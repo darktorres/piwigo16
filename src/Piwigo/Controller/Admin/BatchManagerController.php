@@ -43,7 +43,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 
-final readonly class BatchManagerController
+final class BatchManagerController
 {
     /** @var list<string> */
     public const array PAGES = [
@@ -53,27 +53,33 @@ final readonly class BatchManagerController
         'queue',
     ];
 
+    /** @var list<string> */
+    private array $catElementsId = [];
+    private int $pageStart = 0;
+    private string $batchTab = 'global';
+    private string $prefilter = 'none';
+
     public function __construct(
-        private Connection $conn,
-        private AdminService $adminService,
-        private CategoryAdminService $categoryAdminService,
-        private CategoryRepository $categoryRepository,
-        private CategoryService $categoryService,
-        private DateService $dateService,
-        private FilterResolver $filterResolver,
-        private HtmlService $htmlService,
-        private ImageAdminService $imageAdminService,
-        private ImageRepository $imageRepository,
-        private PermissionService $permissionService,
-        private SearchService $searchService,
-        private StringUtil $stringUtil,
-        private TagAdminService $tagAdminService,
-        private TagRepository $tagRepository,
-        private TagService $tagService,
-        private UrlGenerator $urlGenerator,
-        private UrlService $urlService,
-        private UserAdminService $userAdminService,
-        private Util $util,
+        private readonly Connection $conn,
+        private readonly AdminService $adminService,
+        private readonly CategoryAdminService $categoryAdminService,
+        private readonly CategoryRepository $categoryRepository,
+        private readonly CategoryService $categoryService,
+        private readonly DateService $dateService,
+        private readonly FilterResolver $filterResolver,
+        private readonly HtmlService $htmlService,
+        private readonly ImageAdminService $imageAdminService,
+        private readonly ImageRepository $imageRepository,
+        private readonly PermissionService $permissionService,
+        private readonly SearchService $searchService,
+        private readonly StringUtil $stringUtil,
+        private readonly TagAdminService $tagAdminService,
+        private readonly TagRepository $tagRepository,
+        private readonly TagService $tagService,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly UrlService $urlService,
+        private readonly UserAdminService $userAdminService,
+        private readonly Util $util,
     ) {
     }
 
@@ -95,8 +101,6 @@ final readonly class BatchManagerController
     private function batchManager(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
         $this->util->checkInputParameter('selection', $_POST, true, ValidationPattern::ID);
@@ -494,14 +498,17 @@ final readonly class BatchManagerController
             $b = is_array($set) ? array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $set) : [];
             $current_set = array_intersect($a, $b);
         }
-        $page['cat_elements_id'] = empty($current_set) ? [] : $current_set;
+        $this->catElementsId = !is_array($current_set) || empty($current_set) ? [] : array_values(array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
+            $current_set
+        ));
 
         // ── Pagination ────────────────────────────────────────────────────────
 
         if (!isset($_REQUEST['start']) || !is_numeric($_REQUEST['start']) || $_REQUEST['start'] < 0 || (isset($_REQUEST['display']) && 'all' == $_REQUEST['display'])) {
-            $page['start'] = 0;
+            $this->pageStart = 0;
         } else {
-            $page['start'] = (int) $_REQUEST['start'];
+            $this->pageStart = (int) $_REQUEST['start'];
         }
 
         // ── Tabs ──────────────────────────────────────────────────────────────
@@ -510,14 +517,14 @@ final readonly class BatchManagerController
 
         if (isset($_GET['mode'])) {
             $this->util->checkInputParameter('mode', $_GET, false, '/^(global|unit)$/');
-            $page['tab'] = is_string($_GET['mode']) ? $_GET['mode'] : 'global';
+            $this->batchTab = is_string($_GET['mode']) ? $_GET['mode'] : 'global';
         } else {
-            $page['tab'] = 'global';
+            $this->batchTab = 'global';
         }
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('batch_manager');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select($this->batchTab);
         $tabsheet->assign();
 
         // ── Dimensions ────────────────────────────────────────────────────────
@@ -610,7 +617,7 @@ final readonly class BatchManagerController
 
         // ── Dispatch to tab ───────────────────────────────────────────────────
 
-        $tab = $page['tab'];
+        $tab = $this->batchTab;
         if ($tab === 'global') {
             $this->batchManagerGlobal();
         } elseif ($tab === 'unit') {
@@ -623,8 +630,6 @@ final readonly class BatchManagerController
     private function batchManagerGlobal(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
         $duplicates_on_fields = [];
@@ -655,11 +660,11 @@ final readonly class BatchManagerController
             $collection = is_array($_POST['selection']) ? $_POST['selection'] : [];
         }
 
-        $page['prefilter'] = 'none';
+        $this->prefilter = 'none';
         /** @var array<string, mixed> $bmf */
         $bmf = is_array($_SESSION['bulk_manager_filter'] ?? null) ? $_SESSION['bulk_manager_filter'] : [];
         if (is_string($bmf['prefilter'] ?? null)) {
-            $page['prefilter'] = $bmf['prefilter'];
+            $this->prefilter = $bmf['prefilter'];
         }
 
         $redirect_url = $this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : '');
@@ -692,7 +697,7 @@ final readonly class BatchManagerController
                     }
                     $tag_ids = $this->tagAdminService->getTagIds($add_tags_val);
                     $this->tagAdminService->addTags($tag_ids, $collection_int);
-                    if ('no_tag' == $page['prefilter']) {
+                    if ('no_tag' == $this->prefilter) {
                         $redirect = true;
                     }
                 }
@@ -722,9 +727,9 @@ final readonly class BatchManagerController
                     $associate_raw = is_array($_POST['associate']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : [];
                     $this->categoryAdminService->associateImagesToCategories($collection_int, $associate_raw);
                     $_SESSION['page_infos'] = [Lang::t('Information data registered in database')];
-                    if ('no_album' == $page['prefilter']) {
+                    if ('no_album' == $this->prefilter) {
                         $redirect = true;
-                    } elseif ('no_virtual_album' == $page['prefilter']) {
+                    } elseif ('no_virtual_album' == $this->prefilter) {
                         $rawAssociate  = $_POST['associate'];
                         $associate_id  = is_string($rawAssociate) ? $rawAssociate : '';
                         $category_info = $this->categoryService->getCatInfo($associate_id);
@@ -739,9 +744,9 @@ final readonly class BatchManagerController
                 $move_id_int = is_numeric($move_id) ? (int) $move_id : 0;
                 $this->categoryAdminService->moveImagesToCategories($collection_int, [$move_id_int]);
                 $_SESSION['page_infos'] = [Lang::t('Information data registered in database')];
-                if ('no_album' == $page['prefilter']) {
+                if ('no_album' == $this->prefilter) {
                     $redirect = true;
-                } elseif ('no_virtual_album' == $page['prefilter']) {
+                } elseif ('no_virtual_album' == $this->prefilter) {
                     $category_info = $this->categoryService->getCatInfo($move_id);
                     if (!isset($category_info['dir']) || $category_info['dir'] === '') {
                         $redirect = true;
@@ -852,10 +857,10 @@ final readonly class BatchManagerController
 
         $this->filterResolver->render($collection, $base_url);
 
-        $catElementsId = is_array($page['cat_elements_id']) ? $page['cat_elements_id'] : [];
-        $pageStart     = is_int($page['start']) ? $page['start'] : 0;
+        $catElementsId = $this->catElementsId;
+        $pageStart     = $this->pageStart;
 
-        $tpl->assign('IN_CADDIE', 'caddie' == $page['prefilter']);
+        $tpl->assign('IN_CADDIE', 'caddie' == $this->prefilter);
 
         if (count($catElementsId) > 0) {
             $tpl->assign('associated_tags', $this->tagService->getCommonTags($catElementsId, -1));
@@ -885,7 +890,6 @@ final readonly class BatchManagerController
         } else {
             $nbImages = 20;
         }
-        $page['nb_images'] = $nbImages;
 
         $nb_thumbs_page = 0;
 
@@ -906,7 +910,7 @@ final readonly class BatchManagerController
                 $query .= ' JOIN ' . Tables::imageCategory() . ' ON id = image_id';
             }
 
-            $query .= ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catElementsId)) . ')';
+            $query .= ' WHERE id IN (' . implode(',', $catElementsId) . ')';
             if ($is_category) {
                 $query .= ' AND category_id = ' . $bmf_category_val;
             }
@@ -969,8 +973,6 @@ final readonly class BatchManagerController
     {
         $associated_categories = [];
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
         /** @var array<string, mixed> $pwg_loaded_plugins */
@@ -1058,8 +1060,8 @@ final readonly class BatchManagerController
 
         $tpl->assign('ACTIVE_PLUGINS', array_keys($pwg_loaded_plugins));
 
-        $catElementsIdU = is_array($page['cat_elements_id']) ? $page['cat_elements_id'] : [];
-        $pageStartU     = is_int($page['start']) ? $page['start'] : 0;
+        $catElementsIdU = $this->catElementsId;
+        $pageStartU     = $this->pageStart;
         if (isset($_GET['display']) && $_GET['display'] !== '') {
             $nbImagesU = is_numeric($_GET['display']) ? (int) $_GET['display'] : 5;
         } elseif (in_array(Config::batchManagerImagesPerPageUnit(), [5, 10, 50])) {
@@ -1067,7 +1069,6 @@ final readonly class BatchManagerController
         } else {
             $nbImagesU = 5;
         }
-        $page['nb_images'] = $nbImagesU;
         $tpl->assign('per_page', $nbImagesU);
 
         if (count($catElementsIdU) > 0) {
@@ -1094,7 +1095,7 @@ final readonly class BatchManagerController
                 $query .= ' JOIN ' . Tables::imageCategory() . ' ON id = image_id';
             }
 
-            $query .= ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catElementsIdU)) . ')';
+            $query .= ' WHERE id IN (' . implode(',', $catElementsIdU) . ')';
             if ($is_category) {
                 $query .= ' AND category_id = ' . $bmf_category_val;
             }

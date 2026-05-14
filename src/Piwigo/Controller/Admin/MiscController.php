@@ -139,8 +139,6 @@ final class MiscController
     private function notificationByMail(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         MailNotificationContext::init();
 
@@ -149,13 +147,9 @@ final class MiscController
         $GLOBALS['base_url'] = $base_url = $this->urlGenerator->admin();
         $this->mustRepost = false;
 
-        if (!isset($_GET['mode']) || !is_string($_GET['mode'])) {
-            $page['mode'] = 'send';
-        } else {
-            $page['mode'] = $_GET['mode'];
-        }
+        $mode = (!isset($_GET['mode']) || !is_string($_GET['mode'])) ? 'send' : $_GET['mode'];
 
-        $this->permissionService->checkStatus($this->getTabStatus($page['mode']));
+        $this->permissionService->checkStatus($this->getTabStatus($mode));
 
         EventDispatcher::addListener('nbm_render_global_customize_mail_content', $this->renderGlobalCustomizeMailContent(...));
         EventDispatcher::notify('nbm_event_handler_added');
@@ -168,7 +162,7 @@ final class MiscController
             $this->util->checkPwgToken();
         }
 
-        switch ($page['mode']) {
+        switch ($mode) {
             case 'param':
                 if (isset($_POST['param_submit'])) {
                     $nbmSendMailAsRaw = $_POST['nbm_send_mail_as'] ?? null;
@@ -226,7 +220,7 @@ final class MiscController
         if ($this->permissionService->isAutorizeStatus(AccessLevel::Webmaster)) {
             $tabsheet = new Tabsheet();
             $tabsheet->setId('nbm');
-            $tabsheet->select($page['mode']);
+            $tabsheet->select($mode);
             $tabsheet->assign();
         }
 
@@ -242,12 +236,12 @@ final class MiscController
             $tpl->assign('REPOST_SUBMIT_NAME', $repost_submit_name);
         }
 
-        switch ($page['mode']) {
+        switch ($mode) {
             case 'param':
-                $tpl->assign($page['mode'], ['SEND_HTML_MAIL' => Config::nbmSendHtmlMail(), 'SEND_MAIL_AS' => Config::nbmSendMailAs(), 'SEND_DETAILED_CONTENT' => Config::nbmSendDetailedContent(), 'COMPLEMENTARY_MAIL_CONTENT' => Config::nbmComplementaryMailContent(), 'SEND_RECENT_POST_DATES' => Config::nbmSendRecentPostDates()]);
+                $tpl->assign($mode, ['SEND_HTML_MAIL' => Config::nbmSendHtmlMail(), 'SEND_MAIL_AS' => Config::nbmSendMailAs(), 'SEND_DETAILED_CONTENT' => Config::nbmSendDetailedContent(), 'COMPLEMENTARY_MAIL_CONTENT' => Config::nbmComplementaryMailContent(), 'SEND_RECENT_POST_DATES' => Config::nbmSendRecentPostDates()]);
                 break;
             case 'subscribe':
-                $tpl->assign($page['mode'], true);
+                $tpl->assign($mode, true);
                 $tpl->assign(['L_CAT_OPTIONS_TRUE' => Lang::t('Subscribed'), 'L_CAT_OPTIONS_FALSE' => Lang::t('Unsubscribed')]);
                 $data_users = $this->notificationAdminService->getUserNotifications('subscribe');
                 $opt_true = $opt_true_selected = $opt_false = $opt_false_selected = [];
@@ -290,7 +284,7 @@ final class MiscController
                         }
                     }
                 }
-                $tpl->assign($page['mode'], $tpl_var);
+                $tpl->assign($mode, $tpl_var);
                 if (Config::authKeyDuration() > 0) {
                     $strMiscResult = strtotime('now -' . Config::authKeyDuration() . ' second');
                     $tpl->assign('auth_key_duration', $this->dateService->timeSince($strMiscResult !== false ? $strMiscResult : null, 'second', null, false));
@@ -307,8 +301,6 @@ final class MiscController
     private function permalinks(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         $this->util->checkInputParameter('cat_id', $_POST, false, ValidationPattern::ID);
 
@@ -334,8 +326,7 @@ final class MiscController
             }
         }
 
-        $page['tab'] = 'permalinks';
-        $this->albumsTabRenderer->render();
+        $this->albumsTabRenderer->render('permalinks');
 
         $query = 'SELECT id, permalink, CONCAT(id, " - ", name, IF(permalink IS NULL, "", " &radic;") ) AS name, uppercats, global_rank FROM ' . Tables::categories();
         $this->categoryService->displaySelectCatWrapper($query, $selected_cat, 'categories', false);
@@ -531,8 +522,6 @@ final class MiscController
     private function intro(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
         /** @var array<string, mixed> $pwg_loaded_plugins */
@@ -549,19 +538,18 @@ final class MiscController
         $tabsheet->select('');
         $tabsheet->assign();
 
-        if (isset($page['nb_pending_comments'])) {
-            $message = Lang::t('User comments') . ' <i class="icon-chat"></i> ';
-            $message .= '<a href="' . $my_base_url . 'comments">';
-            $nbPending = $page['nb_pending_comments'];
-            $message .= Lang::t('%d waiting for validation', is_numeric($nbPending) ? (int) $nbPending : 0);
-            $message .= ' <i class="icon-right"></i></a>';
-            PageState::current()->addMessage($message);
+        if (Config::activateComments()) {
+            $nbPending = $this->commentRepository->countUnvalidated();
+            if ($nbPending > 0) {
+                $message = Lang::t('User comments') . ' <i class="icon-chat"></i> ';
+                $message .= '<a href="' . $my_base_url . 'comments">';
+                $message .= Lang::t('%d waiting for validation', $nbPending);
+                $message .= ' <i class="icon-right"></i></a>';
+                PageState::current()->addMessage($message);
+            }
         }
 
-        $nb_orphans = is_numeric($page['nb_orphans'] ?? null) ? (int) $page['nb_orphans'] : 0;
-        if (is_numeric($page['nb_photos_total'] ?? null) && (int) $page['nb_photos_total'] >= 100000) {
-            $nb_orphans = $this->imageAdminService->countOrphans();
-        }
+        $nb_orphans = $this->imageAdminService->countOrphans();
 
         if ($nb_orphans > 0) {
             $orphans_url = $this->urlGenerator->admin('batch_manager') . '&amp;filter=prefilter-no_album';
@@ -894,8 +882,6 @@ final class MiscController
     private function rating(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         $this->util->checkInputParameter('display', $_GET, false, ValidationPattern::ID);
 
@@ -908,20 +894,20 @@ final class MiscController
         $elements_per_page = isset($_GET['display']) && is_numeric($_GET['display']) ? (int) $_GET['display'] : 10;
         $order_by_index  = isset($_GET['order_by']) && is_numeric($_GET['order_by']) ? (int) $_GET['order_by'] : 0;
 
-        $page['user_filter'] = '';
+        $userFilter = '';
         if (isset($_GET['users'])) {
             if ($_GET['users'] == 'user') {
-                $page['user_filter'] = ' AND r.user_id <> ' . Config::guestId();
+                $userFilter = ' AND r.user_id <> ' . Config::guestId();
             } elseif ($_GET['users'] == 'guest') {
-                $page['user_filter'] = ' AND r.user_id = ' . Config::guestId();
+                $userFilter = ' AND r.user_id = ' . Config::guestId();
             }
         }
 
-        $page['cat_filter'] = '';
+        $catFilter = '';
         if (isset($_GET['cat']) && is_numeric($_GET['cat'])) {
             $cat_ids = $this->categoryService->getSubcatIds([(int) $_GET['cat']]);
             if (count($cat_ids) > 0) {
-                $page['cat_filter'] = ' AND ic.category_id IN (' . implode(',', $cat_ids) . ')';
+                $catFilter = ' AND ic.category_id IN (' . implode(',', $cat_ids) . ')';
             }
         }
 
@@ -932,10 +918,10 @@ final class MiscController
         }
 
         $query = 'SELECT COUNT(DISTINCT(r.element_id)) FROM ' . Tables::rate() . ' AS r';
-        if (!empty($page['cat_filter'])) {
+        if (!empty($catFilter)) {
             $query .= ' JOIN ' . Tables::images() . ' AS i ON r.element_id = i.id JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id';
         }
-        $query .= ' WHERE 1=1' . $page['user_filter'];
+        $query .= ' WHERE 1=1' . $userFilter;
         $nb_images_raw = $this->conn->executeQuery($query)->fetchOne();
         $nb_images     = is_numeric($nb_images_raw) ? (int) $nb_images_raw : 0;
         $nb_elements   = $this->imageRepository->countRatings();
@@ -957,10 +943,10 @@ final class MiscController
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Rating'));
 
         $query = 'SELECT i.id, i.path, i.file, i.representative_ext, i.rating_score AS score, MAX(r.date) AS recently_rated, ROUND(AVG(r.rate),2) AS avg_rates, COUNT(r.rate) AS nb_rates, SUM(r.rate) AS sum_rates FROM ' . Tables::rate() . ' AS r LEFT JOIN ' . Tables::images() . ' AS i ON r.element_id = i.id';
-        if (!empty($page['cat_filter'])) {
+        if (!empty($catFilter)) {
             $query .= ' JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id';
         }
-        $query .= ' WHERE 1 = 1 ' . $page['user_filter'] . $page['cat_filter'] . ' GROUP BY i.id, i.path, i.file, i.representative_ext, i.rating_score, r.element_id ORDER BY ' . $available_order_by[$order_by_index][1] . ' LIMIT ' . $elements_per_page . ' OFFSET ' . $start . ';';
+        $query .= ' WHERE 1 = 1 ' . $userFilter . $catFilter . ' GROUP BY i.id, i.path, i.file, i.representative_ext, i.rating_score, r.element_id ORDER BY ' . $available_order_by[$order_by_index][1] . ' LIMIT ' . $elements_per_page . ' OFFSET ' . $start . ';';
 
         $images = $this->conn->executeQuery($query)->fetchAllAssociative();
         $tpl->assign('images', []);
@@ -1113,8 +1099,6 @@ final class MiscController
     private function profile(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         $this->util->checkInputParameter('user_id', $_GET, false, ValidationPattern::ID);
 

@@ -62,8 +62,6 @@ final readonly class ConfigurationController
     private function configuration(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         if (!$this->permissionService->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
@@ -71,8 +69,7 @@ final readonly class ConfigurationController
 
         $this->util->checkInputParameter('section', $_GET, false, '/^[a-z]+$/i');
 
-        $page['section'] = isset($_GET['section']) && is_string($_GET['section']) ? $_GET['section'] : 'main';
-        $section = $page['section'];
+        $section = isset($_GET['section']) && is_string($_GET['section']) ? $_GET['section'] : 'main';
 
         $main_checkboxes = [
             'allow_user_registration', 'obligatory_user_mail_address', 'rate', 'rate_anonymous',

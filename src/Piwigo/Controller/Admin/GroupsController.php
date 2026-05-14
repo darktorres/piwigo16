@@ -144,8 +144,6 @@ final readonly class GroupsController
     private function groupPerm(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         if (!empty($_POST)) {
             $this->util->checkPwgToken();
             $this->util->checkInputParameter('cat_true', $_POST, true, ValidationPattern::ID);
@@ -158,8 +156,7 @@ final readonly class GroupsController
 
         $this->util->checkInputParameter('group_id', $_GET, false, ValidationPattern::ID);
         $getGroupId = $_GET['group_id'];
-        $page['group'] = $getGroupId;
-        $group_id      = is_numeric($getGroupId) ? (int) $getGroupId : 0;
+        $group_id   = is_numeric($getGroupId) ? (int) $getGroupId : 0;
 
         $rawCatTrue  = $_POST['cat_true']  ?? null;
         $rawCatFalse = $_POST['cat_false'] ?? null;

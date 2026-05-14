@@ -197,14 +197,6 @@ final readonly class AdminService
 
     public function getActiveMenu(string $menuPage): int
     {
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
-        if (isset($page['active_menu'])) {
-            $am = $page['active_menu'];
-            return is_int($am) ? $am : -1;
-        }
         $mp = $menuPage;
         return match ($mp) {
             'photo', 'photos_add', 'rating', 'tags', 'batch_manager' => 0,

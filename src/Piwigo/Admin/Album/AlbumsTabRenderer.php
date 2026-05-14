@@ -16,14 +16,12 @@ final readonly class AlbumsTabRenderer
         private UrlGenerator $urlGenerator,
     ) {
     }
-    public function render(): void
+    public function render(string $tab = ''): void
     {
-        /** @var array<string, mixed> $page */
-        $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         $GLOBALS['my_base_url'] = $this->urlGenerator->admin() . '&page=';
         $tabsheet = new Tabsheet();
         $tabsheet->setId('albums');
-        $tabsheet->select(is_string($page['tab'] ?? null) ? $page['tab'] : '');
+        $tabsheet->select($tab);
         $tabsheet->assign();
         $nbCats = $this->categoryRepository->countAll();
         TemplateRegistry::current()->assign(['nb_cats' => $nbCats]);

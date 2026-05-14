@@ -60,6 +60,8 @@ final class PhotoController
     ];
 
     private string $adminPhotoBaseUrl = '';
+    /** @var array<string,mixed>|null */
+    private ?array $imageInfo = null;
 
     public function __construct(
         private readonly Connection $conn,
@@ -115,9 +117,6 @@ final class PhotoController
     private function photo(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
-
         $this->util->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
         $this->util->checkInputParameter('image_id', $_GET, false, ValidationPattern::ID);
 
@@ -126,28 +125,24 @@ final class PhotoController
         $this->adminPhotoBaseUrl = $this->urlGenerator->admin('photo-' . $image_id_str);
         $GLOBALS['admin_photo_base_url'] = $this->adminPhotoBaseUrl;
 
-        $page['image'] = $this->imageAdminService->getImageInfos($image_id_str, true);
+        $this->imageInfo = $this->imageAdminService->getImageInfos($image_id_str, true);
 
         if (isset($_GET['cat_id'])) {
             $GLOBALS['category'] = $this->categoryRepository
                 ->findCategoryById(is_scalar($_GET['cat_id']) ? (int) $_GET['cat_id'] : 0);
         }
 
-        $page['tab'] = 'properties';
-        if (isset($_GET['tab'])) {
-            $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'properties';
-        }
+        $rawTab = $_GET['tab'] ?? null;
+        $tab    = is_string($rawTab) ? $rawTab : 'properties';
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('photo');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select($tab);
         $tabsheet->assign();
 
         $tpl->assign([
             'ADMIN_PAGE_TITLE' => new Html(Lang::t('Edit photo') . ' <span class="image-id">#' . htmlspecialchars($image_id_str) . '</span>'),
         ]);
-
-        $tab = $page['tab'];
         if ($tab === 'properties') {
             $this->pictureModify();
         } elseif ($tab === 'coi') {
@@ -162,8 +157,6 @@ final class PhotoController
     private function pictureModify(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
         $this->util->checkInputParameter('image_id', $_GET, false, ValidationPattern::ID);
@@ -179,8 +172,8 @@ final class PhotoController
         }
         $admin_photo_base_url = $this->adminPhotoBaseUrl;
 
-        if (!isset($page['image'])) {
-            $page['image'] = $this->imageAdminService->getImageInfos($image_id_str, true);
+        if (!isset($this->imageInfo)) {
+            $this->imageInfo = $this->imageAdminService->getImageInfos($image_id_str, true);
         }
 
         $getImageId = $_GET['image_id'] ?? null;
@@ -276,7 +269,7 @@ SELECT id
             $this->util->pwgActivity('photo', $getImageIdInt, 'edit');
 
             $rawImageId3 = $_GET['image_id'] ?? null;
-            $page['image'] = $this->imageAdminService->getImageInfos(is_string($rawImageId3) ? $rawImageId3 : '', true);
+            $this->imageInfo = $this->imageAdminService->getImageInfos(is_string($rawImageId3) ? $rawImageId3 : '', true);
         }
 
         $tag_selection = $this->tagAdminService->getTaglistFromRows(
@@ -285,7 +278,7 @@ SELECT id
         );
 
         /** @var array<string, mixed> $row */
-        $row = is_array($page['image']) ? $page['image'] : [];
+        $row = is_array($this->imageInfo) ? $this->imageInfo : [];
 
         if (isset($data['date_creation'])) {
             $row['date_creation'] = $data['date_creation'];
@@ -576,29 +569,22 @@ SELECT id
     private function photosAdd(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', $this->urlGenerator->admin('photos_add'));
 
         $upload_form_config = $this->uploadService->getUploadFormConfig();
         $GLOBALS['upload_form_config'] = $upload_form_config;
 
-        if (isset($_GET['section'])) {
-            $page['tab'] = is_string($_GET['section']) ? $_GET['section'] : 'direct';
-            if ($page['tab'] === 'ploader') {
-                $page['tab'] = 'applications';
-            }
-        } else {
-            $page['tab'] = 'direct';
+        $rawSection = $_GET['section'] ?? null;
+        $tab = is_string($rawSection) ? $rawSection : 'direct';
+        if ($tab === 'ploader') {
+            $tab = 'applications';
         }
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('photos_add');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select($tab);
         $tabsheet->assign();
-
-        $tab = $page['tab'];
         if ($tab === 'direct') {
             $this->photosAddDirect();
         } elseif ($tab === 'ftp') {
@@ -613,8 +599,6 @@ SELECT id
     private function photosAddDirect(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
 

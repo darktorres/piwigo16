@@ -104,8 +104,6 @@ final class AlbumController
     private function album(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         $this->util->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
 
@@ -119,15 +117,12 @@ final class AlbumController
             throw new NotFoundException('unknown album');
         }
 
-        $page['tab'] = 'properties';
-        if (isset($_GET['tab'])) {
-            $rawTab = $_GET['tab'];
-            $page['tab'] = is_string($rawTab) ? $rawTab : 'properties';
-        }
+        $rawTab = $_GET['tab'] ?? null;
+        $tab    = is_string($rawTab) ? $rawTab : 'properties';
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('album');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select($tab);
         $tabsheet->assign();
 
         $category_name = EventDispatcher::dispatch('render_category_name', $this->albumCategory['name'], 'get_cat_display_name_cache');
@@ -135,8 +130,6 @@ final class AlbumController
             'ADMIN_PAGE_TITLE'     => new Html(Lang::t('Edit album') . ' <strong>' . htmlspecialchars(is_scalar($category_name) ? (string) $category_name : '') . '</strong>'),
             'ADMIN_PAGE_OBJECT_ID' => '#' . (is_scalar($this->albumCategory['id']) ? (string) $this->albumCategory['id'] : ''),
         ]);
-
-        $tab = $page['tab'];
         if ($tab === 'properties') {
             $this->catModify();
         } elseif ($tab === 'sort_order') {
@@ -152,16 +145,13 @@ final class AlbumController
     private function albums(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
         $albums_counter = $this->categoryRepository->countAll();
 
         $this->util->checkInputParameter('parent_id', $_GET, false, ValidationPattern::ID);
 
-        $page['tab'] = 'list';
-        $this->albumsTabRenderer->render();
+        $this->albumsTabRenderer->render('list');
 
         $raw_open_cat = $_GET['parent_id'] ?? -1;
         $open_cat = is_scalar($raw_open_cat) ? (int) $raw_open_cat : -1;
@@ -313,8 +303,6 @@ final class AlbumController
     private function albumNotification(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         $category = $this->albumCategory;
         $admin_album_base_url = $this->adminAlbumBaseUrl;
 
@@ -331,7 +319,7 @@ final class AlbumController
         }
 
         $GLOBALS['admin_album_base_url'] = $admin_album_base_url;
-        $page['cat'] = $category['id'];
+        $pageCat = $category['id'];
 
         if (isset($_POST['submitEmail'])) {
             $this->util->checkPwgToken();
@@ -400,7 +388,7 @@ final class AlbumController
             $this->urlService->unsetMakeFullUrl();
         }
 
-        $catIdScalar = is_string($page['cat'] ?? null) ? $page['cat'] : '';
+        $catIdScalar = is_string($pageCat ?? null) ? $pageCat : '';
         $tpl->assign([
             'CATEGORIES_NAV' => new Html(trim($this->htmlService->getCatDisplayNameFromId($catIdScalar, $this->urlGenerator->admin() . '&page=album-'))),
             'F_ACTION'       => $admin_album_base_url . '-notification',
@@ -457,8 +445,6 @@ final class AlbumController
     private function catList(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         EventDispatcher::notify('loc_begin_cat_list');
 
         if (!empty($_POST) || isset($_GET['delete'])) {
@@ -479,8 +465,7 @@ final class AlbumController
         $base_url   = $this->urlGenerator->admin('cat_list');
         $navigation = '<a href="' . $base_url . '">' . Lang::t('Home') . '</a>';
 
-        $page['tab'] = 'list';
-        $this->albumsTabRenderer->render();
+        $this->albumsTabRenderer->render('list');
 
         if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
             $photo_deletion_mode = 'no_delete';
@@ -797,8 +782,6 @@ final class AlbumController
     private function catOptions(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         if (!empty($_POST)) {
             $this->util->checkPwgToken();
             $this->util->checkInputParameter('cat_true', $_POST, true, ValidationPattern::ID);
@@ -832,31 +815,31 @@ final class AlbumController
             $this->util->pwgActivity('album', $cat_false, 'edit', ['section' => $current_section, 'action' => 'trueify']);
         }
 
-        $get_section     = $_GET['section'] ?? null;
-        $page['section'] = is_string($get_section) ? $get_section : 'status';
-        $base_url        = $this->urlGenerator->admin('cat_options') . '&section=';
+        $get_section = $_GET['section'] ?? null;
+        $section     = is_string($get_section) ? $get_section : 'status';
+        $base_url    = $this->urlGenerator->admin('cat_options') . '&section=';
 
-        $tpl->assign(['U_HELP' => $this->urlGenerator->adminPopupHelp('cat_options'), 'F_ACTION' => $base_url . $page['section']]);
+        $tpl->assign(['U_HELP' => $this->urlGenerator->adminPopupHelp('cat_options'), 'F_ACTION' => $base_url . $section]);
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('cat_options');
-        $tabsheet->select($page['section']);
+        $tabsheet->select($section);
         $tabsheet->assign();
 
         $query_true = $query_false = '';
-        if ($page['section'] === 'comments') {
+        if ($section === 'comments') {
             $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE commentable = 'true';";
             $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE commentable = 'false';";
             $tpl->assign(['L_SECTION' => Lang::t('Authorize users to add comments on selected albums'), 'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'), 'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden')]);
-        } elseif ($page['section'] === 'visible') {
+        } elseif ($section === 'visible') {
             $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE visible = 'true';";
             $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE visible = 'false';";
             $tpl->assign(['L_SECTION' => Lang::t('Lock albums'), 'L_CAT_OPTIONS_TRUE' => Lang::t('Unlocked'), 'L_CAT_OPTIONS_FALSE' => Lang::t('Locked')]);
-        } elseif ($page['section'] === 'status') {
+        } elseif ($section === 'status') {
             $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE status = 'public';";
             $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE status = 'private';";
             $tpl->assign(['L_SECTION' => Lang::t('Manage authorizations for selected albums'), 'L_CAT_OPTIONS_TRUE' => Lang::t('Public'), 'L_CAT_OPTIONS_FALSE' => Lang::t('Private')]);
-        } elseif ($page['section'] === 'representative') {
+        } elseif ($section === 'representative') {
             $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' WHERE representative_picture_id IS NOT NULL;';
             $query_false = 'SELECT DISTINCT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=category_id WHERE representative_picture_id IS NULL;';
             $tpl->assign(['L_SECTION' => Lang::t('Representative'), 'L_CAT_OPTIONS_TRUE' => Lang::t('singly represented'), 'L_CAT_OPTIONS_FALSE' => Lang::t('randomly represented')]);
@@ -1018,8 +1001,6 @@ final class AlbumController
     private function elementSetRanks(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         $sort_fields = [
             '' => '', 'file ASC' => Lang::t('File name, A &rarr; Z'), 'file DESC' => Lang::t('File name, Z &rarr; A'),
             'name ASC' => Lang::t('Photo title, A &rarr; Z'), 'name DESC' => Lang::t('Photo title, Z &rarr; A'),
@@ -1035,7 +1016,7 @@ final class AlbumController
             trigger_error('missing cat_id param', E_USER_ERROR);
         }
 
-        $page['category_id']  = $_GET['cat_id'];
+        $categoryId  = (string) $_GET['cat_id'];
         $image_order_choices  = ['default', 'rank', 'user_define'];
         $image_order_choice   = 'default';
 
@@ -1043,7 +1024,7 @@ final class AlbumController
             if (isset($_POST['rank_of_image'])) {
                 $rank_of_image = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['rank_of_image']) ? $_POST['rank_of_image'] : []);
                 asort($rank_of_image, SORT_NUMERIC);
-                $this->categoryAdminService->saveImagesOrder((int) $page['category_id'], array_keys($rank_of_image));
+                $this->categoryAdminService->saveImagesOrder((int) $categoryId, array_keys($rank_of_image));
             }
 
             if (isset($_POST['image_order_choice']) && is_string($_POST['image_order_choice']) && $_POST['image_order_choice'] !== '' && in_array($_POST['image_order_choice'], $image_order_choices)) {
@@ -1067,7 +1048,7 @@ final class AlbumController
                 $message     = Lang::t('Images manual order was saved');
             }
 
-            $category_id_int = (int) $page['category_id'];
+            $category_id_int = (int) $categoryId;
             $catRepo = $this->categoryRepository;
             $catRepo->updateImageOrder($category_id_int, $image_order ?? null);
 
@@ -1081,7 +1062,7 @@ final class AlbumController
         }
 
         $base_url = $this->urlGenerator->admin();
-        $category = $this->categoryRepository->findCategoryById((int) $page['category_id']);
+        $category = $this->categoryRepository->findCategoryById((int) $categoryId);
 
         if ($category !== null && ($category['image_order'] == 'rank ASC' || $category['image_order'] == '`rank` ASC')) {
             $image_order_choice = 'rank';
@@ -1093,7 +1074,7 @@ final class AlbumController
         $navigation = $this->htmlService->getCatDisplayNameCache(is_scalar($categoryUppercats) ? (string) $categoryUppercats : '', $this->urlGenerator->admin() . '&page=album-');
         $tpl->assign(['CATEGORIES_NAV' => new Html((string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation))), 'F_ACTION' => $base_url . $this->urlService->getQueryStringDiff([])]);
 
-        $imgRows = $this->imageRepository->findByCategoryIdOrdered((int) $page['category_id']);
+        $imgRows = $this->imageRepository->findByCategoryIdOrdered((int) $categoryId);
         if (count($imgRows) > 0) {
             $current_rank     = 1;
             $derivativeParams = ImageStdParams::getByType(DerivativeSize::Square->value);
@@ -1211,17 +1192,8 @@ final class AlbumController
 
     private function getLocalDir(string $category_id): string
     {
-        /** @var array<string, mixed> $page */
-        $page        = &$GLOBALS['page'];
-        $local_dir   = '';
-        $plainStructure = is_array($page['plain_structure'] ?? null) ? $page['plain_structure'] : [];
-        $catEntry    = is_array($plainStructure[$category_id] ?? null) ? $plainStructure[$category_id] : [];
-
-        if (isset($catEntry['uppercats']) && is_scalar($catEntry['uppercats'])) {
-            $uppercats = (string) $catEntry['uppercats'];
-        } else {
-            $uppercats = $this->categoryRepository->findUppercatsStringById((int) $category_id) ?? '';
-        }
+        $local_dir = '';
+        $uppercats = $this->categoryRepository->findUppercatsStringById((int) $category_id) ?? '';
 
         $upper_array   = explode(',', $uppercats);
         $database_dirs = $this->categoryRepository->findIdDirMap(array_map(intval(...), $upper_array));

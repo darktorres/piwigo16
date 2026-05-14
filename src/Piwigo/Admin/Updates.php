@@ -543,12 +543,8 @@ final class Updates
         }
     }
 
-    public function upgradeTo(string $upgrade_to, int &$step, bool $check_current_version = true): void
+    public function upgradeTo(string $upgrade_to, int &$step, bool $check_current_version = true): ?string
     {
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
         $template = TemplateRegistry::current();
 
         if ($check_current_version and !version_compare($upgrade_to, AppInfo::VERSION, '>')) {
@@ -664,8 +660,8 @@ final class Updates
 
                             PageState::current()->addInfo(Lang::t('Update Complete'));
                             PageState::current()->addInfo($upgrade_to);
-                            $page['updated_version'] = $upgrade_to;
                             $step = -1;
+                            return $upgrade_to;
                         } else {
                             $this->util->redirect(UrlService::getRootUrl() . 'index.php?/upgrade');
                         }
@@ -685,6 +681,7 @@ final class Updates
                 PageState::current()->addError(Lang::t('Piwigo cannot retrieve upgrade file from server'));
             }
         }
+        return null;
     }
 
     // Compare version number with a letter suffix

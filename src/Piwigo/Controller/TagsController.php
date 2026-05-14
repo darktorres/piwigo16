@@ -47,18 +47,15 @@ final readonly class TagsController implements ControllerInterface
 
         EventDispatcher::notify('loc_begin_tags');
 
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
-
         $title = Lang::t('Tags');
         PageState::current()->bodyId = 'theTagsPage';
 
         $tpl = TemplateRegistry::current();
 
-        $page['display_mode'] = Config::tagsDefaultDisplayMode();
-        $display_mode         = $this->stringUtil->inputString('display_mode', null, $_GET);
+        $displayMode  = Config::tagsDefaultDisplayMode();
+        $display_mode = $this->stringUtil->inputString('display_mode', null, $_GET);
         if ($display_mode !== null && in_array($display_mode, ['cloud', 'letters'])) {
-            $page['display_mode'] = $display_mode;
+            $displayMode = $display_mode;
         }
 
         foreach (['cloud', 'letters'] as $mode) {
@@ -67,8 +64,6 @@ final readonly class TagsController implements ControllerInterface
                 $this->urlGenerator->tagsPage() . (Config::tagsDefaultDisplayMode() == $mode ? '' : '&display_mode=' . $mode)
             );
         }
-
-        $displayMode = $page['display_mode'];
         $tpl->assign('display_mode', $displayMode);
 
         $tags = $this->tagService->getAvailableTags();

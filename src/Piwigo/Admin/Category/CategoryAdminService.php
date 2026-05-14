@@ -40,10 +40,10 @@ final readonly class CategoryAdminService
     ) {
     }
 
-    public function deleteSite(mixed $id): void
+    public function deleteSite(int $id): void
     {
         $repo        = $this->categoryRepository;
-        $intId       = is_numeric($id) ? (int) $id : 0;
+        $intId       = $id;
         $categoryIds = $repo->findIdsBySiteId($intId);
         $this->deleteCategories($categoryIds);
         $repo->deleteSiteById($intId);

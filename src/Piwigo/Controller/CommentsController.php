@@ -64,9 +64,6 @@ final readonly class CommentsController implements ControllerInterface
 
         $this->permissionService->checkStatus(AccessLevel::Guest);
 
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
-
         $url_self   = $this->urlGenerator->comments() . $this->urlService->getQueryStringDiff(['delete', 'edit', 'validate', 'pwg_token']);
         $sort_order = ['DESC' => Lang::t('descending'), 'ASC' => Lang::t('ascending')];
         $sort_by    = ['date' => Lang::t('comment date'), 'image_id' => Lang::t('photo')];
@@ -95,30 +92,30 @@ final readonly class CommentsController implements ControllerInterface
         EventDispatcher::notify('loc_begin_comments');
 
         $get_since = $this->stringUtil->inputInt('since', null, $_GET);
-        $page['since'] = ($get_since !== null && $get_since !== 0) ? $get_since : 4;
+        $since = ($get_since !== null && $get_since !== 0) ? $get_since : 4;
 
-        $page['sort_by'] = 'date';
+        $sortBy = 'date';
         $get_sort_by = $this->stringUtil->inputString('sort_by', null, $_GET);
         if ($get_sort_by !== null && isset($sort_by[$get_sort_by])) {
-            $page['sort_by'] = $get_sort_by;
+            $sortBy = $get_sort_by;
         }
 
-        $page['sort_order'] = 'DESC';
+        $sortOrder = 'DESC';
         $get_sort_order = $this->stringUtil->inputString('sort_order', null, $_GET);
         if ($get_sort_order !== null && isset($sort_order[$get_sort_order])) {
-            $page['sort_order'] = $get_sort_order;
+            $sortOrder = $get_sort_order;
         }
 
-        $page['items_number'] = Config::commentsPageNbComments();
+        $itemsNumber = Config::commentsPageNbComments();
         $get_items_number = $this->stringUtil->inputString('items_number', null, $_GET);
         if ($get_items_number !== null) {
-            $page['items_number'] = $get_items_number;
+            $itemsNumber = $get_items_number;
         }
-        if (!is_numeric($page['items_number']) && $page['items_number'] != 'all') {
-            $page['items_number'] = 10;
+        if (!is_numeric($itemsNumber) && $itemsNumber != 'all') {
+            $itemsNumber = 10;
         }
 
-        $page['where_clauses'] = [];
+        $whereClauses = [];
 
         $get_cat = $this->stringUtil->inputInt('cat', null, $_GET);
         if ($get_cat !== null && 0 != $get_cat) {
@@ -127,12 +124,12 @@ final readonly class CommentsController implements ControllerInterface
             if (empty($category_ids)) {
                 $category_ids = [-1];
             }
-            $page['where_clauses'][] = 'category_id IN (' . implode(',', $category_ids) . ')';
+            $whereClauses[] = 'category_id IN (' . implode(',', $category_ids) . ')';
         }
 
         $get_author = $this->stringUtil->inputString('author', null, $_GET);
         if ($get_author !== null && $get_author !== '') {
-            $page['where_clauses'][] = '(u.' . Config::userFields()['username'] . ' = \'' . $get_author . '\' OR author = \'' . $get_author . '\')';
+            $whereClauses[] = '(u.' . Config::userFields()['username'] . ' = \'' . $get_author . '\' OR author = \'' . $get_author . '\')';
         }
 
         $get_comment_id_filter = $this->stringUtil->inputInt('comment_id', null, $_GET);
@@ -144,26 +141,25 @@ final readonly class CommentsController implements ControllerInterface
                 $login_url  = $this->urlService->addUrlParams($this->urlGenerator->identification(), ['redirect' => urlencode($requestUri)]);
                 $this->util->redirect($login_url);
             }
-            $page['where_clauses'][] = 'com.id = ' . $get_comment_id_filter;
+            $whereClauses[] = 'com.id = ' . $get_comment_id_filter;
         }
 
         $get_keyword = $this->stringUtil->inputString('keyword', null, $_GET);
         if ($get_keyword !== null && $get_keyword !== '') {
-            $page['where_clauses'][] = '(' . implode(' AND ', array_map(
+            $whereClauses[] = '(' . implode(' AND ', array_map(
                 fn (string $s): string => "content LIKE '%$s%'",
                 preg_split('/[\s,;]+/', $get_keyword) ?: []
             )) . ')';
         }
 
-        $pageSinceRaw = $page['since'];
-        $pageSince    = in_array($pageSinceRaw, [1, 2, 3, 4]) ? $pageSinceRaw : 4;
-        $page['where_clauses'][] = $since_options[$pageSince]['clause'];
+        $pageSince = in_array($since, [1, 2, 3, 4]) ? $since : 4;
+        $whereClauses[] = $since_options[$pageSince]['clause'];
 
         if (!$this->permissionService->isAdmin()) {
-            $page['where_clauses'][] = 'validated=\'true\'';
+            $whereClauses[] = 'validated=\'true\'';
         }
 
-        $page['where_clauses'][] = $this->permissionService->getSqlConditionFandF(
+        $whereClauses[] = $this->permissionService->getSqlConditionFandF(
             ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'ic.image_id'],
             '',
             true
@@ -263,16 +259,16 @@ SELECT id, name, uppercats, global_rank
         $tpl->assign('since_options', $tpl_var);
         $tpl->assign('since_options_selected', $pageSince);
         $tpl->assign('sort_by_options', $sort_by);
-        $tpl->assign('sort_by_options_selected', $page['sort_by']);
+        $tpl->assign('sort_by_options_selected', $sortBy);
         $tpl->assign('sort_order_options', $sort_order);
-        $tpl->assign('sort_order_options_selected', $page['sort_order']);
+        $tpl->assign('sort_order_options_selected', $sortOrder);
 
         $tpl_var = [];
         foreach ($items_number as $option) {
             $tpl_var[$option] = is_numeric($option) ? $option : Lang::t($option);
         }
         $tpl->assign('item_number_options', $tpl_var);
-        $tpl->assign('item_number_options_selected', $page['items_number']);
+        $tpl->assign('item_number_options_selected', $itemsNumber);
 
         $start        = $this->stringUtil->inputInt('start', 0, $_GET);
         $comments     = [];
@@ -285,17 +281,17 @@ SELECT id, name, uppercats, global_rank
   FROM ' . Tables::imageCategory() . ' AS ic
     INNER JOIN ' . Tables::comments() . ' AS com ON ic.image_id = com.image_id
     LEFT JOIN ' . Tables::users() . ' AS u ON u.' . $userIdField . ' = com.author_id
-  WHERE ' . implode("\n    AND ", $page['where_clauses']);
+  WHERE ' . implode("\n    AND ", $whereClauses);
 
         $conn    = $this->conn;
         $counter = $conn->executeQuery('SELECT COUNT(DISTINCT com.id)' . $joinBase)->fetchOne();
 
-        $pageItemsNumber = $page['items_number'];
+        $pageItemsNumber = $itemsNumber;
         $dataQuery = 'SELECT com.id AS comment_id, com.image_id, ic.category_id, com.author, com.author_id,'
             . " u.$userEmailField AS user_email, com.email, com.date, com.website_url, com.content, com.validated"
             . $joinBase . '
   GROUP BY comment_id
-  ORDER BY ' . $page['sort_by'] . ' ' . $page['sort_order'];
+  ORDER BY ' . $sortBy . ' ' . $sortOrder;
         if ('all' != $pageItemsNumber) {
             $dataQuery .= '
   LIMIT ' . $pageItemsNumber . ' OFFSET ' . ($start ?? 0);

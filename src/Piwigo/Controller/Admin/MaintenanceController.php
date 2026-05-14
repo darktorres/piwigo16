@@ -130,8 +130,6 @@ final class MaintenanceController
     private function maintenance(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         if (isset($_GET['action'])) {
             $this->util->checkPwgToken();
@@ -159,19 +157,13 @@ final class MaintenanceController
 
         $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
 
-        if (isset($_GET['tab'])) {
-            $this->util->checkInputParameter('tab', $_GET, false, '/^(actions|env|sys)$/');
-            $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'actions';
-        } else {
-            $page['tab'] = 'actions';
-        }
+        $this->util->checkInputParameter('tab', $_GET, false, '/^(actions|env|sys)$/');
+        $tab = isset($_GET['tab']) && is_string($_GET['tab']) ? $_GET['tab'] : 'actions';
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('maintenance');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select($tab);
         $tabsheet->assign();
-
-        $tab = $page['tab'];
         if ($tab === 'actions') {
             $this->maintenanceActions();
         } elseif ($tab === 'env') {
@@ -873,7 +865,7 @@ final class MaintenanceController
         $this->util->checkInputParameter('filter_image_id', $_GET, false, '/^\d+$/');
         $this->util->checkInputParameter('filter_user_id', $_GET, false, '/^\d+$/');
 
-        $this->historyAdminService->historyTabsheet();
+        $this->historyAdminService->historyTabsheet('history');
         $tpl->assign(['F_ACTION' => $this->urlGenerator->admin('history'), 'API_METHOD' => $this->urlGenerator->ws(['format' => 'json', 'method' => 'pwg.history.search'])]);
 
         if (isset($page['search_id'])) {
@@ -972,7 +964,7 @@ final class MaintenanceController
 
         $this->historyAdminService->historySummarize();
 
-        $this->historyAdminService->historyTabsheet();
+        $this->historyAdminService->historyTabsheet('stats');
         $tpl->assign(['U_HELP' => $this->urlGenerator->adminPopupHelp('history'), 'F_ACTION' => $this->urlGenerator->admin('history')]);
 
         $actual_date = new \DateTime();
@@ -1023,8 +1015,6 @@ final class MaintenanceController
     private function siteManager(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         if (!Config::enableSynchronization()) {
             throw new ConfigException('synchronization is disabled');
@@ -1072,13 +1062,12 @@ final class MaintenanceController
 
         $siteIdSm = null;
         if (isset($_GET['site']) && is_numeric($_GET['site'])) {
-            $page['site'] = $_GET['site'];
             $siteIdSm = (int) $_GET['site'];
         }
         if (isset($_GET['action']) && $siteIdSm !== null) {
             $galleries_url = $this->siteRepository->findGalleriesUrlById($siteIdSm);
             switch ($_GET['action']) {
-                case 'delete': $this->categoryAdminService->deleteSite($page['site']);
+                case 'delete': $this->categoryAdminService->deleteSite($siteIdSm);
                     PageState::current()->addInfo(($galleries_url ?? '') . ' ' . Lang::t('deleted'));
                     break;
             }

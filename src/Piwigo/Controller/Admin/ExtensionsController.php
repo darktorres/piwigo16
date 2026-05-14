@@ -111,24 +111,16 @@ final readonly class ExtensionsController
     private function plugins(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         $my_base_url = $this->urlGenerator->admin('plugins');
         $GLOBALS['my_base_url'] = $my_base_url;
 
-        if (isset($_GET['tab'])) {
-            $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'installed';
-        } else {
-            $page['tab'] = 'installed';
-        }
+        $tab = isset($_GET['tab']) && is_string($_GET['tab']) ? $_GET['tab'] : 'installed';
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('plugins');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select($tab);
         $tabsheet->assign();
-
-        $tab = $page['tab'];
         if ($tab === 'update') {
             $this->updatesExt();
             $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Plugins'));
@@ -144,9 +136,6 @@ final readonly class ExtensionsController
     private function pluginsInstalled(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
-
 
         if (isset($_GET['show_details'])) {
             $show_details = (1 == $_GET['show_details']);
@@ -155,7 +144,7 @@ final readonly class ExtensionsController
             $show_details = $this->sessionService->getSessionVar('plugins_show_details', false);
         }
 
-        $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'plugins';
+        $pageStr  = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'plugins';
         $base_url = $this->urlGenerator->admin($pageStr);
         $pwg_token = $this->util->getPwgToken();
         $action_url = $base_url . '&plugin=' . '%s' . '&pwg_token=' . $pwg_token;
@@ -305,15 +294,13 @@ final readonly class ExtensionsController
     private function pluginsNew(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         if (!Config::enableExtensionsInstall()) {
             throw new ConfigException('Piwigo extensions install/update system is disabled');
         }
 
-        $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'plugins_new';
-        $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
+        $pageStr  = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'plugins_new';
+        $tabStr   = is_string($_GET['tab'] ?? null) ? $_GET['tab'] : '';
         $base_url = $this->urlGenerator->admin($pageStr) . '&tab=' . $tabStr;
 
         $plugins = $this->plugins;
@@ -458,24 +445,16 @@ final readonly class ExtensionsController
     private function themes(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         $my_base_url = $this->urlGenerator->admin('themes');
         $GLOBALS['my_base_url'] = $my_base_url;
 
-        if (isset($_GET['tab'])) {
-            $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'installed';
-        } else {
-            $page['tab'] = 'installed';
-        }
+        $tab = isset($_GET['tab']) && is_string($_GET['tab']) ? $_GET['tab'] : 'installed';
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('themes');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select($tab);
         $tabsheet->assign();
-
-        $tab = $page['tab'];
         if ($tab === 'update') {
             $this->updatesExt();
             $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
@@ -493,14 +472,12 @@ final readonly class ExtensionsController
     private function themesInstalled(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         if (!$this->permissionService->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'themes';
+        $pageStr  = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'themes';
         $base_url = $this->urlGenerator->admin($pageStr);
         $themes   = Kernel::service(Themes::class);
 
@@ -589,15 +566,13 @@ final readonly class ExtensionsController
     private function themesNew(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         if (!Config::enableExtensionsInstall()) {
             throw new ConfigException('Piwigo extensions install/update system is disabled');
         }
 
-        $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'themes_new';
-        $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
+        $pageStr  = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'themes_new';
+        $tabStr   = is_string($_GET['tab'] ?? null) ? $_GET['tab'] : '';
         $base_url = $this->urlGenerator->admin($pageStr) . '&tab=' . $tabStr;
         $themes   = Kernel::service(Themes::class);
 
@@ -766,25 +741,19 @@ final readonly class ExtensionsController
     private function languages(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         $my_base_url = $this->urlGenerator->admin('languages');
         $GLOBALS['my_base_url'] = $my_base_url;
 
         if (isset($_GET['tab'])) {
             $this->util->checkInputParameter('tab', $_GET, false, '/^(installed|update|new)$/');
-            $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'installed';
-        } else {
-            $page['tab'] = 'installed';
         }
+        $tab = isset($_GET['tab']) && is_string($_GET['tab']) ? $_GET['tab'] : 'installed';
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('languages');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select($tab);
         $tabsheet->assign();
-
-        $tab = $page['tab'];
         if ($tab === 'update') {
             $this->updatesExt();
             $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
@@ -800,14 +769,12 @@ final readonly class ExtensionsController
     private function languagesInstalled(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         if (!$this->permissionService->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'languages';
+        $pageStr  = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'languages';
         $base_url = $this->urlGenerator->admin($pageStr);
 
         $languages = Kernel::service(Languages::class);
@@ -873,15 +840,12 @@ final readonly class ExtensionsController
     private function languagesNew(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
-
         if (!Config::enableExtensionsInstall()) {
             throw new ConfigException('Piwigo extensions install/update system is disabled');
         }
 
-        $pageStr  = is_string($page['page'] ?? null) ? $page['page'] : 'languages_new';
-        $tabStr   = is_scalar($page['tab'] ?? null) ? (string) $page['tab'] : '';
+        $pageStr  = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'languages_new';
+        $tabStr   = is_string($_GET['tab'] ?? null) ? $_GET['tab'] : '';
         $base_url = $this->urlGenerator->admin($pageStr) . '&tab=' . $tabStr;
 
         $languages = Kernel::service(Languages::class);
@@ -935,27 +899,18 @@ final readonly class ExtensionsController
 
     private function updates(): void
     {
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
-
         if (!Config::enableExtensionsInstall() && !Config::enableCoreUpdate()) {
             throw new ConfigException('update system is disabled');
         }
 
         $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin('updates');
 
-        if (isset($_GET['tab'])) {
-            $page['tab'] = is_string($_GET['tab']) ? $_GET['tab'] : 'pwg';
-        } else {
-            $page['tab'] = 'pwg';
-        }
+        $tab = isset($_GET['tab']) && is_string($_GET['tab']) ? $_GET['tab'] : 'pwg';
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('updates');
-        $tabsheet->select($page['tab']);
+        $tabsheet->select($tab);
         $tabsheet->assign();
-
-        $tab = $page['tab'];
         if ($tab === 'pwg') {
             $this->updatesPwg();
         } elseif ($tab === 'ext') {
@@ -968,8 +923,6 @@ final readonly class ExtensionsController
     private function updatesExt(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         if (!Config::enableExtensionsInstall()) {
             throw new ConfigException('Piwigo extensions install/update system is disabled');
@@ -982,7 +935,7 @@ final readonly class ExtensionsController
         $updates_ignored_raw = Config::raw('updates_ignored');
         Config::override('updates_ignored', StringUtil::safeUnserialize(is_string($updates_ignored_raw) ? $updates_ignored_raw : ''));
 
-        $pageStr = is_string($page['page'] ?? null) ? $page['page'] : 'updates';
+        $pageStr = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'updates';
         $autoupdate = Kernel::service(Updates::class)->setPage($pageStr);
 
         $show_reset = false;
@@ -1054,8 +1007,7 @@ final readonly class ExtensionsController
     private function updatesPwg(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
+        $updatedVersion = null;
 
         if (!Config::enableCoreUpdate()) {
             throw new ConfigException('Piwigo core update system is disabled');
@@ -1100,14 +1052,14 @@ final readonly class ExtensionsController
         if ($step == 2 && $this->permissionService->isWebmaster()) {
             if (isset($_POST['submit']) && isset($_POST['upgrade_to'])) {
                 $rawUpgradeTo2 = $_POST['upgrade_to'];
-                Kernel::service(Updates::class)->upgradeTo(is_string($rawUpgradeTo2) ? $rawUpgradeTo2 : '', $step);
+                $updatedVersion = Kernel::service(Updates::class)->upgradeTo(is_string($rawUpgradeTo2) ? $rawUpgradeTo2 : '', $step);
             }
         }
 
         if ($step == 3 && $this->permissionService->isWebmaster()) {
             if (isset($_POST['submit']) && isset($_POST['upgrade_to'])) {
                 $rawUpgradeTo3 = $_POST['upgrade_to'];
-                Kernel::service(Updates::class)->upgradeTo(is_string($rawUpgradeTo3) ? $rawUpgradeTo3 : '', $step);
+                $updatedVersion = Kernel::service(Updates::class)->upgradeTo(is_string($rawUpgradeTo3) ? $rawUpgradeTo3 : '', $step);
             }
             $updates->getMergedExtensions($upgrade_to);
             $updates->getServerExtensions($upgrade_to);
@@ -1130,8 +1082,7 @@ final readonly class ExtensionsController
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $updatedVersionRaw = $page['updated_version'] ?? null;
-        $pageUpdatedVersion = is_scalar($updatedVersionRaw) ? (string) $updatedVersionRaw : AppInfo::VERSION;
+        $pageUpdatedVersion = $updatedVersion ?? AppInfo::VERSION;
         $tpl->assign(['STEP' => $step, 'PIWIGO_CURRENT_VERSION' => $pageUpdatedVersion, 'UPGRADE_TO' => $upgrade_to]);
 
         if (isset($new_versions['minor'])) {

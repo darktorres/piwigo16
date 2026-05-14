@@ -56,11 +56,11 @@ final readonly class PasswordController implements ControllerInterface
 
         $this->util->checkInputParameter('action', $_GET, false, '/^(lost|reset|lost_code|reset_end|none)$/');
 
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = &$GLOBALS['user'];
 
+        $action     = null;
+        $username   = null;
         $get_action = $this->stringUtil->inputString('action', null, $_GET);
 
         if ($this->stringUtil->inputString('submit', null, $_POST) !== null) {
@@ -69,18 +69,18 @@ final readonly class PasswordController implements ControllerInterface
             if ('lost' == $get_action) {
                 if ($this->passwordService->processVerificationCode()) {
                     PageState::current()->addInfo(Lang::t('If your account exists, a verification code has been sent to your email address.'));
-                    $page['action'] = 'lost_code';
+                    $action = 'lost_code';
                 }
             }
             if ('lost_code' == $get_action) {
                 if ($this->passwordService->processPasswordRequest()) {
                     PageState::current()->addInfo(Lang::t('Verification successful! You can now choose a new password.'));
-                    $page['action'] = 'reset';
+                    $action = 'reset';
                 }
             }
             if ('reset' == $get_action) {
                 if ($this->passwordService->resetPassword()) {
-                    $page['action'] = 'reset_end';
+                    $action = 'reset_end';
                 }
             }
         }
@@ -95,50 +95,50 @@ final readonly class PasswordController implements ControllerInterface
             $user_id = $this->passwordService->checkPasswordResetKey($get_key);
             if (is_numeric($user_id)) {
                 $userdata = $this->userService->getuserdata($user_id, false);
-                $page['username'] = $userdata !== false ? $userdata['username'] : '';
+                $username = $userdata !== false ? $userdata['username'] : '';
                 TemplateRegistry::current()->assign('key', $get_key);
                 $first_login = $this->userService->hasAlreadyLoggedIn($user_id);
-                if (!isset($page['action'])) {
-                    $page['action'] = 'reset';
+                if ($action === null) {
+                    $action = 'reset';
                 }
             } else {
-                $page['action'] = 'none';
+                $action = 'none';
             }
         }
 
-        if (!isset($page['action'])) {
+        if ($action === null) {
             if ($get_action === null) {
-                $page['action'] = 'lost';
+                $action = 'lost';
             } elseif (in_array($get_action, ['lost', 'lost_code', 'reset', 'none'])) {
-                $page['action'] = $get_action;
+                $action = $get_action;
             }
         }
 
-        if ('reset' == $page['action']) {
+        if ('reset' == $action) {
             if (($get_key === null && ($this->permissionService->isAGuest() || $this->permissionService->isGeneric())) && !isset($_SESSION['valid_reset_password_code'])) {
                 $this->util->redirect($this->urlService->getGalleryHomeUrl());
             }
         }
-        if ('lost' == $page['action'] && !$this->permissionService->isAGuest()) {
+        if ('lost' == $action && !$this->permissionService->isAGuest()) {
             $this->util->redirect($this->urlService->getGalleryHomeUrl());
         }
-        if ('lost_code' == $page['action'] && !isset($_SESSION['reset_password_code'])) {
+        if ('lost_code' == $action && !isset($_SESSION['reset_password_code'])) {
             $this->util->redirect($this->urlGenerator->identification());
         }
-        if ('lost' == $page['action'] && isset($_SESSION['reset_password_code'])) {
-            $page['action'] = 'lost_code';
+        if ('lost' == $action && isset($_SESSION['reset_password_code'])) {
+            $action = 'lost_code';
         }
 
         $title = Lang::t('Password Reset');
         $tpl   = TemplateRegistry::current();
 
-        if ('lost' == $page['action']) {
+        if ('lost' == $action) {
             $title       = Lang::t('Forgot your password?');
             $post_uoe    = $this->stringUtil->inputString('username_or_email', null, $_POST);
             if ($post_uoe !== null) {
                 $tpl->assign('username_or_email', htmlspecialchars(stripslashes($post_uoe)));
             }
-        } elseif ('reset' == $page['action'] && $first_login) {
+        } elseif ('reset' == $action && $first_login) {
             $title = Lang::t('Welcome');
             $tpl->assign('is_first_login', true);
         }
@@ -148,8 +148,8 @@ final readonly class PasswordController implements ControllerInterface
         $tpl->assign([
             'title'          => $title,
             'form_action'    => $this->urlGenerator->password(),
-            'action'         => $page['action'],
-            'username'       => is_scalar($page['username'] ?? null) ? $page['username'] : ($user['username'] ?? ''),
+            'action'         => $action,
+            'username'       => $username ?? ($user['username'] ?? ''),
             'PWG_TOKEN'      => $this->util->getPwgToken(),
             'U_IDENTIFICATION' => $this->urlGenerator->identification(),
             'U_REGISTER'     => $this->urlGenerator->register(),

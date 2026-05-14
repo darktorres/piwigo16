@@ -212,13 +212,9 @@ final readonly class AdminController implements ControllerInterface
             MaintenanceController::PAGES,
             MiscController::PAGES,
         );
-        if ($getPage !== '' && preg_match('/^[a-z_]*$/', $getPage) && in_array($getPage, $allKnownPages, true)) {
-            $page['page'] = $getPage;
-        } else {
-            $page['page'] = 'intro';
-        }
-
-        $adminPage  = $page['page'];
+        $adminPage = ($getPage !== '' && preg_match('/^[a-z_]*$/', $getPage) && in_array($getPage, $allKnownPages, true))
+            ? $getPage
+            : 'intro';
         $adminBase  = $this->urlGenerator->admin();
         $adminSep   = str_contains($adminBase, '?') ? '&' : '?';
         $wsBase     = $this->urlGenerator->ws();
@@ -287,7 +283,6 @@ final readonly class AdminController implements ControllerInterface
             $nb_comments = $this->commentRepository->countUnvalidated();
             if ($nb_comments > 0) {
                 $tpl->assign('NB_PENDING_COMMENTS', $nb_comments);
-                $page['nb_pending_comments'] = $nb_comments;
             }
         }
 
@@ -313,14 +308,11 @@ final readonly class AdminController implements ControllerInterface
             }
         }
 
-        $page['nb_orphans']      = 0;
-        $page['nb_photos_total'] = $this->imageRepository->countAll();
-        if ($page['nb_photos_total'] < 100000) {
-            $page['nb_orphans'] = $this->imageAdminService->countOrphans();
-        }
+        $nbPhotosTotal = $this->imageRepository->countAll();
+        $nbOrphans     = $nbPhotosTotal < 100000 ? $this->imageAdminService->countOrphans() : 0;
 
         $tpl->assign([
-            'NB_ORPHANS' => $page['nb_orphans'],
+            'NB_ORPHANS' => $nbOrphans,
             'U_ORPHANS'  => $link_start . 'batch_manager&filter=prefilter-no_album',
         ]);
 

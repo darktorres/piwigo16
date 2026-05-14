@@ -74,15 +74,12 @@ final readonly class UsersController
     private function userList(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         /** @var array<string, mixed> $user */
         $user = $GLOBALS['user'];
         $this->util->checkInputParameter('group', $_GET, false, ValidationPattern::ID);
         $this->util->checkInputParameter('user_id', $_GET, false, ValidationPattern::ID);
 
-        $page['tab'] = 'user_list';
-        $this->userTabRenderer->render();
+        $this->userTabRenderer->render('user_list');
 
         // ── Groups ──────────────────────────────────────────────────────────
 
@@ -277,20 +274,16 @@ final readonly class UsersController
     private function userPerm(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
         if (!empty($_POST)) {
             $this->util->checkPwgToken();
             $this->util->checkInputParameter('cat_true', $_POST, true, ValidationPattern::ID);
             $this->util->checkInputParameter('cat_false', $_POST, true, ValidationPattern::ID);
         }
 
-        if (isset($_GET['user_id']) && is_numeric($_GET['user_id'])) {
-            $page['user'] = $_GET['user_id'];
-        } else {
+        if (!isset($_GET['user_id']) || !is_numeric($_GET['user_id'])) {
             throw new ValidationException('user_id URL parameter is missing');
         }
-        $pageUser = (int) $page['user'];
+        $pageUser = (int) $_GET['user_id'];
 
         $rawCatTrue3  = $_POST['cat_true']  ?? null;
         $rawCatFalse3 = $_POST['cat_false'] ?? null;
@@ -361,10 +354,7 @@ final readonly class UsersController
         $this->util->checkInputParameter('album', $_GET, false, ValidationPattern::ID);
         $this->util->checkInputParameter('group', $_GET, false, ValidationPattern::ID);
 
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
-        $page['tab'] = 'user_activity';
-        $this->userTabRenderer->render();
+        $this->userTabRenderer->render('user_activity');
 
         if (isset($_GET['type']) && 'download_logs' == $_GET['type']) {
             $usernameField = Config::userFields()['username'];

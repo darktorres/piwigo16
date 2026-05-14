@@ -33,6 +33,11 @@ final readonly class UrlService
 
     public static function getRootUrl(): string
     {
+        // setMakeFullUrl() temporarily overrides root_path in $GLOBALS['page'] to force absolute URLs
+        $pageArr = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
+        if (isset($pageArr['root_path']) && is_string($pageArr['root_path']) && $pageArr['root_path'] !== '') {
+            return $pageArr['root_path'];
+        }
         $rootPath = SectionContextRegistry::current()->rootPath;
         if ($rootPath !== '') {
             return $rootPath;

@@ -63,10 +63,6 @@ final readonly class CategoryService
     public function getCategoriesMenu(): array
     {
         $filter      = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
-        $page        = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
         $ctx         = SectionContextRegistry::current();
         $currentUser = CurrentUser::get();
         $userExpand  = $currentUser->rawAttributes['expand'] ?? false;
@@ -120,11 +116,6 @@ WHERE ' . $where . '
                 $row['icon_ts'] = Kernel::service(Util::class)->getIcon(is_string($row['max_date_last']) || is_null($row['max_date_last']) ? $row['max_date_last'] : (is_scalar($row['max_date_last']) ? (string) $row['max_date_last'] : null), $childDateLast);
             }
             $cats[] = $row;
-            if ($selectedCategory !== null && $row['id'] == ($selectedCategory['id'] ?? null)) {
-                $cat                      = is_array($page['category'] ?? null) ? $page['category'] : [];
-                $cat['count_categories']  = $row['count_categories'];
-                $page['category']         = $cat;
-            }
         }
         usort($cats, $this->globalRankCompare(...));
 
@@ -176,7 +167,6 @@ WHERE ' . $where . '
     /** @return array<mixed> */
     public function getCategoryPreferredImageOrders(): array
     {
-        $page   = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         $result = EventDispatcher::dispatch('get_category_preferred_image_orders', [
             [Lang::t('Default'),                        '',                     true],
             [Lang::t('Photo title, A &rarr; Z'),        'name ASC',             true],

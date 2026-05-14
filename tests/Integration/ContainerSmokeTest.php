@@ -64,7 +64,7 @@ final class ContainerSmokeTest extends IntegrationTestCase
             try {
                 $container->get($id);
             } catch (\Throwable $e) {
-                $failures[$id] = get_class($e) . ': ' . $e->getMessage();
+                $failures[$id] = $e::class . ': ' . $e->getMessage();
             }
         }
 
@@ -73,7 +73,9 @@ final class ContainerSmokeTest extends IntegrationTestCase
             $lines[] = "  [$serviceId]\n    $err";
         }
         $count = count($failures);
-        self::assertSame([], $failures,
+        self::assertSame(
+            [],
+            $failures,
             "$count container " . ($count === 1 ? 'entry' : 'entries') . " failed to resolve:\n"
             . implode("\n", $lines)
         );

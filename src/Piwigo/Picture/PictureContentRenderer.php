@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Picture;
 
-use Piwigo\Core\Kernel;
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;

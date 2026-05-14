@@ -17,15 +17,15 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
-final class MenubarRenderer
+final readonly class MenubarRenderer
 {
     public function __construct(
-        private readonly CategoryService $categoryService,
-        private readonly PermissionService $permissionService,
-        private readonly TagService $tagService,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UrlService $urlService,
-        private readonly Util $util,
+        private CategoryService $categoryService,
+        private PermissionService $permissionService,
+        private TagService $tagService,
+        private UrlGenerator $urlGenerator,
+        private UrlService $urlService,
+        private Util $util,
     ) {
     }
 

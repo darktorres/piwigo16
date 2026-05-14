@@ -36,23 +36,23 @@ use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
 
-final class UsersEndpoints
+final readonly class UsersEndpoints
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly AuthService $authService,
-        private readonly ConfigService $configService,
-        private readonly DateService $dateService,
-        private readonly GroupRepository $groupRepository,
-        private readonly ImageRepository $imageRepository,
-        private readonly MailService $mailService,
-        private readonly PermissionService $permissionService,
-        private readonly PreferencesService $preferencesService,
-        private readonly UserAdminService $userAdminService,
-        private readonly UserRepository $userRepository,
-        private readonly UserService $userService,
-        private readonly Util $util,
-        private readonly WsHelper $wsHelper,
+        private Connection $conn,
+        private AuthService $authService,
+        private ConfigService $configService,
+        private DateService $dateService,
+        private GroupRepository $groupRepository,
+        private ImageRepository $imageRepository,
+        private MailService $mailService,
+        private PermissionService $permissionService,
+        private PreferencesService $preferencesService,
+        private UserAdminService $userAdminService,
+        private UserRepository $userRepository,
+        private UserService $userService,
+        private Util $util,
+        private WsHelper $wsHelper,
     ) {
     }
 

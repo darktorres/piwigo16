@@ -27,18 +27,18 @@ use Psr\Http\Message\ServerRequestInterface;
  * Builds a search query from GET params, saves it and redirects to results.
  * Corresponds to the former search.php entry-point.
  */
-final class SearchController implements ControllerInterface
+final readonly class SearchController implements ControllerInterface
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly ConfigService $configService,
-        private readonly HtmlService $htmlService,
-        private readonly SearchService $searchService,
-        private readonly TagService $tagService,
-        private readonly Util $util,
-        private readonly StringUtil $stringUtil,
-        private readonly PermissionService $permissionService,
-        private readonly PreferencesService $preferencesService,
+        private Connection $conn,
+        private ConfigService $configService,
+        private HtmlService $htmlService,
+        private SearchService $searchService,
+        private TagService $tagService,
+        private Util $util,
+        private StringUtil $stringUtil,
+        private PermissionService $permissionService,
+        private PreferencesService $preferencesService,
     ) {
     }
 

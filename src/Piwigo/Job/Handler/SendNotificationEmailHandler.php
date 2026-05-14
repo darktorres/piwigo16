@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Job\Handler;
 
-use Piwigo\Core\Kernel;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Db\Tables;
 use Piwigo\Job\SendNotificationEmailJob;

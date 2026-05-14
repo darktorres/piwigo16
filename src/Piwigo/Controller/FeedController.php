@@ -26,18 +26,18 @@ use Psr\Http\Message\ServerRequestInterface;
  * Generates the RSS 2.0 feed and sends it directly as XML output.
  * Corresponds to the former feed.php entry-point.
  */
-final class FeedController implements ControllerInterface
+final readonly class FeedController implements ControllerInterface
 {
     public function __construct(
-        private readonly DateService $dateService,
-        private readonly FeedRepository $feedRepository,
-        private readonly HtmlService $htmlService,
-        private readonly NotificationService $notificationService,
-        private readonly PermissionService $permissionService,
-        private readonly StringUtil $stringUtil,
-        private readonly UrlService $urlService,
-        private readonly UserService $userService,
-        private readonly Util $util,
+        private DateService $dateService,
+        private FeedRepository $feedRepository,
+        private HtmlService $htmlService,
+        private NotificationService $notificationService,
+        private PermissionService $permissionService,
+        private StringUtil $stringUtil,
+        private UrlService $urlService,
+        private UserService $userService,
+        private Util $util,
     ) {
     }
 

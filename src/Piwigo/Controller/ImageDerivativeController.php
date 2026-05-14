@@ -31,9 +31,11 @@ use Psr\Http\Message\ServerRequestInterface;
  * This controller sends binary output directly (fpassthru) and returns an empty
  * 200 response — the ResponseEmitter will see headers_sent() and do nothing.
  */
-final class ImageDerivativeController implements ControllerInterface
+final readonly class ImageDerivativeController implements ControllerInterface
 {
-    public function __construct(private readonly Connection $conn) {}
+    public function __construct(private Connection $conn)
+    {
+    }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface

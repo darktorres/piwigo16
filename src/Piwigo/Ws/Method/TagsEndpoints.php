@@ -22,19 +22,19 @@ use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
 
-final class TagsEndpoints
+final readonly class TagsEndpoints
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly CategoryService $categoryService,
-        private readonly HtmlService $htmlService,
-        private readonly ImageRepository $imageRepository,
-        private readonly TagAdminService $tagAdminService,
-        private readonly TagRepository $tagRepository,
-        private readonly TagService $tagService,
-        private readonly UrlService $urlService,
-        private readonly Util $util,
-        private readonly WsHelper $wsHelper,
+        private Connection $conn,
+        private CategoryService $categoryService,
+        private HtmlService $htmlService,
+        private ImageRepository $imageRepository,
+        private TagAdminService $tagAdminService,
+        private TagRepository $tagRepository,
+        private TagService $tagService,
+        private UrlService $urlService,
+        private Util $util,
+        private WsHelper $wsHelper,
     ) {
     }
 

@@ -18,16 +18,16 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 
-final class NoPhotoYetRenderer
+final readonly class NoPhotoYetRenderer
 {
     public function __construct(
-        private readonly ConfigService $configService,
-        private readonly ImageRepository $imageRepository,
-        private readonly StringUtil $stringUtil,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly Util $util,
-        private readonly UrlService $urlService,
-        private readonly PermissionService $permissionService,
+        private ConfigService $configService,
+        private ImageRepository $imageRepository,
+        private StringUtil $stringUtil,
+        private UrlGenerator $urlGenerator,
+        private Util $util,
+        private UrlService $urlService,
+        private PermissionService $permissionService,
     ) {
     }
     public function render(): void

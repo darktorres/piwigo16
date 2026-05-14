@@ -23,17 +23,17 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
-final class CategoryCatsRenderer
+final readonly class CategoryCatsRenderer
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly CategoryService $categoryService,
-        private readonly DateService $dateService,
-        private readonly FilterService $filterService,
-        private readonly HtmlService $htmlService,
-        private readonly PermissionService $permissionService,
-        private readonly UrlService $urlService,
-        private readonly Util $util,
+        private Connection $conn,
+        private CategoryService $categoryService,
+        private DateService $dateService,
+        private FilterService $filterService,
+        private HtmlService $htmlService,
+        private PermissionService $permissionService,
+        private UrlService $urlService,
+        private Util $util,
     ) {
     }
 

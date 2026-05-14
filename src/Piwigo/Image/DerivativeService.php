@@ -9,10 +9,10 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Util;
 
-final class DerivativeService
+final readonly class DerivativeService
 {
     public function __construct(
-        private readonly Util $util,
+        private Util $util,
     ) {
     }
     /**

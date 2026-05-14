@@ -7,10 +7,10 @@ namespace Piwigo\Admin\Users;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Url\UrlGenerator;
 
-final class UserTabRenderer
+final readonly class UserTabRenderer
 {
     public function __construct(
-        private readonly UrlGenerator $urlGenerator,
+        private UrlGenerator $urlGenerator,
     ) {
     }
 

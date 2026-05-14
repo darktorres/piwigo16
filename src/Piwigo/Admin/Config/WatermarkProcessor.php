@@ -16,13 +16,13 @@ use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
 
-final class WatermarkProcessor
+final readonly class WatermarkProcessor
 {
     public function __construct(
-        private readonly ImageAdminService $imageAdminService,
-        private readonly StringUtil $stringUtil,
-        private readonly Util $util,
-        private readonly PermissionService $permissionService,
+        private ImageAdminService $imageAdminService,
+        private StringUtil $stringUtil,
+        private Util $util,
+        private PermissionService $permissionService,
     ) {
     }
     public function process(): void

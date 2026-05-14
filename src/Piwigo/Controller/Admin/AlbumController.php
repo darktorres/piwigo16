@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Album\AlbumsTabRenderer;
@@ -15,7 +16,6 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
-use Doctrine\DBAL\Connection;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;

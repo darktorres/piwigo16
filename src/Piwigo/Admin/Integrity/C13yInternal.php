@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
-use Piwigo\Core\Kernel;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;

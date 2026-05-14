@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Section;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Calendar\CalendarService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
-use Doctrine\DBAL\Connection;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
@@ -39,22 +39,22 @@ use Psr\Http\Message\ServerRequestInterface;
  * consumers (templates, controllers, plugin hooks) see the same shape
  * as before.
  */
-final class SectionInitializer
+final readonly class SectionInitializer
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly CalendarService $calendarService,
-        private readonly CategoryService $categoryService,
-        private readonly HtmlService $htmlService,
-        private readonly PermissionService $permissionService,
-        private readonly SearchService $searchService,
-        private readonly SessionService $sessionService,
-        private readonly StringUtil $stringUtil,
-        private readonly TagService $tagService,
-        private readonly UrlService $urlService,
-        private readonly UserRepository $userRepository,
-        private readonly UserService $userService,
-        private readonly Util $util,
+        private Connection $conn,
+        private CalendarService $calendarService,
+        private CategoryService $categoryService,
+        private HtmlService $htmlService,
+        private PermissionService $permissionService,
+        private SearchService $searchService,
+        private SessionService $sessionService,
+        private StringUtil $stringUtil,
+        private TagService $tagService,
+        private UrlService $urlService,
+        private UserRepository $userRepository,
+        private UserService $userService,
+        private Util $util,
     ) {
     }
 

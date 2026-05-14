@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
-use Piwigo\Core\Kernel;
 use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Lang\Translator;

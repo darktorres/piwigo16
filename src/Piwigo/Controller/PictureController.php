@@ -51,33 +51,33 @@ use Psr\Http\Message\ServerRequestInterface;
  * Handles the single-image page (/picture/{rest}).
  * Corresponds to the former picture.php entry-point.
  */
-final class PictureController implements ControllerInterface
+final readonly class PictureController implements ControllerInterface
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly CategoryRepository $categoryRepository,
-        private readonly CategoryService $categoryService,
-        private readonly CommentService $commentService,
-        private readonly DateService $dateService,
-        private readonly HtmlService $htmlService,
-        private readonly ImageRepository $imageRepository,
-        private readonly MenubarRenderer $menubarRenderer,
-        private readonly PermissionService $permissionService,
-        private readonly PictureCommentRenderer $pictureCommentRenderer,
-        private readonly PictureMetadataRenderer $pictureMetadataRenderer,
-        private readonly PictureRateRenderer $pictureRateRenderer,
-        private readonly PictureService $pictureService,
-        private readonly RateService $rateService,
-        private readonly SectionInitializer $sectionInitializer,
-        private readonly SessionService $sessionService,
-        private readonly StringUtil $stringUtil,
-        private readonly TagService $tagService,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UrlService $urlService,
-        private readonly UserAdminService $userAdminService,
-        private readonly UserRepository $userRepository,
-        private readonly UserService $userService,
-        private readonly Util $util,
+        private Connection $conn,
+        private CategoryRepository $categoryRepository,
+        private CategoryService $categoryService,
+        private CommentService $commentService,
+        private DateService $dateService,
+        private HtmlService $htmlService,
+        private ImageRepository $imageRepository,
+        private MenubarRenderer $menubarRenderer,
+        private PermissionService $permissionService,
+        private PictureCommentRenderer $pictureCommentRenderer,
+        private PictureMetadataRenderer $pictureMetadataRenderer,
+        private PictureRateRenderer $pictureRateRenderer,
+        private PictureService $pictureService,
+        private RateService $rateService,
+        private SectionInitializer $sectionInitializer,
+        private SessionService $sessionService,
+        private StringUtil $stringUtil,
+        private TagService $tagService,
+        private UrlGenerator $urlGenerator,
+        private UrlService $urlService,
+        private UserAdminService $userAdminService,
+        private UserRepository $userRepository,
+        private UserService $userService,
+        private Util $util,
     ) {
     }
 

@@ -18,14 +18,14 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
-final class CommentsEndpoints
+final readonly class CommentsEndpoints
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly CommentService $commentService,
-        private readonly DateService $dateService,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly Util $util,
+        private Connection $conn,
+        private CommentService $commentService,
+        private DateService $dateService,
+        private UrlGenerator $urlGenerator,
+        private Util $util,
     ) {
     }
 

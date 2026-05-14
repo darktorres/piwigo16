@@ -15,14 +15,14 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
 
-final class PermissionsEndpoints
+final readonly class PermissionsEndpoints
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly CategoryAdminService $categoryAdminService,
-        private readonly CategoryService $categoryService,
-        private readonly PermissionRepository $permissionRepository,
-        private readonly Util $util,
+        private Connection $conn,
+        private CategoryAdminService $categoryAdminService,
+        private CategoryService $categoryService,
+        private PermissionRepository $permissionRepository,
+        private Util $util,
     ) {
     }
 

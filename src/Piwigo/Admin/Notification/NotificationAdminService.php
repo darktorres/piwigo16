@@ -21,16 +21,16 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
-final class NotificationAdminService
+final readonly class NotificationAdminService
 {
     public function __construct(
-        private readonly MailService $mailService,
-        private readonly NotificationRepository $notificationRepository,
-        private readonly StringUtil $stringUtil,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UrlService $urlService,
-        private readonly UserService $userService,
-        private readonly Util $util,
+        private MailService $mailService,
+        private NotificationRepository $notificationRepository,
+        private StringUtil $stringUtil,
+        private UrlGenerator $urlGenerator,
+        private UrlService $urlService,
+        private UserService $userService,
+        private Util $util,
     ) {
     }
 

@@ -43,30 +43,30 @@ use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
 
-final class ImagesEndpoints
+final readonly class ImagesEndpoints
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly CategoryAdminService $categoryAdminService,
-        private readonly CategoryRepository $categoryRepository,
-        private readonly CategoryService $categoryService,
-        private readonly CommentService $commentService,
-        private readonly HtmlService $htmlService,
-        private readonly ImageAdminService $imageAdminService,
-        private readonly ImageRepository $imageRepository,
-        private readonly MetadataAdminService $metadataAdminService,
-        private readonly PermissionService $permissionService,
-        private readonly RateRepository $rateRepository,
-        private readonly RateService $rateService,
-        private readonly SearchService $searchService,
-        private readonly StringUtil $stringUtil,
-        private readonly TagAdminService $tagAdminService,
-        private readonly TagService $tagService,
-        private readonly UploadService $uploadService,
-        private readonly UrlService $urlService,
-        private readonly UserAdminService $userAdminService,
-        private readonly Util $util,
-        private readonly WsHelper $wsHelper,
+        private Connection $conn,
+        private CategoryAdminService $categoryAdminService,
+        private CategoryRepository $categoryRepository,
+        private CategoryService $categoryService,
+        private CommentService $commentService,
+        private HtmlService $htmlService,
+        private ImageAdminService $imageAdminService,
+        private ImageRepository $imageRepository,
+        private MetadataAdminService $metadataAdminService,
+        private PermissionService $permissionService,
+        private RateRepository $rateRepository,
+        private RateService $rateService,
+        private SearchService $searchService,
+        private StringUtil $stringUtil,
+        private TagAdminService $tagAdminService,
+        private TagService $tagService,
+        private UploadService $uploadService,
+        private UrlService $urlService,
+        private UserAdminService $userAdminService,
+        private Util $util,
+        private WsHelper $wsHelper,
     ) {
     }
 

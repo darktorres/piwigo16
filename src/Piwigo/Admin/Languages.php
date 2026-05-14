@@ -7,7 +7,6 @@ namespace Piwigo\Admin;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
-use Piwigo\Admin\AdminService;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
 use Piwigo\Html\HtmlService;

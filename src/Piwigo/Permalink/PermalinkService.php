@@ -8,10 +8,10 @@ use Piwigo\Cache\RequestCache;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 
-final class PermalinkService
+final readonly class PermalinkService
 {
     public function __construct(
-        private readonly PermalinkRepository $repo,
+        private PermalinkRepository $repo,
     ) {
     }
     public function deleteCatPermalink(string $catId, bool $save): bool

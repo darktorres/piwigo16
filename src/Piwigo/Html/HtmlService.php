@@ -25,11 +25,11 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
-final class HtmlService
+final readonly class HtmlService
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly StringUtil $stringUtil,
+        private Connection $conn,
+        private StringUtil $stringUtil,
     ) {
     }
     /** @param array<mixed> $catInformations */

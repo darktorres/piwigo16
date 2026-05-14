@@ -29,19 +29,19 @@ use Psr\Http\Message\ServerRequestInterface;
  * Handles the user registration page (/register).
  * Corresponds to the former register.php entry-point.
  */
-final class RegisterController implements ControllerInterface
+final readonly class RegisterController implements ControllerInterface
 {
     public function __construct(
-        private readonly AuthService $authService,
-        private readonly HtmlService $htmlService,
-        private readonly LangService $langService,
-        private readonly MenubarRenderer $menubarRenderer,
-        private readonly PermissionService $permissionService,
-        private readonly StringUtil $stringUtil,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UrlService $urlService,
-        private readonly UserService $userService,
-        private readonly Util $util,
+        private AuthService $authService,
+        private HtmlService $htmlService,
+        private LangService $langService,
+        private MenubarRenderer $menubarRenderer,
+        private PermissionService $permissionService,
+        private StringUtil $stringUtil,
+        private UrlGenerator $urlGenerator,
+        private UrlService $urlService,
+        private UserService $userService,
+        private Util $util,
     ) {
     }
 

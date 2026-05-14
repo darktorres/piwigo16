@@ -20,17 +20,17 @@ use Piwigo\Session\SessionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
-final class UserAdminService
+final readonly class UserAdminService
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly ConfigService $configService,
-        private readonly GroupRepository $groupRepository,
-        private readonly PermissionRepository $permissionRepository,
-        private readonly SessionService $sessionService,
-        private readonly UserRepository $userRepository,
-        private readonly UserService $userService,
-        private readonly Util $util,
+        private Connection $conn,
+        private ConfigService $configService,
+        private GroupRepository $groupRepository,
+        private PermissionRepository $permissionRepository,
+        private SessionService $sessionService,
+        private UserRepository $userRepository,
+        private UserService $userService,
+        private Util $util,
     ) {
     }
 

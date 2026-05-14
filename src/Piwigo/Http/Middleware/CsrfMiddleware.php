@@ -25,10 +25,10 @@ use Psr\Http\Server\RequestHandlerInterface;
  * If the token is present but wrong, Util::checkPwgToken() calls HtmlService::accessDenied().
  * If the token is missing, Util::checkPwgToken() calls HtmlService::badRequest().
  */
-final class CsrfMiddleware implements MiddlewareInterface
+final readonly class CsrfMiddleware implements MiddlewareInterface
 {
     public function __construct(
-        private readonly Util $util,
+        private Util $util,
     ) {
     }
 

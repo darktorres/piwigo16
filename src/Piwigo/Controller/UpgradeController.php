@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Updates;
 use Piwigo\Admin\UpgradeService;
-use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
@@ -31,13 +31,13 @@ use Psr\Http\Message\ServerRequestInterface;
  * Accessed directly via the index.php?/upgrade route — bypasses common.inc.php.
  * The shim loads vendor/autoload.php and ConfigLoader before calling this.
  */
-final class UpgradeController implements ControllerInterface
+final readonly class UpgradeController implements ControllerInterface
 {
     public function __construct(
-        private readonly ConfigService $configService,
-        private readonly Connection $conn,
-        private readonly StringUtil $stringUtil,
-        private readonly LangService $langService,
+        private ConfigService $configService,
+        private Connection $conn,
+        private StringUtil $stringUtil,
+        private LangService $langService,
     ) {
     }
 

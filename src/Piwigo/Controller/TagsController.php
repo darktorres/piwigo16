@@ -26,16 +26,16 @@ use Psr\Http\Message\ServerRequestInterface;
  * Handles the tags cloud/alphabetic page (/tags/{rest}).
  * Corresponds to the former tags.php entry-point.
  */
-final class TagsController implements ControllerInterface
+final readonly class TagsController implements ControllerInterface
 {
     public function __construct(
-        private readonly HtmlService $htmlService,
-        private readonly MenubarRenderer $menubarRenderer,
-        private readonly PermissionService $permissionService,
-        private readonly StringUtil $stringUtil,
-        private readonly TagService $tagService,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UrlService $urlService,
+        private HtmlService $htmlService,
+        private MenubarRenderer $menubarRenderer,
+        private PermissionService $permissionService,
+        private StringUtil $stringUtil,
+        private TagService $tagService,
+        private UrlGenerator $urlGenerator,
+        private UrlService $urlService,
     ) {
     }
 

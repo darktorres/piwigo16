@@ -15,13 +15,13 @@ use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
 
-final class HistoryAdminService
+final readonly class HistoryAdminService
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly ConfigService $configService,
-        private readonly HistoryRepository $historyRepository,
-        private readonly StringUtil $stringUtil,
+        private Connection $conn,
+        private ConfigService $configService,
+        private HistoryRepository $historyRepository,
+        private StringUtil $stringUtil,
     ) {
     }
 

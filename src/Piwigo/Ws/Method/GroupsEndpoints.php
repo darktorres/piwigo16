@@ -17,13 +17,13 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 
-final class GroupsEndpoints
+final readonly class GroupsEndpoints
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly GroupRepository $groupRepository,
-        private readonly UserAdminService $userAdminService,
-        private readonly Util $util,
+        private Connection $conn,
+        private GroupRepository $groupRepository,
+        private UserAdminService $userAdminService,
+        private Util $util,
     ) {
     }
 

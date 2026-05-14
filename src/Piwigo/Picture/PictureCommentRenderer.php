@@ -22,17 +22,17 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
-final class PictureCommentRenderer
+final readonly class PictureCommentRenderer
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly CommentService $commentService,
-        private readonly DateService $dateService,
-        private readonly HtmlService $htmlService,
-        private readonly PermissionService $permissionService,
-        private readonly SessionService $sessionService,
-        private readonly UrlService $urlService,
-        private readonly Util $util,
+        private Connection $conn,
+        private CommentService $commentService,
+        private DateService $dateService,
+        private HtmlService $htmlService,
+        private PermissionService $permissionService,
+        private SessionService $sessionService,
+        private UrlService $urlService,
+        private Util $util,
     ) {
     }
 

@@ -19,14 +19,14 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
-final class CalendarService
+final readonly class CalendarService
 {
     public function __construct(
-        private readonly CategoryService $categoryService,
-        private readonly Connection $conn,
-        private readonly Util $util,
-        private readonly PermissionService $permissionService,
-        private readonly UrlService $urlService,
+        private CategoryService $categoryService,
+        private Connection $conn,
+        private Util $util,
+        private PermissionService $permissionService,
+        private UrlService $urlService,
     ) {
     }
     public function initializeCalendar(): void

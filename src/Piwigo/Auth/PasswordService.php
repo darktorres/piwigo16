@@ -22,18 +22,18 @@ use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
-final class PasswordService
+final readonly class PasswordService
 {
     public function __construct(
-        private readonly AuthService $authService,
-        private readonly MailService $mailService,
-        private readonly PermissionService $permissionService,
-        private readonly PreferencesService $preferencesService,
-        private readonly StringUtil $stringUtil,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UserRepository $userRepository,
-        private readonly UserService $userService,
-        private readonly Util $util,
+        private AuthService $authService,
+        private MailService $mailService,
+        private PermissionService $permissionService,
+        private PreferencesService $preferencesService,
+        private StringUtil $stringUtil,
+        private UrlGenerator $urlGenerator,
+        private UserRepository $userRepository,
+        private UserService $userService,
+        private Util $util,
     ) {
     }
 

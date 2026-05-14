@@ -76,10 +76,9 @@ final class Template
     public array $index_buttons = [];
 
     /**
-     * @param string $root
      * @param string $theme
      */
-    public function __construct($root = '.', $theme = '', string $path = 'template')
+    public function __construct(string $root = '.', $theme = '', string $path = 'template')
     {
         $lang_info = is_array($GLOBALS['lang_info'] ?? null) ? $GLOBALS['lang_info'] : [];
 
@@ -199,12 +198,7 @@ final class Template
         if (file_exists($file)) {
             return true;
         }
-        foreach ($this->template_dirs as $dir) {
-            if (file_exists(rtrim($dir, '/') . '/' . $file)) {
-                return true;
-            }
-        }
-        return false;
+        return array_any($this->template_dirs, fn ($dir): bool => file_exists(rtrim($dir, '/') . '/' . $file));
     }
 
     /**
@@ -256,7 +250,6 @@ final class Template
      *
      * @param string|array<string,mixed> $tpl_var can be a var name or a hashmap of variables
      *    (in this case, do not use the _$value_ parameter)
-     * @param mixed $value
      */
     public function assign(string|array $tpl_var, mixed $value = null): void
     {
@@ -335,10 +328,8 @@ final class Template
      * Renders `$file` (a bare `.latte` filename resolved against the
      * registered template directories, or an absolute path) and either
      * appends the result to the output buffer or returns it.
-     *
-     * @return null|string
      */
-    public function parse(string $file, bool $return = false)
+    public function parse(string $file, bool $return = false): ?string
     {
         $this->assign('ROOT_URL', UrlService::getRootUrl());
         $wsBase = Kernel::service(UrlGenerator::class)->ws();

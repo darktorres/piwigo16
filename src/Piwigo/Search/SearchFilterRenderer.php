@@ -14,25 +14,24 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
-use Piwigo\Search\SearchService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
-final class SearchFilterRenderer
+final readonly class SearchFilterRenderer
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly ConfigService $configService,
-        private readonly DateService $dateService,
-        private readonly HtmlService $htmlService,
-        private readonly LangService $langService,
-        private readonly PermissionService $permissionService,
-        private readonly SearchService $searchService,
-        private readonly TagService $tagService,
-        private readonly UrlService $urlService,
+        private Connection $conn,
+        private ConfigService $configService,
+        private DateService $dateService,
+        private HtmlService $htmlService,
+        private LangService $langService,
+        private PermissionService $permissionService,
+        private SearchService $searchService,
+        private TagService $tagService,
+        private UrlService $urlService,
     ) {
     }
 

@@ -10,10 +10,10 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Template\TemplateRegistry;
 
-final class PictureMetadataRenderer
+final readonly class PictureMetadataRenderer
 {
     public function __construct(
-        private readonly MetadataService $metadataService,
+        private MetadataService $metadataService,
     ) {
     }
     public function render(): void

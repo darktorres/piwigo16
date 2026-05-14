@@ -19,13 +19,13 @@ use Piwigo\Image\SizingParams;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
 
-final class SizesProcessor
+final readonly class SizesProcessor
 {
     public function __construct(
-        private readonly ImageAdminService $imageAdminService,
-        private readonly UploadService $uploadService,
-        private readonly Util $util,
-        private readonly PermissionService $permissionService,
+        private ImageAdminService $imageAdminService,
+        private UploadService $uploadService,
+        private Util $util,
+        private PermissionService $permissionService,
     ) {
     }
     public function process(): void

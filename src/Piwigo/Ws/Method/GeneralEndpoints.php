@@ -47,32 +47,32 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsHelper;
 
-final class GeneralEndpoints
+final readonly class GeneralEndpoints
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly AuthService $authService,
-        private readonly CategoryRepository $categoryRepository,
-        private readonly CommentRepository $commentRepository,
-        private readonly ConfigService $configService,
-        private readonly CookieService $cookieService,
-        private readonly DateService $dateService,
-        private readonly HistoryAdminService $historyAdminService,
-        private readonly HtmlService $htmlService,
-        private readonly ImageAdminService $imageAdminService,
-        private readonly ImageRepository $imageRepository,
-        private readonly PermissionService $permissionService,
-        private readonly PictureService $pictureService,
-        private readonly RateService $rateService,
-        private readonly SearchRepository $searchRepository,
-        private readonly StringUtil $stringUtil,
-        private readonly TagRepository $tagRepository,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UrlService $urlService,
-        private readonly UserAdminService $userAdminService,
-        private readonly UserRepository $userRepository,
-        private readonly Util $util,
-        private readonly WsHelper $wsHelper,
+        private Connection $conn,
+        private AuthService $authService,
+        private CategoryRepository $categoryRepository,
+        private CommentRepository $commentRepository,
+        private ConfigService $configService,
+        private CookieService $cookieService,
+        private DateService $dateService,
+        private HistoryAdminService $historyAdminService,
+        private HtmlService $htmlService,
+        private ImageAdminService $imageAdminService,
+        private ImageRepository $imageRepository,
+        private PermissionService $permissionService,
+        private PictureService $pictureService,
+        private RateService $rateService,
+        private SearchRepository $searchRepository,
+        private StringUtil $stringUtil,
+        private TagRepository $tagRepository,
+        private UrlGenerator $urlGenerator,
+        private UrlService $urlService,
+        private UserAdminService $userAdminService,
+        private UserRepository $userRepository,
+        private Util $util,
+        private WsHelper $wsHelper,
     ) {
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Admin\UpgradeService;
 use Piwigo\Cache\CacheFactory;
@@ -16,7 +17,6 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\InstallSentinel;
-use Doctrine\DBAL\Connection;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;

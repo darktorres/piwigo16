@@ -14,14 +14,14 @@ use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Metadata\MetadataService;
 
-final class MetadataAdminService
+final readonly class MetadataAdminService
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly ImageRepository $imageRepository,
-        private readonly MetadataService $metadataService,
-        private readonly StringUtil $stringUtil,
-        private readonly TagAdminService $tagAdminService,
+        private Connection $conn,
+        private ImageRepository $imageRepository,
+        private MetadataService $metadataService,
+        private StringUtil $stringUtil,
+        private TagAdminService $tagAdminService,
     ) {
     }
     /**

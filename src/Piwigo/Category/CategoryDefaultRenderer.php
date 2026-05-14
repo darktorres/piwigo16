@@ -20,17 +20,17 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 
-final class CategoryDefaultRenderer
+final readonly class CategoryDefaultRenderer
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly CategoryService $categoryService,
-        private readonly HtmlService $htmlService,
-        private readonly ImageRepository $imageRepository,
-        private readonly SessionService $sessionService,
-        private readonly StringUtil $stringUtil,
-        private readonly UrlService $urlService,
-        private readonly Util $util,
+        private Connection $conn,
+        private CategoryService $categoryService,
+        private HtmlService $htmlService,
+        private ImageRepository $imageRepository,
+        private SessionService $sessionService,
+        private StringUtil $stringUtil,
+        private UrlService $urlService,
+        private Util $util,
     ) {
     }
 

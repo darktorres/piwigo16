@@ -30,7 +30,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserService;
 
-final class ConfigurationController
+final readonly class ConfigurationController
 {
     /** @var list<string> */
     public const array PAGES = [
@@ -38,17 +38,17 @@ final class ConfigurationController
     ];
 
     public function __construct(
-        private readonly Connection $conn,
-        private readonly ConfigService $configService,
-        private readonly DateService $dateService,
-        private readonly ImageAdminService $imageAdminService,
-        private readonly PermissionService $permissionService,
-        private readonly ProfileService $profileService,
-        private readonly SizesProcessor $sizesProcessor,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UserService $userService,
-        private readonly Util $util,
-        private readonly WatermarkProcessor $watermarkProcessor,
+        private Connection $conn,
+        private ConfigService $configService,
+        private DateService $dateService,
+        private ImageAdminService $imageAdminService,
+        private PermissionService $permissionService,
+        private ProfileService $profileService,
+        private SizesProcessor $sizesProcessor,
+        private UrlGenerator $urlGenerator,
+        private UserService $userService,
+        private Util $util,
+        private WatermarkProcessor $watermarkProcessor,
     ) {
     }
 

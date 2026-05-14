@@ -16,15 +16,15 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Template\TemplateRegistry;
 
-final class DirectPreparer
+final readonly class DirectPreparer
 {
     public function __construct(
-        private readonly AdminService $adminService,
-        private readonly CategoryRepository $categoryRepository,
-        private readonly HtmlService $htmlService,
-        private readonly ImageRepository $imageRepository,
-        private readonly UploadService $uploadService,
-        private readonly Util $util,
+        private AdminService $adminService,
+        private CategoryRepository $categoryRepository,
+        private HtmlService $htmlService,
+        private ImageRepository $imageRepository,
+        private UploadService $uploadService,
+        private Util $util,
     ) {
     }
 

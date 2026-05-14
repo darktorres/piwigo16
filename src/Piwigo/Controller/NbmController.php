@@ -21,14 +21,14 @@ use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-final class NbmController implements ControllerInterface
+final readonly class NbmController implements ControllerInterface
 {
     public function __construct(
-        private readonly HtmlService $htmlService,
-        private readonly MenubarRenderer $menubarRenderer,
-        private readonly NotificationAdminService $notificationAdminService,
-        private readonly PermissionService $permissionService,
-        private readonly LangService $langService,
+        private HtmlService $htmlService,
+        private MenubarRenderer $menubarRenderer,
+        private NotificationAdminService $notificationAdminService,
+        private PermissionService $permissionService,
+        private LangService $langService,
     ) {
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Languages;
@@ -18,7 +19,6 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Doctrine\DBAL\Connection;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
@@ -39,7 +39,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
 
-final class ExtensionsController
+final readonly class ExtensionsController
 {
     /** @var list<string> */
     public const array PAGES = [
@@ -51,21 +51,21 @@ final class ExtensionsController
     ];
 
     public function __construct(
-        private readonly Connection $conn,
-        private readonly AdminService $adminService,
-        private readonly ConfigService $configService,
-        private readonly DateService $dateService,
-        private readonly LanguageRepository $languageRepository,
-        private readonly PermissionService $permissionService,
-        private readonly Plugins $plugins,
-        private readonly PluginRepository $pluginRepository,
-        private readonly PreferencesService $preferencesService,
-        private readonly SessionService $sessionService,
-        private readonly StringUtil $stringUtil,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UrlService $urlService,
-        private readonly UserService $userService,
-        private readonly Util $util,
+        private Connection $conn,
+        private AdminService $adminService,
+        private ConfigService $configService,
+        private DateService $dateService,
+        private LanguageRepository $languageRepository,
+        private PermissionService $permissionService,
+        private Plugins $plugins,
+        private PluginRepository $pluginRepository,
+        private PreferencesService $preferencesService,
+        private SessionService $sessionService,
+        private StringUtil $stringUtil,
+        private UrlGenerator $urlGenerator,
+        private UrlService $urlService,
+        private UserService $userService,
+        private Util $util,
     ) {
     }
 

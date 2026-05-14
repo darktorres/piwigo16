@@ -18,15 +18,15 @@ use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
-final class UrlService
+final readonly class UrlService
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly StringUtil $stringUtil,
-        private readonly CategoryService $categoryService,
-        private readonly HtmlService $htmlService,
-        private readonly TagService $tagService,
-        private readonly PermissionService $permissionService,
+        private Connection $conn,
+        private StringUtil $stringUtil,
+        private CategoryService $categoryService,
+        private HtmlService $htmlService,
+        private TagService $tagService,
+        private PermissionService $permissionService,
     ) {
     }
 

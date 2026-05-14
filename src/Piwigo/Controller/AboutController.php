@@ -20,13 +20,13 @@ use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-final class AboutController implements ControllerInterface
+final readonly class AboutController implements ControllerInterface
 {
     public function __construct(
-        private readonly HtmlService $htmlService,
-        private readonly MenubarRenderer $menubarRenderer,
-        private readonly PermissionService $permissionService,
-        private readonly LangService $langService,
+        private HtmlService $htmlService,
+        private MenubarRenderer $menubarRenderer,
+        private PermissionService $permissionService,
+        private LangService $langService,
     ) {
     }
 

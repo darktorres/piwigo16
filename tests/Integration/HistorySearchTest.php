@@ -158,9 +158,7 @@ final class HistorySearchTest extends IntegrationTestCase
         self::assertSame($s0['USERS'], $s1['USERS']);
 
         // Distinct seed times mean no overlap in TIME values between pages.
-        $extractTime = static function (mixed $l): string {
-            return is_array($l) && is_string($l['TIME'] ?? null) ? $l['TIME'] : '';
-        };
+        $extractTime = (static fn (mixed $l): string => is_array($l) && is_string($l['TIME'] ?? null) ? $l['TIME'] : '');
         $times0 = array_map($extractTime, $r0['lines']);
         $times1 = array_map($extractTime, $r1['lines']);
         self::assertSame([], array_intersect($times0, $times1), 'page 0 and page 1 must not share rows');

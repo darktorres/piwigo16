@@ -16,15 +16,15 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 
-final class FilterResolver
+final readonly class FilterResolver
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly HtmlService $htmlService,
-        private readonly TagAdminService $tagAdminService,
-        private readonly Util $util,
-        private readonly LangService $langService,
-        private readonly UrlService $urlService,
+        private Connection $conn,
+        private HtmlService $htmlService,
+        private TagAdminService $tagAdminService,
+        private Util $util,
+        private LangService $langService,
+        private UrlService $urlService,
     ) {
     }
     /**

@@ -26,12 +26,12 @@ use Psr\Http\Message\ServerRequestInterface;
  * returns an empty 200 response for the emitter — the legacy PwgServer
  * dispatch model is preserved during the Wave-A transition.
  */
-final class WsController implements ControllerInterface
+final readonly class WsController implements ControllerInterface
 {
     public function __construct(
-        private readonly HtmlService $htmlService,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly PermissionService $permissionService,
+        private HtmlService $htmlService,
+        private UrlGenerator $urlGenerator,
+        private PermissionService $permissionService,
     ) {
     }
 

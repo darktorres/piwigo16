@@ -9,11 +9,11 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 
-final class AlbumsTabRenderer
+final readonly class AlbumsTabRenderer
 {
     public function __construct(
-        private readonly CategoryRepository $categoryRepository,
-        private readonly UrlGenerator $urlGenerator,
+        private CategoryRepository $categoryRepository,
+        private UrlGenerator $urlGenerator,
     ) {
     }
     public function render(): void

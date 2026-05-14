@@ -31,19 +31,19 @@ use Psr\Http\Message\ServerRequestInterface;
  * Handles the user profile / preferences page (/profile).
  * Corresponds to the former profile.php entry-point (direct-access block).
  */
-final class ProfileController implements ControllerInterface
+final readonly class ProfileController implements ControllerInterface
 {
     public function __construct(
-        private readonly HtmlService $htmlService,
-        private readonly MenubarRenderer $menubarRenderer,
-        private readonly ProfileService $profileService,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UserRepository $userRepository,
-        private readonly Util $util,
-        private readonly StringUtil $stringUtil,
-        private readonly PermissionService $permissionService,
-        private readonly LangService $langService,
-        private readonly UrlService $urlService,
+        private HtmlService $htmlService,
+        private MenubarRenderer $menubarRenderer,
+        private ProfileService $profileService,
+        private UrlGenerator $urlGenerator,
+        private UserRepository $userRepository,
+        private Util $util,
+        private StringUtil $stringUtil,
+        private PermissionService $permissionService,
+        private LangService $langService,
+        private UrlService $urlService,
     ) {
     }
 

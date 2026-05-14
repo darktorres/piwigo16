@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Category\CategoryAdminService;
@@ -19,7 +20,6 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
-use Doctrine\DBAL\Connection;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;

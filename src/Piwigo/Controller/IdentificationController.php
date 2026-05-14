@@ -29,18 +29,18 @@ use Psr\Http\Message\ServerRequestInterface;
  * Handles the login page (/identification).
  * Corresponds to the former identification.php entry-point.
  */
-final class IdentificationController implements ControllerInterface
+final readonly class IdentificationController implements ControllerInterface
 {
     public function __construct(
-        private readonly HtmlService $htmlService,
-        private readonly MenubarRenderer $menubarRenderer,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly Util $util,
-        private readonly StringUtil $stringUtil,
-        private readonly PermissionService $permissionService,
-        private readonly LangService $langService,
-        private readonly AuthService $authService,
-        private readonly UrlService $urlService,
+        private HtmlService $htmlService,
+        private MenubarRenderer $menubarRenderer,
+        private UrlGenerator $urlGenerator,
+        private Util $util,
+        private StringUtil $stringUtil,
+        private PermissionService $permissionService,
+        private LangService $langService,
+        private AuthService $authService,
+        private UrlService $urlService,
     ) {
     }
 

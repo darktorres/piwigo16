@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
-use Piwigo\Core\Kernel;
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\Util;
 use Piwigo\Plugins\EventDispatcher;

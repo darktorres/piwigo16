@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
-use Doctrine\DBAL\Connection;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
@@ -19,17 +19,17 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 
-final class ProfileService
+final readonly class ProfileService
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly AuthService $authService,
-        private readonly DateService $dateService,
-        private readonly LangService $langService,
-        private readonly MailService $mailService,
-        private readonly UserRepository $userRepository,
-        private readonly UserService $userService,
-        private readonly Util $util,
+        private Connection $conn,
+        private AuthService $authService,
+        private DateService $dateService,
+        private LangService $langService,
+        private MailService $mailService,
+        private UserRepository $userRepository,
+        private UserService $userService,
+        private Util $util,
     ) {
     }
 

@@ -25,9 +25,6 @@ final class Updates
 {
     /** @var string[] */
     public $types = [];
-    public Plugins $plugins;
-    public Themes $themes;
-    public Languages $languages;
     /** @var array<string, array<mixed>> */
     public array $missing = [];
     /** @var string[] */
@@ -41,9 +38,9 @@ final class Updates
     public string $merged_extension_url = 'http://piwigo.org/download/merged_extensions.txt';
 
     public function __construct(
-        Plugins $plugins,
-        Themes $themes,
-        Languages $languages,
+        public Plugins $plugins,
+        public Themes $themes,
+        public Languages $languages,
         private readonly AdminService $adminService,
         private readonly ConfigService $configService,
         private readonly MailService $mailService,
@@ -56,10 +53,6 @@ final class Updates
         $this->types = ['plugins', 'themes', 'languages'];
         $this->default_themes = ['modus', 'elegant', 'smartpocket'];
         $this->default_plugins = ['AdminTools', 'TakeATour', 'language_switch', 'LocalFilesEditor'];
-
-        $this->plugins   = $plugins;
-        $this->themes    = $themes;
-        $this->languages = $languages;
     }
 
     /**

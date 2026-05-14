@@ -26,7 +26,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 
-final class GroupsController
+final readonly class GroupsController
 {
     /** @var list<string> */
     public const array PAGES = [
@@ -35,15 +35,15 @@ final class GroupsController
     ];
 
     public function __construct(
-        private readonly AdminService $adminService,
-        private readonly CategoryAdminService $categoryAdminService,
-        private readonly CategoryRepository $categoryRepository,
-        private readonly CategoryService $categoryService,
-        private readonly GroupRepository $groupRepository,
-        private readonly PermissionRepository $permissionRepository,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UserAdminService $userAdminService,
-        private readonly Util $util,
+        private AdminService $adminService,
+        private CategoryAdminService $categoryAdminService,
+        private CategoryRepository $categoryRepository,
+        private CategoryService $categoryService,
+        private GroupRepository $groupRepository,
+        private PermissionRepository $permissionRepository,
+        private UrlGenerator $urlGenerator,
+        private UserAdminService $userAdminService,
+        private Util $util,
     ) {
     }
 

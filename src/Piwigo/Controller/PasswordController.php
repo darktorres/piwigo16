@@ -30,19 +30,19 @@ use Psr\Http\Message\ServerRequestInterface;
  * Helper functions live in include/password_functions.php.
  * Corresponds to the former password.php entry-point.
  */
-final class PasswordController implements ControllerInterface
+final readonly class PasswordController implements ControllerInterface
 {
     public function __construct(
-        private readonly HtmlService $htmlService,
-        private readonly LangService $langService,
-        private readonly MenubarRenderer $menubarRenderer,
-        private readonly PasswordService $passwordService,
-        private readonly PermissionService $permissionService,
-        private readonly StringUtil $stringUtil,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UrlService $urlService,
-        private readonly UserService $userService,
-        private readonly Util $util,
+        private HtmlService $htmlService,
+        private LangService $langService,
+        private MenubarRenderer $menubarRenderer,
+        private PasswordService $passwordService,
+        private PermissionService $permissionService,
+        private StringUtil $stringUtil,
+        private UrlGenerator $urlGenerator,
+        private UrlService $urlService,
+        private UserService $userService,
+        private Util $util,
     ) {
     }
 

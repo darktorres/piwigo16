@@ -8,10 +8,10 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 
-final class SelectedTagsRenderer
+final readonly class SelectedTagsRenderer
 {
     public function __construct(
-        private readonly UrlService $urlService,
+        private UrlService $urlService,
     ) {
     }
 

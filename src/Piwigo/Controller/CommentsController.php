@@ -37,20 +37,20 @@ use Psr\Http\Message\ServerRequestInterface;
  * Handles the paginated comments list page (/comments).
  * Corresponds to the former comments.php entry-point.
  */
-final class CommentsController implements ControllerInterface
+final readonly class CommentsController implements ControllerInterface
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly CategoryService $categoryService,
-        private readonly CommentService $commentService,
-        private readonly DateService $dateService,
-        private readonly HtmlService $htmlService,
-        private readonly MenubarRenderer $menubarRenderer,
-        private readonly PermissionService $permissionService,
-        private readonly StringUtil $stringUtil,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UrlService $urlService,
-        private readonly Util $util,
+        private Connection $conn,
+        private CategoryService $categoryService,
+        private CommentService $commentService,
+        private DateService $dateService,
+        private HtmlService $htmlService,
+        private MenubarRenderer $menubarRenderer,
+        private PermissionService $permissionService,
+        private StringUtil $stringUtil,
+        private UrlGenerator $urlGenerator,
+        private UrlService $urlService,
+        private Util $util,
     ) {
     }
 

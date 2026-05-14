@@ -28,15 +28,15 @@ use Psr\Http\Message\ServerRequestInterface;
  * and format variants.
  * Corresponds to the former action.php entry-point.
  */
-final class ActionController implements ControllerInterface
+final readonly class ActionController implements ControllerInterface
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly HtmlService $htmlService,
-        private readonly ImageRepository $imageRepository,
-        private readonly PermissionService $permissionService,
-        private readonly StringUtil $stringUtil,
-        private readonly Util $util,
+        private Connection $conn,
+        private HtmlService $htmlService,
+        private ImageRepository $imageRepository,
+        private PermissionService $permissionService,
+        private StringUtil $stringUtil,
+        private Util $util,
     ) {
     }
 

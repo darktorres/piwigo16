@@ -41,25 +41,25 @@ use Psr\Http\Message\ServerRequestInterface;
  * Corresponds to the former index.php entry-point (lines 26-405).
  * Section routing is delegated to SectionInitializer which populates $GLOBALS['page'].
  */
-final class GalleryController implements ControllerInterface
+final readonly class GalleryController implements ControllerInterface
 {
     public function __construct(
-        private readonly CategoryCatsRenderer $categoryCatsRenderer,
-        private readonly CategoryDefaultRenderer $categoryDefaultRenderer,
-        private readonly CategoryService $categoryService,
-        private readonly ConfigService $configService,
-        private readonly HtmlService $htmlService,
-        private readonly MenubarRenderer $menubarRenderer,
-        private readonly PermissionService $permissionService,
-        private readonly SearchFilterRenderer $searchFilterRenderer,
-        private readonly SectionInitializer $sectionInitializer,
-        private readonly SelectedTagsRenderer $selectedTagsRenderer,
-        private readonly SessionService $sessionService,
-        private readonly StringUtil $stringUtil,
-        private readonly TagService $tagService,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UrlService $urlService,
-        private readonly Util $util,
+        private CategoryCatsRenderer $categoryCatsRenderer,
+        private CategoryDefaultRenderer $categoryDefaultRenderer,
+        private CategoryService $categoryService,
+        private ConfigService $configService,
+        private HtmlService $htmlService,
+        private MenubarRenderer $menubarRenderer,
+        private PermissionService $permissionService,
+        private SearchFilterRenderer $searchFilterRenderer,
+        private SectionInitializer $sectionInitializer,
+        private SelectedTagsRenderer $selectedTagsRenderer,
+        private SessionService $sessionService,
+        private StringUtil $stringUtil,
+        private TagService $tagService,
+        private UrlGenerator $urlGenerator,
+        private UrlService $urlService,
+        private Util $util,
     ) {
     }
 

@@ -12,12 +12,12 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
-final class PictureRateRenderer
+final readonly class PictureRateRenderer
 {
     public function __construct(
-        private readonly RateRepository $rateRepository,
-        private readonly PermissionService $permissionService,
-        private readonly UrlService $urlService,
+        private RateRepository $rateRepository,
+        private PermissionService $permissionService,
+        private UrlService $urlService,
     ) {
     }
 

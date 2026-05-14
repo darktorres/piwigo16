@@ -47,24 +47,24 @@ use Psr\Http\Message\ServerRequestInterface;
  * This controller sends output directly (template pparse + page_tail) and
  * returns an empty 200 — the caller must NOT use ResponseEmitter.
  */
-final class AdminController implements ControllerInterface
+final readonly class AdminController implements ControllerInterface
 {
     public function __construct(
-        private readonly AdminService $adminService,
-        private readonly CommentRepository $commentRepository,
-        private readonly ConfigService $configService,
-        private readonly HtmlService $htmlService,
-        private readonly ImageAdminService $imageAdminService,
-        private readonly ImageRepository $imageRepository,
-        private readonly PermissionService $permissionService,
-        private readonly PreferencesService $preferencesService,
-        private readonly SessionService $sessionService,
-        private readonly StringUtil $stringUtil,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UrlService $urlService,
-        private readonly UserAdminService $userAdminService,
-        private readonly UserRepository $userRepository,
-        private readonly Util $util,
+        private AdminService $adminService,
+        private CommentRepository $commentRepository,
+        private ConfigService $configService,
+        private HtmlService $htmlService,
+        private ImageAdminService $imageAdminService,
+        private ImageRepository $imageRepository,
+        private PermissionService $permissionService,
+        private PreferencesService $preferencesService,
+        private SessionService $sessionService,
+        private StringUtil $stringUtil,
+        private UrlGenerator $urlGenerator,
+        private UrlService $urlService,
+        private UserAdminService $userAdminService,
+        private UserRepository $userRepository,
+        private Util $util,
     ) {
     }
 

@@ -21,13 +21,13 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
-final class ExtensionsEndpoints
+final readonly class ExtensionsEndpoints
 {
     public function __construct(
-        private readonly ConfigService $configService,
-        private readonly PermissionService $permissionService,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly Util $util,
+        private ConfigService $configService,
+        private PermissionService $permissionService,
+        private UrlGenerator $urlGenerator,
+        private Util $util,
     ) {
     }
 

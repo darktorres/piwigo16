@@ -17,13 +17,13 @@ use Psr\Http\Message\ServerRequestInterface;
  * Quick-search redirect: ?q=term → /search page.
  * Corresponds to the former qsearch.php entry-point.
  */
-final class QSearchController implements ControllerInterface
+final readonly class QSearchController implements ControllerInterface
 {
     public function __construct(
-        private readonly UrlGenerator $urlGenerator,
-        private readonly PermissionService $permissionService,
-        private readonly Util $util,
-        private readonly UrlService $urlService,
+        private UrlGenerator $urlGenerator,
+        private PermissionService $permissionService,
+        private Util $util,
+        private UrlService $urlService,
     ) {
     }
 

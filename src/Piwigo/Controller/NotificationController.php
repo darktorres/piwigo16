@@ -24,14 +24,14 @@ use Psr\Http\Message\ServerRequestInterface;
  * Handles the notification/RSS subscription page (/notification).
  * Corresponds to the former notification.php entry-point.
  */
-final class NotificationController implements ControllerInterface
+final readonly class NotificationController implements ControllerInterface
 {
     public function __construct(
-        private readonly FeedRepository $feedRepository,
-        private readonly HtmlService $htmlService,
-        private readonly MenubarRenderer $menubarRenderer,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly PermissionService $permissionService,
+        private FeedRepository $feedRepository,
+        private HtmlService $htmlService,
+        private MenubarRenderer $menubarRenderer,
+        private UrlGenerator $urlGenerator,
+        private PermissionService $permissionService,
     ) {
     }
 

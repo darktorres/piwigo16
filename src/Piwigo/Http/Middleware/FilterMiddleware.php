@@ -26,13 +26,13 @@ use Psr\Http\Server\RequestHandlerInterface;
  * Runs after AuthMiddleware so that $GLOBALS['user'] (recent_period, id,
  * cache_update_time) is already populated when filter data is computed.
  */
-final class FilterMiddleware implements MiddlewareInterface
+final readonly class FilterMiddleware implements MiddlewareInterface
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly CategoryService $categoryService,
-        private readonly SessionService $sessionService,
-        private readonly Util $util,
+        private Connection $conn,
+        private CategoryService $categoryService,
+        private SessionService $sessionService,
+        private Util $util,
     ) {
     }
 

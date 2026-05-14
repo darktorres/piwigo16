@@ -170,19 +170,32 @@ return [
     CategoryAdminService::class      => factory(static function (ContainerInterface $c): CategoryAdminService {
         return (new \ReflectionClass(CategoryAdminService::class))->newLazyProxy(
             static fn (): CategoryAdminService => new CategoryAdminService(
-                $c->get(Connection::class), $c->get(CategoryRepository::class), $c->get(CategoryService::class),
-                $c->get(ConfigService::class), $c->get(ImageAdminService::class), $c->get(ImageRepository::class),
-                $c->get(UserAdminService::class), $c->get(UserRepository::class), $c->get(Util::class),
+                $c->get(Connection::class),
+                $c->get(CategoryRepository::class),
+                $c->get(CategoryService::class),
+                $c->get(ConfigService::class),
+                $c->get(ImageAdminService::class),
+                $c->get(ImageRepository::class),
+                $c->get(UserAdminService::class),
+                $c->get(UserRepository::class),
+                $c->get(Util::class),
             )
         );
     }),
     ImageAdminService::class         => factory(static function (ContainerInterface $c): ImageAdminService {
         return (new \ReflectionClass(ImageAdminService::class))->newLazyProxy(
             static fn (): ImageAdminService => new ImageAdminService(
-                $c->get(Connection::class), $c->get(CategoryAdminService::class), $c->get(CategoryRepository::class),
-                $c->get(CommentRepository::class), $c->get(ConfigService::class), $c->get(ImageRepository::class),
-                $c->get(StringUtil::class), $c->get(TagRepository::class), $c->get(UrlGenerator::class),
-                $c->get(UserRepository::class), $c->get(Util::class),
+                $c->get(Connection::class),
+                $c->get(CategoryAdminService::class),
+                $c->get(CategoryRepository::class),
+                $c->get(CommentRepository::class),
+                $c->get(ConfigService::class),
+                $c->get(ImageRepository::class),
+                $c->get(StringUtil::class),
+                $c->get(TagRepository::class),
+                $c->get(UrlGenerator::class),
+                $c->get(UserRepository::class),
+                $c->get(Util::class),
             )
         );
     }),
@@ -190,9 +203,14 @@ return [
     UserAdminService::class          => factory(static function (ContainerInterface $c): UserAdminService {
         return (new \ReflectionClass(UserAdminService::class))->newLazyProxy(
             static fn (): UserAdminService => new UserAdminService(
-                $c->get(Connection::class), $c->get(ConfigService::class), $c->get(GroupRepository::class),
-                $c->get(PermissionRepository::class), $c->get(SessionService::class), $c->get(UserRepository::class),
-                $c->get(UserService::class), $c->get(Util::class),
+                $c->get(Connection::class),
+                $c->get(ConfigService::class),
+                $c->get(GroupRepository::class),
+                $c->get(PermissionRepository::class),
+                $c->get(SessionService::class),
+                $c->get(UserRepository::class),
+                $c->get(UserService::class),
+                $c->get(Util::class),
             )
         );
     }),

@@ -43,7 +43,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 
-final class BatchManagerController
+final readonly class BatchManagerController
 {
     /** @var list<string> */
     public const array PAGES = [
@@ -54,26 +54,26 @@ final class BatchManagerController
     ];
 
     public function __construct(
-        private readonly Connection $conn,
-        private readonly AdminService $adminService,
-        private readonly CategoryAdminService $categoryAdminService,
-        private readonly CategoryRepository $categoryRepository,
-        private readonly CategoryService $categoryService,
-        private readonly DateService $dateService,
-        private readonly FilterResolver $filterResolver,
-        private readonly HtmlService $htmlService,
-        private readonly ImageAdminService $imageAdminService,
-        private readonly ImageRepository $imageRepository,
-        private readonly PermissionService $permissionService,
-        private readonly SearchService $searchService,
-        private readonly StringUtil $stringUtil,
-        private readonly TagAdminService $tagAdminService,
-        private readonly TagRepository $tagRepository,
-        private readonly TagService $tagService,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UrlService $urlService,
-        private readonly UserAdminService $userAdminService,
-        private readonly Util $util,
+        private Connection $conn,
+        private AdminService $adminService,
+        private CategoryAdminService $categoryAdminService,
+        private CategoryRepository $categoryRepository,
+        private CategoryService $categoryService,
+        private DateService $dateService,
+        private FilterResolver $filterResolver,
+        private HtmlService $htmlService,
+        private ImageAdminService $imageAdminService,
+        private ImageRepository $imageRepository,
+        private PermissionService $permissionService,
+        private SearchService $searchService,
+        private StringUtil $stringUtil,
+        private TagAdminService $tagAdminService,
+        private TagRepository $tagRepository,
+        private TagService $tagService,
+        private UrlGenerator $urlGenerator,
+        private UrlService $urlService,
+        private UserAdminService $userAdminService,
+        private Util $util,
     ) {
     }
 

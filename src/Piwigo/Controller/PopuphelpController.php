@@ -18,11 +18,11 @@ use Piwigo\Users\PermissionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-final class PopuphelpController implements ControllerInterface
+final readonly class PopuphelpController implements ControllerInterface
 {
     public function __construct(
-        private readonly PermissionService $permissionService,
-        private readonly LangService $langService,
+        private PermissionService $permissionService,
+        private LangService $langService,
     ) {
     }
 

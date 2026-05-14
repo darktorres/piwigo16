@@ -7,7 +7,6 @@ namespace Piwigo\Controller;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\UpgradeService;
 use Piwigo\Config\Config;
-use Piwigo\Core\Kernel;
 use Piwigo\Db\Dml;
 use Piwigo\Http\ResponseFactory;
 use Psr\Http\Message\ResponseInterface;
@@ -20,10 +19,10 @@ use Psr\Http\Message\ServerRequestInterface;
  * Accessed via index.php?/upgrade_feed — bypasses common.inc.php (DB schema
  * may be mid-migration).
  */
-final class UpgradeFeedController implements ControllerInterface
+final readonly class UpgradeFeedController implements ControllerInterface
 {
     public function __construct(
-        private readonly Connection $conn,
+        private Connection $conn,
     ) {
     }
 

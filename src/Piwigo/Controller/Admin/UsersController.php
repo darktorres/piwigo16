@@ -30,7 +30,7 @@ use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
-final class UsersController
+final readonly class UsersController
 {
     /** @var list<string> */
     public const array PAGES = [
@@ -40,21 +40,21 @@ final class UsersController
     ];
 
     public function __construct(
-        private readonly Connection $conn,
-        private readonly ActivityRepository $activityRepository,
-        private readonly AdminService $adminService,
-        private readonly CategoryAdminService $categoryAdminService,
-        private readonly CategoryService $categoryService,
-        private readonly GroupRepository $groupRepository,
-        private readonly HtmlService $htmlService,
-        private readonly PermissionRepository $permissionRepository,
-        private readonly PreferencesService $preferencesService,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UserAdminService $userAdminService,
-        private readonly UserRepository $userRepository,
-        private readonly UserService $userService,
-        private readonly UserTabRenderer $userTabRenderer,
-        private readonly Util $util,
+        private Connection $conn,
+        private ActivityRepository $activityRepository,
+        private AdminService $adminService,
+        private CategoryAdminService $categoryAdminService,
+        private CategoryService $categoryService,
+        private GroupRepository $groupRepository,
+        private HtmlService $htmlService,
+        private PermissionRepository $permissionRepository,
+        private PreferencesService $preferencesService,
+        private UrlGenerator $urlGenerator,
+        private UserAdminService $userAdminService,
+        private UserRepository $userRepository,
+        private UserService $userService,
+        private UserTabRenderer $userTabRenderer,
+        private Util $util,
     ) {
     }
 

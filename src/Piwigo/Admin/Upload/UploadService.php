@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Image\PwgImage;
@@ -14,7 +15,6 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
-use Doctrine\DBAL\Connection;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
@@ -34,19 +34,19 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServerRegistry;
 
-final class UploadService
+final readonly class UploadService
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly CategoryAdminService $categoryAdminService,
-        private readonly ConfigService $configService,
-        private readonly DerivativeService $derivativeService,
-        private readonly ImageAdminService $imageAdminService,
-        private readonly ImageRepository $imageRepository,
-        private readonly MetadataAdminService $metadataAdminService,
-        private readonly StringUtil $stringUtil,
-        private readonly UserAdminService $userAdminService,
-        private readonly Util $util,
+        private Connection $conn,
+        private CategoryAdminService $categoryAdminService,
+        private ConfigService $configService,
+        private DerivativeService $derivativeService,
+        private ImageAdminService $imageAdminService,
+        private ImageRepository $imageRepository,
+        private MetadataAdminService $metadataAdminService,
+        private StringUtil $stringUtil,
+        private UserAdminService $userAdminService,
+        private Util $util,
     ) {
     }
 

@@ -6,13 +6,13 @@ use Piwigo\Bootstrap\CommonBootstrap;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Controller\ImageDerivativeController;
-use Piwigo\Db\DbConnection;
 use Piwigo\Controller\InstallController;
 use Piwigo\Controller\UpgradeController;
 use Piwigo\Controller\UpgradeFeedController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Db\DbConnection;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Filesystem;
-use Doctrine\DBAL\Connection;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
@@ -29,20 +29,20 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
 
-final class ImageAdminService
+final readonly class ImageAdminService
 {
     public function __construct(
-        private readonly Connection $conn,
-        private readonly CategoryAdminService $categoryAdminService,
-        private readonly CategoryRepository $categoryRepository,
-        private readonly CommentRepository $commentRepository,
-        private readonly ConfigService $configService,
-        private readonly ImageRepository $imageRepository,
-        private readonly StringUtil $stringUtil,
-        private readonly TagRepository $tagRepository,
-        private readonly UrlGenerator $urlGenerator,
-        private readonly UserRepository $userRepository,
-        private readonly Util $util,
+        private Connection $conn,
+        private CategoryAdminService $categoryAdminService,
+        private CategoryRepository $categoryRepository,
+        private CommentRepository $commentRepository,
+        private ConfigService $configService,
+        private ImageRepository $imageRepository,
+        private StringUtil $stringUtil,
+        private TagRepository $tagRepository,
+        private UrlGenerator $urlGenerator,
+        private UserRepository $userRepository,
+        private Util $util,
     ) {
     }
 

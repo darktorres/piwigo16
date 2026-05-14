@@ -11,7 +11,6 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
-use Piwigo\Admin\AdminService;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;

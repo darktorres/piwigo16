@@ -13,12 +13,12 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
-final class WsHelper
+final readonly class WsHelper
 {
     public function __construct(
-        private readonly StringUtil $stringUtil,
-        private readonly PermissionService $permissionService,
-        private readonly UrlService $urlService,
+        private StringUtil $stringUtil,
+        private PermissionService $permissionService,
+        private UrlService $urlService,
     ) {
     }
     /** @param array<mixed> $params */

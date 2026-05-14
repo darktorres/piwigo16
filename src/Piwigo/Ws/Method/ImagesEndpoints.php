@@ -609,14 +609,13 @@ final readonly class ImagesEndpoints
             return new PwgError(500, 'error during buffer directory creation');
         }
         $pOriginalSum = is_string($params['original_sum'] ?? null) ? $params['original_sum'] : '';
-        $pType        = is_string($params['type'] ?? null) ? $params['type'] : '';
         $pPosition    = is_numeric($params['position']) ? (int) $params['position'] : 0;
         $pData        = is_string($params['data'] ?? null) ? $params['data'] : '';
-        $filename     = sprintf('%s-%s-%05u.block', $pOriginalSum, $pType, $pPosition);
+        $filename     = sprintf('%s-file-%05u.block', $pOriginalSum, $pPosition);
         $logger->debug('[addChunk] data length : ' . strlen($pData));
         $bytesWritten = file_put_contents($uploadDir . '/' . $filename, base64_decode($pData));
         if ($bytesWritten === false) {
-            return new PwgError(500, 'an error has occured while writting chunk ' . $pPosition . ' for ' . $pType);
+            return new PwgError(500, 'an error has occured while writting chunk ' . $pPosition);
         }
         return null;
     }
@@ -627,33 +626,25 @@ final readonly class ImagesEndpoints
         $logger      = LoggerRegistry::current();
         $logger->debug(__FUNCTION__, $params);
         $pImageId    = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $pTypeAf     = is_string($params['type'] ?? null) ? $params['type'] : '';
         $image       = $this->imageRepository->findById($pImageId);
         if ($image === null) {
             return new PwgError(404, 'image_id not found');
         }
         $imageMd5sum = is_string($image['md5sum'] ?? null) ? $image['md5sum'] : '';
         $imageFile   = is_string($image['file'] ?? null) ? $image['file'] : '';
-        if ($pTypeAf === 'thumb') {
-            $this->removeChunks($imageMd5sum, $pTypeAf);
-            return true;
-        }
-        $originalType = $pTypeAf === 'high' ? 'high' : 'file';
-        $filePath     = Config::uploadDir() . '/buffer/' . $imageMd5sum . '-original';
-        $this->mergeChunks($filePath, $imageMd5sum, $originalType);
+        $filePath    = Config::uploadDir() . '/buffer/' . $imageMd5sum . '-original';
+        $this->mergeChunks($filePath, $imageMd5sum, 'file');
         chmod($filePath, Config::chmodValue() & 0o666);
-        if ($pTypeAf === 'file') {
-            $infos = $this->uploadService->pwgImageInfos($filePath);
-            $doUpdate = false;
-            foreach (['width', 'height', 'filesize'] as $imageInfo) {
-                if ($infos[$imageInfo] > $image[$imageInfo]) {
-                    $doUpdate = true;
-                }
+        $infos    = $this->uploadService->pwgImageInfos($filePath);
+        $doUpdate = false;
+        foreach (['width', 'height', 'filesize'] as $imageInfo) {
+            if ($infos[$imageInfo] > $image[$imageInfo]) {
+                $doUpdate = true;
             }
-            if (!$doUpdate) {
-                unlink($filePath);
-                return true;
-            }
+        }
+        if (!$doUpdate) {
+            unlink($filePath);
+            return true;
         }
         $this->uploadService->addUploadedFile($filePath, $imageFile, null, null, $pImageId, $imageMd5sum);
         return null;
@@ -686,15 +677,8 @@ final readonly class ImagesEndpoints
                 return new PwgError(500, 'file already exists');
             }
         }
-        $this->removeChunks($pOriginalSum, 'thumb');
-        if (isset($params['high_sum'])) {
-            $originalType = 'high';
-            $this->removeChunks($pOriginalSum, 'file');
-        } else {
-            $originalType = 'file';
-        }
         $filePath = Config::uploadDir() . '/buffer/' . $pOriginalSum . '-original';
-        $this->mergeChunks($filePath, $pOriginalSum, $originalType);
+        $this->mergeChunks($filePath, $pOriginalSum, 'file');
         chmod($filePath, Config::chmodValue() & 0o666);
         $imageId = $this->uploadService->addUploadedFile($filePath, $pOriginalFilename, null, $pLevel, $pImageId > 0 ? $pImageId : null, $pOriginalSum);
         $update  = [];
@@ -1191,18 +1175,8 @@ final readonly class ImagesEndpoints
             return new PwgError(404, 'image_id not found');
         }
         $ret = [];
-        if (isset($params['thumbnail_sum'])) {
-            $ret['thumbnail'] = 'equals';
-        }
-        $compareType = null;
-        if (isset($params['high_sum'])) {
-            $ret['file']  = 'equals';
-            $compareType  = 'high';
-        } elseif (isset($params['file_sum'])) {
-            $compareType = 'file';
-        }
-        if ($compareType !== null) {
-            $ret[$compareType] = md5_file($path) !== $params[$compareType . '_sum'] ? 'differs' : 'equals';
+        if (isset($params['file_sum'])) {
+            $ret['file'] = md5_file($path) !== $params['file_sum'] ? 'differs' : 'equals';
         }
         return $ret;
     }

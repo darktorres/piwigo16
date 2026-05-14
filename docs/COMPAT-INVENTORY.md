@@ -232,15 +232,12 @@ Three API methods accept legacy parameters that should no longer be used:
 
 **Removal condition:** Confirm no active third-party client (Piwigo.app, DigiKam, etc.) sends these values, then drop the optional params and any handling branches in `ImagesEndpoints.php`.
 
-**Status: ❌ NOT MET.** The compat params are not silently ignored — they drive real behavior branches (grep on `ImagesEndpoints.php`, 2026-05-14):
+**Status: ✅ REMOVED (2026-05-14).** No client compat maintained. All four methods cleaned:
 
-- `type=thumb` in `addFile` (line 637–638): calls `removeChunks` and returns `true` early — distinct behavior from `type=file`.
-- `type=high` in `addFile` (line 641): sets `$originalType = 'high'` which changes which chunk set is merged.
-- `high_sum` in `add` (line 690): sets `$originalType = 'high'` and removes file chunks — distinct upload path.
-- `thumbnail_sum` in `checkFiles` (line 1194): always returns `'equals'` for thumbnail (effectively a no-op, but still a live branch).
-- `high_sum` in `checkFiles` (line 1198): sets `$compareType = 'high'`, changing which file is checksummed.
-
-These cannot be removed without knowing whether Piwigo.app, DigiKam, or any other client still sends `type=high/thumb` or `high_sum`/`thumbnail_sum`.
+- `addChunk`: `type` param removed; chunk filename hardcoded to `file`.
+- `addFile`: `type` param removed; `thumb` early-return and `high` merge path deleted; size-check always runs.
+- `add`: `thumbnail_sum`/`high_sum` params removed; always merges `file` chunks.
+- `checkFiles`: `thumbnail_sum`/`high_sum` params removed; only `file_sum` comparison remains.
 
 ---
 

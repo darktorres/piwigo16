@@ -357,7 +357,6 @@ final readonly class WsMethodRegistrar
             params:       [
                 ParamDefinition::required('data'),
                 ParamDefinition::required('original_sum'),
-                ParamDefinition::optional(name: 'type', default: 'file', info: 'Must be "file", for backward compatiblity "high" and "thumb" are allowed.'),
                 ParamDefinition::required('position'),
             ],
             tags:         ['images'],
@@ -372,7 +371,6 @@ final readonly class WsMethodRegistrar
 <br>pwg.images.addChunk must have been called before (maybe several times).',
             params:       [
                 ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID),
-                ParamDefinition::optional(name: 'type', default: 'file', info: 'Must be "file", for backward compatiblity "high" and "thumb" are allowed.'),
                 ParamDefinition::required('sum'),
             ],
             tags:         ['images'],
@@ -383,11 +381,8 @@ final readonly class WsMethodRegistrar
             name:         'pwg.images.add',
             callback:     $this->imagesEndpoints->add(...),
             description:  'Add an image.
-<br>pwg.images.addChunk must have been called before (maybe several times).
-<br>Don\'t use "thumbnail_sum" and "high_sum", these parameters are here for backward compatibility.',
+<br>pwg.images.addChunk must have been called before (maybe several times).',
             params:       [
-                ParamDefinition::optional('thumbnail_sum'),
-                ParamDefinition::optional('high_sum'),
                 ParamDefinition::required('original_sum'),
                 ParamDefinition::optional('original_filename'),
                 ParamDefinition::optional('name'),
@@ -728,13 +723,10 @@ final readonly class WsMethodRegistrar
         $server->register(new MethodDefinition(
             name:         'pwg.images.checkFiles',
             callback:     $this->imagesEndpoints->checkFiles(...),
-            description:  'Checks if you have updated version of your files for a given photo, the answer can be "missing", "equals" or "differs".
-<br>Don\'t use "thumbnail_sum" and "high_sum", these parameters are here for backward compatibility.',
+            description:  'Checks if you have updated version of your files for a given photo, the answer can be "missing", "equals" or "differs".',
             params:       [
                 ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID),
                 ParamDefinition::optional('file_sum'),
-                ParamDefinition::optional('thumbnail_sum'),
-                ParamDefinition::optional('high_sum'),
             ],
             tags:         ['images'],
             requiresAuth: true,

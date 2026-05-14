@@ -37,6 +37,8 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Tag\TagRepository;
+use Piwigo\Section\SectionContext;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
@@ -503,20 +505,30 @@ final readonly class GeneralEndpoints
     /** @param array<mixed> $params */
     public function historyLog(array $params, PwgServer &$service): void
     {
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
+        $currentCtx = SectionContextRegistry::current();
+
+        $section = $currentCtx->section;
         if (!empty($params['section']) && in_array($params['section'], SchemaHelper::getEnums(Tables::history(), 'section'))) {
-            $page['section'] = $params['section'];
+            $section = is_string($params['section']) ? $params['section'] : $section;
         }
+
+        $category = $currentCtx->category;
         if (!empty($params['cat_id'])) {
-            $page['category'] = ['id' => $params['cat_id']];
+            $category = ['id' => $params['cat_id']];
         }
+
+        $tagIds = $currentCtx->tagIds;
         $tagsString = is_string($params['tags_string'] ?? null) ? $params['tags_string'] : '';
         if ($tagsString !== '' && preg_match('/^\d+(,\d+)*$/', $tagsString)) {
-            $page['tag_ids'] = explode(',', $tagsString);
+            $tagIds = array_map('intval', explode(',', $tagsString));
         }
+
+        SectionContextRegistry::set(new SectionContext(
+            section: $section,
+            category: $category,
+            tagIds: $tagIds,
+        ));
+
         $logImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : null;
         if (!empty($params['image_id']) && $logImageId !== null) {
             $this->pictureService->increaseImageVisitCounter($logImageId);

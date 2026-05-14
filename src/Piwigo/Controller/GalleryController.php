@@ -24,6 +24,7 @@ use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchFilterRenderer;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionInitializer;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\SelectedTagsRenderer;
@@ -73,13 +74,14 @@ final readonly class GalleryController implements ControllerInterface
 
         /** @var array<string, mixed> $page */
         $page = &$GLOBALS['page'];
+        $ctx  = SectionContextRegistry::current();
 
-        // Extract commonly-used typed locals to avoid repeated mixed-type access
-        $items       = is_array($page['items'] ?? null) ? $page['items'] : [];
-        $start       = is_scalar($page['start'] ?? null) ? (int) $page['start'] : 0;
-        $nbImagePage = is_scalar($page['nb_image_page'] ?? null) ? (int) $page['nb_image_page'] : 0;
-        $section     = is_string($page['section'] ?? null) ? $page['section'] : 'categories';
-        $category    = is_array($page['category'] ?? null) ? $page['category'] : null;
+        // Extract commonly-used typed locals from SectionContext
+        $items       = $ctx->items;
+        $start       = $ctx->start;
+        $nbImagePage = $ctx->nbImagePage;
+        $section     = $ctx->section;
+        $category    = $ctx->category;
         $catId       = $category !== null && is_scalar($category['id'] ?? null) ? (int) $category['id'] : 0;
         $countCats   = $category !== null && is_scalar($category['count_categories'] ?? null)
             ? (int) $category['count_categories'] : null;
@@ -131,12 +133,12 @@ final readonly class GalleryController implements ControllerInterface
 
         // Caddie filling
         if ($this->stringUtil->inputString('caddie', null, $_GET) !== null) {
-            $this->util->fillCaddie(array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $items));
+            $this->util->fillCaddie(array_map(static fn (string $i): int => (int) $i, $items));
             $this->util->redirect($this->urlService->duplicateIndexUrl());
         }
 
         // Canonical URL
-        if (isset($page['is_homepage']) && $page['is_homepage']) {
+        if ($ctx->isHomepage) {
             $canonicalUrl = $this->urlService->getGalleryHomeUrl();
         } else {
             $safeStart = $nbImagePage > 0 ? (int) ((float) $nbImagePage * round((float) $start / (float) $nbImagePage)) : 0;
@@ -150,24 +152,24 @@ final readonly class GalleryController implements ControllerInterface
         $tpl->assign('use_standard_pages', is_array($useStandardPagesRaw) || is_scalar($useStandardPagesRaw) || $useStandardPagesRaw === null ? $useStandardPagesRaw : null);
 
         // Page title
-        $tpl->assign('TITLE', new Html(is_string($page['section_title'] ?? null) ? $page['section_title'] : ''));
+        $tpl->assign('TITLE', new Html($ctx->sectionTitle));
         $tpl->assign('NB_ITEMS', count($items));
 
         // Menubar
         $this->menubarRenderer->render();
 
-        if (empty($page['is_external'])) {
+        if (!$ctx->isExternal) {
             PageState::current()->bodyId = 'theCategoryPage';
 
-            if (isset($page['flat']) || isset($page['chronology_field'])) {
+            if ($ctx->flat || $ctx->chronologyField !== '') {
                 $tpl->assign('U_MODE_NORMAL', $this->urlService->duplicateIndexUrl([], ['chronology_field', 'start', 'flat']));
             }
 
-            if (Config::indexFlatIcon() && !isset($page['flat']) && $section === 'categories') {
+            if (Config::indexFlatIcon() && !$ctx->flat && $section === 'categories') {
                 $tpl->assign('U_MODE_FLAT', $this->urlService->duplicateIndexUrl(['flat' => ''], ['start', 'chronology_field']));
             }
 
-            if (!isset($page['chronology_field'])) {
+            if ($ctx->chronologyField === '') {
                 $chronoParams = [
                     'chronology_field' => 'created',
                     'chronology_style' => 'monthly',
@@ -181,8 +183,7 @@ final readonly class GalleryController implements ControllerInterface
                     $tpl->assign('U_MODE_POSTED', $this->urlService->duplicateIndexUrl($chronoParams, ['start', 'flat']));
                 }
             } else {
-                $chronoField = is_string($page['chronology_field']) && $page['chronology_field'] === 'created'
-                    ? 'posted' : 'created';
+                $chronoField = $ctx->chronologyField === 'created' ? 'posted' : 'created';
                 if (Config::raw('index_' . $chronoField . '_date_icon')) {
                     $url = $this->urlService->duplicateIndexUrl(
                         ['chronology_field' => $chronoField],
@@ -194,7 +195,7 @@ final readonly class GalleryController implements ControllerInterface
 
             $this->searchFilterRenderer->render();
 
-            if ($section === 'categories' && $category !== null && !isset($page['combined_categories'])) {
+            if ($section === 'categories' && $category !== null && $ctx->combinedCategories === null) {
                 $tpl->assign([
                     'SEARCH_IN_SET_BUTTON' => Config::indexSearchInSetButton(),
                     'SEARCH_IN_SET_ACTION' => Config::indexSearchInSetAction(),
@@ -205,10 +206,8 @@ final readonly class GalleryController implements ControllerInterface
             // Tag-related context (tags page only)
             $bodyDataArr = PageState::current()->bodyData;
             if (is_array($bodyDataArr['tag_ids'] ?? null)) {
-                $pageTagIds = is_array($page['tag_ids'] ?? null)
-                    ? array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $page['tag_ids'])
-                    : [];
-                $pageTags = is_array($page['tags'] ?? null) ? $page['tags'] : [];
+                $pageTagIds = $ctx->tagIds;
+                $pageTags   = $ctx->tags;
 
                 $tags        = $this->tagService->getCommonTags($items, Config::menubarTagCloudItemsNumber(), $pageTagIds);
                 $tags        = $this->tagService->addLevelToTags($tags);
@@ -247,8 +246,8 @@ final readonly class GalleryController implements ControllerInterface
             }
 
             // Search results hints
-            if ($section === 'search' && $start === 0 && !isset($page['chronology_field']) && isset($page['qsearch_details'])) {
-                $qd   = is_array($page['qsearch_details']) ? $page['qsearch_details'] : [];
+            if ($section === 'search' && $start === 0 && $ctx->chronologyField === '' && $ctx->qsearchDetails !== []) {
+                $qd = $ctx->qsearchDetails;
                 $cats = array_merge(
                     is_array($qd['matching_cats_no_images'] ?? null) ? $qd['matching_cats_no_images'] : [],
                     is_array($qd['matching_cats'] ?? null) ? $qd['matching_cats'] : []
@@ -316,12 +315,11 @@ final readonly class GalleryController implements ControllerInterface
 
             // Category description
             if (($start === 0 || Config::albumDescriptionOnAllPages())
-                && !isset($page['chronology_field'])
-                && !empty($page['comment'])
+                && $ctx->chronologyField === ''
+                && $ctx->comment !== ''
             ) {
-                $commentVal = $page['comment'];
-                $commentText = is_scalar($commentVal) ? (string) $commentVal : '';
-                $tpl->assign('CONTENT_DESCRIPTION', $commentText !== '' ? new Html($commentText) : null);
+                $commentText = $ctx->comment;
+                $tpl->assign('CONTENT_DESCRIPTION', new Html($commentText));
             }
 
             if ($countCats === 0) {
@@ -330,8 +328,8 @@ final readonly class GalleryController implements ControllerInterface
 
             // Sub-category grid
             if ($start === 0
-                && !isset($page['flat'])
-                && !isset($page['chronology_field'])
+                && !$ctx->flat
+                && $ctx->chronologyField === ''
                 && ($section === 'recent_cats' || $section === 'categories')
                 && ($countCats === null || $countCats > 0)
             ) {

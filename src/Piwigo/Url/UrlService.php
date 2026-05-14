@@ -14,6 +14,7 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -32,9 +33,8 @@ final readonly class UrlService
 
     public static function getRootUrl(): string
     {
-        $page     = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
-        $rootPath = $page['root_path'] ?? null;
-        if (is_string($rootPath) && $rootPath !== '') {
+        $rootPath = SectionContextRegistry::current()->rootPath;
+        if ($rootPath !== '') {
             return $rootPath;
         }
         /** @psalm-var string $rootUrl */
@@ -150,7 +150,7 @@ final readonly class UrlService
      */
     public function paramsForDuplication(array $redefined, array $removed): array
     {
-        $params = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
+        $params = SectionContextRegistry::current()->toUrlParams();
 
         foreach ($removed as $paramKey) {
             unset($params[$paramKey]);

@@ -35,6 +35,7 @@ use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Picture\PictureService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Rate\RateService;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionInitializer;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
@@ -99,13 +100,13 @@ final readonly class PictureController implements ControllerInterface
         $user = &$GLOBALS['user'];
         /** @var array<string, mixed> $lang */
         $lang = &$GLOBALS['lang'];
+        $ctx  = SectionContextRegistry::current();
 
-        // Typed locals extracted from $page after SectionInitializer has populated it
-        $category  = is_array($page['category'] ?? null) ? $page['category'] : null;
+        // Typed locals extracted from SectionContext after SectionInitializer has populated it
+        $category  = $ctx->category;
         $catId     = $category !== null && is_scalar($category['id'] ?? null) ? (int) $category['id'] : 0;
-        $rawItems  = is_array($page['items'] ?? null) ? $page['items'] : [];
-        $items     = array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $rawItems);
-        $imageId   = is_scalar($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
+        $items     = array_map(static fn (string $i): int => (int) $i, $ctx->items);
+        $imageId   = $ctx->imageId !== null ? (int) $ctx->imageId : 0;
 
         if ($category !== null) {
             $this->categoryService->checkRestrictions($catId);
@@ -118,9 +119,7 @@ final readonly class PictureController implements ControllerInterface
             if ($imageId > 0) {
                 $row = $imageRepo->findById($imageId);
             } else {
-                assert(!empty($page['image_file']));
-                $imageFileRaw = $page['image_file'];
-                $imageFileStr = is_string($imageFileRaw) ? $imageFileRaw : '';
+                $imageFileStr = $ctx->imageFile;
                 $replaced = str_replace(['_', '%'], ['/_', '/%'], $imageFileStr);
                 $pattern = $replaced . '.%';
                 $row     = $imageRepo->findByFilePattern($pattern);
@@ -132,6 +131,7 @@ final readonly class PictureController implements ControllerInterface
             if (is_numeric($row['level'] ?? null) && is_numeric($user['level'] ?? null) && $row['level'] > $user['level']) {
                 $this->htmlService->accessDenied();
             }
+            $resolvedImageFile = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
             $page['image_id']   = $row['id'];
             $page['image_file'] = $row['file'];
             $imageId = is_scalar($row['id'] ?? null) ? (int) $row['id'] : 0;
@@ -143,7 +143,7 @@ final readonly class PictureController implements ControllerInterface
                     $this->htmlService->pageNotFound('The requested image is filtered', $this->urlService->duplicateIndexUrl());
                     return ResponseFactory::create(404);
                 }
-                if ('categories' == $page['section'] && !isset($page['category'])) {
+                if ($ctx->section === 'categories' && $ctx->category === null) {
                     $this->htmlService->accessDenied();
                 } else {
                     $query = '
@@ -155,13 +155,13 @@ SELECT id
                     if ($this->conn->executeQuery($query)->fetchOne() === false) {
                         $this->htmlService->accessDenied();
                     } else {
-                        if ('best_rated' == $page['section']) {
+                        if ($ctx->section === 'best_rated') {
                             $page['rank_of'][$imageId] = count($items);
                             $items[]                   = $imageId;
                             $page['items']             = $items;
                         } else {
-                            $url = $this->urlService->makePictureUrl(['image_id' => $imageId, 'image_file' => is_scalar($page['image_file'] ?? null) ? $page['image_file'] : '', 'section' => 'categories', 'flat' => true]);
-                            $this->htmlService->setStatusHeader('recent_pics' == $page['section'] ? 301 : 302);
+                            $url = $this->urlService->makePictureUrl(['image_id' => $imageId, 'image_file' => $resolvedImageFile, 'section' => 'categories', 'flat' => true]);
+                            $this->htmlService->setStatusHeader($ctx->section === 'recent_pics' ? 301 : 302);
                             $this->util->redirectHttp($url);
                         }
                     }
@@ -184,11 +184,13 @@ SELECT id
 
         $tpl = TemplateRegistry::current();
 
-        // Refresh typed locals in case image_id was updated in the block above
+        // Refresh typed locals in case image_id or items was updated in the block above
         $pageItems   = $page['items'] ?? null;
-        $items       = array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, is_array($pageItems) ? $pageItems : []);
-        $imageId     = is_scalar($page['image_id'] ?? null) ? (int) $page['image_id'] : 0;
-        $nbImagePage = is_scalar($page['nb_image_page'] ?? null) ? (int) $page['nb_image_page'] : 0;
+        $items       = is_array($pageItems)
+            ? array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $pageItems)
+            : $items;
+        $imageId     = is_scalar($page['image_id'] ?? null) ? (int) $page['image_id'] : $imageId;
+        $nbImagePage = $ctx->nbImagePage;
 
         $page['first_rank']   = 0;
         $page['last_rank']    = count($items) - 1;
@@ -230,7 +232,7 @@ SELECT id
                         is_numeric($user['id']) ? (int) $user['id'] : 0,
                         $imageId
                     );
-                    $this->util->redirect('favorites' == $page['section'] ? $url_up : $url_self);
+                    $this->util->redirect($ctx->section === 'favorites' ? $url_up : $url_self);
                     break;
                 case 'set_as_representative':
                     if ($this->permissionService->isAdmin() && $category !== null) {
@@ -509,9 +511,9 @@ SELECT *
         }
 
         $tpl->assign([
-            'SECTION_TITLE'        => new Html(is_string($page['section_title'] ?? null) ? $page['section_title'] : ''),
+            'SECTION_TITLE'        => new Html($ctx->sectionTitle),
             'PHOTO'                => $title_nb,
-            'IS_HOME'              => ('categories' == $page['section'] && !isset($page['category'])),
+            'IS_HOME'              => ($ctx->section === 'categories' && $ctx->category === null),
             'LEVEL_SEPARATOR'      => Config::levelSeparator(),
             'U_UP'                 => $url_up,
             'DISPLAY_NAV_BUTTONS'  => Config::pictureNavigationIcons(),
@@ -523,7 +525,7 @@ SELECT *
         }
 
         if ($this->permissionService->isAdmin()) {
-            if (isset($page['category']) && Config::pictureRepresentativeIcon()) {
+            if ($ctx->category !== null && Config::pictureRepresentativeIcon()) {
                 $tpl->assign(['U_SET_AS_REPRESENTATIVE' => $this->urlService->addUrlParams($url_self, ['action' => 'set_as_representative'])]);
             }
             if (Config::pictureEditIcon()) {

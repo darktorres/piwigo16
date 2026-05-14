@@ -515,8 +515,6 @@ final class BatchManagerController
 
         // ── Tabs ──────────────────────────────────────────────────────────────
 
-        $GLOBALS['manager_link'] = $manager_link = $this->urlGenerator->admin('batch_manager') . '&mode=';
-
         if (isset($_GET['mode'])) {
             $this->util->checkInputParameter('mode', $_GET, false, '/^(global|unit)$/');
             $this->batchTab = is_string($_GET['mode']) ? $_GET['mode'] : 'global';

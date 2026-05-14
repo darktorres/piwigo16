@@ -146,7 +146,7 @@ final class MiscController
 
         $this->util->checkInputParameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
 
-        $GLOBALS['base_url'] = $base_url = $this->urlGenerator->admin();
+        $base_url = $this->urlGenerator->admin();
         $this->mustRepost = false;
 
         $mode = (!isset($_GET['mode']) || !is_string($_GET['mode'])) ? 'send' : $_GET['mode'];

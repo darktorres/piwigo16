@@ -218,8 +218,8 @@ final readonly class AdminController implements ControllerInterface
         $adminSep   = str_contains($adminBase, '?') ? '&' : '?';
         $wsBase     = $this->urlGenerator->ws();
         $wsSep      = str_contains($wsBase, '?') ? '&' : '?';
-        $GLOBALS['link_start'] = $link_start = $adminBase . $adminSep . 'page=';
-        $GLOBALS['conf_link']  = $conf_link  = $link_start . 'configuration&section=';
+        $link_start = $adminBase . $adminSep . 'page=';
+        $conf_link  = $link_start . 'configuration&section=';
 
         $this->util->checkInputParameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 

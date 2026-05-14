@@ -323,10 +323,10 @@ These globals are used as request-scoped data channels between unrelated classes
 | `$GLOBALS['themeconfs']` | `Template::loadThemeconf()` | `Template::loadThemeconf()` | Self-contained per-request cache for `themeconf.inc.php` files. |
 | `$GLOBALS['prefixeTable']` | `CommonBootstrap`, `UpgradeController`, `InstallController` | `UpgradeService`, `MaintenanceService` | DB table prefix. Pre-boot config value. |
 | `$GLOBALS['admin_album_base_url']` | `AlbumController` | `CoreTabsRegistrar` | Admin album URL prefix, set before tab rendering. |
-| `$GLOBALS['link_start']`, `$GLOBALS['conf_link']` | `AdminController` | `CoreTabsRegistrar` | Admin page/configuration URL prefixes, set before tab rendering. |
-| `$GLOBALS['manager_link']` | `BatchManagerController` | `CoreTabsRegistrar` | Batch manager URL prefix, set before tab rendering. |
-| `$GLOBALS['base_url']` | `MiscController` | `CoreTabsRegistrar` | Admin base URL for the misc page's tabs. |
-| `$GLOBALS['admin_photo_base_url']` | `PhotoController` | `CoreTabsRegistrar` | Photo admin URL prefix, set before tab rendering. |
+| `$GLOBALS['link_start']`, `$GLOBALS['conf_link']` | ~~`AdminController`~~ | ~~`CoreTabsRegistrar`~~ | **Fixed 2026-05-14**: `CoreTabsRegistrar` now calls `$ug->admin('pagename')` directly; writes removed from `AdminController` (local vars kept — still used within that controller). |
+| `$GLOBALS['manager_link']` | ~~`BatchManagerController`~~ | ~~`CoreTabsRegistrar`~~ | **Fixed 2026-05-14**: `CoreTabsRegistrar` uses `$ug->admin('batch_manager').'&mode='` directly; write + unused local var removed from `BatchManagerController`. |
+| `$GLOBALS['base_url']` | ~~`MiscController`~~ | ~~`CoreTabsRegistrar`~~ | **Fixed 2026-05-14**: `CoreTabsRegistrar` uses `$ug->admin('notification_by_mail')` directly; write removed from `MiscController` (local var kept — still used within that controller). |
+| `$GLOBALS['admin_photo_base_url']` | ~~`PhotoController`~~ | ~~`CoreTabsRegistrar`~~ | **Fixed 2026-05-14**: write already removed (dead-code pass); `CoreTabsRegistrar` now reads `$_GET['image_id']` directly and computes the URL via `$ug->admin()`. |
 | `$GLOBALS['maint_actions']` | `MaintenanceController` | `MaintenanceController` | Self-contained: set and consumed within the same controller. |
 | `$GLOBALS['countQueries']` / `$GLOBALS['queriesTime']` | *Nothing in src/* | `PageTailRenderer` (via `PageState::current()->countQueries`) | Were incremented by old `include/` DB layer. Now always 0. |
 | `$GLOBALS['page']['search']` + `['nb_lines']` + `['start']` | `GeneralEndpoints::historySearch()` | `MaintenanceController::history()` | WS history search state: AJAX call sets search rules + result count, page re-render reads them to build the nav bar and prefill the form. Survives the §1.1 migration because both sides still use `$GLOBALS['page']` explicitly. |

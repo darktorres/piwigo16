@@ -221,22 +221,13 @@ No `$GLOBALS['user']` remains anywhere in production `src/`.
 
 ## 2. Session Handler Bridge
 
-**File:** `src/Piwigo/Session/PwgSession.php`
+~~**File:** `src/Piwigo/Session/PwgSession.php`~~
 
-`PwgSession implements \SessionHandlerInterface` is registered with `session_set_save_handler()`. Every method immediately delegates to `Kernel::service(SessionService::class)`:
+**Status: ✅ REMOVED (2026-05-14).** `PwgSession.php` deleted.
 
-```php
-public function open(string $path, string $name): bool {
-    return Kernel::service(SessionService::class)->sessionOpen($path, $name);
-}
-// … close, read, write, destroy, gc
-```
+`SessionService` now implements `\SessionHandlerInterface` directly (`final readonly` → `final` with explicit `readonly` per constructor param). Handler methods renamed to match the interface (`sessionOpen→open`, `sessionClose→close`, `sessionRead→read`, `sessionWrite→write`, `sessionDestroy→destroy`, `sessionGc→gc`).
 
-This adapter exists because PHP requires a `SessionHandlerInterface` object, but `SessionService` holds the real logic and is a DI-managed service. The bridge cannot be eliminated without making `SessionService` itself implement `SessionHandlerInterface` and registering it directly.
-
-**Note:** The `#[Override]` attribute on each method and the `// see https://php.watch/versions/8.4/…` comment confirm the current code uses the valid object-form signature (PHP 8.4's deprecation only affects the old function-argument form).
-
-**Status: ❌ NOT MET.** Verified 2026-05-14. `SessionService` is `final readonly class` — it cannot implement `SessionHandlerInterface` (interface methods mutate state, incompatible with `readonly`). `PwgSession` is the only bridge available. **Removal path:** make `SessionService` non-readonly and have it implement `SessionHandlerInterface`, then register it directly via `session_set_save_handler(new SessionService(…))` from the DI container.
+`SessionBootstrap` passes `Kernel::service(SessionService::class)` directly to `session_set_save_handler()` — Kernel is already booted at that point (line 119 vs 158 in CommonBootstrap). Direct `sessionGc()` callers in `AuthService` and `MaintenanceController` updated to `gc(0)` (the `$max_lifetime` argument is ignored; the method always uses `Config::sessionLength()`).
 
 ---
 

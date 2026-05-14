@@ -9,7 +9,6 @@ use Piwigo\Admin\History\HistoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Auth\CookieService;
-use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
@@ -76,6 +75,7 @@ final readonly class GeneralEndpoints
         private UserRepository $userRepository,
         private Util $util,
         private WsHelper $wsHelper,
+        private \Psr\Cache\CacheItemPoolInterface $pool,
     ) {
     }
 
@@ -99,14 +99,15 @@ final readonly class GeneralEndpoints
 
     private function cacheSizeWithTtl(): int
     {
-        $persistentCache = PersistentCacheRegistry::current();
-        $cacheKey        = $persistentCache->makeKey('ws_cache_size');
-        $value           = null;
-        if ($persistentCache->get($cacheKey, $value) && is_int($value)) {
-            return $value;
+        $cacheKey = md5('ws_cache_size' . AppInfo::VERSION);
+        $item     = $this->pool->getItem($cacheKey);
+        if ($item->isHit() && is_int($item->get())) {
+            return (int) $item->get();
         }
         $bytes = $this->directorySizeBytes(Config::dataLocation() . 'cache') ?? 0;
-        $persistentCache->set($cacheKey, $bytes, 300);
+        $item->set($bytes);
+        $item->expiresAfter(300);
+        $this->pool->save($item);
         return $bytes;
     }
 

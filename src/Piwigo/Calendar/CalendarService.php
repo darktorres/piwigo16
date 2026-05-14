@@ -6,8 +6,8 @@ namespace Piwigo\Calendar;
 
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
-use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\AppInfo;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
@@ -19,6 +19,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Users\PermissionService;
+use Psr\Cache\CacheItemPoolInterface;
 
 final readonly class CalendarService
 {
@@ -28,13 +29,13 @@ final readonly class CalendarService
         private Util $util,
         private PermissionService $permissionService,
         private UrlService $urlService,
+        private CacheItemPoolInterface $pool,
     ) {
     }
     public function initializeCalendar(): void
     {
-        $filter          = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
-        $persistentCache = PersistentCacheRegistry::current();
-        $template        = TemplateRegistry::current();
+        $filter   = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
+        $template = TemplateRegistry::current();
         $currentUser     = CurrentUser::get();
         $user            = $currentUser->rawAttributes;
         $page            = &$GLOBALS['page'];
@@ -228,22 +229,30 @@ WHERE id IN (' . implode(',', $items) . ')';
                 );
             }
 
+            $cacheItem = null;
             if ('categories' == $ctx->section && $ctx->category === null
               && (count($chronologyDateList) == 0
                     or ($chronologyDateList[0] == 'any' && count($chronologyDateList) == 1))
             ) {
                 $cacheUpdateTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
-                $cacheKey        = $persistentCache->makeKey($currentUser->id . $cacheUpdateTime . $calendar->date_field . $orderBy);
+                $cacheKey        = md5($currentUser->id . $cacheUpdateTime . $calendar->date_field . $orderBy . AppInfo::VERSION);
+                $cacheItem       = $this->pool->getItem($cacheKey);
             }
 
-            if (!isset($cacheKey) || !$persistentCache->get($cacheKey, $page['items'])) {
+            if ($cacheItem !== null && $cacheItem->isHit()) {
+                /** @var mixed $cachedItems */
+                $cachedItems   = $cacheItem->get();
+                $page['items'] = is_array($cachedItems) ? $cachedItems : [];
+            } else {
                 $query = 'SELECT DISTINCT id '
                   . $calendar->inner_sql . '
   ' . $calendar->getDateWhere() . '
   ' . $orderBy;
                 $page['items'] = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
-                if (isset($cacheKey)) {
-                    $persistentCache->set($cacheKey, $page['items']);
+                if ($cacheItem !== null) {
+                    $cacheItem->set($page['items']);
+                    $cacheItem->expiresAfter(86400);
+                    $this->pool->save($cacheItem);
                 }
             }
         }

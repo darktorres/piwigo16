@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Tag;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Cache\RequestCache;
+use Piwigo\Core\AppInfo;
 use Piwigo\Config\Config;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
@@ -14,6 +14,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Psr\Cache\CacheItemPoolInterface;
 
 final readonly class TagService
 {
@@ -22,6 +23,7 @@ final readonly class TagService
         private HtmlService $htmlService,
         private TagRepository $repo,
         private PermissionService $permissionService,
+        private CacheItemPoolInterface $pool,
     ) {
     }
 
@@ -59,10 +61,9 @@ final readonly class TagService
      */
     private function fetchAvailableTags(array $tagIds): array
     {
-        $persistentCache = PersistentCacheRegistry::current();
-        $user            = CurrentUser::get()->rawAttributes;
+        $user = CurrentUser::get()->rawAttributes;
 
-        $usePersistentCache = true;
+        $useCache = true;
 
         $query = '
 SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
@@ -80,7 +81,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
         );
 
         if (count($tagIds) > 0) {
-            $usePersistentCache = false;
+            $useCache = false;
             $query .= '
     AND tag_id IN (' . implode(',', $tagIds) . ')
 ';
@@ -90,20 +91,25 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
   GROUP BY tag_id
 ;';
 
-        if ($usePersistentCache) {
+        if ($useCache) {
             $userId      = CurrentUser::get()->id;
             $cacheUpdate = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
-            $cacheKey    = $persistentCache->makeKey('get_available_tags' . $userId . $cacheUpdate);
-            $tagCounters = [];
-            if (!$persistentCache->get($cacheKey, $tagCounters)) {
+            $cacheKey    = md5('get_available_tags' . $userId . $cacheUpdate . AppInfo::VERSION);
+            $item        = $this->pool->getItem($cacheKey);
+            if ($item->isHit()) {
+                /** @var array<mixed> $tagCounters */
+                $tagCounters = $item->get();
+            } else {
                 $tagCounters = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
-                $persistentCache->set($cacheKey, $tagCounters);
+                $item->set($tagCounters);
+                $item->expiresAfter(86400);
+                $this->pool->save($item);
             }
         } else {
             $tagCounters = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
         }
 
-        if (!is_array($tagCounters) || empty($tagCounters)) {
+        if (empty($tagCounters)) {
             return [];
         }
 

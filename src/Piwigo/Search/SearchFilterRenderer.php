@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
@@ -20,6 +20,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Users\PermissionService;
+use Psr\Cache\CacheItemPoolInterface;
 
 final readonly class SearchFilterRenderer
 {
@@ -33,6 +34,7 @@ final readonly class SearchFilterRenderer
         private SearchService $searchService,
         private TagService $tagService,
         private UrlService $urlService,
+        private CacheItemPoolInterface $pool,
     ) {
     }
 
@@ -47,8 +49,6 @@ final readonly class SearchFilterRenderer
         $user = CurrentUser::get()->rawAttributes;
         $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '';
         $userCacheTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
-        $persistent_cache = PersistentCacheRegistry::current();
-
         $filters_views_raw = $this->configService->confGetParam('filters_views', Config::defaultFiltersViews());
         $filters_views_str = is_array($filters_views_raw) ? $filters_views_raw : (is_string($filters_views_raw) ? $filters_views_raw : '');
         /** @var array<string, array<string,mixed>> $filters_views */
@@ -159,14 +159,18 @@ SELECT
 ;';
 
                 if (!preg_match('/^image_id IN/', $filter_clause)) {
-                    $cache_key = $persistent_cache->makeKey('filter_author_rows' . $userId . $userCacheTime);
-                    $filter_rows_raw = [];
-                    if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
-                        $db_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
-                        $persistent_cache->set($cache_key, $db_rows);
-                        $filter_rows = $this->normalizeRows($db_rows);
+                    $cache_key = md5('filter_author_rows' . $userId . $userCacheTime . AppInfo::VERSION);
+                    $item      = $this->pool->getItem($cache_key);
+                    if ($item->isHit()) {
+                        /** @var mixed $filter_rows_raw */
+                        $filter_rows_raw = $item->get();
+                        $filter_rows     = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
                     } else {
-                        $filter_rows = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
+                        $db_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
+                        $item->set($db_rows);
+                        $item->expiresAfter(86400);
+                        $this->pool->save($item);
+                        $filter_rows = $this->normalizeRows($db_rows);
                     }
                 } else {
                     $filter_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
@@ -190,11 +194,17 @@ SELECT
 
             if (isset($my_search['fields']['date_posted']) and $display_filters['post_date']['access']) {
                 $filter_clause = $this->searchService->getClauseForFilter('date_posted');
-                $cache_key = $persistent_cache->makeKey('filter_date_posted' . $userId . $userCacheTime);
-                $date_posted_raw = ['pre_counters' => [], 'list_of_dates' => []];
-                $cache_hit_date_posted = false;
-                $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !($cache_hit_date_posted = $persistent_cache->get($cache_key, $date_posted_raw));
-                $date_posted = $this->normalizeDateData(is_array($date_posted_raw) ? $date_posted_raw : null);
+                $cache_key     = md5('filter_date_posted' . $userId . $userCacheTime . AppInfo::VERSION);
+                $item_dp       = $this->pool->getItem($cache_key);
+                $cache_hit_date_posted = !preg_match('/^image_id IN/', $filter_clause) && $item_dp->isHit();
+                if ($cache_hit_date_posted) {
+                    /** @var mixed $date_posted_raw */
+                    $date_posted_raw = $item_dp->get();
+                } else {
+                    $date_posted_raw = ['pre_counters' => [], 'list_of_dates' => []];
+                }
+                $date_posted  = $this->normalizeDateData(is_array($date_posted_raw) ? $date_posted_raw : null);
+                $set_cache_dp = !preg_match('/^image_id IN/', $filter_clause) && !$cache_hit_date_posted;
 
                 if (!$cache_hit_date_posted) {
                     $query = '
@@ -239,8 +249,10 @@ SELECT
 
                     $date_posted = ['pre_counters' => $pre_counters, 'list_of_dates' => $list_of_dates];
 
-                    if ($set_persistent_cache) {
-                        $persistent_cache->set($cache_key, $date_posted);
+                    if ($set_cache_dp) {
+                        $item_dp->set($date_posted);
+                        $item_dp->expiresAfter(86400);
+                        $this->pool->save($item_dp);
                     }
                 }
 
@@ -293,11 +305,17 @@ SELECT
 
             if (isset($my_search['fields']['date_created']) and $display_filters['creation_date']['access']) {
                 $filter_clause = $this->searchService->getClauseForFilter('date_created');
-                $cache_key = $persistent_cache->makeKey('filter_date_created' . $userId . $userCacheTime);
-                $date_created_raw = ['pre_counters' => [], 'list_of_dates' => []];
-                $cache_hit_date_created = false;
-                $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !($cache_hit_date_created = $persistent_cache->get($cache_key, $date_created_raw));
-                $date_created = $this->normalizeDateData(is_array($date_created_raw) ? $date_created_raw : null);
+                $cache_key     = md5('filter_date_created' . $userId . $userCacheTime . AppInfo::VERSION);
+                $item_dc       = $this->pool->getItem($cache_key);
+                $cache_hit_date_created = !preg_match('/^image_id IN/', $filter_clause) && $item_dc->isHit();
+                if ($cache_hit_date_created) {
+                    /** @var mixed $date_created_raw */
+                    $date_created_raw = $item_dc->get();
+                } else {
+                    $date_created_raw = ['pre_counters' => [], 'list_of_dates' => []];
+                }
+                $date_created  = $this->normalizeDateData(is_array($date_created_raw) ? $date_created_raw : null);
+                $set_cache_dc  = !preg_match('/^image_id IN/', $filter_clause) && !$cache_hit_date_created;
 
                 if (!$cache_hit_date_created) {
                     $query = '
@@ -344,8 +362,10 @@ SELECT
 
                     $date_created = ['pre_counters' => $pre_counters, 'list_of_dates' => $list_of_dates];
 
-                    if ($set_persistent_cache) {
-                        $persistent_cache->set($cache_key, $date_created);
+                    if ($set_cache_dc) {
+                        $item_dc->set($date_created);
+                        $item_dc->expiresAfter(86400);
+                        $this->pool->save($item_dc);
                     }
                 }
 
@@ -411,14 +431,18 @@ SELECT
 ;';
 
                 if (!preg_match('/^image_id IN/', $filter_clause)) {
-                    $cache_key = $persistent_cache->makeKey('filter_added_by_rows' . $userId . $userCacheTime);
-                    $filter_rows_raw = [];
-                    if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
-                        $db_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
-                        $persistent_cache->set($cache_key, $db_rows);
-                        $filter_rows = $this->normalizeRows($db_rows);
+                    $cache_key = md5('filter_added_by_rows' . $userId . $userCacheTime . AppInfo::VERSION);
+                    $item_ab   = $this->pool->getItem($cache_key);
+                    if ($item_ab->isHit()) {
+                        /** @var mixed $filter_rows_raw */
+                        $filter_rows_raw = $item_ab->get();
+                        $filter_rows     = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
                     } else {
-                        $filter_rows = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
+                        $db_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
+                        $item_ab->set($db_rows);
+                        $item_ab->expiresAfter(86400);
+                        $this->pool->save($item_ab);
+                        $filter_rows = $this->normalizeRows($db_rows);
                     }
                 } else {
                     $filter_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
@@ -495,9 +519,13 @@ SELECT
             if (isset($my_search['fields']['filetypes']) and $display_filters['file_type']['access']) {
                 $filter_clause = $this->searchService->getClauseForFilter('filetypes');
 
-                $cache_key = $persistent_cache->makeKey('file_exts' . $userId . $userCacheTime);
-                $all_exts_raw = [];
-                if (!$persistent_cache->get($cache_key, $all_exts_raw)) {
+                $cache_key    = md5('file_exts' . $userId . $userCacheTime . AppInfo::VERSION);
+                $item_fe      = $this->pool->getItem($cache_key);
+                if ($item_fe->isHit()) {
+                    /** @var mixed $all_exts_raw */
+                    $all_exts_raw = $item_fe->get();
+                    $all_exts     = is_array($all_exts_raw) ? $all_exts_raw : [];
+                } else {
                     $query = '
 SELECT
     SUBSTRING_INDEX(path, ".", -1) AS ext,
@@ -508,10 +536,11 @@ SELECT
   GROUP BY ext
   ORDER BY counter DESC
 ;';
-                    $all_exts_raw = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'counter', 'ext');
-                    $persistent_cache->set($cache_key, $all_exts_raw);
+                    $all_exts = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'counter', 'ext');
+                    $item_fe->set($all_exts);
+                    $item_fe->expiresAfter(86400);
+                    $this->pool->save($item_fe);
                 }
-                $all_exts = is_array($all_exts_raw) ? $all_exts_raw : [];
 
                 if (preg_match('/^image_id IN/', $filter_clause)) {
                     $query = '
@@ -543,11 +572,17 @@ SELECT
 
                 if (isset($my_search['fields']['ratings']) and $display_filters['rating']['access']) {
                     $filter_clause = $this->searchService->getClauseForFilter('ratings');
-                    $cache_key = $persistent_cache->makeKey('filter_ratings' . $userId . $userCacheTime);
-                    $ratings_raw = null;
-                    $cache_hit_ratings = false;
-                    $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !($cache_hit_ratings = $persistent_cache->get($cache_key, $ratings_raw));
-                    $ratings = is_array($ratings_raw) ? $ratings_raw : null;
+                    $cache_key         = md5('filter_ratings' . $userId . $userCacheTime . AppInfo::VERSION);
+                    $item_rat          = $this->pool->getItem($cache_key);
+                    $cache_hit_ratings = !preg_match('/^image_id IN/', $filter_clause) && $item_rat->isHit();
+                    if ($cache_hit_ratings) {
+                        /** @var mixed $ratings_raw */
+                        $ratings_raw = $item_rat->get();
+                    } else {
+                        $ratings_raw = null;
+                    }
+                    $ratings      = is_array($ratings_raw) ? $ratings_raw : null;
+                    $set_cache_rat = !preg_match('/^image_id IN/', $filter_clause) && !$cache_hit_ratings;
 
                     if (!$cache_hit_ratings) {
                         $query = '
@@ -576,8 +611,10 @@ SELECT
                             $ratings[$r]++;
                         }
 
-                        if ($set_persistent_cache) {
-                            $persistent_cache->set($cache_key, $ratings);
+                        if ($set_cache_rat) {
+                            $item_rat->set($ratings);
+                            $item_rat->expiresAfter(86400);
+                            $this->pool->save($item_rat);
                         }
                     }
                     $template->assign('RATING', $ratings);
@@ -635,11 +672,17 @@ SELECT
 
             if (isset($my_search['fields']['ratios']) and $display_filters['ratio']['access']) {
                 $filter_clause = $this->searchService->getClauseForFilter('ratios');
-                $cache_key = $persistent_cache->makeKey('filter_ratios' . $userId . $userCacheTime);
-                $ratios_raw = null;
-                $cache_hit_ratios = false;
-                $set_persistent_cache = !preg_match('/^image_id IN/', $filter_clause) and !($cache_hit_ratios = $persistent_cache->get($cache_key, $ratios_raw));
-                $ratios = is_array($ratios_raw) ? $ratios_raw : null;
+                $cache_key         = md5('filter_ratios' . $userId . $userCacheTime . AppInfo::VERSION);
+                $item_ratio        = $this->pool->getItem($cache_key);
+                $cache_hit_ratios  = !preg_match('/^image_id IN/', $filter_clause) && $item_ratio->isHit();
+                if ($cache_hit_ratios) {
+                    /** @var mixed $ratios_raw */
+                    $ratios_raw = $item_ratio->get();
+                } else {
+                    $ratios_raw = null;
+                }
+                $ratios         = is_array($ratios_raw) ? $ratios_raw : null;
+                $set_cache_ratio = !preg_match('/^image_id IN/', $filter_clause) && !$cache_hit_ratios;
 
                 if (!$cache_hit_ratios) {
                     $query = '
@@ -675,8 +718,10 @@ SELECT
                         }
                     }
 
-                    if ($set_persistent_cache) {
-                        $persistent_cache->set($cache_key, $ratios);
+                    if ($set_cache_ratio) {
+                        $item_ratio->set($ratios);
+                        $item_ratio->expiresAfter(86400);
+                        $this->pool->save($item_ratio);
                     }
                 }
                 $template->assign('RATIOS', $ratios);
@@ -699,13 +744,18 @@ SELECT
 ;';
 
                 if (!preg_match('/^image_id IN/', $filter_clause)) {
-                    $cache_key = $persistent_cache->makeKey('filter_height_rows' . $userId . $userCacheTime);
-                    $filter_rows_raw = [];
-                    if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
-                        $filter_rows_raw = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'height');
-                        $persistent_cache->set($cache_key, $filter_rows_raw);
+                    $cache_key = md5('filter_height_rows' . $userId . $userCacheTime . AppInfo::VERSION);
+                    $item_h    = $this->pool->getItem($cache_key);
+                    if ($item_h->isHit()) {
+                        /** @var mixed $filter_rows_raw */
+                        $filter_rows_raw = $item_h->get();
+                        $filter_rows     = is_array($filter_rows_raw) ? $filter_rows_raw : [];
+                    } else {
+                        $filter_rows = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'height');
+                        $item_h->set($filter_rows);
+                        $item_h->expiresAfter(86400);
+                        $this->pool->save($item_h);
                     }
-                    $filter_rows = is_array($filter_rows_raw) ? array_values($filter_rows_raw) : [];
                 } else {
                     $filter_rows = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'height');
                 }
@@ -740,13 +790,18 @@ SELECT
 ;';
 
                 if (!preg_match('/^image_id IN/', $filter_clause)) {
-                    $cache_key = $persistent_cache->makeKey('filter_width_rows' . $userId . $userCacheTime);
-                    $filter_rows_raw = [];
-                    if (!$persistent_cache->get($cache_key, $filter_rows_raw)) {
-                        $filter_rows_raw = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'width');
-                        $persistent_cache->set($cache_key, $filter_rows_raw);
+                    $cache_key = md5('filter_width_rows' . $userId . $userCacheTime . AppInfo::VERSION);
+                    $item_w    = $this->pool->getItem($cache_key);
+                    if ($item_w->isHit()) {
+                        /** @var mixed $filter_rows_raw */
+                        $filter_rows_raw = $item_w->get();
+                        $filter_rows     = is_array($filter_rows_raw) ? $filter_rows_raw : [];
+                    } else {
+                        $filter_rows = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'width');
+                        $item_w->set($filter_rows);
+                        $item_w->expiresAfter(86400);
+                        $this->pool->save($item_w);
                     }
-                    $filter_rows = is_array($filter_rows_raw) ? array_values($filter_rows_raw) : [];
                 } else {
                     $filter_rows = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'width');
                 }

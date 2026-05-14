@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\AppInfo;
 use Piwigo\Config\Config;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbInfo;
@@ -25,6 +25,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Users\UserService;
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
 
 final readonly class SearchService
@@ -41,6 +42,7 @@ final readonly class SearchService
         private TagService $tagService,
         private UrlService $urlService,
         private UserService $userService,
+        private CacheItemPoolInterface $pool,
     ) {
     }
 
@@ -857,28 +859,35 @@ final readonly class SearchService
      */
     public function getQuickSearchResults(string $q, array $options): ?array
     {
-        $persistentCache = PersistentCacheRegistry::current();
-        $currentUser     = CurrentUser::get();
-        $cacheUpdate     = is_scalar($currentUser->rawAttributes['cache_update_time'] ?? null)
+        $currentUser = CurrentUser::get();
+        $cacheUpdate = is_scalar($currentUser->rawAttributes['cache_update_time'] ?? null)
             ? (string) $currentUser->rawAttributes['cache_update_time']
             : '';
 
-        $cacheKey = $persistentCache->makeKey([
-            strtolower($q),
-            Config::orderBy(),
-            $currentUser->id, $cacheUpdate,
-            isset($options['permissions']) ? (bool) $options['permissions'] : true,
-            $options['images_where'] ?? '',
-        ]);
-        $cachedRes = false;
-        if ($persistentCache->get($cacheKey, $cachedRes)) {
+        $cacheKey = md5(implode('&', array_map(
+            static fn (mixed $k): string => is_scalar($k) ? (string) $k : '',
+            [
+                strtolower($q),
+                Config::orderBy(),
+                $currentUser->id, $cacheUpdate,
+                isset($options['permissions']) ? (bool) $options['permissions'] : true,
+                $options['images_where'] ?? '',
+            ]
+        )) . AppInfo::VERSION);
+
+        $item = $this->pool->getItem($cacheKey);
+        if ($item->isHit()) {
+            /** @var mixed $cachedRes */
+            $cachedRes = $item->get();
             return is_array($cachedRes) ? $cachedRes : null;
         }
 
         $res      = $this->getQuickSearchResultsNoCache($q, $options);
         $resItems = is_array($res['items'] ?? null) ? $res['items'] : [];
         if (count($resItems)) {
-            $persistentCache->set($cacheKey, $res, 300);
+            $item->set($res);
+            $item->expiresAfter(300);
+            $this->pool->save($item);
         }
         return $res;
     }

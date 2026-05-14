@@ -18,7 +18,6 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Auth\CookieService;
-use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
@@ -59,6 +58,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
+use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 final class MaintenanceController
@@ -100,6 +100,7 @@ final class MaintenanceController
         private readonly UserAdminService $userAdminService,
         private readonly UserRepository $userRepository,
         private readonly Util $util,
+        private readonly CacheItemPoolInterface $pool,
     ) {
     }
 
@@ -281,7 +282,7 @@ final class MaintenanceController
                 break;
             case 'compiled-templates':
                 $tpl->deleteCompiledTemplates();
-                PersistentCacheRegistry::current()->purge(true);
+                $this->pool->clear();
                 PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge compiled templates'), Lang::t('action successfully performed.')));
                 break;
             case 'derivatives':
@@ -512,7 +513,7 @@ final class MaintenanceController
                 break;
             case 'compiled-templates':
                 $tpl->deleteCompiledTemplates();
-                PersistentCacheRegistry::current()->purge(true);
+                $this->pool->clear();
                 break;
             case 'derivatives':
                 $dtype = is_string($_GET['type'] ?? null) ? $_GET['type'] : '';

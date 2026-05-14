@@ -1,7 +1,7 @@
 # Compatibility Inventory
 
 Shims, bridges, and backward-compatibility mechanisms in the 16.x rewrite.
-Last deep-verified: 2026-05-14. Last updated: 2026-05-14 (all Wave A bridges complete).
+Last deep-verified: 2026-05-14. Last updated: 2026-05-14 (Wave A bridges + §3 PersistentCache removed).
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -233,28 +233,18 @@ No `$GLOBALS['user']` remains anywhere in production `src/`.
 
 ## 3. Legacy Cache API (`PersistentCache` / `PersistentFileCache`)
 
-**Files:** `src/Piwigo/Cache/PersistentCache.php`, `src/Piwigo/Cache/PersistentFileCache.php`, `src/Piwigo/Cache/PersistentCacheRegistry.php`
+**Files deleted (2026-05-14):** `src/Piwigo/Cache/PersistentCache.php`, `src/Piwigo/Cache/PersistentFileCache.php`, `src/Piwigo/Cache/PersistentCacheRegistry.php`
 
-`PersistentCache` is an abstract legacy API (`get`, `set`, `purge`, `makeKey`) that predates PSR-6. `PersistentFileCache` is its sole concrete subclass; it wraps a `CacheItemPoolInterface` (defaults to `FilesystemAdapter`) and maps the old surface to PSR-6 calls.
+`PersistentCache` was an abstract legacy API (`get`, `set`, `purge`, `makeKey`) that predated PSR-6. `PersistentFileCache` was its sole concrete subclass, wrapping a `CacheItemPoolInterface`. `PersistentCacheRegistry::current()` provided the singleton.
 
-`PersistentCacheRegistry::current()` returns the active instance, set by `CommonBootstrap` on every request.
+**Status: ✅ REMOVED (2026-05-14).** All 10 call-sites migrated to direct PSR-6 `CacheItemPoolInterface` injection:
 
-**Removal path:** Replace all `PersistentCache::get/set/purge/makeKey` call-sites with direct PSR-6 / `CacheFactory` usage, then delete `PersistentCache`, `PersistentFileCache`, and `PersistentCacheRegistry`.
-
-**Status: ❌ NOT MET.** Verified 2026-05-14. 10 files with active call-sites:
-
-```
-src/Piwigo/Bootstrap/CommonBootstrap.php        (constructs + registers — 2 lines)
-src/Piwigo/Tag/TagService.php                   (tag list cache — 4 lines)
-src/Piwigo/Section/SectionInitializer.php       (section items cache — 3 lines)
-src/Piwigo/Search/SearchService.php             (search cache)
-src/Piwigo/Search/SearchFilterRenderer.php      (filter cache)
-src/Piwigo/Notification/NotificationService.php (notification cache)
-src/Piwigo/Ws/Method/GeneralEndpoints.php       (WS tag cache)
-src/Piwigo/Calendar/CalendarService.php         (calendar cache)
-src/Piwigo/Admin/Users/UserAdminService.php     (user cache purge)
-src/Piwigo/Controller/Admin/MaintenanceController.php  (purge — 2 lines)
-```
+- `CacheItemPoolInterface` registered in `config/container.php` via `CacheFactory::create()`.
+- `CommonBootstrap`: removed `PersistentFileCache` construction and `PersistentCacheRegistry::set()`.
+- All 8 services (`TagService`, `SectionInitializer`, `SearchService`, `SearchFilterRenderer`, `NotificationService`, `CalendarService`, `GeneralEndpoints`, `UserAdminService`) now receive `CacheItemPoolInterface $pool` via constructor injection and call `getItem()` / `save()` / `clear()` directly.
+- `MaintenanceController`: receives `CacheItemPoolInterface $pool`; two `purge(true)` calls replaced by `$this->pool->clear()`.
+- `makeKey(string|array $key)` → `md5($key . AppInfo::VERSION)` inlined at each call-site to preserve per-version cache invalidation.
+- `PersistentFileCacheTest` deleted (tested a deleted class).
 
 ---
 
@@ -344,3 +334,5 @@ These globals are used as request-scoped data channels between unrelated classes
 | `$GLOBALS['maint_actions']` | `MaintenanceController` | `MaintenanceController` | Self-contained: set and consumed within the same controller. |
 | `$GLOBALS['countQueries']` / `$GLOBALS['queriesTime']` | *Nothing in src/* | `PageTailRenderer` (via `PageState::current()->countQueries`) | Were incremented by old `include/` DB layer. Now always 0. |
 | `$GLOBALS['page']['search']` + `['nb_lines']` + `['start']` | `GeneralEndpoints::historySearch()` | `MaintenanceController::history()` | WS history search state: AJAX call sets search rules + result count, page re-render reads them to build the nav bar and prefill the form. Survives the §1.1 migration because both sides still use `$GLOBALS['page']` explicitly. |
+| `$GLOBALS['page']['auth_key_id']` | `AuthService::authKeyLogin()` | `Util::pwgLog()` | API-key request ID passed to the history log. Pre-existing gap — not part of the Wave A §1.1 migration groups. |
+| `$GLOBALS['page']['username']` | `PasswordService` | `PasswordService` | Temporary username stored mid-password-reset flow. Self-contained within that service. |

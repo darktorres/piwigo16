@@ -107,7 +107,6 @@ final class Translator
 
     /**
      * Load a PO file and merge its translations into the active set.
-     * Also mirrors all strings into $GLOBALS['lang'] for backward compat.
      */
     public function load(string $locale, string $poFile): void
     {
@@ -120,8 +119,7 @@ final class Translator
         // Merge into the inner translator via its array format
         $this->inner->addTranslations($this->generator->generateArray($translations));
 
-        // Mirror into $GLOBALS['lang'] so plugin/theme code that reads the
-        // global directly still gets the translated strings.
+        // Populate Lang::$data / $days / $months from the loaded PO entries.
         $this->mirrorToGlobal($translations);
     }
 

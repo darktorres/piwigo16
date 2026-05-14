@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Section;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Calendar\CalendarService;
+use Piwigo\Core\AppInfo;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
@@ -26,6 +26,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -57,6 +58,7 @@ final readonly class SectionInitializer
         private UserRepository $userRepository,
         private UserService $userService,
         private Util $util,
+        private CacheItemPoolInterface $pool,
     ) {
     }
 
@@ -264,9 +266,7 @@ SELECT id
                     } else {
                         $userId    = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
                         $cacheTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
-                        $cacheKey  = PersistentCacheRegistry::current()->makeKey(
-                            'all_iids' . $userId . $cacheTime . Config::orderBy()
-                        );
+                        $cacheKey  = md5('all_iids' . $userId . $cacheTime . Config::orderBy() . AppInfo::VERSION);
                         unset($page['is_homepage']);
                         $whereSql = '1=1';
                     }
@@ -275,8 +275,12 @@ SELECT id
                     $whereSql = 'category_id = ' . $catId;
                 }
 
-                $cacheHit = isset($cacheKey) && PersistentCacheRegistry::current()->get($cacheKey, $page['items']);
-                if (!$cacheHit) {
+                $cacheItem = isset($cacheKey) ? $this->pool->getItem($cacheKey) : null;
+                if ($cacheItem !== null && $cacheItem->isHit()) {
+                    /** @var mixed $cachedItems */
+                    $cachedItems   = $cacheItem->get();
+                    $page['items'] = is_array($cachedItems) ? $cachedItems : [];
+                } else {
                     $query = '
 SELECT DISTINCT(image_id)
   FROM ' . Tables::imageCategory() . '
@@ -287,8 +291,10 @@ SELECT DISTINCT(image_id)
   ' . Config::orderBy() . '
 ;';
                     $page['items'] = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'image_id');
-                    if (isset($cacheKey)) {
-                        PersistentCacheRegistry::current()->set($cacheKey, $page['items']);
+                    if ($cacheItem !== null) {
+                        $cacheItem->set($page['items']);
+                        $cacheItem->expiresAfter(86400);
+                        $this->pool->save($cacheItem);
                     }
                 }
             }

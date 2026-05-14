@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Notification;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Cache\PersistentCacheRegistry;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
@@ -16,6 +16,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Psr\Cache\CacheItemPoolInterface;
 
 final readonly class NotificationService
 {
@@ -25,6 +26,7 @@ final readonly class NotificationService
         private UrlGenerator $urlGenerator,
         private PermissionService $permissionService,
         private UrlService $urlService,
+        private CacheItemPoolInterface $pool,
     ) {
     }
 
@@ -266,15 +268,16 @@ final readonly class NotificationService
     /** @return array<mixed>|null */
     public function getRecentPostDates(int $maxDates, int $maxElements, int $maxCats): ?array
     {
-        $persistentCache = PersistentCacheRegistry::current();
-        $userId          = CurrentUser::get()->id;
-        $cacheUpdate     = is_scalar(CurrentUser::get()->rawAttributes['cache_update_time'] ?? null)
+        $userId      = CurrentUser::get()->id;
+        $cacheUpdate = is_scalar(CurrentUser::get()->rawAttributes['cache_update_time'] ?? null)
             ? (string) CurrentUser::get()->rawAttributes['cache_update_time']
             : '';
 
-        $cacheKey = $persistentCache->makeKey('recent_posts' . $userId . $cacheUpdate . $maxDates . $maxElements . $maxCats);
-        $cached   = null;
-        if ($persistentCache->get($cacheKey, $cached)) {
+        $cacheKey = md5('recent_posts' . $userId . $cacheUpdate . $maxDates . $maxElements . $maxCats . AppInfo::VERSION);
+        $item     = $this->pool->getItem($cacheKey);
+        if ($item->isHit()) {
+            /** @var mixed $cached */
+            $cached = $item->get();
             return is_array($cached) ? $cached : null;
         }
         $whereSql = $this->getStdSqlWhereRestrictFilter('WHERE', 'i.id', true);
@@ -325,7 +328,9 @@ SELECT
             }
         }
 
-        $persistentCache->set($cacheKey, $dates);
+        $item->set($dates);
+        $item->expiresAfter(86400);
+        $this->pool->save($item);
         return $dates;
     }
 

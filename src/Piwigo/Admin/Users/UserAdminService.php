@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Users;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Cache\PersistentCacheRegistry;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
@@ -20,6 +19,7 @@ use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Psr\Cache\CacheItemPoolInterface;
 
 final readonly class UserAdminService
 {
@@ -32,6 +32,7 @@ final readonly class UserAdminService
         private UserRepository $userRepository,
         private UserService $userService,
         private Util $util,
+        private CacheItemPoolInterface $pool,
     ) {
     }
 
@@ -163,7 +164,6 @@ final readonly class UserAdminService
 
     public function invalidateUserCache(bool $full = true): void
     {
-        $persistentCache = PersistentCacheRegistry::current();
         if (LoggerRegistry::isInitialized()) {
             LoggerRegistry::current()->info('invalidate_user_cache called');
         }
@@ -174,7 +174,7 @@ final readonly class UserAdminService
         } else {
             $userRepo->markAllCachesForUpdate();
         }
-        $persistentCache->purge(true);
+        $this->pool->clear();
         $this->configService->confDeleteParam('count_orphans');
         EventDispatcher::notify('invalidate_user_cache', $full);
     }

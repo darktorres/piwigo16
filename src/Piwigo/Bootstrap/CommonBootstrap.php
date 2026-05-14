@@ -7,9 +7,6 @@ namespace Piwigo\Bootstrap;
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Admin\UpgradeService;
-use Piwigo\Cache\CacheFactory;
-use Piwigo\Cache\PersistentCacheRegistry;
-use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -78,7 +75,6 @@ final class CommonBootstrap
             return;
         }
 
-        $GLOBALS['lang']         = [];
         $GLOBALS['header_msgs']  = [];
         $GLOBALS['header_notes'] = [];
         $GLOBALS['filter']       = [];
@@ -108,10 +104,6 @@ final class CommonBootstrap
         }
 
         PageState::current()->executionUuid = StringUtil::generateKey(10);
-
-        $pool             = CacheFactory::create();
-        $persistent_cache = new PersistentFileCache($pool);
-        PersistentCacheRegistry::set($persistent_cache);
 
         // Boot the DI container now — env credentials are loaded. The container is
         // lazy (PHP-DI instantiates nothing until first get() call), so booting here

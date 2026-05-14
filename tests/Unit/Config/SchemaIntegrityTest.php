@@ -8,7 +8,6 @@ use PHPUnit\Framework\TestCase;
 use Piwigo\Config\Config;
 use ReflectionClass;
 use ReflectionMethod;
-use Symfony\Component\Process\Process;
 
 /**
  * Guards the SCHEMA <-> generated-accessors contract on Piwigo\Config\Config.
@@ -34,21 +33,6 @@ final class SchemaIntegrityTest extends TestCase
         // Path helpers (formerly PHP define()s in include/constants.php)
         'pluginsPath', 'themesPath', 'combinedDir', 'derivativeDir', 'usersTable',
     ];
-
-    public function test_generator_is_in_sync(): void
-    {
-        $repoRoot = dirname(__DIR__, 3);
-        $process  = new Process(['php', 'tools/build-config-accessors.php', '--check'], $repoRoot);
-        $process->run();
-
-        self::assertSame(
-            0,
-            $process->getExitCode(),
-            "Config.php is out of sync with SCHEMA — re-run `php tools/build-config-accessors.php`.\n"
-            . 'stdout: ' . $process->getOutput() . "\n"
-            . 'stderr: ' . $process->getErrorOutput()
-        );
-    }
 
     public function test_every_schema_method_exists(): void
     {

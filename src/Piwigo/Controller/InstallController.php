@@ -82,20 +82,26 @@ final class InstallController implements ControllerInterface
             die('Piwigo is already installed');
         }
 
+        // Boot the container early so LangService, HtmlService, etc. are
+        // resolvable. DB-requiring services stay lazy until credentials are
+        // set in Config::override() inside the step-2 block below.
+        // Languages is intentionally NOT resolved here — its constructor pulls
+        // in AdminService/LanguageRepository (and therefore Connection), which
+        // would fail on a fresh install where no DB credentials exist yet.
         Kernel::boot();
 
-        $languages = Kernel::service(Languages::class);
-        $languages->getFsLanguages('utf-8');
+        // Scan available languages from the filesystem — no DI or DB needed.
+        $fsLanguages = self::scanFsLanguages();
 
         if (isset($_GET['language'])) {
             $language = strip_tags(is_string($rawLang = $_GET['language']) ? $rawLang : '');
-            if (!in_array($language, array_keys($languages->fs_languages))) {
+            if (!in_array($language, array_keys($fsLanguages))) {
                 $language = AppInfo::DEFAULT_LANGUAGE;
             }
         } else {
             $rawAcceptLang = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
             $matched       = PreferencesService::pickFromAcceptLanguage(
-                array_keys($languages->fs_languages),
+                array_keys($fsLanguages),
                 is_string($rawAcceptLang) ? $rawAcceptLang : '',
             );
             $language = $matched !== false ? $matched : AppInfo::DEFAULT_LANGUAGE;
@@ -224,7 +230,7 @@ final class InstallController implements ControllerInterface
                 $configService->confUpdateParam('gallery_title', Lang::t('Just another Piwigo gallery'));
                 $configService->confUpdateParam('page_banner', '<h1>%gallery_title%</h1>' . "\n\n<p>" . Lang::t('Welcome to my photo gallery') . '</p>');
 
-                $languages->performAction('activate', $language);
+                Kernel::service(Languages::class)->performAction('activate', $language);
                 ConfigService::loadConfFromDb();
                 InstallService::activateCoreThemes();
                 InstallService::activateCorePlugins();
@@ -252,7 +258,7 @@ final class InstallController implements ControllerInterface
 
         // Template output
         $languages_options = [];
-        foreach ($languages->fs_languages as $language_code => $fs_language) {
+        foreach ($fsLanguages as $language_code => $fs_language) {
             if ($language == $language_code) {
                 $tpl->assign('language_selection', $language_code);
             }
@@ -337,5 +343,42 @@ final class InstallController implements ControllerInterface
         $tpl->pparse('install.latte');
 
         return ResponseFactory::create(200);
+    }
+
+    /**
+     * Reads available languages from the filesystem without using the DI
+     * container — safe to call before DB credentials are available.
+     * Mirrors the core logic of Languages::getFsLanguages() for the install path.
+     *
+     * @return array<string, array<string, string>>
+     */
+    private static function scanFsLanguages(): array
+    {
+        $langs = [];
+        $dir = opendir(PHPWG_ROOT_PATH . 'language');
+        if ($dir === false) {
+            return $langs;
+        }
+        while ($file = readdir($dir)) {
+            if ($file === '.' || $file === '..') {
+                continue;
+            }
+            $path = PHPWG_ROOT_PATH . 'language/' . $file;
+            if (!is_dir($path) || is_link($path)
+                || !preg_match('/^[a-zA-Z0-9-_]+$/', $file)
+                || !file_exists($path . '/common.po')
+            ) {
+                continue;
+            }
+            $language = ['name' => $file, 'code' => $file, 'version' => '0', 'uri' => '', 'author' => ''];
+            $po       = implode('', file($path . '/common.po') ?: []);
+            if (preg_match('|X-Piwigo-Language-Name:\\s*(.+?)\\\\n|', $po, $val)) {
+                $language['name'] = trim($val[1]);
+            }
+            $langs[$file] = array_map(htmlspecialchars(...), $language);
+        }
+        closedir($dir);
+        uasort($langs, static fn (array $a, array $b): int => strcmp($a['name'], $b['name']));
+        return $langs;
     }
 }

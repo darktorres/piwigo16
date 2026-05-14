@@ -109,6 +109,20 @@ final class UpgradeController implements ControllerInterface
 
         UpgradeService::upgradeDbConnect();
 
+        // Refuse databases predating Piwigo 15.x. The piwigo_activity table was
+        // introduced in 15.0.0; its absence reliably identifies older schemas.
+        // Fresh fork installs always have piwigo_activity (it is in the baseline
+        // SQL), so this check never fires for them.
+        $existingTables = $this->conn->executeQuery('SHOW TABLES')->fetchFirstColumn();
+        $activityTable  = Config::dbPrefix() . 'activity';
+        if (!in_array($activityTable, $existingTables, true)) {
+            header('Content-Type: text/html; charset=UTF-8', true, 409);
+            echo '<h1>Upgrade refused</h1>';
+            echo '<p>Your database predates Piwigo 15.0.0. '
+                . 'Upgrade to Piwigo 15.x first, then retry.</p>';
+            exit;
+        }
+
         define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
 
         $tpl = new Template(PHPWG_ROOT_PATH . 'themes/admin', 'dark');

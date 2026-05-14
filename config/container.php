@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use function DI\create;
 use function DI\factory;
 
 use Doctrine\DBAL\Connection;
@@ -168,10 +167,35 @@ return [
     CategoriesEndpoints::class       => factory(static fn (Connection $conn, CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, HtmlService $h, ImageAdminService $iA, ImageRepository $i, PermissionService $perm, UrlGenerator $ug, UrlService $us, UserAdminService $uA, UserRepository $u, Util $util, WsHelper $ws): CategoriesEndpoints => new CategoriesEndpoints($conn, $catA, $catR, $cat, $h, $iA, $i, $perm, $ug, $us, $uA, $u, $util, $ws)),
     ImagesEndpoints::class           => factory(static fn (Connection $conn, CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, CommentService $com, HtmlService $h, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, PermissionService $perm, RateRepository $rR, RateService $rate, SearchService $sr, StringUtil $s, TagAdminService $tA, TagService $tag, UploadService $up, UrlService $u, UserAdminService $uA, Util $util, WsHelper $ws): ImagesEndpoints => new ImagesEndpoints($conn, $catA, $catR, $cat, $com, $h, $iA, $i, $mA, $perm, $rR, $rate, $sr, $s, $tA, $tag, $up, $u, $uA, $util, $ws)),
     AdminService::class              => factory(static fn (Connection $conn, CategoryRepository $catR, DateService $d, HistoryRepository $hR, ImageRepository $i, StringUtil $s, TagRepository $tR, UserRepository $u): AdminService => new AdminService($conn, $catR, $d, $hR, $i, $s, $tR, $u)),
-    CategoryAdminService::class      => create()->lazy(),
-    ImageAdminService::class         => create()->lazy(),
+    CategoryAdminService::class      => factory(static function (ContainerInterface $c): CategoryAdminService {
+        return (new \ReflectionClass(CategoryAdminService::class))->newLazyProxy(
+            static fn (): CategoryAdminService => new CategoryAdminService(
+                $c->get(Connection::class), $c->get(CategoryRepository::class), $c->get(CategoryService::class),
+                $c->get(ConfigService::class), $c->get(ImageAdminService::class), $c->get(ImageRepository::class),
+                $c->get(UserAdminService::class), $c->get(UserRepository::class), $c->get(Util::class),
+            )
+        );
+    }),
+    ImageAdminService::class         => factory(static function (ContainerInterface $c): ImageAdminService {
+        return (new \ReflectionClass(ImageAdminService::class))->newLazyProxy(
+            static fn (): ImageAdminService => new ImageAdminService(
+                $c->get(Connection::class), $c->get(CategoryAdminService::class), $c->get(CategoryRepository::class),
+                $c->get(CommentRepository::class), $c->get(ConfigService::class), $c->get(ImageRepository::class),
+                $c->get(StringUtil::class), $c->get(TagRepository::class), $c->get(UrlGenerator::class),
+                $c->get(UserRepository::class), $c->get(Util::class),
+            )
+        );
+    }),
     TagAdminService::class           => factory(static fn (Connection $conn, HtmlService $h, ImageAdminService $iA, TagRepository $tR, UserAdminService $uA, Util $util): TagAdminService => new TagAdminService($conn, $h, $iA, $tR, $uA, $util)),
-    UserAdminService::class          => create()->lazy(),
+    UserAdminService::class          => factory(static function (ContainerInterface $c): UserAdminService {
+        return (new \ReflectionClass(UserAdminService::class))->newLazyProxy(
+            static fn (): UserAdminService => new UserAdminService(
+                $c->get(Connection::class), $c->get(ConfigService::class), $c->get(GroupRepository::class),
+                $c->get(PermissionRepository::class), $c->get(SessionService::class), $c->get(UserRepository::class),
+                $c->get(UserService::class), $c->get(Util::class),
+            )
+        );
+    }),
     NotificationAdminService::class  => factory(static fn (MailService $mail, NotificationRepository $nR, StringUtil $s, UrlGenerator $ug, UrlService $u, UserService $us, Util $util): NotificationAdminService => new NotificationAdminService($mail, $nR, $s, $ug, $u, $us, $util)),
     UploadService::class             => factory(static fn (Connection $conn, CategoryAdminService $catA, ConfigService $cfg, DerivativeService $der, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, StringUtil $s, UserAdminService $uA, Util $util): UploadService => new UploadService($conn, $catA, $cfg, $der, $iA, $i, $mA, $s, $uA, $util)),
     AlbumsTabRenderer::class         => factory(static fn (CategoryRepository $catR, UrlGenerator $ug): AlbumsTabRenderer => new AlbumsTabRenderer($catR, $ug)),

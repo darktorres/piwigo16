@@ -170,12 +170,6 @@ final readonly class ImageAdminService
         return $dirs;
     }
 
-    #[\Deprecated(message: '2.4')]
-    public function getFs(string $path, bool $recursive = true): mixed
-    {
-        return $this->getFsInternal($path, $recursive);
-    }
-
     /** @return array{elements: list<string>, thumbnails: list<string>, representatives: list<string>} */
     private function getFsInternal(string $path, bool $recursive = true): array
     {

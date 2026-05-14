@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Core\Kernel;
-use Piwigo\Users\PermissionService;
-
 /**
  * Used to declare maintenance methods of a plugin.
  *
@@ -52,13 +49,4 @@ final class PluginMaintain
         return null;
     }
 
-    /**
-     * @removed 2.7
-     */
-    public function autoUpdate(): void
-    {
-        if (Kernel::service(PermissionService::class)->isAdmin() && !defined('IN_WS')) {
-            trigger_error('Function PluginMaintain::autoUpdate deprecated', E_USER_WARNING);
-        }
-    }
 }

@@ -686,19 +686,6 @@ SELECT
         return $ret;
     }
 
-    public function pwgSendMail(mixed $result, string $to, string $subject, string $content, string $headers): bool|int
-    {
-        if ($this->permissionService->isAdmin()) {
-            trigger_error('pwg_send_mail function is deprecated', E_USER_NOTICE);
-        }
-
-        if (!$result) {
-            return $this->pwgMail($to, ['content' => $content, 'subject' => $subject]);
-        } else {
-            return is_bool($result) || is_int($result) ? $result : (bool) $result;
-        }
-    }
-
     public function moveCssToBody(string $content): string
     {
         try {

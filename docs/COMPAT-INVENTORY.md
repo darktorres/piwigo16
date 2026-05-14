@@ -103,20 +103,19 @@ aliased to the global so that CalendarService and SearchService sub-calls (which
 
 **Removal condition:** All direct `$GLOBALS['lang']` reads in `src/` migrated to `Lang::t()` / `Lang::day()` / `Lang::month()`.
 
-**Status: ❌ NOT MET.** Verified 2026-05-14. Active in-tree callers:
+**Status: ✅ CALLER READS MET (2026-05-14).** All 8 external caller files migrated:
+- `CalendarMonthly` (4×) + `CalendarWeekly` → `Lang::months()` / `Lang::days()` (new array accessors)
+- `PhotoController` + `PictureController` → `Lang::has()` + `Lang::t()` for dynamic format keys
+- `NotificationService` → `Lang::month(int)`
+- `MaintenanceController` → `Lang::months()`
+- `ConfigurationController` → `Lang::day(0/1)`
+- `MiscController` → `Lang::days()`
 
-```
-src/Piwigo/Calendar/CalendarWeekly.php:27
-src/Piwigo/Calendar/CalendarMonthly.php:36, 264, 337, 378
-src/Piwigo/Controller/Admin/PhotoController.php:542, 550–551
-src/Piwigo/Controller/Admin/MaintenanceController.php:998–999
-src/Piwigo/Controller/Admin/ConfigurationController.php:310–312
-src/Piwigo/Controller/Admin/MiscController.php:725–726
-src/Piwigo/Notification/NotificationService.php:394–395
-src/Piwigo/Controller/PictureController.php:101, 475–476
-```
+New methods added: `Lang::months(): array<array-key,string>` and `Lang::days(): array<array-key,string>`.
 
-Note: `CommonBootstrap.php:91` initialises `$GLOBALS['lang'] = []` before boot — this is the bootstrap side, not a legacy read.
+No `$GLOBALS['lang']` reads remain outside the bridge infrastructure itself (`Lang.php`, `LanguageStack.php`, `Translator.php`, `CommonBootstrap.php`).
+
+**Remaining bridge work:** `Lang::day()`, `Lang::month()`, `Lang::months()`, `Lang::days()` still read `$GLOBALS['lang']` internally to access the nested `day`/`month` sub-arrays. Since `Lang::$data` is typed as `array<string,string>` and the day/month entries are nested arrays, removing the bridge requires storing them as separate `Lang::$days` / `Lang::$months` properties and having `Translator::mirrorToGlobal()` populate them — a follow-up refactor. `Lang::attachGlobals()` is still called by `Kernel::boot()`.
 
 ---
 

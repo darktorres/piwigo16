@@ -1818,7 +1818,7 @@ Method groups:
 | `PicturePageContext`                   | `picture`, `relatedCategories`, `items`, `category`, `commentAction`, `urlSelf` |
 | `SearchPageContext`                    | `query`, `filters`, `results`, `pagination`                                     |
 | `TagsPageContext`                      | `tags`, `selectedTags`, `photos`, `displayMode`                                 |
-| `AdminPageContext` *(base, non-final)* | `pageTitle`, `pageMeta`, `themeAssets`, `flashMessages`                         |
+| `AdminPageContext` _(base, non-final)_ | `pageTitle`, `pageMeta`, `themeAssets`, `flashMessages`                         |
 
 No controllers populate them yet — that migration happens as each `.latte` partial is written in #23.
 
@@ -2231,8 +2231,8 @@ Themes hook into the same event bus as plugins, so most of the foundation from P
 4. **`Piwigo\Theme\ThemeRegistry`.** Parallel to `PluginRegistry`. Reads `theme.json`, resolves the parent chain, registers PSR-4 autoload, instantiates `Theme`, calls `boot()`. Caches the resolved chain to avoid re-walking on every request.
 
 5. **Inheritance via class hierarchy or composition.** Two viable approaches — pick one:
-   - *Class inheritance:* `class StandardPagesTheme extends DefaultTheme implements ThemeInterface` — overrides only what differs.
-   - *Composition:* `Theme` always has a `?ThemeInterface $parent` and methods walk up the chain (`getAssetDir()` falls back to parent if not declared). More flexible, but more boilerplate.
+   - _Class inheritance:_ `class StandardPagesTheme extends DefaultTheme implements ThemeInterface` — overrides only what differs.
+   - _Composition:_ `Theme` always has a `?ThemeInterface $parent` and methods walk up the chain (`getAssetDir()` falls back to parent if not declared). More flexible, but more boilerplate.
 
    Recommendation: composition. It mirrors how `themeconf.inc.php` currently works (array merge along the chain) and avoids forcing 3rd-party themes to extend a base class.
 
@@ -2291,7 +2291,7 @@ PHPStan analyse passes at level 10 with no baseline file. Level 10 enforces full
 
 ### What was done
 
-- `phpstan.neon` is set to `level: 10`, no baseline file. `vendor/bin/phpstan analyse` reports `[OK] No errors` (commit `8e141735f` — *chore(phpstan): raise to level 10 — zero errors*).
+- `phpstan.neon` is set to `level: 10`, no baseline file. `vendor/bin/phpstan analyse` reports `[OK] No errors` (commit `8e141735f` — _chore(phpstan): raise to level 10 — zero errors_).
 - The post-#6/#17 error count came in well below the original 1000+ estimate; cleanup landed across the same series of commits without a baseline carry-over.
 - Custom rules still registered: `ConfigKeyExistsRule`, `NoDynamicNewRule`, `NoErrorSuppressionRule`, `NoGlobalInSrcRule`, `StrictTypesRequiredRule`, plus the dynamic-return-type extensions `TriggerChangeDynamicReturnType` and `PwgGetSessionVarDynamicReturnType`. The deprecation-rules pack is included.
 - Remaining `mixed` occurrences are catalogued in `docs/MIXED-TYPES.md` — most are legitimate (DB row results, event payloads, generic cache get/put). Reduction work continues opportunistically; the level-10 gate does not require eliminating them.

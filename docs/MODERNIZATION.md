@@ -283,13 +283,13 @@ causing an immediate fatal error.
 
 The `$GLOBALS['conf']` reference bridge has been **retired**. Plugins that read or write `$conf` directly will see stale data (or no data) and must migrate to the typed facade. Use FQN to avoid alias dependency:
 
-| Was                       | Now                                                                                           |
-| ------------------------- | --------------------------------------------------------------------------------------------- |
-| `$conf['upload_dir']`     | `\Piwigo\Config\Config::uploadDir()`                                                          |
-| `$conf['max_file_size']`  | `\Piwigo\Config\Config::uploadFormMaxFileSize()`                                              |
-| `$conf['enable_formats']` | `\Piwigo\Config\Config::isFormatsEnabled()`                                                   |
-| `$conf['key'] = $v`       | `\Piwigo\Config\Config::override('key', $v)` (per-request)                                    |
-| `conf_update_param(...)`  | `\Piwigo\Core\Kernel::service(\Piwigo\Config\ConfigService::class)->confUpdateParam(...)`     |
+| Was                       | Now                                                                                       |
+| ------------------------- | ----------------------------------------------------------------------------------------- |
+| `$conf['upload_dir']`     | `\Piwigo\Config\Config::uploadDir()`                                                      |
+| `$conf['max_file_size']`  | `\Piwigo\Config\Config::uploadFormMaxFileSize()`                                          |
+| `$conf['enable_formats']` | `\Piwigo\Config\Config::isFormatsEnabled()`                                               |
+| `$conf['key'] = $v`       | `\Piwigo\Config\Config::override('key', $v)` (per-request)                                |
+| `conf_update_param(...)`  | `\Piwigo\Core\Kernel::service(\Piwigo\Config\ConfigService::class)->confUpdateParam(...)` |
 
 The free function `conf_update_param()` no longer exists. Plugins that still call it
 will fatal at runtime — switch to the `ConfigService` form.

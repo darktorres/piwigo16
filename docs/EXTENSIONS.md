@@ -19,25 +19,25 @@ Some plugins include from another plugin's path (`PHPWG_PLUGINS_PATH . 'OtherPlu
 
 **Library plugins** (one-to-many fan-in):
 
-| Library plugin              | Required by                                                                                                                                                | Count |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----: |
-| `GrumPluginClasses`         | `AMenuManager`, `AMetaData`, `ASearchEngine`, `AStat`, `ColorStat`, `EStat`, `GMaps`, `Histogram`, `lmt`, `UserStat`; legacy aliases `grum_plugins_classes` (`FormattedDescription`) and `grum_plugins_classes-2` (`mypolls`, `translator`) |    13 |
-| `IndexManager`              | `ComOnIndex_17j`, `nbc_EditoOnIndex_1.3.e`, `nbc_LogonOnIndex1.4.f`, `nbc_TagsOnIndex_1.1.b`                                                                |     4 |
+| Library plugin      | Required by                                                                                                                                                                                                                                 | Count |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----: |
+| `GrumPluginClasses` | `AMenuManager`, `AMetaData`, `ASearchEngine`, `AStat`, `ColorStat`, `EStat`, `GMaps`, `Histogram`, `lmt`, `UserStat`; legacy aliases `grum_plugins_classes` (`FormattedDescription`) and `grum_plugins_classes-2` (`mypolls`, `translator`) |    13 |
+| `IndexManager`      | `ComOnIndex_17j`, `nbc_EditoOnIndex_1.3.e`, `nbc_LogonOnIndex1.4.f`, `nbc_TagsOnIndex_1.1.b`                                                                                                                                                |     4 |
 
 **Bilateral edges** (long tail):
 
-| Dependent                       | Depends on               |
-| ------------------------------- | ------------------------ |
-| `AlbumPilot_1.4.0`              | `piwigo-videojs`         |
-| `EasyRotate_0.7`                | `rotateImage`            |
-| `HistoryIPExcluder_12.a`        | `nbc_HistoryIPExcluder`  |
-| `icy_picture_modify-v2.4.6`     | `community`              |
-| `LocalFilesEditor_16.3.0`       | `PersonalPlugin`         |
-| `piwigo-cas_users_16.d`         | `cas_users`              |
-| `PluginsManager_17l`            | `trash`                  |
-| `PWG_Stuffs_15.a`               | `piclens`                |
-| `SocialConnect_0.0.3`           | `oAuth`                  |
-| `UserAdvManager_2.80.0`         | `NBC_UserAdvManager`     |
+| Dependent                   | Depends on              |
+| --------------------------- | ----------------------- |
+| `AlbumPilot_1.4.0`          | `piwigo-videojs`        |
+| `EasyRotate_0.7`            | `rotateImage`           |
+| `HistoryIPExcluder_12.a`    | `nbc_HistoryIPExcluder` |
+| `icy_picture_modify-v2.4.6` | `community`             |
+| `LocalFilesEditor_16.3.0`   | `PersonalPlugin`        |
+| `piwigo-cas_users_16.d`     | `cas_users`             |
+| `PluginsManager_17l`        | `trash`                 |
+| `PWG_Stuffs_15.a`           | `piclens`               |
+| `SocialConnect_0.0.3`       | `oAuth`                 |
+| `UserAdvManager_2.80.0`     | `NBC_UserAdvManager`    |
 
 **Theme parent inheritance** — the upstream root theme `default` is renamed to `_base` in the fork, mirroring the bundled `themes/_base/` directory. The PEM mirror's `themeconf.inc.php` files declare these parents:
 
@@ -650,11 +650,11 @@ Regeneration: `tools/audit-extension-deps.php` walks the sibling repos and re-em
 | `id_ID_16.3.0` | `id_ID_16.3.0.zip` | Bahasa Indonesia [ID]  | 16              |
 | `is_IS_16.3.0` | `is_IS_16.3.0.zip` | Íslenska [IS]          | 16              |
 | `it_IT_16.3.0` | `it_IT_16.3.0.zip` | Italiano [IT]          | 16              |
-| `ja_JP_16.3.0` | `ja_JP_16.3.0.zip` | 日本語 [JP]               | 16              |
+| `ja_JP_16.3.0` | `ja_JP_16.3.0.zip` | 日本語 [JP]            | 16              |
 | `ka_GE_16.3.0` | `ka_GE_16.3.0.zip` | ქართული [GE]           | 16              |
 | `km_KH_16.3.0` | `km_KH_16.3.0.zip` | ខ្មែរ [KH]             | 16              |
 | `kn_IN_16.3.0` | `kn_IN_16.3.0.zip` | ಕನ್ನಡ [IN]             | 16              |
-| `ko_KR_16.3.0` | `ko_KR_16.3.0.zip` | 한국어 [KR]               | 16              |
+| `ko_KR_16.3.0` | `ko_KR_16.3.0.zip` | 한국어 [KR]            | 16              |
 | `lb_LU_16.3.0` | `lb_LU_16.3.0.zip` | Lëtzebuergesch [LU]    | 16              |
 | `lt_LT_16.3.0` | `lt_LT_16.3.0.zip` | Lietuvių [LT]          | 16              |
 | `lv_LV_16.3.0` | `lv_LV_16.3.0.zip` | Latviešu [LV]          | 16              |
@@ -678,9 +678,9 @@ Regeneration: `tools/audit-extension-deps.php` walks the sibling repos and re-em
 | `tr_TR_16.3.0` | `tr_TR_16.3.0.zip` | Türkçe [TR]            | 16              |
 | `uk_UA_16.3.0` | `uk_UA_16.3.0.zip` | Українська [UA]        | 16              |
 | `vi_VN_16.3.0` | `vi_VN_16.3.0.zip` | Tiếng Việt [VN]        | 16              |
-| `zh_CN_16.3.0` | `zh_CN_16.3.0.zip` | 简体中文 [CN]              | 16              |
-| `zh_HK_16.3.0` | `zh_HK_16.3.0.zip` | 中文 (香港) [HK]           | 16              |
-| `zh_TW_16.3.0` | `zh_TW_16.3.0.zip` | 中文 (繁體) [TW]           | 16              |
+| `zh_CN_16.3.0` | `zh_CN_16.3.0.zip` | 简体中文 [CN]          | 16              |
+| `zh_HK_16.3.0` | `zh_HK_16.3.0.zip` | 中文 (香港) [HK]       | 16              |
+| `zh_TW_16.3.0` | `zh_TW_16.3.0.zip` | 中文 (繁體) [TW]       | 16              |
 
 ## piwigo16-tools
 

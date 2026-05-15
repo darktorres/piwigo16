@@ -168,28 +168,98 @@ the `XML RPC` option removed from `tools/ws.htm` (developer API tester).
 
 Detail → [Appendix A §Z18](#z18-phase-2d-xmlrpc_encode-removal).
 
-## Phase 2e — MobileEsp removal  [A4.3]
+## Phase 2e — MobileEsp removal & mobile-theme switcher retirement  [A4.3]
 
-`ahand/mobileesp` (`\uagent_info`) is in `composer.json`. Used in three
-places for regex-based mobile UA detection:
+`ahand/mobileesp` (`\uagent_info`) is a ~2010-era regex-based UA-detection
+library, predates UA Client Hints and modern responsive design. It's the
+foundation of an entire **mobile-theme switching mechanism** that the
+original inventory entry understated as "3 call sites" — see the audit
+notes below for the corrected blast radius.
 
-- `Core/Util.php:452` (`mobile_detect` helper)
-- `Controller/Admin/PhotoController.php:614`
-- `Controller/Admin/MiscController.php:574`
+### Actual blast radius (audit 2026-05-15)
 
-~2010-era library, predates UA Client Hints. Modern admin UI is responsive;
-the detection paths are largely obsolete.
+`\uagent_info` itself has only 3 direct `new` sites, but those are the tip
+of an iceberg. The whole mobile-theme switcher rises and falls with them:
 
-**Audit first** — confirm the modern admin UI works on mobile viewports
-without the `Util::mobileTheme()` / `getDevice()` branches.
-`tests/e2e/14-admin-extended-smoke.spec.ts` can be run with a mobile viewport.
+| Layer | File:Line | Role |
+|---|---|---|
+| MobileEsp | `Core/Util.php:446` (in `getDevice()`) | `DetectSmartphone()` / `DetectTierTablet()` → `'mobile' \| 'tablet' \| 'desktop'`, cached in `$_SESSION['device']` |
+| MobileEsp | `Controller/Admin/PhotoController.php:614` | `DetectIos()` — hide "promote mobile apps" banner if user is on iOS |
+| MobileEsp | `Controller/Admin/MiscController.php:574` | `DetectIos()` — hide "newsletter signup" banner if user is on iOS |
+| `Util::getDevice()` consumers | `Util::mobileTheme():475` | Falls back to `getDevice() === 'mobile'` when no `mobile_theme` session preference exists |
+| | `Page/PageTailRenderer.php:70` | `getDevice() !== 'desktop'` gates the "switch to mobile theme" toggle link |
+| | `Template/Latte/PiwigoExtension.php:123,259-261` | Registers `get_device` Latte filter — **zero in-template consumers** across `themes/` |
+| `Util::mobileTheme()` consumers | `Bootstrap/CommonBootstrap.php:240-242` | Overrides user's theme preference with `Config::mobilTheme()` when on mobile |
+| | `Page/PageTailRenderer.php:70,75` | Toggle link visibility + query-param flip |
+| `mobile_theme` config key | `Config/Config.php` SCHEMA + `mobilTheme()` accessor | Single string: theme ID configured as "the mobile theme" |
+| `mobile_theme` writers | `Admin/Themes.php:144,172` | Set on activate / clear on deactivate when theme's themeconf has `'mobile' => true` |
+| `mobile_theme` readers | `Util::getPwgThemes($showMobile = false):188` | Filters the configured mobile theme out of the regular theme list (and re-labels it `(Mobile)` when `$showMobile`) |
+| Theme `mobile` flag | `Admin/Themes.php:122-127,143,171,297,333-335` | themeconf parse + activation single-mobile-theme guard + config write/clear; **no in-tree theme uses this flag** |
+| Latte allowlist | `Template/Latte/PiwigoPolicy.php:74` | `get_device` is in the function allowlist |
 
-- **If the UI is fully responsive** (likely): delete the 3 call sites, delete
-  `Util::mobileTheme()` and `Util::getDevice()`, remove `ahand/mobileesp`
-  from `composer.json`.
-- **If mobile branches still serve a purpose**: migrate to the
-  `Sec-CH-UA-Mobile` request header read from the PSR-7 request — keep the
-  behaviour, drop the regex library.
+Cross-checks:
+
+- `grep -rn 'get_device' themes/` → empty.
+- `grep -l 'mobile' themes/**/themeconf.inc.php` → empty (no in-tree theme
+  is flagged `mobile`).
+- `grep -rln mobileTheme tests/` → empty (no test coverage).
+
+### Removal vs. migration
+
+Modern admin UI is responsive; the entire "switch to a different theme on
+mobile devices" pattern is from ~2010 and predates responsive CSS's
+maturity. There is no functional reason to migrate to `Sec-CH-UA-Mobile` —
+the headers it would feed (Util::getDevice, Util::mobileTheme) lose their
+load-bearing consumers in this same phase.
+
+**Recommended path: full removal of the mobile-theme switching mechanism.**
+Includes:
+
+1. **MobileEsp direct calls** (3 sites): remove the `\uagent_info`
+   instantiations. For the two banner sites, replace `DetectIos()` with a
+   one-line inline UA-string check (`preg_match('~iP(hone|ad|od)~i', …)`)
+   so iOS users still don't see the iOS-app / newsletter promos — same
+   UX, no dep.
+2. **`Util::getDevice()`** and **`Util::mobileTheme()`**: delete; no
+   remaining callers after step 5.
+3. **`Config::mobilTheme()`** accessor and `mobile_theme` SCHEMA entry:
+   delete; no remaining readers after step 5.
+4. **`Admin/Themes.php`**: delete the mobile-flag activation guard
+   (122-127), the activation write (143-145), the deactivation clear
+   (171-173), the `'mobile' => false` default (297), and the
+   themeconf parse line (333-335).
+5. **Bootstrap / PageTail / Latte glue**:
+   - `Bootstrap/CommonBootstrap.php:240-242` — drop the
+     `mobileTheme() → $theme = Config::mobilTheme()` switch.
+   - `Page/PageTailRenderer.php:70-77` — drop the toggle-link block.
+   - `Template/Latte/PiwigoExtension.php:123,259-261` — drop the
+     `get_device` filter registration and its static method.
+   - `Template/Latte/PiwigoPolicy.php:74` — drop `get_device` from the
+     allowlist.
+6. **`Util::getPwgThemes()`**: drop the `bool $showMobile = false`
+   parameter and the mobile-theme filter (line 188). The 5 in-tree callers
+   already pass nothing.
+7. **`composer.json`** + **`composer.lock`**: remove
+   `ahand/mobileesp: dev-master`; `composer update` to clean the lock and
+   `vendor/ahand/`.
+
+### Behavioural deltas after removal
+
+- **Visitors no longer auto-switch to a separate theme on mobile.** Themes
+  are expected to be responsive (the in-tree ones already are).
+- **The "switch to mobile theme" page-footer toggle disappears.** No
+  in-tree theme advertised it via CSS; pure ornament.
+- **iOS users still don't see iOS-app / newsletter promos** (inline regex
+  preserves the existing UX).
+- **External plugins that read `$config['mobile_theme']`** break; per the
+  project rule, external compat is not a blocker.
+- **External themes that declared `'mobile' => true`** in their themeconf
+  still load, the flag is just ignored.
+
+### Session-key cleanup
+
+`$_SESSION['device']` and `$_SESSION['mobile_theme']` become orphans for
+existing sessions. They expire naturally; no migration needed.
 
 **Enables:** [Phase 5](#phase-5--utilphp-split-a51) — `Util.php` loses two
 methods, the split gets smaller.

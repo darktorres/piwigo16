@@ -8,17 +8,19 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\Location\LocBeginNotification;
+use Piwigo\Event\Location\LocEndNotification;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -34,6 +36,7 @@ final readonly class NotificationController implements ControllerInterface
         private MenubarRenderer $menubarRenderer,
         private UrlGenerator $urlGenerator,
         private PermissionService $permissionService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -42,7 +45,7 @@ final readonly class NotificationController implements ControllerInterface
     {
         $this->permissionService->checkStatus(AccessLevel::Guest);
 
-        EventDispatcher::notify('loc_begin_notification');
+        $this->dispatcher->dispatch(new LocBeginNotification());
 
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
@@ -78,7 +81,7 @@ final readonly class NotificationController implements ControllerInterface
         }
 
         PageHeaderRenderer::render($title);
-        EventDispatcher::notify('loc_end_notification');
+        $this->dispatcher->dispatch(new LocEndNotification());
         $this->htmlService->flushPageMessages();
         $tpl->pparse('notification.latte');
         PageTailRenderer::render();

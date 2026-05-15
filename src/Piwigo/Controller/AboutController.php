@@ -9,16 +9,18 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Event\Location\LocBeginAbout;
+use Piwigo\Event\Location\LocEndAbout;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -29,6 +31,7 @@ final readonly class AboutController implements ControllerInterface
         private MenubarRenderer $menubarRenderer,
         private PermissionService $permissionService,
         private LangService $langService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -37,7 +40,7 @@ final readonly class AboutController implements ControllerInterface
     {
         $this->permissionService->checkStatus(AccessLevel::Guest);
 
-        EventDispatcher::notify('loc_begin_about');
+        $this->dispatcher->dispatch(new LocBeginAbout());
 
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
@@ -64,7 +67,7 @@ final readonly class AboutController implements ControllerInterface
         }
 
         PageHeaderRenderer::render($title);
-        EventDispatcher::notify('loc_end_about');
+        $this->dispatcher->dispatch(new LocEndAbout());
         $this->htmlService->flushPageMessages();
         $tpl->pparse('about.latte');
         PageTailRenderer::render();

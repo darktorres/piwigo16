@@ -10,6 +10,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Event\Location\LocBeginPassword;
+use Piwigo\Event\Location\LocEndPassword;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
@@ -18,7 +20,6 @@ use Piwigo\Language\LanguageService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -26,6 +27,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -48,6 +50,7 @@ final readonly class PasswordController implements ControllerInterface
         private InputValidator $inputValidator,
         private RedirectResponder $redirectResponder,
         private LanguageService $languageService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -57,7 +60,7 @@ final readonly class PasswordController implements ControllerInterface
 
         $this->permissionService->checkStatus(AccessLevel::Free);
 
-        EventDispatcher::notify('loc_begin_password');
+        $this->dispatcher->dispatch(new LocBeginPassword());
 
         $this->inputValidator->check('action', $_GET, false, '/^(lost|reset|lost_code|reset_end|none)$/');
 
@@ -193,7 +196,7 @@ final readonly class PasswordController implements ControllerInterface
         $tpl->assign('HELP_LINK', $help_link);
 
         PageHeaderRenderer::render($title);
-        EventDispatcher::notify('loc_end_password');
+        $this->dispatcher->dispatch(new LocEndPassword());
         $this->htmlService->flushPageMessages();
         $tpl->pparse('password.latte');
         PageTailRenderer::render();

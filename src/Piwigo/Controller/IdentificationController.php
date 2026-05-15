@@ -10,6 +10,8 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\Location\LocBeginIdentification;
+use Piwigo\Event\Location\LocEndIdentification;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
@@ -18,7 +20,6 @@ use Piwigo\Language\LanguageService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -26,6 +27,7 @@ use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Validation\InputValidator;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -47,6 +49,7 @@ final readonly class IdentificationController implements ControllerInterface
         private AuthService $authService,
         private UrlService $urlService,
         private LanguageService $languageService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -59,7 +62,7 @@ final readonly class IdentificationController implements ControllerInterface
             $this->redirectResponder->redirect($this->urlService->getGalleryHomeUrl());
         }
 
-        EventDispatcher::notify('loc_begin_identification');
+        $this->dispatcher->dispatch(new LocBeginIdentification());
 
         unset($_SESSION['reset_password_code']);
 
@@ -154,7 +157,7 @@ final readonly class IdentificationController implements ControllerInterface
         $tpl->assign('HELP_LINK', $help_link);
 
         PageHeaderRenderer::render();
-        EventDispatcher::notify('loc_end_identification');
+        $this->dispatcher->dispatch(new LocEndIdentification());
         $this->htmlService->flushPageMessages();
         $tpl->pparse('identification.latte');
         PageTailRenderer::render();

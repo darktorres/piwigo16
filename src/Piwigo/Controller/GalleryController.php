@@ -15,6 +15,8 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\Location\LocBeginIndex;
+use Piwigo\Event\Location\LocEndIndex;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
@@ -25,7 +27,6 @@ use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Page\PaginationService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionInitializer;
@@ -36,6 +37,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -69,6 +71,7 @@ final readonly class GalleryController implements ControllerInterface
         private ActivityLogger $activityLogger,
         private RedirectResponder $redirectResponder,
         private PaginationService $paginationService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -98,7 +101,7 @@ final readonly class GalleryController implements ControllerInterface
             $this->htmlService->pageNotFound('', $this->urlService->duplicateIndexUrl(['start' => 0]));
         }
 
-        EventDispatcher::notify('loc_begin_index');
+        $this->dispatcher->dispatch(new LocBeginIndex());
 
         // Image display-order change
         $imageOrder = $this->stringUtil->inputInt('image_order', null, $_GET);
@@ -390,7 +393,7 @@ final readonly class GalleryController implements ControllerInterface
         }
 
         PageHeaderRenderer::render();
-        EventDispatcher::notify('loc_end_index');
+        $this->dispatcher->dispatch(new LocEndIndex());
         $this->htmlService->flushPageMessages();
         $tpl->parseIndexButtons();
         $tpl->pparse('index.latte');

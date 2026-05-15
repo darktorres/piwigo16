@@ -12,16 +12,17 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocBeginSearch;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchService;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Validation\InputValidator;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -42,6 +43,7 @@ final readonly class SearchController implements ControllerInterface
         private StringUtil $stringUtil,
         private PermissionService $permissionService,
         private PreferencesService $preferencesService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -50,7 +52,7 @@ final readonly class SearchController implements ControllerInterface
     {
         $this->permissionService->checkStatus(AccessLevel::Guest);
 
-        EventDispatcher::notify('loc_begin_search');
+        $this->dispatcher->dispatch(new LocBeginSearch());
 
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;

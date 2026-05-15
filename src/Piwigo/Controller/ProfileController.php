@@ -12,6 +12,8 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocBeginProfile;
+use Piwigo\Event\Location\LocEndProfile;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
@@ -19,7 +21,6 @@ use Piwigo\Language\LanguageService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -27,6 +28,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserRepository;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -48,6 +50,7 @@ final readonly class ProfileController implements ControllerInterface
         private LangService $langService,
         private UrlService $urlService,
         private LanguageService $languageService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -65,7 +68,7 @@ final readonly class ProfileController implements ControllerInterface
         $user = CurrentUser::get()->rawAttributes;
         $userdata = $user;
 
-        EventDispatcher::notify('loc_begin_profile');
+        $this->dispatcher->dispatch(new LocBeginProfile());
 
         $default_user = $this->userRepository
             ->getDefaultUserInfo(Config::defaultUserId());
@@ -167,7 +170,7 @@ final readonly class ProfileController implements ControllerInterface
             : 'https://doc.piwigo.org/managing-users/log-in-to-piwigo';
         $tpl->assign('HELP_LINK', $help_link);
 
-        EventDispatcher::notify('loc_end_profile');
+        $this->dispatcher->dispatch(new LocEndProfile());
         $this->htmlService->flushPageMessages();
         $tpl->pparse('profile.latte');
         PageTailRenderer::render();

@@ -1,0 +1,16 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Event\Location;
+
+/**
+ * Typed event for legacy `loc_begin_register` (notify).
+ *
+ * New in 2.5
+ *
+ * Dispatched from: src/Piwigo/Controller/RegisterController.php
+ */
+final readonly class LocBeginRegister
+{
+}

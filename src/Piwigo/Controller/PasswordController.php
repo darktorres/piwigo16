@@ -9,8 +9,9 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
 use Piwigo\Language\LanguageService;
@@ -24,6 +25,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -42,7 +44,9 @@ final readonly class PasswordController implements ControllerInterface
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserService $userService,
-        private Util $util,
+        private CsrfService $csrfService,
+        private InputValidator $inputValidator,
+        private RedirectResponder $redirectResponder,
         private LanguageService $languageService,
     ) {
     }
@@ -55,7 +59,7 @@ final readonly class PasswordController implements ControllerInterface
 
         EventDispatcher::notify('loc_begin_password');
 
-        $this->util->checkInputParameter('action', $_GET, false, '/^(lost|reset|lost_code|reset_end|none)$/');
+        $this->inputValidator->check('action', $_GET, false, '/^(lost|reset|lost_code|reset_end|none)$/');
 
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
@@ -65,7 +69,7 @@ final readonly class PasswordController implements ControllerInterface
         $get_action = $this->stringUtil->inputString('action', null, $_GET);
 
         if ($this->stringUtil->inputString('submit', null, $_POST) !== null) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
 
             if ('lost' == $get_action) {
                 if ($this->passwordService->processVerificationCode()) {
@@ -117,14 +121,14 @@ final readonly class PasswordController implements ControllerInterface
 
         if ('reset' == $action) {
             if (($get_key === null && ($this->permissionService->isAGuest() || $this->permissionService->isGeneric())) && !isset($_SESSION['valid_reset_password_code'])) {
-                $this->util->redirect($this->urlService->getGalleryHomeUrl());
+                $this->redirectResponder->redirect($this->urlService->getGalleryHomeUrl());
             }
         }
         if ('lost' == $action && !$this->permissionService->isAGuest()) {
-            $this->util->redirect($this->urlService->getGalleryHomeUrl());
+            $this->redirectResponder->redirect($this->urlService->getGalleryHomeUrl());
         }
         if ('lost_code' == $action && !isset($_SESSION['reset_password_code'])) {
-            $this->util->redirect($this->urlGenerator->identification());
+            $this->redirectResponder->redirect($this->urlGenerator->identification());
         }
         if ('lost' == $action && isset($_SESSION['reset_password_code'])) {
             $action = 'lost_code';
@@ -151,7 +155,7 @@ final readonly class PasswordController implements ControllerInterface
             'form_action'    => $this->urlGenerator->password(),
             'action'         => $action,
             'username'       => $username ?? ($user['username'] ?? ''),
-            'PWG_TOKEN'      => $this->util->getPwgToken(),
+            'PWG_TOKEN'      => $this->csrfService->getToken(),
             'U_IDENTIFICATION' => $this->urlGenerator->identification(),
             'U_REGISTER'     => $this->urlGenerator->register(),
         ]);

@@ -7,7 +7,8 @@ namespace Piwigo\Users;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\Util;
+use Piwigo\Csrf\CsrfService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Plugins\EventDispatcher;
@@ -41,7 +42,7 @@ final class UserBootstrap
         if (isset($_COOKIE[session_name()])) {
             if (isset($_GET['act']) && is_string($_GET['act']) && $_GET['act'] === 'logout') {
                 Kernel::service(AuthService::class)->logoutUser();
-                Kernel::service(Util::class)->redirect(Kernel::service(UrlService::class)->getGalleryHomeUrl());
+                Kernel::service(RedirectResponder::class)->redirect(Kernel::service(UrlService::class)->getGalleryHomeUrl());
             } elseif (!empty($_SESSION['pwg_uid']) && is_numeric($_SESSION['pwg_uid'])) {
                 $userId = (int) $_SESSION['pwg_uid'];
             }
@@ -112,7 +113,7 @@ final class UserBootstrap
                 $userId = is_numeric($resolvedId) ? (int) $resolvedId : $userId;
             }
             define('PWG_API_KEY_REQUEST', true);
-            $_POST['pwg_token'] = $_GET['pwg_token'] = Kernel::service(Util::class)->getPwgToken();
+            $_POST['pwg_token'] = $_GET['pwg_token'] = Kernel::service(CsrfService::class)->getToken();
             $requestMethodRaw = $_REQUEST['method'];
             LoggerRegistry::current()->info(
                 '[api_key][pkid=' . explode(':', $authHeader)[0] . ']'

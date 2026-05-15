@@ -18,8 +18,8 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Http\ResponseFactory;
@@ -36,6 +36,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -68,7 +69,8 @@ final readonly class AdminController implements ControllerInterface
         private UrlService $urlService,
         private UserAdminService $userAdminService,
         private UserRepository $userRepository,
-        private Util $util,
+        private InputValidator $inputValidator,
+        private RedirectResponder $redirectResponder,
     ) {
     }
 
@@ -93,8 +95,8 @@ final readonly class AdminController implements ControllerInterface
 
         $this->permissionService->checkStatus(AccessLevel::Administrator);
 
-        $this->util->checkInputParameter('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
-        $this->util->checkInputParameter('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
+        $this->inputValidator->check('page', $_GET, false, '/^[a-zA-Z\d_-]+$/');
+        $this->inputValidator->check('section', $_GET, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
 
         // ── Filesystem quick-check ────────────────────────────────────────────
 
@@ -144,7 +146,7 @@ final readonly class AdminController implements ControllerInterface
                 $redirect_url .= '&' . implode('&', $url_params);
             }
 
-            $this->util->redirect($redirect_url);
+            $this->redirectResponder->redirect($redirect_url);
         }
 
         // ── Sync user info ────────────────────────────────────────────────────
@@ -223,7 +225,7 @@ final readonly class AdminController implements ControllerInterface
         $link_start = $adminBase . $adminSep . 'page=';
         $conf_link  = $link_start . 'configuration&section=';
 
-        $this->util->checkInputParameter('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
+        $this->inputValidator->check('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 
         // ── Template init ─────────────────────────────────────────────────────
 

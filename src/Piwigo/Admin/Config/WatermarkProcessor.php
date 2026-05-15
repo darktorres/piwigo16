@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Config;
 
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\WatermarkParams;
 use Piwigo\Storage\StorageRegistry;
@@ -22,7 +24,7 @@ final readonly class WatermarkProcessor
     public function __construct(
         private ImageAdminService $imageAdminService,
         private StringUtil $stringUtil,
-        private Util $util,
+        private ActivityLogger $activityLogger,
         private PermissionService $permissionService,
     ) {
     }
@@ -177,7 +179,7 @@ final readonly class WatermarkProcessor
             }
 
             $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
-            $this->util->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => 'watermark']);
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'config', ['config_section' => 'watermark']));
         } else {
             $tpl->assign('watermark', $pwatermark);
             $tpl->assign('ferrors', $errors);

@@ -10,10 +10,10 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchService;
@@ -21,6 +21,7 @@ use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -36,7 +37,8 @@ final readonly class SearchController implements ControllerInterface
         private HtmlService $htmlService,
         private SearchService $searchService,
         private TagService $tagService,
-        private Util $util,
+        private InputValidator $inputValidator,
+        private RedirectResponder $redirectResponder,
         private StringUtil $stringUtil,
         private PermissionService $permissionService,
         private PreferencesService $preferencesService,
@@ -106,7 +108,7 @@ final readonly class SearchController implements ControllerInterface
         $cat_ids  = [];
         $cat_id   = $this->stringUtil->inputInt('cat_id', null, $_GET);
         if ($cat_id !== null) {
-            $this->util->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
+            $this->inputValidator->check('cat_id', $_GET, false, ValidationPattern::ID);
             $query = '
 SELECT *
   FROM ' . Tables::userCacheCategories() . '
@@ -128,7 +130,7 @@ SELECT *
             $tag_ids = [];
             $tag_id  = $this->stringUtil->inputString('tag_id', null, $_GET);
             if ($tag_id !== null) {
-                $this->util->checkInputParameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
+                $this->inputValidator->check('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
                 $tag_ids = explode(',', $tag_id);
             }
             if (count($tag_ids) > 0 || in_array('tags', $fields)) {
@@ -171,7 +173,7 @@ SELECT id
         }
 
         [$search_uuid, $search_url] = $this->searchService->saveSearch($search);
-        $this->util->redirect(is_scalar($search_url) ? (string) $search_url : '');
+        $this->redirectResponder->redirect(is_scalar($search_url) ? (string) $search_url : '');
 
         return ResponseFactory::create(200); // unreachable after redirect
     }

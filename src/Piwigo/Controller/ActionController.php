@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityLogger;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
@@ -21,6 +22,7 @@ use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -37,7 +39,9 @@ final readonly class ActionController implements ControllerInterface
         private ImageRepository $imageRepository,
         private PermissionService $permissionService,
         private StringUtil $stringUtil,
-        private Util $util,
+        private ActivityLogger $activityLogger,
+        private CsrfService $csrfService,
+        private InputValidator $inputValidator,
     ) {
     }
 
@@ -50,7 +54,7 @@ final readonly class ActionController implements ControllerInterface
         $format = [];
 
         if (Config::isFormatsEnabled() && isset($params['format'])) {
-            $this->util->checkInputParameter('format', $_GET, false, ValidationPattern::ID);
+            $this->inputValidator->check('format', $_GET, false, ValidationPattern::ID);
             $get_format = $this->stringUtil->inputInt('format', null, $_GET);
 
             $query = 'SELECT * FROM ' . Tables::imageFormat() . ' WHERE format_id = ' . ($get_format ?? 0) . ';';
@@ -78,7 +82,7 @@ final readonly class ActionController implements ControllerInterface
 
         $is_admin_download = false;
         $get_pwg_token     = $this->stringUtil->inputString('pwg_token', null, $_GET);
-        if ($this->permissionService->isAdmin() && $get_pwg_token !== null && $this->util->getPwgToken() == $get_pwg_token) {
+        if ($this->permissionService->isAdmin() && $get_pwg_token !== null && $this->csrfService->getToken() == $get_pwg_token) {
             $is_admin_download = true;
             if (CurrentUser::isInitialized()) {
                 CurrentUser::get()->enabledHigh = true;
@@ -126,9 +130,9 @@ SELECT id FROM ' . Tables::categories() . '
         }
 
         if ($get_part == 'e') {
-            $this->util->pwgLog($get_id, 'high');
+            $this->activityLogger->pageView($get_id, 'high');
         } elseif ($get_part == 'f') {
-            $this->util->pwgLog($get_id, 'high', is_scalar($format['format_id'] ?? null) ? (string) $format['format_id'] : null);
+            $this->activityLogger->pageView($get_id, 'high', is_scalar($format['format_id'] ?? null) ? (string) $format['format_id'] : null);
         }
 
         EventDispatcher::notify('loc_action_before_http_headers');

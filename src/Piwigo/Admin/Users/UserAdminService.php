@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Users;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\Util;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
@@ -31,7 +33,7 @@ final readonly class UserAdminService
         private SessionService $sessionService,
         private UserRepository $userRepository,
         private UserService $userService,
-        private Util $util,
+        private ActivityLogger $activityLogger,
         private CacheItemPoolInterface $pool,
     ) {
     }
@@ -43,7 +45,7 @@ final readonly class UserAdminService
         $this->sessionService->deleteUserSessions($userId);
         $uRepo->deleteByUserId($userId, Tables::users(), Config::userFields()['id']);
         EventDispatcher::notify('delete_user', $userId);
-        $this->util->pwgActivity('user', $userId, 'delete');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'delete'));
     }
 
     public function syncUsers(): void
@@ -145,7 +147,7 @@ final readonly class UserAdminService
         $groupids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($groupList));
         $groupRepo->deleteByIds($groupIds);
         EventDispatcher::notify('delete_group', $groupids);
-        $this->util->pwgActivity('group', $groupids, 'delete');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $groupids, 'delete'));
         return $groupList;
     }
 

@@ -6,6 +6,9 @@ namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\Category\CategoryAdminService;
@@ -21,12 +24,13 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
@@ -45,6 +49,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Validation\InputValidator;
 
 final class BatchManagerController
 {
@@ -82,7 +87,10 @@ final class BatchManagerController
         private readonly UrlGenerator $urlGenerator,
         private readonly UrlService $urlService,
         private readonly UserAdminService $userAdminService,
-        private readonly Util $util,
+        private readonly ActivityLogger $activityLogger,
+        private readonly CsrfService $csrfService,
+        private readonly InputValidator $inputValidator,
+        private readonly RedirectResponder $redirectResponder,
         private readonly PaginationService $paginationService,
     ) {
     }
@@ -107,8 +115,8 @@ final class BatchManagerController
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
-        $this->util->checkInputParameter('selection', $_POST, true, ValidationPattern::ID);
-        $this->util->checkInputParameter('display', $_REQUEST, false, '/^(\d+|all)$/');
+        $this->inputValidator->check('selection', $_POST, true, ValidationPattern::ID);
+        $this->inputValidator->check('display', $_REQUEST, false, '/^(\d+|all)$/');
 
         // ── Specific actions ──────────────────────────────────────────────────
 
@@ -116,11 +124,11 @@ final class BatchManagerController
             if ('empty_caddie' == $_GET['action']) {
                 $this->imageRepository->deleteUserCaddie(is_numeric($user['id']) ? (int) $user['id'] : 0);
                 $_SESSION['page_infos'] = [Lang::t('Information data registered in database')];
-                $this->util->redirect($this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : ''));
+                $this->redirectResponder->redirect($this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : ''));
             }
 
             if ('delete_orphans' == $_GET['action'] && isset($_GET['nb_orphans_deleted'])) {
-                $this->util->checkInputParameter('nb_orphans_deleted', $_GET, false, '/^\d+$/');
+                $this->inputValidator->check('nb_orphans_deleted', $_GET, false, '/^\d+$/');
                 $nb_orphans_deleted = is_numeric($_GET['nb_orphans_deleted']) ? (int) $_GET['nb_orphans_deleted'] : 0;
                 if ($nb_orphans_deleted > 0) {
                     if (!is_array($_SESSION['page_infos'] ?? null)) {
@@ -130,12 +138,12 @@ final class BatchManagerController
                     $page_infos_ref   = &$_SESSION['page_infos'];
                     $page_infos_ref[] = Translator::get()->plural('%d photo was deleted', '%d photos were deleted', $nb_orphans_deleted);
                     $getPage = $_GET['page'] ?? null;
-                    $this->util->redirect($this->urlGenerator->admin() . '&page=' . (is_string($getPage) ? $getPage : ''));
+                    $this->redirectResponder->redirect($this->urlGenerator->admin() . '&page=' . (is_string($getPage) ? $getPage : ''));
                 }
             }
 
             if ('sync_md5sum' == $_GET['action'] && isset($_GET['nb_md5sum_added'])) {
-                $this->util->checkInputParameter('nb_md5sum_added', $_GET, false, '/^\d+$/');
+                $this->inputValidator->check('nb_md5sum_added', $_GET, false, '/^\d+$/');
                 $nb_md5sum_added = is_numeric($_GET['nb_md5sum_added']) ? (int) $_GET['nb_md5sum_added'] : 0;
                 if ($nb_md5sum_added > 0) {
                     if (!is_array($_SESSION['page_infos'] ?? null)) {
@@ -145,7 +153,7 @@ final class BatchManagerController
                     $page_infos_ref   = &$_SESSION['page_infos'];
                     $page_infos_ref[] = Translator::get()->plural('%d checksums were added', '%d checksums were added', $nb_md5sum_added);
                     $getPage2 = $_GET['page'] ?? null;
-                    $this->util->redirect($this->urlGenerator->admin() . '&page=' . (is_string($getPage2) ? $getPage2 : ''));
+                    $this->redirectResponder->redirect($this->urlGenerator->admin() . '&page=' . (is_string($getPage2) ? $getPage2 : ''));
                 }
             }
         }
@@ -180,7 +188,7 @@ final class BatchManagerController
             }
 
             if (isset($_POST['filter_category_use'])) {
-                $this->util->checkInputParameter('filter_category', $_POST, false, ValidationPattern::ID);
+                $this->inputValidator->check('filter_category', $_POST, false, ValidationPattern::ID);
                 $bmf['category'] = $_POST['filter_category'];
                 if (isset($_POST['filter_category_recursive'])) {
                     $bmf['category_recursive'] = true;
@@ -201,7 +209,7 @@ final class BatchManagerController
             }
 
             if (isset($_POST['filter_level_use'])) {
-                $this->util->checkInputParameter('filter_level', $_POST, false, '/^\d+$/');
+                $this->inputValidator->check('filter_level', $_POST, false, '/^\d+$/');
                 if (in_array($_POST['filter_level'], Config::availablePermissionLevels())) {
                     $bmf['level'] = $_POST['filter_level'];
                     if (isset($_POST['filter_level_include_lower'])) {
@@ -419,7 +427,7 @@ final class BatchManagerController
             $bmf_category = is_numeric($bmf['category']) ? (int) $bmf['category'] : 0;
             if (!$this->categoryRepository->existsById($bmf_category)) {
                 unset($_SESSION['bulk_manager_filter']);
-                $this->util->redirect($this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : ''));
+                $this->redirectResponder->redirect($this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : ''));
             }
             $categories   = isset($bmf['category_recursive']) ? $this->categoryService->getSubcatIds([$bmf_category]) : [$bmf_category];
             $filter_sets[] = array_column($this->conn->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $categories) . ');')->fetchAllAssociative(), 'image_id');
@@ -518,7 +526,7 @@ final class BatchManagerController
         // ── Tabs ──────────────────────────────────────────────────────────────
 
         if (isset($_GET['mode'])) {
-            $this->util->checkInputParameter('mode', $_GET, false, '/^(global|unit)$/');
+            $this->inputValidator->check('mode', $_GET, false, '/^(global|unit)$/');
             $this->batchTab = is_string($_GET['mode']) ? $_GET['mode'] : 'global';
         } else {
             $this->batchTab = 'global';
@@ -637,19 +645,19 @@ final class BatchManagerController
         $duplicates_on_fields = [];
         $associated_categories = [];
         if (!empty($_POST)) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
         }
 
         EventDispatcher::notify('loc_begin_element_set_global');
 
-        $this->util->checkInputParameter('del_tags', $_POST, true, ValidationPattern::ID);
-        $this->util->checkInputParameter('associate', $_POST, true, ValidationPattern::ID);
-        $this->util->checkInputParameter('move', $_POST, false, ValidationPattern::ID);
-        $this->util->checkInputParameter('dissociate', $_POST, false, ValidationPattern::ID);
+        $this->inputValidator->check('del_tags', $_POST, true, ValidationPattern::ID);
+        $this->inputValidator->check('associate', $_POST, true, ValidationPattern::ID);
+        $this->inputValidator->check('move', $_POST, false, ValidationPattern::ID);
+        $this->inputValidator->check('dissociate', $_POST, false, ValidationPattern::ID);
 
         $collection = [];
         if (isset($_POST['nb_photos_deleted'])) {
-            $this->util->checkInputParameter('nb_photos_deleted', $_POST, false, '/^\d+$/');
+            $this->inputValidator->check('nb_photos_deleted', $_POST, false, '/^\d+$/');
             $collection = array_fill(0, is_numeric($_POST['nb_photos_deleted']) ? (int) $_POST['nb_photos_deleted'] : 0, null);
         } elseif (isset($_POST['setSelected'])) {
             $collection = explode(',', is_string($rawWholeSet1 = $_POST['whole_set'] ?? null) ? $rawWholeSet1 : '');
@@ -771,7 +779,7 @@ final class BatchManagerController
                     $datas[] = ['id' => $image_id, 'author' => $authorValue];
                 }
                 Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['author']], $datas);
-                $this->util->pwgActivity('photo', $collection_int, 'edit', ['action' => 'author']);
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'author']));
             } elseif ('title' == $action) {
                 $titleValue = isset($_POST['remove_title']) ? null : ($_POST['title'] ?? null);
                 $datas = [];
@@ -779,7 +787,7 @@ final class BatchManagerController
                     $datas[] = ['id' => $image_id, 'name' => $titleValue];
                 }
                 Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['name']], $datas);
-                $this->util->pwgActivity('photo', $collection_int, 'edit', ['action' => 'title']);
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'title']));
             } elseif ('date_creation' == $action) {
                 $date_creation = (isset($_POST['remove_date_creation']) || !isset($_POST['date_creation']) || $_POST['date_creation'] === '') ? null : $_POST['date_creation'];
                 $datas = [];
@@ -787,7 +795,7 @@ final class BatchManagerController
                     $datas[] = ['id' => $image_id, 'date_creation' => $date_creation];
                 }
                 Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['date_creation']], $datas);
-                $this->util->pwgActivity('photo', $collection_int, 'edit', ['action' => 'date_creation']);
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'date_creation']));
             } elseif ('level' == $action) {
                 $levelValue = $_POST['level'] ?? null;
                 $datas = [];
@@ -795,7 +803,7 @@ final class BatchManagerController
                     $datas[] = ['id' => $image_id, 'level' => $levelValue];
                 }
                 Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['level']], $datas);
-                $this->util->pwgActivity('photo', $collection_int, 'edit', ['action' => 'privacy_level']);
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'privacy_level']));
                 if (isset($bmf['level'])) {
                     $bmf_level_val  = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
                     $postLevelRaw = $_POST['level'] ?? null;
@@ -849,7 +857,7 @@ final class BatchManagerController
 
             EventDispatcher::notify('element_set_global_action', $action, $collection_int);
             if ($redirect) {
-                $this->util->redirect($redirect_url);
+                $this->redirectResponder->redirect($redirect_url);
             }
         }
 
@@ -981,8 +989,8 @@ final class BatchManagerController
         EventDispatcher::notify('loc_begin_element_set_unit');
 
         if (isset($_POST['submit'])) {
-            $this->util->checkPwgToken();
-            $this->util->checkInputParameter('element_ids', $_POST, false, '/^\d+(,\d+)*$/');
+            $this->csrfService->check();
+            $this->inputValidator->check('element_ids', $_POST, false, '/^\d+(,\d+)*$/');
             $collection = explode(',', is_string($rawElementIds = $_POST['element_ids'] ?? null) ? $rawElementIds : '');
 
             $datas = [];
@@ -1024,7 +1032,7 @@ final class BatchManagerController
 
         $collection = [];
         if (isset($_POST['nb_photos_deleted'])) {
-            $this->util->checkInputParameter('nb_photos_deleted', $_POST, false, '/^\d+$/');
+            $this->inputValidator->check('nb_photos_deleted', $_POST, false, '/^\d+$/');
             $collection = array_fill(0, is_numeric($_POST['nb_photos_deleted']) ? (int) $_POST['nb_photos_deleted'] : 0, null);
         } elseif (isset($_POST['setSelected'])) {
             $collection = explode(',', is_string($rawWholeSet2 = $_POST['whole_set'] ?? null) ? $rawWholeSet2 : '');
@@ -1043,7 +1051,7 @@ final class BatchManagerController
             'U_ELEMENTS_PAGE' => $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
             'level_options'   => $this->htmlService->getPrivacyLevelOptions(),
             'ADMIN_PAGE_TITLE' => Lang::t('Batch Manager'),
-            'PWG_TOKEN'       => $this->util->getPwgToken(),
+            'PWG_TOKEN'       => $this->csrfService->getToken(),
         ]);
 
         $this->filterResolver->render($collection, $base_url, $this->catElementsId, $this->pageStart);
@@ -1193,10 +1201,10 @@ final class BatchManagerController
                     'related_category_ids'  => json_encode($related_category_ids),
                     'U_JUMPTO'              => (isset($url_img) && $userLevel >= $mediaLevel) ? $url_img : null,
                     'tag_selection'         => $tag_selection,
-                    'U_DOWNLOAD'            => $this->urlGenerator->actionDownload((int) $row_id_str, 'e', $this->util->getPwgToken()),
+                    'U_DOWNLOAD'            => $this->urlGenerator->actionDownload((int) $row_id_str, 'e', $this->csrfService->getToken()),
                     'U_HISTORY'             => $this->urlGenerator->admin('history') . '&filter_image_id=' . $row_id_str,
                     'U_ACTIVITY'            => $this->urlGenerator->admin('user_activity') . '&photo=' . $row_id_str,
-                    'U_DELETE'              => $admin_url_start . '&delete=1&pwg_token=' . $this->util->getPwgToken(),
+                    'U_DELETE'              => $admin_url_start . '&delete=1&pwg_token=' . $this->csrfService->getToken(),
                     'U_SYNC'                => $admin_url_start . '&sync_metadata=1',
                     'PATH'                  => $row['path'],
                     'level_options_selected' => [$selected_level],
@@ -1243,14 +1251,14 @@ final class BatchManagerController
                 $conn->executeStatement('UPDATE ' . $tableName . ' SET queue_name = ?, available_at = NOW(), delivered_at = NULL WHERE id = ?', ['piwigo_async', $failedId]);
                 PageState::current()->addInfo('Job moved back to async queue.');
             }
-            $this->util->redirect($this->urlGenerator->admin('queue'));
+            $this->redirectResponder->redirect($this->urlGenerator->admin('queue'));
         }
 
         if ($action === 'purge_failed') {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
             $conn->executeStatement('DELETE FROM ' . $tableName . ' WHERE queue_name = ?', ['piwigo_failed']);
             PageState::current()->addInfo('Failed queue purged.');
-            $this->util->redirect($this->urlGenerator->admin('queue'));
+            $this->redirectResponder->redirect($this->urlGenerator->admin('queue'));
         }
 
         $stats       = [];
@@ -1270,7 +1278,7 @@ final class BatchManagerController
         }
 
 
-        $pwg_token     = $this->util->getPwgToken();
+        $pwg_token     = $this->csrfService->getToken();
         $pendingAsync  = $stats['piwigo_async'] ?? 0;
         $pendingFailed = $stats['piwigo_failed'] ?? 0;
 

@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Method;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Category\CategoryService;
-use Piwigo\Core\Util;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -34,7 +37,8 @@ final readonly class TagsEndpoints
         private TagRepository $tagRepository,
         private TagService $tagService,
         private UrlService $urlService,
-        private Util $util,
+        private ActivityLogger $activityLogger,
+        private CsrfService $csrfService,
         private WsHelper $wsHelper,
     ) {
     }
@@ -162,9 +166,9 @@ final readonly class TagsEndpoints
         if (isset($creationOutput['error'])) {
             return new PwgError(WsError::InvalidParam->value, is_string($creationOutput['error']) ? $creationOutput['error'] : '');
         }
-        $tagAddId = is_numeric($creationOutput['id'] ?? null) ? (int) $creationOutput['id'] : (is_scalar($creationOutput['id'] ?? null) ? (string) $creationOutput['id'] : 0);
-        $this->util->pwgActivity('tag', $tagAddId, 'add');
-        $newTagRow = $this->tagRepository->findById((int) $tagAddId);
+        $tagAddId = is_numeric($creationOutput['id'] ?? null) ? (int) $creationOutput['id'] : 0;
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagAddId, 'add'));
+        $newTagRow = $this->tagRepository->findById($tagAddId);
         return ['info' => $creationOutput['info'], 'id' => $creationOutput['id'], 'name' => $newTagRow['name'] ?? '', 'url_name' => $newTagRow['url_name'] ?? ''];
     }
 
@@ -174,7 +178,7 @@ final readonly class TagsEndpoints
      */
     public function delete(array $params, PwgServer &$service): PwgError|array
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $tagIdsRaw = is_array($params['tag_id']) ? $params['tag_id'] : [];
@@ -193,25 +197,25 @@ final readonly class TagsEndpoints
     /** @param array<mixed> $params */
     public function rename(array $params, PwgServer &$service): mixed
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        $tagId   = is_numeric($params['tag_id']) ? (int) $params['tag_id'] : (is_scalar($params['tag_id']) ? (string) $params['tag_id'] : 0);
+        $tagId   = is_numeric($params['tag_id']) ? (int) $params['tag_id'] : 0;
         $tagName = strip_tags(stripslashes(is_string($params['new_name'] ?? null) ? $params['new_name'] : ''));
         $tagRepo = $this->tagRepository;
-        if ($tagRepo->countById((int) $tagId) === 0) {
+        if ($tagRepo->countById($tagId) === 0) {
             return new PwgError(WsError::InvalidParam->value, 'This tag does not exist.');
         }
-        $existingNames = $tagRepo->findNamesExcluding((int) $tagId);
+        $existingNames = $tagRepo->findNamesExcluding($tagId);
         $update = [];
         if (in_array($tagName, $existingNames)) {
             return new PwgError(WsError::InvalidParam->value, 'This name is already token');
         } elseif (!empty($tagName)) {
             $update = ['name' => $tagName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $tagName)];
         }
-        $this->util->pwgActivity('tag', $tagId, 'edit');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagId, 'edit'));
         Dml::singleUpdate(Tables::tags(), $update, ['id' => $tagId]);
-        $tag = $tagRepo->findById((int) $tagId) ?? [];
+        $tag = $tagRepo->findById($tagId) ?? [];
         $tag['raw_name'] = $tag['name'] ?? '';
         $tag['name']     = EventDispatcher::dispatch('render_tag_name', $tag['raw_name'], $tag);
         $tag['alt_names'] = EventDispatcher::dispatch('get_tag_alt_names', [], $tag['raw_name']);
@@ -224,7 +228,7 @@ final readonly class TagsEndpoints
      */
     public function duplicate(array $params, PwgServer &$service): PwgError|array
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $dupTagId   = is_numeric($params['tag_id']) ? (int) $params['tag_id'] : 0;
@@ -238,12 +242,12 @@ final readonly class TagsEndpoints
         }
         Dml::singleInsert(Tables::tags(), ['name' => $dupCopyName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $dupCopyName)]);
         $destinationTagId = (int) $this->conn->lastInsertId();
-        $this->util->pwgActivity('tag', $destinationTagId, 'add', ['action' => 'duplicate', 'source_tag' => $dupTagId]);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $destinationTagId, 'add', ['action' => 'duplicate', 'source_tag' => $dupTagId]));
         $destinationTagImageIds = $dupTagRepo->findImageIdsByTagId($dupTagId);
         $inserts = [];
         foreach ($destinationTagImageIds as $imageId) {
             $inserts[] = ['tag_id' => $destinationTagId, 'image_id' => $imageId];
-            $this->util->pwgActivity('photo', $imageId, 'edit', ['add-tag' => $destinationTagId]);
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, 'edit', ['add-tag' => $destinationTagId]));
         }
         if (count($inserts) > 0) {
             Dml::massInserts(Tables::imageTag(), array_keys($inserts[0]), $inserts);
@@ -257,7 +261,7 @@ final readonly class TagsEndpoints
      */
     public function merge(array $params, PwgServer &$service): PwgError|array
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $mergeDestId  = is_numeric($params['destination_tag_id']) ? (int) $params['destination_tag_id'] : 0;
@@ -276,9 +280,9 @@ final readonly class TagsEndpoints
             $inserts[] = ['tag_id' => $mergeDestId, 'image_id' => $image];
         }
         Dml::massInserts(Tables::imageTag(), ['tag_id', 'image_id'], $inserts, ['ignore' => true]);
-        $this->util->pwgActivity('tag', $mergeDestId, 'edit');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $mergeDestId, 'edit'));
         foreach ($imageToAdd as $imageId) {
-            $this->util->pwgActivity('photo', $imageId, 'edit', ['tag-add' => $mergeDestId]);
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, 'edit', ['tag-add' => $mergeDestId]));
         }
         EventDispatcher::notify('merge_tags', $mergeDestId, $mergeTag);
         $this->tagAdminService->deleteTags($mergeTag);

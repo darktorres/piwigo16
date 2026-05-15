@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Category;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
@@ -16,7 +19,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
@@ -36,7 +38,7 @@ final readonly class CategoryAdminService
         private ImageRepository $imageRepository,
         private UserAdminService $userAdminService,
         private UserRepository $userRepository,
-        private Util $util,
+        private ActivityLogger $activityLogger,
     ) {
     }
 
@@ -85,7 +87,7 @@ final readonly class CategoryAdminService
         $userRepo2->deleteUserCacheByCategoryIds($ids);
 
         EventDispatcher::notify('delete_categories', $ids);
-        $this->util->pwgActivity('album', $ids, 'delete', ['photo_deletion_mode' => $photoDeletionMode]);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $ids, 'delete', ['photo_deletion_mode' => $photoDeletionMode]));
     }
 
     public function imagesIntegrity(): void
@@ -438,7 +440,7 @@ SELECT DISTINCT id
             $this->setCatStatus(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($categories)), 'private');
         }
         PageState::current()->addInfo(Translator::get()->plural('%d album moved', '%d albums moved', count($categories)));
-        $this->util->pwgActivity('album', $catIdsInt, 'move', ['parent' => $newParent]);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catIdsInt, 'move', ['parent' => $newParent]));
     }
 
     /**
@@ -500,7 +502,7 @@ SELECT DISTINCT id
             $this->addPermissionOnCategory($insertedId, array_unique(array_merge($this->userAdminService->getAdmins(), [$userId])));
         }
         EventDispatcher::notify('create_virtual_category', array_merge(['id' => $insertedId], $insert));
-        $this->util->pwgActivity('album', $insertedId, 'add');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $insertedId, 'add'));
         return ['info' => Lang::t('Album added'), 'id' => $insertedId];
     }
 

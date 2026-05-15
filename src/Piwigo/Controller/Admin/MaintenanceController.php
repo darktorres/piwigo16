@@ -6,6 +6,9 @@ namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\History\HistoryAdminService;
@@ -29,8 +32,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
@@ -40,6 +43,7 @@ use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -58,6 +62,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
+use Piwigo\Validation\InputValidator;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -99,7 +104,10 @@ final class MaintenanceController
         private readonly UrlService $urlService,
         private readonly UserAdminService $userAdminService,
         private readonly UserRepository $userRepository,
-        private readonly Util $util,
+        private readonly ActivityLogger $activityLogger,
+        private readonly CsrfService $csrfService,
+        private readonly InputValidator $inputValidator,
+        private readonly RedirectResponder $redirectResponder,
         private readonly CacheItemPoolInterface $pool,
         private readonly HtmlService $htmlService,
     ) {
@@ -135,7 +143,7 @@ final class MaintenanceController
         $tpl = TemplateRegistry::current();
 
         if (isset($_GET['action'])) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
         }
 
         $this->maintActions = [
@@ -157,7 +165,7 @@ final class MaintenanceController
             'compiled-templates' => ['icon' => 'icon-file-code',      'label' => Lang::t('Purge compiled templates')],
         ];
 
-        $this->util->checkInputParameter('tab', $_GET, false, '/^(actions|env|sys)$/');
+        $this->inputValidator->check('tab', $_GET, false, '/^(actions|env|sys)$/');
         $tab = isset($_GET['tab']) && is_string($_GET['tab']) ? $_GET['tab'] : 'actions';
 
         $tabsheet = new Tabsheet();
@@ -194,14 +202,14 @@ final class MaintenanceController
                 exit();
             case 'lock_gallery':
                 $this->configService->confUpdateParam('gallery_locked', 'true');
-                $this->util->pwgActivity('system', ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]);
-                $this->util->redirect($this->urlGenerator->admin('maintenance'));
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]));
+                $this->redirectResponder->redirect($this->urlGenerator->admin('maintenance'));
                 break;
             case 'unlock_gallery':
                 $this->configService->confUpdateParam('gallery_locked', 'false');
                 $_SESSION['page_infos'] = [Lang::t('Gallery unlocked')];
-                $this->util->pwgActivity('system', ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]);
-                $this->util->redirect($this->urlGenerator->admin('maintenance'));
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]));
+                $this->redirectResponder->redirect($this->urlGenerator->admin('maintenance'));
                 break;
             case 'categories':
                 $this->categoryAdminService->imagesIntegrity();
@@ -321,10 +329,10 @@ final class MaintenanceController
         }
 
         if ($register_activity) {
-            $this->util->pwgActivity('system', ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]);
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]));
         }
 
-        $pwg_token    = $this->util->getPwgToken();
+        $pwg_token    = $this->csrfService->getToken();
         $gallery_locked = Config::galleryLocked();
         $tpl->assign('page_data_json', json_encode([
             'unit_MB'                     => Lang::t('%s MB'),
@@ -340,7 +348,7 @@ final class MaintenanceController
             'str_delete_all_sizes_confirm' => Lang::t('Are you sure you want to delete all sizes?'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $url_format = $this->urlGenerator->admin('maintenance') . '&action=%s&pwg_token=' . $this->util->getPwgToken();
+        $url_format = $this->urlGenerator->admin('maintenance') . '&action=%s&pwg_token=' . $this->csrfService->getToken();
         if (!$this->permissionService->isWebmaster()) {
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
@@ -443,7 +451,7 @@ final class MaintenanceController
         $tpl = TemplateRegistry::current();
 
         if (isset($_GET['action'])) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
         }
 
         $action = $_GET['action'] ?? '';
@@ -451,11 +459,11 @@ final class MaintenanceController
             case 'phpinfo':  phpinfo();
                 exit();
             case 'lock_gallery':    $this->configService->confUpdateParam('gallery_locked', 'true');
-                $this->util->redirect($this->urlGenerator->admin('maintenance'));
+                $this->redirectResponder->redirect($this->urlGenerator->admin('maintenance'));
                 break;
             case 'unlock_gallery':  $this->configService->confUpdateParam('gallery_locked', 'false');
                 $_SESSION['page_infos'] = [Lang::t('Gallery unlocked')];
-                $this->util->redirect($this->urlGenerator->admin('maintenance'));
+                $this->redirectResponder->redirect($this->urlGenerator->admin('maintenance'));
                 break;
             case 'categories':      $this->categoryAdminService->imagesIntegrity();
                 $this->categoryAdminService->categoriesIntegrity();
@@ -544,7 +552,7 @@ final class MaintenanceController
 
         $tpl->assign('page_data_json', json_encode(['unit_MB' => Lang::t('%s MB'), 'no_time_elapsed' => Lang::t('right now'), 'no_active_plugin' => Lang::t('No plugin activated'), 'error_occured' => Lang::t('an error happened')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $url_format = $this->urlGenerator->admin('maintenance') . '&action=%s&pwg_token=' . $this->util->getPwgToken();
+        $url_format = $this->urlGenerator->admin('maintenance') . '&action=%s&pwg_token=' . $this->csrfService->getToken();
 
         $purge_urls = [];
         $purge_urls[Lang::t('All')] = sprintf($url_format, 'derivatives') . '&type=all';
@@ -849,9 +857,9 @@ final class MaintenanceController
             'display_thumbnail_hoverbox' => Lang::t('Hoverbox display'),
         ];
 
-        $this->util->checkInputParameter('filter_ip', $_GET, false, '/^[0-9.]+$/');
-        $this->util->checkInputParameter('filter_image_id', $_GET, false, '/^\d+$/');
-        $this->util->checkInputParameter('filter_user_id', $_GET, false, '/^\d+$/');
+        $this->inputValidator->check('filter_ip', $_GET, false, '/^[0-9.]+$/');
+        $this->inputValidator->check('filter_image_id', $_GET, false, '/^\d+$/');
+        $this->inputValidator->check('filter_user_id', $_GET, false, '/^\d+$/');
 
         $this->historyAdminService->historyTabsheet('history');
         $tpl->assign(['F_ACTION' => $this->urlGenerator->admin('history'), 'API_METHOD' => $this->urlGenerator->ws(['format' => 'json', 'method' => 'pwg.history.search'])]);
@@ -996,7 +1004,7 @@ final class MaintenanceController
         }
 
         if (!empty($_POST) || isset($_GET['action'])) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
         }
 
         $tabsheet = new Tabsheet();
@@ -1047,7 +1055,7 @@ final class MaintenanceController
 
         $tpl->assign([
             'F_ACTION'   => $this->urlGenerator->admin() . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
-            'PWG_TOKEN'  => $this->util->getPwgToken(),
+            'PWG_TOKEN'  => $this->csrfService->getToken(),
             'ADMIN_PAGE_TITLE' => Lang::t('Synchronize'),
             'page_data_json' => json_encode(['str_delete_site_confirm' => Lang::t('Are you sure you want to delete this site?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
@@ -1057,7 +1065,7 @@ final class MaintenanceController
         foreach ($this->siteRepository->findAll() as $row) {
             $row_id_str = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
             $is_remote  = UrlService::urlIsRemote(is_string($row['galleries_url'] ?? null) ? $row['galleries_url'] : '');
-            $base_url   = $this->urlGenerator->admin('site_manager') . '&site=' . $row_id_str . '&pwg_token=' . $this->util->getPwgToken() . '&action=';
+            $base_url   = $this->urlGenerator->admin('site_manager') . '&site=' . $row_id_str . '&pwg_token=' . $this->csrfService->getToken() . '&action=';
             $update_url = $this->urlGenerator->admin('site_update') . '&site=' . $row_id_str;
             $site_id    = is_numeric($row['id']) ? (int) $row['id'] : 0;
 
@@ -1137,7 +1145,7 @@ final class MaintenanceController
         $tabsheet->assign();
 
         if (isset($_GET['quick_sync'])) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
             $_POST['sync'] = 'files';
             $_POST['display_info'] = '1';
             $_POST['add_to_caddie'] = '1';
@@ -1264,7 +1272,7 @@ final class MaintenanceController
                         $category_up[] = $category['id_uppercat'];
                     }
                 }
-                $this->util->pwgActivity('album', $category_ids, 'add', ['sync' => true]);
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $category_ids, 'add', ['sync' => true]));
                 $category_up_str = implode(',', array_unique($category_up));
                 if (Config::inheritanceByDefault() && !empty($category_up_str)) {
                     $permRepoSync    = $this->permissionRepository;
@@ -1441,7 +1449,7 @@ final class MaintenanceController
                 if (count($inserts) > 0) {
                     Dml::massInserts(Tables::images(), array_keys($inserts[0]), $inserts);
                     Dml::massInserts(Tables::imageCategory(), array_keys($insert_links[0]), $insert_links);
-                    $this->util->pwgActivity('photo', $caddiables, 'add', ['sync' => true]);
+                    $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $caddiables, 'add', ['sync' => true]));
                     if (isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1) {
                         $this->imageRepository->addToUserCaddie(CurrentUser::get()->id, $caddiables);
                     }
@@ -1597,7 +1605,7 @@ final class MaintenanceController
             $tpl_introduction = ['sync' => 'dirs', 'sync_meta' => true, 'display_info' => false, 'add_to_caddie' => false, 'subcats_included' => true, 'privacy_level_selected' => 0, 'meta_all' => false, 'meta_empty_overrides' => false];
             $cat_selected = [];
             if (isset($_GET['cat_id'])) {
-                $this->util->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
+                $this->inputValidator->check('cat_id', $_GET, false, ValidationPattern::ID);
                 $cat_selected = [is_numeric($_GET['cat_id']) ? (int) $_GET['cat_id'] : 0];
                 $tpl_introduction['sync'] = 'files';
             }

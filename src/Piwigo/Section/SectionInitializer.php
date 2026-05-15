@@ -13,10 +13,10 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\Tables;
 use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionService;
@@ -57,7 +57,7 @@ final readonly class SectionInitializer
         private UrlService $urlService,
         private UserRepository $userRepository,
         private UserService $userService,
-        private Util $util,
+        private RedirectResponder $redirectResponder,
         private CacheItemPoolInterface $pool,
     ) {
     }
@@ -134,7 +134,7 @@ final readonly class SectionInitializer
                         }
                     }
                     if (!empty($randomOptions)) {
-                        $this->util->redirect($randomOptions[mt_rand(0, count($randomOptions) - 1)]);
+                        $this->redirectResponder->redirect($randomOptions[mt_rand(0, count($randomOptions) - 1)]);
                     }
                 }
                 $page['is_homepage'] = true;
@@ -347,7 +347,7 @@ SELECT DISTINCT(image_id)
             if ($action === 'remove_all_from_favorites') {
                 $userId = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
                 $this->userRepository->deleteAllFavoritesByUserId($userId);
-                $this->util->redirect($this->urlService->makeIndexUrl(['section' => 'favorites']));
+                $this->redirectResponder->redirect($this->urlService->makeIndexUrl(['section' => 'favorites']));
             } else {
                 $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
                 $query  = '
@@ -547,9 +547,9 @@ SELECT DISTINCT(id)
                 $redirectUrl = $scriptContext === 'picture' ? $this->urlService->duplicatePictureUrl() : $this->urlService->duplicateIndexUrl();
                 if (!headers_sent()) {
                     $this->htmlService->setStatusHeader(301);
-                    $this->util->redirectHttp($redirectUrl);
+                    $this->redirectResponder->redirectHttp($redirectUrl);
                 }
-                $this->util->redirect($redirectUrl);
+                $this->redirectResponder->redirect($redirectUrl);
             }
             unset($page['hit_by']);
         }

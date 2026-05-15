@@ -9,7 +9,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Feed\FeedHelper;
 use Piwigo\Feed\FeedItem;
 use Piwigo\Feed\FeedRepository;
@@ -21,6 +20,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -39,7 +39,7 @@ final readonly class FeedController implements ControllerInterface
         private StringUtil $stringUtil,
         private UrlService $urlService,
         private UserService $userService,
-        private Util $util,
+        private InputValidator $inputValidator,
     ) {
     }
 
@@ -47,7 +47,7 @@ final readonly class FeedController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
 
-        $this->util->checkInputParameter('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
+        $this->inputValidator->check('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
 
         $feed_id    = $this->stringUtil->inputString('feed', '', $_GET);
         $image_only = $this->stringUtil->inputString('image_only', null, $_GET) !== null;

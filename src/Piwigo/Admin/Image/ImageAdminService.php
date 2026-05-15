@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Image;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
@@ -14,7 +17,6 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -44,7 +46,7 @@ final class ImageAdminService
         private readonly TagRepository $tagRepository,
         private readonly UrlGenerator $urlGenerator,
         private readonly UserRepository $userRepository,
-        private readonly Util $util,
+        private readonly ActivityLogger $activityLogger,
     ) {
     }
 
@@ -127,7 +129,7 @@ final class ImageAdminService
             $this->categoryAdminService->updateCategory($categoryIds);
         }
         EventDispatcher::notify('delete_elements', $ids);
-        $this->util->pwgActivity('photo', $ids, 'delete');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $ids, 'delete'));
         return count($ids);
     }
 

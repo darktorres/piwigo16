@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Mail\MailService;
@@ -33,7 +35,7 @@ final readonly class PasswordService
         private UrlGenerator $urlGenerator,
         private UserRepository $userRepository,
         private UserService $userService,
-        private Util $util,
+        private ActivityLogger $activityLogger,
     ) {
     }
 
@@ -137,13 +139,13 @@ final readonly class PasswordService
                     CurrentUser::setRawAttributes($this->userService->buildUser($state_user_id, false));
                     $this->preferencesService->userprefsUpdateParam('reset_password_forbidden_until', time() + 60 * 60);
                     CurrentUser::setRawAttributes($save_user);
-                    $this->util->pwgActivity('user', $state_user_id, 'reset_password_failure_too_many');
+                    $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $state_user_id, 'reset_password_failure_too_many'));
                 }
                 PageState::current()->addKeyedError('login_page_error', Lang::t('Too many attempts, please try later..'));
                 return false;
             }
             if (isset($state['user_id']) && $state['user_id'] !== 0) {
-                $this->util->pwgActivity('user', $state['user_id'], 'reset_password_failure_code');
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $state['user_id'], 'reset_password_failure_code'));
             }
             PageState::current()->addKeyedError('password_form_error', Lang::t('Invalid verification code'));
             return false;
@@ -247,7 +249,7 @@ final readonly class PasswordService
         }
         unset($_SESSION['valid_reset_password_code']);
 
-        $this->util->pwgActivity('user', $user_id, 'reset_password_success');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $user_id, 'reset_password_success'));
         PageState::current()->addInfo(Lang::t('Your password has been reset'));
         PageState::current()->addInfo(new Html('<a href="' . $this->urlGenerator->identification() . '">' . Lang::t('Login') . '</a>'));
 

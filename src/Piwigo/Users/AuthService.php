@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
@@ -13,7 +16,6 @@ use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -30,7 +32,7 @@ final readonly class AuthService
         private AuthKeyRepository $authKeyRepo,
         private Connection $conn,
         private StringUtil $stringUtil,
-        private Util $util,
+        private ActivityLogger $activityLogger,
         private SessionService $sessionService,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
@@ -152,7 +154,7 @@ final readonly class AuthService
         $_SESSION['pwg_uid'] = $userId;
 
         EventDispatcher::notify('user_login', $userId);
-        $this->util->pwgActivity('user', $userId, 'login');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'login'));
     }
 
     public function autoLogin(): bool
@@ -203,7 +205,7 @@ final readonly class AuthService
 
         if ($userFound === null || count($userFound) === 0 || 'guest' === $userFound['status'] || !$passwordVerify) {
             if ($userFound !== null && count($userFound) > 0 && !$passwordVerify) {
-                $this->util->pwgActivity('user', $ufId, 'login_failure_wrong_password');
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $ufId, 'login_failure_wrong_password'));
             }
             EventDispatcher::notify('login_failure', stripslashes($username));
             return false;
@@ -217,7 +219,7 @@ final readonly class AuthService
             /** @psalm-var mixed $stateReasonRaw */
             $stateReasonRaw = $state['reason'] ?? null;
             $stateReason    = is_string($stateReasonRaw) ? $stateReasonRaw : 'login_failure_before_log_user';
-            $this->util->pwgActivity('user', $ufId, $stateReason);
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $ufId, $stateReason));
             EventDispatcher::notify('login_failure_before_log_user', stripslashes($username));
             return false;
         }
@@ -274,7 +276,7 @@ final readonly class AuthService
     {
         $logoutUid = isset($_SESSION['pwg_uid']) && is_numeric($_SESSION['pwg_uid']) ? (int) $_SESSION['pwg_uid'] : 0;
         EventDispatcher::notify('user_logout', $logoutUid);
-        $this->util->pwgActivity('user', $logoutUid, 'logout');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $logoutUid, 'logout'));
 
         $_SESSION = [];
         session_unset();

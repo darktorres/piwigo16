@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Method;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\BoolUtil;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -24,7 +27,8 @@ final readonly class GroupsEndpoints
         private Connection $conn,
         private GroupRepository $groupRepository,
         private UserAdminService $userAdminService,
-        private Util $util,
+        private ActivityLogger $activityLogger,
+        private CsrfService $csrfService,
     ) {
     }
 
@@ -68,14 +72,14 @@ final readonly class GroupsEndpoints
         $isDefaultVal = is_bool($isDefaultRaw) ? $isDefaultRaw : (is_string($isDefaultRaw) ? $isDefaultRaw : '');
         Dml::singleInsert(Tables::groups(), ['name' => $params['name'], 'is_default' => BoolUtil::toString($isDefaultVal)]);
         $insertedId = (int) $this->conn->lastInsertId();
-        $this->util->pwgActivity('group', $insertedId, 'add');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $insertedId, 'add'));
         return $service->invoke('pwg.groups.getList', ['group_id' => $insertedId]);
     }
 
     /** @param array<mixed> $params */
     public function delete(array $params, PwgServer &$service): PwgError|PwgNamedArray
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $groupIdInt = is_numeric($params['group_id']) ? (int) $params['group_id'] : (is_array($params['group_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['group_id']) : 0);
@@ -88,7 +92,7 @@ final readonly class GroupsEndpoints
     /** @param array<mixed> $params */
     public function setInfo(array $params, PwgServer &$service): mixed
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $setinfoName = is_string($params['name']) ? $params['name'] : '';
@@ -113,14 +117,14 @@ final readonly class GroupsEndpoints
             $updates['is_default'] = BoolUtil::toString(is_bool($isDefaultUpd) ? $isDefaultUpd : (is_string($isDefaultUpd) ? $isDefaultUpd : ''));
         }
         Dml::singleUpdate(Tables::groups(), $updates, ['id' => $setinfoGroupId]);
-        $this->util->pwgActivity('group', $setinfoGroupId, 'edit');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $setinfoGroupId, 'edit'));
         return $service->invoke('pwg.groups.getList', ['group_id' => $setinfoGroupId]);
     }
 
     /** @param array<mixed> $params */
     public function addUser(array $params, PwgServer &$service): mixed
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $adduserGroupId = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
@@ -134,8 +138,8 @@ final readonly class GroupsEndpoints
         }
         Dml::massInserts(Tables::userGroup(), ['group_id', 'user_id'], $inserts, ['ignore' => true]);
         $this->userAdminService->invalidateUserCache();
-        $this->util->pwgActivity('group', $adduserGroupId, 'edit');
-        $this->util->pwgActivity('user', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIds), 'edit');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $adduserGroupId, 'edit'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIds), 'edit'));
         return $service->invoke('pwg.groups.getList', ['group_id' => $adduserGroupId]);
     }
 
@@ -145,7 +149,7 @@ final readonly class GroupsEndpoints
      */
     public function merge(array $params, PwgServer &$service): PwgError|array
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $destGroupId   = is_numeric($params['destination_group_id']) ? (int) $params['destination_group_id'] : 0;
@@ -166,10 +170,10 @@ final readonly class GroupsEndpoints
         }
         Dml::massInserts(Tables::userGroup(), ['group_id', 'user_id'], $inserts, ['ignore' => true]);
         $this->userAdminService->invalidateUserCache();
-        $this->util->pwgActivity('group', $destGroupId, 'edit');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $destGroupId, 'edit'));
         foreach ($userToAdd as $userId) {
-            $userIdInt = is_numeric($userId) ? (int) $userId : $userId;
-            $this->util->pwgActivity('user', $userIdInt, 'edit', ['associated' => $destGroupId]);
+            $userIdInt = is_numeric($userId) ? (int) $userId : 0;
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userIdInt, 'edit', ['associated' => $destGroupId]));
         }
         $this->userAdminService->deleteGroups($mergeGroup);
         return ['destination_group' => $service->invoke('pwg.groups.getList', ['group_id' => $destGroupId]), 'deleted_group' => $mergeGroupObj];
@@ -178,7 +182,7 @@ final readonly class GroupsEndpoints
     /** @param array<mixed> $params */
     public function duplicate(array $params, PwgServer &$service): mixed
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $dupGroupId  = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
@@ -193,7 +197,7 @@ final readonly class GroupsEndpoints
         $isDefault = $groupRepo->findIsDefault($dupGroupId);
         Dml::singleInsert(Tables::groups(), ['name' => $copyNameStr, 'is_default' => BoolUtil::toString(is_string($isDefault) ? $isDefault : '')]);
         $insertedId = (int) $this->conn->lastInsertId();
-        $this->util->pwgActivity('group', $insertedId, 'add');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $insertedId, 'add'));
         $users   = array_column($this->conn->executeQuery('SELECT user_id FROM `' . Tables::userGroup() . '` WHERE group_id = ' . $dupGroupId . ';')->fetchAllAssociative(), 'user_id');
         $inserts = [];
         foreach ($users as $user) {
@@ -202,8 +206,8 @@ final readonly class GroupsEndpoints
         Dml::massInserts(Tables::userGroup(), ['group_id', 'user_id'], $inserts, ['ignore' => true]);
         $this->userAdminService->invalidateUserCache();
         foreach ($users as $userId) {
-            $uid = is_numeric($userId) ? (int) $userId : (is_scalar($userId) ? (string) $userId : 0);
-            $this->util->pwgActivity('user', $uid, 'edit', ['associated' => $dupGroupId]);
+            $uid = is_numeric($userId) ? (int) $userId : 0;
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $uid, 'edit', ['associated' => $dupGroupId]));
         }
         return $service->invoke('pwg.groups.getList', ['group_id' => $insertedId]);
     }
@@ -211,7 +215,7 @@ final readonly class GroupsEndpoints
     /** @param array<mixed> $params */
     public function deleteUser(array $params, PwgServer &$service): mixed
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $deluserGroupId = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
@@ -222,8 +226,8 @@ final readonly class GroupsEndpoints
         }
         $groupRepo->deleteUserGroupMembers($deluserGroupId, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $deluserUserIds));
         $this->userAdminService->invalidateUserCache();
-        $this->util->pwgActivity('group', $deluserGroupId, 'edit');
-        $this->util->pwgActivity('user', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $deluserUserIds), 'edit');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $deluserGroupId, 'edit'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $deluserUserIds), 'edit'));
         return $service->invoke('pwg.groups.getList', ['group_id' => $deluserGroupId]);
     }
 }

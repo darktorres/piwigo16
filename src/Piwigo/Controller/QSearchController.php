@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Core\AccessLevel;
-use Piwigo\Core\Util;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -22,7 +22,7 @@ final readonly class QSearchController implements ControllerInterface
     public function __construct(
         private UrlGenerator $urlGenerator,
         private PermissionService $permissionService,
-        private Util $util,
+        private RedirectResponder $redirectResponder,
         private UrlService $urlService,
     ) {
     }
@@ -35,7 +35,7 @@ final readonly class QSearchController implements ControllerInterface
         $bodyQ = is_array($body) && is_string($body['q'] ?? null) ? $body['q'] : null;
         $queryQ = is_string($request->getQueryParams()['q'] ?? null) ? $request->getQueryParams()['q'] : null;
         $q = $bodyQ ?? $queryQ ?? '';
-        $this->util->redirect($this->urlService->addUrlParams($this->urlGenerator->searchPage(), ['q' => $q]));
+        $this->redirectResponder->redirect($this->urlService->addUrlParams($this->urlGenerator->searchPage(), ['q' => $q]));
         return ResponseFactory::create(302);
     }
 }

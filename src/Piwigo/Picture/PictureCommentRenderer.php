@@ -12,7 +12,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\Util;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\AuthException;
 use Piwigo\Html\HtmlService;
@@ -35,7 +35,7 @@ final readonly class PictureCommentRenderer
         private PermissionService $permissionService,
         private SessionService $sessionService,
         private UrlService $urlService,
-        private Util $util,
+        private CsrfService $csrfService,
         private EphemeralKeyService $ephemeralKeyService,
         private PaginationService $paginationService,
     ) {
@@ -192,7 +192,7 @@ SELECT
                         $tpl_comment['U_DELETE'] = $this->urlService->addUrlParams($url_self, [
                             'action' => 'delete_comment',
                             'comment_to_delete' => $row['id'],
-                            'pwg_token' => $this->util->getPwgToken(),
+                            'pwg_token' => $this->csrfService->getToken(),
                         ]);
                     }
                     if ($this->permissionService->canManageComment('edit', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
@@ -205,7 +205,7 @@ SELECT
                             $key = $this->ephemeralKeyService->generate(2, (string) $imageId);
                             $tpl_comment['KEY'] = $key;
                             $tpl_comment['CONTENT'] = $row['content'];
-                            $tpl_comment['PWG_TOKEN'] = $this->util->getPwgToken();
+                            $tpl_comment['PWG_TOKEN'] = $this->csrfService->getToken();
                             $tpl_comment['U_CANCEL'] = $url_self;
                         }
                     }
@@ -216,7 +216,7 @@ SELECT
                             $tpl_comment['U_VALIDATE'] = $this->urlService->addUrlParams($url_self, [
                                 'action' => 'validate_comment',
                                 'comment_to_validate' => $row['id'],
-                                'pwg_token' => $this->util->getPwgToken(),
+                                'pwg_token' => $this->csrfService->getToken(),
                             ]);
                         }
                     }

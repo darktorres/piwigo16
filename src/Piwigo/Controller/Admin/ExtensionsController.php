@@ -6,6 +6,9 @@ namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Plugins;
@@ -22,12 +25,13 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\AuthException;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Plugins\EventDispatcher;
@@ -40,6 +44,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 
 final readonly class ExtensionsController
 {
@@ -67,7 +72,10 @@ final readonly class ExtensionsController
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserService $userService,
-        private Util $util,
+        private ActivityLogger $activityLogger,
+        private CsrfService $csrfService,
+        private InputValidator $inputValidator,
+        private RedirectResponder $redirectResponder,
     ) {
     }
 
@@ -146,7 +154,7 @@ final readonly class ExtensionsController
         $pageRaw  = $_GET['page'] ?? null;
         $pageStr  = is_string($pageRaw) ? $pageRaw : 'plugins';
         $base_url = $this->urlGenerator->admin($pageStr);
-        $pwg_token = $this->util->getPwgToken();
+        $pwg_token = $this->csrfService->getToken();
         $action_url = $base_url . '&plugin=' . '%s' . '&pwg_token=' . $pwg_token;
 
         $plugins = $this->plugins;
@@ -311,9 +319,9 @@ final readonly class ExtensionsController
             if (!$this->permissionService->isWebmaster()) {
                 PageState::current()->addError(Lang::t('Webmaster status is required.'));
             } else {
-                $this->util->checkPwgToken();
+                $this->csrfService->check();
                 $install_status = $plugins->extractPluginFiles('install', is_string($_GET['revision']) ? $_GET['revision'] : '', is_string($_GET['extension']) ? $_GET['extension'] : '', $plugin_id);
-                $this->util->redirect($base_url . '&installstatus=' . $install_status . '&plugin_id=' . ($plugin_id ?? ''));
+                $this->redirectResponder->redirect($base_url . '&installstatus=' . $install_status . '&plugin_id=' . ($plugin_id ?? ''));
             }
         }
 
@@ -326,7 +334,7 @@ final readonly class ExtensionsController
                     $pluginIdRaw = $_GET['plugin_id'] ?? null;
                     $getPluginId = is_string($pluginIdRaw) ? $pluginIdRaw : '';
                     if ($getPluginId !== '' && isset($plugins->fs_plugins[$getPluginId])) {
-                        $this->util->pwgActivity('system', ActivitySystem::Plugin, 'install', ['plugin_id' => $getPluginId, 'version' => $plugins->fs_plugins[$getPluginId]['version']]);
+                        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Plugin, 'install', ['plugin_id' => $getPluginId, 'version' => $plugins->fs_plugins[$getPluginId]['version']]));
                     }
                     break;
                 case 'temp_path_error':   PageState::current()->addError(Lang::t('Can\'t create temporary file.'));
@@ -357,7 +365,7 @@ final readonly class ExtensionsController
                 [$small_desc] = explode("\n", wordwrap($ext_desc, 200));
                 $revisionId    = is_scalar($plugin['revision_id'] ?? null) ? (string) $plugin['revision_id'] : '';
                 $extensionId   = is_scalar($plugin['extension_id'] ?? null) ? (string) $plugin['extension_id'] : '';
-                $url_auto_install = htmlentities($base_url) . '&revision=' . $revisionId . '&extension=' . $extensionId . '&pwg_token=' . $this->util->getPwgToken();
+                $url_auto_install = htmlentities($base_url) . '&revision=' . $revisionId . '&extension=' . $extensionId . '&pwg_token=' . $this->csrfService->getToken();
 
                 $revisionDateRaw    = $plugin['revision_date'] ?? null;
                 $rev_date           = date_create(is_string($revisionDateRaw) ? $revisionDateRaw : '');
@@ -487,7 +495,7 @@ final readonly class ExtensionsController
                 if ($_GET['action'] == 'activate' || $_GET['action'] == 'deactivate') {
                     $tpl->deleteCompiledTemplates();
                 }
-                $this->util->redirect($base_url);
+                $this->redirectResponder->redirect($base_url);
             }
         }
 
@@ -585,9 +593,9 @@ final readonly class ExtensionsController
             if (!$this->permissionService->isWebmaster()) {
                 PageState::current()->addError(Lang::t('Webmaster status is required.'));
             } else {
-                $this->util->checkPwgToken();
+                $this->csrfService->check();
                 $install_status = $themes->extractThemeFiles('install', is_string($_GET['revision']) ? $_GET['revision'] : '', is_string($_GET['extension']) ? $_GET['extension'] : '', $theme_id);
-                $this->util->redirect($base_url . '&installstatus=' . $install_status . '&theme_id=' . ($theme_id ?? ''));
+                $this->redirectResponder->redirect($base_url . '&installstatus=' . $install_status . '&theme_id=' . ($theme_id ?? ''));
             }
         }
 
@@ -598,7 +606,7 @@ final readonly class ExtensionsController
                     $themeIdRaw = $_GET['theme_id'] ?? null;
                     $theme_id_str = is_string($themeIdRaw) ? $themeIdRaw : '';
                     if ($theme_id_str !== '' && isset($themes->fs_themes[$theme_id_str])) {
-                        $this->util->pwgActivity('system', ActivitySystem::Theme, 'install', ['theme_id' => $theme_id_str, 'version' => $themes->fs_themes[$theme_id_str]['version']]);
+                        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, 'install', ['theme_id' => $theme_id_str, 'version' => $themes->fs_themes[$theme_id_str]['version']]));
                     }
                     break;
                 case 'temp_path_error':  PageState::current()->addError(Lang::t('Can\'t create temporary file.'));
@@ -615,7 +623,7 @@ final readonly class ExtensionsController
             foreach ($themes->server_themes as $theme) {
                 $theme_revision_id  = is_scalar($theme['revision_id'] ?? null) ? (string) $theme['revision_id'] : '';
                 $theme_extension_id = is_scalar($theme['extension_id'] ?? null) ? (string) $theme['extension_id'] : '';
-                $url_auto_install   = htmlentities($base_url) . '&revision=' . $theme_revision_id . '&extension=' . $theme_extension_id . '&pwg_token=' . $this->util->getPwgToken();
+                $url_auto_install   = htmlentities($base_url) . '&revision=' . $theme_revision_id . '&extension=' . $theme_extension_id . '&pwg_token=' . $this->csrfService->getToken();
                 $tpl->append('new_themes', ['name' => $theme['extension_name'], 'thumbnail' => key_exists('thumbnail_src', $theme) ? $theme['thumbnail_src'] : '', 'screenshot' => key_exists('screenshot_url', $theme) ? $theme['screenshot_url'] : '', 'install_url' => $url_auto_install]);
             }
         } else {
@@ -642,7 +650,7 @@ final readonly class ExtensionsController
         $std_pgs_skin_options = ['default', 'cadmium', 'cobalt', 'fuchsia', 'green', 'lime', 'purple', 'red', 'sienna', 'silver', 'teal'];
 
         if (isset($_POST['submit']) && $this->permissionService->isWebmaster()) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
             $this->configService->confUpdateParam('use_standard_pages', isset($_POST['use_standard_pages']) && $_POST['use_standard_pages'] !== '', true);
             if (isset($_POST['std_pgs_display_logo']) && in_array($_POST['std_pgs_display_logo'], $std_pgs_logo_options)) {
                 $stdPgsDisplayLogoRaw = $_POST['std_pgs_display_logo'];
@@ -706,7 +714,7 @@ final readonly class ExtensionsController
             'is_standard_pages_used'        => $is_standard_pages_used,
             'standard_pages_used_by'        => $standard_pages_used_by,
             'std_pgs_selected_logo_path'    => $this->configService->confGetParam('standard_pages_selected_logo_path', null),
-            'PWG_TOKEN'                     => $this->util->getPwgToken(),
+            'PWG_TOKEN'                     => $this->csrfService->getToken(),
         ]);
         $tpl->assign('isWebmaster', $this->permissionService->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
@@ -743,7 +751,7 @@ final readonly class ExtensionsController
         $tpl = TemplateRegistry::current();
 
         if (isset($_GET['tab'])) {
-            $this->util->checkInputParameter('tab', $_GET, false, '/^(installed|update|new)$/');
+            $this->inputValidator->check('tab', $_GET, false, '/^(installed|update|new)$/');
         }
         $tab = isset($_GET['tab']) && is_string($_GET['tab']) ? $_GET['tab'] : 'installed';
 
@@ -778,13 +786,13 @@ final readonly class ExtensionsController
         $languages = Kernel::service(Languages::class);
         $languages->getDbLanguages();
 
-        $this->util->checkInputParameter('action', $_GET, false, '/^(activate|deactivate|set_default|delete)$/');
-        $this->util->checkInputParameter('language', $_GET, false, '/^(' . join('|', array_keys($languages->fs_languages)) . ')$/');
+        $this->inputValidator->check('action', $_GET, false, '/^(activate|deactivate|set_default|delete)$/');
+        $this->inputValidator->check('language', $_GET, false, '/^(' . join('|', array_keys($languages->fs_languages)) . ')$/');
 
         if (isset($_GET['action']) && isset($_GET['language']) && $this->permissionService->isWebmaster()) {
             PageState::current()->errors = array_values(array_filter($languages->performAction(is_string($_GET['action']) ? $_GET['action'] : '', is_string($_GET['language']) ? $_GET['language'] : ''), is_string(...)));
             if (empty(PageState::current()->errors)) {
-                $this->util->redirect($base_url);
+                $this->redirectResponder->redirect($base_url);
             }
         }
 
@@ -860,9 +868,9 @@ final readonly class ExtensionsController
             if (!$this->permissionService->isWebmaster()) {
                 PageState::current()->addError(Lang::t('Webmaster status is required.'));
             } else {
-                $this->util->checkPwgToken();
+                $this->csrfService->check();
                 $install_status = $languages->extractLanguageFiles('install', is_string($_GET['revision']) ? $_GET['revision'] : '');
-                $this->util->redirect($base_url . '&installstatus=' . $install_status);
+                $this->redirectResponder->redirect($base_url . '&installstatus=' . $install_status);
             }
         }
 
@@ -883,7 +891,7 @@ final readonly class ExtensionsController
                 $revId    = is_scalar($language['revision_id'] ?? null) ? (string) $language['revision_id'] : '';
                 $extId    = is_scalar($language['extension_id'] ?? null) ? (string) $language['extension_id'] : '';
                 $dlUrl    = is_scalar($language['download_url'] ?? null) ? (string) $language['download_url'] : '';
-                $url_auto_install = htmlentities($base_url) . '&revision=' . $revId . '&pwg_token=' . $this->util->getPwgToken();
+                $url_auto_install = htmlentities($base_url) . '&revision=' . $revId . '&pwg_token=' . $this->csrfService->getToken();
                 $tpl->append('languages', ['EXT_NAME' => is_scalar($language['extension_name'] ?? null) ? (string) $language['extension_name'] : '', 'EXT_DESC' => is_scalar($language['extension_description'] ?? null) ? (string) $language['extension_description'] : '', 'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . $extId, 'VERSION' => is_scalar($language['revision_name'] ?? null) ? (string) $language['revision_name'] : '', 'VER_DESC' => is_scalar($language['revision_description'] ?? null) ? (string) $language['revision_description'] : '', 'DATE' => $date, 'AUTHOR' => is_scalar($language['author_name'] ?? null) ? (string) $language['author_name'] : '', 'URL_INSTALL' => $url_auto_install, 'URL_DOWNLOAD' => $dlUrl . '&origin=piwigo_download']);
             }
         } else {
@@ -993,10 +1001,10 @@ final readonly class ExtensionsController
         $ext_type = $pageStr == 'updates' ? 'extensions' : $pageStr;
         $tpl->assign('UPDATES_EXTENSION', $updates_extension);
         $tpl->assign('SHOW_RESET', $show_reset);
-        $tpl->assign('PWG_TOKEN', $this->util->getPwgToken());
+        $tpl->assign('PWG_TOKEN', $this->csrfService->getToken());
         $tpl->assign('EXT_TYPE', $ext_type);
         $tpl->assign('isWebmaster', $this->permissionService->isWebmaster() ? 1 : 0);
-        $tpl->assign('page_data_json', json_encode(['pwg_token' => $this->util->getPwgToken(), 'ext_type' => $ext_type, 'str_error_head' => Lang::t('ERROR'), 'str_error_msg' => Lang::t('an error happened'), 'str_restore' => Lang::t('Reset ignored updates'), 'str_confirm_update_all' => Lang::t('Are you sure you want to update all extensions?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+        $tpl->assign('page_data_json', json_encode(['pwg_token' => $this->csrfService->getToken(), 'ext_type' => $ext_type, 'str_error_head' => Lang::t('ERROR'), 'str_error_msg' => Lang::t('an error happened'), 'str_restore' => Lang::t('Reset ignored updates'), 'str_confirm_update_all' => Lang::t('Are you sure you want to update all extensions?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'updates_ext.latte');
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Updates'));
     }
@@ -1018,12 +1026,12 @@ final readonly class ExtensionsController
 
         if ('Official' === $ct_env) {
             $tpl->assign(['CONTAINER_VERSION' => $ct_build_version, 'DOCKER_UPDATE_GUIDE_URL' => PHPWG_URL . '/guide-update-docker']);
-            $this->util->checkInputParameter('to', $_GET, false, '/^\d+\.\d+\.\d+[a-z]?$/');
+            $this->inputValidator->check('to', $_GET, false, '/^\d+\.\d+\.\d+[a-z]?$/');
             $rawUpgradeTo   = $_GET['to'] ?? null;
             $upgrade_to_raw = is_string($rawUpgradeTo) ? $rawUpgradeTo : '';
             $upgrade_to     = $upgrade_to_raw !== '' ? (string) preg_replace('/[a-z]$/', '', $upgrade_to_raw) : '';
         } else {
-            $this->util->checkInputParameter('to', $_GET, false, '/^\d+\.\d+\.\d+$/');
+            $this->inputValidator->check('to', $_GET, false, '/^\d+\.\d+\.\d+$/');
             $rawUpgradeToAlt = $_GET['to'] ?? null;
             $upgrade_to = is_string($rawUpgradeToAlt) ? $rawUpgradeToAlt : '';
         }

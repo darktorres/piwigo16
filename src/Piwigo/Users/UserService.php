@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Auth\AuthKeyRepository;
@@ -18,7 +21,6 @@ use Piwigo\Core\ExecutionMutex;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -50,7 +52,7 @@ final class UserService
         private readonly GroupRepository $groupRepo,
         private readonly AuthKeyRepository $authKeyRepo,
         private readonly StringUtil $stringUtil,
-        private readonly Util $util,
+        private readonly ActivityLogger $activityLogger,
         private readonly ExecutionMutex $mutex,
         private readonly LangService $langService,
         private readonly UrlGenerator $urlGenerator,
@@ -167,7 +169,7 @@ final class UserService
             }
 
             EventDispatcher::notify('register_user', ['id' => $userId, 'username' => $login, 'email' => $mailAddress]);
-            $this->util->pwgActivity('user', $userId, 'add');
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'add'));
 
             return $userId;
         } else {
@@ -665,7 +667,7 @@ SELECT DISTINCT f.image_id
         }
 
         $this->userAdminService->invalidateUserCache();
-        $this->util->pwgActivity('user', array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId), 'edit');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId), 'edit'));
 
         return ['user_id' => $params['user_id'], 'infos' => $updatesInfos, 'account' => $updates];
     }

@@ -7,7 +7,7 @@ namespace Piwigo\Ws\Method;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryService;
-use Piwigo\Core\Util;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
@@ -23,7 +23,7 @@ final readonly class PermissionsEndpoints
         private CategoryAdminService $categoryAdminService,
         private CategoryService $categoryService,
         private PermissionRepository $permissionRepository,
-        private Util $util,
+        private CsrfService $csrfService,
     ) {
     }
 
@@ -92,7 +92,7 @@ final readonly class PermissionsEndpoints
     /** @param array<mixed> $params */
     public function add(array $params, PwgServer &$service): mixed
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!empty($params['group_id'])) {
@@ -127,7 +127,7 @@ final readonly class PermissionsEndpoints
     /** @param array<mixed> $params */
     public function remove(array $params, PwgServer &$service): mixed
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $catIdParam3Int = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['cat_id']) ? $params['cat_id'] : []);

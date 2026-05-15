@@ -8,7 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Util;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
@@ -22,7 +22,7 @@ final readonly class FilterResolver
         private Connection $conn,
         private HtmlService $htmlService,
         private TagAdminService $tagAdminService,
-        private Util $util,
+        private CsrfService $csrfService,
         private LangService $langService,
         private UrlService $urlService,
     ) {
@@ -64,7 +64,7 @@ final readonly class FilterResolver
             'selection' => $collection,
             'all_elements' => $catElementsId,
             'START' => $start,
-            'PWG_TOKEN' => $this->util->getPwgToken(),
+            'PWG_TOKEN' => $this->csrfService->getToken(),
             'U_DISPLAY' => $baseUrl . $this->urlService->getQueryStringDiff(['display']),
             'F_ACTION' => $baseUrl . $this->urlService->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),
             'ADMIN_PAGE_TITLE' => Lang::t('Batch Manager'),

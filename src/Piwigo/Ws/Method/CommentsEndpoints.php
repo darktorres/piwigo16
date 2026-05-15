@@ -9,7 +9,7 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Util;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
@@ -25,7 +25,7 @@ final readonly class CommentsEndpoints
         private CommentService $commentService,
         private DateService $dateService,
         private UrlGenerator $urlGenerator,
-        private Util $util,
+        private CsrfService $csrfService,
     ) {
     }
 
@@ -113,7 +113,7 @@ final readonly class CommentsEndpoints
     /** @param array<mixed> $params */
     public function delete(array $params, PwgServer &$service): PwgError|string
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
         $rawIds    = is_array($params['comment_id']) ? $params['comment_id'] : [];
@@ -126,7 +126,7 @@ final readonly class CommentsEndpoints
     /** @param array<mixed> $params */
     public function validate(array $params, PwgServer &$service): PwgError|string
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
         $rawIds     = is_array($params['comment_id']) ? $params['comment_id'] : [];

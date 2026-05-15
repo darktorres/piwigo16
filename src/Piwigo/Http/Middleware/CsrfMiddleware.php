@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
-use Piwigo\Core\Util;
+use Piwigo\Csrf\CsrfService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -22,13 +22,13 @@ use Psr\Http\Server\RequestHandlerInterface;
  *   /register     — registration form (no token in the standard form)
  *   /qsearch      — quick-search redirect-only shim (no state change, no token)
  *
- * If the token is present but wrong, Util::checkPwgToken() calls HtmlService::accessDenied().
- * If the token is missing, Util::checkPwgToken() calls HtmlService::badRequest().
+ * If the token is present but wrong, CsrfService::check() calls HtmlService::accessDenied().
+ * If the token is missing, CsrfService::check() calls HtmlService::badRequest().
  */
 final readonly class CsrfMiddleware implements MiddlewareInterface
 {
     public function __construct(
-        private Util $util,
+        private CsrfService $csrfService,
     ) {
     }
 
@@ -51,7 +51,7 @@ final readonly class CsrfMiddleware implements MiddlewareInterface
                 : '/';
 
             if (!$this->isExempt($path)) {
-                $this->util->checkPwgToken();
+                $this->csrfService->check();
             }
         }
 

@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Method;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
-use Piwigo\Core\Util;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -47,7 +50,8 @@ final readonly class CategoriesEndpoints
         private UrlService $urlService,
         private UserAdminService $userAdminService,
         private UserRepository $userRepository,
-        private Util $util,
+        private ActivityLogger $activityLogger,
+        private CsrfService $csrfService,
         private WsHelper $wsHelper,
     ) {
     }
@@ -409,7 +413,7 @@ final readonly class CategoriesEndpoints
      */
     public function add(array $params, PwgServer &$service): PwgError|array
     {
-        if (isset($params['pwg_token']) && $this->util->getPwgToken() !== $params['pwg_token']) {
+        if (isset($params['pwg_token']) && $this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!empty($params['position']) && in_array($params['position'], ['first', 'last'])) {
@@ -485,7 +489,7 @@ final readonly class CategoriesEndpoints
     /** @param array<mixed> $params */
     public function setInfo(array $params, PwgServer &$service): mixed
     {
-        if (isset($params['pwg_token']) && $this->util->getPwgToken() !== $params['pwg_token']) {
+        if (isset($params['pwg_token']) && $this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
@@ -531,7 +535,7 @@ final readonly class CategoriesEndpoints
         if ($performUpdate) {
             Dml::singleUpdate(Tables::categories(), $update, ['id' => $update['id']]);
         }
-        $this->util->pwgActivity('album', $categoryId, 'edit', ['fields' => implode(',', array_keys($update))]);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, 'edit', ['fields' => implode(',', array_keys($update))]));
         return null;
     }
 
@@ -550,7 +554,7 @@ final readonly class CategoriesEndpoints
         }
         $catRepo->setRepresentativePicture([$categoryId], $imageId);
         $this->userRepository->clearUserRepresentativeForCategory($categoryId);
-        $this->util->pwgActivity('album', $categoryId, 'edit', ['image_id' => $imageId]);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, 'edit', ['image_id' => $imageId]));
         return null;
     }
 
@@ -567,7 +571,7 @@ final readonly class CategoriesEndpoints
             return new PwgError(401, 'not permitted');
         }
         $catRepo2->clearRepresentatives([$categoryId]);
-        $this->util->pwgActivity('album', $categoryId, 'edit');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, 'edit'));
         return null;
     }
 
@@ -586,7 +590,7 @@ final readonly class CategoriesEndpoints
             return new PwgError(401, 'not permitted');
         }
         $this->categoryAdminService->setRandomRepresentant([$categoryId]);
-        $this->util->pwgActivity('album', $categoryId, 'edit');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, 'edit'));
         $category = $catRepo3->findCategoryById($categoryId);
         $repId    = isset($category['representative_picture_id']) ? (is_scalar($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '') : '';
         return $this->imageAdminService->getCategoryRepresentantProperties($repId, DerivativeSize::Small->value);
@@ -595,7 +599,7 @@ final readonly class CategoriesEndpoints
     /** @param array<mixed> $params */
     public function delete(array $params, PwgServer &$service): mixed
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $photoDeletionMode = is_string($params['photo_deletion_mode'] ?? null) ? $params['photo_deletion_mode'] : '';
@@ -628,7 +632,7 @@ final readonly class CategoriesEndpoints
      */
     public function move(array $params, PwgServer &$service): PwgError|array
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!is_array($params['category_id'])) {

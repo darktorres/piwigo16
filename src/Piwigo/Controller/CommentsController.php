@@ -15,11 +15,12 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
@@ -33,6 +34,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -53,7 +55,9 @@ final readonly class CommentsController implements ControllerInterface
         private StringUtil $stringUtil,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
-        private Util $util,
+        private CsrfService $csrfService,
+        private InputValidator $inputValidator,
+        private RedirectResponder $redirectResponder,
         private EphemeralKeyService $ephemeralKeyService,
         private PaginationService $paginationService,
     ) {
@@ -123,7 +127,7 @@ final readonly class CommentsController implements ControllerInterface
 
         $get_cat = $this->stringUtil->inputInt('cat', null, $_GET);
         if ($get_cat !== null && 0 != $get_cat) {
-            $this->util->checkInputParameter('cat', $_GET, false, ValidationPattern::ID);
+            $this->inputValidator->check('cat', $_GET, false, ValidationPattern::ID);
             $category_ids = $this->categoryService->getSubcatIds([$get_cat]);
             if (empty($category_ids)) {
                 $category_ids = [-1];
@@ -138,12 +142,12 @@ final readonly class CommentsController implements ControllerInterface
 
         $get_comment_id_filter = $this->stringUtil->inputInt('comment_id', null, $_GET);
         if ($get_comment_id_filter !== null && $get_comment_id_filter !== 0) {
-            $this->util->checkInputParameter('comment_id', $_GET, false, ValidationPattern::ID);
+            $this->inputValidator->check('comment_id', $_GET, false, ValidationPattern::ID);
             if (!$this->permissionService->isAdmin()) {
                 $requestUriRaw = $_SERVER['REQUEST_URI'] ?? null;
                 $requestUri = is_string($requestUriRaw) ? $requestUriRaw : '';
                 $login_url  = $this->urlService->addUrlParams($this->urlGenerator->identification(), ['redirect' => urlencode($requestUri)]);
-                $this->util->redirect($login_url);
+                $this->redirectResponder->redirect($login_url);
             }
             $whereClauses[] = 'com.id = ' . $get_comment_id_filter;
         }
@@ -177,7 +181,7 @@ final readonly class CommentsController implements ControllerInterface
         foreach (['delete', 'validate', 'edit'] as $loop_action) {
             if (isset($_GET[$loop_action])) {
                 $action = $loop_action;
-                $this->util->checkInputParameter($action, $_GET, false, ValidationPattern::ID);
+                $this->inputValidator->check($action, $_GET, false, ValidationPattern::ID);
                 $actionRaw = $_GET[$action] ?? null;
                 $comment_id = is_numeric($actionRaw) ? (int) $actionRaw : 0;
                 break;
@@ -189,19 +193,19 @@ final readonly class CommentsController implements ControllerInterface
             if ($this->permissionService->canManageComment($action, $comment_author_id)) {
                 $perform_redirect = false;
                 if ('delete' == $action) {
-                    $this->util->checkPwgToken();
+                    $this->csrfService->check();
                     $this->commentService->deleteUserComment($comment_id);
                     $perform_redirect = true;
                 }
                 if ('validate' == $action) {
-                    $this->util->checkPwgToken();
+                    $this->csrfService->check();
                     $this->commentService->validateUserComment($comment_id);
                     $perform_redirect = true;
                 }
                 if ('edit' == $action) {
                     $post_content = $this->stringUtil->inputString('content', null, $_POST);
                     if ($post_content !== null && $post_content !== '') {
-                        $this->util->checkPwgToken();
+                        $this->csrfService->check();
                         $comment_action = $this->commentService->updateUserComment(
                             ['comment_id' => $comment_id, 'image_id' => $this->stringUtil->inputInt('image_id', null, $_POST), 'content' => $post_content, 'website_url' => $this->stringUtil->inputString('website_url', null, $_POST)],
                             $this->stringUtil->inputString('key', null, $_POST) ?? ''
@@ -233,7 +237,7 @@ final readonly class CommentsController implements ControllerInterface
                     $edit_comment = $comment_id;
                 }
                 if ($perform_redirect) {
-                    $this->util->redirect($url_self);
+                    $this->redirectResponder->redirect($url_self);
                 }
             }
         }
@@ -370,7 +374,7 @@ SELECT *
                     $tpl_comment['EMAIL'] = $email;
                 }
                 if ($this->permissionService->canManageComment('delete', $cAuthorId)) {
-                    $tpl_comment['U_DELETE'] = $this->urlService->addUrlParams($url_self, ['delete' => $cId, 'pwg_token' => $this->util->getPwgToken()]);
+                    $tpl_comment['U_DELETE'] = $this->urlService->addUrlParams($url_self, ['delete' => $cId, 'pwg_token' => $this->csrfService->getToken()]);
                 }
                 if ($this->permissionService->canManageComment('edit', $cAuthorId)) {
                     $tpl_comment['U_EDIT'] = $this->urlService->addUrlParams($url_self, ['edit' => $cId]);
@@ -380,12 +384,12 @@ SELECT *
                         $tpl_comment['KEY']       = $key;
                         $tpl_comment['IMAGE_ID']  = $cImageId;
                         $tpl_comment['CONTENT']   = (string) ($comment['content'] ?? '');
-                        $tpl_comment['PWG_TOKEN'] = $this->util->getPwgToken();
+                        $tpl_comment['PWG_TOKEN'] = $this->csrfService->getToken();
                         $tpl_comment['U_CANCEL']  = $url_self;
                     }
                 }
                 if ($this->permissionService->canManageComment('validate', $cAuthorId) && 'true' != $comment['validated']) {
-                    $tpl_comment['U_VALIDATE'] = $this->urlService->addUrlParams($url_self, ['validate' => $cId, 'pwg_token' => $this->util->getPwgToken()]);
+                    $tpl_comment['U_VALIDATE'] = $this->urlService->addUrlParams($url_self, ['validate' => $cId, 'pwg_token' => $this->csrfService->getToken()]);
                 }
                 $tpl->append('comments', $tpl_comment);
             }

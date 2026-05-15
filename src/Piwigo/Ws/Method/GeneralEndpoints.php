@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Method;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityLogger;
 use Piwigo\Admin\History\HistoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
@@ -19,7 +20,7 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
@@ -44,6 +45,7 @@ use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
+use Piwigo\Validation\InputValidator;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
@@ -75,9 +77,11 @@ final readonly class GeneralEndpoints
         private UrlService $urlService,
         private UserAdminService $userAdminService,
         private UserRepository $userRepository,
-        private Util $util,
         private WsHelper $wsHelper,
         private CacheItemPoolInterface $pool,
+        private ActivityLogger $activityLogger,
+        private CsrfService $csrfService,
+        private InputValidator $inputValidator,
     ) {
     }
 
@@ -330,11 +334,11 @@ final readonly class GeneralEndpoints
         $res['status']   = $currentUser->status;
         $res['theme']    = $currentUser->theme;
         $res['language'] = $currentUser->language;
-        $res['pwg_token'] = $this->util->getPwgToken();
+        $res['pwg_token'] = $this->csrfService->getToken();
         $res['charset']   = $this->stringUtil->getPwgCharset();
         $res['current_datetime'] = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         $res['version']   = AppInfo::VERSION;
-        $res['save_visits'] = $this->util->doLog();
+        $res['save_visits'] = $this->activityLogger->isLoggingEnabled();
         $res['connected_with'] = $_SESSION['connected_with'] ?? null;
         /** @var mixed $httpUserAgentRaw */
         $httpUserAgentRaw = $_SERVER['HTTP_USER_AGENT'] ?? '';
@@ -537,7 +541,7 @@ final readonly class GeneralEndpoints
             $this->pictureService->increaseImageVisitCounter($logImageId);
         }
         $imageType = $params['is_download'] ? 'high' : 'picture';
-        $this->util->pwgLog($logImageId, $imageType);
+        $this->activityLogger->pageView($logImageId, $imageType);
     }
 
     /**
@@ -551,17 +555,17 @@ final readonly class GeneralEndpoints
         PageState::current()->errors = [];
         $search         = ['fields' => []];
         if (!empty($param['start'])) {
-            $this->util->checkInputParameter('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
+            $this->inputValidator->check('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
             $search['fields']['date-after'] = $param['start'];
         }
         if (!empty($param['end'])) {
-            $this->util->checkInputParameter('end', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
+            $this->inputValidator->check('end', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
             $search['fields']['date-before'] = $param['end'];
         }
         if (empty($param['types'])) {
             $search['fields']['types'] = $types;
         } else {
-            $this->util->checkInputParameter('types', $param, true, '/^(' . implode('|', $types) . ')$/');
+            $this->inputValidator->check('types', $param, true, '/^(' . implode('|', $types) . ')$/');
             $search['fields']['types'] = $param['types'];
         }
         $search['fields']['user'] = is_numeric($param['user_id']) ? (int) $param['user_id'] : 0;
@@ -574,7 +578,7 @@ final readonly class GeneralEndpoints
         if (!empty($param['ip'])) {
             $search['fields']['ip'] = str_replace('*', '%', is_string($param['ip']) ? $param['ip'] : '');
         }
-        $this->util->checkInputParameter('display_thumbnail', $param, false, '/^(' . implode('|', array_keys($displayThumbnails)) . ')$/');
+        $this->inputValidator->check('display_thumbnail', $param, false, '/^(' . implode('|', array_keys($displayThumbnails)) . ')$/');
         $search['fields']['display_thumbnail'] = $param['display_thumbnail'];
         $displayThumbnailRaw = $param['display_thumbnail'] ?? null;
         $displayThumbnailStr = is_string($displayThumbnailRaw) ? $displayThumbnailRaw : '';

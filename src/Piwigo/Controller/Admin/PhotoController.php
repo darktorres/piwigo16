@@ -7,6 +7,9 @@ namespace Piwigo\Controller\Admin;
 use Detection\MobileDetect;
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
@@ -23,11 +26,12 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
@@ -46,6 +50,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 
 final class PhotoController
 {
@@ -89,7 +94,10 @@ final class PhotoController
         private readonly UserAdminService $userAdminService,
         private readonly UserRepository $userRepository,
         private readonly UserService $userService,
-        private readonly Util $util,
+        private readonly ActivityLogger $activityLogger,
+        private readonly CsrfService $csrfService,
+        private readonly InputValidator $inputValidator,
+        private readonly RedirectResponder $redirectResponder,
     ) {
     }
 
@@ -119,8 +127,8 @@ final class PhotoController
     private function photo(): void
     {
         $tpl = TemplateRegistry::current();
-        $this->util->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
-        $this->util->checkInputParameter('image_id', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('cat_id', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('image_id', $_GET, false, ValidationPattern::ID);
 
         $rawImageIdStr = $_GET['image_id'] ?? null;
         $image_id_str = is_string($rawImageIdStr) ? $rawImageIdStr : '';
@@ -156,9 +164,9 @@ final class PhotoController
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
-        $this->util->checkInputParameter('image_id', $_GET, false, ValidationPattern::ID);
-        $this->util->checkInputParameter('level', $_POST, false, '/^\d+$/');
-        $this->util->checkInputParameter('date_creation', $_POST, false, '/^\d\d\d\d-\d\d-\d\d( \d\d:\d\d:\d\d)?$/');
+        $this->inputValidator->check('image_id', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('level', $_POST, false, '/^\d+$/');
+        $this->inputValidator->check('date_creation', $_POST, false, '/^\d\d\d\d-\d\d-\d\d( \d\d:\d\d:\d\d)?$/');
 
         $rawImageIdStr2 = $_GET['image_id'] ?? null;
         $image_id_str = is_string($rawImageIdStr2) ? $rawImageIdStr2 : '';
@@ -183,14 +191,14 @@ SELECT id
         $represented_albums = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
 
         if (isset($_GET['delete'])) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
             $this->imageAdminService->deleteElements([$getImageIdInt], true);
             $this->userAdminService->invalidateUserCache();
 
             if (($custom_context = $this->userService->getEditContext($getImageIdInt)) !== false && $custom_context !== null && $custom_context !== '') {
-                $this->util->redirect(str_replace('list/1,2', $custom_context, $this->urlService->makeIndexUrl(['list' => [1, 2]])));
+                $this->redirectResponder->redirect(str_replace('list/1,2', $custom_context, $this->urlService->makeIndexUrl(['list' => [1, 2]])));
             }
-            $this->util->redirect($this->urlService->makeIndexUrl());
+            $this->redirectResponder->redirect($this->urlService->makeIndexUrl());
         }
 
         if (isset($_GET['sync_metadata'])) {
@@ -199,7 +207,7 @@ SELECT id
         }
 
         if (isset($_POST['submit'])) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
 
             $data        = [];
             $data['id']  = $getImageIdInt;
@@ -232,7 +240,7 @@ SELECT id
             if (!isset($_POST['associate'])) {
                 $_POST['associate'] = [];
             }
-            $this->util->checkInputParameter('associate', $_POST, true, ValidationPattern::ID);
+            $this->inputValidator->check('associate', $_POST, true, ValidationPattern::ID);
             $this->categoryAdminService->moveImagesToCategories(
                 [$getImageIdInt],
                 is_array($_POST['associate']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : []
@@ -243,7 +251,7 @@ SELECT id
             if (!isset($_POST['represent'])) {
                 $_POST['represent'] = [];
             }
-            $this->util->checkInputParameter('represent', $_POST, true, ValidationPattern::ID);
+            $this->inputValidator->check('represent', $_POST, true, ValidationPattern::ID);
 
             $represented_albums_int = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $represented_albums);
             $represent_post_int     = is_array($_POST['represent']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['represent']) : [];
@@ -263,7 +271,7 @@ SELECT id
 
             $represented_albums = is_array($_POST['represent']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['represent']) : [];
             $tpl->assign(['save_success' => Lang::t('Photo informations updated')]);
-            $this->util->pwgActivity('photo', $getImageIdInt, 'edit');
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $getImageIdInt, 'edit'));
 
             $rawImageId3 = $_GET['image_id'] ?? null;
             $this->imageInfo = $this->imageAdminService->getImageInfos(is_string($rawImageId3) ? $rawImageId3 : '', true);
@@ -297,9 +305,9 @@ SELECT id
 
         $tpl->assign([
             'tag_selection'      => $tag_selection,
-            'U_DOWNLOAD'         => $this->urlGenerator->actionDownload(is_numeric($image_id_str) ? (int) $image_id_str : 0, 'e', $this->util->getPwgToken()),
+            'U_DOWNLOAD'         => $this->urlGenerator->actionDownload(is_numeric($image_id_str) ? (int) $image_id_str : 0, 'e', $this->csrfService->getToken()),
             'U_SYNC'             => $admin_url_start . '&sync_metadata=1',
-            'U_DELETE'           => $admin_url_start . '&delete=1&pwg_token=' . $this->util->getPwgToken(),
+            'U_DELETE'           => $admin_url_start . '&delete=1&pwg_token=' . $this->csrfService->getToken(),
             'U_HISTORY'          => $this->urlGenerator->admin('history') . '&filter_image_id=' . $image_id_str,
             'U_ACTIVITY'         => $this->urlGenerator->admin('user_activity') . '&photo=' . $image_id_str,
             'PATH'               => $row['path'],
@@ -421,9 +429,9 @@ SELECT id
                 'str_yes'               => Lang::t('Yes, delete'),
                 'str_no'                => Lang::t('No, I have changed my mind'),
                 'str_cancel'            => Lang::t('Cancel'),
-                'url_delete'            => $admin_url_start . '&delete=1&pwg_token=' . $this->util->getPwgToken(),
+                'url_delete'            => $admin_url_start . '&delete=1&pwg_token=' . $this->csrfService->getToken(),
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
-            'PWG_TOKEN' => $this->util->getPwgToken(),
+            'PWG_TOKEN' => $this->csrfService->getToken(),
         ]);
 
         EventDispatcher::notify('loc_end_picture_modify');
@@ -436,7 +444,7 @@ SELECT id
     {
         $tpl = TemplateRegistry::current();
 
-        $this->util->checkInputParameter('image_id', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('image_id', $_GET, false, ValidationPattern::ID);
 
         $rawImageIdCoi = $_GET['image_id'] ?? null;
         $imageIdCoi    = is_string($rawImageIdCoi) ? $rawImageIdCoi : '0';
@@ -520,7 +528,7 @@ SELECT id
     {
         $tpl = TemplateRegistry::current();
 
-        $this->util->checkInputParameter('image_id', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('image_id', $_GET, false, ValidationPattern::ID);
         $rawPicFmtId = $_GET['image_id'] ?? null;
         $picFmtId = is_string($rawPicFmtId) ? $rawPicFmtId : '0';
 
@@ -545,9 +553,9 @@ SELECT id
             'ADD_FORMATS_URL' => $this->urlGenerator->admin('photos_add') . '&formats=' . $picFmtId,
             'IMG_SQUARE_SRC'  => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $image),
             'FORMATS'         => $formats,
-            'PWG_TOKEN'       => $this->util->getPwgToken(),
+            'PWG_TOKEN'       => $this->csrfService->getToken(),
             'page_data_json'  => json_encode([
-                'pwg_token'                 => $this->util->getPwgToken(),
+                'pwg_token'                 => $this->csrfService->getToken(),
                 'nb_formats'                => count($formats),
                 'str_confirm_delete_format' => Lang::t('Delete %s format ?'),
                 'str_confirm_msg'           => Lang::t('Yes, I am sure'),
@@ -598,14 +606,14 @@ SELECT id
         defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', $this->urlGenerator->admin('photos_add'));
 
         if (isset($_GET['batch'])) {
-            $this->util->checkInputParameter('batch', $_GET, false, '/^\d+(,\d+)*$/');
+            $this->inputValidator->check('batch', $_GET, false, '/^\d+(,\d+)*$/');
             $this->imageRepository->deleteUserCaddie(is_numeric($user['id']) ? (int) $user['id'] : 0);
             $inserts = [];
             foreach (array_unique(explode(',', is_string($rawGetBatch = $_GET['batch']) ? $rawGetBatch : '')) as $image_id) {
                 $inserts[] = ['user_id' => $user['id'], 'element_id' => $image_id];
             }
             Dml::massInserts(Tables::caddie(), array_keys($inserts[0]), $inserts);
-            $this->util->redirect($this->urlGenerator->admin('batch_manager') . '&filter=prefilter-caddie');
+            $this->redirectResponder->redirect($this->urlGenerator->admin('batch_manager') . '&filter=prefilter-caddie');
         }
 
         if ($this->preferencesService->userprefsGetParam('promote-mobile-apps', true)) {
@@ -628,7 +636,7 @@ SELECT id
         $rawFormatsIdVal = $_GET['formats'] ?? null;
         $formatsId       = is_string($rawFormatsIdVal) ? $rawFormatsIdVal : '';
         if ($display_formats && $formatsId !== '') {
-            $this->util->checkInputParameter('formats', $_GET, false, ValidationPattern::ID, false);
+            $this->inputValidator->check('formats', $_GET, false, ValidationPattern::ID, false);
             $formats_original_info = $this->imageAdminService->getImageInfos($formatsId);
             if ($formats_original_info !== null && count($formats_original_info) > 0) {
                 $src_image = new SrcImage($formats_original_info);
@@ -675,7 +683,7 @@ SELECT id
             'format_ext'            => implode(',', Config::formatExtensions()),
             'str_format_ext'        => implode(', ', Config::formatExtensions()),
             'page_data_json'        => json_encode([
-                'pwg_token'               => $this->util->getPwgToken(),
+                'pwg_token'               => $this->csrfService->getToken(),
                 'chunk_size'              => Config::uploadFormChunkSize() . 'kb',
                 'max_file_size'           => Config::uploadFormMaxFileSize() . 'mb',
                 'albumSummary_label'      => Lang::t('Album "%s" now contains %d photos'),

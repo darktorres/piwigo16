@@ -27,12 +27,13 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\AuthException;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
@@ -63,6 +64,7 @@ use Piwigo\Users\PreferencesService;
 use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 
 final class MiscController
 {
@@ -105,7 +107,9 @@ final class MiscController
         private readonly UrlService $urlService,
         private readonly UserRepository $userRepository,
         private readonly UserService $userService,
-        private readonly Util $util,
+        private readonly CsrfService $csrfService,
+        private readonly InputValidator $inputValidator,
+        private readonly RedirectResponder $redirectResponder,
         private readonly PaginationService $paginationService,
     ) {
     }
@@ -147,7 +151,7 @@ final class MiscController
 
         MailNotificationContext::init();
 
-        $this->util->checkInputParameter('mode', $_GET, false, '/^(param|subscribe|send)$/');
+        $this->inputValidator->check('mode', $_GET, false, '/^(param|subscribe|send)$/');
 
         $base_url = $this->urlGenerator->admin();
         $this->mustRepost = false;
@@ -164,7 +168,7 @@ final class MiscController
         }
 
         if (!empty($_POST)) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
         }
 
         switch ($mode) {
@@ -172,9 +176,9 @@ final class MiscController
                 if (isset($_POST['param_submit'])) {
                     $nbmSendMailAsRaw = $_POST['nbm_send_mail_as'] ?? null;
                     $_POST['nbm_send_mail_as'] = strip_tags(is_string($nbmSendMailAsRaw) ? $nbmSendMailAsRaw : '');
-                    $this->util->checkInputParameter('nbm_send_html_mail', $_POST, false, '/^(true|false)$/');
-                    $this->util->checkInputParameter('nbm_send_detailed_content', $_POST, false, '/^(true|false)$/');
-                    $this->util->checkInputParameter('nbm_send_recent_post_dates', $_POST, false, '/^(true|false)$/');
+                    $this->inputValidator->check('nbm_send_html_mail', $_POST, false, '/^(true|false)$/');
+                    $this->inputValidator->check('nbm_send_detailed_content', $_POST, false, '/^(true|false)$/');
+                    $this->inputValidator->check('nbm_send_recent_post_dates', $_POST, false, '/^(true|false)$/');
                     $updated_param_count = 0;
                     foreach ($this->conn->executeQuery('SELECT param, value FROM ' . Tables::config() . " WHERE param LIKE 'nbm\\_%'")->fetchAllAssociative() as $nbm_user) {
                         $param = is_string($nbm_user['param'] ?? null) ? $nbm_user['param'] : '';
@@ -220,7 +224,7 @@ final class MiscController
                 break;
         }
 
-        $tpl->assign(['PWG_TOKEN' => $this->util->getPwgToken(), 'U_HELP' => $this->urlGenerator->adminPopupHelp('notification_by_mail'), 'F_ACTION' => $base_url . $this->urlService->getQueryStringDiff([])]);
+        $tpl->assign(['PWG_TOKEN' => $this->csrfService->getToken(), 'U_HELP' => $this->urlGenerator->adminPopupHelp('notification_by_mail'), 'F_ACTION' => $base_url . $this->urlService->getQueryStringDiff([])]);
 
         if ($this->permissionService->isAutorizeStatus(AccessLevel::Webmaster)) {
             $tabsheet = new Tabsheet();
@@ -307,11 +311,11 @@ final class MiscController
     {
         $tpl = TemplateRegistry::current();
 
-        $this->util->checkInputParameter('cat_id', $_POST, false, ValidationPattern::ID);
+        $this->inputValidator->check('cat_id', $_POST, false, ValidationPattern::ID);
 
         $selected_cat = [];
         if (isset($_POST['set_permalink']) && $_POST['cat_id'] > 0) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
             $permalinkRaw = $_POST['permalink'] ?? null;
             $permalink  = is_string($permalinkRaw) ? $permalinkRaw : '';
             $rawPostCatId = $_POST['cat_id'];
@@ -323,7 +327,7 @@ final class MiscController
             }
             $selected_cat = [(int) $postCatId];
         } elseif (isset($_GET['delete_permanent'])) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
             $rawDeletePermanent = $_GET['delete_permanent'];
             $deleted = $this->permalinkRepository->deleteOldPermalinkByValue(is_string($rawDeletePermanent) ? $rawDeletePermanent : '');
             if (!$deleted) {
@@ -336,7 +340,7 @@ final class MiscController
         $query = 'SELECT id, permalink, CONCAT(id, " - ", name, IF(permalink IS NULL, "", " &radic;") ) AS name, uppercats, global_rank FROM ' . Tables::categories();
         $this->categoryService->displaySelectCatWrapper($query, $selected_cat, 'categories', false);
 
-        $pwg_token = $this->util->getPwgToken();
+        $pwg_token = $this->csrfService->getToken();
 
         $sort_by = $this->parseSortVariables(['id', 'name', 'permalink'], 'name', 'psf', ['delete_permanent'], 'SORT_');
         $sortBy0  = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
@@ -384,13 +388,13 @@ final class MiscController
         $tabsheet->assign();
 
         if (isset($_GET['action']) && 'delete_orphans' == $_GET['action']) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
             $this->tagAdminService->deleteOrphanTags();
             $_SESSION['message_tags'] = Lang::t('Orphan tags deleted');
-            $this->util->redirect($this->urlGenerator->admin('tags'));
+            $this->redirectResponder->redirect($this->urlGenerator->admin('tags'));
         }
 
-        $tpl->assign(['F_ACTION' => $this->urlGenerator->admin('tags'), 'PWG_TOKEN' => $this->util->getPwgToken(), 'BATCH_MANAGER_URL' => $this->urlGenerator->admin('batch_manager')]);
+        $tpl->assign(['F_ACTION' => $this->urlGenerator->admin('tags'), 'PWG_TOKEN' => $this->csrfService->getToken(), 'BATCH_MANAGER_URL' => $this->urlGenerator->admin('batch_manager')]);
 
         $warning_tags     = '';
         $orphan_tags      = $this->tagAdminService->getOrphanTags();
@@ -405,7 +409,7 @@ final class MiscController
 
         $orphan_tag_names_array = '[]';
         if (count($orphan_tag_names) > 0) {
-            $warning_tags = new Html(sprintf(Lang::t('You have %d orphan tags %s'), count($orphan_tag_names), '<a class="icon-eye" data-url="' . $this->urlGenerator->admin('tags') . '&amp;action=delete_orphans&amp;pwg_token=' . $this->util->getPwgToken() . '">' . htmlspecialchars(Lang::t('Review')) . '</a>'));
+            $warning_tags = new Html(sprintf(Lang::t('You have %d orphan tags %s'), count($orphan_tag_names), '<a class="icon-eye" data-url="' . $this->urlGenerator->admin('tags') . '&amp;action=delete_orphans&amp;pwg_token=' . $this->csrfService->getToken() . '">' . htmlspecialchars(Lang::t('Review')) . '</a>'));
             $orphan_tag_names_array = '["' . implode('" ,"', array_map(htmlentities(...), $orphan_tag_names, array_fill(0, count($orphan_tag_names), ENT_QUOTES))) . '"]';
         }
         $tpl->assign(['orphan_tag_names_array' => $orphan_tag_names_array, 'warning_tags' => $warning_tags]);
@@ -443,7 +447,7 @@ final class MiscController
 
         $tpl->assign(['first_tags' => array_slice($all_tags, 0, $per_page), 'data' => $all_tags, 'total' => count($all_tags), 'per_page' => $per_page, 'ADMIN_PAGE_TITLE' => Lang::t('Tags')]);
         $tpl->assign('page_data_json', json_encode([
-            'pwg_token' => $this->util->getPwgToken(), 'total' => count($all_tags), 'orphan_tag_names' => $orphan_tag_names,
+            'pwg_token' => $this->csrfService->getToken(), 'total' => count($all_tags), 'orphan_tag_names' => $orphan_tag_names,
             'str_already_exist' => Lang::t('Tag "%s" already exists'), 'str_and_others_tags' => Lang::t('and %s others'), 'str_clear_selection' => Lang::t('Clear Selection'), 'str_copy' => Lang::t(' (copy)'), 'str_delete' => Lang::t('Delete tag "%s"?'), 'str_delete_orphan_tags' => Lang::t('Delete orphan tags ?'), 'str_delete_tags' => Lang::t('Delete tags {%s}?'), 'str_delete_them' => Lang::t('Delete them'), 'str_keep_them' => Lang::t('Keep them'), 'str_merged_into' => Lang::t('Tag(s) {%s1} succesfully merged into "%s2"'), 'str_no_delete_confirmation' => Lang::t('No, I have changed my mind'), 'str_no_photos' => Lang::t('no photo'), 'str_number_photos' => Lang::t('%d photos'), 'str_orphan_tags' => Lang::t('You have %s1 orphan : %s2'), 'str_other_copy' => Lang::t(' (copy %s)'), 'str_select_all_tag' => Lang::t('Select all %d tags'), 'str_selection_done' => Lang::t('The %d tags on this page are selected'), 'str_tag_created' => Lang::t('Tag "%s" created'), 'str_tag_deleted' => Lang::t('Tag "%s" succesfully deleted'), 'str_tag_found' => Lang::t('<b>%d</b> tag found'), 'str_tag_rename' => Lang::t('Rename "%s"'), 'str_tag_selected' => Lang::t('<b>%d</b> tag selected'), 'str_tags_deleted' => Lang::t('Tags {%s} succesfully deleted'), 'str_tags_found' => Lang::t('<b>%d</b> tags found'), 'str_yes_delete_confirmation' => Lang::t('Yes, delete'), 'str_yes_rename_confirmation' => Lang::t('Yes, rename'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'tags.latte');
@@ -589,7 +593,7 @@ final class MiscController
             $du_decimals = 0;
         }
 
-        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => $this->adminService->numberFormatHumanReadable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($pwg_loaded_plugins), 'STORAGE_USED' => new Html(str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals)))), 'U_QUICK_SYNC' => $this->urlGenerator->admin('site_update') . '&site=1&quick_sync=1&pwg_token=' . $this->util->getPwgToken(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
+        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => $this->adminService->numberFormatHumanReadable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($pwg_loaded_plugins), 'STORAGE_USED' => new Html(str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals)))), 'U_QUICK_SYNC' => $this->urlGenerator->admin('site_update') . '&site=1&quick_sync=1&pwg_token=' . $this->csrfService->getToken(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
 
         if (Config::activateComments()) {
             $tpl->assign('NB_COMMENTS', $this->commentRepository->countAll());
@@ -857,11 +861,11 @@ final class MiscController
 
         $tpl->assign([
             'F_ACTION'          => $this->urlGenerator->admin('comments'),
-            'PWG_TOKEN'         => $this->util->getPwgToken(),
+            'PWG_TOKEN'         => $this->csrfService->getToken(),
             'COMMENTS_DISABLED' => !Config::activateComments(),
             'U_CONFIGURATION'   => $this->urlGenerator->admin('configuration') . '&section=comments',
             'page_data_json'    => json_encode([
-                'pwg_token' => $this->util->getPwgToken(),
+                'pwg_token' => $this->csrfService->getToken(),
                 'str_yes_delete_confirmation' => Lang::t('Yes, delete'), 'str_no_delete_confirmation' => Lang::t('No, I have changed my mind'), 'str_delete' => Lang::t('Are you sure you want to delete comment #%s?'), 'str_deletes' => Lang::t('Are you sure you want to delete "%d" comments?'), 'str_no_comments_selected' => Lang::t('No comments selected, no actions possible.'), 'str_an_error_has' => Lang::t('An error has occured'), 'str_comment_validated' => Lang::t('The comment has been validated.'), 'str_comments_validated' => Lang::t('The comments have been validated.'), 'str_and_others' => Lang::t('and %s others'),
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
@@ -881,7 +885,7 @@ final class MiscController
     {
         $tpl = TemplateRegistry::current();
 
-        $this->util->checkInputParameter('display', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('display', $_GET, false, ValidationPattern::ID);
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('rating');
@@ -1098,14 +1102,14 @@ final class MiscController
     {
         $tpl = TemplateRegistry::current();
 
-        $this->util->checkInputParameter('user_id', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('user_id', $_GET, false, ValidationPattern::ID);
 
         $userIdRaw = $_GET['user_id'] ?? null;
         $editUserId = is_numeric($userIdRaw) ? (int) $userIdRaw : 0;
         $edit_user  = $this->userService->buildUser($editUserId, false);
 
         if (!empty($_POST)) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
         }
 
         $errors = [];
@@ -1182,7 +1186,7 @@ final class MiscController
                 $untreated_keys = array_diff($check_key_list, $check_key_treated);
                 if (count($untreated_keys) != 0) {
                     $this->notificationRepository->deleteByCheckKeys(array_values($untreated_keys));
-                    $this->util->redirect($base_url . $this->urlService->getQueryStringDiff([], false), Lang::t('Operation in progress') . "\n" . Lang::t('Please wait...'));
+                    $this->redirectResponder->redirect($base_url . $this->urlService->getQueryStringDiff([], false), Lang::t('Operation in progress') . "\n" . Lang::t('Please wait...'));
                 }
             }
         }

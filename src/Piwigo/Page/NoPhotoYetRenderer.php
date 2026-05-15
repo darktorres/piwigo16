@@ -8,8 +8,8 @@ use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Http\PathExtractor;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Image\ImageRepository;
@@ -28,7 +28,7 @@ final readonly class NoPhotoYetRenderer
         private ImageRepository $imageRepository,
         private StringUtil $stringUtil,
         private UrlGenerator $urlGenerator,
-        private Util $util,
+        private RedirectResponder $redirectResponder,
         private UrlService $urlService,
         private PermissionService $permissionService,
     ) {
@@ -57,13 +57,13 @@ final readonly class NoPhotoYetRenderer
                 if (isset($_GET['no_photo_yet'])) {
                     if ('browse' == $_GET['no_photo_yet']) {
                         $_SESSION['no_photo_yet'] = 'browse';
-                        $this->util->redirect($this->urlService->makeIndexUrl());
+                        $this->redirectResponder->redirect($this->urlService->makeIndexUrl());
                         exit();
                     }
 
                     if ('deactivate' == $_GET['no_photo_yet']) {
                         $this->configService->confUpdateParam('no_photo_yet', 'false');
-                        $this->util->redirect($this->urlService->makeIndexUrl());
+                        $this->redirectResponder->redirect($this->urlService->makeIndexUrl());
                         exit();
                     }
                 }

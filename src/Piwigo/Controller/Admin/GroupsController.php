@@ -14,8 +14,8 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -25,6 +25,7 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
+use Piwigo\Validation\InputValidator;
 
 final readonly class GroupsController
 {
@@ -43,7 +44,8 @@ final readonly class GroupsController
         private PermissionRepository $permissionRepository,
         private UrlGenerator $urlGenerator,
         private UserAdminService $userAdminService,
-        private Util $util,
+        private CsrfService $csrfService,
+        private InputValidator $inputValidator,
     ) {
     }
 
@@ -68,18 +70,18 @@ final readonly class GroupsController
         $tabsheet->assign();
 
         if (!empty($_POST) || isset($_GET['delete']) || isset($_GET['toggle_is_default'])) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
         }
 
         $cache_keys = $this->adminService->getAdminClientCacheKeys(['groups', 'users']);
         $tpl->assign([
             'F_ADD_ACTION'              => $this->urlGenerator->admin('group_list'),
-            'PWG_TOKEN'                 => $this->util->getPwgToken(),
+            'PWG_TOKEN'                 => $this->csrfService->getToken(),
             'CACHE_KEYS'                => $cache_keys,
             'ROOT_URL'                  => UrlService::getRootUrl(),
             'group_list_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => Lang::t('Create')]),
             'page_data_json'            => json_encode([
-                'pwg_token'                    => $this->util->getPwgToken(),
+                'pwg_token'                    => $this->csrfService->getToken(),
                 'rootUrl'                      => UrlService::getRootUrl(),
                 'serverId'                     => $cache_keys['_hash'],
                 'serverKey'                    => $cache_keys['users'],
@@ -126,10 +128,10 @@ final readonly class GroupsController
                 'NB_MEMBERS' => count($members),
                 'L_MEMBERS'  => implode(' <span class="userSeparator">&middot;</span> ', $members),
                 'MEMBERS'    => Translator::get()->plural('%d member', '%d members', count($members)),
-                'U_DELETE'   => $del_url . $row_id_str . '&pwg_token=' . $this->util->getPwgToken(),
+                'U_DELETE'   => $del_url . $row_id_str . '&pwg_token=' . $this->csrfService->getToken(),
                 'U_PERM'     => $perm_url . $row_id_str,
                 'U_USERS'    => $users_url . $row_id_str,
-                'U_ISDEFAULT' => $toggle_is_default_url . $row_id_str . '&pwg_token=' . $this->util->getPwgToken(),
+                'U_ISDEFAULT' => $toggle_is_default_url . $row_id_str . '&pwg_token=' . $this->csrfService->getToken(),
             ]);
             $group_counter++;
         }
@@ -144,16 +146,16 @@ final readonly class GroupsController
     {
         $tpl = TemplateRegistry::current();
         if (!empty($_POST)) {
-            $this->util->checkPwgToken();
-            $this->util->checkInputParameter('cat_true', $_POST, true, ValidationPattern::ID);
-            $this->util->checkInputParameter('cat_false', $_POST, true, ValidationPattern::ID);
+            $this->csrfService->check();
+            $this->inputValidator->check('cat_true', $_POST, true, ValidationPattern::ID);
+            $this->inputValidator->check('cat_false', $_POST, true, ValidationPattern::ID);
         }
 
         if (!isset($_GET['group_id'])) {
             HtmlService::fatalError('group_id URL parameter is missing');
         }
 
-        $this->util->checkInputParameter('group_id', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('group_id', $_GET, false, ValidationPattern::ID);
         $getGroupId = $_GET['group_id'];
         $group_id   = is_numeric($getGroupId) ? (int) $getGroupId : 0;
 
@@ -204,7 +206,7 @@ final readonly class GroupsController
         $query_false .= ';';
         $this->categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false');
 
-        $tpl->assign('PWG_TOKEN', $this->util->getPwgToken());
+        $tpl->assign('PWG_TOKEN', $this->csrfService->getToken());
         $tpl->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'group_perm.latte');
     }

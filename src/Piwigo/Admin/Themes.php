@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
@@ -13,7 +16,6 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Core\ZipExtractor;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
@@ -45,7 +47,7 @@ final class Themes
         private readonly ThemeRepository $themeRepository,
         private readonly UrlGenerator $urlGenerator,
         private readonly UserService $userService,
-        private readonly Util $util,
+        private readonly ActivityLogger $activityLogger,
     ) {
         $this->getFsThemes();
 
@@ -203,7 +205,7 @@ final class Themes
                 break;
         }
 
-        $this->util->pwgActivity('system', ActivitySystem::Theme, $action, $activity_details);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, $action, $activity_details));
 
         return array_values($errors);
     }

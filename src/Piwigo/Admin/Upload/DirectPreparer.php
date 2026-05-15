@@ -10,11 +10,12 @@ use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Validation\InputValidator;
 
 final readonly class DirectPreparer
 {
@@ -24,7 +25,8 @@ final readonly class DirectPreparer
         private HtmlService $htmlService,
         private ImageRepository $imageRepository,
         private UploadService $uploadService,
-        private Util $util,
+        private CsrfService $csrfService,
+        private InputValidator $inputValidator,
     ) {
     }
 
@@ -65,7 +67,7 @@ final readonly class DirectPreparer
 
         $tpl->assign([
             'form_action' => $photosAddBaseUrl,
-            'pwg_token' => $this->util->getPwgToken(),
+            'pwg_token' => $this->csrfService->getToken(),
         ]);
 
         $unique_exts = array_unique(
@@ -85,7 +87,7 @@ final readonly class DirectPreparer
         $selected_category = [];
 
         if (isset($_GET['album'])) {
-            $this->util->checkInputParameter('album', $_GET, false, ValidationPattern::ID);
+            $this->inputValidator->check('album', $_GET, false, ValidationPattern::ID);
             $album_id_int = is_scalar($_GET['album']) ? (int) $_GET['album'] : 0;
             $cat = $this->categoryRepository->findCategoryById($album_id_int);
             if ($cat !== null) {

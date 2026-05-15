@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Tag;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -27,7 +29,7 @@ final class TagAdminService
         private readonly ImageAdminService $imageAdminService,
         private readonly TagRepository $tagRepository,
         private readonly UserAdminService $userAdminService,
-        private readonly Util $util,
+        private readonly ActivityLogger $activityLogger,
     ) {
     }
 
@@ -102,7 +104,7 @@ final class TagAdminService
         $tagRepo->deleteImageTagsByTagIds($tagIds);
         $tagRepo->deleteByIds($tagIds);
         EventDispatcher::notify('delete_tags', $tagIds);
-        $this->util->pwgActivity('tag', $tagIds, 'delete');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagIds, 'delete'));
         $this->imageAdminService->updateImagesLastmodified($imageIds);
         $this->userAdminService->invalidateUserCacheNbTags();
     }

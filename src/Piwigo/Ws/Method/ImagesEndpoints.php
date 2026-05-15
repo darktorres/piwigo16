@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Method;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Metadata\MetadataAdminService;
@@ -20,8 +23,8 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -68,7 +71,8 @@ final readonly class ImagesEndpoints
         private UploadService $uploadService,
         private UrlService $urlService,
         private UserAdminService $userAdminService,
-        private Util $util,
+        private ActivityLogger $activityLogger,
+        private CsrfService $csrfService,
         private WsHelper $wsHelper,
         private EphemeralKeyService $ephemeralKeyService,
     ) {
@@ -559,7 +563,7 @@ final readonly class ImagesEndpoints
         $pLevel    = is_numeric($params['level']) ? (int) $params['level'] : 0;
         $pImageIds = is_array($params['image_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
         $affected  = $this->imageRepository->setLevelForIds($pLevel, $pImageIds);
-        $this->util->pwgActivity('photo', $pImageIds, 'edit');
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $pImageIds, 'edit'));
         if ($affected) {
             $this->userAdminService->invalidateUserCache();
         }
@@ -784,7 +788,7 @@ final readonly class ImagesEndpoints
     public function upload(array $params, PwgServer $service): mixed
     {
         $formatExt = null;
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (isset($params['format_of'])) {
@@ -1114,7 +1118,7 @@ final readonly class ImagesEndpoints
     /** @param array<mixed> $params */
     public function formatsDelete(array $params, PwgServer $service): PwgError|bool
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!is_array($params['format_id'])) {
@@ -1185,7 +1189,7 @@ final readonly class ImagesEndpoints
     /** @param array<mixed> $params */
     public function setInfo(array $params, PwgServer $service): mixed
     {
-        if (isset($params['pwg_token']) && $this->util->getPwgToken() !== $params['pwg_token']) {
+        if (isset($params['pwg_token']) && $this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $setImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
@@ -1224,7 +1228,7 @@ final readonly class ImagesEndpoints
         if (count($update) > 0) {
             $update['id'] = $setImageId;
             Dml::singleUpdate(Tables::images(), $update, ['id' => $update['id']]);
-            $this->util->pwgActivity('photo', $setImageId, 'edit');
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $setImageId, 'edit'));
         }
         if (isset($params['categories'])) {
             $this->addImageCategoryRelations($setImageId, is_string($params['categories']) ? $params['categories'] : '', $multipleValueMode === 'replace');
@@ -1263,7 +1267,7 @@ final readonly class ImagesEndpoints
     /** @param array<mixed> $params */
     public function delete(array $params, PwgServer $service): PwgError|int
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $delImageIdsRaw = $params['image_id'];
@@ -1301,7 +1305,7 @@ final readonly class ImagesEndpoints
      */
     public function uploadCompleted(array $params, PwgServer $service): PwgError|array
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $ucImageIdsRaw = $params['image_id'];
@@ -1324,7 +1328,7 @@ final readonly class ImagesEndpoints
      */
     public function setMd5sum(array $params, PwgServer $service): PwgError|array
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $noMd5sumIds    = $this->imageAdminService->getPhotosNoMd5sum();
@@ -1342,7 +1346,7 @@ final readonly class ImagesEndpoints
      */
     public function syncMetadata(array $params, PwgServer $service): PwgError|array
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $syncImageIdsRaw = $params['image_id'];
@@ -1374,7 +1378,7 @@ final readonly class ImagesEndpoints
      */
     public function deleteOrphans(array $params, PwgServer $service): PwgError|array
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $orphanIdsToDelete = array_slice($this->imageAdminService->getOrphans(), 0, is_numeric($params['block_size']) ? (int) $params['block_size'] : null);
@@ -1386,7 +1390,7 @@ final readonly class ImagesEndpoints
     /** @param array<mixed> $params */
     public function setCategory(array $params, PwgServer $service): mixed
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $scCategoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;

@@ -9,7 +9,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -42,7 +42,7 @@ final readonly class ProfileController implements ControllerInterface
         private ProfileService $profileService,
         private UrlGenerator $urlGenerator,
         private UserRepository $userRepository,
-        private Util $util,
+        private CsrfService $csrfService,
         private StringUtil $stringUtil,
         private PermissionService $permissionService,
         private LangService $langService,
@@ -58,7 +58,7 @@ final readonly class ProfileController implements ControllerInterface
         $this->permissionService->checkStatus(AccessLevel::Classic);
 
         if (!empty($_POST)) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
         }
 
         /** @var array<string, mixed> $user */

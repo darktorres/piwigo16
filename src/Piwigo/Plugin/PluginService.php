@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Plugin;
 
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Plugins\LoadedPluginRegistry;
 
@@ -18,7 +20,7 @@ final readonly class PluginService
     public function __construct(
         private PluginRepository $repo,
         private StringUtil $stringUtil,
-        private Util $util,
+        private ActivityLogger $activityLogger,
     ) {
     }
 
@@ -94,7 +96,7 @@ final readonly class PluginService
 
             if ($newVersion != $oldVersion) {
                 $this->repo->updateVersion($pluginId, $fsVersion);
-                $this->util->pwgActivity('system', ActivitySystem::Plugin, 'autoupdate', ['plugin_id' => $pluginId, 'from_version' => $oldVersion, 'to_version' => $newVersion]);
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Plugin, 'autoupdate', ['plugin_id' => $pluginId, 'from_version' => $oldVersion, 'to_version' => $newVersion]));
             }
         }
     }

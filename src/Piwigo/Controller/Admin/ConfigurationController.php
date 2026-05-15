@@ -6,6 +6,9 @@ namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Config\SizesProcessor;
 use Piwigo\Admin\Config\WatermarkProcessor;
 use Piwigo\Admin\Image\ImageAdminService;
@@ -18,7 +21,7 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeSize;
@@ -29,6 +32,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 
 final readonly class ConfigurationController
 {
@@ -47,7 +51,9 @@ final readonly class ConfigurationController
         private SizesProcessor $sizesProcessor,
         private UrlGenerator $urlGenerator,
         private UserService $userService,
-        private Util $util,
+        private ActivityLogger $activityLogger,
+        private CsrfService $csrfService,
+        private InputValidator $inputValidator,
         private WatermarkProcessor $watermarkProcessor,
     ) {
     }
@@ -67,7 +73,7 @@ final readonly class ConfigurationController
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $this->util->checkInputParameter('section', $_GET, false, '/^[a-z]+$/i');
+        $this->inputValidator->check('section', $_GET, false, '/^[a-z]+$/i');
 
         $section = isset($_GET['section']) && is_string($_GET['section']) ? $_GET['section'] : 'main';
 
@@ -130,14 +136,14 @@ final readonly class ConfigurationController
         // ── POST submission ───────────────────────────────────────────────────
 
         if (isset($_POST['submit'])) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
             $int_pattern = '/^\d+$/';
 
             switch ($section) {
                 case 'main':
                     if (!Config::has('order_by_custom') && !Config::has('order_by_inside_category_custom')) {
                         if (isset($_POST['order_by']) && $_POST['order_by'] !== '') {
-                            $this->util->checkInputParameter('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
+                            $this->inputValidator->check('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
                             $post_order_by = is_array($_POST['order_by']) ? $_POST['order_by'] : [];
                             $used = [];
                             foreach ($post_order_by as $i => $val) {
@@ -255,7 +261,7 @@ final readonly class ConfigurationController
                     }
                 }
                 $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
-                $this->util->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => $section]);
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'config', ['config_section' => $section]));
             }
 
             ConfigService::loadConfFromDb();
@@ -268,7 +274,7 @@ final readonly class ConfigurationController
             $this->imageAdminService->clearDerivativeCache();
             ConfigService::loadConfFromDb();
             $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
-            $this->util->pwgActivity('system', ActivitySystem::Core, 'config', ['config_section' => $section, 'config_action' => $_GET['action']]);
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'config', ['config_section' => $section, 'config_action' => $_GET['action']]));
         }
 
         // ── Template init ─────────────────────────────────────────────────────
@@ -282,7 +288,7 @@ final readonly class ConfigurationController
 
         $tpl->assign([
             'U_HELP'    => $this->urlGenerator->adminPopupHelp('configuration'),
-            'PWG_TOKEN' => $this->util->getPwgToken(),
+            'PWG_TOKEN' => $this->csrfService->getToken(),
             'F_ACTION'  => $action,
         ]);
 

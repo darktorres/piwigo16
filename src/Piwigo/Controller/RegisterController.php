@@ -10,8 +10,8 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
 use Piwigo\Language\LanguageService;
@@ -45,7 +45,7 @@ final readonly class RegisterController implements ControllerInterface
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserService $userService,
-        private Util $util,
+        private RedirectResponder $redirectResponder,
         private EphemeralKeyService $ephemeralKeyService,
         private LanguageService $languageService,
     ) {
@@ -103,7 +103,7 @@ final readonly class RegisterController implements ControllerInterface
                 if ($user_id !== false) {
                     $this->authService->logUser($user_id, false);
                 }
-                $this->util->redirect($this->urlService->makeIndexUrl());
+                $this->redirectResponder->redirect($this->urlService->makeIndexUrl());
             }
             $registration_post_key = $this->ephemeralKeyService->generate(2);
         } else {

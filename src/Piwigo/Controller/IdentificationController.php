@@ -10,8 +10,8 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
 use Piwigo\Language\LanguageService;
@@ -25,6 +25,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -38,7 +39,8 @@ final readonly class IdentificationController implements ControllerInterface
         private HtmlService $htmlService,
         private MenubarRenderer $menubarRenderer,
         private UrlGenerator $urlGenerator,
-        private Util $util,
+        private InputValidator $inputValidator,
+        private RedirectResponder $redirectResponder,
         private StringUtil $stringUtil,
         private PermissionService $permissionService,
         private LangService $langService,
@@ -54,7 +56,7 @@ final readonly class IdentificationController implements ControllerInterface
         $this->permissionService->checkStatus(AccessLevel::Free);
 
         if (!$this->permissionService->isAGuest()) {
-            $this->util->redirect($this->urlService->getGalleryHomeUrl());
+            $this->redirectResponder->redirect($this->urlService->getGalleryHomeUrl());
         }
 
         EventDispatcher::notify('loc_begin_identification');
@@ -65,7 +67,7 @@ final readonly class IdentificationController implements ControllerInterface
         if ($post_redirect !== null) {
             $_POST['redirect_decoded'] = urldecode($post_redirect);
         }
-        $this->util->checkInputParameter('redirect_decoded', $_POST, false, '{^' . preg_quote((string) CookieService::cookiePath()) . '}');
+        $this->inputValidator->check('redirect_decoded', $_POST, false, '{^' . preg_quote((string) CookieService::cookiePath()) . '}');
 
         $redirect_to = '';
         $get_redirect = $this->stringUtil->inputString('redirect', null, $_GET);
@@ -90,7 +92,7 @@ final readonly class IdentificationController implements ControllerInterface
                 if ($this->authService->tryLogUser($username, $post_password, $remember_me)) {
                     $root_url = UrlService::getAbsoluteRootUrl();
                     $_SESSION['connected_with'] = 'pwg_ui';
-                    $this->util->redirect(
+                    $this->redirectResponder->redirect(
                         empty($redirect_to)
                         ? $this->urlService->getGalleryHomeUrl()
                         : substr($root_url, 0, strlen($root_url) - strlen(CookieService::cookiePath() ?? '')) . $redirect_to

@@ -6,13 +6,17 @@ namespace Piwigo\Users;
 
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\Util;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Lang\LangService;
@@ -33,7 +37,9 @@ final readonly class ProfileService
         private MailService $mailService,
         private UserRepository $userRepository,
         private UserService $userService,
-        private Util $util,
+        private ActivityLogger $activityLogger,
+        private CsrfService $csrfService,
+        private RedirectResponder $redirectResponder,
         private LanguageService $languageService,
         private ThemeService $themeService,
     ) {
@@ -172,10 +178,10 @@ final readonly class ProfileService
 
             $userId = is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0;
             EventDispatcher::notify('save_profile_from_post', $userId);
-            $this->util->pwgActivity('user', $userId, 'edit', ['function' => 'saveProfileFromPost', 'tables' => implode(',', $activity_details_tables)]);
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'edit', ['function' => 'saveProfileFromPost', 'tables' => implode(',', $activity_details_tables)]));
 
             if (isset($_POST['redirect']) && $_POST['redirect'] !== '') {
-                $this->util->redirect(is_string($_POST['redirect']) ? $_POST['redirect'] : UrlService::getRootUrl());
+                $this->redirectResponder->redirect(is_string($_POST['redirect']) ? $_POST['redirect'] : UrlService::getRootUrl());
             }
         }
         return true;
@@ -257,6 +263,6 @@ final readonly class ProfileService
         $tpl->assign('API_EMAIL_INFOS', new Html($email_notifications_infos));
 
         EventDispatcher::notify('load_profile_in_template', $userdata);
-        $tpl->assign('PWG_TOKEN', $this->util->getPwgToken());
+        $tpl->assign('PWG_TOKEN', $this->csrfService->getToken());
     }
 }

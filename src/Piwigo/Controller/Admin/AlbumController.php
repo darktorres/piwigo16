@@ -6,6 +6,9 @@ namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Album\AlbumsTabRenderer;
 use Piwigo\Admin\Category\CategoryAdminService;
@@ -20,14 +23,15 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
@@ -42,6 +46,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Validation\InputValidator;
 
 final class AlbumController
 {
@@ -71,7 +76,10 @@ final class AlbumController
         private readonly UrlGenerator $urlGenerator,
         private readonly UrlService $urlService,
         private readonly UserAdminService $userAdminService,
-        private readonly Util $util,
+        private readonly ActivityLogger $activityLogger,
+        private readonly CsrfService $csrfService,
+        private readonly InputValidator $inputValidator,
+        private readonly RedirectResponder $redirectResponder,
     ) {
     }
 
@@ -106,7 +114,7 @@ final class AlbumController
     {
         $tpl = TemplateRegistry::current();
 
-        $this->util->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('cat_id', $_GET, false, ValidationPattern::ID);
 
         $rawCatId = $_GET['cat_id'] ?? null;
         $cat_id_str = is_string($rawCatId) ? $rawCatId : '';
@@ -150,7 +158,7 @@ final class AlbumController
         $user = CurrentUser::get()->rawAttributes;
         $albums_counter = $this->categoryRepository->countAll();
 
-        $this->util->checkInputParameter('parent_id', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('parent_id', $_GET, false, ValidationPattern::ID);
 
         $this->albumsTabRenderer->render('list');
 
@@ -168,7 +176,7 @@ final class AlbumController
             if (!in_array($_POST['order'], $sort_orders)) {
                 throw new ValidationException('Invalid sort order');
             }
-            $this->util->checkInputParameter('id', $_POST, false, '/^-?\d+$/');
+            $this->inputValidator->check('id', $_POST, false, '/^-?\d+$/');
 
             $rawPostId = $_POST['id'] ?? null;
             $post_id_str = is_string($rawPostId) ? $rawPostId : '-1';
@@ -255,13 +263,13 @@ final class AlbumController
 
         $tpl->assign([
             'album_data'          => $album_tree,
-            'PWG_TOKEN'           => $this->util->getPwgToken(),
+            'PWG_TOKEN'           => $this->csrfService->getToken(),
             'nb_albums'           => $nb_albums,
             'ADMIN_PAGE_TITLE'    => Lang::t('Albums'),
             'light_album_manager' => $light_album_manager,
             'page_data_json'      => json_encode([
                 'data'                          => $album_tree,
-                'pwg_token'                     => $this->util->getPwgToken(),
+                'pwg_token'                     => $this->csrfService->getToken(),
                 'openCat'                       => is_numeric($open_cat) ? (int) $open_cat : -1,
                 'nb_albums'                     => $nb_albums,
                 'light_album_manager'           => (bool) $light_album_manager,
@@ -308,7 +316,7 @@ final class AlbumController
         $admin_album_base_url = $this->adminAlbumBaseUrl;
 
         if ($category === null) {
-            $this->util->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
+            $this->inputValidator->check('cat_id', $_GET, false, ValidationPattern::ID);
             $rawCatId2 = $_GET['cat_id'] ?? null;
             $cat_id_str = is_string($rawCatId2) ? $rawCatId2 : '';
             $admin_album_base_url = $this->urlGenerator->admin('album-' . $cat_id_str);
@@ -322,7 +330,7 @@ final class AlbumController
         $pageCat = $category['id'];
 
         if (isset($_POST['submitEmail'])) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
             $this->urlService->setMakeFullUrl();
 
             $img = [];
@@ -351,7 +359,7 @@ final class AlbumController
 
             $rawPostUsers = $_POST['users'] ?? null;
             if ('users' == $_POST['who'] && isset($_POST['users']) && is_array($rawPostUsers) && count($rawPostUsers) > 0) {
-                $this->util->checkInputParameter('users', $_POST, true, ValidationPattern::ID);
+                $this->inputValidator->check('users', $_POST, true, ValidationPattern::ID);
                 $query = 'SELECT ui.user_id, ui.status, ui.language, u.' . Config::userFields()['email'] . ' AS email, u.' . Config::userFields()['username'] . ' AS username FROM ' . Tables::userInfos() . ' AS ui JOIN ' . Tables::users() . ' AS u ON u.' . Config::userFields()['id'] . ' = ui.user_id WHERE ui.user_id IN (' . implode(',', array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawPostUsers)) . ');';
                 $users     = $this->conn->executeQuery($query)->fetchAllAssociative();
                 $usernames = [];
@@ -377,7 +385,7 @@ final class AlbumController
                 $message .= ' (' . implode(', ', $usernames) . ')';
                 $tpl->assign(['save_success' => $message]);
             } elseif ('group' == $_POST['who'] && isset($_POST['group']) && $_POST['group'] !== '') {
-                $this->util->checkInputParameter('group', $_POST, false, ValidationPattern::ID);
+                $this->inputValidator->check('group', $_POST, false, ValidationPattern::ID);
                 $postGroupRaw = $_POST['group'];
                 $this->mailService->pwgMailGroup(is_numeric($postGroupRaw) ? (int) $postGroupRaw : 0, $args, $mailTpl);
                 $post_group_str = is_string($postGroupRaw) ? $postGroupRaw : '0';
@@ -392,7 +400,7 @@ final class AlbumController
         $tpl->assign([
             'CATEGORIES_NAV' => new Html(trim($this->htmlService->getCatDisplayNameFromId($catIdScalar, $this->urlGenerator->admin() . '&page=album-'))),
             'F_ACTION'       => $admin_album_base_url . '-notification',
-            'PWG_TOKEN'      => $this->util->getPwgToken(),
+            'PWG_TOKEN'      => $this->csrfService->getToken(),
         ]);
 
         if (Config::authKeyDuration() > 0) {
@@ -448,7 +456,7 @@ final class AlbumController
         EventDispatcher::notify('loc_begin_cat_list');
 
         if (!empty($_POST) || isset($_GET['delete'])) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
         }
 
         $sort_orders = [
@@ -460,7 +468,7 @@ final class AlbumController
             'date_available ASC'  => Lang::t('Date posted, old &rarr; new') . ' ' . Lang::t('(determined from photos)'),
         ];
 
-        $this->util->checkInputParameter('parent_id', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('parent_id', $_GET, false, ValidationPattern::ID);
 
         $base_url   = $this->urlGenerator->admin('cat_list');
         $navigation = '<a href="' . $base_url . '">' . Lang::t('Home') . '</a>';
@@ -481,7 +489,7 @@ final class AlbumController
             if (isset($_GET['parent_id'])) {
                 $redirect_url .= '&parent_id=' . (is_string($_GET['parent_id']) ? $_GET['parent_id'] : '');
             }
-            $this->util->redirect($redirect_url);
+            $this->redirectResponder->redirect($redirect_url);
         } elseif (isset($_POST['submitAdd'])) {
             $output_create = $this->categoryAdminService->createVirtualCategory(
                 is_string($rawVirtualName = $_POST['virtual_name'] ?? null) ? $rawVirtualName : '',
@@ -512,7 +520,7 @@ final class AlbumController
             'ADMIN_PAGE_TITLE'    => Lang::t('Album list management'),
             'CATEGORIES_NAV'      => new Html((string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation))),
             'F_ACTION'            => $form_action,
-            'PWG_TOKEN'           => $this->util->getPwgToken(),
+            'PWG_TOKEN'           => $this->csrfService->getToken(),
             'sort_orders'         => $sort_orders,
             'sort_order_checked'  => array_shift($sort_orders_checked),
         ]);
@@ -583,7 +591,7 @@ final class AlbumController
 
             if (empty($category['dir'])) {
                 $tpl_cat['U_DELETE']  = $self_url . '&delete=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : '');
-                $tpl_cat['U_DELETE'] .= '&pwg_token=' . $this->util->getPwgToken();
+                $tpl_cat['U_DELETE'] .= '&pwg_token=' . $this->csrfService->getToken();
             } elseif (Config::enableSynchronization()) {
                 $tpl_cat['U_SYNC'] = $base_url . 'site_update&site=1&cat_id=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : '');
             }
@@ -745,8 +753,8 @@ final class AlbumController
             $tpl->assign('parent_category', $catUppercat === '' ? [] : [$catUppercat]);
         }
 
-        $tpl->assign('PWG_TOKEN', $this->util->getPwgToken());
-        $pwg_token     = $this->util->getPwgToken();
+        $tpl->assign('PWG_TOKEN', $this->csrfService->getToken());
+        $pwg_token     = $this->csrfService->getToken();
         $parent_cat_id = $catUppercat !== '' ? (int) $catUppercat : 0;
         $tpl->assign('page_data_json', json_encode([
             'album_id'                             => $catIntId,
@@ -780,10 +788,10 @@ final class AlbumController
     {
         $tpl = TemplateRegistry::current();
         if (!empty($_POST)) {
-            $this->util->checkPwgToken();
-            $this->util->checkInputParameter('cat_true', $_POST, true, ValidationPattern::ID);
-            $this->util->checkInputParameter('cat_false', $_POST, true, ValidationPattern::ID);
-            $this->util->checkInputParameter('section', $_GET, false, '/^[a-z0-9_-]+$/i');
+            $this->csrfService->check();
+            $this->inputValidator->check('cat_true', $_POST, true, ValidationPattern::ID);
+            $this->inputValidator->check('cat_false', $_POST, true, ValidationPattern::ID);
+            $this->inputValidator->check('section', $_GET, false, '/^[a-z0-9_-]+$/i');
         }
 
         if (isset($_POST['falsify']) && isset($_POST['cat_true']) && count(is_array($_POST['cat_true']) ? $_POST['cat_true'] : []) > 0) {
@@ -797,7 +805,7 @@ final class AlbumController
                 'representative' => $this->categoryRepository->clearRepresentatives($cat_true),
                 default          => null,
             };
-            $this->util->pwgActivity('album', $cat_true, 'edit', ['section' => $current_section, 'action' => 'falsify']);
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $cat_true, 'edit', ['section' => $current_section, 'action' => 'falsify']));
         } elseif (isset($_POST['trueify']) && isset($_POST['cat_false']) && count(is_array($_POST['cat_false']) ? $_POST['cat_false'] : []) > 0) {
             /** @var int[] $cat_false */
             $cat_false       = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['cat_false']) ? $_POST['cat_false'] : []);
@@ -809,7 +817,7 @@ final class AlbumController
                 'representative' => $this->categoryAdminService->setRandomRepresentant($cat_false),
                 default          => null,
             };
-            $this->util->pwgActivity('album', $cat_false, 'edit', ['section' => $current_section, 'action' => 'trueify']);
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $cat_false, 'edit', ['section' => $current_section, 'action' => 'trueify']));
         }
 
         $get_section = $_GET['section'] ?? null;
@@ -844,7 +852,7 @@ final class AlbumController
 
         $this->categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true');
         $this->categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false');
-        $tpl->assign('PWG_TOKEN', $this->util->getPwgToken());
+        $tpl->assign('PWG_TOKEN', $this->csrfService->getToken());
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Properties of abums'));
         $tpl->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'cat_options.latte');
@@ -855,7 +863,7 @@ final class AlbumController
     private function catPerm(): void
     {
         $tpl = TemplateRegistry::current();
-        $this->util->checkInputParameter('cat_id', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('cat_id', $_GET, false, ValidationPattern::ID);
         $rawCatId3 = $_GET['cat_id'] ?? null;
         $cat_id = is_string($rawCatId3) ? $rawCatId3 : '';
         if ($cat_id === '') {
@@ -871,7 +879,7 @@ final class AlbumController
         $admin_album_base_url = $this->adminAlbumBaseUrl !== '' ? $this->adminAlbumBaseUrl : $this->urlGenerator->admin('album-' . $cat_id);
 
         if (!empty($_POST)) {
-            $this->util->checkPwgToken();
+            $this->csrfService->check();
 
             $rawPostStatus = $_POST['status'] ?? null;
             $post_status = is_string($rawPostStatus) ? $rawPostStatus : '';
@@ -984,7 +992,7 @@ final class AlbumController
 
         $cache_keys = $this->adminService->getAdminClientCacheKeys(['groups', 'users']);
         $tpl->assign([
-            'PWG_TOKEN'               => $this->util->getPwgToken(),
+            'PWG_TOKEN'               => $this->csrfService->getToken(),
             'INHERIT'                 => Config::inheritanceByDefault(),
             'CACHE_KEYS'              => $cache_keys,
             'cat_perm_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => Lang::t('Create'), 'has_indirect_perms' => count($user_granted_indirect_ids) > 0]),

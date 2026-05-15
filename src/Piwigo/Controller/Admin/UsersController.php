@@ -15,8 +15,8 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\ValidationException;
@@ -32,6 +32,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 
 final readonly class UsersController
 {
@@ -57,7 +58,8 @@ final readonly class UsersController
         private UserRepository $userRepository,
         private UserService $userService,
         private UserTabRenderer $userTabRenderer,
-        private Util $util,
+        private CsrfService $csrfService,
+        private InputValidator $inputValidator,
         private LanguageService $languageService,
         private ThemeService $themeService,
     ) {
@@ -81,8 +83,8 @@ final readonly class UsersController
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
-        $this->util->checkInputParameter('group', $_GET, false, ValidationPattern::ID);
-        $this->util->checkInputParameter('user_id', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('group', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('user_id', $_GET, false, ValidationPattern::ID);
 
         $this->userTabRenderer->render('user_list');
 
@@ -129,7 +131,7 @@ final readonly class UsersController
 
         $tpl->assign([
             'U_HISTORY'                 => $this->urlGenerator->admin('history') . '&filter_user_id=',
-            'PWG_TOKEN'                 => $this->util->getPwgToken(),
+            'PWG_TOKEN'                 => $this->csrfService->getToken(),
             'NB_IMAGE_PAGE'             => $default_user['nb_image_page'] ?? null,
             'RECENT_PERIOD'             => $default_user['recent_period'] ?? null,
             'theme_options'             => $this->themeService->getActiveThemes(),
@@ -218,7 +220,7 @@ final readonly class UsersController
 
         $rawPagination = $this->preferencesService->userprefsGetParam('user-manager-pagination', $viewSel === 'line' ? 5 : 10);
         $tpl->assign('page_data_json', json_encode([
-            'pwg_token'                => $this->util->getPwgToken(),
+            'pwg_token'                => $this->csrfService->getToken(),
             'connected_user'           => $userId,
             'connected_user_status'    => $userStatus,
             'owner_id'                 => Config::webmasterId(),
@@ -280,9 +282,9 @@ final readonly class UsersController
     {
         $tpl = TemplateRegistry::current();
         if (!empty($_POST)) {
-            $this->util->checkPwgToken();
-            $this->util->checkInputParameter('cat_true', $_POST, true, ValidationPattern::ID);
-            $this->util->checkInputParameter('cat_false', $_POST, true, ValidationPattern::ID);
+            $this->csrfService->check();
+            $this->inputValidator->check('cat_true', $_POST, true, ValidationPattern::ID);
+            $this->inputValidator->check('cat_false', $_POST, true, ValidationPattern::ID);
         }
 
         if (!isset($_GET['user_id']) || !is_numeric($_GET['user_id'])) {
@@ -345,7 +347,7 @@ final readonly class UsersController
         $query_false .= ';';
         $this->categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false');
 
-        $tpl->assign('PWG_TOKEN', $this->util->getPwgToken());
+        $tpl->assign('PWG_TOKEN', $this->csrfService->getToken());
         $tpl->assignVarFromTemplate('DOUBLE_SELECT', 'double_select.latte');
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'user_perm.latte');
     }
@@ -355,9 +357,9 @@ final readonly class UsersController
     private function userActivity(): void
     {
         $tpl = TemplateRegistry::current();
-        $this->util->checkInputParameter('photo', $_GET, false, ValidationPattern::ID);
-        $this->util->checkInputParameter('album', $_GET, false, ValidationPattern::ID);
-        $this->util->checkInputParameter('group', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('photo', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('album', $_GET, false, ValidationPattern::ID);
+        $this->inputValidator->check('group', $_GET, false, ValidationPattern::ID);
 
         $this->userTabRenderer->render('user_activity');
 
@@ -394,7 +396,7 @@ final readonly class UsersController
 
         $cache_keys = $this->adminService->getAdminClientCacheKeys(['users']);
         $tpl->assign([
-            'PWG_TOKEN'                    => $this->util->getPwgToken(),
+            'PWG_TOKEN'                    => $this->csrfService->getToken(),
             'INHERIT'                      => Config::inheritanceByDefault(),
             'CACHE_KEYS'                   => $cache_keys,
             'user_activity_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => Lang::t('Create')]),

@@ -12,9 +12,9 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\BlockManager;
@@ -223,14 +223,14 @@ SELECT id, name, permalink
         /** @var mixed $rawRequestUri */
         $rawRequestUri = $_SERVER['REQUEST_URI'] ?? '';
         $requestUri    = is_string($rawRequestUri) ? $rawRequestUri : '';
-        Kernel::service(Util::class)->redirectHttp(Kernel::service(UrlService::class)->addUrlParams(Kernel::service(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]));
+        Kernel::service(RedirectResponder::class)->redirectHttp(Kernel::service(UrlService::class)->addUrlParams(Kernel::service(UrlGenerator::class)->identification(), ['redirect' => urlencode($requestUri)]));
     }
 
     public function pageForbidden(string $msg): void
     {
         $this->setStatusHeader(403);
         $redirectUrl = Kernel::service(UrlService::class)->makeIndexUrl();
-        Kernel::service(Util::class)->redirectHtml(
+        Kernel::service(RedirectResponder::class)->redirectHtml(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
 <h1 style="text-align:left; font-size:36px;">' . Lang::t('Forbidden') . '</h1><br>' . $msg . '</div>',
@@ -242,7 +242,7 @@ SELECT id, name, permalink
     {
         $this->setStatusHeader(400);
         $redirectUrl = Kernel::service(UrlService::class)->makeIndexUrl();
-        Kernel::service(Util::class)->redirectHtml(
+        Kernel::service(RedirectResponder::class)->redirectHtml(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
 <h1 style="text-align:left; font-size:36px;">' . Lang::t('Bad request') . '</h1><br>' . $msg . '</div>',
@@ -254,7 +254,7 @@ SELECT id, name, permalink
     {
         $this->setStatusHeader(404);
         $redirectUrl = $alternateUrl ?? Kernel::service(UrlService::class)->makeIndexUrl();
-        Kernel::service(Util::class)->redirectHtml(
+        Kernel::service(RedirectResponder::class)->redirectHtml(
             $redirectUrl,
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
 <h1 style="text-align:left; font-size:36px;">' . Lang::t('Page not found') . '</h1><br>' . ($msg ?? '') . '</div>',

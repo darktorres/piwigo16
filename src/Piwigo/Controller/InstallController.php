@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\InstallService;
 use Piwigo\Admin\Languages;
@@ -19,7 +22,6 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -282,7 +284,7 @@ final class InstallController implements ControllerInterface
         if ($step == 1) {
             $tpl->assign('install', true);
         } else {
-            Kernel::service(Util::class)->pwgActivity('system', ActivitySystem::Core, 'install', ['version' => AppInfo::VERSION]);
+            Kernel::service(ActivityLogger::class)->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'install', ['version' => AppInfo::VERSION]));
             $infos[] = Lang::t('Congratulations, Piwigo installation is completed');
 
             {

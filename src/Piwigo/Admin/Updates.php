@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
@@ -13,8 +16,8 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Core\ZipExtractor;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Mail\MailService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -49,7 +52,8 @@ final class Updates
         private readonly UrlGenerator $urlGenerator,
         private readonly UserAdminService $userAdminService,
         private readonly UserService $userService,
-        private readonly Util $util,
+        private readonly ActivityLogger $activityLogger,
+        private readonly RedirectResponder $redirectResponder,
     ) {
         $this->types = ['plugins', 'themes', 'languages'];
         $this->default_themes = ['modus', 'elegant', 'smartpocket'];
@@ -549,7 +553,7 @@ final class Updates
         $template = TemplateRegistry::current();
 
         if ($check_current_version and !version_compare($upgrade_to, AppInfo::VERSION, '>')) {
-            $this->util->redirect($this->urlGenerator->admin('updates'));
+            $this->redirectResponder->redirect($this->urlGenerator->admin('updates'));
         }
 
         $obsolete_list = null;
@@ -628,7 +632,7 @@ final class Updates
                         $this->adminService->deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
                         $this->userAdminService->invalidateUserCache(true);
                         $this->configService->confUpdateParam('piwigo_installed_version', $upgrade_to);
-                        $this->util->pwgActivity('system', ActivitySystem::Core, 'update', ['from_version' => AppInfo::VERSION, 'to_version' => $upgrade_to]);
+                        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'update', ['from_version' => AppInfo::VERSION, 'to_version' => $upgrade_to]));
 
                         if ($step == 2) {
                             // only purge the compiled-template cache on minor updates;
@@ -641,7 +645,7 @@ final class Updates
                             $step = -1;
                             return $upgrade_to;
                         } else {
-                            $this->util->redirect(UrlService::getRootUrl() . 'index.php?/upgrade');
+                            $this->redirectResponder->redirect(UrlService::getRootUrl() . 'index.php?/upgrade');
                         }
                     } else {
                         file_put_contents(PHPWG_ROOT_PATH.Config::dataLocation().'update/log_error.txt', $error);

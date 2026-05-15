@@ -6,6 +6,9 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -16,12 +19,13 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
@@ -49,6 +53,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -82,7 +87,10 @@ final readonly class PictureController implements ControllerInterface
         private UserAdminService $userAdminService,
         private UserRepository $userRepository,
         private UserService $userService,
-        private Util $util,
+        private ActivityLogger $activityLogger,
+        private CsrfService $csrfService,
+        private InputValidator $inputValidator,
+        private RedirectResponder $redirectResponder,
     ) {
     }
 
@@ -158,7 +166,7 @@ SELECT id
                         } else {
                             $url = $this->urlService->makePictureUrl(['image_id' => $imageId, 'image_file' => $resolvedImageFile, 'section' => 'categories', 'flat' => true]);
                             $this->htmlService->setStatusHeader($ctx->section === 'recent_pics' ? 301 : 302);
-                            $this->util->redirectHttp($url);
+                            $this->redirectResponder->redirectHttp($url);
                         }
                     }
                 }
@@ -206,39 +214,39 @@ SELECT id
                         is_numeric($user['id']) ? (int) $user['id'] : 0,
                         $imageId
                     );
-                    $this->util->redirect($url_self);
+                    $this->redirectResponder->redirect($url_self);
                     break;
                 case 'remove_from_favorites':
                     $this->userRepository->deleteFavorite(
                         is_numeric($user['id']) ? (int) $user['id'] : 0,
                         $imageId
                     );
-                    $this->util->redirect($ctx->section === 'favorites' ? $url_up : $url_self);
+                    $this->redirectResponder->redirect($ctx->section === 'favorites' ? $url_up : $url_self);
                     break;
                 case 'set_as_representative':
                     if ($this->permissionService->isAdmin() && $category !== null) {
                         $this->categoryRepository->setRepresentativePicture([$catId], $imageId);
-                        $this->util->pwgActivity('album', $catId, 'edit', ['action' => $get_action, 'image_id' => $imageId]);
+                        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catId, 'edit', ['action' => $get_action, 'image_id' => $imageId]));
                         $this->userAdminService->invalidateUserCache();
                     }
-                    $this->util->redirect($url_self);
+                    $this->redirectResponder->redirect($url_self);
                     break;
                 case 'add_to_caddie':
                     $this->imageRepository->addToUserCaddie(CurrentUser::get()->id, [$imageId]);
-                    $this->util->redirect($url_self);
+                    $this->redirectResponder->redirect($url_self);
                     break;
                 case 'rate':
                     $this->rateService->ratePicture($imageId, $this->stringUtil->inputInt('rate', 0, $_POST));
-                    $this->util->redirect($url_self);
+                    $this->redirectResponder->redirect($url_self);
                     break;
                 case 'edit_comment':
-                    $this->util->checkInputParameter('comment_to_edit', $_GET, false, ValidationPattern::ID);
+                    $this->inputValidator->check('comment_to_edit', $_GET, false, ValidationPattern::ID);
                     $comment_to_edit = $this->stringUtil->inputInt('comment_to_edit', null, $_GET);
                     $author_id       = $this->commentService->getCommentAuthorId($comment_to_edit ?? 0);
                     if ($this->permissionService->canManageComment('edit', $author_id)) {
                         $post_content = $this->stringUtil->inputString('content', null, $_POST);
                         if ($post_content !== null && $post_content !== '') {
-                            $this->util->checkPwgToken();
+                            $this->csrfService->check();
                             $comment_action = $this->commentService->updateUserComment(
                                 ['comment_id' => $comment_to_edit, 'image_id' => $imageId, 'content' => $post_content, 'website_url' => $this->stringUtil->inputString('website_url', null, $_POST)],
                                 $this->stringUtil->inputString('key', null, $_POST) ?? ''
@@ -259,7 +267,7 @@ SELECT id
                                     throw new \LogicException('Invalid comment action: ' . $comment_action);
                             }
                             if ($perform_redirect) {
-                                $this->util->redirect($url_self);
+                                $this->redirectResponder->redirect($url_self);
                             }
                             unset($_POST['content']);
                         }
@@ -267,22 +275,22 @@ SELECT id
                     }
                     break;
                 case 'delete_comment':
-                    $this->util->checkPwgToken();
-                    $this->util->checkInputParameter('comment_to_delete', $_GET, false, ValidationPattern::ID);
+                    $this->csrfService->check();
+                    $this->inputValidator->check('comment_to_delete', $_GET, false, ValidationPattern::ID);
                     $author_id = $this->commentService->getCommentAuthorId($this->stringUtil->inputInt('comment_to_delete', null, $_GET) ?? 0);
                     if ($this->permissionService->canManageComment('delete', $author_id)) {
                         $this->commentService->deleteUserComment($this->stringUtil->inputInt('comment_to_delete', null, $_GET) ?? 0);
                     }
-                    $this->util->redirect($url_self);
+                    $this->redirectResponder->redirect($url_self);
                     break;
                 case 'validate_comment':
-                    $this->util->checkPwgToken();
-                    $this->util->checkInputParameter('comment_to_validate', $_GET, false, ValidationPattern::ID);
+                    $this->csrfService->check();
+                    $this->inputValidator->check('comment_to_validate', $_GET, false, ValidationPattern::ID);
                     $author_id = $this->commentService->getCommentAuthorId($this->stringUtil->inputInt('comment_to_validate', null, $_GET) ?? 0);
                     if ($this->permissionService->canManageComment('validate', $author_id)) {
                         $this->commentService->validateUserComment($this->stringUtil->inputInt('comment_to_validate', null, $_GET) ?? 0);
                     }
-                    $this->util->redirect($url_self);
+                    $this->redirectResponder->redirect($url_self);
                     break;
             }
         }
@@ -659,7 +667,7 @@ SELECT *
         }
 
         $picIdRaw = $currentPic['id'] ?? null;
-        $this->util->pwgLog((is_int($picIdRaw) || is_string($picIdRaw)) ? $picIdRaw : null, 'picture');
+        $this->activityLogger->pageView((is_int($picIdRaw) || is_string($picIdRaw)) ? $picIdRaw : null, 'picture');
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

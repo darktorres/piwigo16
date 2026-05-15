@@ -6,6 +6,9 @@ namespace Piwigo\Bootstrap;
 
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\UpgradeService;
 use Piwigo\Config\Config;
@@ -21,11 +24,11 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\DeviceDetectionService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Image\ImageStdParams;
@@ -129,7 +132,7 @@ final class CommonBootstrap
 
         if (!Config::checkUpgradeFeed()) {
             if (!Config::has('piwigo_db_version') or Config::piwigoDbVersion() != AppInfo::branchFromVersion(AppInfo::VERSION)) {
-                Kernel::service(Util::class)->redirect(UrlService::getRootUrl() . 'index.php?/upgrade');
+                Kernel::service(RedirectResponder::class)->redirect(UrlService::getRootUrl() . 'index.php?/upgrade');
             }
         }
 
@@ -145,7 +148,7 @@ final class CommonBootstrap
         if (!Config::has('piwigo_installed_version')) {
             Kernel::service(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         } elseif (Config::piwigoInstalledVersion() != AppInfo::VERSION) {
-            Kernel::service(Util::class)->pwgActivity('system', ActivitySystem::Core, 'autoupdate', ['from_version' => Config::piwigoInstalledVersion(), 'to_version' => AppInfo::VERSION]);
+            Kernel::service(ActivityLogger::class)->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'autoupdate', ['from_version' => Config::piwigoInstalledVersion(), 'to_version' => AppInfo::VERSION]));
             Kernel::service(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         }
 

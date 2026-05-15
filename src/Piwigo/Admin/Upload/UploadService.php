@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Upload;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityEvent;
+use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Image\PwgImage;
@@ -17,7 +20,6 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\ConfigException;
@@ -48,7 +50,7 @@ final readonly class UploadService
         private MetadataAdminService $metadataAdminService,
         private StringUtil $stringUtil,
         private UserAdminService $userAdminService,
-        private Util $util,
+        private ActivityLogger $activityLogger,
     ) {
     }
 
@@ -233,7 +235,7 @@ final readonly class UploadService
             }
             Dml::singleInsert(Tables::images(), $insert);
             $imageId = (int) $this->conn->lastInsertId();
-            $this->util->pwgActivity('photo', $imageId, 'add');
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, 'add'));
         }
 
         $this->addUploadedFileAddToCategories($imageId, $categories);
@@ -325,7 +327,7 @@ final readonly class UploadService
             $formatId  = (int) $this->conn->lastInsertId();
             $addStatus = 'add';
         }
-        $this->util->pwgActivity('photo', $formatOf, 'edit', ['action' => 'add format', 'format_ext' => $formatExt, 'format_id' => $formatId]);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, (int) $formatOf, 'edit', ['action' => 'add format', 'format_ext' => $formatExt, 'format_id' => $formatId]));
         $formatInfos = array_merge($insert, ['format_id' => $formatId]);
         EventDispatcher::notify('loc_end_add_format', $formatInfos);
         return $addStatus;

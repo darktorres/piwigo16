@@ -14,8 +14,8 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
+use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
@@ -52,7 +52,7 @@ final readonly class UsersEndpoints
         private UserAdminService $userAdminService,
         private UserRepository $userRepository,
         private UserService $userService,
-        private Util $util,
+        private CsrfService $csrfService,
         private WsHelper $wsHelper,
     ) {
     }
@@ -264,7 +264,7 @@ final readonly class UsersEndpoints
     /** @param array<mixed> $params */
     public function add(array $params, PwgServer &$service): mixed
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if (strlen(str_replace(' ', '', is_string($params['username']) ? $params['username'] : '')) === 0) {
@@ -288,7 +288,7 @@ final readonly class UsersEndpoints
     /** @param array<mixed> $params */
     public function getAuthKey(array $params, PwgServer &$service): mixed
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $authkey = $this->authService->createUserAuthKey(is_numeric($params['user_id']) ? (int) $params['user_id'] : 0);
@@ -301,7 +301,7 @@ final readonly class UsersEndpoints
     /** @param array<mixed> $params */
     public function delete(array $params, PwgServer &$service): PwgError|string
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $currentUser = CurrentUser::get();
@@ -322,7 +322,7 @@ final readonly class UsersEndpoints
     /** @param array<mixed> $params */
     public function setInfo(array $params, PwgServer &$service): mixed
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $updatedUsers = $this->userService->checkAndSaveUserInfos($params);
@@ -337,7 +337,7 @@ final readonly class UsersEndpoints
     /** @param array<mixed> $params */
     public function setMyInfo(array $params, PwgServer &$service): mixed
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if ($this->permissionService->isAGuest()) {
@@ -460,7 +460,7 @@ final readonly class UsersEndpoints
      */
     public function generatePasswordLink(array $params, PwgServer &$service): PwgError|array
     {
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $targetUserId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
@@ -506,7 +506,7 @@ final readonly class UsersEndpoints
         if (!$this->permissionService->isWebmaster()) {
             return new PwgError(403, 'You cannot perform this action');
         }
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $mainUserId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
@@ -535,7 +535,7 @@ final readonly class UsersEndpoints
         if ($this->permissionService->isAGuest() || !$this->authService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         if ($params['duration'] < 1 || $params['duration'] > 999999) {
@@ -559,7 +559,7 @@ final readonly class UsersEndpoints
         if ($this->permissionService->isAGuest() || !$this->authService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
         $revokePkid = is_string($params['pkid'] ?? null) ? $params['pkid'] : '';
@@ -582,7 +582,7 @@ final readonly class UsersEndpoints
         if ($this->permissionService->isAGuest() || !$this->authService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
         $editPkid = is_string($params['pkid'] ?? null) ? $params['pkid'] : '';
@@ -607,7 +607,7 @@ final readonly class UsersEndpoints
         if ($this->permissionService->isAGuest() || !$this->authService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if ($this->util->getPwgToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
         $apiKeys = $this->userService->getApiKey((string) CurrentUser::get()->id);

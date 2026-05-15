@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityLogger;
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\CategoryService;
@@ -14,8 +15,8 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
@@ -65,7 +66,8 @@ final readonly class GalleryController implements ControllerInterface
         private TagService $tagService,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
-        private Util $util,
+        private ActivityLogger $activityLogger,
+        private RedirectResponder $redirectResponder,
         private PaginationService $paginationService,
     ) {
     }
@@ -106,7 +108,7 @@ final readonly class GalleryController implements ControllerInterface
             } else {
                 $this->sessionService->unsetSessionVar('image_order');
             }
-            $this->util->redirect($this->urlService->duplicateIndexUrl([], ['start']));
+            $this->redirectResponder->redirect($this->urlService->duplicateIndexUrl([], ['start']));
         }
 
         $display = $this->stringUtil->inputString('display', null, $_GET);
@@ -137,7 +139,7 @@ final readonly class GalleryController implements ControllerInterface
         // Caddie filling
         if ($this->stringUtil->inputString('caddie', null, $_GET) !== null) {
             $this->imageRepository->addToUserCaddie(\Piwigo\Users\CurrentUser::get()->id, array_map(static fn (string $i): int => (int) $i, $items));
-            $this->util->redirect($this->urlService->duplicateIndexUrl());
+            $this->redirectResponder->redirect($this->urlService->duplicateIndexUrl());
         }
 
         // Canonical URL
@@ -364,7 +366,7 @@ final readonly class GalleryController implements ControllerInterface
             $catSlideshowUrl    = is_string($catSlideshowUrlRaw) ? $catSlideshowUrlRaw : '';
             if ($catSlideshowUrl !== '') {
                 if ($this->stringUtil->inputString('slideshow', null, $_GET) !== null) {
-                    $this->util->redirect($catSlideshowUrl);
+                    $this->redirectResponder->redirect($catSlideshowUrl);
                 } elseif (Config::indexSlideShowIcon()) {
                     $tpl->assign('U_SLIDESHOW', $catSlideshowUrl);
                 }
@@ -393,7 +395,7 @@ final readonly class GalleryController implements ControllerInterface
         $tpl->parseIndexButtons();
         $tpl->pparse('index.latte');
 
-        $this->util->pwgLog();
+        $this->activityLogger->pageView();
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

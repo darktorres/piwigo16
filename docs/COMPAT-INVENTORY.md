@@ -11,6 +11,7 @@ Last deep-verified: 2026-05-14. Last updated: 2026-05-14.
 - §10 tooling drift outside `src/`: the `NoGlobalInSrcRule` PHPStan rule has stale replacement advice (points at deleted `PersistentCacheRegistry`); `index.php` writes `$GLOBALS['prefixeTable']` directly in two fast-path branches; `psalm.xml` suppresses a check with a "legacy-compatibility bridges" comment. Tests legitimately seed `$GLOBALS` for fixtures. See §10.
 - §11 legacy `define()` constants — a parallel shim mechanism the inventory had not covered at all: 105 `define()` calls in `src/` form three legacy patterns — runtime context flags (`IN_ADMIN`, `IN_WS`, `PHPWG_IN_UPGRADE`), web-service constant bridges (13 `WS_*` constants mirroring `WsParam`/`WsType` enums), SQL table-name constants (30+ defined in `UpgradeService` for legacy upgrade queries), plus a brittle `CURRENT_DATE` constant with inconsistent definitions across three controllers, and a `xmlrpc_encode()` call in `PwgXmlRpcEncoder` that depends on a PHP extension removed in 8.1. See §11.
 - §12 vendor & template-engine shims — `pclzip/pclzip` (PHP 4-era zip library) still used in 4 admin files instead of native `ZipArchive`; `openpsa/universalfeedcreator` extended by `PiwigoFeedCreator`; `ahand/mobileesp` (`uagent_info` class) used in 3 places for mobile UA detection. The `Template/Latte/PiwigoExtension.php` is a 700+-line Smarty-compatibility layer that ports `default`, `strip_tags`, `date_format`, `cat:`, `html_options`, `html_radios`, `math` and other Smarty modifiers/blocks to Latte — needed because the .latte templates use Smarty-style surface syntax. `PwgImage::__call()` magic dispatch over `ImageImagick`/`ImageExtImagick`. See §12.
+- §13 PHPStan tooling stubs & extensions — `tools/phpstan-bootstrap.php` declares 11 legacy `global $foo` placeholders (8 already removed), duplicates 13 `WS_*` runtime defines, and provides 7 stub `plugin_*`/`theme_*` procedural callbacks. Two phpstan extensions are dead: `PwgGetSessionVarDynamicReturnType` types a function that no longer exists, and `TriggerChangeDynamicReturnType` is misnamed (actually targets `EventDispatcher::dispatch`). `tools/triggers_list.php` is a 1136-line plugin-author doc using legacy `trigger_change`/`trigger_notify` terminology. See §13.
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -562,4 +563,75 @@ Already covered in §11.5. The PHP `xmlrpc` extension is itself a deprecated ven
 
 ---
 
-**End of inventory.** This document is the source of truth for what's left of the 16.x rewrite's compatibility surface, audited 2026-05-14 across the entire repository (not just `src/`).
+## 13. PHPStan Tooling Stubs & Stale Extensions
+
+A fifth-pass audit on 2026-05-14 read `phpstan.neon`, its bootstrap files, and every rule under `tools/phpstan/`. The static-analysis tooling carries more drift than the production code does:
+
+### 13.1 `tools/phpstan-bootstrap.php` — Stale Global Placeholders
+
+This bootstrap file is referenced from `phpstan.neon` (`bootstrapFiles: - tools/phpstan-bootstrap.php`). It runs only at PHPStan analysis time. Three sections of stale content:
+
+**A. Legacy global placeholders** (lines 14-35) — declares `@var` types for 11 globals so PHPStan can resolve `global $foo` references. 8 of these were already migrated:
+
+| Variable | Status in production code |
+|---|---|
+| `$prefixeTable` | Active (`§8`) |
+| `$user` | **Removed** — typed via `CurrentUser` (§1.6) |
+| `$page` | Bridge alias still active (§1.1) |
+| `$lang` | **Removed** — `Lang::attachGlobals` unsets it (§1.2) |
+| `$template` | **Removed** (§1.3) |
+| `$logger` | **Removed** — replaced by `LoggerRegistry` |
+| `$filter` | Active (§8) |
+| `$pwg_event_handlers` | **Removed** — `EventDispatcher` (§1.5) |
+| `$pwg_loaded_plugins` | **Removed** — `LoadedPluginRegistry` (§1.4) |
+| `$service` | Now `PwgServerRegistry::current()` |
+| `$persistent_cache` | **Deleted entirely** — class deleted in §3 |
+
+**B. Runtime constant duplicates** (lines 37-65) — re-declares 13 `WS_*` constants, plus `IN_ADMIN`, `PHPWG_DOMAIN`, `PHPWG_URL`, `PEM_URL`, `PHOTOS_ADD_BASE_URL`. These are stubs of the runtime defines from §11; PHPStan needs them for static-time const resolution. Not strictly stale, but a parallel maintenance burden — any rename in §11 has to be mirrored here.
+
+**C. Procedural plugin/theme callbacks** (lines 75-103) — stubs `plugin_install`, `plugin_activate`, `plugin_deactivate`, `plugin_uninstall`, `theme_activate`, `theme_deactivate`, `theme_delete`. These are the legacy free-function plugin contract; since the policy is plugins are being rewritten ("v17.0 intentionally breaks all PEM extensions"), the callback contract itself is dead. Stubs can be removed when the plugin-loader path that calls them is removed.
+
+### 13.2 `tools/phpstan/PwgGetSessionVarDynamicReturnType.php` — Dead Extension
+
+The extension teaches PHPStan that `pwg_get_session_var($key, $default)` returns the same type as `$default`. The class docstring (line 17) refers to "`Kernel::service(SessionService::class)->getSessionVar()`" but the extension checks for the **free function** `pwg_get_session_var`:
+
+```
+return $functionReflection->getName() === 'pwg_get_session_var';
+```
+
+A whole-repo grep finds **zero** call sites of `pwg_get_session_var` outside this file. The function was migrated to `SessionService::getSessionVar()`, but the extension still targets the deleted free function. **Safe to delete the extension and unregister from `phpstan.neon`.**
+
+### 13.3 `tools/phpstan/TriggerChangeDynamicReturnType.php` — Misnamed
+
+Class is called `TriggerChangeDynamicReturnType` — name comes from the legacy `trigger_change()` free function (the plugin-event dispatcher's old name). The implementation actually targets `\Piwigo\Plugins\EventDispatcher::dispatch()`:
+
+```
+public function getClass(): string { return \Piwigo\Plugins\EventDispatcher::class; }
+public function isStaticMethodSupported(...) { return $methodReflection->getName() === 'dispatch'; }
+```
+
+The class is **functionally correct** but the name is a fossil. Rename to `EventDispatcherDispatchDynamicReturnType` (or shorter) to match what it actually does.
+
+### 13.4 `tools/triggers_list.php` — Stale Terminology
+
+1136-line documentation file listing every event the codebase dispatches, intended for plugin authors. Uses legacy `'type' => 'trigger_change'` / `'type' => 'trigger_notify'` terminology that mirrors the legacy free-function names (the modern equivalents are `EventDispatcher::dispatch()` and `EventDispatcher::notify()`).
+
+Also contains 4 references to `'files' => array('include/functions.inc.php', ...)` — pointing at a directory that no longer exists in 16.x.
+
+**Not a runtime shim** — it's a reference doc — but the terminology and dead path references would mislead any plugin author trying to use it. Either delete (plugins are being rewritten) or rename the type strings to match `EventDispatcher` method names.
+
+### 13.5 `set_error_handler(static fn (): bool => true)` — Typed `@` Replacement
+
+10 call sites in `Core/StringUtil.php` (×3), `Admin/AdminService.php` (×3), `Core/Filesystem.php` (×4) use this idiom:
+
+```
+set_error_handler(static fn (): bool => true);
+try { /* operation that might emit warnings */ }
+finally { restore_error_handler(); }
+```
+
+This is the **typed replacement** for the `@` error-suppression operator (which is forbidden by `NoErrorSuppressionRule`). It's the recommended pattern, not a shim — flagged here because it's the only error-handling primitive used outside the framework's own pipeline. Adding it to the inventory so future audits don't mistake it for boot-shim code.
+
+---
+
+**End of inventory.** This document is the source of truth for what's left of the 16.x rewrite's compatibility surface. Audited across the entire repository (`src/`, `tools/`, `tests/`, `install/`, root entry points, vendor dependencies, static-analysis tooling, build config) on 2026-05-14.

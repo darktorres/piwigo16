@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Detection\MobileDetect;
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
@@ -443,11 +444,12 @@ final readonly class Util
         $rawDevice = $this->sessionService->getSessionVar('device', '');
         $device = is_string($rawDevice) ? $rawDevice : '';
         if ($device === '') {
-            $uagentObj = new \uagent_info();
-            if ($uagentObj->DetectSmartphone()) {
-                $device = 'mobile';
-            } elseif ($uagentObj->DetectTierTablet()) {
+            // MobileDetect::isMobile() returns true for tablets too, so check tablet first.
+            $detect = new MobileDetect();
+            if ($detect->isTablet()) {
                 $device = 'tablet';
+            } elseif ($detect->isMobile()) {
+                $device = 'mobile';
             } else {
                 $device = 'desktop';
             }

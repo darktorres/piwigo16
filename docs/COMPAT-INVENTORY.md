@@ -30,7 +30,7 @@ defer to this table.
 | Phase | Title | Status | Gates | Parallelism |
 |---|---|---|---|---|
 | **1** | Doc-drift cleanups | ✓ Closed 2026-05-15 | — | — |
-| **2** | Legacy `define()` migrations | Open (2a ✓, 2b ✓, 2c ✓, 2d ✓, 2e–2h open) | none | 2e–2h independent |
+| **2** | Legacy `define()` migrations | Open (2a ✓, 2b ✓, 2c ✓, 2d ✓, 2e ✓, 2f–2h open) | none | 2f–2h independent |
 | **3** | `$GLOBALS` channel migrations | ✓ Closed 2026-05-15 | — | — |
 | **4a** | `$filter` → `FilterContext` VO | ✓ Closed 2026-05-15 | — | — |
 | **4b** | `header_msgs` / `header_notes` → `PageState` | ✓ Closed 2026-05-15 | — | — |
@@ -55,6 +55,7 @@ defer to this table.
 - §Z16 — Phase 2b `*_TABLE` constant migration (2026-05-15)
 - §Z17 — Phase 2c PclZip → ZipArchive migration (2026-05-15)
 - §Z18 — Phase 2d `xmlrpc_encode()` removal (2026-05-15)
+- §Z19 — Phase 2e MobileEsp → mobiledetect/mobiledetectlib swap (2026-05-15)
 
 ---
 
@@ -168,126 +169,15 @@ the `XML RPC` option removed from `tools/ws.htm` (developer API tester).
 
 Detail → [Appendix A §Z18](#z18-phase-2d-xmlrpc_encode-removal).
 
-## Phase 2e — MobileEsp dep replacement  [A4.3]
+## Phase 2e — MobileEsp dep replacement  [A4.3] ✓
 
-Retire the `ahand/mobileesp` Composer dep (`\uagent_info`, ~2010-era
-regex-based UA-detection library). The dep goes; the consumers stay.
+Closed 2026-05-15. `ahand/mobileesp` (`\uagent_info`, ~2010-era regex-based
+UA-detection library) replaced with `mobiledetect/mobiledetectlib: ^4.8`
+(actively maintained, namespaced `Detection\MobileDetect`). The dep
+swapped; every consumer of the UA classification (mobile-theme switcher,
+iOS banner guards) is preserved unchanged.
 
-The **mobile-theme switching feature** stays. Some Piwigo themes are
-mobile-specific (declared via `'mobile' => true` in themeconf); desktop
-themes aren't always responsively designed, so switching to a separate
-theme for mobile visitors is a real, load-bearing feature. Phase 2e
-only swaps MobileEsp's UA-detection backend — every consumer (Util,
-Themes, CommonBootstrap, PageTailRenderer, Config schema, Latte filter,
-mobile-theme config key) is preserved.
-
-### What MobileEsp is used for
-
-3 direct `\uagent_info` instantiations, each calling a single method:
-
-| File:Line | Method | Used to |
-|---|---|---|
-| `Core/Util.php:446` (in `getDevice()`) | `DetectSmartphone()` + `DetectTierTablet()` | Classify visitor as `'mobile' \| 'tablet' \| 'desktop'`. Cached in `$_SESSION['device']`. Feeds `Util::mobileTheme()` → `CommonBootstrap` theme switch + `PageTailRenderer` toggle link |
-| `Controller/Admin/PhotoController.php:614` | `DetectIos()` | Hide "promote mobile apps" admin-dashboard banner if user is on iOS |
-| `Controller/Admin/MiscController.php:574` | `DetectIos()` | Hide "newsletter signup" admin-dashboard banner if user is on iOS |
-
-That's the entirety of MobileEsp's surface. Everything else
-(`Util::mobileTheme`, `Config::mobilTheme`, `Admin/Themes.php` mobile-flag
-plumbing, the Latte `get_device` filter, the `PageTailRenderer` toggle
-link) is downstream — feature code that *uses* the UA classification but
-isn't tied to MobileEsp specifically.
-
-### Picking a replacement
-
-UA-string parsing is fiddly: iPadOS 13+ identifies as macOS Safari unless
-you check for `(iPad)`-shaped artifacts or touch-event support; Android
-tablet detection is a "not Mobile" heuristic that breaks against custom
-skins; new Apple/Samsung devices keep adding string quirks. Off-the-shelf
-libraries encode hard-won pattern knowledge that we don't want to maintain
-ourselves.
-
-Modern alternatives surveyed:
-
-- **`Sec-CH-UA-Mobile` / `Sec-CH-UA-Platform`** request headers — Chromium
-  (89+), Firefox (127+, 2024), Edge (89+) send them. **Safari does not.**
-  Since Safari is the dominant browser on iOS (and macOS), Client Hints
-  alone don't cover the mobile/iOS-detection cases we care about. Useful
-  as a *prefer-when-present* signal layered on top of UA-string parsing,
-  not a replacement.
-- **`mobiledetect/mobiledetectlib` v4** — the actively maintained modern
-  equivalent of MobileEsp (same lineage, completely rewritten for v4 in
-  2023). Methods are nearly drop-in for our use case
-  (`isMobile()`, `isTablet()`, `is('iOS')`). ~150 KB of source, namespaced
-  (`Detection\MobileDetect`), test-covered, gets pattern updates as new
-  devices ship. **Recommended.**
-- **`matomo/device-detector`** — ML-trained against ~60k device models.
-  Excellent quality, heavier (~10× the footprint of mobiledetect), built
-  for analytics dashboards that need to render "iPhone 15 Pro Max" in a
-  chart. Overkill for three boolean classifications.
-- **Roll our own three-regex helper** — feasible (~30 LOC) but freezes the
-  regex set in time. Every new iOS major / Android skin / device form
-  factor becomes our maintenance debt. The maintenance argument is the
-  one that actually decides this — a library catches new UA quirks
-  upstream; we'd only notice ours when something visibly breaks.
-
-### Recommended path
-
-1. **Add `mobiledetect/mobiledetectlib: ^4.8` to `composer.json`**
-   `require` block. The package is namespaced and shares no symbols with
-   MobileEsp.
-2. **Swap the 3 call sites** to instantiate `Detection\MobileDetect` (or
-   inject a singleton via the DI container — match the pattern used by
-   neighbouring services in each file):
-   - `Core/Util.php:441-457` (`getDevice()` body) — replace the
-     `\uagent_info` instantiation with `MobileDetect`. The current
-     classification is `mobile`/`tablet`/`desktop`; map as
-     `isTablet() ? 'tablet' : (isMobile() ? 'mobile' : 'desktop')`
-     (`isMobile()` returns true for tablets too in mobiledetect, so the
-     order matters).
-   - `Controller/Admin/PhotoController.php:614-615` — replace
-     `$uagent_obj->DetectIos()` with `$detect->is('iOS')`.
-   - `Controller/Admin/MiscController.php:574-575` — same swap.
-3. **Optionally layer `Sec-CH-UA-Mobile`** into `getDevice()`: when the
-   header is present and the user-agent is mobile per the header, trust
-   it; otherwise fall back to `MobileDetect`. This shaves a regex pass on
-   Chromium-family browsers but is not required for correctness.
-4. **Drop `ahand/mobileesp` from `composer.json`**; `composer update`
-   refreshes the lock and removes `vendor/ahand/`.
-5. **Optional**: add a unit test covering a small matrix of UA strings
-   (iOS Safari, Android Chrome, iPadOS Safari masquerading as macOS,
-   Android tablet, desktop Chrome, desktop Safari) — locks down the
-   classification mapping in `getDevice()` so future MobileDetect version
-   bumps don't silently change behaviour.
-
-### Out of scope for Phase 2e
-
-The mobile-theme switching feature itself stays as-is. Specifically the
-following are **not** touched in this phase:
-
-- `Util::mobileTheme()` — keep
-- `Util::getDevice()` — keep (becomes a thin wrapper over the new helper)
-- `Config::mobilTheme()` accessor and `mobile_theme` config schema entry — keep
-- `Admin/Themes.php` mobile-flag activation guard / config writes / themeconf parse — keep
-- `Bootstrap/CommonBootstrap.php:240-242` theme switch — keep
-- `Page/PageTailRenderer.php:70-77` toggle link — keep
-- `Template/Latte/PiwigoExtension.php` `get_device` filter — keep
-- `Util::getPwgThemes(bool $showMobile)` parameter — keep
-
-If any of those need follow-up cleanup (e.g., the `get_device` Latte
-filter has **zero in-template consumers** today across in-tree themes —
-audit 2026-05-15), that's a separate phase, not Phase 2e.
-
-### Behavioural deltas after removal
-
-None visible to users or admins. The UA classifications produced by the
-inline regexes match MobileEsp's output for the cases that matter
-(`DetectSmartphone`, `DetectTierTablet`, `DetectIos` are themselves
-regex-only on these patterns); the rest of the system reads those
-classifications unchanged.
-
-**Enables:** [Phase 5](#phase-5--utilphp-split-a51) — eventually `Util.php`
-loses `getDevice()` and `mobileTheme()` to the new home for device-related
-logic. Phase 2e gets out of Phase 5's way; it doesn't do Phase 5's work.
+Detail → [Appendix A §Z19](#z19-phase-2e-mobileesp-mobiledetect-swap).
 
 ## Phase 2f — `CURRENT_DATE` inconsistency  [A3.4]
 
@@ -706,10 +596,10 @@ Update the "Smarty templates" header to "Latte" at the same time.
    all standalone
 
    Phase 2a (WS_*)        ──┐
-   Phase 2b (*_TABLE)     ──┤  done 2026-05-15
-   Phase 2c (PclZip)      ──┤  (see Appendix A §Z15–§Z18)
-   Phase 2d (xmlrpc)      ──┘
-   Phase 2e (MobileEsp)      ──→  composer.json
+   Phase 2b (*_TABLE)     ──┤
+   Phase 2c (PclZip)      ──┤  done 2026-05-15
+   Phase 2d (xmlrpc)      ──┤  (see Appendix A §Z15–§Z19)
+   Phase 2e (MobileEsp)   ──┘
    Phase 2f (CURRENT_DATE)   ──→  (standalone)
    Phase 2g (FeedCreator)    ──→  composer.json
    Phase 2h (other defines, optional)
@@ -1418,6 +1308,105 @@ response any other unknown format produces.
   deletion (classmap count went 7469 → 7468).
 - Post-edit cross-tree grep: `grep -rEn "xmlrpc|XmlRpc|PwgXmlRpc"
   src/ tests/ tools/ composer.json` returns nothing.
+
+## Z19. Phase 2e MobileEsp → mobiledetect Swap
+
+Closed 2026-05-15. `ahand/mobileesp` (`\uagent_info`, ~2010-era regex-based
+UA-detection library) replaced with `mobiledetect/mobiledetectlib: ^4.8`.
+Pure dep swap — the mobile-theme switching feature is staying, every
+consumer is preserved.
+
+### Why a dep at all (vs. rolling our own)
+
+UA-string parsing is fiddly enough that a maintained library doing it for
+us is cheaper than catching corners ourselves. iPadOS 13+ identifies as
+macOS Safari unless you check for `(iPad)`-shaped artifacts or touch
+support; Android tablet detection is a "not Mobile" heuristic that breaks
+against custom skins; new Apple/Samsung devices keep adding string quirks.
+`mobiledetect/mobiledetectlib` v4 is the actively maintained successor to
+MobileEsp (same lineage, completely rewritten for v4 in 2023) and ships
+pattern updates as new devices appear.
+
+`Sec-CH-UA-Mobile` / `Sec-CH-UA-Platform` were surveyed as alternatives:
+they're cleaner protocol-wise, but Safari doesn't send them, and Safari is
+the dominant browser on iOS. Useful only as a *prefer-when-present* signal
+layered on top of the library, not a replacement. Not added in this phase
+to keep the diff narrow; trivial follow-up if a perf gain is wanted on
+Chromium-family browsers.
+
+`matomo/device-detector` was the third candidate — excellent but ~10× the
+footprint of mobiledetect, built for analytics dashboards needing model
+names. Overkill for three boolean classifications.
+
+### API mapping
+
+| MobileEsp call | mobiledetect equivalent |
+|---|---|
+| `new \uagent_info()` | `new \Detection\MobileDetect()` |
+| `$obj->DetectSmartphone()` | `$detect->isMobile()` **AND** `!$detect->isTablet()` (mobiledetect's `isMobile()` returns true for tablets too) |
+| `$obj->DetectTierTablet()` | `$detect->isTablet()` |
+| `$obj->DetectIos()` | `$detect->is('iOS')` |
+
+For `getDevice()`'s 3-way mobile/tablet/desktop classification, the
+order-of-checks matters: check `isTablet()` first, then `isMobile()`,
+otherwise tablets get classified as `'mobile'`.
+
+### Files touched
+
+- **`composer.json`** — `mobiledetect/mobiledetectlib: ^4.8` added to
+  `require`; `ahand/mobileesp: dev-master` removed.
+- **`composer.lock`** — regenerated; `vendor/ahand/` gone,
+  `vendor/mobiledetect/mobiledetectlib/` (v4.10.0) installed.
+- **`src/Piwigo/Core/Util.php`** — `getDevice()` body migrated:
+  `new \uagent_info()` → `new MobileDetect()`; tablet/mobile/desktop
+  classification reordered to check `isTablet()` before `isMobile()`;
+  `use Detection\MobileDetect;` import added.
+- **`src/Piwigo/Controller/Admin/PhotoController.php`** — banner UA guard
+  migrated: `$uagent_obj->DetectIos()` → `$detect->is('iOS')`;
+  `use Detection\MobileDetect;` import added.
+- **`src/Piwigo/Controller/Admin/MiscController.php`** — same migration
+  as PhotoController.
+
+No psalm/phpstan stubs were needed (the library is properly typed).
+
+### Behavioural deltas
+
+None visible to users or admins. Both libraries are regex-based UA
+classifiers; for the three classification queries Piwigo asks
+(`isSmartphone` / `isTablet` / `isIos`), the result spaces are
+functionally identical for current devices. mobiledetect is newer, so
+it'll correctly classify devices MobileEsp doesn't know about (e.g.,
+post-2010 Android tablets, iPad Air, etc.) — a strict improvement.
+
+### What was kept
+
+Every consumer of the UA classification stays. The mobile-theme switching
+feature is a real Piwigo feature (some themes are mobile-specific via
+`'mobile' => true` in themeconf), and remains untouched:
+
+- `Util::mobileTheme()`, `Util::getDevice()`
+- `Config::mobilTheme()` accessor + `mobile_theme` SCHEMA entry
+- `Admin/Themes.php` mobile-flag activation guard, config writes, themeconf parse
+- `Bootstrap/CommonBootstrap.php` theme switch
+- `Page/PageTailRenderer.php` toggle link
+- `Template/Latte/PiwigoExtension.php` `get_device` filter (zero in-template
+  consumers across in-tree themes today — eligible for separate cleanup,
+  not Phase 2e's job)
+- `Util::getPwgThemes(bool $showMobile)` parameter
+
+### Verification
+
+- `vendor/bin/phpstan analyse --no-progress` → 0 errors at level 10.
+- `vendor/bin/phpunit` (Unit + Integration) → 495 tests, 2418 assertions, OK
+  (no test count change — no test was targeting MobileEsp and no new test
+  was added; the swap is API-equivalent).
+- `composer dump-autoload --classmap-authoritative` run after the dep swap
+  (classmap 7468 → 7474, reflecting mobiledetect's namespace-loaded
+  classes).
+- Post-edit cross-tree grep: `grep -rEn "uagent_info|MobileEsp|mobileesp"
+  src/ tests/ tools/ composer.json` returns nothing.
+- `vendor/ahand/` directory removed by `composer remove`;
+  `vendor/mobiledetect/mobiledetectlib/` installed.
 
 ---
 

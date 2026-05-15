@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Detection\MobileDetect;
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
@@ -611,8 +612,8 @@ SELECT id
             $register_date = $this->userRepository->findEarliestRegistrationDate();
             $nb_cats       = $this->categoryRepository->countAll();
             $nb_images     = $this->imageRepository->countAll();
-            $uagent_obj    = new \uagent_info();
-            $tpl->assign('PROMOTE_MOBILE_APPS', (!$uagent_obj->DetectIos() && strtotime((string) $register_date) < strtotime('2 weeks ago') && $nb_cats >= 3 && $nb_images >= 30));
+            $detect = new MobileDetect();
+            $tpl->assign('PROMOTE_MOBILE_APPS', (!$detect->is('iOS') && strtotime((string) $register_date) < strtotime('2 weeks ago') && $nb_cats >= 3 && $nb_images >= 30));
         } else {
             $tpl->assign('PROMOTE_MOBILE_APPS', false);
         }

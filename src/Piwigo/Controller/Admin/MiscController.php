@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Detection\MobileDetect;
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
@@ -571,8 +572,8 @@ final class MiscController
             $register_date = $this->userRepository->findEarliestRegistrationDate();
             $nb_cats       = $this->categoryRepository->countAll();
             $nb_images     = $this->imageRepository->countAll();
-            $uagent_obj    = new \uagent_info();
-            if (!$uagent_obj->DetectIos() && strtotime((string) $register_date) < strtotime('2 weeks ago') && $nb_cats >= 3 && $nb_images >= 30) {
+            $detect = new MobileDetect();
+            if (!$detect->is('iOS') && strtotime((string) $register_date) < strtotime('2 weeks ago') && $nb_cats >= 3 && $nb_images >= 30) {
                 $userLang  = is_string($user['language'] ?? null) ? $user['language'] : '';
                 $userEmail = is_string($user['email'] ?? null) ? $user['email'] : '';
                 $intro_newsletter_data = ['email' => $userEmail, 'subscribe_base_url' => $this->adminService->getNewsletterSubscribeBaseUrl($userLang), 'old_newsletters_url' => $this->adminService->getOldNewslettersBaseUrl($userLang), 'str_subscribe_title' => Lang::t('Subscribe to our newsletter and stay updated!'), 'str_subscribe_button' => Lang::t('Sign up to the newsletter'), 'str_see_previous' => Lang::t('See previous newsletters'), 'str_dismiss' => Lang::t('Understood, do not show again')];

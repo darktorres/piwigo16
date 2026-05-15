@@ -33,9 +33,8 @@ defer to this table.
 | **4b** | `header_msgs` / `header_notes` → `PageState` | ✓ Closed 2026-05-15 | — | — |
 | **4c** | `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` → typed `RequestContext` | Open | none | — |
 | **4d** | `$lang_info` → `Lang` static state | ✓ Closed 2026-05-15 | — | — |
-| **5a** | `Util.php` split | Open | soft: Phase 2e + 4a (4a ✓) | — |
-| **5b** | Retire caddie | Open | soft: Phase 2b | — |
-| **6** | v17.0 plugin-API cutover | Sustained until v17 | soft: Phase 5b done first | single coordinated PR cluster |
+| **5** | `Util.php` split | Open | soft: Phase 2e + 4a (4a ✓) | — |
+| **6** | v17.0 plugin-API cutover | Sustained until v17 | none | single coordinated PR cluster |
 
 **Already shipped before this re-org** (Appendix A entries):
 
@@ -215,8 +214,10 @@ Only `UpgradeService.php` reads them inside `src/` — everywhere else uses
 3. Delete `*_TABLE` stubs from `tools/phpstan-bootstrap.php` and
    `tools/psalm-stubs.phpstub`.
 
-**Enables:** simpler caddie removal in [Phase 5b](#phase-5b--retire-caddie-a52)
-because `CADDIE_TABLE` goes with this batch.
+**Side benefit:** the `CADDIE_TABLE` constant defined alongside the rest in
+`UpgradeService.php:53` goes with this batch. (Caddie itself is a live admin
+feature — see [Phase 5](#phase-5--utilphp-split-a51), `fillCaddie` carve-out
+note.)
 
 ## Phase 2c — `PclZip` → `ZipArchive`  [A4.1]
 
@@ -270,7 +271,7 @@ without the `Util::mobileTheme()` / `getDevice()` branches.
   `Sec-CH-UA-Mobile` request header read from the PSR-7 request — keep the
   behaviour, drop the regex library.
 
-**Enables:** [Phase 5a](#phase-5a--split-utilphp-a51) — `Util.php` loses two
+**Enables:** [Phase 5](#phase-5--utilphp-split-a51) — `Util.php` loses two
 methods, the split gets smaller.
 
 ## Phase 2f — `CURRENT_DATE` inconsistency  [A3.4]
@@ -318,7 +319,7 @@ string literal in `Db/SqlExpr.php:70, 72, 74`.
 locale-derived strings — could become `Config` reads. `PWG_LOCAL_DIR`
 (`CommonBootstrap.php:78`) is a constant path. `MKGETDIR_*`
 (`Core/Util.php:41-45`) flag constants — promote to a typed enum that the
-new `Filesystem` service (Phase 5a) consumes.
+new `Filesystem` service (Phase 5) consumes.
 
 Conventional runtime config, not shims. Defer unless touching the surrounding
 code anyway.
@@ -352,7 +353,7 @@ mirroring `SectionContext` / `SectionContextRegistry`. Six readers migrated;
 `FilterMiddleware` builds one immutable `FilterContext` per request. Detail →
 [Appendix A §Z11](#z11-phase-4a-filtercontext-vo).
 
-**Enabled:** [Phase 5a](#phase-5a--split-utilphp-a51) — several `Util::*`
+**Enabled:** [Phase 5](#phase-5--utilphp-split-a51) — several `Util::*`
 methods that read `$GLOBALS['filter']` can now become DI injections.
 
 ## Phase 4b — `header_msgs` / `header_notes` → `PageState`  [A2] ✓
@@ -399,11 +400,9 @@ to `Lang`. Detail → [Appendix A §Z13](#z13-phase-4d-lang_info-lang-static-sta
 
 ---
 
-# Phase 5 — `Util.php` Split + Caddie Retirement
+# Phase 5 — `Util.php` Split  [A5.1]
 
-**Status:** open. Both tasks have soft dependencies on earlier phases.
-
-## Phase 5a — Split `Util.php`  [A5.1]
+**Status:** open. Soft dependencies on earlier phases.
 
 **Gates (soft):** [Phase 2e](#phase-2e--mobileesp-removal-a43) (drops
 `mobileTheme` / `getDevice`); [Phase 4a](#phase-4a--filter--filtercontext-vo-a2)
@@ -430,7 +429,7 @@ functions of the same name in `include/functions.inc.php`.
 | Filter state | `getFilterPageValue` |
 | Email | `getWebmasterMailAddress` |
 | Lounge (timed-publish staging) | `checkLounge` |
-| Caddie (legacy) | `fillCaddie` — see Phase 5b |
+| Caddie | `fillCaddie` (one orphan; the other caddie DB operations already live on `ImageRepository`) |
 
 Carve-out (names deliberately drop the `pwg` prefix — those are the legacy
 free-function names §A5.1 calls out as the smell):
@@ -455,6 +454,20 @@ free-function names §A5.1 calls out as the smell):
   `league/flysystem`, so the `Filesystem` component or a thin Flysystem
   wrapper subsumes it). Promote `MKGETDIR_*` flags (Phase 2h) to a typed enum
   if callers still need flag combinations; otherwise inline the defaults.
+- **`fillCaddie`** → `ImageRepository::addToUserCaddie()` (or sibling).
+  Caddie is a **live admin feature** — a per-admin selection basket surfaced
+  in the top admin menu (with photo-count badge), the gallery and picture
+  pages ("Add to caddie" buttons), and the Batch Manager (a `caddie`
+  prefilter plus `add_to_caddie` / `remove_from_caddie` / `empty_caddie`
+  actions); newly uploaded photos auto-populate it. Its DB operations
+  already live on `ImageRepository` (`deleteUserCaddie`,
+  `deleteUserCaddieByImageIds`, `deleteCaddieByImageIds`,
+  `countCaddieByUserId`); `fillCaddie` is the only orphan still on `Util`.
+  The `CADDIE_TABLE` define drops naturally with Phase 2b. **Not a removal
+  target** — earlier inventory framing of caddie as a "v1.x precursor to
+  batch_manager" was wrong; caddie and batch_manager are complementary
+  features (caddie = selection basket, batch_manager = the tool that
+  operates on selections).
 
 Update `Util::pwgActivity`'s signature to a typed `ActivityEvent` enum + DTO
 at the same time — the current
@@ -466,36 +479,17 @@ union signature is itself a smell.
 > paragraphs explaining is the symptom of `include/functions.inc.php`
 > heritage. The point of the split is to leave that behind.
 
-## Phase 5b — Retire caddie  [A5.2]
-
-**Gates (soft):** [Phase 2b](#phase-2b--_table-constant-migration-a33) (drops
-`CADDIE_TABLE` constant in the same batch).
-
-The "caddie" was the v1.x precursor to `batch_manager`. Replaced years ago in
-the UI but the machinery is fully preserved:
-
-| Surface | Location |
-|---|---|
-| DB table | `piwigo_caddie` (`element_id`, `user_id`) |
-| Typed accessor | `Db\Tables::caddie()` |
-| Upgrade constant | `define('CADDIE_TABLE', ...)` in `UpgradeService.php:53` |
-| WS API | `pwg.caddie.add` (registered in `WsMethodRegistrar.php:105`) |
-| Internal helper | `Util::fillCaddie()` |
-| Callers | `Ws\Method\GeneralEndpoints:262-269`, `Controller\Admin\PhotoController:606` |
-
-1. Confirm no in-tree caller uses `pwg.caddie.add` (frontend admin UI doesn't
-   surface a caddie tab; third-party usage breaks by policy).
-2. Delete WS method registration in `WsMethodRegistrar.php:105`.
-3. Delete `Util::fillCaddie()` and the two call sites.
-4. Doctrine migration: `DROP TABLE piwigo_caddie`.
-5. Delete `Db\Tables::caddie()` accessor.
-6. Phase 2b already deleted the `CADDIE_TABLE` constant.
-
 > **§A1 — `$page` reference bridge** was originally scheduled for Phase 5
 > (service-owned state was invasive enough to land alongside the Util split).
 > Shipped early on 2026-05-15. Closure record:
 > [Appendix A §Z1.1](#z1-wave-a-reference-bridges) and the supplementary
 > detail block in [§A1 closure](#a1-page-reference-bridge-closure-record).
+
+> **No §A5.2 / "caddie retirement" phase.** Earlier versions of this
+> inventory described caddie as a v1.x precursor to batch_manager and listed
+> it as a removal target. That was wrong — caddie is a live admin feature
+> (see the `fillCaddie` carve-out bullet above). The only Phase 5 work
+> related to caddie is moving `fillCaddie` off the `Util` god-class.
 
 ---
 
@@ -508,9 +502,7 @@ breaks all plugin-facing surface at once.
 layer for plugin authors. They are wired and load-bearing for plugins running
 today. Per policy (top of doc), they break at the v17.0 cutover, not before.
 
-**Hard dependency:** [Phase 5b](#phase-5b--retire-caddie-a52) must finish
-first (the caddie WS method is part of the legacy plugin API surface and
-goes away in 5b rather than here).
+**Hard dependency:** none. Phase 6 is independent of Phases 1–5.
 
 ## 6.1 Plugin/theme procedural contract  [P1]
 
@@ -689,7 +681,8 @@ Update the "Smarty templates" header to "Latte" at the same time.
    all standalone
 
    Phase 2a (WS_*)           ──→  phpstan + psalm stubs
-   Phase 2b (*_TABLE)        ──→  phpstan + psalm stubs ──→  Phase 5b (caddie)
+   Phase 2b (*_TABLE)        ──→  phpstan + psalm stubs
+                                   (also drops CADDIE_TABLE define)
    Phase 2c (PclZip)         ──→  composer.json, stubs
    Phase 2d (xmlrpc)         ──→  psalm stub
    Phase 2e (MobileEsp)      ──→  composer.json     ──┐
@@ -699,14 +692,13 @@ Update the "Smarty templates" header to "Latte" at the same time.
                                                       │
    Phase 3a (4 channels)  ──┐                         │
    Phase 3b (3 channels)  ──┼──  done 2026-05-15     │
-   Phase 4a ($filter)     ──┤  (see Appendix A)     ──┼──→  Phase 5a (Util split)
+   Phase 4a ($filter)     ──┤  (see Appendix A)     ──┼──→  Phase 5 (Util split)
    Phase 4b (header_*)    ──┤                         │
    Phase 4d (lang_info)   ──┘                         │
                                                       │
    Phase 4c (RequestCtx)     ──→  phpstan stubs       │
-                                                      │
-   Phase 5b (caddie)         ──────────────────────────┴──→ Phase 6
-   Phase 5a (Util split)
+
+   Phase 6 (v17 cutover)     ──  independent of Phases 1-5
    §A1 ($page alias)         ──  done 2026-05-15 (shipped early, §Z1.1)
 ```
 
@@ -714,10 +706,9 @@ Notes:
 
 - Phase 2 tasks are internally sequenced (code → runtime → stubs) but
   externally parallel.
-- Phase 3 / 4a / 4b / 4d are done; they unblock Phase 5a but Phase 5a also
+- Phase 3 / 4a / 4b / 4d are done; they unblock Phase 5 but Phase 5 also
   needs Phase 2e (MobileEsp).
-- Phase 6 only hard-depends on Phase 5b having retired the caddie. Every
-  other Phase 1-5 task is independent of Phase 6.
+- Phase 6 has no hard dependency on any other phase.
 
 ---
 

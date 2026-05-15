@@ -1430,7 +1430,7 @@ common case, a `RedirectResponse::to($url)` factory keeps it short.
 | `pwg_log(…)`                                   | PSR-3 `LoggerInterface` from the container                         |
 | `set_status_header()`, `redirect()`            | return `ResponseInterface` from the handler                        |
 | `script_basename()` (113 callsites)            | PSR-15 controllers know their route via request URI                |
-| `IN_ADMIN` constant                            | route-based admin gating in the dispatcher                         |
+| `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` constants | `RequestContextRegistry::current() === RequestContext::Admin\|Ws\|Upgrade` (Phase 4c §Z22) |
 | `PHPWG_ROOT_PATH` (1,041 file uses)            | constructor-inject `Piwigo\Core\PathService` or `string $rootPath` |
 | `defined('PHPWG_ROOT_PATH') or die(...)` guard | gone — controllers run only when routed                            |
 

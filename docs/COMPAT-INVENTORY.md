@@ -1732,8 +1732,28 @@ PHP-side `defined()` call remains.
 
 - `vendor/bin/phpstan analyse --no-progress` → 0 errors at level 10.
 - `vendor/bin/psalm --no-progress` → 0 errors.
-- `vendor/bin/phpunit --testsuite Unit` → 484 tests, 2224 assertions, OK.
+- `vendor/bin/phpunit` (Unit + Integration) → 503 tests, 2442 assertions, OK.
+- `composer dump-autoload --classmap-authoritative` re-run after the new
+  `Piwigo\Http\RequestContext` / `RequestContextRegistry` files were
+  added — required because the project pins `classmap-authoritative: true`,
+  so Apache PHP-FPM cannot autoload classes not in the classmap. A first
+  pass without this step produced 14 WS integration failures (Apache
+  returning 500 because the autoloader could not resolve the new classes);
+  the unit suite missed it because it doesn't exercise Apache.
 - Cross-tree grep: `grep -RnE '\bIN_ADMIN\b|\bIN_WS\b|\bPHPWG_IN_UPGRADE\b' src/ tests/ tools/` returns only intentional residuals: the `'IN_ADMIN'` template-variable string in `ProfileService:220` (see above), and docstring references to the retired flag names in the new `RequestContext.php` / `UpgradeService.php` migration notes.
+- Whole-tree `defined()` / `define()` sweep across `*.php` / `*.phpstub`
+  for the three flag names returns zero matches outside docstrings.
+
+### Doc-drift fixed alongside
+
+- `docs/STRUCTURE.md` `tools/phpstan-bootstrap.php` row no longer mentions
+  `IN_ADMIN=false` (that define was removed).
+- `ROADMAP.md` Forbidden-Patterns table line for `IN_ADMIN` updated to
+  cover all three retired flags and point at `RequestContextRegistry`.
+- `docs/DEFAULT-PLUGINS.md:69` (`If IN_ADMIN, includes admin/admin_boot.php`)
+  is **not** touched — that line describes the PiwigoOpenstreetmap
+  plugin's own source code, which is external and out of scope (per the
+  "plugins will be rewritten; external compat is not a blocker" policy).
 
 ---
 

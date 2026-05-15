@@ -1251,6 +1251,25 @@ shipping broken on every PHP install without an explicit PECL build for two
 major versions; REST/JSON cover all in-tree callers and all external API
 consumers we've observed in extension code.
 
+### XML-RPC was only an output format, never an input handler
+
+Worth being explicit because Phase 2d looks one-sided otherwise: XML-RPC in
+Piwigo was always *response*-side only. Looking at `PwgServer::boot()`:
+
+- `$requestFormat` is hardcoded to `'rest'`; the only concrete handler
+  subclass of `PwgRequestHandler` is `PwgRestRequestHandler`. Requests are
+  always REST-parsed.
+- Only `$responseFormat` (read from `$_GET['format']`) ever varied; the
+  encoder switch picked one of `rest` / `php` / `json` / `xmlrpc`.
+- There is no `pwg.xmlrpc` method, no XML-RPC RPC dispatcher, no separate
+  request-format `case 'xmlrpc':` to remove. Phase 2d is purely an
+  encoder-side removal.
+
+A request that arrives with `?format=xmlrpc` after this phase falls through
+the encoder switch with `$encoder = null` and gets the existing
+"Unknown response format" 400 (handled in `PwgServer::run()`) — the same
+response any other unknown format produces.
+
 ### What was deleted
 
 - **`src/Piwigo/Ws/Protocol/PwgXmlRpcEncoder.php`** — entire file (60 lines).
@@ -1259,10 +1278,7 @@ consumers we've observed in extension code.
 - **`src/Piwigo/Ws/PwgServer.php`** — `use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;`
   import dropped; the `case 'xmlrpc': $encoder = new PwgXmlRpcEncoder();`
   arm of the encoder-selection switch in `boot()` deleted. The switch now
-  has three live cases (`rest`, `php`, `json`); requests with
-  `?format=xmlrpc` fall through, `$encoder` stays null, and
-  `$server->setEncoder('xmlrpc', null)` is what
-  the request gets — same behavior as for any other unknown format.
+  has three live cases (`rest`, `php`, `json`).
 - **`tools/psalm-stubs.phpstub`** — `function xmlrpc_encode(mixed $value): string {}`
   stub (and its 3-line docblock explaining why it existed) deleted from
   the global namespace block.
@@ -1287,8 +1303,8 @@ consumers we've observed in extension code.
 - `composer.json`: no PECL `ext-xmlrpc` requirement was declared (the
   extension's removal from core meant the dependency would have been
   impossible to satisfy anyway).
-- External plugins that issued `pwg.xmlrpc` requests have been broken since
-  PHP 8.1; per the project rule, external compat is not a blocker.
+- External plugins that issued `?format=xmlrpc` API calls have been broken
+  since PHP 8.1; per the project rule, external compat is not a blocker.
 
 ### Verification
 

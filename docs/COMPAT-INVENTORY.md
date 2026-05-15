@@ -687,7 +687,7 @@ No code dependencies. All independent of each other and of every §A item.
 | Fix stale `include/`/`admin/` directory references in 22 files (§D1.2) | None — docstrings only | small |
 | Fix `psalm.xml` "legacy-compatibility bridges" comment (§D2.1) | None | trivial |
 | Rename `'trigger_change'`/`'trigger_notify'` `type` strings in `tools/triggers_list.php` to match modern `dispatch`/`notify` (§D3.5); fix 4 `include/functions.inc.php` path references | None — reference doc, the event names themselves are untouched | small |
-| Remove resolved-bridge `@var` placeholders from `tools/phpstan-bootstrap.php`: `$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$persistent_cache` (§D3.1A subset) | None — corresponding code is already gone (§Z1, §Z3) | trivial |
+| Remove resolved-bridge `@var` placeholders from `tools/phpstan-bootstrap.php`: `$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`, `$persistent_cache` (§D3.1A subset — 8 of 11) | None — corresponding code is already gone (§Z1, §Z3, plus `$logger`→`LoggerRegistry`, `$service`→`PwgServerRegistry`) | trivial |
 
 > Do NOT touch `NoGlobalInSrcRule` entries for `cache`, `themeconfs`, `filter`, `page`, `header_notes` yet — those globals are still active (see Phase 3/5). Only `persistent_cache` is dead-code at this point.
 
@@ -1029,8 +1029,8 @@ Part P are listed for completeness.
 | `include/` template subdir caveat | D1.3 | — | Awareness only, no task |
 | `psalm.xml` comments | D2.1 | 1 | Open |
 | `psalm-stubs.phpstub` cleanup | D2.2 | 2a/2b/2c/2d (per stub group) | Open |
-| `phpstan-bootstrap.php` closed-bridge stubs | D3.1A (7 of 11) | 1 | Open |
-| `phpstan-bootstrap.php` `$page`/`$filter`/`$prefixeTable` stubs | D3.1A (3 of 11) | 5 / 4a / 3b | Open |
+| `phpstan-bootstrap.php` closed-bridge stubs (8 vars) | D3.1A | 1 | Open |
+| `phpstan-bootstrap.php` `$page` / `$filter` / `$prefixeTable` stubs (3 vars, still active) | D3.1A | 5 / 4a / 3b | Open |
 | `phpstan-bootstrap.php` WS const stubs | D3.1B | 2a | Open |
 | `phpstan-bootstrap.php` plugin/theme callback stubs | D3.1C | 6 | Sustained until v17 |
 | Dead `PwgGetSessionVarDynamicReturnType` | D3.2 | 1 | Open |

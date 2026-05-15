@@ -497,11 +497,12 @@ Functionally correct, but the name lies. **Rename to
 
 Class docblock (line 18) claims "Legacy code in `include/` and `admin/` is
 allowed to keep using globals" — neither directory exists. `REPLACEMENTS`
-map (lines 31-48) has stale entries:
+map remaining stale entry:
 
 - `'persistent_cache' => 'PersistentCacheRegistry::current()'` — class deleted in §Z3
-- `'header_notes' => '$GLOBALS[\'header_notes\'] reference-bridge'` — wrong message
-- `'filter'` — description is self-referential
+
+(The previously-flagged `'header_notes'`, `'filter'`, `'themeconfs'` entries
+were dropped in §Z9/§Z11/§Z12 along with the underlying channels.)
 
 ### D3.5 `tools/triggers_list.php` — Stale Terminology
 

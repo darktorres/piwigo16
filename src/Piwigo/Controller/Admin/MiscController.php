@@ -375,7 +375,6 @@ final class MiscController
     {
         $tpl = TemplateRegistry::current();
 
-        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->setId('tags');
         $tabsheet->select('');
@@ -533,7 +532,6 @@ final class MiscController
             exit();
         }
 
-        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->setId('admin_home');
         $tabsheet->select('');
@@ -543,7 +541,7 @@ final class MiscController
             $nbPending = $this->commentRepository->countUnvalidated();
             if ($nbPending > 0) {
                 $message = Lang::t('User comments') . ' <i class="icon-chat"></i> ';
-                $message .= '<a href="' . $my_base_url . 'comments">';
+                $message .= '<a href="' . $this->urlGenerator->admin('comments') . '">';
                 $message .= Lang::t('%d waiting for validation', $nbPending);
                 $message .= ' <i class="icon-right"></i></a>';
                 PageState::current()->addMessage($message);
@@ -777,7 +775,6 @@ final class MiscController
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->setId('menus');
         $tabsheet->select('');
@@ -866,7 +863,6 @@ final class MiscController
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
         $tabsheet    = new Tabsheet();
         $tabsheet->setId('comments');
         $tabsheet->select('');

@@ -157,8 +157,6 @@ final class MaintenanceController
         ];
         $GLOBALS['maint_actions'] = $this->maintActions;
 
-        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
-
         $this->util->checkInputParameter('tab', $_GET, false, '/^(actions|env|sys)$/');
         $tab = isset($_GET['tab']) && is_string($_GET['tab']) ? $_GET['tab'] : 'actions';
 
@@ -1024,9 +1022,6 @@ final class MaintenanceController
             $this->util->checkPwgToken();
         }
 
-
-        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
-
         $tabsheet = new Tabsheet();
         $tabsheet->setId('site_update');
         $tabsheet->select('site_maager');
@@ -1156,8 +1151,6 @@ final class MaintenanceController
         if (count($this->imageAdminService->getPhotosNoMd5sum()) > 0) {
             $tpl->assign(['save_error' => new Html('<a href="' . $this->urlGenerator->admin('batch_manager') . '&amp;filter=prefilter-no_sync_md5sum">' . Lang::t('Some checksums are missing.') . '<i class="icon-right"></i></a>')]);
         }
-
-        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('site_update');

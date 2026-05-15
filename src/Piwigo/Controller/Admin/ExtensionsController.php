@@ -113,9 +113,6 @@ final readonly class ExtensionsController
     {
         $tpl = TemplateRegistry::current();
 
-        $my_base_url = $this->urlGenerator->admin('plugins');
-        $GLOBALS['my_base_url'] = $my_base_url;
-
         $tab = isset($_GET['tab']) && is_string($_GET['tab']) ? $_GET['tab'] : 'installed';
 
         $tabsheet = new Tabsheet();
@@ -445,9 +442,6 @@ final readonly class ExtensionsController
     {
         $tpl = TemplateRegistry::current();
 
-        $my_base_url = $this->urlGenerator->admin('themes');
-        $GLOBALS['my_base_url'] = $my_base_url;
-
         $tab = isset($_GET['tab']) && is_string($_GET['tab']) ? $_GET['tab'] : 'installed';
 
         $tabsheet = new Tabsheet();
@@ -741,9 +735,6 @@ final readonly class ExtensionsController
     {
         $tpl = TemplateRegistry::current();
 
-        $my_base_url = $this->urlGenerator->admin('languages');
-        $GLOBALS['my_base_url'] = $my_base_url;
-
         if (isset($_GET['tab'])) {
             $this->util->checkInputParameter('tab', $_GET, false, '/^(installed|update|new)$/');
         }
@@ -901,8 +892,6 @@ final readonly class ExtensionsController
         if (!Config::enableExtensionsInstall() && !Config::enableCoreUpdate()) {
             throw new ConfigException('update system is disabled');
         }
-
-        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin('updates');
 
         $tab = isset($_GET['tab']) && is_string($_GET['tab']) ? $_GET['tab'] : 'pwg';
 

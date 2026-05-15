@@ -61,7 +61,6 @@ final readonly class GroupsController
     private function groupList(): void
     {
         $tpl = TemplateRegistry::current();
-        $GLOBALS['my_base_url'] = $my_base_url = $this->urlGenerator->admin() . '&page=';
 
         $tabsheet = new Tabsheet();
         $tabsheet->setId('groups');

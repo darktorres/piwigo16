@@ -319,7 +319,6 @@ final class AlbumController
             }
         }
 
-        $GLOBALS['admin_album_base_url'] = $admin_album_base_url;
         $pageCat = $category['id'];
 
         if (isset($_POST['submitEmail'])) {
@@ -608,18 +607,15 @@ final class AlbumController
         }
 
         $category = $this->albumCategory;
-        $admin_album_base_url = $this->adminAlbumBaseUrl;
 
         if ($category === null) {
-            $cat_id_str           = $_GET['cat_id'];
-            $admin_album_base_url = $this->urlGenerator->admin('album-' . $cat_id_str);
-            $category             = $this->categoryRepository->findCategoryById((int) $cat_id_str);
+            $cat_id_str = $_GET['cat_id'];
+            $category   = $this->categoryRepository->findCategoryById((int) $cat_id_str);
             if ($category === null) {
                 throw new ValidationException('Invalid category');
             }
         }
 
-        $GLOBALS['admin_album_base_url'] = $admin_album_base_url;
         foreach (['comment', 'dir', 'site_id', 'id_uppercat'] as $nullable) {
             if (!isset($category[$nullable])) {
                 $category[$nullable] = '';
@@ -872,7 +868,7 @@ final class AlbumController
         }
         $pageCat = is_numeric($category['id'] ?? null) ? (int) $category['id'] : 0;
 
-        $GLOBALS['admin_album_base_url'] = $admin_album_base_url = $this->adminAlbumBaseUrl !== '' ? $this->adminAlbumBaseUrl : $this->urlGenerator->admin('album-' . $cat_id);
+        $admin_album_base_url = $this->adminAlbumBaseUrl !== '' ? $this->adminAlbumBaseUrl : $this->urlGenerator->admin('album-' . $cat_id);
 
         if (!empty($_POST)) {
             $this->util->checkPwgToken();

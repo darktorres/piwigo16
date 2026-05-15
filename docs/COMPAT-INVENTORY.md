@@ -651,37 +651,286 @@ Cross-class admin URL channels eliminated as of 2026-05-14;
 
 ---
 
-# Sequencing Recommendation
+# Sequencing Plan
 
-Roughly in order of effort × value × risk:
+Each task below is annotated with its **prerequisites** (must finish first)
+and **enables** (work that becomes easier or unblocked afterward). Most
+tasks are genuinely independent; the dependencies that exist are concentrated
+around tooling-stub updates (which must follow the runtime change they
+describe) and composer dependency removal (which requires all call sites
+migrated first).
 
-1. **Quick wins, no dependencies** — delete `PwgGetSessionVarDynamicReturnType`
-   (§D3.2); rename `TriggerChangeDynamicReturnType` (§D3.3); fix
-   `NoGlobalInSrcRule` stale entries (§D3.4); fix stale docstrings
-   (§D1.1, §D1.2); fix `psalm.xml` comments (§D2.1); update
-   `tools/triggers_list.php` `'type'` strings (§D3.5).
+## Pattern: Three-Phase Cleanup
 
-2. **Mechanical translations** — `WS_*` → `WsParam`/`WsType` enum reads
-   (§A3.2); `*_TABLE` → `Db\Tables::*()` (§A3.3); `PclZip` → `ZipArchive`
-   (§A4.1); `MobileEsp` removal (§A4.3); `xmlrpc_encode` → drop xmlrpc
-   protocol (§A3.5).
+Most §A removal targets follow the same three-phase shape:
 
-3. **Self-contained instance state** — `$GLOBALS['errors']`,
-   `$GLOBALS['themeconfs']`, `$GLOBALS['cache']`, `$GLOBALS['maint_actions']`
-   → instance properties (§A2).
+1. **Migrate call sites** in `src/` to the typed replacement.
+2. **Remove the runtime shim** (the `define()` block, the GLOBALS write, or
+   the composer dependency).
+3. **Clean up the static-analysis stubs** that described it
+   (`tools/phpstan-bootstrap.php`, `tools/psalm-stubs.phpstub`, the
+   `NoGlobalInSrcRule` GUARDED/REPLACEMENTS maps).
 
-4. **Cross-class typed contexts** — `$GLOBALS['filter']` → `FilterContext`;
-   `$GLOBALS['header_msgs']`/`['header_notes']` → `PageState` typed arrays
-   (§A2); `IN_ADMIN`/`IN_WS`/`PHPWG_IN_UPGRADE` → request attributes via
-   typed `RequestContext` middleware (§A3.1).
+Phase 3 always follows phase 2 (PHPStan and Psalm read the stubs at analyze
+time; removing a stub before the runtime is gone breaks the analyzer).
 
-5. **Larger refactors** — split `Util.php` into purpose-specific services
-   (§A5.1); retire `caddie` feature once we confirm no in-tree WS caller
-   (§A5.2); thread an explicit `PageContext` through Search/Calendar and
-   delete the `SectionInitializer:68` alias (§A1).
+## Phase 1 — Standalone Doc & Tooling Cleanup
 
-6. **v17.0 cutover (single PR cluster)** — break plugin/theme procedural
-   contract (§P1); rename 153-event plugin API (§P2); rewrite all 133
-   templates to native Latte and delete the Smarty compat layer (§P3);
-   delete frontend BC queues (§P4); delete the `pwg.caddie.add` WS method
-   and the legacy plugin-name `pwg_*` aliases in `Util.php`.
+No code dependencies. All independent of each other and of every §A item.
+
+| Task | Prereq | Effort |
+|---|---|---|
+| Delete `PwgGetSessionVarDynamicReturnType` extension (§D3.2) | None | trivial |
+| Rename `TriggerChangeDynamicReturnType` → `EventDispatcherDispatchDynamicReturnType` (§D3.3) | None — implementation already targets the new method | trivial |
+| Fix `NoGlobalInSrcRule.php` REPLACEMENTS for *dead* entries: `persistent_cache` only (§D3.4) | None — class is already deleted | trivial |
+| Fix stale comments in `UserBootstrap`, `AuthMiddleware`, `FilterMiddleware`, `Config`, `ConfigStorage`, `Translator`, `LanguageStack`, `CurrentUser` (§D1.1) | None — these assert about already-completed migrations | trivial |
+| Fix stale `include/`/`admin/` directory references in 22 files (§D1.2) | None — docstrings only | small |
+| Fix `psalm.xml` "legacy-compatibility bridges" comment (§D2.1) | None | trivial |
+| Rename `'trigger_change'`/`'trigger_notify'` `type` strings in `tools/triggers_list.php` to match modern `dispatch`/`notify` (§D3.5); fix 4 `include/functions.inc.php` path references | None — reference doc, the event names themselves are untouched | small |
+| Remove resolved-bridge `@var` placeholders from `tools/phpstan-bootstrap.php`: `$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$persistent_cache` (§D3.1A subset) | None — corresponding code is already gone (§Z1, §Z3) | trivial |
+
+> Do NOT touch `NoGlobalInSrcRule` entries for `cache`, `themeconfs`, `filter`, `page`, `header_notes` yet — those globals are still active (see Phase 3/5). Only `persistent_cache` is dead-code at this point.
+
+## Phase 2 — Mechanical Translations (Parallelisable)
+
+Each task here is internally a three-phase sequence (call sites → runtime
+shim → stubs). The four tasks are independent of each other and can be done
+in any order.
+
+### Phase 2a — `WS_*` constant migration (§A3.2)
+
+1. Migrate ~50 call sites in `Ws/Method/*Endpoints.php`,
+   `Ws/Protocol/PwgRestRequestHandler.php`, `Ws/WsHelper.php` from
+   `WS_ERR_INVALID_PARAM` etc. to `WsError::InvalidParam->value` /
+   `WsType::Int->value` / `WsParam::Optional->value`.
+2. Delete the `define()` block in `PwgServer::boot()` lines 471-485.
+3. Delete WS_* stubs from `tools/phpstan-bootstrap.php` and
+   `tools/psalm-stubs.phpstub`.
+4. Update `WsParam.php:10` docstring (currently references the deleted
+   `include/ws_core.inc.php`).
+
+**Enables:** Cleaner WS layer; nothing else hard-depends on this.
+
+### Phase 2b — `*_TABLE` constant migration (§A3.3)
+
+1. Rewrite legacy upgrade SQL in `Admin/UpgradeService.php` to use
+   `Piwigo\Db\Tables::*()` accessors.
+2. Delete the 30+ `define()` calls in `UpgradeService.php:33-58`.
+3. Delete `*_TABLE` stubs from `tools/phpstan-bootstrap.php` and
+   `tools/psalm-stubs.phpstub`.
+
+**Enables:** Simpler caddie removal (§A5.2) because `CADDIE_TABLE` goes with
+this batch.
+
+### Phase 2c — `PclZip` → `ZipArchive` (§A4.1)
+
+1. Rewrite 4 call sites: `Admin/Updates.php:600`, `Admin/Plugins.php:549`,
+   `Admin/Languages.php:273`, `Admin/Themes.php:511`.
+2. Remove `pclzip/pclzip` from `composer.json` (hard dep: all 4 must be
+   migrated first).
+3. Delete `PCLZIP_OPT_*` stubs (~20 constants) from
+   `tools/psalm-stubs.phpstub`.
+
+### Phase 2d — `xmlrpc_encode()` removal (§A3.5)
+
+1. Delete `Ws/Protocol/PwgXmlRpcEncoder.php`.
+2. Remove the `xmlrpc` case from encoder selection in `PwgServer.php:522`.
+3. Delete the `xmlrpc_encode` stub from `tools/psalm-stubs.phpstub` lines 6-9.
+
+### Phase 2e — MobileEsp removal (§A4.3)
+
+1. Delete or rewrite the 3 call sites: `Core/Util.php:452`,
+   `Controller/Admin/PhotoController.php:614`,
+   `Controller/Admin/MiscController.php:574`. The admin UI is responsive;
+   the detection paths are vestigial — simplest is to delete.
+2. Delete `Util::mobileTheme()` and `Util::getDevice()` (no other callers).
+3. Remove `ahand/mobileesp` from `composer.json`.
+
+**Enables:** Util.php split (§A5.1) loses two methods, becoming smaller.
+
+## Phase 3 — Self-Contained `$GLOBALS` → Instance State
+
+Four channels where writer and reader are the same class. Each is a 5-10
+line change.
+
+| Task | Prereq | Sub-steps |
+|---|---|---|
+| `$GLOBALS['errors']` → `LocalSiteReader::$errors` (§A2) | None | Migrate `LocalSiteReader.php:35-38`, drop `errors` from `NoGlobalInSrcRule` GUARDED |
+| `$GLOBALS['themeconfs']` → `Template::$themeconfs` (§A2) | None | Migrate `Template::loadThemeconf()` (line 485), drop `themeconfs` from GUARDED |
+| `$GLOBALS['cache']` → `UserService::$defaultUserCache` (§A2) | None | Migrate `UserService::getDefaultUserInfo()` (line 407), drop `cache` from GUARDED |
+| `$GLOBALS['maint_actions']` → `MaintenanceController::$maintActions` (§A2) | None | Already exists as instance prop; remove the GLOBALS mirror (line 158) |
+
+All four are mutually independent.
+
+## Phase 4 — Cross-Class Typed Contexts
+
+Each task touches multiple files and introduces a new typed VO/middleware.
+Independent of each other (and of Phases 1-3).
+
+### Phase 4a — `$GLOBALS['filter']` → `FilterContext` VO (§A2)
+
+1. Define `FilterContext` VO + registry (mirror `SectionContext` pattern).
+2. Migrate `CommonBootstrap` (init), `FilterMiddleware` (write),
+   `SectionInitializer:72` (reference mutation).
+3. Migrate readers: `CategoryService`, `FilterService`, `MenubarRenderer`,
+   `PermissionService`, `CalendarService`, `PictureController`.
+4. Remove `$filter` from `tools/phpstan-bootstrap.php`; drop `'filter'`
+   from `NoGlobalInSrcRule` GUARDED.
+
+**Enables:** Util.php split (§A5.1) — several `Util::*` methods read
+`$GLOBALS['filter']`; with a typed `FilterContext`, those become DI
+injections.
+
+### Phase 4b — `$GLOBALS['header_*']` → `PageState` properties (§A2)
+
+1. Add `PageState::$headerMessages` and `$headerNotes` as typed arrays.
+2. Migrate `CommonBootstrap` writes (lines 72-73, 264, 268, 284, 296, 299).
+3. Migrate `CheckIntegrity:72` write.
+4. Migrate `FilterMiddleware:54` (reference) and `CommonBootstrap:291-292`
+   (template assign).
+5. Drop `header_notes` from `NoGlobalInSrcRule` GUARDED.
+
+### Phase 4c — `IN_ADMIN`/`IN_WS`/`PHPWG_IN_UPGRADE` → typed `RequestContext` (§A3.1)
+
+1. Define `RequestContext` enum (`Admin`, `Ws`, `Upgrade`, `Gallery`,
+   `Derivative`) + PSR-7 request attribute.
+2. Middleware sets the attribute per route.
+3. Migrate read sites: `Page/PageHeaderRenderer.php:30`,
+   `Page/NoPhotoYetRenderer.php:39, 41`,
+   `Users/ProfileService.php:56, 60, 92, 150, 217`, `Core/Util.php:142`,
+   `Users/UserBootstrap.php:89, 119`,
+   `Admin/Upload/UploadService.php:167`.
+4. Delete `define('IN_ADMIN', true)` at `ExtensionsEndpoints.php:63, 87, 165`
+   and `define('IN_WS', true)` at `WsController.php:42`.
+5. Remove `IN_ADMIN`/`IN_WS` stubs from `tools/phpstan-bootstrap.php`.
+6. `PHPWG_IN_UPGRADE` is self-contained in `UpgradeService` — collapse to a
+   private static property.
+
+## Phase 5 — Large Refactors (Ordered)
+
+These have soft dependencies on earlier phases. The dependencies are not
+hard correctness requirements but make each step smaller / less risky.
+
+```
+Phase 2e (MobileEsp)        ──┐
+Phase 4a ($filter context)  ──┼──→  §A5.1 Util.php split
+                              ┘
+Phase 2b (*_TABLE migration) ──→  §A5.2 caddie retirement
+                                  └──→ also retires CADDIE_TABLE define
+Phase 2 + Phase 4           ──→  §A1 PageContext through Search/Calendar
+                                 (Phase 4a frees up $filter sub-call sites
+                                  in CalendarService that share the alias)
+```
+
+### §A5.1 — Split `Util.php` (recommended order after Phase 2e + 4a)
+
+Carve out:
+- `PwgLogger` (`pwgLog`, `pwgDebug`, `doLog`, `pwgActivity`)
+- `CsrfService` (`getPwgToken`, `checkPwgToken`)
+- `ExecutionMutex` (`pwgUniqueExecBegins`/`IsRunning`/`Ends`)
+- `RedirectResponder` (collapses `redirect`/`redirectHttp`/`redirectHtml` to one PSR-7-returning method)
+- `TelemetryService` (`sendPiwigoInfos`, `sendPiwigoInfosRetryLater`)
+- Extension enumeration helpers move to a `ThemeService` and `LanguageService`.
+- `mkgetdir` → static method on a `Filesystem` helper (or use `Symfony\Component\Filesystem`).
+
+Update `Util::pwgActivity` signature to typed `ActivityEvent` enum + DTO at
+the same time.
+
+### §A5.2 — Retire `caddie` (after Phase 2b)
+
+1. Confirm no in-tree caller uses `pwg.caddie.add` (frontend admin UI
+   doesn't surface a caddie tab; third-party usage breaks by policy).
+2. Delete WS method registration in `WsMethodRegistrar.php:105`.
+3. Delete `Util::fillCaddie()` and call sites in
+   `Ws\Method\GeneralEndpoints:262-269` and
+   `Controller\Admin\PhotoController:606`.
+4. Doctrine migration: `DROP TABLE piwigo_caddie`.
+5. Delete `Db\Tables::caddie()` accessor.
+6. Phase 2b already deleted the `CADDIE_TABLE` constant.
+
+### §A1 — `PageContext` through Search/Calendar (after Phases 2 & 4)
+
+1. Define mutable `PageContext` VO covering the keys still mutated via
+   `&$GLOBALS['page']` (search rules, chronology, root_path push/pop).
+2. Update method signatures to accept/return `PageContext` in:
+   `SearchService` (4 methods), `SearchFilterRenderer::render`,
+   `CalendarService::initializeCalendar`, `CalendarBase::render`,
+   `CalendarMonthly` (4 render methods), `UrlService::setMakeFullUrl`/
+   `unsetMakeFullUrl`, `PasswordService` (×2), `AuthService::authKeyLogin`,
+   `Util::pwgLog`, `PictureController`,
+   `MaintenanceController::history`, `GeneralEndpoints::historySearch`,
+   `UpgradeController` (×2).
+3. Delete the `$GLOBALS['page'] = &$page` alias in
+   `SectionInitializer.php:68`.
+4. Remove `$page` from `tools/phpstan-bootstrap.php`; drop `'page'` from
+   `NoGlobalInSrcRule` GUARDED.
+
+This is the biggest single refactor in §A.
+
+## Phase 6 — v17.0 Cutover (Single PR Cluster)
+
+Coordinated breakage of all plugin-facing surface (§P1–§P4). Independent of
+every Phase 1-5 task except that §A5.2 (caddie) is **already done** by the
+time this phase runs.
+
+| Task | Notes |
+|---|---|
+| Delete `Plugin/PluginService.php`, `Plugins/EventDispatcher.php` plugin-loader paths (§P1.1, §P1.4) | Drops `main.inc.php` `require_once` and the include_path-on-listener mechanism |
+| Delete `Admin/Plugins.php` pre-2.7 BC branching (§P1.2) | Single dead-code removal |
+| Delete `Admin/Themes.php` theme contract (§P1.3) | `themeconf.inc.php`, `admin/maintain.inc.php`, `admin.inc.php` |
+| Remove `plugin_*` / `theme_*` callback stubs from `tools/phpstan-bootstrap.php` (§P1.5) | Phase 1 didn't touch these; they live as long as §P1 does |
+| Rewrite the 153 plugin event names as PSR-14 typed events (§P2) | Touches every `EventDispatcher::dispatch/notify` call site |
+| Rewrite the 1136-line `tools/triggers_list.php` to match new event types or delete it (§P2.2, §D3.5) | Phase 1 already cleaned the `'type'` field strings; this phase deletes or reshapes the file |
+| Rewrite all 133 `.latte` templates to native Latte syntax (§P3) | Largest single piece of v17 work |
+| Delete `Template/Latte/PiwigoExtension.php` Smarty ports (§P3) | Becomes empty / mostly empty once templates are rewritten |
+| Delete frontend BC queues: `_pwgRatingAutoQueue`, `SwitchBox` drainers, `_cont` alias (§P4) | `rating.ts:150`, `switchbox.ts:35`, `albums.ts:522` |
+| Clean `src/types/globals.d.ts`: remove unused declarations, update "Smarty templates" header to "Latte" (§D4) | After templates rewritten, several declared globals can go |
+
+## Hard Dependencies — Summary Graph
+
+```
+                        ┌─────────────────────┐
+                        │ Phase 1 (parallel)  │  ──┐
+                        │ all standalone      │    │
+                        └─────────────────────┘    │
+                                                   │
+   Phase 2a (WS_*)     ──→  stubs (D3.1B, D2.2)   │
+   Phase 2b (*_TABLE)  ──→  stubs (D3.1B, D2.2)  ─┼──→  Phase 5
+   Phase 2c (PclZip)   ──→  composer.json, stubs  │    §A5.2 (caddie)
+   Phase 2d (xmlrpc)   ──→  stubs (D2.2)          │    after 2b
+   Phase 2e (MobileEsp)──→  composer.json        ─┼──→  §A5.1 split
+                                                   │    after 2e + 4a
+   Phase 3 (self-contained ×4)  ──→ GUARDED list ─┤
+                                                   │
+   Phase 4a ($filter)   ──→ phpstan stubs, GUARDED┤
+   Phase 4b (header_*)  ──→ GUARDED              ─┼──→  §A1 PageContext
+   Phase 4c (RequestCtx)──→ phpstan stubs, GUARDED│    after 2 + 4
+                                                   │
+                                              ┌────┴────┐
+                                              │ Phase 6 │
+                                              │ v17 cut │
+                                              └─────────┘
+```
+
+Notes:
+- Phase 2 tasks are internally sequenced (code → runtime → stubs) but
+  externally parallel.
+- Phase 3 tasks are mutually independent and don't gate anything.
+- Phase 4 tasks gate Phase 5 softly: Util.php split (§A5.1) benefits from
+  Phase 2e + 4a; PageContext refactor (§A1) benefits from Phase 4a (shared
+  sub-call sites in CalendarService).
+- Phase 6 only hard-depends on §A5.2 having retired the caddie — every
+  other §P task is independent of Phases 1-5.
+
+## Caveats
+
+- The plugin/theme procedural contract (§P1) and the 153-name event API
+  (§P2) sit behind every Phase 5 refactor. Splitting `Util.php` doesn't
+  reach those, but anything that touches event names or plugin-loader paths
+  is v17 territory.
+- The Smarty compat layer (§P3) is the largest piece of v17 work in terms
+  of touched files (133 templates). Estimate this independently of the
+  rest of §P.
+- `tools/triggers_list.php` (§D3.5 + §P2.2) shows up in two phases: the
+  `'type'`-string rename is Phase 1; the underlying event-name rewrite is
+  Phase 6.

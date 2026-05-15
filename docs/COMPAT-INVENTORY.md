@@ -12,6 +12,7 @@ Last deep-verified: 2026-05-14. Last updated: 2026-05-14.
 - §11 legacy `define()` constants — a parallel shim mechanism the inventory had not covered at all: 105 `define()` calls in `src/` form three legacy patterns — runtime context flags (`IN_ADMIN`, `IN_WS`, `PHPWG_IN_UPGRADE`), web-service constant bridges (13 `WS_*` constants mirroring `WsParam`/`WsType` enums), SQL table-name constants (30+ defined in `UpgradeService` for legacy upgrade queries), plus a brittle `CURRENT_DATE` constant with inconsistent definitions across three controllers, and a `xmlrpc_encode()` call in `PwgXmlRpcEncoder` that depends on a PHP extension removed in 8.1. See §11.
 - §12 vendor & template-engine shims — `pclzip/pclzip` (PHP 4-era zip library) still used in 4 admin files instead of native `ZipArchive`; `openpsa/universalfeedcreator` extended by `PiwigoFeedCreator`; `ahand/mobileesp` (`uagent_info` class) used in 3 places for mobile UA detection. The `Template/Latte/PiwigoExtension.php` is a 700+-line Smarty-compatibility layer that ports `default`, `strip_tags`, `date_format`, `cat:`, `html_options`, `html_radios`, `math` and other Smarty modifiers/blocks to Latte — needed because the .latte templates use Smarty-style surface syntax. `PwgImage::__call()` magic dispatch over `ImageImagick`/`ImageExtImagick`. See §12.
 - §13 PHPStan tooling stubs & extensions — `tools/phpstan-bootstrap.php` declares 11 legacy `global $foo` placeholders (8 already removed), duplicates 13 `WS_*` runtime defines, and provides 7 stub `plugin_*`/`theme_*` procedural callbacks. Two phpstan extensions are dead: `PwgGetSessionVarDynamicReturnType` types a function that no longer exists, and `TriggerChangeDynamicReturnType` is misnamed (actually targets `EventDispatcher::dispatch`). `tools/triggers_list.php` is a 1136-line plugin-author doc using legacy `trigger_change`/`trigger_notify` terminology. See §13.
+- §14 frontend shims — `src/types/globals.d.ts` documents 30+ ambient TS globals; its header comment says "Smarty templates" (stale; we're on Latte). Several declared globals (`var user`, `SwitchBox`, `_pwgRatingAutoQueue`, `preferencesDefaultValues`, …) are pre-load auto-queue patterns explicitly drained as "legacy queue" by `rating.ts:150` and `switchbox.ts:35` for plugin BC. `albums.ts:522` retains a window-global with a `// keep global for compatibility` comment. See §14.
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -634,4 +635,59 @@ This is the **typed replacement** for the `@` error-suppression operator (which 
 
 ---
 
-**End of inventory.** This document is the source of truth for what's left of the 16.x rewrite's compatibility surface. Audited across the entire repository (`src/`, `tools/`, `tests/`, `install/`, root entry points, vendor dependencies, static-analysis tooling, build config) on 2026-05-14.
+## 14. Frontend Shims (TypeScript / Latte Templates)
+
+The 16.x rewrite isn't only PHP — the frontend (TypeScript bundles compiled by Vite, ~40 entry points, served via `themes/`) has its own shim layer. Audited 2026-05-14 by reading `src/types/globals.d.ts`, all `themes/**/js/*.ts` files, and Latte template inline-script patterns.
+
+### 14.1 `src/types/globals.d.ts` — Ambient Globals Declaration
+
+109-line file declaring TypeScript ambient globals so the bundles can reference cross-bundle vars without TS errors. The header comment is stale:
+
+> "Ambient globals injected by **Smarty templates** via inline `<script>` tags or exposed to window by other bundles loaded earlier on the same page."
+
+Templates are Latte now, not Smarty — but the inline-script pattern continues. Categories of declared globals:
+
+| Category | Examples | Status |
+|---|---|---|
+| Template-emitted constants | `pwg_token`, `pwg_root_url`, `cookie_path`, `cookie_domain` | Now populated via `<script type="application/json" id="pwg-page-data">` JSON islands (modern), **not** legacy `<script>var x=...</script>` blocks. Declarations in `globals.d.ts` may be stale. |
+| Cross-bundle functions | `pwgBind`, `pwgAddEventListener`, `phpWGOpenWindow`, `pwgToaster`, `popuphelp`, `array_delete`, `str_repeat`, `getRandomInt`, `sprintf` | Active — defined in `themes/_base/js/scripts.ts` and assigned to `window` for cross-bundle access. Names mirror PHP (`array_delete`, `str_repeat`, `sprintf`) because these JS helpers were carried over from the Smarty era. |
+| Profile-specific i18n vars | `selected_date`, `no_time_elapsed`, `str_handle_error`, `str_copy_key_secret`, etc. | Set via inline `<script>` from `profile.latte` for `profile.ts` consumption. |
+| Globally-exposed classes | `Window.PwgWS`, `Window.LocalStorageCache`, `Window.CategoriesCache`, `Window.TagsCache`, `Window.GroupsCache`, `Window.UsersCache` | Active — these are intentionally hoisted to `window` for cross-bundle reuse. |
+
+**Likely-stale entries** that would need verifying: `var user`, `var preferencesDefaultValues`, `var standardSaveSelector` — `grep` found no consumers in `themes/`.
+
+### 14.2 Pre-Load Auto-Queue Shims (Plugin BC)
+
+A legacy pattern where third-party plugins could inject behaviour *before* the relevant bundle had loaded by pushing onto a global array; the bundle, once loaded, replaces the array with a real object exposing the same `push()` interface and drains the queue. Two such queues remain:
+
+- **`_pwgRatingAutoQueue`** — `themes/_base/js/rating.ts:150` has a comment block: *"Process any legacy `_pwgRatingAutoQueue` queue (plugins may still push to it)."* Drains then redefines `push()` to be a direct rate-call.
+- **`SwitchBox`** — `themes/_base/js/switchbox.ts:35` *"Process the legacy queue any caller may have populated before this module loaded."* Same pattern.
+
+These are explicit plugin-backwards-compat shims. Given the v17.0 policy (all plugins are being rewritten, BC is not maintained), both queues could be deleted in a single commit per file once any in-tree caller is migrated.
+
+### 14.3 Window-Global Compatibility Aliases
+
+- `themes/admin/_base/js/albums.ts:522`: `_cont = contEl; // keep global for compatibility` — explicit BC marker for a `window._cont` reference. Likely used by plugin/theme scripts; safe to remove with v17.0.
+- `themes/admin/_base/js/batchManagerGlobal.ts:834` references "the legacy `typeof elements` guard" — guards against an older bundle-load order.
+
+### 14.4 PHP-Style Names in JS
+
+`array_delete`, `str_repeat`, `getRandomInt`, `sprintf` (declared in `globals.d.ts`, implemented in `themes/admin/_base/js/common.ts`) are JavaScript reimplementations of PHP functions with PHP names — a holdover from the Smarty era when template variables crossed the PHP/JS boundary with the same names. Native JS has `Array.prototype.splice`, `String.repeat`, `Math.random`, template literals, and (since 2018) most string-format needs are covered by template strings. Cosmetic cleanup target; no functional shim.
+
+### 14.5 `tools/ws/ws.js` & `tools/ws/json-viewer.js` — Already Migrated
+
+The web-services explorer was migrated from jQuery to vanilla ES modules; comments at the top of both files document this:
+
+- `tools/ws/ws.js:2` — *"Vanilla ES module replacement for the original jQuery-based ws.js."*
+- `tools/ws/json-viewer.js:1` — *"Vanilla replacement for jquery.json-viewer."*
+- `tools/ws/ws.js:406` — *"tipTip — dropped along with jQuery."*
+
+No jQuery remains in the codebase (`package.json` confirms). These are historical doc comments only.
+
+### 14.6 `tools/triggers_list.php` Output Uses jQuery
+
+The static HTML reference page emitted by `tools/triggers_list.php` includes jQuery-based DataTables filter glue at lines 1116-1122. This is the **only** jQuery reference in the project. Since the file is a reference doc (not runtime), and the `<script>` references a CDN-hosted jQuery, this isn't a runtime dependency. But future cleanup could rewrite it as vanilla JS too — or delete the file entirely (the inventory in §13.4 covers the doc-staleness side).
+
+---
+
+**End of inventory.** Audited across the entire repository (`src/`, `tools/`, `tests/`, `install/`, root entry points, vendor dependencies in `composer.json` / `package.json`, static-analysis tooling, build config, frontend TypeScript, Latte templates, CI workflows) on 2026-05-14.

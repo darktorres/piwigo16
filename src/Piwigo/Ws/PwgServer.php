@@ -16,7 +16,6 @@ use Piwigo\Ws\Protocol\PwgJsonEncoder;
 use Piwigo\Ws\Protocol\PwgRestEncoder;
 use Piwigo\Ws\Protocol\PwgRestRequestHandler;
 use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
-use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
 
 /**
  * @phpstan-type WsParamDef array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string, chooseList?: list<mixed>}
@@ -501,9 +500,6 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
                 break;
             case 'json':
                 $encoder = new PwgJsonEncoder();
-                break;
-            case 'xmlrpc':
-                $encoder = new PwgXmlRpcEncoder();
                 break;
         }
         $server->setEncoder($responseFormat, $encoder);

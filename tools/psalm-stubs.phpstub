@@ -4,12 +4,6 @@
 // stubs (Relay, Predis) can coexist in the same file without parse errors.
 
 namespace {
-    /**
-     * The xmlrpc extension is deprecated/removed in modern PHP builds but still used
-     * in PwgXmlRpcEncoder.
-     */
-    function xmlrpc_encode(mixed $value): string {}
-
     // -------------------------------------------------------------------------
     // Runtime constants
     // -------------------------------------------------------------------------

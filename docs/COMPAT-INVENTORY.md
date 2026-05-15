@@ -30,7 +30,7 @@ defer to this table.
 | Phase | Title | Status | Gates | Parallelism |
 |---|---|---|---|---|
 | **1** | Doc-drift cleanups | ✓ Closed 2026-05-15 | — | — |
-| **2** | Legacy `define()` migrations | Open (2a ✓, 2b ✓, 2c ✓, 2d–2h open) | none | 2d–2h independent |
+| **2** | Legacy `define()` migrations | Open (2a ✓, 2b ✓, 2c ✓, 2d ✓, 2e–2h open) | none | 2e–2h independent |
 | **3** | `$GLOBALS` channel migrations | ✓ Closed 2026-05-15 | — | — |
 | **4a** | `$filter` → `FilterContext` VO | ✓ Closed 2026-05-15 | — | — |
 | **4b** | `header_msgs` / `header_notes` → `PageState` | ✓ Closed 2026-05-15 | — | — |
@@ -54,6 +54,7 @@ defer to this table.
 - §Z15 — Phase 2a WS_* constant migration (2026-05-15)
 - §Z16 — Phase 2b `*_TABLE` constant migration (2026-05-15)
 - §Z17 — Phase 2c PclZip → ZipArchive migration (2026-05-15)
+- §Z18 — Phase 2d `xmlrpc_encode()` removal (2026-05-15)
 
 ---
 
@@ -156,16 +157,16 @@ selective extraction, chmod).
 
 Detail → [Appendix A §Z17](#z17-phase-2c-pclzip-ziparchive-migration).
 
-## Phase 2d — `xmlrpc_encode()` removal  [A3.5]
+## Phase 2d — `xmlrpc_encode()` removal  [A3.5] ✓
 
-`Ws/Protocol/PwgXmlRpcEncoder.php:40` calls `xmlrpc_encode($response)`. The
-PHP `xmlrpc` extension was deprecated in 8.0 and removed from core in 8.1+;
-`pwg.xmlrpc` requests will fatal-error on any modern PHP build without an
-explicit PECL install. REST/JSON cover all in-tree callers.
+Closed 2026-05-15. The PHP `xmlrpc` extension was deprecated in 8.0 and
+removed from core in 8.1+; `pwg.xmlrpc` requests would fatal-error on any
+modern PHP build without an explicit PECL install. `PwgXmlRpcEncoder.php`
+deleted; `xmlrpc` case removed from encoder selection in `PwgServer::boot()`;
+`xmlrpc_encode` function stub purged from `tools/psalm-stubs.phpstub`;
+the `XML RPC` option removed from `tools/ws.htm` (developer API tester).
 
-1. Delete `Ws/Protocol/PwgXmlRpcEncoder.php`.
-2. Remove the `xmlrpc` case from encoder selection in `PwgServer.php:522`.
-3. Delete the `xmlrpc_encode` stub from `tools/psalm-stubs.phpstub` lines 6-9.
+Detail → [Appendix A §Z18](#z18-phase-2d-xmlrpc_encode-removal).
 
 ## Phase 2e — MobileEsp removal  [A4.3]
 
@@ -606,8 +607,8 @@ Update the "Smarty templates" header to "Latte" at the same time.
 
    Phase 2a (WS_*)        ──┐
    Phase 2b (*_TABLE)     ──┤  done 2026-05-15
-   Phase 2c (PclZip)      ──┘  (see Appendix A §Z15, §Z16, §Z17)
-   Phase 2d (xmlrpc)         ──→  psalm stub
+   Phase 2c (PclZip)      ──┤  (see Appendix A §Z15–§Z18)
+   Phase 2d (xmlrpc)      ──┘
    Phase 2e (MobileEsp)      ──→  composer.json     ──┐
    Phase 2f (CURRENT_DATE)   ──→  (standalone)        │
    Phase 2g (FeedCreator)    ──→  composer.json      │
@@ -1241,6 +1242,64 @@ future reader doesn't grep for it and assume the guard was lost.
   src/ tools/ tests/ composer.json composer.lock` returns nothing outside
   docstrings in `ZipExtractor.php` (intentional historical reference).
 - `vendor/pclzip/` directory removed by `composer update`.
+
+## Z18. Phase 2d `xmlrpc_encode()` Removal
+
+Closed 2026-05-15. The PHP `xmlrpc` extension was deprecated in 8.0 and
+removed from core in 8.1+. Piwigo's `pwg.xmlrpc` response format had been
+shipping broken on every PHP install without an explicit PECL build for two
+major versions; REST/JSON cover all in-tree callers and all external API
+consumers we've observed in extension code.
+
+### What was deleted
+
+- **`src/Piwigo/Ws/Protocol/PwgXmlRpcEncoder.php`** — entire file (60 lines).
+  Only producer of `text/xml`-shaped XML-RPC responses; only consumer of
+  `xmlrpc_encode()`.
+- **`src/Piwigo/Ws/PwgServer.php`** — `use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;`
+  import dropped; the `case 'xmlrpc': $encoder = new PwgXmlRpcEncoder();`
+  arm of the encoder-selection switch in `boot()` deleted. The switch now
+  has three live cases (`rest`, `php`, `json`); requests with
+  `?format=xmlrpc` fall through, `$encoder` stays null, and
+  `$server->setEncoder('xmlrpc', null)` is what
+  the request gets — same behavior as for any other unknown format.
+- **`tools/psalm-stubs.phpstub`** — `function xmlrpc_encode(mixed $value): string {}`
+  stub (and its 3-line docblock explaining why it existed) deleted from
+  the global namespace block.
+- **`tools/ws.htm:145`** — the `<option value="xmlrpc">XML RPC</option>`
+  entry removed from the developer API tester's response-format dropdown
+  (the surrounding `select` still has JSON/REST/PHP-serial).
+
+### Docs touched
+
+- **`docs/STRUCTURE.md:153`** — `PwgXmlRpcEncoder` removed from the
+  `Ws/Protocol` namespace listing.
+- **`docs/ROADMAP-PHP.md:1377`** — the migration row for
+  `include/ws_protocols/xmlrpc_encoder.php` was historically marked
+  "✅ deleted — migrated to PwgXmlRpcEncoder". Updated to note the second
+  hop: PwgXmlRpcEncoder was itself retired in Phase 2d.
+
+### No callers blocked the removal
+
+- `src/`: grep for `xmlrpc` returns nothing post-edit; the encoder was only
+  reachable via `?format=xmlrpc` from the HTTP layer.
+- `tests/`: no tests target `xmlrpc` (grep clean before edit).
+- `composer.json`: no PECL `ext-xmlrpc` requirement was declared (the
+  extension's removal from core meant the dependency would have been
+  impossible to satisfy anyway).
+- External plugins that issued `pwg.xmlrpc` requests have been broken since
+  PHP 8.1; per the project rule, external compat is not a blocker.
+
+### Verification
+
+- `vendor/bin/phpstan analyse --no-progress` → 0 errors at level 10.
+- `vendor/bin/phpunit` (Unit + Integration) → 495 tests, 2418 assertions, OK
+  (no test count change — no test was targeting xmlrpc and no new test was
+  added; the deletion is pure removal of dead code).
+- `composer dump-autoload --classmap-authoritative` run after the file
+  deletion (classmap count went 7469 → 7468).
+- Post-edit cross-tree grep: `grep -rEn "xmlrpc|XmlRpc|PwgXmlRpc"
+  src/ tests/ tools/ composer.json` returns nothing.
 
 ---
 

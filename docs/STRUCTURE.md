@@ -150,7 +150,7 @@ PSR-15 `ControllerInterface` implementations. Each `__invoke(Request, args): Res
 | `Ws/Encoder`      | `PwgResponseEncoder` base                                                                                                                                                                                                                           |
 | `Ws/Method`       | WS method endpoint classes (`CategoriesEndpoints`, `CommentsEndpoints`, `ExtensionsEndpoints`, `GeneralEndpoints`, `GroupsEndpoints`, `ImagesEndpoints`, `PermissionsEndpoints`, `TagsEndpoints`, `UsersEndpoints`)                                 |
 | `Ws/OpenApi`      | `SpecBuilder` (OpenAPI JSON generation), `OpenApiDocument`, `ApiMethod` attribute                                                                                                                                                                   |
-| `Ws/Protocol`     | `PwgJsonEncoder`, `PwgRestEncoder`, `PwgRestRequestHandler`, `PwgSerialPhpEncoder`, `PwgXmlRpcEncoder`, `PwgXmlWriter`                                                                                                                              |
+| `Ws/Protocol`     | `PwgJsonEncoder`, `PwgRestEncoder`, `PwgRestRequestHandler`, `PwgSerialPhpEncoder`, `PwgXmlWriter`                                                                                                                                                  |
 
 #### Admin sub-namespaces (`src/Piwigo/Admin/<Domain>/`)
 

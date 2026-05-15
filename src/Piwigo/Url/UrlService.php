@@ -277,7 +277,8 @@ final class UrlService
 
                         $sectionString .= '/category/';
                         if (!isset($cat['permalink']) || $cat['permalink'] === '') {
-                            $sectionString .= is_scalar($cat['id'] ?? null) ? (string) $cat['id'] : '';
+                            $catIdRaw       = $cat['id'] ?? null;
+                            $sectionString .= is_scalar($catIdRaw) ? (string) $catIdRaw : '';
                             if (Config::categoryUrlStyle() == 'id-name') {
                                 $catNameRaw = $cat['name'];
                                 $sectionString .= '-' . $this->stringUtil->str2url(is_string($catNameRaw) ? $catNameRaw : '');

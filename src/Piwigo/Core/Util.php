@@ -105,7 +105,8 @@ final readonly class Util
 
     public function pwgDebug(string $string): void
     {
-        $t2 = is_numeric($_SERVER['REQUEST_TIME_FLOAT'] ?? null) ? (float) $_SERVER['REQUEST_TIME_FLOAT'] : 0.0;
+        $reqTimeFloat = $_SERVER['REQUEST_TIME_FLOAT'] ?? null;
+        $t2           = is_float($reqTimeFloat) ? $reqTimeFloat : 0.0;
         $now = explode(' ', microtime());
         $now2 = explode('.', $now[0]);
         $now2Float = (float) ($now[1] . '.' . $now2[1]);

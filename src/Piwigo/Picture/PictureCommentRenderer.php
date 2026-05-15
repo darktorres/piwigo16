@@ -144,7 +144,7 @@ SELECT
     com.id,
     com.author,
     com.author_id,
-    u.' . (string) Config::userFields()['email'] . ' AS user_email,
+    u.' . Config::userFields()['email'] . ' AS user_email,
     com.date,
     com.image_id,
     com.website_url,

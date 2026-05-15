@@ -112,7 +112,7 @@ final class TagAdminService
         $tagName = trim($tagName);
         if (isset($this->tagCache[$tagName])) {
             $cached = $this->tagCache[$tagName];
-            return is_int($cached) ? $cached : (string) $cached;
+            return $cached;
         }
         $tagRepo = $this->tagRepository;
         $foundId = $tagRepo->findIdByExactName($tagName);

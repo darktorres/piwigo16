@@ -388,7 +388,7 @@ final class AlbumController
             $this->urlService->unsetMakeFullUrl();
         }
 
-        $catIdScalar = is_string($pageCat ?? null) ? $pageCat : '';
+        $catIdScalar = is_string($pageCat) ? $pageCat : '';
         $tpl->assign([
             'CATEGORIES_NAV' => new Html(trim($this->htmlService->getCatDisplayNameFromId($catIdScalar, $this->urlGenerator->admin() . '&page=album-'))),
             'F_ACTION'       => $admin_album_base_url . '-notification',
@@ -1013,7 +1013,7 @@ final class AlbumController
             throw new \InvalidArgumentException('missing cat_id param');
         }
 
-        $categoryId  = (string) $_GET['cat_id'];
+        $categoryId  = $_GET['cat_id'];
         $image_order_choices  = ['default', 'rank', 'user_define'];
         $image_order_choice   = 'default';
 

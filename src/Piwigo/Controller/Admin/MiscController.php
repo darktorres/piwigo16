@@ -711,7 +711,7 @@ final class MiscController
         $day_names  = Lang::days();
         $day_labels = [];
         for ($i = 0; $i <= 6; $i++) {
-            $name         = (string) ($day_names[($i + 1) % 7] ?? '');
+            $name         = $day_names[($i + 1) % 7] ?? '';
             $day_labels[] = mb_substr($name, 0, 3);
         }
         $tpl->assign('DAY_LABELS', $day_labels);

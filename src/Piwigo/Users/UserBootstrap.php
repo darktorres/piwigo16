@@ -69,7 +69,9 @@ final class UserBootstrap
                 if ($apacheUserId === false || $apacheUserId === 0) {
                     $apacheUserId = Kernel::service(UserService::class)->registerUser($remoteUserStr, '', '', false);
                 }
-                $userId = is_numeric($apacheUserId) ? (int) $apacheUserId : $userId;
+                if ($apacheUserId !== false) {
+                    $userId = $apacheUserId;
+                }
             }
         }
 

@@ -54,7 +54,8 @@ final class PiwigoFeedCreator
             $channel->appendChild(self::buildItemElement($doc, $item));
         }
 
-        return $doc->saveXML() ?: '';
+        $xml = $doc->saveXML();
+        return $xml !== false ? $xml : '';
     }
 
     private static function buildItemElement(DOMDocument $doc, FeedItem $item): DOMElement

@@ -184,7 +184,7 @@ SELECT id
 
         $currentRank  = max(0, $rankOf[$imageId] ?? 0);
         $firstRank    = 0;
-        $lastRank     = count($items) - 1;
+        $lastRank     = max(0, count($items) - 1);
 
         $previousItem = $currentRank !== $firstRank ? $items[$currentRank - 1] : null;
         $firstItem    = $currentRank !== $firstRank ? $items[$firstRank] : null;
@@ -315,16 +315,16 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         // Load prev/current/next picture data
         $picture = [];
         $ids     = [$imageId];
-        if ($previousItem !== null) {
+        if ($previousItem !== null && $firstItem !== null) {
             $ids[] = $previousItem;
             $ids[] = $firstItem;
         }
-        if ($nextItem !== null) {
+        if ($nextItem !== null && $lastItem !== null) {
             $ids[] = $nextItem;
             $ids[] = $lastItem;
         }
 
-        foreach ($this->imageRepository->findByIds(array_map(static fn (mixed $i): int => is_scalar($i) ? (int) $i : 0, $ids)) as $row) {
+        foreach ($this->imageRepository->findByIds(array_map(intval(...), $ids)) as $row) {
             if ($previousItem !== null && $row['id'] == $previousItem) {
                 $i = 'previous';
             } elseif ($nextItem !== null && $row['id'] == $nextItem) {

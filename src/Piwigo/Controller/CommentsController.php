@@ -308,7 +308,7 @@ SELECT id, name, uppercats, global_rank
             $url,
             is_numeric($counter) ? (int) $counter : 0,
             $start ?? 0,
-            is_numeric($pageItemsNumber) ? (int) $pageItemsNumber : 0,
+            (int) $pageItemsNumber,
             false
         );
         $tpl->assign('navbar', $navbar);

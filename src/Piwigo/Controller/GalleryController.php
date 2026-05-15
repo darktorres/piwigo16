@@ -356,7 +356,8 @@ final readonly class GalleryController implements ControllerInterface
             }
 
             // Slideshow
-            $catSlideshowUrl = is_string($tpl->getTemplateVars('CAT_SLIDESHOW_URL') ?? null) ? $tpl->getTemplateVars('CAT_SLIDESHOW_URL') : '';
+            $catSlideshowUrlRaw = $tpl->getTemplateVars('CAT_SLIDESHOW_URL');
+            $catSlideshowUrl    = is_string($catSlideshowUrlRaw) ? $catSlideshowUrlRaw : '';
             if ($catSlideshowUrl !== '') {
                 if ($this->stringUtil->inputString('slideshow', null, $_GET) !== null) {
                     $this->util->redirect($catSlideshowUrl);

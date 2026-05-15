@@ -39,7 +39,8 @@ final class ZipExtractorTest extends TestCase
         if (!is_dir($path)) {
             return;
         }
-        foreach (scandir($path) ?: [] as $entry) {
+        $entries = scandir($path);
+        foreach ($entries !== false ? $entries : [] as $entry) {
             if ($entry === '.' || $entry === '..') {
                 continue;
             }
@@ -139,7 +140,8 @@ final class ZipExtractorTest extends TestCase
             'file.txt' => 'data',
         ]);
         ZipExtractor::extract($this->archivePath, $this->extractPath, '', null, 0o644);
-        $mode = fileperms($this->extractPath . '/file.txt') & 0o777;
+        $perms = fileperms($this->extractPath . '/file.txt');
+        $mode  = $perms !== false ? $perms & 0o777 : 0;
         self::assertSame(0o644, $mode);
     }
 

@@ -447,26 +447,31 @@ SELECT DISTINCT(id)
 
         if (isset($page['chronology_field'])) {
             unset($page['is_homepage']);
-            $superOrderBy = isset($page['super_order_by']) && (bool) $page['super_order_by'];
-            $rawCD        = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];
+            $superOrderBy   = isset($page['super_order_by']) && (bool) $page['super_order_by'];
+            $chronoDateRaw  = $page['chronology_date'] ?? null;
+            $rawCD          = is_array($chronoDateRaw) ? $chronoDateRaw : [];
             /** @var list<int|string> $cdList */
-            $cdList       = array_values(array_map(
+            $cdList         = array_values(array_map(
                 static fn (mixed $v): int|string => is_int($v) ? $v : (is_scalar($v) ? (string) $v : ''),
                 $rawCD
             ));
-            $rawItems     = is_array($page['items'] ?? null) ? $page['items'] : [];
+            $itemsRaw       = $page['items'] ?? null;
+            $rawItems       = is_array($itemsRaw) ? $itemsRaw : [];
             /** @var list<string> $itemList */
-            $itemList     = array_values(array_map(
+            $itemList       = array_values(array_map(
                 static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
                 $rawItems
             ));
+            $chronoField    = $page['chronology_field'];
+            $chronoStyleRaw = $page['chronology_style'] ?? null;
+            $chronoViewRaw  = $page['chronology_view']  ?? null;
             $this->calendarService->initializeCalendar(
                 section:          $section,
                 category:         $category,
                 superOrderBy:     $superOrderBy,
-                chronologyField:  is_string($page['chronology_field']) ? $page['chronology_field'] : '',
-                chronologyStyle:  is_string($page['chronology_style'] ?? null) ? $page['chronology_style'] : null,
-                chronologyView:   is_string($page['chronology_view'] ?? null) ? $page['chronology_view'] : null,
+                chronologyField:  is_string($chronoField) ? $chronoField : '',
+                chronologyStyle:  is_string($chronoStyleRaw) ? $chronoStyleRaw : null,
+                chronologyView:   is_string($chronoViewRaw) ? $chronoViewRaw : null,
                 chronologyDate:   $cdList,
                 sectionItems:     $itemList,
             );
@@ -607,44 +612,71 @@ SELECT DISTINCT(id)
 
         // ── Build typed SectionContext ─────────────────────────────────────────
 
-        $rawItems    = is_array($page['items'] ?? null) ? $page['items'] : [];
-        $rawTagIds   = is_array($page['tag_ids'] ?? null) ? $page['tag_ids'] : [];
-        $rawList     = is_array($page['list'] ?? null) ? $page['list'] : [];
-        $rawWhere    = is_array($page['where_clauses'] ?? null) ? $page['where_clauses'] : [];
-        $rawChronoDate = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];
+        // Extract each $page key to a local once so Psalm can narrow types
+        // through is_X() checks; in-line repeated access trips PossiblyUndefinedArrayOffset.
+        $itemsRaw         = $page['items']            ?? null;
+        $tagIdsRaw        = $page['tag_ids']          ?? null;
+        $listRaw          = $page['list']             ?? null;
+        $whereRaw         = $page['where_clauses']    ?? null;
+        $chronoDateRaw    = $page['chronology_date']  ?? null;
+        $sectionUrlRaw    = $page['section_url']      ?? null;
+        $rootPathRaw      = $page['root_path']        ?? null;
+        $startRaw         = $page['start']            ?? null;
+        $startcatRaw      = $page['startcat']         ?? null;
+        $imageIdRaw       = $page['image_id']         ?? null;
+        $imageFileRaw     = $page['image_file']       ?? null;
+        $categoryRaw      = $page['category']         ?? null;
+        $combinedRaw      = $page['combined_categories'] ?? null;
+        $tagsRaw          = $page['tags']             ?? null;
+        $searchRaw        = $page['search']           ?? null;
+        $searchDetailsRaw = $page['search_details']   ?? null;
+        $qsearchRaw       = $page['qsearch_details']  ?? null;
+        $chronoFieldRaw   = $page['chronology_field'] ?? null;
+        $chronoViewRaw    = $page['chronology_view']  ?? null;
+        $chronoStyleRaw   = $page['chronology_style'] ?? null;
+        $titleRaw         = $page['title']            ?? null;
+        $commentRaw       = $page['comment']          ?? null;
+        $sectionTitleRaw  = $page['section_title']    ?? null;
+        $feedRaw          = $page['feed']             ?? null;
+
+        $rawItems       = is_array($itemsRaw) ? $itemsRaw : [];
+        $rawTagIds      = is_array($tagIdsRaw) ? $tagIdsRaw : [];
+        $rawList        = is_array($listRaw) ? $listRaw : [];
+        $rawWhere       = is_array($whereRaw) ? $whereRaw : [];
+        $rawChronoDate  = is_array($chronoDateRaw) ? $chronoDateRaw : [];
 
         $ctx = new SectionContext(
             section:            $section,
-            sectionUrl:         is_string($page['section_url'] ?? null) ? $page['section_url'] : '',
-            rootPath:           is_string($page['root_path'] ?? null) ? $page['root_path'] : '',
+            sectionUrl:         is_string($sectionUrlRaw) ? $sectionUrlRaw : '',
+            rootPath:           is_string($rootPathRaw) ? $rootPathRaw : '',
             items:              array_values(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $rawItems)),
-            start:              is_numeric($page['start'] ?? null) ? (int) $page['start'] : 0,
-            startcat:           is_numeric($page['startcat'] ?? null) ? (int) $page['startcat'] : 0,
+            start:              is_numeric($startRaw) ? (int) $startRaw : 0,
+            startcat:           is_numeric($startcatRaw) ? (int) $startcatRaw : 0,
             nbImagePage:        $page['nb_image_page'],
             flat:               isset($page['flat']),
             isHomepage:         isset($page['is_homepage']),
             superOrderBy:       isset($page['super_order_by']) && (bool) $page['super_order_by'],
-            imageId:            is_scalar($page['image_id'] ?? null) ? (string) $page['image_id'] : null,
-            imageFile:          is_string($page['image_file'] ?? null) ? $page['image_file'] : '',
-            category:           is_array($page['category'] ?? null) ? $page['category'] : null,
-            combinedCategories: is_array($page['combined_categories'] ?? null) ? array_values(array_filter($page['combined_categories'], is_array(...))) : null,
-            tags:               is_array($page['tags'] ?? null) ? array_values(array_filter($page['tags'], is_array(...))) : [],
+            imageId:            is_scalar($imageIdRaw) ? (string) $imageIdRaw : null,
+            imageFile:          is_string($imageFileRaw) ? $imageFileRaw : '',
+            category:           is_array($categoryRaw) ? $categoryRaw : null,
+            combinedCategories: is_array($combinedRaw) ? array_values(array_filter($combinedRaw, is_array(...))) : null,
+            tags:               is_array($tagsRaw) ? array_values(array_filter($tagsRaw, is_array(...))) : [],
             tagIds:             array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawTagIds)),
             list:               array_values(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $rawList)),
-            search:             is_scalar($page['search'] ?? null) ? (string) $page['search'] : null,
+            search:             is_scalar($searchRaw) ? (string) $searchRaw : null,
             searchId:           $this->searchService->getSearchId(),
-            searchDetails:      is_array($page['search_details'] ?? null) ? $page['search_details'] : [],
-            qsearchDetails:     is_array($page['qsearch_details'] ?? null) ? $page['qsearch_details'] : [],
+            searchDetails:      is_array($searchDetailsRaw) ? $searchDetailsRaw : [],
+            qsearchDetails:     is_array($qsearchRaw) ? $qsearchRaw : [],
             whereClauses:       array_values(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rawWhere)),
             useRegexpICU:       isset($page['use_regexp_icu']) && (bool) $page['use_regexp_icu'],
             chronologyDate:     array_values(array_map(static fn (mixed $v): int|string => is_int($v) ? $v : (is_scalar($v) ? (string) $v : ''), $rawChronoDate)),
-            chronologyField:    is_string($page['chronology_field'] ?? null) ? $page['chronology_field'] : '',
-            chronologyView:     is_string($page['chronology_view'] ?? null) ? $page['chronology_view'] : '',
-            chronologyStyle:    is_string($page['chronology_style'] ?? null) ? $page['chronology_style'] : '',
-            title:              is_scalar($page['title'] ?? null) ? (string) $page['title'] : '',
-            comment:            is_string($page['comment'] ?? null) ? $page['comment'] : '',
-            sectionTitle:       is_string($page['section_title'] ?? null) ? $page['section_title'] : '',
-            feed:               is_string($page['feed'] ?? null) ? $page['feed'] : '',
+            chronologyField:    is_string($chronoFieldRaw) ? $chronoFieldRaw : '',
+            chronologyView:     is_string($chronoViewRaw) ? $chronoViewRaw : '',
+            chronologyStyle:    is_string($chronoStyleRaw) ? $chronoStyleRaw : '',
+            title:              is_scalar($titleRaw) ? (string) $titleRaw : '',
+            comment:            is_string($commentRaw) ? $commentRaw : '',
+            sectionTitle:       is_string($sectionTitleRaw) ? $sectionTitleRaw : '',
+            feed:               is_string($feedRaw) ? $feedRaw : '',
             isExternal:         isset($page['is_external']),
         );
         SectionContextRegistry::set($ctx);

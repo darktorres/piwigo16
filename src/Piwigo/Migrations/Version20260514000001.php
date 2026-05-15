@@ -26,6 +26,7 @@ final class Version20260514000001 extends AbstractMigration
         return 'Drop legacy summarized column from history table';
     }
 
+    #[\Override]
     public function up(Schema $schema): void
     {
         $prefix = $this->resolvePrefix();
@@ -48,6 +49,6 @@ final class Version20260514000001 extends AbstractMigration
     {
         return (class_exists(Config::class) && Config::has('db_prefix'))
             ? Config::dbPrefix()
-            : (getenv('PIWIGO_DB_PREFIX') ?: 'piwigo_');
+            : ((($env = getenv('PIWIGO_DB_PREFIX')) !== false && $env !== '') ? $env : 'piwigo_');
     }
 }

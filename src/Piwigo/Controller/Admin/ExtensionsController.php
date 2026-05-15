@@ -142,7 +142,8 @@ final readonly class ExtensionsController
             $show_details = $this->sessionService->getSessionVar('plugins_show_details', false);
         }
 
-        $pageStr  = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'plugins';
+        $pageRaw  = $_GET['page'] ?? null;
+        $pageStr  = is_string($pageRaw) ? $pageRaw : 'plugins';
         $base_url = $this->urlGenerator->admin($pageStr);
         $pwg_token = $this->util->getPwgToken();
         $action_url = $base_url . '&plugin=' . '%s' . '&pwg_token=' . $pwg_token;
@@ -297,8 +298,10 @@ final readonly class ExtensionsController
             throw new ConfigException('Piwigo extensions install/update system is disabled');
         }
 
-        $pageStr  = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'plugins_new';
-        $tabStr   = is_string($_GET['tab'] ?? null) ? $_GET['tab'] : '';
+        $pageRaw  = $_GET['page'] ?? null;
+        $tabRaw   = $_GET['tab'] ?? null;
+        $pageStr  = is_string($pageRaw) ? $pageRaw : 'plugins_new';
+        $tabStr   = is_string($tabRaw) ? $tabRaw : '';
         $base_url = $this->urlGenerator->admin($pageStr) . '&tab=' . $tabStr;
 
         $plugins = $this->plugins;
@@ -470,7 +473,8 @@ final readonly class ExtensionsController
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $pageStr  = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'themes';
+        $pageRaw  = $_GET['page'] ?? null;
+        $pageStr  = is_string($pageRaw) ? $pageRaw : 'themes';
         $base_url = $this->urlGenerator->admin($pageStr);
         $themes   = Kernel::service(Themes::class);
 
@@ -564,8 +568,10 @@ final readonly class ExtensionsController
             throw new ConfigException('Piwigo extensions install/update system is disabled');
         }
 
-        $pageStr  = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'themes_new';
-        $tabStr   = is_string($_GET['tab'] ?? null) ? $_GET['tab'] : '';
+        $pageRaw  = $_GET['page'] ?? null;
+        $tabRaw   = $_GET['tab'] ?? null;
+        $pageStr  = is_string($pageRaw) ? $pageRaw : 'themes_new';
+        $tabStr   = is_string($tabRaw) ? $tabRaw : '';
         $base_url = $this->urlGenerator->admin($pageStr) . '&tab=' . $tabStr;
         $themes   = Kernel::service(Themes::class);
 
@@ -764,7 +770,8 @@ final readonly class ExtensionsController
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $pageStr  = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'languages';
+        $pageRaw  = $_GET['page'] ?? null;
+        $pageStr  = is_string($pageRaw) ? $pageRaw : 'languages';
         $base_url = $this->urlGenerator->admin($pageStr);
 
         $languages = Kernel::service(Languages::class);
@@ -834,8 +841,10 @@ final readonly class ExtensionsController
             throw new ConfigException('Piwigo extensions install/update system is disabled');
         }
 
-        $pageStr  = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'languages_new';
-        $tabStr   = is_string($_GET['tab'] ?? null) ? $_GET['tab'] : '';
+        $pageRaw  = $_GET['page'] ?? null;
+        $tabRaw   = $_GET['tab'] ?? null;
+        $pageStr  = is_string($pageRaw) ? $pageRaw : 'languages_new';
+        $tabStr   = is_string($tabRaw) ? $tabRaw : '';
         $base_url = $this->urlGenerator->admin($pageStr) . '&tab=' . $tabStr;
 
         $languages = Kernel::service(Languages::class);
@@ -923,7 +932,8 @@ final readonly class ExtensionsController
         $updates_ignored_raw = Config::raw('updates_ignored');
         Config::override('updates_ignored', StringUtil::safeUnserialize(is_string($updates_ignored_raw) ? $updates_ignored_raw : ''));
 
-        $pageStr = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'updates';
+        $pageRaw = $_GET['page'] ?? null;
+        $pageStr = is_string($pageRaw) ? $pageRaw : 'updates';
         $autoupdate = Kernel::service(Updates::class)->setPage($pageStr);
 
         $show_reset = false;

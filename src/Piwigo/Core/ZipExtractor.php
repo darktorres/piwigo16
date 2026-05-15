@@ -127,9 +127,7 @@ final class ZipExtractor
             }
             $destFh = Filesystem::tryFopen($targetAbs, 'wb');
             if (!is_resource($destFh)) {
-                if (is_resource($srcStream)) {
-                    fclose($srcStream);
-                }
+                fclose($srcStream);
                 $results[] = ['filename' => $relative, 'stored_filename' => $storedName, 'status' => self::STATUS_WRITE_ERROR];
                 continue;
             }
@@ -139,9 +137,7 @@ final class ZipExtractor
             } finally {
                 restore_error_handler();
                 fclose($destFh);
-                if (is_resource($srcStream)) {
-                    fclose($srcStream);
-                }
+                fclose($srcStream);
             }
             if ($copied === false) {
                 $results[] = ['filename' => $relative, 'stored_filename' => $storedName, 'status' => self::STATUS_WRITE_ERROR];

@@ -23,13 +23,13 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Handles image derivative (thumbnail/resize) generation and serving.
- * Corresponds to the former i.php entry-point.
  *
- * Helper functions (ierror, parse_request, send_derivative, etc.) live in
- * include/image_derivative_functions.php.
+ * Helpers (`ierror`, `parseRequest`, `sendDerivative`, etc.) are static
+ * methods on `Piwigo\Image\DerivativePipeline`.
  *
- * This controller sends binary output directly (fpassthru) and returns an empty
- * 200 response — the ResponseEmitter will see headers_sent() and do nothing.
+ * This controller sends binary output directly (fpassthru) and returns an
+ * empty 200 response — the ResponseEmitter will see headers_sent() and do
+ * nothing.
  */
 final readonly class ImageDerivativeController implements ControllerInterface
 {

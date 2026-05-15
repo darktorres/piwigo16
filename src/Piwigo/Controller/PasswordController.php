@@ -28,8 +28,6 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Handles the three-stage password-reset flow (/password).
- * Helper functions live in include/password_functions.php.
- * Corresponds to the former password.php entry-point.
  */
 final readonly class PasswordController implements ControllerInterface
 {

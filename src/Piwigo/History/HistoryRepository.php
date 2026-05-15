@@ -112,7 +112,6 @@ final class HistoryRepository extends AbstractRepository
 
     /**
      * Return history_summary rows filtered by granularity type.
-     * Used by admin/stats.php to build the stats charts.
      *
      * $type: 'hour' | 'day' | 'month' | 'year'
      *
@@ -146,7 +145,6 @@ final class HistoryRepository extends AbstractRepository
     /**
      * Return AVG(nb_pages) for days in the current year or the previous year
      * after the current month (rolling 12-month window).
-     * Used by admin/stats.php for the daily-average badge.
      */
     public function findCurrentPeriodDailyAvg(int $currentYear, int $currentMonth): ?float
     {

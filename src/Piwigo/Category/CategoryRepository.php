@@ -502,7 +502,6 @@ final class CategoryRepository extends AbstractRepository
 
     /**
      * Return the uppercats string for a single category, or null if not found.
-     * Used by admin/cat_modify.php get_local_dir().
      */
     public function findUppercatsStringById(int $id): ?string
     {

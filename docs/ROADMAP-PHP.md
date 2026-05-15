@@ -2293,7 +2293,7 @@ PHPStan analyse passes at level 10 with no baseline file. Level 10 enforces full
 
 - `phpstan.neon` is set to `level: 10`, no baseline file. `vendor/bin/phpstan analyse` reports `[OK] No errors` (commit `8e141735f` — *chore(phpstan): raise to level 10 — zero errors*).
 - The post-#6/#17 error count came in well below the original 1000+ estimate; cleanup landed across the same series of commits without a baseline carry-over.
-- Custom rules still registered: `ConfigKeyExistsRule`, `NoDynamicNewRule`, `NoErrorSuppressionRule`, `NoGlobalInSrcRule`, `StrictTypesRequiredRule`, plus the dynamic-return-type extensions `TriggerChangeDynamicReturnType` and `PwgGetSessionVarDynamicReturnType`. The deprecation-rules pack is included.
+- Custom rules still registered: `ConfigKeyExistsRule`, `NoDynamicNewRule`, `NoErrorSuppressionRule`, `NoGlobalInSrcRule`, `StrictTypesRequiredRule`, plus the dynamic-return-type extension `EventDispatcherDispatchDynamicReturnType`. The deprecation-rules pack is included.
 - Remaining `mixed` occurrences are catalogued in `docs/MIXED-TYPES.md` — most are legitimate (DB row results, event payloads, generic cache get/put). Reduction work continues opportunistically; the level-10 gate does not require eliminating them.
 - The `phpstan` job in `.github/workflows/ci.yml` runs `composer dump-autoload --strict-psr` and `vendor/bin/phpstan analyse` on every push — bumping the level required no CI change.
 

@@ -18,10 +18,9 @@ use Piwigo\Ws\PwgServerRegistry;
 /**
  * Resolves the current user from session, cookie, Apache auth, or auth-key.
  *
- * Replaces the former include/user.inc.php procedural script.
  * Called from AuthMiddleware::process() so that every request routed through
- * the PSR-15 pipeline has a fully-built $GLOBALS['user'] before the
- * controller runs.
+ * the PSR-15 pipeline has a fully populated CurrentUser singleton before
+ * the controller runs.
  */
 final class UserBootstrap
 {

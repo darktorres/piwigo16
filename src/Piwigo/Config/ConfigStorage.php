@@ -7,25 +7,18 @@ namespace Piwigo\Config;
 use Piwigo\Core\Kernel;
 
 /**
- * Thin OO facade over the conf-table free functions in
- * include/functions.inc.php. Provides a stable injection point that typed
- * Config classes (Piwigo's own + per-plugin classes) can use to persist /
- * load / delete config values without depending directly on the legacy
- * free-function API.
+ * Storage backend for the conf table. Typed Config classes (Piwigo's own +
+ * per-plugin classes) call ConfigStorage to persist / load / delete config
+ * rows without depending on any free-function API.
  *
- * Does NOT validate keys against any SCHEMA — each calling Config class
- * is responsible for its own typed accessors and validation. ConfigStorage
- * is the storage backend; Config classes are the typed read/write API.
- *
- * The free functions stay (legacy code in admin/ and include/ depends on
- * them). Eventually they can become thin wrappers around this class once
- * all callers migrate.
+ * Does NOT validate keys against any SCHEMA — each calling Config class is
+ * responsible for its own typed accessors and validation. ConfigStorage is
+ * the storage backend; Config classes are the typed read/write API.
  */
 final class ConfigStorage
 {
     /**
-     * Bulk read from the conf table into $GLOBALS['conf'] (and through the
-     * reference bridge into Config::$data after Kernel::boot()).
+     * Bulk read from the conf table into Config::$data.
      *
      * @param string|null $whereCondition optional SQL `WHERE` fragment
      *                    (without the `WHERE` keyword), e.g., "param LIKE 'plugin_%'"

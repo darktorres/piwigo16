@@ -15,8 +15,12 @@ final class CurrentUser
     private static ?User $instance = null;
 
     /**
-     * Called by Kernel::boot() to initialise the singleton with an empty guest user.
-     * UserBootstrap::bootstrap() later calls set() with the real user.
+     * Initialise the singleton with an empty guest user. Called by
+     * Kernel::boot() before authentication runs; UserBootstrap::bootstrap()
+     * later calls set() with the real user.
+     *
+     * (Method name is historical from the days of the $GLOBALS['user']
+     * bridge; the body no longer touches any global.)
      */
     public static function attachGlobals(): void
     {

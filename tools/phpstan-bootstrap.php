@@ -11,23 +11,6 @@ define('IN_ADMIN', false);
 // Declared here as a PHPStan placeholder so migration-step analysis resolves it.
 define('PREFIX_TABLE', 'piwigo_');
 
-/** @var array{id:int,username:string,email:string,language:string,theme:string,status:string,enabled_high:bool,internal_status:array<string,mixed>,cache_update_time:int,last_visit:string,...} $user */
-$user = ['id' => 0, 'username' => '', 'email' => '', 'language' => 'en_UK', 'theme' => 'modus', 'status' => 'guest', 'enabled_high' => false, 'internal_status' => [], 'cache_update_time' => 0, 'last_visit' => ''];
-/** @var array<string,string> $lang */
-$lang = [];
-/** @var \Piwigo\Template\Template|null $template */
-$template = null;
-/** @var \Psr\Log\LoggerInterface|null $logger */
-$logger = null;
-/** @var array<string,mixed> $pwg_event_handlers */
-$pwg_event_handlers = [];
-/** @var array<string,mixed> $pwg_loaded_plugins */
-$pwg_loaded_plugins = [];
-/** @var \Piwigo\Ws\PwgServer|null $service */
-$service = null;
-/** @var array<string,mixed> $persistent_cache */
-$persistent_cache = [];
-
 // Runtime constants from CommonBootstrap::run() — placeholder values for static analysis.
 if (!defined('PHPWG_DOMAIN')) {
     define('PHPWG_DOMAIN', 'piwigo.org');

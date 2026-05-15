@@ -19,9 +19,7 @@ use Piwigo\Core\Kernel;
  *      getBool pattern.
  *
  * self::$data is the single source of truth. ConfigLoader populates it at
- * boot, callers mutate it via Config::override / Config::persist. The legacy
- * $GLOBALS['conf'] reference bridge (attachGlobals) was retired once all
- * core and bundled-plugin readers/writers were migrated to this facade.
+ * boot, callers mutate it via Config::override / Config::persist.
  */
 final class Config
 {
@@ -1184,7 +1182,7 @@ final class Config
     }
     // <<<CONFIG-ACCESSORS-END>>>
 
-    // ---- Path helpers (formerly PHP define()s in include/constants.php) ----
+    // ---- Path helpers ----
 
     public static function pluginsPath(): string
     {

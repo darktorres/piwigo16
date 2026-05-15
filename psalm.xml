@@ -27,11 +27,14 @@
     </projectFiles>
 
     <issueHandlers>
-        <!-- Legacy globals used in bootstrapped files — not actionable yet -->
+        <!-- Dynamic include paths (plugin / theme / language file loaders) resolve
+             at runtime; Psalm cannot follow them statically. -->
         <MissingFile errorLevel="suppress"/>
 
-        <!-- Reference assignments to $GLOBALS / static properties are intentional
-             legacy-compatibility bridges; Psalm cannot analyze them but they are correct. -->
+        <!-- Reference assignments to nested static-array slots (EventDispatcher
+             handler buckets, LoadedPluginRegistry plugin_data) are the registry
+             pattern, not a legacy bridge. Psalm cannot model them but they are
+             correct. -->
         <UnsupportedPropertyReferenceUsage errorLevel="suppress"/>
     </issueHandlers>
 </psalm>

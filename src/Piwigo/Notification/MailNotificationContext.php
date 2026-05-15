@@ -11,12 +11,10 @@ use Piwigo\Template\Template;
 
 /**
  * Typed context for a notification-by-mail dispatch cycle, replacing the
- * $env_nbm global array.
- *
- * Lifecycle: MailNotificationContext::init() at the top of
- * functions_notification_by_mail.inc.php replaces the $env_nbm = [...] literal.
- * All functions in that file and admin/notification_by_mail.php call current()
- * to access and mutate state.
+ * legacy $env_nbm global array. Callers — primarily
+ * `NotificationAdminService` and `MailService` — read and mutate state via
+ * `MailNotificationContext::current()` after a one-time `::init()` at the
+ * top of the dispatch cycle.
  */
 final class MailNotificationContext
 {

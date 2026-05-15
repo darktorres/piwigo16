@@ -85,10 +85,10 @@ final class ConfigLoader
 
     /**
      * Seeds Config::$data with default values for every key in Config::SCHEMA
-     * that isn't already set. Replaces the legacy include/config_default.inc.php
-     * file as the single source of compile-time defaults — SCHEMA itself
-     * carries the simple-type defaults; for keys flagged 'custom' => true the
-     * default comes from invoking the typed accessor (which encodes its
+     * that isn't already set. SCHEMA is the single source of compile-time
+     * defaults — it carries the simple-type defaults; for keys flagged
+     * 'custom' => true the default comes from invoking the typed accessor
+     * (which encodes its
      * hardcoded fallback in the accessor body, e.g., file_ext = picture_ext +
      * extras, recent_post_dates = nested RSS/NBM structure).
      *

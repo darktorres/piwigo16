@@ -32,8 +32,8 @@ final class LanguageStack
 
     /**
      * Plugin/theme language files registered by LangService::get()->loadLanguage(), keyed by
-     * dirname → filename → options. Stored as a private static property so
-     * we don't need $GLOBALS['language_files'] for the switch_lang_to reload.
+     * dirname → filename → options. Consumed by switch_lang_to to reload
+     * extension language files when switching the active language.
      *
      * @var array<string, array<string, array<mixed>>>
      */

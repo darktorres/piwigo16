@@ -161,7 +161,6 @@ final class RateRepository extends AbstractRepository
 
     /**
      * Return all rate rows ordered by date descending.
-     * Used by admin/rating_user.php.
      *
      * @return list<array<string, mixed>>
      */
@@ -177,7 +176,6 @@ final class RateRepository extends AbstractRepository
 
     /**
      * Return (element_id, avg_rate) for all elements.
-     * Used by admin/rating_user.php to compute per-image average.
      *
      * @return list<array<string, mixed>>
      */

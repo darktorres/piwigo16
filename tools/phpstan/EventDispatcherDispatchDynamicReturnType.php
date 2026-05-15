@@ -18,7 +18,7 @@ use PHPStan\Type\Type;
  * Teaches PHPStan that EventDispatcher::dispatch() returns the same type as its second argument.
  * The plugin filter contract requires handlers to return the same type they receive.
  */
-class TriggerChangeDynamicReturnType implements DynamicStaticMethodReturnTypeExtension
+class EventDispatcherDispatchDynamicReturnType implements DynamicStaticMethodReturnTypeExtension
 {
     public function getClass(): string
     {

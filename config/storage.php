@@ -15,7 +15,7 @@ use Piwigo\Config\Config;
  *
  * Disk roots use runtime Config values so they honour site-level overrides
  * (e.g. Config::uploadDir(), Config::dataLocation()).  PWG_LOCAL_DIR is the
- * 'local/' directory defined in include/common.inc.php.
+ * 'local/' directory; the constant is defined by CommonBootstrap.
  *
  * --- Switching `derivatives` to AWS S3 ---
  *

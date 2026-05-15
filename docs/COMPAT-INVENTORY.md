@@ -29,7 +29,7 @@ defer to this table.
 
 | Phase | Title | Status | Gates | Parallelism |
 |---|---|---|---|---|
-| **1** | Doc-drift cleanups | Open | none | all tasks independent |
+| **1** | Doc-drift cleanups | ✓ Closed 2026-05-15 | — | — |
 | **2** | Legacy `define()` migrations | Open | none | 2a–2h independent |
 | **3** | `$GLOBALS` channel migrations | ✓ Closed 2026-05-15 | — | — |
 | **4a** | `$filter` → `FilterContext` VO | ✓ Closed 2026-05-15 | — | — |
@@ -50,125 +50,53 @@ defer to this table.
 - §Z7 `trigger_error` runtime signals
 - §Z8 12 admin-URL `$GLOBALS` channels
 - §Z9 / §Z10 / §Z11 / §Z12 / §Z13 — channels closed 2026-05-15 (Phases 3a, 3b, 4a, 4b, 4d)
+- §Z14 — Phase 1 doc-drift sweep (2026-05-15)
 
 ---
 
-# Phase 1 — Doc-Drift Cleanups
+# Phase 1 — Doc-Drift Cleanups ✓
 
-**Status:** open, all tasks independent. No code dependencies; do
-opportunistically.
+Closed 2026-05-15. Five sub-tasks landed in one sweep:
 
-**Why:** the runtime cleanups in Phases 3 / 4 left behind stale comments,
-unused PHPStan extensions, and dead stub entries. None block other work, but
-they mislead readers and bulk up tooling configuration.
+- **1.1** [D1.1] — Seven stale `$GLOBALS['user']` / `$GLOBALS['conf']` /
+  `$GLOBALS['lang']` / `$GLOBALS['language_files']` claims in docstrings
+  rewritten; `CurrentUser::attachGlobals()` got a clarifying note that the
+  historical name no longer matches the body. (One file the inventory
+  listed — `FilterMiddleware:27` — was already clean.)
+- **1.2** [D1.2] — 17 docstrings carrying stale `include/` / `admin/`
+  file references rewritten or simplified. The `SelectedTagsRenderer:43`
+  caveat is preserved (template path, not a real `include/` reference).
+- **1.3** [D2.1] — `psalm.xml` suppressions reframed: `MissingFile` now
+  explains it's for dynamic plugin / theme / language file includes;
+  `UnsupportedPropertyReferenceUsage` now names the actual registry-pattern
+  call sites (EventDispatcher handler buckets, LoadedPluginRegistry
+  plugin_data) instead of "legacy compatibility bridges".
+- **1.4** [D3.2, D3.3, D3.1A] — Dead `PwgGetSessionVarDynamicReturnType`
+  PHPStan extension deleted and unregistered. Misnamed
+  `TriggerChangeDynamicReturnType` renamed to
+  `EventDispatcherDispatchDynamicReturnType` (file + class + phpstan.neon
+  registration + one referencing comment in `PiwigoExtension.php` + STRUCTURE
+  / ROADMAP-PHP doc references). Eight stale `@var` placeholders dropped
+  from `tools/phpstan-bootstrap.php` (`$user`, `$lang`, `$template`,
+  `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`,
+  `$persistent_cache`). NoGlobalInSrcRule cleanup [D3.4] was found already
+  done — docblock and REPLACEMENTS were clean before Phase 1 ran.
+- **1.5** [D3.5 — Phase 1 portion] — `tools/triggers_list.php` type strings
+  renamed `'trigger_change'` → `'dispatch'` and `'trigger_notify'` →
+  `'notify'` (159 entries via single-file Edit replace_all); HTML filter
+  dropdown updated to match. Eleven `include/` path references repointed to
+  current src/ files (`page_header.php` → `PageHeaderRenderer.php`,
+  `page_tail.php` → `PageTailRenderer.php`, `common.inc.php` →
+  `CommonBootstrap.php`, `functions_plugins.inc.php` → `EventDispatcher.php`,
+  redundant `functions.inc.php` entries dropped); one orphan event
+  (`functions_mail_included`) that no longer dispatches deleted from the
+  list. Event names themselves untouched — they're the API surface
+  ([Phase 6.2](#62-plugin-event-api-p2) territory).
 
-## 1.1 Stale comments asserting removed bridges  [D1.1]
+Verified: `vendor/bin/phpstan analyse` → 0 errors at level 10;
+`vendor/bin/phpunit --testsuite Unit` → 467 tests, 2172 assertions, OK.
 
-Eight files have docstrings that describe `$GLOBALS` bridges that no longer
-exist:
-
-| File:Line | Stale claim | Reality |
-|---|---|---|
-| `Users/UserBootstrap.php:23` | "the PSR-15 pipeline has a fully-built `$GLOBALS['user']`" | No `$GLOBALS['user']` write happens |
-| `Http/Middleware/AuthMiddleware.php:18, 20` | "Calls `UserBootstrap::bootstrap()` which populates `$GLOBALS['user']`" | Same |
-| `Http/Middleware/FilterMiddleware.php:27` | "Runs after AuthMiddleware so that `$GLOBALS['user']`" | Reads `CurrentUser::get()->rawAttributes` now |
-| `Config/Config.php:23` | "`$GLOBALS['conf']` reference bridge (attachGlobals) was retired" | Last in-tree mention; flagged for awareness |
-| `Config/ConfigStorage.php:27` | "Bulk read from the conf table into `$GLOBALS['conf']`" | Bulk read populates `Config::$data` only |
-| `Lang/Translator.php:99` | "restores from the stack top (so `$GLOBALS['lang']` takes over)" | `$GLOBALS['lang']` unset at boot |
-| `Core/LanguageStack.php:34` | mentions `$GLOBALS['language_files']` | Only mention in codebase |
-| `Users/CurrentUser.php:21` | method named `attachGlobals` | Body no longer touches `$GLOBALS` |
-
-## 1.2 References to deleted directories  [D1.2]
-
-Eighteen `src/` files have docstrings of the form "Replaces the former
-`include/X.inc.php`" or "Used by `admin/Y.php`". Affected:
-
-`Kernel.php` (4×), `InstallSentinel.php` (2×), `InstallController.php` (2×),
-`FilterMiddleware.php` (2×), `Config.php`, `WsType.php`, `WsParam.php`,
-`DerivativeSize.php`, `LanguageStack.php`, `SectionInitializer.php`,
-`UserBootstrap.php`, `ImageDerivativeController.php`, `HistoryRepository.php`
-(2×), `CategoryRepository.php`, `UserRepository.php`, `RateRepository.php`
-(2×), `PermalinkRepository.php`, `Db/SqlExpr.php`, `Tag/TagRepository.php:95`,
-`Image/ImageDerivativeContext.php`, `config/routes.php:64, 79`.
-
-> **Caveat — `include/` as a template subdirectory  [D1.3]:**
-> `SelectedTagsRenderer.php:43` assigns the template path
-> `include/selected_tags.inc.latte`. That path is **inside the template tree**
-> (`themes/_base/template/include/...`), not the deleted root `include/`. Easy
-> to misread; do not "fix" this one.
-
-## 1.3 `psalm.xml` stale comments  [D2.1]
-
-Two comments around suppression rules (lines 30, 33-34) frame the suppressions
-as "Legacy globals used in bootstrapped files — not actionable yet" and
-"reference assignments to `$GLOBALS` / static properties are intentional
-legacy-compatibility bridges". The suppressions themselves are still needed
-(one reference assignment remains, in `UrlService`), but the framing is
-outdated.
-
-## 1.4 PHPStan tooling cleanups
-
-### Delete `PwgGetSessionVarDynamicReturnType`  [D3.2]
-
-The extension targets a free function `pwg_get_session_var()` that no longer
-exists. Whole-repo grep finds zero call sites — `SessionService::getSessionVar()`
-replaced it. Safe to delete the extension and unregister from `phpstan.neon`.
-
-### Rename `TriggerChangeDynamicReturnType`  [D3.3]
-
-Class name fossilizes the legacy `trigger_change()` free function; the
-implementation correctly targets
-`\Piwigo\Plugins\EventDispatcher::dispatch()`. Functionally correct, but the
-name lies. Rename to `EventDispatcherDispatchDynamicReturnType` (mechanical).
-
-### Clean `NoGlobalInSrcRule`  [D3.4]
-
-Class docblock (line 18) claims "Legacy code in `include/` and `admin/` is
-allowed to keep using globals" — neither directory exists. The `REPLACEMENTS`
-map's single remaining stale entry is
-`'persistent_cache' => 'PersistentCacheRegistry::current()'` — the class
-was deleted in §Z3. The previously stale `'header_notes'`, `'filter'`,
-`'themeconfs'` entries were dropped alongside their channel closures (§Z9 /
-§Z11 / §Z12).
-
-### Drop closed-bridge `@var` placeholders from `tools/phpstan-bootstrap.php`  [D3.1A]
-
-Eight of the nine "closed-bridge" placeholders still declared in lines 14-35
-correspond to globals that no longer exist anywhere in `src/`:
-
-| Variable | Why it's dead |
-|---|---|
-| `$user` | Removed (§Z1) — readers use `CurrentUser::get()->rawAttributes` |
-| `$lang` | Removed (§Z1) — readers use `Lang::all()` |
-| `$template` | Removed (§Z1) — readers use `TemplateRegistry::current()` |
-| `$logger` | Replaced by `LoggerRegistry` |
-| `$pwg_event_handlers` | Removed (§Z1) |
-| `$pwg_loaded_plugins` | Removed (§Z1) |
-| `$service` | Now `PwgServerRegistry::current()` |
-| `$persistent_cache` | Class deleted (§Z3) |
-
-(`$page` was the ninth; already dropped 2026-05-15 alongside §A1.) Each can
-be deleted with the corresponding `@var` block. The `$prefixeTable` and
-`$filter` stubs were already dropped in §Z10 and §Z11.
-
-> The remaining placeholders in the same file fall into two groups:
-> **(B) runtime constant duplicates** (13 `WS_*`, `IN_ADMIN`, URLs) tracked
-> by [Phase 2a](#phase-2a--ws_-constant-migration-a32) and
-> [Phase 4c](#phase-4c--in_admin--in_ws--phpwg_in_upgrade--typed-requestcontext-a31);
-> and **(C) procedural plugin/theme callback stubs** (`plugin_install`, …)
-> required by [Phase 6](#phase-6--extension-api-compat-removal).
-
-## 1.5 `tools/triggers_list.php` terminology — Phase 1 portion  [D3.5]
-
-The 1136-line plugin-author reference uses legacy `'type' => 'trigger_change'`
-and `'type' => 'trigger_notify'` strings, plus four
-`'files' => array('include/functions.inc.php', ...)` references pointing at a
-deleted directory.
-
-**Phase 1 task:** rename the type strings to match the modern method names
-(`dispatch` / `notify`) and replace the four `include/` paths with their
-modern equivalents. The event names themselves are the API surface and don't
-change here — see [Phase 6](#phase-6--extension-api-compat-removal) for that.
+Detail → [Appendix A §Z14](#z14-phase-1-doc-drift-sweep).
 
 ---
 
@@ -970,6 +898,103 @@ state alongside `$data` / `$days` / `$months`.
 `mergeFromFile()` include helper in `LanguageStack`) still use local
 `$lang_info` variables, but those are scoped to the include `.lang.php`
 files — not the global.
+
+## Z14. Phase 1 Doc-Drift Sweep
+
+Closed 2026-05-15. One-pass mechanical cleanup of comments, tooling stubs,
+and the plugin-author event-reference doc. No runtime behaviour changes.
+
+### Code comments / docstrings rewritten
+
+- **Stale `$GLOBALS` bridge claims** [D1.1] — 7 docstrings rewritten:
+  `UserBootstrap.php:18-25`, `AuthMiddleware.php:14-21`,
+  `Config.php:21-25`, `ConfigStorage.php:26-29` (full docblock rewrite),
+  `Translator.php:97-100`, `LanguageStack.php:33-39`,
+  `CurrentUser.php:17-20` (added clarifying note that the
+  `attachGlobals()` method name is historical — body no longer touches
+  any global; rename would touch callers, deferred).
+- **Stale `include/` / `admin/` doc references** [D1.2] — 17 single-line
+  or short-block edits across `src/` and `config/storage.php`. Two
+  docblocks rewritten in full:
+  `ConfigStorage.php` ("Thin OO facade…" → "Storage backend for the conf
+  table…") and `MailNotificationContext.php` (now names the actual
+  current callers — `NotificationAdminService` and `MailService`).
+  Pointer updates: `WsParam.php` / `WsType.php` now say
+  "Values mirror the WS_PARAM_*/WS_TYPE_* runtime constants emitted by
+  `PwgServer::boot()`"; `ImageDerivativeController.php` points helpers at
+  `DerivativePipeline`; `config/storage.php` points `PWG_LOCAL_DIR` at
+  `CommonBootstrap`; `Config.php`'s "(formerly PHP define()s in
+  include/constants.php)" historical aside dropped; `ConfigLoader.php`'s
+  "Replaces the legacy include/config_default.inc.php" historical aside
+  dropped. `Repository::*` doc lines of the form "Used by admin/X.php"
+  removed entirely (the action verb in the method name documents itself).
+  The `SelectedTagsRenderer.php:43` template-path note from D1.3 was
+  preserved as a deliberate non-fix.
+
+### Tooling
+
+- **psalm.xml** [D2.1] — both suppression comments rewritten. `MissingFile`
+  comment now describes the dynamic plugin / theme / language file include
+  pattern it's actually catching. `UnsupportedPropertyReferenceUsage`
+  comment names the two real call sites
+  (`EventDispatcher` handler buckets, `LoadedPluginRegistry::plugin_data`)
+  rather than the stale "legacy compatibility bridge" framing.
+- **PHPStan dead extension deleted** [D3.2] —
+  `tools/phpstan/PwgGetSessionVarDynamicReturnType.php` removed (zero
+  callers; `SessionService::getSessionVar()` replaced the targeted free
+  function). The `services:` block in `phpstan.neon` lost the
+  `dynamicFunctionReturnTypeExtension` registration.
+- **PHPStan extension renamed** [D3.3] —
+  `tools/phpstan/TriggerChangeDynamicReturnType.php` → 
+  `tools/phpstan/EventDispatcherDispatchDynamicReturnType.php` (`git mv`),
+  class name updated, `phpstan.neon` registration updated, one referencing
+  comment in `src/Piwigo/Template/Latte/PiwigoExtension.php:415` updated,
+  doc tables in `docs/STRUCTURE.md:293` and `docs/ROADMAP-PHP.md:2296`
+  updated.
+- **phpstan-bootstrap.php stale `@var` placeholders dropped** [D3.1A] — 8
+  blocks deleted (`$user`, `$lang`, `$template`, `$logger`,
+  `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`,
+  `$persistent_cache`). File dropped from 93 lines to 75. The remaining
+  runtime-constant duplicates (Group B) and procedural callback stubs
+  (Group C) are out of Phase 1 scope; Group B tracks
+  [Phase 2a](#phase-2a--ws_-constant-migration-a32) and
+  [Phase 4c](#phase-4c--in_admin--in_ws--phpwg_in_upgrade--typed-requestcontext-a31);
+  Group C is required by [Phase 6](#phase-6--extension-api-compat-removal).
+- **NoGlobalInSrcRule cleanup** [D3.4] — found already done. The docblock
+  no longer mentioned `include/` / `admin/`, and `persistent_cache` was
+  already gone from `REPLACEMENTS`. No-op for Phase 1.
+
+### `tools/triggers_list.php`
+
+[D3.5 — Phase 1 portion]:
+
+- `'type' => 'trigger_change'` → `'type' => 'dispatch'` and
+  `'type' => 'trigger_notify'` → `'type' => 'notify'` across 159 entries
+  via single-file `Edit replace_all`. HTML filter dropdown in the rendered
+  page updated to match (`<option value="dispatch">` / `notify`).
+- 11 `include/` path references repointed:
+  `include/page_header.php` (×4) → `src/Piwigo/Page/PageHeaderRenderer.php`;
+  `include/page_tail.php` (×2) → `src/Piwigo/Page/PageTailRenderer.php`;
+  `include/common.inc.php` (×2) → `src/Piwigo/Bootstrap/CommonBootstrap.php`;
+  `include/functions.inc.php` (×2) — both were the redundant first entry
+  in a multi-file list (alongside `ConfigService.php` for `load_conf` and
+  alongside `CommonBootstrap` / `Util` / `MailService` for `loading_lang`)
+  — dropped entirely;
+  `include/functions_plugins.inc.php (trigger_change, trigger_notify)` → 
+  `src/Piwigo/Plugins/EventDispatcher.php (dispatch, notify)`.
+- The orphan event `functions_mail_included` was dispatched by the
+  deleted `include/functions_mail.inc.php` and is never fired anywhere
+  in `src/`; its entry was deleted from the reference doc rather than
+  pointed at an unrelated file. (Event-API rewrite, including any further
+  pruning of dead events, is
+  [Phase 6.2](#62-plugin-event-api-p2).)
+
+### Verification
+
+- `vendor/bin/phpstan analyse --no-progress` → 0 errors at level 10.
+- `vendor/bin/phpunit --testsuite Unit` → 467 tests, 2172 assertions, OK.
+- `composer dump-autoload --classmap-authoritative` run after the
+  PHPStan-extension rename.
 
 ---
 

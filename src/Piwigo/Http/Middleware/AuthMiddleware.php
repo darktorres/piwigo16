@@ -13,11 +13,9 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * Resolves the current user from session / cookie / Apache auth / auth-key
- * and attaches the CurrentUser instance as the '_current_user' request attribute.
- *
- * Calls UserBootstrap::bootstrap() which populates $GLOBALS['user'] and
- * calls CurrentUser::attachGlobals(). Downstream controllers and templates
- * read $GLOBALS['user'] as before; typed code reads the request attribute.
+ * and attaches the CurrentUser instance as the '_current_user' request
+ * attribute. Downstream controllers read the user via CurrentUser::get() or
+ * the '_current_user' request attribute.
  */
 final class AuthMiddleware implements MiddlewareInterface
 {

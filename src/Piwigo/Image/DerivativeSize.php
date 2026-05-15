@@ -6,8 +6,6 @@ namespace Piwigo\Image;
 
 /**
  * Standard derivative image sizes.
- *
- * Values match the IMG_* defines in include/derivative_std_params.inc.php.
  */
 enum DerivativeSize: string
 {

@@ -25,9 +25,6 @@ use Psr\Http\Server\RequestHandlerInterface;
  * Resolves the "recent photos" filter state and commits it to
  * FilterContextRegistry as a typed immutable FilterContext.
  *
- * Replaces the former include/filter.inc.php + the outer condition in
- * common.inc.php that loaded it.
- *
  * Runs after AuthMiddleware so CurrentUser::get() (recent_period, id,
  * cache_update_time) is already populated when filter data is computed.
  */

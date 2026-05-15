@@ -98,7 +98,7 @@ final class PermalinkRepository extends AbstractRepository
     }
 
     /**
-     * Delete an old_permalink entry by permalink value only (used by admin/permalinks.php).
+     * Delete an old_permalink entry by permalink value only.
      * Returns true if a row was deleted.
      */
     public function deleteOldPermalinkByValue(string $permalink): bool

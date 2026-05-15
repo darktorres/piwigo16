@@ -456,7 +456,6 @@ final class UserRepository extends AbstractRepository
 
     /**
      * Return all users with their status from user_infos.
-     * Used by admin/rating_user.php to build the user filter.
      *
      * @return list<array<string, mixed>>
      */

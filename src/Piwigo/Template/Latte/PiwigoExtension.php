@@ -412,7 +412,7 @@ final class PiwigoExtension extends Extension
             }
         }
         // The `combined_script` event contract is "first arg is the URL,
-        // mutated in place"; PHPStan's TriggerChangeDynamicReturnType
+        // mutated in place"; PHPStan's EventDispatcherDispatchDynamicReturnType
         // extension narrows dispatch's return to the first-arg type, but
         // psalm sees `mixed`, hence the `(string)` cast — defensive against
         // a misbehaving plugin and load-bearing for psalm narrowing.

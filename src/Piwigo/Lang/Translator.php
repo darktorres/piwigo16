@@ -95,8 +95,8 @@ final class Translator
     }
 
     /**
-     * Restore the Translator previously saved for $language.
-     * If none was saved, restores from the stack top (so $GLOBALS['lang'] takes over).
+     * Restore the Translator previously saved for $language. No-op if none
+     * was saved.
      */
     public static function restoreForLanguage(string $language): void
     {

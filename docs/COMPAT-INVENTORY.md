@@ -756,7 +756,7 @@ Standard event-dispatcher pattern, but PSR-14 dispatchers don't have this — it
 
 A `grep -rn 'include/\|admin/'` of `src/` PHP files turns up **18+ docstrings** that describe code as "Replaces the former `include/X.inc.php`" or "Used by `admin/Y.php`". Neither directory exists in 16.x. Affected files include:
 
-`Kernel.php` (4×), `InstallSentinel.php` (2×), `InstallController.php` (2×), `FilterMiddleware.php` (2×), `Config.php`, `WsType.php`, `WsParam.php`, `DerivativeSize.php`, `LanguageStack.php`, `SectionInitializer.php`, `UserBootstrap.php`, `ImageDerivativeController.php`, `HistoryRepository.php` (2×), `CategoryRepository.php`, `UserRepository.php`, `RateRepository.php` (2×), `PermalinkRepository.php`.
+`Kernel.php` (4×), `InstallSentinel.php` (2×), `InstallController.php` (2×), `FilterMiddleware.php` (2×), `Config.php`, `WsType.php`, `WsParam.php`, `DerivativeSize.php`, `LanguageStack.php`, `SectionInitializer.php`, `UserBootstrap.php`, `ImageDerivativeController.php`, `HistoryRepository.php` (2×), `CategoryRepository.php`, `UserRepository.php`, `RateRepository.php` (2×), `PermalinkRepository.php`, `Db/SqlExpr.php` ("instead of the legacy"), `Tag/TagRepository.php:95` ("Replaces the legacy `find_tags()`"), `Image/ImageDerivativeContext.php` (former `$page` keys), and `config/routes.php:64, 79` ("former tags.php", "former search.php").
 
 No functional impact — they're docstrings. But misleading to anyone tracing the codebase ("where's `include/section_init.inc.php`?" → "doesn't exist; this is the replacement").
 

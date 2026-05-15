@@ -29,6 +29,10 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocBeginElementSetGlobal;
+use Piwigo\Event\Location\LocBeginElementSetUnit;
+use Piwigo\Event\Location\LocEndElementSetGlobal;
+use Piwigo\Event\Location\LocEndElementSetUnit;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\DerivativeImage;
@@ -50,6 +54,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Validation\InputValidator;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class BatchManagerController
 {
@@ -92,6 +97,7 @@ final class BatchManagerController
         private readonly InputValidator $inputValidator,
         private readonly RedirectResponder $redirectResponder,
         private readonly PaginationService $paginationService,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -648,7 +654,7 @@ final class BatchManagerController
             $this->csrfService->check();
         }
 
-        EventDispatcher::notify('loc_begin_element_set_global');
+        $this->dispatcher->dispatch(new LocBeginElementSetGlobal());
 
         $this->inputValidator->check('del_tags', $_POST, true, ValidationPattern::ID);
         $this->inputValidator->check('associate', $_POST, true, ValidationPattern::ID);
@@ -973,7 +979,7 @@ final class BatchManagerController
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        EventDispatcher::notify('loc_end_element_set_global');
+        $this->dispatcher->dispatch(new LocEndElementSetGlobal());
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'batch_manager_global.latte');
     }
 
@@ -986,7 +992,7 @@ final class BatchManagerController
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
         $pwg_loaded_plugins = LoadedPluginRegistry::all();
-        EventDispatcher::notify('loc_begin_element_set_unit');
+        $this->dispatcher->dispatch(new LocBeginElementSetUnit());
 
         if (isset($_POST['submit'])) {
             $this->csrfService->check();
@@ -1226,7 +1232,7 @@ final class BatchManagerController
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        EventDispatcher::notify('loc_end_element_set_unit');
+        $this->dispatcher->dispatch(new LocEndElementSetUnit());
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'batch_manager_unit.latte');
     }
 

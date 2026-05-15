@@ -10,11 +10,15 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\Lifecycle\LocAfterPageHeader;
+use Piwigo\Event\Location\LocBeginPageHeader;
+use Piwigo\Event\Location\LocEndPageHeader;
+use Piwigo\Event\Template\RenderPageBanner;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class PageHeaderRenderer
 {
@@ -26,7 +30,8 @@ final class PageHeaderRenderer
         $template  = TemplateRegistry::current();
         $pageState = PageState::current();
 
-        EventDispatcher::notify('loc_begin_page_header');
+        $dispatcher = Kernel::service(EventDispatcherInterface::class);
+        $dispatcher->dispatch(new LocBeginPageHeader());
 
         $show_mobile_app_banner = Kernel::service(ConfigService::class)->confGetParam('show_mobile_app_banner_in_gallery', false);
         if (RequestContextRegistry::current() === RequestContext::Admin) {
@@ -34,12 +39,14 @@ final class PageHeaderRenderer
         }
 
         $pageBannerRaw = $pageState->pageBanner ?? Config::pageBanner();
+        $bannerEvent = new RenderPageBanner(
+            str_replace('%gallery_title%', Config::galleryTitle(), $pageBannerRaw)
+        );
+        $dispatcher->dispatch($bannerEvent);
+
         $template->assign([
             'GALLERY_TITLE'          => $pageState->galleryTitle ?? Config::galleryTitle(),
-            'PAGE_BANNER'            => new Html((string) EventDispatcher::dispatch(
-                'render_page_banner',
-                str_replace('%gallery_title%', Config::galleryTitle(), $pageBannerRaw)
-            )),
+            'PAGE_BANNER'            => new Html($bannerEvent->banner),
             'BODY_ID'                => $pageState->bodyId,
             'CONTENT_ENCODING'       => Kernel::service(StringUtil::class)->getPwgCharset(),
             'PAGE_TITLE'             => strip_tags($title),
@@ -68,11 +75,11 @@ final class PageHeaderRenderer
             $template->assign(['page_refresh' => ['TIME' => $refresh, 'U_REFRESH' => $urlLink]]);
         }
 
-        EventDispatcher::notify('loc_end_page_header');
+        $dispatcher->dispatch(new LocEndPageHeader());
 
         header('Content-Type: text/html; charset=' . Kernel::service(StringUtil::class)->getPwgCharset());
         $template->parse('header.latte');
 
-        EventDispatcher::notify('loc_after_page_header');
+        $dispatcher->dispatch(new LocAfterPageHeader());
     }
 }

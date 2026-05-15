@@ -12,17 +12,18 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Lifecycle\LocActionBeforeHttpHeaders;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Validation\InputValidator;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -42,6 +43,7 @@ final readonly class ActionController implements ControllerInterface
         private ActivityLogger $activityLogger,
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -135,7 +137,7 @@ SELECT id FROM ' . Tables::categories() . '
             $this->activityLogger->pageView($get_id, 'high', is_scalar($format['format_id'] ?? null) ? (string) $format['format_id'] : null);
         }
 
-        EventDispatcher::notify('loc_action_before_http_headers');
+        $this->dispatcher->dispatch(new LocActionBeforeHttpHeaders());
 
         $http_headers = [];
         $ctype        = null;

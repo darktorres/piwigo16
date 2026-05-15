@@ -18,6 +18,9 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\Location\LocBeginAdmin;
+use Piwigo\Event\Location\LocBeginAdminPage;
+use Piwigo\Event\Location\LocEndAdmin;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\RequestContext;
@@ -37,6 +40,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Validation\InputValidator;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -71,6 +75,7 @@ final readonly class AdminController implements ControllerInterface
         private UserRepository $userRepository,
         private InputValidator $inputValidator,
         private RedirectResponder $redirectResponder,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -91,7 +96,7 @@ final readonly class AdminController implements ControllerInterface
 
         EventDispatcher::addListener('tabsheet_before_select', CoreTabsRegistrar::addCoreTabs(...), 0);
 
-        EventDispatcher::notify('loc_begin_admin');
+        $this->dispatcher->dispatch(new LocBeginAdmin());
 
         $this->permissionService->checkStatus(AccessLevel::Administrator);
 
@@ -391,7 +396,7 @@ final readonly class AdminController implements ControllerInterface
 
         // ── Dispatch to admin sub-page ────────────────────────────────────────
 
-        EventDispatcher::notify('loc_begin_admin_page');
+        $this->dispatcher->dispatch(new LocBeginAdminPage());
         $this->dispatchToSubController($adminPage);
 
         $tpl->assign('ACTIVE_MENU', $this->adminService->getActiveMenu($adminPage));
@@ -402,7 +407,7 @@ final readonly class AdminController implements ControllerInterface
 
         PageHeaderRenderer::render($title);
 
-        EventDispatcher::notify('loc_end_admin');
+        $this->dispatcher->dispatch(new LocEndAdmin());
 
         $this->htmlService->flushPageMessages();
 

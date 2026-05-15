@@ -27,6 +27,10 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocBeginCatList;
+use Piwigo\Event\Location\LocBeginCatModify;
+use Piwigo\Event\Location\LocEndCatList;
+use Piwigo\Event\Location\LocEndCatModify;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Group\GroupRepository;
@@ -47,6 +51,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class AlbumController
 {
@@ -80,6 +85,7 @@ final class AlbumController
         private readonly CsrfService $csrfService,
         private readonly InputValidator $inputValidator,
         private readonly RedirectResponder $redirectResponder,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -453,7 +459,7 @@ final class AlbumController
     private function catList(): void
     {
         $tpl = TemplateRegistry::current();
-        EventDispatcher::notify('loc_begin_cat_list');
+        $this->dispatcher->dispatch(new LocBeginCatList());
 
         if (!empty($_POST) || isset($_GET['delete'])) {
             $this->csrfService->check();
@@ -599,7 +605,7 @@ final class AlbumController
             $tpl->append('categories', $tpl_cat);
         }
 
-        EventDispatcher::notify('loc_end_cat_list');
+        $this->dispatcher->dispatch(new LocEndCatList());
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'cat_list.latte');
     }
 
@@ -608,7 +614,7 @@ final class AlbumController
     private function catModify(): void
     {
         $tpl = TemplateRegistry::current();
-        EventDispatcher::notify('loc_begin_cat_modify');
+        $this->dispatcher->dispatch(new LocBeginCatModify());
 
         if (!isset($_GET['cat_id']) || !is_numeric($_GET['cat_id'])) {
             throw new \InvalidArgumentException('missing cat_id param');
@@ -778,7 +784,7 @@ final class AlbumController
             'str_modal_ab'                         => Lang::t('New parent album'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        EventDispatcher::notify('loc_end_cat_modify');
+        $this->dispatcher->dispatch(new LocEndCatModify());
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'cat_modify.latte');
     }
 

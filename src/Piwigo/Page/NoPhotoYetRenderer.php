@@ -8,18 +8,19 @@ use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\Location\LocEndNoPhotoYet;
 use Piwigo\Http\PathExtractor;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Image\ImageRepository;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class NoPhotoYetRenderer
 {
@@ -31,6 +32,7 @@ final readonly class NoPhotoYetRenderer
         private RedirectResponder $redirectResponder,
         private UrlService $urlService,
         private PermissionService $permissionService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
     public function render(): void
@@ -94,7 +96,7 @@ final readonly class NoPhotoYetRenderer
                     ]);
                 }
 
-                EventDispatcher::notify('loc_end_no_photo_yet');
+                $this->dispatcher->dispatch(new LocEndNoPhotoYet());
                 $template->pparse('no_photo_yet.latte');
                 exit();
             } else {

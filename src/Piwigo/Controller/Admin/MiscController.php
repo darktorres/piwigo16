@@ -31,6 +31,8 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocEndHelp;
+use Piwigo\Event\Location\LocEndIntro;
 use Piwigo\Exception\AuthException;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
@@ -65,6 +67,7 @@ use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class MiscController
 {
@@ -111,6 +114,7 @@ final class MiscController
         private readonly InputValidator $inputValidator,
         private readonly RedirectResponder $redirectResponder,
         private readonly PaginationService $paginationService,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -468,7 +472,7 @@ final class MiscController
         $tabsheet->select($selected);
         $tabsheet->assign();
 
-        EventDispatcher::notify('loc_end_help');
+        $this->dispatcher->dispatch(new LocEndHelp());
 
         $helpContent = $this->langService->loadLanguage('help/help_' . $tabsheet->selected . '.html', '', ['return' => true]);
         $tpl->assign([
@@ -611,7 +615,7 @@ final class MiscController
             }
         }
 
-        EventDispatcher::notify('loc_end_intro');
+        $this->dispatcher->dispatch(new LocEndIntro());
 
         $nb_weeks         = Config::dashboardActivityNbWeeks();
         $mondays          = 0;

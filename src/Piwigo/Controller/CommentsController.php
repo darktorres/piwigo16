@@ -19,6 +19,8 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocBeginComments;
+use Piwigo\Event\Location\LocEndComments;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
@@ -35,6 +37,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Validation\InputValidator;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -60,6 +63,7 @@ final readonly class CommentsController implements ControllerInterface
         private RedirectResponder $redirectResponder,
         private EphemeralKeyService $ephemeralKeyService,
         private PaginationService $paginationService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -97,7 +101,7 @@ final readonly class CommentsController implements ControllerInterface
             4 => ['label' => Lang::t('the beginning'),      'clause' => '1=1'],
         ];
 
-        EventDispatcher::notify('loc_begin_comments');
+        $this->dispatcher->dispatch(new LocBeginComments());
 
         $get_since = $this->stringUtil->inputInt('since', null, $_GET);
         $since = ($get_since !== null && $get_since !== 0) ? $get_since : 4;
@@ -406,7 +410,7 @@ SELECT *
         }
 
         PageHeaderRenderer::render($title);
-        EventDispatcher::notify('loc_end_comments');
+        $this->dispatcher->dispatch(new LocEndComments());
         $this->htmlService->flushPageMessages();
         if (count($comments) > 0) {
             $tpl->assignVarFromTemplate('COMMENT_LIST', 'comment_list.latte');

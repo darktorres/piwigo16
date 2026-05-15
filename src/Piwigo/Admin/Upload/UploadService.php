@@ -22,6 +22,8 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocEndAddFormat;
+use Piwigo\Event\Location\LocEndAddUploadedFile;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
@@ -37,6 +39,7 @@ use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServerRegistry;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class UploadService
 {
@@ -51,6 +54,7 @@ final readonly class UploadService
         private StringUtil $stringUtil,
         private UserAdminService $userAdminService,
         private ActivityLogger $activityLogger,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -253,7 +257,7 @@ final readonly class UploadService
         $this->derivativeService->generate($imageInfos, DerivativeSize::Medium->value);
         $logger->info('[addUploadedFile] medium derivative generated', ['id' => $imageId]);
 
-        EventDispatcher::notify('loc_end_add_uploaded_file', $imageInfos);
+        $this->dispatcher->dispatch(new LocEndAddUploadedFile($imageInfos));
         return $imageId;
     }
 
@@ -329,7 +333,7 @@ final readonly class UploadService
         }
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, (int) $formatOf, 'edit', ['action' => 'add format', 'format_ext' => $formatExt, 'format_id' => $formatId]));
         $formatInfos = array_merge($insert, ['format_id' => $formatId]);
-        EventDispatcher::notify('loc_end_add_format', $formatInfos);
+        $this->dispatcher->dispatch(new LocEndAddFormat($formatInfos));
         return $addStatus;
     }
 

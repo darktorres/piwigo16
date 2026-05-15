@@ -22,6 +22,8 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocBeginPicture;
+use Piwigo\Event\Location\LocEndPicture;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
@@ -54,6 +56,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -91,6 +94,7 @@ final readonly class PictureController implements ControllerInterface
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private RedirectResponder $redirectResponder,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -184,7 +188,7 @@ SELECT id
         EventDispatcher::addListener('render_element_content', PictureContentRenderer::defaultContent(...));
         EventDispatcher::addListener('render_element_description', 'pwg_nl2br');
 
-        EventDispatcher::notify('loc_begin_picture');
+        $this->dispatcher->dispatch(new LocBeginPicture());
 
         $tpl = TemplateRegistry::current();
 
@@ -657,7 +661,7 @@ SELECT *
         }
 
         PageHeaderRenderer::render($title, isset($refresh) && is_int($refresh) ? $refresh : null, $url_link ?? null);
-        EventDispatcher::notify('loc_end_picture');
+        $this->dispatcher->dispatch(new LocEndPicture());
         $this->htmlService->flushPageMessages();
         if ($slideshowActive && Config::lightSlideshow()) {
             $tpl->pparse('slideshow.latte');

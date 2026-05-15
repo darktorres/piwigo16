@@ -12,13 +12,15 @@ use Piwigo\Core\ExecutionMutex;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\Location\LocBeginPageTail;
+use Piwigo\Event\Location\LocEndPageTail;
 use Piwigo\Http\DeviceDetectionService;
 use Piwigo\Mail\MailService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Telemetry\TelemetryService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class PageTailRenderer
 {
@@ -26,7 +28,8 @@ final class PageTailRenderer
     {
         $template = TemplateRegistry::current();
 
-        EventDispatcher::notify('loc_begin_page_tail');
+        $dispatcher = Kernel::service(EventDispatcherInterface::class);
+        $dispatcher->dispatch(new LocBeginPageTail());
 
         $template->assign([
             'VERSION'    => Config::showVersion() ? AppInfo::VERSION : '',
@@ -82,7 +85,7 @@ final class PageTailRenderer
             ));
         }
 
-        EventDispatcher::notify('loc_end_page_tail');
+        $dispatcher->dispatch(new LocEndPageTail());
 
         $template->parse('footer.latte');
         $template->flush();

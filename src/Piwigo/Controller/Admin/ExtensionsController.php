@@ -27,6 +27,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocEndThemesInstalled;
 use Piwigo\Exception\AuthException;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
@@ -45,6 +46,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class ExtensionsController
 {
@@ -76,6 +78,7 @@ final readonly class ExtensionsController
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private RedirectResponder $redirectResponder,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -559,7 +562,7 @@ final readonly class ExtensionsController
             'tpl_themes'         => $tpl_themes,
         ]);
 
-        EventDispatcher::notify('loc_end_themes_installed');
+        $this->dispatcher->dispatch(new LocEndThemesInstalled());
         $tpl->assign('isWebmaster', $this->permissionService->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
         $tpl->assign('CONF_ENABLE_EXTENSIONS_INSTALL', Config::enableExtensionsInstall());

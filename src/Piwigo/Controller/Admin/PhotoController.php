@@ -30,6 +30,8 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocEndPhotoAddDirect;
+use Piwigo\Event\Location\LocEndPictureModify;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\DerivativeEncoding;
@@ -51,6 +53,7 @@ use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class PhotoController
 {
@@ -98,6 +101,7 @@ final class PhotoController
         private readonly CsrfService $csrfService,
         private readonly InputValidator $inputValidator,
         private readonly RedirectResponder $redirectResponder,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -434,7 +438,7 @@ SELECT id
             'PWG_TOKEN' => $this->csrfService->getToken(),
         ]);
 
-        EventDispatcher::notify('loc_end_picture_modify');
+        $this->dispatcher->dispatch(new LocEndPictureModify());
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'picture_modify.latte');
     }
 
@@ -669,7 +673,7 @@ SELECT id
         $selected_category = [];
         $this->directPreparer->prepare(PHOTOS_ADD_BASE_URL);
 
-        EventDispatcher::notify('loc_end_photo_add_direct');
+        $this->dispatcher->dispatch(new LocEndPhotoAddDirect());
 
         $unique_exts_for_json = array_unique(array_map(strtolower(...), Config::uploadFormAllTypes() ? Config::fileExtensions() : Config::pictureExtensions()));
 

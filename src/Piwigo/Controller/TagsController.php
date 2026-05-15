@@ -9,17 +9,19 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\Location\LocBeginTags;
+use Piwigo\Event\Location\LocEndTags;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -37,6 +39,7 @@ final readonly class TagsController implements ControllerInterface
         private TagService $tagService,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -45,7 +48,7 @@ final readonly class TagsController implements ControllerInterface
     {
         $this->permissionService->checkStatus(AccessLevel::Guest);
 
-        EventDispatcher::notify('loc_begin_tags');
+        $this->dispatcher->dispatch(new LocBeginTags());
 
         $title = Lang::t('Tags');
         PageState::current()->bodyId = 'theTagsPage';
@@ -128,7 +131,7 @@ final readonly class TagsController implements ControllerInterface
         }
 
         PageHeaderRenderer::render($title);
-        EventDispatcher::notify('loc_end_tags');
+        $this->dispatcher->dispatch(new LocEndTags());
         $this->htmlService->flushPageMessages();
         $tpl->pparse('tags.latte');
         PageTailRenderer::render();

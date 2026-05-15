@@ -14,6 +14,7 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocEndSectionInit;
 use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
@@ -28,6 +29,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Cache\CacheItemPoolInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -59,6 +61,7 @@ final readonly class SectionInitializer
         private UserService $userService,
         private RedirectResponder $redirectResponder,
         private CacheItemPoolInterface $pool,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -681,6 +684,6 @@ SELECT DISTINCT(id)
         );
         SectionContextRegistry::set($ctx);
 
-        EventDispatcher::notify('loc_end_section_init');
+        $this->dispatcher->dispatch(new LocEndSectionInit());
     }
 }

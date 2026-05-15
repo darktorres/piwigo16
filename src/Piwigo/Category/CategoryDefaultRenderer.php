@@ -9,6 +9,9 @@ use Piwigo\Config\Config;
 use Piwigo\Core\DebugCollector;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocBeginIndexThumbnails;
+use Piwigo\Event\Location\LocEndIndexThumbnails;
+use Piwigo\Event\Location\LocIndexThumbnailsSelection;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
@@ -20,6 +23,7 @@ use Piwigo\Session\SessionService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class CategoryDefaultRenderer
 {
@@ -32,6 +36,7 @@ final readonly class CategoryDefaultRenderer
         private StringUtil $stringUtil,
         private UrlService $urlService,
         private DebugCollector $debugCollector,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -46,10 +51,12 @@ final readonly class CategoryDefaultRenderer
         $pageItems = $ctx->items;
         $pageStart = $ctx->start;
         $pageNbImagePage = $ctx->nbImagePage;
-        $selection = EventDispatcher::dispatch(
-            'loc_index_thumbnails_selection',
+        $selectionEvent = new LocIndexThumbnailsSelection(
             array_slice($pageItems, $pageStart, $pageNbImagePage)
         );
+        $this->dispatcher->dispatch($selectionEvent);
+        /** @var array<int, int|string> $selection */
+        $selection = $selectionEvent->selection;
 
         if (count($selection) > 0) {
             $rank_of = array_flip($selection);
@@ -87,7 +94,7 @@ SELECT image_id, COUNT(*) AS nb_comments
         }
 
 
-        EventDispatcher::notify('loc_begin_index_thumbnails', $pictures);
+        $this->dispatcher->dispatch(new LocBeginIndexThumbnails($pictures));
         $tpl_thumbnails_var = [];
 
         foreach ($pictures as $row) {
@@ -149,7 +156,9 @@ SELECT image_id, COUNT(*) AS nb_comments
             'maxRequests' => Config::maxRequests(),
             'SHOW_THUMBNAIL_CAPTION' => Config::showThumbnailCaption(),
         ]);
-        $tpl_thumbnails_var = EventDispatcher::dispatch('loc_end_index_thumbnails', $tpl_thumbnails_var, $pictures);
+        $thumbsEvent = new LocEndIndexThumbnails($tpl_thumbnails_var, $pictures);
+        $this->dispatcher->dispatch($thumbsEvent);
+        $tpl_thumbnails_var = $thumbsEvent->tplThumbnailsVar;
         $template->assign('thumbnails', $tpl_thumbnails_var);
 
         $template->assignVarFromTemplate('THUMBNAILS', 'thumbnails.latte');

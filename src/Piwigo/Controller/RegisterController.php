@@ -10,6 +10,8 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\Location\LocBeginRegister;
+use Piwigo\Event\Location\LocEndRegister;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
@@ -18,7 +20,6 @@ use Piwigo\Language\LanguageService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -26,6 +27,7 @@ use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -48,6 +50,7 @@ final readonly class RegisterController implements ControllerInterface
         private RedirectResponder $redirectResponder,
         private EphemeralKeyService $ephemeralKeyService,
         private LanguageService $languageService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -60,7 +63,7 @@ final readonly class RegisterController implements ControllerInterface
             $this->htmlService->pageForbidden('User registration closed');
         }
 
-        EventDispatcher::notify('loc_begin_register');
+        $this->dispatcher->dispatch(new LocBeginRegister());
 
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
@@ -158,7 +161,7 @@ final readonly class RegisterController implements ControllerInterface
         $tpl->assign('HELP_LINK', $help_link);
 
         PageHeaderRenderer::render();
-        EventDispatcher::notify('loc_end_register');
+        $this->dispatcher->dispatch(new LocEndRegister());
         $this->htmlService->flushPageMessages();
         $tpl->parse('register.latte');
         PageTailRenderer::render();

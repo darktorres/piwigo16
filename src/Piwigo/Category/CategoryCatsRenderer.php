@@ -12,6 +12,9 @@ use Piwigo\Core\DebugCollector;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocBeginIndexCategoryThumbnails;
+use Piwigo\Event\Location\LocBeginIndexCategoryThumbnailsQuery;
+use Piwigo\Event\Location\LocEndIndexCategoryThumbnails;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeSize;
@@ -24,6 +27,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class CategoryCatsRenderer
 {
@@ -37,6 +41,7 @@ final readonly class CategoryCatsRenderer
         private UrlService $urlService,
         private DebugCollector $debugCollector,
         private PaginationService $paginationService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -89,7 +94,9 @@ SELECT SQL_CALC_FOUND_ROWS
   LIMIT ' . $nb_cats_page . ' OFFSET ' . $ctx->startcat . '
 ;';
 
-        $query = EventDispatcher::dispatch('loc_begin_index_category_thumbnails_query', $query);
+        $queryEvent = new LocBeginIndexCategoryThumbnailsQuery($query);
+        $this->dispatcher->dispatch($queryEvent);
+        $query = $queryEvent->query;
 
         $conn = $this->conn;
         $catCatsRows = $conn->executeQuery($query)->fetchAllAssociative();
@@ -232,7 +239,7 @@ SELECT *
         if (count($categories) > 0) {
             $this->filterService->updateCategoriesWithFilteredData($categories);
 
-            EventDispatcher::notify('loc_begin_index_category_thumbnails', $categories);
+            $this->dispatcher->dispatch(new LocBeginIndexCategoryThumbnails($categories));
             $tpl_thumbnails_var = [];
 
             foreach ($categories as $category) {
@@ -306,7 +313,9 @@ SELECT *
 
             $tpl_thumbnails_var_selection = $tpl_thumbnails_var;
             $derivative_params = EventDispatcher::dispatch('get_index_album_derivative_params', ImageStdParams::getByType(DerivativeSize::Thumb->value));
-            $tpl_thumbnails_var_selection = EventDispatcher::dispatch('loc_end_index_category_thumbnails', $tpl_thumbnails_var_selection);
+            $catsEvent = new LocEndIndexCategoryThumbnails($tpl_thumbnails_var_selection);
+            $this->dispatcher->dispatch($catsEvent);
+            $tpl_thumbnails_var_selection = $catsEvent->tplThumbnailsVar;
             $template->assign([
                 'maxRequests' => Config::maxRequests(),
                 'category_thumbnails' => $tpl_thumbnails_var_selection,

@@ -120,12 +120,16 @@ use Piwigo\Ws\Method\UsersEndpoints;
 use Piwigo\Ws\WsHelper;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 return [
     CacheItemPoolInterface::class => factory(static fn (): CacheItemPoolInterface => CacheFactory::create()),
+    EventDispatcherInterface::class => factory(static fn (): EventDispatcherInterface => new EventDispatcher()),
+    EventDispatcher::class => factory(static fn (EventDispatcherInterface $d): EventDispatcher => $d instanceof EventDispatcher ? $d : new EventDispatcher()),
     Config::class          => factory(fn () => Config::instance()),
     Translator::class      => factory(fn () => Translator::get()),
     PageState::class       => factory(fn () => PageState::current()),

@@ -60,7 +60,6 @@ final readonly class ExtensionsEndpoints
         if (!Config::enableExtensionsInstall() && $params['action'] === 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
-        define('IN_ADMIN', true);
         $plugins      = Kernel::service(Plugins::class);
         $pluginAction = is_string($params['action']) ? $params['action'] : '';
         $pluginId     = is_string($params['plugin']) ? $params['plugin'] : '';
@@ -84,7 +83,6 @@ final readonly class ExtensionsEndpoints
         if (!Config::enableExtensionsInstall() && $params['action'] === 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
-        define('IN_ADMIN', true);
         $themes      = Kernel::service(Themes::class);
         $themeAction = is_string($params['action']) ? $params['action'] : '';
         $themeId     = is_string($params['theme']) ? $params['theme'] : '';
@@ -162,7 +160,6 @@ final readonly class ExtensionsEndpoints
     /** @param array<mixed> $params */
     public function ignoreUpdate(array $params, PwgServer $service): PwgError|true
     {
-        define('IN_ADMIN', true);
         if (!$this->permissionService->isWebmaster()) {
             return new PwgError(401, 'Access denied');
         }

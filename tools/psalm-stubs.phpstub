@@ -20,11 +20,7 @@ namespace {
     const PREFIX_TABLE = '';
     const DEFAULT_PREFIX_TABLE = '';
 
-    // Context flags
-    const IN_ADMIN = false;
-    const IN_WS = false;
-    const PHPWG_IN_UPGRADE = false;
-
+    // Context flag (request-context now lives in Piwigo\Http\RequestContext / Registry — Phase 4c)
     const PWG_API_KEY_REQUEST = '';
 
     // Misc

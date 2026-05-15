@@ -13,6 +13,8 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Http\RequestContext;
+use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
 use Piwigo\Plugins\EventDispatcher;
@@ -52,11 +54,13 @@ final readonly class ProfileService
             $_POST['language'] = $this->userService->getDefaultLanguage();
         }
 
-        if (!defined('IN_ADMIN')) {
+        $inAdmin = RequestContextRegistry::current() === RequestContext::Admin;
+
+        if (!$inAdmin) {
             unset($_POST['username']);
         }
 
-        if (Config::allowUserCustomization() or defined('IN_ADMIN')) {
+        if (Config::allowUserCustomization() or $inAdmin) {
             $int_pattern = '/^\d+$/';
             $nbImagePageRaw = $_POST['nb_image_page'] ?? null;
             if ((!isset($_POST['nb_image_page']) || $nbImagePageRaw === null || $nbImagePageRaw === '') or (!preg_match($int_pattern, is_string($nbImagePageRaw) ? $nbImagePageRaw : ''))) {
@@ -88,7 +92,7 @@ final readonly class ProfileService
             if ($_POST['use_new_pwd'] != $_POST['passwordConf']) {
                 $errors[] = Lang::t('The passwords do not match');
             }
-            if (!defined('IN_ADMIN')) {
+            if (!$inAdmin) {
                 $current_password = $this->userRepository->findPasswordById(
                     Config::userFields()['password'],
                     Config::userFields()['id'],
@@ -146,7 +150,7 @@ final readonly class ProfileService
                 $activity_details_tables[] = 'users';
             }
 
-            if (Config::allowUserCustomization() or defined('IN_ADMIN')) {
+            if (Config::allowUserCustomization() or $inAdmin) {
                 $fields = ['nb_image_page', 'language', 'expand', 'show_nb_hits', 'recent_period', 'theme'];
                 if (Config::activateComments()) {
                     $fields[] = 'show_nb_comments';
@@ -213,7 +217,7 @@ final readonly class ProfileService
 
         $special_user = in_array($userdata['id'], [Config::guestId(), Config::defaultUserId()]);
         $tpl->assign('SPECIAL_USER', $special_user);
-        $tpl->assign('IN_ADMIN', defined('IN_ADMIN'));
+        $tpl->assign('IN_ADMIN', RequestContextRegistry::current() === RequestContext::Admin);
 
         $dbnow    = new \DateTimeImmutable('+1 day')->format('Y-m-d H:i:s');
         $tpl->assign('API_CURRENT_DATE', explode(' ', $dbnow)[0]);

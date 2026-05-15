@@ -22,6 +22,8 @@ use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RequestContext;
+use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\LangService;
 use Piwigo\Language\LanguageRepository;
@@ -135,7 +137,7 @@ final readonly class Util
             $this->langService->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
             $tpl = new Template(PHPWG_ROOT_PATH . 'themes', Kernel::service(UserService::class)->getDefaultTheme());
             TemplateRegistry::set($tpl);
-        } elseif (defined('IN_ADMIN')) {
+        } elseif (RequestContextRegistry::current() === RequestContext::Admin) {
             $tpl = new Template(PHPWG_ROOT_PATH . 'themes', Kernel::service(UserService::class)->getDefaultTheme());
             TemplateRegistry::set($tpl);
         }

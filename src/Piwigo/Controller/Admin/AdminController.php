@@ -20,6 +20,8 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RequestContext;
+use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Page\PageHeaderRenderer;
@@ -73,10 +75,10 @@ final readonly class AdminController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        defined('IN_ADMIN') or define('IN_ADMIN', true);
+        RequestContextRegistry::set(RequestContext::Admin);
 
-        // common.inc.php creates the frontend template (IN_ADMIN not yet set).
-        // Replace it with the admin-theme template now that IN_ADMIN is defined.
+        // common.inc.php creates the frontend template before the controller
+        // runs. Replace it with the admin-theme template now.
         $admin_theme_raw = $this->preferencesService->userprefsGetParam('admin_theme', 'dark');
         $admin_theme     = is_scalar($admin_theme_raw) ? (string) $admin_theme_raw : 'dark';
         $adminTpl        = new Template(PHPWG_ROOT_PATH . 'themes/admin', $admin_theme);

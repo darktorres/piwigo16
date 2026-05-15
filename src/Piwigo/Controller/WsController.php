@@ -7,6 +7,8 @@ namespace Piwigo\Controller;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RequestContext;
+use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
@@ -38,9 +40,7 @@ final readonly class WsController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
-        if (!defined('IN_WS')) {
-            define('IN_WS', true);
-        }
+        RequestContextRegistry::set(RequestContext::Ws);
 
         $this->permissionService->checkStatus(AccessLevel::Free);
 

@@ -17,6 +17,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
+use Piwigo\Http\RequestContext;
+use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Lang\LangService;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
@@ -45,6 +47,8 @@ final readonly class UpgradeController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
+        RequestContextRegistry::set(RequestContext::Upgrade);
+
         $prefixeTable = Config::dbPrefix();
 
         if (!InstallSentinel::isInstalled()) {

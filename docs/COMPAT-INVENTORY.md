@@ -34,7 +34,7 @@ defer to this table.
 | **3** | `$GLOBALS` channel migrations | ✓ Closed 2026-05-15 | — | — |
 | **4a** | `$filter` → `FilterContext` VO | ✓ Closed 2026-05-15 | — | — |
 | **4b** | `header_msgs` / `header_notes` → `PageState` | ✓ Closed 2026-05-15 | — | — |
-| **4c** | `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` → typed `RequestContext` | Open | none | — |
+| **4c** | `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` → typed `RequestContext` | ✓ Closed 2026-05-15 | — | — |
 | **4d** | `$lang_info` → `Lang` static state | ✓ Closed 2026-05-15 | — | — |
 | **5** | `Util.php` split | Open | soft: Phase 4a (4a ✓) | — |
 | **6** | Extension-API compat removal (post-v17 cleanup) | Open | none | 6.1–6.5 mostly independent (6.5 soft-depends on 6.3) |
@@ -58,6 +58,7 @@ defer to this table.
 - §Z19 — Phase 2e MobileEsp → mobiledetect/mobiledetectlib swap (2026-05-15)
 - §Z20 — Phase 2f `CURRENT_DATE` global retired (2026-05-15)
 - §Z21 — Phase 2g UniversalFeedCreator → in-tree DOMDocument RSS generator (2026-05-15)
+- §Z22 — Phase 4c `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` → typed `RequestContext` (2026-05-15)
 
 ---
 
@@ -260,8 +261,8 @@ Seven `$GLOBALS` channels eliminated across two sub-phases:
 
 # Phase 4 — Cross-Class Typed Contexts
 
-**Status:** 3 of 4 sub-phases closed. Phase 4c is the only open task. Each
-sub-phase is independent of the others.
+**Status:** ✓ all 4 sub-phases closed 2026-05-15. Each sub-phase shipped
+independently of the others.
 
 ## Phase 4a — `$filter` → `FilterContext` VO  [A2] ✓
 
@@ -281,72 +282,23 @@ so integrity / filter notes were silently swallowed; `PageHeaderRenderer::render
 now wires both `header_msgs` and `header_notes` to the template. Detail →
 [Appendix A §Z12](#z12-phase-4b-header_-pagestate-properties).
 
-## Phase 4c — `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` → typed `RequestContext`  [A3.1]
+## Phase 4c — `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` → typed `RequestContext`  [A3.1] ✓
 
-**Status:** open. The only Phase 4 task still pending.
+Closed 2026-05-15. New typed enum `Piwigo\Http\RequestContext` (cases
+`Admin`, `Ws`, `Upgrade`, `Gallery`, `Derivative`) distributed via
+`Piwigo\Http\RequestContextRegistry::set` / `current`, mirroring the
+established `FilterContextRegistry` / `SectionContextRegistry` pattern.
+Four entry-point controllers (`AdminController`, `WsController`,
+`UpgradeController`, `ImageDerivativeController`) set the context at the
+top of `__invoke`; gallery-side controllers leave the default. 13 read
+sites migrated; 4 `define('IN_ADMIN', …)` and 1 `define('IN_WS', true)`
+lines deleted; stubs purged from `tools/phpstan-bootstrap.php` and
+`tools/psalm-stubs.phpstub`. `PHPWG_IN_UPGRADE` collapsed to a
+private static `UpgradeService::$upgradeAuthorized` property; the
+`checkUpgrade()` accessor reads it directly. PSR-7 request attributes
+remain a possible future re-homing but are not needed for this phase.
 
-**Pattern:** typed enum (`Piwigo\Http\RequestContext`) distributed via a thin
-static registry (`Piwigo\Http\RequestContextRegistry`), matching the
-established Phase 4a/4b/4d shape (`FilterContextRegistry`,
-`SectionContextRegistry`, `PageState::current()`, `TemplateRegistry`,
-`CurrentUser`). The PSR-7 request-attribute approach hinted at in earlier
-drafts of this entry (and at `_route_path` / `_current_user` in
-[ROADMAP-PHP](./ROADMAP-PHP.md)) is a future enhancement; pushing it now
-would force ServerRequestInterface through ~7 service constructors that
-otherwise have no need for it. Phase 4c migrates to the registry first; a
-later phase can re-home the state onto request attributes if/when the
-broader PSR-7 push happens.
-
-### Audit findings (2026-05-15)
-
-Inventory understated the scope. Actual sites:
-
-| Flag | Define sites (actual) | Read sites (actual) |
-|---|---|---|
-| `IN_ADMIN` | 4 — `Controller/Admin/AdminController.php:76`, `Ws/Method/ExtensionsEndpoints.php:63, 87, 165` | 10 — `Page/NoPhotoYetRenderer.php:41`, `Page/PageHeaderRenderer.php:30`, `Core/Util.php:138`, `Users/ProfileService.php:55, 59, 91, 149, 216`, `Users/UserBootstrap.php:145`, `Bootstrap/CommonBootstrap.php:190, 234` |
-| `IN_WS` | 1 — `Controller/WsController.php:42` (guarded by `!defined('IN_WS')` at `:41`) | 3 — `Admin/Upload/UploadService.php:167`, `Users/UserBootstrap.php:90, 120` |
-| `PHPWG_IN_UPGRADE` | 2 — `Admin/UpgradeService.php:109, 144` (inventory said 145, 180 + `UpgradeController` — no define exists in `UpgradeController`) | 2 — `Admin/UpgradeService.php:23-24` (self-contained, `checkUpgrade()` accessor) |
-
-Stubs to clean up: `tools/phpstan-bootstrap.php:8` (`IN_ADMIN`),
-`tools/psalm-stubs.phpstub:24-26` (`IN_ADMIN`, `IN_WS`, `PHPWG_IN_UPGRADE`).
-
-`NoPhotoYetRenderer:39` carries a
-`/** @psalm-suppress RedundantCondition — IN_ADMIN is runtime-set; stub
-value misleads Psalm */` acknowledging the smell — that suppression goes
-with the migration.
-
-### Plan
-
-1. New `Piwigo\Http\RequestContext` enum with cases `Admin`, `Ws`,
-   `Upgrade`, `Gallery`, `Derivative`. `Gallery` is the default (returned by
-   `RequestContextRegistry::current()` when no controller has set the
-   context yet — matches the legacy "no `IN_ADMIN` / `IN_WS` defined" state).
-2. New `Piwigo\Http\RequestContextRegistry` with `set()` / `current()` /
-   `reset()`, mirroring `FilterContextRegistry`.
-3. Set the context at the top of each entry-point controller's `__invoke`
-   (replacing the existing `define()` calls):
-   - `AdminController` → `RequestContext::Admin`
-   - `WsController` → `RequestContext::Ws`
-   - `UpgradeController` → `RequestContext::Upgrade`
-   - `ImageDerivativeController` → `RequestContext::Derivative`
-   - Gallery-side controllers leave the default.
-4. Migrate the 10 + 3 read sites to
-   `RequestContextRegistry::current() === RequestContext::Admin` (resp. `Ws`).
-   Drop `NoPhotoYetRenderer.php:39`'s `@psalm-suppress` block — Psalm
-   narrows the enum comparison without help.
-5. Delete the 4 `define('IN_ADMIN', …)` and 1 `define('IN_WS', true)` lines.
-   The three `ExtensionsEndpoints` defines were a belt-and-suspenders
-   re-define inside WS extension methods; with the registry set by
-   `WsController::__invoke`, the WS context is already in place, and the
-   `IN_ADMIN`-only readers (`PageHeaderRenderer`, `NoPhotoYetRenderer`,
-   `ProfileService`, `Util::redirectHtml`, `CommonBootstrap`) don't run
-   during WS dispatch anyway.
-6. Remove `IN_ADMIN` / `IN_WS` stubs from `tools/phpstan-bootstrap.php` and
-   `tools/psalm-stubs.phpstub`.
-7. `PHPWG_IN_UPGRADE` is self-contained in `UpgradeService` — collapse to a
-   private static `UpgradeService::$upgradeAuthorized` property. The
-   `checkUpgrade()` accessor stays but reads the property. Drop the
-   `PHPWG_IN_UPGRADE` stub too.
+Detail → [Appendix A §Z22](#z22-phase-4c-requestcontext-enum--registry).
 
 ## Phase 4d — `$lang_info` → `Lang` static state  [A2] ✓
 
@@ -659,12 +611,11 @@ Update the "Smarty templates" header to "Latte" at the same time.
    Phase 2h (other defines)   ── deferred 2026-05-15 (see Phase 2h section)
 
    Phase 3a (4 channels)  ──┐
-   Phase 3b (3 channels)  ──┼──  done 2026-05-15
-   Phase 4a ($filter)     ──┤  (see Appendix A)     ───→  Phase 5 (Util split)
-   Phase 4b (header_*)    ──┤
+   Phase 3b (3 channels)  ──┤
+   Phase 4a ($filter)     ──┼──  done 2026-05-15
+   Phase 4b (header_*)    ──┤  (see Appendix A §Z9–§Z13, §Z22)  ───→  Phase 5 (Util split)
+   Phase 4c (RequestCtx)  ──┤
    Phase 4d (lang_info)   ──┘
-
-   Phase 4c (RequestCtx)     ──→  phpstan stubs
 
    Phase 6 (extension-API)   ──  independent of Phases 1-5 (post-v17.0 cleanup)
    §A1 ($page alias)         ──  done 2026-05-15 (shipped early, §Z1.1)
@@ -1686,6 +1637,103 @@ in-tree DOMDocument-based RSS 2.0 generator.
   (PiwigoFeedCreator import in FeedController, docstrings in the new
   classes referencing the retired lib by name).
 - `vendor/openpsa/` directory removed by `composer remove`.
+
+## Z22. Phase 4c `RequestContext` enum + registry
+
+Closed 2026-05-15. The three legacy "we're inside this kind of request" flags —
+`defined('IN_ADMIN')`, `defined('IN_WS')`, `defined('PHPWG_IN_UPGRADE')` —
+replaced with a typed enum distributed via a thin static registry, matching
+the established Phase 4a/4b/4d pattern. PSR-7 request attributes were
+considered (the inventory's pre-audit framing) and deferred as a future
+re-homing — every read site would have needed `ServerRequestInterface`
+threaded through its constructor; the registry shape is already idiomatic
+in this codebase (`FilterContextRegistry`, `SectionContextRegistry`,
+`TemplateRegistry`, `CurrentUser`).
+
+### What landed
+
+- **`Piwigo\Http\RequestContext`** — `enum` with cases `Admin`, `Ws`,
+  `Upgrade`, `Gallery`, `Derivative`.
+- **`Piwigo\Http\RequestContextRegistry`** — `set()` / `current()` /
+  `reset()`. `current()` falls back to `RequestContext::Gallery` when no
+  controller has set the context yet, matching the legacy "no flag
+  defined" semantics. (Gallery-side controllers therefore leave the
+  default; only the four non-default contexts get an explicit `set()`.)
+
+### Contexts set at controller entry
+
+| Controller | Context | Old code |
+|---|---|---|
+| `Controller/Admin/AdminController.php:76` | `RequestContext::Admin` | `defined('IN_ADMIN') or define('IN_ADMIN', true);` |
+| `Controller/WsController.php:42` | `RequestContext::Ws` | `if (!defined('IN_WS')) { define('IN_WS', true); }` |
+| `Controller/UpgradeController.php:48` | `RequestContext::Upgrade` | (no equivalent — Upgrade context is new) |
+| `Controller/ImageDerivativeController.php:43` | `RequestContext::Derivative` | (no equivalent — Derivative context is new) |
+
+The Upgrade/Derivative contexts have no reader yet (existing flow was
+purely structural: bypass `CommonBootstrap` via `index.php` URL prefix
+dispatch). They're set so the enum covers every entry point and so future
+code that needs the distinction has a typed answer.
+
+### 13 read sites migrated
+
+- **`IN_ADMIN` (10 → `RequestContextRegistry::current() === RequestContext::Admin`):**
+  `Page/NoPhotoYetRenderer.php:41` (also dropped the `@psalm-suppress
+  RedundantCondition` block at `:39` — Psalm narrows the enum compare
+  without help), `Page/PageHeaderRenderer.php:30`, `Core/Util.php:138`,
+  `Users/ProfileService.php` (5 sites: 55, 59, 91, 149, 216 — consolidated
+  to a single `$inAdmin` local inside `saveProfileFromPost` since the four
+  reads happen in one method),
+  `Users/UserBootstrap.php:145`, `Bootstrap/CommonBootstrap.php:190, 234`.
+- **`IN_WS` (3 → `=== RequestContext::Ws`):**
+  `Admin/Upload/UploadService.php:167`, `Users/UserBootstrap.php:90, 120`
+  (consolidated to one `$inWs` local since both reads are in the same
+  function).
+
+### 5 define() lines deleted
+
+- `Controller/Admin/AdminController.php:76` (`IN_ADMIN`) — replaced by `RequestContextRegistry::set(RequestContext::Admin)`.
+- `Ws/Method/ExtensionsEndpoints.php:63, 87, 165` (3× `IN_ADMIN`) — belt-and-suspenders re-defines inside WS extension methods. Now that `WsController::__invoke` sets `RequestContext::Ws` at request entry, the `IN_ADMIN` re-defines are pure dead state — the `IN_ADMIN`-only readers (`PageHeaderRenderer`, `NoPhotoYetRenderer`, `ProfileService`, `Util::redirectHtml`, `CommonBootstrap`) don't run inside WS dispatch (which echoes JSON/XML, never renders HTML pages or re-runs bootstrap).
+- `Controller/WsController.php:42` (`IN_WS`) — replaced by `RequestContextRegistry::set(RequestContext::Ws)`. The `if (!defined('IN_WS'))` guard at `:41` went too — the registry is set-once-overwrites and doesn't need the guard.
+
+### `PHPWG_IN_UPGRADE` collapse
+
+Self-contained inside `Admin/UpgradeService.php`: 2 defines at `:109, :144`
+and 1 read at `:23-24`. Collapsed to:
+
+- **`private static bool $upgradeAuthorized = false;`** — class field, same
+  single-write/many-read shape as the legacy define.
+- **`self::$upgradeAuthorized = true;`** at the two grant sites
+  (webmaster cookie path + username/password POST path).
+- **`return self::$upgradeAuthorized;`** in `checkUpgrade()` — the
+  accessor's public signature is unchanged; callers (`UpgradeService` itself)
+  read it the same way.
+
+The inventory entry previously named `:145, :180` and `Controller/UpgradeController.php`
+as define sites; the audit found `:109, :144` in `UpgradeService` and zero
+defines in `UpgradeController`. Corrected before code work began
+(commit `49eab8dfe`).
+
+### Stubs purged
+
+- **`tools/phpstan-bootstrap.php:8`** — `define('IN_ADMIN', false);` deleted. PHPStan no longer needs the stub because the legacy reads (`defined('IN_ADMIN')`) are gone and the new code uses enum comparison.
+- **`tools/psalm-stubs.phpstub:24-26`** — `IN_ADMIN`, `IN_WS`, `PHPWG_IN_UPGRADE` constant stubs deleted.
+
+### What about `$tpl->assign('IN_ADMIN', …)`?
+
+`ProfileService.php:220` still assigns a template variable named `IN_ADMIN`
+because the Latte templates downstream read `{$IN_ADMIN}` by that name.
+The variable's *value* is now derived from the enum
+(`RequestContextRegistry::current() === RequestContext::Admin`); the
+*name* is a template-side identifier that a future Latte cleanup phase can
+rename to `IS_ADMIN_REQUEST` if desired. Out of scope for Phase 4c — no
+PHP-side `defined()` call remains.
+
+### Verification
+
+- `vendor/bin/phpstan analyse --no-progress` → 0 errors at level 10.
+- `vendor/bin/psalm --no-progress` → 0 errors.
+- `vendor/bin/phpunit --testsuite Unit` → 484 tests, 2224 assertions, OK.
+- Cross-tree grep: `grep -RnE '\bIN_ADMIN\b|\bIN_WS\b|\bPHPWG_IN_UPGRADE\b' src/ tests/ tools/` returns only intentional residuals: the `'IN_ADMIN'` template-variable string in `ProfileService:220` (see above), and docstring references to the retired flag names in the new `RequestContext.php` / `UpgradeService.php` migration notes.
 
 ---
 

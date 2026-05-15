@@ -10,6 +10,8 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
+use Piwigo\Http\RequestContext;
+use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -27,7 +29,7 @@ final class PageHeaderRenderer
         EventDispatcher::notify('loc_begin_page_header');
 
         $show_mobile_app_banner = Kernel::service(ConfigService::class)->confGetParam('show_mobile_app_banner_in_gallery', false);
-        if (defined('IN_ADMIN')) {
+        if (RequestContextRegistry::current() === RequestContext::Admin) {
             $show_mobile_app_banner = Kernel::service(ConfigService::class)->confGetParam('show_mobile_app_banner_in_admin', true);
         }
 

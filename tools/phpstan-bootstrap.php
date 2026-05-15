@@ -5,7 +5,6 @@ declare(strict_types=1);
 define('PHPWG_ROOT_PATH', __DIR__ . '/../');
 // PHPWG_VERSION migrated to AppInfo::VERSION — no PHP define needed.
 define('PWG_LOCAL_DIR', 'local/');
-define('IN_ADMIN', false);
 
 // PREFIX_TABLE is defined at runtime by UpgradeController / UpgradeFeedController (upgrade path only).
 // Declared here as a PHPStan placeholder so migration-step analysis resolves it.

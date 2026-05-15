@@ -11,6 +11,8 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\Util;
+use Piwigo\Http\RequestContext;
+use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativePipeline;
 use Piwigo\Image\DerivativeSize;
@@ -40,6 +42,8 @@ final readonly class ImageDerivativeController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
+        RequestContextRegistry::set(RequestContext::Derivative);
+
         $logger = LoggerRegistry::current();
 
         $ctx   = new ImageDerivativeContext();

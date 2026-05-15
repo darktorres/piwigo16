@@ -24,6 +24,8 @@ use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RequestContext;
+use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\LangService;
 use Piwigo\Menu\BlockManager;
@@ -187,7 +189,7 @@ final class CommonBootstrap
         }
 
         Kernel::service(LangService::class)->loadLanguage('common.lang');
-        if (Kernel::service(PermissionService::class)->isAdmin() || defined('IN_ADMIN')) {
+        if (Kernel::service(PermissionService::class)->isAdmin() || RequestContextRegistry::current() === RequestContext::Admin) {
             Kernel::service(LangService::class)->loadLanguage('admin.lang');
             Kernel::service(LangService::class)->loadLanguage('whats_new_' . AppInfo::branchFromVersion(AppInfo::VERSION) . '.lang');
         }
@@ -231,7 +233,7 @@ final class CommonBootstrap
             PageState::current()->notifyApiKeyExpiration = null;
         }
 
-        if (defined('IN_ADMIN')) {
+        if (RequestContextRegistry::current() === RequestContext::Admin) {
             $admin_theme_raw = Kernel::service(PreferencesService::class)->userprefsGetParam('admin_theme', 'dark');
             $template = new Template(PHPWG_ROOT_PATH . 'themes/admin', is_string($admin_theme_raw) ? $admin_theme_raw : 'dark');
         } else {

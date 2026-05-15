@@ -18,12 +18,17 @@ use Piwigo\Users\UserRepository;
 
 final class UpgradeService
 {
+    /**
+     * Set once the upgrade-wizard credentials check at {@see self::checkUpgradeAccessRights()}
+     * has authorised the user. Replaces the legacy `PHPWG_IN_UPGRADE` PHP
+     * constant (retired in Phase 4c) — same single-write, multi-read shape but
+     * scoped to this class and typed.
+     */
+    private static bool $upgradeAuthorized = false;
+
     public static function checkUpgrade(): bool
     {
-        if (defined('PHPWG_IN_UPGRADE')) {
-            return (bool) PHPWG_IN_UPGRADE;
-        }
-        return false;
+        return self::$upgradeAuthorized;
     }
 
     public static function deactivateNonStandardPlugins(): void
@@ -106,7 +111,7 @@ final class UpgradeService
                 $statusValue = Kernel::service(UserRepository::class)
                     ->findStatusByUserId((int) $pwgUid);
                 if ($statusValue === 'webmaster') {
-                    define('PHPWG_IN_UPGRADE', true);
+                    self::$upgradeAuthorized = true;
                     return;
                 }
             }
@@ -141,7 +146,7 @@ final class UpgradeService
         } elseif ($row['status'] != 'admin' and $row['status'] != 'webmaster') {
             PageState::current()->addError(Lang::t('You do not have access rights to run upgrade'));
         } else {
-            define('PHPWG_IN_UPGRADE', true);
+            self::$upgradeAuthorized = true;
         }
     }
 

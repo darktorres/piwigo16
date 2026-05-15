@@ -10,6 +10,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Http\PathExtractor;
+use Piwigo\Http\RequestContext;
+use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
@@ -36,9 +38,8 @@ final readonly class NoPhotoYetRenderer
         $user = CurrentUser::get()->rawAttributes;
         $_no_photo_yet_route = PathExtractor::fromServer($_SERVER);
 
-        /** @psalm-suppress RedundantCondition — IN_ADMIN is runtime-set; stub value misleads Psalm */
         if (
-            !defined('IN_ADMIN')
+            RequestContextRegistry::current() !== RequestContext::Admin
             and StringUtil::scriptBasename() != 'identification'
             and StringUtil::scriptBasename() != 'password'
             and StringUtil::scriptBasename() != 'ws'

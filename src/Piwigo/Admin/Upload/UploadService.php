@@ -23,6 +23,8 @@ use Piwigo\Db\Tables;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
+use Piwigo\Http\RequestContext;
+use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeService;
 use Piwigo\Image\DerivativeSize;
@@ -164,7 +166,7 @@ final readonly class UploadService
                 if (in_array($finfoType, ['image/svg', 'image/svg+xml']) && $originalExtension !== 'svg') {
                     unlink($sourceFilepath);
                     $errorMsg = 'Extension "' . $originalExtension . '" for "' . ($originalFilename ?? '') . '" does not match MIME "' . ($finfoType !== false ? $finfoType : '') . '"';
-                    if (defined('IN_WS')) {
+                    if (RequestContextRegistry::current() === RequestContext::Ws) {
                         PwgServerRegistry::current()->sendResponse(new PwgError(415, $errorMsg));
                         exit;
                     }

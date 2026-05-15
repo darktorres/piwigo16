@@ -8,6 +8,8 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\Util;
+use Piwigo\Http\RequestContext;
+use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlService;
 use Piwigo\Ws\Method\GeneralEndpoints;
@@ -86,8 +88,10 @@ final class UserBootstrap
             }
         }
 
-        // HTTP API key (only relevant when IN_WS is defined by WsController)
-        if (defined('IN_WS')
+        $inWs = RequestContextRegistry::current() === RequestContext::Ws;
+
+        // HTTP API key (only relevant under the Ws request context set by WsController)
+        if ($inWs
             && isset($_SERVER['HTTP_X_PIWIGO_API'])
             && !empty($_SERVER['HTTP_X_PIWIGO_API'])
             && isset($_REQUEST['method'])
@@ -116,8 +120,8 @@ final class UserBootstrap
             );
         }
 
-        // pwg.images.uploadAsync credential login (IN_WS only)
-        if (defined('IN_WS')
+        // pwg.images.uploadAsync credential login (Ws context only)
+        if ($inWs
             && isset($_REQUEST['method'])
             && is_string($_REQUEST['method'])
             && $_REQUEST['method'] === 'pwg.images.uploadAsync'
@@ -142,7 +146,7 @@ final class UserBootstrap
 
         // Cache invalidation flag
         $useCache = true;
-        if (defined('IN_ADMIN')) {
+        if (RequestContextRegistry::current() === RequestContext::Admin) {
             $useCache = false;
         } else {
             $referer = $_SERVER['HTTP_REFERER'] ?? null;

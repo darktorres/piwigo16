@@ -15,6 +15,7 @@ Last deep-verified: 2026-05-14. Last updated: 2026-05-14.
 - §14 frontend shims — `src/types/globals.d.ts` documents 30+ ambient TS globals; its header comment says "Smarty templates" (stale; we're on Latte). Several declared globals (`var user`, `SwitchBox`, `_pwgRatingAutoQueue`, `preferencesDefaultValues`, …) are pre-load auto-queue patterns explicitly drained as "legacy queue" by `rating.ts:150` and `switchbox.ts:35` for plugin BC. `albums.ts:522` retains a window-global with a `// keep global for compatibility` comment. See §14.
 - §15 plugin/theme procedural contract — the **whole legacy Piwigo plugin/theme runtime contract is still wired**: `PluginService::loadPlugin()` does `require_once($pluginsPath/$id/main.inc.php)`; plugin metadata is parsed from file header comments (`Version: x.y.z`); `Admin/Plugins.php` has explicit pre-2.7 vs 2.7+ branching (`maintain.class.php` vs `maintain.inc.php`); `Admin/Themes.php` requires `themeconf.inc.php` and `admin/maintain.inc.php` per theme; `EventDispatcher` supports lazy-include plugins via `include_path` on listeners. 18+ docstrings throughout `src/` still describe code as "Used by admin/X.php" or "Replaces the former include/Y.inc.php" for directories that don't exist. See §15.
 - §16 `Util.php` kitchen-sink class & legacy v1.x features — `src/Piwigo/Core/Util.php` is 1058 lines / 33 methods, most named `pwg*` (`pwgLog`, `pwgDebug`, `pwgActivity`, `getPwgToken`, `pwgUniqueExecBegins`, etc.) — the modern wrapper around legacy `include/functions.inc.php`. The legacy v1.x **caddie** feature (predecessor to batch_manager) is still alive as a WS API (`pwg.caddie.add`), a DB table (`Tables::caddie()`), a `CADDIE_TABLE` constant for upgrade SQL, and `Util::fillCaddie()` populating it from `GeneralEndpoints` and `PhotoController`. Three redirect helpers (`redirect`, `redirectHttp`, `redirectHtml`) overlap. See §16.
+- §17 plugin event API — `EventDispatcher::dispatch()` / `notify()` is called with **153 unique event names** across `src/`. Names like `loc_begin_index`, `loc_end_page_header`, `get_admin_plugin_menu_links`, `format_exif_data`, `render_element_content`, `ws_invoke_allowed`, `user_init`, `batch_manager_perform_filters` follow the legacy Piwigo plugin-hook naming and form the stable plugin API contract. `tools/triggers_list.php` is the 1136-line reference doc for these. Removing any name would break plugins listening on it. See §17.
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -827,4 +828,55 @@ Modernisation target: collapse to a `RedirectResponder` returning PSR-7 response
 
 ---
 
-**End of inventory.** Audited 2026-05-14 across nine progressive passes covering: `src/` (every namespace), `tools/`, `tests/`, `install/`, root entry points (`index.php`, `ecs.php`, `migrations.php`, `rector.php`, `bin/piwigo`), `config/` (`container.php`, `routes.php`), Composer + npm dependencies, static-analysis tooling (PHPStan rules/extensions/stubs + Psalm config/stubs), build config (Vite + ESLint + Playwright), frontend TypeScript bundles, all 133 Latte templates (spot-checked), CI workflows (`.github/`), the plugin/theme procedural contract, the `Util.php` kitchen-sink + legacy v1.x features, and stale docstrings throughout.
+## 17. Plugin Event API — 153 Hook Names
+
+A tenth-pass audit (2026-05-14) ran `grep -roE "(dispatch|notify)\('[^']+'"` across `src/` and counted **153 unique event names** dispatched through `EventDispatcher`. This is the **public plugin API contract** — every name is a stable hook that third-party plugins from PEM listen on. Removing any name breaks plugins that subscribe to it.
+
+### 17.1 Naming Conventions
+
+The names follow the legacy Piwigo plugin-API conventions:
+
+| Pattern | Purpose | Example |
+|---|---|---|
+| `loc_begin_X` / `loc_end_X` | Location markers — page lifecycle hooks fired before/after rendering each section | `loc_begin_index`, `loc_end_page_header`, `loc_begin_page_tail` |
+| `get_X` | Getter hooks — plugins can modify what's returned | `get_admin_plugin_menu_links`, `get_categories_menu_sql_where`, `get_derivative_url`, `get_tag_alt_names` |
+| `render_element_X` | Photo-page rendering hooks | `render_element_content`, `render_element_name`, `render_element_description` |
+| `batch_manager_X` | Batch manager hooks | `batch_manager_perform_filters`, `batch_manager_register_filters`, `batch_manager_url_filter` |
+| `format_X` | Data-formatting hooks | `format_exif_data`, `format_*` |
+| `clean_X` | Data-sanitisation hooks | `clean_iptc_value` |
+| `combined_X` | Asset bundler hooks | `combined_css`, `combined_script` |
+| `before_X` / `finalize_X` | Pre/post-action hooks | `before_send_mail`, `finalize_login` |
+| Special / cross-cutting | Auth, WS gating, derivatives | `user_init`, `ws_invoke_allowed`, `derivative_params_get` |
+
+Of the 153 events:
+- ~30 are `loc_begin_*` / `loc_end_*` page-lifecycle markers
+- ~50 are `get_*` getter hooks
+- The rest are domain-specific.
+
+### 17.2 The 1136-Line Reference (`tools/triggers_list.php`)
+
+Already noted in §13.4 as having stale legacy terminology, but the file's *content* is genuinely load-bearing: it's the canonical reference for the plugin event API. Each entry includes:
+
+```php
+array(
+  'name'  => 'event_name',
+  'type'  => 'trigger_change' | 'trigger_notify',  // → dispatch | notify
+  'vars'  => array('php_type', 'var_name', ...),
+  'files' => array('src/Piwigo/Controller/Foo.php', ...),
+  'infos' => '(optional) plugin-author note',
+),
+```
+
+The `'type'` value uses the **legacy free-function names** (`trigger_change` → `EventDispatcher::dispatch()`, `trigger_notify` → `EventDispatcher::notify()`). Renaming the type strings in `triggers_list.php` to match the modern method names is a doc cleanup; the events themselves can't be renamed without breaking plugins.
+
+### 17.3 Lazy-Include Listener Path
+
+Already noted in §15.4 as a shim — `EventDispatcher::addListener($event, $func, $priority, ?$include_path)` accepts an optional include path that's `include_once`'d at dispatch time. This is a plugin-loader optimization that doesn't exist in PSR-14. Cross-referenced here because it's the load-bearing infrastructure for §17.1's hook-API contract.
+
+### 17.4 Removal Window
+
+Per the v17.0 plugin-breakage policy, every event name in this list is a candidate for deletion in v17. Until then, all 153 are part of the supported API. The migration path is to rename the events to PSR-14 typed events at the v17 cutover, breaking the legacy names cleanly.
+
+---
+
+**End of inventory.** Audited 2026-05-14 across ten progressive passes covering: `src/` (every namespace, plus end-to-end reads of `Util.php`, `PluginService.php`, `Admin/Plugins.php`, `Admin/Themes.php`), `tools/`, `tests/`, `install/`, root entry points (`index.php`, `ecs.php`, `migrations.php`, `rector.php`, `bin/piwigo`), `config/` (`container.php`, `routes.php`), Composer + npm dependencies, static-analysis tooling (PHPStan rules/extensions/stubs + Psalm config/stubs), build config (Vite + ESLint + Playwright), frontend TypeScript bundles, all 133 Latte templates (spot-checked), CI workflows (`.github/`), the plugin/theme procedural contract, the `Util.php` kitchen-sink + legacy v1.x caddie feature, the 153-name plugin event API, and stale docstrings throughout. Audited 2026-05-14 across nine progressive passes covering: `src/` (every namespace), `tools/`, `tests/`, `install/`, root entry points (`index.php`, `ecs.php`, `migrations.php`, `rector.php`, `bin/piwigo`), `config/` (`container.php`, `routes.php`), Composer + npm dependencies, static-analysis tooling (PHPStan rules/extensions/stubs + Psalm config/stubs), build config (Vite + ESLint + Playwright), frontend TypeScript bundles, all 133 Latte templates (spot-checked), CI workflows (`.github/`), the plugin/theme procedural contract, the `Util.php` kitchen-sink + legacy v1.x features, and stale docstrings throughout.

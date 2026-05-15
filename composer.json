@@ -20,7 +20,6 @@
     "monolog/monolog": "^3.0",
     "nyholm/psr7": "^1.8",
     "nyholm/psr7-server": "^1.1",
-    "openpsa/universalfeedcreator": "^1.9",
     "pelago/emogrifier": "^8.0",
     "php-di/php-di": "^7.0",
     "phpmailer/phpmailer": "^7.0",

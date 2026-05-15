@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "00480e07c9bc121306d6ef9f31aa4d24",
+    "content-hash": "7969f214eb12aff05b627258bf43d4ff",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -1466,61 +1466,6 @@
                 }
             ],
             "time": "2023-11-08T09:30:43+00:00"
-        },
-        {
-            "name": "openpsa/universalfeedcreator",
-            "version": "v1.9.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flack/UniversalFeedCreator.git",
-                "reference": "c55f908e867aa6dade0905b8aefb94fd9d8c1f9e"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flack/UniversalFeedCreator/zipball/c55f908e867aa6dade0905b8aefb94fd9d8c1f9e",
-                "reference": "c55f908e867aa6dade0905b8aefb94fd9d8c1f9e",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.2"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^6.5.14 || ^7.5.20 || ^8.5.32 || ^9.5.10"
-            },
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "lib/constants.php"
-                ],
-                "classmap": [
-                    "lib"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-2.1-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "Andreas Flack",
-                    "email": "flack@contentcontrol-berlin.de",
-                    "homepage": "http://www.contentcontrol-berlin.de/"
-                }
-            ],
-            "description": "RSS and Atom feed generator by Kai Blankenhorn",
-            "keywords": [
-                "atom",
-                "georss",
-                "gpx",
-                "opml",
-                "pie",
-                "rss"
-            ],
-            "support": {
-                "issues": "https://github.com/flack/UniversalFeedCreator/issues",
-                "source": "https://github.com/flack/UniversalFeedCreator/tree/v1.9.0"
-            },
-            "time": "2024-02-22T11:08:24+00:00"
         },
         {
             "name": "pelago/emogrifier",

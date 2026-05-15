@@ -11,6 +11,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Feed\FeedHelper;
+use Piwigo\Feed\FeedItem;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Feed\PiwigoFeedCreator;
 use Piwigo\Html\HtmlService;
@@ -77,9 +78,8 @@ final readonly class FeedController implements ControllerInterface
 
         $rss           = new PiwigoFeedCreator();
         $rss->encoding = $this->stringUtil->getPwgCharset();
-        $rss->title    = Config::galleryTitle();
         $username      = is_string($user['username'] ?? null) ? $user['username'] : '';
-        $rss->title   .= ' (as ' . stripslashes($username) . ')';
+        $rss->title    = Config::galleryTitle() . ' (as ' . stripslashes($username) . ')';
         $rss->link     = $this->urlService->getGalleryHomeUrl();
 
         $news = [];
@@ -89,7 +89,7 @@ final readonly class FeedController implements ControllerInterface
             $news = $this->notificationService->news($last_check, $dbnow, true, true);
 
             if (count($news) > 0) {
-                $item = new \FeedItem();
+                $item = new FeedItem();
                 $item->title = Lang::t('New on %s', $this->dateService->formatDate($dbnow));
                 $item->link  = $this->urlService->getGalleryHomeUrl();
                 $item->description = '<ul>';
@@ -98,9 +98,9 @@ final readonly class FeedController implements ControllerInterface
                 }
                 $item->description .= '</ul>';
                 $item->descriptionHtmlSyndicated = true;
-                $item->date   = FeedHelper::tsToIso8601(FeedHelper::datetimeToTs($dbnow));
+                $item->date   = new \DateTimeImmutable($dbnow);
                 $item->author = Config::rssReedAuthor();
-                $item->guid   = sprintf('%s', $dbnow);
+                $item->guid   = $dbnow;
                 $rss->addItem($item);
 
                 $this->feedRepository->updateLastCheck((string) $feed_id, $dbnow);
@@ -121,7 +121,7 @@ final readonly class FeedController implements ControllerInterface
             if (!is_array($date_detail)) {
                 continue;
             }
-            $item  = new \FeedItem();
+            $item  = new FeedItem();
             $date  = is_string($date_detail['date_available'] ?? null) ? $date_detail['date_available'] : '';
             $item->title = $this->notificationService->getTitleRecentPostDate($date_detail);
             $item->link  = $this->urlService->makeIndexUrl([
@@ -133,17 +133,13 @@ final readonly class FeedController implements ControllerInterface
             $item->description = '<a href="' . $this->urlService->makeIndexUrl() . '">' . Config::galleryTitle() . '</a><br> ';
             $item->description .= $this->notificationService->getHtmlDescriptionRecentPostDate($date_detail);
             $item->descriptionHtmlSyndicated = true;
-            $item->date   = FeedHelper::tsToIso8601(FeedHelper::datetimeToTs($date));
+            $item->date   = new \DateTimeImmutable($date);
             $item->author = Config::rssReedAuthor();
-            $item->guid   = sprintf('%s', 'pics-' . $date);
+            $item->guid   = 'pics-' . $date;
             $rss->addItem($item);
         }
 
-        $fileName = PHPWG_ROOT_PATH . Config::dataLocation() . 'tmp';
-        Util::mkgetdir($fileName);
-        $fileName .= '/feed.xml';
-        $feedOutput = $rss->saveFeed('RSS2.0', $fileName, true);
-        echo is_string($feedOutput) ? $feedOutput : '';
+        echo $rss->toRss20Xml();
 
         return ResponseFactory::create(200);
     }

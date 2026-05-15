@@ -30,7 +30,7 @@ defer to this table.
 | Phase | Title | Status | Gates | Parallelism |
 |---|---|---|---|---|
 | **1** | Doc-drift cleanups | ✓ Closed 2026-05-15 | — | — |
-| **2** | Legacy `define()` migrations | Open (2a ✓, 2b ✓, 2c ✓, 2d ✓, 2e ✓, 2f ✓, 2g–2h open) | none | 2g–2h independent |
+| **2** | Legacy `define()` migrations | Open (2a ✓, 2b ✓, 2c ✓, 2d ✓, 2e ✓, 2f ✓, 2g ✓, 2h open) | none | 2h independent |
 | **3** | `$GLOBALS` channel migrations | ✓ Closed 2026-05-15 | — | — |
 | **4a** | `$filter` → `FilterContext` VO | ✓ Closed 2026-05-15 | — | — |
 | **4b** | `header_msgs` / `header_notes` → `PageState` | ✓ Closed 2026-05-15 | — | — |
@@ -57,6 +57,7 @@ defer to this table.
 - §Z18 — Phase 2d `xmlrpc_encode()` removal (2026-05-15)
 - §Z19 — Phase 2e MobileEsp → mobiledetect/mobiledetectlib swap (2026-05-15)
 - §Z20 — Phase 2f `CURRENT_DATE` global retired (2026-05-15)
+- §Z21 — Phase 2g UniversalFeedCreator → in-tree DOMDocument RSS generator (2026-05-15)
 
 ---
 
@@ -192,17 +193,17 @@ literal in the SQL namespace.
 
 Detail → [Appendix A §Z20](#z20-phase-2f-current_date-global-retired).
 
-## Phase 2g — UniversalFeedCreator removal  [A4.2]
+## Phase 2g — UniversalFeedCreator removal  [A4.2] ✓
 
-`openpsa/universalfeedcreator` is in `composer.json`.
-`Feed/PiwigoFeedCreator.php` extends `\UniversalFeedCreator` (untyped
-2004-era class). Used by `Controller/FeedController.php:78`.
+Closed 2026-05-15. `openpsa/universalfeedcreator` (2004-era untyped lib,
+~50 file vendor package supporting RSS/Atom/RDF/OPML/JSON/GPX — we only
+used RSS 2.0) replaced with an in-tree DOMDocument-based RSS 2.0 generator
+(`Piwigo\Feed\PiwigoFeedCreator` + `Piwigo\Feed\FeedItem`). One controller
+consumer (`FeedController`) migrated; file-caching side effect dropped (it
+was overwritten on every request, not actually used as a cache); 8 unit
+tests cover the new generator.
 
-1. Rewrite `Feed/PiwigoFeedCreator.php` to emit RSS/Atom directly with
-   `SimpleXMLElement` (PHP built-in) or `laminas/laminas-feed`.
-2. Update `Controller/FeedController.php:78` if the constructor signature
-   changes.
-3. Remove `openpsa/universalfeedcreator` from `composer.json`.
+Detail → [Appendix A §Z21](#z21-phase-2g-universalfeedcreator-in-tree-dom-rss-generator).
 
 ## Phase 2h — Other one-off `define()` polish  [A3.6] — *optional*
 
@@ -583,11 +584,11 @@ Update the "Smarty templates" header to "Latte" at the same time.
 
    Phase 2a (WS_*)         ──┐
    Phase 2b (*_TABLE)      ──┤
-   Phase 2c (PclZip)       ──┤  done 2026-05-15
-   Phase 2d (xmlrpc)       ──┤  (see Appendix A §Z15–§Z20)
-   Phase 2e (MobileEsp)    ──┤
-   Phase 2f (CURRENT_DATE) ──┘
-   Phase 2g (FeedCreator)    ──→  composer.json
+   Phase 2c (PclZip)       ──┤
+   Phase 2d (xmlrpc)       ──┤  done 2026-05-15
+   Phase 2e (MobileEsp)    ──┤  (see Appendix A §Z15–§Z21)
+   Phase 2f (CURRENT_DATE) ──┤
+   Phase 2g (FeedCreator)  ──┘
    Phase 2h (other defines, optional)
 
    Phase 3a (4 channels)  ──┐
@@ -1497,6 +1498,127 @@ field consumed across many controllers), a service can be introduced then.
   returns only intentional residuals — `ProfileService.php:220`
   (`'API_CURRENT_DATE'` template-var name, unrelated), `Db/SqlExpr.php:70,72,74`
   (SQL keyword string literal, unrelated).
+
+## Z21. Phase 2g UniversalFeedCreator → In-Tree DOM RSS Generator
+
+Closed 2026-05-15. `openpsa/universalfeedcreator` (2004-era untyped lib,
+~50 files supporting RSS/Atom/RDF/OPML/JSON/GPX) retired in favour of an
+in-tree DOMDocument-based RSS 2.0 generator.
+
+### Audit findings
+
+- Single consumer: `Controller/FeedController.php` (RSS 2.0 only — the
+  only `saveFeed(…)` call in `src/` passes `'RSS2.0'`).
+- `Piwigo\Feed\PiwigoFeedCreator` was a 12-line subclass of
+  `\UniversalFeedCreator` that only overrode `$encoding = 'UTF-8'`.
+- The controller's call to `saveFeed('RSS2.0', $fileName, true)` wrote to
+  `_data/tmp/feed.xml` AND returned the string. The file was overwritten
+  on every request and never read back as a cache — pure side effect.
+- Item-level fields actually used: `title`, `link`, `description`,
+  `descriptionHtmlSyndicated`, `date` (ISO 8601 string), `author`, `guid`.
+- Channel-level fields actually used: `title`, `link`, `encoding`. The lib
+  emitted `<lastBuildDate>` and `<generator>` automatically; channel
+  `<description>` was unset (lib emitted an empty element).
+- No tests targeted the feed output.
+
+### Why DOMDocument over alternatives
+
+- **DOMDocument (chosen):** zero deps, ships with PHP, native `<![CDATA[…]]>`
+  support via `createCDATASection()`, automatic XML escaping for everything
+  else. ~80 LOC generator + ~30 LOC FeedItem.
+- **SimpleXMLElement:** lighter API, but no native CDATA — workaround
+  requires dropping to DOM for the CDATA nodes anyway, so you end up with
+  a mixed model.
+- **laminas/laminas-feed:** modern and well-maintained, but pulls in
+  laminas-stdlib + laminas-escaper as transitive deps. Overkill when the
+  in-tree shape is ~110 LOC and tightly scoped.
+- **Roll our own string concat:** what UniversalFeedCreator did. Fragile
+  against escaping bugs; DOMDocument is strictly safer for nearly the same
+  LOC.
+
+### What was built
+
+- **`src/Piwigo/Feed/PiwigoFeedCreator.php`** — DOMDocument-based RSS 2.0
+  generator. Property-bag API matching the legacy call-site shape:
+  `$encoding`, `$title`, `$link`, `addItem(FeedItem)`. New `toRss20Xml():
+  string` method returns the XML directly (replaces the legacy
+  `saveFeed(…)` file-write + return-string side-effect; file caching
+  dropped — it wasn't being used as a cache). Channel `<description>`
+  falls back to `<title>` to stay valid per RSS 2.0 spec (the legacy lib
+  emitted an empty element, which was technically spec-non-compliant).
+  Item title gets `strip_tags()` + 100-char truncation with `...` suffix;
+  description gets CDATA wrap when `descriptionHtmlSyndicated`, plain
+  text-escape otherwise; dates emitted as RFC 822 (`DATE_RSS`).
+- **`src/Piwigo/Feed/FeedItem.php`** — new namespaced class replacing the
+  global `\FeedItem` from the retired lib. Property-bag with typed
+  fields; `$date` is `?\DateTimeImmutable` (was an ISO 8601 string passed
+  through `FeedHelper::tsToIso8601(…)` then converted to RFC 822 inside
+  the lib — now it's a single typed value across the boundary).
+
+### Files touched
+
+- **`composer.json`** — `openpsa/universalfeedcreator: ^1.9` removed.
+- **`composer.lock`** — regenerated; `vendor/openpsa/` directory removed.
+- **`src/Piwigo/Feed/PiwigoFeedCreator.php`** — full rewrite (was a 12-line
+  shell extending `\UniversalFeedCreator`; now a ~95-line standalone
+  generator).
+- **`src/Piwigo/Feed/FeedItem.php`** — new file (~25 lines) replacing the
+  global `\FeedItem`.
+- **`src/Piwigo/Controller/FeedController.php`** — `use Piwigo\Feed\FeedItem;`
+  import added; two `new \FeedItem()` → `new FeedItem()`; two
+  `FeedHelper::tsToIso8601(FeedHelper::datetimeToTs($x))` →
+  `new \DateTimeImmutable($x)`; the title-string assignment refactored to
+  one statement (was two — `$rss->title = …; $rss->title .= ' (as …)';`);
+  `$rss->saveFeed('RSS2.0', $fileName, true)` + `Util::mkgetdir(…)` +
+  `_data/tmp/feed.xml` file-write block all replaced with a single
+  `echo $rss->toRss20Xml();`.
+
+### Tests added
+
+`tests/Unit/Feed/PiwigoFeedCreatorTest.php` — 8 tests, 24 assertions:
+
+1. Root element is well-formed RSS 2.0 with `<title>`, `<link>`,
+   `<description>` (fallback to title).
+2. Item descriptions wrapped in CDATA when `descriptionHtmlSyndicated = true`.
+3. Item descriptions XML-escaped (no CDATA) when flag is false.
+4. Item dates emitted in RFC 822 format.
+5. Item titles strip HTML and truncate at 100 chars with `...` suffix.
+6. Items without a date omit the `<pubDate>` element entirely.
+7. Multiple items emitted in insertion order.
+8. Generated XML is parseable by `simplexml_load_string()` with mixed
+   ampersand/`<unsafe>` content escaped correctly across both channel and
+   item levels.
+
+### Behavioural deltas
+
+- **Channel `<description>` is no longer empty.** Falls back to title to
+  stay RSS-2.0 compliant. Legacy output had an empty `<description></description>`
+  element, which is technically spec-non-compliant — readers tolerated it
+  but the new output is stricter-valid.
+- **`<generator>` value changed** from `FeedCreator 1.7.4` (the lib's
+  version string) to `Piwigo`. No reader behaviour depends on this.
+- **File write at `_data/tmp/feed.xml` removed.** Was overwritten on every
+  request, never read back; pure side effect.
+- **Item title truncation behaviour matched** (100 chars, with `...`
+  suffix when truncated). HTML-strip matched.
+- **CDATA semantics matched** (wrap when `descriptionHtmlSyndicated`,
+  XML-escape otherwise).
+- **Item dates: same RFC 822 wire format**, internal representation
+  changed from ISO 8601 string → `DateTimeImmutable`.
+
+### Verification
+
+- `vendor/bin/phpstan analyse --no-progress` → 0 errors at level 10.
+- `vendor/bin/phpunit` (Unit + Integration) → 503 tests, 2442 assertions,
+  OK (495 → 503 = +8 from `PiwigoFeedCreatorTest`).
+- `composer dump-autoload --classmap-authoritative` refreshed (classmap
+  7474 → 7455 — net negative because the retired lib was a vendor package
+  with many classes, replaced by 2 in-tree classes).
+- Post-edit cross-tree grep: `grep -rEn "UniversalFeedCreator|\\FeedItem|universalfeedcreator"
+  src/ tests/ tools/ composer.json` returns only intentional residuals
+  (PiwigoFeedCreator import in FeedController, docstrings in the new
+  classes referencing the retired lib by name).
+- `vendor/openpsa/` directory removed by `composer remove`.
 
 ---
 

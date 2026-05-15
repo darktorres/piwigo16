@@ -99,27 +99,25 @@ final class LanguageStack
     /** @return array<mixed> */
     public static function info(): array
     {
-        $raw = $GLOBALS['lang_info'] ?? [];
-        return is_array($raw) ? $raw : [];
+        return Lang::langInfo();
     }
 
     /** Returns true once at least one language file has been loaded. */
     public static function initialized(): bool
     {
-        return self::info() !== [];
+        return Lang::langInfo() !== [];
     }
 
     /** @param array<string, mixed> $info */
     public static function setInfo(array $info): void
     {
-        $GLOBALS['lang_info'] = $info;
+        Lang::setLangInfo($info);
     }
 
     /** @param array<string, mixed> $additions */
     public static function mergeInfo(array $additions): void
     {
-        $current = is_array($GLOBALS['lang_info'] ?? null) ? $GLOBALS['lang_info'] : [];
-        $GLOBALS['lang_info'] = array_merge($current, $additions);
+        Lang::mergeLangInfo($additions);
     }
 
     // -------------------------------------------------------------------------
@@ -192,7 +190,9 @@ final class LanguageStack
             return;
         }
         self::setLang(self::$saved[$code]['lang']);
-        $GLOBALS['lang_info'] = self::$saved[$code]['lang_info'];
+        /** @var array<string,mixed> $info */
+        $info = self::$saved[$code]['lang_info'];
+        Lang::setLangInfo($info);
     }
 
     public static function pushStack(string $code): void

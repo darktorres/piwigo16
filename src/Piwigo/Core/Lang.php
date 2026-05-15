@@ -26,6 +26,15 @@ final class Lang
     private static array $months = [];
 
     /**
+     * Locale metadata for the currently-loaded language: `code`, `name`, `parent`,
+     * `direction`, etc. Populated by LanguageStack::mergeInfo() / setInfo() and
+     * read by Template + AdminService::getPiwigoNews().
+     *
+     * @var array<string,mixed>
+     */
+    private static array $langInfo = [];
+
+    /**
      * Called by Kernel::boot(). Snapshots any PHP-file-loaded lang data from
      * $GLOBALS['lang'] into the typed static properties, then clears the global.
      */
@@ -143,6 +152,24 @@ final class Lang
         return self::$months[$m] ?? '';
     }
 
+    /** @return array<string,mixed> */
+    public static function langInfo(): array
+    {
+        return self::$langInfo;
+    }
+
+    /** @param array<string,mixed> $info */
+    public static function setLangInfo(array $info): void
+    {
+        self::$langInfo = $info;
+    }
+
+    /** @param array<string,mixed> $additions */
+    public static function mergeLangInfo(array $additions): void
+    {
+        self::$langInfo = array_merge(self::$langInfo, $additions);
+    }
+
     // ---- Test helpers ----------------------------------------------------
 
     /** @param array<string,mixed> $data */
@@ -153,8 +180,9 @@ final class Lang
 
     public static function reset(): void
     {
-        self::$data   = [];
-        self::$days   = [];
-        self::$months = [];
+        self::$data     = [];
+        self::$days     = [];
+        self::$months   = [];
+        self::$langInfo = [];
     }
 }

@@ -27,7 +27,7 @@ Last audited end-to-end: 2026-05-15.
 | `summarized` column lazy guard | Replaced by Doctrine migration | [§Z5](#z5-one-time-db-migration-guard) |
 | Plugin config legacy storage format | Moot (no callers) | [§Z6](#z6-plugin-config-legacy-storage) |
 | `trigger_error` runtime signals | All converted to typed exceptions / PSR-3 | [§Z7](#z7-trigger_error-runtime-signals) |
-| Ad-hoc `$GLOBALS` cross-class channels | Mixed — admin URL + 4 self-contained + 3 mechanical + `filter` + `header_*` channels removed, 1 runtime state channel still active (`lang_info`) | [§A2](#a2-ad-hoc-globals-cross-class-channels), [§Z8](#z8-globals-channels-closed), [§Z9](#z9-phase-3a-self-contained-channels), [§Z10](#z10-phase-3b-mechanical-channels), [§Z11](#z11-phase-4a-filtercontext-vo), [§Z12](#z12-phase-4b-header_-pagestate-properties) |
+| Ad-hoc `$GLOBALS` cross-class channels | All removed | [§A2](#a2-ad-hoc-globals-cross-class-channels), [§Z8](#z8-globals-channels-closed), [§Z9](#z9-phase-3a-self-contained-channels), [§Z10](#z10-phase-3b-mechanical-channels), [§Z11](#z11-phase-4a-filtercontext-vo), [§Z12](#z12-phase-4b-header_-pagestate-properties), [§Z13](#z13-phase-4d-lang_info-lang-static-state) |
 | Plugin/theme procedural contract (`main.inc.php`, `maintain.class.php`, hook events) | Active until v17.0 | [§P1](#p1-plugintheme-procedural-contract) |
 | Plugin event API — 153 hook names | Active until v17.0 | [§P2](#p2-plugin-event-api) |
 | Smarty-syntax compatibility layer in Latte | Active (transitional API) | [§P3](#p3-smarty-syntax-compatibility-in-latte) |
@@ -62,23 +62,18 @@ compatibility) and could be removed in the 16.x line.
 
 `SectionInitializer.php:68` (`$GLOBALS['page'] = &$page;`) is gone. The local `$page` array still exists inside `SectionInitializer::initialize()` as scratch space for building the `SectionContext` value object — it is no longer aliased to any global. `tools/phpstan-bootstrap.php` `$page` stub removed; `NoGlobalInSrcRule` GUARDED entry for `page` removed.
 
-## A2. Ad-hoc `$GLOBALS` Cross-Class Channels
+## A2. Ad-hoc `$GLOBALS` Cross-Class Channels — **Closed** (2026-05-15)
 
-Channels still actively written and read across class boundaries. None has a
-typed bridge — readers do `is_array($GLOBALS['x'] ?? null) ? … : []` inline.
+All cross-class channels in this section have been retired. See:
 
-| Global | Writer(s) | Reader(s) | Removal sketch |
-|---|---|---|---|
-| `$GLOBALS['lang_info']` | `LanguageStack` (set/merge/restore) | `Template:83`, `AdminService:406` | Cross-subsystem read — fold into `Lang` static state |
-
-The four self-contained channels (`errors`, `themeconfs`, `cache`,
-`maint_actions`) were closed in Phase 3a — see
-[§Z9](#z9-phase-3a-self-contained-channels). The three mechanical channels
-(`prefixeTable`, `t2`, `debug`) were closed in Phase 3b — see
-[§Z10](#z10-phase-3b-mechanical-channels). The `filter` channel was closed
-in Phase 4a — see [§Z11](#z11-phase-4a-filtercontext-vo). The
-`header_msgs` + `header_notes` channels were closed in Phase 4b — see
-[§Z12](#z12-phase-4b-header_-pagestate-properties).
+- [§Z9](#z9-phase-3a-self-contained-channels) — Phase 3a (`errors`,
+  `themeconfs`, `cache`, `maint_actions`).
+- [§Z10](#z10-phase-3b-mechanical-channels) — Phase 3b (`prefixeTable`,
+  `t2`, `debug`).
+- [§Z11](#z11-phase-4a-filtercontext-vo) — Phase 4a (`filter`).
+- [§Z12](#z12-phase-4b-header_-pagestate-properties) — Phase 4b
+  (`header_msgs`, `header_notes`).
+- [§Z13](#z13-phase-4d-lang_info-lang-static-state) — Phase 4d (`lang_info`).
 
 ## A3. Legacy `define()` Shims
 
@@ -727,6 +722,31 @@ undefined variable.
   REPLACEMENTS. (`header_msgs` was never in GUARDED because it was always
   accessed via `$GLOBALS[…]` rather than `global $header_msgs`.)
 
+## Z13. Phase 4d `lang_info` Lang Static State
+
+Closed 2026-05-15. Locale metadata folded into the existing `Lang` static
+state alongside `$data` / `$days` / `$months`.
+
+- **Lang additions** — `private static array $langInfo = []` (typed
+  `array<string,mixed>`) with `langInfo()` / `setLangInfo()` /
+  `mergeLangInfo()` accessors. `Lang::reset()` clears it.
+- **LanguageStack delegates** — `info()` / `setInfo()` / `mergeInfo()` /
+  `initialized()` now route through `Lang::langInfo/setLangInfo/mergeLangInfo`.
+  `restoreState()` calls `Lang::setLangInfo()` instead of writing
+  `$GLOBALS['lang_info']` directly.
+- **External readers migrated** — `Template::__construct():86` and
+  `AdminService::getPiwigoNews():406` call `Lang::langInfo()` instead of
+  narrowing `$GLOBALS['lang_info']`.
+- **No new tooling** — `NoGlobalInSrcRule` never guarded `lang_info` (the
+  legacy code accessed it as `$GLOBALS['lang_info']` rather than
+  `global $lang_info`, so the rule didn't flag it).
+- **No autoload regen** — only existing classes modified; no new files.
+
+`LangService::getParentLanguage()` and `loadLanguage()` (and the
+`mergeFromFile()` include helper in LanguageStack) still use local
+`$lang_info` variables, but those are scoped to the include `.lang.php`
+files — not the global.
+
 Each task below is annotated with its **prerequisites** (must finish first)
 and **enables** (work that becomes easier or unblocked afterward). Most
 tasks are genuinely independent; the dependencies that exist are concentrated
@@ -945,18 +965,11 @@ swallowed. `PageHeaderRenderer::render()` now wires both `header_msgs` and
 6. `PHPWG_IN_UPGRADE` is self-contained in `UpgradeService` — collapse to a
    private static property.
 
-### Phase 4d — `$GLOBALS['lang_info']` → `Lang` static state (§A2)
+### Phase 4d — `$GLOBALS['lang_info']` → `Lang` static state (§A2) — **Done** (2026-05-15)
 
-1. Add `Lang::$langInfo` typed static property + accessor methods
-   (`Lang::langInfo(): array<string,string>`,
-   `Lang::setLangInfo(array)`, `Lang::mergeLangInfo(array)`).
-2. Migrate writers: `LanguageStack:115, 122, 195` (set, merge, restore from
-   stack top) to call the new `Lang` methods.
-3. Migrate readers: `Template:83`, `AdminService:406`.
-4. Drop `lang_info` from `NoGlobalInSrcRule` GUARDED (if listed).
-
-Cross-subsystem read (template + admin both depend on the language-stack
-writer), so it's a true Phase-4 task. Independent of 4a/4b/4c.
+Closed; see [§Z13](#z13-phase-4d-lang_info-lang-static-state) for the
+as-shipped record. `lang_info` was never in `NoGlobalInSrcRule` GUARDED
+(the legacy code accessed it via `$GLOBALS[…]` rather than `global $lang_info`).
 
 ## Phase 5 — Large Refactors (Ordered)
 
@@ -1063,7 +1076,8 @@ time this phase runs.
    Phase 4a ($filter) — done 2026-05-15 (§Z11)
    Phase 4b (header_*) — done 2026-05-15 (§Z12)
    Phase 4c (RequestCtx)  ──→ phpstan stubs       │    (§A1 already done
-   Phase 4d (lang_info)   ──→ Lang static state   │     2026-05-15 — §Z1.1)
+   Phase 4d (lang_info) — done 2026-05-15 (§Z13)    (§A1 also done
+                                                     2026-05-15 — §Z1.1)
                                                    │
                                               ┌────┴────┐
                                               │ Phase 6 │
@@ -1094,7 +1108,7 @@ Part P are listed for completeness.
 |---|---|---|---|
 | `$page` reference bridge alias | A1 | 5 | **Closed** (2026-05-15 — see [§Z1.1](#z1-wave-a-reference-bridges)) |
 | `$filter` channel | A2 | 4a | **Closed** (2026-05-15 — see [§Z11](#z11-phase-4a-filtercontext-vo)) |
-| `lang_info` channel | A2 | 4d | Open |
+| `lang_info` channel | A2 | 4d | **Closed** (2026-05-15 — see [§Z13](#z13-phase-4d-lang_info-lang-static-state)) |
 | `header_msgs` + `header_notes` | A2 | 4b | **Closed** (2026-05-15 — see [§Z12](#z12-phase-4b-header_-pagestate-properties)) |
 | `debug` + `t2` | A2 | 3b | **Closed** (2026-05-15 — see [§Z10](#z10-phase-3b-mechanical-channels)) |
 | `prefixeTable` | A2 | 3b | **Closed** (2026-05-15 — see [§Z10](#z10-phase-3b-mechanical-channels)) |

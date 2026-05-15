@@ -83,7 +83,7 @@ final class Template
      */
     public function __construct(string $root = '.', $theme = '', string $path = 'template')
     {
-        $lang_info = is_array($GLOBALS['lang_info'] ?? null) ? $GLOBALS['lang_info'] : [];
+        $lang_info = Lang::langInfo();
 
         $this->scriptLoader = new ScriptLoader();
         $this->cssLoader = new CssLoader();

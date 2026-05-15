@@ -10,6 +10,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Filesystem;
+use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\DbInfo;
@@ -403,7 +404,7 @@ final readonly class AdminService
     /** @return array<mixed> */
     public function getPiwigoNews(): array
     {
-        $langInfo = is_array($GLOBALS['lang_info'] ?? null) ? $GLOBALS['lang_info'] : [];
+        $langInfo = Lang::langInfo();
         $langCode = is_scalar($langInfo['code'] ?? null) ? (string) $langInfo['code'] : '';
         $news     = null;
         $cachePath = PHPWG_ROOT_PATH . Config::dataLocation() . 'cache/piwigo_latest_news-' . $langCode . '.cache.php';

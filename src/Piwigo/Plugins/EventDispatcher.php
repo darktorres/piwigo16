@@ -5,10 +5,23 @@ declare(strict_types=1);
 namespace Piwigo\Plugins;
 
 use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Core\Kernel;
+use Piwigo\Event\LegacyEventBridge;
 use Piwigo\Menu\BlockManager;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Static event dispatcher.
+ *
+ * § 1.4 B4 — alongside the legacy listener loop, every `dispatch()` and
+ * `notify()` call also constructs the matching typed event class (via
+ * {@see LegacyEventBridge}) and fires it through the PSR-14 dispatcher.
+ * This double-firing lets B5 migrate dispatch sites and B6 migrate
+ * subscribers one at a time without a big-bang switch.
+ *
+ * The whole class — including the bridge plumbing — is deleted in B17
+ * once every src/ call site has moved to typed dispatch.
  */
 final class EventDispatcher
 {
@@ -76,22 +89,23 @@ final class EventDispatcher
             self::notify('trigger', ['type' => 'event', 'event' => $event, 'data' => $data]);
         }
 
-        if (!isset(self::$handlers[$event])) {
-            return $data;
-        }
-
-        foreach (self::$handlers[$event] as $handlers) {
-            foreach ($handlers as $handler) {
-                $args[0] = $data;
-                if (isset($handler['include_path']) && $handler['include_path'] !== '') {
-                    /** @psalm-suppress UnresolvableInclude */
-                    include_once($handler['include_path']);
-                }
-                if (is_callable($handler['function'])) {
-                    $data = call_user_func_array($handler['function'], $args);
+        if (isset(self::$handlers[$event])) {
+            foreach (self::$handlers[$event] as $handlers) {
+                foreach ($handlers as $handler) {
+                    $args[0] = $data;
+                    if (isset($handler['include_path']) && $handler['include_path'] !== '') {
+                        /** @psalm-suppress UnresolvableInclude */
+                        include_once($handler['include_path']);
+                    }
+                    if (is_callable($handler['function'])) {
+                        $data = call_user_func_array($handler['function'], $args);
+                    }
                 }
             }
         }
+
+        $args[0] = $data;
+        self::bridgeToTyped($event, ...$args);
 
         if (isset(self::$handlers['trigger'])) {
             self::notify('trigger', ['type' => 'post_event', 'event' => $event, 'data' => $data]);
@@ -106,19 +120,64 @@ final class EventDispatcher
             self::notify('trigger', ['type' => 'action', 'event' => $event, 'data' => null]);
         }
 
-        if (!isset(self::$handlers[$event])) {
+        if (isset(self::$handlers[$event])) {
+            foreach (self::$handlers[$event] as $handlers) {
+                foreach ($handlers as $handler) {
+                    if (isset($handler['include_path']) && $handler['include_path'] !== '') {
+                        /** @psalm-suppress UnresolvableInclude */
+                        include_once($handler['include_path']);
+                    }
+                    if (is_callable($handler['function'])) {
+                        call_user_func_array($handler['function'], $args);
+                    }
+                }
+            }
+        }
+
+        // 'trigger' is the legacy plugin-API meta-event — itself not bridged,
+        // since its concept disappears with the typed event system.
+        if ($event !== 'trigger') {
+            self::bridgeToTyped($event, ...$args);
+        }
+    }
+
+    /**
+     * Fire the typed event matching `$event` (if any) through the PSR-14
+     * dispatcher. Silently skipped when the Kernel container isn't booted
+     * (early bootstrap, certain test contexts) or when no typed class is
+     * mapped for the event name. Construction or dispatch errors are
+     * logged when a PSR-3 logger is reachable, then swallowed so legacy
+     * dispatch continues unaffected.
+     */
+    private static function bridgeToTyped(string $event, mixed ...$args): void
+    {
+        if (!Kernel::isBooted()) {
             return;
         }
 
-        foreach (self::$handlers[$event] as $handlers) {
-            foreach ($handlers as $handler) {
-                if (isset($handler['include_path']) && $handler['include_path'] !== '') {
-                    /** @psalm-suppress UnresolvableInclude */
-                    include_once($handler['include_path']);
-                }
-                if (is_callable($handler['function'])) {
-                    call_user_func_array($handler['function'], $args);
-                }
+        $class = LegacyEventBridge::classFor($event);
+        if ($class === null) {
+            return;
+        }
+
+        try {
+            // $class is always a typed class-string sourced from
+            // LegacyEventBridge::MAP, where every value is a ::class FQN.
+            // The codebase-wide NoDynamicNewRule (tools/phpstan/NoDynamicNewRule.php)
+            // forbids `new $var()` in src/; this site is the one
+            // intentional exception, and goes away in B17 with the rest
+            // of the legacy dispatcher.
+            // @phpstan-ignore-next-line piwigo.noDynamicNew
+            $typed = new $class(...$args);
+            Kernel::service(EventDispatcherInterface::class)->dispatch($typed);
+        } catch (\Throwable $e) {
+            try {
+                Kernel::service(LoggerInterface::class)->warning(
+                    'LegacyEventBridge failed to fire typed event',
+                    ['event' => $event, 'class' => $class, 'error' => $e->getMessage()],
+                );
+            } catch (\Throwable) {
+                // Logger unavailable; legacy flow continues either way.
             }
         }
     }

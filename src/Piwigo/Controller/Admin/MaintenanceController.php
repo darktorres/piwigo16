@@ -1109,7 +1109,9 @@ final class MaintenanceController
         $site_url_str  = $site_url;
         $site_is_remote = UrlService::urlIsRemote($site_url_str);
 
-        defined('CURRENT_DATE') or define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
+        $now = new \DateTimeImmutable();
+        $nowDateTime = $now->format('Y-m-d H:i:s');
+        $today = $now->format('Y-m-d');
 
         $error_labels = [
             'PWG-UPDATE-1'    => [Lang::t('wrong filename'), Lang::t('The name of directories and files must be composed of letters, numbers, "-", "_" or "."')],
@@ -1371,7 +1373,7 @@ final class MaintenanceController
                     $errors[] = ['path' => $path, 'type' => 'PWG-UPDATE-1'];
                     continue;
                 }
-                $insert = ['id' => $next_element_id++, 'file' => $filename, 'name' => $this->stringUtil->getNameFromFile($filename), 'date_available' => CURRENT_DATE, 'path' => $path, 'representative_ext' => is_array($fs[$path]) ? ($fs[$path]['representative_ext'] ?? null) : null, 'storage_category_id' => $db_fulldirs[$dirname], 'added_by' => $user['id']];
+                $insert = ['id' => $next_element_id++, 'file' => $filename, 'name' => $this->stringUtil->getNameFromFile($filename), 'date_available' => $nowDateTime, 'path' => $path, 'representative_ext' => is_array($fs[$path]) ? ($fs[$path]['representative_ext'] ?? null) : null, 'storage_category_id' => $db_fulldirs[$dirname], 'added_by' => $user['id']];
                 if ($_POST['privacy_level'] != 0) {
                     $insert['level'] = $_POST['privacy_level'];
                 }
@@ -1532,7 +1534,7 @@ final class MaintenanceController
                 $element_infos_arr = is_array($element_infos) ? $element_infos : [];
                 $data = $site_reader->getElementMetadata($element_infos_arr);
                 if (is_array($data)) {
-                    $data['date_metadata_update'] = CURRENT_DATE;
+                    $data['date_metadata_update'] = $today;
                     $data['id'] = $id;
                     $datas[]    = $data;
                     foreach (['keywords', 'tags'] as $key) {

@@ -124,8 +124,6 @@ final readonly class UpgradeController implements ControllerInterface
             exit;
         }
 
-        define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
-
         $tpl = new Template(PHPWG_ROOT_PATH . 'themes/admin', 'dark');
         TemplateRegistry::set($tpl);
         $tpl->assign([

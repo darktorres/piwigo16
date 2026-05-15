@@ -30,7 +30,7 @@ defer to this table.
 | Phase | Title | Status | Gates | Parallelism |
 |---|---|---|---|---|
 | **1** | Doc-drift cleanups | ✓ Closed 2026-05-15 | — | — |
-| **2** | Legacy `define()` migrations | Open (2a ✓, 2b ✓, 2c ✓, 2d ✓, 2e ✓, 2f–2h open) | none | 2f–2h independent |
+| **2** | Legacy `define()` migrations | Open (2a ✓, 2b ✓, 2c ✓, 2d ✓, 2e ✓, 2f ✓, 2g–2h open) | none | 2g–2h independent |
 | **3** | `$GLOBALS` channel migrations | ✓ Closed 2026-05-15 | — | — |
 | **4a** | `$filter` → `FilterContext` VO | ✓ Closed 2026-05-15 | — | — |
 | **4b** | `header_msgs` / `header_notes` → `PageState` | ✓ Closed 2026-05-15 | — | — |
@@ -56,6 +56,7 @@ defer to this table.
 - §Z17 — Phase 2c PclZip → ZipArchive migration (2026-05-15)
 - §Z18 — Phase 2d `xmlrpc_encode()` removal (2026-05-15)
 - §Z19 — Phase 2e MobileEsp → mobiledetect/mobiledetectlib swap (2026-05-15)
+- §Z20 — Phase 2f `CURRENT_DATE` global retired (2026-05-15)
 
 ---
 
@@ -179,32 +180,17 @@ iOS banner guards) is preserved unchanged.
 
 Detail → [Appendix A §Z19](#z19-phase-2e-mobileesp-mobiledetect-swap).
 
-## Phase 2f — `CURRENT_DATE` inconsistency  [A3.4]
+## Phase 2f — `CURRENT_DATE` global retired  [A3.4] ✓
 
-Defined in **three** places with **two formats**:
+Closed 2026-05-15. The `CURRENT_DATE` PHP constant — defined in 4 places
+with 2 different formats and consumed at 4 sites — replaced with inline
+`new \DateTimeImmutable()->format(...)` per call site, each picking the
+format its DB column needs. Latent format-collision bug (whichever path
+defined first won) fixed along the way. Coincidence-of-naming with SQL
+`CURRENT_DATE` keyword in `Db/SqlExpr.php` unaffected — that's a string
+literal in the SQL namespace.
 
-- `Admin/Metadata/MetadataAdminService.php:214` → `date('Y-m-d')`
-- `Controller/UpgradeController.php:127` → `date('Y-m-d H:i:s')`
-- `Controller/InstallController.php:245` → `date('Y-m-d H:i:s')`
-
-The `defined() or define()` guard means whichever path runs first wins —
-**latent bug**. Also conflicts with the SQL keyword `CURRENT_DATE` used as a
-string literal in `Db/SqlExpr.php:70, 72, 74`.
-
-**Recommended fix** — eliminate the global constant entirely:
-
-1. Define a `Piwigo\Core\RequestClock` service holding one
-   `DateTimeImmutable` per request; expose `->now()` and
-   `->format(string $fmt)`. Inject via DI.
-2. Rewrite the three call sites to read from `RequestClock`. Each picks its
-   own format — no shared format, no inconsistency.
-3. Delete all three `define('CURRENT_DATE', …)` calls.
-4. Add an inline `// SQL keyword, not the PHP constant` comment at
-   `Db/SqlExpr.php:70, 72, 74`.
-
-> **Workaround alternative** (smaller diff, doesn't actually fix shared
-> state): pick one canonical format and standardise all three `define()`
-> calls. Not recommended unless `RequestClock` is too invasive.
+Detail → [Appendix A §Z20](#z20-phase-2f-current_date-global-retired).
 
 ## Phase 2g — UniversalFeedCreator removal  [A4.2]
 
@@ -595,12 +581,12 @@ Update the "Smarty templates" header to "Latte" at the same time.
    Phase 1 (parallel)        ──→  (no downstream gate)
    all standalone
 
-   Phase 2a (WS_*)        ──┐
-   Phase 2b (*_TABLE)     ──┤
-   Phase 2c (PclZip)      ──┤  done 2026-05-15
-   Phase 2d (xmlrpc)      ──┤  (see Appendix A §Z15–§Z19)
-   Phase 2e (MobileEsp)   ──┘
-   Phase 2f (CURRENT_DATE)   ──→  (standalone)
+   Phase 2a (WS_*)         ──┐
+   Phase 2b (*_TABLE)      ──┤
+   Phase 2c (PclZip)       ──┤  done 2026-05-15
+   Phase 2d (xmlrpc)       ──┤  (see Appendix A §Z15–§Z20)
+   Phase 2e (MobileEsp)    ──┤
+   Phase 2f (CURRENT_DATE) ──┘
    Phase 2g (FeedCreator)    ──→  composer.json
    Phase 2h (other defines, optional)
 
@@ -1407,6 +1393,110 @@ feature is a real Piwigo feature (some themes are mobile-specific via
   src/ tests/ tools/ composer.json` returns nothing.
 - `vendor/ahand/` directory removed by `composer remove`;
   `vendor/mobiledetect/mobiledetectlib/` installed.
+
+## Z20. Phase 2f `CURRENT_DATE` Global Retired
+
+Closed 2026-05-15. The `CURRENT_DATE` PHP constant was a global
+shared-mutable state footgun and an inventory inaccuracy: stated as
+"3 places, 2 formats", actually **4 places, 2 formats**, with a latent
+column/format mismatch on one consumer that this phase fixed.
+
+### What was actually true (audit before edits)
+
+**4 sites defined `CURRENT_DATE`** (not 3):
+
+| File:Line | Format | Notes |
+|---|---|---|
+| `Admin/Metadata/MetadataAdminService.php:213-214` | `Y-m-d` | Inside `syncMetadata()`; only reachable from one method |
+| `Controller/UpgradeController.php:127` | `Y-m-d H:i:s` | Top of upgrade flow — **never read** within `src/` in v17; was leaking into the global namespace for legacy upgrade scripts in `install/db/*.php` that ship empty in v17 (see also §Z16). Pure dead define. |
+| `Controller/InstallController.php:244` | `Y-m-d H:i:s` | Inside installer; reads on next line |
+| `Controller/Admin/MaintenanceController.php:1112` | `Y-m-d H:i:s` | Inside one method (`siteUpdate()`); two consumers downstream |
+
+**4 sites consumed `CURRENT_DATE`** + a column-format table:
+
+| File:Line | Column | DB type | Format wanted | What was happening |
+|---|---|---|---|---|
+| `MetadataAdminService.php:238` | `images.date_metadata_update` | `date` | `Y-m-d` | Worked: own define is `Y-m-d` |
+| `InstallController.php:247` | `upgrade.applied` | `datetime` | `Y-m-d H:i:s` | Worked: own define is `Y-m-d H:i:s` |
+| `MaintenanceController.php:1374` | `images.date_available` | `datetime` | `Y-m-d H:i:s` | Worked: own define is `Y-m-d H:i:s` |
+| `MaintenanceController.php:1535` | `images.date_metadata_update` | `date` | `Y-m-d` | **Bug**: was using `Y-m-d H:i:s` from the controller's own define. MySQL silently truncates the time portion when writing to a `date` column, so the data on disk was still correct, but the PHP-side value differed from MetadataAdminService's writes to the same column. Flat-out inconsistency. |
+
+**Latent shared-state footgun**: the `defined() or define()` guard at
+`MaintenanceController:1112` and the `if (!defined())` guard at
+`MetadataAdminService:213` meant whichever path ran first won. If
+`syncMetadata()` ran first in a request (`Y-m-d` format), then
+`siteUpdate()` ran later, `siteUpdate()`'s `date_available` write at line
+1374 would have used `Y-m-d` — landing `Y-m-d 00:00:00` in MySQL instead
+of the current request time. Reverse direction: `MetadataAdminService`'s
+`date_metadata_update` write at line 238 would have used `Y-m-d H:i:s` —
+truncated by MySQL but inconsistent on the PHP side.
+
+### The fix
+
+Per-call-site inline `DateTimeImmutable`, each picks its own format. No
+shared state, no constant, no possibility of cross-request bleed:
+
+- **`MetadataAdminService::syncMetadata()`** — `$today = new \DateTimeImmutable()->format('Y-m-d');` once near method top; consumer at line 238 reads `$today`.
+- **`InstallController` (install path)** — `$now = new \DateTimeImmutable()->format('Y-m-d H:i:s');` immediately above the foreach loop; consumer reads `$now`.
+- **`MaintenanceController::siteUpdate()`** — `$now = new \DateTimeImmutable();` once near method top, then derives `$nowDateTime = $now->format('Y-m-d H:i:s')` and `$today = $now->format('Y-m-d')` from the **same instant**; consumers at 1374 use `$nowDateTime`, at 1535 use `$today`. This fixes the latent format bug at 1535 and guarantees both consumers see the same request-instant clock.
+- **`UpgradeController`** — `define('CURRENT_DATE', …)` line deleted with no replacement. It was a leak with no in-tree v17 consumer.
+
+`Db/SqlExpr.php:70-74` is unaffected: it uses `'CURRENT_DATE'` as a SQL
+keyword string literal, in the `recentPeriodExpr()` argument namespace.
+The existing docstring `$date may be a column name or 'CURRENT_DATE'`
+already clarifies the SQL context.
+
+`tools/psalm-stubs.phpstub:27` — `const CURRENT_DATE = '';` stub
+deleted (no remaining PHP-constant consumers).
+
+### Files touched
+
+- `src/Piwigo/Admin/Metadata/MetadataAdminService.php` — define block replaced with `$today` local; line 238 reads `$today`.
+- `src/Piwigo/Controller/InstallController.php` — define replaced with `$now` local; line 247 reads `$now`.
+- `src/Piwigo/Controller/UpgradeController.php` — define line deleted outright.
+- `src/Piwigo/Controller/Admin/MaintenanceController.php` — define replaced with one `DateTimeImmutable` instance + two `format()`-derived strings; lines 1374 / 1535 read the correct format for their respective columns.
+- `tools/psalm-stubs.phpstub` — `const CURRENT_DATE = '';` stub deleted.
+
+### Behavioural deltas
+
+- **Cross-method format bleed eliminated.** Each call site's value is
+  derived from `DateTimeImmutable` at its own moment, with its own
+  format string. Order-of-method-call no longer affects timestamp shape.
+- **`MaintenanceController::siteUpdate()` `date_metadata_update` writes**
+  now use `Y-m-d` (matching the `date` column type) instead of
+  `Y-m-d H:i:s`. MySQL was already truncating the latter, so the on-disk
+  values are unchanged; the PHP-side value matches reality now.
+- **`MaintenanceController::siteUpdate()` `date_available` writes**
+  unchanged in format (`Y-m-d H:i:s`) and timestamp accuracy.
+- **Multi-method-call requests no longer drift between formats.** Even if
+  some long-running request hits both `syncMetadata` and `siteUpdate`,
+  each grabs its own clock instant.
+
+### Why no `Piwigo\Core\RequestClock` service
+
+The inventory's "recommended fix" proposed introducing a
+`Piwigo\Core\RequestClock` DI service holding a single
+`DateTimeImmutable` per request. Skipped in favour of inline reads at the
+4 sites — each call site needs `now()` exactly once for its own purpose
+with its own format, and there's no shared "the request's start time"
+concept anywhere else in `src/` that would benefit from a service
+abstraction. Following the project rule
+(`Don't add abstractions beyond what the task requires`), inline beats a
+new service here. If a future phase finds a real need (e.g., testability
+hooks for clock-mocked tests, or a request-scoped "started_at"
+field consumed across many controllers), a service can be introduced then.
+
+### Verification
+
+- `vendor/bin/phpstan analyse --no-progress` → 0 errors at level 10.
+- `vendor/bin/phpunit` (Unit + Integration) → 495 tests, 2418 assertions, OK
+  (no test count change — no test was targeting `CURRENT_DATE`).
+- `composer dump-autoload --classmap-authoritative` refreshed (classmap
+  stable at 7474; no new files).
+- Post-edit cross-tree grep: `grep -rEn "CURRENT_DATE" src/ tests/ tools/`
+  returns only intentional residuals — `ProfileService.php:220`
+  (`'API_CURRENT_DATE'` template-var name, unrelated), `Db/SqlExpr.php:70,72,74`
+  (SQL keyword string literal, unrelated).
 
 ---
 

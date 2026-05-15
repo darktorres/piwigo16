@@ -210,9 +210,7 @@ final readonly class MetadataAdminService
     /** @param int[] $ids */
     public function syncMetadata(array $ids): void
     {
-        if (!defined('CURRENT_DATE')) {
-            define('CURRENT_DATE', date('Y-m-d'));
-        }
+        $today = new \DateTimeImmutable()->format('Y-m-d');
 
         $datas = [];
         $tags_of = [];
@@ -235,7 +233,7 @@ final readonly class MetadataAdminService
                 }
             }
 
-            $data['date_metadata_update'] = CURRENT_DATE;
+            $data['date_metadata_update'] = $today;
             $datas[] = $data;
         }
 

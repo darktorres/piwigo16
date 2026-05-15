@@ -241,10 +241,10 @@ final class InstallController implements ControllerInterface
                 Dml::massInserts(Tables::users(), array_keys($inserts[0]), $inserts);
                 Kernel::service(UserService::class)->createUserInfos([1, 2], ['language' => $language]);
 
-                define('CURRENT_DATE', new \DateTimeImmutable()->format('Y-m-d H:i:s'));
+                $now = new \DateTimeImmutable()->format('Y-m-d H:i:s');
                 $datas = [];
                 foreach (UpgradeService::getAvailableUpgradeIds() as $upgrade_id) {
-                    $datas[] = ['id' => $upgrade_id, 'applied' => CURRENT_DATE, 'description' => 'upgrade included in installation'];
+                    $datas[] = ['id' => $upgrade_id, 'applied' => $now, 'description' => 'upgrade included in installation'];
                 }
                 if (!empty($datas)) {
                     Dml::massInserts(Tables::upgrade(), array_keys($datas[0]), $datas);

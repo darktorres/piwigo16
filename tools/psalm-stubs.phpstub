@@ -24,7 +24,6 @@ namespace {
     const IN_ADMIN = false;
     const IN_WS = false;
     const PHPWG_IN_UPGRADE = false;
-    const CURRENT_DATE = '';
 
     const PWG_API_KEY_REQUEST = '';
 

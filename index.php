@@ -35,7 +35,6 @@ if (str_starts_with($_qs, 'i/')) {
     ConfigLoader::applyDefaults();
     ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
     ConfigLoader::applyEnvOverrides();
-    $GLOBALS['prefixeTable'] = Config::dbPrefix();
     $logger = new Logger([
         'directory' => PHPWG_ROOT_PATH . Config::dataLocation() . Config::logDir(),
         'severity'  => Config::logLevel(),
@@ -63,7 +62,6 @@ if (str_starts_with($_qs, 'upgrade_feed')) {
     ConfigLoader::applyDefaults();
     ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
     ConfigLoader::applyEnvOverrides();
-    $GLOBALS['prefixeTable'] = Config::dbPrefix();
     Kernel::boot();
     Kernel::service(UpgradeFeedController::class)(RequestFactory::fromGlobals());
     exit;

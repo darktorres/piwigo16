@@ -44,6 +44,15 @@ final class PageState
     public int $countQueries = 0;
     public float $queriesTime = 0.0;
 
+    /**
+     * Timing breadcrumbs collected by Util::pwgDebug() and surfaced by
+     * PageTailRenderer when Config::showQueries() is on. Each entry is a
+     * pre-formatted `<p>[time, N queries] : message</p>` line.
+     *
+     * @var list<string>
+     */
+    public array $debugLines = [];
+
     public string $bodyId = '';
     public ?string $pageBanner = null;
     /** @var array<string,int> */

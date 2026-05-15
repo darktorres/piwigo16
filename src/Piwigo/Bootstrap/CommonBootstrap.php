@@ -53,9 +53,6 @@ final class CommonBootstrap
     {
         ExceptionHandler::register();
 
-        // Determine the initial instant for generation time tracking.
-        $GLOBALS['t2'] = microtime(true);
-
         array_walk_recursive($_GET, self::sanitizeMysqlKv(...));
         array_walk_recursive($_POST, self::sanitizeMysqlKv(...));
         array_walk_recursive($_COOKIE, self::sanitizeMysqlKv(...));
@@ -79,8 +76,6 @@ final class CommonBootstrap
 
         ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
         ConfigLoader::applyEnvOverrides();
-
-        $GLOBALS['prefixeTable'] = Config::dbPrefix();
 
         if (!InstallSentinel::isInstalled()) {
             header('Location: index.php?/install');

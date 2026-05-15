@@ -104,18 +104,12 @@ final readonly class Util
 
     public function pwgDebug(string $string): void
     {
-        $t2 = is_numeric($GLOBALS['t2'] ?? null) ? (float) $GLOBALS['t2'] : 0.0;
+        $t2 = is_numeric($_SERVER['REQUEST_TIME_FLOAT'] ?? null) ? (float) $_SERVER['REQUEST_TIME_FLOAT'] : 0.0;
         $now = explode(' ', microtime());
         $now2 = explode('.', $now[0]);
         $now2Float = (float) ($now[1] . '.' . $now2[1]);
         $time = number_format($now2Float - $t2, 3, '.', ' ') . ' s';
-        if (!isset($GLOBALS['debug']) || !is_string($GLOBALS['debug'])) {
-            $GLOBALS['debug'] = '';
-        }
-        $GLOBALS['debug'] .= '<p>';
-        $GLOBALS['debug'] .= '[' . $time . ', ';
-        $GLOBALS['debug'] .= PageState::current()->countQueries . ' queries] : ' . $string;
-        $GLOBALS['debug'] .= "</p>\n";
+        PageState::current()->debugLines[] = '<p>[' . $time . ', ' . PageState::current()->countQueries . ' queries] : ' . $string . "</p>\n";
     }
 
     public function redirectHttp(string $url): void

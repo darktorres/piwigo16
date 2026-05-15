@@ -27,7 +27,7 @@ Last audited end-to-end: 2026-05-15.
 | `summarized` column lazy guard | Replaced by Doctrine migration | [§Z5](#z5-one-time-db-migration-guard) |
 | Plugin config legacy storage format | Moot (no callers) | [§Z6](#z6-plugin-config-legacy-storage) |
 | `trigger_error` runtime signals | All converted to typed exceptions / PSR-3 | [§Z7](#z7-trigger_error-runtime-signals) |
-| Ad-hoc `$GLOBALS` cross-class channels | Mixed — admin URL + 4 self-contained channels removed, 5 runtime state channels still active | [§A2](#a2-ad-hoc-globals-cross-class-channels), [§Z8](#z8-globals-channels-closed), [§Z9](#z9-phase-3a-self-contained-channels) |
+| Ad-hoc `$GLOBALS` cross-class channels | Mixed — admin URL + 4 self-contained + 3 mechanical channels removed, 3 runtime state channels still active (`filter`, `lang_info`, `header_*`) | [§A2](#a2-ad-hoc-globals-cross-class-channels), [§Z8](#z8-globals-channels-closed), [§Z9](#z9-phase-3a-self-contained-channels), [§Z10](#z10-phase-3b-mechanical-channels) |
 | Plugin/theme procedural contract (`main.inc.php`, `maintain.class.php`, hook events) | Active until v17.0 | [§P1](#p1-plugintheme-procedural-contract) |
 | Plugin event API — 153 hook names | Active until v17.0 | [§P2](#p2-plugin-event-api) |
 | Smarty-syntax compatibility layer in Latte | Active (transitional API) | [§P3](#p3-smarty-syntax-compatibility-in-latte) |
@@ -72,11 +72,11 @@ typed bridge — readers do `is_array($GLOBALS['x'] ?? null) ? … : []` inline.
 | `$GLOBALS['filter']` | `CommonBootstrap` (init), `FilterMiddleware` (`&$GLOBALS['filter']`), `SectionInitializer` (reference mutation) | `CategoryService`, `FilterService`, `MenubarRenderer`, `PermissionService`, `CalendarService`, `PictureController` | Promote to typed `FilterContext` VO with registry singleton |
 | `$GLOBALS['lang_info']` | `LanguageStack` (set/merge/restore) | `Template:83`, `AdminService:406` | Cross-subsystem read — fold into `Lang` static state |
 | `$GLOBALS['header_msgs']` + `$GLOBALS['header_notes']` | `CommonBootstrap`, `CheckIntegrity` | `CommonBootstrap` (template assign), `FilterMiddleware:54` (reference) | Promote to `PageState` typed arrays |
-| `$GLOBALS['debug']` + `$GLOBALS['t2']` | `Util::pwgLog`, `CommonBootstrap` | `PageTailRenderer`, `Util` | `t2` → use `$_SERVER['REQUEST_TIME_FLOAT']` (built-in); `debug` → fold into PSR-3 logger via `DebugAccumulatorHandler` |
-| `$GLOBALS['prefixeTable']` | `CommonBootstrap:83`, `UpgradeController`, `InstallController`, `index.php:38` (image-derivative fast path), `index.php:66` (upgrade_feed fast path) | `UpgradeService:31`, `MaintenanceService:16` | Use `Config::dbPrefix()` everywhere |
-
 The four self-contained channels (`errors`, `themeconfs`, `cache`,
-`maint_actions`) were closed in Phase 3a — see [§Z9](#z9-phase-3a-self-contained-channels).
+`maint_actions`) were closed in Phase 3a — see
+[§Z9](#z9-phase-3a-self-contained-channels). The three mechanical channels
+(`prefixeTable`, `t2`, `debug`) were closed in Phase 3b — see
+[§Z10](#z10-phase-3b-mechanical-channels).
 
 ## A3. Legacy `define()` Shims
 
@@ -456,7 +456,7 @@ is deprecated/removed in modern PHP builds but still used in
 
 | Variable | Code status |
 |---|---|
-| `$prefixeTable` | Active (§A2) |
+| `$prefixeTable` | Removed (§Z10) |
 | `$user` | Removed (§Z1) |
 | `$page` | Removed (§Z1.1) |
 | `$lang` | Removed (§Z1) |
@@ -643,9 +643,16 @@ no cross-class contract existed.
 `NoGlobalInSrcRule` GUARDED list drops `errors`, `themeconfs`, `cache`,
 `maint_actions`; `REPLACEMENTS` map drops the same four entries.
 
----
+## Z10. Phase 3b Mechanical Channels
 
-# Sequencing Plan
+Closed 2026-05-15. Cross-class channels with an existing typed accessor or
+PHP built-in waiting in the wings.
+
+| Channel | Closure |
+|---|---|
+| `$GLOBALS['prefixeTable']` | Both readers (`UpgradeService::prepareConfUpgrade()`, `MaintenanceService::repairAndOptimize()`) call `Config::dbPrefix()` directly. All 5 writes deleted (`CommonBootstrap:83`, `UpgradeController:49`, `InstallController:56`, `index.php:38`, `index.php:66`). `phpstan-bootstrap.php` `$prefixeTable` stub dropped; `ContainerSmokeTest` test plumbing line removed. |
+| `$GLOBALS['t2']` | The `CommonBootstrap:57` write deleted. `Util::pwgDebug()` and `PageTailRenderer` read `$_SERVER['REQUEST_TIME_FLOAT']` (populated natively by PHP at request start — strictly more accurate than `microtime(true)` at bootstrap). |
+| `$GLOBALS['debug']` | The HTML-string accumulator is now `PageState::current()->debugLines` — a `list<string>` of pre-formatted `<p>` lines populated by `Util::pwgDebug()` and surfaced by `PageTailRenderer` when `Config::showQueries()` is on. No `DebugAccumulatorHandler` introduced; the panel content was always semantically distinct from PSR-3 logging (timing breadcrumbs, not application logs) and folding it into PageState keeps it request-scoped and typed without adding a new Monolog handler. |
 
 Each task below is annotated with its **prerequisites** (must finish first)
 and **enables** (work that becomes easier or unblocked afterward). Most
@@ -816,16 +823,16 @@ for the as-shipped record.
 | `$GLOBALS['cache']` (§A2) | `UserService::getDefaultUserInfo()` uses `private array\|false\|null $defaultUserCache` instance memo. Class-level `readonly` dropped (PHP rejects mutable state inside `readonly` classes); DI props made individually `private readonly`. |
 | `$GLOBALS['maint_actions']` (§A2) | Mirror write (line 158) + two defensive restoration blocks (188/636) deleted; `$this->maintActions` was always populated by `maintenance()` before the private callees ran. |
 
-### Phase 3b — Cross-class, but existing typed accessor available
+### Phase 3b — Cross-class, but existing typed accessor available — **Done** (2026-05-15)
 
-| Task | Sub-steps |
+All three channels closed; see [§Z10](#z10-phase-3b-mechanical-channels)
+for the as-shipped record.
+
+| Task | Closure |
 |---|---|
-| `$GLOBALS['prefixeTable']` → `Config::dbPrefix()` (§A2) | Migrate the 2 readers (`UpgradeService:31`, `MaintenanceService:16`); delete the 5 writes (`CommonBootstrap:83`, `UpgradeController`, `InstallController`, `index.php:38`, `index.php:66`); drop `prefixeTable` from `phpstan-bootstrap.php` |
-| `$GLOBALS['t2']` → `$_SERVER['REQUEST_TIME_FLOAT']` (§A2) | PHP populates `$_SERVER['REQUEST_TIME_FLOAT']` natively. Replace the `CommonBootstrap:57` write and `Util:107, 502` + `PageTailRenderer:61` reads with that. Delete the global entirely. **Proper fix — eliminates the custom timing mechanism, no relocation.** |
-| `$GLOBALS['debug']` → PSR-3 logger (§A2) | The codebase already has `LoggerRegistry::current()` with Monolog. `Util::pwgLog()` writes an HTML string into `$GLOBALS['debug']`; `PageTailRenderer:55` reads it back to render a debug panel. Replace the string accumulator with `$logger->debug(...)` calls and either (a) delete the debug-panel render if it duplicates Monolog's output, or (b) add a `DebugAccumulatorHandler` that captures log records and exposes them to `PageTailRenderer`. **Proper fix — folds custom mechanism into the existing typed logger.** Coordinated with Phase 5 Util split. |
-
-Phase 3b sits between Phase 3a (trivial) and Phase 4 (new VO required) —
-each task is a 10-30-line change across 2-5 files.
+| `$GLOBALS['prefixeTable']` (§A2) | Both readers (`UpgradeService::prepareConfUpgrade()`, `MaintenanceService::repairAndOptimize()`) call `Config::dbPrefix()` directly. All 5 writes deleted; `phpstan-bootstrap.php` stub dropped; `ContainerSmokeTest` test plumbing removed. |
+| `$GLOBALS['t2']` (§A2) | `CommonBootstrap:57` write deleted. Readers in `Util::pwgDebug()` and `PageTailRenderer` use `$_SERVER['REQUEST_TIME_FLOAT']` (set natively by PHP). |
+| `$GLOBALS['debug']` (§A2) | Folded into `PageState::current()->debugLines` (`list<string>` of pre-formatted `<p>` lines). Not folded into PSR-3: the panel is timing breadcrumbs, semantically distinct from application logging; keeping it on `PageState` makes the data typed and request-scoped without a new Monolog handler. The Phase 5 Util split can still extract `Util::pwgDebug` into a thin `DebugCollector` facade, but no longer needs to coordinate with PSR-3 plumbing. |
 
 ## Phase 4 — Cross-Class Typed Contexts
 
@@ -983,8 +990,8 @@ time this phase runs.
    Phase 2g (FeedCreator) ──→  composer.json      │
    Phase 2h (other defines, optional)             │
                                                    │
-   Phase 3a (self-contained ×4)                  ─┤
-   Phase 3b (prefixeTable, debug+t2)             ─┤
+   Phase 3a (self-contained ×4) — done 2026-05-15 (§Z9)
+   Phase 3b (prefixeTable, debug+t2) — done 2026-05-15 (§Z10)
                                                    │
    Phase 4a ($filter)     ──→ phpstan stubs, GUARDED
    Phase 4b (header_*)    ──→ GUARDED             │
@@ -1022,8 +1029,8 @@ Part P are listed for completeness.
 | `$filter` channel | A2 | 4a | Open |
 | `lang_info` channel | A2 | 4d | Open |
 | `header_msgs` + `header_notes` | A2 | 4b | Open |
-| `debug` + `t2` | A2 | 3b | Open |
-| `prefixeTable` | A2 | 3b | Open |
+| `debug` + `t2` | A2 | 3b | **Closed** (2026-05-15 — see [§Z10](#z10-phase-3b-mechanical-channels)) |
+| `prefixeTable` | A2 | 3b | **Closed** (2026-05-15 — see [§Z10](#z10-phase-3b-mechanical-channels)) |
 | `errors` | A2 | 3a | **Closed** (2026-05-15 — see [§Z9](#z9-phase-3a-self-contained-channels)) |
 | `themeconfs` | A2 | 3a | **Closed** (2026-05-15 — see [§Z9](#z9-phase-3a-self-contained-channels)) |
 | `cache` | A2 | 3a | **Closed** (2026-05-15 — see [§Z9](#z9-phase-3a-self-contained-channels)) |
@@ -1048,7 +1055,7 @@ Part P are listed for completeness.
 | `psalm.xml` comments | D2.1 | 1 | Open |
 | `psalm-stubs.phpstub` cleanup | D2.2 | 2a/2b/2c/2d (per stub group) | Open |
 | `phpstan-bootstrap.php` closed-bridge stubs (9 vars: `$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`, `$persistent_cache`, `$page`) | D3.1A | 1 | 1 of 9 closed (`$page` removed 2026-05-15); 8 still open |
-| `phpstan-bootstrap.php` `$filter` / `$prefixeTable` stubs (2 vars, still active) | D3.1A | 4a / 3b | Open |
+| `phpstan-bootstrap.php` `$filter` / `$prefixeTable` stubs | D3.1A | 4a / 3b | 1 of 2 closed (`$prefixeTable` removed 2026-05-15); `$filter` still open |
 | `phpstan-bootstrap.php` WS const stubs | D3.1B | 2a | Open |
 | `phpstan-bootstrap.php` plugin/theme callback stubs | D3.1C | 6 | Sustained until v17 |
 | Dead `PwgGetSessionVarDynamicReturnType` | D3.2 | 1 | Open |

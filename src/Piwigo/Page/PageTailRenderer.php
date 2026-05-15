@@ -52,13 +52,12 @@ final class PageTailRenderer
         $debug_vars = [];
 
         if (Config::showQueries()) {
-            $debug = $GLOBALS['debug'] ?? '';
-            $debug_vars['QUERIES_LIST'] = new Html(is_string($debug) ? $debug : '');
+            $debug_vars['QUERIES_LIST'] = new Html(implode('', PageState::current()->debugLines));
         }
 
         if (Config::showGt()) {
             $pageState  = PageState::current();
-            $t2         = is_float($GLOBALS['t2'] ?? null) ? $GLOBALS['t2'] : microtime(true);
+            $t2         = is_numeric($_SERVER['REQUEST_TIME_FLOAT'] ?? null) ? (float) $_SERVER['REQUEST_TIME_FLOAT'] : microtime(true);
             $debug_vars += [
                 'TIME'       => Kernel::service(StringUtil::class)->getElapsedTime($t2, Kernel::service(StringUtil::class)->getMoment()),
                 'NB_QUERIES' => $pageState->countQueries,

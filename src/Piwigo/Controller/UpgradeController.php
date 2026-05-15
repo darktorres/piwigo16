@@ -46,7 +46,6 @@ final readonly class UpgradeController implements ControllerInterface
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
         $prefixeTable = Config::dbPrefix();
-        $GLOBALS['prefixeTable'] = $prefixeTable;
 
         if (!InstallSentinel::isInstalled()) {
             die('Piwigo is not installed yet — navigate to index.php?/install first.');

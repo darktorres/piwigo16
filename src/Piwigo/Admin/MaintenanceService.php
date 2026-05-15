@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -13,7 +14,7 @@ final class MaintenanceService
 {
     public static function repairAndOptimize(): void
     {
-        $prefixeTable = is_string($GLOBALS['prefixeTable'] ?? null) ? $GLOBALS['prefixeTable'] : 'piwigo_';
+        $prefixeTable = Config::dbPrefix();
         $conn = Kernel::service(Connection::class);
 
         $allTables = $conn->executeQuery("SHOW TABLES LIKE '" . $prefixeTable . "%'")->fetchFirstColumn();

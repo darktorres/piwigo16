@@ -53,7 +53,6 @@ final class InstallController implements ControllerInterface
         $prefixeTable = isset($_POST['install']) && is_string($prefixRaw)
             ? $prefixRaw
             : DEFAULT_PREFIX_TABLE;
-        $GLOBALS['prefixeTable'] = $prefixeTable;
 
         $rawDbhost    = $_POST['dbhost']     ?? null;
         $rawDbuser    = $_POST['dbuser']     ?? null;

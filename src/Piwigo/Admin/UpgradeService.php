@@ -28,7 +28,7 @@ final class UpgradeService
 
     public static function prepareConfUpgrade(): void
     {
-        $prefixeTable = is_string($GLOBALS['prefixeTable'] ?? null) ? $GLOBALS['prefixeTable'] : 'piwigo_';
+        $prefixeTable = Config::dbPrefix();
 
         define('CATEGORIES_TABLE', $prefixeTable.'categories');
         define('COMMENTS_TABLE', $prefixeTable.'comments');

@@ -92,14 +92,10 @@ Tier 3; Tier 3 retired them.
   (`AdminPageContext`, `AlbumPageContext`, `PicturePageContext`, …) cover the
   controller side instead.
 
-**Remaining seams (low priority):**
-
-- `PageHeaderRenderer.php:25` reads `$GLOBALS['page']` and writes back at line 59.
-- `PageTailRenderer.php:56,62` reads `$GLOBALS['debug']` and `$GLOBALS['t2']`.
-- `NoPhotoYetRenderer.php:26` reads `$GLOBALS['user']`.
-
-These are cheap to retire if the value-object design is later adopted, but they
-are harmless given the reference-bridge model in `Kernel::boot()`.
+**Remaining seams (low priority):** none — `PageHeaderRenderer`'s
+`$GLOBALS['page']` read/write, `PageTailRenderer`'s `$GLOBALS['debug']` /
+`$GLOBALS['t2']` reads, and `NoPhotoYetRenderer`'s `$GLOBALS['user']` read
+have all been retired (see COMPAT-INVENTORY §Z1, §Z1.1, §Z10).
 
 ---
 

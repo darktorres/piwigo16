@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\Kernel;
 
@@ -36,7 +35,6 @@ final class ContainerSmokeTest extends IntegrationTestCase
         // DbConnection::build() can connect when the container resolves Connection.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        $GLOBALS['prefixeTable'] = Config::dbPrefix();
     }
 
     #[\Override]

@@ -5,8 +5,11 @@ the work in execution sequence. Each open task appears exactly once, with its
 gates called out. Closed migrations are recorded for context in
 [Appendix A](#appendix-a--closed-migrations).
 
-**Policy:** v17.0 intentionally breaks all PEM extensions. External plugin
+**Policy:** v17.0 intentionally breaks all PEM extensions
+(`AppInfo::VERSION = '17.0.0'` — already in effect). External plugin
 compatibility is **not** a blocker; only in-tree `src/` callers block removal.
+Existing extensions get migrated separately — out of scope for this
+inventory.
 
 **How to read this doc:** start at the [Phase Ladder](#phase-ladder) below.
 Each row points at its full narrative further down. Closed phases collapse to
@@ -34,7 +37,7 @@ defer to this table.
 | **4c** | `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` → typed `RequestContext` | Open | none | — |
 | **4d** | `$lang_info` → `Lang` static state | ✓ Closed 2026-05-15 | — | — |
 | **5** | `Util.php` split | Open | soft: Phase 2e + 4a (4a ✓) | — |
-| **6** | v17.0 plugin-API cutover | Sustained until v17 | none | single coordinated PR cluster |
+| **6** | Extension-API compat removal (post-v17 cleanup) | Open | none | 6.1–6.5 mostly independent (6.5 soft-depends on 6.3) |
 
 **Already shipped before this re-org** (Appendix A entries):
 
@@ -153,7 +156,7 @@ be deleted with the corresponding `@var` block. The `$prefixeTable` and
 > by [Phase 2a](#phase-2a--ws_-constant-migration-a32) and
 > [Phase 4c](#phase-4c--in_admin--in_ws--phpwg_in_upgrade--typed-requestcontext-a31);
 > and **(C) procedural plugin/theme callback stubs** (`plugin_install`, …)
-> required by [Phase 6](#phase-6--v170-plugin-api-cutover).
+> required by [Phase 6](#phase-6--extension-api-compat-removal).
 
 ## 1.5 `tools/triggers_list.php` terminology — Phase 1 portion  [D3.5]
 
@@ -165,7 +168,7 @@ deleted directory.
 **Phase 1 task:** rename the type strings to match the modern method names
 (`dispatch` / `notify`) and replace the four `include/` paths with their
 modern equivalents. The event names themselves are the API surface and don't
-change here — see [Phase 6](#phase-6--v170-plugin-api-cutover) for that.
+change here — see [Phase 6](#phase-6--extension-api-compat-removal) for that.
 
 ---
 
@@ -493,16 +496,21 @@ union signature is itself a smell.
 
 ---
 
-# Phase 6 — v17.0 Plugin-API Cutover
+# Phase 6 — Extension-API Compat Removal
 
-**Status:** sustained until v17.0. A single coordinated PR cluster that
-breaks all plugin-facing surface at once.
+**Status:** open. The v17.0 version bump has already shipped
+(`AppInfo::VERSION = '17.0.0'`), so the BC layer for plugins/themes is no
+longer load-bearing and the in-tree machinery that supports it is eligible
+for deletion. Extension code (in `plugins/`, `themes/`) is migrated as a
+separate effort — not tracked here.
 
-**Why one cluster:** every item in this phase is a deliberate compatibility
-layer for plugin authors. They are wired and load-bearing for plugins running
-today. Per policy (top of doc), they break at the v17.0 cutover, not before.
+**Sub-tasks are mostly independent:** 6.1 (loader), 6.2 (event rename),
+6.3 (Smarty→Latte rewrite), and 6.4 (frontend BC queues) can run in any
+order. 6.5 (globals.d.ts cleanup) soft-depends on 6.3 having finished
+because some declared globals only go away once templates stop emitting
+them.
 
-**Hard dependency:** none. Phase 6 is independent of Phases 1–5.
+**Hard dependencies:** none. Phase 6 is independent of Phases 1–5.
 
 ## 6.1 Plugin/theme procedural contract  [P1]
 
@@ -597,14 +605,14 @@ array(
 )
 ```
 
-Phase 1 already cleaned the `'type'` field strings; v17 either rewrites this
-file to match the new typed-event shape or deletes it.
+Phase 1 already cleaned the `'type'` field strings; Phase 6.2 either
+rewrites this file to match the new typed-event shape or deletes it.
 
-### Removal at v17.0  [P2.3]
+### Rename to PSR-14 typed events  [P2.3]
 
-Migration path: rename the events to PSR-14 typed events at the v17 cutover,
-breaking the legacy names cleanly. Until then, all 153 are part of the
-supported API.
+Rename the 153 legacy event names to PSR-14 typed events. The version bump
+already broke the legacy names by policy, so this is a mechanical rewrite of
+every `EventDispatcher::dispatch()` / `notify()` call site.
 
 ## 6.3 Smarty-syntax compatibility in Latte  [P3]
 
@@ -620,8 +628,8 @@ Ported features:
 - Accessor: Smarty's `$pwg->derivative(...)` over `SrcImage`
 
 Migrating away requires rewriting all 133 templates to native Latte syntax.
-**Largest single piece of v17 work** in terms of touched files — estimate
-independently of the rest of Phase 6.
+**Largest sub-task in Phase 6** in terms of touched files — estimate
+independently of the others.
 
 ## 6.4 Frontend plugin BC queues  [P4]
 
@@ -638,7 +646,7 @@ Plus a smaller window-global alias:
 - `themes/admin/_base/js/albums.ts:522`: `_cont = contEl;` — kept for plugin
   compat.
 
-Removable as one batch at v17.0.
+Removable as one tight diff — three line-level edits and a search-and-verify.
 
 ## 6.5 Frontend `globals.d.ts` cleanup  [D4]
 
@@ -698,7 +706,7 @@ Update the "Smarty templates" header to "Latte" at the same time.
                                                       │
    Phase 4c (RequestCtx)     ──→  phpstan stubs       │
 
-   Phase 6 (v17 cutover)     ──  independent of Phases 1-5
+   Phase 6 (extension-API)   ──  independent of Phases 1-5 (post-v17.0 cleanup)
    §A1 ($page alias)         ──  done 2026-05-15 (shipped early, §Z1.1)
 ```
 
@@ -967,11 +975,11 @@ files — not the global.
 
 ## Caveats
 
-- The plugin/theme procedural contract (Phase 6.1) and the 153-name event API
-  (Phase 6.2) sit behind every Phase 5 refactor. Splitting `Util.php` doesn't
-  reach those, but anything that touches event names or plugin-loader paths
-  is v17 territory.
-- The Smarty compat layer (Phase 6.3) is the largest piece of v17 work in
+- The plugin/theme procedural contract (Phase 6.1) and the 153-name event
+  API (Phase 6.2) are orthogonal to Phase 5: splitting `Util.php` doesn't
+  reach those, and Phase 6 doesn't reach `Util.php`. They can run in either
+  order.
+- The Smarty compat layer (Phase 6.3) is the largest sub-task in Phase 6 in
   terms of touched files (133 templates). Estimate this independently of the
   rest of Phase 6.
 - `tools/triggers_list.php` shows up in two phases: the `'type'`-string

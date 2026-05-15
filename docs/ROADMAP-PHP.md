@@ -1716,7 +1716,7 @@ Pipeline order wired in `Kernel::handle()`:
 | 1   | `ExceptionHandlerMiddleware`  | Active — catches `PiwigoException`, logs others                                                     |
 | 2   | `SessionMiddleware`           | Active — `session_start()` if not already active                                                    |
 | 3   | `AuthMiddleware`              | Active — calls `UserBootstrap::bootstrap()`; attaches `CurrentUser`                                 |
-| 4   | `FilterMiddleware`            | Active — replaces `filter.inc.php`; populates `$GLOBALS['filter']`                                  |
+| 4   | `FilterMiddleware`            | Active — replaces `filter.inc.php`; commits `FilterContext` to `FilterContextRegistry`              |
 | 5   | `CsrfMiddleware`              | Active — verifies `pwg_token` on POST (exempt: /ws, /install, /upgrade, /identification, /register) |
 | 6   | `RoutingMiddleware`           | Active — calls `Router::dispatch()`, attaches `RouteResult`                                         |
 | 7   | `ControllerInvokerMiddleware` | Active — resolves controller from DI, calls `__invoke`; returns 404 directly for unmatched routes   |

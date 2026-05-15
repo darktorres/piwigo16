@@ -929,7 +929,7 @@ hard correctness requirements but make each step smaller / less risky.
 ```
 Phase 2e (MobileEsp)        ──┐
 Phase 4a ($filter context)  ──┼──→  §A5.1 Util.php split
-                              ┘
+  (done 2026-05-15, §Z11)     ┘
 Phase 2b (*_TABLE migration) ──→  §A5.2 caddie retirement
                                   └──→ also retires CADDIE_TABLE define
 §A1 service-owned state — done 2026-05-15, out of recommended order

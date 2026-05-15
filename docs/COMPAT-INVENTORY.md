@@ -30,7 +30,7 @@ defer to this table.
 | Phase | Title | Status | Gates | Parallelism |
 |---|---|---|---|---|
 | **1** | Doc-drift cleanups | ✓ Closed 2026-05-15 | — | — |
-| **2** | Legacy `define()` migrations | Open (2a ✓, 2b ✓, 2c ✓, 2d ✓, 2e ✓, 2f ✓, 2g ✓, 2h open) | none | 2h independent |
+| **2** | Legacy `define()` migrations | ✓ Closed 2026-05-15 (2a–2g done; 2h deferred — audit found scope ≠ inventory framing, see Phase 2h section) | — | — |
 | **3** | `$GLOBALS` channel migrations | ✓ Closed 2026-05-15 | — | — |
 | **4a** | `$filter` → `FilterContext` VO | ✓ Closed 2026-05-15 | — | — |
 | **4b** | `header_msgs` / `header_notes` → `PageState` | ✓ Closed 2026-05-15 | — | — |
@@ -205,16 +205,41 @@ tests cover the new generator.
 
 Detail → [Appendix A §Z21](#z21-phase-2g-universalfeedcreator-in-tree-dom-rss-generator).
 
-## Phase 2h — Other one-off `define()` polish  [A3.6] — *optional*
+## Phase 2h — Other one-off `define()` polish  [A3.6] — deferred 2026-05-15
 
-`PHPWG_DOMAIN`, `PHPWG_URL`, `PEM_URL` (`CommonBootstrap.php:174-186`) are
-locale-derived strings — could become `Config` reads. `PWG_LOCAL_DIR`
-(`CommonBootstrap.php:78`) is a constant path. `MKGETDIR_*`
-(`Core/Util.php:41-45`) flag constants — promote to a typed enum that the
-new `Filesystem` service (Phase 5) consumes.
+Decision: **deferred indefinitely.** The audit (2026-05-15) found each
+piece's cost-benefit different from the inventory framing, and the
+inventory's own "defer unless touching the surrounding code anyway"
+guidance applies to all of them. Captured here as a record of what was
+looked at and why each was passed over, not as a TODO.
 
-Conventional runtime config, not shims. Defer unless touching the surrounding
-code anyway.
+### Audit findings per piece
+
+| Constant | Define sites (actual) | In-tree consumers | Why deferred |
+|---|---|---|---|
+| **`PHPWG_DOMAIN`** | 2 — `Bootstrap/CommonBootstrap.php:164-172` and `Controller/UpgradeController.php:79-99` (inventory listed only the first) | **0 in `src/`** | Pure dead code. Both define blocks duplicate the same locale→domain mapping; nothing reads the result. `CommonBootstrap` has an explicit comment "left intact above to ease upstream merges" — the dead define is preserved deliberately to keep diffs against upstream Piwigo smaller. **Delete blocked by the upstream-merge ergonomics, not by code dependency.** If/when the fork stops tracking upstream merges, both blocks can be deleted as ~30 lines of pure cruft. |
+| **`PHPWG_URL`** | 1 — `Bootstrap/CommonBootstrap.php:177` (hardcoded `''` by fork policy: "blanked so this install never sends telemetry to upstream piwigo.org") | 28 sites — `AdminService.php` admin help-link templates (`PHPWG_URL . '/wiki'`, `'/forum'`, `'/bugs'`, etc.), `Updates.php` (telemetry endpoint), `MailService.php`, `PageTailRenderer.php` (template var), `Util.php` (telemetry endpoint) | **Migration is blocked by a product decision, not a refactor question.** With `PHPWG_URL=''`, the 28 consumers produce broken `/wiki`, `/forum`, `/bugs`-on-current-host paths in the admin UI. Cleaning that up means deciding where the fork's help links *should* point (fork docs URL? remove the help-link feature entirely? keep them broken?). That's a UX/product call, not a Phase 2h refactor. |
+| **`PEM_URL`** | 1 — `Bootstrap/CommonBootstrap.php:180-186` (fork-local extensions catalog URL, derived from `$_SERVER['HTTP_HOST']` or `Config::alternativePemUrl()`) | ~10 sites — `Plugins.php`, `Themes.php`, `Languages.php`, `Updates.php`, `Util.php` (all in plugin/theme/language install + version-check flows) | Live runtime constant with real consumers. Migration to `Config::pemUrl()` is mechanical (~10 touches) but doesn't fix a bug, remove a dep, or unlock another phase. The inventory's "defer unless touching the surrounding code anyway" applies. Reasonable bundle-of-opportunity move if a future phase touches the extension-install flow. |
+| **`PWG_LOCAL_DIR`** | 1 — `Bootstrap/CommonBootstrap.php:71` (literal `'local/'`) | 14 sites — various `PHPWG_ROOT_PATH . PWG_LOCAL_DIR . '...'` constructions | String literal, never varies. Could become a class constant (`AppInfo::LOCAL_DIR`?) for stricter typing but nothing currently breaks. 14 mechanical touches for low value. |
+| **`MKGETDIR_*`** | 5 in `Core/Util.php:42-46` (`MKGETDIR_NONE`, `_RECURSIVE`, `_DIE_ON_ERROR`, `_PROTECT_INDEX`, `_DEFAULT`) | 28 sites + 1 default parameter on `Util::mkgetdir()` | Bitmask flags for `Util::mkgetdir($flags)`. **The inventory itself files this under "promote to a typed enum that the new `Filesystem` service (Phase 5) consumes."** Doing the enum promotion now picks a home (`Piwigo\Core\MkGetDirFlag`?) that Phase 5's Util-split will move. Better to do it once, with the Filesystem-service context, during Phase 5. |
+
+### Bottom line
+
+Nothing in Phase 2h is bug-driving, dep-removing, or unlocking another
+phase. The remaining pieces fall into three buckets:
+
+- **`PHPWG_DOMAIN`**: dead code preserved for upstream-merge ergonomics.
+  Delete becomes free if/when the fork drops upstream-merge tracking.
+- **`PHPWG_URL`**: surfaces a *product* question (where should the fork's
+  help links point?), not a refactor. Belongs in a UX discussion.
+- **`PEM_URL` / `PWG_LOCAL_DIR` / `MKGETDIR_*`**: conventional runtime
+  config, not shims. Pickable as bundle-of-opportunity moves when a
+  future phase touches the surrounding code. `MKGETDIR_*` specifically is
+  Phase 5 territory.
+
+This phase intentionally does not move code. If any of the above
+conditions changes (fork drops upstream merges, help-link UX decision is
+made, Phase 5 reaches `mkgetdir`), reopen the relevant piece then.
 
 ---
 
@@ -349,8 +374,10 @@ free-function names §A5.1 calls out as the smell):
   (mirroring `PluginService`).
 - `mkgetdir` → `Symfony\Component\Filesystem` (we already require
   `league/flysystem`, so the `Filesystem` component or a thin Flysystem
-  wrapper subsumes it). Promote `MKGETDIR_*` flags (Phase 2h) to a typed enum
-  if callers still need flag combinations; otherwise inline the defaults.
+  wrapper subsumes it). Promote `MKGETDIR_*` flags to a typed enum if
+  callers still need flag combinations; otherwise inline the defaults.
+  (Phase 2h deferred the standalone enum promotion specifically because
+  Phase 5 will move `mkgetdir`'s home — see Phase 2h section.)
 - **`fillCaddie`** → `ImageRepository::addToUserCaddie()` (or sibling).
   Caddie is a **live admin feature** — a per-admin selection basket surfaced
   in the top admin menu (with photo-count badge), the gallery and picture
@@ -589,7 +616,7 @@ Update the "Smarty templates" header to "Latte" at the same time.
    Phase 2e (MobileEsp)    ──┤  (see Appendix A §Z15–§Z21)
    Phase 2f (CURRENT_DATE) ──┤
    Phase 2g (FeedCreator)  ──┘
-   Phase 2h (other defines, optional)
+   Phase 2h (other defines)   ── deferred 2026-05-15 (see Phase 2h section)
 
    Phase 3a (4 channels)  ──┐
    Phase 3b (3 channels)  ──┼──  done 2026-05-15

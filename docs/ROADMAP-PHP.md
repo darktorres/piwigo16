@@ -1556,8 +1556,8 @@ $server->register(new MethodDefinition(
     callback:     'ws_images_getInfo',
     description:  'Returns information about an image.',
     params:       [
-        ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID),
-        ParamDefinition::optional(name: 'comments_page', default: 0, type: WS_TYPE_INT | WS_TYPE_POSITIVE),
+        ParamDefinition::required(name: 'image_id', type: WsType::Id->value),
+        ParamDefinition::optional(name: 'comments_page', default: 0, type: WsType::Int->value | WsType::Positive->value),
     ],
     tags:         ['images'],
     requiresAuth: false,
@@ -1588,16 +1588,16 @@ Fallback (no rewrite needed):
 
 #### Type mapping (`WsType` → OpenAPI)
 
-| WS type flags                               | OpenAPI schema                                    |
-| ------------------------------------------- | ------------------------------------------------- |
-| `WS_TYPE_BOOL`                              | `{type: boolean}`                                 |
-| `WS_TYPE_INT`                               | `{type: integer, format: int32}`                  |
-| `WS_TYPE_INT \| WS_TYPE_POSITIVE`           | `{type: integer, minimum: 0}`                     |
-| `WS_TYPE_ID` (`INT \| POSITIVE \| NOTNULL`) | `{type: integer, minimum: 1}`                     |
-| `WS_TYPE_FLOAT`                             | `{type: number, format: float}`                   |
-| (none)                                      | `{type: string}`                                  |
-| `WS_PARAM_FORCE_ARRAY`                      | wraps scalar in `{type: array, items: …}`         |
-| `WS_PARAM_ACCEPT_ARRAY`                     | `{oneOf: [scalar, {type: array, items: scalar}]}` |
+| WS type flags                                       | OpenAPI schema                                    |
+| --------------------------------------------------- | ------------------------------------------------- |
+| `WsType::Bool->value`                               | `{type: boolean}`                                 |
+| `WsType::Int->value`                                | `{type: integer, format: int32}`                  |
+| `WsType::Int \| WsType::Positive`                   | `{type: integer, minimum: 0}`                     |
+| `WsType::Id` (`Int \| Positive \| NotNull`)         | `{type: integer, minimum: 1}`                     |
+| `WsType::Float->value`                              | `{type: number, format: float}`                   |
+| (none)                                              | `{type: string}`                                  |
+| `WsParam::ForceArray->value`                        | wraps scalar in `{type: array, items: …}`         |
+| `WsParam::AcceptArray->value`                       | `{oneOf: [scalar, {type: array, items: scalar}]}` |
 
 POST-only methods (options `post_only: true`) are documented as `POST` with an `application/x-www-form-urlencoded` request body; all others as `GET` with query parameters.
 

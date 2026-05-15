@@ -1225,7 +1225,7 @@ public function onMethodsRegistering(WsMethodsRegistering $event): void
         callback:     $this->myEndpoints->myMethod(...),
         description:  'Description shown in the API browser',
         params:       [
-            ParamDefinition::required(name: 'photo_id', type: WS_TYPE_INT | WS_TYPE_POSITIVE),
+            ParamDefinition::required(name: 'photo_id', type: WsType::Int->value | WsType::Positive->value),
         ],
         tags:         ['my'],
         access:       AccessLevel::Administrator,   // see "granular auth" below

@@ -13,6 +13,7 @@ Last deep-verified: 2026-05-14. Last updated: 2026-05-14.
 - §12 vendor & template-engine shims — `pclzip/pclzip` (PHP 4-era zip library) still used in 4 admin files instead of native `ZipArchive`; `openpsa/universalfeedcreator` extended by `PiwigoFeedCreator`; `ahand/mobileesp` (`uagent_info` class) used in 3 places for mobile UA detection. The `Template/Latte/PiwigoExtension.php` is a 700+-line Smarty-compatibility layer that ports `default`, `strip_tags`, `date_format`, `cat:`, `html_options`, `html_radios`, `math` and other Smarty modifiers/blocks to Latte — needed because the .latte templates use Smarty-style surface syntax. `PwgImage::__call()` magic dispatch over `ImageImagick`/`ImageExtImagick`. See §12.
 - §13 PHPStan tooling stubs & extensions — `tools/phpstan-bootstrap.php` declares 11 legacy `global $foo` placeholders (8 already removed), duplicates 13 `WS_*` runtime defines, and provides 7 stub `plugin_*`/`theme_*` procedural callbacks. Two phpstan extensions are dead: `PwgGetSessionVarDynamicReturnType` types a function that no longer exists, and `TriggerChangeDynamicReturnType` is misnamed (actually targets `EventDispatcher::dispatch`). `tools/triggers_list.php` is a 1136-line plugin-author doc using legacy `trigger_change`/`trigger_notify` terminology. See §13.
 - §14 frontend shims — `src/types/globals.d.ts` documents 30+ ambient TS globals; its header comment says "Smarty templates" (stale; we're on Latte). Several declared globals (`var user`, `SwitchBox`, `_pwgRatingAutoQueue`, `preferencesDefaultValues`, …) are pre-load auto-queue patterns explicitly drained as "legacy queue" by `rating.ts:150` and `switchbox.ts:35` for plugin BC. `albums.ts:522` retains a window-global with a `// keep global for compatibility` comment. See §14.
+- §15 plugin/theme procedural contract — the **whole legacy Piwigo plugin/theme runtime contract is still wired**: `PluginService::loadPlugin()` does `require_once($pluginsPath/$id/main.inc.php)`; plugin metadata is parsed from file header comments (`Version: x.y.z`); `Admin/Plugins.php` has explicit pre-2.7 vs 2.7+ branching (`maintain.class.php` vs `maintain.inc.php`); `Admin/Themes.php` requires `themeconf.inc.php` and `admin/maintain.inc.php` per theme; `EventDispatcher` supports lazy-include plugins via `include_path` on listeners. 18+ docstrings throughout `src/` still describe code as "Used by admin/X.php" or "Replaces the former include/Y.inc.php" for directories that don't exist. See §15.
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -690,4 +691,79 @@ The static HTML reference page emitted by `tools/triggers_list.php` includes jQu
 
 ---
 
-**End of inventory.** Audited across the entire repository (`src/`, `tools/`, `tests/`, `install/`, root entry points, vendor dependencies in `composer.json` / `package.json`, static-analysis tooling, build config, frontend TypeScript, Latte templates, CI workflows) on 2026-05-14.
+## 15. Plugin / Theme Procedural Contract
+
+This is the largest shim system in the codebase and earlier inventory passes did not catalogue it as a shim — it was treated as "plugin loader" rather than backwards-compat. But the contract is purely a legacy Piwigo design: plugins ship as **procedural PHP files** that register handlers into the event dispatcher, and the loader reads file-header comments for metadata. The v17.0 policy ("v17 intentionally breaks all PEM extensions") means this entire contract is removable, but as long as the 16.x line ships, it's load-bearing.
+
+### 15.1 Plugin Loading (`Plugin/PluginService.php`)
+
+`loadPlugin(array $plugin)` (line 32):
+- Computes `$fileName = Config::pluginsPath() . $pluginId . '/main.inc.php'`
+- `require_once($fileName)` — loads the plugin's procedural entry point
+- Plugins are expected to call `EventDispatcher::addListener(...)` during this `require`
+
+`autoupdatePlugin()` (line 44) parses the file header for legacy Piwigo plugin metadata:
+- Reads first 10 lines of `main.inc.php`
+- Regex-matches `Version:\s*([\w.-]+)`
+- This is the **Piwigo plugin header format** — comment-block metadata at the top of `main.inc.php`
+
+If a version bump is detected, `autoupdatePlugin()` loads `maintain.class.php` and instantiates `{plugin_id}_maintain` (dashes replaced with underscores) implementing `PluginMaintain`, then calls `->update($oldVersion, $fsVersion, $errors)`.
+
+### 15.2 Pre-2.7 vs Post-2.7 Branching (`Admin/Plugins.php`)
+
+`buildMaintainClass()` (lines 60-84) has explicit dual-path BC:
+
+```php
+// 2.7 pattern (OO only)
+if (file_exists($file_to_include.'.class.php')) {
+    require_once($file_to_include.'.class.php');
+    ...
+}
+// before 2.7 pattern (OO only)
+if (file_exists($file_to_include.'.inc.php')) {
+    require_once($file_to_include.'.inc.php');
+    ...
+}
+```
+
+The "pre-2.7" branch is a documented BC path for plugins from before Piwigo 2.7 (released circa 2015). Eleven years of compatibility surface, dead-coded behind v17.0 policy.
+
+### 15.3 Theme Contract (`Admin/Themes.php`)
+
+Themes have a similar contract:
+- `buildMaintainClass()` (line 63) requires `<theme>/admin/maintain.inc.php` and instantiates `{theme_id}_maintain` implementing `ThemeMaintain`
+- Theme metadata is parsed from `themeconf.inc.php` (line 287, 298) — file-format-encoded as PHP array literals
+- Theme archives extracted during install are searched for `themeconf.inc.php` (line 522-523) as the canonical "this is a Piwigo theme" marker
+- `admin.inc.php` (line 353) is the optional admin-side theme bootstrap
+
+### 15.4 Lazy-Include Event Handlers (`Plugins/EventDispatcher.php`)
+
+`addListener($event, $func, $priority, ?$include_path)` accepts an optional include path that's `include_once`'d **right before** dispatching the event (lines 86-88, 115-117). This is how plugins can register lightweight stubs at boot and defer loading the heavy implementation file until the event actually fires.
+
+```php
+if (isset($handler['include_path']) && $handler['include_path'] !== '') {
+    include_once($handler['include_path']);
+}
+```
+
+Standard event-dispatcher pattern, but PSR-14 dispatchers don't have this — it's a Piwigo-specific shim for the procedural plugin contract.
+
+### 15.5 Procedural Plugin/Theme Callback Stubs
+
+`tools/phpstan-bootstrap.php` (already §13.1 C) stubs the procedural callbacks plugins/themes are expected to define: `plugin_install`, `plugin_activate`, `plugin_deactivate`, `plugin_uninstall`, `theme_activate`, `theme_deactivate`, `theme_delete`. These names come from the legacy contract; the stubs make PHPStan happy on call sites in `Admin/Plugins.php` and `Admin/Themes.php` that look for these functions via `is_callable()`.
+
+### 15.6 Docstring Drift Across `src/`
+
+A `grep -rn 'include/\|admin/'` of `src/` PHP files turns up **18+ docstrings** that describe code as "Replaces the former `include/X.inc.php`" or "Used by `admin/Y.php`". Neither directory exists in 16.x. Affected files include:
+
+`Kernel.php` (4×), `InstallSentinel.php` (2×), `InstallController.php` (2×), `FilterMiddleware.php` (2×), `Config.php`, `WsType.php`, `WsParam.php`, `DerivativeSize.php`, `LanguageStack.php`, `SectionInitializer.php`, `UserBootstrap.php`, `ImageDerivativeController.php`, `HistoryRepository.php` (2×), `CategoryRepository.php`, `UserRepository.php`, `RateRepository.php` (2×), `PermalinkRepository.php`.
+
+No functional impact — they're docstrings. But misleading to anyone tracing the codebase ("where's `include/section_init.inc.php`?" → "doesn't exist; this is the replacement").
+
+### 15.7 Template Inheritance via `themes/_base`
+
+Not a shim per se, but worth noting: the Latte template system reproduces Piwigo's classic theme-inheritance model (`themes/elegant` extends `themes/_base`; `themes/admin/dark` extends `themes/admin/_base`). The `include/selected_tags.inc.latte` reference at `SelectedTagsRenderer.php:43` is a path **inside the template directory tree** (`themes/_base/template/include/selected_tags.inc.latte`), not a reference to the deleted `include/` root directory. Easy to misread as legacy drift; flagged here so it doesn't trip a future audit.
+
+---
+
+**End of inventory.** Sixth-pass audit (2026-05-14) covered: `src/`, `tools/`, `tests/`, `install/`, root entry points (`index.php`, `ecs.php`, `migrations.php`, `rector.php`, `bin/piwigo`), Composer + npm dependencies, static-analysis tooling (PHPStan + Psalm + their rules/stubs), build config (Vite + ESLint + Playwright), frontend TypeScript bundles, all 133 Latte templates, CI workflows (`.github/`), and the plugin/theme procedural contract.

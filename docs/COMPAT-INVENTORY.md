@@ -36,7 +36,7 @@ defer to this table.
 | **4b** | `header_msgs` / `header_notes` → `PageState` | ✓ Closed 2026-05-15 | — | — |
 | **4c** | `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` → typed `RequestContext` | ✓ Closed 2026-05-15 | — | — |
 | **4d** | `$lang_info` → `Lang` static state | ✓ Closed 2026-05-15 | — | — |
-| **5** | `Util.php` split | Open | soft: Phase 4a (4a ✓) | — |
+| **5** | `Util.php` split | ✓ Closed 2026-05-15 | — | — |
 | **6** | Extension-API compat removal (post-v17 cleanup) | Open | none | 6.1–6.5 mostly independent (6.5 soft-depends on 6.3) |
 
 **Already shipped before this re-org** (Appendix A entries):
@@ -59,6 +59,7 @@ defer to this table.
 - §Z20 — Phase 2f `CURRENT_DATE` global retired (2026-05-15)
 - §Z21 — Phase 2g UniversalFeedCreator → in-tree DOMDocument RSS generator (2026-05-15)
 - §Z22 — Phase 4c `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` → typed `RequestContext` (2026-05-15)
+- §Z23 — Phase 5 `Util.php` split (2026-05-15)
 
 ---
 
@@ -145,7 +146,7 @@ already covers every live caller, and the only legacy consumer
 deleted, sole call from `UpgradeFeedController` removed, 30 stubs purged from
 `tools/psalm-stubs.phpstub`. `CADDIE_TABLE` went with the batch — caddie itself
 is a live admin feature; only the legacy define is retired (see
-[Phase 5](#phase-5--utilphp-split-a51) `fillCaddie` carve-out note).
+[§Z23 fillCaddie carve-out](#z23-phase-5-utilphp-split)).
 
 Detail → [Appendix A §Z16](#z16-phase-2b-_table-constant-migration).
 
@@ -222,7 +223,7 @@ looked at and why each was passed over, not as a TODO.
 | **`PHPWG_URL`** | 1 — `Bootstrap/CommonBootstrap.php:177` (hardcoded `''` by fork policy: "blanked so this install never sends telemetry to upstream piwigo.org") | 28 sites — `AdminService.php` admin help-link templates (`PHPWG_URL . '/wiki'`, `'/forum'`, `'/bugs'`, etc.), `Updates.php` (telemetry endpoint), `MailService.php`, `PageTailRenderer.php` (template var), `Util.php` (telemetry endpoint) | **Migration is blocked by a product decision, not a refactor question.** With `PHPWG_URL=''`, the 28 consumers produce broken `/wiki`, `/forum`, `/bugs`-on-current-host paths in the admin UI. Cleaning that up means deciding where the fork's help links *should* point (fork docs URL? remove the help-link feature entirely? keep them broken?). That's a UX/product call, not a Phase 2h refactor. |
 | **`PEM_URL`** | 1 — `Bootstrap/CommonBootstrap.php:180-186` (fork-local extensions catalog URL, derived from `$_SERVER['HTTP_HOST']` or `Config::alternativePemUrl()`) | ~10 sites — `Plugins.php`, `Themes.php`, `Languages.php`, `Updates.php`, `Util.php` (all in plugin/theme/language install + version-check flows) | Live runtime constant with real consumers. Migration to `Config::pemUrl()` is mechanical (~10 touches) but doesn't fix a bug, remove a dep, or unlock another phase. The inventory's "defer unless touching the surrounding code anyway" applies. Reasonable bundle-of-opportunity move if a future phase touches the extension-install flow. |
 | **`PWG_LOCAL_DIR`** | 1 — `Bootstrap/CommonBootstrap.php:71` (literal `'local/'`) | 14 sites — various `PHPWG_ROOT_PATH . PWG_LOCAL_DIR . '...'` constructions | String literal, never varies. Could become a class constant (`AppInfo::LOCAL_DIR`?) for stricter typing but nothing currently breaks. 14 mechanical touches for low value. |
-| **`MKGETDIR_*`** | 5 in `Core/Util.php:42-46` (`MKGETDIR_NONE`, `_RECURSIVE`, `_DIE_ON_ERROR`, `_PROTECT_INDEX`, `_DEFAULT`) | 28 sites + 1 default parameter on `Util::mkgetdir()` | Bitmask flags for `Util::mkgetdir($flags)`. **The inventory itself files this under "promote to a typed enum that the new `Filesystem` service (Phase 5) consumes."** Doing the enum promotion now picks a home (`Piwigo\Core\MkGetDirFlag`?) that Phase 5's Util-split will move. Better to do it once, with the Filesystem-service context, during Phase 5. |
+| **`MKGETDIR_*`** | ~~5 in `Core/Util.php:42-46`~~ retired 2026-05-15 in Phase 5 Batch 2 — promoted to `Piwigo\Core\Filesystem::FLAG_*` class constants (`FLAG_NONE`, `FLAG_RECURSIVE`, `FLAG_DIE_ON_ERROR`, `FLAG_PROTECT_INDEX`, `FLAG_DEFAULT`). See [§Z23](#z23-phase-5-utilphp-split). |
 
 ### Bottom line
 
@@ -233,14 +234,14 @@ phase. The remaining pieces fall into three buckets:
   Delete becomes free if/when the fork drops upstream-merge tracking.
 - **`PHPWG_URL`**: surfaces a *product* question (where should the fork's
   help links point?), not a refactor. Belongs in a UX discussion.
-- **`PEM_URL` / `PWG_LOCAL_DIR` / `MKGETDIR_*`**: conventional runtime
-  config, not shims. Pickable as bundle-of-opportunity moves when a
-  future phase touches the surrounding code. `MKGETDIR_*` specifically is
-  Phase 5 territory.
+- **`PEM_URL` / `PWG_LOCAL_DIR`**: conventional runtime config, not shims.
+  Pickable as bundle-of-opportunity moves when a future phase touches the
+  surrounding code. **`MKGETDIR_*`** retired 2026-05-15 in Phase 5 Batch 2
+  (now `Piwigo\Core\Filesystem::FLAG_*` class constants).
 
 This phase intentionally does not move code. If any of the above
-conditions changes (fork drops upstream merges, help-link UX decision is
-made, Phase 5 reaches `mkgetdir`), reopen the relevant piece then.
+conditions changes (fork drops upstream merges, help-link UX decision
+is made), reopen the relevant piece then.
 
 ---
 
@@ -271,8 +272,9 @@ mirroring `SectionContext` / `SectionContextRegistry`. Six readers migrated;
 `FilterMiddleware` builds one immutable `FilterContext` per request. Detail →
 [Appendix A §Z11](#z11-phase-4a-filtercontext-vo).
 
-**Enabled:** [Phase 5](#phase-5--utilphp-split-a51) — several `Util::*`
-methods that read `$GLOBALS['filter']` can now become DI injections.
+**Enabled:** Phase 5 — the Util methods that read `$GLOBALS['filter']` became
+`FilterService::getFilterPageValue()` during Phase 5 Batch 2. See
+[§Z23](#z23-phase-5-utilphp-split).
 
 ## Phase 4b — `header_msgs` / `header_notes` → `PageState`  [A2] ✓
 
@@ -309,110 +311,18 @@ to `Lang`. Detail → [Appendix A §Z13](#z13-phase-4d-lang_info-lang-static-sta
 
 ---
 
-# Phase 5 — `Util.php` Split  [A5.1]
+# Phase 5 — `Util.php` Split  [A5.1] ✓
 
-**Status:** open. Soft dependencies on earlier phases.
+Closed 2026-05-15 in three sequential batches. The 1058-line
+`src/Piwigo/Core/Util.php` god-class is gone — file deleted, no compat shim.
+Twenty methods carved into eight new typed services, three method moves to
+existing services (`HtmlService`, `FilterService`, `MailService`), one move
+to an existing storage helper (`Piwigo\Core\Filesystem::mkgetdir`), and one
+to a repository (`ImageRepository::addToUserCaddie`). The `pwgActivity`
+union-typed signature became the typed `ActivityEvent` DTO + `ActivityObject`
+enum.
 
-**Gates (soft):** [Phase 4a](#phase-4a--filter--filtercontext-vo-a2)
-done ✓ (already shipped).
-
-**Note:** [Phase 2e](#phase-2e--mobileesp-dep-replacement-a43) was
-previously expected to drop `mobileTheme` / `getDevice` from Util — the
-"full removal" path. The mobile-theme switching feature is staying
-(see Phase 2e's "Out of scope" section), so `mobileTheme` and
-`getDevice` remain on Util.php and need a new home in the split below.
-
-`src/Piwigo/Core/Util.php` is a 1058-line service-locator anti-pattern: 33
-methods across many concerns, 11 prefixed `pwg*` because they were once free
-functions of the same name in `include/functions.inc.php`.
-
-| Concern | Methods |
-|---|---|
-| Logging / debug | `pwgLog`, `pwgDebug`, `doLog`, `pwgActivity` |
-| CSRF tokens | `getPwgToken`, `checkPwgToken` |
-| Execution mutex | `pwgUniqueExecBegins`, `pwgUniqueExecIsRunning`, `pwgUniqueExecEnds` |
-| HTTP redirects | `redirect`, `redirectHttp`, `redirectHtml` (three overlap) |
-| Telemetry | `sendPiwigoInfos`, `sendPiwigoInfosRetryLater` |
-| Extension enumeration | `getLanguages`, `getPwgThemes`, `checkThemeInstalled`, `getThemeconf` |
-| Filesystem | `mkgetdir` |
-| Mobile detection | `mobileTheme`, `getDevice` — survive Phase 2e; need a new home in the split (mobile-theme switcher is staying as a feature) |
-| Input validation | `checkInputParameter` |
-| Misc UI | `getPrivacyLevelOptions`, `getIcon`, `createNavigationBar` |
-| Ephemeral keys | `getEphemeralKey`, `verifyEphemeralKey` |
-| Comment counts | `getNbAvailableComments` |
-| Filter state | `getFilterPageValue` |
-| Email | `getWebmasterMailAddress` |
-| Lounge (timed-publish staging) | `checkLounge` |
-| Caddie | `fillCaddie` (one orphan; the other caddie DB operations already live on `ImageRepository`) |
-
-Carve-out (names deliberately drop the `pwg` prefix — those are the legacy
-free-function names §A5.1 calls out as the smell):
-
-- **`ActivityLogger`** — `pwgLog`, `pwgActivity`, `doLog`. These all write to
-  the activity log table; merge them. PSR-3 `LoggerRegistry` / `Logger`
-  already covers application logging; `ActivityLogger` is specifically the
-  user-visible activity feed.
-- **`DebugCollector`** — `pwgDebug`. Coordinates with `PageState->debugLines`
-  (set in [§Z10](#z10-phase-3b-mechanical-channels)). Becomes a thin facade
-  over the `PageState` property.
-- **`CsrfService`** — `getPwgToken`, `checkPwgToken`.
-- **`ExecutionMutex`** — `pwgUniqueExecBegins` / `IsRunning` / `Ends` →
-  rename methods to `acquire` / `isHeld` / `release`.
-- **`RedirectResponder`** — carves `redirect` / `redirectHttp` / `redirectHtml`
-  off `Util` while keeping the existing procedural exit semantics
-  (`header(); exit()`). The inventory originally specified returning PSR-7
-  `ResponseInterface`, but that would require every caller in the chain —
-  including deep services like `AuthService`, `UserService`, `PasswordService`
-  — to return `ResponseInterface` up to the middleware. That conversion is
-  invasive enough that Phase 4c followed the same "defer PSR-7, do the
-  carve-out now" path, and Batch 3 follows suit. The collapse to a single
-  method is also deferred — callers keep using `redirect()` / `redirectHttp()`
-  / `redirectHtml()` exactly as before.
-- **`TelemetryService`** — `sendPiwigoInfos`, `sendPiwigoInfosRetryLater`.
-- Extension enumeration helpers move to `ThemeService` and `LanguageService`
-  (mirroring `PluginService`).
-- `mkgetdir` → `Symfony\Component\Filesystem` (we already require
-  `league/flysystem`, so the `Filesystem` component or a thin Flysystem
-  wrapper subsumes it). Promote `MKGETDIR_*` flags to a typed enum if
-  callers still need flag combinations; otherwise inline the defaults.
-  (Phase 2h deferred the standalone enum promotion specifically because
-  Phase 5 will move `mkgetdir`'s home — see Phase 2h section.)
-- **`fillCaddie`** → `ImageRepository::addToUserCaddie()` (or sibling).
-  Caddie is a **live admin feature** — a per-admin selection basket surfaced
-  in the top admin menu (with photo-count badge), the gallery and picture
-  pages ("Add to caddie" buttons), and the Batch Manager (a `caddie`
-  prefilter plus `add_to_caddie` / `remove_from_caddie` / `empty_caddie`
-  actions); newly uploaded photos auto-populate it. Its DB operations
-  already live on `ImageRepository` (`deleteUserCaddie`,
-  `deleteUserCaddieByImageIds`, `deleteCaddieByImageIds`,
-  `countCaddieByUserId`); `fillCaddie` is the only orphan still on `Util`.
-  The `CADDIE_TABLE` define has been retired with Phase 2b. **Not a removal
-  target** — earlier inventory framing of caddie as a "v1.x precursor to
-  batch_manager" was wrong; caddie and batch_manager are complementary
-  features (caddie = selection basket, batch_manager = the tool that
-  operates on selections).
-
-Update `Util::pwgActivity`'s signature to a typed `ActivityEvent` enum + DTO
-at the same time — the current
-`(string $object, array|int|string $objectId, string $action, array $details = [])`
-union signature is itself a smell.
-
-> **Don't do:** name the carved-out classes `PwgLogger`, `PwgCsrf`, etc.
-> Those names preserve the legacy `pwg*` prefix the inventory just spent
-> paragraphs explaining is the symptom of `include/functions.inc.php`
-> heritage. The point of the split is to leave that behind.
-
-> **§A1 — `$page` reference bridge** was originally scheduled for Phase 5
-> (service-owned state was invasive enough to land alongside the Util split).
-> Shipped early on 2026-05-15. Closure record:
-> [Appendix A §Z1.1](#z1-wave-a-reference-bridges) and the supplementary
-> detail block in [§A1 closure](#a1-page-reference-bridge-closure-record).
-
-> **No §A5.2 / "caddie retirement" phase.** Earlier versions of this
-> inventory described caddie as a v1.x precursor to batch_manager and listed
-> it as a removal target. That was wrong — caddie is a live admin feature
-> (see the `fillCaddie` carve-out bullet above). The only Phase 5 work
-> related to caddie is moving `fillCaddie` off the `Util` god-class.
+Detail → [Appendix A §Z23](#z23-phase-5-utilphp-split).
 
 ---
 
@@ -619,10 +529,11 @@ Update the "Smarty templates" header to "Latte" at the same time.
 
    Phase 3a (4 channels)  ──┐
    Phase 3b (3 channels)  ──┤
-   Phase 4a ($filter)     ──┼──  done 2026-05-15
-   Phase 4b (header_*)    ──┤  (see Appendix A §Z9–§Z13, §Z22)  ───→  Phase 5 (Util split)
-   Phase 4c (RequestCtx)  ──┤
-   Phase 4d (lang_info)   ──┘
+   Phase 4a ($filter)     ──┤
+   Phase 4b (header_*)    ──┼──  done 2026-05-15
+   Phase 4c (RequestCtx)  ──┤  (see Appendix A §Z9–§Z13, §Z22)
+   Phase 4d (lang_info)   ──┤
+   Phase 5 (Util split)   ──┘  (see Appendix A §Z23)
 
    Phase 6 (extension-API)   ──  independent of Phases 1-5 (post-v17.0 cleanup)
    §A1 ($page alias)         ──  done 2026-05-15 (shipped early, §Z1.1)
@@ -632,10 +543,10 @@ Notes:
 
 - Phase 2 tasks are internally sequenced (code → runtime → stubs) but
   externally parallel.
-- Phase 3 / 4a / 4b / 4d are done; they unblock Phase 5. Phase 5 no
-  longer needs Phase 2e — the mobile-theme switcher is staying, so
-  `Util::mobileTheme` / `getDevice` survive Phase 2e and need a new home
-  in the Util split (see Phase 5's Mobile-detection row).
+- Phases 3 / 4 / 5 are all done. Phase 5 did not need Phase 2e — the
+  mobile-theme switcher stays as a feature, so `mobileTheme` / `getDevice`
+  carved into the new `DeviceDetectionService` (Batch 2) rather than being
+  removed.
 - Phase 6 has no hard dependency on any other phase.
 
 ---
@@ -1126,7 +1037,8 @@ block. **The caddie feature is unaffected** — it's a live admin feature (a
 per-user shopping cart for the printing/order-form mechanism), and its
 runtime table access goes through the (yet-to-be-written) Tables accessor
 just like the others. Only the legacy procedural define was retired here.
-`fillCaddie` itself is parked for Phase 5's `Util.php` carve-out.
+`fillCaddie` moved to `ImageRepository::addToUserCaddie()` during Phase 5
+Batch 1 — see [§Z23](#z23-phase-5-utilphp-split).
 
 ### Files touched
 
@@ -1764,12 +1676,209 @@ PHP-side `defined()` call remains.
 
 ---
 
+## Z23. Phase 5 `Util.php` split
+
+Closed 2026-05-15. The 1058-line `src/Piwigo/Core/Util.php` service-locator
+god-class — 27 methods across many concerns, 11 carrying the legacy `pwg*`
+prefix from `include/functions.inc.php` heritage — was split into eight new
+typed services and three existing-service extensions, then deleted entirely.
+No compat shim. Method renames deliberately drop the `pwg*` prefix.
+
+The split happened in three sequential batches over a single day, each with
+PHPStan 0 / Psalm 0 / PHPUnit 503/503 / Pint clean before commit.
+
+### What landed
+
+#### New services
+
+| Class | Methods carved from `Util` | Notes |
+|---|---|---|
+| `Piwigo\Activity\ActivityLogger` | `log(ActivityEvent)`, `pageView()`, `isLoggingEnabled()` | replaces `pwgActivity` / `pwgLog` / `doLog`. Method renames intentional — `pageView` is what `pwgLog` actually did. |
+| `Piwigo\Activity\ActivityEvent` (DTO) | — | typed payload replacing `pwgActivity`'s `(string $object, array\|int\|string $objectId, string $action, array $details)` union signature |
+| `Piwigo\Activity\ActivityObject` (enum) | — | `Album` / `Group` / `Photo` / `System` / `Tag` / `User`. String values match the persisted `activity.object` MySQL ENUM column — renaming a case is a schema migration |
+| `Piwigo\Auth\EphemeralKeyService` | `generate()`, `verify()` | replaces `getEphemeralKey` / `verifyEphemeralKey` |
+| `Piwigo\Core\DebugCollector` | `collect()` | replaces `pwgDebug`; thin facade over `PageState->debugLines` (set in [§Z10](#z10-phase-3b-mechanical-channels)) |
+| `Piwigo\Core\ExecutionMutex` | `acquire()`, `isHeld()`, `release()` | replaces `pwgUniqueExecBegins` / `IsRunning` / `Ends` |
+| `Piwigo\Csrf\CsrfService` | `getToken()`, `check()` | replaces `getPwgToken` / `checkPwgToken` |
+| `Piwigo\Http\DeviceDetectionService` | `getDevice()`, `isMobileTheme()` | replaces `getDevice` / `mobileTheme`. Mobile-theme switcher stays as a feature (see Phase 2e "Out of scope" — these survived Phase 2e specifically because Phase 5 had a home for them) |
+| `Piwigo\Http\RedirectResponder` | `redirect()`, `redirectHttp()`, `redirectHtml()` | same signatures; PSR-7 deferred (see "Deferred" below) |
+| `Piwigo\Language\LanguageService` | `getActiveLanguages()` | replaces `getLanguages` |
+| `Piwigo\Page\PaginationService` | `createNavigationBar()` | — |
+| `Piwigo\Telemetry\TelemetryService` | `sendInfos()`, `retryLater()` | replaces `sendPiwigoInfos` / `sendPiwigoInfosRetryLater` |
+| `Piwigo\Theme\ThemeService` | `getActiveThemes()`, `isInstalled()`, `getThemeconf()` | replaces `getPwgThemes` / `checkThemeInstalled` / `getThemeconf` |
+| `Piwigo\Validation\InputValidator` | `check()` | replaces `checkInputParameter` |
+
+#### Method moves to existing services
+
+| Target | Method | Old name on `Util` |
+|---|---|---|
+| `Piwigo\Comment\CommentService` | `getNbAvailable()` | `getNbAvailableComments` |
+| `Piwigo\Admin\Category\CategoryAdminService` | `checkLounge()` | `checkLounge` |
+| `Piwigo\Image\ImageRepository` | `addToUserCaddie(int $userId, int[] $elementIds)` | `fillCaddie` — explicit userId parameter replaces the implicit `CurrentUser::get()->id` read |
+| `Piwigo\Html\HtmlService` | `getPrivacyLevelOptions()`, `getIcon()` | same names |
+| `Piwigo\Filter\FilterService` | `getFilterPageValue()` | same name |
+| `Piwigo\Mail\MailService` | `getWebmasterMailAddress()` | same name; MailService dropped its `Util` dep entirely |
+| `Piwigo\Core\Filesystem` (existing) | `mkgetdir()` static + `FLAG_*` class constants | `Util::mkgetdir()` static + global `MKGETDIR_*` ints. Joined the existing `try*` filesystem helpers rather than creating a separate `Piwigo\Filesystem\Filesystem` |
+
+#### Caddie
+
+`fillCaddie` was the only orphan caddie operation still on `Util` — the other
+DB operations (`deleteUserCaddie`, `deleteUserCaddieByImageIds`,
+`deleteCaddieByImageIds`, `countCaddieByUserId`) already lived on
+`ImageRepository`. Caddie itself is a **live admin feature** (per-admin
+selection basket surfaced in the top admin menu with photo-count badge,
+gallery/picture "Add to caddie" buttons, Batch Manager `caddie` prefilter
+plus `add_to_caddie` / `remove_from_caddie` / `empty_caddie` actions, plus
+auto-population on photo upload). Earlier inventory framing of caddie as a
+"v1.x precursor to batch_manager" / removal target was wrong — caddie and
+batch_manager are complementary features (caddie = selection basket,
+batch_manager = the tool that operates on selections). The `CADDIE_TABLE`
+define was already retired with Phase 2b; `fillCaddie` was the last
+Util-side trace.
+
+### Batch sequencing
+
+Six commits in `16.x-rewrite`:
+
+- **Batch 1** (`ae8aadb8d`) — six mechanical low-coupling carve-outs:
+  `DebugCollector`, `ExecutionMutex`, `TelemetryService`,
+  `CommentService::getNbAvailable`, `CategoryAdminService::checkLounge`,
+  `ImageRepository::addToUserCaddie`. ~25 callers updated.
+- Post-Batch-1 follow-ups (`6ec4b79ef` + `3b355628b`) — orphan-import sweep
+  and Pint style-fix. (See [§Z23 caveats](#z23-phase-5-utilphp-split) below
+  on why these landed separately.)
+- **Batch 2** (`8e313c650`) — nine more carve-outs / method moves:
+  `ThemeService`, `LanguageService`, `EphemeralKeyService`,
+  `DeviceDetectionService`, `PaginationService`, `Filesystem::mkgetdir`,
+  plus `HtmlService::getPrivacyLevelOptions/getIcon`,
+  `FilterService::getFilterPageValue`, `MailService::getWebmasterMailAddress`.
+  ~85 callers updated. Util.php shrank 1058 → 343 lines.
+- Inventory tweak (`8568cae3f`) — recorded RedirectResponder PSR-7 deferral
+  in Phase 5's open description (see "Deferred" below).
+- **Batch 3** (`4727b3837`) — four big carve-outs +
+  `ActivityEvent` signature change: `CsrfService` (140 sites),
+  `InputValidator` (85 sites), `RedirectResponder` (57 sites),
+  `ActivityLogger` (71 sites). ~360 caller sites total. `Util.php` deleted
+  from disk; `Util::class` factory + import removed from `config/container.php`.
+
+### Naming policy — what we deliberately didn't do
+
+> Don't name the carved-out classes `PwgLogger`, `PwgCsrf`, etc. Those names
+> preserve the legacy `pwg*` prefix the inventory just spent paragraphs
+> explaining is the symptom of `include/functions.inc.php` heritage. The
+> point of the split is to leave that behind.
+
+All renames are deliberate: `pwgActivity` → `ActivityLogger::log`,
+`pwgLog` → `ActivityLogger::pageView`, `doLog` → `ActivityLogger::isLoggingEnabled`,
+`getPwgToken` → `CsrfService::getToken`, `checkPwgToken` → `CsrfService::check`,
+`getEphemeralKey` → `EphemeralKeyService::generate`, `verifyEphemeralKey` →
+`::verify`, `getPwgThemes` → `ThemeService::getActiveThemes`,
+`checkThemeInstalled` → `ThemeService::isInstalled`,
+`getLanguages` → `LanguageService::getActiveLanguages`,
+`mobileTheme` → `DeviceDetectionService::isMobileTheme`,
+`checkInputParameter` → `InputValidator::check`.
+
+`MKGETDIR_*` global ints became `Filesystem::FLAG_*` class constants — same
+bitmask values, same combine-with-`|` ergonomics, scoped to the class
+instead of the global namespace.
+
+### Deferred
+
+- **PSR-7 conversion for `RedirectResponder`.** The inventory originally
+  specified that `RedirectResponder` should return PSR-7 `ResponseInterface`
+  and collapse the three methods to one. Converting deep services
+  (`AuthService`, `UserService`, `PasswordService`, …) to bubble Response
+  up through the call chain instead of `exit()`-ing is invasive enough that
+  Phase 4c followed the same "defer PSR-7, do the carve-out now" path —
+  Batch 3 did the same. The single-method collapse is also deferred.
+  Callers use `redirect()` / `redirectHttp()` / `redirectHtml()` exactly as
+  they used them on `Util`. Recorded in inventory tweak `8568cae3f` ahead
+  of Batch 3.
+- **`ActivityEvent::$objectId` widening to `int|int[]|string`.** Kept at
+  `int|int[]` rather than reintroducing the legacy `array|int|string`
+  union. Three call sites where the source was loosely typed needed an
+  inline `is_numeric(...) ? (int) ... : 0` cast at the call site
+  (`PasswordService` reset-failure `$state['user_id']` access; two
+  `GroupsEndpoints` user-id reads from WS params; `TagsEndpoints` tag-id
+  read). This surfaces a deeper WS-param-typing smell — WS endpoint IDs
+  travel as strings and some callers cast at the boundary, some don't — but
+  that's out of scope for Phase 5.
+- **§A5.2 / "caddie retirement" phase.** Earlier inventory drafts described
+  caddie as a v1.x precursor to batch_manager and listed it as a removal
+  target. That was wrong (see the Caddie section above). No retirement
+  phase was scheduled or executed; the only caddie work in Phase 5 was
+  moving `fillCaddie` to `ImageRepository`.
+
+### §A1 — `$page` reference bridge
+
+Originally scheduled for Phase 5 (service-owned state was invasive enough to
+land alongside the Util split). Shipped early on 2026-05-15. Closure record:
+[Appendix A §Z1.1](#z1-wave-a-reference-bridges) and the supplementary
+detail block in §A1 closure. Not part of the Phase 5 batches themselves.
+
+### Container.php impact
+
+The `Util::class` factory and `use Piwigo\Core\Util` import were removed.
+Roughly twenty-five consumer factories had their `Util $util` argument
+replaced with the appropriate combination of `ActivityLogger`, `CsrfService`,
+`InputValidator`, `RedirectResponder`, plus the Batch 1/2 services. Four new
+service wirings landed in Batch 3 (`ActivityLogger`, `CsrfService`,
+`InputValidator`, `RedirectResponder`); five more in Batch 2
+(`ThemeService`, `LanguageService`, `EphemeralKeyService`,
+`DeviceDetectionService`, `PaginationService`); three in Batch 1
+(`DebugCollector`, `ExecutionMutex`, `TelemetryService`).
+
+The three lazy-proxy factories (`CategoryAdminService`, `ImageAdminService`,
+`UserAdminService`) now resolve `ActivityLogger::class` instead of
+`Util::class`.
+
+### Verification
+
+Each batch ran the full gate set before commit (PHPStan 0 / Psalm 0 /
+PHPUnit 503/503, 2442 assertions / Pint clean) and an audit-pass-style
+re-check after commit:
+
+- Batch 1 needed two follow-up commits (orphan imports + Pint). The
+  orphan-import miss is what produced the `feedback_run_pint_before_commit`
+  memory: PHPStan and Psalm don't flag unused `use` statements under this
+  project's config — that's specifically Pint's job, and Pint hadn't been
+  run locally before the original Batch 1 commit. Batch 2 and Batch 3
+  followed the corrected workflow (`composer lint:php` before commit) and
+  needed no follow-up.
+- `composer dump-autoload --classmap-authoritative` re-ran after every
+  batch because the project pins `classmap-authoritative: true`. Phase 4c
+  was where this trap was discovered (14 WS integration failures from
+  Apache being unable to autoload new classes the unit suite didn't
+  exercise); the `feedback_composer_dump_after_new_class` memory was
+  written then and Phase 5 followed it.
+- Final post-Batch-3 audit verified: zero `Piwigo\Core\Util` references
+  anywhere, zero `MKGETDIR_*` global-constant references, zero orphan
+  imports across the 62 changed files, three lazy proxies correctly
+  re-wired to `ActivityLogger`, all 67 `new ActivityEvent(...)` call sites
+  type-check clean under PHPStan level 10 + Psalm.
+
+### Doc drift fixed alongside
+
+- Phase 2h MKGETDIR_* row marked retired (was: "deferred to Phase 5
+  territory").
+- Phase 2h bottom-line list trimmed (`MKGETDIR_*` removed from the
+  bundle-of-opportunity bucket).
+- Phase 4a "Enabled by" forward-reference rewritten to past tense pointing
+  at `FilterService::getFilterPageValue`.
+- Phase 2b CADDIE_TABLE note pointing at "Phase 5's `fillCaddie` carve-out"
+  rewritten to `ImageRepository::addToUserCaddie()` with §Z23 anchor.
+- Dependency graph: Phase 5 row added to the done block.
+- Phase Ladder: Phase 5 status changed from Open to ✓ Closed.
+- Phase Ladder "Already shipped" list: §Z23 added.
+
+---
+
 ## Caveats
 
 - The plugin/theme procedural contract (Phase 6.1) and the 153-name event
-  API (Phase 6.2) are orthogonal to Phase 5: splitting `Util.php` doesn't
-  reach those, and Phase 6 doesn't reach `Util.php`. They can run in either
-  order.
+  API (Phase 6.2) were orthogonal to Phase 5 (now closed): splitting
+  `Util.php` didn't reach those, and Phase 6 doesn't reach the carved-out
+  Phase 5 services either.
 - The Smarty compat layer (Phase 6.3) is the largest sub-task in Phase 6 in
   terms of touched files (133 templates). Estimate this independently of the
   rest of Phase 6.

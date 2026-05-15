@@ -544,12 +544,6 @@ final readonly class GeneralEndpoints
      */
     public function historySearch(array $param, PwgServer &$service): array
     {
-        $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
-        if (isset($_GET['start']) && is_numeric($_GET['start'])) {
-            $page['start'] = (int) $_GET['start'];
-        } else {
-            $page['start'] = 0;
-        }
         $types = array_merge(['none'], SchemaHelper::getEnums(Tables::history(), 'image_type'));
         $displayThumbnails = ['no_display_thumbnail' => Lang::t('No display'), 'display_thumbnail_classic' => Lang::t('Classic display'), 'display_thumbnail_hoverbox' => Lang::t('Hoverbox display')];
         PageState::current()->errors = [];
@@ -590,10 +584,6 @@ final readonly class GeneralEndpoints
         $searchId   = $searchRepo->insertSearch(serialize($search));
         $serializedRules = $searchRepo->findRulesById($searchId);
         $searchRules = unserialize(is_string($serializedRules) ? $serializedRules : '');
-        if (!is_array($GLOBALS['page'])) {
-            $GLOBALS['page'] = [];
-        }
-        $GLOBALS['page']['search'] = $searchRules;
         $search = is_array($searchRules) ? $searchRules : [];
         $historyService = $this->historyAdminService;
         $search         = $historyService->prepareSearch($search);
@@ -607,8 +597,6 @@ final readonly class GeneralEndpoints
         $userHitCounts = $historyService->getHistoryUserHitCounts($search, $types);
         $searchIds     = $historyService->getHistoryDistinctSearchIds($search, $types);
         $pageRows      = $historyService->getHistoryPage($search, $types, $pageNumber * $pageSize, $pageSize);
-
-        $page['nb_lines'] = $nbLines;
 
         $userIds = [];
         foreach (array_keys($userHitCounts) as $uid) {
@@ -789,7 +777,7 @@ final readonly class GeneralEndpoints
         arsort($sortedMembers);
         unset($sortedMembers['guest']);
         $maxPage = (int) ceil($nbLines / $pageSize);
-        $searchSummary = ['NB_LINES' => Translator::get()->plural('%d line filtered', '%d lines filtered', $page['nb_lines']), 'FILESIZE' => $totalFilesize != 0 ? ceil($totalFilesize / 1024) : 0, 'USERS' => Translator::get()->plural('%d user', '%d users', $nbMembers + $nbGuests), 'MEMBERS' => $memberStrings, 'SORTED_MEMBERS' => $sortedMembers, 'GUESTS' => Translator::get()->plural('%d guest', '%d guests', $nbGuests)];
+        $searchSummary = ['NB_LINES' => Translator::get()->plural('%d line filtered', '%d lines filtered', $nbLines), 'FILESIZE' => $totalFilesize != 0 ? ceil($totalFilesize / 1024) : 0, 'USERS' => Translator::get()->plural('%d user', '%d users', $nbMembers + $nbGuests), 'MEMBERS' => $memberStrings, 'SORTED_MEMBERS' => $sortedMembers, 'GUESTS' => Translator::get()->plural('%d guest', '%d guests', $nbGuests)];
         return ['lines' => $result, 'params' => $param, 'maxPage' => ($maxPage == 0) ? 1 : $maxPage, 'summary' => $searchSummary];
     }
 }

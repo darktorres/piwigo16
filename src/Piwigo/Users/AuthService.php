@@ -364,7 +364,7 @@ SELECT
 
         $this->logUser(is_numeric($user['id']) ? (int) $user['id'] : 0, false);
         EventDispatcher::notify('login_success', $key['username']);
-        $GLOBALS['page'] = array_merge(is_array($GLOBALS['page']) ? $GLOBALS['page'] : [], ['auth_key_id' => $key['auth_key_id']]);
+        PageState::current()->authKeyId = is_numeric($key['auth_key_id']) ? (int) $key['auth_key_id'] : null;
 
         return true;
     }

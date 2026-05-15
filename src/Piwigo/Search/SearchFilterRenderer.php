@@ -41,10 +41,6 @@ final readonly class SearchFilterRenderer
     public function render(): void
     {
         $template = TemplateRegistry::current();
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
         $ctx = SectionContextRegistry::current();
         $user = CurrentUser::get()->rawAttributes;
         $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '';
@@ -58,8 +54,11 @@ final readonly class SearchFilterRenderer
 
         if ('search' == $ctx->section and $ctx->searchDetails !== []) {
             /** @var array<string, mixed> $search_details */
-            $search_details = $ctx->searchDetails;
-            $page['search_details'] = &$search_details;
+            $search_details = $this->searchService->getSearchDetails();
+            if ($search_details === []) {
+                $search_details = $ctx->searchDetails;
+                $this->searchService->setSearchDetails($search_details);
+            }
             /** @var array<string, array<string, bool>> $display_filters */
             $display_filters = $filters_views;
 
@@ -80,10 +79,12 @@ final readonly class SearchFilterRenderer
             $my_search_fields_tmp = is_array($my_search['fields'] ?? null) ? $my_search['fields'] : [];
             $my_search['fields'] = $my_search_fields_tmp;
 
-            $search_details['forbidden'] = $this->permissionService->getSqlConditionFandF(
+            $forbidden = $this->permissionService->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
                 "\n  AND"
             );
+            $search_details['forbidden'] = $forbidden;
+            $this->searchService->setForbidden($forbidden);
 
             if ($search_details['has_filters_filled']) {
                 $search_items = [-1];

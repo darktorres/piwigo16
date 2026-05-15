@@ -499,7 +499,6 @@ final readonly class Util
     public function pwgLog(int|string|null $imageId = null, ?string $imageType = null, ?string $formatId = null): bool
     {
         $user = CurrentUser::get()->rawAttributes;
-        $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         $ctx  = SectionContextRegistry::current();
 
         if ($imageId !== null) {
@@ -565,7 +564,7 @@ final readonly class Util
         $category   = $ctx->category;
         $categoryId = $category !== null && is_scalar($category['id'] ?? null) ? (string) $category['id'] : 'NULL';
         $searchId   = $ctx->searchId ?? 'NULL';
-        $authKeyId  = is_scalar($page['auth_key_id'] ?? null) ? (string) $page['auth_key_id'] : 'NULL';
+        $authKeyId  = PageState::current()->authKeyId !== null ? (string) PageState::current()->authKeyId : 'NULL';
 
         $historyId = $this->historyRepository->insertLog(
             $userId,

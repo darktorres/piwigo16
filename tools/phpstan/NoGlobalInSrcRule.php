@@ -12,30 +12,26 @@ use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
 
 /**
- * Flags `global $conf`, `global $page`, `global $user`, `global $lang`,
- * `global $template` declarations inside src/ — Phase 4 enforcement.
- *
- * Legacy code in include/ and admin/ is allowed to keep using globals; this
- * rule only prevents NEW typed-service code from pulling in the raw globals
- * instead of calling typed accessors / Config::raw(), PageState::current(), etc.
+ * Flags `global $conf`, `global $user`, `global $lang`, `global $template`
+ * declarations inside src/ — prevents new typed-service code from pulling
+ * in raw globals instead of calling typed accessors / Config::raw(),
+ * PageState::current(), etc.
  *
  * @implements Rule<Global_>
  */
 final class NoGlobalInSrcRule implements Rule
 {
     private const GUARDED = [
-        'conf', 'page', 'user', 'lang', 'template', 'logger', 'mysqli', 'persistent_cache', 'service',
+        'conf', 'user', 'lang', 'template', 'logger', 'mysqli', 'service',
         'pwg_event_handlers', 'pwg_loaded_plugins', 'env_nbm', 'header_notes', 'themeconfs', 'cache', 'filter',
     ];
 
     private const REPLACEMENTS = [
         'conf' => 'Config typed accessor / Config::raw()',
-        'page' => 'PageState::current()',
         'user' => 'CurrentUser::get()',
         'lang' => 'Lang::t()',
         'template' => 'TemplateRegistry::current()',
         'logger' => 'LoggerRegistry::current()',
-        'persistent_cache' => 'PersistentCacheRegistry::current()',
         'service' => 'PwgServerRegistry::current()',
         'mysqli' => 'get_dbal_connection() or Kernel::service(Connection::class)',
         'pwg_event_handlers' => 'EventDispatcher::addListener/dispatch/notify()',

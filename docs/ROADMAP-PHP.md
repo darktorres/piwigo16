@@ -22,7 +22,7 @@ Tasks pulled out of phases otherwise marked Done. Grouped by source phase. Most 
 
 ### From #6 — Procedural globals
 
-- [ ] Remove `$GLOBALS` reference bridges (`$page`, `$user`, `$lang`, `$template`, …) from `phpstan-bootstrap.php` once direct `$GLOBALS[...]` reads in `src/` are eliminated.
+- [ ] Remove the remaining `$GLOBALS` reference bridges (`$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`, `$persistent_cache`) from `phpstan-bootstrap.php` — corresponding code is already gone (§Z1/§Z3). `$page` stub removed 2026-05-15 (§Z1.1).
 
 ### From #7 — Overdue TODOs
 
@@ -611,7 +611,7 @@ None. All file-top globals in root entry-scripts, admin entry-scripts, and pre-b
 2. **Migrate `include/` function-internal globals.** ✅ Done (Tier 1 + Tier 2).
 3. **Migrate `admin/` function-internal globals.** ✅ Done (Tier 1 `$env_nbm`, Tier 2 `$lang_info`/`$lang` in NBM functions).
 4. **Extend the PHPStan rule.** ✅ Done — `NoGlobalInSrcRule` enforces zero `global $x;` in `src/`; gate cleared when `include/` and `admin/` were deleted.
-5. **Drop the bootstrap stubs.** ✅ Partially done — `$conf` and `$mysqli` stubs removed; `$GLOBALS` reference bridges for `$page`, `$user`, `$lang`, `$template`, etc. remain in `phpstan-bootstrap.php` because `$GLOBALS[...]` direct access is still used throughout `src/`.
+5. **Drop the bootstrap stubs.** ✅ Partially done — `$conf`, `$mysqli`, and `$page` stubs removed (last one closed by §A1 / §Z1.1, 2026-05-15); `$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`, `$persistent_cache` reference-bridge stubs remain in `phpstan-bootstrap.php` even though the corresponding code is already gone — open work (§D3.1A).
 
 ### Verification
 

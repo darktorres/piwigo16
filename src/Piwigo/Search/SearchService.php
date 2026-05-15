@@ -28,22 +28,54 @@ use Piwigo\Users\UserService;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
 
-final readonly class SearchService
+final class SearchService
 {
+    /** @var array<string,mixed> */
+    private array $searchDetails = [];
+    private ?string $searchId    = null;
+    private ?bool $useRegexpICU  = null;
+
     public function __construct(
-        private SearchRepository $searchRepo,
-        private Connection $conn,
-        private LoggerInterface $logger,
-        private CategoryService $categoryService,
-        private HtmlService $htmlService,
-        private PermissionService $permissionService,
-        private PreferencesService $preferencesService,
-        private StringUtil $stringUtil,
-        private TagService $tagService,
-        private UrlService $urlService,
-        private UserService $userService,
-        private CacheItemPoolInterface $pool,
+        private readonly SearchRepository $searchRepo,
+        private readonly Connection $conn,
+        private readonly LoggerInterface $logger,
+        private readonly CategoryService $categoryService,
+        private readonly HtmlService $htmlService,
+        private readonly PermissionService $permissionService,
+        private readonly PreferencesService $preferencesService,
+        private readonly StringUtil $stringUtil,
+        private readonly TagService $tagService,
+        private readonly UrlService $urlService,
+        private readonly UserService $userService,
+        private readonly CacheItemPoolInterface $pool,
     ) {
+    }
+
+    /** @return array<string,mixed> */
+    public function getSearchDetails(): array
+    {
+        return $this->searchDetails;
+    }
+
+    /** @param array<mixed> $details */
+    public function setSearchDetails(array $details): void
+    {
+        /** @var array<string,mixed> $normalized */
+        $normalized = [];
+        foreach ($details as $key => $value) {
+            $normalized[(string) $key] = $value;
+        }
+        $this->searchDetails = $normalized;
+    }
+
+    public function setForbidden(string $forbidden): void
+    {
+        $this->searchDetails['forbidden'] = $forbidden;
+    }
+
+    public function getSearchId(): ?string
+    {
+        return $this->searchId;
     }
 
     public function getSearchIdPattern(string $candidate): ?string
@@ -60,10 +92,6 @@ final readonly class SearchService
     /** @return array<string,mixed>|null */
     public function getSearchInfo(string $candidate): ?array
     {
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
         $clausePattern = $this->getSearchIdPattern($candidate);
 
         if ($clausePattern === null || $clausePattern === '') {
@@ -78,7 +106,8 @@ final readonly class SearchService
                 HtmlService::fatalError('this search is not reachable with its id, need the search_uuid instead');
             }
             if ('search' == SectionContextRegistry::current()->section) {
-                $page['search_id'] = $searches[0]['id'];
+                $rawId = $searches[0]['id'] ?? null;
+                $this->searchId = is_scalar($rawId) ? (string) $rawId : null;
             }
             return $searches[0];
         }
@@ -444,24 +473,25 @@ final readonly class SearchService
             $items = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' i WHERE id IN (' . implode(',', $items) . ') ' . Config::orderBy())->fetchAllAssociative(), 'id');
         }
 
+        $details = [
+            'matching_cat_ids' => isset($matchingCatIds) ? array_values($matchingCatIds) : null,
+            'matching_tag_ids' => isset($matchingTagIds) ? array_values($matchingTagIds) : null,
+            'has_filters_filled' => $hasFilersFilled,
+            'image_ids_for_filter' => $imageIdsForFilter,
+        ];
+        $this->searchDetails = $details;
+
         return [
-            'items' => $items,
-            'search_details' => [
-                'matching_cat_ids' => isset($matchingCatIds) ? array_values($matchingCatIds) : null,
-                'matching_tag_ids' => isset($matchingTagIds) ? array_values($matchingTagIds) : null,
-                'has_filters_filled' => $hasFilersFilled,
-                'image_ids_for_filter' => $imageIdsForFilter,
-            ],
+            'items'          => $items,
+            'search_details' => $details,
         ];
     }
 
     public function getClauseForFilter(string $filterName): string
     {
-        $page = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
         $otherFiltersItems = $this->getItemsForFilter($filterName);
         if (false === $otherFiltersItems) {
-            $details  = is_array($page['search_details'] ?? null) ? $page['search_details'] : [];
-            $forbidden = is_string($details['forbidden'] ?? null) ? $details['forbidden'] : '';
+            $forbidden = is_string($this->searchDetails['forbidden'] ?? null) ? $this->searchDetails['forbidden'] : '';
             return '1=1' . $forbidden;
         }
         return 'image_id IN (' . implode(',', $otherFiltersItems) . ')';
@@ -470,13 +500,7 @@ final readonly class SearchService
     /** @return array<int>|false */
     public function getItemsForFilter(string $filterName): array|false
     {
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
-        $detailsRaw          = $page['search_details'] ?? [];
-        $details             = is_array($detailsRaw) ? $detailsRaw : [];
-        $imageIdsForFilter   = is_array($details['image_ids_for_filter'] ?? null) ? $details['image_ids_for_filter'] : [];
+        $imageIdsForFilter   = is_array($this->searchDetails['image_ids_for_filter'] ?? null) ? $this->searchDetails['image_ids_for_filter'] : [];
         $otherFilters        = array_diff(array_keys($imageIdsForFilter), [$filterName]);
 
         if (empty($otherFilters)) {
@@ -484,8 +508,7 @@ final readonly class SearchService
         }
 
         $cacheKey = md5(implode(',', $otherFilters));
-        $details  = is_array($page['search_details'] ?? null) ? $page['search_details'] : [];
-        $cache    = is_array($details['getItemsForFilter'] ?? null) ? $details['getItemsForFilter'] : [];
+        $cache    = is_array($this->searchDetails['getItemsForFilter'] ?? null) ? $this->searchDetails['getItemsForFilter'] : [];
 
         if (!isset($cache[$cacheKey])) {
             $functionStart = $this->stringUtil->getMoment();
@@ -509,9 +532,8 @@ final readonly class SearchService
                 $otherFiltersItems = [-1];
             }
 
-            $cache[$cacheKey]             = $otherFiltersItems;
-            $details['getItemsForFilter'] = $cache;
-            $page['search_details']       = $details;
+            $cache[$cacheKey] = $otherFiltersItems;
+            $this->searchDetails['getItemsForFilter'] = $cache;
         }
 
         $rawCached = is_array($cache[$cacheKey]) ? $cache[$cacheKey] : [];
@@ -530,10 +552,6 @@ final readonly class SearchService
      */
     public function qsearchGetTextTokenSearchSql(QSingleToken $token, array $fields): array
     {
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
         $clauses  = [];
         $variants = array_merge([$token->term], $token->variants);
         $fts      = [];
@@ -553,15 +571,15 @@ final readonly class SearchService
                 }
             }
             if (!$useFt) {
-                if (!isset($page['use_regexp_ICU'])) {
-                    $page['use_regexp_ICU'] = false;
+                if ($this->useRegexpICU === null) {
+                    $this->useRegexpICU = false;
                     $dbVersion = DbInfo::version();
                     if (!preg_match('/mariadb/i', $dbVersion) and version_compare($dbVersion, '8.0.4', '>')) {
-                        $page['use_regexp_ICU'] = true;
+                        $this->useRegexpICU = true;
                     }
                 }
-                $pre  = ($token->modifier & QST_WILDCARD_BEGIN) ? '' : ((bool) $page['use_regexp_ICU'] ? '\\\\b' : '[[:<:]]');
-                $post = ($token->modifier & QST_WILDCARD_END) ? '' : ((bool) $page['use_regexp_ICU'] ? '\\\\b' : '[[:>:]]');
+                $pre  = ($token->modifier & QST_WILDCARD_BEGIN) ? '' : ($this->useRegexpICU ? '\\\\b' : '[[:<:]]');
+                $post = ($token->modifier & QST_WILDCARD_END) ? '' : ($this->useRegexpICU ? '\\\\b' : '[[:>:]]');
                 foreach ($fields as $field) {
                     $clauses[] = $field . ' REGEXP \'' . $pre . addslashes(preg_quote($variant)) . $post . '\'';
                 }

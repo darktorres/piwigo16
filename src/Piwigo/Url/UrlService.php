@@ -19,24 +19,27 @@ use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 
-final readonly class UrlService
+final class UrlService
 {
+    /** Override pushed by setMakeFullUrl(); null when not active. */
+    private static ?string $rootPathOverride = null;
+    /** Reference count for nested setMakeFullUrl()/unsetMakeFullUrl() pairs. */
+    private static int $rootPathRefCount = 0;
+
     public function __construct(
-        private Connection $conn,
-        private StringUtil $stringUtil,
-        private CategoryService $categoryService,
-        private HtmlService $htmlService,
-        private TagService $tagService,
-        private PermissionService $permissionService,
+        private readonly Connection $conn,
+        private readonly StringUtil $stringUtil,
+        private readonly CategoryService $categoryService,
+        private readonly HtmlService $htmlService,
+        private readonly TagService $tagService,
+        private readonly PermissionService $permissionService,
     ) {
     }
 
     public static function getRootUrl(): string
     {
-        // setMakeFullUrl() temporarily overrides root_path in $GLOBALS['page'] to force absolute URLs
-        $pageArr = is_array($GLOBALS['page'] ?? null) ? $GLOBALS['page'] : [];
-        if (isset($pageArr['root_path']) && is_string($pageArr['root_path']) && $pageArr['root_path'] !== '') {
-            return $pageArr['root_path'];
+        if (self::$rootPathOverride !== null) {
+            return self::$rootPathOverride;
         }
         $rootPath = SectionContextRegistry::current()->rootPath;
         if ($rootPath !== '') {
@@ -616,47 +619,20 @@ final readonly class UrlService
 
     public function setMakeFullUrl(): void
     {
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
+        if (self::$rootPathRefCount === 0) {
+            self::$rootPathOverride = self::getAbsoluteRootUrl();
         }
-        $save = is_array($page['save_root_path'] ?? null) ? $page['save_root_path'] : null;
-        if ($save === null) {
-            $newSave = [];
-            if (isset($page['root_path'])) {
-                $newSave['path'] = $page['root_path'];
-            }
-            $newSave['count']       = 1;
-            $page['save_root_path'] = $newSave;
-            $page['root_path']      = self::getAbsoluteRootUrl();
-        } else {
-            $count             = is_numeric($save['count'] ?? null) ? (int) $save['count'] : 0;
-            $save['count']     = $count + 1;
-            $page['save_root_path'] = $save;
-        }
+        self::$rootPathRefCount++;
     }
 
     public function unsetMakeFullUrl(): void
     {
-        $page = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
-        $save = is_array($page['save_root_path'] ?? null) ? $page['save_root_path'] : null;
-        if ($save === null) {
+        if (self::$rootPathRefCount === 0) {
             return;
         }
-        $count = is_numeric($save['count'] ?? null) ? (int) $save['count'] : 0;
-        if ($count == 1) {
-            if (isset($save['path'])) {
-                $page['root_path'] = $save['path'];
-            } else {
-                unset($page['root_path']);
-            }
-            unset($page['save_root_path']);
-        } else {
-            $save['count']          = $count - 1;
-            $page['save_root_path'] = $save;
+        self::$rootPathRefCount--;
+        if (self::$rootPathRefCount === 0) {
+            self::$rootPathOverride = null;
         }
     }
 

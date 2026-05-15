@@ -12,7 +12,7 @@ A fourth category, **closed migrations**, is recorded for historical context.
 **Policy:** v17.0 intentionally breaks all PEM extensions. External plugin
 compatibility is NOT a blocker; only in-tree `src/` callers block removal.
 
-Last audited end-to-end: 2026-05-14.
+Last audited end-to-end: 2026-05-15.
 
 ---
 
@@ -20,7 +20,7 @@ Last audited end-to-end: 2026-05-14.
 
 | Area | State | Section |
 |---|---|---|
-| Wave A reference bridges (`$page`, `$lang`, `$template`, `$user`, …) | 5 of 6 removed; `$page` alias still active | [§A1](#a1-page-reference-bridge), [§Z1](#z1-wave-a-reference-bridges) |
+| Wave A reference bridges (`$page`, `$lang`, `$template`, `$user`, …) | All 6 removed | [§Z1](#z1-wave-a-reference-bridges) |
 | Session handler bridge | Removed | [§Z2](#z2-session-handler-bridge) |
 | Legacy cache API (`PersistentCache`) | Removed | [§Z3](#z3-legacy-cache-api) |
 | WS backward-compat parameters | Removed | [§Z4](#z4-ws-backward-compat-parameters) |
@@ -32,7 +32,7 @@ Last audited end-to-end: 2026-05-14.
 | Plugin event API — 153 hook names | Active until v17.0 | [§P2](#p2-plugin-event-api) |
 | Smarty-syntax compatibility layer in Latte | Active (transitional API) | [§P3](#p3-smarty-syntax-compatibility-in-latte) |
 | Frontend plugin BC queues | Active until v17.0 | [§P4](#p4-frontend-plugin-bc-queues) |
-| Reference bridge alias `SectionInitializer:68` | Removal target | [§A1](#a1-page-reference-bridge) |
+| Reference bridge alias `SectionInitializer:68` | Removed | [§A1](#a1-page-reference-bridge) |
 | Remaining `$GLOBALS` runtime state channels | Removal targets | [§A2](#a2-ad-hoc-globals-cross-class-channels) |
 | Legacy `define()` shims (`IN_ADMIN`, `WS_*`, `*_TABLE`, `CURRENT_DATE`, `xmlrpc_encode`) | Removal targets | [§A3](#a3-legacy-define-shims) |
 | Legacy vendor dependencies (PclZip, UniversalFeedCreator, MobileEsp) | Removal targets | [§A4](#a4-legacy-vendor-dependencies) |
@@ -51,38 +51,16 @@ compatibility) and could be removed in the 16.x line.
 
 ## A1. `$page` Reference Bridge
 
-**File:** `src/Piwigo/Section/SectionInitializer.php:68`
+**Removed** (2026-05-15). Each subsystem now owns its own per-request state:
 
-```php
-$GLOBALS['page'] = &$page;  // local array aliased to global
-```
+- `SearchService::$searchDetails`, `$searchId`, `$useRegexpICU` (instance properties); `SearchFilterRenderer` calls `setForbidden()` instead of mutating a shared array; `SectionInitializer` reads `getSearchId()` directly.
+- `CalendarService::$chronologyDate`, `$chronologyStyle`, `$chronologyView`, `$items`, `$comment` (instance properties). `CalendarBase` / `CalendarMonthly` operate on `public array $chronologyDate` populated by `CalendarService`. `SectionInitializer::initialize()` passes chronology data in as named parameters and reads results back through `getChronologyDate()` / `getItems()` / etc.
+- `UrlService::setMakeFullUrl()` / `unsetMakeFullUrl()` are backed by a private static `$rootPathOverride` + ref count; `getRootUrl()` reads override → `SectionContext::rootPath` → `PHPWG_ROOT_PATH`.
+- `AuthService::authKeyLogin()` writes `PageState::current()->authKeyId`; `Util::pwgLog()` reads from the same typed property.
+- `PasswordService` no longer writes `username` (dead write — no reader).
+- `MaintenanceController::history()` / `GeneralEndpoints::historySearch()` / `UpgradeController` reads of `$page['search']`, `$page['errors']`, `$page['nb_lines']` were dead (different request paths) or replaced by `PageState::current()->errors`.
 
-External readers all moved to typed VOs (`SectionContext`, `PictureContext`)
-or `PageState` typed properties, but the alias is preserved so
-Search/Calendar/UrlService sub-calls that do `&$GLOBALS['page']` mutate the
-same shared local array. **30 `$GLOBALS['page']` references remain across 13
-files.**
-
-Still-active sub-call sites:
-
-| File | Keys | Why preserved |
-|---|---|---|
-| `SearchService` (×4) | `search_details`, `use_regexp_ICU`, `search_id` | Mutable search-cache state |
-| `SearchFilterRenderer` | `search_details` | Reference write-back |
-| `CalendarBase`, `CalendarMonthly` (×4) | `chronology_date` | Rendering-time writes (dead — calendar URL builders override) |
-| `CalendarService` | `items`, `comment`, `chronology_*` | Feeds SectionContext snapshot |
-| `UrlService::setMakeFullUrl`/`unsetMakeFullUrl` | `root_path`, `save_root_path` | Push/pop for absolute email URLs |
-| `MaintenanceController::history()`, `GeneralEndpoints::historySearch()` | `search`, `nb_lines`, `start` | WS search state — see [§A2](#a2-ad-hoc-globals-cross-class-channels) |
-| `PasswordService` | `username` | Password-reset mid-flow |
-| `AuthService::authKeyLogin()` | `auth_key_id` | API-key request log |
-| `UpgradeController` (×2) | mixed | Upgrade pipeline scratch |
-| `Util::pwgLog`, `Util::recentPeriod` | varies | Logger reads section context |
-| `PictureController` | `filter` | Recent-photos mode |
-
-**Removal path:** see [§A1 detailed plan](#a1--eliminate-the-globalspage-alias-after-phases-2--4)
-in Phase 5 — proper fix is to make each subsystem own its own state
-internally (so `SearchService` keeps `$this->searchDetails` etc.), not to
-type the shared-mutable-state pattern via a `PageContext` VO.
+`SectionInitializer.php:68` (`$GLOBALS['page'] = &$page;`) is gone. The local `$page` array still exists inside `SectionInitializer::initialize()` as scratch space for building the `SectionContext` value object — it is no longer aliased to any global. `tools/phpstan-bootstrap.php` `$page` stub removed; `NoGlobalInSrcRule` GUARDED entry for `page` removed.
 
 ## A2. Ad-hoc `$GLOBALS` Cross-Class Channels
 
@@ -481,7 +459,7 @@ is deprecated/removed in modern PHP builds but still used in
 |---|---|
 | `$prefixeTable` | Active (§A2) |
 | `$user` | Removed (§Z1) |
-| `$page` | Bridge alias still active (§A1) |
+| `$page` | Removed (§Z1.1) |
 | `$lang` | Removed (§Z1) |
 | `$template` | Removed (§Z1) |
 | `$logger` | Removed — replaced by `LoggerRegistry` |
@@ -569,6 +547,7 @@ Items completed earlier in the 16.x branch, kept for context.
 
 | § | Global | Notes |
 |---|---|---|
+| §Z1.1 | `$GLOBALS['page']` | Service-owned state across `SearchService`, `CalendarService`, `CalendarBase`, `CalendarMonthly`, `UrlService`, `AuthService` (via `PageState::current()->authKeyId`); dead writes removed in `PasswordService`, `MaintenanceController`, `GeneralEndpoints`, `UpgradeController`. Alias at `SectionInitializer:68` deleted. |
 | §Z1.2 | `$GLOBALS['lang']` | `Lang::attachGlobals()` snapshots once at boot then `unset()`s the global. Stale comment at `Translator.php:99` — see [§D1.1](#d11-comments-asserting-removed-bridges). |
 | §Z1.3 | `$GLOBALS['template']` | `TemplateRegistry::set()` write removed; readers migrated to `TemplateRegistry::current()`. |
 | §Z1.4 | `$GLOBALS['pwg_loaded_plugins']` | Bridge removed from `LoadedPluginRegistry::init/reset`. 3 callers migrated (MiscController, BatchManagerController, ExtensionsController). |
@@ -688,7 +667,7 @@ No code dependencies. All independent of each other and of every §A item.
 | Fix stale `include/`/`admin/` directory references in 22 files (§D1.2) | None — docstrings only | small |
 | Fix `psalm.xml` "legacy-compatibility bridges" comment (§D2.1) | None | trivial |
 | Rename `'trigger_change'`/`'trigger_notify'` `type` strings in `tools/triggers_list.php` to match modern `dispatch`/`notify` (§D3.5); fix 4 `include/functions.inc.php` path references | None — reference doc, the event names themselves are untouched | small |
-| Remove resolved-bridge `@var` placeholders from `tools/phpstan-bootstrap.php`: `$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`, `$persistent_cache` (§D3.1A subset — 8 of 11) | None — corresponding code is already gone (§Z1, §Z3, plus `$logger`→`LoggerRegistry`, `$service`→`PwgServerRegistry`) | trivial |
+| Remove resolved-bridge `@var` placeholders from `tools/phpstan-bootstrap.php`: `$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`, `$persistent_cache`, `$page` (§D3.1A subset — 9 of 11; `$page` removed 2026-05-15) | None — corresponding code is already gone (§Z1, §Z1.1, §Z3, plus `$logger`→`LoggerRegistry`, `$service`→`PwgServerRegistry`) | trivial |
 
 > Do NOT touch `NoGlobalInSrcRule` entries for `cache`, `themeconfs`, `filter`, `page`, `header_notes` yet — those globals are still active (see Phase 3/5). Only `persistent_cache` is dead-code at this point.
 
@@ -899,9 +878,9 @@ Phase 4a ($filter context)  ──┼──→  §A5.1 Util.php split
                               ┘
 Phase 2b (*_TABLE migration) ──→  §A5.2 caddie retirement
                                   └──→ also retires CADDIE_TABLE define
-Phase 2 + Phase 4           ──→  §A1 PageContext through Search/Calendar
-                                 (Phase 4a frees up $filter sub-call sites
-                                  in CalendarService that share the alias)
+§A1 service-owned state — done 2026-05-15, out of recommended order
+                          (Phase 4a would have shrunk the surface but
+                           wasn't strictly required; see §Z1.1)
 ```
 
 ### §A5.1 — Split `Util.php` (recommended order after Phase 2e + 4a)
@@ -936,47 +915,20 @@ string $action, array $details = [])` union-type signature is itself a smell.
 5. Delete `Db\Tables::caddie()` accessor.
 6. Phase 2b already deleted the `CADDIE_TABLE` constant.
 
-### §A1 — Eliminate the `&$GLOBALS['page']` Alias (after Phases 2 & 4)
+### §A1 — Eliminate the `&$GLOBALS['page']` Alias
 
-The current `&$GLOBALS['page']` alias exists because four subsystems
-(Search, Calendar, UrlService, password-reset/auth-key flow) historically
-shared mutable state via the global. There are **two ways** to fix this;
-the proper one is significantly more work.
+**Done** (2026-05-15) — service-owned state shipped. See [§Z1.1](#z1-wave-a-reference-bridges) for the closure record. Key class changes:
 
-**Proper fix — service-owned state (preferred):**
+- `SearchService` (no longer `readonly`): `$searchDetails`, `$searchId`, `$useRegexpICU` instance state; `setSearchDetails`/`setForbidden`/`getSearchDetails`/`getSearchId` accessors. `SearchFilterRenderer` calls `setForbidden()` instead of mutating a shared array via reference.
+- `CalendarService` (no longer `readonly`): `$chronologyDate`, `$chronologyStyle`, `$chronologyView`, `$items`, `$comment` instance state; `initializeCalendar()` takes named parameters and SectionInitializer reads results back through getters.
+- `CalendarBase` / `CalendarMonthly`: `public array $chronologyDate`, `public string $chronologyField`, `public string $chronologyView` populated by `CalendarService` before `initialize()`.
+- `UrlService`: refcounted `private static ?string $rootPathOverride` for the `setMakeFullUrl()` / `unsetMakeFullUrl()` pair. `getRootUrl()` reads override → `SectionContext::rootPath` → `PHPWG_ROOT_PATH`. Class-level `readonly` dropped (PHP rejects static properties inside `readonly` classes) and DI props made individually `readonly`.
+- `AuthService::authKeyLogin()` writes `PageState::current()->authKeyId` (new typed `?int` property); `Util::pwgLog()` reads it.
+- `PasswordService`, `MaintenanceController::history`, `GeneralEndpoints::historySearch`, `UpgradeController` — dead `$page` reads/writes (different request paths or never-set keys) deleted; `UpgradeController` errors path reads from `PageState::current()->errors`.
 
-The reason each of these subsystems reaches into `$GLOBALS['page']` is
-that they were procedural and shared mutable state via the global. Each
-subsystem should own its own state internally:
+`SectionInitializer.php:68` alias deleted. `tools/phpstan-bootstrap.php` `$page` stub removed; `NoGlobalInSrcRule` GUARDED entry for `page` removed.
 
-- `SearchService` keeps `$this->searchDetails`, `$this->searchId`,
-  `$this->useRegexpICU` as instance properties; `SearchFilterRenderer`
-  reads them via getters; the cross-class write-back goes away.
-- `CalendarService` / `CalendarMonthly` / `CalendarBase` own
-  `$this->chronologyDate` and feed it forward via method return values
-  instead of mutating shared state. The "rendering-time dead writes"
-  noted in §A1 turn out to actually be dead and can be deleted.
-- `UrlService::setMakeFullUrl()` / `unsetMakeFullUrl()` already manage
-  a push/pop pair via `root_path`/`save_root_path` keys in
-  `$GLOBALS['page']`. Replace with a real `private array $rootPathStack`
-  property on `UrlService`.
-- `AuthService::authKeyLogin()` writes `auth_key_id` into the page
-  global for `Util::pwgLog()` to read later. Replace by passing the
-  auth-key id through the request attributes or as a method argument
-  to whichever activity-log call needs it.
-- `PasswordService` writes `username` into the page global mid-flow.
-  Convert to a local variable or an instance property — the read is in
-  the same class.
-
-Then delete the `$GLOBALS['page'] = &$page` alias in
-`SectionInitializer.php:68` and remove `$page` from
-`tools/phpstan-bootstrap.php` / `NoGlobalInSrcRule` GUARDED.
-
-This is the biggest single refactor in §A (~20+ method signature changes
-across 13 files), but it actually eliminates the shared-mutable-state
-pattern instead of typing it.
-
-> **Workaround alternative — mutable `PageContext` VO (do not use unless service-owned state is too invasive):** introduce a mutable `PageContext` covering the keys still mutated via `&$GLOBALS['page']`, thread it through the same 13 files as a method parameter, and delete the alias. This types the global but preserves the shared-mutable-state pattern — the next person who needs to track "where does this field get written" still has to walk every consumer. Strictly better than `$GLOBALS['page']`; strictly worse than service-owned state.
+Verification: full repo grep for `$GLOBALS['page']` (excluding vendor) returns zero matches; PHPStan green; 486 tests pass.
 
 ## Phase 6 — v17.0 Cutover (Single PR Cluster)
 
@@ -1018,9 +970,9 @@ time this phase runs.
    Phase 3b (prefixeTable, debug+t2)             ─┤
                                                    │
    Phase 4a ($filter)     ──→ phpstan stubs, GUARDED
-   Phase 4b (header_*)    ──→ GUARDED            ─┼──→ §A1 service-owned state
-   Phase 4c (RequestCtx)  ──→ phpstan stubs       │    after 2 + 4
-   Phase 4d (lang_info)   ──→ Lang static state   │
+   Phase 4b (header_*)    ──→ GUARDED             │
+   Phase 4c (RequestCtx)  ──→ phpstan stubs       │    (§A1 already done
+   Phase 4d (lang_info)   ──→ Lang static state   │     2026-05-15 — §Z1.1)
                                                    │
                                               ┌────┴────┐
                                               │ Phase 6 │
@@ -1033,9 +985,11 @@ Notes:
   externally parallel.
 - Phase 3 tasks are mutually independent and don't gate anything.
 - Phase 4 tasks gate Phase 5 softly: Util.php split (§A5.1) benefits from
-  Phase 2e + 4a; §A1 service-owned-state refactor benefits from Phase 4a
-  (CalendarService sub-calls share the alias with the filter path, so
-  migrating filter first reduces the §A1 surface).
+  Phase 2e + 4a. §A1 was originally listed as benefiting from Phase 4a for
+  the same reason (CalendarService sub-calls share the alias with the
+  filter path) but shipped first in practice — service-owned state was
+  invasive enough that filter-context dependency didn't materially change
+  the diff size. §Z1.1 is the closure record.
 - Phase 6 only hard-depends on §A5.2 having retired the caddie — every
   other §P task is independent of Phases 1-5.
 
@@ -1047,7 +1001,7 @@ Part P are listed for completeness.
 
 | Item | Section | Phase | Status |
 |---|---|---|---|
-| `$page` reference bridge alias | A1 | 5 | Open |
+| `$page` reference bridge alias | A1 | 5 | **Closed** (2026-05-15 — see [§Z1.1](#z1-wave-a-reference-bridges)) |
 | `$filter` channel | A2 | 4a | Open |
 | `lang_info` channel | A2 | 4d | Open |
 | `header_msgs` + `header_notes` | A2 | 4b | Open |
@@ -1076,8 +1030,8 @@ Part P are listed for completeness.
 | `include/` template subdir caveat | D1.3 | — | Awareness only, no task |
 | `psalm.xml` comments | D2.1 | 1 | Open |
 | `psalm-stubs.phpstub` cleanup | D2.2 | 2a/2b/2c/2d (per stub group) | Open |
-| `phpstan-bootstrap.php` closed-bridge stubs (8 vars) | D3.1A | 1 | Open |
-| `phpstan-bootstrap.php` `$page` / `$filter` / `$prefixeTable` stubs (3 vars, still active) | D3.1A | 5 / 4a / 3b | Open |
+| `phpstan-bootstrap.php` closed-bridge stubs (9 vars: `$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`, `$persistent_cache`, `$page`) | D3.1A | 1 | 1 of 9 closed (`$page` removed 2026-05-15); 8 still open |
+| `phpstan-bootstrap.php` `$filter` / `$prefixeTable` stubs (2 vars, still active) | D3.1A | 4a / 3b | Open |
 | `phpstan-bootstrap.php` WS const stubs | D3.1B | 2a | Open |
 | `phpstan-bootstrap.php` plugin/theme callback stubs | D3.1C | 6 | Sustained until v17 |
 | Dead `PwgGetSessionVarDynamicReturnType` | D3.2 | 1 | Open |

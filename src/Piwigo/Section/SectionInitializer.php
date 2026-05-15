@@ -30,17 +30,16 @@ use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Resolves the gallery section from the request URL and populates $GLOBALS['page']
- * with items, title, section, meta_robots, body_classes, etc.
+ * Resolves the gallery section from the request URL and builds the
+ * SectionContext value object with items, title, section, meta_robots,
+ * body_classes, etc.
  *
- * Replaces the former include/section_init.inc.php procedural script.
- * The $scriptContext parameter ('index' or 'picture') replaces the old
- * StringUtil::scriptBasename() calls that distinguished between the gallery and single-
- * image pages.
+ * The $scriptContext parameter ('index' or 'picture') distinguishes between
+ * the gallery and single-image pages.
  *
- * All $GLOBALS['page'] mutations are preserved so that page-state
- * consumers (templates, controllers, plugin hooks) see the same shape
- * as before.
+ * SearchService, CalendarService and UrlService own their own per-request
+ * state; this orchestrator passes inputs in and reads results back through
+ * each service's typed getters rather than via a shared mutable array.
  */
 final readonly class SectionInitializer
 {
@@ -65,7 +64,6 @@ final readonly class SectionInitializer
     public function initialize(ServerRequestInterface $request, string $scriptContext = 'index'): void
     {
         $page = [];
-        $GLOBALS['page'] = &$page;  // sub-calls that do &$GLOBALS['page'] write into the same local array
         /** @var array<string,mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
         /** @var array<string,mixed> $filter */
@@ -451,7 +449,34 @@ SELECT DISTINCT(id)
 
         if (isset($page['chronology_field'])) {
             unset($page['is_homepage']);
-            $this->calendarService->initializeCalendar();
+            $superOrderBy = isset($page['super_order_by']) && (bool) $page['super_order_by'];
+            $rawCD        = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];
+            /** @var list<int|string> $cdList */
+            $cdList       = array_values(array_map(
+                static fn (mixed $v): int|string => is_int($v) ? $v : (is_scalar($v) ? (string) $v : ''),
+                $rawCD
+            ));
+            $rawItems     = is_array($page['items'] ?? null) ? $page['items'] : [];
+            /** @var list<string> $itemList */
+            $itemList     = array_values(array_map(
+                static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
+                $rawItems
+            ));
+            $this->calendarService->initializeCalendar(
+                section:          $section,
+                category:         $category,
+                superOrderBy:     $superOrderBy,
+                chronologyField:  is_string($page['chronology_field']) ? $page['chronology_field'] : '',
+                chronologyStyle:  is_string($page['chronology_style'] ?? null) ? $page['chronology_style'] : null,
+                chronologyView:   is_string($page['chronology_view'] ?? null) ? $page['chronology_view'] : null,
+                chronologyDate:   $cdList,
+                sectionItems:     $itemList,
+            );
+            $page['chronology_style'] = $this->calendarService->getChronologyStyle();
+            $page['chronology_view']  = $this->calendarService->getChronologyView();
+            $page['chronology_date']  = $this->calendarService->getChronologyDate();
+            $page['items']            = $this->calendarService->getItems();
+            $page['comment']          = $this->calendarService->getComment();
         }
 
         // ── Title ─────────────────────────────────────────────────────────────
@@ -610,7 +635,7 @@ SELECT DISTINCT(id)
             tagIds:             array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawTagIds)),
             list:               array_values(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $rawList)),
             search:             is_scalar($page['search'] ?? null) ? (string) $page['search'] : null,
-            searchId:           is_scalar($page['search_id'] ?? null) ? (string) $page['search_id'] : null,
+            searchId:           $this->searchService->getSearchId(),
             searchDetails:      is_array($page['search_details'] ?? null) ? $page['search_details'] : [],
             qsearchDetails:     is_array($page['qsearch_details'] ?? null) ? $page['qsearch_details'] : [],
             whereClauses:       array_values(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rawWhere)),

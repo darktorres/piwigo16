@@ -41,7 +41,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * favorites, recent, best-rated, most-visited, and calendar views.
  *
  * Corresponds to the former index.php entry-point (lines 26-405).
- * Section routing is delegated to SectionInitializer which populates $GLOBALS['page'].
+ * Section routing is delegated to SectionInitializer which builds the
+ * SectionContext value object.
  */
 final readonly class GalleryController implements ControllerInterface
 {

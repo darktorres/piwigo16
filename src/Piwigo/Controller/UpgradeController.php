@@ -14,6 +14,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\LangService;
@@ -133,7 +134,6 @@ final readonly class UpgradeController implements ControllerInterface
             'L_UPGRADE_HELP' => Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
         ]);
 
-        $page = &$GLOBALS['page'];
         $has_remote_site = false;
         foreach ($this->conn->executeQuery('SELECT galleries_url FROM ' . Tables::sites())->fetchAllAssociative() as $row) {
             if (UrlService::urlIsRemote(is_string($row['galleries_url'] ?? null) ? $row['galleries_url'] : '')) {
@@ -145,13 +145,11 @@ final readonly class UpgradeController implements ControllerInterface
             $step = 3;
             Kernel::service(Updates::class)->upgradeTo('2.3.4', $step, false);
 
-            $rawPage       = $GLOBALS['page'] ?? null;
-            $upgradeErrors = is_array($rawPage) && is_array($rawPage['errors'] ?? null)
-                ? $rawPage['errors'] : [];
+            $upgradeErrors = PageState::current()->errors;
             if ($upgradeErrors !== []) {
                 echo '<ul>';
                 foreach ($upgradeErrors as $error) {
-                    echo '<li>' . (is_scalar($error) ? (string) $error : '') . '</li>';
+                    echo '<li>' . (string) $error . '</li>';
                 }
                 echo '</ul>';
             }

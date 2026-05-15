@@ -15,8 +15,6 @@ define('PREFIX_TABLE', 'piwigo_');
 $prefixeTable = 'piwigo_';
 /** @var array{id:int,username:string,email:string,language:string,theme:string,status:string,enabled_high:bool,internal_status:array<string,mixed>,cache_update_time:int,last_visit:string,...} $user */
 $user = ['id' => 0, 'username' => '', 'email' => '', 'language' => 'en_UK', 'theme' => 'modus', 'status' => 'guest', 'enabled_high' => false, 'internal_status' => [], 'cache_update_time' => 0, 'last_visit' => ''];
-/** @var array<string,mixed> $page */
-$page = ['infos' => [], 'errors' => [], 'warnings' => [], 'messages' => [], 'body_classes' => [], 'body_data' => []];
 /** @var array<string,string> $lang */
 $lang = [];
 /** @var \Piwigo\Template\Template|null $template */

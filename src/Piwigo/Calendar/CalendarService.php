@@ -17,42 +17,92 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Users\PermissionService;
 use Psr\Cache\CacheItemPoolInterface;
 
-final readonly class CalendarService
+final class CalendarService
 {
+    /** @var array<int,int|string> */
+    private array $chronologyDate = [];
+    private string $chronologyStyle = '';
+    private string $chronologyView  = '';
+    private string $comment         = '';
+    /** @var list<string> */
+    private array $items = [];
+
     public function __construct(
-        private CategoryService $categoryService,
-        private Connection $conn,
-        private Util $util,
-        private PermissionService $permissionService,
-        private UrlService $urlService,
-        private CacheItemPoolInterface $pool,
+        private readonly CategoryService $categoryService,
+        private readonly Connection $conn,
+        private readonly Util $util,
+        private readonly PermissionService $permissionService,
+        private readonly UrlService $urlService,
+        private readonly CacheItemPoolInterface $pool,
     ) {
     }
-    public function initializeCalendar(): void
+
+    /** @return array<int,int|string> */
+    public function getChronologyDate(): array
     {
-        $filter   = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
-        $template = TemplateRegistry::current();
-        $currentUser     = CurrentUser::get();
-        $user            = $currentUser->rawAttributes;
-        $page            = &$GLOBALS['page'];
-        if (!is_array($page)) {
-            $page = [];
-        }
-        $ctx = SectionContextRegistry::current();
+        return $this->chronologyDate;
+    }
+
+    public function getChronologyStyle(): string
+    {
+        return $this->chronologyStyle;
+    }
+
+    public function getChronologyView(): string
+    {
+        return $this->chronologyView;
+    }
+
+    public function getComment(): string
+    {
+        return $this->comment;
+    }
+
+    /** @return list<string> */
+    public function getItems(): array
+    {
+        return $this->items;
+    }
+
+    /**
+     * @param array<int,int|string> $chronologyDate
+     * @param list<string>          $sectionItems
+     * @param array<mixed>|null     $category
+     */
+    public function initializeCalendar(
+        string $section,
+        ?array $category,
+        bool $superOrderBy,
+        string $chronologyField,
+        ?string $chronologyStyle,
+        ?string $chronologyView,
+        array $chronologyDate,
+        array $sectionItems,
+    ): void {
+        $template    = TemplateRegistry::current();
+        $currentUser = CurrentUser::get();
+        $user        = $currentUser->rawAttributes;
+
+        $this->chronologyDate  = $chronologyDate;
+        $this->items           = $sectionItems;
+        $this->comment         = '';
+        // Preserve URL-parsed values on early return; the resolution code
+        // below overwrites these with normalised defaults when reached.
+        $this->chronologyStyle = $chronologyStyle ?? '';
+        $this->chronologyView  = $chronologyView ?? '';
 
         $innerSql = ' FROM ' . Tables::images();
 
-        if ($ctx->section == 'categories') {
-            $page['items'] = [];
+        if ($section === 'categories') {
+            $this->items = [];
             $innerSql .= '
 INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id';
 
-            if ($ctx->category !== null) {
-                $categoryIdRaw = $ctx->category['id'] ?? null;
+            if ($category !== null) {
+                $categoryIdRaw = $category['id'] ?? null;
                 $subIds = array_diff(
                     $this->categoryService->getSubcatIds([is_numeric($categoryIdRaw) ? (int) $categoryIdRaw : 0]),
                     explode(',', is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : '')
@@ -74,16 +124,12 @@ WHERE category_id IN (' . implode(',', $subIds) . ')';
                 );
             }
         } else {
-            /** @psalm-var mixed $pageItems */
-            $pageItems = $page['items'] ?? null;
-            if (!is_array($pageItems) || empty($pageItems)) {
+            if (empty($sectionItems)) {
                 return;
             }
             $items = [];
-            foreach ($pageItems as $item) {
-                if (is_int($item) || is_string($item)) {
-                    $items[] = (string) (int) $item;
-                }
+            foreach ($sectionItems as $item) {
+                $items[] = (string) (int) $item;
             }
             $innerSql .= '
 WHERE id IN (' . implode(',', $items) . ')';
@@ -103,84 +149,71 @@ WHERE id IN (' . implode(',', $items) . ')';
 
         $views = [CAL_VIEW_LIST, CAL_VIEW_CALENDAR];
 
-        $chronologyField = $ctx->chronologyField;
         isset($fields[$chronologyField]) or HtmlService::fatalError('bad chronology field');
 
-        $chronologyStyleRaw = $page['chronology_style'] ?? null;
-        $chronologyStyle = is_scalar($chronologyStyleRaw) ? (string) $chronologyStyleRaw : '';
-        if (!isset($styles[$chronologyStyle])) {
-            $page['chronology_style'] = 'monthly';
-        }
-        $calStyleRaw = $page['chronology_style'] ?? null;
-        $calStyle = is_scalar($calStyleRaw) ? (string) $calStyleRaw : 'monthly';
+        $calStyle = (is_string($chronologyStyle) && isset($styles[$chronologyStyle])) ? $chronologyStyle : 'monthly';
+        $this->chronologyStyle = $calStyle;
         $calendar = match ($calStyle) {
             'monthly' => new CalendarMonthly(),
             default   => new CalendarWeekly(),
         };
 
-        if (!isset($page['chronology_view']) or !in_array($page['chronology_view'], $views)) {
-            $page['chronology_view'] = CAL_VIEW_LIST;
+        $resolvedView = (is_string($chronologyView) && in_array($chronologyView, $views, true)) ? $chronologyView : CAL_VIEW_LIST;
+        if (CAL_VIEW_CALENDAR === $resolvedView && !$styles[$calStyle]['view_calendar']) {
+            $resolvedView = CAL_VIEW_LIST;
         }
+        $this->chronologyView = $resolvedView;
 
-        $styleEntry = $styles[$calStyle] ?? null;
-        /** @var string $chronologyView */
-        $chronologyView = $page['chronology_view'];
-        if (CAL_VIEW_CALENDAR == $chronologyView and
-              is_array($styleEntry) and
-              !$styleEntry['view_calendar']) {
-            $page['chronology_view'] = CAL_VIEW_LIST;
-        }
-
-        if (!isset($page['chronology_date']) || !is_array($page['chronology_date'])) {
-            $page['chronology_date'] = [];
-        }
-        while (count($page['chronology_date']) > 3) {
-            array_pop($page['chronology_date']);
+        $cd = $this->chronologyDate;
+        while (count($cd) > 3) {
+            array_pop($cd);
         }
 
         $anyCount = 0;
-        /** @var string $currentChronologyView */
-        $currentChronologyView = $page['chronology_view'];
-        for ($i = 0; $i < count($page['chronology_date']); $i++) {
-            if ($page['chronology_date'][$i] == 'any') {
-                if ($currentChronologyView == CAL_VIEW_CALENDAR) {
-                    while ($i < count($page['chronology_date'])) {
-                        array_pop($page['chronology_date']);
+        for ($i = 0; $i < count($cd); $i++) {
+            if ($cd[$i] === 'any') {
+                if ($resolvedView === CAL_VIEW_CALENDAR) {
+                    while ($i < count($cd)) {
+                        array_pop($cd);
                     }
                     break;
                 }
                 $anyCount++;
-            } elseif ($page['chronology_date'][$i] == '') {
-                while ($i < count($page['chronology_date'])) {
-                    array_pop($page['chronology_date']);
+            } elseif ($cd[$i] === '' || $cd[$i] === 0) {
+                while ($i < count($cd)) {
+                    array_pop($cd);
                 }
-            } else {
-                $rawDate = $page['chronology_date'][$i];
-                $page['chronology_date'][$i] = is_scalar($rawDate) ? (int) $rawDate : 0;
+            } elseif (is_string($cd[$i])) {
+                $cd[$i] = (int) $cd[$i];
             }
         }
-        if ($anyCount == 3) {
-            array_pop($page['chronology_date']);
+        if ($anyCount === 3) {
+            array_pop($cd);
         }
+        $this->chronologyDate = $cd;
 
+        $calendar->chronologyField = $chronologyField;
+        $calendar->chronologyView  = $resolvedView;
+        $calendar->chronologyDate  = $this->chronologyDate;
         $calendar->initialize($innerSql);
 
         $mustShowList = true;
-        if (StringUtil::scriptBasename() != 'picture') {
+        if (StringUtil::scriptBasename() !== 'picture') {
             if ($calendar->generateCategoryContent()) {
-                $page['items']  = [];
-                $mustShowList   = false;
+                $this->items  = [];
+                $mustShowList = false;
             }
+            // calendar->generateCategoryContent() may have collapsed single-item levels
+            $this->chronologyDate = $calendar->chronologyDate;
 
-            $page['comment'] = '';
             $template->assign('FILE_CHRONOLOGY_VIEW', 'month_calendar.latte');
 
             foreach ($styles as $style => $styleData) {
                 foreach ($views as $view) {
                     if ($styleData['view_calendar'] or $view != CAL_VIEW_CALENDAR) {
                         $selected         = false;
-                        $chronologyDateAll = $page['chronology_date'];
-                        if ($style != $calStyle) {
+                        $chronologyDateAll = $this->chronologyDate;
+                        if ($style !== $calStyle) {
                             $chronologyDate = [];
                             if (isset($chronologyDateAll[0])) {
                                 $chronologyDate[] = $chronologyDateAll[0];
@@ -194,7 +227,7 @@ WHERE id IN (' . implode(',', $items) . ')';
                             'chronology_date'  => $chronologyDate,
                         ]);
 
-                        if ($style == $calStyle and $view == $page['chronology_view']) {
+                        if ($style === $calStyle && $view === $resolvedView) {
                             $selected = true;
                         }
 
@@ -213,11 +246,11 @@ WHERE id IN (' . implode(',', $items) . ')';
         }
 
         if ($mustShowList) {
-            $chronologyDateList = $page['chronology_date'];
-            if ($ctx->superOrderBy) {
+            $chronologyDateList = $this->chronologyDate;
+            if ($superOrderBy) {
                 $orderBy = Config::orderBy();
             } else {
-                if (count($chronologyDateList) == 0 or in_array('any', $chronologyDateList)) {
+                if (count($chronologyDateList) === 0 || in_array('any', $chronologyDateList, true)) {
                     $order = ' DESC, ';
                 } else {
                     $order = ' ASC, ';
@@ -230,9 +263,9 @@ WHERE id IN (' . implode(',', $items) . ')';
             }
 
             $cacheItem = null;
-            if ('categories' == $ctx->section && $ctx->category === null
-              && (count($chronologyDateList) == 0
-                    or ($chronologyDateList[0] == 'any' && count($chronologyDateList) == 1))
+            if ('categories' === $section && $category === null
+              && (count($chronologyDateList) === 0
+                    || ($chronologyDateList[0] === 'any' && count($chronologyDateList) === 1))
             ) {
                 $cacheUpdateTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
                 $cacheKey        = md5($currentUser->id . $cacheUpdateTime . $calendar->date_field . $orderBy . AppInfo::VERSION);
@@ -242,15 +275,16 @@ WHERE id IN (' . implode(',', $items) . ')';
             if ($cacheItem !== null && $cacheItem->isHit()) {
                 /** @var mixed $cachedItems */
                 $cachedItems   = $cacheItem->get();
-                $page['items'] = is_array($cachedItems) ? $cachedItems : [];
+                $this->items   = is_array($cachedItems) ? array_values(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $cachedItems)) : [];
             } else {
                 $query = 'SELECT DISTINCT id '
                   . $calendar->inner_sql . '
   ' . $calendar->getDateWhere() . '
   ' . $orderBy;
-                $page['items'] = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
+                $rows = $this->conn->executeQuery($query)->fetchAllAssociative();
+                $this->items = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($rows, 'id'));
                 if ($cacheItem !== null) {
-                    $cacheItem->set($page['items']);
+                    $cacheItem->set($this->items);
                     $cacheItem->expiresAfter(86400);
                     $this->pool->save($cacheItem);
                 }

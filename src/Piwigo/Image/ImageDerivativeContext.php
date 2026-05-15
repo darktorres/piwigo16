@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 /**
- * Mutable context for a single derivative image request inside i.php,
- * replacing the $page global array that previously carried derivative state.
+ * Mutable context for a single derivative image request inside i.php.
  *
- * Properties map 1-to-1 to former $page keys so the migration diff stays small.
+ * Carries root path, source paths/URL, and the derivative params through
+ * the image-handling pipeline so each pass can read/mutate them without
+ * relying on a shared global array.
  */
 final class ImageDerivativeContext
 {

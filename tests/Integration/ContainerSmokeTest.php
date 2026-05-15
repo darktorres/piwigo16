@@ -27,8 +27,7 @@ final class ContainerSmokeTest extends IntegrationTestCase
         $this->loadFixture(self::FIXTURE);
         $this->markTestInstalled();
 
-        // Globals required by container factories (PageState, CurrentUser, Lang).
-        $GLOBALS['page']   = ['infos' => [], 'errors' => [], 'warnings' => [], 'messages' => []];
+        // Globals still consumed by container factories (CurrentUser, Lang, filter).
         $GLOBALS['user']   = [];
         $GLOBALS['lang']   = [];
         $GLOBALS['filter'] = [];

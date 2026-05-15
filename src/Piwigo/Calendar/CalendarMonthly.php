@@ -14,7 +14,6 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 
@@ -61,10 +60,8 @@ final class CalendarMonthly extends CalendarBase
     #[\Override]
     public function generateCategoryContent(): bool
     {
-        $page = &$GLOBALS['page'];
-        $ctx = SectionContextRegistry::current();
-        $view_type = $ctx->chronologyView;
-        $chronologyDate = $ctx->chronologyDate;
+        $view_type = $this->chronologyView;
+        $chronologyDate = $this->chronologyDate;
 
         if ($view_type == CAL_VIEW_CALENDAR) {
             $template = TemplateRegistry::current();
@@ -74,9 +71,7 @@ final class CalendarMonthly extends CalendarBase
                     $template->assign('chronology_calendar', $tpl_var);
                     return true;
                 }
-                // Re-read after build_global_calendar may have modified it
-                $pageArr = is_array($page) ? $page : [];
-                $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
+                $chronologyDate = $this->chronologyDate;
             }
 
             if (count($chronologyDate) == 1) {//case B: year given - display all days in given year
@@ -85,9 +80,7 @@ final class CalendarMonthly extends CalendarBase
                     $this->buildNavBar(CYEAR); // years
                     return true;
                 }
-                // Re-read after build_year_calendar may have modified it
-                $pageArr = is_array($page) ? $page : [];
-                $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
+                $chronologyDate = $this->chronologyDate;
             }
 
             if (count($chronologyDate) == 2) {//case C: year+month given - display a nice month calendar
@@ -99,9 +92,7 @@ final class CalendarMonthly extends CalendarBase
             }
         }
 
-        // Re-read chronology_date in case it changed
-        $pageArr = is_array($page) ? $page : [];
-        $chronologyDate = is_array($pageArr['chronology_date'] ?? null) ? $pageArr['chronology_date'] : [];
+        $chronologyDate = $this->chronologyDate;
 
         if ($view_type == CAL_VIEW_LIST or count($chronologyDate) == 3) {
             if (count($chronologyDate) == 0) {
@@ -133,7 +124,7 @@ final class CalendarMonthly extends CalendarBase
     #[\Override]
     public function getDateWhere(int $max_levels = 3): string
     {
-        $date = SectionContextRegistry::current()->chronologyDate;
+        $date = $this->chronologyDate;
 
         while (count($date) > $max_levels) {
             array_pop($date);
@@ -217,8 +208,7 @@ final class CalendarMonthly extends CalendarBase
     /** @param array<mixed> $tpl_var */
     protected function buildGlobalCalendar(array &$tpl_var): bool
     {
-        $page = &$GLOBALS['page'];
-        $chronologyDate = SectionContextRegistry::current()->chronologyDate;
+        $chronologyDate = $this->chronologyDate;
 
         assert(count($chronologyDate) == 0);
         $query = '
@@ -246,12 +236,7 @@ final class CalendarMonthly extends CalendarBase
         if (count($items) == 1) {// only one year exists so bail out to year view
             $first_year = array_key_first($items);
             $y = $first_year;
-            if (is_array($page)) {
-                if (!is_array($page['chronology_date'] ?? null)) {
-                    $page['chronology_date'] = [];
-                }
-                $page['chronology_date'][CYEAR] = $y;
-            }
+            $this->chronologyDate[CYEAR] = $y;
             return false;
         }
 
@@ -291,8 +276,7 @@ final class CalendarMonthly extends CalendarBase
     /** @param array<mixed> $tpl_var */
     protected function buildYearCalendar(array &$tpl_var): bool
     {
-        $page = &$GLOBALS['page'];
-        $chronologyDate = SectionContextRegistry::current()->chronologyDate;
+        $chronologyDate = $this->chronologyDate;
 
         assert(count($chronologyDate) == 1);
         $query = 'SELECT '.SqlExpr::dateMMDD($this->date_field).' as period,
@@ -318,11 +302,7 @@ final class CalendarMonthly extends CalendarBase
         }
         if (count($items) == 1) { // only one month exists so bail out to month view
             [$m] = array_keys($items);
-            if (is_array($page)) {
-                $cd = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];
-                $cd[CMONTH] = $m;
-                $page['chronology_date'] = $cd;
-            }
+            $this->chronologyDate[CMONTH] = $m;
             return false;
         }
         $monthLabels = Lang::months();
@@ -362,8 +342,6 @@ final class CalendarMonthly extends CalendarBase
     /** @param array<mixed> $tpl_var */
     protected function buildMonthCalendar(array &$tpl_var): bool
     {
-        $page = &$GLOBALS['page'];
-
         $query = 'SELECT '.SqlExpr::dayOfMonth($this->date_field).' as period,
               COUNT(DISTINCT id) as count';
         $query .= $this->inner_sql;
@@ -381,11 +359,7 @@ final class CalendarMonthly extends CalendarBase
 
         $items = [];
         foreach ($day_counts as $day => $nb_images) {
-            if (is_array($page)) {
-                $cdTmp = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];
-                $cdTmp[CDAY] = $day;
-                $page['chronology_date'] = $cdTmp;
-            }
+            $this->chronologyDate[CDAY] = $day;
             $query = '
   SELECT id, file,representative_ext,path,width,height,rotation, '.SqlExpr::dayOfWeek($this->date_field).'-1 as dow';
             $query .= $this->inner_sql;
@@ -393,11 +367,7 @@ final class CalendarMonthly extends CalendarBase
             $query .= '
     ORDER BY '.Dml::RANDOM_FUNCTION.'()
     LIMIT 1';
-            if (is_array($page)) {
-                $cdTmp2 = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];
-                unset($cdTmp2[CDAY]);
-                $page['chronology_date'] = $cdTmp2;
-            }
+            unset($this->chronologyDate[CDAY]);
 
             $rowResult = Kernel::service(Connection::class)->executeQuery($query)->fetchAssociative();
             $row = $rowResult !== false ? $rowResult : null;
@@ -446,9 +416,7 @@ final class CalendarMonthly extends CalendarBase
                 $tpl_crt_week[] = [];
             }
 
-            // Re-read chronology_date for month calendar loop
-            $pageArr2 = is_array($page) ? $page : [];
-            $chronologyDate = is_array($pageArr2['chronology_date'] ?? null) ? $pageArr2['chronology_date'] : [];
+            $chronologyDate = $this->chronologyDate;
             $cyearRaw = $chronologyDate[CYEAR] ?? 0;
             $cmonthRaw = $chronologyDate[CMONTH] ?? 1;
             $cyearInt = is_int($cyearRaw) ? $cyearRaw : (is_numeric($cyearRaw) ? (int) $cyearRaw : 0);

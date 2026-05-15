@@ -174,9 +174,6 @@ final readonly class PasswordService
             'email'    => $temp_email,
             'language' => $temp_language,
         ];
-        if (is_array($GLOBALS['page'])) {
-            $GLOBALS['page']['username'] = $temp_username;
-        }
         CurrentUser::setRawAttributes($save_user);
 
         if ($this->permissionService->isAGuest($status) || $this->permissionService->isGeneric($status) || $has_no_email) {

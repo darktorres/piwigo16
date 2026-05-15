@@ -26,15 +26,12 @@ use Psr\Log\NullLogger;
  * Single boot entry point for the typed-service layer.
  *
  * Call order: common.inc.php runs first (ConfigLoader populates Config::$data
- * directly; legacy code populates $page/$user/$lang via the bootstrap dance),
- * then every root entry point calls Kernel::boot() immediately after. boot()
- * wires PageState / CurrentUser / Lang to their respective $GLOBALS via
- * reference bridges so legacy procedural reads stay coherent with the typed
- * facades. (Config no longer needs a bridge — ConfigLoader writes directly
- * to Config::$data and all readers/writers are migrated.)
+ * directly), then every root entry point calls Kernel::boot() immediately
+ * after. boot() builds the DI container and primes the singletons (CurrentUser
+ * default guest, Lang stack) that the typed services depend on.
  *
  * The guard (self::$booted) makes the call idempotent: nested entry points that
- * include common.inc.php a second time will not re-wire and corrupt references.
+ * include common.inc.php a second time will not re-wire and corrupt state.
  */
 final class Kernel
 {

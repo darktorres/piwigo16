@@ -850,8 +850,6 @@ final class MaintenanceController
     private function history(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $page */
-        $page = &$GLOBALS['page'];
 
         $types = array_merge(['none'], SchemaHelper::getEnums(Tables::history(), 'image_type'));
 
@@ -868,26 +866,15 @@ final class MaintenanceController
         $this->historyAdminService->historyTabsheet('history');
         $tpl->assign(['F_ACTION' => $this->urlGenerator->admin('history'), 'API_METHOD' => $this->urlGenerator->ws(['format' => 'json', 'method' => 'pwg.history.search'])]);
 
-        if (isset($page['search_id'])) {
-            $navbar = $this->util->createNavigationBar($this->urlGenerator->admin() . $this->urlService->getQueryStringDiff(['start']), is_int($page['nb_lines']) ? $page['nb_lines'] : 0, is_int($page['start']) ? $page['start'] : 0, Config::nbLogsPage());
-            $tpl->assign('navbar', $navbar);
-        }
-
-        $form = ['ip' => null, 'image_id' => null, 'filename' => null, 'start' => '', 'end' => '', 'types' => [], 'display_thumbnail' => ''];
-        if (isset($page['search'])) {
-            $searchArr    = is_array($page['search']) ? $page['search'] : [];
-            $searchFields = is_array($searchArr['fields'] ?? null) ? $searchArr['fields'] : [];
-            if (isset($searchFields['date-after'])) {
-                $form['start'] = $searchFields['date-after'];
-            }
-            if (isset($searchFields['date-before'])) {
-                $form['end']   = $searchFields['date-before'];
-            }
-        } else {
-            $form['start'] = $form['end'] = date('Y-m-d');
-            $form['types'] = $types;
-            $form['display_thumbnail'] = $this->cookieService->getCookieVar('display_thumbnail', 'no_display_thumbnail');
-        }
+        $form = [
+            'ip'                => null,
+            'image_id'          => null,
+            'filename'          => null,
+            'start'             => date('Y-m-d'),
+            'end'               => date('Y-m-d'),
+            'types'             => $types,
+            'display_thumbnail' => $this->cookieService->getCookieVar('display_thumbnail', 'no_display_thumbnail'),
+        ];
 
         $getFilterIp     = $_GET['filter_ip']     ?? null;
         $getFilterImageId = $_GET['filter_image_id'] ?? null;
@@ -917,8 +904,8 @@ final class MaintenanceController
             'IMAGE_ID'  => $form_param['image_id'],
             'FILENAME'  => $form['filename'],
             'IP'        => $form_param['ip'],
-            'START'     => $form['start'] ?? null,
-            'END'       => $form['end'] ?? null,
+            'START'     => $form['start'],
+            'END'       => $form['end'],
         ]);
 
         $tpl->assign('display_thumbnails', $display_thumbnails);

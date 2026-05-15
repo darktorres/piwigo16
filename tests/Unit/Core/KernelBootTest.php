@@ -27,7 +27,7 @@ final class KernelBootTest extends TestCase
     protected function tearDown(): void
     {
         Kernel::reset();
-        unset($GLOBALS['page'], $GLOBALS['lang'], $GLOBALS['user']);
+        unset($GLOBALS['lang'], $GLOBALS['user']);
     }
 
     public function test_isBooted_false_before_boot(): void
@@ -197,7 +197,6 @@ final class KernelBootTest extends TestCase
     {
         $confSeed = $overrides['conf'] ?? ['upload_dir' => './upload'];
         Config::loadArray($confSeed);
-        $GLOBALS['page'] = [];
         $GLOBALS['lang'] = $overrides['lang'] ?? [];
         $GLOBALS['user'] = $overrides['user'] ?? ['id' => 2, 'username' => 'guest', 'email' => '', 'language' => 'en_US', 'theme' => 'elegant', 'status' => 'guest', 'enabled_high' => false];
     }

@@ -9,7 +9,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Db\SqlExpr;
-use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 
@@ -28,6 +27,14 @@ abstract class CalendarBase
     /** used to store db fields */
     /** @var array<mixed> */
     public array $calendar_levels = [];
+
+    /** chronology field ('posted' or 'created'); set by CalendarService before initialize() */
+    public string $chronologyField = '';
+    /** mutable chronology date state owned by this calendar instance */
+    /** @var array<int,int|string> */
+    public array $chronologyDate = [];
+    /** chronology view (CAL_VIEW_LIST or CAL_VIEW_CALENDAR) */
+    public string $chronologyView = '';
 
     /**
      * Generate navigation bars for category page.
@@ -50,9 +57,7 @@ abstract class CalendarBase
      */
     public function initialize(mixed $inner_sql): void
     {
-        $ctx = SectionContextRegistry::current();
-        $chronologyField = $ctx->chronologyField;
-        if ($chronologyField === 'posted') {
+        if ($this->chronologyField === 'posted') {
             $this->date_field = 'date_available';
         } else {
             $this->date_field = 'date_creation';
@@ -65,7 +70,7 @@ abstract class CalendarBase
      */
     public function getDisplayName(): string
     {
-        $chronologyDate = SectionContextRegistry::current()->chronologyDate;
+        $chronologyDate = $this->chronologyDate;
         $res = '';
 
         for ($i = 0; $i < count($chronologyDate); $i++) {
@@ -214,7 +219,6 @@ abstract class CalendarBase
     protected function buildNavBar(int $level, ?array $labels = null): void
     {
         $template = TemplateRegistry::current();
-        $page = &$GLOBALS['page'];
 
         $level_data = $this->calendar_levels[$level] ?? [];
         $levelSql = is_array($level_data) ? (is_string($level_data['sql'] ?? null) ? $level_data['sql'] : '') : '';
@@ -228,17 +232,14 @@ $this->getDateWhere($level).'
 
         $level_items = array_column(Kernel::service(Connection::class)->executeQuery($query)->fetchAllAssociative(), 'nb_images', 'period');
 
-        $chronologyDate = SectionContextRegistry::current()->chronologyDate;
+        $chronologyDate = $this->chronologyDate;
 
         if (count($level_items) == 1 and
              count($chronologyDate) < count($this->calendar_levels) - 1) {
             if (! isset($chronologyDate[$level])) {
                 [$key] = array_keys($level_items);
                 $chronologyDate[$level] = (int) $key;
-                // Write back through the reference
-                if (is_array($page)) {
-                    $page['chronology_date'] = $chronologyDate;
-                }
+                $this->chronologyDate = $chronologyDate;
 
                 if ($level < count($chronologyDate) and
                      $level != count($this->calendar_levels) - 1) {
@@ -278,7 +279,7 @@ $this->getDateWhere($level).'
     {
         $template = TemplateRegistry::current();
 
-        $chronologyDate = SectionContextRegistry::current()->chronologyDate;
+        $chronologyDate = $this->chronologyDate;
 
         $prev = $next = null;
         if (count($chronologyDate) === 0) {

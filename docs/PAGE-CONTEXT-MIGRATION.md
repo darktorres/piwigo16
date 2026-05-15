@@ -1,5 +1,11 @@
 # §1.1 Page Context Migration Design
 
+> **Status: closed (2026-05-15).** Replaced by service-owned state — see
+> [COMPAT-INVENTORY §Z1.1](./COMPAT-INVENTORY.md#z1-wave-a-reference-bridges)
+> for the as-shipped record. This document describes a different approach
+> (typed immutable VOs distributed via DI) that was superseded in §A1; kept
+> for historical context.
+
 Replace `$GLOBALS['page']` with proper typed, injectable value objects.
 
 ## Problem

@@ -17,8 +17,9 @@ use Piwigo\Url\UrlService;
  *
  * Config defaults (php_extension_in_urls=true, question_mark_in_urls=true) are
  * used because the Config store is not initialised in unit-test context.
- * getRootUrl() is forced to '/' via $GLOBALS['page']['root_path'] so URL
- * assertions are readable regardless of the test-machine install path.
+ * UrlService::getRootUrl() falls back to PHPWG_ROOT_PATH when neither a
+ * setMakeFullUrl override nor a SectionContext rootPath is set; assertions
+ * use assertStringContainsString so they're root-path-agnostic.
  */
 final class UrlGeneratorTest extends TestCase
 {
@@ -38,14 +39,6 @@ final class UrlGeneratorTest extends TestCase
         // mocking final classes the test never exercises.
         $this->urls   = new \ReflectionClass(UrlService::class)->newInstanceWithoutConstructor();
         $this->gen    = new UrlGenerator($this->router, $this->urls);
-        // Force a deterministic root URL (avoids filesystem path leaking into assertions)
-        $GLOBALS['page'] = ['root_path' => '/'];
-    }
-
-    #[\Override]
-    protected function tearDown(): void
-    {
-        unset($GLOBALS['page']);
     }
 
     // ── Named PSR-15 routes ───────────────────────────────────────────────────

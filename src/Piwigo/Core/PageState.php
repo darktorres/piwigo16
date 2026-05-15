@@ -37,6 +37,8 @@ final class PageState
     public string $executionUuid = '';
 
     public bool $authKeyInvalid = false;
+    /** The id of the auth-key row used to authenticate this request, if any. */
+    public ?int $authKeyId = null;
     /** @var array<string,mixed>|null */
     public ?array $notifyApiKeyExpiration = null;
     public int $countQueries = 0;

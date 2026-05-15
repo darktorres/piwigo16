@@ -50,7 +50,7 @@ final class PluginSchemaTest extends TestCase
     public function testFullManifestWithAllOptionalFieldsValidates(): void
     {
         $manifest = (object) [
-            '$schema' => 'https://raw.githubusercontent.com/fork/piwigo16/16.x-rewrite/docs/schemas/plugin.schema.json',
+            '$schema' => 'https://raw.githubusercontent.com/darktorres/piwigo16/16.x-rewrite/docs/schemas/plugin.schema.json',
             'id' => 'my-plugin',
             'name' => 'My Plugin',
             'version' => '1.4.0-beta.1',

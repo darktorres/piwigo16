@@ -47,7 +47,7 @@ final class ThemeSchemaTest extends TestCase
     public function testChildThemeWithFullManifestValidates(): void
     {
         $manifest = (object) [
-            '$schema' => 'https://raw.githubusercontent.com/fork/piwigo16/16.x-rewrite/docs/schemas/theme.schema.json',
+            '$schema' => 'https://raw.githubusercontent.com/darktorres/piwigo16/16.x-rewrite/docs/schemas/theme.schema.json',
             'id' => 'standard_pages',
             'version' => '1.0.0',
             'name' => 'Standard Pages',

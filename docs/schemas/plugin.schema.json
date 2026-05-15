@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/fork/piwigo16/16.x-rewrite/docs/schemas/plugin.schema.json",
+  "$id": "https://raw.githubusercontent.com/darktorres/piwigo16/16.x-rewrite/docs/schemas/plugin.schema.json",
   "title": "Piwigo plugin manifest",
   "description": "Declarative manifest for Piwigo 17+ plugins. One file per plugin at plugins/<id>/plugin.json. Read by PluginRegistry at load time; validated via opis/json-schema.",
   "type": "object",

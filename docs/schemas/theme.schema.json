@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/fork/piwigo16/16.x-rewrite/docs/schemas/theme.schema.json",
+  "$id": "https://raw.githubusercontent.com/darktorres/piwigo16/16.x-rewrite/docs/schemas/theme.schema.json",
   "title": "Piwigo theme manifest",
   "description": "Declarative manifest for Piwigo 17+ themes. One file per theme at themes/<id>/theme.json. Read by ThemeRegistry at load time; validated via opis/json-schema.",
   "type": "object",

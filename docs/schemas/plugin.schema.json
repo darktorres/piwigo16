@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/fork/piwigo16/16.x-rewrite/docs/schemas/plugin.schema.json",
+  "title": "Piwigo plugin manifest",
+  "description": "Declarative manifest for Piwigo 17+ plugins. One file per plugin at plugins/<id>/plugin.json. Read by PluginRegistry at load time; validated via opis/json-schema.",
+  "type": "object",
+  "required": ["id", "name", "version", "description", "license", "minPiwigo", "main"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "URI pointing at this schema for IDE/editor autocomplete. Optional; not enforced."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Unique identifier. Must match the plugin directory basename."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Human-readable plugin name shown in the admin UI."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?(?:[-+][A-Za-z0-9._-]+)?$",
+      "description": "Plugin version — SemVer or PEM-revision-string (e.g. '1.4.0', '2.0', '1.0.0-beta.1', '1.0+r42')."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Single-line description shown in the admin UI."
+    },
+    "homepage": {
+      "type": "string",
+      "format": "uri",
+      "description": "Plugin homepage URL."
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Plugin author name or organisation."
+    },
+    "authorUri": {
+      "type": "string",
+      "format": "uri",
+      "description": "Plugin author URL."
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1,
+      "description": "SPDX license identifier (e.g. 'GPL-3.0-or-later', 'MIT', 'Apache-2.0'). Required — the fork rejects plugins distributed without a license."
+    },
+    "minPiwigo": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$",
+      "description": "Minimum Piwigo branch this plugin targets, formatted 'MAJOR.MINOR' (e.g. '17.0'). PluginRegistry compares this against AppInfo::branchFromVersion(AppInfo::VERSION); mismatches are refused."
+    },
+    "hasSettings": {
+      "oneOf": [
+        {"type": "boolean"},
+        {"type": "string", "enum": ["webmaster"]}
+      ],
+      "description": "Whether the plugin exposes a settings page: true (admin), false (none), or 'webmaster' (webmaster-only). Default: false."
+    },
+    "require": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Map of dependency names to composer-style version constraints. Keys are 'piwigo' for core or 'plugin/<id>' for other plugins."
+    },
+    "main": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\\\[A-Za-z_][A-Za-z0-9_]*)*$",
+      "description": "Fully-qualified class name implementing Piwigo\\Plugin\\PluginInterface."
+    },
+    "autoload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "psr-4": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "PSR-4 namespace prefix to directory map, relative to the plugin root."
+        }
+      },
+      "description": "Autoload configuration for the plugin's source files."
+    }
+  }
+}

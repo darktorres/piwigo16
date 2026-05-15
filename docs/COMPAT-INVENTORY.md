@@ -14,6 +14,7 @@ Last deep-verified: 2026-05-14. Last updated: 2026-05-14.
 - §13 PHPStan tooling stubs & extensions — `tools/phpstan-bootstrap.php` declares 11 legacy `global $foo` placeholders (8 already removed), duplicates 13 `WS_*` runtime defines, and provides 7 stub `plugin_*`/`theme_*` procedural callbacks. Two phpstan extensions are dead: `PwgGetSessionVarDynamicReturnType` types a function that no longer exists, and `TriggerChangeDynamicReturnType` is misnamed (actually targets `EventDispatcher::dispatch`). `tools/triggers_list.php` is a 1136-line plugin-author doc using legacy `trigger_change`/`trigger_notify` terminology. See §13.
 - §14 frontend shims — `src/types/globals.d.ts` documents 30+ ambient TS globals; its header comment says "Smarty templates" (stale; we're on Latte). Several declared globals (`var user`, `SwitchBox`, `_pwgRatingAutoQueue`, `preferencesDefaultValues`, …) are pre-load auto-queue patterns explicitly drained as "legacy queue" by `rating.ts:150` and `switchbox.ts:35` for plugin BC. `albums.ts:522` retains a window-global with a `// keep global for compatibility` comment. See §14.
 - §15 plugin/theme procedural contract — the **whole legacy Piwigo plugin/theme runtime contract is still wired**: `PluginService::loadPlugin()` does `require_once($pluginsPath/$id/main.inc.php)`; plugin metadata is parsed from file header comments (`Version: x.y.z`); `Admin/Plugins.php` has explicit pre-2.7 vs 2.7+ branching (`maintain.class.php` vs `maintain.inc.php`); `Admin/Themes.php` requires `themeconf.inc.php` and `admin/maintain.inc.php` per theme; `EventDispatcher` supports lazy-include plugins via `include_path` on listeners. 18+ docstrings throughout `src/` still describe code as "Used by admin/X.php" or "Replaces the former include/Y.inc.php" for directories that don't exist. See §15.
+- §16 `Util.php` kitchen-sink class & legacy v1.x features — `src/Piwigo/Core/Util.php` is 1058 lines / 33 methods, most named `pwg*` (`pwgLog`, `pwgDebug`, `pwgActivity`, `getPwgToken`, `pwgUniqueExecBegins`, etc.) — the modern wrapper around legacy `include/functions.inc.php`. The legacy v1.x **caddie** feature (predecessor to batch_manager) is still alive as a WS API (`pwg.caddie.add`), a DB table (`Tables::caddie()`), a `CADDIE_TABLE` constant for upgrade SQL, and `Util::fillCaddie()` populating it from `GeneralEndpoints` and `PhotoController`. Three redirect helpers (`redirect`, `redirectHttp`, `redirectHtml`) overlap. See §16.
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -766,4 +767,64 @@ Not a shim per se, but worth noting: the Latte template system reproduces Piwigo
 
 ---
 
-**End of inventory.** Sixth-pass audit (2026-05-14) covered: `src/`, `tools/`, `tests/`, `install/`, root entry points (`index.php`, `ecs.php`, `migrations.php`, `rector.php`, `bin/piwigo`), Composer + npm dependencies, static-analysis tooling (PHPStan + Psalm + their rules/stubs), build config (Vite + ESLint + Playwright), frontend TypeScript bundles, all 133 Latte templates, CI workflows (`.github/`), and the plugin/theme procedural contract.
+## 16. `Util.php` Kitchen-Sink Class & Legacy v1.x Features
+
+A ninth-pass audit (2026-05-14) opened `src/Piwigo/Core/Util.php` end-to-end and traced its 33 methods to their call sites. The file is the modern wrapper around the legacy `include/functions.inc.php` procedural module — same responsibilities, same naming conventions, same overlapping helpers, just in a class.
+
+### 16.1 `Util.php` — 1058 lines, 33 methods
+
+Method naming is heavily legacy: 11 of 33 methods are prefixed `pwg*` because they were once free functions of the same name. The class spans concerns that would normally be split across half a dozen services:
+
+| Concern | Methods |
+|---|---|
+| Logging / debug | `pwgLog`, `pwgDebug`, `doLog`, `pwgActivity` |
+| CSRF tokens | `getPwgToken`, `checkPwgToken` |
+| Execution mutex (lock files) | `pwgUniqueExecBegins`, `pwgUniqueExecIsRunning`, `pwgUniqueExecEnds` |
+| HTTP redirects | `redirect`, `redirectHttp`, `redirectHtml` (three variants overlap) |
+| Telemetry | `sendPiwigoInfos`, `sendPiwigoInfosRetryLater` |
+| Extension enumeration | `getLanguages`, `getPwgThemes`, `checkThemeInstalled`, `getThemeconf` |
+| Filesystem | `mkgetdir` (static, with `MKGETDIR_*` flag constants from §11.6) |
+| Mobile detection | `mobileTheme`, `getDevice` (uses MobileEsp from §12.3) |
+| Input validation | `checkInputParameter` |
+| Misc UI | `getPrivacyLevelOptions`, `getIcon`, `createNavigationBar` |
+| Ephemeral keys | `getEphemeralKey`, `verifyEphemeralKey` |
+| Comment counts | `getNbAvailableComments` |
+| Filter state | `getFilterPageValue` |
+| Email | `getWebmasterMailAddress` |
+| Lounge (timed-publish staging) | `checkLounge` |
+| Caddie (legacy) | `fillCaddie` |
+
+**Not strictly removable** — every method has live call sites — but the right modernisation would split `Util` into purpose-specific services (`PwgLogger`, `CsrfService`, `MobileUaService`, `RedirectResponder`, …) and let DI inject only the surface each consumer needs. The current shape is a service-locator anti-pattern: any class that needs `pwgLog` ends up with the entire 1058-line `Util` as a dependency.
+
+### 16.2 The Caddie Feature — Legacy v1.x Cart
+
+The "caddie" was the v1.x precursor to `batch_manager`: users would click photos to add them to a session-scoped collection, then run a bulk operation on the collection. `batch_manager` replaced this UX years ago, but the underlying machinery is fully preserved:
+
+| Surface | Location |
+|---|---|
+| DB table | `piwigo_caddie` (`element_id`, `user_id`) |
+| Typed accessor | `Db\Tables::caddie()` |
+| Upgrade constant | `define('CADDIE_TABLE', $prefix.'caddie')` in `UpgradeService.php:53` |
+| Web Service API | `pwg.caddie.add` (registered in `WsMethodRegistrar.php:105`) |
+| Internal helper | `Util::fillCaddie(array $elementsId)` |
+| Callers | `Ws\Method\GeneralEndpoints::262-269` (the `pwg.caddie.add` impl), `Controller\Admin\PhotoController.php:606` (admin "send to caddie" action) |
+
+**Status:** still load-bearing as long as the `pwg.caddie.add` WS API is published. Frontend (modern admin UI) doesn't use the caddie tab anywhere, but third-party scripts and plugins likely still call the WS method. Same v17.0 dead-coding window as the rest of the plugin contract.
+
+### 16.3 Three Overlapping `redirect()` Variants
+
+`Util::redirect()`, `Util::redirectHttp()`, `Util::redirectHtml()` are three sibling redirect helpers with subtly different signatures:
+
+- `redirectHttp(string $url)` — `Location:` header, then `exit()`.
+- `redirectHtml(string $url, string $msg = '', int $refreshTime = 0)` — emits a `<meta http-equiv="refresh">` HTML page with optional message and delay.
+- `redirect(string $url, string $msg = '', int $refreshTime = 0)` — dispatches between the two based on whether headers can still be sent.
+
+Modernisation target: collapse to a `RedirectResponder` returning PSR-7 responses; `redirectHtml` only exists because some legacy code paths emitted output before deciding to redirect.
+
+### 16.4 Activity Logging via `pwgActivity()`
+
+`Util::pwgActivity(string $object, array|int|string $objectId, string $action, array $details = [])` writes to the `activity` log table. Most callers are admin controllers. The signature (`$object` as free-form string, `$objectId` as union of `array|int|string`) is a legacy holdover from when the activity log accepted whatever the caller felt like writing. Modern code would use a typed `ActivityEvent` enum + DTO.
+
+---
+
+**End of inventory.** Audited 2026-05-14 across nine progressive passes covering: `src/` (every namespace), `tools/`, `tests/`, `install/`, root entry points (`index.php`, `ecs.php`, `migrations.php`, `rector.php`, `bin/piwigo`), `config/` (`container.php`, `routes.php`), Composer + npm dependencies, static-analysis tooling (PHPStan rules/extensions/stubs + Psalm config/stubs), build config (Vite + ESLint + Playwright), frontend TypeScript bundles, all 133 Latte templates (spot-checked), CI workflows (`.github/`), the plugin/theme procedural contract, the `Util.php` kitchen-sink + legacy v1.x features, and stale docstrings throughout.

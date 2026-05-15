@@ -1,7 +1,13 @@
 # Compatibility Inventory
 
 Shims, bridges, and backward-compatibility mechanisms in the 16.x rewrite.
-Last deep-verified: 2026-05-14. Last updated: 2026-05-14. All eight sections fully resolved. Five previously uncatalogued dead-channel globals fixed (logger mirror, help_link, current_release, category, upload_form_config). Five working CoreTabsRegistrar channels added to §8.
+Last deep-verified: 2026-05-14. Last updated: 2026-05-14.
+
+**Headline status:**
+- §§2–7 fully resolved (session bridge deleted, PersistentCache removed, WS BC params dropped, summarized-column guard migrated, plugin config moot, all `trigger_error` eliminated).
+- §1 Wave A: §§1.2–1.6 caller migrations are complete and no `$GLOBALS` reads/writes remain for those keys; §1.1 `$GLOBALS['page']` still has 30 active references in 13 files — the reference bridge at `SectionInitializer:68` (`$GLOBALS['page'] = &$page`) is preserved on purpose so sub-calls (Search/Calendar/UrlService push-pop) mutate the same shared array.
+- §8 ad-hoc channels: all cross-class admin URL channels eliminated as of 2026-05-14 (CoreTabsRegistrar takes no `$GLOBALS` reads). Remaining §8 channels are either bootstrap init (`prefixeTable`, `t2`, `header_*`, `debug`, `filter`), language-subsystem (`lang_info`), or self-contained (`themeconfs`, `cache`, `errors`, `maint_actions`).
+- §9 stale comments: several files reference long-removed `$GLOBALS` bridges in docstrings only — see §9.
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -10,16 +16,16 @@ External plugin compatibility is NOT a blocker. Only in-tree `src/` callers bloc
 
 ## 1. Wave A Reference Bridges
 
-These classes previously maintained a bidirectional PHP-reference link between a typed singleton and a `$GLOBALS` key. **All six Wave A bridges are now fully resolved** — bridges removed, callers migrated to typed APIs, no `$GLOBALS` reads/writes remain in production `src/` for any of these keys.
+These classes previously maintained a bidirectional PHP-reference link between a typed singleton and a `$GLOBALS` key. Five of the six bridges are fully removed; the sixth (`page`) keeps a deliberate alias for internal sub-call mutation.
 
 | § | Global | Status |
 |---|---|---|
-| 1.1 | `$GLOBALS['page']` | ✅ Complete — SectionContext + PictureContext VOs, PageState typed props |
-| 1.2 | `$GLOBALS['lang']` | ✅ Complete — Lang static properties, bridge removed |
+| 1.1 | `$GLOBALS['page']` | ⚠️ Bridge alias still active — typed VOs (SectionContext, PictureContext) and PageState props cover external readers, but `SectionInitializer:68` still does `$GLOBALS['page'] = &$page` so Search/Calendar/UrlService sub-calls mutate the shared local array. 30 `$GLOBALS['page']` references remain across 13 files. |
+| 1.2 | `$GLOBALS['lang']` | ✅ Removed — `Lang::attachGlobals()` snapshots once at boot and `unset()`s the global; one stale comment in `Translator.php:99` |
 | 1.3 | `$GLOBALS['template']` | ✅ Removed |
 | 1.4 | `$GLOBALS['pwg_loaded_plugins']` | ✅ Removed — 3 callers migrated to LoadedPluginRegistry |
 | 1.5 | `$GLOBALS['pwg_event_handlers']` | ✅ Removed |
-| 1.6 | `$GLOBALS['user']` | ✅ Complete — CurrentUser typed entity, bridge removed |
+| 1.6 | `$GLOBALS['user']` | ✅ Removed — no code reads/writes remain; 4 stale comments reference it (see §9) |
 
 ### 1.1 `PageState` — `$GLOBALS['page']`
 
@@ -29,7 +35,9 @@ These classes previously maintained a bidirectional PHP-reference link between a
 
 **Removal condition (original):** All reads/writes of `$GLOBALS['page']` in `src/` migrated to typed equivalents.
 
-**Status: ✅ COMPLETE.** All six migration groups delivered:
+**Status: ⚠️ MIGRATION GROUPS DELIVERED, BRIDGE ALIAS STILL ACTIVE.** External readers all moved to typed VOs (SectionContext, PictureContext) or PageState properties — but `SectionInitializer:68` keeps `$GLOBALS['page'] = &$page` so Search/Calendar/UrlService sub-calls that do `&$GLOBALS['page']` still mutate the shared local array (see the "Remaining accesses" table below). 30 `$GLOBALS['page']` references remain in production `src/` (verified 2026-05-14).
+
+All six migration groups delivered:
 
 #### Group 1 — per-request service caches → service instance state
 Five keys moved out of `$page` into owning class fields:
@@ -134,6 +142,8 @@ No `$GLOBALS['lang']` reads remain in production `src/` outside `Lang::attachGlo
 
 `Lang::attachGlobals()` is still called by `Kernel::boot()` for the pre-boot snapshot, but it could be inlined into Kernel if desired. No `$GLOBALS['lang']` remains in production code after boot.
 
+**Stale comment:** `Translator.php:99` still says "restores from the stack top (so `$GLOBALS['lang']` takes over)" — this is wrong; the bridge is gone. See §9.
+
 ---
 
 ### 1.3 `TemplateRegistry` — `$GLOBALS['template']`
@@ -216,7 +226,11 @@ Not a PHP-reference bridge (the global is a plain array), but maintains bidirect
 - `CurrentUser::setLanguage()` and `setRawAttributes()`: `$GLOBALS['user']` writes removed (dead code).
 - `CommonBootstrap`: `$GLOBALS['user'] = []` init removed.
 
-No `$GLOBALS['user']` remains anywhere in production `src/`.
+No `$GLOBALS['user']` reads or writes remain anywhere in production `src/`.
+
+**Stale (2026-05-14):**
+- `CurrentUser::attachGlobals()` is misnamed — its current body just initialises a guest `User` singleton (`self::$instance ??= new User(...)`) and does not touch any `$GLOBALS` key. Kept under the historical name because `Kernel::boot()` calls it. Renaming to `initGuest()` (or merging into Kernel) is a cosmetic follow-up.
+- Four docstrings still describe `$GLOBALS['user']` as if the bridge were live — `UserBootstrap.php:23`, `AuthMiddleware.php:18`, `AuthMiddleware.php:20`, `FilterMiddleware.php:27`. See §9.
 
 ---
 
@@ -308,8 +322,8 @@ These globals are used as request-scoped data channels between unrelated classes
 
 | Global | Writer(s) | Reader(s) | Notes |
 |--------|-----------|-----------|-------|
-| `$GLOBALS['filter']` | `CommonBootstrap`, `FilterMiddleware` | `CategoryService`, `FilterService`, `SectionInitializer`, `MenubarRenderer`, `PermissionService`, `CalendarService` | Request-scoped filter state (recent-photos mode). No bridge. |
-| `$GLOBALS['lang_info']` | `LanguageStack` | `AdminService`, `Template` | Language metadata (code, direction, name). Written and read only within the language subsystem. No bridge. |
+| `$GLOBALS['filter']` | `CommonBootstrap` (init), `FilterMiddleware` (writes via `&$GLOBALS['filter']`), `SectionInitializer` (mutates via reference) | `CategoryService`, `FilterService`, `MenubarRenderer`, `PermissionService`, `CalendarService`, `PictureController` | Request-scoped filter state (recent-photos mode). No typed bridge — readers do `is_array($GLOBALS['filter'] ?? null) ? ... : []` inline. |
+| `$GLOBALS['lang_info']` | `LanguageStack` (sets at language switch, merges, restores from stack) | `Template:83`, `AdminService:406` | Language metadata (code, direction, name). Cross-subsystem read — template + admin layers depend on the language-stack writer. Still an active runtime channel. |
 | `$GLOBALS['my_base_url']` | ~~`AlbumsTabRenderer`, `UserTabRenderer`, `GroupsController`, `MaintenanceController`, `MiscController`, `ExtensionsController`~~ | ~~`CoreTabsRegistrar`~~ | **Fixed 2026-05-14**: `CoreTabsRegistrar` now calls `$ug->admin('pagename')` (with `&tab=...`/`&mode=...` suffixes where needed) directly per case. All writes removed; `UrlGenerator` dependency dropped from `UserTabRenderer` and `AlbumsTabRenderer`. `MiscController` internal `$my_base_url.'comments'` use replaced with `$urlGenerator->admin('comments')`. |
 | `$GLOBALS['debug']` | `Util::pwgLog()` | `PageTailRenderer` | Accumulated debug HTML. No bridge. |
 | `$GLOBALS['t2']` | `CommonBootstrap` | `PageTailRenderer`, `Util::pwgLog()` | Request start microtime. No bridge. |
@@ -337,3 +351,23 @@ These globals are used as request-scoped data channels between unrelated classes
 | `$GLOBALS['current_release']` | *Nothing in src/* | ~~`UpgradeService`~~ | **Fixed 2026-05-14**: dead read replaced with `Config::piwigoInstalledVersion() ?? ''`, which is the typed equivalent (the upgrade version stored in conf table). |
 | `$GLOBALS['category']` | ~~`PhotoController`~~ | *Nothing in src/* | **Fixed 2026-05-14**: dead write removed; the DB query that populated it was also eliminated. |
 | `$GLOBALS['upload_form_config']` | ~~`PhotoController`~~ | *Nothing in src/* | **Fixed 2026-05-14**: dead write removed; `$upload_form_config` is still used locally in the same method. |
+
+---
+
+## 9. Stale Comments Referring to Removed Bridges
+
+Code-level cleanup is done for these channels, but docstrings/inline comments in `src/` still describe the old behaviour and would mislead a reader auditing the codebase. Identified 2026-05-14 by a `grep -rn "GLOBALS\\['…'\\]"` sweep over `src/`.
+
+| File:Line | Stale text (paraphrased) | Reality |
+|---|---|---|
+| `Users/UserBootstrap.php:23` | "the PSR-15 pipeline has a fully-built `$GLOBALS['user']` before the…" | `UserBootstrap` no longer writes `$GLOBALS['user']`; it only sets the typed `CurrentUser` singleton. |
+| `Http/Middleware/AuthMiddleware.php:18` | "Calls `UserBootstrap::bootstrap()` which populates `$GLOBALS['user']`…" | Same — no `$GLOBALS['user']` write happens. |
+| `Http/Middleware/AuthMiddleware.php:20` | "read `$GLOBALS['user']` as before; typed code reads the request attribute." | The "as before" half is dead. |
+| `Http/Middleware/FilterMiddleware.php:27` | "Runs after AuthMiddleware so that `$GLOBALS['user']` (recent_period, id, …)" | `$GLOBALS['user']` doesn't exist at this point in 16.x; the middleware reads `CurrentUser::get()->rawAttributes`. |
+| `Config/Config.php:23` | "`$GLOBALS['conf']` reference bridge (attachGlobals) was retired once all…" | True statement, but flagged here because Config no longer has `attachGlobals` and the comment is the last in-tree mention of the channel. |
+| `Config/ConfigStorage.php:27` | "Bulk read from the conf table into `$GLOBALS['conf']` (and through the…)" | The bulk read populates `Config::$data` only; no `$GLOBALS['conf']` write. |
+| `Lang/Translator.php:99` | "restores from the stack top (so `$GLOBALS['lang']` takes over)" | `$GLOBALS['lang']` is unset at boot by `Lang::attachGlobals()` and never repopulated — the Translator restore is via static state, not a global. |
+| `Core/LanguageStack.php:34` | "we don't need `$GLOBALS['language_files']` for the switch_lang_to reload." | True — but it's the only mention of `$GLOBALS['language_files']` in the codebase. Could be deleted as a non-existent reference. |
+| `Users/CurrentUser.php:21` | Method named `attachGlobals` with comment "initialise the singleton with an empty guest user" | The method no longer attaches anything to `$GLOBALS`. Misnamed; mechanical rename to `initGuest()` (or fold into `Kernel::boot()`) would be safe. |
+
+**Impact:** None on runtime behaviour — these are documentation drift. Cleaning them is a search-and-replace pass, but worth doing in a single dedicated commit so future audits don't get false signals.

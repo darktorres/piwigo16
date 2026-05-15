@@ -30,7 +30,7 @@ defer to this table.
 | Phase | Title | Status | Gates | Parallelism |
 |---|---|---|---|---|
 | **1** | Doc-drift cleanups | ✓ Closed 2026-05-15 | — | — |
-| **2** | Legacy `define()` migrations | Open (2a ✓, 2b ✓, 2c–2h open) | none | 2c–2h independent |
+| **2** | Legacy `define()` migrations | Open (2a ✓, 2b ✓, 2c ✓, 2d–2h open) | none | 2d–2h independent |
 | **3** | `$GLOBALS` channel migrations | ✓ Closed 2026-05-15 | — | — |
 | **4a** | `$filter` → `FilterContext` VO | ✓ Closed 2026-05-15 | — | — |
 | **4b** | `header_msgs` / `header_notes` → `PageState` | ✓ Closed 2026-05-15 | — | — |
@@ -53,6 +53,7 @@ defer to this table.
 - §Z14 — Phase 1 doc-drift sweep (2026-05-15)
 - §Z15 — Phase 2a WS_* constant migration (2026-05-15)
 - §Z16 — Phase 2b `*_TABLE` constant migration (2026-05-15)
+- §Z17 — Phase 2c PclZip → ZipArchive migration (2026-05-15)
 
 ---
 
@@ -143,23 +144,17 @@ is a live admin feature; only the legacy define is retired (see
 
 Detail → [Appendix A §Z16](#z16-phase-2b-_table-constant-migration).
 
-## Phase 2c — `PclZip` → `ZipArchive`  [A4.1]
+## Phase 2c — `PclZip` → `ZipArchive`  [A4.1] ✓
 
-`pclzip/pclzip` is in `composer.json` and used in 4 production files instead
-of the built-in `ZipArchive`:
+Closed 2026-05-15. All four PclZip call sites (`Admin/Updates.php`,
+`Admin/Plugins.php`, `Admin/Languages.php`, `Admin/Themes.php`) migrated to
+the built-in `ZipArchive` via a new `Piwigo\Core\ZipExtractor` helper.
+`pclzip/pclzip` removed from `composer.json`; `ext-zip` added to `require`;
+21 `PCLZIP_OPT_*` stubs deleted from `tools/psalm-stubs.phpstub`. New
+helper class covered by 9 unit tests (path traversal, prefix stripping,
+selective extraction, chmod).
 
-| File:Line | Purpose |
-|---|---|
-| `Admin/Updates.php:600` | Extract Piwigo core update archives |
-| `Admin/Plugins.php:549` | Extract plugin archives from PEM |
-| `Admin/Languages.php:273` | Extract language archives |
-| `Admin/Themes.php:511` | Extract theme archives |
-
-1. Rewrite all four call sites to `ZipArchive`.
-2. Remove `pclzip/pclzip` from `composer.json` (hard dep: all four must be
-   migrated first).
-3. Delete `PCLZIP_OPT_*` stubs (~20 constants) from
-   `tools/psalm-stubs.phpstub`.
+Detail → [Appendix A §Z17](#z17-phase-2c-pclzip-ziparchive-migration).
 
 ## Phase 2d — `xmlrpc_encode()` removal  [A3.5]
 
@@ -609,9 +604,9 @@ Update the "Smarty templates" header to "Latte" at the same time.
    Phase 1 (parallel)        ──→  (no downstream gate)
    all standalone
 
-   Phase 2a (WS_*)        ──┐  done 2026-05-15
-   Phase 2b (*_TABLE)     ──┘  (see Appendix A §Z15, §Z16)
-   Phase 2c (PclZip)         ──→  composer.json, stubs
+   Phase 2a (WS_*)        ──┐
+   Phase 2b (*_TABLE)     ──┤  done 2026-05-15
+   Phase 2c (PclZip)      ──┘  (see Appendix A §Z15, §Z16, §Z17)
    Phase 2d (xmlrpc)         ──→  psalm stub
    Phase 2e (MobileEsp)      ──→  composer.json     ──┐
    Phase 2f (CURRENT_DATE)   ──→  (standalone)        │
@@ -1151,6 +1146,101 @@ collapsed to deleting dead code rather than rewriting it.
 - Post-edit cross-tree grep: `grep -rEn "\b[A-Z][A-Z_]+_TABLE\b" --include="*.php"
   --include="*.sql"` returns nothing outside `PREFIX_TABLE` /
   `DEFAULT_PREFIX_TABLE` (the surviving prefix constants).
+
+## Z17. Phase 2c PclZip → ZipArchive Migration
+
+Closed 2026-05-15. All four `\PclZip` call sites migrated to the built-in
+`ZipArchive` via a new `Piwigo\Core\ZipExtractor` helper; the
+`pclzip/pclzip` Composer dependency is gone.
+
+### New type
+
+- **`Piwigo\Core\ZipExtractor`** — minimal extraction helper. Two public
+  static methods:
+  - `listNames(string $archivePath): list<string>` — returns archive entry
+    stored-names in order; `[]` on open failure. Replaces PclZip's
+    `listContent()` for the sentinel-scan use case.
+  - `extract(string $archivePath, string $extractPath, string $stripPrefix
+    = '', ?list<string> $onlyNames = null, ?int $chmod = null): list<array{
+    filename: string, stored_filename: string, status: string}>` — extracts
+    entries (optionally restricted to a name list), stripping `$stripPrefix`
+    from each stored name before writing. Returns a per-entry status row
+    array whose shape mirrors PclZip's so call-site inspection logic ports
+    unchanged: `stored_filename` is the archive's entry name; `filename` is
+    the on-disk path *relative to `$extractPath`*. Path-traversal is
+    blocked by lexically resolving each computed target and rejecting any
+    that escapes `$extractPath` (`STATUS_PATH_ERROR`).
+- **Status string constants** mirror PclZip's: `ok`, `already_a_directory`,
+  `filtered`, plus three failure cases not enumerated by PclZip
+  (`write_error`, `open_error`, `path_error`).
+
+### Behavioral mapping
+
+| PclZip surface | ZipExtractor equivalent |
+|---|---|
+| `new \PclZip($p); $zip->listContent()` | `ZipExtractor::listNames($p)` |
+| `PCLZIP_OPT_PATH` | `$extractPath` argument |
+| `PCLZIP_OPT_REMOVE_PATH` | `$stripPrefix` argument |
+| `PCLZIP_OPT_SET_CHMOD` | `$chmod` argument |
+| `PCLZIP_OPT_BY_NAME` | `$onlyNames` array |
+| `PCLZIP_OPT_REPLACE_NEWER` | (dropped — ZipArchive always overwrites; in install/upgrade flow the archived file IS the new version, so the "only if newer" guard was vacuous) |
+| return `[i => ['filename'=>…, 'stored_filename'=>…, 'status'=>…]]` | return `list<array{filename, stored_filename, status}>` — same keys |
+
+### Files touched
+
+- **`src/Piwigo/Core/ZipExtractor.php`** — new helper class (~170 lines).
+- **`src/Piwigo/Admin/Plugins.php`** — `extractPluginFiles()` migrated. The
+  pre-scan loop now reads `listNames()` directly (returns flat names instead
+  of PclZip's per-entry assoc arrays). `\PclZip` import and noisy
+  `is_array($listRaw) && $listRaw` / type-juggling on result rows removed
+  thanks to the new return type's typed array shape.
+- **`src/Piwigo/Admin/Languages.php`** — `extractLanguageFiles()` migrated;
+  same shape as Plugins.
+- **`src/Piwigo/Admin/Themes.php`** — `extractThemeFiles()` migrated; same
+  shape as Plugins.
+- **`src/Piwigo/Admin/Updates.php`** — `submitMaintenance()` core-update
+  extraction migrated. The retry-on-error loop (chmod + re-extract single
+  failed entry) now uses `$onlyNames = [$entryStoredName]` instead of
+  `PCLZIP_OPT_BY_NAME`. Loop walks the typed result array directly; the
+  PHPStan `@phpstan-ignore-next-line offsetAccess.nonOffsetAccessible` line
+  that was masking PclZip's untyped return is gone.
+- **`composer.json`** — `pclzip/pclzip: ^2.8` removed from `require`;
+  `ext-zip: *` added (already implicit on most builds, now explicit).
+- **`composer.lock`** — regenerated; `vendor/pclzip/` directory removed.
+- **`tools/psalm-stubs.phpstub`** — 21 `PCLZIP_OPT_*` constant stubs (the
+  whole "PclZip library constants" block) deleted.
+
+### Tests added
+
+- **`tests/Unit/Core/ZipExtractorTest.php`** — 9 tests, 28 assertions.
+  Covers: list-names ordering, list on missing archive, prefix-stripped
+  extraction, plain extraction without prefix, `$onlyNames` filtering,
+  path-traversal blocking (`../escape.txt` style entries), chmod
+  application, empty-result on open failure, missing-parent-directory
+  auto-creation.
+
+### Semantic note: `PCLZIP_OPT_REPLACE_NEWER` dropped
+
+PclZip's default was "never overwrite an existing file"; `REPLACE_NEWER`
+relaxed that to "overwrite when the archived entry's mtime is newer". All
+four call sites passed `REPLACE_NEWER`. `ZipArchive` always overwrites
+unconditionally. In the install/upgrade context — where the archive *is*
+the new version we want on disk — the difference is moot: there is no case
+where the archived file is older than what's on disk. Documented here so a
+future reader doesn't grep for it and assume the guard was lost.
+
+### Verification
+
+- `vendor/bin/phpstan analyse --no-progress` → 0 errors at level 10.
+- `vendor/bin/phpunit` (Unit + Integration) → 495 tests, 2418 assertions, OK
+  (was 486 / 2390 before; the 9 new tests + 28 assertions are
+  `ZipExtractorTest`).
+- `composer dump-autoload --classmap-authoritative` run after `ZipExtractor`
+  was added.
+- Post-edit cross-tree grep: `grep -rEn "PclZip|PCLZIP_|pclzip"
+  src/ tools/ tests/ composer.json composer.lock` returns nothing outside
+  docstrings in `ZipExtractor.php` (intentional historical reference).
+- `vendor/pclzip/` directory removed by `composer update`.
 
 ---
 

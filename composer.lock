@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "430526890a6624f087e0bf4031c9d7d2",
+    "content-hash": "99def52198439e4d5a276d56eeb5b17b",
     "packages": [
         {
             "name": "ahand/mobileesp",
@@ -1516,47 +1516,6 @@
                 "source": "https://github.com/flack/UniversalFeedCreator/tree/v1.9.0"
             },
             "time": "2024-02-22T11:08:24+00:00"
-        },
-        {
-            "name": "pclzip/pclzip",
-            "version": "2.8.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/ivanlanin/pclzip.git",
-                "reference": "19dd1de9d3f5fc4d7d70175b4c344dee329f45fd"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/ivanlanin/pclzip/zipball/19dd1de9d3f5fc4d7d70175b4c344dee329f45fd",
-                "reference": "19dd1de9d3f5fc4d7d70175b4c344dee329f45fd",
-                "shasum": ""
-            },
-            "type": "library",
-            "autoload": {
-                "classmap": [
-                    "pclzip.lib.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-2.1"
-            ],
-            "authors": [
-                {
-                    "name": "Vincent Blavet"
-                }
-            ],
-            "description": "A PHP library that offers compression and extraction functions for Zip formatted archives",
-            "homepage": "http://www.phpconcept.net/pclzip",
-            "keywords": [
-                "php",
-                "zip"
-            ],
-            "support": {
-                "issues": "https://github.com/ivanlanin/pclzip/issues",
-                "source": "https://github.com/ivanlanin/pclzip/tree/master"
-            },
-            "time": "2014-06-05T11:42:24+00:00"
         },
         {
             "name": "pelago/emogrifier",
@@ -10589,7 +10548,8 @@
         "php": "^8.5",
         "ext-gd": "*",
         "ext-mbstring": "*",
-        "ext-mysqli": "*"
+        "ext-mysqli": "*",
+        "ext-zip": "*"
     },
     "platform-dev": {},
     "plugin-api-version": "2.9.0"

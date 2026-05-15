@@ -49,26 +49,6 @@ namespace {
     // UI
     const BUTTONS_RANK_NEUTRAL = 0;
 
-    // PclZip library constants (defined in vendor/pclzip/pclzip/pclzip.lib.php at runtime)
-    const PCLZIP_OPT_PATH = 77001;
-    const PCLZIP_OPT_ADD_PATH = 77002;
-    const PCLZIP_OPT_REMOVE_PATH = 77003;
-    const PCLZIP_OPT_REMOVE_ALL_PATH = 77004;
-    const PCLZIP_OPT_SET_CHMOD = 77005;
-    const PCLZIP_OPT_EXTRACT_AS_STRING = 77006;
-    const PCLZIP_OPT_NO_COMPRESSION = 77007;
-    const PCLZIP_OPT_BY_NAME = 77008;
-    const PCLZIP_OPT_BY_INDEX = 77009;
-    const PCLZIP_OPT_BY_EREG = 77010;
-    const PCLZIP_OPT_BY_PREG = 77011;
-    const PCLZIP_OPT_COMMENT = 77012;
-    const PCLZIP_OPT_ADD_COMMENT = 77013;
-    const PCLZIP_OPT_PREPEND_COMMENT = 77014;
-    const PCLZIP_OPT_EXTRACT_IN_OUTPUT = 77015;
-    const PCLZIP_OPT_REPLACE_NEWER = 77016;
-    const PCLZIP_OPT_STOP_ON_ERROR = 77017;
-    const PCLZIP_OPT_EXTRACT_DIR_RESTRICTION = 77019;
-    const PCLZIP_OPT_TEMP_FILE_THRESHOLD = 77020;
 
     // -------------------------------------------------------------------------
     // Imagick PECL extension

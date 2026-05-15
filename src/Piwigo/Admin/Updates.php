@@ -14,6 +14,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
+use Piwigo\Core\ZipExtractor;
 use Piwigo\Mail\MailService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -597,44 +598,27 @@ final class Updates
 
             $filesize = Filesystem::tryFilesize($filename);
             if ($filesize !== false && $filesize > 0) {
-                $zip = new \PclZip($filename);
-                $resultRaw = $zip->extract(
-                    PCLZIP_OPT_PATH,
-                    PHPWG_ROOT_PATH,
-                    PCLZIP_OPT_REMOVE_PATH,
-                    $remove_path,
-                    PCLZIP_OPT_SET_CHMOD,
-                    0755,
-                    PCLZIP_OPT_REPLACE_NEWER
-                );
-                if (is_array($resultRaw) && $resultRaw) {
-                    $result = $resultRaw;
+                $result = ZipExtractor::extract($filename, PHPWG_ROOT_PATH, $remove_path, null, 0755);
+                if ($result !== []) {
                     //Check if all files were extracted
                     $error = '';
                     foreach ($result as $extract) {
-                        if (!is_array($extract)) {
-                            continue;
-                        }
-                        $extractStatus = is_string($extract['status'] ?? null) ? $extract['status'] : '';
-                        $extractFilename = is_string($extract['filename'] ?? null) ? $extract['filename'] : '';
+                        $extractStatus = $extract['status'];
+                        $extractFilename = $extract['filename'];
+                        $extractStoredName = $extract['stored_filename'];
                         if (!in_array($extractStatus, ['ok', 'filtered', 'already_a_directory'])) {
                             // Try to change chmod and extract
-                            if (Filesystem::tryChmod(PHPWG_ROOT_PATH.$extractFilename, Config::chmodValue())
-                              and is_array($res = $zip->extract(
-                                  PCLZIP_OPT_BY_NAME,
-                                  $remove_path.'/'.$extractFilename,
-                                  PCLZIP_OPT_PATH,
-                                  PHPWG_ROOT_PATH,
-                                  PCLZIP_OPT_REMOVE_PATH,
-                                  $remove_path,
-                                  PCLZIP_OPT_SET_CHMOD,
-                                  0755,
-                                  PCLZIP_OPT_REPLACE_NEWER
-                              ))
-                              and isset($res[0])
-                              /** @phpstan-ignore-next-line offsetAccess.nonOffsetAccessible */
-                              and is_string($res[0]['status'] ?? null)
-                              and $res[0]['status'] == 'ok') {
+                            $retry = Filesystem::tryChmod(PHPWG_ROOT_PATH.$extractFilename, Config::chmodValue())
+                              ? ZipExtractor::extract($filename, PHPWG_ROOT_PATH, $remove_path, [$extractStoredName], 0755)
+                              : [];
+                            $retryEntry = null;
+                            foreach ($retry as $row) {
+                                if ($row['stored_filename'] === $extractStoredName) {
+                                    $retryEntry = $row;
+                                    break;
+                                }
+                            }
+                            if ($retryEntry !== null && $retryEntry['status'] === 'ok') {
                                 continue;
                             } else {
                                 $error .= $extractFilename.': '.$extractStatus."\n";

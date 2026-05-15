@@ -14,6 +14,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
+use Piwigo\Core\ZipExtractor;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
 use Piwigo\Plugins\EventDispatcher;
@@ -508,17 +509,11 @@ final class Themes
                 $fh = $handle;
                 if ($this->adminService->fetchRemote($url, $handle, $get_data)) {
                     fclose($fh);
-                    $zip = new \PclZip($archive);
-                    $listRaw = $zip->listContent();
-                    if (is_array($listRaw) && $listRaw) {
-                        $list = $listRaw;
+                    $names = ZipExtractor::listNames($archive);
+                    if ($names !== []) {
                         $main_filepath = null;
                         $status = 'ok';
-                        foreach ($list as $file) {
-                            if (!is_array($file)) {
-                                continue;
-                            }
-                            $filename = is_string($file['filename'] ?? null) ? (string) $file['filename'] : '';
+                        foreach ($names as $filename) {
                             // we search themeconf.inc.php in archive
                             if (basename($filename) == 'themeconf.inc.php'
                               and ($main_filepath === null
@@ -539,22 +534,11 @@ final class Themes
                             $extract_path = Config::themesPath() . $theme_id;
                             $logger->debug(__FUNCTION__.', $extract_path = '.$extract_path);
 
-                            $resultRaw = $zip->extract(
-                                PCLZIP_OPT_PATH,
-                                $extract_path,
-                                PCLZIP_OPT_REMOVE_PATH,
-                                $root,
-                                PCLZIP_OPT_REPLACE_NEWER
-                            );
-                            if (is_array($resultRaw) && $resultRaw) {
-                                $result = $resultRaw;
+                            $result = ZipExtractor::extract($archive, $extract_path, $root === '.' ? '' : $root);
+                            if ($result !== []) {
                                 foreach ($result as $file) {
-                                    if (!is_array($file)) {
-                                        continue;
-                                    }
-                                    $storedFilename = is_string($file['stored_filename'] ?? null) ? $file['stored_filename'] : '';
-                                    if ($storedFilename == $main_filepath) {
-                                        $status = is_string($file['status'] ?? null) ? $file['status'] : 'ok';
+                                    if ($file['stored_filename'] === $main_filepath) {
+                                        $status = $file['status'];
                                         break;
                                     }
                                 }

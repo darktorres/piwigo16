@@ -26,10 +26,9 @@ final class ContainerSmokeTest extends IntegrationTestCase
         $this->loadFixture(self::FIXTURE);
         $this->markTestInstalled();
 
-        // Globals still consumed by container factories (CurrentUser, Lang, filter).
+        // Globals still consumed by container factories (CurrentUser, Lang).
         $GLOBALS['user']   = [];
         $GLOBALS['lang']   = [];
-        $GLOBALS['filter'] = [];
 
         // Populate Config::$data with defaults + test-env credentials so
         // DbConnection::build() can connect when the container resolves Connection.

@@ -10,6 +10,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
+use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -32,7 +33,7 @@ final readonly class MenubarRenderer
 
     public function render(): void
     {
-        $filter = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
+        $filter = FilterContextRegistry::current();
         $template = TemplateRegistry::current();
         $ctx = SectionContextRegistry::current();
         $user = CurrentUser::get()->rawAttributes;
@@ -79,7 +80,7 @@ final readonly class MenubarRenderer
 
         $block = $menu->getBlock('mbCategories');
         if (Config::menubarFilterIcon() and !empty(Config::filterPages()) and $this->util->getFilterPageValue('used')) {
-            if ($filter['enabled']) {
+            if ($filter->enabled) {
                 $template->assign('U_STOP_FILTER', $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), ['filter' => 'stop']));
             } else {
                 $template->assign(

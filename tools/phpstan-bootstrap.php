@@ -19,8 +19,6 @@ $lang = [];
 $template = null;
 /** @var \Psr\Log\LoggerInterface|null $logger */
 $logger = null;
-/** @var array<string,mixed> $filter */
-$filter = [];
 /** @var array<string,mixed> $pwg_event_handlers */
 $pwg_event_handlers = [];
 /** @var array<string,mixed> $pwg_loaded_plugins */

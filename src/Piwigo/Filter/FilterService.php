@@ -9,16 +9,15 @@ final class FilterService
     /** @param array<array<string, mixed>> $cats */
     public function updateCategoriesWithFilteredData(array &$cats): void
     {
-        $filter = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
+        $filter = FilterContextRegistry::current();
 
-        if (!empty($filter['enabled'])) {
+        if ($filter->enabled) {
             $upd_fields = ['date_last', 'max_date_last', 'count_images', 'count_categories', 'nb_images'];
 
-            $filter_categories = is_array($filter['categories']) ? $filter['categories'] : [];
             foreach ($cats as $cat_id => &$category) {
                 $catIdRaw = $category['id'];
                 $cat_id_val = is_numeric($catIdRaw) ? (int) $catIdRaw : (is_string($catIdRaw) ? $catIdRaw : '');
-                $raw_cat_data = $filter_categories[$cat_id_val] ?? null;
+                $raw_cat_data = $filter->categories[$cat_id_val] ?? null;
                 $cat_data = is_array($raw_cat_data) ? $raw_cat_data : [];
                 foreach ($upd_fields as $upd_field) {
                     $category[$upd_field] = $cat_data[$upd_field] ?? null;

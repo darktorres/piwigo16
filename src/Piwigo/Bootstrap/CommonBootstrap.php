@@ -68,7 +68,6 @@ final class CommonBootstrap
 
         $GLOBALS['header_msgs']  = [];
         $GLOBALS['header_notes'] = [];
-        $GLOBALS['filter']       = [];
 
         ConfigLoader::applyDefaults();
 
@@ -287,8 +286,6 @@ final class CommonBootstrap
             $template->assign('header_msgs', $GLOBALS['header_msgs']);
             $GLOBALS['header_msgs'] = [];
         }
-
-        $GLOBALS['filter']['enabled'] = false;
 
         if (Config::has('header_notes')) {
             $GLOBALS['header_notes'] = array_merge($GLOBALS['header_notes'], Config::headerNotes());

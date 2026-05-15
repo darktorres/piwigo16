@@ -20,6 +20,7 @@ use Piwigo\Core\Util;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\NotFoundException;
+use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
@@ -134,8 +135,7 @@ final readonly class PictureController implements ControllerInterface
             $imageId = is_scalar($row['id'] ?? null) ? (int) $row['id'] : 0;
 
             if (!isset($rankOf[$imageId])) {
-                $filter          = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
-                $visibleImages   = is_scalar($filter['visible_images'] ?? null) ? (string) $filter['visible_images'] : '';
+                $visibleImages = FilterContextRegistry::current()->visibleImages;
                 if ($visibleImages !== '' && !in_array($imageId, explode(',', $visibleImages))) {
                     $this->htmlService->pageNotFound('The requested image is filtered', $this->urlService->duplicateIndexUrl());
                     return ResponseFactory::create(404);

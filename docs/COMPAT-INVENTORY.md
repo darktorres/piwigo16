@@ -27,7 +27,7 @@ Last audited end-to-end: 2026-05-15.
 | `summarized` column lazy guard | Replaced by Doctrine migration | [§Z5](#z5-one-time-db-migration-guard) |
 | Plugin config legacy storage format | Moot (no callers) | [§Z6](#z6-plugin-config-legacy-storage) |
 | `trigger_error` runtime signals | All converted to typed exceptions / PSR-3 | [§Z7](#z7-trigger_error-runtime-signals) |
-| Ad-hoc `$GLOBALS` cross-class channels | Mixed — admin URL + 4 self-contained + 3 mechanical channels removed, 3 runtime state channels still active (`filter`, `lang_info`, `header_*`) | [§A2](#a2-ad-hoc-globals-cross-class-channels), [§Z8](#z8-globals-channels-closed), [§Z9](#z9-phase-3a-self-contained-channels), [§Z10](#z10-phase-3b-mechanical-channels) |
+| Ad-hoc `$GLOBALS` cross-class channels | Mixed — admin URL + 4 self-contained + 3 mechanical + `filter` channels removed, 2 runtime state channels still active (`lang_info`, `header_*`) | [§A2](#a2-ad-hoc-globals-cross-class-channels), [§Z8](#z8-globals-channels-closed), [§Z9](#z9-phase-3a-self-contained-channels), [§Z10](#z10-phase-3b-mechanical-channels), [§Z11](#z11-phase-4a-filtercontext-vo) |
 | Plugin/theme procedural contract (`main.inc.php`, `maintain.class.php`, hook events) | Active until v17.0 | [§P1](#p1-plugintheme-procedural-contract) |
 | Plugin event API — 153 hook names | Active until v17.0 | [§P2](#p2-plugin-event-api) |
 | Smarty-syntax compatibility layer in Latte | Active (transitional API) | [§P3](#p3-smarty-syntax-compatibility-in-latte) |
@@ -69,14 +69,15 @@ typed bridge — readers do `is_array($GLOBALS['x'] ?? null) ? … : []` inline.
 
 | Global | Writer(s) | Reader(s) | Removal sketch |
 |---|---|---|---|
-| `$GLOBALS['filter']` | `CommonBootstrap` (init), `FilterMiddleware` (`&$GLOBALS['filter']`), `SectionInitializer` (reference mutation) | `CategoryService`, `FilterService`, `MenubarRenderer`, `PermissionService`, `CalendarService`, `PictureController` | Promote to typed `FilterContext` VO with registry singleton |
 | `$GLOBALS['lang_info']` | `LanguageStack` (set/merge/restore) | `Template:83`, `AdminService:406` | Cross-subsystem read — fold into `Lang` static state |
 | `$GLOBALS['header_msgs']` + `$GLOBALS['header_notes']` | `CommonBootstrap`, `CheckIntegrity` | `CommonBootstrap` (template assign), `FilterMiddleware:54` (reference) | Promote to `PageState` typed arrays |
+
 The four self-contained channels (`errors`, `themeconfs`, `cache`,
 `maint_actions`) were closed in Phase 3a — see
 [§Z9](#z9-phase-3a-self-contained-channels). The three mechanical channels
 (`prefixeTable`, `t2`, `debug`) were closed in Phase 3b — see
-[§Z10](#z10-phase-3b-mechanical-channels).
+[§Z10](#z10-phase-3b-mechanical-channels). The `filter` channel was closed
+in Phase 4a — see [§Z11](#z11-phase-4a-filtercontext-vo).
 
 ## A3. Legacy `define()` Shims
 
@@ -462,7 +463,7 @@ is deprecated/removed in modern PHP builds but still used in
 | `$lang` | Removed (§Z1) |
 | `$template` | Removed (§Z1) |
 | `$logger` | Removed — replaced by `LoggerRegistry` |
-| `$filter` | Active (§A2) |
+| `$filter` | Removed (§Z11) |
 | `$pwg_event_handlers` | Removed (§Z1) |
 | `$pwg_loaded_plugins` | Removed (§Z1) |
 | `$service` | Now `PwgServerRegistry::current()` |
@@ -654,6 +655,40 @@ PHP built-in waiting in the wings.
 | `$GLOBALS['t2']` | The `CommonBootstrap:57` write deleted. `Util::pwgDebug()` and `PageTailRenderer` read `$_SERVER['REQUEST_TIME_FLOAT']` (populated natively by PHP at request start — strictly more accurate than `microtime(true)` at bootstrap). |
 | `$GLOBALS['debug']` | The HTML-string accumulator is now `PageState::current()->debugLines` — a `list<string>` of pre-formatted `<p>` lines populated by `Util::pwgDebug()` and surfaced by `PageTailRenderer` when `Config::showQueries()` is on. No `DebugAccumulatorHandler` introduced; the panel content was always semantically distinct from PSR-3 logging (timing breadcrumbs, not application logs) and folding it into PageState keeps it request-scoped and typed without adding a new Monolog handler. |
 
+## Z11. Phase 4a FilterContext VO
+
+Closed 2026-05-15. New typed value object + registry mirroring
+`SectionContext` / `SectionContextRegistry`.
+
+- **VO** — `Piwigo\Filter\FilterContext` (immutable `readonly` props):
+  `enabled (bool)`, `recentPeriod (int)`, `categories (array<int|string,
+  array<string,mixed>>)`, `visibleCategories (string)`, `visibleImages
+  (string)`. The legacy `int -1` sentinel for "no rows match" is preserved
+  as the string `"-1"` so SQL `IN ($visible)` matches nothing.
+- **Registry** — `Piwigo\Filter\FilterContextRegistry::current()` /
+  `::set(FilterContext)` / `::reset()`.
+- **Writer** — `FilterMiddleware::bootstrap()` builds local scalars / arrays
+  and commits one immutable `FilterContext` to the registry. The previous
+  `&$GLOBALS['filter']` reference-mutation pattern is gone; each early-return
+  branch (filter disabled / cancelled / page not used) sets a `FilterContext(enabled: false)`.
+- **Readers** — all 6 sites (`FilterService::updateCategoriesWithFilteredData`,
+  `PermissionService::getSqlConditionFandF`, `CategoryService::getCategoriesMenu`,
+  `MenubarRenderer::render`, `PictureController::__invoke`,
+  `SectionInitializer::initialize`) replaced
+  `is_array($GLOBALS['filter'] ?? null)` narrowing with
+  `FilterContextRegistry::current()->{$prop}`.
+- **Init writes removed** — `CommonBootstrap:71` (`$GLOBALS['filter'] = []`)
+  and the late `enabled = false` write deleted. Default `FilterContext()`
+  provided by the registry is functionally equivalent.
+- **Tooling/stubs** — `$filter` stub dropped from `tools/phpstan-bootstrap.php`;
+  `'filter'` dropped from `NoGlobalInSrcRule` GUARDED + REPLACEMENTS;
+  `ContainerSmokeTest` test plumbing line removed.
+
+Note: this is the first §A2 task to add new files (`FilterContext.php`,
+`FilterContextRegistry.php`), so `composer dump-autoload --classmap-authoritative`
+is required after the diff is checked out (the project pins
+`classmap-authoritative: true`).
+
 Each task below is annotated with its **prerequisites** (must finish first)
 and **enables** (work that becomes easier or unblocked afterward). Most
 tasks are genuinely independent; the dependencies that exist are concentrated
@@ -690,7 +725,7 @@ No code dependencies. All independent of each other and of every §A item.
 | Rename `'trigger_change'`/`'trigger_notify'` `type` strings in `tools/triggers_list.php` to match modern `dispatch`/`notify` (§D3.5); fix 4 `include/functions.inc.php` path references | None — reference doc, the event names themselves are untouched | small |
 | Remove resolved-bridge `@var` placeholders from `tools/phpstan-bootstrap.php`: `$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`, `$persistent_cache`, `$page` (§D3.1A subset — 9 of 11; `$page` removed 2026-05-15) | None — corresponding code is already gone (§Z1, §Z1.1, §Z3, plus `$logger`→`LoggerRegistry`, `$service`→`PwgServerRegistry`) | trivial |
 
-> Do NOT touch `NoGlobalInSrcRule` entries for `filter`, `header_notes` yet — those globals are still active (see Phase 4a/4b). `cache`, `themeconfs`, `errors`, `maint_actions`, `page` already removed (§Z1.1, §Z9). Only `persistent_cache` is dead-code beyond those.
+> Do NOT touch `NoGlobalInSrcRule` entry for `header_notes` yet — that global is still active (see Phase 4b). `cache`, `themeconfs`, `errors`, `maint_actions`, `page`, `filter` already removed (§Z1.1, §Z9, §Z11). Only `persistent_cache` is dead-code beyond those.
 
 ## Phase 2 — Mechanical Translations (Parallelisable)
 
@@ -839,15 +874,10 @@ for the as-shipped record.
 Each task touches multiple files and introduces a new typed VO/middleware.
 Independent of each other (and of Phases 1-3).
 
-### Phase 4a — `$GLOBALS['filter']` → `FilterContext` VO (§A2)
+### Phase 4a — `$GLOBALS['filter']` → `FilterContext` VO (§A2) — **Done** (2026-05-15)
 
-1. Define `FilterContext` VO + registry (mirror `SectionContext` pattern).
-2. Migrate `CommonBootstrap` (init), `FilterMiddleware` (write),
-   `SectionInitializer:72` (reference mutation).
-3. Migrate readers: `CategoryService`, `FilterService`, `MenubarRenderer`,
-   `PermissionService`, `CalendarService`, `PictureController`.
-4. Remove `$filter` from `tools/phpstan-bootstrap.php`; drop `'filter'`
-   from `NoGlobalInSrcRule` GUARDED.
+Closed; see [§Z11](#z11-phase-4a-filtercontext-vo) for the as-shipped
+record.
 
 **Enables:** Util.php split (§A5.1) — several `Util::*` methods read
 `$GLOBALS['filter']`; with a typed `FilterContext`, those become DI
@@ -993,7 +1023,7 @@ time this phase runs.
    Phase 3a (self-contained ×4) — done 2026-05-15 (§Z9)
    Phase 3b (prefixeTable, debug+t2) — done 2026-05-15 (§Z10)
                                                    │
-   Phase 4a ($filter)     ──→ phpstan stubs, GUARDED
+   Phase 4a ($filter) — done 2026-05-15 (§Z11)
    Phase 4b (header_*)    ──→ GUARDED             │
    Phase 4c (RequestCtx)  ──→ phpstan stubs       │    (§A1 already done
    Phase 4d (lang_info)   ──→ Lang static state   │     2026-05-15 — §Z1.1)
@@ -1026,7 +1056,7 @@ Part P are listed for completeness.
 | Item | Section | Phase | Status |
 |---|---|---|---|
 | `$page` reference bridge alias | A1 | 5 | **Closed** (2026-05-15 — see [§Z1.1](#z1-wave-a-reference-bridges)) |
-| `$filter` channel | A2 | 4a | Open |
+| `$filter` channel | A2 | 4a | **Closed** (2026-05-15 — see [§Z11](#z11-phase-4a-filtercontext-vo)) |
 | `lang_info` channel | A2 | 4d | Open |
 | `header_msgs` + `header_notes` | A2 | 4b | Open |
 | `debug` + `t2` | A2 | 3b | **Closed** (2026-05-15 — see [§Z10](#z10-phase-3b-mechanical-channels)) |
@@ -1055,13 +1085,13 @@ Part P are listed for completeness.
 | `psalm.xml` comments | D2.1 | 1 | Open |
 | `psalm-stubs.phpstub` cleanup | D2.2 | 2a/2b/2c/2d (per stub group) | Open |
 | `phpstan-bootstrap.php` closed-bridge stubs (9 vars: `$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`, `$persistent_cache`, `$page`) | D3.1A | 1 | 1 of 9 closed (`$page` removed 2026-05-15); 8 still open |
-| `phpstan-bootstrap.php` `$filter` / `$prefixeTable` stubs | D3.1A | 4a / 3b | 1 of 2 closed (`$prefixeTable` removed 2026-05-15); `$filter` still open |
+| `phpstan-bootstrap.php` `$filter` / `$prefixeTable` stubs | D3.1A | 4a / 3b | 2 of 2 closed (`$prefixeTable` 2026-05-15 §Z10; `$filter` 2026-05-15 §Z11) |
 | `phpstan-bootstrap.php` WS const stubs | D3.1B | 2a | Open |
 | `phpstan-bootstrap.php` plugin/theme callback stubs | D3.1C | 6 | Sustained until v17 |
 | Dead `PwgGetSessionVarDynamicReturnType` | D3.2 | 1 | Open |
 | Misnamed `TriggerChangeDynamicReturnType` | D3.3 | 1 | Open |
 | `NoGlobalInSrcRule` `persistent_cache` entry | D3.4 | 1 | Open |
-| `NoGlobalInSrcRule` other GUARDED entries | D3.4 | 3a / 3b / 4a / 4b / 4d | 4 of 9 closed (`page` 2026-05-15; `errors`, `themeconfs`, `cache`, `maint_actions` 2026-05-15) |
+| `NoGlobalInSrcRule` other GUARDED entries | D3.4 | 3a / 3b / 4a / 4b / 4d | 5 of 9 closed (`page` 2026-05-15; `errors`, `themeconfs`, `cache`, `maint_actions` 2026-05-15 §Z9; `filter` 2026-05-15 §Z11) |
 | `triggers_list.php` `'type'` strings + `include/` paths | D3.5 | 1 | Open |
 | `triggers_list.php` event-name rewrite | D3.5 (cross-ref P2) | 6 | Sustained until v17 |
 | `globals.d.ts` ambient TS globals | D4 | 6 | Sustained until v17 |

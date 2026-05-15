@@ -13,6 +13,7 @@ use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
+use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
@@ -62,7 +63,7 @@ final readonly class CategoryService
     /** @return array<mixed> */
     public function getCategoriesMenu(): array
     {
-        $filter      = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
+        $filter      = FilterContextRegistry::current();
         $ctx         = SectionContextRegistry::current();
         $currentUser = CurrentUser::get();
         $userExpand  = $currentUser->rawAttributes['expand'] ?? false;
@@ -74,7 +75,7 @@ SELECT
 FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . '
   ON id = cat_id and user_id = ' . $currentUser->id;
 
-        if (($userExpand === false || $userExpand === 0 || $userExpand === '') and !$filter['enabled']) {
+        if (($userExpand === false || $userExpand === 0 || $userExpand === '') and !$filter->enabled) {
             $where = '
 (id_uppercat is NULL';
             $category = $ctx->category;
@@ -88,7 +89,7 @@ FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() .
   ' . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], null, true);
         }
 
-        $where = EventDispatcher::dispatch('get_categories_menu_sql_where', $where, $userExpand, $filter['enabled']);
+        $where = EventDispatcher::dispatch('get_categories_menu_sql_where', $where, $userExpand, $filter->enabled);
 
         $query .= '
 WHERE ' . $where . '

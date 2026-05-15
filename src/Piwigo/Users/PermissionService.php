@@ -9,6 +9,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
+use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
 
 final readonly class PermissionService
@@ -140,7 +141,7 @@ final readonly class PermissionService
     /** @param array<string,string> $conditionFields */
     public function getSqlConditionFandF(array $conditionFields, ?string $prefixCondition = null, bool $forceOneCondition = false): string
     {
-        $filter = is_array($GLOBALS['filter'] ?? null) ? $GLOBALS['filter'] : [];
+        $filter = FilterContextRegistry::current();
         $user   = CurrentUser::get()->rawAttributes;
 
         $sqlList = [];
@@ -153,15 +154,13 @@ final readonly class PermissionService
                     }
                     break;
                 case 'visible_categories':
-                    $visibleCategories = is_scalar($filter['visible_categories'] ?? null) ? (string) $filter['visible_categories'] : '';
-                    if ($visibleCategories !== '') {
-                        $sqlList[] = $fieldName . ' IN (' . $visibleCategories . ')';
+                    if ($filter->visibleCategories !== '') {
+                        $sqlList[] = $fieldName . ' IN (' . $filter->visibleCategories . ')';
                     }
                     break;
                 case 'visible_images':
-                    $visibleImages = is_scalar($filter['visible_images'] ?? null) ? (string) $filter['visible_images'] : '';
-                    if ($visibleImages !== '') {
-                        $sqlList[] = $fieldName . ' IN (' . $visibleImages . ')';
+                    if ($filter->visibleImages !== '') {
+                        $sqlList[] = $fieldName . ' IN (' . $filter->visibleImages . ')';
                     }
                     // no break — visible includes forbidden
                 case 'forbidden_images':

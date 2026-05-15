@@ -10,6 +10,8 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Util;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
+use Piwigo\Filter\FilterContext;
+use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Lang\Translator;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
@@ -19,12 +21,13 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Resolves the "recent photos" filter state and populates $GLOBALS['filter'].
+ * Resolves the "recent photos" filter state and commits it to
+ * FilterContextRegistry as a typed immutable FilterContext.
  *
  * Replaces the former include/filter.inc.php + the outer condition in
  * common.inc.php that loaded it.
  *
- * Runs after AuthMiddleware so that $GLOBALS['user'] (recent_period, id,
+ * Runs after AuthMiddleware so CurrentUser::get() (recent_period, id,
  * cache_update_time) is already populated when filter data is computed.
  */
 final readonly class FilterMiddleware implements MiddlewareInterface
@@ -46,43 +49,39 @@ final readonly class FilterMiddleware implements MiddlewareInterface
 
     private function bootstrap(): void
     {
-        /** @var array<string,mixed> $filter */
-        $filter = &$GLOBALS['filter'];
         /** @var array<string,mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
         /** @var array<mixed> $header_notes */
         $header_notes = &$GLOBALS['header_notes'];
 
         if (empty(Config::filterPages()) || !$this->util->getFilterPageValue('used')) {
-            $filter['enabled'] = false;
+            FilterContextRegistry::set(new FilterContext(enabled: false));
             return;
         }
 
         // ── Determine whether filter is active ────────────────────────────────
 
         $recentPeriodFromUrl = null;
+        $enabled             = false;
 
         if (!$this->util->getFilterPageValue('cancel')) {
             if (isset($_GET['filter'])) {
-                $urlMatches    = [];
-                $rawFilter = $_GET['filter'];
-                $filterEnabled = preg_match(
+                $urlMatches = [];
+                $rawFilter  = $_GET['filter'];
+                $enabled    = preg_match(
                     '/^start-recent-(\d+)$/',
                     is_string($rawFilter) ? $rawFilter : '',
                     $urlMatches
                 ) === 1;
-                $filter['enabled'] = $filterEnabled;
-                if ($filterEnabled) {
+                if ($enabled) {
                     $recentPeriodFromUrl = (int) $urlMatches[1];
                 }
             } else {
-                $filter['enabled'] = $this->sessionService->getSessionVar('filter_enabled', false);
+                $enabled = (bool) $this->sessionService->getSessionVar('filter_enabled', false);
             }
-        } else {
-            $filter['enabled'] = false;
         }
 
-        if (!(bool) $filter['enabled']) {
+        if (!$enabled) {
             if (!empty($_SESSION['pwg_filter_enabled'])) {
                 $this->sessionService->unsetSessionVar('filter_enabled');
                 $this->sessionService->unsetSessionVar('filter_check_key');
@@ -90,6 +89,7 @@ final readonly class FilterMiddleware implements MiddlewareInterface
                 $this->sessionService->unsetSessionVar('filter_visible_categories');
                 $this->sessionService->unsetSessionVar('filter_visible_images');
             }
+            FilterContextRegistry::set(new FilterContext(enabled: false));
             return;
         }
 
@@ -107,7 +107,6 @@ final readonly class FilterMiddleware implements MiddlewareInterface
                 ? $filterKey['recent_period']
                 : (is_numeric($user['recent_period'] ?? null) ? (int) $user['recent_period'] : 0);
         }
-        $filter['recent_period'] = $recentPeriod;
 
         $userId          = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
         $cacheUpdateTime = is_numeric($user['cache_update_time'] ?? null) ? (int) $user['cache_update_time'] : 0;
@@ -126,12 +125,11 @@ final readonly class FilterMiddleware implements MiddlewareInterface
                 'date'          => date('Ymd'),
             ];
 
-            $computedCategories    = $this->categoryService->getComputedCategories($user, $recentPeriod);
-            $filter['categories']  = $computedCategories;
+            $computedCategories = $this->categoryService->getComputedCategories($user, $recentPeriod);
 
-            $visibleCatKeys        = array_map(static fn (string $k): string => $k, array_keys($computedCategories));
-            $visibleCatStr         = implode(',', $visibleCatKeys);
-            $filter['visible_categories'] = $visibleCatStr !== '' ? $visibleCatStr : -1;
+            $visibleCatKeys    = array_map(static fn (string $k): string => $k, array_keys($computedCategories));
+            $visibleCatStr     = implode(',', $visibleCatKeys);
+            $visibleCategories = $visibleCatStr !== '' ? $visibleCatStr : '-1';
 
             $catClause = $visibleCatStr !== ''
                 ? "\n  category_id IN ($visibleCatStr) and"
@@ -146,18 +144,33 @@ WHERE ' . $catClause . '
                 static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
                 array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'image_id')
             ));
-            $filter['visible_images'] = $visibleImageStr !== '' ? $visibleImageStr : -1;
+            $visibleImages = $visibleImageStr !== '' ? $visibleImageStr : '-1';
 
-            $this->sessionService->setSessionVar('filter_enabled', $filter['enabled']);
+            $this->sessionService->setSessionVar('filter_enabled', true);
             $this->sessionService->setSessionVar('filter_check_key', $filterKey);
             $this->sessionService->setSessionVar('filter_categories', serialize($computedCategories));
-            $this->sessionService->setSessionVar('filter_visible_categories', $filter['visible_categories']);
-            $this->sessionService->setSessionVar('filter_visible_images', $filter['visible_images']);
+            $this->sessionService->setSessionVar('filter_visible_categories', $visibleCategories);
+            $this->sessionService->setSessionVar('filter_visible_images', $visibleImages);
         } else {
-            $rawCategories                = $this->sessionService->getSessionVar('filter_categories', serialize([]));
-            $filter['categories']         = unserialize(is_string($rawCategories) ? $rawCategories : serialize([]));
-            $filter['visible_categories'] = $this->sessionService->getSessionVar('filter_visible_categories', '');
-            $filter['visible_images']     = $this->sessionService->getSessionVar('filter_visible_images', '');
+            $rawCategories      = $this->sessionService->getSessionVar('filter_categories', serialize([]));
+            $unserialized       = unserialize(is_string($rawCategories) ? $rawCategories : serialize([]));
+            $computedCategories = [];
+            if (is_array($unserialized)) {
+                foreach ($unserialized as $catKey => $catRow) {
+                    if (!is_array($catRow)) {
+                        continue;
+                    }
+                    $row = [];
+                    foreach ($catRow as $fieldKey => $fieldVal) {
+                        $row[(string) $fieldKey] = $fieldVal;
+                    }
+                    $computedCategories[$catKey] = $row;
+                }
+            }
+            $visibleCategoriesRaw = $this->sessionService->getSessionVar('filter_visible_categories', '');
+            $visibleCategories    = is_scalar($visibleCategoriesRaw) ? (string) $visibleCategoriesRaw : '';
+            $visibleImagesRaw     = $this->sessionService->getSessionVar('filter_visible_images', '');
+            $visibleImages        = is_scalar($visibleImagesRaw) ? (string) $visibleImagesRaw : '';
         }
 
         if ($this->util->getFilterPageValue('add_notes')) {
@@ -168,5 +181,12 @@ WHERE ' . $catClause . '
             );
         }
 
+        FilterContextRegistry::set(new FilterContext(
+            enabled:           true,
+            recentPeriod:      $recentPeriod,
+            categories:        $computedCategories,
+            visibleCategories: $visibleCategories,
+            visibleImages:     $visibleImages,
+        ));
     }
 }

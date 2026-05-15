@@ -15,6 +15,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\Tables;
+use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchService;
@@ -66,8 +67,6 @@ final readonly class SectionInitializer
         $page = [];
         /** @var array<string,mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
-        /** @var array<string,mixed> $filter */
-        $filter = &$GLOBALS['filter'];
 
         $page['items']    = [];
         $page['start']    = 0;
@@ -515,8 +514,7 @@ SELECT DISTINCT(id)
             $ps->metaRobots = ['noindex' => 1, 'nofollow' => 1];
         }
 
-        $filterEnabled = (bool) ($filter['enabled'] ?? false);
-        if ($filterEnabled) {
+        if (FilterContextRegistry::current()->enabled) {
             $ps->metaRobots = array_merge($ps->metaRobots, ['noindex' => 1]);
         }
 

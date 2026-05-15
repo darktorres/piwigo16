@@ -27,7 +27,7 @@ Last audited end-to-end: 2026-05-15.
 | `summarized` column lazy guard | Replaced by Doctrine migration | [§Z5](#z5-one-time-db-migration-guard) |
 | Plugin config legacy storage format | Moot (no callers) | [§Z6](#z6-plugin-config-legacy-storage) |
 | `trigger_error` runtime signals | All converted to typed exceptions / PSR-3 | [§Z7](#z7-trigger_error-runtime-signals) |
-| Ad-hoc `$GLOBALS` cross-class channels | Mixed — admin URL + 4 self-contained + 3 mechanical + `filter` channels removed, 2 runtime state channels still active (`lang_info`, `header_*`) | [§A2](#a2-ad-hoc-globals-cross-class-channels), [§Z8](#z8-globals-channels-closed), [§Z9](#z9-phase-3a-self-contained-channels), [§Z10](#z10-phase-3b-mechanical-channels), [§Z11](#z11-phase-4a-filtercontext-vo) |
+| Ad-hoc `$GLOBALS` cross-class channels | Mixed — admin URL + 4 self-contained + 3 mechanical + `filter` + `header_*` channels removed, 1 runtime state channel still active (`lang_info`) | [§A2](#a2-ad-hoc-globals-cross-class-channels), [§Z8](#z8-globals-channels-closed), [§Z9](#z9-phase-3a-self-contained-channels), [§Z10](#z10-phase-3b-mechanical-channels), [§Z11](#z11-phase-4a-filtercontext-vo), [§Z12](#z12-phase-4b-header_-pagestate-properties) |
 | Plugin/theme procedural contract (`main.inc.php`, `maintain.class.php`, hook events) | Active until v17.0 | [§P1](#p1-plugintheme-procedural-contract) |
 | Plugin event API — 153 hook names | Active until v17.0 | [§P2](#p2-plugin-event-api) |
 | Smarty-syntax compatibility layer in Latte | Active (transitional API) | [§P3](#p3-smarty-syntax-compatibility-in-latte) |
@@ -70,14 +70,15 @@ typed bridge — readers do `is_array($GLOBALS['x'] ?? null) ? … : []` inline.
 | Global | Writer(s) | Reader(s) | Removal sketch |
 |---|---|---|---|
 | `$GLOBALS['lang_info']` | `LanguageStack` (set/merge/restore) | `Template:83`, `AdminService:406` | Cross-subsystem read — fold into `Lang` static state |
-| `$GLOBALS['header_msgs']` + `$GLOBALS['header_notes']` | `CommonBootstrap`, `CheckIntegrity` | `CommonBootstrap` (template assign), `FilterMiddleware:54` (reference) | Promote to `PageState` typed arrays |
 
 The four self-contained channels (`errors`, `themeconfs`, `cache`,
 `maint_actions`) were closed in Phase 3a — see
 [§Z9](#z9-phase-3a-self-contained-channels). The three mechanical channels
 (`prefixeTable`, `t2`, `debug`) were closed in Phase 3b — see
 [§Z10](#z10-phase-3b-mechanical-channels). The `filter` channel was closed
-in Phase 4a — see [§Z11](#z11-phase-4a-filtercontext-vo).
+in Phase 4a — see [§Z11](#z11-phase-4a-filtercontext-vo). The
+`header_msgs` + `header_notes` channels were closed in Phase 4b — see
+[§Z12](#z12-phase-4b-header_-pagestate-properties).
 
 ## A3. Legacy `define()` Shims
 
@@ -689,6 +690,42 @@ Note: this is the first §A2 task to add new files (`FilterContext.php`,
 is required after the diff is checked out (the project pins
 `classmap-authoritative: true`).
 
+## Z12. Phase 4b `header_*` PageState Properties
+
+Closed 2026-05-15. Two channels promoted to typed `PageState` arrays.
+Audit also fixed a pre-existing bug: `$GLOBALS['header_notes']` had three
+writers (CommonBootstrap, CheckIntegrity, FilterMiddleware) but no
+template-assign anywhere — the integrity warnings, filter-period note, and
+`Config::headerNotes()` were silently swallowed because the
+`{if !empty($header_notes)}` block in `header.latte` always saw an
+undefined variable.
+
+- **PageState additions** — `PageState::$headerMessages` and `$headerNotes`
+  (both `list<string|Latte\Runtime\Html>`).
+- **header_msgs writers migrated** — `CommonBootstrap` (guest-status,
+  gallery-locked, upgrade-pending) and `ImageAdminService` (missing photos /
+  duplicate paths) now push to `PageState::current()->headerMessages`.
+  `CommonBootstrap`'s init at line 69 and the flush-to-template block at
+  lines 285-288 deleted (PageHeaderRenderer reads PageState directly now).
+- **header_notes writers migrated** — `CommonBootstrap` (Config::headerNotes()
+  merge), `CheckIntegrity` (anomaly count notice), and `FilterMiddleware`
+  (filter-period note) push to `PageState::current()->headerNotes`.
+  `CommonBootstrap`'s init at line 70 deleted; `FilterMiddleware`'s
+  `&$GLOBALS['header_notes']` reference variable deleted.
+- **Display wiring** — `PageHeaderRenderer::render()` now assigns
+  `header_msgs` and `header_notes` to the template along with the other
+  `$pageState->…` properties it already surfaces (bodyId, pageBanner,
+  metaRobots, etc.) before calling `$template->parse('header.latte')`.
+- **No clear-after-assign** — the old flush logic in CommonBootstrap reset
+  `$GLOBALS['header_msgs'] = []` after assigning to the template. The new
+  pattern does not clear; each request gets a fresh `PageState` singleton,
+  and intra-request re-renders are uncommon (PageHeaderRenderer is typically
+  called once per page). If re-display becomes a concern later, PageState
+  can grow `consumeHeaderMessages(): array` accessors.
+- **Tooling** — `'header_notes'` dropped from `NoGlobalInSrcRule` GUARDED +
+  REPLACEMENTS. (`header_msgs` was never in GUARDED because it was always
+  accessed via `$GLOBALS[…]` rather than `global $header_msgs`.)
+
 Each task below is annotated with its **prerequisites** (must finish first)
 and **enables** (work that becomes easier or unblocked afterward). Most
 tasks are genuinely independent; the dependencies that exist are concentrated
@@ -725,7 +762,7 @@ No code dependencies. All independent of each other and of every §A item.
 | Rename `'trigger_change'`/`'trigger_notify'` `type` strings in `tools/triggers_list.php` to match modern `dispatch`/`notify` (§D3.5); fix 4 `include/functions.inc.php` path references | None — reference doc, the event names themselves are untouched | small |
 | Remove resolved-bridge `@var` placeholders from `tools/phpstan-bootstrap.php`: `$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`, `$persistent_cache`, `$page` (§D3.1A subset — 9 of 11; `$page` removed 2026-05-15) | None — corresponding code is already gone (§Z1, §Z1.1, §Z3, plus `$logger`→`LoggerRegistry`, `$service`→`PwgServerRegistry`) | trivial |
 
-> Do NOT touch `NoGlobalInSrcRule` entry for `header_notes` yet — that global is still active (see Phase 4b). `cache`, `themeconfs`, `errors`, `maint_actions`, `page`, `filter` already removed (§Z1.1, §Z9, §Z11). Only `persistent_cache` is dead-code beyond those.
+> All `$GLOBALS` channels listed in `NoGlobalInSrcRule` are now either removed (`page`, `errors`, `themeconfs`, `cache`, `maint_actions`, `filter`, `header_notes`) or sustained-until-v17 / forever-guarded (`conf`, `user`, `lang`, `template`, `logger`, `mysqli`, `service`, `pwg_event_handlers`, `pwg_loaded_plugins`, `env_nbm`). Only `persistent_cache` is genuinely dead-code (Phase 1 cleanup; see §D3.4).
 
 ## Phase 2 — Mechanical Translations (Parallelisable)
 
@@ -883,14 +920,13 @@ record.
 `$GLOBALS['filter']`; with a typed `FilterContext`, those become DI
 injections.
 
-### Phase 4b — `$GLOBALS['header_*']` → `PageState` properties (§A2)
+### Phase 4b — `$GLOBALS['header_*']` → `PageState` properties (§A2) — **Done** (2026-05-15)
 
-1. Add `PageState::$headerMessages` and `$headerNotes` as typed arrays.
-2. Migrate `CommonBootstrap` writes (lines 72-73, 264, 268, 284, 296, 299).
-3. Migrate `CheckIntegrity:72` write.
-4. Migrate `FilterMiddleware:54` (reference) and `CommonBootstrap:291-292`
-   (template assign).
-5. Drop `header_notes` from `NoGlobalInSrcRule` GUARDED.
+Closed; see [§Z12](#z12-phase-4b-header_-pagestate-properties) for the
+as-shipped record. Audit-discovered bug fix: `header_notes` template
+variable was never assigned, so the integrity/filter notes were silently
+swallowed. `PageHeaderRenderer::render()` now wires both `header_msgs` and
+`header_notes` to the template.
 
 ### Phase 4c — `IN_ADMIN`/`IN_WS`/`PHPWG_IN_UPGRADE` → typed `RequestContext` (§A3.1)
 
@@ -1024,7 +1060,7 @@ time this phase runs.
    Phase 3b (prefixeTable, debug+t2) — done 2026-05-15 (§Z10)
                                                    │
    Phase 4a ($filter) — done 2026-05-15 (§Z11)
-   Phase 4b (header_*)    ──→ GUARDED             │
+   Phase 4b (header_*) — done 2026-05-15 (§Z12)
    Phase 4c (RequestCtx)  ──→ phpstan stubs       │    (§A1 already done
    Phase 4d (lang_info)   ──→ Lang static state   │     2026-05-15 — §Z1.1)
                                                    │
@@ -1058,7 +1094,7 @@ Part P are listed for completeness.
 | `$page` reference bridge alias | A1 | 5 | **Closed** (2026-05-15 — see [§Z1.1](#z1-wave-a-reference-bridges)) |
 | `$filter` channel | A2 | 4a | **Closed** (2026-05-15 — see [§Z11](#z11-phase-4a-filtercontext-vo)) |
 | `lang_info` channel | A2 | 4d | Open |
-| `header_msgs` + `header_notes` | A2 | 4b | Open |
+| `header_msgs` + `header_notes` | A2 | 4b | **Closed** (2026-05-15 — see [§Z12](#z12-phase-4b-header_-pagestate-properties)) |
 | `debug` + `t2` | A2 | 3b | **Closed** (2026-05-15 — see [§Z10](#z10-phase-3b-mechanical-channels)) |
 | `prefixeTable` | A2 | 3b | **Closed** (2026-05-15 — see [§Z10](#z10-phase-3b-mechanical-channels)) |
 | `errors` | A2 | 3a | **Closed** (2026-05-15 — see [§Z9](#z9-phase-3a-self-contained-channels)) |
@@ -1091,7 +1127,7 @@ Part P are listed for completeness.
 | Dead `PwgGetSessionVarDynamicReturnType` | D3.2 | 1 | Open |
 | Misnamed `TriggerChangeDynamicReturnType` | D3.3 | 1 | Open |
 | `NoGlobalInSrcRule` `persistent_cache` entry | D3.4 | 1 | Open |
-| `NoGlobalInSrcRule` other GUARDED entries | D3.4 | 3a / 3b / 4a / 4b / 4d | 5 of 9 closed (`page` 2026-05-15; `errors`, `themeconfs`, `cache`, `maint_actions` 2026-05-15 §Z9; `filter` 2026-05-15 §Z11) |
+| `NoGlobalInSrcRule` other GUARDED entries | D3.4 | 3a / 3b / 4a / 4b / 4d | 6 of 9 closed (`page` 2026-05-15; `errors`, `themeconfs`, `cache`, `maint_actions` §Z9; `filter` §Z11; `header_notes` §Z12); `lang_info` open for Phase 4d |
 | `triggers_list.php` `'type'` strings + `include/` paths | D3.5 | 1 | Open |
 | `triggers_list.php` event-name rewrite | D3.5 (cross-ref P2) | 6 | Sustained until v17 |
 | `globals.d.ts` ambient TS globals | D4 | 6 | Sustained until v17 |

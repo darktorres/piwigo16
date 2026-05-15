@@ -23,7 +23,7 @@ final class NoGlobalInSrcRule implements Rule
 {
     private const GUARDED = [
         'conf', 'user', 'lang', 'template', 'logger', 'mysqli', 'service',
-        'pwg_event_handlers', 'pwg_loaded_plugins', 'env_nbm', 'header_notes',
+        'pwg_event_handlers', 'pwg_loaded_plugins', 'env_nbm',
     ];
 
     private const REPLACEMENTS = [
@@ -37,7 +37,6 @@ final class NoGlobalInSrcRule implements Rule
         'pwg_event_handlers' => 'EventDispatcher::addListener/dispatch/notify()',
         'pwg_loaded_plugins' => 'LoadedPluginRegistry::register/get/all()',
         'env_nbm' => 'MailNotificationContext::current()',
-        'header_notes' => '$GLOBALS[\'header_notes\'] reference-bridge',
     ];
 
     public function getNodeType(): string

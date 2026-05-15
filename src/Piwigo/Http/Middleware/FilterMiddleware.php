@@ -7,6 +7,7 @@ namespace Piwigo\Http\Middleware;
 use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Util;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
@@ -51,8 +52,6 @@ final readonly class FilterMiddleware implements MiddlewareInterface
     {
         /** @var array<string,mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
-        /** @var array<mixed> $header_notes */
-        $header_notes = &$GLOBALS['header_notes'];
 
         if (empty(Config::filterPages()) || !$this->util->getFilterPageValue('used')) {
             FilterContextRegistry::set(new FilterContext(enabled: false));
@@ -174,7 +173,7 @@ WHERE ' . $catClause . '
         }
 
         if ($this->util->getFilterPageValue('add_notes')) {
-            $header_notes[] = Translator::get()->plural(
+            PageState::current()->headerNotes[] = Translator::get()->plural(
                 'Photos posted within the last %d day.',
                 'Photos posted within the last %d days.',
                 $recentPeriod

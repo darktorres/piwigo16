@@ -65,11 +65,7 @@ final class CheckIntegrity
         $retrieveList = $this->retrieve_list;
         $anomalyCount = count($retrieveList);
         if ($anomalyCount > 0) {
-            if (!isset($GLOBALS['header_notes']) || !is_array($GLOBALS['header_notes'])) {
-                $GLOBALS['header_notes'] = [];
-            }
-            /** @psalm-suppress NoValue -- Psalm over-narrows through $GLOBALS array assignment */
-            $GLOBALS['header_notes'][] = Translator::get()->plural(
+            PageState::current()->headerNotes[] = Translator::get()->plural(
                 '%d anomaly has been detected.',
                 '%d anomalies have been detected.',
                 $anomalyCount

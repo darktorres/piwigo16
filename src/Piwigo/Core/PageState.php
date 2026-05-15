@@ -30,6 +30,23 @@ final class PageState
     public array $messages = [];
     /** @var list<string|Html> */
     public array $infos = [];
+
+    /**
+     * Header-strip messages flushed by PageHeaderRenderer just before header.latte
+     * renders. Reserved for boot-time service notices (locked gallery, upgrade
+     * pending, "guest" status fallback). Typically empty.
+     *
+     * @var list<string|Html>
+     */
+    public array $headerMessages = [];
+
+    /**
+     * Header-strip informational notes (filter period, integrity warnings,
+     * Config::headerNotes()). Surfaced by PageHeaderRenderer.
+     *
+     * @var list<string|Html>
+     */
+    public array $headerNotes = [];
     /** @var list<string> */
     public array $bodyClasses = [];
     /** @var array<string,mixed> */

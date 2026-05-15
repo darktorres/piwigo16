@@ -66,9 +66,6 @@ final class CommonBootstrap
             return;
         }
 
-        $GLOBALS['header_msgs']  = [];
-        $GLOBALS['header_notes'] = [];
-
         ConfigLoader::applyDefaults();
 
         defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
@@ -255,11 +252,11 @@ final class CommonBootstrap
         if (is_array($internal_status_gs)
             && isset($internal_status_gs['guest_must_be_guest'])
             && $internal_status_gs['guest_must_be_guest'] === true) {
-            $GLOBALS['header_msgs'][] = Lang::t('Bad status for user "guest", using default status. Please notify the webmaster.');
+            PageState::current()->headerMessages[] = Lang::t('Bad status for user "guest", using default status. Please notify the webmaster.');
         }
 
         if (Config::galleryLocked()) {
-            $GLOBALS['header_msgs'][] = Lang::t('The gallery is locked for maintenance. Please, come back later.');
+            PageState::current()->headerMessages[] = Lang::t('The gallery is locked for maintenance. Please, come back later.');
 
             if (StringUtil::scriptBasename() != 'identification' and !Kernel::service(PermissionService::class)->isAdmin()) {
                 Kernel::service(HtmlService::class)->setStatusHeader(503, 'Service Unavailable');
@@ -275,20 +272,17 @@ final class CommonBootstrap
 
         if (Config::checkUpgradeFeed()) {
             if (UpgradeService::checkUpgradeFeed()) {
-                $GLOBALS['header_msgs'][] = new Html(
+                PageState::current()->headerMessages[] = new Html(
                     'Some database upgrades are missing, '
                     . '<a href="' . UrlService::getAbsoluteRootUrl(false) . 'index.php?/upgrade_feed">upgrade now</a>'
                 );
             }
         }
 
-        if (count($GLOBALS['header_msgs']) > 0) {
-            $template->assign('header_msgs', $GLOBALS['header_msgs']);
-            $GLOBALS['header_msgs'] = [];
-        }
-
         if (Config::has('header_notes')) {
-            $GLOBALS['header_notes'] = array_merge($GLOBALS['header_notes'], Config::headerNotes());
+            foreach (Config::headerNotes() as $note) {
+                PageState::current()->headerNotes[] = $note;
+            }
         }
 
         EventDispatcher::addListener('render_category_literal_description', 'render_category_literal_description');

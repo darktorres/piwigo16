@@ -46,6 +46,8 @@ final class PageHeaderRenderer
             'SHOW_MOBILE_APP_BANNER' => $show_mobile_app_banner,
             'BODY_CLASSES'           => $pageState->bodyClasses,
             'BODY_DATA'              => json_encode($pageState->bodyData),
+            'header_msgs'            => $pageState->headerMessages,
+            'header_notes'           => $pageState->headerNotes,
         ]);
 
         $metaRobots = $pageState->metaRobots;

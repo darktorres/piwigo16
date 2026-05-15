@@ -12,6 +12,7 @@ use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
@@ -24,7 +25,6 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagRepository;
-use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
@@ -396,17 +396,16 @@ final class ImageAdminService
             'SELECT id, path FROM ' . Tables::images() . ' WHERE id IN (' . implode(',', $checkIds) . ')'
         )->fetchAllAssociative(), 'path', 'id');
 
-        $template = TemplateRegistry::current();
         foreach ($paths as $path) {
             if (!file_exists(is_scalar($path) ? (string) $path : '')) {
-                $template->assign('header_msgs', [Lang::t('Some photos are missing from your file system. Details provided by plugin Check Uploads')]);
+                PageState::current()->headerMessages[] = Lang::t('Some photos are missing from your file system. Details provided by plugin Check Uploads');
                 return;
             }
         }
 
         $duplicatePaths = $this->conn->executeQuery('SELECT path FROM ' . Tables::images() . ' GROUP BY path HAVING COUNT(*) > 1')->fetchAllAssociative();
         if (count($duplicatePaths) > 0) {
-            $template->assign('header_msgs', [Lang::t('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicatePaths))]);
+            PageState::current()->headerMessages[] = Lang::t('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicatePaths));
         }
     }
 }

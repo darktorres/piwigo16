@@ -197,12 +197,14 @@ plumbing, the Latte `get_device` filter, the `PageTailRenderer` toggle
 link) is downstream — feature code that *uses* the UA classification but
 isn't tied to MobileEsp specifically.
 
-### Do we need a UA-detection dep at all in 2026?
+### Picking a replacement
 
-The three methods MobileEsp gives us — "smartphone?", "tablet?",
-"iOS?" — are all answerable by short UA-string regexes. The "ML-trained
-device database" use case (`matomo/device-detector`) is overkill: we
-only need three boolean classifications, not 60,000 device models.
+UA-string parsing is fiddly: iPadOS 13+ identifies as macOS Safari unless
+you check for `(iPad)`-shaped artifacts or touch-event support; Android
+tablet detection is a "not Mobile" heuristic that breaks against custom
+skins; new Apple/Samsung devices keep adding string quirks. Off-the-shelf
+libraries encode hard-won pattern knowledge that we don't want to maintain
+ourselves.
 
 Modern alternatives surveyed:
 
@@ -210,39 +212,52 @@ Modern alternatives surveyed:
   (89+), Firefox (127+, 2024), Edge (89+) send them. **Safari does not.**
   Since Safari is the dominant browser on iOS (and macOS), Client Hints
   alone don't cover the mobile/iOS-detection cases we care about. Useful
-  as a *prefer-when-present* signal, not a replacement.
-- **`mobiledetect/mobiledetectlib` v4** (the modern equivalent of MobileEsp,
-  same lineage but actively maintained, ~30k regexes). Drop-in mental
-  model, ~2MB installed. Still a regex library, just newer.
-- **Roll our own** — three regexes in a small in-tree helper class:
-  - `isSmartphone(): bool` — matches `Mobile|Android|iPhone|iPod|BlackBerry|webOS|IEMobile|Opera Mini`
-  - `isTablet(): bool` — matches `iPad|Tablet|Kindle|PlayBook|Silk|(?:Android(?!.*Mobile))`
-  - `isIos(): bool` — matches `iPhone|iPad|iPod`
-
-For Piwigo's three call sites, the third option is the cleanest: no dep,
-~30 lines, easy to read, no upstream maintenance burden, easy to extend
-or correct in-tree if a corner case turns up. Optionally augmented by
-`Sec-CH-UA-Mobile` for the `isSmartphone()` path (use it when present;
-fall back to the regex for Safari/iOS).
+  as a *prefer-when-present* signal layered on top of UA-string parsing,
+  not a replacement.
+- **`mobiledetect/mobiledetectlib` v4** — the actively maintained modern
+  equivalent of MobileEsp (same lineage, completely rewritten for v4 in
+  2023). Methods are nearly drop-in for our use case
+  (`isMobile()`, `isTablet()`, `is('iOS')`). ~150 KB of source, namespaced
+  (`Detection\MobileDetect`), test-covered, gets pattern updates as new
+  devices ship. **Recommended.**
+- **`matomo/device-detector`** — ML-trained against ~60k device models.
+  Excellent quality, heavier (~10× the footprint of mobiledetect), built
+  for analytics dashboards that need to render "iPhone 15 Pro Max" in a
+  chart. Overkill for three boolean classifications.
+- **Roll our own three-regex helper** — feasible (~30 LOC) but freezes the
+  regex set in time. Every new iOS major / Android skin / device form
+  factor becomes our maintenance debt. The maintenance argument is the
+  one that actually decides this — a library catches new UA quirks
+  upstream; we'd only notice ours when something visibly breaks.
 
 ### Recommended path
 
-1. **Add `Piwigo\Core\UserAgentDetector`** — a small static class with
-   `isSmartphone()`, `isTablet()`, `isIos()` methods reading
-   `$_SERVER['HTTP_USER_AGENT']` (and optionally `Sec-CH-UA-Mobile` /
-   `Sec-CH-UA-Platform` as preferred signals when present).
-2. **Swap the 3 call sites**:
-   - `Core/Util.php:446-453` — `new \uagent_info()` → `UserAgentDetector`
-     static calls.
-   - `Controller/Admin/PhotoController.php:614-615` — `$uagent_obj->DetectIos()`
-     → `UserAgentDetector::isIos()`.
+1. **Add `mobiledetect/mobiledetectlib: ^4.8` to `composer.json`**
+   `require` block. The package is namespaced and shares no symbols with
+   MobileEsp.
+2. **Swap the 3 call sites** to instantiate `Detection\MobileDetect` (or
+   inject a singleton via the DI container — match the pattern used by
+   neighbouring services in each file):
+   - `Core/Util.php:441-457` (`getDevice()` body) — replace the
+     `\uagent_info` instantiation with `MobileDetect`. The current
+     classification is `mobile`/`tablet`/`desktop`; map as
+     `isTablet() ? 'tablet' : (isMobile() ? 'mobile' : 'desktop')`
+     (`isMobile()` returns true for tablets too in mobiledetect, so the
+     order matters).
+   - `Controller/Admin/PhotoController.php:614-615` — replace
+     `$uagent_obj->DetectIos()` with `$detect->is('iOS')`.
    - `Controller/Admin/MiscController.php:574-575` — same swap.
-3. **Drop the Composer dep**: remove `ahand/mobileesp` from
-   `composer.json`, `composer update ahand/mobileesp` to refresh the lock
-   and drop `vendor/ahand/`.
-4. **Optional**: add a unit test for `UserAgentDetector` covering a small
-   matrix of representative UA strings (iOS Safari, Android Chrome,
-   iPadOS Safari, Android tablet, desktop Chrome, desktop Safari).
+3. **Optionally layer `Sec-CH-UA-Mobile`** into `getDevice()`: when the
+   header is present and the user-agent is mobile per the header, trust
+   it; otherwise fall back to `MobileDetect`. This shaves a regex pass on
+   Chromium-family browsers but is not required for correctness.
+4. **Drop `ahand/mobileesp` from `composer.json`**; `composer update`
+   refreshes the lock and removes `vendor/ahand/`.
+5. **Optional**: add a unit test covering a small matrix of UA strings
+   (iOS Safari, Android Chrome, iPadOS Safari masquerading as macOS,
+   Android tablet, desktop Chrome, desktop Safari) — locks down the
+   classification mapping in `getDevice()` so future MobileDetect version
+   bumps don't silently change behaviour.
 
 ### Out of scope for Phase 2e
 

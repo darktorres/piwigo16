@@ -790,7 +790,7 @@ PHP built-in waiting in the wings.
 
 | Channel | Closure |
 |---|---|
-| `$GLOBALS['prefixeTable']` | Both readers (`UpgradeService::prepareConfUpgrade()`, `MaintenanceService::repairAndOptimize()`) call `Config::dbPrefix()` directly. All 5 writes deleted (`CommonBootstrap:83`, `UpgradeController:49`, `InstallController:56`, `index.php:38`, `index.php:66`). `phpstan-bootstrap.php` `$prefixeTable` stub dropped; `ContainerSmokeTest` test plumbing line removed. |
+| `$GLOBALS['prefixeTable']` | Both readers (`UpgradeService::prepareConfUpgrade()` [later deleted in Phase 2b], `MaintenanceService::repairAndOptimize()`) call `Config::dbPrefix()` directly. All 5 writes deleted (`CommonBootstrap:83`, `UpgradeController:49`, `InstallController:56`, `index.php:38`, `index.php:66`). `phpstan-bootstrap.php` `$prefixeTable` stub dropped; `ContainerSmokeTest` test plumbing line removed. |
 | `$GLOBALS['t2']` | The `CommonBootstrap:57` write deleted. `Util::pwgDebug()` and `PageTailRenderer` read `$_SERVER['REQUEST_TIME_FLOAT']` (populated natively by PHP at request start — strictly more accurate than `microtime(true)` at bootstrap). |
 | `$GLOBALS['debug']` | The HTML-string accumulator is now `PageState::current()->debugLines` — a `list<string>` of pre-formatted `<p>` lines populated by `Util::pwgDebug()` and surfaced by `PageTailRenderer` when `Config::showQueries()` is on. No `DebugAccumulatorHandler` introduced; the panel content was always semantically distinct from PSR-3 logging (timing breadcrumbs, not application logs) and folding it into PageState keeps it request-scoped and typed without adding a new Monolog handler. |
 

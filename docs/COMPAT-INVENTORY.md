@@ -748,19 +748,71 @@ this batch.
 
 **Enables:** Util.php split (§A5.1) loses two methods, becoming smaller.
 
-## Phase 3 — Self-Contained `$GLOBALS` → Instance State
+### Phase 2f — `CURRENT_DATE` inconsistency (§A3.4)
 
-Four channels where writer and reader are the same class. Each is a 5-10
-line change.
+1. Pick a single canonical format. Recommend `date('Y-m-d H:i:s')` (the
+   UpgradeController / InstallController choice) because date-only loses
+   information.
+2. Rewrite `Admin/Metadata/MetadataAdminService.php:214` to use
+   `(new \DateTimeImmutable())->format('Y-m-d H:i:s')` (or thread a
+   parameter through). Same for the other two writers.
+3. Either delete the `define('CURRENT_DATE', …)` calls in all three sites
+   (preferred — pass a `DateTimeImmutable` through call chains) or keep one
+   canonical define if the three call paths really do need a request-scoped
+   shared timestamp.
+4. Disambiguate from the SQL string literal `'CURRENT_DATE'` in
+   `Db/SqlExpr.php:70, 72, 74` — that's the SQL keyword, not the PHP
+   constant; an inline `// SQL keyword, not the PHP constant` comment is
+   enough.
 
-| Task | Prereq | Sub-steps |
-|---|---|---|
-| `$GLOBALS['errors']` → `LocalSiteReader::$errors` (§A2) | None | Migrate `LocalSiteReader.php:35-38`, drop `errors` from `NoGlobalInSrcRule` GUARDED |
-| `$GLOBALS['themeconfs']` → `Template::$themeconfs` (§A2) | None | Migrate `Template::loadThemeconf()` (line 485), drop `themeconfs` from GUARDED |
-| `$GLOBALS['cache']` → `UserService::$defaultUserCache` (§A2) | None | Migrate `UserService::getDefaultUserInfo()` (line 407), drop `cache` from GUARDED |
-| `$GLOBALS['maint_actions']` → `MaintenanceController::$maintActions` (§A2) | None | Already exists as instance prop; remove the GLOBALS mirror (line 158) |
+Latent bug, not a shim. Worth doing because the inconsistent formats
+silently no-op via the `defined() or define()` guard.
 
-All four are mutually independent.
+### Phase 2g — UniversalFeedCreator removal (§A4.2)
+
+1. Rewrite `Feed/PiwigoFeedCreator.php` to emit RSS/Atom directly with
+   `SimpleXMLElement` (PHP built-in), or replace with `laminas/laminas-feed`.
+2. Update `Controller/FeedController.php:78` if the constructor signature
+   changes.
+3. Remove `openpsa/universalfeedcreator` from `composer.json`.
+
+Mechanical translation, no other dependencies.
+
+### Phase 2h — Other one-off `define()` polish (§A3.6) — *optional*
+
+`PHPWG_DOMAIN`, `PHPWG_URL`, `PEM_URL` (`CommonBootstrap.php:174-186`) are
+locale-derived strings; could become `Config` reads. `PWG_LOCAL_DIR`
+(`CommonBootstrap.php:78`) is a constant path. `MKGETDIR_*`
+(`Core/Util.php:41-45`) flag constants could be promoted to a typed enum
+that the new `Filesystem` service (Phase 5 Util split) consumes.
+
+Conventional runtime config, not shims. Defer unless touching the
+surrounding code anyway.
+
+## Phase 3 — Direct `$GLOBALS` Migrations (No New VO)
+
+Channels where the fix is a straight read-through to a typed accessor or an
+instance property — no new value object needed. All independent of each
+other.
+
+### Phase 3a — Self-contained (writer == reader class)
+
+| Task | Sub-steps |
+|---|---|
+| `$GLOBALS['errors']` → `LocalSiteReader::$errors` (§A2) | Migrate `LocalSiteReader.php:35-38`; drop `errors` from `NoGlobalInSrcRule` GUARDED |
+| `$GLOBALS['themeconfs']` → `Template::$themeconfs` (§A2) | Migrate `Template::loadThemeconf()` (line 485); drop `themeconfs` from GUARDED |
+| `$GLOBALS['cache']` → `UserService::$defaultUserCache` (§A2) | Migrate `UserService::getDefaultUserInfo()` (line 407); drop `cache` from GUARDED |
+| `$GLOBALS['maint_actions']` → `MaintenanceController::$maintActions` (§A2) | Already an instance prop; remove the GLOBALS mirror (line 158) |
+
+### Phase 3b — Cross-class, but existing typed accessor available
+
+| Task | Sub-steps |
+|---|---|
+| `$GLOBALS['prefixeTable']` → `Config::dbPrefix()` (§A2) | Migrate the 2 readers (`UpgradeService:31`, `MaintenanceService:16`); delete the 5 writes (`CommonBootstrap:83`, `UpgradeController`, `InstallController`, `index.php:38`, `index.php:66`); drop `prefixeTable` from `phpstan-bootstrap.php` |
+| `$GLOBALS['debug']` + `$GLOBALS['t2']` → `PageState` typed properties (§A2) | Add `PageState::$debugLog` and `$requestStartTime`; migrate writers (`Util::pwgLog`, `CommonBootstrap:57, 113-118`) and readers (`PageTailRenderer:55, 61`, `Util:107, 502`); the debug accumulator could alternatively be folded into the new `PwgLogger` from Phase 5 Util split if logging is reworked |
+
+Phase 3b sits between Phase 3a (trivial) and Phase 4 (new VO required) —
+each task is a 10-30-line change across 2-5 files.
 
 ## Phase 4 — Cross-Class Typed Contexts
 
@@ -805,6 +857,19 @@ injections.
 5. Remove `IN_ADMIN`/`IN_WS` stubs from `tools/phpstan-bootstrap.php`.
 6. `PHPWG_IN_UPGRADE` is self-contained in `UpgradeService` — collapse to a
    private static property.
+
+### Phase 4d — `$GLOBALS['lang_info']` → `Lang` static state (§A2)
+
+1. Add `Lang::$langInfo` typed static property + accessor methods
+   (`Lang::langInfo(): array<string,string>`,
+   `Lang::setLangInfo(array)`, `Lang::mergeLangInfo(array)`).
+2. Migrate writers: `LanguageStack:115, 122, 195` (set, merge, restore from
+   stack top) to call the new `Lang` methods.
+3. Migrate readers: `Template:83`, `AdminService:406`.
+4. Drop `lang_info` from `NoGlobalInSrcRule` GUARDED (if listed).
+
+Cross-subsystem read (template + admin both depend on the language-stack
+writer), so it's a true Phase-4 task. Independent of 4a/4b/4c.
 
 ## Phase 5 — Large Refactors (Ordered)
 
@@ -894,17 +959,22 @@ time this phase runs.
                         │ all standalone      │    │
                         └─────────────────────┘    │
                                                    │
-   Phase 2a (WS_*)     ──→  stubs (D3.1B, D2.2)   │
-   Phase 2b (*_TABLE)  ──→  stubs (D3.1B, D2.2)  ─┼──→  Phase 5
-   Phase 2c (PclZip)   ──→  composer.json, stubs  │    §A5.2 (caddie)
-   Phase 2d (xmlrpc)   ──→  stubs (D2.2)          │    after 2b
-   Phase 2e (MobileEsp)──→  composer.json        ─┼──→  §A5.1 split
-                                                   │    after 2e + 4a
-   Phase 3 (self-contained ×4)  ──→ GUARDED list ─┤
+   Phase 2a (WS_*)        ──→  stubs (D3.1B, D2.2)│
+   Phase 2b (*_TABLE)     ──→  stubs (D3.1B, D2.2)┼──→ §A5.2 (caddie)
+   Phase 2c (PclZip)      ──→  composer.json,stubs│    after 2b
+   Phase 2d (xmlrpc)      ──→  stubs (D2.2)       │
+   Phase 2e (MobileEsp)   ──→  composer.json     ─┼──→ §A5.1 split
+   Phase 2f (CURRENT_DATE)──→  (standalone)       │    after 2e + 4a
+   Phase 2g (FeedCreator) ──→  composer.json      │
+   Phase 2h (other defines, optional)             │
                                                    │
-   Phase 4a ($filter)   ──→ phpstan stubs, GUARDED┤
-   Phase 4b (header_*)  ──→ GUARDED              ─┼──→  §A1 PageContext
-   Phase 4c (RequestCtx)──→ phpstan stubs, GUARDED│    after 2 + 4
+   Phase 3a (self-contained ×4)                  ─┤
+   Phase 3b (prefixeTable, debug+t2)             ─┤
+                                                   │
+   Phase 4a ($filter)     ──→ phpstan stubs, GUARDED
+   Phase 4b (header_*)    ──→ GUARDED            ─┼──→ §A1 PageContext
+   Phase 4c (RequestCtx)  ──→ phpstan stubs       │    after 2 + 4
+   Phase 4d (lang_info)   ──→ Lang static state   │
                                                    │
                                               ┌────┴────┐
                                               │ Phase 6 │
@@ -921,6 +991,55 @@ Notes:
   sub-call sites in CalendarService).
 - Phase 6 only hard-depends on §A5.2 having retired the caddie — every
   other §P task is independent of Phases 1-5.
+
+## Coverage Matrix
+
+Every open-action item in Parts A and D maps to exactly one phase (or one
+phase plus a v17 follow-up). Closed items in Part Z and sustained items in
+Part P are listed for completeness.
+
+| Item | Section | Phase | Status |
+|---|---|---|---|
+| `$page` reference bridge alias | A1 | 5 | Open |
+| `$filter` channel | A2 | 4a | Open |
+| `lang_info` channel | A2 | 4d | Open |
+| `header_msgs` + `header_notes` | A2 | 4b | Open |
+| `debug` + `t2` | A2 | 3b | Open |
+| `prefixeTable` | A2 | 3b | Open |
+| `errors` | A2 | 3a | Open |
+| `themeconfs` | A2 | 3a | Open |
+| `cache` | A2 | 3a | Open |
+| `maint_actions` | A2 | 3a | Open |
+| `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` | A3.1 | 4c | Open |
+| `WS_*` constants | A3.2 | 2a | Open |
+| `*_TABLE` constants | A3.3 | 2b | Open |
+| `CURRENT_DATE` inconsistency | A3.4 | 2f | Open |
+| `xmlrpc_encode` | A3.5 | 2d | Open |
+| `PHPWG_DOMAIN` / `MKGETDIR_*` etc. | A3.6 | 2h (optional) | Open |
+| PclZip | A4.1 | 2c | Open |
+| UniversalFeedCreator | A4.2 | 2g | Open |
+| MobileEsp | A4.3 | 2e | Open |
+| `Util.php` split | A5.1 | 5 | Open |
+| Caddie | A5.2 | 5 | Open |
+| Plugin/theme procedural contract | P1 | 6 | Sustained until v17 |
+| Plugin event API (153 names) | P2 | 6 | Sustained until v17 |
+| Smarty syntax compat in Latte | P3 | 6 | Sustained until v17 |
+| Frontend plugin BC queues | P4 | 6 | Sustained until v17 |
+| Stale comments (D1.1, D1.2) | D1 | 1 | Open |
+| `include/` template subdir caveat | D1.3 | — | Awareness only, no task |
+| `psalm.xml` comments | D2.1 | 1 | Open |
+| `psalm-stubs.phpstub` cleanup | D2.2 | 2a/2b/2c/2d (per stub group) | Open |
+| `phpstan-bootstrap.php` closed-bridge stubs | D3.1A (7 of 11) | 1 | Open |
+| `phpstan-bootstrap.php` `$page`/`$filter`/`$prefixeTable` stubs | D3.1A (3 of 11) | 5 / 4a / 3b | Open |
+| `phpstan-bootstrap.php` WS const stubs | D3.1B | 2a | Open |
+| `phpstan-bootstrap.php` plugin/theme callback stubs | D3.1C | 6 | Sustained until v17 |
+| Dead `PwgGetSessionVarDynamicReturnType` | D3.2 | 1 | Open |
+| Misnamed `TriggerChangeDynamicReturnType` | D3.3 | 1 | Open |
+| `NoGlobalInSrcRule` `persistent_cache` entry | D3.4 | 1 | Open |
+| `NoGlobalInSrcRule` other GUARDED entries | D3.4 | 3a / 3b / 4a / 4b / 4d | Open (per channel) |
+| `triggers_list.php` `'type'` strings + `include/` paths | D3.5 | 1 | Open |
+| `triggers_list.php` event-name rewrite | D3.5 (cross-ref P2) | 6 | Sustained until v17 |
+| `globals.d.ts` ambient TS globals | D4 | 6 | Sustained until v17 |
 
 ## Caveats
 

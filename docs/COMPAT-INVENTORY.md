@@ -94,7 +94,7 @@ Closed 2026-05-15. Five sub-tasks landed in one sweep:
   ([Phase 6.2](#62-plugin-event-api-p2) territory).
 
 Verified: `vendor/bin/phpstan analyse` → 0 errors at level 10;
-`vendor/bin/phpunit --testsuite Unit` → 467 tests, 2172 assertions, OK.
+`vendor/bin/phpunit` (Unit + Integration) → 486 tests, 2390 assertions, OK.
 
 Detail → [Appendix A §Z14](#z14-phase-1-doc-drift-sweep).
 
@@ -992,7 +992,7 @@ and the plugin-author event-reference doc. No runtime behaviour changes.
 ### Verification
 
 - `vendor/bin/phpstan analyse --no-progress` → 0 errors at level 10.
-- `vendor/bin/phpunit --testsuite Unit` → 467 tests, 2172 assertions, OK.
+- `vendor/bin/phpunit` (Unit + Integration) → 486 tests, 2390 assertions, OK.
 - `composer dump-autoload --classmap-authoritative` run after the
   PHPStan-extension rename.
 

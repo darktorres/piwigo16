@@ -10,6 +10,7 @@ Last deep-verified: 2026-05-14. Last updated: 2026-05-14.
 - §9 stale comments: several files reference long-removed `$GLOBALS` bridges in docstrings only — see §9.
 - §10 tooling drift outside `src/`: the `NoGlobalInSrcRule` PHPStan rule has stale replacement advice (points at deleted `PersistentCacheRegistry`); `index.php` writes `$GLOBALS['prefixeTable']` directly in two fast-path branches; `psalm.xml` suppresses a check with a "legacy-compatibility bridges" comment. Tests legitimately seed `$GLOBALS` for fixtures. See §10.
 - §11 legacy `define()` constants — a parallel shim mechanism the inventory had not covered at all: 105 `define()` calls in `src/` form three legacy patterns — runtime context flags (`IN_ADMIN`, `IN_WS`, `PHPWG_IN_UPGRADE`), web-service constant bridges (13 `WS_*` constants mirroring `WsParam`/`WsType` enums), SQL table-name constants (30+ defined in `UpgradeService` for legacy upgrade queries), plus a brittle `CURRENT_DATE` constant with inconsistent definitions across three controllers, and a `xmlrpc_encode()` call in `PwgXmlRpcEncoder` that depends on a PHP extension removed in 8.1. See §11.
+- §12 vendor & template-engine shims — `pclzip/pclzip` (PHP 4-era zip library) still used in 4 admin files instead of native `ZipArchive`; `openpsa/universalfeedcreator` extended by `PiwigoFeedCreator`; `ahand/mobileesp` (`uagent_info` class) used in 3 places for mobile UA detection. The `Template/Latte/PiwigoExtension.php` is a 700+-line Smarty-compatibility layer that ports `default`, `strip_tags`, `date_format`, `cat:`, `html_options`, `html_radios`, `math` and other Smarty modifiers/blocks to Latte — needed because the .latte templates use Smarty-style surface syntax. `PwgImage::__call()` magic dispatch over `ImageImagick`/`ImageExtImagick`. See §12.
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -494,3 +495,71 @@ This means `pwg.xmlrpc` requests will fatally error on any modern PHP build with
 - `Core/Util.php:41-45` — `MKGETDIR_*` flag constants for the `mkgetdir` helper.
 
 These are conventional runtime config / flag definitions and not shims, but they do contribute to the 105-define count and follow the same legacy `defined() or define()` pattern. A future cleanup pass could promote `MKGETDIR_*` to a typed enum and replace `PHPWG_DOMAIN`/`PHPWG_URL` with `Config` reads.
+
+---
+
+## 12. Vendor Library & Template-Engine Shims
+
+A fourth (and finally exhaustive) sweep on 2026-05-14 caught two more shim categories that earlier passes missed: vendored legacy PHP libraries the codebase still depends on, and a Smarty-syntax compatibility layer inside the Latte engine.
+
+### 12.1 PclZip — Legacy Zip Library
+
+`pclzip/pclzip` (PHP 4-era zip library, originally from PHPConcept) is in `composer.json` `require` and used in four production files:
+
+| File:Line | Call | Purpose |
+|---|---|---|
+| `Admin/Updates.php:600` | `new \PclZip($filename)` | Extract Piwigo core update archives |
+| `Admin/Plugins.php:549` | `new \PclZip($archive)` | Extract plugin archives from PEM |
+| `Admin/Languages.php:273` | `new \PclZip($archive)` | Extract language archives |
+| `Admin/Themes.php:511` | `new \PclZip($archive)` | Extract theme archives |
+
+PHP 8.x has built-in `ZipArchive` (ext-zip). No code uses `ZipArchive`. The `tools/psalm-stubs.phpstub` even declares all 20 `PCLZIP_OPT_*` constants because the library's own constants are defined lazily at first instantiation.
+
+**Migration:** Replace four call sites with `ZipArchive`, then drop the Composer dependency. Mechanical translation; the PclZip API is wider than needed (we only use `extract()` essentially).
+
+### 12.2 UniversalFeedCreator — Legacy Feed Library
+
+`openpsa/universalfeedcreator` is in `composer.json` `require`. `Feed/PiwigoFeedCreator.php` extends `\UniversalFeedCreator` (untyped legacy class). Used by `Controller/FeedController.php:78` to emit RSS/Atom feeds.
+
+Modern alternatives: PHP's built-in `SimpleXMLElement`, or `laminas/laminas-feed`. The current dependency is maintained by a third party but the upstream library is essentially a port of a 2004-era PHP class. The class hierarchy is untyped (mixed defaults, no docblocks).
+
+**Migration:** Either swap the library or rewrite `PiwigoFeedCreator` to emit RSS/Atom XML directly with `SimpleXMLElement`. Not urgent; the feed format itself is stable.
+
+### 12.3 MobileEsp — Mobile User-Agent Detection
+
+`ahand/mobileesp` (`\uagent_info` class) is in `composer.json` `require` and used in three places:
+
+- `Core/Util.php:452` — `new \uagent_info()` for `mobile_detect()` helper
+- `Controller/Admin/PhotoController.php:614` — admin upload UI mobile path
+- `Controller/Admin/MiscController.php:574` — admin home page mobile shortcut
+
+MobileEsp is a ~2010 regex-based UA detection library; it predates modern UA Client Hints and has no PHP type hints. Native PHP 8.x alternatives: `WhichBrowser/Parser`, `matomo/device-detector`, or just `Sec-CH-UA-Mobile` request header.
+
+**Migration:** Mobile-only admin UI shortcuts are largely obsolete (modern admin pages are responsive). Could simply delete the three call sites and the dependency.
+
+### 12.4 `Template/Latte/PiwigoExtension.php` — Smarty Compatibility Layer
+
+The Latte extension contains 28 "Smarty" mentions across ~700 lines. It's a deliberate compatibility layer that ports Smarty filter/block/function semantics to Latte so the converted `.latte` templates can still write `{$x|default:'fallback'}`, `{$str|strip_tags}`, `{$d|date_format:"%Y"}`, `{html_options ...}`, `{math eq=...}`, etc.
+
+This was an intentional design choice in the Smarty → Latte migration: rather than rewriting all 133 templates to native Latte syntax, the converter kept the Smarty surface and PiwigoExtension implements the missing pieces. Filters/tags ported include:
+
+- `default`, `strip_tags`, `date_format`, `cat:`, `number_format`
+- `html_options`, `html_radios`, `math` blocks
+- `{combineScript}`-style admin asset accumulation
+- Smarty's `$pwg->derivative(...)` accessor
+
+**Not strictly removable.** Migrating away means rewriting all 133 .latte templates to native syntax. This is a real shim layer but tracked as a "stable transitional API" — not a removal target.
+
+### 12.5 `PwgImage::__call()` — Magic Strategy Dispatch
+
+`Admin/Image/PwgImage.php:63` exposes a `__call($method, $arguments)` magic method that forwards to whichever backend (`ImageImagick` or `ImageExtImagick`) was selected at construction. This isn't a backwards-compatibility shim — it's a strategy pattern — but the use of `__call` makes the public API opaque to static analysis.
+
+**Not blocking.** Could be replaced with an explicit interface + matching method declarations on `PwgImage` that delegate, but the gain is mostly tooling-visibility.
+
+### 12.6 `xmlrpc_encode()` — Cross-reference
+
+Already covered in §11.5. The PHP `xmlrpc` extension is itself a deprecated vendor shim that the codebase depends on. Worth re-flagging here for completeness: `composer.json` does not declare `ext-xmlrpc` (because it can no longer be statically declared on PHP 8.1+), but `Ws/Protocol/PwgXmlRpcEncoder.php:40` calls `xmlrpc_encode()` directly. Any deployment without the PECL `xmlrpc` package installed will fatal-error on `pwg.xmlrpc` requests.
+
+---
+
+**End of inventory.** This document is the source of truth for what's left of the 16.x rewrite's compatibility surface, audited 2026-05-14 across the entire repository (not just `src/`).

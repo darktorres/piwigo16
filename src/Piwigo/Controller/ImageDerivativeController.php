@@ -10,7 +10,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\Util;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Http\ResponseFactory;
@@ -158,7 +157,7 @@ SELECT *
         }
 
         $derivativeDir = dirname($ctx->derivativePath);
-        if (!is_dir($derivativeDir) && !Util::mkgetdir($derivativeDir, MKGETDIR_RECURSIVE)) {
+        if (!is_dir($derivativeDir) && !Filesystem::mkgetdir($derivativeDir, Filesystem::FLAG_RECURSIVE)) {
             DerivativePipeline::ierror('dir create error', 500);
         }
 

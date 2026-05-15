@@ -12,7 +12,8 @@ use Piwigo\Core\ExecutionMutex;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
+use Piwigo\Http\DeviceDetectionService;
+use Piwigo\Mail\MailService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Telemetry\TelemetryService;
 use Piwigo\Template\TemplateRegistry;
@@ -33,7 +34,7 @@ final class PageTailRenderer
         ]);
 
         if (!Kernel::service(PermissionService::class)->isAGuest()) {
-            $template->assign('CONTACT_MAIL', Kernel::service(Util::class)->getWebmasterMailAddress());
+            $template->assign('CONTACT_MAIL', Kernel::service(MailService::class)->getWebmasterMailAddress());
         }
 
         if (Config::updateNotifyCheckPeriod() > 0) {
@@ -71,12 +72,13 @@ final class PageTailRenderer
 
         $template->assign('debug', $debug_vars);
 
-        if (!empty(Config::mobilTheme()) && (Kernel::service(Util::class)->getDevice() !== 'desktop' || Kernel::service(Util::class)->mobileTheme())) {
+        $deviceService = Kernel::service(DeviceDetectionService::class);
+        if (!empty(Config::mobilTheme()) && ($deviceService->getDevice() !== 'desktop' || $deviceService->isMobileTheme())) {
             /** @var mixed $requestUriRaw */
             $requestUriRaw = $_SERVER['REQUEST_URI'] ?? '';
             $template->assign('TOGGLE_MOBILE_THEME_URL', Kernel::service(UrlService::class)->addUrlParams(
                 htmlspecialchars(is_string($requestUriRaw) ? $requestUriRaw : ''),
-                ['mobile' => Kernel::service(Util::class)->mobileTheme() ? 'false' : 'true']
+                ['mobile' => $deviceService->isMobileTheme() ? 'false' : 'true']
             ));
         }
 

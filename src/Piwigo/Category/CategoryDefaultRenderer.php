@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\DebugCollector;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeSize;
@@ -32,7 +31,6 @@ final readonly class CategoryDefaultRenderer
         private SessionService $sessionService,
         private StringUtil $stringUtil,
         private UrlService $urlService,
-        private Util $util,
         private DebugCollector $debugCollector,
     ) {
     }
@@ -121,7 +119,7 @@ SELECT image_id, COUNT(*) AS nb_comments
 
             if (Config::indexNewIcon()) {
                 $rowDateAvailable = $row['date_available'] ?? null;
-                $tpl_var['icon_ts'] = $this->util->getIcon(is_string($rowDateAvailable) ? $rowDateAvailable : null);
+                $tpl_var['icon_ts'] = $this->htmlService->getIcon(is_string($rowDateAvailable) ? $rowDateAvailable : null);
             }
 
             if ($user['show_nb_hits']) {

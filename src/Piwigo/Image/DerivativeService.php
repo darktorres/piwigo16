@@ -7,13 +7,11 @@ namespace Piwigo\Image;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
-use Piwigo\Core\Util;
 
 final readonly class DerivativeService
 {
-    public function __construct(
-        private Util $util,
-    ) {
+    public function __construct()
+    {
     }
     /**
      * Generate (or skip if already current) one derivative file for a given image row and size type.
@@ -58,7 +56,7 @@ final readonly class DerivativeService
 
         $derivDir = dirname($derivPath);
         if (!is_dir($derivDir)) {
-            $this->util->mkgetdir($derivDir, MKGETDIR_RECURSIVE | MKGETDIR_PROTECT_INDEX);
+            Filesystem::mkgetdir($derivDir, Filesystem::FLAG_RECURSIVE | Filesystem::FLAG_PROTECT_INDEX);
         }
 
         $rotationCode  = is_numeric($imageRow['rotation'] ?? null) ? (int) $imageRow['rotation'] : 0;

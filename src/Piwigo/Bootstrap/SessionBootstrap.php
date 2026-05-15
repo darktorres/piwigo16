@@ -6,8 +6,8 @@ namespace Piwigo\Bootstrap;
 
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
+use Piwigo\Core\Filesystem;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\Util;
 use Piwigo\Session\SessionService;
 
 /**
@@ -27,7 +27,7 @@ final class SessionBootstrap
             session_set_save_handler(Kernel::service(SessionService::class));
         } else {
             $session_dir = PHPWG_ROOT_PATH . Config::dataLocation() . 'sessions';
-            if (!is_dir($session_dir) && !Util::mkgetdir($session_dir, MKGETDIR_RECURSIVE) && !is_dir($session_dir)) {
+            if (!is_dir($session_dir) && !Filesystem::mkgetdir($session_dir, Filesystem::FLAG_RECURSIVE) && !is_dir($session_dir)) {
                 // Could not create the dir and it still doesn't exist — fall through and let
                 // PHP raise the actual error from session_start() with the failed save_path.
             }

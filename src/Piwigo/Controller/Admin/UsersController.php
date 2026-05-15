@@ -22,8 +22,10 @@ use Piwigo\Db\Tables;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Language\LanguageService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -56,6 +58,8 @@ final readonly class UsersController
         private UserService $userService,
         private UserTabRenderer $userTabRenderer,
         private Util $util,
+        private LanguageService $languageService,
+        private ThemeService $themeService,
     ) {
     }
 
@@ -128,9 +132,9 @@ final readonly class UsersController
             'PWG_TOKEN'                 => $this->util->getPwgToken(),
             'NB_IMAGE_PAGE'             => $default_user['nb_image_page'] ?? null,
             'RECENT_PERIOD'             => $default_user['recent_period'] ?? null,
-            'theme_options'             => $this->util->getPwgThemes(),
+            'theme_options'             => $this->themeService->getActiveThemes(),
             'theme_selected'            => $this->userService->getDefaultTheme(),
-            'language_options'          => $this->util->getLanguages(),
+            'language_options'          => $this->languageService->getActiveLanguages(),
             'language_selected'         => $this->userService->getDefaultLanguage(),
             'association_options'       => $groups,
             'protected_users'           => implode(',', array_unique($protected_users)),

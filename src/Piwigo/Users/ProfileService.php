@@ -16,9 +16,11 @@ use Piwigo\Db\Tables;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Lang\LangService;
+use Piwigo\Language\LanguageService;
 use Piwigo\Mail\MailService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlService;
 
 final readonly class ProfileService
@@ -32,6 +34,8 @@ final readonly class ProfileService
         private UserRepository $userRepository,
         private UserService $userService,
         private Util $util,
+        private LanguageService $languageService,
+        private ThemeService $themeService,
     ) {
     }
 
@@ -73,10 +77,10 @@ final readonly class ProfileService
             ) {
                 $errors[] = Lang::t('Recent period must be a positive integer value');
             }
-            if (!in_array($_POST['language'] ?? null, array_keys($this->util->getLanguages()))) {
+            if (!in_array($_POST['language'] ?? null, array_keys($this->languageService->getActiveLanguages()))) {
                 die('Hacking attempt, incorrect language value');
             }
-            if (!in_array($_POST['theme'] ?? null, array_keys($this->util->getPwgThemes()))) {
+            if (!in_array($_POST['theme'] ?? null, array_keys($this->themeService->getActiveThemes()))) {
                 die('Hacking attempt, incorrect theme value');
             }
         }
@@ -204,10 +208,10 @@ final readonly class ProfileService
         ]);
 
         $tpl->assign('template_selection', $userdata['theme']);
-        $tpl->assign('template_options', $this->util->getPwgThemes());
+        $tpl->assign('template_options', $this->themeService->getActiveThemes());
 
         $language_options = [];
-        foreach ($this->util->getLanguages() as $language_code => $language_name) {
+        foreach ($this->languageService->getActiveLanguages() as $language_code => $language_name) {
             if (isset($_POST['submit']) or $userdata['language'] == $language_code) {
                 $tpl->assign('language_selection', $language_code);
             }

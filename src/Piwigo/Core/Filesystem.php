@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Config\Config;
+use Piwigo\Html\HtmlService;
+
 /**
  * Small helpers that replace `@`-prefixed file calls with explicit
  * preflight checks or scoped error-handler suppression.
@@ -15,6 +18,54 @@ namespace Piwigo\Core;
  */
 final class Filesystem
 {
+    public const FLAG_NONE          = 0;
+    public const FLAG_RECURSIVE     = 1;
+    public const FLAG_DIE_ON_ERROR  = 2;
+    public const FLAG_PROTECT_INDEX = 4;
+    public const FLAG_DEFAULT       = self::FLAG_RECURSIVE | self::FLAG_DIE_ON_ERROR | self::FLAG_PROTECT_INDEX;
+
+    /**
+     * Ensure `$dir` exists and is writable, creating it if necessary, with
+     * an `index.htm` sentinel to block directory listing. Static — safe to
+     * call before Kernel::boot() (used by SessionBootstrap and
+     * InstallSentinel during pre-DI bootstrapping).
+     */
+    public static function mkgetdir(string $dir, int $flags = self::FLAG_DEFAULT): bool
+    {
+        if (!is_dir($dir)) {
+            if (str_starts_with(PHP_OS, 'WIN')) {
+                $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
+            }
+            $umask = umask(0);
+            set_error_handler(static fn (): bool => true);
+            try {
+                $mkd = mkdir($dir, Config::chmodValue(), ($flags & self::FLAG_RECURSIVE) ? true : false);
+            } finally {
+                restore_error_handler();
+            }
+            umask($umask);
+            if ($mkd == false) {
+                if (!($flags & self::FLAG_DIE_ON_ERROR)) {
+                    return false;
+                }
+                HtmlService::fatalError("$dir " . Lang::t('no write access'));
+            }
+            if ($flags & self::FLAG_PROTECT_INDEX) {
+                $file = $dir . '/index.htm';
+                if (!file_exists($file) && is_writable($dir)) {
+                    file_put_contents($file, 'Not allowed!');
+                }
+            }
+        }
+        if (!is_writable($dir)) {
+            if (!($flags & self::FLAG_DIE_ON_ERROR)) {
+                return false;
+            }
+            HtmlService::fatalError("$dir " . Lang::t('no write access'));
+        }
+        return true;
+    }
+
     /**
      * `unlink($p)` if `$p` is a regular file. Returns whether it ended up
      * removed.

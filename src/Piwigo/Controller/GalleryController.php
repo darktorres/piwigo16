@@ -23,6 +23,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Page\PaginationService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Section\SectionContextRegistry;
@@ -65,6 +66,7 @@ final readonly class GalleryController implements ControllerInterface
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private Util $util,
+        private PaginationService $paginationService,
     ) {
     }
 
@@ -121,7 +123,7 @@ final readonly class GalleryController implements ControllerInterface
         // Navigation bar
         $navigationBar = [];
         if (count($items) > $nbImagePage) {
-            $navigationBar = $this->util->createNavigationBar(
+            $navigationBar = $this->paginationService->createNavigationBar(
                 $this->urlService->duplicateIndexUrl([], ['start']),
                 count($items),
                 $start,

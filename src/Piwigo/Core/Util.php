@@ -4,94 +4,42 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-use Detection\MobileDetect;
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Admin\History\HistoryAdminService;
-use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
-use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Lang\LangService;
-use Piwigo\Language\LanguageRepository;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
-use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
-use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
-
-defined('MKGETDIR_NONE') or define('MKGETDIR_NONE', 0);
-defined('MKGETDIR_RECURSIVE') or define('MKGETDIR_RECURSIVE', 1);
-defined('MKGETDIR_DIE_ON_ERROR') or define('MKGETDIR_DIE_ON_ERROR', 2);
-defined('MKGETDIR_PROTECT_INDEX') or define('MKGETDIR_PROTECT_INDEX', 4);
-defined('MKGETDIR_DEFAULT') or define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_INDEX);
 
 final readonly class Util
 {
     public function __construct(
         private Connection $conn,
         private LangService $langService,
-        private LanguageRepository $languageRepository,
-        private ThemeRepository $themeRepository,
         private UserRepository $userRepository,
         private PermissionService $permissionService,
         private HtmlService $htmlService,
-        private SessionService $sessionService,
         private ConfigService $configService,
         private HistoryRepository $historyRepository,
         private HistoryAdminService $historyAdminService,
     ) {
-    }
-
-    /** @pre-boot Safe to call before Kernel::boot() — no DI container required. */
-    public static function mkgetdir(string $dir, int $flags = MKGETDIR_DEFAULT): bool
-    {
-        if (!is_dir($dir)) {
-            if (str_starts_with(PHP_OS, 'WIN')) {
-                $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
-            }
-            $umask = umask(0);
-            set_error_handler(static fn (): bool => true);
-            try {
-                $mkd = mkdir($dir, Config::chmodValue(), ($flags & MKGETDIR_RECURSIVE) ? true : false);
-            } finally {
-                restore_error_handler();
-            }
-            umask($umask);
-            if ($mkd == false) {
-                if (!($flags & MKGETDIR_DIE_ON_ERROR)) {
-                    return false;
-                }
-                HtmlService::fatalError("$dir " . Lang::t('no write access'));
-            }
-            if ($flags & MKGETDIR_PROTECT_INDEX) {
-                $file = $dir . '/index.htm';
-                if (!file_exists($file) && is_writable($dir)) {
-                    file_put_contents($file, 'Not allowed!');
-                }
-            }
-        }
-        if (!is_writable($dir)) {
-            if (!($flags & MKGETDIR_DIE_ON_ERROR)) {
-                return false;
-            }
-            HtmlService::fatalError("$dir " . Lang::t('no write access'));
-        }
-        return true;
     }
 
     public function redirectHttp(string $url): void
@@ -148,72 +96,6 @@ final readonly class Util
         }
     }
 
-    /** @return array<string,string> */
-    /** @return string[] */
-    public function getLanguages(): array
-    {
-        $languages = [];
-        foreach ($this->languageRepository->findIdNameMap() as $id => $name) {
-            if (is_dir(PHPWG_ROOT_PATH . 'language/' . $id)) {
-                $languages[$id] = $name;
-            }
-        }
-        return $languages;
-    }
-
-    /** @return array<string,string> */
-    public function getPwgThemes(bool $showMobile = false): array
-    {
-        $themes = [];
-        $rows = $this->themeRepository->findAll();
-        foreach ($rows as $row) {
-            if ($row['id'] === Config::mobilTheme()) {
-                if (!$showMobile) {
-                    continue;
-                }
-                $row['name'] = (is_string($row['name'] ?? null) ? $row['name'] : '') . (' (' . Lang::t('Mobile') . ')');
-            }
-            $themeId = is_string($row['id'] ?? null) ? $row['id'] : '';
-            if ($this->checkThemeInstalled($themeId)) {
-                $themes[$themeId] = is_string($row['name'] ?? null) ? $row['name'] : '';
-            }
-        }
-        $dispatched = EventDispatcher::dispatch('get_pwg_themes', $themes);
-        return $dispatched;
-    }
-
-    public function checkThemeInstalled(string $themeId): bool
-    {
-        return file_exists(Config::themesDir() . '/' . $themeId . '/themeconf.inc.php');
-    }
-
-    public function getThemeconf(string $key): mixed
-    {
-        return TemplateRegistry::current()->getThemeconf($key);
-    }
-
-    public function getFilterPageValue(string $valueName): mixed
-    {
-        $pageName = StringUtil::scriptBasename();
-        /** @var array<string, array<string, mixed>> $filterPages */
-        $filterPages = Config::filterPages();
-        return $filterPages[$pageName][$valueName] ?? $filterPages['default'][$valueName] ?? null;
-    }
-
-    public function getWebmasterMailAddress(): string
-    {
-        $userFields = Config::userFields();
-        $email = $this->userRepository
-            ->getWebmasterEmail(
-                $userFields['email'],
-                $userFields['id'],
-                Tables::users(),
-                Config::webmasterId()
-            );
-        $email = EventDispatcher::dispatch('get_webmaster_mail_address', $email);
-        return (string) $email;
-    }
-
     public function checkPwgToken(): void
     {
         if (isset($_REQUEST['pwg_token']) && $_REQUEST['pwg_token'] !== '') {
@@ -260,166 +142,6 @@ final readonly class Util
             HtmlService::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
         }
         return true;
-    }
-
-    /** @return string[] */
-    public function getPrivacyLevelOptions(): array
-    {
-        $options = [];
-        $label   = '';
-        foreach (array_reverse(Config::availablePermissionLevels()) as $level) {
-            if ($level === 0) {
-                $label = Lang::t('Everybody');
-            } else {
-                if (strlen($label)) {
-                    $label .= ', ';
-                }
-                $label .= Lang::t(sprintf('Level %d', $level));
-            }
-            $options[$level] = $label;
-        }
-        return $options;
-    }
-
-    /** @return array<mixed>|false */
-    public function getIcon(?string $date, bool $isChildDate = false): array|false
-    {
-        if ($date === null || $date === '') {
-            return false;
-        }
-        $raw         = CurrentUser::get()->rawAttributes;
-        $recentPeriod = is_scalar($raw['recent_period'] ?? null) ? (int) $raw['recent_period'] : 7;
-        $title = RequestCache::remember('get_icon', 'title', static fn (): string => Lang::t(
-            'photos posted during the last %d days',
-            $recentPeriod
-        ));
-        $icon = ['TITLE' => $title, 'IS_CHILD_DATE' => $isChildDate];
-        if (RequestCache::has('get_icon', $date)) {
-            return RequestCache::get('get_icon', $date) ? $icon : [];
-        }
-        $sqlRecentDate = RequestCache::remember(
-            'get_icon',
-            'sql_recent_date',
-            function () use ($recentPeriod): string {
-                $v = $this->conn->executeQuery('SELECT ' . SqlExpr::recentPeriodExpr((string) $recentPeriod))->fetchOne();
-                return is_scalar($v) ? (string) $v : '';
-            }
-        );
-        $isRecent = $date > $sqlRecentDate;
-        RequestCache::set('get_icon', $date, $isRecent);
-        return $isRecent ? $icon : [];
-    }
-
-    public function getEphemeralKey(int $validAfterSeconds, string $additionalData = ''): string
-    {
-        $time       = round(microtime(true), 1);
-        /** @var mixed $remoteAddrRaw */
-        $remoteAddrRaw = $_SERVER['REMOTE_ADDR'] ?? '';
-        $remoteAddr = is_string($remoteAddrRaw) ? $remoteAddrRaw : '';
-        return number_format($time, 1, '.', '') . ':' . $validAfterSeconds . ':'
-            . hash_hmac(
-                'md5',
-                number_format($time, 1, '.', '') . substr($remoteAddr, 0, 5) . $validAfterSeconds . $additionalData,
-                Config::secretKey()
-            );
-    }
-
-    public function verifyEphemeralKey(string $key, string $additionalData = ''): bool
-    {
-        $time       = microtime(true);
-        $key        = explode(':', $key);
-        /** @var mixed $remoteAddrRaw */
-        $remoteAddrRaw = $_SERVER['REMOTE_ADDR'] ?? '';
-        $remoteAddr = is_string($remoteAddrRaw) ? $remoteAddrRaw : '';
-        if (count($key) !== 3
-            || $key[0] > $time - (float) $key[1]
-            || $key[0] < $time - 3600.0
-            || hash_hmac('md5', $key[0] . substr($remoteAddr, 0, 5) . $key[1] . $additionalData, Config::secretKey()) !== $key[2]
-        ) {
-            return false;
-        }
-        return true;
-    }
-
-    /** @return array<mixed> */
-    public function createNavigationBar(string $url, int $nbElement, int $start, int $nbElementPage, bool $cleanUrl = false, string $paramName = 'start'): array
-    {
-        $navbar      = [];
-        $pagesAround = Config::paginatePagesAround();
-        $startStr    = $cleanUrl ? '/' . $paramName . '-' : (!str_contains($url, '?') ? '?' : '&') . $paramName . '=';
-
-        if ($start < 0) {
-            $start = 0;
-        }
-
-        if ($nbElement > $nbElementPage) {
-            $urlStart = $url . $startStr;
-            $curPage  = $navbar['CURRENT_PAGE'] = (float) $start / (float) $nbElementPage + 1.0;
-            $maximum  = ceil((float) $nbElement / (float) $nbElementPage);
-            $start    = (int) ((float) $nbElementPage * round((float) $start / (float) $nbElementPage));
-            $previous = $start - $nbElementPage;
-            $next     = $start + $nbElementPage;
-            $last     = (int) (($maximum - 1.0) * (float) $nbElementPage);
-
-            if ($curPage != 1) {
-                $navbar['URL_FIRST'] = $url;
-                $navbar['URL_PREV']  = $previous > 0 ? $urlStart . $previous : $url;
-            }
-            if ($curPage != $maximum) {
-                $navbar['URL_NEXT'] = $urlStart . ($next < $last ? $next : $last);
-                $navbar['URL_LAST'] = $urlStart . $last;
-            }
-
-            $navbar['pages']    = [];
-            $navbar['pages'][1] = $url;
-            for ($i = (int) max(floor($curPage) - (float) $pagesAround, 2.0), $stop = (int) min(ceil($curPage) + (float) $pagesAround + 1.0, $maximum); $i < $stop; $i++) {
-                $navbar['pages'][$i] = $url . $startStr . (($i - 1) * $nbElementPage);
-            }
-            $navbar['pages'][(int) $maximum] = $urlStart . $last;
-            $navbar['NB_PAGE']               = $maximum;
-        }
-        return $navbar;
-    }
-
-    public function getDevice(): string
-    {
-        $rawDevice = $this->sessionService->getSessionVar('device', '');
-        $device = is_string($rawDevice) ? $rawDevice : '';
-        if ($device === '') {
-            // MobileDetect::isMobile() returns true for tablets too, so check tablet first.
-            $detect = new MobileDetect();
-            if ($detect->isTablet()) {
-                $device = 'tablet';
-            } elseif ($detect->isMobile()) {
-                $device = 'mobile';
-            } else {
-                $device = 'desktop';
-            }
-            $this->sessionService->setSessionVar('device', $device);
-        }
-        return $device;
-    }
-
-    public function mobileTheme(): bool
-    {
-        if (empty(Config::mobilTheme())) {
-            return false;
-        }
-        if (isset($_GET['mobile'])) {
-            /** @var mixed $mobileRaw */
-            $mobileRaw = $_GET['mobile'];
-            $isMobileTheme = (is_string($mobileRaw) || is_int($mobileRaw) || is_float($mobileRaw))
-                ? BoolUtil::fromMixed($mobileRaw)
-                : false;
-            $this->sessionService->setSessionVar('mobile_theme', $isMobileTheme);
-        } else {
-            $isMobileTheme = $this->sessionService->getSessionVar('mobile_theme');
-        }
-        if (is_null($isMobileTheme)) {
-            $isMobileTheme = ($this->getDevice() === 'mobile');
-            $this->sessionService->setSessionVar('mobile_theme', $isMobileTheme);
-        }
-        return (bool) $isMobileTheme;
     }
 
     public function doLog(int|null $imageId = null, string|null $imageType = null): bool

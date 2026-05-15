@@ -101,6 +101,7 @@ final class MaintenanceController
         private readonly UserRepository $userRepository,
         private readonly Util $util,
         private readonly CacheItemPoolInterface $pool,
+        private readonly HtmlService $htmlService,
     ) {
     }
 
@@ -1602,7 +1603,7 @@ final class MaintenanceController
             }
         }
 
-        $tpl_introduction['privacy_level_options'] = $this->util->getPrivacyLevelOptions();
+        $tpl_introduction['privacy_level_options'] = $this->htmlService->getPrivacyLevelOptions();
         $tpl->assign('introduction', $tpl_introduction);
 
         $this->categoryService->displaySelectCatWrapper('SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' WHERE site_id = ' . $site_id, $cat_selected, 'category_options', false);

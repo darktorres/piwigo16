@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Config;
 
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
@@ -46,7 +47,7 @@ final readonly class WatermarkProcessor
                 $errors['watermarkImage'] = sprintf(Lang::t('Allowed file types: %s.'), 'PNG');
             } else {
                 $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks';
-                if (Util::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+                if (Filesystem::mkgetdir($upload_dir, Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR)) {
                     $rawWmName    = $watermarkImage['name'] ?? null;
                     $wm_file_name = is_string($rawWmName) ? $rawWmName : '';
                     $new_name = $this->stringUtil->str2url($this->stringUtil->getFilenameWoExtension($wm_file_name));

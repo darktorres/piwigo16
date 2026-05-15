@@ -17,6 +17,7 @@ use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Language\LanguageService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Url\UrlGenerator;
@@ -34,6 +35,7 @@ final readonly class AuthService
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private DateService $dateService,
+        private LanguageService $languageService,
     ) {
     }
 
@@ -118,7 +120,7 @@ final readonly class AuthService
     {
         $cookieLang = is_string($_COOKIE['lang'] ?? null) ? $_COOKIE['lang'] : '';
         if ($cookieLang !== '' and CurrentUser::get()->language != $cookieLang) {
-            if (!array_key_exists($cookieLang, $this->util->getLanguages())) {
+            if (!array_key_exists($cookieLang, $this->languageService->getActiveLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookieLang . '" is not valid');
             }
             Dml::singleUpdate(Tables::userInfos(), ['language' => $cookieLang], ['user_id' => $userId]);

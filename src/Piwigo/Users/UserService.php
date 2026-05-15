@@ -26,10 +26,12 @@ use Piwigo\History\HistoryRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Lang\LangService;
+use Piwigo\Language\LanguageService;
 use Piwigo\Mail\MailService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
+use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Ws\WsError;
@@ -62,6 +64,8 @@ final class UserService
         private readonly AuthService $authService,
         private readonly PreferencesService $preferencesService,
         private readonly PermissionService $permissionService,
+        private readonly LanguageService $languageService,
+        private readonly ThemeService $themeService,
     ) {
     }
 
@@ -150,7 +154,7 @@ final class UserService
                     $this->langService->getL10nArgs('Password: %s', str_repeat('*', $length)),
                     $this->langService->getL10nArgs('Email: %s', $mailAddress),
                     $this->langService->getL10nArgs('', ''),
-                    $this->langService->getL10nArgs('If you think you\'ve received this email in error, please contact us at %s', $this->util->getWebmasterMailAddress()),
+                    $this->langService->getL10nArgs('If you think you\'ve received this email in error, please contact us at %s', $this->mailService->getWebmasterMailAddress()),
                 ];
                 $this->messageBus->dispatch(
                     new SendNotificationEmailJob($userId, 'registration', [
@@ -187,7 +191,7 @@ final class UserService
         }
 
         $userThemeRaw = $user['theme'] ?? null;
-        if (!isset($user['theme_name']) or !$this->util->checkThemeInstalled(is_string($userThemeRaw) ? $userThemeRaw : '')) {
+        if (!isset($user['theme_name']) or !$this->themeService->isInstalled(is_string($userThemeRaw) ? $userThemeRaw : '')) {
             $user['theme']      = $this->getDefaultTheme();
             $user['theme_name'] = $user['theme'];
         }
@@ -448,10 +452,10 @@ SELECT DISTINCT f.image_id
     {
         $themeRaw = $this->getDefaultUserValue('theme', AppInfo::DEFAULT_TEMPLATE);
         $theme    = $themeRaw !== '' ? $themeRaw : AppInfo::DEFAULT_TEMPLATE;
-        if ($this->util->checkThemeInstalled($theme)) {
+        if ($this->themeService->isInstalled($theme)) {
             return $theme;
         }
-        $activeThemes = array_keys($this->util->getPwgThemes());
+        $activeThemes = array_keys($this->themeService->getActiveThemes());
         return $activeThemes[0] ?? '_base';
     }
 
@@ -601,10 +605,10 @@ SELECT DISTINCT f.image_id
                 return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'Invalid level']];
             }
         }
-        if (!empty($params['language']) and !in_array($params['language'], array_keys($this->util->getLanguages()))) {
+        if (!empty($params['language']) and !in_array($params['language'], array_keys($this->languageService->getActiveLanguages()))) {
             return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'Invalid language']];
         }
-        if (!empty($params['theme']) and !in_array($params['theme'], array_keys($this->util->getPwgThemes()))) {
+        if (!empty($params['theme']) and !in_array($params['theme'], array_keys($this->themeService->getActiveThemes()))) {
             return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'Invalid theme']];
         }
 

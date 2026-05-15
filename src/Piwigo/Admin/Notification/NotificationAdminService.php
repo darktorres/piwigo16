@@ -9,7 +9,6 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
@@ -30,7 +29,6 @@ final readonly class NotificationAdminService
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserService $userService,
-        private Util $util,
     ) {
     }
 
@@ -81,7 +79,7 @@ final readonly class NotificationAdminService
         if ($isToSendMail) {
             $ctx->emailFormat          = $this->mailService->getStrEmailFormat(Config::nbmSendHtmlMail());
             $ctx->sendAsName           = (Config::has('nbm_send_mail_as') && !empty(Config::nbmSendMailAs())) ? Config::nbmSendMailAs() : $this->mailService->getMailSenderName();
-            $ctx->sendAsMailAddress    = $this->util->getWebmasterMailAddress();
+            $ctx->sendAsMailAddress    = $this->mailService->getWebmasterMailAddress();
             $ctx->sendAsMailFormated   = $this->mailService->formatEmail($ctx->sendAsName, $ctx->sendAsMailAddress);
             $ctx->errorOnMailCount     = 0;
             $ctx->sentMailCount        = 0;

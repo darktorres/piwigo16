@@ -12,7 +12,6 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
 use Piwigo\Plugins\EventDispatcher;
@@ -90,7 +89,7 @@ final class Template
 
         if (!Config::has('data_dir_checked')) {
             $dir = PHPWG_ROOT_PATH.Config::dataLocation();
-            Util::mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
+            Filesystem::mkgetdir($dir, Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR);
             if (!is_writable($dir)) {
                 Kernel::service(LangService::class)->loadLanguage('admin.lang');
                 HtmlService::fatalError(
@@ -108,7 +107,7 @@ final class Template
         }
 
         $compile_dir = PHPWG_ROOT_PATH.Config::dataLocation().'templates_c';
-        Util::mkgetdir($compile_dir);
+        Filesystem::mkgetdir($compile_dir);
 
         if (!empty($theme)) {
             $this->setTheme($root, $theme, $path);
@@ -212,7 +211,7 @@ final class Template
     {
         $compile_dir = PHPWG_ROOT_PATH.Config::dataLocation().'templates_c';
         self::rrmdirContents($compile_dir);
-        Util::mkgetdir($compile_dir);
+        Filesystem::mkgetdir($compile_dir);
         file_put_contents($compile_dir.'/index.htm', 'Not allowed!');
     }
 

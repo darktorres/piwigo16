@@ -9,7 +9,7 @@ use Latte\Runtime\Html;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Util;
+use Piwigo\Http\DeviceDetectionService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
@@ -258,7 +258,7 @@ final class PiwigoExtension extends Extension
 
     public static function getDevice(): string
     {
-        return Kernel::service(Util::class)->getDevice();
+        return Kernel::service(DeviceDetectionService::class)->getDevice();
     }
 
     public static function getGalleryHomeUrl(): string

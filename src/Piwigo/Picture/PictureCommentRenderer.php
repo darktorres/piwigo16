@@ -6,6 +6,7 @@ namespace Piwigo\Picture;
 
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
@@ -15,6 +16,7 @@ use Piwigo\Core\Util;
 use Piwigo\Db\Tables;
 use Piwigo\Exception\AuthException;
 use Piwigo\Html\HtmlService;
+use Piwigo\Page\PaginationService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
@@ -34,6 +36,8 @@ final readonly class PictureCommentRenderer
         private SessionService $sessionService,
         private UrlService $urlService,
         private Util $util,
+        private EphemeralKeyService $ephemeralKeyService,
+        private PaginationService $paginationService,
     ) {
     }
 
@@ -112,7 +116,7 @@ final readonly class PictureCommentRenderer
             $startOffset = SectionContextRegistry::current()->start;
             $nb_comments = is_numeric($row['nb_comments'] ?? null) ? (int) $row['nb_comments'] : 0;
 
-            $navigation_bar = $this->util->createNavigationBar(
+            $navigation_bar = $this->paginationService->createNavigationBar(
                 $this->urlService->duplicatePictureUrl([], ['start']),
                 $nb_comments,
                 $startOffset,
@@ -198,7 +202,7 @@ SELECT
                         ]);
                         if ($editComment !== null && $row['id'] == $editComment) {
                             $tpl_comment['IN_EDIT'] = true;
-                            $key = $this->util->getEphemeralKey(2, (string) $imageId);
+                            $key = $this->ephemeralKeyService->generate(2, (string) $imageId);
                             $tpl_comment['KEY'] = $key;
                             $tpl_comment['CONTENT'] = $row['content'];
                             $tpl_comment['PWG_TOKEN'] = $this->util->getPwgToken();
@@ -229,7 +233,7 @@ SELECT
             }
 
             if ($show_add_comment_form) {
-                $key = $this->util->getEphemeralKey(3, (string) $imageId);
+                $key = $this->ephemeralKeyService->generate(3, (string) $imageId);
 
                 $tpl_var = [
                     'F_ACTION' => $url_self,

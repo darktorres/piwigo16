@@ -17,6 +17,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DateService;
+use Piwigo\Core\Filesystem;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -666,7 +667,7 @@ final readonly class ExtensionsController
                 $tpl->assign(['save_error' => 'Invalid image file.']);
             } else {
                 $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'logo';
-                if (Util::mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+                if (Filesystem::mkgetdir($upload_dir, Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR)) {
                     $stdPgsLogoNameRaw = $std_pgs_logo_file['name'] ?? null;
                     $std_pgs_logo_name = is_string($stdPgsLogoNameRaw) ? $stdPgsLogoNameRaw : '';
                     $pathinfo  = pathinfo($std_pgs_logo_name);

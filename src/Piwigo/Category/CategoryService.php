@@ -9,7 +9,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
@@ -114,7 +113,7 @@ WHERE ' . $where . '
                 'IS_UPPERCAT' => ($selectedCategory !== null && $selectedCategory['id_uppercat'] == $row['id']) ? true : false,
             ]);
             if (Config::indexNewIcon()) {
-                $row['icon_ts'] = Kernel::service(Util::class)->getIcon(is_string($row['max_date_last']) || is_null($row['max_date_last']) ? $row['max_date_last'] : (is_scalar($row['max_date_last']) ? (string) $row['max_date_last'] : null), $childDateLast);
+                $row['icon_ts'] = Kernel::service(HtmlService::class)->getIcon(is_string($row['max_date_last']) || is_null($row['max_date_last']) ? $row['max_date_last'] : (is_scalar($row['max_date_last']) ? (string) $row['max_date_last'] : null), $childDateLast);
             }
             $cats[] = $row;
         }

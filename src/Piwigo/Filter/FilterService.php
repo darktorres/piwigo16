@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Filter;
 
+use Piwigo\Config\Config;
+use Piwigo\Core\StringUtil;
+
 final class FilterService
 {
     /** @param array<array<string, mixed>> $cats */
@@ -25,5 +28,18 @@ final class FilterService
             }
             unset($category);
         }
+    }
+
+    /**
+     * Look up a per-page filter configuration value. The current page is
+     * keyed by script basename; entries in `$conf['filter_pages']['default']`
+     * apply as a fallback.
+     */
+    public function getFilterPageValue(string $valueName): mixed
+    {
+        $pageName = StringUtil::scriptBasename();
+        /** @var array<string,array<string,mixed>> $filterPages */
+        $filterPages = Config::filterPages();
+        return $filterPages[$pageName][$valueName] ?? $filterPages['default'][$valueName] ?? null;
     }
 }

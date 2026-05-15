@@ -25,6 +25,7 @@ use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\DeviceDetectionService;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Image\ImageStdParams;
@@ -240,7 +241,7 @@ final class CommonBootstrap
         } else {
             $theme_raw = CurrentUser::get()->rawAttributes['theme'] ?? '';
             $theme     = is_string($theme_raw) ? $theme_raw : '';
-            if (StringUtil::scriptBasename() != 'ws' and Kernel::service(Util::class)->mobileTheme()) {
+            if (StringUtil::scriptBasename() != 'ws' and Kernel::service(DeviceDetectionService::class)->isMobileTheme()) {
                 $theme = Config::mobilTheme();
             }
             $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);

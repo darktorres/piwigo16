@@ -46,6 +46,7 @@ use Piwigo\Notification\NotificationRepository;
 use Piwigo\Notification\NotificationService;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Page\PaginationService;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
 use Piwigo\Plugins\EventDispatcher;
@@ -105,6 +106,7 @@ final class MiscController
         private readonly UserRepository $userRepository,
         private readonly UserService $userService,
         private readonly Util $util,
+        private readonly PaginationService $paginationService,
     ) {
     }
 
@@ -925,7 +927,7 @@ final class MiscController
         $cache_keys  = $this->adminService->getAdminClientCacheKeys(['categories']);
         $rating_page_data = ['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => Lang::t('Create'), 'nb_elements' => $nb_elements];
 
-        $tpl->assign(['navbar' => $this->util->createNavigationBar($this->urlGenerator->admin() . $this->urlService->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page), 'F_ACTION' => $this->urlGenerator->admin(), 'DISPLAY' => $elements_per_page, 'NB_ELEMENTS' => $nb_elements, 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []), 'CACHE_KEYS' => $cache_keys, 'rating_page_data_json' => json_encode($rating_page_data)]);
+        $tpl->assign(['navbar' => $this->paginationService->createNavigationBar($this->urlGenerator->admin() . $this->urlService->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page), 'F_ACTION' => $this->urlGenerator->admin(), 'DISPLAY' => $elements_per_page, 'NB_ELEMENTS' => $nb_elements, 'category' => (isset($_GET['cat']) ? [$_GET['cat']] : []), 'CACHE_KEYS' => $cache_keys, 'rating_page_data_json' => json_encode($rating_page_data)]);
 
         $available_order_by = [[Lang::t('Rate date'), 'recently_rated DESC'], [Lang::t('Rating score'), 'score DESC'], [Lang::t('Average rate'), 'avg_rates DESC'], [Lang::t('Number of rates'), 'nb_rates DESC'], [Lang::t('Sum of rates'), 'sum_rates DESC'], [Lang::t('File name'), 'file DESC'], [Lang::t('Creation date'), 'date_creation DESC'], [Lang::t('Post date'), 'date_available DESC']];
         foreach ($available_order_by as $orderByEntry) {

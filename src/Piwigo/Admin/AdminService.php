@@ -12,7 +12,6 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
@@ -125,7 +124,7 @@ final readonly class AdminService
             }
             if ($trashPath !== null && $trashPath !== '') {
                 if (!is_dir($trashPath)) {
-                    Util::mkgetdir($trashPath, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR);
+                    Filesystem::mkgetdir($trashPath, Filesystem::FLAG_RECURSIVE | Filesystem::FLAG_DIE_ON_ERROR);
                 }
                 while ($r = $trashPath . '/' . md5(uniqid((string) random_int(0, mt_getrandmax()), true))) {
                     if (!is_dir($r)) {
@@ -424,7 +423,7 @@ final readonly class AdminService
                         'url'       => $topic['url'] ?? null,
                     ];
                 }
-                if (Util::mkgetdir(dirname($cachePath))) {
+                if (Filesystem::mkgetdir(dirname($cachePath))) {
                     file_put_contents($cachePath, serialize($news));
                 }
             } else {

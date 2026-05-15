@@ -501,7 +501,7 @@ final readonly class UploadService
     public function prepareDirectory(string $directory): void
     {
         if (!is_dir($directory)) {
-            if (!Util::mkgetdir($directory, MKGETDIR_RECURSIVE)) {
+            if (!Filesystem::mkgetdir($directory, Filesystem::FLAG_RECURSIVE)) {
                 throw new ConfigException('[prepareDirectory] cannot create "' . $directory . '"');
             }
         }

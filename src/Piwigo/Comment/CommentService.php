@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Comment;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -33,7 +33,7 @@ final readonly class CommentService
         private StringUtil $stringUtil,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
-        private Util $util,
+        private EphemeralKeyService $ephemeralKeyService,
     ) {
     }
 
@@ -153,7 +153,7 @@ final readonly class CommentService
         }
 
         $commImageIdRaw = $comm['image_id'] ?? null;
-        if (!$this->util->verifyEphemeralKey($key, is_string($commImageIdRaw) ? $commImageIdRaw : '')) {
+        if (!$this->ephemeralKeyService->verify($key, is_string($commImageIdRaw) ? $commImageIdRaw : '')) {
             $commentAction = 'reject';
             if (!is_array($_POST['cr'] ?? null)) {
                 $_POST['cr'] = [];
@@ -307,7 +307,7 @@ final readonly class CommentService
     {
         $commentAction = 'validate';
 
-        if (!$this->util->verifyEphemeralKey($postKey, is_scalar($comment['image_id'] ?? null) ? (string) $comment['image_id'] : '')) {
+        if (!$this->ephemeralKeyService->verify($postKey, is_scalar($comment['image_id'] ?? null) ? (string) $comment['image_id'] : '')) {
             $commentAction = 'reject';
         } elseif (!Config::commentsValidation() or $this->permissionService->isAdmin()) {
             $commentAction = 'validate';

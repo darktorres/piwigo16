@@ -33,6 +33,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
+use Piwigo\Page\PaginationService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Plugins\LoadedPluginRegistry;
 use Piwigo\Search\SearchService;
@@ -82,6 +83,7 @@ final class BatchManagerController
         private readonly UrlService $urlService,
         private readonly UserAdminService $userAdminService,
         private readonly Util $util,
+        private readonly PaginationService $paginationService,
     ) {
     }
 
@@ -869,7 +871,7 @@ final class BatchManagerController
         $rawDateCreationPost = $_POST['date_creation'] ?? null;
         $dateCreationAssign  = (!isset($_POST['date_creation']) || $_POST['date_creation'] === '') ? date('Y-m-d') . ' 00:00:00' : (is_string($rawDateCreationPost) ? $rawDateCreationPost : '');
         $tpl->assign('DATE_CREATION', $dateCreationAssign);
-        $tpl->assign(['level_options' => $this->util->getPrivacyLevelOptions(), 'level_options_selected' => 0]);
+        $tpl->assign(['level_options' => $this->htmlService->getPrivacyLevelOptions(), 'level_options_selected' => 0]);
 
         $site_reader  = new LocalSiteReader('./');
         $used_metadata = implode(', ', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $site_reader->getMetadataAttributes()));
@@ -894,7 +896,7 @@ final class BatchManagerController
         $nb_thumbs_page = 0;
 
         if (count($catElementsId) > 0) {
-            $nav_bar = $this->util->createNavigationBar($base_url . $this->urlService->getQueryStringDiff(['start']), count($catElementsId), $pageStart, $nbImages);
+            $nav_bar = $this->paginationService->createNavigationBar($base_url . $this->urlService->getQueryStringDiff(['start']), count($catElementsId), $pageStart, $nbImages);
             $tpl->assign('navbar', $nav_bar);
 
             $is_category      = isset($bmf['category']) && !isset($bmf['category_recursive']);
@@ -1039,7 +1041,7 @@ final class BatchManagerController
 
         $tpl->assign([
             'U_ELEMENTS_PAGE' => $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
-            'level_options'   => $this->util->getPrivacyLevelOptions(),
+            'level_options'   => $this->htmlService->getPrivacyLevelOptions(),
             'ADMIN_PAGE_TITLE' => Lang::t('Batch Manager'),
             'PWG_TOKEN'       => $this->util->getPwgToken(),
         ]);
@@ -1071,7 +1073,7 @@ final class BatchManagerController
         $tpl->assign('per_page', $nbImagesU);
 
         if (count($catElementsIdU) > 0) {
-            $nav_bar = $this->util->createNavigationBar($base_url . $this->urlService->getQueryStringDiff(['start']), count($catElementsIdU), $pageStartU, $nbImagesU);
+            $nav_bar = $this->paginationService->createNavigationBar($base_url . $this->urlService->getQueryStringDiff(['start']), count($catElementsIdU), $pageStartU, $nbImagesU);
             $tpl->assign(['navbar' => $nav_bar]);
 
             $element_ids      = [];

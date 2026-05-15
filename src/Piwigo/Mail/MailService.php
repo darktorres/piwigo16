@@ -10,13 +10,13 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Filesystem;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\LangService;
 use Piwigo\Lang\Translator;
@@ -26,6 +26,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 final readonly class MailService
@@ -34,11 +35,24 @@ final readonly class MailService
         private Connection $conn,
         private StringUtil $stringUtil,
         private UrlGenerator $urlGenerator,
-        private Util $util,
+        private UserRepository $userRepository,
         private LangService $langService,
         private AuthService $authService,
         private UrlService $urlService,
     ) {
+    }
+
+    public function getWebmasterMailAddress(): string
+    {
+        $userFields = Config::userFields();
+        $email      = $this->userRepository->getWebmasterEmail(
+            $userFields['email'],
+            $userFields['id'],
+            Tables::users(),
+            Config::webmasterId()
+        );
+        $email = EventDispatcher::dispatch('get_webmaster_mail_address', $email);
+        return (string) $email;
     }
 
     public function getMailSenderName(): string
@@ -48,7 +62,7 @@ final readonly class MailService
 
     public function getMailSenderEmail(): string
     {
-        return empty(Config::mailSenderEmail()) ? $this->util->getWebmasterMailAddress() : Config::mailSenderEmail();
+        return empty(Config::mailSenderEmail()) ? $this->getWebmasterMailAddress() : Config::mailSenderEmail();
     }
 
     /** @return array<string,mixed> */
@@ -495,7 +509,7 @@ SELECT
         $bccRaw = $args['Bcc'] ?? '';
         $Bcc = $this->getCleanRecipientsList(is_array($bccRaw) || is_string($bccRaw) ? $bccRaw : '');
         if (Config::sendBccMailWebmaster()) {
-            $Bcc[] = ['email' => $this->util->getWebmasterMailAddress(), 'name' => ''];
+            $Bcc[] = ['email' => $this->getWebmasterMailAddress(), 'name' => ''];
         }
         if (!empty($Bcc)) {
             foreach ($Bcc as $recipient) {
@@ -704,7 +718,7 @@ SELECT
         $langCode = is_scalar($info['code'] ?? null) ? (string) $info['code'] : '';
 
         $dir = PHPWG_ROOT_PATH . Config::dataLocation() . 'tmp';
-        if (Util::mkgetdir($dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (Filesystem::mkgetdir($dir, Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR)) {
             $filename = $dir . '/mail.' . stripslashes(CurrentUser::get()->username) . '.' . $langCode . '-' . date('YmdHis') . ($success ? '' : '.ERROR');
             if ($args['content_format'] == 'text/plain') {
                 $filename .= '.txt';

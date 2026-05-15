@@ -10,7 +10,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\DebugCollector;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Filter\FilterService;
@@ -18,6 +17,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Page\PaginationService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Template\TemplateRegistry;
@@ -35,8 +35,8 @@ final readonly class CategoryCatsRenderer
         private HtmlService $htmlService,
         private PermissionService $permissionService,
         private UrlService $urlService,
-        private Util $util,
         private DebugCollector $debugCollector,
+        private PaginationService $paginationService,
     ) {
     }
 
@@ -280,7 +280,7 @@ SELECT *
                 ]);
                 if (Config::indexNewIcon()) {
                     $maxDateLastRaw = $category['max_date_last'] ?? null;
-                    $tpl_var['icon_ts'] = $this->util->getIcon(
+                    $tpl_var['icon_ts'] = $this->htmlService->getIcon(
                         is_scalar($maxDateLastRaw) ? (string) $maxDateLastRaw : null,
                         (bool) ($category['is_child_date_last'] ?? false)
                     );
@@ -318,7 +318,7 @@ SELECT *
             $catsNavigationBar = [];
             $totalCats = is_numeric($totalCategories) ? (int) $totalCategories : 0;
             if ($totalCats > Config::nbCategoriesPage()) {
-                $catsNavigationBar = $this->util->createNavigationBar(
+                $catsNavigationBar = $this->paginationService->createNavigationBar(
                     $this->urlService->duplicateIndexUrl([], ['startcat']),
                     $totalCats,
                     $ctx->startcat,

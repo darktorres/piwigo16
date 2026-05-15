@@ -114,7 +114,7 @@ final readonly class DirectPreparer
 
         $selected_level = $_POST['level'] ?? 0;
         $tpl->assign([
-            'level_options' => $this->util->getPrivacyLevelOptions(),
+            'level_options' => $this->htmlService->getPrivacyLevelOptions(),
             'level_options_selected' => [$selected_level],
         ]);
 

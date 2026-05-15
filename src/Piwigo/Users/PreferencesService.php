@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
-use Piwigo\Core\Util;
+use Piwigo\Language\LanguageService;
 
 final readonly class PreferencesService
 {
     public function __construct(
-        private Util $util,
+        private LanguageService $languageService,
         private UserRepository $userRepository,
     ) {
     }
@@ -18,7 +18,7 @@ final readonly class PreferencesService
     {
         $raw = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null;
         return self::pickFromAcceptLanguage(
-            array_keys($this->util->getLanguages()),
+            array_keys($this->languageService->getActiveLanguages()),
             is_string($raw) ? $raw : '',
         );
     }

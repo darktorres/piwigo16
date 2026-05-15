@@ -364,7 +364,7 @@ SELECT id
         }
 
         $selected_level = $_POST['level'] ?? $row['level'];
-        $tpl->assign(['level_options' => $this->util->getPrivacyLevelOptions(), 'level_options_selected' => [$selected_level]]);
+        $tpl->assign(['level_options' => $this->htmlService->getPrivacyLevelOptions(), 'level_options_selected' => [$selected_level]]);
 
         $related_categories     = [];
         $related_categories_ids = [];

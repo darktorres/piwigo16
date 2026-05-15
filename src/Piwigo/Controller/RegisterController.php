@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -13,6 +14,7 @@ use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
+use Piwigo\Language\LanguageService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
@@ -44,6 +46,8 @@ final readonly class RegisterController implements ControllerInterface
         private UrlService $urlService,
         private UserService $userService,
         private Util $util,
+        private EphemeralKeyService $ephemeralKeyService,
+        private LanguageService $languageService,
     ) {
     }
 
@@ -69,7 +73,7 @@ final readonly class RegisterController implements ControllerInterface
         if ($this->stringUtil->inputString('submit', null, $_POST) !== null) {
             $pgErrors = [];
 
-            if (!$this->util->verifyEphemeralKey($post_key)) {
+            if (!$this->ephemeralKeyService->verify($post_key)) {
                 $this->htmlService->setStatusHeader(403);
                 $pgErrors['register_page_error'] = Lang::t('Invalid/expired form key');
             }
@@ -101,9 +105,9 @@ final readonly class RegisterController implements ControllerInterface
                 }
                 $this->util->redirect($this->urlService->makeIndexUrl());
             }
-            $registration_post_key = $this->util->getEphemeralKey(2);
+            $registration_post_key = $this->ephemeralKeyService->generate(2);
         } else {
-            $registration_post_key = $this->util->getEphemeralKey(6);
+            $registration_post_key = $this->ephemeralKeyService->generate(6);
         }
 
         $login = ($post_login !== null && $post_login !== '') ? htmlspecialchars(stripslashes($post_login)) : '';
@@ -129,7 +133,7 @@ final readonly class RegisterController implements ControllerInterface
 
         $cookie_lang = $this->stringUtil->inputString('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
-            if (!array_key_exists($cookie_lang, $this->util->getLanguages())) {
+            if (!array_key_exists($cookie_lang, $this->languageService->getActiveLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
             $user['language'] = $cookie_lang;
@@ -137,7 +141,7 @@ final readonly class RegisterController implements ControllerInterface
         }
 
         $language_options = [];
-        foreach ($this->util->getLanguages() as $language_code => $language_name) {
+        foreach ($this->languageService->getActiveLanguages() as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
         $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';

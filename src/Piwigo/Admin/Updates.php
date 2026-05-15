@@ -570,7 +570,7 @@ final class Updates
         if (empty(PageState::current()->errors)) {
             $path = PHPWG_ROOT_PATH.Config::dataLocation().'update';
             $filename = $path.'/'.$code.'.zip';
-            Util::mkgetdir($path);
+            Filesystem::mkgetdir($path);
 
             $chunk_num = 0;
             $end = false;

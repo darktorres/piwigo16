@@ -13,6 +13,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
+use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
@@ -21,6 +22,7 @@ use Piwigo\Menu\RegisteredBlock;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Template\TemplateRegistry;
+use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -342,7 +344,7 @@ $btraceMsg
                   '<a id="TagsGroupRemoveTag" href="' . $removeUrl . '" style="border:none;" title="'
                   . Lang::t('remove this tag from the list')
                   . '"><img src="'
-                    . UrlService::getRootUrl() . (is_string(Kernel::service(Util::class)->getThemeconf('icon_dir')) ? Kernel::service(Util::class)->getThemeconf('icon_dir') : '') . '/remove_s.png'
+                    . UrlService::getRootUrl() . (is_string(Kernel::service(ThemeService::class)->getThemeconf('icon_dir')) ? Kernel::service(ThemeService::class)->getThemeconf('icon_dir') : '') . '/remove_s.png'
                   . '" alt="x" style="vertical-align:bottom;" >'
                   . '<span class="pwg-icon pwg-icon-close" ></span>'
                   . '</a>';
@@ -509,5 +511,53 @@ $btraceMsg
             return $string;
         }
         return nl2br($string);
+    }
+
+    /** @return array<int,string> */
+    public function getPrivacyLevelOptions(): array
+    {
+        $options = [];
+        $label   = '';
+        foreach (array_reverse(Config::availablePermissionLevels()) as $level) {
+            if ($level === 0) {
+                $label = Lang::t('Everybody');
+            } else {
+                if (strlen($label)) {
+                    $label .= ', ';
+                }
+                $label .= Lang::t(sprintf('Level %d', $level));
+            }
+            $options[$level] = $label;
+        }
+        return $options;
+    }
+
+    /** @return array<string,mixed>|false */
+    public function getIcon(?string $date, bool $isChildDate = false): array|false
+    {
+        if ($date === null || $date === '') {
+            return false;
+        }
+        $raw          = CurrentUser::get()->rawAttributes;
+        $recentPeriod = is_scalar($raw['recent_period'] ?? null) ? (int) $raw['recent_period'] : 7;
+        $title        = RequestCache::remember('get_icon', 'title', static fn (): string => Lang::t(
+            'photos posted during the last %d days',
+            $recentPeriod
+        ));
+        $icon = ['TITLE' => $title, 'IS_CHILD_DATE' => $isChildDate];
+        if (RequestCache::has('get_icon', $date)) {
+            return RequestCache::get('get_icon', $date) ? $icon : [];
+        }
+        $sqlRecentDate = RequestCache::remember(
+            'get_icon',
+            'sql_recent_date',
+            function () use ($recentPeriod): string {
+                $v = $this->conn->executeQuery('SELECT ' . SqlExpr::recentPeriodExpr((string) $recentPeriod))->fetchOne();
+                return is_scalar($v) ? (string) $v : '';
+            }
+        );
+        $isRecent = $date > $sqlRecentDate;
+        RequestCache::set('get_icon', $date, $isRecent);
+        return $isRecent ? $icon : [];
     }
 }

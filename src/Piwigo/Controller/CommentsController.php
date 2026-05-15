@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
@@ -26,6 +27,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Page\PaginationService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -52,6 +54,8 @@ final readonly class CommentsController implements ControllerInterface
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private Util $util,
+        private EphemeralKeyService $ephemeralKeyService,
+        private PaginationService $paginationService,
     ) {
     }
 
@@ -304,7 +308,7 @@ SELECT id, name, uppercats, global_rank
         }
 
         $url     = $this->urlGenerator->comments() . $this->urlService->getQueryStringDiff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
-        $navbar  = $this->util->createNavigationBar(
+        $navbar  = $this->paginationService->createNavigationBar(
             $url,
             is_numeric($counter) ? (int) $counter : 0,
             $start ?? 0,
@@ -371,7 +375,7 @@ SELECT *
                 if ($this->permissionService->canManageComment('edit', $cAuthorId)) {
                     $tpl_comment['U_EDIT'] = $this->urlService->addUrlParams($url_self, ['edit' => $cId]);
                     if ($edit_comment !== null && $cId == $edit_comment) {
-                        $key = $this->util->getEphemeralKey(2, (string) $cImageId);
+                        $key = $this->ephemeralKeyService->generate(2, (string) $cImageId);
                         $tpl_comment['IN_EDIT']   = true;
                         $tpl_comment['KEY']       = $key;
                         $tpl_comment['IMAGE_ID']  = $cImageId;

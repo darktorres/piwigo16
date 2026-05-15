@@ -14,6 +14,7 @@ use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
+use Piwigo\Language\LanguageService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
@@ -43,6 +44,7 @@ final readonly class IdentificationController implements ControllerInterface
         private LangService $langService,
         private AuthService $authService,
         private UrlService $urlService,
+        private LanguageService $languageService,
     ) {
     }
 
@@ -125,7 +127,7 @@ final readonly class IdentificationController implements ControllerInterface
 
         $cookie_lang = $this->stringUtil->inputString('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
-            if (!array_key_exists($cookie_lang, $this->util->getLanguages())) {
+            if (!array_key_exists($cookie_lang, $this->languageService->getActiveLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
             $user['language'] = $cookie_lang;
@@ -133,7 +135,7 @@ final readonly class IdentificationController implements ControllerInterface
         }
 
         $language_options = [];
-        foreach ($this->util->getLanguages() as $language_code => $language_name) {
+        foreach ($this->languageService->getActiveLanguages() as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
         $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';

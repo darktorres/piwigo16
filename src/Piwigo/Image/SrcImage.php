@@ -7,8 +7,8 @@ namespace Piwigo\Image;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlService;
 
 /**
@@ -52,7 +52,7 @@ final class SrcImage
             $repExt = $infos['representative_ext'];
             $this->rel_path = Kernel::service(StringUtil::class)->originalToRepresentative($path, is_scalar($repExt) ? (string) $repExt : '');
         } else {
-            $mimeIconDir = Kernel::service(Util::class)->getThemeconf('mime_icon_dir');
+            $mimeIconDir = Kernel::service(ThemeService::class)->getThemeconf('mime_icon_dir');
             $triggerResult = EventDispatcher::dispatch('get_mimetype_location', (is_string($mimeIconDir) ? $mimeIconDir : '').$ext.'.png', $ext);
             $this->rel_path = $triggerResult;
             $this->flags |= self::IS_MIMETYPE;

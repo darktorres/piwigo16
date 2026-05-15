@@ -8,11 +8,11 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
-use Piwigo\Core\Util;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Filter\FilterContext;
 use Piwigo\Filter\FilterContextRegistry;
+use Piwigo\Filter\FilterService;
 use Piwigo\Lang\Translator;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
@@ -34,7 +34,7 @@ final readonly class FilterMiddleware implements MiddlewareInterface
         private Connection $conn,
         private CategoryService $categoryService,
         private SessionService $sessionService,
-        private Util $util,
+        private FilterService $filterService,
     ) {
     }
 
@@ -50,7 +50,7 @@ final readonly class FilterMiddleware implements MiddlewareInterface
         /** @var array<string,mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
 
-        if (empty(Config::filterPages()) || !$this->util->getFilterPageValue('used')) {
+        if (empty(Config::filterPages()) || !$this->filterService->getFilterPageValue('used')) {
             FilterContextRegistry::set(new FilterContext(enabled: false));
             return;
         }
@@ -60,7 +60,7 @@ final readonly class FilterMiddleware implements MiddlewareInterface
         $recentPeriodFromUrl = null;
         $enabled             = false;
 
-        if (!$this->util->getFilterPageValue('cancel')) {
+        if (!$this->filterService->getFilterPageValue('cancel')) {
             if (isset($_GET['filter'])) {
                 $urlMatches = [];
                 $rawFilter  = $_GET['filter'];
@@ -169,7 +169,7 @@ WHERE ' . $catClause . '
             $visibleImages        = is_scalar($visibleImagesRaw) ? (string) $visibleImagesRaw : '';
         }
 
-        if ($this->util->getFilterPageValue('add_notes')) {
+        if ($this->filterService->getFilterPageValue('add_notes')) {
             PageState::current()->headerNotes[] = Translator::get()->plural(
                 'Photos posted within the last %d day.',
                 'Photos posted within the last %d days.',

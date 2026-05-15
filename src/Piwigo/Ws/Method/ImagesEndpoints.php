@@ -11,6 +11,7 @@ use Piwigo\Admin\Metadata\MetadataAdminService;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Admin\Users\UserAdminService;
+use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
@@ -69,6 +70,7 @@ final readonly class ImagesEndpoints
         private UserAdminService $userAdminService,
         private Util $util,
         private WsHelper $wsHelper,
+        private EphemeralKeyService $ephemeralKeyService,
     ) {
     }
 
@@ -298,7 +300,7 @@ final readonly class ImagesEndpoints
         $commentPostData = null;
         if (Config::activateComments() && $isCommentable && (!$this->permissionService->isAGuest() || Config::commentsForall())) {
             $commentPostData['author'] = stripslashes(CurrentUser::get()->username);
-            $commentPostData['key']    = $this->util->getEphemeralKey(2, (string) $pImageId);
+            $commentPostData['key']    = $this->ephemeralKeyService->generate(2, (string) $pImageId);
         }
         $ret = $imageRow;
         foreach (['id', 'width', 'height', 'hit', 'filesize'] as $k) {
@@ -607,7 +609,7 @@ final readonly class ImagesEndpoints
     {
         $logger    = LoggerRegistry::current();
         $uploadDir = Config::uploadDir() . '/buffer';
-        if (!Util::mkgetdir($uploadDir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (!Filesystem::mkgetdir($uploadDir, Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
         $pOriginalSum = is_string($params['original_sum'] ?? null) ? $params['original_sum'] : '';
@@ -799,7 +801,7 @@ final readonly class ImagesEndpoints
             }
         }
         $uploadDir = Config::uploadDir() . '/buffer';
-        if (!Util::mkgetdir($uploadDir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (!Filesystem::mkgetdir($uploadDir, Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
         if (isset($_REQUEST['name'])) {
@@ -907,7 +909,7 @@ final readonly class ImagesEndpoints
         $outputFilepathPrefix  = Config::uploadDir() . '/buffer/' . $pOriginalSum . '-u' . $pUserId;
         $chunkfilePathPattern  = $outputFilepathPrefix . '-%03uof%03u.chunk';
         $chunkfilePath         = sprintf($chunkfilePathPattern, $pChunk + 1, $pChunks);
-        if (!Util::mkgetdir(dirname($chunkfilePath), MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
+        if (!Filesystem::mkgetdir(dirname($chunkfilePath), Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
         $this->stringUtil->secureDirectory(dirname($chunkfilePath));

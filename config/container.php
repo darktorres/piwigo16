@@ -23,6 +23,7 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Admin\Users\UserTabRenderer;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\CookieService;
+use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Calendar\CalendarService;
@@ -48,6 +49,7 @@ use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\DeviceDetectionService;
 use Piwigo\Http\Middleware\AuthMiddleware;
 use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
 use Piwigo\Http\Middleware\CsrfMiddleware;
@@ -61,12 +63,14 @@ use Piwigo\Job\MessengerFactory;
 use Piwigo\Lang\LangService;
 use Piwigo\Lang\Translator;
 use Piwigo\Language\LanguageRepository;
+use Piwigo\Language\LanguageService;
 use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Notification\NotificationService;
 use Piwigo\Page\NoPhotoYetRenderer;
+use Piwigo\Page\PaginationService;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
 use Piwigo\Permission\PermissionRepository;
@@ -92,6 +96,7 @@ use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Telemetry\TelemetryService;
 use Piwigo\Theme\ThemeRepository;
+use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
@@ -133,7 +138,7 @@ return [
     // Doctrine DBAL shared connection — applies utf8mb4 and removes ONLY_FULL_GROUP_BY.
     Connection::class => factory(static fn (): Connection => DbConnection::build()),
 
-    DerivativeService::class   => factory(static fn (Util $util): DerivativeService => new DerivativeService($util)),
+    DerivativeService::class   => factory(static fn (): DerivativeService => new DerivativeService()),
 
     // Symfony Messenger bus — transports backed by the shared DBAL connection.
     MessageBusInterface::class => factory(static fn (Connection $conn): MessageBusInterface => MessengerFactory::build($conn)),
@@ -144,15 +149,15 @@ return [
     MetadataService::class => factory(static fn (LoggerInterface $log, StringUtil $s): MetadataService => new MetadataService($log, $s)),
     PictureService::class  => factory(static fn (ImageRepository $r): PictureService => new PictureService($r)),
     RateService::class     => factory(static fn (RateRepository $rate, ImageRepository $img, CookieService $c, PermissionService $perm): RateService => new RateService($rate, $img, $c, $perm)),
-    CommentService::class  => factory(static fn (Connection $conn, CommentRepository $repo, LangService $lang, MailService $mail, PermissionService $perm, StringUtil $s, UrlGenerator $ug, UrlService $u, Util $util): CommentService => new CommentService($conn, $repo, $lang, $mail, $perm, $s, $ug, $u, $util)),
-    AuthService::class         => factory(static fn (UserRepository $u, AuthKeyRepository $ak, Connection $conn, StringUtil $s, Util $util, SessionService $sess, UrlGenerator $ug, UrlService $us, DateService $d): AuthService => new AuthService($u, $ak, $conn, $s, $util, $sess, $ug, $us, $d)),
+    CommentService::class  => factory(static fn (Connection $conn, CommentRepository $repo, LangService $lang, MailService $mail, PermissionService $perm, StringUtil $s, UrlGenerator $ug, UrlService $u, EphemeralKeyService $eks): CommentService => new CommentService($conn, $repo, $lang, $mail, $perm, $s, $ug, $u, $eks)),
+    AuthService::class         => factory(static fn (UserRepository $u, AuthKeyRepository $ak, Connection $conn, StringUtil $s, Util $util, SessionService $sess, UrlGenerator $ug, UrlService $us, DateService $d, LanguageService $lang): AuthService => new AuthService($u, $ak, $conn, $s, $util, $sess, $ug, $us, $d, $lang)),
     PasswordService::class     => factory(static fn (AuthService $auth, MailService $mail, PermissionService $perm, PreferencesService $pref, StringUtil $s, UrlGenerator $ug, UserRepository $u, UserService $us, Util $util): PasswordService => new PasswordService($auth, $mail, $perm, $pref, $s, $ug, $u, $us, $util)),
     CalendarService::class     => factory(static fn (CategoryService $cat, Connection $conn, DebugCollector $dbg, PermissionService $perm, UrlService $us, CacheItemPoolInterface $pool): CalendarService => new CalendarService($cat, $conn, $dbg, $perm, $us, $pool)),
-    MailService::class         => factory(static fn (Connection $conn, StringUtil $s, UrlGenerator $ug, Util $util, LangService $lang, AuthService $auth, UrlService $us): MailService => new MailService($conn, $s, $ug, $util, $lang, $auth, $us)),
+    MailService::class         => factory(static fn (Connection $conn, StringUtil $s, UrlGenerator $ug, UserRepository $u, LangService $lang, AuthService $auth, UrlService $us): MailService => new MailService($conn, $s, $ug, $u, $lang, $auth, $us)),
     PermissionService::class   => factory(static fn (Connection $conn, HtmlService $h): PermissionService => new PermissionService($conn, $h)),
-    PreferencesService::class  => factory(static fn (Util $u, UserRepository $r): PreferencesService => new PreferencesService($u, $r)),
-    UserService::class         => factory(static fn (UserRepository $u, Connection $conn, HistoryRepository $h, ActivityRepository $a, GroupRepository $g, AuthKeyRepository $ak, StringUtil $s, Util $util, ExecutionMutex $mutex, LangService $lang, UrlGenerator $ug, MailService $mail, MessageBusInterface $bus, HtmlService $html, DateService $date, CategoryService $cat, UserAdminService $uas, SessionService $sess, AuthService $auth, PreferencesService $pref, PermissionService $perm): UserService => new UserService($u, $conn, $h, $a, $g, $ak, $s, $util, $mutex, $lang, $ug, $mail, $bus, $html, $date, $cat, $uas, $sess, $auth, $pref, $perm)),
-    ProfileService::class      => factory(static fn (Connection $conn, AuthService $auth, DateService $d, LangService $lang, MailService $mail, UserRepository $u, UserService $us, Util $util): ProfileService => new ProfileService($conn, $auth, $d, $lang, $mail, $u, $us, $util)),
+    PreferencesService::class  => factory(static fn (LanguageService $lang, UserRepository $r): PreferencesService => new PreferencesService($lang, $r)),
+    UserService::class         => factory(static fn (UserRepository $u, Connection $conn, HistoryRepository $h, ActivityRepository $a, GroupRepository $g, AuthKeyRepository $ak, StringUtil $s, Util $util, ExecutionMutex $mutex, LangService $lang, UrlGenerator $ug, MailService $mail, MessageBusInterface $bus, HtmlService $html, DateService $date, CategoryService $cat, UserAdminService $uas, SessionService $sess, AuthService $auth, PreferencesService $pref, PermissionService $perm, LanguageService $langSvc, ThemeService $theme): UserService => new UserService($u, $conn, $h, $a, $g, $ak, $s, $util, $mutex, $lang, $ug, $mail, $bus, $html, $date, $cat, $uas, $sess, $auth, $pref, $perm, $langSvc, $theme)),
+    ProfileService::class      => factory(static fn (Connection $conn, AuthService $auth, DateService $d, LangService $lang, MailService $mail, UserRepository $u, UserService $us, Util $util, LanguageService $langSvc, ThemeService $theme): ProfileService => new ProfileService($conn, $auth, $d, $lang, $mail, $u, $us, $util, $langSvc, $theme)),
     CategoryService::class     => factory(static fn (CategoryRepository $cat, Connection $conn, FilterService $f, PermissionService $perm): CategoryService => new CategoryService($cat, $conn, $f, $perm)),
     HtmlService::class         => factory(static fn (Connection $conn, StringUtil $s): HtmlService => new HtmlService($conn, $s)),
     NotificationService::class => factory(static fn (Connection $conn, HtmlService $h, UrlGenerator $ug, PermissionService $perm, UrlService $us, CacheItemPoolInterface $pool): NotificationService => new NotificationService($conn, $h, $ug, $perm, $us, $pool)),
@@ -171,7 +176,7 @@ return [
     GroupsEndpoints::class           => factory(static fn (Connection $conn, GroupRepository $g, UserAdminService $uA, Util $util): GroupsEndpoints => new GroupsEndpoints($conn, $g, $uA, $util)),
     UsersEndpoints::class            => factory(static fn (Connection $conn, AuthService $auth, ConfigService $cfg, DateService $d, GroupRepository $g, ImageRepository $i, MailService $m, PermissionService $perm, PreferencesService $pref, UserAdminService $uA, UserRepository $u, UserService $us, Util $util, WsHelper $ws): UsersEndpoints => new UsersEndpoints($conn, $auth, $cfg, $d, $g, $i, $m, $perm, $pref, $uA, $u, $us, $util, $ws)),
     CategoriesEndpoints::class       => factory(static fn (Connection $conn, CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, HtmlService $h, ImageAdminService $iA, ImageRepository $i, PermissionService $perm, UrlGenerator $ug, UrlService $us, UserAdminService $uA, UserRepository $u, Util $util, WsHelper $ws): CategoriesEndpoints => new CategoriesEndpoints($conn, $catA, $catR, $cat, $h, $iA, $i, $perm, $ug, $us, $uA, $u, $util, $ws)),
-    ImagesEndpoints::class           => factory(static fn (Connection $conn, CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, CommentService $com, HtmlService $h, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, PermissionService $perm, RateRepository $rR, RateService $rate, SearchService $sr, StringUtil $s, TagAdminService $tA, TagService $tag, UploadService $up, UrlService $u, UserAdminService $uA, Util $util, WsHelper $ws): ImagesEndpoints => new ImagesEndpoints($conn, $catA, $catR, $cat, $com, $h, $iA, $i, $mA, $perm, $rR, $rate, $sr, $s, $tA, $tag, $up, $u, $uA, $util, $ws)),
+    ImagesEndpoints::class           => factory(static fn (Connection $conn, CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, CommentService $com, HtmlService $h, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, PermissionService $perm, RateRepository $rR, RateService $rate, SearchService $sr, StringUtil $s, TagAdminService $tA, TagService $tag, UploadService $up, UrlService $u, UserAdminService $uA, Util $util, WsHelper $ws, EphemeralKeyService $eks): ImagesEndpoints => new ImagesEndpoints($conn, $catA, $catR, $cat, $com, $h, $iA, $i, $mA, $perm, $rR, $rate, $sr, $s, $tA, $tag, $up, $u, $uA, $util, $ws, $eks)),
     AdminService::class              => factory(static fn (Connection $conn, CategoryRepository $catR, DateService $d, HistoryRepository $hR, ImageRepository $i, StringUtil $s, TagRepository $tR, UserRepository $u): AdminService => new AdminService($conn, $catR, $d, $hR, $i, $s, $tR, $u)),
     CategoryAdminService::class      => factory(static function (ContainerInterface $c): CategoryAdminService {
         return (new \ReflectionClass(CategoryAdminService::class))->newLazyProxy(
@@ -221,7 +226,7 @@ return [
             )
         );
     }),
-    NotificationAdminService::class  => factory(static fn (MailService $mail, NotificationRepository $nR, StringUtil $s, UrlGenerator $ug, UrlService $u, UserService $us, Util $util): NotificationAdminService => new NotificationAdminService($mail, $nR, $s, $ug, $u, $us, $util)),
+    NotificationAdminService::class  => factory(static fn (MailService $mail, NotificationRepository $nR, StringUtil $s, UrlGenerator $ug, UrlService $u, UserService $us): NotificationAdminService => new NotificationAdminService($mail, $nR, $s, $ug, $u, $us)),
     UploadService::class             => factory(static fn (Connection $conn, CategoryAdminService $catA, ConfigService $cfg, DerivativeService $der, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, StringUtil $s, UserAdminService $uA, Util $util): UploadService => new UploadService($conn, $catA, $cfg, $der, $iA, $i, $mA, $s, $uA, $util)),
     AlbumsTabRenderer::class         => factory(static fn (CategoryRepository $catR): AlbumsTabRenderer => new AlbumsTabRenderer($catR)),
     UserTabRenderer::class           => factory(static fn (): UserTabRenderer => new UserTabRenderer()),
@@ -229,14 +234,14 @@ return [
     FilterResolver::class            => factory(static fn (Connection $conn, HtmlService $h, TagAdminService $tA, Util $util, LangService $lang, UrlService $us): FilterResolver => new FilterResolver($conn, $h, $tA, $util, $lang, $us)),
     SizesProcessor::class            => factory(static fn (ImageAdminService $iA, UploadService $up, Util $util, PermissionService $perm): SizesProcessor => new SizesProcessor($iA, $up, $util, $perm)),
     WatermarkProcessor::class        => factory(static fn (ImageAdminService $iA, StringUtil $s, Util $util, PermissionService $perm): WatermarkProcessor => new WatermarkProcessor($iA, $s, $util, $perm)),
-    MenubarRenderer::class           => factory(static fn (CategoryService $cat, CommentService $com, PermissionService $perm, TagService $tag, UrlGenerator $ug, UrlService $u, Util $util): MenubarRenderer => new MenubarRenderer($cat, $com, $perm, $tag, $ug, $u, $util)),
+    MenubarRenderer::class           => factory(static fn (CategoryService $cat, CommentService $com, PermissionService $perm, TagService $tag, UrlGenerator $ug, UrlService $u, FilterService $f): MenubarRenderer => new MenubarRenderer($cat, $com, $perm, $tag, $ug, $u, $f)),
     SearchFilterRenderer::class      => factory(static fn (Connection $conn, ConfigService $cfg, DateService $d, HtmlService $h, LangService $lang, PermissionService $perm, SearchService $sr, TagService $tag, UrlService $u, CacheItemPoolInterface $pool): SearchFilterRenderer => new SearchFilterRenderer($conn, $cfg, $d, $h, $lang, $perm, $sr, $tag, $u, $pool)),
-    CategoryCatsRenderer::class      => factory(static fn (Connection $conn, CategoryService $cat, DateService $d, FilterService $f, HtmlService $h, PermissionService $perm, UrlService $u, Util $util, DebugCollector $dbg): CategoryCatsRenderer => new CategoryCatsRenderer($conn, $cat, $d, $f, $h, $perm, $u, $util, $dbg)),
-    CategoryDefaultRenderer::class   => factory(static fn (Connection $conn, CategoryService $cat, HtmlService $h, ImageRepository $i, SessionService $sess, StringUtil $s, UrlService $u, Util $util, DebugCollector $dbg): CategoryDefaultRenderer => new CategoryDefaultRenderer($conn, $cat, $h, $i, $sess, $s, $u, $util, $dbg)),
+    CategoryCatsRenderer::class      => factory(static fn (Connection $conn, CategoryService $cat, DateService $d, FilterService $f, HtmlService $h, PermissionService $perm, UrlService $u, DebugCollector $dbg, PaginationService $pag): CategoryCatsRenderer => new CategoryCatsRenderer($conn, $cat, $d, $f, $h, $perm, $u, $dbg, $pag)),
+    CategoryDefaultRenderer::class   => factory(static fn (Connection $conn, CategoryService $cat, HtmlService $h, ImageRepository $i, SessionService $sess, StringUtil $s, UrlService $u, DebugCollector $dbg): CategoryDefaultRenderer => new CategoryDefaultRenderer($conn, $cat, $h, $i, $sess, $s, $u, $dbg)),
     SelectedTagsRenderer::class      => factory(static fn (UrlService $us): SelectedTagsRenderer => new SelectedTagsRenderer($us)),
     NoPhotoYetRenderer::class        => factory(static fn (ConfigService $cfg, ImageRepository $i, StringUtil $s, UrlGenerator $ug, Util $util, UrlService $us, PermissionService $perm): NoPhotoYetRenderer => new NoPhotoYetRenderer($cfg, $i, $s, $ug, $util, $us, $perm)),
     PictureRateRenderer::class       => factory(static fn (RateRepository $rR, PermissionService $perm, UrlService $us): PictureRateRenderer => new PictureRateRenderer($rR, $perm, $us)),
-    PictureCommentRenderer::class    => factory(static fn (Connection $conn, CommentService $com, DateService $d, HtmlService $h, PermissionService $perm, SessionService $sess, UrlService $u, Util $util): PictureCommentRenderer => new PictureCommentRenderer($conn, $com, $d, $h, $perm, $sess, $u, $util)),
+    PictureCommentRenderer::class    => factory(static fn (Connection $conn, CommentService $com, DateService $d, HtmlService $h, PermissionService $perm, SessionService $sess, UrlService $u, Util $util, EphemeralKeyService $eks, PaginationService $pag): PictureCommentRenderer => new PictureCommentRenderer($conn, $com, $d, $h, $perm, $sess, $u, $util, $eks, $pag)),
     PictureMetadataRenderer::class   => factory(static fn (MetadataService $m): PictureMetadataRenderer => new PictureMetadataRenderer($m)),
     MetadataAdminService::class      => factory(static fn (Connection $conn, ImageRepository $i, MetadataService $m, StringUtil $s, TagAdminService $tA): MetadataAdminService => new MetadataAdminService($conn, $i, $m, $s, $tA)),
     HistoryAdminService::class       => factory(static fn (Connection $conn, HistoryRepository $hR, StringUtil $s): HistoryAdminService => new HistoryAdminService($conn, $hR, $s)),
@@ -246,10 +251,15 @@ return [
     LangService::class         => factory(static fn (): LangService => new LangService()),
     ConfigService::class       => factory(static fn (Connection $conn): ConfigService => new ConfigService($conn)),
     QueryHelper::class         => factory(static fn (Connection $conn): QueryHelper => new QueryHelper($conn)),
-    Util::class                => factory(static fn (Connection $conn, LangService $lang, LanguageRepository $langRepo, ThemeRepository $themeRepo, UserRepository $u, PermissionService $perm, HtmlService $html, SessionService $sess, ConfigService $cfg, HistoryRepository $hist, HistoryAdminService $histA): Util => new Util($conn, $lang, $langRepo, $themeRepo, $u, $perm, $html, $sess, $cfg, $hist, $histA)),
+    Util::class                => factory(static fn (Connection $conn, LangService $lang, UserRepository $u, PermissionService $perm, HtmlService $html, ConfigService $cfg, HistoryRepository $hist, HistoryAdminService $histA): Util => new Util($conn, $lang, $u, $perm, $html, $cfg, $hist, $histA)),
     DebugCollector::class      => factory(static fn (): DebugCollector => new DebugCollector()),
+    DeviceDetectionService::class => factory(static fn (SessionService $sess): DeviceDetectionService => new DeviceDetectionService($sess)),
+    EphemeralKeyService::class => factory(static fn (): EphemeralKeyService => new EphemeralKeyService()),
     ExecutionMutex::class      => factory(static fn (Connection $conn, ConfigService $cfg, LoggerInterface $log): ExecutionMutex => new ExecutionMutex($conn, $cfg, $log)),
+    LanguageService::class     => factory(static fn (LanguageRepository $r): LanguageService => new LanguageService($r)),
+    PaginationService::class   => factory(static fn (): PaginationService => new PaginationService()),
     TelemetryService::class    => factory(static fn (Connection $conn, ConfigService $cfg, LoggerInterface $log, AdminService $admin, StringUtil $s, ExecutionMutex $mutex): TelemetryService => new TelemetryService($conn, $cfg, $log, $admin, $s, $mutex)),
+    ThemeService::class        => factory(static fn (ThemeRepository $r): ThemeService => new ThemeService($r)),
 
     // Domain repositories — injected with the shared DBAL connection and table prefix.
     TagRepository::class          => factory(static fn (Connection $conn): TagRepository => new TagRepository($conn, Config::dbPrefix())),
@@ -279,7 +289,7 @@ return [
     ExceptionHandlerMiddleware::class => factory(static fn (): ExceptionHandlerMiddleware => new ExceptionHandlerMiddleware()),
     SessionMiddleware::class          => factory(static fn (): SessionMiddleware => new SessionMiddleware()),
     AuthMiddleware::class             => factory(static fn (): AuthMiddleware => new AuthMiddleware()),
-    FilterMiddleware::class           => factory(static fn (Connection $conn, CategoryService $cat, SessionService $sess, Util $util): FilterMiddleware => new FilterMiddleware($conn, $cat, $sess, $util)),
+    FilterMiddleware::class           => factory(static fn (Connection $conn, CategoryService $cat, SessionService $sess, FilterService $f): FilterMiddleware => new FilterMiddleware($conn, $cat, $sess, $f)),
     CsrfMiddleware::class             => factory(static fn (Util $util): CsrfMiddleware => new CsrfMiddleware($util)),
     RoutingMiddleware::class          => factory(static fn (Router $r): RoutingMiddleware => new RoutingMiddleware($r)),
     ControllerInvokerMiddleware::class => factory(static fn (ContainerInterface $c): ControllerInvokerMiddleware => new ControllerInvokerMiddleware($c)),

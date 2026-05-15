@@ -79,9 +79,10 @@ Still-active sub-call sites:
 | `Util::pwgLog`, `Util::recentPeriod` | varies | Logger reads section context |
 | `PictureController` | `filter` | Recent-photos mode |
 
-**Removal path:** thread an explicit mutable `PageContext` or `SearchContext`
-through `SearchService` / `CalendarService`; delete the reference bridge from
-`SectionInitializer::initialize()`.
+**Removal path:** see [§A1 detailed plan](#a1--eliminate-the-globalspage-alias-after-phases-2--4)
+in Phase 5 — proper fix is to make each subsystem own its own state
+internally (so `SearchService` keeps `$this->searchDetails` etc.), not to
+type the shared-mutable-state pattern via a `PageContext` VO.
 
 ## A2. Ad-hoc `$GLOBALS` Cross-Class Channels
 
@@ -93,7 +94,7 @@ typed bridge — readers do `is_array($GLOBALS['x'] ?? null) ? … : []` inline.
 | `$GLOBALS['filter']` | `CommonBootstrap` (init), `FilterMiddleware` (`&$GLOBALS['filter']`), `SectionInitializer` (reference mutation) | `CategoryService`, `FilterService`, `MenubarRenderer`, `PermissionService`, `CalendarService`, `PictureController` | Promote to typed `FilterContext` VO with registry singleton |
 | `$GLOBALS['lang_info']` | `LanguageStack` (set/merge/restore) | `Template:83`, `AdminService:406` | Cross-subsystem read — fold into `Lang` static state |
 | `$GLOBALS['header_msgs']` + `$GLOBALS['header_notes']` | `CommonBootstrap`, `CheckIntegrity` | `CommonBootstrap` (template assign), `FilterMiddleware:54` (reference) | Promote to `PageState` typed arrays |
-| `$GLOBALS['debug']` + `$GLOBALS['t2']` | `Util::pwgLog`, `CommonBootstrap` | `PageTailRenderer`, `Util` | Move into `PageState` or kill if debug-only |
+| `$GLOBALS['debug']` + `$GLOBALS['t2']` | `Util::pwgLog`, `CommonBootstrap` | `PageTailRenderer`, `Util` | `t2` → use `$_SERVER['REQUEST_TIME_FLOAT']` (built-in); `debug` → fold into PSR-3 logger via `DebugAccumulatorHandler` |
 | `$GLOBALS['prefixeTable']` | `CommonBootstrap:83`, `UpgradeController`, `InstallController`, `index.php:38` (image-derivative fast path), `index.php:66` (upgrade_feed fast path) | `UpgradeService:31`, `MaintenanceService:16` | Use `Config::dbPrefix()` everywhere |
 | `$GLOBALS['errors']` | `LocalSiteReader` | `LocalSiteReader` | Self-contained — make instance state |
 | `$GLOBALS['themeconfs']` | `Template::loadThemeconf` | `Template::loadThemeconf` | Self-contained — make instance property |
@@ -739,31 +740,46 @@ this batch.
 
 ### Phase 2e — MobileEsp removal (§A4.3)
 
-1. Delete or rewrite the 3 call sites: `Core/Util.php:452`,
-   `Controller/Admin/PhotoController.php:614`,
-   `Controller/Admin/MiscController.php:574`. The admin UI is responsive;
-   the detection paths are vestigial — simplest is to delete.
-2. Delete `Util::mobileTheme()` and `Util::getDevice()` (no other callers).
-3. Remove `ahand/mobileesp` from `composer.json`.
+**Precondition** (not yet verified): the 3 call sites assume mobile UA
+detection is needed to switch theme/UI. The frontend is meant to be
+responsive, but this hasn't been audited against the actual call sites.
+
+1. **Audit first**: confirm the modern admin UI works on mobile viewports
+   without the `Util::mobileTheme()` / `getDevice()` branches.
+   `tests/e2e/14-admin-extended-smoke.spec.ts` and friends can be run with
+   a mobile viewport.
+2. **If the UI is fully responsive** (likely): delete the 3 call sites,
+   delete `Util::mobileTheme()` and `Util::getDevice()` (no other callers),
+   remove `ahand/mobileesp` from `composer.json`.
+3. **If mobile branches still serve a purpose**: migrate to the
+   `Sec-CH-UA-Mobile` request header (modern UA Client Hints) read from
+   the PSR-7 request — keep the behaviour, drop the regex library.
 
 **Enables:** Util.php split (§A5.1) loses two methods, becoming smaller.
 
 ### Phase 2f — `CURRENT_DATE` inconsistency (§A3.4)
 
-1. Pick a single canonical format. Recommend `date('Y-m-d H:i:s')` (the
-   UpgradeController / InstallController choice) because date-only loses
-   information.
-2. Rewrite `Admin/Metadata/MetadataAdminService.php:214` to use
-   `(new \DateTimeImmutable())->format('Y-m-d H:i:s')` (or thread a
-   parameter through). Same for the other two writers.
-3. Either delete the `define('CURRENT_DATE', …)` calls in all three sites
-   (preferred — pass a `DateTimeImmutable` through call chains) or keep one
-   canonical define if the three call paths really do need a request-scoped
-   shared timestamp.
+**Proper fix** — eliminate the global constant entirely:
+
+1. Define a `Piwigo\Core\RequestClock` service that holds one
+   `DateTimeImmutable` for the request and exposes `->now()` and
+   `->format(string $fmt)`. Inject via DI.
+2. Rewrite `Admin/Metadata/MetadataAdminService.php:214`,
+   `Controller/UpgradeController.php:127`, and
+   `Controller/InstallController.php:245` to read from `RequestClock`
+   instead of `define('CURRENT_DATE', …)`. Each call site picks its own
+   format — no shared format means no inconsistency.
+3. Delete all three `define('CURRENT_DATE', …)` calls.
 4. Disambiguate from the SQL string literal `'CURRENT_DATE'` in
    `Db/SqlExpr.php:70, 72, 74` — that's the SQL keyword, not the PHP
-   constant; an inline `// SQL keyword, not the PHP constant` comment is
+   constant. An inline `// SQL keyword, not the PHP constant` comment is
    enough.
+
+> **Workaround alternative (do not use unless RequestClock is too
+> invasive):** pick one canonical format and standardise all three
+> `define()` calls. This keeps the global state but at least makes the
+> three writers consistent. Smaller diff but doesn't actually solve the
+> shared-state problem.
 
 Latent bug, not a shim. Worth doing because the inconsistent formats
 silently no-op via the `defined() or define()` guard.
@@ -809,7 +825,8 @@ other.
 | Task | Sub-steps |
 |---|---|
 | `$GLOBALS['prefixeTable']` → `Config::dbPrefix()` (§A2) | Migrate the 2 readers (`UpgradeService:31`, `MaintenanceService:16`); delete the 5 writes (`CommonBootstrap:83`, `UpgradeController`, `InstallController`, `index.php:38`, `index.php:66`); drop `prefixeTable` from `phpstan-bootstrap.php` |
-| `$GLOBALS['debug']` + `$GLOBALS['t2']` → `PageState` typed properties (§A2) | Add `PageState::$debugLog` and `$requestStartTime`; migrate writers (`Util::pwgLog`, `CommonBootstrap:57, 113-118`) and readers (`PageTailRenderer:55, 61`, `Util:107, 502`); the debug accumulator could alternatively be folded into the new `PwgLogger` from Phase 5 Util split if logging is reworked |
+| `$GLOBALS['t2']` → `$_SERVER['REQUEST_TIME_FLOAT']` (§A2) | PHP populates `$_SERVER['REQUEST_TIME_FLOAT']` natively. Replace the `CommonBootstrap:57` write and `Util:107, 502` + `PageTailRenderer:61` reads with that. Delete the global entirely. **Proper fix — eliminates the custom timing mechanism, no relocation.** |
+| `$GLOBALS['debug']` → PSR-3 logger (§A2) | The codebase already has `LoggerRegistry::current()` with Monolog. `Util::pwgLog()` writes an HTML string into `$GLOBALS['debug']`; `PageTailRenderer:55` reads it back to render a debug panel. Replace the string accumulator with `$logger->debug(...)` calls and either (a) delete the debug-panel render if it duplicates Monolog's output, or (b) add a `DebugAccumulatorHandler` that captures log records and exposes them to `PageTailRenderer`. **Proper fix — folds custom mechanism into the existing typed logger.** Coordinated with Phase 5 Util split. |
 
 Phase 3b sits between Phase 3a (trivial) and Phase 4 (new VO required) —
 each task is a 10-30-line change across 2-5 files.
@@ -889,17 +906,23 @@ Phase 2 + Phase 4           ──→  §A1 PageContext through Search/Calendar
 
 ### §A5.1 — Split `Util.php` (recommended order after Phase 2e + 4a)
 
-Carve out:
-- `PwgLogger` (`pwgLog`, `pwgDebug`, `doLog`, `pwgActivity`)
+Carve out (names deliberately drop the `pwg` prefix — those are the legacy
+free-function names §16 calls out as the smell):
+
+- `ActivityLogger` (`pwgLog`, `pwgActivity`, `doLog` — these all write to the activity log table; merge with each other). The PSR-3 `LoggerRegistry`/`Logger` covers application-level logging; `ActivityLogger` is specifically the user-visible activity feed.
+- `DebugCollector` (`pwgDebug`) — coordinated with the Phase 3b `$GLOBALS['debug']` fold into PSR-3. If Phase 3b adds a `DebugAccumulatorHandler` to Monolog, this class becomes a thin facade or goes away.
 - `CsrfService` (`getPwgToken`, `checkPwgToken`)
-- `ExecutionMutex` (`pwgUniqueExecBegins`/`IsRunning`/`Ends`)
-- `RedirectResponder` (collapses `redirect`/`redirectHttp`/`redirectHtml` to one PSR-7-returning method)
-- `TelemetryService` (`sendPiwigoInfos`, `sendPiwigoInfosRetryLater`)
-- Extension enumeration helpers move to a `ThemeService` and `LanguageService`.
-- `mkgetdir` → static method on a `Filesystem` helper (or use `Symfony\Component\Filesystem`).
+- `ExecutionMutex` (`pwgUniqueExecBegins` / `IsRunning` / `Ends`) — rename methods to `acquire` / `isHeld` / `release`.
+- `RedirectResponder` returning PSR-7 `ResponseInterface` (collapses `redirect` / `redirectHttp` / `redirectHtml` to one method that picks header vs HTML body based on whether headers can still be sent).
+- `TelemetryService` (`sendPiwigoInfos`, `sendPiwigoInfosRetryLater`).
+- Extension enumeration helpers move to `ThemeService` and `LanguageService` (mirroring `PluginService`).
+- `mkgetdir` → `Symfony\Component\Filesystem` — we already require `league/flysystem`, so the `Filesystem` component or a thin Flysystem wrapper subsumes it. Promote `MKGETDIR_*` flags (§A3.6) to a typed enum if any callers still need flag combinations; otherwise inline the defaults.
 
 Update `Util::pwgActivity` signature to typed `ActivityEvent` enum + DTO at
-the same time.
+the same time. The current `(string $object, array|int|string $objectId,
+string $action, array $details = [])` union-type signature is itself a smell.
+
+> **Don't do**: name the carved-out class `PwgLogger`, `PwgCsrf`, etc. Those names preserve the legacy `pwg*` prefix the inventory just spent paragraphs explaining are the symptom of `include/functions.inc.php` heritage. The point of the split is to leave that behind.
 
 ### §A5.2 — Retire `caddie` (after Phase 2b)
 
@@ -913,24 +936,47 @@ the same time.
 5. Delete `Db\Tables::caddie()` accessor.
 6. Phase 2b already deleted the `CADDIE_TABLE` constant.
 
-### §A1 — `PageContext` through Search/Calendar (after Phases 2 & 4)
+### §A1 — Eliminate the `&$GLOBALS['page']` Alias (after Phases 2 & 4)
 
-1. Define mutable `PageContext` VO covering the keys still mutated via
-   `&$GLOBALS['page']` (search rules, chronology, root_path push/pop).
-2. Update method signatures to accept/return `PageContext` in:
-   `SearchService` (4 methods), `SearchFilterRenderer::render`,
-   `CalendarService::initializeCalendar`, `CalendarBase::render`,
-   `CalendarMonthly` (4 render methods), `UrlService::setMakeFullUrl`/
-   `unsetMakeFullUrl`, `PasswordService` (×2), `AuthService::authKeyLogin`,
-   `Util::pwgLog`, `PictureController`,
-   `MaintenanceController::history`, `GeneralEndpoints::historySearch`,
-   `UpgradeController` (×2).
-3. Delete the `$GLOBALS['page'] = &$page` alias in
-   `SectionInitializer.php:68`.
-4. Remove `$page` from `tools/phpstan-bootstrap.php`; drop `'page'` from
-   `NoGlobalInSrcRule` GUARDED.
+The current `&$GLOBALS['page']` alias exists because four subsystems
+(Search, Calendar, UrlService, password-reset/auth-key flow) historically
+shared mutable state via the global. There are **two ways** to fix this;
+the proper one is significantly more work.
 
-This is the biggest single refactor in §A.
+**Proper fix — service-owned state (preferred):**
+
+The reason each of these subsystems reaches into `$GLOBALS['page']` is
+that they were procedural and shared mutable state via the global. Each
+subsystem should own its own state internally:
+
+- `SearchService` keeps `$this->searchDetails`, `$this->searchId`,
+  `$this->useRegexpICU` as instance properties; `SearchFilterRenderer`
+  reads them via getters; the cross-class write-back goes away.
+- `CalendarService` / `CalendarMonthly` / `CalendarBase` own
+  `$this->chronologyDate` and feed it forward via method return values
+  instead of mutating shared state. The "rendering-time dead writes"
+  noted in §A1 turn out to actually be dead and can be deleted.
+- `UrlService::setMakeFullUrl()` / `unsetMakeFullUrl()` already manage
+  a push/pop pair via `root_path`/`save_root_path` keys in
+  `$GLOBALS['page']`. Replace with a real `private array $rootPathStack`
+  property on `UrlService`.
+- `AuthService::authKeyLogin()` writes `auth_key_id` into the page
+  global for `Util::pwgLog()` to read later. Replace by passing the
+  auth-key id through the request attributes or as a method argument
+  to whichever activity-log call needs it.
+- `PasswordService` writes `username` into the page global mid-flow.
+  Convert to a local variable or an instance property — the read is in
+  the same class.
+
+Then delete the `$GLOBALS['page'] = &$page` alias in
+`SectionInitializer.php:68` and remove `$page` from
+`tools/phpstan-bootstrap.php` / `NoGlobalInSrcRule` GUARDED.
+
+This is the biggest single refactor in §A (~20+ method signature changes
+across 13 files), but it actually eliminates the shared-mutable-state
+pattern instead of typing it.
+
+> **Workaround alternative — mutable `PageContext` VO (do not use unless service-owned state is too invasive):** introduce a mutable `PageContext` covering the keys still mutated via `&$GLOBALS['page']`, thread it through the same 13 files as a method parameter, and delete the alias. This types the global but preserves the shared-mutable-state pattern — the next person who needs to track "where does this field get written" still has to walk every consumer. Strictly better than `$GLOBALS['page']`; strictly worse than service-owned state.
 
 ## Phase 6 — v17.0 Cutover (Single PR Cluster)
 
@@ -972,7 +1018,7 @@ time this phase runs.
    Phase 3b (prefixeTable, debug+t2)             ─┤
                                                    │
    Phase 4a ($filter)     ──→ phpstan stubs, GUARDED
-   Phase 4b (header_*)    ──→ GUARDED            ─┼──→ §A1 PageContext
+   Phase 4b (header_*)    ──→ GUARDED            ─┼──→ §A1 service-owned state
    Phase 4c (RequestCtx)  ──→ phpstan stubs       │    after 2 + 4
    Phase 4d (lang_info)   ──→ Lang static state   │
                                                    │
@@ -987,8 +1033,9 @@ Notes:
   externally parallel.
 - Phase 3 tasks are mutually independent and don't gate anything.
 - Phase 4 tasks gate Phase 5 softly: Util.php split (§A5.1) benefits from
-  Phase 2e + 4a; PageContext refactor (§A1) benefits from Phase 4a (shared
-  sub-call sites in CalendarService).
+  Phase 2e + 4a; §A1 service-owned-state refactor benefits from Phase 4a
+  (CalendarService sub-calls share the alias with the filter path, so
+  migrating filter first reduces the §A1 surface).
 - Phase 6 only hard-depends on §A5.2 having retired the caddie — every
   other §P task is independent of Phases 1-5.
 

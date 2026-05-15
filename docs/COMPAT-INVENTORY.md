@@ -8,6 +8,7 @@ Last deep-verified: 2026-05-14. Last updated: 2026-05-14.
 - §1 Wave A: §§1.2–1.6 caller migrations are complete and no `$GLOBALS` reads/writes remain for those keys; §1.1 `$GLOBALS['page']` still has 30 active references in 13 files — the reference bridge at `SectionInitializer:68` (`$GLOBALS['page'] = &$page`) is preserved on purpose so sub-calls (Search/Calendar/UrlService push-pop) mutate the same shared array.
 - §8 ad-hoc channels: all cross-class admin URL channels eliminated as of 2026-05-14 (CoreTabsRegistrar takes no `$GLOBALS` reads). Remaining §8 channels are either bootstrap init (`prefixeTable`, `t2`, `header_*`, `debug`, `filter`), language-subsystem (`lang_info`), or self-contained (`themeconfs`, `cache`, `errors`, `maint_actions`).
 - §9 stale comments: several files reference long-removed `$GLOBALS` bridges in docstrings only — see §9.
+- §10 tooling drift outside `src/`: the `NoGlobalInSrcRule` PHPStan rule has stale replacement advice (points at deleted `PersistentCacheRegistry`); `index.php` writes `$GLOBALS['prefixeTable']` directly in two fast-path branches. Tests legitimately seed `$GLOBALS` for fixtures. See §10.
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -335,7 +336,7 @@ These globals are used as request-scoped data channels between unrelated classes
 | `$GLOBALS['picture']` | ~~Nothing in src/~~ | ~~`PictureCommentRenderer`, `PictureRateRenderer`, `PictureMetadataRenderer`~~ | **Fixed 2026-05-14**: added `ratingScore: ?float` and `srcImage: ?SrcImage` to `PictureContext`; `PictureController` populates both; renderers read from `PictureContextRegistry::current()`. Dead `$picture` read in `PictureCommentRenderer` removed. |
 | `$GLOBALS['cache']` | `UserService::getDefaultUserInfo()` | `UserService::getDefaultUserInfo()` | Self-contained request memoization. |
 | `$GLOBALS['themeconfs']` | `Template::loadThemeconf()` | `Template::loadThemeconf()` | Self-contained per-request cache for `themeconf.inc.php` files. |
-| `$GLOBALS['prefixeTable']` | `CommonBootstrap`, `UpgradeController`, `InstallController` | `UpgradeService`, `MaintenanceService` | DB table prefix. Pre-boot config value. |
+| `$GLOBALS['prefixeTable']` | `CommonBootstrap:83`, `UpgradeController`, `InstallController`, **`index.php:38` (image-derivative fast path)**, **`index.php:66` (upgrade_feed fast path)** | `UpgradeService:31`, `MaintenanceService:16` | DB table prefix. Pre-boot config value. The root `index.php` short-circuit branches (`/i/...` derivative and `/upgrade_feed`) skip `CommonBootstrap::run()` and therefore set this directly before calling Config queries. |
 | `$GLOBALS['admin_album_base_url']` | ~~`AlbumController`~~ | ~~`CoreTabsRegistrar`~~ | **Fixed 2026-05-14**: `CoreTabsRegistrar` reads `$_GET['cat_id']` directly and computes `$ug->admin('album-{cat_id}')`. All three GLOBALS writes removed from `AlbumController`; local var kept in `albumNotification()` and `catPerm()` where still used internally. Dead local-var assignments removed from `catModify()`. |
 | `$GLOBALS['link_start']`, `$GLOBALS['conf_link']` | ~~`AdminController`~~ | ~~`CoreTabsRegistrar`~~ | **Fixed 2026-05-14**: `CoreTabsRegistrar` now calls `$ug->admin('pagename')` directly; writes removed from `AdminController` (local vars kept — still used within that controller). |
 | `$GLOBALS['manager_link']` | ~~`BatchManagerController`~~ | ~~`CoreTabsRegistrar`~~ | **Fixed 2026-05-14**: `CoreTabsRegistrar` uses `$ug->admin('batch_manager').'&mode='` directly; write + unused local var removed from `BatchManagerController`. |
@@ -371,3 +372,38 @@ Code-level cleanup is done for these channels, but docstrings/inline comments in
 | `Users/CurrentUser.php:21` | Method named `attachGlobals` with comment "initialise the singleton with an empty guest user" | The method no longer attaches anything to `$GLOBALS`. Misnamed; mechanical rename to `initGuest()` (or fold into `Kernel::boot()`) would be safe. |
 
 **Impact:** None on runtime behaviour — these are documentation drift. Cleaning them is a search-and-replace pass, but worth doing in a single dedicated commit so future audits don't get false signals.
+
+---
+
+## 10. Tooling Drift Outside `src/`
+
+A 2026-05-14 audit confirmed there is no shim/bridge code outside `src/` itself, but the *tooling* that enforces the cleanup has its own drift.
+
+### 10.1 `tools/phpstan/NoGlobalInSrcRule.php`
+
+The PHPStan rule that flags `global $foo` in `src/` has stale content:
+
+| Issue | Detail |
+|---|---|
+| Class docblock (line 18) | Says "Legacy code in `include/` and `admin/` is allowed to keep using globals" — neither directory exists in 16.x. The rule applies to all of `src/`; nothing is exempted. |
+| `REPLACEMENTS['persistent_cache']` (line 38) | Points at `PersistentCacheRegistry::current()` — that class was deleted in §3. Should point at `CacheItemPoolInterface` injection. |
+| `REPLACEMENTS['header_notes']` (line 44) | Says the replacement is "$GLOBALS['header_notes'] reference-bridge" — that's a description, not a typed accessor. Either remove `header_notes` from GUARDED or point at a real typed wrapper. |
+| `REPLACEMENTS['themeconfs']` (line 45) | "instance property or $GLOBALS['themeconfs'] reference-bridge" — contradictory; the global IS the cache (`Template::loadThemeconf()`). |
+| `REPLACEMENTS['filter']` (line 47) | "$GLOBALS['filter'] read with is_array narrowing" — describes the existing pattern. Either remove from GUARDED (since the global is the storage and is allowed) or add a typed `FilterContext`. |
+
+**Impact:** The rule still fires on `global $foo` declarations, so the enforcement isn't broken — but the error messages it would produce for some keys point users at deleted/non-existent typed APIs. Anyone who triggers it for `persistent_cache` gets advice to use a class that doesn't exist.
+
+### 10.2 Tests legitimately seed `$GLOBALS`
+
+Several test files set `$GLOBALS[...]` in setup/teardown to simulate the pre-boot environment Kernel expects:
+
+- `tests/Unit/Core/KernelBootTest.php` — seeds `page`, `lang`, `user` then asserts boot behaviour (including that `attachGlobals` unsets `lang`).
+- `tests/Unit/Url/UrlGeneratorTest.php` — sets `$GLOBALS['page']['root_path']` so URL builders have a deterministic root.
+- `tests/Integration/ContainerSmokeTest.php` — seeds `page`, `user`, `lang`, `filter`, `prefixeTable` for the container smoke test.
+- `tests/Unit/Users/CurrentUserTest.php` / `LangTest.php` — unset `$GLOBALS[...]` in setUp to isolate.
+
+These are **not** shims or bridges — they are test fixtures that exist precisely because the code paths still touch `$GLOBALS` (or expect them to be initialised). They become removable in lockstep with the corresponding production-code cleanup.
+
+### 10.3 `install/obsolete.list`
+
+Plain-text file listing legacy filenames the upgrade flow deletes from old installs. Not code; lists historical Piwigo files that were removed (e.g., `include_phpwebgallery`, `admin/admin.php`). Kept for upgrade compatibility only — no action needed.

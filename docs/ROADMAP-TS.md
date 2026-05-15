@@ -297,7 +297,7 @@ Replace 3rd-party JS/CSS libraries currently checked into the repo under `plugin
 - Bundled themes (`themes/elegant`, `themes/modus`, `themes/smartpocket`, `themes/bootstrap_darkroom`) — themes, not libs; out of 16.x core scope per ROADMAP-CSS.
 - `themes/_base/js/plugins/piecon.ts` — already authored TS, ~100 LOC, no maintenance burden.
 
-**Already migrated:** PHP libs (`smarty`, `phpmailer`, `minify`, `pclzip`, `feedcreator`, `jshrink`, `passwordhash`, `mdetect`, `emogrifier`, `phpqrcode`) all moved to Composer in 16.x. `pint.json`'s `exclude` still lists them — stale entries; harmless, worth a one-line cleanup.
+**Already migrated:** PHP libs (`smarty`, `phpmailer`, `minify`, `feedcreator`, `jshrink`, `passwordhash`, `mdetect`, `emogrifier`, `phpqrcode`) all moved to Composer in 16.x. `pclzip` followed the same path then was retired in Phase 2c (replaced by `ext-zip` / `Piwigo\Core\ZipExtractor`). `pint.json`'s `exclude` previously still listed these — already cleaned up.
 
 ### Tiers (recommended order)
 

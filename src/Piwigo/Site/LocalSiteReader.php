@@ -31,19 +31,7 @@ final class LocalSiteReader
 
     public function open(): bool
     {
-        if (!is_dir($this->site_url)) {
-            if (!isset($GLOBALS['errors']) || !is_array($GLOBALS['errors'])) {
-                $GLOBALS['errors'] = [];
-            }
-            $GLOBALS['errors'][] = [
-              'path' => $this->site_url,
-              'type' => 'PWG-ERROR-NO-FS',
-              ];
-
-            return false;
-        }
-
-        return true;
+        return is_dir($this->site_url);
     }
 
     /** @return string[] */

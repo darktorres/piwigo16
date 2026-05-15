@@ -75,6 +75,9 @@ final class Template
     /** @var array<int, list<mixed>> - Runtime buttons on index page */
     public array $index_buttons = [];
 
+    /** @var array<string, array<mixed>> - per-directory themeconf cache */
+    private array $themeconfs = [];
+
     /**
      * @param string $theme
      */
@@ -482,21 +485,15 @@ final class Template
      */
     public function loadThemeconf(string $dir): array
     {
-        $themeconfs = &$GLOBALS['themeconfs'];
-        if (!is_array($themeconfs)) {
-            $themeconfs = [];
-        }
-
         $realpathDir = realpath($dir);
         $dir = $realpathDir !== false ? $realpathDir : $dir;
-        if (!isset($themeconfs[$dir])) {
+        if (!isset($this->themeconfs[$dir])) {
             $themeconf = [];
             /** @psalm-suppress UnresolvableInclude */
             require($dir.'/themeconf.inc.php');
-            // Put themeconf in cache
-            $themeconfs[$dir] = $themeconf;
+            $this->themeconfs[$dir] = $themeconf;
         }
-        return is_array($themeconfs[$dir]) ? $themeconfs[$dir] : [];
+        return $this->themeconfs[$dir];
     }
 
     /**

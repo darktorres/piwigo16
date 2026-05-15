@@ -155,7 +155,6 @@ final class MaintenanceController
             'search'             => ['icon' => 'icon-search',         'label' => Lang::t('Purge search history')],
             'compiled-templates' => ['icon' => 'icon-file-code',      'label' => Lang::t('Purge compiled templates')],
         ];
-        $GLOBALS['maint_actions'] = $this->maintActions;
 
         $this->util->checkInputParameter('tab', $_GET, false, '/^(actions|env|sys)$/');
         $tab = isset($_GET['tab']) && is_string($_GET['tab']) ? $_GET['tab'] : 'actions';
@@ -183,11 +182,6 @@ final class MaintenanceController
 
         $this->imageAdminService->fsQuickCheck();
 
-        if (empty($this->maintActions)) {
-            /** @var array<string, array<string, string>> $maint_actions_g */
-            $maint_actions_g = is_array($GLOBALS['maint_actions'] ?? null) ? $GLOBALS['maint_actions'] : [];
-            $this->maintActions = $maint_actions_g;
-        }
         $maint_actions = $this->maintActions;
 
         $action = $_GET['action'] ?? '';
@@ -631,11 +625,6 @@ final class MaintenanceController
     {
         $tpl = TemplateRegistry::current();
 
-        if (empty($this->maintActions)) {
-            /** @var array<string, array<string, string>> $maint_actions_g */
-            $maint_actions_g = is_array($GLOBALS['maint_actions'] ?? null) ? $GLOBALS['maint_actions'] : [];
-            $this->maintActions = $maint_actions_g;
-        }
         $maint_actions = $this->maintActions;
 
         if ($this->permissionService->isWebmaster()) {

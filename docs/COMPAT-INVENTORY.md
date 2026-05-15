@@ -27,7 +27,7 @@ Last audited end-to-end: 2026-05-15.
 | `summarized` column lazy guard | Replaced by Doctrine migration | [§Z5](#z5-one-time-db-migration-guard) |
 | Plugin config legacy storage format | Moot (no callers) | [§Z6](#z6-plugin-config-legacy-storage) |
 | `trigger_error` runtime signals | All converted to typed exceptions / PSR-3 | [§Z7](#z7-trigger_error-runtime-signals) |
-| Ad-hoc `$GLOBALS` cross-class channels | Mixed — admin URL channels removed, runtime state channels still active | [§A2](#a2-ad-hoc-globals-cross-class-channels), [§Z8](#z8-globals-channels-closed) |
+| Ad-hoc `$GLOBALS` cross-class channels | Mixed — admin URL + 4 self-contained channels removed, 5 runtime state channels still active | [§A2](#a2-ad-hoc-globals-cross-class-channels), [§Z8](#z8-globals-channels-closed), [§Z9](#z9-phase-3a-self-contained-channels) |
 | Plugin/theme procedural contract (`main.inc.php`, `maintain.class.php`, hook events) | Active until v17.0 | [§P1](#p1-plugintheme-procedural-contract) |
 | Plugin event API — 153 hook names | Active until v17.0 | [§P2](#p2-plugin-event-api) |
 | Smarty-syntax compatibility layer in Latte | Active (transitional API) | [§P3](#p3-smarty-syntax-compatibility-in-latte) |
@@ -74,10 +74,9 @@ typed bridge — readers do `is_array($GLOBALS['x'] ?? null) ? … : []` inline.
 | `$GLOBALS['header_msgs']` + `$GLOBALS['header_notes']` | `CommonBootstrap`, `CheckIntegrity` | `CommonBootstrap` (template assign), `FilterMiddleware:54` (reference) | Promote to `PageState` typed arrays |
 | `$GLOBALS['debug']` + `$GLOBALS['t2']` | `Util::pwgLog`, `CommonBootstrap` | `PageTailRenderer`, `Util` | `t2` → use `$_SERVER['REQUEST_TIME_FLOAT']` (built-in); `debug` → fold into PSR-3 logger via `DebugAccumulatorHandler` |
 | `$GLOBALS['prefixeTable']` | `CommonBootstrap:83`, `UpgradeController`, `InstallController`, `index.php:38` (image-derivative fast path), `index.php:66` (upgrade_feed fast path) | `UpgradeService:31`, `MaintenanceService:16` | Use `Config::dbPrefix()` everywhere |
-| `$GLOBALS['errors']` | `LocalSiteReader` | `LocalSiteReader` | Self-contained — make instance state |
-| `$GLOBALS['themeconfs']` | `Template::loadThemeconf` | `Template::loadThemeconf` | Self-contained — make instance property |
-| `$GLOBALS['cache']` | `UserService::getDefaultUserInfo` | `UserService::getDefaultUserInfo` | Self-contained — make instance memo |
-| `$GLOBALS['maint_actions']` | `MaintenanceController` | `MaintenanceController` | Self-contained — make instance property |
+
+The four self-contained channels (`errors`, `themeconfs`, `cache`,
+`maint_actions`) were closed in Phase 3a — see [§Z9](#z9-phase-3a-self-contained-channels).
 
 ## A3. Legacy `define()` Shims
 
@@ -500,7 +499,7 @@ map (lines 31-48) has stale entries:
 
 - `'persistent_cache' => 'PersistentCacheRegistry::current()'` — class deleted in §Z3
 - `'header_notes' => '$GLOBALS[\'header_notes\'] reference-bridge'` — wrong message
-- `'themeconfs'`, `'filter'` — descriptions are self-referential
+- `'filter'` — description is self-referential
 
 ### D3.5 `tools/triggers_list.php` — Stale Terminology
 
@@ -629,6 +628,21 @@ Cross-class admin URL channels eliminated as of 2026-05-14;
 | `$GLOBALS['help_link']`, `$GLOBALS['current_release']` | Dead reads removed |
 | `$GLOBALS['category']`, `$GLOBALS['upload_form_config']` | Dead writes removed |
 
+## Z9. Phase 3a Self-Contained Channels
+
+Closed 2026-05-15. Each channel's writer and reader lived in a single class;
+no cross-class contract existed.
+
+| Channel | Closure |
+|---|---|
+| `$GLOBALS['errors']` | `LocalSiteReader::open()` write was dead (no reader repo-wide). Deleted the write; `open()` now collapses to `return is_dir($this->site_url);`. |
+| `$GLOBALS['themeconfs']` | `Template::loadThemeconf()` now uses `private array $themeconfs = []` instance cache. |
+| `$GLOBALS['cache']` | `UserService::getDefaultUserInfo()` now uses `private array\|false\|null $defaultUserCache = null` instance memo. Class-level `readonly` dropped; DI props made individually `private readonly`. |
+| `$GLOBALS['maint_actions']` | `MaintenanceController` already stored the data as `$this->maintActions`. The mirror write (line 158) and the two defensive `if (empty($this->maintActions))` blocks at lines 188/636 (dead — both methods are private callees of `maintenance()`) deleted. |
+
+`NoGlobalInSrcRule` GUARDED list drops `errors`, `themeconfs`, `cache`,
+`maint_actions`; `REPLACEMENTS` map drops the same four entries.
+
 ---
 
 # Sequencing Plan
@@ -669,7 +683,7 @@ No code dependencies. All independent of each other and of every §A item.
 | Rename `'trigger_change'`/`'trigger_notify'` `type` strings in `tools/triggers_list.php` to match modern `dispatch`/`notify` (§D3.5); fix 4 `include/functions.inc.php` path references | None — reference doc, the event names themselves are untouched | small |
 | Remove resolved-bridge `@var` placeholders from `tools/phpstan-bootstrap.php`: `$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`, `$persistent_cache`, `$page` (§D3.1A subset — 9 of 11; `$page` removed 2026-05-15) | None — corresponding code is already gone (§Z1, §Z1.1, §Z3, plus `$logger`→`LoggerRegistry`, `$service`→`PwgServerRegistry`) | trivial |
 
-> Do NOT touch `NoGlobalInSrcRule` entries for `cache`, `themeconfs`, `filter`, `page`, `header_notes` yet — those globals are still active (see Phase 3/5). Only `persistent_cache` is dead-code at this point.
+> Do NOT touch `NoGlobalInSrcRule` entries for `filter`, `header_notes` yet — those globals are still active (see Phase 4a/4b). `cache`, `themeconfs`, `errors`, `maint_actions`, `page` already removed (§Z1.1, §Z9). Only `persistent_cache` is dead-code beyond those.
 
 ## Phase 2 — Mechanical Translations (Parallelisable)
 
@@ -790,14 +804,17 @@ Channels where the fix is a straight read-through to a typed accessor or an
 instance property — no new value object needed. All independent of each
 other.
 
-### Phase 3a — Self-contained (writer == reader class)
+### Phase 3a — Self-contained (writer == reader class) — **Done** (2026-05-15)
 
-| Task | Sub-steps |
+All four channels closed; see [§Z9](#z9-phase-3a-self-contained-channels)
+for the as-shipped record.
+
+| Task | Closure |
 |---|---|
-| `$GLOBALS['errors']` → `LocalSiteReader::$errors` (§A2) | Migrate `LocalSiteReader.php:35-38`; drop `errors` from `NoGlobalInSrcRule` GUARDED |
-| `$GLOBALS['themeconfs']` → `Template::$themeconfs` (§A2) | Migrate `Template::loadThemeconf()` (line 485); drop `themeconfs` from GUARDED |
-| `$GLOBALS['cache']` → `UserService::$defaultUserCache` (§A2) | Migrate `UserService::getDefaultUserInfo()` (line 407); drop `cache` from GUARDED |
-| `$GLOBALS['maint_actions']` → `MaintenanceController::$maintActions` (§A2) | Already an instance prop; remove the GLOBALS mirror (line 158) |
+| `$GLOBALS['errors']` (§A2) | Write was dead repo-wide; deleted. `LocalSiteReader::open()` collapses to `is_dir()`. |
+| `$GLOBALS['themeconfs']` (§A2) | `Template::loadThemeconf()` uses `private array $themeconfs` instance cache. |
+| `$GLOBALS['cache']` (§A2) | `UserService::getDefaultUserInfo()` uses `private array\|false\|null $defaultUserCache` instance memo. Class-level `readonly` dropped (PHP rejects mutable state inside `readonly` classes); DI props made individually `private readonly`. |
+| `$GLOBALS['maint_actions']` (§A2) | Mirror write (line 158) + two defensive restoration blocks (188/636) deleted; `$this->maintActions` was always populated by `maintenance()` before the private callees ran. |
 
 ### Phase 3b — Cross-class, but existing typed accessor available
 
@@ -1007,10 +1024,10 @@ Part P are listed for completeness.
 | `header_msgs` + `header_notes` | A2 | 4b | Open |
 | `debug` + `t2` | A2 | 3b | Open |
 | `prefixeTable` | A2 | 3b | Open |
-| `errors` | A2 | 3a | Open |
-| `themeconfs` | A2 | 3a | Open |
-| `cache` | A2 | 3a | Open |
-| `maint_actions` | A2 | 3a | Open |
+| `errors` | A2 | 3a | **Closed** (2026-05-15 — see [§Z9](#z9-phase-3a-self-contained-channels)) |
+| `themeconfs` | A2 | 3a | **Closed** (2026-05-15 — see [§Z9](#z9-phase-3a-self-contained-channels)) |
+| `cache` | A2 | 3a | **Closed** (2026-05-15 — see [§Z9](#z9-phase-3a-self-contained-channels)) |
+| `maint_actions` | A2 | 3a | **Closed** (2026-05-15 — see [§Z9](#z9-phase-3a-self-contained-channels)) |
 | `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` | A3.1 | 4c | Open |
 | `WS_*` constants | A3.2 | 2a | Open |
 | `*_TABLE` constants | A3.3 | 2b | Open |
@@ -1037,7 +1054,7 @@ Part P are listed for completeness.
 | Dead `PwgGetSessionVarDynamicReturnType` | D3.2 | 1 | Open |
 | Misnamed `TriggerChangeDynamicReturnType` | D3.3 | 1 | Open |
 | `NoGlobalInSrcRule` `persistent_cache` entry | D3.4 | 1 | Open |
-| `NoGlobalInSrcRule` other GUARDED entries | D3.4 | 3a / 3b / 4a / 4b / 4d | Open (per channel) |
+| `NoGlobalInSrcRule` other GUARDED entries | D3.4 | 3a / 3b / 4a / 4b / 4d | 4 of 9 closed (`page` 2026-05-15; `errors`, `themeconfs`, `cache`, `maint_actions` 2026-05-15) |
 | `triggers_list.php` `'type'` strings + `include/` paths | D3.5 | 1 | Open |
 | `triggers_list.php` event-name rewrite | D3.5 (cross-ref P2) | 6 | Sustained until v17 |
 | `globals.d.ts` ambient TS globals | D4 | 6 | Sustained until v17 |

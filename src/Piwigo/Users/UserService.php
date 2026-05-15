@@ -33,29 +33,32 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-final readonly class UserService
+final class UserService
 {
+    /** @var array<mixed>|false|null Memoised default-user row (false = "no default user", null = not loaded). */
+    private array|false|null $defaultUserCache = null;
+
     public function __construct(
-        private UserRepository $userRepo,
-        private Connection $conn,
-        private HistoryRepository $histRepo,
-        private ActivityRepository $actRepo,
-        private GroupRepository $groupRepo,
-        private AuthKeyRepository $authKeyRepo,
-        private StringUtil $stringUtil,
-        private Util $util,
-        private LangService $langService,
-        private UrlGenerator $urlGenerator,
-        private MailService $mailService,
-        private MessageBusInterface $messageBus,
-        private HtmlService $htmlService,
-        private DateService $dateService,
-        private CategoryService $categoryService,
-        private UserAdminService $userAdminService,
-        private SessionService $sessionService,
-        private AuthService $authService,
-        private PreferencesService $preferencesService,
-        private PermissionService $permissionService,
+        private readonly UserRepository $userRepo,
+        private readonly Connection $conn,
+        private readonly HistoryRepository $histRepo,
+        private readonly ActivityRepository $actRepo,
+        private readonly GroupRepository $groupRepo,
+        private readonly AuthKeyRepository $authKeyRepo,
+        private readonly StringUtil $stringUtil,
+        private readonly Util $util,
+        private readonly LangService $langService,
+        private readonly UrlGenerator $urlGenerator,
+        private readonly MailService $mailService,
+        private readonly MessageBusInterface $messageBus,
+        private readonly HtmlService $htmlService,
+        private readonly DateService $dateService,
+        private readonly CategoryService $categoryService,
+        private readonly UserAdminService $userAdminService,
+        private readonly SessionService $sessionService,
+        private readonly AuthService $authService,
+        private readonly PreferencesService $preferencesService,
+        private readonly PermissionService $permissionService,
     ) {
     }
 
@@ -404,23 +407,18 @@ SELECT DISTINCT f.image_id
     /** @return array<mixed,mixed>|null */
     public function getDefaultUserInfo(bool $convertStr = true): ?array
     {
-        $cache = &$GLOBALS['cache'];
-        if (!is_array($cache)) {
-            $cache = [];
-        }
-
-        if (!isset($cache['default_user'])) {
+        if ($this->defaultUserCache === null) {
             $row = $this->userRepo->getDefaultUserInfo(Config::defaultUserId());
             if ($row !== null) {
                 unset($row['user_id'], $row['status'], $row['registration_date'], $row['last_visit'], $row['last_visit_from_history']);
-                $cache['default_user'] = $row;
+                $this->defaultUserCache = $row;
             } else {
-                $cache['default_user'] = false;
+                $this->defaultUserCache = false;
             }
         }
 
-        if (is_array($cache['default_user']) and $convertStr) {
-            $defaultUser = $cache['default_user'];
+        if (is_array($this->defaultUserCache) && $convertStr) {
+            $defaultUser = $this->defaultUserCache;
             foreach ($defaultUser as &$value) {
                 if ($value == 'true') {
                     $value = true;
@@ -429,9 +427,8 @@ SELECT DISTINCT f.image_id
                 }
             }
             return $defaultUser;
-        } else {
-            return is_array($cache['default_user']) ? $cache['default_user'] : null;
         }
+        return is_array($this->defaultUserCache) ? $this->defaultUserCache : null;
     }
 
     public function getDefaultUserValue(string $valueName, string $default): string

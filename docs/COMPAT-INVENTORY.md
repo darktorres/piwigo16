@@ -8,7 +8,8 @@ Last deep-verified: 2026-05-14. Last updated: 2026-05-14.
 - §1 Wave A: §§1.2–1.6 caller migrations are complete and no `$GLOBALS` reads/writes remain for those keys; §1.1 `$GLOBALS['page']` still has 30 active references in 13 files — the reference bridge at `SectionInitializer:68` (`$GLOBALS['page'] = &$page`) is preserved on purpose so sub-calls (Search/Calendar/UrlService push-pop) mutate the same shared array.
 - §8 ad-hoc channels: all cross-class admin URL channels eliminated as of 2026-05-14 (CoreTabsRegistrar takes no `$GLOBALS` reads). Remaining §8 channels are either bootstrap init (`prefixeTable`, `t2`, `header_*`, `debug`, `filter`), language-subsystem (`lang_info`), or self-contained (`themeconfs`, `cache`, `errors`, `maint_actions`).
 - §9 stale comments: several files reference long-removed `$GLOBALS` bridges in docstrings only — see §9.
-- §10 tooling drift outside `src/`: the `NoGlobalInSrcRule` PHPStan rule has stale replacement advice (points at deleted `PersistentCacheRegistry`); `index.php` writes `$GLOBALS['prefixeTable']` directly in two fast-path branches. Tests legitimately seed `$GLOBALS` for fixtures. See §10.
+- §10 tooling drift outside `src/`: the `NoGlobalInSrcRule` PHPStan rule has stale replacement advice (points at deleted `PersistentCacheRegistry`); `index.php` writes `$GLOBALS['prefixeTable']` directly in two fast-path branches; `psalm.xml` suppresses a check with a "legacy-compatibility bridges" comment. Tests legitimately seed `$GLOBALS` for fixtures. See §10.
+- §11 legacy `define()` constants — a parallel shim mechanism the inventory had not covered at all: 105 `define()` calls in `src/` form three legacy patterns — runtime context flags (`IN_ADMIN`, `IN_WS`, `PHPWG_IN_UPGRADE`), web-service constant bridges (13 `WS_*` constants mirroring `WsParam`/`WsType` enums), SQL table-name constants (30+ defined in `UpgradeService` for legacy upgrade queries), plus a brittle `CURRENT_DATE` constant with inconsistent definitions across three controllers, and a `xmlrpc_encode()` call in `PwgXmlRpcEncoder` that depends on a PHP extension removed in 8.1. See §11.
 
 **Policy (2026-05-14):** All plugins will be rewritten as part of the platform migration.
 External plugin compatibility is NOT a blocker. Only in-tree `src/` callers block removal.
@@ -407,3 +408,89 @@ These are **not** shims or bridges — they are test fixtures that exist precise
 ### 10.3 `install/obsolete.list`
 
 Plain-text file listing legacy filenames the upgrade flow deletes from old installs. Not code; lists historical Piwigo files that were removed (e.g., `include_phpwebgallery`, `admin/admin.php`). Kept for upgrade compatibility only — no action needed.
+
+### 10.4 `psalm.xml`
+
+Two stale comments around suppression rules:
+- Line 30: `<!-- Legacy globals used in bootstrapped files — not actionable yet -->` — suppresses `MissingFile`. "Not actionable yet" is wrong; the policy is plugins are rewriting and BC is not maintained.
+- Lines 33-34: `<!-- Reference assignments to $GLOBALS / static properties are intentional legacy-compatibility bridges; Psalm cannot analyze them but they are correct. -->` — suppresses `UnsupportedPropertyReferenceUsage`. The framing "legacy-compatibility bridges" is misleading; the only remaining reference assignment (`SectionInitializer:68`) is for internal sub-call coherence, not legacy callers. Suppression is still needed, but the reason should be updated.
+
+### 10.5 `tools/psalm-stubs.phpstub`
+
+223-line stub file declaring runtime constants and extension classes (Imagick, Redis, Relay, Predis, IntlDateFormatter) for Psalm. Lines 6-9 contain a stub for `xmlrpc_encode()` with the comment: "The xmlrpc extension is deprecated/removed in modern PHP builds but still used in `PwgXmlRpcEncoder`." This is the only stub that documents a real shim concern (see §11.5).
+
+---
+
+## 11. Legacy `define()` Constants — Parallel Shim Mechanism
+
+The 16.x inventory has so far focused exclusively on `$GLOBALS[...]` channels, but the codebase also relies heavily on PHP runtime constants defined via `define()` to carry cross-cutting state. A whole-codebase sweep on 2026-05-14 found **105 `define()` calls in `src/`**, falling into five legacy categories.
+
+### 11.1 Runtime Context Flags (`IN_ADMIN`, `IN_WS`, `PHPWG_IN_UPGRADE`)
+
+Classic Piwigo "request context" detection — code reaches for `defined('IN_ADMIN')` instead of receiving a typed flag.
+
+| Flag | Defined in | Read in |
+|---|---|---|
+| `IN_ADMIN` | `Ws/Method/ExtensionsEndpoints.php:63, 87, 165` (three plugin/theme install endpoints) | `Page/PageHeaderRenderer.php:30`, `Page/NoPhotoYetRenderer.php:39, 41`, `Users/ProfileService.php:56, 60, 92, 150, 217`, `Core/Util.php:142` |
+| `IN_WS` | `Controller/WsController.php:42` | `Users/UserBootstrap.php:89, 119`, `Admin/Upload/UploadService.php:167` |
+| `PHPWG_IN_UPGRADE` | `Admin/UpgradeService.php:145, 180`, `Controller/UpgradeController.php` | `Admin/UpgradeService.php:23` (self-contained) |
+
+**Impact:** These are global state — any code path can `define()` them and any other can read them, with no type or scope enforcement. `IN_ADMIN` in particular escapes from WS extension endpoints into general page-render code (`PageHeaderRenderer`, `ProfileService`), which couples the WS layer to admin-page rendering.
+
+**Migration:** Replace with a typed `RequestContext` object (admin/ws/upgrade/derivative) populated by the corresponding middleware and read from PSR-7 request attributes. The `NoPhotoYetRenderer:39` comment already acknowledges the smell: `/** @psalm-suppress RedundantCondition — IN_ADMIN is runtime-set; stub value misleads Psalm */`.
+
+### 11.2 Web Service Constant Bridges (`WS_*`)
+
+`PwgServer::boot()` lines 471-485 defines 13 constants as a bridge to the typed `WsParam` and `WsType` enums:
+
+```
+WS_PARAM_ACCEPT_ARRAY, WS_PARAM_FORCE_ARRAY, WS_PARAM_OPTIONAL,
+WS_TYPE_BOOL, WS_TYPE_INT, WS_TYPE_FLOAT, WS_TYPE_POSITIVE, WS_TYPE_NOTNULL, WS_TYPE_ID,
+WS_ERR_INVALID_METHOD, WS_ERR_MISSING_PARAM, WS_ERR_INVALID_PARAM, WS_XML_ATTRIBUTES
+```
+
+Consumed throughout `Ws/Method/*Endpoints.php` (Permissions, Groups, Users, Images, etc.) and in `Ws/Protocol/PwgRestRequestHandler.php`, `Ws/WsHelper.php`.
+
+`WsParam.php:10` docstring even says: *"Values match the WS_PARAM_* defines in include/ws_core.inc.php."* — referencing an `include/` directory that no longer exists.
+
+**Migration:** Replace `WS_ERR_INVALID_PARAM` with `WsError::InvalidParam->value`, `WS_TYPE_INT` with `WsType::Int->value`, etc. Then delete the `define()` block in `PwgServer::boot()`. Touches ~50 call sites across `Ws/`.
+
+### 11.3 Legacy Table-Name Constants (`*_TABLE`)
+
+`Admin/UpgradeService.php:33-58` defines 30+ table-name constants (`CATEGORIES_TABLE`, `IMAGES_TABLE`, `USERS_TABLE`, etc.) by string-concatenating the prefix. These exist only for **legacy upgrade SQL** that does inline string interpolation. Only `UpgradeService.php` reads them inside `src/` (verified). The typed equivalent (`Piwigo\Db\Tables::categories()` etc.) is used everywhere else.
+
+**Migration:** Delete the defines once all upgrade SQL is rewritten to use the typed `Tables::*()` API. Not blocking — they're contained to the upgrade flow.
+
+### 11.4 `CURRENT_DATE` — Inconsistent Definitions
+
+Defined in **three** places with **two different formats**:
+
+- `Admin/Metadata/MetadataAdminService.php:214` → `date('Y-m-d')` (date only)
+- `Controller/UpgradeController.php:127` → `date('Y-m-d H:i:s')` (date + time)
+- `Controller/InstallController.php:245` → `date('Y-m-d H:i:s')` (date + time)
+
+Whichever path defines it first wins for the rest of the request; subsequent `define()` calls silently no-op (the `defined() or define()` guard pattern is used). **This is a latent bug**: if a request runs metadata + upgrade work in either order, the second consumer gets the format the first writer chose.
+
+Also conflicts with the SQL keyword `CURRENT_DATE` (string literal) used in `Db/SqlExpr.php:70, 72, 74`.
+
+**Migration:** Pass a `DateTimeImmutable` through the call chain, or delete one of the writers if it's dead.
+
+### 11.5 `xmlrpc_encode()` — Removed PHP Extension
+
+`Ws/Protocol/PwgXmlRpcEncoder.php:40` calls `xmlrpc_encode($response)`. The PHP `xmlrpc` extension was:
+
+- Deprecated in PHP 8.0
+- Moved to PECL in PHP 8.0
+- Removed from the main PHP distribution by 8.1
+
+This means `pwg.xmlrpc` requests will fatally error on any modern PHP build without an explicit PECL install. The class is fully wired through `PwgServer.php:522` (encoder selection by `format=xmlrpc` query param).
+
+**Migration:** Either replace with a vendor library (e.g., `phpxmlrpc/phpxmlrpc`) or drop the xmlrpc protocol entirely — REST/JSON cover all callers we control. Since v17.0 breaks all PEM extensions anyway (per project policy), dropping is viable.
+
+### 11.6 Other (one-off) `define()` Calls
+
+- `Bootstrap/CommonBootstrap.php:174-186` — `PHPWG_DOMAIN`, `PHPWG_URL` (locale-derived strings for PEM URLs).
+- `Bootstrap/CommonBootstrap.php:78` — `PWG_LOCAL_DIR`.
+- `Core/Util.php:41-45` — `MKGETDIR_*` flag constants for the `mkgetdir` helper.
+
+These are conventional runtime config / flag definitions and not shims, but they do contribute to the 105-define count and follow the same legacy `defined() or define()` pattern. A future cleanup pass could promote `MKGETDIR_*` to a typed enum and replace `PHPWG_DOMAIN`/`PHPWG_URL` with `Config` reads.

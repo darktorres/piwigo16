@@ -358,9 +358,16 @@ free-function names §A5.1 calls out as the smell):
 - **`CsrfService`** — `getPwgToken`, `checkPwgToken`.
 - **`ExecutionMutex`** — `pwgUniqueExecBegins` / `IsRunning` / `Ends` →
   rename methods to `acquire` / `isHeld` / `release`.
-- **`RedirectResponder`** returning PSR-7 `ResponseInterface` — collapses
-  `redirect` / `redirectHttp` / `redirectHtml` to one method that picks
-  header vs HTML body based on whether headers can still be sent.
+- **`RedirectResponder`** — carves `redirect` / `redirectHttp` / `redirectHtml`
+  off `Util` while keeping the existing procedural exit semantics
+  (`header(); exit()`). The inventory originally specified returning PSR-7
+  `ResponseInterface`, but that would require every caller in the chain —
+  including deep services like `AuthService`, `UserService`, `PasswordService`
+  — to return `ResponseInterface` up to the middleware. That conversion is
+  invasive enough that Phase 4c followed the same "defer PSR-7, do the
+  carve-out now" path, and Batch 3 follows suit. The collapse to a single
+  method is also deferred — callers keep using `redirect()` / `redirectHttp()`
+  / `redirectHtml()` exactly as before.
 - **`TelemetryService`** — `sendPiwigoInfos`, `sendPiwigoInfosRetryLater`.
 - Extension enumeration helpers move to `ThemeService` and `LanguageService`
   (mirroring `PluginService`).

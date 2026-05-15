@@ -22,7 +22,7 @@ Tasks pulled out of phases otherwise marked Done. Grouped by source phase. Most 
 
 ### From #6 — Procedural globals
 
-- [ ] Remove the remaining `$GLOBALS` reference bridges (`$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`, `$persistent_cache`) from `phpstan-bootstrap.php` — corresponding code is already gone (§Z1/§Z3). `$page` stub removed 2026-05-15 (§Z1.1).
+- [ ] Remove the remaining `$GLOBALS` reference bridges (`$user`, `$lang`, `$template`, `$logger`, `$pwg_event_handlers`, `$pwg_loaded_plugins`, `$service`, `$persistent_cache`) from `phpstan-bootstrap.php` — corresponding code is already gone (§Z1/§Z3). `$page` stub removed 2026-05-15 (§Z1.1); `$prefixeTable` stub removed 2026-05-15 (§Z10).
 
 ### From #7 — Overdue TODOs
 

@@ -30,7 +30,7 @@ defer to this table.
 | Phase | Title | Status | Gates | Parallelism |
 |---|---|---|---|---|
 | **1** | Doc-drift cleanups | ✓ Closed 2026-05-15 | — | — |
-| **2** | Legacy `define()` migrations | Open (2a ✓, 2b–2h open) | none | 2a–2h independent |
+| **2** | Legacy `define()` migrations | Open (2a ✓, 2b ✓, 2c–2h open) | none | 2c–2h independent |
 | **3** | `$GLOBALS` channel migrations | ✓ Closed 2026-05-15 | — | — |
 | **4a** | `$filter` → `FilterContext` VO | ✓ Closed 2026-05-15 | — | — |
 | **4b** | `header_msgs` / `header_notes` → `PageState` | ✓ Closed 2026-05-15 | — | — |
@@ -52,6 +52,7 @@ defer to this table.
 - §Z9 / §Z10 / §Z11 / §Z12 / §Z13 — channels closed 2026-05-15 (Phases 3a, 3b, 4a, 4b, 4d)
 - §Z14 — Phase 1 doc-drift sweep (2026-05-15)
 - §Z15 — Phase 2a WS_* constant migration (2026-05-15)
+- §Z16 — Phase 2b `*_TABLE` constant migration (2026-05-15)
 
 ---
 
@@ -129,23 +130,18 @@ duplicate defines in `tests/bootstrap.php`, and stubs in
 
 Detail → [Appendix A §Z15](#z15-phase-2a-ws_-constant-migration).
 
-## Phase 2b — `*_TABLE` constant migration  [A3.3]
+## Phase 2b — `*_TABLE` constant migration  [A3.3] ✓
 
-`Admin/UpgradeService.php:33-58` defines 30+ table-name constants
-(`CATEGORIES_TABLE`, `IMAGES_TABLE`, …) by string-concatenating the prefix.
-Only `UpgradeService.php` reads them inside `src/` — everywhere else uses
-`Piwigo\Db\Tables::*()`.
+Closed 2026-05-15. 30 table-name `define()` calls in
+`Admin/UpgradeService::prepareConfUpgrade()` were dead code — `Piwigo\Db\Tables::*`
+already covers every live caller, and the only legacy consumer
+(`install/db/*-database.php` upgrade scripts) ships empty in v17. Method
+deleted, sole call from `UpgradeFeedController` removed, 30 stubs purged from
+`tools/psalm-stubs.phpstub`. `CADDIE_TABLE` went with the batch — caddie itself
+is a live admin feature; only the legacy define is retired (see
+[Phase 5](#phase-5--utilphp-split-a51) `fillCaddie` carve-out note).
 
-1. Rewrite legacy upgrade SQL in `Admin/UpgradeService.php` to use
-   `Piwigo\Db\Tables::*()` accessors.
-2. Delete the 30+ `define()` calls in `UpgradeService.php:33-58`.
-3. Delete `*_TABLE` stubs from `tools/phpstan-bootstrap.php` and
-   `tools/psalm-stubs.phpstub`.
-
-**Side benefit:** the `CADDIE_TABLE` constant defined alongside the rest in
-`UpgradeService.php:53` goes with this batch. (Caddie itself is a live admin
-feature — see [Phase 5](#phase-5--utilphp-split-a51), `fillCaddie` carve-out
-note.)
+Detail → [Appendix A §Z16](#z16-phase-2b-_table-constant-migration).
 
 ## Phase 2c — `PclZip` → `ZipArchive`  [A4.1]
 
@@ -391,7 +387,7 @@ free-function names §A5.1 calls out as the smell):
   already live on `ImageRepository` (`deleteUserCaddie`,
   `deleteUserCaddieByImageIds`, `deleteCaddieByImageIds`,
   `countCaddieByUserId`); `fillCaddie` is the only orphan still on `Util`.
-  The `CADDIE_TABLE` define drops naturally with Phase 2b. **Not a removal
+  The `CADDIE_TABLE` define has been retired with Phase 2b. **Not a removal
   target** — earlier inventory framing of caddie as a "v1.x precursor to
   batch_manager" was wrong; caddie and batch_manager are complementary
   features (caddie = selection basket, batch_manager = the tool that
@@ -613,9 +609,8 @@ Update the "Smarty templates" header to "Latte" at the same time.
    Phase 1 (parallel)        ──→  (no downstream gate)
    all standalone
 
-   Phase 2a (WS_*)           ──→  phpstan + psalm stubs
-   Phase 2b (*_TABLE)        ──→  phpstan + psalm stubs
-                                   (also drops CADDIE_TABLE define)
+   Phase 2a (WS_*)        ──┐  done 2026-05-15
+   Phase 2b (*_TABLE)     ──┘  (see Appendix A §Z15, §Z16)
    Phase 2c (PclZip)         ──→  composer.json, stubs
    Phase 2d (xmlrpc)         ──→  psalm stub
    Phase 2e (MobileEsp)      ──→  composer.json     ──┐
@@ -1085,6 +1080,77 @@ are out of Phase 2a's scope.
 - `vendor/bin/phpunit` (Unit + Integration) → 486 tests, 2390 assertions, OK.
 - `composer dump-autoload --classmap-authoritative` run after `WsError.php`
   was added (the project pins `classmap-authoritative: true`).
+
+## Z16. Phase 2b `*_TABLE` Constant Migration
+
+Closed 2026-05-15. 30 table-name `define()` calls in
+`Admin/UpgradeService::prepareConfUpgrade()` retired as dead code.
+
+### What was actually true at start
+
+The inventory listed three tasks (rewrite legacy upgrade SQL → delete defines
+→ delete stubs). On audit, task #1 was unnecessary: a cross-tree grep showed
+the 30 constants (`CATEGORIES_TABLE`, `IMAGES_TABLE`, `USER_INFOS_TABLE`, …,
+including `CADDIE_TABLE`) had **zero** consumers anywhere — `src/`, `tests/`,
+`install/`. `Piwigo\Db\Tables::*()` already covered every live caller
+(`UserAdminService.php:70-73` is the canonical example). The only legacy
+consumer pathway — `install/db/<id>-database.php` upgrade scripts dynamically
+required by `UpgradeFeedController` — ships empty in v17 (`install/db/`
+contains only an `index.php` placeholder), so there was nothing reading the
+constants there either.
+
+### What landed
+
+- **`Admin/UpgradeService::prepareConfUpgrade()` deleted** (entire method,
+  lines 29-63). It only existed to populate the 30 defines.
+- **`Controller/UpgradeFeedController:36`** — the sole call to
+  `UpgradeService::prepareConfUpgrade()` removed. The controller's own
+  `define('PREFIX_TABLE', …)` and `define('UPGRADES_PATH', …)` calls remain;
+  those constants are still consumed at lines 41/57/54 of the same controller
+  and stay alive.
+- **`tools/psalm-stubs.phpstub`** — the 30 `const *_TABLE = '';` stubs deleted
+  (lines 28-57 in the pre-change file). `PREFIX_TABLE` and
+  `DEFAULT_PREFIX_TABLE` kept — those are table-*prefix* strings, separate
+  identifier space, still defined and consumed.
+- **`tools/phpstan-bootstrap.php`** — no change needed (only `PREFIX_TABLE`
+  was stubbed here, not the 30 table-name constants).
+- **`src/Piwigo/Users/UserRepository.php:107`** — `@param` docstring example
+  rewritten: "`(e.g. USER_INFOS_TABLE)`" → "`(e.g. `Tables::userInfos()`)`".
+  The actual `$tableName` parameter is already passed as a `Tables::*` string
+  by the only caller (`UserAdminService.php:84`); only the prose was stale.
+
+### What about CADDIE_TABLE?
+
+`CADDIE_TABLE` came along with this batch as part of the same dead-define
+block. **The caddie feature is unaffected** — it's a live admin feature (a
+per-user shopping cart for the printing/order-form mechanism), and its
+runtime table access goes through the (yet-to-be-written) Tables accessor
+just like the others. Only the legacy procedural define was retired here.
+`fillCaddie` itself is parked for Phase 5's `Util.php` carve-out.
+
+### Files touched
+
+- `src/Piwigo/Admin/UpgradeService.php` — `prepareConfUpgrade()` removed.
+- `src/Piwigo/Controller/UpgradeFeedController.php` — call site removed.
+- `src/Piwigo/Users/UserRepository.php` — docstring example refreshed.
+- `tools/psalm-stubs.phpstub` — 30 stubs purged; comment reframed.
+
+### Why this was cheaper than the original three-step plan
+
+The original plan assumed legacy upgrade SQL inside `UpgradeService.php`
+still referenced the constants. It did not — the SQL had already been
+migrated to `Tables::*()` accessors in earlier waves. So the migration
+collapsed to deleting dead code rather than rewriting it.
+
+### Verification
+
+- `vendor/bin/phpstan analyse --no-progress` → 0 errors at level 10.
+- `vendor/bin/phpunit` (Unit + Integration) → 486 tests, 2390 assertions, OK.
+- `composer dump-autoload --classmap-authoritative` run after the edits
+  (no new files, but the project pins `classmap-authoritative: true`).
+- Post-edit cross-tree grep: `grep -rEn "\b[A-Z][A-Z_]+_TABLE\b" --include="*.php"
+  --include="*.sql"` returns nothing outside `PREFIX_TABLE` /
+  `DEFAULT_PREFIX_TABLE` (the surviving prefix constants).
 
 ---
 

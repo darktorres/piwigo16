@@ -104,8 +104,8 @@ final class UserRepository extends AbstractRepository
 
     /**
      * Delete rows from any user-related table where user_id is not in the base
-     * users table.  $tableName is a PHP constant (e.g. USER_INFOS_TABLE) —
-     * not user-supplied, safe to embed directly.
+     * users table.  $tableName is a `Piwigo\Db\Tables` accessor result
+     * (e.g. `Tables::userInfos()`) — not user-supplied, safe to embed directly.
      *
      * @param int[] $userIds
      */

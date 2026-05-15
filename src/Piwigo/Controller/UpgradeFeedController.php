@@ -33,8 +33,6 @@ final readonly class UpgradeFeedController implements ControllerInterface
             die('upgrade feed is not active');
         }
 
-        UpgradeService::prepareConfUpgrade();
-
         define('PREFIX_TABLE', Config::dbPrefix());
         define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
 

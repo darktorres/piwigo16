@@ -22,39 +22,9 @@ namespace {
     const PWG_LOCAL_DIR = '';
     const UPGRADES_PATH = '';
 
-    // Table-name constants
+    // Table-prefix constants (table-name constants retired in Phase 2b — use Piwigo\Db\Tables::*)
     const PREFIX_TABLE = '';
     const DEFAULT_PREFIX_TABLE = '';
-    const CADDIE_TABLE = '';
-    const CATEGORIES_TABLE = '';
-    const COMMENTS_TABLE = '';
-    const CONFIG_TABLE = '';
-    const FAVORITES_TABLE = '';
-    const GROUPS_TABLE = '';
-    const GROUP_ACCESS_TABLE = '';
-    const HISTORY_TABLE = '';
-    const HISTORY_SUMMARY_TABLE = '';
-    const IMAGES_TABLE = '';
-    const IMAGE_CATEGORY_TABLE = '';
-    const IMAGE_TAG_TABLE = '';
-    const LANGUAGES_TABLE = '';
-    const OLD_PERMALINKS_TABLE = '';
-    const PLUGINS_TABLE = '';
-    const RATE_TABLE = '';
-    const SEARCH_TABLE = '';
-    const SESSIONS_TABLE = '';
-    const SITES_TABLE = '';
-    const TAGS_TABLE = '';
-    const THEMES_TABLE = '';
-    const UPGRADE_TABLE = '';
-    const USERS_TABLE = '';
-    const USER_ACCESS_TABLE = '';
-    const USER_CACHE_TABLE = '';
-    const USER_CACHE_CATEGORIES_TABLE = '';
-    const USER_FEED_TABLE = '';
-    const USER_GROUP_TABLE = '';
-    const USER_INFOS_TABLE = '';
-    const USER_MAIL_NOTIFICATION_TABLE = '';
 
     // Context flags
     const IN_ADMIN = false;

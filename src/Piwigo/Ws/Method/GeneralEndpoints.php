@@ -733,7 +733,7 @@ final readonly class GeneralEndpoints
                 }
                 $imageTitle = '';
                 if (isset($imageInfos[$lineImageIdStr]['label'])) {
-                    $tcResult    = EventDispatcher::dispatch('render_element_description', $imageInfos[$lineImageIdStr]['label']);
+                    $tcResult    = EventDispatcher::dispatch('render_element_description', $imageInfos[$lineImageIdStr]['label'], __FUNCTION__);
                     $imageTitle .= ' ' . (is_scalar($tcResult) ? (string) $tcResult : '');
                 } else {
                     $imageEditString = '';

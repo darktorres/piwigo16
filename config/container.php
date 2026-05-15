@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use function DI\factory;
+use function DI\get;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityLogger;
@@ -129,7 +130,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 return [
     CacheItemPoolInterface::class => factory(static fn (): CacheItemPoolInterface => CacheFactory::create()),
     EventDispatcherInterface::class => factory(static fn (): EventDispatcherInterface => new EventDispatcher()),
-    EventDispatcher::class => factory(static fn (EventDispatcherInterface $d): EventDispatcher => $d instanceof EventDispatcher ? $d : new EventDispatcher()),
+    EventDispatcher::class => get(EventDispatcherInterface::class),
     Config::class          => factory(fn () => Config::instance()),
     Translator::class      => factory(fn () => Translator::get()),
     PageState::class       => factory(fn () => PageState::current()),

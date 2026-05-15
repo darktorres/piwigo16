@@ -36,7 +36,7 @@ defer to this table.
 | **4b** | `header_msgs` / `header_notes` → `PageState` | ✓ Closed 2026-05-15 | — | — |
 | **4c** | `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` → typed `RequestContext` | Open | none | — |
 | **4d** | `$lang_info` → `Lang` static state | ✓ Closed 2026-05-15 | — | — |
-| **5** | `Util.php` split | Open | soft: Phase 2e + 4a (4a ✓) | — |
+| **5** | `Util.php` split | Open | soft: Phase 4a (4a ✓) | — |
 | **6** | Extension-API compat removal (post-v17 cleanup) | Open | none | 6.1–6.5 mostly independent (6.5 soft-depends on 6.3) |
 
 **Already shipped before this re-org** (Appendix A entries):
@@ -168,101 +168,111 @@ the `XML RPC` option removed from `tools/ws.htm` (developer API tester).
 
 Detail → [Appendix A §Z18](#z18-phase-2d-xmlrpc_encode-removal).
 
-## Phase 2e — MobileEsp removal & mobile-theme switcher retirement  [A4.3]
+## Phase 2e — MobileEsp dep replacement  [A4.3]
 
-`ahand/mobileesp` (`\uagent_info`) is a ~2010-era regex-based UA-detection
-library, predates UA Client Hints and modern responsive design. It's the
-foundation of an entire **mobile-theme switching mechanism** that the
-original inventory entry understated as "3 call sites" — see the audit
-notes below for the corrected blast radius.
+Retire the `ahand/mobileesp` Composer dep (`\uagent_info`, ~2010-era
+regex-based UA-detection library). The dep goes; the consumers stay.
 
-### Actual blast radius (audit 2026-05-15)
+The **mobile-theme switching feature** stays. Some Piwigo themes are
+mobile-specific (declared via `'mobile' => true` in themeconf); desktop
+themes aren't always responsively designed, so switching to a separate
+theme for mobile visitors is a real, load-bearing feature. Phase 2e
+only swaps MobileEsp's UA-detection backend — every consumer (Util,
+Themes, CommonBootstrap, PageTailRenderer, Config schema, Latte filter,
+mobile-theme config key) is preserved.
 
-`\uagent_info` itself has only 3 direct `new` sites, but those are the tip
-of an iceberg. The whole mobile-theme switcher rises and falls with them:
+### What MobileEsp is used for
 
-| Layer | File:Line | Role |
+3 direct `\uagent_info` instantiations, each calling a single method:
+
+| File:Line | Method | Used to |
 |---|---|---|
-| MobileEsp | `Core/Util.php:446` (in `getDevice()`) | `DetectSmartphone()` / `DetectTierTablet()` → `'mobile' \| 'tablet' \| 'desktop'`, cached in `$_SESSION['device']` |
-| MobileEsp | `Controller/Admin/PhotoController.php:614` | `DetectIos()` — hide "promote mobile apps" banner if user is on iOS |
-| MobileEsp | `Controller/Admin/MiscController.php:574` | `DetectIos()` — hide "newsletter signup" banner if user is on iOS |
-| `Util::getDevice()` consumers | `Util::mobileTheme():475` | Falls back to `getDevice() === 'mobile'` when no `mobile_theme` session preference exists |
-| | `Page/PageTailRenderer.php:70` | `getDevice() !== 'desktop'` gates the "switch to mobile theme" toggle link |
-| | `Template/Latte/PiwigoExtension.php:123,259-261` | Registers `get_device` Latte filter — **zero in-template consumers** across `themes/` |
-| `Util::mobileTheme()` consumers | `Bootstrap/CommonBootstrap.php:240-242` | Overrides user's theme preference with `Config::mobilTheme()` when on mobile |
-| | `Page/PageTailRenderer.php:70,75` | Toggle link visibility + query-param flip |
-| `mobile_theme` config key | `Config/Config.php` SCHEMA + `mobilTheme()` accessor | Single string: theme ID configured as "the mobile theme" |
-| `mobile_theme` writers | `Admin/Themes.php:144,172` | Set on activate / clear on deactivate when theme's themeconf has `'mobile' => true` |
-| `mobile_theme` readers | `Util::getPwgThemes($showMobile = false):188` | Filters the configured mobile theme out of the regular theme list (and re-labels it `(Mobile)` when `$showMobile`) |
-| Theme `mobile` flag | `Admin/Themes.php:122-127,143,171,297,333-335` | themeconf parse + activation single-mobile-theme guard + config write/clear; **no in-tree theme uses this flag** |
-| Latte allowlist | `Template/Latte/PiwigoPolicy.php:74` | `get_device` is in the function allowlist |
+| `Core/Util.php:446` (in `getDevice()`) | `DetectSmartphone()` + `DetectTierTablet()` | Classify visitor as `'mobile' \| 'tablet' \| 'desktop'`. Cached in `$_SESSION['device']`. Feeds `Util::mobileTheme()` → `CommonBootstrap` theme switch + `PageTailRenderer` toggle link |
+| `Controller/Admin/PhotoController.php:614` | `DetectIos()` | Hide "promote mobile apps" admin-dashboard banner if user is on iOS |
+| `Controller/Admin/MiscController.php:574` | `DetectIos()` | Hide "newsletter signup" admin-dashboard banner if user is on iOS |
 
-Cross-checks:
+That's the entirety of MobileEsp's surface. Everything else
+(`Util::mobileTheme`, `Config::mobilTheme`, `Admin/Themes.php` mobile-flag
+plumbing, the Latte `get_device` filter, the `PageTailRenderer` toggle
+link) is downstream — feature code that *uses* the UA classification but
+isn't tied to MobileEsp specifically.
 
-- `grep -rn 'get_device' themes/` → empty.
-- `grep -l 'mobile' themes/**/themeconf.inc.php` → empty (no in-tree theme
-  is flagged `mobile`).
-- `grep -rln mobileTheme tests/` → empty (no test coverage).
+### Do we need a UA-detection dep at all in 2026?
 
-### Removal vs. migration
+The three methods MobileEsp gives us — "smartphone?", "tablet?",
+"iOS?" — are all answerable by short UA-string regexes. The "ML-trained
+device database" use case (`matomo/device-detector`) is overkill: we
+only need three boolean classifications, not 60,000 device models.
 
-Modern admin UI is responsive; the entire "switch to a different theme on
-mobile devices" pattern is from ~2010 and predates responsive CSS's
-maturity. There is no functional reason to migrate to `Sec-CH-UA-Mobile` —
-the headers it would feed (Util::getDevice, Util::mobileTheme) lose their
-load-bearing consumers in this same phase.
+Modern alternatives surveyed:
 
-**Recommended path: full removal of the mobile-theme switching mechanism.**
-Includes:
+- **`Sec-CH-UA-Mobile` / `Sec-CH-UA-Platform`** request headers — Chromium
+  (89+), Firefox (127+, 2024), Edge (89+) send them. **Safari does not.**
+  Since Safari is the dominant browser on iOS (and macOS), Client Hints
+  alone don't cover the mobile/iOS-detection cases we care about. Useful
+  as a *prefer-when-present* signal, not a replacement.
+- **`mobiledetect/mobiledetectlib` v4** (the modern equivalent of MobileEsp,
+  same lineage but actively maintained, ~30k regexes). Drop-in mental
+  model, ~2MB installed. Still a regex library, just newer.
+- **Roll our own** — three regexes in a small in-tree helper class:
+  - `isSmartphone(): bool` — matches `Mobile|Android|iPhone|iPod|BlackBerry|webOS|IEMobile|Opera Mini`
+  - `isTablet(): bool` — matches `iPad|Tablet|Kindle|PlayBook|Silk|(?:Android(?!.*Mobile))`
+  - `isIos(): bool` — matches `iPhone|iPad|iPod`
 
-1. **MobileEsp direct calls** (3 sites): remove the `\uagent_info`
-   instantiations. For the two banner sites, replace `DetectIos()` with a
-   one-line inline UA-string check (`preg_match('~iP(hone|ad|od)~i', …)`)
-   so iOS users still don't see the iOS-app / newsletter promos — same
-   UX, no dep.
-2. **`Util::getDevice()`** and **`Util::mobileTheme()`**: delete; no
-   remaining callers after step 5.
-3. **`Config::mobilTheme()`** accessor and `mobile_theme` SCHEMA entry:
-   delete; no remaining readers after step 5.
-4. **`Admin/Themes.php`**: delete the mobile-flag activation guard
-   (122-127), the activation write (143-145), the deactivation clear
-   (171-173), the `'mobile' => false` default (297), and the
-   themeconf parse line (333-335).
-5. **Bootstrap / PageTail / Latte glue**:
-   - `Bootstrap/CommonBootstrap.php:240-242` — drop the
-     `mobileTheme() → $theme = Config::mobilTheme()` switch.
-   - `Page/PageTailRenderer.php:70-77` — drop the toggle-link block.
-   - `Template/Latte/PiwigoExtension.php:123,259-261` — drop the
-     `get_device` filter registration and its static method.
-   - `Template/Latte/PiwigoPolicy.php:74` — drop `get_device` from the
-     allowlist.
-6. **`Util::getPwgThemes()`**: drop the `bool $showMobile = false`
-   parameter and the mobile-theme filter (line 188). The 5 in-tree callers
-   already pass nothing.
-7. **`composer.json`** + **`composer.lock`**: remove
-   `ahand/mobileesp: dev-master`; `composer update` to clean the lock and
-   `vendor/ahand/`.
+For Piwigo's three call sites, the third option is the cleanest: no dep,
+~30 lines, easy to read, no upstream maintenance burden, easy to extend
+or correct in-tree if a corner case turns up. Optionally augmented by
+`Sec-CH-UA-Mobile` for the `isSmartphone()` path (use it when present;
+fall back to the regex for Safari/iOS).
+
+### Recommended path
+
+1. **Add `Piwigo\Core\UserAgentDetector`** — a small static class with
+   `isSmartphone()`, `isTablet()`, `isIos()` methods reading
+   `$_SERVER['HTTP_USER_AGENT']` (and optionally `Sec-CH-UA-Mobile` /
+   `Sec-CH-UA-Platform` as preferred signals when present).
+2. **Swap the 3 call sites**:
+   - `Core/Util.php:446-453` — `new \uagent_info()` → `UserAgentDetector`
+     static calls.
+   - `Controller/Admin/PhotoController.php:614-615` — `$uagent_obj->DetectIos()`
+     → `UserAgentDetector::isIos()`.
+   - `Controller/Admin/MiscController.php:574-575` — same swap.
+3. **Drop the Composer dep**: remove `ahand/mobileesp` from
+   `composer.json`, `composer update ahand/mobileesp` to refresh the lock
+   and drop `vendor/ahand/`.
+4. **Optional**: add a unit test for `UserAgentDetector` covering a small
+   matrix of representative UA strings (iOS Safari, Android Chrome,
+   iPadOS Safari, Android tablet, desktop Chrome, desktop Safari).
+
+### Out of scope for Phase 2e
+
+The mobile-theme switching feature itself stays as-is. Specifically the
+following are **not** touched in this phase:
+
+- `Util::mobileTheme()` — keep
+- `Util::getDevice()` — keep (becomes a thin wrapper over the new helper)
+- `Config::mobilTheme()` accessor and `mobile_theme` config schema entry — keep
+- `Admin/Themes.php` mobile-flag activation guard / config writes / themeconf parse — keep
+- `Bootstrap/CommonBootstrap.php:240-242` theme switch — keep
+- `Page/PageTailRenderer.php:70-77` toggle link — keep
+- `Template/Latte/PiwigoExtension.php` `get_device` filter — keep
+- `Util::getPwgThemes(bool $showMobile)` parameter — keep
+
+If any of those need follow-up cleanup (e.g., the `get_device` Latte
+filter has **zero in-template consumers** today across in-tree themes —
+audit 2026-05-15), that's a separate phase, not Phase 2e.
 
 ### Behavioural deltas after removal
 
-- **Visitors no longer auto-switch to a separate theme on mobile.** Themes
-  are expected to be responsive (the in-tree ones already are).
-- **The "switch to mobile theme" page-footer toggle disappears.** No
-  in-tree theme advertised it via CSS; pure ornament.
-- **iOS users still don't see iOS-app / newsletter promos** (inline regex
-  preserves the existing UX).
-- **External plugins that read `$config['mobile_theme']`** break; per the
-  project rule, external compat is not a blocker.
-- **External themes that declared `'mobile' => true`** in their themeconf
-  still load, the flag is just ignored.
+None visible to users or admins. The UA classifications produced by the
+inline regexes match MobileEsp's output for the cases that matter
+(`DetectSmartphone`, `DetectTierTablet`, `DetectIos` are themselves
+regex-only on these patterns); the rest of the system reads those
+classifications unchanged.
 
-### Session-key cleanup
-
-`$_SESSION['device']` and `$_SESSION['mobile_theme']` become orphans for
-existing sessions. They expire naturally; no migration needed.
-
-**Enables:** [Phase 5](#phase-5--utilphp-split-a51) — `Util.php` loses two
-methods, the split gets smaller.
+**Enables:** [Phase 5](#phase-5--utilphp-split-a51) — eventually `Util.php`
+loses `getDevice()` and `mobileTheme()` to the new home for device-related
+logic. Phase 2e gets out of Phase 5's way; it doesn't do Phase 5's work.
 
 ## Phase 2f — `CURRENT_DATE` inconsistency  [A3.4]
 
@@ -394,9 +404,14 @@ to `Lang`. Detail → [Appendix A §Z13](#z13-phase-4d-lang_info-lang-static-sta
 
 **Status:** open. Soft dependencies on earlier phases.
 
-**Gates (soft):** [Phase 2e](#phase-2e--mobileesp-removal-a43) (drops
-`mobileTheme` / `getDevice`); [Phase 4a](#phase-4a--filter--filtercontext-vo-a2)
+**Gates (soft):** [Phase 4a](#phase-4a--filter--filtercontext-vo-a2)
 done ✓ (already shipped).
+
+**Note:** [Phase 2e](#phase-2e--mobileesp-dep-replacement-a43) was
+previously expected to drop `mobileTheme` / `getDevice` from Util — the
+"full removal" path. The mobile-theme switching feature is staying
+(see Phase 2e's "Out of scope" section), so `mobileTheme` and
+`getDevice` remain on Util.php and need a new home in the split below.
 
 `src/Piwigo/Core/Util.php` is a 1058-line service-locator anti-pattern: 33
 methods across many concerns, 11 prefixed `pwg*` because they were once free
@@ -411,7 +426,7 @@ functions of the same name in `include/functions.inc.php`.
 | Telemetry | `sendPiwigoInfos`, `sendPiwigoInfosRetryLater` |
 | Extension enumeration | `getLanguages`, `getPwgThemes`, `checkThemeInstalled`, `getThemeconf` |
 | Filesystem | `mkgetdir` |
-| Mobile detection | `mobileTheme`, `getDevice` (goes away with Phase 2e) |
+| Mobile detection | `mobileTheme`, `getDevice` — survive Phase 2e; need a new home in the split (mobile-theme switcher is staying as a feature) |
 | Input validation | `checkInputParameter` |
 | Misc UI | `getPrivacyLevelOptions`, `getIcon`, `createNavigationBar` |
 | Ephemeral keys | `getEphemeralKey`, `verifyEphemeralKey` |
@@ -679,18 +694,18 @@ Update the "Smarty templates" header to "Latte" at the same time.
    Phase 2b (*_TABLE)     ──┤  done 2026-05-15
    Phase 2c (PclZip)      ──┤  (see Appendix A §Z15–§Z18)
    Phase 2d (xmlrpc)      ──┘
-   Phase 2e (MobileEsp)      ──→  composer.json     ──┐
-   Phase 2f (CURRENT_DATE)   ──→  (standalone)        │
-   Phase 2g (FeedCreator)    ──→  composer.json      │
-   Phase 2h (other defines, optional)                │
-                                                      │
-   Phase 3a (4 channels)  ──┐                         │
-   Phase 3b (3 channels)  ──┼──  done 2026-05-15     │
-   Phase 4a ($filter)     ──┤  (see Appendix A)     ──┼──→  Phase 5 (Util split)
-   Phase 4b (header_*)    ──┤                         │
-   Phase 4d (lang_info)   ──┘                         │
-                                                      │
-   Phase 4c (RequestCtx)     ──→  phpstan stubs       │
+   Phase 2e (MobileEsp)      ──→  composer.json
+   Phase 2f (CURRENT_DATE)   ──→  (standalone)
+   Phase 2g (FeedCreator)    ──→  composer.json
+   Phase 2h (other defines, optional)
+
+   Phase 3a (4 channels)  ──┐
+   Phase 3b (3 channels)  ──┼──  done 2026-05-15
+   Phase 4a ($filter)     ──┤  (see Appendix A)     ───→  Phase 5 (Util split)
+   Phase 4b (header_*)    ──┤
+   Phase 4d (lang_info)   ──┘
+
+   Phase 4c (RequestCtx)     ──→  phpstan stubs
 
    Phase 6 (extension-API)   ──  independent of Phases 1-5 (post-v17.0 cleanup)
    §A1 ($page alias)         ──  done 2026-05-15 (shipped early, §Z1.1)
@@ -700,8 +715,10 @@ Notes:
 
 - Phase 2 tasks are internally sequenced (code → runtime → stubs) but
   externally parallel.
-- Phase 3 / 4a / 4b / 4d are done; they unblock Phase 5 but Phase 5 also
-  needs Phase 2e (MobileEsp).
+- Phase 3 / 4a / 4b / 4d are done; they unblock Phase 5. Phase 5 no
+  longer needs Phase 2e — the mobile-theme switcher is staying, so
+  `Util::mobileTheme` / `getDevice` survive Phase 2e and need a new home
+  in the Util split (see Phase 5's Mobile-detection row).
 - Phase 6 has no hard dependency on any other phase.
 
 ---

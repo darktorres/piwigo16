@@ -16,6 +16,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsError;
 
 final readonly class GroupsEndpoints
 {
@@ -35,7 +36,7 @@ final readonly class GroupsEndpoints
     {
         $orderStr = is_string($params['order'] ?? null) ? $params['order'] : '';
         if (!preg_match(ValidationPattern::ORDER, $orderStr)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
+            return new PwgError(WsError::InvalidParam->value, 'Invalid input parameter order');
         }
         $whereClauses = ['1=1'];
         if (!empty($params['name'])) {
@@ -58,10 +59,10 @@ final readonly class GroupsEndpoints
         $params['name'] = strip_tags(stripslashes(is_string($params['name'] ?? null) ? $params['name'] : ''));
         $groupRepo      = $this->groupRepository;
         if ($groupRepo->countByName($params['name']) !== 0) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
+            return new PwgError(WsError::InvalidParam->value, 'This name is already used by another group.');
         }
         if (strlen(str_replace(' ', '', $params['name'])) === 0) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
+            return new PwgError(WsError::InvalidParam->value, 'Name field must not be empty');
         }
         $isDefaultRaw = $params['is_default'];
         $isDefaultVal = is_bool($isDefaultRaw) ? $isDefaultRaw : (is_string($isDefaultRaw) ? $isDefaultRaw : '');
@@ -92,18 +93,18 @@ final readonly class GroupsEndpoints
         }
         $setinfoName = is_string($params['name']) ? $params['name'] : '';
         if (isset($params['name']) && strlen(str_replace(' ', '', $setinfoName)) === 0) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
+            return new PwgError(WsError::InvalidParam->value, 'Name field must not be empty');
         }
         $updates         = [];
         $setinfoGroupId  = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
         $groupRepo       = $this->groupRepository;
         if (!$groupRepo->existsById($setinfoGroupId)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
+            return new PwgError(WsError::InvalidParam->value, 'This group does not exist.');
         }
         if (!empty($params['name'])) {
             $params['name'] = strip_tags(stripslashes(is_string($params['name']) ? $params['name'] : ''));
             if ($groupRepo->countByNameExcludingId($params['name'], $setinfoGroupId) !== 0) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
+                return new PwgError(WsError::InvalidParam->value, 'This name is already used by another group.');
             }
             $updates['name'] = $params['name'];
         }
@@ -124,7 +125,7 @@ final readonly class GroupsEndpoints
         }
         $adduserGroupId = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
         if (!$this->groupRepository->existsById($adduserGroupId)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
+            return new PwgError(WsError::InvalidParam->value, 'This group does not exist.');
         }
         $userIds = is_array($params['user_id']) ? $params['user_id'] : [];
         $inserts = [];
@@ -154,7 +155,7 @@ final readonly class GroupsEndpoints
         $mergeGroupObj = $service->invoke('pwg.groups.getList', ['group_id' => $mergeGroupIds]);
         $groupRepo     = $this->groupRepository;
         if ($groupRepo->countByIds($allGroups) !== count($allGroups)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'All groups does not exist.');
+            return new PwgError(WsError::InvalidParam->value, 'All groups does not exist.');
         }
         $userInMergeGroups = array_column($this->conn->executeQuery('SELECT DISTINCT(user_id) FROM `' . Tables::userGroup() . '` WHERE group_id IN (' . implode(',', $mergeGroup) . ');')->fetchAllAssociative(), 'user_id');
         $userInDest        = array_column($this->conn->executeQuery('SELECT user_id FROM `' . Tables::userGroup() . '` WHERE group_id = ' . $destGroupId . ';')->fetchAllAssociative(), 'user_id');
@@ -184,10 +185,10 @@ final readonly class GroupsEndpoints
         $copyNameStr = is_string($params['copy_name'] ?? null) ? $params['copy_name'] : '';
         $groupRepo   = $this->groupRepository;
         if ($groupRepo->countByName($copyNameStr) !== 0) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
+            return new PwgError(WsError::InvalidParam->value, 'This name is already used by another group.');
         }
         if (!$groupRepo->existsById($dupGroupId)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
+            return new PwgError(WsError::InvalidParam->value, 'This group does not exist.');
         }
         $isDefault = $groupRepo->findIsDefault($dupGroupId);
         Dml::singleInsert(Tables::groups(), ['name' => $copyNameStr, 'is_default' => BoolUtil::toString(is_string($isDefault) ? $isDefault : '')]);
@@ -217,7 +218,7 @@ final readonly class GroupsEndpoints
         $deluserUserIds = is_array($params['user_id']) ? $params['user_id'] : [];
         $groupRepo      = $this->groupRepository;
         if (!$groupRepo->existsById($deluserGroupId)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
+            return new PwgError(WsError::InvalidParam->value, 'This group does not exist.');
         }
         $groupRepo->deleteUserGroupMembers($deluserGroupId, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $deluserUserIds));
         $this->userAdminService->invalidateUserCache();

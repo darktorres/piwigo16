@@ -14,6 +14,7 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsError;
 
 final readonly class PermissionsEndpoints
 {
@@ -34,7 +35,7 @@ final readonly class PermissionsEndpoints
     {
         $myParams = array_intersect(array_keys($params), ['cat_id', 'group_id', 'user_id']);
         if (count($myParams) > 1) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Too many parameters, provide cat_id OR user_id OR group_id');
+            return new PwgError(WsError::InvalidParam->value, 'Too many parameters, provide cat_id OR user_id OR group_id');
         }
         $permRepo    = $this->permissionRepository;
         $catIdsFilter = !empty($params['cat_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['cat_id']) ? $params['cat_id'] : []) : null;

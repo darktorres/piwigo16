@@ -7,8 +7,7 @@ namespace Piwigo\Ws;
 /**
  * Web-service parameter type flags (bitmask).
  *
- * Values mirror the WS_TYPE_* runtime constants emitted by PwgServer::boot().
- * They are OR-combined at call sites: WsType::Int->value | WsType::Positive->value.
+ * OR-combined at call sites: `WsType::Int->value | WsType::Positive->value`.
  */
 enum WsType: int
 {

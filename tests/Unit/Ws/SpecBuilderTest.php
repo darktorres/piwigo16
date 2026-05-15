@@ -10,6 +10,7 @@ use Piwigo\Ws\OpenApi\OpenApiDocument;
 use Piwigo\Ws\OpenApi\SpecBuilder;
 use Piwigo\Ws\ParamDefinition;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsParam;
 use Piwigo\Ws\WsType;
 
 /**
@@ -202,7 +203,7 @@ final class SpecBuilderTest extends TestCase
         $this->server->register(new MethodDefinition(
             name: 'pwg.test',
             callback: fn (): null => null,
-            params: [ParamDefinition::optional(name: 'recursive', default: false, type: WS_TYPE_BOOL)],
+            params: [ParamDefinition::optional(name: 'recursive', default: false, type: WsType::Bool->value)],
         ));
         self::assertSame('boolean', $this->getSchema('/ws/pwg.test', 'recursive')['type']);
     }
@@ -212,7 +213,7 @@ final class SpecBuilderTest extends TestCase
         $this->server->register(new MethodDefinition(
             name: 'pwg.test',
             callback: fn (): null => null,
-            params: [ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID)],
+            params: [ParamDefinition::required(name: 'image_id', type: WsType::Id->value)],
         ));
         $schema = $this->getSchema('/ws/pwg.test', 'image_id');
         self::assertSame('integer', $schema['type']);
@@ -224,7 +225,7 @@ final class SpecBuilderTest extends TestCase
         $this->server->register(new MethodDefinition(
             name: 'pwg.test',
             callback: fn (): null => null,
-            params: [ParamDefinition::required(name: 'rate', type: WS_TYPE_FLOAT)],
+            params: [ParamDefinition::required(name: 'rate', type: WsType::Float->value)],
         ));
         $schema = $this->getSchema('/ws/pwg.test', 'rate');
         self::assertSame('number', $schema['type']);
@@ -246,7 +247,7 @@ final class SpecBuilderTest extends TestCase
         $this->server->register(new MethodDefinition(
             name: 'pwg.test',
             callback: fn (): null => null,
-            params: [ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID, flags: WS_PARAM_FORCE_ARRAY)],
+            params: [ParamDefinition::required(name: 'image_id', type: WsType::Id->value, flags: WsParam::ForceArray->value)],
         ));
         $schema = $this->getSchema('/ws/pwg.test', 'image_id');
         self::assertSame('array', $schema['type']);
@@ -260,7 +261,7 @@ final class SpecBuilderTest extends TestCase
         $this->server->register(new MethodDefinition(
             name: 'pwg.test',
             callback: fn (): null => null,
-            params: [ParamDefinition::required(name: 'ids', type: WS_TYPE_ID, flags: WS_PARAM_ACCEPT_ARRAY)],
+            params: [ParamDefinition::required(name: 'ids', type: WsType::Id->value, flags: WsParam::AcceptArray->value)],
         ));
         $schema = $this->getSchema('/ws/pwg.test', 'ids');
         self::assertArrayHasKey('oneOf', $schema);
@@ -274,7 +275,7 @@ final class SpecBuilderTest extends TestCase
         $this->server->register(new MethodDefinition(
             name: 'pwg.test',
             callback: fn (): null => null,
-            params: [ParamDefinition::optional(name: 'per_page', default: 100, type: WS_TYPE_INT | WS_TYPE_POSITIVE, maxValue: 500)],
+            params: [ParamDefinition::optional(name: 'per_page', default: 100, type: WsType::Int->value | WsType::Positive->value, maxValue: 500)],
         ));
         self::assertSame(500, $this->getSchema('/ws/pwg.test', 'per_page')['maximum']);
     }
@@ -288,7 +289,7 @@ final class SpecBuilderTest extends TestCase
         $this->server->register(new MethodDefinition(
             name: 'pwg.test',
             callback: fn (): null => null,
-            params: [ParamDefinition::required(name: 'image_id', type: WS_TYPE_ID)],
+            params: [ParamDefinition::required(name: 'image_id', type: WsType::Id->value)],
         ));
         self::assertTrue($this->findParam('/ws/pwg.test', 'image_id')['required']);
     }
@@ -298,7 +299,7 @@ final class SpecBuilderTest extends TestCase
         $this->server->register(new MethodDefinition(
             name: 'pwg.test',
             callback: fn (): null => null,
-            params: [ParamDefinition::optional(name: 'cat_id', default: null, type: WS_TYPE_ID)],
+            params: [ParamDefinition::optional(name: 'cat_id', default: null, type: WsType::Id->value)],
         ));
         self::assertFalse($this->findParam('/ws/pwg.test', 'cat_id')['required']);
     }

@@ -7,6 +7,7 @@ namespace Piwigo\Ws\Protocol;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgRequestHandler;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsError;
 
 final class PwgRestRequestHandler extends PwgRequestHandler
 {
@@ -34,7 +35,7 @@ final class PwgRestRequestHandler extends PwgRequestHandler
 
         if (empty($method)) {
             $service->sendResponse(
-                new PwgError(WS_ERR_INVALID_METHOD, 'Missing "method" name')
+                new PwgError(WsError::InvalidMethod->value, 'Missing "method" name')
             );
             return;
         }

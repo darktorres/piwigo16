@@ -6,8 +6,6 @@ namespace Piwigo\Ws;
 
 /**
  * Web-service parameter modifier flags (bitmask).
- *
- * Values mirror the WS_PARAM_* runtime constants emitted by PwgServer::boot().
  */
 enum WsParam: int
 {

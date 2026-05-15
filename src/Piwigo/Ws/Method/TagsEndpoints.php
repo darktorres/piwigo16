@@ -20,6 +20,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsHelper;
 
 final readonly class TagsEndpoints
@@ -159,7 +160,7 @@ final readonly class TagsEndpoints
     {
         $creationOutput = $this->tagAdminService->createTag(is_string($params['name'] ?? null) ? $params['name'] : '');
         if (isset($creationOutput['error'])) {
-            return new PwgError(WS_ERR_INVALID_PARAM, is_string($creationOutput['error']) ? $creationOutput['error'] : '');
+            return new PwgError(WsError::InvalidParam->value, is_string($creationOutput['error']) ? $creationOutput['error'] : '');
         }
         $tagAddId = is_numeric($creationOutput['id'] ?? null) ? (int) $creationOutput['id'] : (is_scalar($creationOutput['id'] ?? null) ? (string) $creationOutput['id'] : 0);
         $this->util->pwgActivity('tag', $tagAddId, 'add');
@@ -180,7 +181,7 @@ final readonly class TagsEndpoints
         /** @var int[] $tagIdsDel */
         $tagIdsDel = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $tagIdsRaw);
         if ($this->tagRepository->countByIds($tagIdsDel) !== count($tagIdsDel)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
+            return new PwgError(WsError::InvalidParam->value, 'All tags does not exist.');
         }
         if (count($tagIdsDel) > 0) {
             $this->tagAdminService->deleteTags($tagIdsDel);
@@ -199,12 +200,12 @@ final readonly class TagsEndpoints
         $tagName = strip_tags(stripslashes(is_string($params['new_name'] ?? null) ? $params['new_name'] : ''));
         $tagRepo = $this->tagRepository;
         if ($tagRepo->countById((int) $tagId) === 0) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
+            return new PwgError(WsError::InvalidParam->value, 'This tag does not exist.');
         }
         $existingNames = $tagRepo->findNamesExcluding((int) $tagId);
         $update = [];
         if (in_array($tagName, $existingNames)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already token');
+            return new PwgError(WsError::InvalidParam->value, 'This name is already token');
         } elseif (!empty($tagName)) {
             $update = ['name' => $tagName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $tagName)];
         }
@@ -230,10 +231,10 @@ final readonly class TagsEndpoints
         $dupCopyName = is_string($params['copy_name'] ?? null) ? $params['copy_name'] : '';
         $dupTagRepo  = $this->tagRepository;
         if ($dupTagRepo->countById($dupTagId) === 0) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
+            return new PwgError(WsError::InvalidParam->value, 'This tag does not exist.');
         }
         if ($dupTagRepo->countByExactName($dupCopyName) !== 0) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already taken.');
+            return new PwgError(WsError::InvalidParam->value, 'This name is already taken.');
         }
         Dml::singleInsert(Tables::tags(), ['name' => $dupCopyName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $dupCopyName)]);
         $destinationTagId = (int) $this->conn->lastInsertId();
@@ -265,7 +266,7 @@ final readonly class TagsEndpoints
         $mergeTag     = array_diff($mergeTagIds, [$mergeDestId]);
         $mergeTagRepo = $this->tagRepository;
         if ($mergeTagRepo->countByIds($allTags) !== count($allTags)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
+            return new PwgError(WsError::InvalidParam->value, 'All tags does not exist.');
         }
         $imageInMergeTags = $mergeTagRepo->findDistinctImageIdsByTagIds($mergeTag);
         $imageInDest      = $mergeTagRepo->findImageIdsByTagId($mergeDestId);

@@ -47,6 +47,7 @@ use Piwigo\Users\UserRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsHelper;
 
 final readonly class GeneralEndpoints
@@ -123,7 +124,7 @@ final readonly class GeneralEndpoints
             $typesRaw = is_array($params['types']) ? $params['types'] : [];
             $types = array_intersect(array_keys(ImageStdParams::getDefinedTypeMap()), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $typesRaw));
             if (count($types) === 0) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid types');
+                return new PwgError(WsError::InvalidParam->value, 'Invalid types');
             }
         }
         $maxUrls = is_numeric($params['max_urls']) ? (int) $params['max_urls'] : 0;
@@ -358,7 +359,7 @@ final readonly class GeneralEndpoints
     {
         foreach (['date_min', 'date_max'] as $datefield) {
             if (!empty($param[$datefield]) && !$this->stringUtil->isValidMysqlDatetime(is_scalar($param[$datefield]) ? (string) $param[$datefield] : '')) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid ' . $datefield);
+                return new PwgError(WsError::InvalidParam->value, 'Invalid ' . $datefield);
             }
         }
         $outputLines = [];

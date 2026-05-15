@@ -31,6 +31,7 @@ use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
+use Piwigo\Ws\WsError;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 final class UserService
@@ -521,7 +522,7 @@ SELECT DISTINCT f.image_id
     public function checkAndSaveUserInfos(array $params): array
     {
         if (isset($params['username']) and strlen(str_replace(' ', '', is_string($params['username']) ? $params['username'] : '')) == 0) {
-            return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => 'Name field must not be empty']];
+            return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'Name field must not be empty']];
         }
 
         $currentUser = CurrentUser::get();
@@ -531,24 +532,24 @@ SELECT DISTINCT f.image_id
         $paramUserId = is_array($params['user_id']) ? $params['user_id'] : [];
         if (count($paramUserId) == 1) {
             if ($this->userAdminService->getUsername(is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : 0) === false) {
-                return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => 'This user does not exist.']];
+                return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'This user does not exist.']];
             }
 
             if (isset($params['username']) && $params['username'] !== '') {
                 $userId = $this->getUserid(is_string($params['username']) ? $params['username'] : '');
                 if ($userId !== false && $userId !== 0 && $userId != $paramUserId[0]) {
-                    return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => Lang::t('this login is already used')]];
+                    return ['error' => ['code' => WsError::InvalidParam->value, 'message' => Lang::t('this login is already used')]];
                 }
                 $usernameStr = is_string($params['username']) ? $params['username'] : '';
                 if ($usernameStr != strip_tags($usernameStr)) {
-                    return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => Lang::t('html tags are not allowed in login')]];
+                    return ['error' => ['code' => WsError::InvalidParam->value, 'message' => Lang::t('html tags are not allowed in login')]];
                 }
                 $updates[Config::userFields()['username']] = $params['username'];
             }
 
             if (!empty($params['email'])) {
                 if (($error = $this->authService->validateMailAddress(is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : null, is_scalar($params['email']) ? (string) $params['email'] : null)) != '') {
-                    return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => $error]];
+                    return ['error' => ['code' => WsError::InvalidParam->value, 'message' => $error]];
                 }
                 $updates[Config::userFields()['email']] = $params['email'];
             }
@@ -571,7 +572,7 @@ SELECT DISTINCT f.image_id
                 return ['error' => ['code ' => 403, 'message' => 'Only webmasters can grant "webmaster/admin" status']];
             }
             if (!in_array($params['status'], ['guest', 'generic', 'normal', 'admin', 'webmaster'])) {
-                return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => 'Invalid status']];
+                return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'Invalid status']];
             }
 
             $protectedUsers = [$currentUser->id, Config::guestId(), Config::webmasterId()];
@@ -595,14 +596,14 @@ SELECT DISTINCT f.image_id
 
         if (!empty($params['level']) or $params['level'] === 0) {
             if (!in_array($params['level'], Config::availablePermissionLevels())) {
-                return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => 'Invalid level']];
+                return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'Invalid level']];
             }
         }
         if (!empty($params['language']) and !in_array($params['language'], array_keys($this->util->getLanguages()))) {
-            return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => 'Invalid language']];
+            return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'Invalid language']];
         }
         if (!empty($params['theme']) and !in_array($params['theme'], array_keys($this->util->getPwgThemes()))) {
-            return ['error' => ['code' => WS_ERR_INVALID_PARAM, 'message' => 'Invalid theme']];
+            return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'Invalid theme']];
         }
 
         $paramUid0   = is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : 0;

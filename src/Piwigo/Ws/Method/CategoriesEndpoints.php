@@ -29,6 +29,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsHelper;
 
 final readonly class CategoriesEndpoints
@@ -171,10 +172,10 @@ final readonly class CategoriesEndpoints
         $currentUser = CurrentUser::get();
         $user        = $currentUser->rawAttributes;
         if (!in_array($params['thumbnail_size'], array_keys(ImageStdParams::getDefinedTypeMap()))) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid thumbnail_size');
+            return new PwgError(WsError::InvalidParam->value, 'Invalid thumbnail_size');
         }
         if (!empty($params['limit']) && $params['recursive']) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Cannot use both recursive and limit parameters at the same time');
+            return new PwgError(WsError::InvalidParam->value, 'Cannot use both recursive and limit parameters at the same time');
         }
         $output    = [];
         $where     = ['1=1'];
@@ -453,7 +454,7 @@ final readonly class CategoriesEndpoints
             $catAscStr     = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catAsc);
             $orderNewStr   = array_map(fn (int $v): string => (string) $v, $orderNewById);
             if (strcmp(implode(',', $catAscStr), implode(',', $orderNewStr)) !== 0) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'you need to provide all sub-category ids for a given category');
+                return new PwgError(WsError::InvalidParam->value, 'you need to provide all sub-category ids for a given category');
             }
             $orderNew = $setrankCategoryIds;
         } else {
@@ -495,7 +496,7 @@ final readonly class CategoriesEndpoints
         $category = $categories[0];
         if (!empty($params['status'])) {
             if (!in_array($params['status'], ['private', 'public'])) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid status, only public/private');
+                return new PwgError(WsError::InvalidParam->value, 'Invalid status, only public/private');
             }
             if ($params['status'] !== $category['status']) {
                 $this->categoryAdminService->setCatStatus([$categoryId], is_string($params['status']) ? $params['status'] : '');
@@ -505,7 +506,7 @@ final readonly class CategoriesEndpoints
         foreach (['visible', 'commentable'] as $paramName) {
             $paramValStr = is_scalar($params[$paramName] ?? null) ? (string) $params[$paramName] : '';
             if (isset($params[$paramName]) && !preg_match('/^(true|false)$/i', $paramValStr)) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid param ' . $paramName . ' : ' . $paramValStr);
+                return new PwgError(WsError::InvalidParam->value, 'Invalid param ' . $paramName . ' : ' . $paramValStr);
             }
         }
         if (!empty($params['visible']) && ($params['visible'] !== $category['visible'])) {

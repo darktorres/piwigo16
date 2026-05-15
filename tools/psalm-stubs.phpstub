@@ -62,20 +62,6 @@ namespace {
     const PHPWG_IN_UPGRADE = false;
     const CURRENT_DATE = '';
 
-    // Web-service error / param constants
-    const WS_ERR_INVALID_METHOD = 501;
-    const WS_ERR_INVALID_PARAM = 400;
-    const WS_ERR_MISSING_PARAM = 400;
-    const WS_PARAM_ACCEPT_ARRAY = 0;
-    const WS_PARAM_FORCE_ARRAY = 0;
-    const WS_PARAM_OPTIONAL = 0;
-    const WS_TYPE_BOOL = 0;
-    const WS_TYPE_FLOAT = 0;
-    const WS_TYPE_ID = 0;
-    const WS_TYPE_INT = 0;
-    const WS_TYPE_NOTNULL = 0;
-    const WS_TYPE_POSITIVE = 0;
-    const WS_XML_ATTRIBUTES = 0;
     const PWG_API_KEY_REQUEST = '';
 
     // Misc

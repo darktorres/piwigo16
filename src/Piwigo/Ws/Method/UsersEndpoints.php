@@ -34,6 +34,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsHelper;
 
 final readonly class UsersEndpoints
@@ -64,7 +65,7 @@ final readonly class UsersEndpoints
     {
         $orderStr = is_string($params['order'] ?? null) ? $params['order'] : '';
         if (!preg_match(ValidationPattern::ORDER, $orderStr)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
+            return new PwgError(WsError::InvalidParam->value, 'Invalid input parameter order');
         }
         if (isset($params['order']) && str_contains($orderStr, 'username')) {
             $orderStr = str_ireplace('username', 'LOWER(username)', $orderStr);
@@ -91,7 +92,7 @@ final readonly class UsersEndpoints
         if (!empty($params['min_register'])) {
             $minRegisterStr = is_string($params['min_register']) ? $params['min_register'] : '';
             if (!preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $minRegisterStr)) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter min_register');
+                return new PwgError(WsError::InvalidParam->value, 'Invalid input parameter min_register');
             }
             $dateTokens     = explode('-', $minRegisterStr);
             $minDate        = sprintf('%u-%02u-%02u', $dateTokens[0], $dateTokens[1] ?? 1, $dateTokens[2] ?? 1);
@@ -100,7 +101,7 @@ final readonly class UsersEndpoints
         if (!empty($params['max_register'])) {
             $maxRegisterStr = is_string($params['max_register']) ? $params['max_register'] : '';
             if (!preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $maxRegisterStr)) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter max_register');
+                return new PwgError(WsError::InvalidParam->value, 'Invalid input parameter max_register');
             }
             $maxDateTokens = explode('-', $maxRegisterStr);
             $strResult = strtotime($maxDateTokens[0] . '-' . ($maxDateTokens[1] ?? '12') . '-1');
@@ -118,13 +119,13 @@ final readonly class UsersEndpoints
         }
         if (!empty($params['min_level'])) {
             if (!in_array($params['min_level'], Config::availablePermissionLevels())) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
+                return new PwgError(WsError::InvalidParam->value, 'Invalid level');
             }
             $whereClauses[] = 'ui.level >= ' . (is_numeric($params['min_level']) ? (int) $params['min_level'] : 0);
         }
         if (!empty($params['max_level'])) {
             if (!in_array($params['max_level'], Config::availablePermissionLevels())) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
+                return new PwgError(WsError::InvalidParam->value, 'Invalid level');
             }
             $whereClauses[] = 'ui.level <= ' . (is_numeric($params['max_level']) ? (int) $params['max_level'] : 0);
         }
@@ -267,10 +268,10 @@ final readonly class UsersEndpoints
             return new PwgError(403, 'Invalid security token');
         }
         if (strlen(str_replace(' ', '', is_string($params['username']) ? $params['username'] : '')) === 0) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
+            return new PwgError(WsError::InvalidParam->value, 'Name field must not be empty');
         }
         if (Config::doublePasswordTypeInAdmin() && $params['password'] !== $params['password_confirm']) {
-            return new PwgError(WS_ERR_INVALID_PARAM, Lang::t('The passwords do not match'));
+            return new PwgError(WsError::InvalidParam->value, Lang::t('The passwords do not match'));
         }
         if ($params['auto_password']) {
             $params['password'] = StringUtil::generateKey(random_int(15, 20));
@@ -279,7 +280,7 @@ final readonly class UsersEndpoints
         $passwordRaw = $params['password'] ?? null;
         $userId = $this->userService->registerUser(is_string($params['username']) ? $params['username'] : '', is_string($passwordRaw) ? $passwordRaw : '', is_string($params['email']) ? $params['email'] : null, false, $errors, false);
         if ($userId === false || $userId === 0) {
-            return new PwgError(WS_ERR_INVALID_PARAM, $errors[0]);
+            return new PwgError(WsError::InvalidParam->value, $errors[0]);
         }
         return $service->invoke('pwg.users.getList', ['user_id' => $userId]);
     }
@@ -292,7 +293,7 @@ final readonly class UsersEndpoints
         }
         $authkey = $this->authService->createUserAuthKey(is_numeric($params['user_id']) ? (int) $params['user_id'] : 0);
         if ($authkey === false) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'invalid user_id');
+            return new PwgError(WsError::InvalidParam->value, 'invalid user_id');
         }
         return $authkey;
     }
@@ -379,7 +380,7 @@ final readonly class UsersEndpoints
     {
         $prefParam = is_string($params['param'] ?? null) ? $params['param'] : '';
         if (!preg_match('/^[a-zA-Z0-9_-]+$/', $prefParam)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid param name #' . $prefParam . '#');
+            return new PwgError(WsError::InvalidParam->value, 'Invalid param name #' . $prefParam . '#');
         }
         $value = stripslashes(is_string($params['value'] ?? null) ? $params['value'] : '');
         if ($params['is_json']) {
@@ -464,7 +465,7 @@ final readonly class UsersEndpoints
         }
         $targetUserId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
         if ($this->userAdminService->getUsername($targetUserId) === false) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
+            return new PwgError(WsError::InvalidParam->value, 'This user does not exist.');
         }
         $userLost = $this->userService->getuserdata($targetUserId);
         if ($userLost === false) {
@@ -510,7 +511,7 @@ final readonly class UsersEndpoints
         }
         $mainUserId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
         if ($this->userAdminService->getUsername($mainUserId) === false) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
+            return new PwgError(WsError::InvalidParam->value, 'This user does not exist.');
         }
         $newMainUser = $this->userService->getuserdata($mainUserId);
         if ($newMainUser === false) {

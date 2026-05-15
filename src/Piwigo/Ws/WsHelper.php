@@ -44,7 +44,7 @@ final readonly class WsHelper
     {
         foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
             if (isset($params[$datefield]) && !$this->stringUtil->isValidMysqlDatetime(is_scalar($params[$datefield]) ? (string) $params[$datefield] : '')) {
-                PwgServerRegistry::current()->sendResponse(new PwgError(WS_ERR_INVALID_PARAM, 'Invalid ' . $datefield));
+                PwgServerRegistry::current()->sendResponse(new PwgError(WsError::InvalidParam->value, 'Invalid ' . $datefield));
                 exit;
             }
         }

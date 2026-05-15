@@ -30,7 +30,7 @@ defer to this table.
 | Phase | Title | Status | Gates | Parallelism |
 |---|---|---|---|---|
 | **1** | Doc-drift cleanups | ✓ Closed 2026-05-15 | — | — |
-| **2** | Legacy `define()` migrations | Open | none | 2a–2h independent |
+| **2** | Legacy `define()` migrations | Open (2a ✓, 2b–2h open) | none | 2a–2h independent |
 | **3** | `$GLOBALS` channel migrations | ✓ Closed 2026-05-15 | — | — |
 | **4a** | `$filter` → `FilterContext` VO | ✓ Closed 2026-05-15 | — | — |
 | **4b** | `header_msgs` / `header_notes` → `PageState` | ✓ Closed 2026-05-15 | — | — |
@@ -51,6 +51,7 @@ defer to this table.
 - §Z8 12 admin-URL `$GLOBALS` channels
 - §Z9 / §Z10 / §Z11 / §Z12 / §Z13 — channels closed 2026-05-15 (Phases 3a, 3b, 4a, 4b, 4d)
 - §Z14 — Phase 1 doc-drift sweep (2026-05-15)
+- §Z15 — Phase 2a WS_* constant migration (2026-05-15)
 
 ---
 
@@ -115,22 +116,18 @@ Detail → [Appendix A §Z14](#z14-phase-1-doc-drift-sweep).
 Step 3 always follows step 2 — PHPStan and Psalm read the stubs at analyze
 time, so removing a stub before the runtime is gone breaks the analyzer.
 
-## Phase 2a — `WS_*` constant migration  [A3.2]
+## Phase 2a — `WS_*` constant migration  [A3.2] ✓
 
-`PwgServer::boot()` (lines 471-485) defines 13 constants (`WS_PARAM_*`,
-`WS_TYPE_*`, `WS_ERR_*`, `WS_XML_ATTRIBUTES`) as a bridge to the typed
-`WsParam` and `WsType` enums. ~50 call sites in `Ws/Method/*Endpoints.php`,
-`Ws/Protocol/PwgRestRequestHandler.php`, `Ws/WsHelper.php`.
+Closed 2026-05-15. All 13 WS_* constants formerly emitted by `PwgServer::boot()`
+have been replaced with typed enum / class-constant references. New enum
+`Piwigo\Ws\WsError` added (`InvalidMethod=501`, `MissingParam=1002`,
+`InvalidParam=1003`) to round out the trio with the existing `WsType` /
+`WsParam`; `WS_XML_ATTRIBUTES` became a public class constant
+`PwgResponseEncoder::ATTRIBUTES_KEY`. Define block in `PwgServer::boot()`,
+duplicate defines in `tests/bootstrap.php`, and stubs in
+`tools/phpstan-bootstrap.php` / `tools/psalm-stubs.phpstub` all deleted.
 
-1. Migrate call sites from `WS_ERR_INVALID_PARAM` to `WsError::InvalidParam->value`
-   / `WS_TYPE_INT` to `WsType::Int->value` / etc.
-2. Delete the `define()` block in `PwgServer::boot()` lines 471-485.
-3. Delete `WS_*` stubs from `tools/phpstan-bootstrap.php` and
-   `tools/psalm-stubs.phpstub`.
-4. Update `WsParam.php:10` docstring (currently references deleted
-   `include/ws_core.inc.php`).
-
-**Enables:** cleaner WS layer; nothing else hard-depends on this.
+Detail → [Appendix A §Z15](#z15-phase-2a-ws_-constant-migration).
 
 ## Phase 2b — `*_TABLE` constant migration  [A3.3]
 
@@ -995,6 +992,99 @@ and the plugin-author event-reference doc. No runtime behaviour changes.
 - `vendor/bin/phpunit` (Unit + Integration) → 486 tests, 2390 assertions, OK.
 - `composer dump-autoload --classmap-authoritative` run after the
   PHPStan-extension rename.
+
+## Z15. Phase 2a WS_* Constant Migration
+
+Closed 2026-05-15. All 13 `WS_*` runtime constants formerly emitted by
+`PwgServer::boot()` have been replaced with typed enum / class-constant
+references across `src/` and the test suite.
+
+### New types
+
+- **`Piwigo\Ws\WsError`** (new enum, parallels `WsType` / `WsParam`):
+  `InvalidMethod=501`, `MissingParam=1002`, `InvalidParam=1003`. These three
+  codes were the only ones with constant names; the rest of the Piwigo
+  error-code space (101/102/103, 400/401/403/415, etc.) is still passed to
+  `PwgError` as bare ints and is left as-is.
+- **`PwgResponseEncoder::ATTRIBUTES_KEY`** (new public `const string` =
+  `'attributes_xml_'`): the marker key used inside response structs to attach
+  XML-attribute metadata. Replaces the `WS_XML_ATTRIBUTES` magic string at
+  three reader sites (`PwgResponseEncoder::flatten`, `PwgRestEncoder`,
+  `ImagesEndpoints`).
+
+### Migration mapping
+
+| Old token | New |
+|---|---|
+| `WS_TYPE_BOOL` | `WsType::Bool->value` |
+| `WS_TYPE_INT` | `WsType::Int->value` |
+| `WS_TYPE_FLOAT` | `WsType::Float->value` |
+| `WS_TYPE_POSITIVE` | `WsType::Positive->value` |
+| `WS_TYPE_NOTNULL` | `WsType::NotNull->value` |
+| `WS_TYPE_ID` | `WsType::Id->value` |
+| `WS_PARAM_ACCEPT_ARRAY` | `WsParam::AcceptArray->value` |
+| `WS_PARAM_FORCE_ARRAY` | `WsParam::ForceArray->value` |
+| `WS_PARAM_OPTIONAL` | `WsParam::Optional->value` |
+| `WS_ERR_INVALID_METHOD` | `WsError::InvalidMethod->value` |
+| `WS_ERR_MISSING_PARAM` | `WsError::MissingParam->value` |
+| `WS_ERR_INVALID_PARAM` | `WsError::InvalidParam->value` |
+| `WS_XML_ATTRIBUTES` | `PwgResponseEncoder::ATTRIBUTES_KEY` |
+
+Composite `WS_TYPE_*` OR-patterns at call sites (e.g.
+`WS_TYPE_INT | WS_TYPE_POSITIVE`) translate term-for-term
+(`WsType::Int->value | WsType::Positive->value`); the `WS_TYPE_ID` composite
+case on the enum keeps it short where it stood alone.
+
+### Files touched
+
+- **Source migrations** — 15 files with replacements (largest:
+  `WsMethodRegistrar.php` 186 hits; `PwgServer.php` 47 hits;
+  `ImagesEndpoints.php` 21 hits). `Piwigo\Ws\Method\*Endpoints`,
+  `Piwigo\Ws\Protocol\PwgRestRequestHandler`, `Piwigo\Users\UserService`,
+  `Piwigo\Ws\Protocol\PwgRestEncoder` gained
+  `use Piwigo\Ws\WsError;` and/or `use Piwigo\Ws\Encoder\PwgResponseEncoder;`
+  imports. Files already in `Piwigo\Ws` namespace (`PwgServer`, `WsHelper`,
+  `WsMethodRegistrar`) need no imports.
+- **`UserService.php`** — also routes its array-shape error returns
+  (`['error' => ['code' => 1003, ...]]`) through `WsError::InvalidParam->value`
+  for consistency with the PwgError call sites.
+- **Tests** — `tests/Unit/Ws/PwgServerTest.php` (7 hits) and
+  `tests/Unit/Ws/SpecBuilderTest.php` (8 hits) migrated. `PwgErrorTest.php`
+  left untouched — its bare `1003` is testing that `PwgError` accepts an
+  arbitrary `int`, not coupling to `WsError`.
+- **Encoder** — `Piwigo\Ws\Encoder\PwgResponseEncoder` gained the new
+  `ATTRIBUTES_KEY` class constant; `WS_XML_ATTRIBUTES` consumers migrated.
+- **Define / stub deletions:**
+  - `PwgServer::boot()` — entire 13-`define()` block deleted.
+  - `tests/bootstrap.php` — WS_* and WS_XML_ATTRIBUTES `define()` blocks
+    deleted (the unrelated `QST_*` search-constant block kept).
+  - `tools/phpstan-bootstrap.php` — WS_* `define()` block deleted.
+  - `tools/psalm-stubs.phpstub` — 13 `const WS_*` declarations deleted.
+- **Docstrings** — `WsType` and `WsParam` had docstrings claiming
+  "Values mirror the WS_*… constants emitted by PwgServer::boot()" — the
+  reference is now incoherent (the constants are gone), so the line was
+  dropped. `WsError`'s new docstring notes the same history with "retired
+  in Phase 2a".
+
+### Migration philosophy
+
+The inventory's original plan said "WS_ERR_INVALID_PARAM →
+`WsError::InvalidParam->value` / WS_TYPE_INT → `WsType::Int->value` / etc."
+First-pass attempted to use bare int literals for the three WS_ERR_* codes
+(reasoning: the codebase already uses 400/401/403 as bare ints in PwgError
+calls, so adding more bare ints "stays consistent"). On feedback that bare
+ints lose semantic information, the work backed out to create the
+`WsError` enum and route the three codes through it as the inventory had
+originally specified. The pre-existing bare 400/401/403/etc. PwgError codes
+are left as-is — they were never WS_ERR_* constants in the first place and
+are out of Phase 2a's scope.
+
+### Verification
+
+- `vendor/bin/phpstan analyse --no-progress` → 0 errors at level 10.
+- `vendor/bin/phpunit` (Unit + Integration) → 486 tests, 2390 assertions, OK.
+- `composer dump-autoload --classmap-authoritative` run after `WsError.php`
+  was added (the project pins `classmap-authoritative: true`).
 
 ---
 

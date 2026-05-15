@@ -8,6 +8,8 @@ use PHPUnit\Framework\TestCase;
 use Piwigo\Ws\MethodDefinition;
 use Piwigo\Ws\ParamDefinition;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsParam;
+use Piwigo\Ws\WsType;
 
 /**
  * Unit tests for PwgServer method registration and introspection.
@@ -76,13 +78,13 @@ final class PwgServerTest extends TestCase
         $this->server->register(new MethodDefinition(
             name:     'pwg.typed',
             callback: 'callback',
-            params:   [ParamDefinition::required(name: 'image_id', type: WS_TYPE_INT | WS_TYPE_POSITIVE)],
+            params:   [ParamDefinition::required(name: 'image_id', type: WsType::Int->value | WsType::Positive->value)],
         ));
         $sig = $this->server->getMethodSignature('pwg.typed');
 
         self::assertArrayHasKey('image_id', $sig);
-        self::assertSame(WS_TYPE_INT | WS_TYPE_POSITIVE, $sig['image_id']['type']);
-        self::assertSame(0, $sig['image_id']['flags'] & WS_PARAM_OPTIONAL);
+        self::assertSame(WsType::Int->value | WsType::Positive->value, $sig['image_id']['type']);
+        self::assertSame(0, $sig['image_id']['flags'] & WsParam::Optional->value);
     }
 
     public function test_register_optional_param_sets_optional_flag_and_default(): void
@@ -90,12 +92,12 @@ final class PwgServerTest extends TestCase
         $this->server->register(new MethodDefinition(
             name:     'pwg.optional_param',
             callback: 'callback',
-            params:   [ParamDefinition::optional(name: 'limit', default: 100, type: WS_TYPE_INT)],
+            params:   [ParamDefinition::optional(name: 'limit', default: 100, type: WsType::Int->value)],
         ));
         $sig = $this->server->getMethodSignature('pwg.optional_param');
 
         self::assertArrayHasKey('limit', $sig);
-        self::assertTrue((bool) ($sig['limit']['flags'] & WS_PARAM_OPTIONAL));
+        self::assertTrue((bool) ($sig['limit']['flags'] & WsParam::Optional->value));
         self::assertArrayHasKey('default', $sig['limit']);
         self::assertSame(100, $sig['limit']['default'] ?? null);
     }
@@ -105,12 +107,12 @@ final class PwgServerTest extends TestCase
         $this->server->register(new MethodDefinition(
             name:     'pwg.optional_no_default',
             callback: 'callback',
-            params:   [ParamDefinition::optionalFlag(name: 'group_id', type: WS_TYPE_ID)],
+            params:   [ParamDefinition::optionalFlag(name: 'group_id', type: WsType::Id->value)],
         ));
         $sig = $this->server->getMethodSignature('pwg.optional_no_default');
 
         self::assertArrayHasKey('group_id', $sig);
-        self::assertTrue((bool) ($sig['group_id']['flags'] & WS_PARAM_OPTIONAL));
+        self::assertTrue((bool) ($sig['group_id']['flags'] & WsParam::Optional->value));
         self::assertArrayNotHasKey('default', $sig['group_id']);
     }
 

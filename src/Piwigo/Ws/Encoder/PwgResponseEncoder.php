@@ -14,6 +14,13 @@ use Piwigo\Ws\PwgNamedStruct;
 abstract class PwgResponseEncoder
 {
     /**
+     * Marker key used inside a response struct to attach XML-attribute metadata.
+     * When the REST/XML encoder finds this key, the wrapped array is merged
+     * into the parent struct as attributes rather than emitted as a child node.
+     */
+    public const string ATTRIBUTES_KEY = 'attributes_xml_';
+
+    /**
      * encodes the web service response to the appropriate output format
      *
      * @param mixed $response the unencoded result of a service method call
@@ -64,13 +71,13 @@ abstract class PwgResponseEncoder
         /** @var array<mixed> $arr */
         $arr = $value;
         if (self::isStruct($value)) {
-            if (isset($arr[WS_XML_ATTRIBUTES])) {
-                $xmlAttrs = $arr[WS_XML_ATTRIBUTES];
+            if (isset($arr[self::ATTRIBUTES_KEY])) {
+                $xmlAttrs = $arr[self::ATTRIBUTES_KEY];
                 if (is_array($xmlAttrs)) {
                     $value = array_merge($arr, $xmlAttrs);
                     /** @var array<mixed> $arr */
                     $arr = $value;
-                    unset($arr[WS_XML_ATTRIBUTES]);
+                    unset($arr[self::ATTRIBUTES_KEY]);
                     $value = $arr;
                 }
             }

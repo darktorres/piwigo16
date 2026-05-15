@@ -37,10 +37,12 @@ use Piwigo\Tag\TagService;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsHelper;
 
 final readonly class ImagesEndpoints
@@ -207,7 +209,7 @@ final readonly class ImagesEndpoints
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
         $query    = 'SELECT DISTINCT image_id FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id=id WHERE commentable="true" AND image_id=' . $pImageId . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id', 'visible_images' => 'image_id'], ' AND') . ';';
         if ($this->conn->executeQuery($query)->fetchOne() === false) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id');
+            return new PwgError(WsError::InvalidParam->value, 'Invalid image_id');
         }
         $comm = ['author' => trim(is_string($params['author'] ?? null) ? $params['author'] : ''), 'content' => trim(is_string($params['content'] ?? null) ? $params['content'] : ''), 'image_id' => $pImageId];
         $infos         = [];
@@ -305,11 +307,11 @@ final readonly class ImagesEndpoints
             }
         }
         unset($ret['path'], $ret['storage_category_id']);
-        $ret['rates']    = [WS_XML_ATTRIBUTES => $rating];
+        $ret['rates']    = [PwgResponseEncoder::ATTRIBUTES_KEY => $rating];
         $ret['categories'] = new PwgNamedArray($relatedCategories, 'category', ['id', 'url', 'page_url']);
         $ret['tags']       = new PwgNamedArray($relatedTags, 'tag', $this->wsHelper->getTagXmlAttributes());
         if (isset($commentPostData)) {
-            $ret['comment_post'] = [WS_XML_ATTRIBUTES => $commentPostData];
+            $ret['comment_post'] = [PwgResponseEncoder::ATTRIBUTES_KEY => $commentPostData];
         }
         $ret['comments_paging'] = new PwgNamedStruct(['page' => $params['comments_page'], 'per_page' => $params['comments_per_page'], 'count' => count($relatedComments), 'total_count' => $nbComments]);
         $ret['comments']        = new PwgNamedArray($relatedComments, 'comment', ['id', 'date']);
@@ -400,11 +402,11 @@ final readonly class ImagesEndpoints
             $pSearchId = is_string($params['search_id']) ? $params['search_id'] : '';
             $searchPattern = $this->searchService->getSearchIdPattern($pSearchId);
             if ($searchPattern === null || $searchPattern === '') {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid search_id input parameter.');
+                return new PwgError(WsError::InvalidParam->value, 'Invalid search_id input parameter.');
             }
             $searchInfo = $this->searchService->getSearchInfo($pSearchId);
             if ($searchInfo === null || count($searchInfo) === 0) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'This search does not exist.');
+                return new PwgError(WsError::InvalidParam->value, 'This search does not exist.');
             }
         }
         $search = ['mode' => 'AND', 'fields' => []];
@@ -415,7 +417,7 @@ final readonly class ImagesEndpoints
             }
             $pAllwordsMode = is_string($params['allwords_mode']) ? $params['allwords_mode'] : '';
             if (!preg_match('/^(OR|AND)$/', $pAllwordsMode)) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter allwords_mode');
+                return new PwgError(WsError::InvalidParam->value, 'Invalid parameter allwords_mode');
             }
             $search['fields']['allwords']['mode'] = $pAllwordsMode;
             $allwordsFieldsAvailable = ['name', 'comment', 'file', 'author', 'tags', 'cat-title', 'cat-desc'];
@@ -425,7 +427,7 @@ final readonly class ImagesEndpoints
             $pAllwordsFields = is_array($params['allwords_fields']) ? $params['allwords_fields'] : [];
             foreach ($pAllwordsFields as $field) {
                 if (!in_array($field, $allwordsFieldsAvailable)) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter allwords_fields');
+                    return new PwgError(WsError::InvalidParam->value, 'Invalid parameter allwords_fields');
                 }
             }
             $search['fields']['allwords']['fields'] = $pAllwordsFields;
@@ -435,7 +437,7 @@ final readonly class ImagesEndpoints
             $pTags = is_array($params['tags']) ? $params['tags'] : [];
             foreach ($pTags as $tagId) {
                 if (!preg_match('/^\d+$/', is_scalar($tagId) ? (string) $tagId : '')) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter tags');
+                    return new PwgError(WsError::InvalidParam->value, 'Invalid parameter tags');
                 }
             }
             if (!isset($params['tags_mode'])) {
@@ -443,7 +445,7 @@ final readonly class ImagesEndpoints
             }
             $pTagsMode = is_string($params['tags_mode']) ? $params['tags_mode'] : '';
             if (!preg_match('/^(OR|AND)$/', $pTagsMode)) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter tags_mode');
+                return new PwgError(WsError::InvalidParam->value, 'Invalid parameter tags_mode');
             }
             $search['fields']['tags'] = ['words' => $pTags, 'mode' => $pTagsMode];
         }
@@ -451,7 +453,7 @@ final readonly class ImagesEndpoints
             $pCategories = is_array($params['categories']) ? $params['categories'] : [];
             foreach ($pCategories as $catId) {
                 if (!preg_match('/^\d+$/', is_scalar($catId) ? (string) $catId : '')) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter categories');
+                    return new PwgError(WsError::InvalidParam->value, 'Invalid parameter categories');
                 }
             }
             $search['fields']['cat'] = ['words' => $pCategories, 'sub_inc' => $params['categories_withsubs'] ?? false];
@@ -468,7 +470,7 @@ final readonly class ImagesEndpoints
             $pFiletypes = is_array($params['filetypes']) ? $params['filetypes'] : [];
             foreach ($pFiletypes as $ext) {
                 if (!preg_match('/^[a-z0-9]+$/i', is_scalar($ext) ? (string) $ext : '')) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter filetypes');
+                    return new PwgError(WsError::InvalidParam->value, 'Invalid parameter filetypes');
                 }
             }
             $search['fields']['filetypes'] = $pFiletypes;
@@ -477,7 +479,7 @@ final readonly class ImagesEndpoints
             $pAddedBy = is_array($params['added_by']) ? $params['added_by'] : [];
             foreach ($pAddedBy as $userId) {
                 if (!preg_match('/^\d+$/', is_scalar($userId) ? (string) $userId : '')) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter added_by');
+                    return new PwgError(WsError::InvalidParam->value, 'Invalid parameter added_by');
                 }
             }
             $search['fields']['added_by'] = $pAddedBy;
@@ -487,7 +489,7 @@ final readonly class ImagesEndpoints
                 $pPreset    = is_scalar($params[$presetParam]) ? (string) $params[$presetParam] : '';
                 $validPres  = $presetParam === 'date_posted_preset' ? '/^(24h|7d|30d|3m|6m|custom|)$/' : '/^(7d|30d|3m|6m|12m|custom|)$/';
                 if (!preg_match($validPres, $pPreset)) {
-                    return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter ' . $presetParam);
+                    return new PwgError(WsError::InvalidParam->value, 'Invalid parameter ' . $presetParam);
                 }
                 $fieldKey = $presetParam === 'date_posted_preset' ? 'date_posted' : 'date_created';
                 $search['fields'][$fieldKey]['preset'] = $pPreset;
@@ -515,7 +517,7 @@ final readonly class ImagesEndpoints
                         }
                     }
                     if (!$correctFormat) {
-                        return new PwgError(WS_ERR_INVALID_PARAM, $customParam . ', invalid option ' . $dateStr);
+                        return new PwgError(WsError::InvalidParam->value, $customParam . ', invalid option ' . $dateStr);
                     }
                     $search['fields'][$fieldKey]['custom'][] = $dateStr;
                 }
@@ -528,7 +530,7 @@ final readonly class ImagesEndpoints
                     $pRatios = is_array($fieldVal) ? $fieldVal : [];
                     foreach ($pRatios as $ext) {
                         if (!preg_match('/^[a-z0-9]+$/i', is_scalar($ext) ? (string) $ext : '')) {
-                            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid parameter ratios');
+                            return new PwgError(WsError::InvalidParam->value, 'Invalid parameter ratios');
                         }
                     }
                     $search['fields']['ratios'] = $pRatios;
@@ -550,7 +552,7 @@ final readonly class ImagesEndpoints
     public function setPrivacyLevel(array $params, PwgServer $service): mixed
     {
         if (!in_array($params['level'], Config::availablePermissionLevels())) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid level');
+            return new PwgError(WsError::InvalidParam->value, 'Invalid level');
         }
         $pLevel    = is_numeric($params['level']) ? (int) $params['level'] : 0;
         $pImageIds = is_array($params['image_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
@@ -577,7 +579,7 @@ final readonly class ImagesEndpoints
         }
         $pImageId = $pImageIdArr[0] ?? 0;
         if (empty($params['rank'])) {
-            return new PwgError(WS_ERR_MISSING_PARAM, 'rank is missing');
+            return new PwgError(WsError::MissingParam->value, 'rank is missing');
         }
         $catRepo = $this->categoryRepository;
         if (!$this->imageRepository->existsById($pImageId)) {
@@ -893,7 +895,7 @@ final readonly class ImagesEndpoints
         $logger = LoggerRegistry::current();
         $pOriginalSum = is_string($params['original_sum'] ?? null) ? $params['original_sum'] : '';
         if (!preg_match('/^[a-fA-F0-9]{32}$/', $pOriginalSum)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid original_sum');
+            return new PwgError(WsError::InvalidParam->value, 'Invalid original_sum');
         }
         $pImageIdAsync = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
         $pChunk        = is_numeric($params['chunk']) ? (int) $params['chunk'] : 0;
@@ -1243,7 +1245,7 @@ final readonly class ImagesEndpoints
         }
         if (isset($_REQUEST['tag_list'])) {
             if (isset($params['tag_ids'])) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Do not use tag_list and tag_ids at the same time.');
+                return new PwgError(WsError::InvalidParam->value, 'Do not use tag_list and tag_ids at the same time.');
             }
             $requestTagList = is_array($_REQUEST['tag_list']) ? $_REQUEST['tag_list'] : [];
             foreach ($requestTagList as $idx => $tagCandidate) {
@@ -1349,12 +1351,12 @@ final readonly class ImagesEndpoints
         foreach ($syncImageIdsRaw as $imageId) {
             $imageId = trim(is_scalar($imageId) ? (string) $imageId : '');
             if (!preg_match(ValidationPattern::ID, $imageId)) {
-                return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id "' . $imageId . '"');
+                return new PwgError(WsError::InvalidParam->value, 'Invalid image_id "' . $imageId . '"');
             }
             $imageIds[] = $imageId;
         }
         if (empty($imageIds)) {
-            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid image_id (no value after filters)');
+            return new PwgError(WsError::InvalidParam->value, 'Invalid image_id (no value after filters)');
         }
         $imageIds = array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE id IN (' . implode(', ', $imageIds) . ');')->fetchAllAssociative(), 'id'));
         if (empty($imageIds)) {

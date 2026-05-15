@@ -10,9 +10,11 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ExecutionMutex;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Telemetry\TelemetryService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
@@ -39,15 +41,16 @@ final class PageTailRenderer
                 || strtotime((string) Config::updateNotifyLastCheck()) < strtotime(Config::updateNotifyCheckPeriod() . ' seconds ago');
 
             if ($check_for_updates) {
-                $exec_id = Kernel::service(Util::class)->pwgUniqueExecBegins('check_for_updates');
+                $mutex   = Kernel::service(ExecutionMutex::class);
+                $exec_id = $mutex->acquire('check_for_updates');
                 if ($exec_id !== false) {
                     Kernel::service(Updates::class)->notifyPiwigoNewVersions();
-                    Kernel::service(Util::class)->pwgUniqueExecEnds('check_for_updates');
+                    $mutex->release('check_for_updates');
                 }
             }
         }
 
-        Kernel::service(Util::class)->sendPiwigoInfos();
+        Kernel::service(TelemetryService::class)->sendInfos();
 
         $debug_vars = [];
 

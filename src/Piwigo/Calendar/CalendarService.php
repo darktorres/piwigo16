@@ -10,8 +10,8 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
+use Piwigo\Core\DebugCollector;
 use Piwigo\Core\StringUtil;
-use Piwigo\Core\Util;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\TemplateRegistry;
@@ -33,7 +33,7 @@ final class CalendarService
     public function __construct(
         private readonly CategoryService $categoryService,
         private readonly Connection $conn,
-        private readonly Util $util,
+        private readonly DebugCollector $debugCollector,
         private readonly PermissionService $permissionService,
         private readonly UrlService $urlService,
         private readonly CacheItemPoolInterface $pool,
@@ -135,7 +135,7 @@ WHERE category_id IN (' . implode(',', $subIds) . ')';
 WHERE id IN (' . implode(',', $items) . ')';
         }
 
-        $this->util->pwgDebug('start initialize_calendar');
+        $this->debugCollector->collect('start initialize_calendar');
 
         $fields = [
             'created' => ['label' => Lang::t('Creation date')],
@@ -289,6 +289,6 @@ WHERE id IN (' . implode(',', $items) . ')';
                 }
             }
         }
-        $this->util->pwgDebug('end initialize_calendar');
+        $this->debugCollector->collect('end initialize_calendar');
     }
 }

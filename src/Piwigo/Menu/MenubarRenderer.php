@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Menu;
 
 use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -23,6 +24,7 @@ final readonly class MenubarRenderer
 {
     public function __construct(
         private CategoryService $categoryService,
+        private CommentService $commentService,
         private PermissionService $permissionService,
         private TagService $tagService,
         private UrlGenerator $urlGenerator,
@@ -215,7 +217,7 @@ final readonly class MenubarRenderer
                     'TITLE' => Lang::t('display last user comments'),
                     'NAME' => Lang::t('Comments'),
                     'URL' => $this->urlGenerator->comments(),
-                    'COUNTER' => $this->util->getNbAvailableComments(),
+                    'COUNTER' => $this->commentService->getNbAvailable(),
                 ];
             }
 

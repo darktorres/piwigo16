@@ -224,7 +224,7 @@ SELECT id
                     $this->util->redirect($url_self);
                     break;
                 case 'add_to_caddie':
-                    $this->util->fillCaddie([$imageId]);
+                    $this->imageRepository->addToUserCaddie(CurrentUser::get()->id, [$imageId]);
                     $this->util->redirect($url_self);
                     break;
                 case 'rate':

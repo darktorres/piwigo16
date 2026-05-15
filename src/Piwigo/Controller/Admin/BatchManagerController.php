@@ -803,7 +803,7 @@ final class BatchManagerController
                     }
                 }
             } elseif ('add_to_caddie' == $action) {
-                $this->util->fillCaddie($collection_int);
+                $this->imageRepository->addToUserCaddie(CurrentUser::get()->id, array_values($collection_int));
             } elseif ('delete' == $action) {
                 if (isset($_POST['confirm_deletion']) && 1 == $_POST['confirm_deletion']) {
                     if (count($collection_int) > 0) {

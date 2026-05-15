@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Comment;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
+use Piwigo\Db\Dml;
+use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
@@ -21,6 +25,7 @@ use Piwigo\Users\PermissionService;
 final readonly class CommentService
 {
     public function __construct(
+        private Connection $conn,
         private CommentRepository $repo,
         private LangService $langService,
         private MailService $mailService,
@@ -30,6 +35,34 @@ final readonly class CommentService
         private UrlService $urlService,
         private Util $util,
     ) {
+    }
+
+    /**
+     * Count comments visible to the current user, caching the result per
+     * request and persisting it to `user_cache.nb_available_comments`. Was
+     * `Util::getNbAvailableComments()` before Phase 5.
+     */
+    public function getNbAvailable(): int
+    {
+        $cached = RequestCache::remember('user', 'nb_available_comments', function (): int {
+            $where = [];
+            if (!$this->permissionService->isAdmin()) {
+                $where[] = "validated='true'";
+            }
+            $where[] = $this->permissionService->getSqlConditionFandF(
+                ['forbidden_categories' => 'category_id', 'forbidden_images' => 'ic.image_id'],
+                '',
+                true
+            );
+            $query = 'SELECT COUNT(DISTINCT(com.id)) FROM ' . Tables::imageCategory() . ' AS ic'
+                . ' INNER JOIN ' . Tables::comments() . ' AS com ON ic.image_id = com.image_id'
+                . ' WHERE ' . implode(' AND ', $where);
+            $count = $this->conn->executeQuery($query)->fetchOne();
+            $nb    = is_numeric($count) ? (int) $count : 0;
+            Dml::singleUpdate(Tables::userCache(), ['nb_available_comments' => $nb], ['user_id' => CurrentUser::get()->id]);
+            return $nb;
+        });
+        return is_int($cached) ? $cached : 0;
     }
 
     /** @param array<string,mixed> $comment */

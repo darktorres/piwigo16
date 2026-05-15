@@ -6,6 +6,7 @@ namespace Piwigo\Bootstrap;
 
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\UpgradeService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
@@ -158,7 +159,7 @@ final class CommonBootstrap
             Config::override('order_by_inside_category', Config::orderByInsideCategoryCustom());
         }
 
-        Kernel::service(Util::class)->checkLounge();
+        Kernel::service(CategoryAdminService::class)->checkLounge();
 
         $user_language = is_scalar(CurrentUser::get()->rawAttributes['language'] ?? null)
             ? (string) CurrentUser::get()->rawAttributes['language']

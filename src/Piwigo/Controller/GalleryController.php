@@ -18,6 +18,7 @@ use Piwigo\Core\Util;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeSize;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
@@ -52,6 +53,7 @@ final readonly class GalleryController implements ControllerInterface
         private CategoryService $categoryService,
         private ConfigService $configService,
         private HtmlService $htmlService,
+        private ImageRepository $imageRepository,
         private MenubarRenderer $menubarRenderer,
         private PermissionService $permissionService,
         private SearchFilterRenderer $searchFilterRenderer,
@@ -132,7 +134,7 @@ final readonly class GalleryController implements ControllerInterface
 
         // Caddie filling
         if ($this->stringUtil->inputString('caddie', null, $_GET) !== null) {
-            $this->util->fillCaddie(array_map(static fn (string $i): int => (int) $i, $items));
+            $this->imageRepository->addToUserCaddie(\Piwigo\Users\CurrentUser::get()->id, array_map(static fn (string $i): int => (int) $i, $items));
             $this->util->redirect($this->urlService->duplicateIndexUrl());
         }
 

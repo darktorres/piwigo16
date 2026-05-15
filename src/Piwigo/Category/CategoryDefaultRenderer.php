@@ -6,6 +6,7 @@ namespace Piwigo\Category;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\DebugCollector;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Db\Tables;
@@ -32,6 +33,7 @@ final readonly class CategoryDefaultRenderer
         private StringUtil $stringUtil,
         private UrlService $urlService,
         private Util $util,
+        private DebugCollector $debugCollector,
     ) {
     }
 
@@ -155,6 +157,6 @@ SELECT image_id, COUNT(*) AS nb_comments
         $template->assignVarFromTemplate('THUMBNAILS', 'thumbnails.latte');
         unset($pictures, $selection, $tpl_thumbnails_var);
         $template->clearAssign('thumbnails');
-        $this->util->pwgDebug('end CategoryDefaultRenderer');
+        $this->debugCollector->collect('end CategoryDefaultRenderer');
     }
 }

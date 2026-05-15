@@ -1442,7 +1442,7 @@ final class MaintenanceController
                     Dml::massInserts(Tables::imageCategory(), array_keys($insert_links[0]), $insert_links);
                     $this->util->pwgActivity('photo', $caddiables, 'add', ['sync' => true]);
                     if (isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1) {
-                        $this->util->fillCaddie($caddiables);
+                        $this->imageRepository->addToUserCaddie(CurrentUser::get()->id, $caddiables);
                     }
                 }
                 if (count($insert_formats) > 0) {

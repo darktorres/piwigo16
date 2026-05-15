@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
+use Piwigo\Core\DebugCollector;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\Util;
 use Piwigo\Db\Dml;
@@ -35,6 +36,7 @@ final readonly class CategoryCatsRenderer
         private PermissionService $permissionService,
         private UrlService $urlService,
         private Util $util,
+        private DebugCollector $debugCollector,
     ) {
     }
 
@@ -329,6 +331,6 @@ SELECT *
             $template->assign('cats_navbar', $catsNavigationBar);
         }
 
-        $this->util->pwgDebug('end CategoryCatsRenderer');
+        $this->debugCollector->collect('end CategoryCatsRenderer');
     }
 }

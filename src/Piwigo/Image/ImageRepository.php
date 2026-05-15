@@ -11,6 +11,37 @@ use Piwigo\Db\AbstractRepository;
 final class ImageRepository extends AbstractRepository
 {
     /**
+     * Append the given element ids to a user's caddie, skipping any that are
+     * already present. Used by Add-to-caddie buttons in the gallery / picture
+     * pages and the Batch Manager. Replaces `Util::fillCaddie()` (Phase 5).
+     *
+     * @param list<int|string> $elementIds
+     */
+    public function addToUserCaddie(int $userId, array $elementIds): void
+    {
+        if ($elementIds === []) {
+            return;
+        }
+        $existing = $this->conn->createQueryBuilder()
+            ->select('element_id')
+            ->from($this->table('caddie'))
+            ->where('user_id = :uid')
+            ->setParameter('uid', $userId)
+            ->executeQuery()
+            ->fetchFirstColumn();
+        $alreadyIn = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $existing);
+        $toInsert  = array_values(array_diff($elementIds, $alreadyIn));
+        if ($toInsert === []) {
+            return;
+        }
+        $rows = array_map(
+            static fn (int|string $id): array => ['element_id' => $id, 'user_id' => $userId],
+            $toInsert
+        );
+        \Piwigo\Db\Dml::massInserts($this->table('caddie'), ['element_id', 'user_id'], $rows);
+    }
+
+    /**
      * Delete all caddie entries for the given user.
      * The caddie is a temporary selection basket in the admin batch manager.
      */

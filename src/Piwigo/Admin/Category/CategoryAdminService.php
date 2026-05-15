@@ -669,6 +669,37 @@ SELECT id FROM ' . Tables::imageCategory() . '
         }
     }
 
+    /**
+     * Age-out cleanup: if any image has been sitting in the upload lounge
+     * longer than `lounge_max_duration`, drain the entire lounge into the
+     * main image set via {@see self::emptyLounge()}. Called from
+     * `CommonBootstrap::run()` once per request. Was `Util::checkLounge()`
+     * before Phase 5.
+     */
+    public function checkLounge(): void
+    {
+        if (!Config::has('lounge_active') || !Config::loungeActive()) {
+            return;
+        }
+        if (isset($_REQUEST['method']) && in_array($_REQUEST['method'], ['pwg.images.upload', 'pwg.images.uploadAsync'])) {
+            return;
+        }
+        $query    = 'SELECT image_id, date_available, NOW() AS dbnow FROM ' . Tables::lounge() . ' JOIN ' . Tables::images() . ' ON image_id = id ORDER BY image_id ASC LIMIT 1;';
+        $voyagers = $this->conn->executeQuery($query)->fetchAllAssociative();
+        if (count($voyagers) === 0) {
+            return;
+        }
+        $voyager      = $voyagers[0];
+        $dbnowStr     = is_string($voyager['dbnow'] ?? null) ? $voyager['dbnow'] : '';
+        $dateAvailStr = is_string($voyager['date_available'] ?? null) ? $voyager['date_available'] : '';
+        $dbnowTs      = strtotime($dbnowStr);
+        $dateAvailTs  = strtotime($dateAvailStr);
+        $age          = ($dbnowTs !== false ? $dbnowTs : 0) - ($dateAvailTs !== false ? $dateAvailTs : 0);
+        if ($age > Config::loungeMaxDuration()) {
+            $this->emptyLounge();
+        }
+    }
+
     /** @return array<mixed>|null */
     public function emptyLounge(bool $invalidateUserCache = true): ?array
     {

@@ -14,6 +14,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\DateService;
+use Piwigo\Core\ExecutionMutex;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
@@ -48,6 +49,7 @@ final class UserService
         private readonly AuthKeyRepository $authKeyRepo,
         private readonly StringUtil $stringUtil,
         private readonly Util $util,
+        private readonly ExecutionMutex $mutex,
         private readonly LangService $langService,
         private readonly UrlGenerator $urlGenerator,
         private readonly MailService $mailService,
@@ -262,7 +264,7 @@ final class UserService
             if (!isset($userdata['need_update']) or !is_bool($userdata['need_update']) or $userdata['need_update'] == true) {
                 $logger->info($loggerMsgPrefix . 'needs user_cache to be rebuilt');
 
-                $execId = $this->util->pwgUniqueExecBegins($cacheTokenName);
+                $execId = $this->mutex->acquire($cacheTokenName);
                 if (false === $execId) {
                     $logger->info($loggerMsgPrefix . 'starts to wait for another request to build user_cache');
                     $waitStart = $this->stringUtil->getMoment();
@@ -274,7 +276,7 @@ final class UserService
                         if ($nbCacheLines > 0) {
                             $logger->info($loggerMsgPrefix . 'user_cache rebuilt, after waiting ' . $waitingTime);
                             return $this->getuserdata($userId, false);
-                        } elseif (!$this->util->pwgUniqueExecIsRunning($cacheTokenName)) {
+                        } elseif (!$this->mutex->isHeld($cacheTokenName)) {
                             $logger->info($loggerMsgPrefix . 'user_cache rebuilt but has been reset since, after waiting ' . $waitingTime);
                             return $this->getuserdata($userId, true);
                         } else {
@@ -360,7 +362,7 @@ final class UserService
                     $cacheParams
                 );
 
-                $this->util->pwgUniqueExecEnds($cacheTokenName);
+                $this->mutex->release($cacheTokenName);
                 $logger->info($loggerMsgPrefix . 'user_cache generated, executed in ' . $this->stringUtil->getElapsedTime($genStart, $this->stringUtil->getMoment()));
             }
         }

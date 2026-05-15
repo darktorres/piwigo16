@@ -187,9 +187,9 @@ SELECT id
         $lastRank     = count($items) - 1;
 
         $previousItem = $currentRank !== $firstRank ? $items[$currentRank - 1] : null;
-        $firstItem    = $currentRank !== $firstRank ? $items[$firstRank]       : null;
-        $nextItem     = $currentRank !== $lastRank  ? $items[min($currentRank + 1, $lastRank)] : null;
-        $lastItem     = $currentRank !== $lastRank  ? $items[$lastRank]        : null;
+        $firstItem    = $currentRank !== $firstRank ? $items[$firstRank] : null;
+        $nextItem     = $currentRank !== $lastRank ? $items[min($currentRank + 1, $lastRank)] : null;
+        $lastItem     = $currentRank !== $lastRank ? $items[$lastRank] : null;
 
         $url_up = $this->urlService->duplicateIndexUrl(
             ['start' => (int) floor($currentRank / $nbImagePage) * $nbImagePage],

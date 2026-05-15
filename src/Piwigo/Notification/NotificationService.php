@@ -276,7 +276,6 @@ final readonly class NotificationService
         $cacheKey = md5('recent_posts' . $userId . $cacheUpdate . $maxDates . $maxElements . $maxCats . AppInfo::VERSION);
         $item     = $this->pool->getItem($cacheKey);
         if ($item->isHit()) {
-            /** @var mixed $cached */
             $cached = $item->get();
             return is_array($cached) ? $cached : null;
         }

@@ -611,13 +611,7 @@ final class Updates
                             $retry = Filesystem::tryChmod(PHPWG_ROOT_PATH.$extractFilename, Config::chmodValue())
                               ? ZipExtractor::extract($filename, PHPWG_ROOT_PATH, $remove_path, [$extractStoredName], 0755)
                               : [];
-                            $retryEntry = null;
-                            foreach ($retry as $row) {
-                                if ($row['stored_filename'] === $extractStoredName) {
-                                    $retryEntry = $row;
-                                    break;
-                                }
-                            }
+                            $retryEntry = array_find($retry, fn ($row): bool => $row['stored_filename'] === $extractStoredName);
                             if ($retryEntry !== null && $retryEntry['status'] === 'ok') {
                                 continue;
                             } else {

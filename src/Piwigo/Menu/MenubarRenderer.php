@@ -11,12 +11,12 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
 use Piwigo\Filter\FilterContextRegistry;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Users\PermissionService;
 
 final readonly class MenubarRenderer

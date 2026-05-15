@@ -18,7 +18,6 @@ use Piwigo\Mail\MailService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
-use Piwigo\Users\CurrentUser;
 
 final readonly class ProfileService
 {

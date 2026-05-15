@@ -6,8 +6,8 @@ namespace Piwigo\Tag;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\RequestCache;
-use Piwigo\Core\AppInfo;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;

@@ -6,9 +6,9 @@ namespace Piwigo\Section;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Calendar\CalendarService;
-use Piwigo\Core\AppInfo;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
@@ -274,7 +274,6 @@ SELECT id
 
                 $cacheItem = isset($cacheKey) ? $this->pool->getItem($cacheKey) : null;
                 if ($cacheItem !== null && $cacheItem->isHit()) {
-                    /** @var mixed $cachedItems */
                     $cachedItems   = $cacheItem->get();
                     $page['items'] = is_array($cachedItems) ? $cachedItems : [];
                 } else {
@@ -628,8 +627,8 @@ SELECT DISTINCT(id)
             imageId:            is_scalar($page['image_id'] ?? null) ? (string) $page['image_id'] : null,
             imageFile:          is_string($page['image_file'] ?? null) ? $page['image_file'] : '',
             category:           is_array($page['category'] ?? null) ? $page['category'] : null,
-            combinedCategories: is_array($page['combined_categories'] ?? null) ? array_values(array_filter($page['combined_categories'], 'is_array')) : null,
-            tags:               is_array($page['tags'] ?? null) ? array_values(array_filter($page['tags'], 'is_array')) : [],
+            combinedCategories: is_array($page['combined_categories'] ?? null) ? array_values(array_filter($page['combined_categories'], is_array(...))) : null,
+            tags:               is_array($page['tags'] ?? null) ? array_values(array_filter($page['tags'], is_array(...))) : [],
             tagIds:             array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawTagIds)),
             list:               array_values(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $rawList)),
             search:             is_scalar($page['search'] ?? null) ? (string) $page['search'] : null,

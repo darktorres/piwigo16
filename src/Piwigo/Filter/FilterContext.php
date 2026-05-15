@@ -15,17 +15,17 @@ namespace Piwigo\Filter;
  * `$GLOBALS['filter']` implementation). When the filter is off, the field
  * is `""` and callers omit the clause.
  */
-final class FilterContext
+final readonly class FilterContext
 {
     /**
      * @param array<int|string, array<string, mixed>> $categories Category rows keyed by id (used by FilterService)
      */
     public function __construct(
-        public readonly bool   $enabled            = false,
-        public readonly int    $recentPeriod       = 0,
-        public readonly array  $categories         = [],
-        public readonly string $visibleCategories  = '',
-        public readonly string $visibleImages      = '',
+        public bool   $enabled            = false,
+        public int    $recentPeriod       = 0,
+        public array  $categories         = [],
+        public string $visibleCategories  = '',
+        public string $visibleImages      = '',
     ) {
     }
 }

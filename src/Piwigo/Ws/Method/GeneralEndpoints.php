@@ -35,9 +35,9 @@ use Piwigo\Picture\PictureService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Tag\TagRepository;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
@@ -49,6 +49,7 @@ use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsHelper;
+use Psr\Cache\CacheItemPoolInterface;
 
 final readonly class GeneralEndpoints
 {
@@ -76,7 +77,7 @@ final readonly class GeneralEndpoints
         private UserRepository $userRepository,
         private Util $util,
         private WsHelper $wsHelper,
-        private \Psr\Cache\CacheItemPoolInterface $pool,
+        private CacheItemPoolInterface $pool,
     ) {
     }
 
@@ -522,7 +523,7 @@ final readonly class GeneralEndpoints
         $tagIds = $currentCtx->tagIds;
         $tagsString = is_string($params['tags_string'] ?? null) ? $params['tags_string'] : '';
         if ($tagsString !== '' && preg_match('/^\d+(,\d+)*$/', $tagsString)) {
-            $tagIds = array_map('intval', explode(',', $tagsString));
+            $tagIds = array_map(intval(...), explode(',', $tagsString));
         }
 
         SectionContextRegistry::set(new SectionContext(

@@ -9,7 +9,7 @@ namespace Piwigo\Section;
  * gallery request. Built once by SectionInitializer::initialize() and
  * distributed via SectionContextRegistry.
  */
-final class SectionContext
+final readonly class SectionContext
 {
     /**
      * @param list<string>        $items            Image IDs in display order
@@ -24,38 +24,38 @@ final class SectionContext
      * @param list<int|string>    $chronologyDate
      */
     public function __construct(
-        public readonly string  $section            = 'categories',
-        public readonly string  $sectionUrl         = '',
-        public readonly string  $rootPath           = '',
-        public readonly array   $items              = [],
-        public readonly int     $start              = 0,
-        public readonly int     $startcat           = 0,
-        public readonly int     $nbImagePage        = 0,
-        public readonly bool    $flat               = false,
-        public readonly bool    $isHomepage         = false,
-        public readonly bool    $superOrderBy       = false,
-        public readonly ?string $imageId            = null,
-        public readonly string  $imageFile          = '',
-        public readonly ?array  $category           = null,
-        public readonly ?array  $combinedCategories = null,
-        public readonly array   $tags               = [],
-        public readonly array   $tagIds             = [],
-        public readonly array   $list               = [],
-        public readonly ?string $search             = null,
-        public readonly ?string $searchId           = null,
-        public readonly array   $searchDetails      = [],
-        public readonly array   $qsearchDetails     = [],
-        public readonly array   $whereClauses       = [],
-        public readonly bool    $useRegexpICU       = false,
-        public readonly array   $chronologyDate     = [],
-        public readonly string  $chronologyField    = '',
-        public readonly string  $chronologyView     = '',
-        public readonly string  $chronologyStyle    = '',
-        public readonly string  $title              = '',
-        public readonly string  $comment            = '',
-        public readonly string  $sectionTitle       = '',
-        public readonly string  $feed               = '',
-        public readonly bool    $isExternal         = false,
+        public string  $section            = 'categories',
+        public string  $sectionUrl         = '',
+        public string  $rootPath           = '',
+        public array   $items              = [],
+        public int     $start              = 0,
+        public int     $startcat           = 0,
+        public int     $nbImagePage        = 0,
+        public bool    $flat               = false,
+        public bool    $isHomepage         = false,
+        public bool    $superOrderBy       = false,
+        public ?string $imageId            = null,
+        public string  $imageFile          = '',
+        public ?array  $category           = null,
+        public ?array  $combinedCategories = null,
+        public array   $tags               = [],
+        public array   $tagIds             = [],
+        public array   $list               = [],
+        public ?string $search             = null,
+        public ?string $searchId           = null,
+        public array   $searchDetails      = [],
+        public array   $qsearchDetails     = [],
+        public array   $whereClauses       = [],
+        public bool    $useRegexpICU       = false,
+        public array   $chronologyDate     = [],
+        public string  $chronologyField    = '',
+        public string  $chronologyView     = '',
+        public string  $chronologyStyle    = '',
+        public string  $title              = '',
+        public string  $comment            = '',
+        public string  $sectionTitle       = '',
+        public string  $feed               = '',
+        public bool    $isExternal         = false,
     ) {
     }
 

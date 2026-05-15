@@ -78,7 +78,7 @@ final class KernelBootTest extends TestCase
         Kernel::boot();
 
         // Kernel::boot() initialises the PageState singleton via PageState::current().
-        self::assertInstanceOf(\Piwigo\Core\PageState::class, \Piwigo\Core\PageState::current());
+        self::assertInstanceOf(PageState::class, PageState::current());
     }
 
     public function test_CurrentUser_get_returns_guest_after_boot_alone(): void

@@ -201,7 +201,7 @@ final class Template
         if (file_exists($file)) {
             return true;
         }
-        return array_any($this->template_dirs, fn ($dir): bool => file_exists(rtrim($dir, '/') . '/' . $file));
+        return array_any($this->template_dirs, fn ($dir): bool => file_exists(rtrim((string) $dir, '/') . '/' . $file));
     }
 
     /**

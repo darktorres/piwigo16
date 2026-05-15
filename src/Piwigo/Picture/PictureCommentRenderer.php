@@ -16,8 +16,8 @@ use Piwigo\Db\Tables;
 use Piwigo\Exception\AuthException;
 use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
-use Piwigo\Session\SessionService;
 use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -44,14 +44,7 @@ final readonly class PictureCommentRenderer
         $imageId            = $picCtx->currentItem;
         $related_categories = $picCtx->relatedCategories;
         $url_self           = $this->urlService->duplicatePictureUrl();
-
-        $showComments = false;
-        foreach ($related_categories as $category) {
-            if (($category['commentable'] ?? '') == 'true') {
-                $showComments = true;
-                break;
-            }
-        }
+        $showComments = array_any($related_categories, fn ($category): bool => ($category['commentable'] ?? '') == 'true');
 
         $comment_action = null;
 

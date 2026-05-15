@@ -6,8 +6,8 @@ namespace Piwigo\Search;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryService;
-use Piwigo\Core\AppInfo;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
@@ -17,13 +17,13 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\Inflector\InflectorEn;
 use Piwigo\Search\Inflector\InflectorFr;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
-use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Users\UserService;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
@@ -895,7 +895,6 @@ final class SearchService
 
         $item = $this->pool->getItem($cacheKey);
         if ($item->isHit()) {
-            /** @var mixed $cachedRes */
             $cachedRes = $item->get();
             return is_array($cachedRes) ? $cachedRes : null;
         }

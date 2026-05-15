@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-use ZipArchive;
-
 use function fclose;
 use function is_resource;
-use function set_error_handler;
 use function restore_error_handler;
+use function set_error_handler;
 use function stream_copy_to_stream;
+
+use ZipArchive;
 
 /**
  * Minimal ZIP extraction helper used by core/plugin/theme/language update flows.

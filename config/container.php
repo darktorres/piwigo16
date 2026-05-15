@@ -6,7 +6,6 @@ use function DI\factory;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
-use Piwigo\Cache\CacheFactory;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Album\AlbumsTabRenderer;
 use Piwigo\Admin\BatchManager\FilterResolver;
@@ -25,6 +24,7 @@ use Piwigo\Admin\Users\UserTabRenderer;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Cache\CacheFactory;
 use Piwigo\Calendar\CalendarService;
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryDefaultRenderer;

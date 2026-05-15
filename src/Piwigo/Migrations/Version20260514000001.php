@@ -6,6 +6,7 @@ namespace Piwigo\Migrations;
 
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
+use Piwigo\Config\Config;
 
 /**
  * Drop the legacy `summarized` column from the history table.
@@ -19,6 +20,7 @@ use Doctrine\Migrations\AbstractMigration;
  */
 final class Version20260514000001 extends AbstractMigration
 {
+    #[\Override]
     public function getDescription(): string
     {
         return 'Drop legacy summarized column from history table';
@@ -34,6 +36,7 @@ final class Version20260514000001 extends AbstractMigration
         }
     }
 
+    #[\Override]
     public function down(Schema $schema): void
     {
         $prefix = $this->resolvePrefix();
@@ -43,8 +46,8 @@ final class Version20260514000001 extends AbstractMigration
 
     private function resolvePrefix(): string
     {
-        return (class_exists(\Piwigo\Config\Config::class) && \Piwigo\Config\Config::has('db_prefix'))
-            ? \Piwigo\Config\Config::dbPrefix()
+        return (class_exists(Config::class) && Config::has('db_prefix'))
+            ? Config::dbPrefix()
             : (getenv('PIWIGO_DB_PREFIX') ?: 'piwigo_');
     }
 }

@@ -7,8 +7,8 @@ namespace Piwigo\Calendar;
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Category\CategoryService;
-use Piwigo\Core\AppInfo;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\Util;
@@ -273,7 +273,6 @@ WHERE id IN (' . implode(',', $items) . ')';
             }
 
             if ($cacheItem !== null && $cacheItem->isHit()) {
-                /** @var mixed $cachedItems */
                 $cachedItems   = $cacheItem->get();
                 $this->items   = is_array($cachedItems) ? array_values(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $cachedItems)) : [];
             } else {

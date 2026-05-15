@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Piwigo\Core\Util;
-use Piwigo\Users\CurrentUser;
 
 final readonly class PreferencesService
 {

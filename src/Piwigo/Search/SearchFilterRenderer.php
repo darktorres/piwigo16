@@ -6,19 +6,19 @@ namespace Piwigo\Search;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
-use Piwigo\Core\AppInfo;
 use Piwigo\Config\ConfigService;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Users\PermissionService;
 use Psr\Cache\CacheItemPoolInterface;
 
@@ -163,7 +163,6 @@ SELECT
                     $cache_key = md5('filter_author_rows' . $userId . $userCacheTime . AppInfo::VERSION);
                     $item      = $this->pool->getItem($cache_key);
                     if ($item->isHit()) {
-                        /** @var mixed $filter_rows_raw */
                         $filter_rows_raw = $item->get();
                         $filter_rows     = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
                     } else {
@@ -199,7 +198,6 @@ SELECT
                 $item_dp       = $this->pool->getItem($cache_key);
                 $cache_hit_date_posted = !preg_match('/^image_id IN/', $filter_clause) && $item_dp->isHit();
                 if ($cache_hit_date_posted) {
-                    /** @var mixed $date_posted_raw */
                     $date_posted_raw = $item_dp->get();
                 } else {
                     $date_posted_raw = ['pre_counters' => [], 'list_of_dates' => []];
@@ -310,7 +308,6 @@ SELECT
                 $item_dc       = $this->pool->getItem($cache_key);
                 $cache_hit_date_created = !preg_match('/^image_id IN/', $filter_clause) && $item_dc->isHit();
                 if ($cache_hit_date_created) {
-                    /** @var mixed $date_created_raw */
                     $date_created_raw = $item_dc->get();
                 } else {
                     $date_created_raw = ['pre_counters' => [], 'list_of_dates' => []];
@@ -435,7 +432,6 @@ SELECT
                     $cache_key = md5('filter_added_by_rows' . $userId . $userCacheTime . AppInfo::VERSION);
                     $item_ab   = $this->pool->getItem($cache_key);
                     if ($item_ab->isHit()) {
-                        /** @var mixed $filter_rows_raw */
                         $filter_rows_raw = $item_ab->get();
                         $filter_rows     = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
                     } else {
@@ -523,7 +519,6 @@ SELECT
                 $cache_key    = md5('file_exts' . $userId . $userCacheTime . AppInfo::VERSION);
                 $item_fe      = $this->pool->getItem($cache_key);
                 if ($item_fe->isHit()) {
-                    /** @var mixed $all_exts_raw */
                     $all_exts_raw = $item_fe->get();
                     $all_exts     = is_array($all_exts_raw) ? $all_exts_raw : [];
                 } else {
@@ -577,7 +572,6 @@ SELECT
                     $item_rat          = $this->pool->getItem($cache_key);
                     $cache_hit_ratings = !preg_match('/^image_id IN/', $filter_clause) && $item_rat->isHit();
                     if ($cache_hit_ratings) {
-                        /** @var mixed $ratings_raw */
                         $ratings_raw = $item_rat->get();
                     } else {
                         $ratings_raw = null;
@@ -677,7 +671,6 @@ SELECT
                 $item_ratio        = $this->pool->getItem($cache_key);
                 $cache_hit_ratios  = !preg_match('/^image_id IN/', $filter_clause) && $item_ratio->isHit();
                 if ($cache_hit_ratios) {
-                    /** @var mixed $ratios_raw */
                     $ratios_raw = $item_ratio->get();
                 } else {
                     $ratios_raw = null;
@@ -748,7 +741,6 @@ SELECT
                     $cache_key = md5('filter_height_rows' . $userId . $userCacheTime . AppInfo::VERSION);
                     $item_h    = $this->pool->getItem($cache_key);
                     if ($item_h->isHit()) {
-                        /** @var mixed $filter_rows_raw */
                         $filter_rows_raw = $item_h->get();
                         $filter_rows     = is_array($filter_rows_raw) ? $filter_rows_raw : [];
                     } else {
@@ -794,7 +786,6 @@ SELECT
                     $cache_key = md5('filter_width_rows' . $userId . $userCacheTime . AppInfo::VERSION);
                     $item_w    = $this->pool->getItem($cache_key);
                     if ($item_w->isHit()) {
-                        /** @var mixed $filter_rows_raw */
                         $filter_rows_raw = $item_w->get();
                         $filter_rows     = is_array($filter_rows_raw) ? $filter_rows_raw : [];
                     } else {

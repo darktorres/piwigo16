@@ -37,7 +37,7 @@ defer to this table.
 | **4c** | `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` → typed `RequestContext` | ✓ Closed 2026-05-15 | — | — |
 | **4d** | `$lang_info` → `Lang` static state | ✓ Closed 2026-05-15 | — | — |
 | **5** | `Util.php` split | ✓ Closed 2026-05-15 | — | — |
-| **6** | Extension-API compat removal (post-v17 cleanup) | Open — most sub-tasks deferred pending §1.3 plugin architecture | none | 6.1–6.5 framed as independent before the 2026-05-15 audit; the audit reframed 6.3 (mostly complete already) and tied 6.1 / 6.2 / 6.4 to the plugin architecture replacement |
+| **6** | Extension-API compat removal (post-v17 cleanup) | Open — most sub-tasks deferred pending §1.4 plugin architecture | none | 6.1–6.5 framed as independent before the 2026-05-15 audit; the audit reframed 6.3 (mostly complete already) and tied 6.1 / 6.2 / 6.4 to the plugin architecture replacement |
 
 **Already shipped before this re-org** (Appendix A entries):
 
@@ -328,13 +328,13 @@ Detail → [Appendix A §Z23](#z23-phase-5-utilphp-split).
 
 # Phase 6 — Extension-API Compat Removal
 
-**Status:** open, but most sub-tasks deferred 2026-05-15 pending the §1.3
+**Status:** open, but most sub-tasks deferred 2026-05-15 pending the §1.4
 plugin architecture rewrite. The v17.0 version bump has shipped
 (`AppInfo::VERSION = '17.0.0'`) and intentionally breaks all PEM extensions
 by policy, so the *external* BC layer is no longer load-bearing — but the
 *in-tree* surfaces (procedural plugin loader, event dispatcher, frontend BC
 queues, Latte template API) double as the staging ground for the
-replacement plugin contract. Removing them before the §1.3 replacement
+replacement plugin contract. Removing them before the §1.4 replacement
 exists would leave the codebase in a half-built state. Re-investigate when
 the plugin architecture lands.
 
@@ -350,39 +350,39 @@ the plugin architecture lands.
 2. **`PiwigoExtension.php` is no longer a Smarty-compat shim** — it is the
    Piwigo Latte template API. Every filter / function it registers is also
    listed in `src/Piwigo/Template/Latte/PiwigoPolicy.php` as the staged
-   plugin template API for §1.3.
+   plugin template API for §1.4.
 3. **All 17 internal `EventDispatcher::addListener` call sites** register
    hardcoded framework callbacks (no `include_path` use). The event
    dispatcher is not currently a plugin extension surface; it's an internal
-   message bus dressed up as one. Replacement design belongs to the §1.3
+   message bus dressed up as one. Replacement design belongs to the §1.4
    plugin architecture.
 4. **`tools/triggers_list.php`** has zero runtime references (purely an
    author-facing reference doc), but listing what events the not-yet-built
-   plugin system *will* expose is part of the §1.3 design — defer.
+   plugin system *will* expose is part of the §1.4 design — defer.
 5. **`globals.d.ts` plugin-facing declarations** (`SwitchBox`,
    `_pwgRatingAutoQueue`) are the TypeScript half of the frontend BC
    queues in 6.4 — they defer with that sub-task.
 
 **Sub-task statuses after the 2026-05-15 audit:**
-- 6.1 (P1) — **deferred** with §1.3 (procedural loader is the staged
+- 6.1 (P1) — **deferred** with §1.4 (procedural loader is the staged
   plugin contract)
-- 6.2 (P2) — **deferred** with §1.3 (event dispatcher is the staged
+- 6.2 (P2) — **deferred** with §1.4 (event dispatcher is the staged
   plugin extension surface)
 - 6.3 (P3) — **largely complete**; remaining sub-pieces re-scoped (see
   below)
-- 6.4 (P4) — **deferred** with §1.3 (frontend BC queues are the staged
+- 6.4 (P4) — **deferred** with §1.4 (frontend BC queues are the staged
   plugin frontend entry points)
 - 6.5 (D4) — **partially available** (header comment + a handful of dead
   declarations); plugin-facing subset defers with 6.4
 
 **Hard dependencies:** none on Phases 1–5; 6.1 / 6.2 / 6.4 / 6.5-plugin-subset
-gated on §1.3 plugin architecture.
+gated on §1.4 plugin architecture.
 
 ## 6.1 Plugin/theme procedural contract  [P1]
 
-**Deferred 2026-05-15** with §1.3. The procedural runtime described below
-is the staging ground for the new plugin contract. Removing it before §1.3
-ships would mean no plugin contract at all. When §1.3 lands, the procedural
+**Deferred 2026-05-15** with §1.4. The procedural runtime described below
+is the staging ground for the new plugin contract. Removing it before §1.4
+ships would mean no plugin contract at all. When §1.4 lands, the procedural
 loader gets removed *alongside* the typed replacement, not before. See
 [[no-shim-removal-before-replacement]].
 
@@ -454,11 +454,11 @@ Plugins/themes are expected to define free functions: `plugin_install`,
 
 ## 6.2 Plugin event API  [P2]
 
-**Deferred 2026-05-15** with §1.3. The event dispatcher is the staged
-plugin extension surface; deleting it before §1.3 produces a typed
+**Deferred 2026-05-15** with §1.4. The event dispatcher is the staged
+plugin extension surface; deleting it before §1.4 produces a typed
 replacement would erase Piwigo's extensibility contract entirely.
 
-Audit findings to carry into §1.3 planning:
+Audit findings to carry into §1.4 planning:
 
 - 17 internal `EventDispatcher::addListener` calls catalogued; all register
   hardcoded framework callbacks, none use the `include_path` mechanism. Of
@@ -476,7 +476,7 @@ Audit findings to carry into §1.3 planning:
   can introspect all event flow.
 - `composer.json` does NOT declare `psr/event-dispatcher`. The current
   dispatcher is homegrown; a future PSR-14 alignment is open design space
-  for §1.3.
+  for §1.4.
 
 `EventDispatcher::dispatch()` / `notify()` is called with **153 unique event
 names** across `src/`. Every name is a stable hook PEM plugins subscribe on.
@@ -533,7 +533,7 @@ wrong. Audit findings:
 2. **`PiwigoExtension.php` (808 LOC) is the Piwigo Latte template API**,
    not a Smarty-compat shim. Every filter and function it registers is
    also listed in `src/Piwigo/Template/Latte/PiwigoPolicy.php` as the
-   staged plugin template API for §1.3:
+   staged plugin template API for §1.4:
    - `getFilters()` registers 35 entries — translation pair (`translate`,
      `translate_dec`), 19 PHP passthroughs (`sprintf`, `urlencode`, …),
      7 Smarty-pipe-convention wrappers (`number_format`, `cat`,
@@ -584,30 +584,30 @@ wrong. Audit findings:
    `CORE_FILTERS`. Deletion is a *paired* edit (drop from
    `PiwigoExtension::getFilters()` / `getFunctions()` AND from the
    matching `PiwigoPolicy` allowlist). Because `PiwigoPolicy` is the
-   staged plugin template API for §1.3, this audit should run alongside
-   the §1.3 plugin architecture rewrite — not before. **Deferred** with
-   §1.3.
+   staged plugin template API for §1.4, this audit should run alongside
+   the §1.4 plugin architecture rewrite — not before. **Deferred** with
+   §1.4.
 3. **[P3.3] Decide on `htmlOptions` / `htmlRadios` / `math` long-term.**
    Currently used by 24 / 2 / 1 templates respectively. Two paths to weigh
-   when §1.3 lands:
+   when §1.4 lands:
    - Keep them as the Piwigo Latte form-helper API (status quo)
    - Rewrite the 24 / 2 / 1 templates to inline `<select>` HTML / radio
      groups, then delete the helpers from both `PiwigoExtension` and
      `PiwigoPolicy`
    This is a design call coupled to the plugin-template-API surface
-   choice, so **deferred** with §1.3.
+   choice, so **deferred** with §1.4.
 4. **[P3.4 — completed already]** 133-template Smarty → Latte syntactic
    conversion. Historical, not "still ahead". No current open work.
 
 **Net status:** P3.1 (docstring update) is the only currently-actionable
-piece. Everything else defers with §1.3.
+piece. Everything else defers with §1.4.
 
 ## 6.4 Frontend plugin BC queues  [P4]
 
-**Deferred 2026-05-15** with §1.3. These three pre-load auto-queue patterns
+**Deferred 2026-05-15** with §1.4. These three pre-load auto-queue patterns
 exist so third-party plugins can inject frontend behaviour before the
 relevant bundle has loaded. They are the staged frontend extension entry
-points for the not-yet-built plugin system; deleting them before §1.3 ships
+points for the not-yet-built plugin system; deleting them before §1.4 ships
 a typed alternative would leave the frontend with no plugin contract at all.
 
 The patterns:
@@ -618,7 +618,7 @@ The patterns:
   (`_cont = contEl;`)
 
 Removable as one tight diff (three line-level edits and a search-and-verify)
-once §1.3 has produced the replacement frontend plugin contract.
+once §1.4 has produced the replacement frontend plugin contract.
 
 ## 6.5 Frontend `globals.d.ts` cleanup  [D4]
 
@@ -648,30 +648,30 @@ Latte, see [6.3](#63-piwigoextensionphp--piwigo-latte-template-api-p3)).
   still dead).
 
 **Deferred:** the plugin-facing pair (`SwitchBox`, `_pwgRatingAutoQueue`) —
-ships alongside the 6.4 BC-queue removal once §1.3 produces the
+ships alongside the 6.4 BC-queue removal once §1.4 produces the
 replacement frontend plugin contract.
 
 ## 6.6 Phase 6 task summary
 
 Revised 2026-05-15 after the full audit. The deferred rows below revisit
-together once §1.3 has produced a typed plugin contract — at that point
+together once §1.4 has produced a typed plugin contract — at that point
 the legacy bridges come out *alongside* the replacement, not before.
 
 | Task | Disposition |
 |---|---|
-| Delete plugin-loader paths (P1.1, P1.4) | **Deferred** with §1.3 |
-| Delete `Admin/Plugins.php` pre-2.7 BC branching (P1.2) | **Deferred** with §1.3 |
-| Delete theme contract (P1.3) | **Deferred** with §1.3 |
-| Remove `plugin_*` / `theme_*` callback stubs from `tools/phpstan-bootstrap.php` (P1.5) | **Deferred** with §1.3 (lives with P1) |
-| Rewrite legacy event names as PSR-14 typed events (P2) | **Deferred** with §1.3 |
-| Rewrite or delete `tools/triggers_list.php` (P2.2, D3.5 part 2) | **Deferred** with §1.3 |
+| Delete plugin-loader paths (P1.1, P1.4) | **Deferred** with §1.4 |
+| Delete `Admin/Plugins.php` pre-2.7 BC branching (P1.2) | **Deferred** with §1.4 |
+| Delete theme contract (P1.3) | **Deferred** with §1.4 |
+| Remove `plugin_*` / `theme_*` callback stubs from `tools/phpstan-bootstrap.php` (P1.5) | **Deferred** with §1.4 (lives with P1) |
+| Rewrite legacy event names as PSR-14 typed events (P2) | **Deferred** with §1.4 |
+| Rewrite or delete `tools/triggers_list.php` (P2.2, D3.5 part 2) | **Deferred** with §1.4 |
 | Rewrite all 133 `.latte` templates from Smarty to native Latte (P3 original framing) | **Completed already** (pre-Phase-6 work) — Smarty surface syntax is gone from every template; what remains is Latte syntax using the Piwigo template API |
 | Update `PiwigoExtension.php` docstring to drop Smarty-conversion narrative (P3.1) | **Actionable now** — pure docs change |
-| Drop unused PiwigoExtension filters/functions in lockstep with PiwigoPolicy (P3.2) | **Deferred** with §1.3 — `PiwigoPolicy` is the staged plugin template API |
-| Decide `htmlOptions` / `htmlRadios` / `math` long-term (P3.3) | **Deferred** with §1.3 |
-| Delete frontend BC queues (P4) | **Deferred** with §1.3 |
+| Drop unused PiwigoExtension filters/functions in lockstep with PiwigoPolicy (P3.2) | **Deferred** with §1.4 — `PiwigoPolicy` is the staged plugin template API |
+| Decide `htmlOptions` / `htmlRadios` / `math` long-term (P3.3) | **Deferred** with §1.4 |
+| Delete frontend BC queues (P4) | **Deferred** with §1.4 |
 | Update `globals.d.ts` header comment + drop confirmed-dead non-plugin declarations (D4 partial) | **Actionable now** |
-| Remove `SwitchBox` / `_pwgRatingAutoQueue` declarations (D4 plugin-coupled subset) | **Deferred** with P4 / §1.3 |
+| Remove `SwitchBox` / `_pwgRatingAutoQueue` declarations (D4 plugin-coupled subset) | **Deferred** with P4 / §1.4 |
 
 ---
 
@@ -699,7 +699,7 @@ the legacy bridges come out *alongside* the replacement, not before.
    Phase 5 (Util split)   ──┘  (see Appendix A §Z23)
 
    Phase 6 (extension-API)   ──  independent of Phases 1-5; most sub-tasks
-                                gated on §1.3 plugin architecture (see Phase 6)
+                                gated on §1.4 plugin architecture (see Phase 6)
    §A1 ($page alias)         ──  done 2026-05-15 (shipped early, §Z1.1)
 ```
 
@@ -714,7 +714,7 @@ Notes:
 - Phase 6 has no hard dependency on any other phase, but the 2026-05-15
   audit reframed most of it: 6.3's "rewrite 133 templates" was already
   complete; 6.1 / 6.2 / 6.4 / 6.5-plugin-subset / 6.3's residual deletions
-  defer with §1.3 plugin architecture. Only the cosmetic docstring update
+  defer with §1.4 plugin architecture. Only the cosmetic docstring update
   in 6.3 (P3.1) and the non-plugin globals.d.ts trim in 6.5 (D4 partial)
   remain actionable now.
 

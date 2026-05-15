@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * Manages the push-down language-switch stack and all mutations of the $lang,
- * $lang_info and $language_files globals, replacing those three global declarations
- * across functions_mail.inc.php, functions.inc.php, and functions_notification_by_mail.inc.php.
+ * Manages the push-down language-switch stack and all mutations of the typed
+ * Lang static state ($data, $days, $months, $langInfo) and the plugin-file
+ * registry that replaces the legacy $lang / $lang_info / $language_files
+ * globals.
  *
- * Design: all reads go through Lang static methods; mutations call Lang::setString(),
- * Lang::bulkSet(), Lang::setDays(), Lang::setMonths(). No $GLOBALS['lang'] bridge.
+ * Design: all reads/writes go through Lang static methods (`bulkSet`,
+ * `setString`, `setDays`, `setMonths`, `langInfo`, `setLangInfo`,
+ * `mergeLangInfo`). No `$GLOBALS` bridge.
  *
- * Stack state ($stack, $saved, $switchInitialized) lives in static properties since
- * it does not need a global bridge — only switch_lang_to/back read it.
+ * Stack state ($stack, $saved, $switchInitialized) lives in static properties
+ * since it does not need a global bridge — only switch_lang_to/back read it.
  */
 final class LanguageStack
 {

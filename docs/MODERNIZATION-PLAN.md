@@ -72,9 +72,9 @@ Tier 3; Tier 3 retired them.
 - No `global $lang | $lang_info | $language_files | $switch_lang | $conf_mail`
   declarations remain in `src/`.
 - `LanguageContext` value object was not introduced — the stack snapshots
-  `$lang` / `$lang_info` arrays directly via `$GLOBALS` to preserve the
-  reference bridge that `Lang::attachGlobals()` sets up. Pragmatic choice;
-  documented in the class header.
+  `$lang` / `$lang_info` via the typed `Lang` static state
+  (`Lang::all()` / `Lang::langInfo()` after COMPAT-INVENTORY §Z13). No
+  `$GLOBALS` reference bridges remain.
 
 ---
 

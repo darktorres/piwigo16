@@ -1142,7 +1142,7 @@ Part P are listed for completeness.
 | Dead `PwgGetSessionVarDynamicReturnType` | D3.2 | 1 | Open |
 | Misnamed `TriggerChangeDynamicReturnType` | D3.3 | 1 | Open |
 | `NoGlobalInSrcRule` `persistent_cache` entry | D3.4 | 1 | Open |
-| `NoGlobalInSrcRule` other GUARDED entries | D3.4 | 3a / 3b / 4a / 4b / 4d | 6 of 9 closed (`page` 2026-05-15; `errors`, `themeconfs`, `cache`, `maint_actions` §Z9; `filter` §Z11; `header_notes` §Z12); `lang_info` open for Phase 4d |
+| `NoGlobalInSrcRule` other GUARDED entries | D3.4 | 3a / 3b / 4a / 4b / 4d | 6 of 9 closed (`page` 2026-05-15; `errors`, `themeconfs`, `cache`, `maint_actions` §Z9; `filter` §Z11; `header_notes` §Z12). `lang_info` never appeared in GUARDED (accessed via `$GLOBALS[…]` not `global`); closed via §Z13. |
 | `triggers_list.php` `'type'` strings + `include/` paths | D3.5 | 1 | Open |
 | `triggers_list.php` event-name rewrite | D3.5 (cross-ref P2) | 6 | Sustained until v17 |
 | `globals.d.ts` ambient TS globals | D4 | 6 | Sustained until v17 |

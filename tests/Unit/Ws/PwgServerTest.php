@@ -21,7 +21,6 @@ use Piwigo\Ws\WsType;
  */
 final class PwgServerTest extends TestCase
 {
-    /** @psalm-suppress PropertyNotSetInConstructor */
     private PwgServer $server;
 
     #[\Override]

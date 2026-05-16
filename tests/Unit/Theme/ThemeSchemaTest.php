@@ -14,7 +14,6 @@ use PHPUnit\Framework\TestCase;
  * required field, every constrained field (parent, loadParentCss,
  * assets, localHead, main, autoload), and edge cases.
  */
-/** @psalm-suppress PropertyNotSetInConstructor — properties initialized in setUp() */
 final class ThemeSchemaTest extends TestCase
 {
     private Validator $validator;

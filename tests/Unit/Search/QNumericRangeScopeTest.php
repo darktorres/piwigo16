@@ -10,7 +10,6 @@ use Piwigo\Search\QSingleToken;
 
 final class QNumericRangeScopeTest extends TestCase
 {
-    /** @psalm-suppress PropertyNotSetInConstructor */
     private QNumericRangeScope $scope;
 
     #[\Override]

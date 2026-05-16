@@ -30,7 +30,6 @@ use Piwigo\Template\Template;
  * `id` is intentionally NOT emitted — Template::setTheme rewrites it
  * to the directory basename on line 165 regardless.
  */
-/** @psalm-suppress PropertyNotSetInConstructor — initialized in setUp() */
 final class TemplateLoadThemeconfTest extends TestCase
 {
     private Template $template;

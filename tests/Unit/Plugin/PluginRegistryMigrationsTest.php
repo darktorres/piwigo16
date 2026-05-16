@@ -24,7 +24,6 @@ use Psr\Log\NullLogger;
  * without a MySQL fixture. The runner itself is verified deeply by
  * PluginMigrationRunnerTest; this test owns the registry-runner glue.
  */
-/** @psalm-suppress PropertyNotSetInConstructor — properties initialized in setUp() */
 final class PluginRegistryMigrationsTest extends TestCase
 {
     private Connection $conn;
@@ -100,6 +99,7 @@ final class PluginRegistryMigrationsTest extends TestCase
 
     private function stubRepository(): PluginRepository
     {
+        /** @psalm-suppress PropertyNotSetInConstructor — parent's $conn/$tablePrefix intentionally skipped; stub has no DB */
         return new class () extends PluginRepository {
             /** @var array<string, array<string, mixed>> */
             private array $rows = [];

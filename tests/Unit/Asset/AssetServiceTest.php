@@ -22,7 +22,6 @@ use Psr\Log\NullLogger;
  *  - Unknown entry inside a known plugin yields no tags (no fatal)
  *  - Malformed entry reference is ignored
  */
-/** @psalm-suppress PropertyNotSetInConstructor — initialized in setUp() */
 final class AssetServiceTest extends TestCase
 {
     private string $pluginsDir;

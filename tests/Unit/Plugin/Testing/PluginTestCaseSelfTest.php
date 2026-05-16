@@ -15,7 +15,6 @@ use Psr\Container\ContainerInterface;
  * workflow (bind services → boot plugin → dispatch event → assert
  * mutation) so that the file doubles as documentation.
  */
-/** @psalm-suppress PropertyNotSetInConstructor — $container/$dispatcher initialized in PluginTestCase::setUp() */
 final class PluginTestCaseSelfTest extends PluginTestCase
 {
     public function testBootPluginRegistersSubscribedEventHandlers(): void

@@ -10,7 +10,6 @@ use Piwigo\Ws\PwgError;
 
 final class PwgJsonEncoderTest extends TestCase
 {
-    /** @psalm-suppress PropertyNotSetInConstructor */
     private PwgJsonEncoder $encoder;
 
     #[\Override]

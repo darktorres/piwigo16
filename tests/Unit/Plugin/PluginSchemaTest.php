@@ -14,7 +14,6 @@ use PHPUnit\Framework\TestCase;
  * required field, every constrained field (version, license, hasSettings,
  * minPiwigo, main, autoload), and a handful of edge cases.
  */
-/** @psalm-suppress PropertyNotSetInConstructor — properties initialized in setUp() */
 final class PluginSchemaTest extends TestCase
 {
     private Validator $validator;

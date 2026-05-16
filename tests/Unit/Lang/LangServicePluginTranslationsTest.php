@@ -19,7 +19,6 @@ use Piwigo\Lang\Translator;
  * Translator/Lang are global facades; reset() between tests so each
  * assertion runs against a clean translation table.
  */
-/** @psalm-suppress PropertyNotSetInConstructor — properties initialized in setUp() */
 final class LangServicePluginTranslationsTest extends TestCase
 {
     private LangService $lang;

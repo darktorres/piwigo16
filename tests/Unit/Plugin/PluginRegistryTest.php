@@ -20,7 +20,6 @@ use Psr\Log\NullLogger;
  * The PluginRepository dependency is stubbed with an in-memory shim so
  * we don't need a DB for registry-level tests.
  */
-/** @psalm-suppress PropertyNotSetInConstructor — properties initialized in setUp() */
 final class PluginRegistryTest extends TestCase
 {
     private string $fixturesDir;
@@ -71,14 +70,11 @@ final class PluginRegistryTest extends TestCase
         $registry = $this->makeRegistry($repo);
 
         $registry->install('valid_plugin');
-        // Psalm narrows static-int counters too tightly across method
-        // calls (it sees =int(1) and flags `===1` as redundant). Suppress.
-        /** @psalm-suppress RedundantConditionGivenDocblockType */
         self::assertSame(1, ValidPlugin::$installCount);
         self::assertNotEmpty($repo->findAll('', 'valid_plugin'));
 
         $registry->install('valid_plugin'); // idempotent — install() runs only once
-        /** @psalm-suppress RedundantConditionGivenDocblockType */
+        /** @psalm-suppress RedundantConditionGivenDocblockType — static counter narrowed to =int(1) after idempotent re-run */
         self::assertSame(1, ValidPlugin::$installCount);
 
         $registry->activate('valid_plugin');

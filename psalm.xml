@@ -41,4 +41,4 @@
              correct. -->
         <UnsupportedPropertyReferenceUsage errorLevel="suppress"/>
     </issueHandlers>
-</psalm>
+<plugins><pluginClass class="Psalm\PhpUnitPlugin\Plugin"/></plugins></psalm>

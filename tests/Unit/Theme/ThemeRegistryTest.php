@@ -19,7 +19,6 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
  * approach — in-memory ThemeRepository stub, isolated cycle fixture
  * outside the main scan dir.
  */
-/** @psalm-suppress PropertyNotSetInConstructor — properties initialized in setUp() */
 final class ThemeRegistryTest extends TestCase
 {
     private string $fixturesDir;
@@ -189,6 +188,7 @@ final class ThemeRegistryTest extends TestCase
 
     private function stubRepository(): ThemeRepository
     {
+        /** @psalm-suppress PropertyNotSetInConstructor — parent's $conn/$tablePrefix intentionally skipped; stub has no DB */
         return new class () extends ThemeRepository {
             /** @var array<string, array<string, mixed>> */
             private array $rows = [];

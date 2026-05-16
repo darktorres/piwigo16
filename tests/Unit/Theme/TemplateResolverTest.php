@@ -23,7 +23,6 @@ use Psr\Log\NullLogger;
  *    the rest.
  *  - missing.latte exists in neither → resolves to null.
  */
-/** @psalm-suppress PropertyNotSetInConstructor — properties initialized in setUp() */
 final class TemplateResolverTest extends TestCase
 {
     private string $themesDir;
@@ -37,6 +36,7 @@ final class TemplateResolverTest extends TestCase
     {
         $this->themesDir = PHPWG_ROOT_PATH . 'tests/fixtures/themes';
 
+        /** @psalm-suppress PropertyNotSetInConstructor — parent's $conn/$tablePrefix intentionally skipped; stub has no DB */
         $repo = new class () extends ThemeRepository {
             public function __construct()
             {

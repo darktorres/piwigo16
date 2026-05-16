@@ -16,7 +16,6 @@ use Piwigo\Routing\RouteResult;
  */
 final class RouterTest extends TestCase
 {
-    /** @psalm-suppress PropertyNotSetInConstructor */
     private Router $router;
 
     #[\Override]

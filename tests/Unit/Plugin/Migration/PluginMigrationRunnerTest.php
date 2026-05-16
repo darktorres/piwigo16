@@ -27,7 +27,6 @@ use Psr\Log\NullLogger;
  *  - bad migration class = PluginMigrationException with plugin id +
  *    version embedded
  */
-/** @psalm-suppress PropertyNotSetInConstructor — properties initialized in setUp() */
 final class PluginMigrationRunnerTest extends TestCase
 {
     private Connection $conn;

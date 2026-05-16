@@ -19,7 +19,6 @@ use Psr\Log\NullLogger;
  * point a plugin's translation table merges into the running
  * Translator without the plugin author writing any boilerplate.
  */
-/** @psalm-suppress PropertyNotSetInConstructor — properties initialized in setUp() */
 final class PluginRegistryLanguagesTest extends TestCase
 {
     private LangService $lang;
@@ -86,6 +85,7 @@ final class PluginRegistryLanguagesTest extends TestCase
     /** @param array<string, string> $states plugin id => state */
     private function stubRepository(array $states): PluginRepository
     {
+        /** @psalm-suppress PropertyNotSetInConstructor — parent's $conn/$tablePrefix intentionally skipped; stub has no DB */
         return new class ($states) extends PluginRepository {
             /** @var array<string, array<string, mixed>> */
             private array $rows = [];

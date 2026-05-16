@@ -13,7 +13,6 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 
 final class BlockManagerTest extends TestCase
 {
-    /** @psalm-suppress PropertyNotSetInConstructor */
     private BlockManager $mgr;
 
     #[\Override]

@@ -45,6 +45,7 @@
     "phpstan/phpstan-deprecation-rules": "^2.0",
     "phpstan/phpstan-strict-rules": "^2.0",
     "phpunit/phpunit": "^13.0",
+    "psalm/plugin-phpunit": "^0.19.7",
     "rector/argtyper": "^0.6.0",
     "rector/extension-installer": "^0.11.2",
     "rector/jack": "^1.0",

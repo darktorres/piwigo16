@@ -20,7 +20,6 @@ use Symfony\Component\EventDispatcher\EventDispatcher as SymfonyEventDispatcher;
  */
 final class SpecBuilderTest extends TestCase
 {
-    /** @psalm-suppress PropertyNotSetInConstructor */
     private PwgServer $server;
 
     #[\Override]

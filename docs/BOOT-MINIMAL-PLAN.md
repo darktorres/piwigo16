@@ -95,6 +95,7 @@ No changes to `reset()` — it already clears `$booted` and `$container`.
 ### Step B — `index.php` `i/` block
 
 Replace:
+
 ```php
 // current
 $logger = new Logger([
@@ -107,6 +108,7 @@ LoggerRegistry::set($logger);
 ```
 
 With:
+
 ```php
 // target
 $logger = new Logger([

@@ -165,7 +165,7 @@ the built-in `ZipArchive` via a new `Piwigo\Core\ZipExtractor` helper.
 helper class covered by 9 unit tests (path traversal, prefix stripping,
 selective extraction, chmod).
 
-Detail → [Appendix A §Z17](#z17-phase-2c-pclzip-ziparchive-migration).
+Detail → [Appendix A §Z17](#z17-phase-2c-pclzip--ziparchive-migration).
 
 ## Phase 2d — `xmlrpc_encode()` removal  [A3.5] ✓
 
@@ -186,7 +186,7 @@ UA-detection library) replaced with `mobiledetect/mobiledetectlib: ^4.8`
 swapped; every consumer of the UA classification (mobile-theme switcher,
 iOS banner guards) is preserved unchanged.
 
-Detail → [Appendix A §Z19](#z19-phase-2e-mobileesp-mobiledetect-swap).
+Detail → [Appendix A §Z19](#z19-phase-2e-mobileesp--mobiledetect-swap).
 
 ## Phase 2f — `CURRENT_DATE` global retired  [A3.4] ✓
 
@@ -210,7 +210,7 @@ consumer (`FeedController`) migrated; file-caching side effect dropped (it
 was overwritten on every request, not actually used as a cache); 8 unit
 tests cover the new generator.
 
-Detail → [Appendix A §Z21](#z21-phase-2g-universalfeedcreator-in-tree-dom-rss-generator).
+Detail → [Appendix A §Z21](#z21-phase-2g-universalfeedcreator--in-tree-dom-rss-generator).
 
 ## Phase 2h — Other one-off `define()` polish  [A3.6] — deferred 2026-05-15
 
@@ -228,7 +228,7 @@ looked at and why each was passed over, not as a TODO.
 | **`PHPWG_URL`** | 1 — `Bootstrap/CommonBootstrap.php:177` (hardcoded `''` by fork policy: "blanked so this install never sends telemetry to upstream piwigo.org") | 28 sites — `AdminService.php` admin help-link templates (`PHPWG_URL . '/wiki'`, `'/forum'`, `'/bugs'`, etc.), `Updates.php` (telemetry endpoint), `MailService.php`, `PageTailRenderer.php` (template var), `Util.php` (telemetry endpoint) | **Migration is blocked by a product decision, not a refactor question.** With `PHPWG_URL=''`, the 28 consumers produce broken `/wiki`, `/forum`, `/bugs`-on-current-host paths in the admin UI. Cleaning that up means deciding where the fork's help links *should* point (fork docs URL? remove the help-link feature entirely? keep them broken?). That's a UX/product call, not a Phase 2h refactor. |
 | **`PEM_URL`** | 1 — `Bootstrap/CommonBootstrap.php:180-186` (fork-local extensions catalog URL, derived from `$_SERVER['HTTP_HOST']` or `Config::alternativePemUrl()`) | ~10 sites — `Plugins.php`, `Themes.php`, `Languages.php`, `Updates.php`, `Util.php` (all in plugin/theme/language install + version-check flows) | Live runtime constant with real consumers. Migration to `Config::pemUrl()` is mechanical (~10 touches) but doesn't fix a bug, remove a dep, or unlock another phase. The inventory's "defer unless touching the surrounding code anyway" applies. Reasonable bundle-of-opportunity move if a future phase touches the extension-install flow. |
 | **`PWG_LOCAL_DIR`** | 1 — `Bootstrap/CommonBootstrap.php:71` (literal `'local/'`) | 14 sites — various `PHPWG_ROOT_PATH . PWG_LOCAL_DIR . '...'` constructions | String literal, never varies. Could become a class constant (`AppInfo::LOCAL_DIR`?) for stricter typing but nothing currently breaks. 14 mechanical touches for low value. |
-| **`MKGETDIR_*`** | ~~5 in `Core/Util.php:42-46`~~ retired 2026-05-15 in Phase 5 Batch 2 — promoted to `Piwigo\Core\Filesystem::FLAG_*` class constants (`FLAG_NONE`, `FLAG_RECURSIVE`, `FLAG_DIE_ON_ERROR`, `FLAG_PROTECT_INDEX`, `FLAG_DEFAULT`). See [§Z23](#z23-phase-5-utilphp-split). |
+| **`MKGETDIR_*`** | ~~5 in `Core/Util.php:42-46`~~ retired 2026-05-15 | 0 — retired with the constants | Promoted to `Piwigo\Core\Filesystem::FLAG_*` class constants (`FLAG_NONE`, `FLAG_RECURSIVE`, `FLAG_DIE_ON_ERROR`, `FLAG_PROTECT_INDEX`, `FLAG_DEFAULT`) in Phase 5 Batch 2. See [§Z23](#z23-phase-5-utilphp-split). |
 
 ### Bottom line
 
@@ -355,7 +355,7 @@ concerned.
 
 # Hard Dependencies — Summary Graph
 
-```
+```text
    Phase 1 (parallel)        ──→  (no downstream gate)
    all standalone
 
@@ -409,7 +409,7 @@ preserves its original `§Z` anchor so prior commits and docs still resolve.
 
 | § | Global | Notes |
 |---|---|---|
-| §Z1.1 | `$GLOBALS['page']` | Service-owned state across `SearchService`, `CalendarService`, `CalendarBase`, `CalendarMonthly`, `UrlService`, `AuthService` (via `PageState::current()->authKeyId`); dead writes removed in `PasswordService`, `MaintenanceController`, `GeneralEndpoints`, `UpgradeController`. Alias at `SectionInitializer:68` deleted. See [§A1 closure detail](#a1-page-reference-bridge-closure-record) below. |
+| §Z1.1 | `$GLOBALS['page']` | Service-owned state across `SearchService`, `CalendarService`, `CalendarBase`, `CalendarMonthly`, `UrlService`, `AuthService` (via `PageState::current()->authKeyId`); dead writes removed in `PasswordService`, `MaintenanceController`, `GeneralEndpoints`, `UpgradeController`. Alias at `SectionInitializer:68` deleted. See [§A1 closure detail](#a1--page-reference-bridge-closure-record) below. |
 | §Z1.2 | `$GLOBALS['lang']` | `Lang::attachGlobals()` snapshots once at boot then `unset()`s the global. (Stale comment at `Translator.php:99` → Phase 1.1.) |
 | §Z1.3 | `$GLOBALS['template']` | `TemplateRegistry::set()` write removed; readers migrated to `TemplateRegistry::current()`. |
 | §Z1.4 | `$GLOBALS['pwg_loaded_plugins']` | Bridge removed from `LoadedPluginRegistry::init/reset`. 3 callers migrated (MiscController, BatchManagerController, ExtensionsController). |
@@ -697,7 +697,7 @@ and the plugin-author event-reference doc. No runtime behaviour changes.
   function). The `services:` block in `phpstan.neon` lost the
   `dynamicFunctionReturnTypeExtension` registration.
 - **PHPStan extension renamed** [D3.3] —
-  `tools/phpstan/TriggerChangeDynamicReturnType.php` → 
+  `tools/phpstan/TriggerChangeDynamicReturnType.php` →
   `tools/phpstan/EventDispatcherDispatchDynamicReturnType.php` (`git mv`),
   class name updated, `phpstan.neon` registration updated, one referencing
   comment in `src/Piwigo/Template/Latte/PiwigoExtension.php:415` updated,
@@ -709,8 +709,8 @@ and the plugin-author event-reference doc. No runtime behaviour changes.
   `$persistent_cache`). File dropped from 93 lines to 75. The remaining
   runtime-constant duplicates (Group B) and procedural callback stubs
   (Group C) are out of Phase 1 scope; Group B tracks
-  [Phase 2a](#phase-2a--ws_-constant-migration-a32) and
-  [Phase 4c](#phase-4c--in_admin--in_ws--phpwg_in_upgrade--typed-requestcontext-a31);
+  [Phase 2a](#phase-2a--ws_-constant-migration--a32-) and
+  [Phase 4c](#phase-4c--in_admin--in_ws--phpwg_in_upgrade--typed-requestcontext--a31-);
   Group C was required by Phase 6 (now closed; see [§Z25](#z25-14-plugin-contract)).
 - **NoGlobalInSrcRule cleanup** [D3.4] — found already done. The docblock
   no longer mentioned `include/` / `admin/`, and `persistent_cache` was
@@ -732,7 +732,7 @@ and the plugin-author event-reference doc. No runtime behaviour changes.
   in a multi-file list (alongside `ConfigService.php` for `load_conf` and
   alongside `CommonBootstrap` / `Util` / `MailService` for `loading_lang`)
   — dropped entirely;
-  `include/functions_plugins.inc.php (trigger_change, trigger_notify)` → 
+  `include/functions_plugins.inc.php (trigger_change, trigger_notify)` →
   `src/Piwigo/Plugins/EventDispatcher.php (dispatch, notify)`.
 - The orphan event `functions_mail_included` was dispatched by the
   deleted `include/functions_mail.inc.php` and is never fired anywhere
@@ -825,7 +825,7 @@ case on the enum keeps it short where it stood alone.
 
 The inventory's original plan said "WS_ERR_INVALID_PARAM →
 `WsError::InvalidParam->value` / WS_TYPE_INT → `WsType::Int->value` / etc."
-First-pass attempted to use bare int literals for the three WS_ERR_* codes
+First-pass attempted to use bare int literals for the three WS_ERR_*codes
 (reasoning: the codebase already uses 400/401/403 as bare ints in PwgError
 calls, so adding more bare ints "stays consistent"). On feedback that bare
 ints lose semantic information, the work backed out to create the
@@ -875,7 +875,7 @@ constants there either.
 - **`tools/phpstan-bootstrap.php`** — no change needed (only `PREFIX_TABLE`
   was stubbed here, not the 30 table-name constants).
 - **`src/Piwigo/Users/UserRepository.php:107`** — `@param` docstring example
-  rewritten: "`(e.g. USER_INFOS_TABLE)`" → "`(e.g. `Tables::userInfos()`)`".
+  rewritten: "`(e.g. USER_INFOS_TABLE)`" → "`(e.g.`Tables::userInfos()`)`".
   The actual `$tableName` parameter is already passed as a `Tables::*` string
   by the only caller (`UserAdminService.php:84`); only the prose was stale.
 
@@ -1766,7 +1766,7 @@ Closed 2026-05-16 (§1.4 batches B2, B7–B9, B17e–B17g).
 The Piwigo 17+ plugin contract is now expressed via:
 
 - **`Piwigo\Plugin\PluginInterface`** — `getId/getVersion/getName/boot`
-  + lifecycle hooks `install/activate/deactivate/uninstall/update` +
+  - lifecycle hooks `install/activate/deactivate/uninstall/update` +
   `subscribedEvents` (Symfony `EventSubscriberInterface`-compatible
   shape).
 - **`docs/schemas/plugin.schema.json`** (JSON Schema draft 2020-12) —
@@ -1813,7 +1813,7 @@ Closed 2026-05-16 (§1.4 batches B2, B13–B14, B17g).
 The Piwigo 17+ theme contract mirrors the plugin contract:
 
 - **`Piwigo\Theme\ThemeInterface`** — `getId/getVersion/getName/getParentId/boot`
-  + lifecycle hooks + `getAssetDir/loadParentCss/getLocalHeadTemplate`.
+  - lifecycle hooks + `getAssetDir/loadParentCss/getLocalHeadTemplate`.
 - **`docs/schemas/theme.schema.json`** — `id, version, name, parent,
   loadParentCss, assets, localHead, main, autoload, colorscheme,
   useStandardPages`. `main` is optional (bundled themes ship metadata

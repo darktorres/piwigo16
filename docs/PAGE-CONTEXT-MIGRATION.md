@@ -33,7 +33,7 @@ Move them to `private` instance fields; no new class needed.
 |---|---|---|
 | `is_ext_imagick`, `ext_imagick_command` | `PwgImage` | `private static ?string $cmd = null` + lazy init |
 | `fs_quick_check_already_called` | `ImageAdminService` | `private bool $fsQuickCheckCalled = false` |
-| `tag_id_from_tag_name_cache` | `TagAdminService` | `private array<string, int|string> $tagCache = []` |
+| `tag_id_from_tag_name_cache` | `TagAdminService` | `private array<string, int\|string> $tagCache = []` |
 | `user_use_cache` | `UserBootstrap` | local variable, never crosses method boundaries |
 | `sizes_loaded_in_tpl` | `SizesProcessor` | `private bool $loadedInTpl = false` |
 

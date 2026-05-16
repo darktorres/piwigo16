@@ -18,7 +18,11 @@ a one-paragraph stub that links into Appendix A. Legacy `§A` / `§D` tags
 inside their owning phase, and `§Z` anchors are preserved verbatim in
 Appendix A.
 
-Last audited end-to-end: 2026-05-15.
+Last audited end-to-end: 2026-05-16. Every Phase Ladder row resolves
+to ✓ Closed; Phase 2h is closed as "deferred indefinitely" by a
+deliberate audit decision (see [Phase 2h section](#phase-2h--other-one-off-define-polish--a36--deferred-2026-05-15)).
+Whether any *new* compat surface needs cataloguing is the next audit
+question — none has surfaced through §1.4 closure.
 
 ---
 
@@ -117,7 +121,10 @@ Detail → [Appendix A §Z14](#z14-phase-1-doc-drift-sweep).
 
 # Phase 2 — Legacy `define()` Migrations
 
-**Status:** open. Eight independent sub-phases, do in any order.
+**Status:** ✓ Closed 2026-05-15 — 2a through 2g shipped (see [Appendix A
+§Z15–§Z21](#z15-phase-2a-ws_-constant-migration)); 2h deferred
+indefinitely as a deliberate decision documented in the [Phase 2h
+section](#phase-2h--other-one-off-define-polish--a36--deferred-2026-05-15).
 
 **Pattern (applies to every sub-phase):**
 

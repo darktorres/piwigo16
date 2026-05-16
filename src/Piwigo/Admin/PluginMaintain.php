@@ -41,10 +41,8 @@ final class PluginMaintain
     {
     }
 
-    /** @param string $old_version
-     *  @param string $new_version
-     *  @param array<mixed> $errors */
-    public function update($old_version, $new_version, &$errors = []): null
+    /** @param array<mixed> $errors */
+    public function update(string $old_version, string $new_version, array &$errors = []): null
     {
         return null;
     }

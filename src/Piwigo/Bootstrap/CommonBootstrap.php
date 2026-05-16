@@ -37,7 +37,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\LangService;
 use Piwigo\Migrations\MigrationRunner;
 use Piwigo\Page\NoPhotoYetRenderer;
-use Piwigo\Plugin\PluginService;
+use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -47,7 +47,9 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserBootstrap;
 use Piwigo\Users\UserService;
+use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface as SymfonyEventDispatcher;
 
 final class CommonBootstrap
 {
@@ -143,7 +145,12 @@ final class CommonBootstrap
         UserBootstrap::bootstrap();
         // Core event subscribers register themselves via the EventDispatcher
         // factory in config/container.php (see Piwigo\Listener\CoreSubscribers).
-        Kernel::service(PluginService::class)->loadPlugins(); // no-op: plugins/ has no main.inc.php files
+        // Plugin subscribers attach here, after auth so plugin::boot() can
+        // read CurrentUser; no-op when plugins/ holds no plugin.json file.
+        Kernel::service(PluginRegistry::class)->bootActive(
+            Kernel::service(SymfonyEventDispatcher::class),
+            Kernel::service(ContainerInterface::class),
+        );
 
         if (!Config::has('piwigo_installed_version')) {
             Kernel::service(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);

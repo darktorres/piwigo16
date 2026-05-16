@@ -7,9 +7,12 @@ namespace Piwigo\Plugin;
 use Composer\Semver\Semver;
 use Opis\JsonSchema\Validator;
 use Piwigo\Core\AppInfo;
+use Piwigo\Event\Lifecycle\PluginsLoaded;
 use Piwigo\Lang\LangService;
 use Piwigo\Plugin\Migration\PluginMigrationRunner;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface as SymfonyEventDispatcher;
 
 /**
  * Registry for Piwigo 17+ plugins.
@@ -18,10 +21,9 @@ use Psr\Log\LoggerInterface;
  * `docs/schemas/plugin.schema.json` via opis/json-schema, resolves the
  * dependency graph using composer/semver, and exposes a typed
  * activate/deactivate/install/uninstall/update API to admin code.
- *
- * Replaces the legacy `PluginService` + `PluginMaintain` shim duo.
- * Both stay alive until B17 because the legacy admin UX (B8 target)
- * still calls them.
+ * `bootActive()` is the per-request entry point that walks the
+ * dependency-sorted active plugins, calls each PluginInterface::boot,
+ * and registers their subscribedEvents() with the Symfony dispatcher.
  */
 final class PluginRegistry
 {
@@ -247,6 +249,90 @@ final class PluginRegistry
         $this->applyMigrations($manifest);
         $this->bootInstance($manifest)->update($oldVersion, $newVersion);
         $this->repository->updateVersion($pluginId, $newVersion);
+    }
+
+    /**
+     * Boot every active plugin in load order: instantiate the
+     * PluginInterface implementation, call boot($container), and attach
+     * each entry of its subscribedEvents() map to the Symfony dispatcher.
+     * Fires PluginsLoaded once after the loop completes — observers that
+     * need the plugin graph fully wired (and aren't themselves part of
+     * it) subscribe there.
+     *
+     * Replaces the legacy `PluginService::loadPlugins()` boot — called
+     * once during CommonBootstrap after authentication is in place.
+     * Plugin-side errors are not swallowed: a missing main class or an
+     * unreachable autoload surfaces as a PluginValidationException, the
+     * same shape admin lifecycle hooks already raise.
+     *
+     * subscribedEvents() shape (mirror of Symfony's EventSubscriberInterface):
+     *   class-string => string                              // method name, default priority
+     *   class-string => array{0: string, 1?: int}           // method name + priority
+     *   class-string => list<array{0: string, 1?: int}>     // multiple handlers
+     */
+    public function bootActive(SymfonyEventDispatcher $dispatcher, ContainerInterface $container): void
+    {
+        foreach ($this->getLoadOrder() as $pluginId) {
+            if (!$this->isActive($pluginId)) {
+                continue;
+            }
+            $manifest = $this->requireManifest($pluginId);
+            $instance = $this->bootInstance($manifest);
+            $instance->boot($container);
+
+            foreach ($instance->subscribedEvents() as $eventClass => $handlers) {
+                foreach ($this->normalizeSubscribedHandlers($handlers) as $entry) {
+                    [$method, $priority] = $entry;
+                    // Wrap in a closure so the method name (dynamic per
+                    // plugin) doesn't trip the static-callable analyser.
+                    $listener = static function (object $event) use ($instance, $method): void {
+                        $instance->{$method}($event);
+                    };
+                    $dispatcher->addListener($eventClass, $listener, $priority);
+                }
+            }
+        }
+
+        $dispatcher->dispatch(new PluginsLoaded());
+    }
+
+    /**
+     * Normalize the three legal shapes of PluginInterface::subscribedEvents
+     * entries to a uniform `list<array{0: string, 1: int}>` so bootActive
+     * can register them with a single loop. Defensive at the runtime
+     * boundary — plugins author the source map, so unexpected shapes
+     * fall through to an empty list rather than fatal.
+     *
+     * @return list<array{0: string, 1: int}>
+     */
+    private function normalizeSubscribedHandlers(mixed $handlers): array
+    {
+        if (is_string($handlers)) {
+            return [[$handlers, 0]];
+        }
+        if (!is_array($handlers)) {
+            return [];
+        }
+        // Single-handler shape: [method:string, priority?:int]
+        $first = $handlers[0] ?? null;
+        if (is_string($first)) {
+            $rawPriority = $handlers[1] ?? 0;
+            return [[$first, is_int($rawPriority) ? $rawPriority : 0]];
+        }
+        // Multi-handler shape: list<[method, priority?]>
+        $out = [];
+        foreach ($handlers as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+            $method = $entry[0] ?? null;
+            if (!is_string($method)) {
+                continue;
+            }
+            $rawPriority = $entry[1] ?? 0;
+            $out[] = [$method, is_int($rawPriority) ? $rawPriority : 0];
+        }
+        return $out;
     }
 
     /**

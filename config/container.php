@@ -88,7 +88,6 @@ use Piwigo\Plugin\Migration\PluginMigrationLedger;
 use Piwigo\Plugin\Migration\PluginMigrationRunner;
 use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Plugin\PluginRepository;
-use Piwigo\Plugin\PluginService;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Routing\Router;
@@ -133,6 +132,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface as SymfonyEventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -178,7 +178,8 @@ return [
         }
         return $dispatcher;
     }),
-    EventDispatcher::class => get(EventDispatcherInterface::class),
+    EventDispatcher::class                 => get(EventDispatcherInterface::class),
+    SymfonyEventDispatcherInterface::class => get(EventDispatcherInterface::class),
     Config::class          => factory(fn () => Config::instance()),
     Translator::class      => factory(fn () => Translator::get()),
     PageState::class       => factory(fn () => PageState::current()),
@@ -217,7 +218,6 @@ return [
     CategoryService::class     => factory(static fn (CategoryRepository $cat, Connection $conn, FilterService $f, PermissionService $perm, EventDispatcherInterface $d): CategoryService => new CategoryService($cat, $conn, $f, $perm, $d)),
     HtmlService::class         => factory(static fn (Connection $conn, StringUtil $s, EventDispatcherInterface $d): HtmlService => new HtmlService($conn, $s, $d)),
     NotificationService::class => factory(static fn (Connection $conn, HtmlService $h, UrlGenerator $ug, PermissionService $perm, UrlService $us, CacheItemPoolInterface $pool): NotificationService => new NotificationService($conn, $h, $ug, $perm, $us, $pool)),
-    PluginService::class       => factory(static fn (PluginRepository $repo, StringUtil $s, ActivityLogger $al, EventDispatcherInterface $dispatcher): PluginService => new PluginService($repo, $s, $al, $dispatcher)),
     PluginMigrationLedger::class  => factory(static fn (Connection $conn): PluginMigrationLedger => new PluginMigrationLedger($conn, Config::dbPrefix())),
     PluginMigrationRunner::class  => factory(static fn (Connection $conn, PluginMigrationLedger $ledger, LoggerInterface $log): PluginMigrationRunner => new PluginMigrationRunner($conn, $ledger, $log)),
     PluginRegistry::class      => factory(static fn (PluginRepository $repo, LoggerInterface $log, PluginMigrationRunner $runner): PluginRegistry => new PluginRegistry($repo, $log, PHPWG_ROOT_PATH . 'plugins', PHPWG_ROOT_PATH . 'docs/schemas/plugin.schema.json', $runner)),

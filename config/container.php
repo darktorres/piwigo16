@@ -70,6 +70,7 @@ use Piwigo\Language\LanguageRepository;
 use Piwigo\Language\LanguageService;
 use Piwigo\Listener\CoreSubscribers;
 use Piwigo\Mail\MailService;
+use Piwigo\Menu\MenubarLayoutRepository;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Notification\NotificationRepository;
@@ -296,7 +297,8 @@ return [
     FilterResolver::class            => factory(static fn (Connection $conn, HtmlService $h, TagAdminService $tA, CsrfService $csrf, LangService $lang, UrlService $us, EventDispatcherInterface $dispatcher): FilterResolver => new FilterResolver($conn, $h, $tA, $csrf, $lang, $us, $dispatcher)),
     SizesProcessor::class            => factory(static fn (ImageAdminService $iA, UploadService $up, ActivityLogger $al, PermissionService $perm): SizesProcessor => new SizesProcessor($iA, $up, $al, $perm)),
     WatermarkProcessor::class        => factory(static fn (ImageAdminService $iA, ActivityLogger $al, PermissionService $perm): WatermarkProcessor => new WatermarkProcessor($iA, $al, $perm)),
-    MenubarRenderer::class           => factory(static fn (CategoryService $cat, CommentService $com, PermissionService $perm, TagService $tag, UrlGenerator $ug, UrlService $u, FilterService $f, EventDispatcherInterface $dispatcher): MenubarRenderer => new MenubarRenderer($cat, $com, $perm, $tag, $ug, $u, $f, $dispatcher)),
+    MenubarRenderer::class           => factory(static fn (CategoryService $cat, CommentService $com, PermissionService $perm, TagService $tag, UrlGenerator $ug, UrlService $u, FilterService $f, MenubarLayoutRepository $ml, EventDispatcherInterface $dispatcher): MenubarRenderer => new MenubarRenderer($cat, $com, $perm, $tag, $ug, $u, $f, $ml, $dispatcher)),
+    MenubarLayoutRepository::class   => factory(static fn (ConfigService $cfg): MenubarLayoutRepository => new MenubarLayoutRepository($cfg)),
     SearchFilterRenderer::class      => factory(static fn (Connection $conn, ConfigService $cfg, DateService $d, HtmlService $h, LangService $lang, PermissionService $perm, SearchService $sr, TagService $tag, UrlService $u, CacheItemPoolInterface $pool): SearchFilterRenderer => new SearchFilterRenderer($conn, $cfg, $d, $h, $lang, $perm, $sr, $tag, $u, $pool)),
     CategoryCatsRenderer::class      => factory(static fn (Connection $conn, CategoryService $cat, DateService $d, FilterService $f, HtmlService $h, PermissionService $perm, UrlService $u, DebugCollector $dbg, PaginationService $pag, EventDispatcherInterface $dispatcher): CategoryCatsRenderer => new CategoryCatsRenderer($conn, $cat, $d, $f, $h, $perm, $u, $dbg, $pag, $dispatcher)),
     CategoryDefaultRenderer::class   => factory(static fn (Connection $conn, CategoryService $cat, HtmlService $h, ImageRepository $i, SessionService $sess, UrlService $u, DebugCollector $dbg, EventDispatcherInterface $dispatcher): CategoryDefaultRenderer => new CategoryDefaultRenderer($conn, $cat, $h, $i, $sess, $u, $dbg, $dispatcher)),

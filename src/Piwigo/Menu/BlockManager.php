@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Menu;
 
-use Piwigo\Config\Config;
-use Piwigo\Core\StringUtil;
 use Piwigo\Event\BlockManager\BlockManagerApply;
 use Piwigo\Event\BlockManager\BlockManagerPrepareDisplay;
 use Piwigo\Event\BlockManager\BlockManagerRegisterBlocks;
@@ -13,23 +11,22 @@ use Piwigo\Template\TemplateRegistry;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @package functions\menubar
- */
-/**
- * Manages a set of RegisteredBlock and DisplayBlock.
+ * Manages a set of RegisteredBlock and DisplayBlock for the menubar.
+ *
+ * v17 removed the per-menu-id dynamic conf-key indirection — only the
+ * menubar exists. Layout persistence is delegated to MenubarLayoutRepository.
  */
 final class BlockManager
 {
-    /** @var RegisteredBlock[] */
-    protected $registered_blocks = [];
-    /** @var DisplayBlock[] */
-    protected $display_blocks = [];
+    /** @var array<string, RegisteredBlock> */
+    protected array $registered_blocks = [];
+    /** @var array<string, DisplayBlock> */
+    protected array $display_blocks = [];
 
-    /**
-     * @param string $id
-     */
-    public function __construct(protected $id, private readonly EventDispatcherInterface $dispatcher)
-    {
+    public function __construct(
+        private readonly EventDispatcherInterface $dispatcher,
+        private readonly MenubarLayoutRepository $layout,
+    ) {
     }
 
     /**
@@ -41,17 +38,9 @@ final class BlockManager
     }
 
     /**
-     * @return string
+     * @return array<string, RegisteredBlock>
      */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * @return RegisteredBlock[]
-     */
-    public function getRegisteredBlocks()
+    public function getRegisteredBlocks(): array
     {
         return $this->registered_blocks;
     }
@@ -75,20 +64,11 @@ final class BlockManager
      */
     public function prepareDisplay(): void
     {
-        $conf_id = 'blk_'.$this->id;
-        $mb_conf_raw = Config::raw($conf_id);
-        if (is_array($mb_conf_raw)) {
-            $mb_conf = $mb_conf_raw;
-        } elseif (is_string($mb_conf_raw)) {
-            $mb_conf = StringUtil::safeUnserialize($mb_conf_raw);
-        } else {
-            $mb_conf = [];
-        }
+        $mb_conf = $this->layout->load();
 
         $idx = 1;
         foreach ($this->registered_blocks as $id => $block) {
-            $stored = $mb_conf[$id] ?? null;
-            $pos = is_int($stored) ? $stored : $idx * 50;
+            $pos = $mb_conf[$id] ?? ($idx * 50);
             if ($pos > 0) {
                 $this->display_blocks[$id] = new DisplayBlock($block);
                 $this->display_blocks[$id]->setPosition($pos);
@@ -110,10 +90,8 @@ final class BlockManager
 
     /**
      * Remove a block from the displayed blocks.
-     *
-     * @param string $block_id
      */
-    public function hideBlock($block_id): void
+    public function hideBlock(string $block_id): void
     {
         unset($this->display_blocks[$block_id]);
     }

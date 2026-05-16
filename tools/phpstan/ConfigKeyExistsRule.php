@@ -62,6 +62,10 @@ final class ConfigKeyExistsRule implements Rule
         // Admin path override: when set, points the gallery_url at a sibling
         // site (used by configuration.php's "site" view).
         'local_dir_site',
+        // Menubar block layout (serialized array<string, int>): owned by
+        // MenubarLayoutRepository, persisted in the conf table for lack of
+        // a dedicated single-row store.
+        'blk_menubar',
     ];
 
     public function getNodeType(): string

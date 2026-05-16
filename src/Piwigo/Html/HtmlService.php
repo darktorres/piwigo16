@@ -397,9 +397,6 @@ $btraceMsg
 
     public function registerDefaultMenubarBlocks(BlockManager $menu): void
     {
-        if ($menu->getId() != 'menubar') {
-            return;
-        }
         $menu->registerBlock(new RegisteredBlock('mbLinks', 'Links', 'piwigo'));
         $menu->registerBlock(new RegisteredBlock('mbCategories', 'Albums', 'piwigo'));
         $menu->registerBlock(new RegisteredBlock('mbTags', 'Tags', 'piwigo'));

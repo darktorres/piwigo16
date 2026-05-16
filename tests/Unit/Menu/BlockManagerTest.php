@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Menu;
 
+use Doctrine\DBAL\Connection;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigService;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\DisplayBlock;
+use Piwigo\Menu\MenubarLayoutRepository;
 use Piwigo\Menu\RegisteredBlock;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
@@ -19,18 +22,15 @@ final class BlockManagerTest extends TestCase
     protected function setUp(): void
     {
         Config::reset();
-        $this->mgr = new BlockManager('menubar', new EventDispatcher());
+        $conn = $this->createStub(Connection::class);
+        $cfg  = new ConfigService($conn);
+        $this->mgr = new BlockManager(new EventDispatcher(), new MenubarLayoutRepository($cfg));
     }
 
     #[\Override]
     protected function tearDown(): void
     {
         Config::reset();
-    }
-
-    public function testGetId(): void
-    {
-        self::assertSame('menubar', $this->mgr->getId());
     }
 
     public function testRegisterBlockReturnsTrueOnFirstRegistration(): void
@@ -63,7 +63,7 @@ final class BlockManagerTest extends TestCase
     {
         $block = new RegisteredBlock('nav', 'Navigation', 'piwigo');
         $this->mgr->registerBlock($block);
-        Config::loadArray(['blk_menubar' => []]);
+        Config::loadArray(['blk_menubar' => serialize([])]);
         $this->mgr->prepareDisplay();
 
         self::assertFalse($this->mgr->isHidden('nav'), 'should be visible after prepare_display');
@@ -82,7 +82,7 @@ final class BlockManagerTest extends TestCase
     {
         $block = new RegisteredBlock('nav', 'Navigation', 'piwigo');
         $this->mgr->registerBlock($block);
-        Config::loadArray(['blk_menubar' => []]);
+        Config::loadArray(['blk_menubar' => serialize([])]);
         $this->mgr->prepareDisplay();
         self::assertInstanceOf(DisplayBlock::class, $this->mgr->getBlock('nav'));
     }
@@ -91,7 +91,7 @@ final class BlockManagerTest extends TestCase
     {
         $block = new RegisteredBlock('nav', 'Navigation', 'piwigo');
         $this->mgr->registerBlock($block);
-        Config::loadArray(['blk_menubar' => []]);
+        Config::loadArray(['blk_menubar' => serialize([])]);
         $this->mgr->prepareDisplay();
         $this->mgr->setBlockPosition('nav', 999);
         $block = $this->mgr->getBlock('nav');

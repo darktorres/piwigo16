@@ -31,6 +31,7 @@ final readonly class MenubarRenderer
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private FilterService $filterService,
+        private MenubarLayoutRepository $menubarLayout,
         private EventDispatcherInterface $dispatcher,
     ) {
     }
@@ -42,7 +43,7 @@ final readonly class MenubarRenderer
         $ctx = SectionContextRegistry::current();
         $user = CurrentUser::get()->rawAttributes;
 
-        $menu = new BlockManager('menubar', $this->dispatcher);
+        $menu = new BlockManager($this->dispatcher, $this->menubarLayout);
 
         if (Config::guestAccess() or !$this->permissionService->isAGuest()) {
             $menu->loadRegisteredBlocks();

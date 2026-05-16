@@ -7,37 +7,26 @@ namespace Piwigo\Menu;
 /**
  * Represents a menu block registered in a BlockManager object.
  */
-final class RegisteredBlock
+final readonly class RegisteredBlock
 {
-    /**
-     * @param string $id
-     * @param string $name
-     * @param string $owner
-     */
-    public function __construct(protected $id, protected $name, protected $owner)
-    {
+    public function __construct(
+        protected string $id,
+        protected string $name,
+        protected string $owner,
+    ) {
     }
 
-    /**
-     * @return string
-     */
-    public function getId()
+    public function getId(): string
     {
         return $this->id;
     }
 
-    /**
-     * @return string
-     */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * @return string
-     */
-    public function getOwner()
+    public function getOwner(): string
     {
         return $this->owner;
     }

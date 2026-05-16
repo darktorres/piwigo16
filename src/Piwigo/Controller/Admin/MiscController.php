@@ -49,6 +49,7 @@ use Piwigo\Lang\LangService;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\Menu\BlockManager;
+use Piwigo\Menu\MenubarLayoutRepository;
 use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Notification\NotificationService;
@@ -98,6 +99,7 @@ final class MiscController implements AdminSubControllerInterface
         private readonly ImageRepository $imageRepository,
         private readonly LangService $langService,
         private readonly MailService $mailService,
+        private readonly MenubarLayoutRepository $menubarLayout,
         private readonly NotificationAdminService $notificationAdminService,
         private readonly NotificationRepository $notificationRepository,
         private readonly NotificationService $notificationService,
@@ -807,17 +809,11 @@ final class MiscController implements AdminSubControllerInterface
         $tabsheet->select('');
         $tabsheet->assign();
 
-        $menu      = new BlockManager('menubar', $this->dispatcher);
+        $menu      = new BlockManager($this->dispatcher, $this->menubarLayout);
         $menu->loadRegisteredBlocks();
         $reg_blocks = $menu->getRegisteredBlocks();
 
-        $mb_conf = Config::raw('blk_' . $menu->getId());
-        if (is_string($mb_conf)) {
-            $mb_conf = unserialize($mb_conf);
-        }
-        if (!is_array($mb_conf)) {
-            $mb_conf = [];
-        }
+        $mb_conf = $this->menubarLayout->load();
 
         foreach ($mb_conf as $id => $pos) {
             if (!isset($reg_blocks[$id])) {
@@ -835,24 +831,22 @@ final class MiscController implements AdminSubControllerInterface
         if (isset($_POST['submit']) && $this->permissionService->isWebmaster()) {
             foreach ($mb_conf as $id => $pos) {
                 $hide     = isset($_POST['hide_' . $id]);
-                $int_pos  = is_numeric($pos) ? (int) $pos : 0;
-                $mb_conf[$id] = ($hide ? -1 : +1) * abs($int_pos);
+                $mb_conf[$id] = ($hide ? -1 : +1) * abs($pos);
                 $raw_pos  = $_POST['pos_' . $id] ?? null;
-                $pos      = is_scalar($raw_pos) ? (int) $raw_pos : 0;
-                if ($pos > 0) {
-                    $mb_conf[$id] = $mb_conf[$id] > 0 ? $pos : -$pos;
+                $postPos  = is_scalar($raw_pos) ? (int) $raw_pos : 0;
+                if ($postPos > 0) {
+                    $mb_conf[$id] = $mb_conf[$id] > 0 ? $postPos : -$postPos;
                 }
             }
             $this->makeConsecutive($mb_conf);
-            $mb_conf_db = $mb_conf;
-            $this->configService->confUpdateParam('blk_' . $menu->getId(), serialize($mb_conf_db));
+            $this->menubarLayout->save($mb_conf);
             $tpl->assign(['save_success' => Lang::t('Order of menubar items has been updated successfully.')]);
         }
 
         $this->makeConsecutive($mb_conf);
 
         foreach ($mb_conf as $id => $pos) {
-            $tpl->append('blocks', ['pos' => (is_numeric($pos) ? (int) $pos : 0) / 5, 'reg' => $reg_blocks[$id]]);
+            $tpl->append('blocks', ['pos' => $pos / 5, 'reg' => $reg_blocks[$id]]);
         }
 
         $action = $this->urlGenerator->admin('menubar');
@@ -1469,6 +1463,7 @@ final class MiscController implements AdminSubControllerInterface
     }
 
     /** @param array<mixed> $orders */
+    /** @param array<string, int> $orders */
     private function makeConsecutive(array &$orders, int $step = 50): void
     {
         uasort($orders, $this->absFnCmp(...));

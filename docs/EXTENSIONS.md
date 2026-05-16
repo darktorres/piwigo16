@@ -15,7 +15,7 @@ Of the 636 entries here, only 321 (~50%) are actually compatible with Piwigo 16;
 
 ## Inter-extension dependencies
 
-Some plugins include from another plugin's path (`PHPWG_PLUGINS_PATH . 'OtherPlugin/...'`) — an implicit hard dependency. The fork plugin contract shipped in §1.4 (see [COMPAT-INVENTORY §Z25](COMPAT-INVENTORY.md#z25-14-plugin-contract)) replaces this with a typed `require` field in `plugin.json`, resolved by `PluginRegistry` via `composer/semver`; this section enumerates the graph the converter has to preserve.
+Some plugins include from another plugin's path (`PHPWG_PLUGINS_PATH . 'OtherPlugin/...'`) — an implicit hard dependency. The fork plugin contract shipped in §1.4 replaces this with a typed `require` field in `plugin.json`, resolved by `PluginRegistry` via `composer/semver`; this section enumerates the graph the converter has to preserve.
 
 **Library plugins** (one-to-many fan-in):
 

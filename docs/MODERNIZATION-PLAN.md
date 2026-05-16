@@ -73,7 +73,8 @@ Tier 3; Tier 3 retired them.
   declarations remain in `src/`.
 - `LanguageContext` value object was not introduced — the stack snapshots
   `$lang` / `$lang_info` via the typed `Lang` static state
-  (`Lang::all()` / `Lang::langInfo()` after COMPAT-INVENTORY §Z13). No
+  (`Lang::all()` / `Lang::langInfo()` after the Phase 4d `lang_info`
+  migration). No
   `$GLOBALS` reference bridges remain.
 
 ---
@@ -95,7 +96,8 @@ Tier 3; Tier 3 retired them.
 **Remaining seams (low priority):** none — `PageHeaderRenderer`'s
 `$GLOBALS['page']` read/write, `PageTailRenderer`'s `$GLOBALS['debug']` /
 `$GLOBALS['t2']` reads, and `NoPhotoYetRenderer`'s `$GLOBALS['user']` read
-have all been retired (see COMPAT-INVENTORY §Z1, §Z1.1, §Z10).
+have all been retired (Wave A reference-bridge cleanup +
+Phase 3 channel migration, 2026-05-15).
 
 ---
 

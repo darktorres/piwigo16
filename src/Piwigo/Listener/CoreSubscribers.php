@@ -31,5 +31,6 @@ final class CoreSubscribers
         BlockManagerRegisterBlocksSubscriber::class,
         TabsheetBeforeSelectSubscriber::class,
         NbmRenderGlobalCustomizeMailContentSubscriber::class,
+        AdminPagesRegisteringSubscriber::class,
     ];
 }

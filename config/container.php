@@ -8,6 +8,7 @@ use function DI\get;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityRepository;
+use Piwigo\Admin\AdminPageRegistry;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Album\AlbumsTabRenderer;
 use Piwigo\Admin\BatchManager\FilterResolver;
@@ -218,6 +219,7 @@ return [
     UsersEndpoints::class            => factory(static fn (Connection $conn, AuthService $auth, ConfigService $cfg, DateService $d, GroupRepository $g, ImageRepository $i, MailService $m, PermissionService $perm, PreferencesService $pref, UserAdminService $uA, UserRepository $u, UserService $us, CsrfService $csrf, WsHelper $ws, EventDispatcherInterface $dispatcher): UsersEndpoints => new UsersEndpoints($conn, $auth, $cfg, $d, $g, $i, $m, $perm, $pref, $uA, $u, $us, $csrf, $ws, $dispatcher)),
     CategoriesEndpoints::class       => factory(static fn (Connection $conn, CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, HtmlService $h, ImageAdminService $iA, ImageRepository $i, PermissionService $perm, UrlGenerator $ug, UrlService $us, UserAdminService $uA, UserRepository $u, ActivityLogger $al, CsrfService $csrf, WsHelper $ws, EventDispatcherInterface $d): CategoriesEndpoints => new CategoriesEndpoints($conn, $catA, $catR, $cat, $h, $iA, $i, $perm, $ug, $us, $uA, $u, $al, $csrf, $ws, $d)),
     ImagesEndpoints::class           => factory(static fn (Connection $conn, CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, CommentService $com, HtmlService $h, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, PermissionService $perm, RateRepository $rR, RateService $rate, SearchService $sr, StringUtil $s, TagAdminService $tA, TagService $tag, UploadService $up, UrlService $u, UserAdminService $uA, ActivityLogger $al, CsrfService $csrf, WsHelper $ws, EphemeralKeyService $eks, EventDispatcherInterface $d): ImagesEndpoints => new ImagesEndpoints($conn, $catA, $catR, $cat, $com, $h, $iA, $i, $mA, $perm, $rR, $rate, $sr, $s, $tA, $tag, $up, $u, $uA, $al, $csrf, $ws, $eks, $d)),
+    AdminPageRegistry::class         => factory(static fn (): AdminPageRegistry => new AdminPageRegistry()),
     AdminService::class              => factory(static fn (Connection $conn, CategoryRepository $catR, DateService $d, HistoryRepository $hR, ImageRepository $i, StringUtil $s, TagRepository $tR, UserRepository $u): AdminService => new AdminService($conn, $catR, $d, $hR, $i, $s, $tR, $u)),
     CategoryAdminService::class      => factory(static function (ContainerInterface $c): CategoryAdminService {
         return (new \ReflectionClass(CategoryAdminService::class))->newLazyProxy(

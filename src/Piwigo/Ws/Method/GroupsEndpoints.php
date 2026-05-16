@@ -15,6 +15,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Ws\OpenApi\ApiMethod;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -36,6 +37,7 @@ final readonly class GroupsEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Retrieves a list of all groups. The list can be filtered.', tags: ['groups'])]
     public function getList(array $params, PwgServer &$service): PwgError|array
     {
         $orderStr = is_string($params['order'] ?? null) ? $params['order'] : '';
@@ -58,6 +60,7 @@ final readonly class GroupsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Creates a group and returns the new group record.', tags: ['groups'])]
     public function add(array $params, PwgServer &$service): mixed
     {
         $params['name'] = strip_tags(stripslashes(is_string($params['name'] ?? null) ? $params['name'] : ''));
@@ -77,6 +80,7 @@ final readonly class GroupsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Deletes a or more groups. Users and photos are not deleted.', tags: ['groups'])]
     public function delete(array $params, PwgServer &$service): PwgError|PwgNamedArray
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -90,6 +94,7 @@ final readonly class GroupsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Updates a group. Leave a field blank to keep the current value.', tags: ['groups'])]
     public function setInfo(array $params, PwgServer &$service): mixed
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -122,6 +127,7 @@ final readonly class GroupsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Adds one or more users to a group.', tags: ['groups'])]
     public function addUser(array $params, PwgServer &$service): mixed
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -147,6 +153,7 @@ final readonly class GroupsEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Merge groups in one other group', tags: ['groups'])]
     public function merge(array $params, PwgServer &$service): PwgError|array
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -180,6 +187,7 @@ final readonly class GroupsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Create a copy of a group', tags: ['groups'])]
     public function duplicate(array $params, PwgServer &$service): mixed
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -213,6 +221,7 @@ final readonly class GroupsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Removes one or more users from a group.', tags: ['groups'])]
     public function deleteUser(array $params, PwgServer &$service): mixed
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {

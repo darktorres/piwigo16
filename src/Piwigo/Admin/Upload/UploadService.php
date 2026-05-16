@@ -213,7 +213,7 @@ final readonly class UploadService
 
         if (PwgImage::getLibrary() !== 'gd' && Config::originalResize()) {
             if ($this->needResize($filePath, Config::originalResizeMaxwidth(), Config::originalResizeMaxheight())) {
-                $img = new PwgImage($filePath);
+                $img = new PwgImage($filePath, $this->dispatcher);
                 $img->pwgResize($filePath, Config::originalResizeMaxwidth(), Config::originalResizeMaxheight(), Config::originalResizeQuality(), Config::uploadFormAutomaticRotation(), false);
                 $img->destroy();
             }

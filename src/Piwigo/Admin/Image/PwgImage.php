@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Image;
 
 use Piwigo\Config\Config;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
 use Piwigo\Event\Lifecycle\LoadImageLibrary;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -31,9 +30,12 @@ final class PwgImage
     private static ?string $extImagickCommandCache = null;
     private static ?bool $extImagickCache = null;
 
-    public function __construct(public string $source_filepath, ?string $library = null)
-    {
-        Kernel::service(EventDispatcherInterface::class)->dispatch(new LoadImageLibrary($this));
+    public function __construct(
+        public string $source_filepath,
+        private readonly EventDispatcherInterface $dispatcher,
+        ?string $library = null,
+    ) {
+        $this->dispatcher->dispatch(new LoadImageLibrary($this));
 
         if ($this->image !== null) {
             return; // A plugin may have load its own library

@@ -194,7 +194,7 @@ return [
     // Doctrine DBAL shared connection — applies utf8mb4 and removes ONLY_FULL_GROUP_BY.
     Connection::class => factory(static fn (): Connection => DbConnection::build()),
 
-    DerivativeService::class   => factory(static fn (): DerivativeService => new DerivativeService()),
+    DerivativeService::class   => factory(static fn (EventDispatcherInterface $d): DerivativeService => new DerivativeService($d)),
 
     // Symfony Messenger bus — transports backed by the shared DBAL connection.
     MessageBusInterface::class => factory(static fn (Connection $conn): MessageBusInterface => MessengerFactory::build($conn)),

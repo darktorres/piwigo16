@@ -7,11 +7,13 @@ namespace Piwigo\Image;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class DerivativeService
 {
-    public function __construct()
-    {
+    public function __construct(
+        private EventDispatcherInterface $dispatcher,
+    ) {
     }
     /**
      * Generate (or skip if already current) one derivative file for a given image row and size type.
@@ -63,7 +65,7 @@ final readonly class DerivativeService
         $rotationAngle = PwgImage::getRotationAngleFromCode($rotationCode);
         $coi           = is_string($imageRow['coi'] ?? null) ? $imageRow['coi'] : null;
 
-        $image = new PwgImage($srcPath);
+        $image = new PwgImage($srcPath, $this->dispatcher);
 
         if ($rotationAngle !== 0) {
             $image->rotate($rotationAngle);
@@ -92,7 +94,7 @@ final readonly class DerivativeService
 
         if ($params->willWatermark($d_size)) {
             $wm       = ImageStdParams::getWatermark();
-            $wm_image = new PwgImage(PHPWG_ROOT_PATH . $wm->file);
+            $wm_image = new PwgImage(PHPWG_ROOT_PATH . $wm->file, $this->dispatcher);
             /** @var array<int, int> $wm_size */
             $wm_size  = [$wm_image->getWidth(), $wm_image->getHeight()];
 

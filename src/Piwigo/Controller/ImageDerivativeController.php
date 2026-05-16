@@ -171,7 +171,7 @@ SELECT *
             set_time_limit(0);
         }
 
-        $image = new PwgImage($ctx->srcPath);
+        $image = new PwgImage($ctx->srcPath, $this->dispatcher);
         $timing['load'] = DerivativePipeline::timeStep($step);
 
         $changes = 0;
@@ -206,7 +206,7 @@ SELECT *
 
         if ($params->willWatermark($d_size)) {
             $wm       = ImageStdParams::getWatermark();
-            $wm_image = new PwgImage(PHPWG_ROOT_PATH . $wm->file);
+            $wm_image = new PwgImage(PHPWG_ROOT_PATH . $wm->file, $this->dispatcher);
             $wm_size  = [$wm_image->getWidth(), $wm_image->getHeight()];
             if ($d_size[0] < $wm_size[0] || $d_size[1] < $wm_size[1]) {
                 $wm_scaling_params = SizingParams::classic((int) $d_size[0], (int) $d_size[1]);

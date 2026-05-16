@@ -8,15 +8,16 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Event\User\UserInit;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlService;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\PwgServerRegistry;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Resolves the current user from session, cookie, Apache auth, or auth-key.
@@ -175,7 +176,7 @@ final class UserBootstrap
 
         CurrentUser::set(User::fromUserArray($builtUser));
 
-        EventDispatcher::notify('user_init', CurrentUser::get()->rawAttributes);
+        Kernel::service(EventDispatcherInterface::class)->dispatch(new UserInit(CurrentUser::get()->rawAttributes));
     }
 
     public static function reset(): void

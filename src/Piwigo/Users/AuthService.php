@@ -18,12 +18,19 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\User\FinalizeLogin;
+use Piwigo\Event\User\LoginFailure;
+use Piwigo\Event\User\LoginFailureBeforeLogUser;
+use Piwigo\Event\User\LoginSuccess;
+use Piwigo\Event\User\UserLogin;
+use Piwigo\Event\User\UserLogout;
 use Piwigo\Html\HtmlService;
 use Piwigo\Language\LanguageService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class AuthService
 {
@@ -38,6 +45,7 @@ final readonly class AuthService
         private UrlService $urlService,
         private DateService $dateService,
         private LanguageService $languageService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -153,7 +161,7 @@ final readonly class AuthService
         }
         $_SESSION['pwg_uid'] = $userId;
 
-        EventDispatcher::notify('user_login', $userId);
+        $this->dispatcher->dispatch(new UserLogin($userId));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'login'));
     }
 
@@ -174,7 +182,7 @@ final readonly class AuthService
                         $_SESSION['connected_with'] = 'pwg_ui';
                     }
                     $this->logUser((int) $cookie[0], true);
-                    EventDispatcher::notify('login_success', is_scalar($username) ? stripslashes((string) $username) : '');
+                    $this->dispatcher->dispatch(new LoginSuccess(is_scalar($username) ? stripslashes((string) $username) : ''));
                     return true;
                 }
             }
@@ -207,20 +215,22 @@ final readonly class AuthService
             if ($userFound !== null && count($userFound) > 0 && !$passwordVerify) {
                 $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $ufId, 'login_failure_wrong_password'));
             }
-            EventDispatcher::notify('login_failure', stripslashes($username));
+            $this->dispatcher->dispatch(new LoginFailure(stripslashes($username)));
             return false;
         }
 
         $stateInit = ['can_login' => true, 'reason' => null, 'authenticated' => false];
+        $finalizeEvent = new FinalizeLogin($stateInit, $userFound, $rememberMe);
+        $this->dispatcher->dispatch($finalizeEvent);
         /** @var array<string, mixed> $state */
-        $state     = EventDispatcher::dispatch('finalize_login', $stateInit, $userFound, $rememberMe);
+        $state = $finalizeEvent->state;
 
         if (!$state['can_login']) {
             /** @psalm-var mixed $stateReasonRaw */
             $stateReasonRaw = $state['reason'] ?? null;
             $stateReason    = is_string($stateReasonRaw) ? $stateReasonRaw : 'login_failure_before_log_user';
             $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $ufId, $stateReason));
-            EventDispatcher::notify('login_failure_before_log_user', stripslashes($username));
+            $this->dispatcher->dispatch(new LoginFailureBeforeLogUser(stripslashes($username)));
             return false;
         }
 
@@ -229,7 +239,7 @@ final readonly class AuthService
         }
 
         $this->clearFakeUserCache();
-        EventDispatcher::notify('login_success', stripslashes($username));
+        $this->dispatcher->dispatch(new LoginSuccess(stripslashes($username)));
         return true;
     }
 
@@ -275,7 +285,7 @@ final readonly class AuthService
     public function logoutUser(): void
     {
         $logoutUid = isset($_SESSION['pwg_uid']) && is_numeric($_SESSION['pwg_uid']) ? (int) $_SESSION['pwg_uid'] : 0;
-        EventDispatcher::notify('user_logout', $logoutUid);
+        $this->dispatcher->dispatch(new UserLogout($logoutUid));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $logoutUid, 'logout'));
 
         $_SESSION = [];
@@ -367,7 +377,7 @@ SELECT
         }
 
         $this->logUser(is_numeric($user['id']) ? (int) $user['id'] : 0, false);
-        EventDispatcher::notify('login_success', $key['username']);
+        $this->dispatcher->dispatch(new LoginSuccess(is_string($key['username'] ?? null) ? $key['username'] : ''));
         PageState::current()->authKeyId = is_numeric($key['auth_key_id']) ? (int) $key['auth_key_id'] : null;
 
         return true;

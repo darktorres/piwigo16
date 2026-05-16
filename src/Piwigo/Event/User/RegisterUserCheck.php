@@ -12,8 +12,8 @@ namespace Piwigo\Event\User;
 final readonly class RegisterUserCheck
 {
     /**
-     * @param array<mixed> $errors
-     * @param array<mixed> $user
+     * @param list<string> $errors
+     * @param array<string, mixed> $user
      */
     public function __construct(
         public array $errors,
@@ -22,7 +22,7 @@ final readonly class RegisterUserCheck
     }
 
     /**
-     * @param array<mixed> $errors
+     * @param list<string> $errors
      */
     public function withErrors(array $errors): self
     {

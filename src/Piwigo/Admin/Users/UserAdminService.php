@@ -14,14 +14,17 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Db\Tables;
+use Piwigo\Event\User\DeleteGroup;
+use Piwigo\Event\User\DeleteUser;
+use Piwigo\Event\User\InvalidateUserCache;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Cache\CacheItemPoolInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class UserAdminService
 {
@@ -35,6 +38,7 @@ final readonly class UserAdminService
         private UserService $userService,
         private ActivityLogger $activityLogger,
         private CacheItemPoolInterface $pool,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -44,7 +48,7 @@ final readonly class UserAdminService
         $uRepo->deleteAllRelatedData($userId);
         $this->sessionService->deleteUserSessions($userId);
         $uRepo->deleteByUserId($userId, Tables::users(), Config::userFields()['id']);
-        EventDispatcher::notify('delete_user', $userId);
+        $this->dispatcher->dispatch(new DeleteUser($userId));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'delete'));
     }
 
@@ -146,7 +150,7 @@ final readonly class UserAdminService
         )->fetchAllAssociative(), 'name', 'id');
         $groupids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($groupList));
         $groupRepo->deleteByIds($groupIds);
-        EventDispatcher::notify('delete_group', $groupids);
+        $this->dispatcher->dispatch(new DeleteGroup($groupids));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $groupids, 'delete'));
         return $groupList;
     }
@@ -177,7 +181,7 @@ final readonly class UserAdminService
         }
         $this->pool->clear();
         $this->configService->confDeleteParam('count_orphans');
-        EventDispatcher::notify('invalidate_user_cache', $full);
+        $this->dispatcher->dispatch(new InvalidateUserCache($full));
     }
 
     public function invalidateUserCacheNbTags(): void

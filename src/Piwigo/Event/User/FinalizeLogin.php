@@ -13,10 +13,11 @@ final readonly class FinalizeLogin
 {
     /**
      * @param array<mixed> $state
+     * @param array<string, mixed> $userFound
      */
     public function __construct(
         public array $state,
-        public bool $userFound,
+        public array $userFound,
         public bool $rememberMe,
     ) {
     }

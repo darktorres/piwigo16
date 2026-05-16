@@ -13,14 +13,17 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\User\UserCommentCheck;
+use Piwigo\Event\User\UserCommentDeletion;
+use Piwigo\Event\User\UserCommentValidation;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class CommentService
 {
@@ -34,6 +37,7 @@ final readonly class CommentService
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private EphemeralKeyService $ephemeralKeyService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -217,7 +221,9 @@ final readonly class CommentService
             }
         }
 
-        $commentAction = (string) EventDispatcher::dispatch('user_comment_check', $commentAction, $comm);
+        $checkEvent = new UserCommentCheck($commentAction, $comm);
+        $this->dispatcher->dispatch($checkEvent);
+        $commentAction = $checkEvent->commentAction;
 
         if ($commentAction != 'reject') {
             $commAuthorRaw  = $comm['author'] ?? null;
@@ -289,7 +295,7 @@ final readonly class CommentService
                 'author'     => is_string($globalUser['username'] ?? null) ? $globalUser['username'] : '',
                 'comment_id' => $commentId,
             ]);
-            EventDispatcher::notify('user_comment_deletion', $commentId);
+            $this->dispatcher->dispatch(new UserCommentDeletion($commentId));
 
             return true;
         }
@@ -316,11 +322,12 @@ final readonly class CommentService
         }
 
         $globalUser = CurrentUser::isInitialized() ? CurrentUser::get()->rawAttributes : [];
-        $commentAction = (string) EventDispatcher::dispatch(
-            'user_comment_check',
+        $checkEvent = new UserCommentCheck(
             $commentAction,
             array_merge($comment, ['author' => is_string($globalUser['username'] ?? null) ? $globalUser['username'] : ''])
         );
+        $this->dispatcher->dispatch($checkEvent);
+        $commentAction = $checkEvent->commentAction;
 
         if (!empty($comment['website_url'])) {
             $wUrl              = is_string($comment['website_url']) ? $comment['website_url'] : '';
@@ -422,7 +429,7 @@ final readonly class CommentService
     {
         $this->repo->setValidated($commentId);
         $this->invalidateUserCacheNbComments();
-        EventDispatcher::notify('user_comment_validation', $commentId);
+        $this->dispatcher->dispatch(new UserCommentValidation($commentId));
     }
 
     public function invalidateUserCacheNbComments(): void

@@ -23,6 +23,8 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\User\RegisterUser;
+use Piwigo\Event\User\RegisterUserCheck;
 use Piwigo\Group\GroupRepository;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Html\HtmlService;
@@ -30,13 +32,13 @@ use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Lang\LangService;
 use Piwigo\Language\LanguageService;
 use Piwigo\Mail\MailService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Ws\WsError;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 final class UserService
@@ -68,6 +70,7 @@ final class UserService
         private readonly PermissionService $permissionService,
         private readonly LanguageService $languageService,
         private readonly ThemeService $themeService,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -101,7 +104,9 @@ final class UserService
             }
         }
 
-        $errors = EventDispatcher::dispatch('register_user_check', $errors, ['username' => $login, 'password' => $password, 'email' => $mailAddress]);
+        $checkEvent = new RegisterUserCheck(array_values($errors), ['username' => $login, 'password' => $password, 'email' => $mailAddress]);
+        $this->dispatcher->dispatch($checkEvent);
+        $errors = $checkEvent->errors;
 
         if (empty($errors)) {
             $insert = [
@@ -168,7 +173,7 @@ final class UserService
                 );
             }
 
-            EventDispatcher::notify('register_user', ['id' => $userId, 'username' => $login, 'email' => $mailAddress]);
+            $this->dispatcher->dispatch(new RegisterUser(['id' => $userId, 'username' => $login, 'email' => $mailAddress]));
             $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'add'));
 
             return $userId;

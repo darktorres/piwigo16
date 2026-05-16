@@ -14,6 +14,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
+use Piwigo\Event\User\UserCommentInsertion;
 use Piwigo\Exception\AuthException;
 use Piwigo\Html\HtmlService;
 use Piwigo\Page\PaginationService;
@@ -24,6 +25,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class PictureCommentRenderer
 {
@@ -38,6 +40,7 @@ final readonly class PictureCommentRenderer
         private CsrfService $csrfService,
         private EphemeralKeyService $ephemeralKeyService,
         private PaginationService $paginationService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -91,7 +94,7 @@ final readonly class PictureCommentRenderer
                     throw new \LogicException('Invalid comment action: ' . $comment_action);
             }
 
-            EventDispatcher::notify('user_comment_insertion', array_merge($comm, ['action' => $comment_action]));
+            $this->dispatcher->dispatch(new UserCommentInsertion(array_merge($comm, ['action' => $comment_action])));
         } elseif (isset($_POST['content'])) {
             $this->htmlService->setStatusHeader(403);
             throw new AuthException('ugly spammer');

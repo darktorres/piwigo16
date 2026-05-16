@@ -16,16 +16,18 @@ use Piwigo\Core\PageState;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\User\LoadProfileInTemplate;
+use Piwigo\Event\User\SaveProfileFromPost;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Lang\LangService;
 use Piwigo\Language\LanguageService;
 use Piwigo\Mail\MailService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class ProfileService
 {
@@ -42,6 +44,7 @@ final readonly class ProfileService
         private RedirectResponder $redirectResponder,
         private LanguageService $languageService,
         private ThemeService $themeService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -177,7 +180,7 @@ final readonly class ProfileService
             }
 
             $userId = is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0;
-            EventDispatcher::notify('save_profile_from_post', $userId);
+            $this->dispatcher->dispatch(new SaveProfileFromPost($userId));
             $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'edit', ['function' => 'saveProfileFromPost', 'tables' => implode(',', $activity_details_tables)]));
 
             if (isset($_POST['redirect']) && $_POST['redirect'] !== '') {
@@ -262,7 +265,7 @@ final readonly class ProfileService
             : Lang::t('You have no email address, so you will not be notified when your API key is about to expire.');
         $tpl->assign('API_EMAIL_INFOS', new Html($email_notifications_infos));
 
-        EventDispatcher::notify('load_profile_in_template', $userdata);
+        $this->dispatcher->dispatch(new LoadProfileInTemplate($userdata));
         $tpl->assign('PWG_TOKEN', $this->csrfService->getToken());
     }
 }

@@ -24,6 +24,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Url\UrlService;
+use Piwigo\Ws\OpenApi\ApiMethod;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -54,6 +55,7 @@ final readonly class TagsEndpoints
      * @param array<mixed> $params
      * @return array<mixed>
      */
+    #[ApiMethod(summary: 'Retrieves a list of available tags.', tags: ['tags'])]
     public function getList(array $params, PwgServer &$service): array
     {
         /** @var array<int, array<string, mixed>> $tags */
@@ -77,6 +79,7 @@ final readonly class TagsEndpoints
      * @param array<mixed> $params
      * @return array<mixed>
      */
+    #[ApiMethod(summary: '<b>Admin only.</b>', tags: ['tags'])]
     public function getAdminList(array $params, PwgServer &$service): array
     {
         return ['tags' => new PwgNamedArray($this->tagService->getAllTags(), 'tag', $this->wsHelper->getTagXmlAttributes())];
@@ -86,6 +89,7 @@ final readonly class TagsEndpoints
      * @param array<mixed> $params
      * @return array<mixed>
      */
+    #[ApiMethod(summary: 'Returns elements for the corresponding tags. Fill at least tag_id, tag_url_name or tag_name.', tags: ['tags'])]
     public function getImages(array $params, PwgServer &$service): array
     {
         $tagIdArr     = is_array($params['tag_id']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $params['tag_id']) : [];
@@ -171,6 +175,7 @@ final readonly class TagsEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Adds a new tag.', tags: ['tags'])]
     public function add(array $params, PwgServer &$service): PwgError|array
     {
         $creationOutput = $this->tagAdminService->createTag(is_string($params['name'] ?? null) ? $params['name'] : '');
@@ -187,6 +192,7 @@ final readonly class TagsEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Delete tag(s) by ID.', tags: ['tags'])]
     public function delete(array $params, PwgServer &$service): PwgError|array
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -206,6 +212,7 @@ final readonly class TagsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Rename tag', tags: ['tags'])]
     public function rename(array $params, PwgServer &$service): mixed
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -244,6 +251,7 @@ final readonly class TagsEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Create a copy of a tag', tags: ['tags'])]
     public function duplicate(array $params, PwgServer &$service): PwgError|array
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -280,6 +288,7 @@ final readonly class TagsEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Merge tags in one other group', tags: ['tags'])]
     public function merge(array $params, PwgServer &$service): PwgError|array
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {

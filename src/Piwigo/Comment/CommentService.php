@@ -232,6 +232,10 @@ final readonly class CommentService
 
         if ($commentAction != 'reject') {
             $commAuthorRaw  = $comm['author'] ?? null;
+            // PHPStan sees `ip` as always defined on $comm (set on
+            // line 120 above), so it flags the defensive ?? null as
+            // dead. Psalm sees the offset as optional. Keep the
+            // ?? null until row shape narrowing converges.
             /** @phpstan-ignore-next-line nullCoalesce.offset */
             $commIpRaw      = $comm['ip'] ?? null;
             $commContentRaw = $comm['content'] ?? null;

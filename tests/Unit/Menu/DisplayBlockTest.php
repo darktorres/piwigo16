@@ -50,6 +50,10 @@ final class DisplayBlockTest extends TestCase
         $block->raw_content = '<div>raw</div>';
         $block->id = 'custom_id';
         self::assertSame(['key' => 'value'], $block->data);
+        // Psalm narrows each property to its literal value after the
+        // assignment above, then flags assertSame as redundant. The
+        // assertions are still meaningful — they document the public
+        // writable-property contract.
         /** @psalm-suppress RedundantCondition */
         self::assertSame('my_template.tpl', $block->template);
         /** @psalm-suppress RedundantCondition */

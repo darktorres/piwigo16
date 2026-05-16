@@ -210,6 +210,10 @@ final readonly class WsHelper
             $key_of_cat[$node_id] = $key;
 
             if (!isset($node['id_uppercat'])) {
+                // Building a category tree via reference assignment so
+                // descendants pushed later mutate the same node. Psalm
+                // can't model this aliasing; the project psalm.xml
+                // documents the same pattern globally.
                 /** @psalm-suppress UnsupportedReferenceUsage */
                 $tree[] = &$node;
             } else {

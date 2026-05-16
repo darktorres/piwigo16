@@ -80,6 +80,9 @@ final readonly class PluginService
             $maintainFile = Config::pluginsPath() . $pluginId . '/maintain.class.php';
 
             if (file_exists($maintainFile)) {
+                // Legacy plugin loader: path computed from $pluginId at
+                // runtime, then maintain class dynamically instantiated.
+                // Both go away in B17 with the PluginMaintain bridge.
                 /** @psalm-suppress UnresolvableInclude */
                 require_once($maintainFile);
 

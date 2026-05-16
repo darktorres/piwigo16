@@ -74,6 +74,9 @@ final class Themes
             require_once($file_to_include);
 
             if (class_exists($classname) && is_a($classname, ThemeMaintain::class, true)) {
+                // Deliberate dynamic new — legacy theme maintain class
+                // name discovered at runtime. Goes away in B17 with the
+                // ThemeMaintain bridge.
                 return new $classname($theme_id); // @phpstan-ignore piwigo.noDynamicNew
             }
         }

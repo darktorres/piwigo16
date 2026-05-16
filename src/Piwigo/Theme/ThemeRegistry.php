@@ -395,6 +395,9 @@ final class ThemeRegistry
                 "Theme main class '{$class}' does not exist.",
             );
         }
+        // Theme main-class name comes from the manifest at runtime —
+        // dispatching to it is exactly what the registry exists for, so
+        // the project-wide noDynamicNew rule explicitly allows this.
         // @phpstan-ignore-next-line piwigo.noDynamicNew
         $instance = new $class();
         if (!$instance instanceof ThemeInterface) {

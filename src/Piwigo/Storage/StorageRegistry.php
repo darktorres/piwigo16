@@ -33,6 +33,7 @@ final class StorageRegistry
     public static function fromConfig(string $configPath): self
     {
         /** @var array<string, \Closure(): FilesystemOperator> $factories */
+        // Config path is a parameter — Psalm cannot follow the require.
         /** @psalm-suppress UnresolvableInclude */
         $factories = require $configPath;
         return new self($factories);

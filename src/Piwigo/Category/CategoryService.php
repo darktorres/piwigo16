@@ -408,6 +408,11 @@ FROM ' . Tables::categories() . ' as c
             $parent['nb_categories']++;
 
             do {
+                // PHPStan narrows the category-row docblock shape to
+                // "nb_images always present"; runtime rows assembled
+                // from heterogeneous fetches may lack the column. The
+                // defensive ?? null is kept until row shapes converge
+                // (likely §1.7 typed-entity-repositories pass).
                 /** @phpstan-ignore-next-line nullCoalesce.offset */
                 $parent['count_images']     += is_numeric($cat['nb_images'] ?? null) ? (int) ($cat['nb_images'] ?? 0) : 0;
                 $parent['count_categories']++;
@@ -450,6 +455,8 @@ FROM ' . Tables::categories() . ' as c
             $parent['nb_categories'] = (is_numeric($parent['nb_categories'] ?? null) ? (int) $parent['nb_categories'] : 0) - 1;
 
             do {
+                // Same row-shape disagreement as the parallel block in
+                // computeAdditional() above — see comment there.
                 /** @phpstan-ignore-next-line nullCoalesce.offset */
                 $parent['count_images']     = (is_numeric($parent['count_images'] ?? null) ? (int) ($parent['count_images'] ?? 0) : 0) - (is_numeric($cat['nb_images'] ?? null) ? (int) ($cat['nb_images'] ?? 0) : 0);
                 /** @phpstan-ignore-next-line nullCoalesce.offset */

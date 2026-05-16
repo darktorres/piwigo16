@@ -48,6 +48,8 @@ final readonly class UpgradeFeedController implements ControllerInterface
             echo "\n\n";
             echo '=== upgrade ' . $upgrade_id . "\n";
 
+            // Upgrade script path computed from runtime $upgrade_id —
+            // Psalm cannot follow the include statically.
             /** @psalm-suppress UnresolvableInclude */
             require(UPGRADES_PATH . '/' . $upgrade_id . '-database.php');
             /** @var string|null $upgrade_description -- may be set by the required migration file */

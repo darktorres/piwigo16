@@ -743,6 +743,11 @@ final class AlbumController implements AdminSubControllerInterface
         $tpl->assign(['U_MANAGE_RANKS' => $base_url . 'element_set_ranks&cat_id=' . $catId, 'CACHE_KEYS' => $this->adminService->getAdminClientCacheKeys(['categories'])]);
 
         if (!$category['is_virtual']) {
+            // PHPStan sees $_GET['cat_id'] as mixed; the controller's
+            // earlier route gate ensured it's a string. Wrapping in a
+            // local is_scalar narrow tripped Psalm's RedundantCondition
+            // (it knows the narrowed type already) — net-zero churn,
+            // so suppress just this call site.
             /** @phpstan-ignore-next-line argument.type */
             $category['cat_full_dir'] = $this->getCompleteDir($_GET['cat_id']);
             $catFullDirRaw = $category['cat_full_dir'];

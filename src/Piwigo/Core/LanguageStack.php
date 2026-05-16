@@ -157,6 +157,8 @@ final class LanguageStack
         $lang = [];
         $lang_info = [];
         if (is_readable($path)) {
+            // Language file path computed from runtime locale — Psalm
+            // cannot follow the include statically.
             /** @psalm-suppress UnresolvableInclude */
             include $path;
         }

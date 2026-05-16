@@ -78,19 +78,19 @@ final class PluginRegistryTest extends TestCase
         self::assertSame(1, ValidPlugin::$installCount);
 
         $registry->activate('valid_plugin');
-        /** @psalm-suppress RedundantConditionGivenDocblockType */
+        /** @psalm-suppress RedundantConditionGivenDocblockType — same Psalm static-counter narrowing as the install case above */
         self::assertSame(1, ValidPlugin::$activateCount);
 
         $registry->activate('valid_plugin'); // idempotent — already active
-        /** @psalm-suppress RedundantConditionGivenDocblockType */
+        /** @psalm-suppress RedundantConditionGivenDocblockType — same Psalm static-counter narrowing as the install case above */
         self::assertSame(1, ValidPlugin::$activateCount);
 
         $registry->deactivate('valid_plugin');
-        /** @psalm-suppress RedundantConditionGivenDocblockType */
+        /** @psalm-suppress RedundantConditionGivenDocblockType — same Psalm static-counter narrowing as the install case above */
         self::assertSame(1, ValidPlugin::$deactivateCount);
 
         $registry->uninstall('valid_plugin');
-        /** @psalm-suppress RedundantConditionGivenDocblockType */
+        /** @psalm-suppress RedundantConditionGivenDocblockType — same Psalm static-counter narrowing as the install case above */
         self::assertSame(1, ValidPlugin::$uninstallCount);
         self::assertEmpty($repo->findAll('', 'valid_plugin'));
     }

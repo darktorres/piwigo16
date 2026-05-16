@@ -24,6 +24,8 @@ final readonly class Router
 
     public function __construct(string $routesFile)
     {
+        // Routes file path is a constructor parameter (DI-injected
+        // path constant) — Psalm cannot follow the require statically.
         /** @psalm-suppress UnresolvableInclude */
         $routes = require $routesFile;
         assert($routes instanceof RouteCollection);

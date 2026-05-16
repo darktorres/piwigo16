@@ -519,6 +519,9 @@ final class PluginRegistry
                 "Plugin main class '{$class}' does not exist (autoload missing — B12 will wire per-plugin PSR-4).",
             );
         }
+        // Plugin main-class name comes from the manifest at runtime —
+        // dispatching to it is exactly what the registry exists for, so
+        // the project-wide noDynamicNew rule explicitly allows this site.
         // @phpstan-ignore-next-line piwigo.noDynamicNew
         $instance = new $class();
         if (!$instance instanceof PluginInterface) {

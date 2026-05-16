@@ -109,6 +109,9 @@ final class EventDispatcher
                 foreach ($handlers as $handler) {
                     $args[0] = $data;
                     if (isset($handler['include_path']) && $handler['include_path'] !== '') {
+                        // Legacy plugin handler may carry an include_path
+                        // computed at registration. Path is plugin-specific
+                        // and not statically resolvable.
                         /** @psalm-suppress UnresolvableInclude */
                         include_once($handler['include_path']);
                     }
@@ -142,6 +145,8 @@ final class EventDispatcher
             foreach (self::$handlers[$event] as $handlers) {
                 foreach ($handlers as $handler) {
                     if (isset($handler['include_path']) && $handler['include_path'] !== '') {
+                        // Same as the dispatch branch above — handler may
+                        // ship an include_path registered at runtime.
                         /** @psalm-suppress UnresolvableInclude */
                         include_once($handler['include_path']);
                     }

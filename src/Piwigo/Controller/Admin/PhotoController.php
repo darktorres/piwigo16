@@ -239,6 +239,11 @@ SELECT id
                 if (is_array($tags_post)) {
                     $tag_ids = $this->tagAdminService->getTagIds(array_map(fn (mixed $v): string => is_string($v) ? $v : '', $tags_post));
                 } else {
+                    // PHPStan keeps $tags_post as mixed even after the
+                    // `!== null && !== ''` filter (Psalm narrows to
+                    // non-empty-string). Adding is_string here trips
+                    // Psalm's RedundantCondition — both branches lose,
+                    // so suppress.
                     /** @phpstan-ignore-next-line argument.type */
                     $tag_ids = $this->tagAdminService->getTagIds($tags_post);
                 }

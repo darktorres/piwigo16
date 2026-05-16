@@ -508,6 +508,9 @@ final class Template
                 $this->themeconfs[$dir] = $this->themeconfFromJson($jsonPath);
             } elseif (is_file($legacyPath)) {
                 $themeconf = [];
+                // Legacy themeconf.inc.php fallback during the B14
+                // bundled-themes migration. Removed once every bundled
+                // theme has a theme.json (B14e).
                 /** @psalm-suppress UnresolvableInclude */
                 require($legacyPath);
                 $this->themeconfs[$dir] = $themeconf;

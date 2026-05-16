@@ -106,6 +106,12 @@ final class Plugins
         // name (=plugin_id) and a class name can't have a "-". So we have to replace with a "_"
         $classname = str_replace('-', '_', $classname);
 
+        // Both branches: legacy plugin loader. The plugin's main file
+        // is computed at runtime from $plugin_id and required (no static
+        // resolution possible), then the maintain class is dynamically
+        // instantiated by name. Both code paths disappear in B17 with
+        // the legacy PluginMaintain bridge.
+
         // 2.7 pattern (OO only)
         if (file_exists($file_to_include.'.class.php')) {
             /** @psalm-suppress UnresolvableInclude */

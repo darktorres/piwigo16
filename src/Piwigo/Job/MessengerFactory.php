@@ -90,6 +90,9 @@ final class MessengerFactory
         Connection $conn,
         PhpSerializer $serializer,
     ): DoctrineTransport {
+        // Symfony Messenger marks its Doctrine transport's Connection
+        // wrapper as @internal — no public alternative for custom
+        // table/queue wiring, so we instantiate it directly.
         /** @psalm-suppress InternalClass, InternalMethod */
         $messengerConn = new DoctrineMessengerConnection(
             ['table_name' => $tableName, 'queue_name' => $queueName, 'auto_setup' => true],

@@ -42,6 +42,9 @@ final class MigrationRunner
             return;
         }
 
+        // Doctrine marks DependencyFactory's resolver/migrator getters
+        // and MigratorConfiguration as @internal — no public alternative
+        // for programmatic migration runs outside their CLI command.
         /** @psalm-suppress InternalMethod */
         $version = $factory->getVersionAliasResolver()->resolveVersionAlias('latest');
         $plan    = $factory->getMigrationPlanCalculator()->getPlanUntilVersion($version);

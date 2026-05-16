@@ -28,6 +28,10 @@ final class ContainerDefinitionsTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         $loaded = require dirname(__DIR__, 3) . '/config/container.php';
+        // Psalm narrows the require result to array via the file's
+        // return type, then flags assertIsArray as redundant. The
+        // assertion is still the documented PHPUnit way to verify
+        // the require contract.
         /** @psalm-suppress RedundantCondition */
         self::assertIsArray($loaded);
         self::$definitions = $loaded;

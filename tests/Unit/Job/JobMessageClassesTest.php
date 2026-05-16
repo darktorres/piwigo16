@@ -24,7 +24,8 @@ final class JobMessageClassesTest extends TestCase
     {
         $job = new GenerateDerivativeJob(1, 'medium');
         $this->expectException(\Error::class);
-        /** @phpstan-ignore-next-line */
+        // Intentional readonly-violation to verify PHP raises \Error.
+        /** @phpstan-ignore-next-line assign.propertyReadOnly */
         $job->imageId = 99;
     }
 

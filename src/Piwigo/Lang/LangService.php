@@ -167,6 +167,8 @@ final class LangService
                 if (is_readable($f)) {
                     $lang      = null;
                     $lang_info = null;
+                    // Language file path computed from runtime locale —
+                    // Psalm cannot follow the include statically.
                     /** @psalm-suppress UnresolvableInclude */
                     include $f;
                     LanguageStack::mergeLang((array) $lang);

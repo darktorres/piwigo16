@@ -37,7 +37,7 @@ defer to this table.
 | **4c** | `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` → typed `RequestContext` | ✓ Closed 2026-05-15 | — | — |
 | **4d** | `$lang_info` → `Lang` static state | ✓ Closed 2026-05-15 | — | — |
 | **5** | `Util.php` split | ✓ Closed 2026-05-15 | — | — |
-| **6** | Extension-API compat removal (post-v17 cleanup) | Mostly closed 2026-05-16 — 6.1 / 6.2 / 6.4 / 6.5 delivered by §1.4 (see §Z24–§Z28). 6.3 (PiwigoExtension residuals) P3.1 / P3.2 / P3.3 still open as out-of-§1.4-scope follow-ups | none | P3.1 (docs change) actionable now; P3.2 (unused-filter audit + paired PiwigoPolicy edits) actionable now; P3.3 (form-helper design call) needs a product decision |
+| **6** | Extension-API compat removal (post-v17 cleanup) | ✓ Closed 2026-05-16 — 6.1 / 6.2 / 6.4 / 6.5 delivered by §1.4 (see §Z24–§Z28); 6.3 PiwigoExtension residuals (P3.1 docstring + P3.2 unused-filter audit + P3.3 form-helper decision) landed as §Z29 | — | — |
 
 **Already shipped before this re-org** (Appendix A entries):
 
@@ -65,6 +65,7 @@ defer to this table.
 - §Z26 — §1.4 theme contract: ThemeInterface, ThemeRegistry, TemplateResolver, bundled themes migrated to theme.json (2026-05-16)
 - §Z27 — §1.4 WS API enrichment: `#[ApiMethod]` on 94 endpoints + SpecBuilder + cebe-validated CI gate + redocly lint (2026-05-16)
 - §Z28 — §1.4 legacy deletion: static EventDispatcher, LoadedPluginRegistry, PluginService, PluginMaintain, ThemeMaintain, triggers_list.php, frontend BC queues, phpstan stubs (2026-05-16)
+- §Z29 — Phase 6.3 PiwigoExtension residuals: docstring refresh (P3.1), 13 zero-caller filter/function deletions paired with PiwigoPolicy (P3.2), KEEP decision on the htmlOptions/htmlRadios/math form helpers (P3.3) (2026-05-16)
 
 ---
 
@@ -331,18 +332,14 @@ Detail → [Appendix A §Z23](#z23-phase-5-utilphp-split).
 
 ---
 
-# Phase 6 — Extension-API Compat Removal — mostly closed
+# Phase 6 — Extension-API Compat Removal ✓
 
-Closed 2026-05-16 for 6.1 / 6.2 / 6.4 / 6.5: resolved by §1.4 plugin
-architecture (Batches B0–B18). The original Phase 6 plan called for
-deferring the extension-API deletions until a typed replacement
-landed; §1.4 *is* that replacement, and B17 retired the legacy
-surfaces alongside it.
-
-**6.3 residuals stay open** — three items on `PiwigoExtension.php` /
-`PiwigoPolicy.php` were deferred-with-§1.4 in the 2026-05-15 audit,
-and are still unblocked-but-not-done after §1.4 closed: see the
-[6.3 open work](#63-piwigoextensionphp-residuals--open) section below.
+Closed 2026-05-16. 6.1 / 6.2 / 6.4 / 6.5 delivered by the §1.4 plugin
+architecture (Batches B0–B18); the original Phase 6 plan deferred the
+extension-API deletions until a typed replacement landed and §1.4 *is*
+that replacement. 6.3 PiwigoExtension residuals (docstring refresh,
+unused-filter audit, form-helper decision) landed as a post-§1.4
+follow-up the same day — see [§Z29](#z29-phase-63-piwigoextension-residuals).
 
 Sub-task → closure-record mapping:
 
@@ -350,26 +347,20 @@ Sub-task → closure-record mapping:
 |---|---|---|
 | 6.1 (P1) Plugin/theme procedural contract | §1.4 B7–B9 (plugin contract) + B13–B14 (theme contract) + B17e–B17g (deletion of `PluginService`, `LoadedPluginRegistry`, `PluginMaintain`, `ThemeMaintain`, `maintain.inc.php` parsing) | [§Z25](#z25-14-plugin-contract), [§Z26](#z26-14-theme-contract), [§Z28](#z28-14-legacy-deletion) |
 | 6.2 (P2) Plugin event API | §1.4 B3–B6 (153 typed DTOs + selective-mutability subscribers + 17 internal listeners migrated) + B17d (static `EventDispatcher` + `LegacyEventBridge` deleted) | [§Z24](#z24-14-event-system-rebuild), [§Z28](#z28-14-legacy-deletion) |
-| 6.3 (P3) `PiwigoExtension.php` Latte template API | Reframed 2026-05-15: 133 templates already Latte-native (P3.4 was historical); `PiwigoExtension` is the Piwigo Latte API, allowlisted via `PiwigoPolicy`. The docstring (P3.1), unused-filter audit (P3.2), and `htmlOptions`/`htmlRadios`/`math` decision (P3.3) are out of §1.4 scope and tracked separately in [B17a](#z28-14-legacy-deletion) only for the `tools/triggers_list.php` retirement (P2.2 / D3.5 part 2). | n/a — see [§Z24](#z24-14-event-system-rebuild) for `triggers_list.php` retirement |
+| 6.3 (P3) `PiwigoExtension.php` Latte template API | Reframed 2026-05-15: 133 templates already Latte-native (P3.4 was historical); `PiwigoExtension` is the Piwigo Latte API, allowlisted via `PiwigoPolicy`. Post-§1.4 follow-up landed P3.1 (docstring refresh), P3.2 (13 zero-caller filter/function deletions paired with PiwigoPolicy), and P3.3 (form-helper KEEP decision). `tools/triggers_list.php` retirement (P2.2 / D3.5 part 2) is in §Z24. | [§Z29](#z29-phase-63-piwigoextension-residuals), [§Z24](#z24-14-event-system-rebuild) |
 | 6.4 (P4) Frontend plugin BC queues | §1.4 B17c (`SwitchBox` drain loop, `_pwgRatingAutoQueue` queue + push-shim, `_cont` window-alias all removed) | [§Z28](#z28-14-legacy-deletion) |
 | 6.5 (D4) Frontend `globals.d.ts` cleanup | §1.4 B17c (plugin-coupled `SwitchBox` + `_pwgRatingAutoQueue` declarations removed; Smarty → Latte header refresh) | [§Z28](#z28-14-legacy-deletion) |
 
-## 6.3 `PiwigoExtension.php` residuals — open
+## 6.3 `PiwigoExtension.php` residuals — closed
 
 The 2026-05-15 audit reframed 6.3 from "rewrite 133 templates"
 (historical) to three concrete sub-tasks on `PiwigoExtension.php` /
-`PiwigoPolicy.php`. §1.4 didn't touch them because the audit deferred
-P3.2 / P3.3 with the plugin contract and §1.4 closed without going
-back for them. Verified open 2026-05-16:
+`PiwigoPolicy.php`. All three landed as a post-§1.4 follow-up
+2026-05-16 — see [§Z29](#z29-phase-63-piwigoextension-residuals) for
+the closure-record detail (commit `465abe3d0`).
 
-| Item | Status | Effort |
-|---|---|---|
-| **P3.1** Update `PiwigoExtension.php` docstring (lines 28-61) to drop the Smarty-conversion narrative and frame the filter set as "Piwigo Latte template API, allowlisted via `PiwigoPolicy`" | Open — pure docs change | ~10 min |
-| **P3.2** Audit deletable filters/functions: 10 filters (`file_exists`, `constant`, `json_decode`, `trim`, `md5`, `strtolower`, `is_null`, `is_file`, `strpos`, `sizeOf`) + 3 functions (`defineDerivative`, `htmlStyle`, `footerScript`) had zero template callers at 2026-05-15. Deletion = paired edit in `PiwigoExtension::getFilters()`/`getFunctions()` AND the matching `PiwigoPolicy` allowlist. Re-verify the zero-caller counts first | Open — unblocked now that §1.4 has shipped | ~30 min |
-| **P3.3** Long-term decision on `htmlOptions` (24 templates) / `htmlRadios` (2) / `math()` (1) — keep as Piwigo Latte form-helper API, or rewrite the 24/2/1 callers inline and delete the helpers from both `PiwigoExtension` and `PiwigoPolicy` | Open — design call coupled to plugin-template-API surface choice | TBD |
-
-**D4 partial — already verified clean.** The 2026-05-15 audit flagged
-three `globals.d.ts` declarations (`var user`, `var preferencesDefaultValues`,
+**D4 partial — verified clean.** The 2026-05-15 audit flagged three
+`globals.d.ts` declarations (`var user`, `var preferencesDefaultValues`,
 `var standardSaveSelector`) as "likely-stale; needs re-verification".
 Re-grepped 2026-05-16: all three have live consumers under `themes/`
 and `src/Piwigo/Controller/ProfileController.php`. False positive in
@@ -398,10 +389,9 @@ the old audit; nothing to drop.
    Phase 4d (lang_info)   ──┤
    Phase 5 (Util split)   ──┘  (see Appendix A §Z23)
 
-   Phase 6 (extension-API)   ──┐ mostly closed 2026-05-16
-                                ┤ (6.1/6.2/6.4/6.5 done by §1.4;
-                                │  see Appendix A §Z24–§Z28)
-                                └  6.3 residuals (P3.1/P3.2/P3.3) open
+   Phase 6 (extension-API)   ──┐ done 2026-05-16
+                                ┤ (6.1/6.2/6.4/6.5 by §1.4 — §Z24–§Z28;
+                                ┘  6.3 residuals — §Z29)
    §A1 ($page alias)         ──  done 2026-05-15 (shipped early, §Z1.1)
 ```
 
@@ -409,18 +399,18 @@ Notes:
 
 - Phase 2 tasks are internally sequenced (code → runtime → stubs) but
   externally parallel.
-- Phases 3 / 4 / 5 are all done. Phase 5 did not need Phase 2e — the
-  mobile-theme switcher stays as a feature, so `mobileTheme` / `getDevice`
-  carved into the new `DeviceDetectionService` (Batch 2) rather than being
-  removed.
-- Phase 6 is **mostly closed** 2026-05-16 via the §1.4 plugin
-  architecture rewrite (19 batches, ~50 commits). Sub-tasks 6.1 / 6.2
-  / 6.4 / 6.5 shipped alongside their typed replacements in §Z24
-  (events), §Z25 (plugin contract), §Z26 (theme contract), §Z27 (WS
-  API), §Z28 (legacy deletion). 6.3's `PiwigoExtension` residuals stay
-  open: P3.1 (docstring refresh — actionable now), P3.2 (unused-filter
-  audit + paired `PiwigoPolicy` edits — unblocked by §1.4), P3.3
-  (form-helper long-term decision — needs a product call).
+- Phases 3 / 4 / 5 / 6 are all done. Phase 5 did not need Phase 2e —
+  the mobile-theme switcher stays as a feature, so `mobileTheme` /
+  `getDevice` carved into the new `DeviceDetectionService` (Batch 2)
+  rather than being removed.
+- Phase 6 closed 2026-05-16. Sub-tasks 6.1 / 6.2 / 6.4 / 6.5 shipped
+  via the §1.4 plugin architecture rewrite (19 batches, ~50 commits;
+  §Z24 events, §Z25 plugin contract, §Z26 theme contract, §Z27 WS API,
+  §Z28 legacy deletion). 6.3's `PiwigoExtension` residuals closed
+  same-day as a post-§1.4 follow-up (§Z29): P3.1 docstring refresh,
+  P3.2 13-entry zero-caller filter/function deletions paired with
+  `PiwigoPolicy`, P3.3 KEEP decision on the
+  `htmlOptions`/`htmlRadios`/`math` form helpers.
 
 ---
 
@@ -1964,18 +1954,79 @@ removal. Apache smoke test of `/ws?method=pwg.getVersion` returns
 
 ---
 
+## Z29. Phase 6.3 PiwigoExtension Residuals
+
+Closed 2026-05-16 (commit `465abe3d0`). Three residuals on
+`src/Piwigo/Template/Latte/PiwigoExtension.php` /
+`src/Piwigo/Template/Latte/PiwigoPolicy.php` that the 2026-05-15
+audit deferred-with-§1.4 and §1.4 didn't come back for:
+
+### P3.1 — docstring refresh
+
+`PiwigoExtension.php`'s class-level docstring was framed as a "§1.2
+Wave 2 Phase B" catalog with a "two Smarty filters intentionally not
+ported" coda. Rewritten as "Piwigo Latte template API, allowlisted via
+[[PiwigoPolicy]]" — the surface plugin templates run under
+`createPluginPolicy()`, with a "when adding a filter/function, also
+add it to PiwigoPolicy" reminder. Inline filter-list block headers
+(`Phase A` / `Phase B.1` / `Phase B.2` / `Phase B.3`) trimmed of
+historical Smarty-conversion narrative while preserving the rationale
+that explains why pipe-incompatible PHP signatures stay unregistered.
+
+### P3.2 — 13-entry zero-caller filter/function deletion
+
+Re-verified zero-caller status against the 133 `.latte` templates
+2026-05-16; all 13 candidates from the 2026-05-15 audit remained at
+zero callers. Deleted in lockstep:
+
+**Filters** (gone from `PiwigoExtension::getFilters()` and from
+matching `PiwigoPolicy` allowlists where present):
+`file_exists`, `constant`, `json_decode`, `trim`, `md5`, `strtolower`,
+`is_null`, `is_file`, `strpos`, `sizeOf`.
+
+**Functions** (gone from `PiwigoExtension::getFunctions()` + their
+orphan static helper methods + the `createCorePolicy()` allowlist):
+`defineDerivative`, `htmlStyle`, `footerScript`.
+
+**Companion deletion in `Template`:** with `htmlStyle()` gone,
+`Template::appendHtmlStyle()` + the `$html_style` buffer + the
+runtime-CSS branch of the head-flush logic all became dead code.
+Removed.
+
+**Test updates:** `PiwigoPolicyTest::test_core_policy_allows_what_plugin_policy_denies`
+and `test_plugin_policy_allows_form_helpers_only` updated to drop
+assertions on the deleted items.
+`LatteEngineTest::test_phase_b1_php_passthrough_filters` renamed to
+`test_php_passthrough_filters` and reshaped: representatives now
+`urlencode` (single-arg), `sprintf` (one- and two-arg positional),
+`ucfirst` (single-arg from $vars), `in_array` (multi-arg returning
+non-string). The historical `md5` / `strtolower` demos retired with
+the filter removal.
+
+### P3.3 — form-helper long-term decision: KEEP
+
+Three helpers under consideration:
+
+| Helper | In-tree callers | Decision |
+|---|---|---|
+| `htmlOptions` | 50 calls across 24 templates; also in `PiwigoPolicy::PLUGIN_FUNCTIONS` (plugin-accessible) | **Keep** — meaningful consumer base, well-tested, part of the plugin template API surface |
+| `htmlRadios` | 6 calls across 2 templates; also in `PiwigoPolicy::PLUGIN_FUNCTIONS` | **Keep** — same rationale |
+| `math()` | 1 call in 1 template; core-only (not in `PLUGIN_FUNCTIONS`) | **Keep** — regex-validated eval is safer than hand-rewriting the math expression with risk of typo |
+
+The helpers are stable, well-tested (`LatteEngineTest` covers them),
+plugin-API-aligned, and have no maintenance burden. Rewriting 24
+templates inline for `htmlOptions` would be 50 edits across 24 files
+with no functional benefit. Decision recorded; no code change.
+
+---
+
 ## Caveats
 
-- `PiwigoExtension.php` (the Piwigo Latte template API, allowlisted via
-  `PiwigoPolicy`) is *not* covered by §1.4. The 6.3 follow-up items
-  remain open: docstring update (P3.1), unused-filter audit (P3.2),
-  and `htmlOptions` / `htmlRadios` / `math` long-term decision (P3.3).
-  Track separately.
-- Phase 6's "rewrite 133 templates from Smarty to native Latte" (P3.4
-  original framing) was already historical at the 2026-05-15 audit —
-  Smarty surface syntax is gone from every template.
 - §1.4 intentionally breaks all PEM extensions (`project_version_17_breaks_extensions`).
   External plugins built against pre-17 APIs will not run on v17 by
   design; rewriting them against `PluginInterface` /
   `subscribedEvents` is a separate effort tracked outside this
   inventory.
+- Phase 6's "rewrite 133 templates from Smarty to native Latte" (P3.4
+  original framing) was historical at the 2026-05-15 audit — Smarty
+  surface syntax is gone from every template.

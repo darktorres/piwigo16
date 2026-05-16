@@ -15,17 +15,19 @@ bypass it.
 
 ---
 
-## §1 Smells in the current `i/` fast-path (`index.php:30-46`)
+## §1 Smells in the current `i/` fast-path (`index.php:30-48`)
 
 ```php
-// three problems:
+// two problems:
 
 // 1. Logger constructed inline — duplicates CommonBootstrap logic
 $logger = new Logger([...]);
 LoggerRegistry::set($logger);
 
 // 2. Controller manually wired — bypasses the DI container
-(new ImageDerivativeController(DbConnection::build()))(RequestFactory::fromGlobals());
+//    (bare EventDispatcher passed directly; EventDispatcherInterface
+//     is now a container-registered service)
+(new ImageDerivativeController(DbConnection::build(), new EventDispatcher()))(RequestFactory::fromGlobals());
 ```
 
 The performance rationale is correct (derivative serving must not trigger
@@ -55,7 +57,7 @@ eager singletons.
 | Set `self::$booted = true` | Yes | Yes (shared flag — the `i/` path never escalates to full boot) |
 | `LoggerRegistry` NullLogger fallback | Yes | Yes |
 | `Container::build()` | Yes | Yes |
-| `PageState::attachGlobals()` | Yes | **No** |
+| `PageState::current()` (singleton init) | Yes | **No** |
 | `Lang::attachGlobals()` | Yes | **No** |
 | `CurrentUser::attachGlobals()` | Yes | **No** |
 | Eager `StorageRegistry` init | Yes | **No** |
@@ -104,7 +106,7 @@ $logger = new Logger([
     'filename'  => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . Config::dbPassword()) . '.txt',
 ]);
 LoggerRegistry::set($logger);
-(new ImageDerivativeController(DbConnection::build()))(RequestFactory::fromGlobals());
+(new ImageDerivativeController(DbConnection::build(), new EventDispatcher()))(RequestFactory::fromGlobals());
 ```
 
 With:
@@ -128,8 +130,17 @@ before any service resolves it).
 
 ### Step C — `config/container.php`
 
-No change. PHP-DI autowiring resolves `ImageDerivativeController` from the
-`Connection` definition already present. `Kernel::service(ImageDerivativeController::class)` will work without an explicit factory entry.
+No change. `ImageDerivativeController` has two constructor params — `Connection`
+and `EventDispatcherInterface` — both registered in `container.php`. PHP-DI
+autowiring resolves both without an explicit factory entry.
+
+The container's `EventDispatcherInterface` binding wires `CoreSubscribers`
+lazily. This is safe for the derivative path: none of the 16 `CoreSubscribers`
+subscribe to `DerivativeParamsGet`, so dispatching that event through the
+container-built dispatcher has identical behaviour to the current bare
+`new EventDispatcher()`. Plugin subscribers register via `PluginRegistry::activate()`
+which requires plugins to be loaded — that doesn't happen on the `i/`
+fast-path regardless.
 
 ---
 

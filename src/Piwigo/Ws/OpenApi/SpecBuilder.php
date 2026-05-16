@@ -81,11 +81,22 @@ final readonly class SpecBuilder
         $adminOnly = $def !== null ? $def->requiresAuth
             : (isset($method['options']['admin_only']) && (bool) $method['options']['admin_only']);
 
-        $rawDesc   = $method['description'];
-        $tags      = ($def !== null && $def->tags !== []) ? $def->tags : $this->inferTags($name);
+        $apiAttr = $def !== null ? $this->extractApiMethodAttribute($def->callback) : null;
+        $rawDesc = $method['description'];
+
+        // #[ApiMethod] on the endpoint method is authoritative for plugin authors;
+        // fall back to MethodDefinition tags, then inferred tags from the name.
+        $tags = ($apiAttr !== null && $apiAttr->tags !== [])
+            ? $apiAttr->tags
+            : (($def !== null && $def->tags !== []) ? $def->tags : $this->inferTags($name));
+
+        $summary = ($apiAttr !== null && $apiAttr->summary !== '')
+            ? $apiAttr->summary
+            : ($rawDesc !== '' ? $this->firstLine($rawDesc) : $name);
+
         $operation = [
             'operationId' => str_replace('.', '_', $name),
-            'summary'     => $rawDesc !== '' ? $this->firstLine($rawDesc) : $name,
+            'summary'     => $summary,
             'tags'        => $tags,
         ];
 
@@ -216,6 +227,47 @@ final readonly class SpecBuilder
         }
 
         return ['type' => 'string'];
+    }
+
+    /**
+     * Reflects on a MethodDefinition callback to find an #[ApiMethod]
+     * attribute on the target method. Supports first-class callable syntax
+     * (`$obj->method(...)`, `Class::staticMethod(...)`) and `[obj, 'm']`
+     * arrays. Returns null for anonymous closures, function-name strings,
+     * and any callback whose target cannot be resolved.
+     */
+    private function extractApiMethodAttribute(mixed $callback): ?ApiMethod
+    {
+        $rm = null;
+
+        if ($callback instanceof \Closure) {
+            $rf = new \ReflectionFunction($callback);
+            if ($rf->isAnonymous()) {
+                return null;
+            }
+            $bound    = $rf->getClosureThis();
+            $scopeRef = $rf->getClosureScopeClass();
+
+            if ($bound !== null) {
+                $rm = new \ReflectionMethod($bound, $rf->getName());
+            } elseif ($scopeRef !== null) {
+                $rm = new \ReflectionMethod($scopeRef->getName(), $rf->getName());
+            }
+        } elseif (is_array($callback) && count($callback) === 2) {
+            [$target, $methodName] = $callback;
+            if (is_string($methodName) && is_object($target)) {
+                $rm = new \ReflectionMethod($target, $methodName);
+            } elseif (is_string($methodName) && is_string($target) && class_exists($target)) {
+                $rm = new \ReflectionMethod($target, $methodName);
+            }
+        }
+
+        if ($rm === null) {
+            return null;
+        }
+
+        $attrs = $rm->getAttributes(ApiMethod::class);
+        return $attrs === [] ? null : $attrs[0]->newInstance();
     }
 
     /** @return string[] */

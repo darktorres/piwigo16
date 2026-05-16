@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Ws;
 
 use PHPUnit\Framework\TestCase;
 use Piwigo\Ws\MethodDefinition;
+use Piwigo\Ws\OpenApi\ApiMethod;
 use Piwigo\Ws\OpenApi\OpenApiDocument;
 use Piwigo\Ws\OpenApi\SpecBuilder;
 use Piwigo\Ws\ParamDefinition;
@@ -441,5 +442,102 @@ final class SpecBuilderTest extends TestCase
         $result = $this->server->invoke('pwg.test', []);
         self::assertTrue($called, 'register() must store callback in $_methods so invoke() works');
         self::assertSame('ok', $result);
+    }
+
+    // -------------------------------------------------------------------------
+    // #[ApiMethod] reflection (B16)
+    // -------------------------------------------------------------------------
+
+    public function test_api_method_attribute_summary_overrides_description(): void
+    {
+        $endpoint = new SpecBuilderFakeEndpoint();
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.fake.getInfo',
+            callback: $endpoint->getInfo(...),
+            description: 'Stale description from registration.',
+            tags: ['stale-tag'],
+        ));
+
+        $op = $this->getOp('/ws/pwg.fake.getInfo');
+        self::assertSame('Attribute summary wins.', $op['summary']);
+    }
+
+    public function test_api_method_attribute_tags_override_definition_tags(): void
+    {
+        $endpoint = new SpecBuilderFakeEndpoint();
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.fake.getInfo',
+            callback: $endpoint->getInfo(...),
+            tags: ['stale-tag'],
+        ));
+
+        $op   = $this->getOp('/ws/pwg.fake.getInfo');
+        $tags = $op['tags'];
+        self::assertIsArray($tags);
+        self::assertContains('fakes', $tags);
+        self::assertNotContains('stale-tag', $tags);
+    }
+
+    public function test_method_without_api_method_attribute_falls_back_to_description(): void
+    {
+        $endpoint = new SpecBuilderFakeEndpoint();
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.fake.plain',
+            callback: $endpoint->plain(...),
+            description: 'Description used because no attribute.',
+            tags: ['fakes'],
+        ));
+
+        self::assertSame(
+            'Description used because no attribute.',
+            $this->getOp('/ws/pwg.fake.plain')['summary'],
+        );
+    }
+
+    public function test_anonymous_closure_callback_falls_back_to_description(): void
+    {
+        // Lambdas have no method to reflect — make sure the reflection helper
+        // gracefully returns null and registration metadata still wins.
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.fake.lambda',
+            callback: fn (): null => null,
+            description: 'Lambda fallback.',
+            tags: ['fakes'],
+        ));
+
+        self::assertSame('Lambda fallback.', $this->getOp('/ws/pwg.fake.lambda')['summary']);
+    }
+
+    public function test_array_callback_supports_api_method_attribute(): void
+    {
+        $endpoint = new SpecBuilderFakeEndpoint();
+        $this->server->register(new MethodDefinition(
+            name: 'pwg.fake.arrayCallback',
+            callback: [$endpoint, 'getInfo'],
+        ));
+
+        $op = $this->getOp('/ws/pwg.fake.arrayCallback');
+        self::assertSame('Attribute summary wins.', $op['summary']);
+    }
+}
+
+/**
+ * Fixture endpoint class with one decorated and one plain method, used to
+ * exercise SpecBuilder's #[ApiMethod] reflection path.
+ *
+ * @psalm-suppress UnusedClass — referenced via first-class callable / array
+ *                                callback in tests of this file only.
+ */
+final class SpecBuilderFakeEndpoint
+{
+    #[ApiMethod(summary: 'Attribute summary wins.', tags: ['fakes'])]
+    public function getInfo(): null
+    {
+        return null;
+    }
+
+    public function plain(): null
+    {
+        return null;
     }
 }

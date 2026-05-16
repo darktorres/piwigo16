@@ -11,6 +11,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
+use Piwigo\Ws\OpenApi\ApiMethod;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
@@ -31,6 +32,7 @@ final readonly class PermissionsEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Returns permissions: user ids and group ids having access to each album.', tags: ['permissions'])]
     public function getList(array $params, PwgServer &$service): PwgError|array
     {
         $myParams = array_intersect(array_keys($params), ['cat_id', 'group_id', 'user_id']);
@@ -90,6 +92,7 @@ final readonly class PermissionsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Adds permissions to an album.', tags: ['permissions'])]
     public function add(array $params, PwgServer &$service): mixed
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -125,6 +128,7 @@ final readonly class PermissionsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Removes permissions from an album.', tags: ['permissions'])]
     public function remove(array $params, PwgServer &$service): mixed
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {

@@ -2543,3 +2543,100 @@ composer dump-autoload --strict-psr                              # clean
 vendor/bin/phpstan analyse --no-progress                         # green
 vendor/bin/phpunit                                               # green
 ```
+
+---
+
+## #32 — Image derivative serving: webserver-static + private access control
+
+**Status:** Not started &nbsp;|&nbsp; **Size:** M
+
+### Background
+
+`Kernel::bootMinimal()` was added in `90dc4afcc` to modernise the `i/`
+fast-path — matching original `i.php` behaviour with proper DI wiring. That
+was Phase 0 (modernize what Piwigo did). This item is the follow-on: improve
+on what Piwigo did.
+
+### Goal
+
+**Phase 1 — Webserver static serving.** Already-generated derivatives are
+served directly by the webserver as static files; PHP is never invoked for
+cache hits. PHP runs only when a derivative needs generating (cache miss).
+
+**Phase 2 — Private image access control.** Derivative URLs for images in
+private albums embed a short-lived HMAC signature. PHP verifies the signature
+on each request with no session or DB lookup; path obscurity is eliminated as
+the sole protection for restricted content.
+
+### Current state
+
+- All derivative requests (`i/`) hit PHP regardless of whether the file is
+  already cached on disk. Session locking is avoided (fast-path skips
+  `CommonBootstrap`) but PHP is still paying config-load and DB-query costs
+  on every thumbnail request.
+- `Config::derivativeUrlStyle()` (values 0/1/2) already supports emitting
+  direct static file paths (`_data/i/…`) vs PHP URLs. Mode 0 (default)
+  auto-detects per derivative. The webserver config to back this up is missing.
+- No access control exists on derivative URLs. Anyone who can guess or observe
+  a derivative path can fetch it regardless of album visibility or image level.
+  `original_url_protection` protects original files via `ActionController` but
+  derivatives are untouched.
+- `Config::secretKey()` is available for HMAC signing. `EphemeralKeyService`
+  provides a signing/verify pattern but is IP-tied and max 1-hour — it would
+  need adaptation or a purpose-built `DerivativeTokenService`.
+
+### Phase 1 steps
+
+1. **Webserver config templates.** Add `docs/webserver/nginx.conf` and
+   `docs/webserver/apache.htaccess` showing a `try_files` (nginx) or
+   `RewriteCond %{REQUEST_FILENAME} -f` (Apache) rule that serves
+   `_data/i/$rest` as a static file and falls through to `index.php?/i/$rest`
+   on miss. The PHP generation path (`bootMinimal()` + `ImageDerivativeController`)
+   remains unchanged.
+2. **Enforce `derivative_url_style = 1`** (direct static path) as the default,
+   or document that Phase 1 only works when `derivativeUrlStyle()` emits static
+   URLs. Audit `DerivativeImage::build()` for the URL construction logic.
+3. **Smoke test** — load a gallery page, delete one cached derivative, reload;
+   confirm the miss regenerates correctly and 304s work on subsequent requests.
+
+### Phase 2 steps
+
+1. **Design the token.** Minimal payload: `image_id:expiry:hmac` where HMAC
+   is over `image_id + expiry + Config::secretKey()`. No IP binding (breaks
+   CDNs and proxies). Expiry in hours (e.g. 24 h) so URLs survive a page
+   staying open.
+2. **`DerivativeTokenService`** in `src/Piwigo/Image/`. `sign(int $imageId): string`
+   and `verify(string $token, int $imageId): bool`. Replaces the
+   `EphemeralKeyService` approach (wrong shape for this use case).
+3. **URL generation.** `UrlGenerator::image()` passes the image ID (already
+   available at call sites via `$picture['id']`). For private images (level > 0
+   or in a private category) append `?_sig=<token>`; public images get no
+   signature.
+4. **Verification in `ImageDerivativeController`.** If the request carries a
+   `_sig` param, verify it. If verification fails → 403. If the image is
+   private and no `_sig` is present → 403. Public images (no sig required)
+   pass through unchanged.
+5. **Cache directory split (optional).** Private derivatives stored under
+   `_data/i_private/` (not web-accessible), served via `X-Accel-Redirect`
+   (nginx) or `X-Sendfile` (Apache) so the webserver sends bytes without PHP
+   reading the file. If this complexity is deferred, private derivatives stay
+   in `_data/i/` but the webserver must not serve that path directly for
+   private images — achieved by making the `try_files` rule conditional on
+   the absence of `_sig`.
+
+### Verification
+
+```bash
+# Phase 1
+# 1. Load gallery index — all thumbnail <img src> point to _data/i/… paths
+# 2. curl -I _data/i/galleries/photo-th.jpg  → served by webserver (no PHP)
+# 3. Delete _data/i/galleries/photo-th.jpg, reload page → regenerated via PHP
+# 4. curl -v with If-Modified-Since → 304
+
+# Phase 2
+vendor/bin/phpunit --filter DerivativeToken  # unit tests for sign/verify
+# 5. Private album image: src URL contains _sig param
+# 6. Tampered _sig → 403
+# 7. Public image: no _sig, still served
+# 8. Private image with valid _sig → 200
+```

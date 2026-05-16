@@ -19,7 +19,10 @@ use Piwigo\Core\ZipExtractor;
 use Piwigo\Event\Lifecycle\ThemeActivateErrors;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
+use Piwigo\Theme\ThemeDependencyException;
+use Piwigo\Theme\ThemeRegistry;
 use Piwigo\Theme\ThemeRepository;
+use Piwigo\Theme\ThemeValidationException;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
@@ -44,6 +47,7 @@ final class Themes
         private readonly HtmlService $htmlService,
         private readonly LangService $langService,
         private readonly PreferencesService $preferencesService,
+        private readonly ThemeRegistry $themeRegistry,
         private readonly ThemeRepository $themeRepository,
         private readonly UrlGenerator $urlGenerator,
         private readonly UserService $userService,
@@ -61,29 +65,6 @@ final class Themes
     }
 
     /**
-     * Returns the maintain class of a theme
-     * or build a new class with the procedural methods
-     */
-    private static function buildMaintainClass(string $theme_id): ThemeMaintain
-    {
-        $file_to_include = Config::themesPath().'/'.$theme_id.'/admin/maintain.inc.php';
-        $classname = $theme_id.'_maintain';
-
-        if (file_exists($file_to_include)) {
-            require_once($file_to_include);
-
-            if (class_exists($classname) && is_a($classname, ThemeMaintain::class, true)) {
-                // Deliberate dynamic new — legacy theme maintain class
-                // name discovered at runtime. Goes away in B17 with the
-                // ThemeMaintain bridge.
-                return new $classname($theme_id); // @phpstan-ignore piwigo.noDynamicNew
-            }
-        }
-
-        throw new \RuntimeException("Theme $theme_id has no ThemeMaintain class");
-    }
-
-    /**
      * Perform requested actions
      * @return list<mixed>
      */
@@ -96,8 +77,6 @@ final class Themes
         if (isset($this->db_themes_by_id[$theme_id])) {
             $crt_db_theme = $this->db_themes_by_id[$theme_id];
         }
-
-        $theme_maintain = self::buildMaintainClass($theme_id);
 
         /** @var list<mixed> $errors */
         $errors = [];
@@ -132,21 +111,19 @@ final class Themes
                     break;
                 }
 
-                $vRaw = $this->fs_themes[$theme_id]['version'] ?? null;
-                $version = is_scalar($vRaw) ? (string) $vRaw : '';
-                $theme_maintain->activate($version, $errors);
+                try {
+                    $this->themeRegistry->activate($theme_id);
+                } catch (ThemeValidationException | ThemeDependencyException $e) {
+                    $errors[] = $e->getMessage();
+                }
+
                 $activateErrorsEvent = new ThemeActivateErrors($errors);
                 $this->dispatcher->dispatch($activateErrorsEvent);
                 $errors = $activateErrorsEvent->errors;
 
                 if (empty($errors)) {
                     $tvRaw = $this->fs_themes[$theme_id]['version'] ?? null;
-                    $themeVersion = is_scalar($tvRaw) ? (string) $tvRaw : '';
-                    $tnRaw = $this->fs_themes[$theme_id]['name'] ?? null;
-                    $themeName = is_scalar($tnRaw) ? (string) $tnRaw : '';
-                    $this->themeRepository->activate($theme_id, $themeVersion, $themeName);
-
-                    $activity_details['version'] = $themeVersion;
+                    $activity_details['version'] = is_scalar($tvRaw) ? (string) $tvRaw : '';
 
                     if ($this->fs_themes[$theme_id]['mobile']) {
                         $this->configService->confUpdateParam('mobile_theme', $theme_id);
@@ -172,9 +149,7 @@ final class Themes
                     $this->setDefaultTheme($new_theme);
                 }
 
-                $theme_maintain->deactivate();
-
-                $this->themeRepository->deactivate($theme_id);
+                $this->themeRegistry->deactivate($theme_id);
 
                 if ($this->fs_themes[$theme_id]['mobile']) {
                     $this->configService->confUpdateParam('mobile_theme', '');
@@ -200,7 +175,11 @@ final class Themes
                     break;
                 }
 
-                $theme_maintain->delete();
+                try {
+                    $this->themeRegistry->uninstall($theme_id);
+                } catch (ThemeValidationException $e) {
+                    $errors[] = $e->getMessage();
+                }
 
                 $this->adminService->deltree(Config::themesPath().$theme_id, Config::themesPath() . 'trash');
                 break;
@@ -516,21 +495,22 @@ final class Themes
                     fclose($fh);
                     $names = ZipExtractor::listNames($archive);
                     if ($names !== []) {
-                        $main_filepath = null;
+                        $manifest_filepath = null;
                         $status = 'ok';
                         foreach ($names as $filename) {
-                            // we search themeconf.inc.php in archive
-                            if (basename($filename) == 'themeconf.inc.php'
-                              and ($main_filepath === null
-                              or strlen($filename) < strlen($main_filepath))) {
-                                $main_filepath = $filename;
+                            // theme.json — track the shallowest path so a stray
+                            // theme.json deeper in the archive doesn't win.
+                            if (basename($filename) == 'theme.json'
+                              and ($manifest_filepath === null
+                              or strlen($filename) < strlen($manifest_filepath))) {
+                                $manifest_filepath = $filename;
                             }
                         }
 
-                        $logger->debug(__FUNCTION__.', $main_filepath = '.(string) $main_filepath);
+                        $logger->debug(__FUNCTION__.', $manifest_filepath = '.(string) $manifest_filepath);
 
-                        if (isset($main_filepath)) {
-                            $root = dirname($main_filepath); // main.inc.php path in archive
+                        if (isset($manifest_filepath)) {
+                            $root = dirname($manifest_filepath); // theme root path in archive
                             if ($action == 'upgrade') {
                                 $theme_id = $dest;
                             } else {
@@ -542,9 +522,19 @@ final class Themes
                             $result = ZipExtractor::extract($archive, $extract_path, $root === '.' ? '' : $root);
                             if ($result !== []) {
                                 foreach ($result as $file) {
-                                    if ($file['stored_filename'] === $main_filepath) {
+                                    if ($file['stored_filename'] === $manifest_filepath) {
                                         $status = $file['status'];
                                         break;
+                                    }
+                                }
+                                if ($status === 'ok') {
+                                    // Refresh ThemeRegistry so the freshly-extracted
+                                    // theme.json is validated immediately. A missing
+                                    // manifest after reload means the ZIP shipped a
+                                    // malformed file — surface that as a status.
+                                    $this->themeRegistry->reload();
+                                    if ($this->themeRegistry->getManifest($theme_id) === null) {
+                                        $status = 'manifest_invalid';
                                     }
                                 }
                                 if (file_exists($extract_path.'/obsolete.list')

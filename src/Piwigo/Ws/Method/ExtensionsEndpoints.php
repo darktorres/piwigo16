@@ -133,7 +133,7 @@ final readonly class ExtensionsEndpoints
                 $extension->performAction('deactivate', $extensionId);
                 $this->redirectResponder->redirect($this->urlGenerator->ws(['method' => 'pwg.extensions.update', 'type' => 'plugins', 'id' => $extensionId, 'revision' => $revision, 'reactivate' => 'true', 'pwg_token' => $this->csrfService->getToken(), 'format' => 'json']));
             }
-            $performResult = $extension->performAction('update', $extensionId, ['revision' => $revision]);
+            $performResult = $extension->performAction('update', $extensionId, $revision);
             $upgradeStatus = is_array($performResult) ? ($performResult[0] ?? 'ok') : 'ok';
             $upgradeStatus = is_string($upgradeStatus) ? $upgradeStatus : 'ok';
             $extensionName = is_string($extension->fs_plugins[$extensionId]['name'] ?? null) ? $extension->fs_plugins[$extensionId]['name'] : '';

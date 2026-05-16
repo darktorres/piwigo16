@@ -771,7 +771,27 @@ grep -rn "DbConnection::get()" src/ tests/                              # → 0
 
 ### 1.4 Plugin / theme system + WS plugin surface
 
-**Status:** 🟢 Active ▸ foundation partial · **Effort:** L · 3 phases
+**Status:** ✅ Done 2026-05-16 ▸ all 19 batches (B0–B18) shipped on the
+`16.x-rewrite` branch in 47 commits. **Effort:** L · 3 phases (delivered).
+
+**Delivered.** The full contract landed: `PluginInterface` +
+`PluginRegistry::bootActive()` + `plugin.json` schema (B7–B9), 153
+typed PSR-14 event DTOs + selective-mutability subscribers + 17 typed
+listeners (B1, B3–B6), `ThemeInterface` + `ThemeRegistry` +
+`TemplateResolver` with five bundled themes migrated to `theme.json`
+(B13–B14), 94 `#[ApiMethod]`-decorated WS endpoints + `SpecBuilder` +
+`/ws/openapi.json` + cebe-validated `SpecValidityTest` + redocly CI
+gate (B15–B16). Plus the legacy deletion pass (B17): ~2300 LOC of
+static `EventDispatcher`, `LoadedPluginRegistry`, `PluginService`,
+`PluginMaintain`, `ThemeMaintain`, `tools/triggers_list.php`,
+frontend BC queues, and procedural plugin/theme stubs in
+`tools/phpstan-bootstrap.php` retired alongside their typed
+replacements. Plus Phase 6 closure in the inventory (B18, see
+[COMPAT-INVENTORY §Z24–§Z28](docs/COMPAT-INVENTORY.md)).
+
+The rest of this section preserves the planning detail for historical
+reference; "Phase X / Phase Y" framing below maps to the closure
+records under `docs/COMPAT-INVENTORY.md` Appendix A.
 
 **Prerequisite landed.** `AppInfo::VERSION` was bumped from `16.3.0` to
 `17.0.0` (commit `26377fe07`) so PEM's branch-16 entries no longer match

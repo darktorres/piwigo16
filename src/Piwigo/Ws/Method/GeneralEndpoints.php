@@ -47,6 +47,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Validation\InputValidator;
+use Piwigo\Ws\OpenApi\ApiMethod;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
@@ -124,6 +125,7 @@ final readonly class GeneralEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Returns a list of derivatives to build.', tags: ['pwg'])]
     public function getMissingDerivatives(array $params, PwgServer &$service): PwgError|array
     {
         if (empty($params['types'])) {
@@ -192,6 +194,7 @@ final readonly class GeneralEndpoints
         return $ret;
     }
 
+    #[ApiMethod(summary: 'Returns the Piwigo version.', tags: ['pwg'])]
     public function getVersion(mixed $params, PwgServer &$service): string
     {
         return AppInfo::VERSION;
@@ -201,6 +204,7 @@ final readonly class GeneralEndpoints
      * @param array<mixed> $params
      * @return array<mixed>
      */
+    #[ApiMethod(summary: 'Returns general informations.', tags: ['pwg'])]
     public function getInfos(array $params, PwgServer &$service): array
     {
         $infos = [];
@@ -238,6 +242,7 @@ final readonly class GeneralEndpoints
      * @param array<mixed> $params
      * @return array<mixed>
      */
+    #[ApiMethod(summary: 'Returns general informations.', tags: ['pwg'])]
     public function getCacheSize(array $params, PwgServer &$service): array
     {
         $infos = [];
@@ -265,6 +270,7 @@ final readonly class GeneralEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Adds elements to the caddie. Returns the number of elements added.', tags: ['caddie'])]
     public function caddieAdd(array $params, PwgServer &$service): int
     {
         $userId = CurrentUser::get()->id;
@@ -281,6 +287,7 @@ final readonly class GeneralEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Deletes all rates for a user.', tags: ['rates'])]
     public function ratesDelete(array $params, PwgServer &$service): mixed
     {
         $userId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
@@ -299,6 +306,7 @@ final readonly class GeneralEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Tries to login the user.', tags: ['session'])]
     public function sessionLogin(array $params, PwgServer &$service): PwgError|true
     {
         if (defined('PWG_API_KEY_REQUEST')) {
@@ -318,6 +326,7 @@ final readonly class GeneralEndpoints
         return new PwgError(999, 'Invalid username/password');
     }
 
+    #[ApiMethod(summary: 'Ends the current session.', tags: ['session'])]
     public function sessionLogout(mixed $params, PwgServer &$service): PwgError|true
     {
         if (defined('PWG_API_KEY_REQUEST')) {
@@ -329,6 +338,7 @@ final readonly class GeneralEndpoints
         return true;
     }
 
+    #[ApiMethod(summary: 'Gets information about the current session. Also provides a token useable with admin methods.', tags: ['session'])]
     public function sessionGetStatus(mixed $params, PwgServer &$service): mixed
     {
         $currentUser = CurrentUser::get();
@@ -363,6 +373,7 @@ final readonly class GeneralEndpoints
      * @param array<mixed> $param
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Returns general informations.', tags: ['activity'])]
     public function getActivityList(array $param, PwgServer &$service): PwgError|array
     {
         foreach (['date_min', 'date_max'] as $datefield) {
@@ -519,6 +530,7 @@ final readonly class GeneralEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Log visit in history', tags: ['history'])]
     public function historyLog(array $params, PwgServer &$service): void
     {
         $currentCtx = SectionContextRegistry::current();
@@ -557,6 +569,7 @@ final readonly class GeneralEndpoints
      * @param array<mixed> $param
      * @return array<mixed>
      */
+    #[ApiMethod(summary: 'Gives an history of who has visited the gallery and the actions done in it.', tags: ['history'])]
     public function historySearch(array $param, PwgServer &$service): array
     {
         $types = array_merge(['none'], SchemaHelper::getEnums(Tables::history(), 'image_type'));

@@ -16,6 +16,7 @@ use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Url\UrlGenerator;
+use Piwigo\Ws\OpenApi\ApiMethod;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -36,6 +37,7 @@ final readonly class CommentsEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Get comments', tags: ['comments'])]
     public function getList(array $params, PwgServer &$service): PwgError|array
     {
         if (!Config::activateComments()) {
@@ -118,6 +120,7 @@ final readonly class CommentsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Delete comments', tags: ['comments'])]
     public function delete(array $params, PwgServer &$service): PwgError|string
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -131,6 +134,7 @@ final readonly class CommentsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Validate comments', tags: ['comments'])]
     public function validate(array $params, PwgServer &$service): PwgError|string
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {

@@ -15,7 +15,7 @@
 | 1.3 | Kill ServiceLocator + DI      | ✅ **Done**            | L         | constructor injection everywhere; `ServiceLocator.php` deleted; `DbConnection::get()` callers eliminated                          |
 | 1.4 | Plugin / theme + WS           | ✅ **Done**            | L         | shipped 2026-05-16 in 19 batches (B0–B18) on `16.x-rewrite`: `PluginInterface` + `PluginRegistry`, 153 typed PSR-14 events, `ThemeInterface` + `ThemeRegistry`, 94 `#[ApiMethod]`-decorated WS endpoints + cebe/redocly OpenAPI gates, legacy runtime deleted |
 | 1.5 | Security hardening            | 🟢 **Active** ▸ 1 / 6  | M         | 4 waves: session cookie → lockout + rate limit → CSP/headers → `SECURITY.md`                                                      |
-| 1.6 | Type correctness              | 🟡 **Not started**     | M         | mixed-types · globals · schema metadata                                                                                           |
+| 1.6 | Type correctness              | 🟢 **Active** ▸ 4 / 13 | M         | 1.6b globals cleanup ✅ closed; 1.6a mixed-types 2 / 6 done (4 left); 1.6c schema metadata 0 / 5 done (1 moot)                     |
 | 1.7 | Typed boundaries              | 🟡 **Not started**     | L         | HTTP request DTOs (Phase 1) → repository entity layer (Phase 2)                                                                   |
 | 1.8 | Test infrastructure           | 🟡 **Not started**     | M + L + S | Pest → coverage → Infection (chained)                                                                                             |
 | 1.9 | Deferred / on-demand          | 🟠 **On-demand**       | —         | Monolog · S3/SFTP · supervisor · Renovate · ScriptLoader dep graph                                                                |
@@ -2226,17 +2226,26 @@ rm themes/_base/template/_probe.latte
 
 ### 1.6 Type correctness — three tactical streams
 
-**Status:** 🟡 Not started · **Effort:** M · 3 streams (6 + 2 + 5 items)
+**Status:** 🟢 Active ▸ 4 of 13 sub-tasks done · 1 stream closed · **Effort:** M
+
+> **Audit refresh (2026-05-16).** Re-verified every item against the
+> current `16.x-rewrite` tree. Stream **1.6b** is fully closed (all
+> `$GLOBALS` cleanup either shipped or proved unneeded). Stream **1.6a**
+> has 2 of 6 items closed (one shipped, one made moot by §1.4's
+> deletion of the static EventDispatcher). Stream **1.6c** has 1 item
+> moot (the accessor generator was deleted on 2026-05-13 as a one-shot
+> migration script) and 4 still open.
 
 After PHPStan level 10 landed, three threads tighten the remaining
 mixed-type surface that doesn't require new architectural patterns:
 
-- **5a** — six high-ROI mixed-type fixes from the codebase audit.
-- **5b** — `$GLOBALS` cleanup that's been deferred since the
-  modernization phases that retired the procedural layer. Gated by direct
-  `$GLOBALS[...]` reads in `src/` being eliminated first.
-- **5c** — five `Config::SCHEMA` enhancements left as deferred design
-  surface from the schema work.
+- **1.6a** — six high-ROI mixed-type fixes from the codebase audit.
+  **4 still open** (2 closed).
+- **1.6b** — `$GLOBALS` cleanup that was deferred since the
+  modernization phases that retired the procedural layer.
+  **Closed** — only the intentional `Lang::attachGlobals` read remains.
+- **1.6c** — five `Config::SCHEMA` enhancements left as deferred design
+  surface from the schema work. **4 still open** (1 moot).
 
 Architectural boundary work — typed entities for DB rows and typed DTOs
 for HTTP input — was originally drafted under 1.6a (items 8–9) but lives
@@ -2245,19 +2254,19 @@ as one section, work the streams in parallel where possible.
 
 #### 1.6a Mixed-type fixes
 
-**Status:** 🟡 Not started · 6 items
+**Status:** 🟢 Active ▸ 2 of 6 done · 4 items left
 
 Six fixes ordered by effort. None require behavior changes — all are
 type narrowings supported by existing runtime invariants.
 
-| Item                                                                                               | Files | Effort           |
-| -------------------------------------------------------------------------------------------------- | ----: | ---------------- |
-| `ImageInterface::compose(mixed $overlay)` → `ImageInterface $overlay`                              |     4 | trivial          |
-| `CookieService::getCookieVar()` → `?string` (cookies are always strings)                           |     1 | low              |
-| `CategoryAdminService::deleteSite(mixed $id)` → `int\|string`                                      |     1 | trivial          |
-| `Config::raw()` typed return — `string\|int\|bool\|float\|array<mixed>\|null`                      |     1 | low (annotation) |
-| `EventDispatcher::dispatch()` → `@template T` generic — eliminates many downstream `mixed`s        |     1 | medium           |
-| `RequestCache` / `PersistentCache` → `@template T` generic on `remember()` / templated value types |     2 | medium           |
+| Item                                                                                                  | Files | Effort           | State                            |
+| ----------------------------------------------------------------------------------------------------- | ----: | ---------------- | -------------------------------- |
+| `ImageInterface::compose(mixed $overlay)` → `self $overlay`                                           |     4 | trivial          | 🟡 open                          |
+| `CookieService::getCookieVar()` → `?string` (cookies are always strings)                              |     1 | low              | 🟡 open (1 file + 2 callers)     |
+| `CategoryAdminService::deleteSite(mixed $id)` → typed                                                 |     1 | trivial          | ✅ shipped — already `int $id`   |
+| `Config::raw()` typed return — `string\|int\|bool\|float\|array<mixed>\|null`                         |     1 | low (annotation) | 🟡 open (1 file + 24 callers)    |
+| `EventDispatcher::dispatch()` → `@template T` generic                                                 |     — | —                | ✅ moot — static class deleted in §1.4 B17d, replaced by typed PSR-14 DTOs |
+| `RequestCache::remember()` / `::get()` → `@template T` (note: `PersistentCache` no longer exists)     |     1 | medium           | 🟡 open (1 file + 13 callers)    |
 
 ##### Concrete examples
 
@@ -2270,144 +2279,99 @@ interface ImageInterface
     public function compose(mixed $overlay, int $x, int $y, int $opacity): bool;
 }
 
-// after — every concrete implementation already passes ImageInterface
+// after — every concrete implementation (ImageGd, ImageImagick, ImageExtImagick)
+// already passes ImageInterface; `self` is the right narrowing.
 interface ImageInterface
 {
     public function compose(self $overlay, int $x, int $y, int $opacity): bool;
 }
 ```
 
-###### CategoryAdminService::deleteSite
+Current state: `ImageInterface.php:26`, `ImageGd.php:115`,
+`ImageImagick.php:83`, `ImageExtImagick.php:155` all declare
+`mixed $overlay`. The only construction site that calls `compose()`
+passes a `PwgImage` whose `image` property is `ImageInterface|null`, so
+the narrowing is supported by the runtime invariant.
 
-```php
-// before
-public function deleteSite(mixed $id): void
+###### Notes on the moot items
 
-// after
-public function deleteSite(int|string $id): void
-```
+- **`CategoryAdminService::deleteSite`** is already
+  `public function deleteSite(int $id): void` at line 49. The original
+  audit caught a `mixed` signature that's since been tightened. The
+  related `array_map(fn (mixed $v) => …)` lambdas at DB call boundaries
+  the audit also mentioned are unaffected by this fix — they get
+  removed naturally as queries move into typed repository methods
+  under §1.7 Phase 2.
+- **`EventDispatcher::dispatch` generic** was scoped against the
+  static `Piwigo\Plugins\EventDispatcher` class. That class was
+  deleted in §1.4 batch B17d and replaced by PSR-14 dispatch through
+  Symfony's `EventDispatcherInterface` with 153 typed event DTOs. The
+  dispatcher already returns the same instance the caller passed
+  (PSR-14 contract), so the `@template T` win the original item
+  promised is now structural — no annotation needed.
 
-Callers already narrow internally with `(int)` casts; the union-type
-annotation just documents what's actually accepted. The other
-`mixed $id`-shaped sites the original audit catalogued live inside
-`array_map(fn (mixed $v) => …)` lambdas at DB call boundaries — those
-get removed naturally as queries move into typed repository methods
-under §1.7 Phase 2.
-
-###### EventDispatcher generic
-
-```php
-// before — every caller widens to mixed
-$result = $dispatcher->dispatch('foo_event', $someArray);
-// $result is array<mixed>
-
-// after — @template T preserves the input type, variadic split for templating
-/** @template T */
-class EventDispatcher {
-    /**
-     * @param T $data
-     * @return T
-     */
-    public static function dispatch(string $event, mixed $data = null, mixed ...$extraArgs): mixed { /* … */ }
-}
-$result = EventDispatcher::dispatch('foo_event', ['k' => 1]);
-// $result is array{k: int}
-```
-
-The variadic split is BC: the existing body already extracted
-`$args[0] ?? null` as `$data` and passed the rest to handlers via
-`call_user_func_array`. The new body reassembles `[$data, ...$extraArgs]`
-before dispatch so handlers see identical positional arguments.
-
-##### Sequencing
+##### Sequencing (remaining 4)
 
 Land in this order, smallest blast radius first:
 
-1. `CategoryAdminService::deleteSite` (1 line).
-2. `ImageInterface::compose` (4 files, no caller updates).
-3. `CookieService::getCookieVar` (1 file + 2 callers).
-4. `Config::raw` — first tighten `Config::src()` phpdoc to the typed
-   union, then annotate `raw()` (1 file + 23 callers verified by PHPStan).
-5. `RequestCache` / `PersistentCache` templates (2 files + 13 callers).
-6. `EventDispatcher::dispatch` (1 file + 217 callers verified by PHPStan).
+1. `ImageInterface::compose` (4 files, no caller updates).
+2. `CookieService::getCookieVar` (1 file + 2 callers — `RateService`,
+   `MaintenanceController`).
+3. `Config::raw` — first tighten `Config::src()` phpdoc to the typed
+   union, then annotate `raw()` (1 file + 24 callers verified by PHPStan).
+4. `RequestCache::remember` / `::get` templates (1 file + 13 callers).
+   `PersistentCache` doesn't exist anymore — `RequestCache` is the
+   only request-scoped cache shipping today.
 
 #### 1.6b Globals cleanup
 
-**Status:** 🟡 Not started · 2 items · gated by `$GLOBALS[...]` reads in `src/` being eliminated first
+**Status:** ✅ Closed 2026-05-16 ▸ both items shipped or proved unneeded
 
-Both items below are gated by the same precondition — direct
-`$GLOBALS[...]` reads in `src/` being eliminated first — so tackle them
-together as one closing pass.
+**Audit findings on the current tree:**
 
-**Relationship to the entity layer (§1.7 Phase 2).** The `$user` global is
-itself a raw DB row (`array<string, mixed>`). Once `UserRepository` returns
-a typed `UserEntity`, `CurrentUser::get()` can expose typed properties
-(`->id`, `->username`, `->status`) instead of routing through
-`rawAttributes`. The globals cleanup and the entity layer are therefore
-the same work seen from two angles: entities eliminate the need for
-`$GLOBALS['user']`; retiring `$GLOBALS['user']` motivates finishing the
-`UserEntity`.
+- **`phpstan-bootstrap.php` reference bridges** — gone. The file's only
+  contents today are `define()`s for runtime constants (`PHPWG_DOMAIN`,
+  `PHPWG_URL`, `PEM_URL`, `PREFIX_TABLE`, `PHOTOS_ADD_BASE_URL`). No
+  `$page`, `$user`, `$lang`, `$template` bridges remain.
+- **`PageHeaderRenderer` / `PageTailRenderer` / `NoPhotoYetRenderer`
+  globals** — all retired by the Wave A reference-bridge cleanup +
+  Phase 3 channel migration (2026-05-15). `grep -n '\$GLOBALS'`
+  against those three files now returns zero hits.
+- **Remaining `$GLOBALS[…]` reads in `src/`** — exactly one, at
+  `Core/Lang.php:43,49`:
 
-##### Drop `$GLOBALS` reference bridges in `phpstan-bootstrap.php`
+  ```php
+  $raw = $GLOBALS['lang'] ?? [];
+  // […]
+  unset($GLOBALS['lang']);
+  ```
 
-The bridges for `$page`, `$user`, `$lang`, `$template`, etc. exist only
-because `src/` still does direct `$GLOBALS[...]` reads. The bridges are
-type aliases, not runtime objects:
+  `Lang::attachGlobals()` consumes the procedural `.lang.php` files
+  (which still use `$lang = [...]` as their on-disk format) into typed
+  static properties and immediately clears the global. This read is
+  intentional and stays until the translation pipeline itself is
+  redesigned (out of scope for §1.6).
 
-```php
-// phpstan-bootstrap.php (current)
-/** @var array<string, mixed> $page */
-$page = &$GLOBALS['page'];
-/** @var array<string, mixed> $user */
-$user = &$GLOBALS['user'];
-```
-
-Once direct reads are gone, drop the bridges. PHPStan re-analyses with no
-errors because the typed services (`PageState::current()`,
-`CurrentUser::get()`) are the new entry points.
-
-##### Retire `$GLOBALS` reads in renderers
-
-Three renderers still read globals — residuals from earlier modernization
-passes that didn't fully retire the value-object design:
-
-- `PageHeaderRenderer.php:25` reads `$GLOBALS['page']`; line 59 writes
-  back.
-- `PageTailRenderer.php:56,62` reads `$GLOBALS['debug']` and
-  `$GLOBALS['t2']`.
-- `NoPhotoYetRenderer.php:26` reads `$GLOBALS['user']`.
-
-Each should accept its dependencies via constructor or a per-method
-typed context object:
-
-```php
-// after
-final class PageHeaderRenderer
-{
-    public function __construct(private PageState $page) {}
-
-    public function render(HeaderContext $ctx): string
-    {
-        $title = $ctx->title;
-        $this->page->addMeta('description', $ctx->description);
-        // …
-    }
-}
-```
-
-These are cheap to retire if the value-object design is later adopted in
-full, but they're harmless given the reference-bridge model in
-`Kernel::boot()`. Low priority — schedule when the bridge cleanup happens
-anyway.
+**Relationship to §1.7 Phase 2.** The original sub-section noted that
+the `$user` global was a raw DB row, and that closure would arrive
+together with the typed `UserEntity`. That motivation still applies to
+`UserEntity`'s design — but it no longer gates the globals cleanup,
+which is now complete on its own.
 
 #### 1.6c Config schema metadata
 
-**Status:** 🟡 Not started · 5 items
+**Status:** 🟢 Active ▸ 0 of 5 done · 1 moot · 4 items left
 
-Five `Config::SCHEMA` enhancements that are still deferred design surface.
-They're independent of each other; pick whichever delivers value first.
+Four `Config::SCHEMA` enhancements still deferred design surface. The
+fifth has been overtaken by events (see below). They're independent of
+each other; pick whichever delivers value first.
 
 ##### `'required' => true` field + validation
+
+**Status:** 🟡 open. Confirmed: no SCHEMA entry today carries
+`'required'`; `ConfigLoader::applyDefaults()` (line 107) walks SCHEMA
+to seed defaults but never validates required keys; no
+`MissingRequiredConfigException` exists.
 
 ```php
 // Config::SCHEMA additions
@@ -2415,8 +2379,7 @@ They're independent of each other; pick whichever delivers value first.
 'secret_key' => ['type' => 'string', 'default' => '', 'required' => true],
 ```
 
-`ConfigLoader::applyDefaults()` walks SCHEMA after env overrides and
-throws if any required key is unset:
+Validation after env overrides:
 
 ```php
 foreach (Config::SCHEMA as $key => $meta) {
@@ -2427,6 +2390,9 @@ foreach (Config::SCHEMA as $key => $meta) {
 ```
 
 ##### `'description'` field → populated reference doc
+
+**Status:** 🟡 open. Confirmed: `grep "'description'"` against
+`Config.php` returns 0 hits.
 
 ```php
 'gallery_title' => [
@@ -2441,6 +2407,9 @@ The generator that emits the config-reference doc reads
 description column is empty for all 287 keys today.
 
 ##### `'sensitive'` field + `Config::dumpForLog()`
+
+**Status:** 🟡 open. Confirmed: no `'sensitive'` entries in SCHEMA,
+no `Config::dumpForLog()` method exists.
 
 ```php
 'db_password' => [
@@ -2466,10 +2435,17 @@ public static function dumpForLog(): array
 
 Used in error-handler logging instead of `var_export($GLOBALS['conf'])`.
 
-##### Namespace-prefix support in `ConfigStorage` for plugin keys
+##### Namespace-prefix support — caller pattern over `ConfigStorage` feature
 
-Today plugin keys collide in the global `config` table. After the change,
-a per-plugin `Config` class can declare its prefix:
+**Status:** 🟡 open (reframed).
+
+`ConfigStorage` (the only persistence facade in tree today) is
+deliberately prefix-agnostic — its docstring states "each calling
+Config class is responsible for its own typed accessors and
+validation. ConfigStorage is the storage backend; Config classes are
+the typed read/write API." The plan therefore shifts from "add prefix
+support to ConfigStorage" to "establish the per-plugin Config-class
+pattern":
 
 ```php
 namespace Piwigo\Plugin\OpenStreetMap;
@@ -2481,26 +2457,34 @@ final class Config
         'tile_provider' => ['type' => 'string', 'default' => 'osm'],
         'default_zoom' => ['type' => 'int', 'default' => 13],
     ];
+
+    public static function tileProvider(): string
+    {
+        // accessor body — calls ConfigStorage with self::PREFIX . 'tile_provider'
+    }
 }
 ```
 
-`ConfigStorage` stores the row as `openstreetmap.tile_provider` so
-plugins can use short keys without colliding.
+The plugin's Config class prepends `self::PREFIX` before every
+`ConfigStorage::persist` / `loadAll(…where param LIKE 'openstreetmap.%')`
+call. No `ConfigStorage` change required — what's still missing is the
+reference template (no in-tree plugin yet ships a Config class to
+prove out the pattern).
 
-##### `--target=<path>` flag on `tools/build-config-accessors.php`
+##### ~~`--target=<path>` flag on `tools/build-config-accessors.php`~~
 
-The generator currently regenerates `src/Piwigo/Config/Config.php` only.
-Add a `--target=<path>` flag so future per-plugin `Config` classes (or
-any other generated accessor target) regenerate from the same tool:
+**Status:** ✅ Moot. The accessor generator was deleted on 2026-05-13
+in commit `7341f5497` ("chore(tools): delete one-shot migration
+scripts"). `Config.php`'s SCHEMA and accessors are now hand-edited;
+`tests/Unit/Config/SchemaIntegrityTest.php` catches accessor/SCHEMA
+drift at CI time, which fulfills the original "no-diff" guarantee
+without a generator.
 
-```bash
-php tools/build-config-accessors.php   # default — Piwigo Config
-php tools/build-config-accessors.php --target=plugins/<id>/src/Config.php
-php tools/build-config-accessors.php --check   # CI guard — no diff
-```
-
-Running with `--check` in CI catches accessor/SCHEMA drift across every
-target the build script knows about.
+**Doc-rot follow-up:** `src/Piwigo/Config/Config.php:31-43` still
+instructs maintainers to run `php tools/build-config-accessors.php`
+after adding a key. That docstring should be updated to reflect the
+hand-edited reality (the `SchemaIntegrityTest` line is still correct
+and load-bearing).
 
 ---
 

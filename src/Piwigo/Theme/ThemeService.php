@@ -44,7 +44,9 @@ final readonly class ThemeService
 
     public function isInstalled(string $themeId): bool
     {
-        return file_exists(Config::themesDir() . '/' . $themeId . '/themeconf.inc.php');
+        // B14e: presence of theme.json is the installed-on-disk check;
+        // themeconf.inc.php is gone from every bundled theme.
+        return file_exists(Config::themesDir() . '/' . $themeId . '/theme.json');
     }
 
     public function getThemeconf(string $key): mixed

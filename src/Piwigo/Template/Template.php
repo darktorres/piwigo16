@@ -493,7 +493,8 @@ final class Template
     }
 
     /**
-     * Loads the configuration file from a theme directory and returns it.
+     * Load the theme manifest from a theme directory and project it
+     * into the legacy themeconf array shape consumers expect.
      *
      * @return array<mixed>
      */
@@ -503,20 +504,9 @@ final class Template
         $dir = $realpathDir !== false ? $realpathDir : $dir;
         if (!isset($this->themeconfs[$dir])) {
             $jsonPath = $dir . '/theme.json';
-            $legacyPath = $dir . '/themeconf.inc.php';
-            if (is_file($jsonPath)) {
-                $this->themeconfs[$dir] = $this->themeconfFromJson($jsonPath);
-            } elseif (is_file($legacyPath)) {
-                $themeconf = [];
-                // Legacy themeconf.inc.php fallback during the B14
-                // bundled-themes migration. Removed once every bundled
-                // theme has a theme.json (B14e).
-                /** @psalm-suppress UnresolvableInclude */
-                require($legacyPath);
-                $this->themeconfs[$dir] = $themeconf;
-            } else {
-                $this->themeconfs[$dir] = [];
-            }
+            $this->themeconfs[$dir] = is_file($jsonPath)
+                ? $this->themeconfFromJson($jsonPath)
+                : [];
         }
         return $this->themeconfs[$dir];
     }

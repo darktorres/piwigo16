@@ -62,17 +62,12 @@ final class TemplateLoadThemeconfTest extends TestCase
         self::assertArrayNotHasKey('id', $themeconf, 'id must come from setTheme(), not loadThemeconf()');
     }
 
-    public function testLegacyThemeconfStillLoadsWhenJsonAbsent(): void
+    public function testParentOnlyManifestYieldsParentKey(): void
     {
-        // valid_theme fixture from B13 has neither theme.json (well, it
-        // does — let's use a path with only themeconf.inc.php). Use
-        // child_theme which has theme.json but no themeconf.inc.php to
-        // verify the JSON branch fires; use the bundled fixture's
-        // *parent dir* without theme.json to verify empty fallback.
-        $emptyDir = PHPWG_ROOT_PATH . 'tests/fixtures/themes/orphan_parent';
-        $themeconf = $this->template->loadThemeconf($emptyDir);
-        // orphan_parent has theme.json (parent: does_not_exist) but no
-        // themeconf.inc.php — JSON branch should fire and emit `parent`.
+        // orphan_parent fixture has theme.json with parent: does_not_exist
+        // — verifies the parent field comes through the JSON projection
+        // even when the rest of the manifest is minimal.
+        $themeconf = $this->template->loadThemeconf(PHPWG_ROOT_PATH . 'tests/fixtures/themes/orphan_parent');
         self::assertSame('does_not_exist', $themeconf['parent'] ?? null);
     }
 

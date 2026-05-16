@@ -11,7 +11,6 @@ use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
@@ -280,8 +279,22 @@ final class Themes
     }
 
     /**
-    *  Get themes defined in the theme directory
-    */
+     * Scan `themes/` for installable themes.
+     *
+     * Reads each directory's `theme.json` manifest (the format ThemeRegistry
+     * validates against `docs/schemas/theme.schema.json`). The legacy
+     * regex-parsing of `themeconf.inc.php` headers was retired in B14e —
+     * all bundled themes ship `theme.json`, and v17.0 PEM-style themes
+     * also use the new manifest format.
+     *
+     * Per-theme fields populated for the admin listing:
+     *  - `id`, `name`, `version`, `parent`, `use_standard_pages`
+     *    sourced from `theme.json`.
+     *  - `description` overridden by `description.txt` translation file
+     *    when present (lets translators ship a localized blurb without
+     *    editing the manifest).
+     *  - `screenshot` / `admin_uri` derived from filesystem checks.
+     */
     public function getFsThemes(): void
     {
         $dir = opendir(Config::themesPath());
@@ -290,86 +303,69 @@ final class Themes
         }
 
         while ($file = readdir($dir)) {
-            if ($file != '.' and $file != '..') {
-                $path = Config::themesPath().$file;
-                if (is_dir($path)
-                    and preg_match('/^[a-zA-Z0-9-_]+$/', $file)
-                    and file_exists($path.'/themeconf.inc.php')
-                ) {
-                    $theme = [
-                      'id' => $file,
-                      'name' => $file,
-                      'version' => '0',
-                      'uri' => '',
-                      'description' => '',
-                      'author' => '',
-                      'mobile' => false,
-                      ];
-                    $theme_data_lines = file($path.'/themeconf.inc.php');
-                    $theme_data = implode('', $theme_data_lines !== false ? $theme_data_lines : []);
-                    if (preg_match('|Theme Name:\\s*(.+)|', $theme_data, $val)) {
-                        $theme['name'] = trim($val[1]);
-                    }
-                    if (preg_match('|Version:\\s*([\\w.-]+)|', $theme_data, $val)) {
-                        $theme['version'] = trim($val[1]);
-                    }
-                    if (preg_match('|Theme URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
-                        $theme['uri'] = trim($val[1]);
-                    }
-                    if (is_string($desc = $this->langService->loadLanguage('description.txt', $path.'/', ['return' => true]))) {
-                        $theme['description'] = trim($desc);
-                    } elseif (preg_match('|Description:\\s*(.+)|', $theme_data, $val)) {
-                        $theme['description'] = trim($val[1]);
-                    }
-                    if (preg_match('|Author:\\s*(.+)|', $theme_data, $val)) {
-                        $theme['author'] = trim($val[1]);
-                    }
-                    if (preg_match('|Author URI:\\s*(https?:\\/\\/.+)|', $theme_data, $val)) {
-                        $theme['author uri'] = trim($val[1]);
-                    }
-                    if ($theme['uri'] !== '' and str_contains($theme['uri'], 'extension_view.php?eid=')) {
-                        list(, $extension) = explode('extension_view.php?eid=', $theme['uri']);
-                        if (is_numeric($extension)) {
-                            $theme['extension'] = $extension;
-                        }
-                    }
-                    if (preg_match('/["\']parent["\'][^"\']+["\']([^"\']+)["\']/', $theme_data, $val)) {
-                        $theme['parent'] = $val[1];
-                    }
-                    if (preg_match('/["\']activable["\'].*?(true|false)/i', $theme_data, $val)) {
-                        $theme['activable'] = BoolUtil::fromMixed($val[1]);
-                    }
-                    if (preg_match('/["\']mobile["\'].*?(true|false)/i', $theme_data, $val)) {
-                        $theme['mobile'] = BoolUtil::fromMixed($val[1]);
-                    }
-                    if (preg_match('/["\']use_standard_pages["\'].*?(true|false)/i', $theme_data, $val)) {
-                        $theme['use_standard_pages'] = BoolUtil::fromMixed($val[1]);
-                    }
-
-                    // screenshot
-                    $screenshot_path = $path.'/screenshot.png';
-                    if (file_exists($screenshot_path)) {
-                        $theme['screenshot'] = $screenshot_path;
-                    } else {
-                        $admin_theme = $this->preferencesService->userprefsGetParam('admin_theme', 'dark');
-                        $admin_theme = is_scalar($admin_theme) ? (string) $admin_theme : 'dark';
-                        $theme['screenshot'] =
-                          PHPWG_ROOT_PATH.'themes/admin/'
-                          .$admin_theme
-                          .'/images/missing_screenshot.png'
-                        ;
-                    }
-
-                    $admin_file = $path.'/admin/admin.inc.php';
-                    if (file_exists($admin_file)) {
-                        $theme['admin_uri'] = $this->urlGenerator->admin('theme') . '&theme='.$file;
-                    }
-
-                    // IMPORTANT SECURITY !
-                    $theme = array_map(fn (bool|string $v): string|bool => is_string($v) ? htmlspecialchars($v) : $v, $theme);
-                    $this->fs_themes[$file] = $theme;
-                }
+            if ($file === '.' || $file === '..') {
+                continue;
             }
+            $path = Config::themesPath() . $file;
+            if (!is_dir($path) || preg_match('/^[a-zA-Z0-9-_]+$/', $file) === 0) {
+                continue;
+            }
+            $manifestPath = $path . '/theme.json';
+            if (!is_file($manifestPath)) {
+                continue;
+            }
+            $raw = file_get_contents($manifestPath);
+            if ($raw === false) {
+                continue;
+            }
+            try {
+                $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+            } catch (\JsonException) {
+                continue;
+            }
+            if (!is_array($decoded)) {
+                continue;
+            }
+
+            $theme = [
+                'id'          => $file,
+                'name'        => is_string($decoded['name'] ?? null) ? $decoded['name'] : $file,
+                'version'     => is_string($decoded['version'] ?? null) ? $decoded['version'] : '0',
+                'uri'         => is_string($decoded['homepage'] ?? null) ? $decoded['homepage'] : '',
+                'description' => '',
+                'author'      => is_string($decoded['author'] ?? null) ? $decoded['author'] : '',
+                'mobile'      => false,
+            ];
+            if (is_string($decoded['parent'] ?? null)) {
+                $theme['parent'] = $decoded['parent'];
+            }
+            if (isset($decoded['useStandardPages']) && is_bool($decoded['useStandardPages'])) {
+                $theme['use_standard_pages'] = $decoded['useStandardPages'];
+            }
+
+            // description.txt (localized blurb) wins over any prose in the manifest.
+            if (is_string($desc = $this->langService->loadLanguage('description.txt', $path . '/', ['return' => true]))) {
+                $theme['description'] = trim($desc);
+            }
+
+            // screenshot fallback when the theme didn't ship one.
+            $screenshot_path = $path . '/screenshot.png';
+            if (file_exists($screenshot_path)) {
+                $theme['screenshot'] = $screenshot_path;
+            } else {
+                $admin_theme = $this->preferencesService->userprefsGetParam('admin_theme', 'dark');
+                $admin_theme = is_scalar($admin_theme) ? (string) $admin_theme : 'dark';
+                $theme['screenshot'] = PHPWG_ROOT_PATH . 'themes/admin/' . $admin_theme . '/images/missing_screenshot.png';
+            }
+
+            $admin_file = $path . '/admin/admin.inc.php';
+            if (file_exists($admin_file)) {
+                $theme['admin_uri'] = $this->urlGenerator->admin('theme') . '&theme=' . $file;
+            }
+
+            // IMPORTANT SECURITY ! escape user-supplied strings before the template renders them.
+            $theme = array_map(fn (bool|string $v): string|bool => is_string($v) ? htmlspecialchars($v) : $v, $theme);
+            $this->fs_themes[$file] = $theme;
         }
         closedir($dir);
     }

@@ -1,0 +1,24 @@
+{
+  "src/admin/index.ts": {
+    "file": "assets/admin-abc123.js",
+    "css": [
+      "assets/admin-style-def456.css"
+    ],
+    "isEntry": true,
+    "imports": []
+  },
+  "src/public/index.ts": {
+    "file": "assets/public-789xyz.js",
+    "isEntry": true,
+    "imports": []
+  },
+  "src/extras/index.ts": {
+    "file": "assets/extras-ghi789.js",
+    "css": [
+      "assets/extras-jkl012.css",
+      "assets/extras-mno345.css"
+    ],
+    "isEntry": true,
+    "imports": []
+  }
+}

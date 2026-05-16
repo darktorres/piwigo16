@@ -32,6 +32,10 @@ node_modules/
 playwright-report/
 test-results/
 dist/
+# Test fixtures intentionally ship a pre-built dist/ tree as input to
+# AssetServiceTest — exempt them from the dist/ rule above.
+!tests/fixtures/plugins/*/dist/
+!tests/fixtures/plugins/*/dist/**
 
 # Composer dependencies
 /vendor/

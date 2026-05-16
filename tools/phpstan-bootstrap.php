@@ -21,38 +21,3 @@ if (!defined('PHPWG_DOMAIN')) {
 if (!defined('PHOTOS_ADD_BASE_URL')) {
     define('PHOTOS_ADD_BASE_URL', 'index.php?/admin&page=photos_add');
 }
-
-// Stubs for procedural plugin/theme callbacks (defined at runtime by plugin files).
-// These allow PHPStan to know the functions exist without is_callable() checks.
-if (!function_exists('plugin_install')) {
-    function plugin_install(string $plugin_id, string $version, array &$errors = []): mixed
-    {
-        return null;
-    }
-    function plugin_activate(string $plugin_id, string $version, array &$errors = []): mixed
-    {
-        return null;
-    }
-    function plugin_deactivate(string $plugin_id): mixed
-    {
-        return null;
-    }
-    function plugin_uninstall(string $plugin_id): mixed
-    {
-        return null;
-    }
-}
-if (!function_exists('theme_activate')) {
-    function theme_activate(string $theme_id, string $version, array &$errors = []): mixed
-    {
-        return null;
-    }
-    function theme_deactivate(string $theme_id): mixed
-    {
-        return null;
-    }
-    function theme_delete(string $theme_id): mixed
-    {
-        return null;
-    }
-}

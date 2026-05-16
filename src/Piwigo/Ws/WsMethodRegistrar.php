@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Piwigo\Config\Config;
+use Piwigo\Event\Ws\WsMethodsRegistering;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
@@ -18,8 +19,21 @@ use Piwigo\Ws\Method\ImagesEndpoints;
 use Piwigo\Ws\Method\PermissionsEndpoints;
 use Piwigo\Ws\Method\TagsEndpoints;
 use Piwigo\Ws\Method\UsersEndpoints;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-final readonly class WsMethodRegistrar
+/**
+ * Core WS-method roster.
+ *
+ * Implements [[EventSubscriberInterface]] so [[PwgServer::populateMethods]]
+ * only needs to dispatch [[WsMethodsRegistering]] — this class subscribes
+ * with priority 100 so core registrations precede any plugin subscriber
+ * (a plugin priority above 100 still wins, by design).
+ *
+ * The 1413-LOC body still lives inline; B15/B17 will continue the
+ * decomposition by sharding the registration across the per-domain
+ * endpoint classes via `#[ApiMethod]` decoration.
+ */
+final readonly class WsMethodRegistrar implements EventSubscriberInterface
 {
     public function __construct(
         private CategoriesEndpoints $categoriesEndpoints,
@@ -35,8 +49,15 @@ final readonly class WsMethodRegistrar
     ) {
     }
 
-    public function register(PwgServer $server): void
+    #[\Override]
+    public static function getSubscribedEvents(): array
     {
+        return [WsMethodsRegistering::class => ['onMethodsRegistering', 100]];
+    }
+
+    public function onMethodsRegistering(WsMethodsRegistering $event): void
+    {
+        $server = $event->server;
         $user = CurrentUser::get()->rawAttributes;
         $filterParams = [
             ParamDefinition::optional(name: 'f_min_rate', type: WsType::Float->value),

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Listener;
 
+use Piwigo\Ws\WsMethodRegistrar;
+
 /**
  * Roster of in-tree event subscribers wired into the typed dispatcher at
  * container build. Plugins (B7+) register their own subscribers via
@@ -32,5 +34,6 @@ final class CoreSubscribers
         TabsheetBeforeSelectSubscriber::class,
         NbmRenderGlobalCustomizeMailContentSubscriber::class,
         AdminPagesRegisteringSubscriber::class,
+        WsMethodRegistrar::class,
     ];
 }

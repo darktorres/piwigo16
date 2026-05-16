@@ -305,11 +305,11 @@ CREATE TABLE `piwigo_plugins` (
 
 DROP TABLE IF EXISTS `piwigo_plugin_migrations`;
 CREATE TABLE `piwigo_plugin_migrations` (
-  `plugin_id` varchar(64) NOT NULL,
-  `version` varchar(191) NOT NULL,
+  `plugin_id` varchar(64) CHARACTER SET ascii NOT NULL,
+  `version` varchar(191) CHARACTER SET ascii NOT NULL,
   `executed_at` datetime NOT NULL,
   PRIMARY KEY (`plugin_id`, `version`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
+) ENGINE=MyISAM;
 
 --
 -- Table structure for table `piwigo_rate`

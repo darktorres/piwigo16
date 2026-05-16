@@ -90,6 +90,17 @@ final class PluginRegistry
     }
 
     /**
+     * Discard the cached scan and rebuild it on next access. Used by the
+     * admin UX after extracting a freshly-uploaded plugin so the new
+     * plugin.json is validated immediately.
+     */
+    public function reload(): void
+    {
+        $this->loaded = false;
+        $this->load();
+    }
+
+    /**
      * Absolute filesystem path to a plugin's directory, or null if the
      * plugin id isn't known to the registry.
      */

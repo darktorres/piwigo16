@@ -18,7 +18,10 @@ use Piwigo\Core\ZipExtractor;
 use Piwigo\Event\Lifecycle\PluginInstallErrors;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
+use Piwigo\Plugin\PluginDependencyException;
+use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Plugin\PluginRepository;
+use Piwigo\Plugin\PluginValidationException;
 use Piwigo\Users\CurrentUser;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
@@ -43,6 +46,7 @@ final class Plugins
         private readonly PluginRepository $pluginRepository,
         private readonly ActivityLogger $activityLogger,
         private readonly EventDispatcherInterface $dispatcher,
+        private readonly PluginRegistry $pluginRegistry,
     ) {
         $this->getFsPlugins();
 
@@ -54,8 +58,44 @@ final class Plugins
     }
 
     /**
+     * True when the plugin ships a validated plugin.json (B7+ contract).
+     * Lifecycle hooks for such plugins route through PluginRegistry; the
+     * legacy buildMaintainClass / main.inc.php parsing path stays alive
+     * only for upgrades carrying pre-17 plugins on disk, and is slated
+     * for deletion in B17.
+     */
+    private function isManifestDriven(string $pluginId): bool
+    {
+        return $this->pluginRegistry->getManifest($pluginId) !== null;
+    }
+
+    /**
+     * Resolve plugin.json `hasSettings` (true|false|"webmaster") to the
+     * boolean the legacy fs_plugins shape expects. Webmaster-only
+     * settings are visible to webmaster sessions and hidden otherwise.
+     */
+    private function resolveHasSettings(bool|string $hasSettings): bool
+    {
+        if (is_bool($hasSettings)) {
+            return $hasSettings;
+        }
+        if ($hasSettings === 'webmaster') {
+            return CurrentUser::isInitialized() && CurrentUser::get()->status === 'webmaster';
+        }
+        return false;
+    }
+
+    /**
      * Returns the maintain class of a plugin
-     * or build a new class with the procedural methods
+     * or build a new class with the procedural methods.
+     *
+     * Legacy lifecycle entry point. Plugins shipping a plugin.json (B7+
+     * contract) route through PluginRegistry; this method only fires
+     * during the upgrade window for pre-17 plugins still on disk, and
+     * is deleted with the rest of the legacy path in B17. Not marked
+     * `@deprecated` because the manifest-vs-legacy branch is internal
+     * to performAction()/getFsPlugin() — every caller is in this same
+     * file and intentional.
      */
     private static function buildMaintainClass(string $plugin_id): PluginMaintain
     {
@@ -117,15 +157,26 @@ final class Plugins
 
                 $installVersion = $this->fs_plugins[$plugin_id]['version'];
                 $installVersionStr = is_string($installVersion) ? $installVersion : '';
-                self::buildMaintainClass($plugin_id)->install($installVersionStr, $errors);
                 $activity_details['version'] = $installVersionStr;
-                $installErrorsEvent = new PluginInstallErrors($errors);
-                $this->dispatcher->dispatch($installErrorsEvent);
-                $errors = $installErrorsEvent->errors;
 
-                if (empty($errors)) {
-                    $this->pluginRepository->insert($plugin_id, $installVersionStr);
+                if ($this->isManifestDriven($plugin_id)) {
+                    try {
+                        $this->pluginRegistry->install($plugin_id);
+                    } catch (PluginValidationException | PluginDependencyException $e) {
+                        $errors[] = $e->getMessage();
+                    }
                 } else {
+                    self::buildMaintainClass($plugin_id)->install($installVersionStr, $errors);
+                    $installErrorsEvent = new PluginInstallErrors($errors);
+                    $this->dispatcher->dispatch($installErrorsEvent);
+                    $errors = $installErrorsEvent->errors;
+
+                    if (empty($errors)) {
+                        $this->pluginRepository->insert($plugin_id, $installVersionStr);
+                    }
+                }
+
+                if (!empty($errors)) {
                     $activity_details['result'] = 'error';
                 }
                 break;
@@ -144,11 +195,19 @@ final class Plugins
                     $new_version = is_string($newVersionRaw) ? $newVersionRaw : '';
                     $activity_details['to_version'] = $new_version;
 
-                    $plugin_maintain = self::buildMaintainClass($plugin_id);
-                    $plugin_maintain->update($previous_version, $new_version, $errors);
+                    if ($this->isManifestDriven($plugin_id)) {
+                        try {
+                            $this->pluginRegistry->update($plugin_id);
+                        } catch (PluginValidationException | PluginDependencyException $e) {
+                            $errors[] = $e->getMessage();
+                        }
+                    } else {
+                        $plugin_maintain = self::buildMaintainClass($plugin_id);
+                        $plugin_maintain->update($previous_version, $new_version, $errors);
 
-                    if ($new_version != 'auto') {
-                        $this->pluginRepository->updateVersion($plugin_id, $new_version);
+                        if ($new_version != 'auto') {
+                            $this->pluginRepository->updateVersion($plugin_id, $new_version);
+                        }
                     }
                 } else {
                     $activity_details['result'] = 'error';
@@ -170,13 +229,23 @@ final class Plugins
                 if (count($errors) === 0) {
                     $vRaw = is_array($crt_db_plugin) ? ($crt_db_plugin['version'] ?? null) : null;
                     $version = is_scalar($vRaw) ? (string) $vRaw : '';
-                    self::buildMaintainClass($plugin_id)->activate($version, $errors);
                     $activity_details['version'] = $version;
+
+                    if ($this->isManifestDriven($plugin_id)) {
+                        try {
+                            $this->pluginRegistry->activate($plugin_id);
+                        } catch (PluginValidationException | PluginDependencyException $e) {
+                            $errors[] = $e->getMessage();
+                        }
+                    } else {
+                        self::buildMaintainClass($plugin_id)->activate($version, $errors);
+                        if (count($errors) === 0) {
+                            $this->pluginRepository->updateState($plugin_id, 'active');
+                        }
+                    }
                 }
 
-                if (count($errors) === 0) {
-                    $this->pluginRepository->updateState($plugin_id, 'active');
-                } else {
+                if (count($errors) !== 0) {
                     $activity_details['result'] = 'error';
                 }
                 break;
@@ -187,12 +256,15 @@ final class Plugins
                     break;
                 }
 
-                $this->pluginRepository->updateState($plugin_id, 'inactive');
-
-                self::buildMaintainClass($plugin_id)->deactivate();
-
                 if (isset($crt_db_plugin['version'])) {
                     $activity_details['version'] = $crt_db_plugin['version'];
+                }
+
+                if ($this->isManifestDriven($plugin_id)) {
+                    $this->pluginRegistry->deactivate($plugin_id);
+                } else {
+                    $this->pluginRepository->updateState($plugin_id, 'inactive');
+                    self::buildMaintainClass($plugin_id)->deactivate();
                 }
 
                 break;
@@ -212,9 +284,12 @@ final class Plugins
                     $this->performAction('deactivate', $plugin_id);
                 }
 
-                $this->pluginRepository->delete($plugin_id);
-
-                self::buildMaintainClass($plugin_id)->uninstall();
+                if ($this->isManifestDriven($plugin_id)) {
+                    $this->pluginRegistry->uninstall($plugin_id);
+                } else {
+                    $this->pluginRepository->delete($plugin_id);
+                    self::buildMaintainClass($plugin_id)->uninstall();
+                }
                 break;
 
             case 'restore':
@@ -266,14 +341,34 @@ final class Plugins
     }
 
     /**
-     * Load metadata of a plugin in `fs_plugins` array
-     * @from 2.7
-     * @param $plugin_id
-     * @return false|array
+     * Load metadata of a plugin in `fs_plugins` array.
+     *
+     * B7 introduced plugin.json as the primary source: if PluginRegistry
+     * has validated the manifest, that data wins. The legacy main.inc.php
+     * header regex stays as a fallback for pre-17 plugins still on disk
+     * during the upgrade window; B17 deletes it.
+     *
+     * @return array<string,mixed>|false
      */
-    /** @return array<string,mixed>|false */
     public function getFsPlugin(string $plugin_id): array|false
     {
+        $manifest = $this->pluginRegistry->getManifest($plugin_id);
+        if ($manifest !== null) {
+            $plugin = [
+                'name'        => htmlspecialchars($manifest->name),
+                'version'     => htmlspecialchars($manifest->version),
+                'uri'         => $manifest->homepage !== null ? htmlspecialchars($manifest->homepage) : '',
+                'description' => htmlspecialchars($manifest->description),
+                'author'      => $manifest->author !== null ? htmlspecialchars($manifest->author) : '',
+                'hasSettings' => $this->resolveHasSettings($manifest->hasSettings),
+            ];
+            if ($manifest->authorUri !== null) {
+                $plugin['author uri'] = htmlspecialchars($manifest->authorUri);
+            }
+            $this->fs_plugins[$plugin_id] = $plugin;
+            return $plugin;
+        }
+
         $path = Config::pluginsPath().$plugin_id;
 
         if (is_dir($path) and !is_link($path)
@@ -555,21 +650,32 @@ final class Plugins
                     fclose($fh);
                     $names = ZipExtractor::listNames($archive);
                     if ($names !== []) {
+                        $manifest_filepath = null;
                         $main_filepath = null;
                         $status = 'ok';
                         foreach ($names as $filename) {
-                            // we search main.inc.php in archive
-                            if (basename($filename) == 'main.inc.php'
+                            // B7+ plugin.json (preferred) — track the shallowest path so
+                            // a stray plugin.json deeper in vendor/ doesn't win.
+                            if (basename($filename) === 'plugin.json'
+                              and ($manifest_filepath === null
+                              or strlen($filename) < strlen($manifest_filepath))) {
+                                $manifest_filepath = $filename;
+                            }
+                            // legacy main.inc.php fallback (pre-17 plugins) — same
+                            // shallowest-wins rule. Deleted with the rest of the
+                            // legacy path in B17.
+                            if (basename($filename) === 'main.inc.php'
                               and ($main_filepath === null
                               or strlen($filename) < strlen($main_filepath))) {
                                 $main_filepath = $filename;
                             }
                         }
 
-                        $logger->debug(__FUNCTION__.', $main_filepath = '.(string) $main_filepath);
+                        $root_anchor = $manifest_filepath ?? $main_filepath;
+                        $logger->debug(__FUNCTION__.', $root_anchor = '.(string) $root_anchor);
 
-                        if (isset($main_filepath)) {
-                            $root = dirname($main_filepath); // main.inc.php path in archive
+                        if (isset($root_anchor)) {
+                            $root = dirname($root_anchor); // path to plugin's root inside archive
                             if ($action == 'upgrade') {
                                 $plugin_id = $dest;
                             } else {
@@ -581,9 +687,20 @@ final class Plugins
                             $result = ZipExtractor::extract($archive, $extract_path, $root === '.' ? '' : $root);
                             if ($result !== []) {
                                 foreach ($result as $file) {
-                                    if ($file['stored_filename'] === $main_filepath) {
+                                    if ($file['stored_filename'] === $root_anchor) {
                                         $status = $file['status'];
                                         break;
+                                    }
+                                }
+                                if ($status === 'ok' && $manifest_filepath !== null) {
+                                    // Refresh the registry so the freshly-extracted
+                                    // plugin.json is validated immediately. A
+                                    // PluginValidationException here means the ZIP
+                                    // shipped a malformed manifest — surface that
+                                    // as the extraction status.
+                                    $this->pluginRegistry->reload();
+                                    if ($this->pluginRegistry->getManifest($plugin_id) === null) {
+                                        $status = 'manifest_invalid';
                                     }
                                 }
                                 if (file_exists($extract_path.'/obsolete.list')

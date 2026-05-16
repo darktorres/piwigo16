@@ -42,17 +42,20 @@ final class Version20260516000001 extends AbstractMigration
         $tableName = $prefix . 'plugin_migrations';
         $sm = $this->connection->createSchemaManager();
         if (!$sm->tablesExist([$tableName])) {
-            // varchar(191) matches Doctrine's migration_versions ledger
-            // (see migrations.php version_column_length). utf8mb3 keeps
-            // the (plugin_id, version) composite PK under MyISAM's
-            // 1000-byte key cap: (64 + 191) * 3 bytes = 765 bytes.
+            // Column-level CHARACTER SET ascii: the schema regex restricts
+            // plugin_id to [a-zA-Z0-9_-] and version stores Doctrine
+            // migration FQCNs, both ASCII by construction. ascii at 1 byte
+            // per char keeps the (plugin_id, version) composite PK far
+            // under MyISAM's 1000-byte key cap and avoids declaring a
+            // table-level utf8mb3 that conflicts with the utf8mb4 mysqli
+            // connection.
             $this->addSql(
                 'CREATE TABLE `' . $tableName . '` ('
-                . '`plugin_id` VARCHAR(64) NOT NULL, '
-                . '`version` VARCHAR(191) NOT NULL, '
+                . '`plugin_id` VARCHAR(64) CHARACTER SET ascii NOT NULL, '
+                . '`version` VARCHAR(191) CHARACTER SET ascii NOT NULL, '
                 . '`executed_at` DATETIME NOT NULL, '
                 . 'PRIMARY KEY (`plugin_id`, `version`)'
-                . ') ENGINE=MyISAM DEFAULT CHARSET=utf8mb3'
+                . ') ENGINE=MyISAM'
             );
         }
     }

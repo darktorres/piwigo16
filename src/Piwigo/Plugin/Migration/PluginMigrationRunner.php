@@ -171,6 +171,8 @@ final class PluginMigrationRunner
             }
             $path = $migrationsDir . '/' . $entry;
             if (is_file($path)) {
+                // Migration file path computed from runtime $migrationsDir
+                // (per-plugin) — Psalm cannot follow the require statically.
                 /** @psalm-suppress UnresolvableInclude */
                 require_once $path;
             }

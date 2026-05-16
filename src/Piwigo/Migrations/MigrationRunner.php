@@ -52,6 +52,8 @@ final class MigrationRunner
             return;
         }
 
+        // Same rationale as line 48: Doctrine marks these as @internal but
+        // exposes no public alternative for programmatic migration runs.
         /** @psalm-suppress InternalClass, InternalMethod */
         $migratorConfig = new MigratorConfiguration()->setAllOrNothing(true);
         /** @psalm-suppress InternalMethod */

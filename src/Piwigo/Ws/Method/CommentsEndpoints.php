@@ -11,12 +11,14 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Template\RenderCommentAuthor;
+use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class CommentsEndpoints
 {
@@ -26,6 +28,7 @@ final readonly class CommentsEndpoints
         private DateService $dateService,
         private UrlGenerator $urlGenerator,
         private CsrfService $csrfService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -98,7 +101,11 @@ final readonly class CommentsEndpoints
                 $coalesced  = $row['username'] ?? $row['author'] ?? Lang::t('guest');
                 $authorName = stripslashes(is_scalar($coalesced) ? (string) $coalesced : Lang::t('guest'));
             }
-            $list[] = ['id' => $row['id'], 'admin_link' => $this->urlGenerator->admin('photo-' . (is_string($row['image_id'] ?? null) ? $row['image_id'] : '')), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => $this->dateService->formatDate(is_string($row['date_available'] ?? null) ? $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => EventDispatcher::dispatch('render_comment_author', $authorName), 'author_status' => Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => $this->dateService->formatDate(is_string($row['date'] ?? null) ? $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => EventDispatcher::dispatch('render_comment_content', $row['content']), 'raw_content' => $row['content'], 'is_pending' => ('false' === $row['validated'])];
+            $authorEvent = new RenderCommentAuthor(is_string($authorName) ? $authorName : '');
+            $this->dispatcher->dispatch($authorEvent);
+            $contentEvent = new RenderCommentContent(is_string($row['content']) ? $row['content'] : '');
+            $this->dispatcher->dispatch($contentEvent);
+            $list[] = ['id' => $row['id'], 'admin_link' => $this->urlGenerator->admin('photo-' . (is_string($row['image_id'] ?? null) ? $row['image_id'] : '')), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => $this->dateService->formatDate(is_string($row['date_available'] ?? null) ? $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => $authorEvent->commentAuthor, 'author_status' => Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => $this->dateService->formatDate(is_string($row['date'] ?? null) ? $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => $contentEvent->commentContent, 'raw_content' => $row['content'], 'is_pending' => ('false' === $row['validated'])];
         }
         $datesQuery = 'SELECT MIN(date) AS started_at, MAX(date) AS ended_at FROM ' . Tables::comments() . ' WHERE ' . implode(' AND ', $whereClauses) . ';';
         $datesResult = $conn->executeQuery($datesQuery)->fetchAssociative();

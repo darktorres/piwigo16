@@ -15,10 +15,10 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocEndSectionInit;
+use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
@@ -212,8 +212,10 @@ final readonly class SectionInitializer
             } elseif ($category !== null) {
                 $catComment   = is_string($category['comment'] ?? null) ? $category['comment'] : '';
                 $upperNames   = is_array($category['upper_names'] ?? null) ? $category['upper_names'] : [];
+                $catDescEvent = new RenderCategoryDescription($catComment, 'main_page_category_description');
+                $this->dispatcher->dispatch($catDescEvent);
                 $page = array_merge($page, [
-                    'comment' => EventDispatcher::dispatch('render_category_description', $catComment, 'main_page_category_description'),
+                    'comment' => $catDescEvent->categoryDescription,
                     'title'   => $this->htmlService->getCatDisplayName($upperNames, ''),
                 ]);
             } else {

@@ -14,12 +14,13 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Album\MergeTags;
+use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\RenderTagName;
+use Piwigo\Event\Tag\RenderTagUrl;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Url\UrlService;
@@ -140,7 +141,10 @@ final readonly class TagsEndpoints
                 $renderEvent   = new RenderElementName($imgNameStr, $image);
                 $this->dispatcher->dispatch($renderEvent);
                 $image['name']    = strip_tags($renderEvent->elementName);
-                $image['comment'] = EventDispatcher::dispatch('render_element_description', $image['comment'] ?? null, __FUNCTION__);
+                $imgCommentRaw    = $image['comment'] ?? null;
+                $imgDescEvent     = new RenderElementDescription(is_string($imgCommentRaw) ? $imgCommentRaw : '', __FUNCTION__);
+                $this->dispatcher->dispatch($imgDescEvent);
+                $image['comment'] = $imgDescEvent->elementDescription;
                 $image = array_merge($image, $this->wsHelper->getUrls($row));
                 $imgIdRaw   = $image['id'] ?? null;
                 $imgIdKey   = is_numeric($imgIdRaw) ? (int) $imgIdRaw : 0;
@@ -218,7 +222,9 @@ final readonly class TagsEndpoints
         if (in_array($tagName, $existingNames)) {
             return new PwgError(WsError::InvalidParam->value, 'This name is already token');
         } elseif (!empty($tagName)) {
-            $update = ['name' => $tagName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $tagName)];
+            $urlEvent = new RenderTagUrl($tagName);
+            $this->dispatcher->dispatch($urlEvent);
+            $update = ['name' => $tagName, 'url_name' => $urlEvent->tagName];
         }
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagId, 'edit'));
         Dml::singleUpdate(Tables::tags(), $update, ['id' => $tagId]);
@@ -252,7 +258,10 @@ final readonly class TagsEndpoints
         if ($dupTagRepo->countByExactName($dupCopyName) !== 0) {
             return new PwgError(WsError::InvalidParam->value, 'This name is already taken.');
         }
-        Dml::singleInsert(Tables::tags(), ['name' => $dupCopyName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $dupCopyName)]);
+        $dupUrlEvent = new RenderTagUrl($dupCopyName);
+        $this->dispatcher->dispatch($dupUrlEvent);
+        $dupUrlName  = $dupUrlEvent->tagName;
+        Dml::singleInsert(Tables::tags(), ['name' => $dupCopyName, 'url_name' => $dupUrlName]);
         $destinationTagId = (int) $this->conn->lastInsertId();
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $destinationTagId, 'add', ['action' => 'duplicate', 'source_tag' => $dupTagId]));
         $destinationTagImageIds = $dupTagRepo->findImageIdsByTagId($dupTagId);
@@ -264,7 +273,7 @@ final readonly class TagsEndpoints
         if (count($inserts) > 0) {
             Dml::massInserts(Tables::imageTag(), array_keys($inserts[0]), $inserts);
         }
-        return ['id' => $destinationTagId, 'name' => $dupCopyName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $dupCopyName), 'count' => count($inserts)];
+        return ['id' => $destinationTagId, 'name' => $dupCopyName, 'url_name' => $dupUrlName, 'count' => count($inserts)];
     }
 
     /**

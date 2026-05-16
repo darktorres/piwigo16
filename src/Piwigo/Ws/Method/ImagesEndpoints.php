@@ -27,6 +27,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Picture\WsImagesUploadCompleted;
 use Piwigo\Event\Template\RenderCategoryName;
@@ -35,7 +36,6 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchService;
@@ -258,7 +258,9 @@ final readonly class ImagesEndpoints
         $this->dispatcher->dispatch($renderEvent);
         $imageRow['name']        = strip_tags($renderEvent->elementName);
         $imageRow['comment_raw'] = $imageRow['comment'];
-        $imageRow['comment']     = EventDispatcher::dispatch('render_element_description', $imageRow['comment'], __FUNCTION__);
+        $rowDescEvent            = new RenderElementDescription(is_string($imageRow['comment']) ? $imageRow['comment'] : '', __FUNCTION__);
+        $this->dispatcher->dispatch($rowDescEvent);
+        $imageRow['comment']     = $rowDescEvent->elementDescription;
         $isCommentable    = false;
         $relatedCategories = [];
         foreach ($this->conn->executeQuery('SELECT id, name, permalink, uppercats, global_rank, commentable FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id = id WHERE image_id = ' . $imageRowId . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND') . ';')->fetchAllAssociative() as $row) {
@@ -391,7 +393,10 @@ final readonly class ImagesEndpoints
                 $renderEvent2     = new RenderElementName(is_string($image['name'] ?? null) ? $image['name'] : '', $image);
                 $this->dispatcher->dispatch($renderEvent2);
                 $image['name']    = strip_tags($renderEvent2->elementName);
-                $image['comment'] = EventDispatcher::dispatch('render_element_description', $image['comment'] ?? null, __FUNCTION__);
+                $imgCommentRaw    = $image['comment'] ?? null;
+                $imgDescEvent     = new RenderElementDescription(is_string($imgCommentRaw) ? $imgCommentRaw : '', __FUNCTION__);
+                $this->dispatcher->dispatch($imgDescEvent);
+                $image['comment'] = $imgDescEvent->elementDescription;
                 $image = array_merge($image, $this->wsHelper->getUrls($row));
                 $imgIdRaw = $image['id'] ?? null;
                 $imgIdInt = is_numeric($imgIdRaw) ? (int) $imgIdRaw : 0;

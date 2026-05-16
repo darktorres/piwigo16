@@ -24,6 +24,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeEncoding;
@@ -34,7 +35,6 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Picture\PictureService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Section\SectionContext;
@@ -738,8 +738,10 @@ final readonly class GeneralEndpoints
                 }
                 $imageTitle = '';
                 if (isset($imageInfos[$lineImageIdStr]['label'])) {
-                    $tcResult    = EventDispatcher::dispatch('render_element_description', $imageInfos[$lineImageIdStr]['label'], __FUNCTION__);
-                    $imageTitle .= ' ' . (is_scalar($tcResult) ? (string) $tcResult : '');
+                    $labelRaw    = $imageInfos[$lineImageIdStr]['label'];
+                    $descEvent   = new RenderElementDescription(is_string($labelRaw) ? $labelRaw : '', __FUNCTION__);
+                    $this->dispatcher->dispatch($descEvent);
+                    $imageTitle .= ' ' . $descEvent->elementDescription;
                 } else {
                     $imageEditString = '';
                     $imageTitle     .= ' unknown filename';

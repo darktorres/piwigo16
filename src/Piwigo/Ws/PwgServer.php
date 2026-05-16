@@ -8,9 +8,9 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Event\Ws\SendResponse;
 use Piwigo\Event\Ws\WsAddMethods;
+use Piwigo\Event\Ws\WsInvokeAllowed;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Html\HtmlService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
@@ -375,9 +375,11 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             return new PwgError(WsError::MissingParam->value, 'Missing parameters: '.implode(',', $missing_params));
         }
 
-        $result = EventDispatcher::dispatch('ws_invoke_allowed', true, $methodName, $params);
-        // A handler may return PwgError to block invocation; true means allowed
-        if ($result !== true) {
+        $invokeEvent = new WsInvokeAllowed(true, $methodName, $params);
+        $this->dispatcher->dispatch($invokeEvent);
+        // A subscriber may flip $value to a PwgError to block invocation;
+        // true means allowed.
+        if ($invokeEvent->value !== true) {
             return new PwgError(WsError::InvalidMethod->value, 'Method invocation not allowed');
         }
 

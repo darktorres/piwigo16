@@ -12,9 +12,10 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Event\Picture\ListCheckIntegrity;
 use Piwigo\Lang\Translator;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class CheckIntegrity
 {
@@ -58,7 +59,13 @@ final class CheckIntegrity
         $this->retrieve_list = [];
         $this->build_ignore_list = [];
 
-        EventDispatcher::notify('list_check_integrity', $this);
+        // Core checks run inline so PHPStan can see retrieve_list grows;
+        // the event remains as a plugin extension point.
+        $c13yInternal = Kernel::service(C13yInternal::class);
+        $c13yInternal->c13yVersion($this);
+        $c13yInternal->c13yExif($this);
+        $c13yInternal->c13yUser($this);
+        Kernel::service(EventDispatcherInterface::class)->dispatch(new ListCheckIntegrity($this));
 
         // Information
         /** @var array<mixed> $retrieveList */

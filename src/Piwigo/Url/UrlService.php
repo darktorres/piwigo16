@@ -12,12 +12,13 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Html\HtmlService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class UrlService
 {
@@ -33,6 +34,7 @@ final class UrlService
         private readonly HtmlService $htmlService,
         private readonly TagService $tagService,
         private readonly PermissionService $permissionService,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -615,7 +617,9 @@ final class UrlService
             $url = self::embellishUrl(self::getRootUrl() . $url);
             $url = is_string($url) ? $url : '';
         }
-        return (string) EventDispatcher::dispatch('get_element_url', $url, $elementInfo);
+        $event = new GetElementUrl($url, $elementInfo);
+        $this->dispatcher->dispatch($event);
+        return $event->url;
     }
 
     public function setMakeFullUrl(): void

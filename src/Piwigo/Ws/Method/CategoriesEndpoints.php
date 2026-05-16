@@ -17,14 +17,15 @@ use Piwigo\Config\Config;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
+use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -129,7 +130,10 @@ final readonly class CategoriesEndpoints
                 $renderEvent = new RenderElementName($imageName, $image);
                 $this->dispatcher->dispatch($renderEvent);
                 $image['name']    = strip_tags($renderEvent->elementName);
-                $image['comment'] = EventDispatcher::dispatch('render_element_description', $image['comment'] ?? null, __FUNCTION__);
+                $imgCommentRaw    = $image['comment'] ?? null;
+                $descEvent        = new RenderElementDescription(is_string($imgCommentRaw) ? $imgCommentRaw : '', __FUNCTION__);
+                $this->dispatcher->dispatch($descEvent);
+                $image['comment'] = $descEvent->elementDescription;
                 $image = array_merge($image, $this->wsHelper->getUrls($row));
                 $images[] = $image;
             }
@@ -255,7 +259,9 @@ final readonly class CategoriesEndpoints
                 $row['name']      = strip_tags($listRenderEvent->categoryName);
             }
             $row['comment_raw'] = $row['comment'];
-            $row['comment']     = EventDispatcher::dispatch('render_category_description', is_string($row['comment'] ?? null) ? $row['comment'] : '', 'ws_categories_getList');
+            $catDescEvent       = new RenderCategoryDescription(is_string($row['comment'] ?? null) ? $row['comment'] : '', 'ws_categories_getList');
+            $this->dispatcher->dispatch($catDescEvent);
+            $row['comment']     = $catDescEvent->categoryDescription;
             $imageId            = null;
             if (!empty($row['user_representative_picture_id'])) {
                 $imageId = $row['user_representative_picture_id'];
@@ -386,8 +392,11 @@ final readonly class CategoriesEndpoints
             $this->dispatcher->dispatch($adminRenderEvent);
             $row['name']     = strip_tags($adminRenderEvent->categoryName);
             $row['fullname'] = strip_tags($catDisplayName);
-            $row['comment_raw'] = $row['comment'];
-            $row['comment']  = EventDispatcher::dispatch('render_category_description', $row['comment'] ?? '', 'ws_categories_getAdminList');
+            $row['comment_raw']  = $row['comment'];
+            $adminCommentRaw     = $row['comment'] ?? '';
+            $adminCatDescEvent   = new RenderCategoryDescription(is_string($adminCommentRaw) ? $adminCommentRaw : '', 'ws_categories_getAdminList');
+            $this->dispatcher->dispatch($adminCatDescEvent);
+            $row['comment']      = $adminCatDescEvent->categoryDescription;
             if (empty($row['image_order'])) {
                 $row['image_order'] = str_replace('ORDER BY ', '', Config::orderBy());
             }

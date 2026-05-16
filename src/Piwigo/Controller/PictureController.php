@@ -27,6 +27,8 @@ use Piwigo\Event\Location\LocEndPicture;
 use Piwigo\Event\Picture\AllowIncrementElementHitCount;
 use Piwigo\Event\Picture\GetElementMetadataAvailable;
 use Piwigo\Event\Picture\PicturePicturesData;
+use Piwigo\Event\Picture\RenderElementContent;
+use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
@@ -44,7 +46,6 @@ use Piwigo\Picture\PictureContextRegistry;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Picture\PictureService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Rate\RateService;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionInitializer;
@@ -562,10 +563,10 @@ SELECT *
         // Picture info
         $infos = [];
         if (isset($picture['current']['comment']) && $picture['current']['comment'] !== '') {
-            /** @var mixed $commentValue */
             $commentValue = $picture['current']['comment'];
-            $rendered = EventDispatcher::dispatch('render_element_description', $commentValue, 'picture_page_element_description');
-            $tpl->assign('COMMENT_IMG', new Html(is_string($rendered) ? $rendered : ''));
+            $descEvent = new RenderElementDescription(is_string($commentValue) ? $commentValue : '', 'picture_page_element_description');
+            $this->dispatcher->dispatch($descEvent);
+            $tpl->assign('COMMENT_IMG', new Html($descEvent->elementDescription));
         }
         if (isset($currentPic['author']) && $currentPic['author'] !== '') {
             /** @var mixed $authorValue */
@@ -629,8 +630,10 @@ SELECT *
             $tpl->assign(['PDF_VIEWER_FILESIZE_THRESHOLD' => Config::pdfViewerFilesizeThreshold() * 1024, 'PDF_NB_PAGES' => $this->pictureService->countPdfPages(is_string($currentPic['path'] ?? null) ? $currentPic['path'] : '')]);
         }
 
-        $element_content = EventDispatcher::dispatch('render_element_content', '', $picture['current']);
-        $tpl->assign('ELEMENT_CONTENT', new Html((string) $element_content));
+        $currentPic        = is_array($picture['current'] ?? null) ? $picture['current'] : [];
+        $contentEvent      = new RenderElementContent('', $currentPic);
+        $this->dispatcher->dispatch($contentEvent);
+        $tpl->assign('ELEMENT_CONTENT', new Html($contentEvent->content));
 
         $nextPic      = is_array($picture['next'] ?? null) ? $picture['next'] : null;
         $nextSrcImage = ($nextPic !== null && ($nextPic['src_image'] ?? null) instanceof SrcImage) ? $nextPic['src_image'] : null;

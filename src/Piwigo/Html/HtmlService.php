@@ -15,6 +15,7 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\GetThumbnailTitle;
+use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Event\Template\SetStatusHeader;
@@ -23,7 +24,6 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\RegisteredBlock;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Theme\ThemeService;
@@ -428,7 +428,9 @@ $btraceMsg
     public function renderElementDescription(array $info, string $param = ''): string
     {
         if (!empty($info['comment'])) {
-            return (string) EventDispatcher::dispatch('render_element_description', is_string($info['comment']) ? $info['comment'] : '', $param);
+            $event = new RenderElementDescription(is_string($info['comment']) ? $info['comment'] : '', $param);
+            $this->dispatcher->dispatch($event);
+            return $event->elementDescription;
         }
         return '';
     }

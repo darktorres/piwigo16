@@ -34,6 +34,7 @@ use Piwigo\Event\Admin\GetPopupHelpContent;
 use Piwigo\Event\Lifecycle\NbmEventHandlerAdded;
 use Piwigo\Event\Location\LocEndHelp;
 use Piwigo\Event\Location\LocEndIntro;
+use Piwigo\Event\Mail\NbmRenderGlobalCustomizeMailContent;
 use Piwigo\Event\Mail\NbmRenderUserCustomizeMailContent;
 use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\RenderTagName;
@@ -56,7 +57,6 @@ use Piwigo\Page\PageTailRenderer;
 use Piwigo\Page\PaginationService;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Plugins\LoadedPluginRegistry;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Tag\TagRepository;
@@ -1232,7 +1232,9 @@ final class MiscController
                     if (empty($customize_mail_content)) {
                         $customize_mail_content = Config::nbmComplementaryMailContent();
                     }
-                    $customize_mail_content = EventDispatcher::dispatch('nbm_render_global_customize_mail_content', $customize_mail_content);
+                    $cmcEvent  = new NbmRenderGlobalCustomizeMailContent($customize_mail_content);
+                    $this->dispatcher->dispatch($cmcEvent);
+                    $customize_mail_content = $cmcEvent->customizeMailContent;
                     $msg_break_timeout = $is_action_send ? Lang::t('Time to send mail is limited. Others mails are skipped.') : Lang::t('Prepared time for list of users to send mail is limited. Others users are not listed.');
 
                     $this->notificationAdminService->beginUsersEnvNbm($is_action_send);

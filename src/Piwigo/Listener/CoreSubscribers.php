@@ -19,7 +19,6 @@ final class CoreSubscribers
     public const array ALL = [
         TryLogUserSubscriber::class,
         WsInvokeAllowedSubscriber::class,
-        ListCheckIntegritySubscriber::class,
         RenderElementContentSubscriber::class,
         RenderElementDescriptionSubscriber::class,
         RenderCommentContentSubscriber::class,

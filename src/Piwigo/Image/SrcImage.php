@@ -8,7 +8,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
 use Piwigo\Event\Picture\GetMimetypeLocation;
-use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Event\Picture\GetSrcImageUrl;
 use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlService;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -122,8 +122,9 @@ final class SrcImage
     {
         $url = UrlService::getRootUrl().$this->rel_path;
         if (!($this->flags & self::IS_MIMETYPE)) {
-            $changed = EventDispatcher::dispatch('get_src_image_url', $url, $this);
-            $url = $changed;
+            $event = new GetSrcImageUrl($url, $this);
+            Kernel::service(EventDispatcherInterface::class)->dispatch($event);
+            $url = $event->url;
         }
         return UrlService::embellishUrl($url);
     }

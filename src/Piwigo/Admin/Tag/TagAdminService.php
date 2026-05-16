@@ -18,8 +18,8 @@ use Piwigo\Event\Tag\DeleteTags;
 use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\GetTagNameLikeWhere;
 use Piwigo\Event\Tag\RenderTagName;
+use Piwigo\Event\Tag\RenderTagUrl;
 use Piwigo\Html\HtmlService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagRepository;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
@@ -126,7 +126,9 @@ final class TagAdminService
         $foundId = $tagRepo->findIdByExactName($tagName);
         $existing = $foundId !== null ? [$foundId] : [];
         if (count($existing) === 0) {
-            $urlName  = (string) EventDispatcher::dispatch('render_tag_url', $tagName);
+            $urlEvent = new RenderTagUrl($tagName);
+            $this->dispatcher->dispatch($urlEvent);
+            $urlName  = $urlEvent->tagName;
             $foundUrlId = $tagRepo->findIdByUrlName($urlName);
             $existing = $foundUrlId !== null ? [$foundUrlId] : [];
             if (count($existing) === 0) {
@@ -287,7 +289,9 @@ final class TagAdminService
         $tagName    = strip_tags($tagName);
         $existingId = $this->tagRepository->findIdByExactName($tagName);
         if ($existingId === null) {
-            Dml::singleInsert(Tables::tags(), ['name' => $tagName, 'url_name' => EventDispatcher::dispatch('render_tag_url', $tagName)]);
+            $createUrlEvent = new RenderTagUrl($tagName);
+            $this->dispatcher->dispatch($createUrlEvent);
+            Dml::singleInsert(Tables::tags(), ['name' => $tagName, 'url_name' => $createUrlEvent->tagName]);
             return ['info' => Lang::t('Tag "%s" was added', stripslashes($tagName)), 'id' => (int) $this->conn->lastInsertId()];
         }
         return ['error' => Lang::t('Tag "%s" already exists', stripslashes($tagName))];

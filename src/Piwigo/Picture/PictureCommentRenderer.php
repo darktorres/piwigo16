@@ -14,11 +14,12 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Template\RenderCommentAuthor;
+use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Event\User\UserCommentInsertion;
 use Piwigo\Exception\AuthException;
 use Piwigo\Html\HtmlService;
 use Piwigo\Page\PaginationService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\TemplateRegistry;
@@ -182,12 +183,15 @@ SELECT
                         $email = $row['email'];
                     }
 
-                    $renderedContent = EventDispatcher::dispatch('render_comment_content', $row['content']);
+                    $contentEvent = new RenderCommentContent(is_string($row['content']) ? $row['content'] : '');
+                    $this->dispatcher->dispatch($contentEvent);
+                    $authorEvent = new RenderCommentAuthor(is_string($row['author']) ? $row['author'] : '');
+                    $this->dispatcher->dispatch($authorEvent);
                     $tpl_comment = [
                         'ID' => $row['id'],
-                        'AUTHOR' => EventDispatcher::dispatch('render_comment_author', $row['author']),
+                        'AUTHOR' => $authorEvent->commentAuthor,
                         'DATE' => $this->dateService->formatDate(is_string($row['date'] ?? null) ? $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']),
-                        'CONTENT' => new Html(is_string($renderedContent) ? $renderedContent : ''),
+                        'CONTENT' => new Html($contentEvent->commentContent),
                         'WEBSITE_URL' => $row['website_url'],
                     ];
 

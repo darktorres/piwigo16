@@ -12,6 +12,7 @@ use Piwigo\Ws\ParamDefinition;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsParam;
 use Piwigo\Ws\WsType;
+use Symfony\Component\EventDispatcher\EventDispatcher as SymfonyEventDispatcher;
 
 /**
  * Unit-tests for SpecBuilder — no DB, no HTTP bootstrap.
@@ -26,6 +27,12 @@ final class SpecBuilderTest extends TestCase
     protected function setUp(): void
     {
         $this->server = new \ReflectionClass(PwgServer::class)->newInstanceWithoutConstructor();
+
+        // PwgServer::invoke() now fires the ws_invoke_allowed event; provide a
+        // bare dispatcher so the typed property is initialized. The DB-bound
+        // WsInvokeAllowedSubscriber isn't wired here so the event no-ops.
+        $dispatcherRef = new \ReflectionProperty($this->server, 'dispatcher');
+        $dispatcherRef->setValue($this->server, new SymfonyEventDispatcher());
 
         // Stub globals that addMethod / getMethods touch (none — it's pure array work).
     }

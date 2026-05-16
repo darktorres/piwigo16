@@ -16,6 +16,8 @@ use Piwigo\Event\Location\LocBeginIndexCategoryThumbnails;
 use Piwigo\Event\Location\LocBeginIndexCategoryThumbnailsQuery;
 use Piwigo\Event\Location\LocEndIndexCategoryThumbnails;
 use Piwigo\Event\Picture\GetIndexAlbumDerivativeParams;
+use Piwigo\Event\Template\RenderCategoryDescription;
+use Piwigo\Event\Template\RenderCategoryLiteralDescription;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
@@ -23,7 +25,6 @@ use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Page\PaginationService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -268,10 +269,12 @@ SELECT *
                 $infosRaw = ($repPicId !== null) ? ($infos_of_image[$repPicId] ?? null) : null;
                 $representative_infos = is_array($infosRaw) ? $infosRaw : [];
 
-                $description = EventDispatcher::dispatch(
-                    'render_category_literal_description',
-                    EventDispatcher::dispatch('render_category_description', $category['comment'] ?? null, 'subcatify_category_description')
-                );
+                $commentRaw = $category['comment'] ?? null;
+                $descEvent = new RenderCategoryDescription(is_string($commentRaw) ? $commentRaw : '', 'subcatify_category_description');
+                $this->dispatcher->dispatch($descEvent);
+                $literalEvent = new RenderCategoryLiteralDescription($descEvent->categoryDescription);
+                $this->dispatcher->dispatch($literalEvent);
+                $description = $literalEvent->description;
 
                 $tpl_var = array_merge($category, [
                     'ID' => $category['id'],
@@ -285,7 +288,7 @@ SELECT *
                         true,
                         '<br>'
                     )),
-                    'DESCRIPTION' => new Html(is_string($description) ? $description : ''),
+                    'DESCRIPTION' => new Html($description),
                     'NAME' => $name,
                 ]);
                 if (Config::indexNewIcon()) {

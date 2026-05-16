@@ -8,7 +8,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\StringUtil;
 use Piwigo\Event\BlockManager\BlockManagerApply;
 use Piwigo\Event\BlockManager\BlockManagerPrepareDisplay;
-use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Event\BlockManager\BlockManagerRegisterBlocks;
 use Piwigo\Template\TemplateRegistry;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
@@ -37,7 +37,7 @@ final class BlockManager
      */
     public function loadRegisteredBlocks(): void
     {
-        EventDispatcher::notify('blockmanager_register_blocks', $this);
+        $this->dispatcher->dispatch(new BlockManagerRegisterBlocks($this));
     }
 
     /**

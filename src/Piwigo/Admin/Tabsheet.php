@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Core\Kernel;
+use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Template\TemplateRegistry;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class Tabsheet
 {
@@ -68,7 +70,11 @@ final class Tabsheet
     */
     public function select(string $name): void
     {
-        $this->sheets = EventDispatcher::dispatch('tabsheet_before_select', $this->sheets, $this->uniqid);
+        $event = new TabsheetBeforeSelect($this->sheets, $this->uniqid ?? '');
+        Kernel::service(EventDispatcherInterface::class)->dispatch($event);
+        /** @var array<string, array<string, bool|string>> $sheets */
+        $sheets       = $event->sheets;
+        $this->sheets = $sheets;
         if (!array_key_exists($name, $this->sheets)) {
             $keys = array_keys($this->sheets);
             $name = $keys[0];

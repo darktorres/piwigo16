@@ -22,6 +22,8 @@ use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocBeginComments;
 use Piwigo\Event\Location\LocEndComments;
 use Piwigo\Event\Picture\GetCommentsDerivativeParams;
+use Piwigo\Event\Template\RenderCommentAuthor;
+use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
@@ -32,7 +34,6 @@ use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Page\PaginationService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -369,11 +370,15 @@ SELECT *
                     'U_PICTURE'   => $url,
                     'src_image'   => $src_image,
                     'ALT'         => $name,
-                    'AUTHOR'      => EventDispatcher::dispatch('render_comment_author', (string) ($comment['author'] ?? '')),
                     'WEBSITE_URL' => $comment['website_url'],
                     'DATE'        => $this->dateService->formatDate($cDate, ['day_name', 'day', 'month', 'year', 'time']),
-                    'CONTENT'     => new Html((string) EventDispatcher::dispatch('render_comment_content', (string) ($comment['content'] ?? ''))),
                 ];
+                $authorEvent = new RenderCommentAuthor((string) ($comment['author'] ?? ''));
+                $this->dispatcher->dispatch($authorEvent);
+                $tpl_comment['AUTHOR'] = $authorEvent->commentAuthor;
+                $contentEvent = new RenderCommentContent((string) ($comment['content'] ?? ''));
+                $this->dispatcher->dispatch($contentEvent);
+                $tpl_comment['CONTENT'] = new Html($contentEvent->commentContent);
 
                 if ($this->permissionService->isAdmin()) {
                     $tpl_comment['EMAIL'] = $email;

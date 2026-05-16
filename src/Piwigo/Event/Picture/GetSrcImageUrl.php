@@ -11,11 +11,11 @@ namespace Piwigo\Event\Picture;
  *
  * Dispatched from: src/Piwigo/Image/SrcImage.php
  */
-final readonly class GetSrcImageUrl
+final class GetSrcImageUrl
 {
     public function __construct(
         public string $url,
-        public \Piwigo\Image\SrcImage $value,
+        public readonly \Piwigo\Image\SrcImage $value,
     ) {
     }
 }

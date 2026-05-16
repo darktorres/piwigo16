@@ -9,11 +9,11 @@ namespace Piwigo\Event\Picture;
  *
  * Dispatched from: src/Piwigo/Html/HtmlService.php, src/Piwigo/Controller/PictureController.php, src/Piwigo/Ws/Method/CategoriesEndpoints.php
  */
-final readonly class RenderElementDescription
+final class RenderElementDescription
 {
     public function __construct(
         public string $elementDescription,
-        public string $action,
+        public readonly string $action,
     ) {
     }
 }

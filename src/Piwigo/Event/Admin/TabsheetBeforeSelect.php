@@ -11,14 +11,14 @@ namespace Piwigo\Event\Admin;
  *
  * Dispatched from: src/Piwigo/Admin/Tabsheet.php (Tabsheet::select)
  */
-final readonly class TabsheetBeforeSelect
+final class TabsheetBeforeSelect
 {
     /**
      * @param array<mixed> $sheets
      */
     public function __construct(
         public array $sheets,
-        public string $tabsheetId,
+        public readonly string $tabsheetId,
     ) {
     }
 }

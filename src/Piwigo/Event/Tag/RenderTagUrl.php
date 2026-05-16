@@ -9,7 +9,7 @@ namespace Piwigo\Event\Tag;
  *
  * Dispatched from: src/Piwigo/Admin/Tag/TagAdminService.php, src/Piwigo/Ws/Method/TagsEndpoints.php
  */
-final readonly class RenderTagUrl
+final class RenderTagUrl
 {
     public function __construct(
         public string $tagName,

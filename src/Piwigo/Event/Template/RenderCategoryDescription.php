@@ -9,11 +9,11 @@ namespace Piwigo\Event\Template;
  *
  * Dispatched from: src/Piwigo/Category/CategoryCatsRenderer.php, src/Piwigo/Section/SectionInitializer.php, src/Piwigo/Ws/Method/CategoriesEndpoints.php
  */
-final readonly class RenderCategoryDescription
+final class RenderCategoryDescription
 {
     public function __construct(
         public string $categoryDescription,
-        public string $action,
+        public readonly string $action,
     ) {
     }
 }

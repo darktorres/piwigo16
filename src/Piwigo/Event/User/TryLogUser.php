@@ -11,13 +11,13 @@ namespace Piwigo\Event\User;
  *
  * Dispatched from: src/Piwigo/Users/AuthService.php
  */
-final readonly class TryLogUser
+final class TryLogUser
 {
     public function __construct(
         public bool $success,
-        public string $username,
-        public string $password,
-        public bool $rememberMe,
+        public readonly string $username,
+        public readonly string $password,
+        public readonly bool $rememberMe,
     ) {
     }
 }

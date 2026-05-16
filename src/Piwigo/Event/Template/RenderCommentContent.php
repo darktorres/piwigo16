@@ -9,7 +9,7 @@ namespace Piwigo\Event\Template;
  *
  * Dispatched from: src/Piwigo/Controller/CommentsController.php, src/Piwigo/Picture/PictureCommentRenderer.php
  */
-final readonly class RenderCommentContent
+final class RenderCommentContent
 {
     public function __construct(
         public string $commentContent,

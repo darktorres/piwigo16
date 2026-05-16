@@ -9,15 +9,15 @@ namespace Piwigo\Event\Ws;
  *
  * Dispatched from: src/Piwigo/Ws/PwgServer.php
  */
-final readonly class WsInvokeAllowed
+final class WsInvokeAllowed
 {
     /**
      * @param array<mixed> $params
      */
     public function __construct(
         public bool $value,
-        public string $methodName,
-        public array $params,
+        public readonly string $methodName,
+        public readonly array $params,
     ) {
     }
 }

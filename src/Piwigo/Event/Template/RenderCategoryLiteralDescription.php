@@ -20,7 +20,7 @@ namespace Piwigo\Event\Template;
  * legacy dispatcher until B6 migrates the listener to a typed
  * subscriber.
  */
-final readonly class RenderCategoryLiteralDescription
+final class RenderCategoryLiteralDescription
 {
     public function __construct(
         public string $description,

@@ -9,7 +9,7 @@ namespace Piwigo\Event\Mail;
  *
  * Dispatched from: src/Piwigo/Controller/Admin/MiscController.php
  */
-final readonly class NbmRenderGlobalCustomizeMailContent
+final class NbmRenderGlobalCustomizeMailContent
 {
     public function __construct(
         public string $customizeMailContent,

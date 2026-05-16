@@ -9,14 +9,14 @@ namespace Piwigo\Event\Picture;
  *
  * Dispatched from: src/Piwigo/Controller/PictureController.php
  */
-final readonly class RenderElementContent
+final class RenderElementContent
 {
     /**
      * @param array<mixed> $currentPicture
      */
     public function __construct(
         public string $content,
-        public array $currentPicture,
+        public readonly array $currentPicture,
     ) {
     }
 }

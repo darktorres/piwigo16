@@ -9,14 +9,14 @@ namespace Piwigo\Event\Picture;
  *
  * Dispatched from: src/Piwigo/Url/UrlService.php
  */
-final readonly class GetElementUrl
+final class GetElementUrl
 {
     /**
      * @param array<mixed> $elementInfo
      */
     public function __construct(
         public string $url,
-        public array $elementInfo,
+        public readonly array $elementInfo,
     ) {
     }
 }

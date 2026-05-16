@@ -1,0 +1,12 @@
+{
+  "id": "missing_dep",
+  "name": "Plugin With Missing Dep",
+  "version": "1.0.0",
+  "description": "Requires a plugin that does not exist; activate must throw.",
+  "license": "MIT",
+  "minPiwigo": "17.0",
+  "main": "Piwigo\\Tests\\Fixtures\\Plugins\\MissingDep\\Plugin",
+  "require": {
+    "plugin/does_not_exist": "^1.0"
+  }
+}

@@ -6,8 +6,13 @@ namespace Piwigo\Plugin;
 
 use Piwigo\Db\AbstractRepository;
 
-/** Persistence layer for the plugin domain. */
-final class PluginRepository extends AbstractRepository
+/**
+ * Persistence layer for the plugin domain.
+ *
+ * Non-final so PluginRegistryTest can subclass it for an in-memory shim
+ * (no DB needed at unit-test scope). Production code never extends it.
+ */
+class PluginRepository extends AbstractRepository
 {
     /**
      * Return all rows from the plugins table, optionally filtered by state and/or id.

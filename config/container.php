@@ -82,6 +82,7 @@ use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Picture\PictureService;
+use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Plugin\PluginService;
 use Piwigo\Rate\RateRepository;
@@ -197,6 +198,7 @@ return [
     HtmlService::class         => factory(static fn (Connection $conn, StringUtil $s, EventDispatcherInterface $d): HtmlService => new HtmlService($conn, $s, $d)),
     NotificationService::class => factory(static fn (Connection $conn, HtmlService $h, UrlGenerator $ug, PermissionService $perm, UrlService $us, CacheItemPoolInterface $pool): NotificationService => new NotificationService($conn, $h, $ug, $perm, $us, $pool)),
     PluginService::class       => factory(static fn (PluginRepository $repo, StringUtil $s, ActivityLogger $al, EventDispatcherInterface $dispatcher): PluginService => new PluginService($repo, $s, $al, $dispatcher)),
+    PluginRegistry::class      => factory(static fn (PluginRepository $repo, LoggerInterface $log): PluginRegistry => new PluginRegistry($repo, $log, PHPWG_ROOT_PATH . 'plugins', PHPWG_ROOT_PATH . 'docs/schemas/plugin.schema.json')),
     SearchService::class       => factory(static fn (SearchRepository $repo, Connection $conn, LoggerInterface $log, CategoryService $cat, HtmlService $h, PermissionService $perm, PreferencesService $pref, StringUtil $s, TagService $tag, UrlService $u, UserService $us, CacheItemPoolInterface $pool, EventDispatcherInterface $d): SearchService => new SearchService($repo, $conn, $log, $cat, $h, $perm, $pref, $s, $tag, $u, $us, $pool, $d)),
     SessionService::class      => factory(static fn (SessionRepository $repo): SessionService => new SessionService($repo)),
     TagService::class          => factory(static fn (Connection $conn, HtmlService $h, TagRepository $repo, PermissionService $perm, CacheItemPoolInterface $pool, EventDispatcherInterface $dispatcher): TagService => new TagService($conn, $h, $repo, $perm, $pool, $dispatcher)),

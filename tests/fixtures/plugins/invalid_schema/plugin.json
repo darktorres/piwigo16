@@ -1,0 +1,9 @@
+{
+  "id": "invalid schema",
+  "name": "",
+  "version": "not-semver",
+  "description": "",
+  "license": "MIT",
+  "minPiwigo": "17",
+  "main": "Bad/Class/Path"
+}

@@ -559,6 +559,18 @@ LOCK TABLES `piwigo_plugins` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `piwigo_plugin_migrations`
+--
+
+DROP TABLE IF EXISTS `piwigo_plugin_migrations`;
+CREATE TABLE `piwigo_plugin_migrations` (
+  `plugin_id` varchar(64) NOT NULL,
+  `version` varchar(191) NOT NULL,
+  `executed_at` datetime NOT NULL,
+  PRIMARY KEY (`plugin_id`,`version`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
+
+--
 -- Table structure for table `piwigo_rate`
 --
 

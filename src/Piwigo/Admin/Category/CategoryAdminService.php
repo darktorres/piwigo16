@@ -13,12 +13,10 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
-use Piwigo\Config\ConfigService;
 use Piwigo\Core\BoolUtil;
+use Piwigo\Core\ExecutionMutex;
 use Piwigo\Core\Lang;
-use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
-use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Album\CreateVirtualCategory;
@@ -36,12 +34,12 @@ final readonly class CategoryAdminService
         private Connection $conn,
         private CategoryRepository $categoryRepository,
         private CategoryService $categoryService,
-        private ConfigService $configService,
         private ImageAdminService $imageAdminService,
         private ImageRepository $imageRepository,
         private UserAdminService $userAdminService,
         private UserRepository $userRepository,
         private ActivityLogger $activityLogger,
+        private ExecutionMutex $mutex,
         private EventDispatcherInterface $dispatcher,
     ) {
     }
@@ -709,24 +707,10 @@ SELECT id FROM ' . Tables::imageCategory() . '
     /** @return array<mixed>|null */
     public function emptyLounge(bool $invalidateUserCache = true): ?array
     {
-        $logger = LoggerRegistry::current();
-        if (Config::has('empty_lounge_running')) {
-            [$runningExecId, $runningExecStartTime] = explode('-', (string) Config::emptyLoungeRunning());
-            if (time() - (int) $runningExecStartTime > 60) {
-                $logger->debug('empty_lounge, exec=' . $runningExecId . ', timeout stopped by another call');
-                $this->configService->confDeleteParam('empty_lounge_running');
-            }
-        }
-        $execId = StringUtil::generateKey(4);
-        $logger->debug('empty_lounge, exec=' . $execId . ', begins');
-        $this->conn->executeStatement('INSERT IGNORE INTO ' . Tables::config() . ' SET param="empty_lounge_running", value=?', [$execId . '-' . time()]);
-        $emptyLoungeRunning = $this->conn->executeQuery('SELECT value FROM ' . Tables::config() . ' WHERE param = "empty_lounge_running"')->fetchOne();
-        [$runningExecId] = explode('-', is_string($emptyLoungeRunning) ? $emptyLoungeRunning : '');
-        if ($runningExecId != $execId) {
-            $logger->debug('empty_lounge, exec=' . $execId . ', skip');
+        $execId = $this->mutex->acquire('empty_lounge');
+        if ($execId === false) {
             return null;
         }
-        $logger->debug('empty_lounge, exec=' . $execId . ' wins the race!');
         $maxImageId = 0;
         $rows       = $this->conn->executeQuery('SELECT image_id, category_id FROM ' . Tables::lounge() . ' ORDER BY category_id ASC, image_id ASC')->fetchAllAssociative();
         $images     = [];
@@ -744,8 +728,7 @@ SELECT id FROM ' . Tables::imageCategory() . '
         if ($invalidateUserCache) {
             $this->userAdminService->invalidateUserCache();
         }
-        $this->configService->confDeleteParam('empty_lounge_running');
-        $logger->debug('empty_lounge, exec=' . $execId . ', ends');
+        $this->mutex->release('empty_lounge');
         $this->dispatcher->dispatch(new EmptyLounge($rows));
         return $rows;
     }

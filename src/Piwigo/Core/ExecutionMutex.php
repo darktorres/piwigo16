@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Db\Tables;
 use Psr\Log\LoggerInterface;
@@ -41,9 +40,12 @@ final readonly class ExecutionMutex
         $execId = substr(sha1(random_bytes(1000)), 0, 8);
         $this->log->info('[' . $tokenName . '][exec=' . $execId . '] starts now');
 
-        if (Config::has($tokenName . '_running')) {
-            $runningRaw = Config::raw($tokenName . '_running');
-            [$runningExecId, $runningExecStartTime] = explode('-', is_scalar($runningRaw) ? (string) $runningRaw : '-');
+        $existing = $this->conn->executeQuery(
+            'SELECT value FROM ' . Tables::config() . ' WHERE param = ?',
+            [$tokenName . '_running']
+        )->fetchOne();
+        if (is_string($existing) && $existing !== '') {
+            [$runningExecId, $runningExecStartTime] = explode('-', $existing);
             if (time() - (int) $runningExecStartTime > $timeout) {
                 $this->log->info('[' . $tokenName . '][exec=' . $execId . '] exec=' . $runningExecId . ', timeout stopped by another call');
                 $this->release($tokenName);

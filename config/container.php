@@ -244,12 +244,12 @@ return [
                 $c->get(Connection::class),
                 $c->get(CategoryRepository::class),
                 $c->get(CategoryService::class),
-                $c->get(ConfigService::class),
                 $c->get(ImageAdminService::class),
                 $c->get(ImageRepository::class),
                 $c->get(UserAdminService::class),
                 $c->get(UserRepository::class),
                 $c->get(ActivityLogger::class),
+                $c->get(ExecutionMutex::class),
                 $c->get(EventDispatcherInterface::class),
             )
         );

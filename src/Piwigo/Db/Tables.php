@@ -20,6 +20,10 @@ final class Tables
     {
         return Config::dbPrefix() . 'config';
     }
+    public static function extensionIgnoredUpdates(): string
+    {
+        return Config::dbPrefix() . 'extension_ignored_updates';
+    }
     public static function favorites(): string
     {
         return Config::dbPrefix() . 'favorites';

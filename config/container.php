@@ -15,6 +15,7 @@ use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Config\SizesProcessor;
 use Piwigo\Admin\Config\WatermarkProcessor;
+use Piwigo\Admin\Extensions\IgnoredUpdatesRepository;
 use Piwigo\Admin\History\HistoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Metadata\MetadataAdminService;
@@ -299,6 +300,7 @@ return [
     WatermarkProcessor::class        => factory(static fn (ImageAdminService $iA, ActivityLogger $al, PermissionService $perm): WatermarkProcessor => new WatermarkProcessor($iA, $al, $perm)),
     MenubarRenderer::class           => factory(static fn (CategoryService $cat, CommentService $com, PermissionService $perm, TagService $tag, UrlGenerator $ug, UrlService $u, FilterService $f, MenubarLayoutRepository $ml, EventDispatcherInterface $dispatcher): MenubarRenderer => new MenubarRenderer($cat, $com, $perm, $tag, $ug, $u, $f, $ml, $dispatcher)),
     MenubarLayoutRepository::class   => factory(static fn (ConfigService $cfg): MenubarLayoutRepository => new MenubarLayoutRepository($cfg)),
+    IgnoredUpdatesRepository::class  => factory(static fn (Connection $conn): IgnoredUpdatesRepository => new IgnoredUpdatesRepository($conn)),
     SearchFilterRenderer::class      => factory(static fn (Connection $conn, ConfigService $cfg, DateService $d, HtmlService $h, LangService $lang, PermissionService $perm, SearchService $sr, TagService $tag, UrlService $u, CacheItemPoolInterface $pool): SearchFilterRenderer => new SearchFilterRenderer($conn, $cfg, $d, $h, $lang, $perm, $sr, $tag, $u, $pool)),
     CategoryCatsRenderer::class      => factory(static fn (Connection $conn, CategoryService $cat, DateService $d, FilterService $f, HtmlService $h, PermissionService $perm, UrlService $u, DebugCollector $dbg, PaginationService $pag, EventDispatcherInterface $dispatcher): CategoryCatsRenderer => new CategoryCatsRenderer($conn, $cat, $d, $f, $h, $perm, $u, $dbg, $pag, $dispatcher)),
     CategoryDefaultRenderer::class   => factory(static fn (Connection $conn, CategoryService $cat, HtmlService $h, ImageRepository $i, SessionService $sess, UrlService $u, DebugCollector $dbg, EventDispatcherInterface $dispatcher): CategoryDefaultRenderer => new CategoryDefaultRenderer($conn, $cat, $h, $i, $sess, $u, $dbg, $dispatcher)),

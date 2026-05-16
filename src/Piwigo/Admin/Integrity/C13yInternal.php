@@ -72,15 +72,23 @@ final class C13yInternal
      */
     public function c13yExif(CheckIntegrity $c13y): void
     {
-        foreach (['show_exif', 'use_exif'] as $value) {
-            if ((Config::raw($value)) and (!function_exists('exif_read_data'))) {
+        if (!function_exists('exif_read_data')) {
+            if (Config::showExif()) {
                 $c13y->addAnomaly(
-                    sprintf(Lang::t('%s value is not correct file because exif are not supported'), '$' . 'conf[\''.$value.'\']'),
+                    sprintf(Lang::t('%s value is not correct file because exif are not supported'), '$conf[\'show_exif\']'),
                     null,
                     null,
-                    sprintf(Lang::t('Install the PHP exif extension, or set %s to false in the database config table'), '$' . 'conf[\''.$value.'\']')
-          .'<br>'.
-          $c13y->getHtlmLinksMoreInfo()
+                    sprintf(Lang::t('Install the PHP exif extension, or set %s to false in the database config table'), '$conf[\'show_exif\']')
+                    . '<br>' . $c13y->getHtlmLinksMoreInfo()
+                );
+            }
+            if (Config::useExif()) {
+                $c13y->addAnomaly(
+                    sprintf(Lang::t('%s value is not correct file because exif are not supported'), '$conf[\'use_exif\']'),
+                    null,
+                    null,
+                    sprintf(Lang::t('Install the PHP exif extension, or set %s to false in the database config table'), '$conf[\'use_exif\']')
+                    . '<br>' . $c13y->getHtlmLinksMoreInfo()
                 );
             }
         }

@@ -334,9 +334,19 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                 natcasesort($groups);
                 $tpl->assign(['group_options' => $groups]);
 
-                foreach ($main_checkboxes as $checkbox) {
-                    $tpl->append('main', [$checkbox => Config::raw($checkbox)], true);
-                }
+                $tpl->append('main', [
+                    'allow_user_registration'           => Config::allowUserRegistration(),
+                    'obligatory_user_mail_address'      => Config::obligatoryUserMailAddress(),
+                    'rate'                              => Config::rateEnabled(),
+                    'rate_anonymous'                    => Config::rateAnonymous(),
+                    'allow_user_customization'          => Config::allowUserCustomization(),
+                    'log'                               => Config::logConf(),
+                    'history_admin'                     => Config::historyAdmin(),
+                    'history_guest'                     => Config::historyGuest(),
+                    'show_mobile_app_banner_in_gallery' => (bool) $this->configService->confGetParam('show_mobile_app_banner_in_gallery', false),
+                    'show_mobile_app_banner_in_admin'   => (bool) $this->configService->confGetParam('show_mobile_app_banner_in_admin', true),
+                    'upload_detect_duplicate'           => Config::uploadDetectDuplicate(),
+                ], true);
 
                 $tpl->assign('page_data_json', json_encode([
                     'order_by_is_custom'        => Config::has('order_by_custom') || Config::has('order_by_inside_category_custom'),
@@ -350,9 +360,20 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                     'comments_order'      => Config::commentsOrder(),
                     'comments_order_options' => $comments_order,
                 ]);
-                foreach ($comments_checkboxes as $checkbox) {
-                    $tpl->append('comments', [$checkbox => Config::raw($checkbox)], true);
-                }
+                $tpl->append('comments', [
+                    'activate_comments'                 => Config::activateComments(),
+                    'comments_forall'                   => Config::commentsForall(),
+                    'comments_validation'               => Config::commentsValidation(),
+                    'email_admin_on_comment'            => Config::emailAdminOnComment(),
+                    'email_admin_on_comment_validation' => Config::emailAdminOnCommentValidation(),
+                    'user_can_delete_comment'           => Config::userCanDeleteComment(),
+                    'user_can_edit_comment'             => Config::userCanEditComment(),
+                    'email_admin_on_comment_edition'    => Config::emailAdminOnCommentEdition(),
+                    'email_admin_on_comment_deletion'   => Config::emailAdminOnCommentDeletion(),
+                    'comments_author_mandatory'         => Config::commentsAuthorMandatory(),
+                    'comments_email_mandatory'          => Config::commentsEmailMandatory(),
+                    'comments_enable_website'           => Config::commentsEnableWebsite(),
+                ], true);
                 break;
 
             case 'default':
@@ -371,9 +392,32 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                 break;
 
             case 'display':
-                foreach ($display_checkboxes as $checkbox) {
-                    $tpl->append('display', [$checkbox => Config::raw($checkbox)], true);
-                }
+                $tpl->append('display', [
+                    'menubar_filter_icon'         => Config::menubarFilterIcon(),
+                    'index_search_in_set_button'  => Config::indexSearchInSetButton(),
+                    'index_search_in_set_action'  => Config::indexSearchInSetAction(),
+                    'index_sort_order_input'      => Config::indexSortOrderInput(),
+                    'index_flat_icon'             => Config::indexFlatIcon(),
+                    'index_posted_date_icon'      => Config::indexPostedDateIcon(),
+                    'index_created_date_icon'     => Config::indexCreatedDateIcon(),
+                    'index_slideshow_icon'        => Config::indexSlideShowIcon(),
+                    'index_sizes_icon'            => Config::indexSizesIcon(),
+                    'index_new_icon'              => Config::indexNewIcon(),
+                    'index_edit_icon'             => Config::indexEditIcon(),
+                    'index_caddie_icon'           => Config::indexCaddieIcon(),
+                    'display_fromto'              => Config::displayFromto(),
+                    'picture_metadata_icon'       => Config::pictureMetadataIcon(),
+                    'picture_slideshow_icon'      => Config::pictureSlideShowIcon(),
+                    'picture_favorite_icon'       => Config::pictureFavoriteIcon(),
+                    'picture_sizes_icon'          => Config::pictureSizesIcon(),
+                    'picture_download_icon'       => Config::pictureDownloadIcon(),
+                    'picture_edit_icon'           => Config::pictureEditIcon(),
+                    'picture_caddie_icon'         => Config::pictureCaddieIcon(),
+                    'picture_representative_icon' => Config::pictureRepresentativeIcon(),
+                    'picture_navigation_icons'    => Config::pictureNavigationIcons(),
+                    'picture_navigation_thumb'    => Config::pictureNavigationThumb(),
+                    'picture_menu'                => Config::pictureMenu(),
+                ], true);
                 $tpl->append('display', [
                     'picture_informations' => StringUtil::safeUnserialize(Config::pictureInformations() ?? ''),
                     'NB_CATEGORIES_PAGE'   => Config::nbCategoriesPage(),
@@ -389,9 +433,9 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                         'original_resize_maxheight' => Config::originalResizeMaxheight(),
                         'original_resize_quality'   => Config::originalResizeQuality(),
                     ]);
-                    foreach ($sizes_checkboxes as $checkbox) {
-                        $tpl->append('sizes', [$checkbox => Config::raw($checkbox)], true);
-                    }
+                    $tpl->append('sizes', [
+                        'original_resize' => Config::originalResize(),
+                    ], true);
 
                     $enabled      = ImageStdParams::getDefinedTypeMap();
                     $disabled_raw = StringUtil::safeUnserialize(ImageStdParams::getDisabledTypeMap());

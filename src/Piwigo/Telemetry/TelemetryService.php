@@ -333,9 +333,11 @@ final readonly class TelemetryService
         }
         $piwigoInfos['apps'] = $apps;
 
-        foreach (['activate_comments', 'rate', 'log', 'history_guest', 'history_admin'] as $feature) {
-            $piwigoInfos['features'][$feature] = Config::raw($feature) ? 'yes' : 'no';
-        }
+        $piwigoInfos['features']['activate_comments'] = Config::activateComments() ? 'yes' : 'no';
+        $piwigoInfos['features']['rate']              = Config::rateEnabled() ? 'yes' : 'no';
+        $piwigoInfos['features']['log']               = Config::logConf() ? 'yes' : 'no';
+        $piwigoInfos['features']['history_guest']     = Config::historyGuest() ? 'yes' : 'no';
+        $piwigoInfos['features']['history_admin']     = Config::historyAdmin() ? 'yes' : 'no';
 
         $updateUrl = $this->configService->confGetParam('send_piwigo_infos_update_url', PHPWG_URL);
         $url = (is_scalar($updateUrl) ? (string) $updateUrl : PHPWG_URL) . '/ws.php';

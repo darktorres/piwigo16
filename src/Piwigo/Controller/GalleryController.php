@@ -191,7 +191,11 @@ final readonly class GalleryController implements ControllerInterface
                 }
             } else {
                 $chronoField = $ctx->chronologyField === 'created' ? 'posted' : 'created';
-                if (Config::raw('index_' . $chronoField . '_date_icon')) {
+                $iconEnabled = match ($chronoField) {
+                    'created' => Config::indexCreatedDateIcon(),
+                    'posted'  => Config::indexPostedDateIcon(),
+                };
+                if ($iconEnabled) {
                     $url = $this->urlService->duplicateIndexUrl(
                         ['chronology_field' => $chronoField],
                         ['chronology_date', 'start', 'flat']

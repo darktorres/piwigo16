@@ -31,6 +31,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
+use Piwigo\Ws\OpenApi\ApiMethod;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -65,6 +66,7 @@ final readonly class CategoriesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Returns elements for the corresponding categories. cat_id can be empty if recursive is true.', tags: ['categories'])]
     public function getImages(array $params, PwgServer &$service): PwgError|array
     {
         $rawCatId = is_array($params['cat_id']) ? $params['cat_id'] : [];
@@ -180,6 +182,7 @@ final readonly class CategoriesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Returns a list of categories.', tags: ['categories'])]
     public function getList(array $params, PwgServer &$service): PwgError|array
     {
         $currentUser = CurrentUser::get();
@@ -356,6 +359,7 @@ final readonly class CategoriesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>
      */
+    #[ApiMethod(summary: 'Get albums list as displayed on admin page.', tags: ['categories'])]
     public function getAdminList(array $params, PwgServer &$service): array
     {
         if (!isset($params['additional_output'])) {
@@ -430,6 +434,7 @@ final readonly class CategoriesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Adds an album. pwg_token required if you want to use HTML in name/comment.', tags: ['categories'])]
     public function add(array $params, PwgServer &$service): PwgError|array
     {
         if (isset($params['pwg_token']) && $this->csrfService->getToken() !== $params['pwg_token']) {
@@ -459,6 +464,7 @@ final readonly class CategoriesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Changes the rank of an album.', tags: ['categories'])]
     public function setRank(array $params, PwgServer &$service): mixed
     {
         $rawSetrankIds  = is_array($params['category_id']) ? $params['category_id'] : [];
@@ -506,6 +512,7 @@ final readonly class CategoriesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Changes properties of an album. pwg_token required if you want to use HTML in name/comment.', tags: ['categories'])]
     public function setInfo(array $params, PwgServer &$service): mixed
     {
         if (isset($params['pwg_token']) && $this->csrfService->getToken() !== $params['pwg_token']) {
@@ -559,6 +566,7 @@ final readonly class CategoriesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Sets the representative photo for an album. The photo does not have to belong to the album.', tags: ['categories'])]
     public function setRepresentative(array $params, PwgServer &$service): mixed
     {
         $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
@@ -578,6 +586,7 @@ final readonly class CategoriesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: "Deletes the album thumbnail. Only possible if conf['allow_random_representative']", tags: ['categories'])]
     public function deleteRepresentative(array $params, PwgServer &$service): mixed
     {
         $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
@@ -598,6 +607,7 @@ final readonly class CategoriesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Find a new album thumbnail.', tags: ['categories'])]
     public function refreshRepresentative(array $params, PwgServer &$service): PwgError|array
     {
         $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
@@ -616,6 +626,7 @@ final readonly class CategoriesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Deletes album(s). photo_deletion_mode can be no_delete, delete_orphans (default), or force_delete_orphans.', tags: ['categories'])]
     public function delete(array $params, PwgServer &$service): mixed
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -649,6 +660,7 @@ final readonly class CategoriesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Move album(s). Set parent as 0 to move to gallery root. Only virtual categories can be moved.', tags: ['categories'])]
     public function move(array $params, PwgServer &$service): PwgError|array
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -710,6 +722,7 @@ final readonly class CategoriesEndpoints
     }
 
     /** @param array<mixed> $param */
+    #[ApiMethod(summary: 'Return the number of orphan photos if an album is deleted.', tags: ['categories'])]
     public function calculateOrphans(array $param, PwgServer &$service): mixed
     {
         $paramCatId    = is_array($param['category_id']) ? $param['category_id'] : [];

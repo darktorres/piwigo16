@@ -22,6 +22,7 @@ use Piwigo\Http\RedirectResponder;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
+use Piwigo\Ws\OpenApi\ApiMethod;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 
@@ -41,6 +42,7 @@ final readonly class ExtensionsEndpoints
      * @param array<mixed> $params
      * @return array<mixed>
      */
+    #[ApiMethod(summary: 'Gets the list of plugins with id, name, version, state and description.', tags: ['extensions'])]
     public function pluginsGetList(array $params, PwgServer $service): array
     {
         $plugins    = Kernel::service(Plugins::class);
@@ -54,6 +56,7 @@ final readonly class ExtensionsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Perform a plugin lifecycle action (install, activate, deactivate, uninstall, delete).', tags: ['extensions'])]
     public function pluginsPerformAction(array $params, PwgServer $service): PwgError|true
     {
         $template = TemplateRegistry::current();
@@ -80,6 +83,7 @@ final readonly class ExtensionsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Perform a theme lifecycle action (activate, deactivate, delete, set_default).', tags: ['extensions'])]
     public function themesPerformAction(array $params, PwgServer $service): PwgError|true
     {
         $template = TemplateRegistry::current();
@@ -103,6 +107,7 @@ final readonly class ExtensionsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: '<b>Webmaster only.</b>', tags: ['extensions'])]
     public function update(array $params, PwgServer $service): mixed
     {
         if (!Config::enableExtensionsInstall()) {
@@ -164,6 +169,7 @@ final readonly class ExtensionsEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: '<b>Webmaster only.</b> Ignores an extension if it needs update.', tags: ['extensions'])]
     public function ignoreUpdate(array $params, PwgServer $service): PwgError|true
     {
         if (!$this->permissionService->isWebmaster()) {
@@ -213,6 +219,7 @@ final readonly class ExtensionsEndpoints
      * @param array<mixed> $params
      * @return array<mixed>
      */
+    #[ApiMethod(summary: 'Checks if piwigo or extensions are up to date.', tags: ['extensions'])]
     public function checkUpdates(array $params, PwgServer $service): array
     {
         $update  = Kernel::service(Updates::class);

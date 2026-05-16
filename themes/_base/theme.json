@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/darktorres/piwigo16/16.x-rewrite/docs/schemas/theme.schema.json",
+  "id": "_base",
+  "name": "_base",
+  "version": "1.0.0",
+  "localHead": "local_head.latte",
+  "assets": {
+    "icon": "themes/_base/icon",
+    "img": "themes/_base/images",
+    "mimeIcon": "themes/_base/icon/mimetypes/"
+  }
+}

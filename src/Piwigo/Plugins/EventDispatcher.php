@@ -27,6 +27,21 @@ final class EventDispatcher
 {
     public const int NEUTRAL_PRIORITY = 50;
 
+    /**
+     * Singleton sentinel returned by bridgeToTyped() when no writeback
+     * should propagate back into the legacy `$data` (Kernel not booted,
+     * no typed event mapped, typed class threw, or every DTO field is
+     * readonly). Identity-compared (===), so it cannot collide with any
+     * legitimate event payload — strings, bools, arrays, even null can
+     * all be valid writeback values for some event.
+     */
+    private static ?\stdClass $noWritebackSentinel = null;
+
+    private static function noWriteback(): \stdClass
+    {
+        return self::$noWritebackSentinel ??= new \stdClass();
+    }
+
     /** @var array<string, array<int, list<array{function: mixed, include_path: string|null}>>> */
     public static array $handlers = [];
 
@@ -105,7 +120,10 @@ final class EventDispatcher
         }
 
         $args[0] = $data;
-        self::bridgeToTyped($event, ...$args);
+        $bridgeResult = self::bridgeToTyped($event, ...$args);
+        if ($bridgeResult !== self::noWriteback()) {
+            $data = $bridgeResult;
+        }
 
         if (isset(self::$handlers['trigger'])) {
             self::notify('trigger', ['type' => 'post_event', 'event' => $event, 'data' => $data]);
@@ -148,16 +166,23 @@ final class EventDispatcher
      * mapped for the event name. Construction or dispatch errors are
      * logged when a PSR-3 logger is reachable, then swallowed so legacy
      * dispatch continues unaffected.
+     *
+     * Returns the post-dispatch value of the typed event's single mutable
+     * public property (the B6b "selective readonly" convention), or the
+     * noWriteback() sentinel when no writeback should flow back into the
+     * legacy `$data`. Legacy callers in `dispatch()` use this to surface
+     * typed-subscriber mutations to plugin code that hasn't migrated off
+     * the static API yet.
      */
-    private static function bridgeToTyped(string $event, mixed ...$args): void
+    private static function bridgeToTyped(string $event, mixed ...$args): mixed
     {
         if (!Kernel::isBooted()) {
-            return;
+            return self::noWriteback();
         }
 
         $class = LegacyEventBridge::classFor($event);
         if ($class === null) {
-            return;
+            return self::noWriteback();
         }
 
         try {
@@ -170,6 +195,18 @@ final class EventDispatcher
             // @phpstan-ignore-next-line piwigo.noDynamicNew
             $typed = new $class(...$args);
             Kernel::service(EventDispatcherInterface::class)->dispatch($typed);
+
+            // Find the single mutable public property (the B6b convention:
+            // filter events demote exactly one field from readonly so
+            // subscribers can write into it). Reflection on the freshly
+            // dispatched event surfaces that field's post-subscriber value.
+            $reflection = new \ReflectionObject($typed);
+            foreach ($reflection->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
+                if (!$prop->isReadOnly()) {
+                    return $prop->getValue($typed);
+                }
+            }
+            return self::noWriteback();
         } catch (\Throwable $e) {
             try {
                 Kernel::service(LoggerInterface::class)->warning(
@@ -179,6 +216,7 @@ final class EventDispatcher
             } catch (\Throwable) {
                 // Logger unavailable; legacy flow continues either way.
             }
+            return self::noWriteback();
         }
     }
 

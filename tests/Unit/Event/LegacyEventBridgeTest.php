@@ -101,6 +101,37 @@ final class LegacyEventBridgeTest extends TestCase
         self::assertSame('value', $result);
     }
 
+    public function testTypedSubscriberMutationFlowsBackToLegacyReturn(): void
+    {
+        // B6e writeback: when a typed subscriber mutates the event's single
+        // mutable property, the bridge reads that value via reflection and
+        // returns it as the legacy dispatch's $data. Without this, plugins
+        // still calling the legacy API see input unchanged even when typed
+        // subscribers ran. render_tag_url's RenderTagUrlSubscriber applies
+        // StringUtil::str2url and is wired without DB deps, so it exercises
+        // the writeback end-to-end inside the unit test.
+        $result = EventDispatcher::dispatch('render_tag_url', 'Hello World!');
+        self::assertSame('hello_world', $result, 'typed subscriber mutation flowed back into legacy dispatch return');
+    }
+
+    public function testReadonlyOnlyEventReturnsLegacyMutatedDataUnchanged(): void
+    {
+        // When every DTO field is readonly (no B6b demotion), the bridge
+        // detects "no writeback property" and leaves the legacy $data alone.
+        // picture_modify_before_update is a notify-shape event with one
+        // readonly array field, so any plugin-legacy mutation propagates
+        // through legacy listeners without being clobbered by reflection.
+        $legacyListener = static function (array $data): array {
+            $data['mutated'] = true;
+            return $data;
+        };
+        EventDispatcher::addListener('picture_modify_before_update', $legacyListener);
+
+        $result = EventDispatcher::dispatch('picture_modify_before_update', ['title' => 'cat']);
+
+        self::assertSame(['title' => 'cat', 'mutated' => true], $result);
+    }
+
     public function testLegacyBridgeMapCoversEveryDispatchedEvent(): void
     {
         $missing = LegacyEventBridge::classFor('not_a_real_event_name');

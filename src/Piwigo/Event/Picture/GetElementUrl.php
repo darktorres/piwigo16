@@ -12,7 +12,7 @@ namespace Piwigo\Event\Picture;
 final class GetElementUrl
 {
     /**
-     * @param array<mixed> $elementInfo
+     * @param array<string, mixed> $elementInfo
      */
     public function __construct(
         public string $url,

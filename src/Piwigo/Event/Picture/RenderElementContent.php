@@ -12,7 +12,7 @@ namespace Piwigo\Event\Picture;
 final class RenderElementContent
 {
     /**
-     * @param array<mixed> $currentPicture
+     * @param array<string, mixed> $currentPicture
      */
     public function __construct(
         public string $content,

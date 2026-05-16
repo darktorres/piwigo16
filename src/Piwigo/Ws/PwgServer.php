@@ -471,8 +471,8 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         if (PwgServerRegistry::isInitialized()) {
             return;
         }
-        EventDispatcher::addListener('ws_invoke_allowed', static fn (mixed $res, string $methodName, array $params): mixed => Kernel::service(WsHelper::class)->isInvokeAllowed($res, $methodName, $params), EventDispatcher::NEUTRAL_PRIORITY);
-
+        // ws_invoke_allowed listener now registers at boot via
+        // Piwigo\Listener\WsInvokeAllowedSubscriber.
         $requestFormat = 'rest';
         $responseFormat = null;
 

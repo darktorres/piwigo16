@@ -79,10 +79,14 @@ final class LegacyEventBridgeTest extends TestCase
             static fn (bool $success, string $username, string $password, bool $rememberMe): bool => true,
         );
 
+        // High priority so this listener fires before the core
+        // TryLogUserSubscriber — that subscriber pulls in AuthService and
+        // Connection (DB), which aren't available in this unit test. We only
+        // care about the bridge wiring here, not the core subscriber.
         $capturedSuccess = null;
         self::dispatcher()->addListener(TryLogUser::class, static function (TryLogUser $event) use (&$capturedSuccess): void {
             $capturedSuccess = $event->success;
-        });
+        }, 100);
 
         $result = EventDispatcher::dispatch('try_log_user', false, 'alice', 'secret', false);
 

@@ -67,6 +67,7 @@ use Piwigo\Lang\LangService;
 use Piwigo\Lang\Translator;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Language\LanguageService;
+use Piwigo\Listener\CoreSubscribers;
 use Piwigo\Mail\MailService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Metadata\MetadataService;
@@ -125,11 +126,37 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 return [
     CacheItemPoolInterface::class => factory(static fn (): CacheItemPoolInterface => CacheFactory::create()),
-    EventDispatcherInterface::class => factory(static fn (): EventDispatcherInterface => new EventDispatcher()),
+    EventDispatcherInterface::class => factory(static function (ContainerInterface $c): EventDispatcherInterface {
+        $dispatcher = new EventDispatcher();
+        // Subscribers register lazily: the subscriber service is only
+        // resolved (and thus instantiated, with all its DI deps) the first
+        // time its event actually fires. This keeps boot cheap and lets
+        // tests build the dispatcher without pulling DB-bound services.
+        foreach (CoreSubscribers::ALL as $subscriberClass) {
+            \assert(is_subclass_of($subscriberClass, EventSubscriberInterface::class));
+            foreach ($subscriberClass::getSubscribedEvents() as $eventClass => $config) {
+                if (is_string($config)) {
+                    $method   = $config;
+                    $priority = 0;
+                } else {
+                    \assert(is_array($config));
+                    $method   = (string) $config[0];
+                    $priority = isset($config[1]) ? (int) $config[1] : 0;
+                }
+                $dispatcher->addListener(
+                    (string) $eventClass,
+                    static fn (object $event) => $c->get($subscriberClass)->{$method}($event),
+                    $priority,
+                );
+            }
+        }
+        return $dispatcher;
+    }),
     EventDispatcher::class => get(EventDispatcherInterface::class),
     Config::class          => factory(fn () => Config::instance()),
     Translator::class      => factory(fn () => Translator::get()),

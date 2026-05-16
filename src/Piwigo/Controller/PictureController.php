@@ -39,7 +39,6 @@ use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Picture\PictureCommentRenderer;
-use Piwigo\Picture\PictureContentRenderer;
 use Piwigo\Picture\PictureContext;
 use Piwigo\Picture\PictureContextRegistry;
 use Piwigo\Picture\PictureMetadataRenderer;
@@ -188,9 +187,9 @@ SELECT id
             }
         }
 
-        EventDispatcher::addListener('render_element_content', PictureContentRenderer::defaultContent(...));
-        EventDispatcher::addListener('render_element_description', 'pwg_nl2br');
-
+        // render_element_content / render_element_description listeners now
+        // register at container build time via CoreSubscribers
+        // (RenderElementContentSubscriber, RenderElementDescriptionSubscriber).
         $this->dispatcher->dispatch(new LocBeginPicture());
 
         $tpl = TemplateRegistry::current();

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\AdminService;
-use Piwigo\Admin\CoreTabsRegistrar;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Comment\CommentRepository;
@@ -29,7 +28,6 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
@@ -94,8 +92,8 @@ final readonly class AdminController implements ControllerInterface
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
 
-        EventDispatcher::addListener('tabsheet_before_select', CoreTabsRegistrar::addCoreTabs(...), 0);
-
+        // tabsheet_before_select listener now registers at boot via
+        // Piwigo\Listener\TabsheetBeforeSelectSubscriber.
         $this->dispatcher->dispatch(new LocBeginAdmin());
 
         $this->permissionService->checkStatus(AccessLevel::Administrator);

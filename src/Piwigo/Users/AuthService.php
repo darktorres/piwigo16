@@ -22,11 +22,11 @@ use Piwigo\Event\User\FinalizeLogin;
 use Piwigo\Event\User\LoginFailure;
 use Piwigo\Event\User\LoginFailureBeforeLogUser;
 use Piwigo\Event\User\LoginSuccess;
+use Piwigo\Event\User\TryLogUser;
 use Piwigo\Event\User\UserLogin;
 use Piwigo\Event\User\UserLogout;
 use Piwigo\Html\HtmlService;
 use Piwigo\Language\LanguageService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -193,7 +193,9 @@ final readonly class AuthService
 
     public function tryLogUser(string $username, string $password, bool $rememberMe): bool
     {
-        return (bool) EventDispatcher::dispatch('try_log_user', false, $username, $password, $rememberMe);
+        $event = new TryLogUser(false, $username, $password, $rememberMe);
+        $this->dispatcher->dispatch($event);
+        return $event->success;
     }
 
     public function pwgLogin(bool $success, string $username, string $password, bool $rememberMe): bool

@@ -14,7 +14,7 @@ namespace Piwigo\Event\BlockManager;
 final readonly class BlockManagerRegisterBlocks
 {
     public function __construct(
-        public object $menu,
+        public \Piwigo\Menu\BlockManager $menu,
     ) {
     }
 }

@@ -12,7 +12,7 @@ namespace Piwigo\Event\Picture;
 final readonly class ListCheckIntegrity
 {
     public function __construct(
-        public object $value,
+        public \Piwigo\Admin\Integrity\CheckIntegrity $value,
     ) {
     }
 }

@@ -391,9 +391,9 @@ $btraceMsg
         $this->dispatcher->dispatch(new SetStatusHeader($code, $text));
     }
 
-    public function renderCategoryLiteralDescription(?string $desc): string
+    public function renderCategoryLiteralDescription(string $desc): string
     {
-        return strip_tags($desc ?? '', '<span><p><a><br><b><i><small><big><strong><em>');
+        return strip_tags($desc, '<span><p><a><br><b><i><small><big><strong><em>');
     }
 
     public function registerDefaultMenubarBlocks(BlockManager $menu): void

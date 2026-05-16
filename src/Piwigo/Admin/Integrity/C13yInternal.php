@@ -16,16 +16,14 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\UserService;
 
 final class C13yInternal
 {
     public function __construct()
     {
-        EventDispatcher::addListener('list_check_integrity', $this->c13yVersion(...));
-        EventDispatcher::addListener('list_check_integrity', $this->c13yExif(...));
-        EventDispatcher::addListener('list_check_integrity', $this->c13yUser(...));
+        // c13yVersion/c13yExif/c13yUser listeners now register at boot via
+        // Piwigo\Listener\ListCheckIntegritySubscriber.
     }
 
     /**

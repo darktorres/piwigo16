@@ -35,16 +35,13 @@ use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\LangService;
-use Piwigo\Menu\BlockManager;
 use Piwigo\Migrations\MigrationRunner;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Plugin\PluginService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
-use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
@@ -144,8 +141,8 @@ final class CommonBootstrap
         SessionBootstrap::bootstrap();
         session_start();
         UserBootstrap::bootstrap();
-        EventDispatcher::init();
-        EventDispatcher::addListener('try_log_user', Kernel::service(AuthService::class)->pwgLogin(...));
+        // Core event subscribers register themselves via the EventDispatcher
+        // factory in config/container.php (see Piwigo\Listener\CoreSubscribers).
         Kernel::service(PluginService::class)->loadPlugins(); // no-op: plugins/ has no main.inc.php files
 
         if (!Config::has('piwigo_installed_version')) {
@@ -295,24 +292,12 @@ final class CommonBootstrap
             }
         }
 
-        EventDispatcher::addListener('render_category_literal_description', 'render_category_literal_description');
-        if (!Config::allowHtmlDescriptions()) {
-            EventDispatcher::addListener('render_category_description', 'pwg_nl2br');
-        }
-        EventDispatcher::addListener('render_comment_content', 'render_comment_content');
-        EventDispatcher::addListener('render_comment_author', 'strip_tags');
-        EventDispatcher::addListener('render_tag_url', 'str2url');
-        EventDispatcher::addListener(
-            'blockmanager_register_blocks',
-            static function (BlockManager $menu): void {
-                Kernel::service(HtmlService::class)->registerDefaultMenubarBlocks($menu);
-            },
-            EventDispatcher::NEUTRAL_PRIORITY - 1
-        );
-        if (!empty(Config::originalUrlProtection())) {
-            EventDispatcher::addListener('UrlService::get()->getElementUrl', 'get_element_url_protection_handler');
-            EventDispatcher::addListener('get_src_image_url', 'get_src_image_url_protection_handler');
-        }
+        // Listener registration moved to Piwigo\Listener\CoreSubscribers and
+        // wired into the EventDispatcher factory in config/container.php.
+        // Conditional registrations (Config::allowHtmlDescriptions,
+        // Config::originalUrlProtection) became dispatch-time guards inside
+        // the respective subscribers since Symfony subscribers register once
+        // at boot.
         Kernel::service(EventDispatcherInterface::class)->dispatch(new Init());
     }
 }

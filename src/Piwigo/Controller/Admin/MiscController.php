@@ -10,7 +10,6 @@ use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Album\AlbumsTabRenderer;
 use Piwigo\Admin\Image\ImageAdminService;
-use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Notification\NotificationAdminService;
 use Piwigo\Admin\Tabsheet;
@@ -169,7 +168,8 @@ final class MiscController
 
         $this->permissionService->checkStatus($this->getTabStatus($mode));
 
-        EventDispatcher::addListener('nbm_render_global_customize_mail_content', $this->renderGlobalCustomizeMailContent(...));
+        // nbm_render_global_customize_mail_content listener now registers
+        // at boot via NbmRenderGlobalCustomizeMailContentSubscriber.
         $this->dispatcher->dispatch(new NbmEventHandlerAdded());
 
         if (count($_POST) == 0) {
@@ -784,8 +784,9 @@ final class MiscController
         $tpl->assign('page_data_json', json_encode(['storage_details' => $data_storage, 'str_gb' => Lang::t('%sGB'), 'str_mb' => Lang::t('%sMB'), 'translate_type' => $translate_type, 'translate_files' => Lang::t('%d files'), 'dashboard' => $intro_dashboard_extras], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'intro.latte');
 
+        // C13yInternal's listener registration moved to
+        // Piwigo\Listener\ListCheckIntegritySubscriber (boot-time).
         $c13y = new CheckIntegrity();
-        new C13yInternal();
         $c13y->check();
         $c13y->display();
     }
@@ -1208,18 +1209,6 @@ final class MiscController
                 }
             }
         }
-    }
-
-    /** @param string|array<mixed> $customize_mail_content */
-    public function renderGlobalCustomizeMailContent(string|array $customize_mail_content): string
-    {
-        if (is_array($customize_mail_content)) {
-            return '';
-        }
-        if (Config::nbmSendHtmlMail() && !str_starts_with($customize_mail_content, '<')) {
-            return nl2br(htmlspecialchars($customize_mail_content));
-        }
-        return $customize_mail_content;
     }
 
     /**

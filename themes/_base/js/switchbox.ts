@@ -32,16 +32,6 @@ function sbFunc(link: string, box: string): void {
     }
 }
 
-// Process the legacy queue any caller may have populated before this module loaded.
-type SwitchBoxQueue = string[] | { push: typeof sbFunc };
-const existing = (window as unknown as Window & { SwitchBox?: SwitchBoxQueue }).SwitchBox;
-if (Array.isArray(existing)) {
-    const arr: string[] = existing;
-    for (let i = 0; i < arr.length; i += 2) {
-        sbFunc(arr[i]!, arr[i + 1]!);
-    }
-}
-
 // Auto-discover triggers via the data-switchbox attribute. Each trigger
 // element points at its companion box: <a data-switchbox="#fooBox">.
 document.querySelectorAll<HTMLElement>('[data-switchbox]').forEach((triggerEl) => {
@@ -55,8 +45,5 @@ document.querySelectorAll<HTMLElement>('[data-switchbox]').forEach((triggerEl) =
         sbFunc(`[data-switchbox="${box}"]`, box);
     }
 });
-
-// Keep the queue interface around for any caller still pushing.
-(window as unknown as Window & { SwitchBox?: SwitchBoxQueue }).SwitchBox = { push: sbFunc };
 
 export {};

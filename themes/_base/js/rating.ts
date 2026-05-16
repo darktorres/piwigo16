@@ -147,23 +147,7 @@ function updateRating(e: Event): void {
     );
 }
 
-// Process any legacy _pwgRatingAutoQueue queue (plugins may still push to it)
-// then auto-discover the rating form on the current page via its data-* attrs.
-if (
-    typeof _pwgRatingAutoQueue !== 'undefined' &&
-    Array.isArray(_pwgRatingAutoQueue) &&
-    _pwgRatingAutoQueue.length
-) {
-    for (let i = 0; i < (_pwgRatingAutoQueue as RatingOptions[]).length; i++) {
-        makeNiceRatingForm((_pwgRatingAutoQueue as RatingOptions[])[i]!);
-    }
-}
-_pwgRatingAutoQueue = {
-    push: (opts: RatingOptions) => {
-        makeNiceRatingForm(opts);
-    },
-};
-
+// Auto-discover the rating form on the current page via its data-* attrs.
 const ratingForm = document.getElementById('rateForm');
 const rootUrl = ratingForm?.dataset['rootUrl'];
 if (rootUrl !== undefined && rootUrl !== '') {

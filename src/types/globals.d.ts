@@ -1,4 +1,4 @@
-// Ambient globals injected by Smarty templates via inline <script> tags
+// Ambient globals injected by Latte templates via inline <script> tags
 // or exposed to window by other bundles loaded earlier on the same page.
 // Classes/consts defined in our own .ts files are NOT redeclared here to
 // avoid duplicate-identifier errors. Instead they appear on Window interface.
@@ -46,14 +46,6 @@ declare global {
     function pwgToaster(info: { text: string; icon: 'success' | 'error'; time?: number }): void;
 
     // ── Template-set vars (set by inline <script> before bundles load) ────────
-    // switchbox.ts
-    var SwitchBox: Array<string> | { push(link: string, box: string): void };
-
-    // rating.ts
-    var _pwgRatingAutoQueue:
-        | Array<Record<string, unknown>>
-        | { push(opts: Record<string, unknown>): void };
-
     // thumbnails.loader.ts
     var max_requests: number | undefined;
     var error_icon: string | undefined;

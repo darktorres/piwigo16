@@ -83,7 +83,6 @@ let nb_albums = pageData.nb_albums;
 // ---------------------------------------------------------------------------
 let actions: string;
 let catToEdit: string | undefined;
-let _cont: HTMLElement;
 let icon: string;
 let id: string | number | undefined;
 let moveParent: number | string | null;
@@ -519,7 +518,6 @@ function createAlbumNode(node: TreeNode, li: HTMLElement) {
     contEl.id = 'cat-' + node.id;
     contEl.innerHTML = '';
     contEl.insertAdjacentHTML('beforeend', actions);
-    _cont = contEl; // keep global for compatibility
 
     const hasChildren =
         (Array.isArray(node.haveChildren) && node.haveChildren.length > 0) ||

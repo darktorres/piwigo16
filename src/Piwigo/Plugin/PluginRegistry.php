@@ -7,6 +7,8 @@ namespace Piwigo\Plugin;
 use Composer\Semver\Semver;
 use Opis\JsonSchema\Validator;
 use Piwigo\Core\AppInfo;
+use Piwigo\Lang\LangService;
+use Piwigo\Plugin\Migration\PluginMigrationRunner;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -41,6 +43,7 @@ final class PluginRegistry
         private readonly LoggerInterface $logger,
         private readonly string $pluginsDir,
         private readonly string $schemaPath,
+        private readonly ?PluginMigrationRunner $migrationRunner = null,
     ) {
         $this->validator = new Validator();
     }
@@ -155,6 +158,7 @@ final class PluginRegistry
         }
 
         $this->repository->insert($pluginId, $manifest->version);
+        $this->applyMigrations($manifest);
         $this->bootInstance($manifest)->install();
     }
 
@@ -215,6 +219,7 @@ final class PluginRegistry
             return;
         }
 
+        $this->reverseMigrations($manifest);
         $this->bootInstance($manifest)->uninstall();
         $this->repository->delete($pluginId);
     }
@@ -239,8 +244,73 @@ final class PluginRegistry
             return;
         }
 
+        $this->applyMigrations($manifest);
         $this->bootInstance($manifest)->update($oldVersion, $newVersion);
         $this->repository->updateVersion($pluginId, $newVersion);
+    }
+
+    /**
+     * Walk active plugins in load order and merge each one's `.po`
+     * translations into the running LangService. Called from request
+     * bootstrap once the registry has resolved the dependency graph;
+     * plugin code is then free to use `$lang->t('key')` everywhere
+     * without manual `loadLanguage()` calls.
+     */
+    public function loadActiveLanguages(LangService $lang): void
+    {
+        foreach ($this->getLoadOrder() as $pluginId) {
+            if (!$this->isActive($pluginId)) {
+                continue;
+            }
+            $pluginDir = $this->getPath($pluginId);
+            if ($pluginDir === null) {
+                continue;
+            }
+            $lang->loadPluginTranslations($pluginId, $pluginDir);
+        }
+    }
+
+    private function isActive(string $pluginId): bool
+    {
+        $rows = $this->repository->findAll('active', $pluginId);
+        return $rows !== [];
+    }
+
+    /**
+     * Resolve the absolute path holding `Version*.php` files for this
+     * plugin (manifest field `migrations.path` is relative to the plugin
+     * root). Returns null when the manifest does not ship migrations.
+     */
+    private function migrationsDir(PluginManifest $manifest): ?string
+    {
+        if ($manifest->migrationsPath === null) {
+            return null;
+        }
+        return rtrim($this->pluginsDir, '/') . '/' . $manifest->id . '/' . trim($manifest->migrationsPath, '/');
+    }
+
+    private function applyMigrations(PluginManifest $manifest): void
+    {
+        if ($this->migrationRunner === null) {
+            return;
+        }
+        $this->migrationRunner->runUp(
+            $manifest->id,
+            $manifest->migrationsNamespace,
+            $this->migrationsDir($manifest),
+        );
+    }
+
+    private function reverseMigrations(PluginManifest $manifest): void
+    {
+        if ($this->migrationRunner === null) {
+            return;
+        }
+        $this->migrationRunner->runDown(
+            $manifest->id,
+            $manifest->migrationsNamespace,
+            $this->migrationsDir($manifest),
+        );
     }
 
     /**

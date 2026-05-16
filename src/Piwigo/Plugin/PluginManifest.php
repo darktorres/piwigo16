@@ -15,8 +15,10 @@ namespace Piwigo\Plugin;
 final readonly class PluginManifest
 {
     /**
-     * @param array<string, string> $require        Composer-style version constraints keyed by 'piwigo' or 'plugin/<id>'.
-     * @param array<string, string> $autoloadPsr4   PSR-4 namespace prefix -> directory map, relative to the plugin root.
+     * @param array<string, string> $require            Composer-style version constraints keyed by 'piwigo' or 'plugin/<id>'.
+     * @param array<string, string> $autoloadPsr4       PSR-4 namespace prefix -> directory map, relative to the plugin root.
+     * @param ?string               $migrationsNamespace Namespace declared by Version*.php migration files (null = no migrations shipped).
+     * @param ?string               $migrationsPath      Directory holding Version*.php files, relative to the plugin root (null = no migrations shipped).
      */
     public function __construct(
         public string $id,
@@ -32,6 +34,8 @@ final readonly class PluginManifest
         public bool|string $hasSettings = false,
         public array $require = [],
         public array $autoloadPsr4 = [],
+        public ?string $migrationsNamespace = null,
+        public ?string $migrationsPath = null,
     ) {
     }
 
@@ -70,6 +74,18 @@ final readonly class PluginManifest
             $hasSettings = false;
         }
 
+        $migrationsNamespace = null;
+        $migrationsPath = null;
+        $migrationsRaw = $data['migrations'] ?? null;
+        if (is_array($migrationsRaw)) {
+            $ns = $migrationsRaw['namespace'] ?? null;
+            $path = $migrationsRaw['path'] ?? null;
+            if (is_string($ns) && is_string($path) && $ns !== '' && $path !== '') {
+                $migrationsNamespace = $ns;
+                $migrationsPath = $path;
+            }
+        }
+
         return new self(
             id: self::requireString($data, 'id'),
             name: self::requireString($data, 'name'),
@@ -84,6 +100,8 @@ final readonly class PluginManifest
             hasSettings: $hasSettings,
             require: $require,
             autoloadPsr4: $psr4,
+            migrationsNamespace: $migrationsNamespace,
+            migrationsPath: $migrationsPath,
         );
     }
 

@@ -23,6 +23,10 @@
             <directory name="vendor"/>
             <directory name="install/db"/>
             <directory name="language"/>
+            <!-- Fixture used by PluginLintTest — intentionally uses
+                 the legacy globals and helpers plugin-lint must flag.
+                 Psalm has no business analyzing forbidden-pattern bait. -->
+            <directory name="tests/fixtures/plugins/dirty_plugin"/>
         </ignoreFiles>
     </projectFiles>
 

@@ -16,6 +16,12 @@ parameters:
             - install/db/*.php
             - language/*.php
             - vendor/*
+            # Fixture used by tools/plugin-lint.php tests — intentionally
+            # written with the legacy globals and functions plugin-lint
+            # must reject. Loading it under PSR-4 is already blocked by
+            # the lowercase directory name; PHPStan was happy to analyse
+            # it anyway, so exclude explicitly.
+            - tests/fixtures/plugins/dirty_plugin/*
     bootstrapFiles:
         - tools/phpstan-bootstrap.php
         - tools/phpstan-types.php

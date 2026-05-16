@@ -21,6 +21,34 @@ final class LangService
         return Lang::t($key ?? '', ...$args);
     }
 
+    /**
+     * Short translate API surfaced to plugin authors. Functionally identical
+     * to l10n(); ships as the canonical name in PluginInterface docs so
+     * plugins never call legacy `l10n()` or rely on global `Lang::t()`.
+     */
+    public function t(?string $key, string|int|float|bool|null ...$args): string
+    {
+        return Lang::t($key ?? '', ...$args);
+    }
+
+    /**
+     * Discover and merge a plugin's `.po` translations.
+     *
+     * Looks for `<pluginDir>/language/<locale>/plugin.po` against the
+     * standard fallback chain (current user locale → parent locale →
+     * configured default). Plugins call this nowhere — PluginRegistry
+     * invokes it during boot so plugin code only ever sees `t()`.
+     *
+     * @return bool true when a .po file was found and merged.
+     */
+    public function loadPluginTranslations(string $pluginId, string $pluginDir): bool
+    {
+        if ($pluginId === '' || $pluginDir === '') {
+            return false;
+        }
+        return $this->loadLanguage('plugin', rtrim($pluginDir, '/') . '/') === true;
+    }
+
     public function l10nDec(string $singularKey, string $pluralKey, int|float|null $decimal): string
     {
         return Translator::get()->plural($singularKey, $pluralKey, (int) $decimal);

@@ -93,6 +93,24 @@
         }
       },
       "description": "Autoload configuration for the plugin's source files."
+    },
+    "migrations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["namespace", "path"],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\\\[A-Za-z_][A-Za-z0-9_]*)*$",
+          "description": "PHP namespace declared in the plugin's Version*.php migration files."
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Directory containing Version*.php migration files, relative to the plugin root."
+        }
+      },
+      "description": "Optional Doctrine-style migrations shipped by the plugin. PluginRegistry runs un-applied migrations on activate() and reverses them on uninstall(); applied versions are tracked in piwigo_plugin_migrations keyed on (plugin_id, version)."
     }
   }
 }

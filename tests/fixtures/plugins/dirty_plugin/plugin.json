@@ -1,0 +1,9 @@
+{
+  "id": "dirty_plugin",
+  "name": "Dirty Plugin",
+  "version": "0.1.0",
+  "description": "Fixture plugin intentionally riddled with forbidden legacy patterns so plugin-lint has something to flag.",
+  "license": "MIT",
+  "minPiwigo": "17.0",
+  "main": "Piwigo\\Tests\\Fixtures\\Plugins\\DirtyPlugin\\Plugin"
+}

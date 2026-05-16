@@ -1,0 +1,13 @@
+# Fixture translations for LangService::loadPluginTranslations()
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_UK\n"
+"X-Piwigo-Language-Name: English (UK)\n"
+
+msgid "hello_plugin"
+msgstr "Hello from valid_plugin fixture"
+
+msgid "greeting"
+msgstr "Welcome, %s"

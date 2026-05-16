@@ -30,6 +30,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Ws\OpenApi\ApiMethod;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -63,6 +64,7 @@ final readonly class UsersEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Retrieves a list of all the users. display controls which data are returned: all, basics, none.', tags: ['users'])]
     public function getList(array $params, PwgServer &$service): PwgError|array
     {
         $orderStr = is_string($params['order'] ?? null) ? $params['order'] : '';
@@ -267,6 +269,7 @@ final readonly class UsersEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Registers a new user.', tags: ['users'])]
     public function add(array $params, PwgServer &$service): mixed
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -291,6 +294,7 @@ final readonly class UsersEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Get a new authentication key for a user. Only works for normal/generic users (not admins).', tags: ['users'])]
     public function getAuthKey(array $params, PwgServer &$service): mixed
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -304,6 +308,7 @@ final readonly class UsersEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Deletes one or more users. Photos owned by this user are not deleted.', tags: ['users'])]
     public function delete(array $params, PwgServer &$service): PwgError|string
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -325,6 +330,7 @@ final readonly class UsersEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Updates a user. Leave a field blank to keep the current value. username, password and email are ignored if user_id is an array.', tags: ['users'])]
     public function setInfo(array $params, PwgServer &$service): mixed
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -340,6 +346,7 @@ final readonly class UsersEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Update the current user.', tags: ['users'])]
     public function setMyInfo(array $params, PwgServer &$service): mixed
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -381,6 +388,7 @@ final readonly class UsersEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Set a user preferences parameter. JSON encode the value (and set is_json to true) if you need a complex data structure.', tags: ['users'])]
     public function preferencesSet(array $params, PwgServer &$service): mixed
     {
         $prefParam = is_string($params['param'] ?? null) ? $params['param'] : '';
@@ -396,6 +404,7 @@ final readonly class UsersEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: "Adds the indicated image to the current user's favorite images.", tags: ['users'])]
     public function favoritesAdd(array $params, PwgServer &$service): PwgError|true
     {
         if ($this->permissionService->isAGuest()) {
@@ -411,6 +420,7 @@ final readonly class UsersEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: "Removes the indicated image from the current user's favorite images.", tags: ['users'])]
     public function favoritesRemove(array $params, PwgServer &$service): PwgError|true
     {
         if ($this->permissionService->isAGuest()) {
@@ -429,6 +439,7 @@ final readonly class UsersEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|false
      */
+    #[ApiMethod(summary: 'Returns the favorite images of the current user.', tags: ['users'])]
     public function favoritesGetList(array $params, PwgServer &$service): false|array
     {
         if ($this->permissionService->isAGuest()) {
@@ -463,6 +474,7 @@ final readonly class UsersEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Return the reset password link. Only webmaster can perform this action for another webmaster.', tags: ['users'])]
     public function generatePasswordLink(array $params, PwgServer &$service): PwgError|array
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -506,6 +518,7 @@ final readonly class UsersEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Update the main user (owner). The user must have status "webmaster"; only a webmaster can call this.', tags: ['users'])]
     public function setMainUser(array $params, PwgServer &$service): PwgError|string
     {
         if (!$this->permissionService->isWebmaster()) {
@@ -533,6 +546,7 @@ final readonly class UsersEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Create a new api key for the user in the current session.', tags: ['users'])]
     public function createApiKey(array $params, PwgServer &$service): PwgError|array
     {
         $logger = LoggerRegistry::current();
@@ -557,6 +571,7 @@ final readonly class UsersEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Revoke an api key for the user in the current session.', tags: ['users'])]
     public function revokeApiKey(array $params, PwgServer &$service): mixed
     {
         $logger = LoggerRegistry::current();
@@ -580,6 +595,7 @@ final readonly class UsersEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Edit an api key for the user in the current session.', tags: ['users'])]
     public function editApiKey(array $params, PwgServer &$service): mixed
     {
         $logger = LoggerRegistry::current();
@@ -607,6 +623,7 @@ final readonly class UsersEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Get all api keys for the user in the current session.', tags: ['users'])]
     public function getApiKey(array $params, PwgServer &$service): PwgError|array
     {
         if ($this->permissionService->isAGuest() || !$this->authService->connectedWithPwgUi()) {

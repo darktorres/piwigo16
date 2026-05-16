@@ -112,12 +112,17 @@ final readonly class ConfigService
     }
 
     /**
+     * Generic dynamic-key reader for plugin-persisted conf rows that
+     * legitimately lack a SCHEMA entry (per-plugin keys, the existing
+     * mobile-app-banner toggles, etc.). For SCHEMA-backed keys, prefer
+     * the typed Config::xxx() accessors.
+     *
      * @param array<mixed>|bool|int|null|string $defaultValue
      *
      * @psalm-param 90|604800|array<mixed>|bool|null|string $defaultValue
      */
     public function confGetParam(string $param, array|string|int|bool|null $defaultValue = null): mixed
     {
-        return Config::raw($param) ?? $defaultValue;
+        return Config::all()[$param] ?? $defaultValue;
     }
 }

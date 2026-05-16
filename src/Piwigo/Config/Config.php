@@ -62,22 +62,6 @@ final class Config
     {
         return self::$data;
     }
-    /**
-     * Public escape hatch for parametric / dynamic keys (per-block menu config,
-     * _running semaphores, flip_picture_ext caches, DB row write loops, etc.).
-     * Bypasses SCHEMA validation by design.
-     *
-     * Static keys MUST go through a typed accessor — `raw()` is for cases where
-     * the key is computed at runtime and cannot be expressed via SCHEMA.
-     *
-     *
-     * @psalm-param 'fallback'|null $default
-     */
-    public static function raw(string $key, string|null $default = null): mixed
-    {
-        return self::src()[$key] ?? $default;
-    }
-
     private static function getString(string $key, string $default = ''): string
     {
         if (!array_key_exists($key, self::SCHEMA)) {

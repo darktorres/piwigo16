@@ -14,7 +14,7 @@ use PHPStan\Rules\RuleErrorBuilder;
 /**
  * Flags `global $conf`, `global $user`, `global $lang`, `global $template`
  * declarations inside src/ — prevents new typed-service code from pulling
- * in raw globals instead of calling typed accessors / Config::raw(),
+ * in raw globals instead of calling typed accessors,
  * PageState::current(), etc.
  *
  * @implements Rule<Global_>
@@ -27,7 +27,7 @@ final class NoGlobalInSrcRule implements Rule
     ];
 
     private const REPLACEMENTS = [
-        'conf' => 'Config typed accessor / Config::raw()',
+        'conf' => 'Config typed accessor or ConfigService::confGetParam()',
         'user' => 'CurrentUser::get()',
         'lang' => 'Lang::t()',
         'template' => 'TemplateRegistry::current()',

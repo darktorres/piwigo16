@@ -574,10 +574,9 @@ final class Template
      */
     private function applyStandardPagesContext(): void
     {
-        // Use ConfigService::confGetParam() rather than Config::raw() so
-        // PHPStan's ConfigKeyExistsRule doesn't flag the three theme-pref
-        // keys (the rule only inspects Config::raw static-call sites).
-        // ExtensionsController writes these via the same service.
+        // ConfigService::confGetParam is the dynamic-key reader for
+        // plugin-persisted conf rows that legitimately lack a SCHEMA
+        // entry. ExtensionsController writes these via the same service.
         $configService = Kernel::service(ConfigService::class);
         $logoRaw = $configService->confGetParam('standard_pages_selected_logo', 'piwigo_logo');
         $skinRaw = $configService->confGetParam('standard_pages_selected_skin', 'default');

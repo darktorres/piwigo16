@@ -12,9 +12,9 @@ use RuntimeException;
  * Config::SCHEMA. This catches typos in hand-written custom accessors and any
  * accidental drift from the source-of-truth registry.
  *
- * Dynamic / parametric keys (per-block menu config, *_running semaphores,
- * flip_picture_ext caches, etc.) are read via Config::raw() which bypasses
- * SCHEMA validation by design.
+ * Dynamic / parametric keys (plugin-persisted rows, etc.) go through
+ * ConfigService::confGetParam, which reads Config::all() directly without
+ * SCHEMA validation.
  */
 final class UnknownConfigKeyException extends RuntimeException
 {
@@ -22,8 +22,8 @@ final class UnknownConfigKeyException extends RuntimeException
     {
         parent::__construct(
             "Config::{$callee}('{$key}') called with key not in Config::SCHEMA. "
-            . 'Either add the key to SCHEMA + run tools/build-config-accessors.php, '
-            . 'or use Config::raw() if the key is genuinely dynamic.'
+            . 'Add the SCHEMA entry and its matching typed accessor in Config.php, '
+            . 'or use ConfigService::confGetParam() if the key is genuinely dynamic.'
         );
     }
 }

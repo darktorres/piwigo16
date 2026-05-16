@@ -23,21 +23,6 @@ final class ConfigTest extends TestCase
         Config::reset();
     }
 
-    public function test_raw_returns_default_when_key_missing(): void
-    {
-        $key = 'nonexistent';
-        self::assertNull(Config::raw($key));
-        self::assertSame('fallback', Config::raw($key, 'fallback'));
-    }
-
-    public function test_raw_returns_value_after_loadArray(): void
-    {
-        Config::loadArray(['upload_dir' => './upload', 'enable_formats' => false]);
-
-        self::assertSame('./upload', Config::raw('upload_dir'));
-        self::assertFalse(Config::raw('enable_formats'));
-    }
-
     public function test_typed_accessor_coerces_string_value(): void
     {
         Config::loadArray(['admin_theme' => 42]);

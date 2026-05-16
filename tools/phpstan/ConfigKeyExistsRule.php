@@ -18,17 +18,18 @@ use Piwigo\Config\Config;
  * Static-analysis safety net for Piwigo\Config\Config calls that take a key
  * argument:
  *
- *   - Config::raw / has / override / persist / delete with a string LITERAL
+ *   - Config::has / override / persist / delete with a string LITERAL
  *     key must reference a key that exists in Config::SCHEMA, OR be on the
  *     ALLOWED_RUNTIME_KEYS list (parametric / cache / sentinel keys that
  *     legitimately live outside the schema).
  *
  *   - Calls with a dynamic (non-literal) key argument are skipped — those
- *     are the legitimate dynamic-key escape hatch.
+ *     can only come from ConfigService::confGetParam now and that's
+ *     legitimate plugin-key dispatch.
  *
  * Catches typos at static-analysis time, complementing the runtime
  * UnknownConfigKeyException (which only fires on the private typed-getter
- * helpers, not on the public raw/has/override/persist/delete surface).
+ * helpers, not on the public has/override/persist/delete surface).
  *
  * @implements Rule<StaticCall>
  */
@@ -36,7 +37,7 @@ final class ConfigKeyExistsRule implements Rule
 {
     private const TARGET_CLASS = 'Piwigo\\Config\\Config';
 
-    private const VALIDATED_METHODS = ['raw', 'has', 'override', 'persist', 'delete'];
+    private const VALIDATED_METHODS = ['has', 'override', 'persist', 'delete'];
 
     /**
      * Keys that are NOT in SCHEMA but ARE legitimately accessed via literal

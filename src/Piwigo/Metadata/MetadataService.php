@@ -16,7 +16,6 @@ final readonly class MetadataService
 {
     public function __construct(
         private LoggerInterface $logger,
-        private StringUtil $stringUtil,
         private EventDispatcherInterface $dispatcher,
     ) {
     }
@@ -32,7 +31,7 @@ final readonly class MetadataService
         $result = [];
 
         $imginfo = [];
-        if (false === $this->stringUtil->pwgSafeGetimagesize($filename, $imginfo)) {
+        if (false === StringUtil::pwgSafeGetimagesize($filename, $imginfo)) {
             return $result;
         }
 
@@ -78,7 +77,7 @@ final readonly class MetadataService
             $cleanEvent = new CleanIptcValue($value);
             $this->dispatcher->dispatch($cleanEvent);
             $value = $cleanEvent->value;
-            if (($qual = $this->stringUtil->qualifyUtf8($value)) != 0) {
+            if (($qual = StringUtil::qualifyUtf8($value)) != 0) {
                 if ($qual > 0) {
                     $inputEncoding = 'utf-8';
                 } else {
@@ -88,7 +87,7 @@ final readonly class MetadataService
                     }
                 }
 
-                $value = $this->stringUtil->convertCharset($value, $inputEncoding, $this->stringUtil->getPwgCharset());
+                $value = StringUtil::convertCharset($value, $inputEncoding, StringUtil::getPwgCharset());
             }
         }
         return $value;
@@ -108,7 +107,7 @@ final readonly class MetadataService
             throw new ConfigException('Exif extension not available, admin should disable exif use');
         }
 
-        $exifResult = $this->stringUtil->pwgSafeExifReadData($filename);
+        $exifResult = StringUtil::pwgSafeExifReadData($filename);
         $exif = $exifResult !== false ? $exifResult : null;
         $exifEvent = new FormatExifData($exif ?? [], $filename, $map);
         $this->dispatcher->dispatch($exifEvent);

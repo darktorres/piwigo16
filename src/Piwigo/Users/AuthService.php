@@ -38,7 +38,6 @@ final readonly class AuthService
         private UserRepository $userRepo,
         private AuthKeyRepository $authKeyRepo,
         private Connection $conn,
-        private StringUtil $stringUtil,
         private ActivityLogger $activityLogger,
         private SessionService $sessionService,
         private UrlGenerator $urlGenerator,
@@ -56,7 +55,7 @@ final readonly class AuthService
             return '';
         }
 
-        if (!$this->stringUtil->emailCheckFormat($mailAddress ?? '')) {
+        if (!StringUtil::emailCheckFormat($mailAddress ?? '')) {
             return Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 

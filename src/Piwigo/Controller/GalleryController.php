@@ -64,7 +64,6 @@ final readonly class GalleryController implements ControllerInterface
         private SectionInitializer $sectionInitializer,
         private SelectedTagsRenderer $selectedTagsRenderer,
         private SessionService $sessionService,
-        private StringUtil $stringUtil,
         private TagService $tagService,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
@@ -104,7 +103,7 @@ final readonly class GalleryController implements ControllerInterface
         $this->dispatcher->dispatch(new LocBeginIndex());
 
         // Image display-order change
-        $imageOrder = $this->stringUtil->inputInt('image_order', null, $_GET);
+        $imageOrder = StringUtil::inputInt('image_order', null, $_GET);
         if ($imageOrder !== null) {
             if ($imageOrder > 0) {
                 $this->sessionService->setSessionVar('image_order', $imageOrder);
@@ -114,7 +113,7 @@ final readonly class GalleryController implements ControllerInterface
             $this->redirectResponder->redirect($this->urlService->duplicateIndexUrl([], ['start']));
         }
 
-        $display = $this->stringUtil->inputString('display', null, $_GET);
+        $display = StringUtil::inputString('display', null, $_GET);
         if ($display !== null) {
             $ps = PageState::current();
             $ps->metaRobots = array_merge($ps->metaRobots, ['noindex' => 1]);
@@ -140,7 +139,7 @@ final readonly class GalleryController implements ControllerInterface
         $tpl->assign('thumb_navbar', $navigationBar);
 
         // Caddie filling
-        if ($this->stringUtil->inputString('caddie', null, $_GET) !== null) {
+        if (StringUtil::inputString('caddie', null, $_GET) !== null) {
             $this->imageRepository->addToUserCaddie(\Piwigo\Users\CurrentUser::get()->id, array_map(static fn (string $i): int => (int) $i, $items));
             $this->redirectResponder->redirect($this->urlService->duplicateIndexUrl());
         }
@@ -368,7 +367,7 @@ final readonly class GalleryController implements ControllerInterface
             $catSlideshowUrlRaw = $tpl->getTemplateVars('CAT_SLIDESHOW_URL');
             $catSlideshowUrl    = is_string($catSlideshowUrlRaw) ? $catSlideshowUrlRaw : '';
             if ($catSlideshowUrl !== '') {
-                if ($this->stringUtil->inputString('slideshow', null, $_GET) !== null) {
+                if (StringUtil::inputString('slideshow', null, $_GET) !== null) {
                     $this->redirectResponder->redirect($catSlideshowUrl);
                 } elseif (Config::indexSlideShowIcon()) {
                     $tpl->assign('U_SLIDESHOW', $catSlideshowUrl);

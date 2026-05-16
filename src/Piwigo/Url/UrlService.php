@@ -29,7 +29,6 @@ final class UrlService
 
     public function __construct(
         private readonly Connection $conn,
-        private readonly StringUtil $stringUtil,
         private readonly CategoryService $categoryService,
         private readonly HtmlService $htmlService,
         private readonly TagService $tagService,
@@ -190,12 +189,12 @@ final class UrlService
             case 'id-file':
                 $url .= is_scalar($params['image_id'] ?? null) ? (string) $params['image_id'] : '';
                 if (isset($params['image_file'])) {
-                    $url .= '-' . $this->stringUtil->str2url($this->stringUtil->getFilenameWoExtension(is_string($params['image_file']) ? $params['image_file'] : ''));
+                    $url .= '-' . StringUtil::str2url(StringUtil::getFilenameWoExtension(is_string($params['image_file']) ? $params['image_file'] : ''));
                 }
                 break;
             case 'file':
                 if (isset($params['image_file'])) {
-                    $fnameWoExt = $this->stringUtil->getFilenameWoExtension(is_string($params['image_file']) ? $params['image_file'] : '');
+                    $fnameWoExt = StringUtil::getFilenameWoExtension(is_string($params['image_file']) ? $params['image_file'] : '');
                     if (ord($fnameWoExt[0]) > ord('9') or !preg_match('/^\d+(-|$)/', $fnameWoExt)) {
                         $url .= $fnameWoExt;
                         break;
@@ -283,7 +282,7 @@ final class UrlService
                             $sectionString .= is_scalar($catIdRaw) ? (string) $catIdRaw : '';
                             if (Config::categoryUrlStyle() == 'id-name') {
                                 $catNameRaw = $cat['name'];
-                                $sectionString .= '-' . $this->stringUtil->str2url(is_string($catNameRaw) ? $catNameRaw : '');
+                                $sectionString .= '-' . StringUtil::str2url(is_string($catNameRaw) ? $catNameRaw : '');
                             }
                         } else {
                             $sectionString .= is_string($cat['permalink']) ? $cat['permalink'] : '';
@@ -299,7 +298,7 @@ final class UrlService
                                 if (empty($category['permalink'])) {
                                     $sectionString .= is_scalar($category['id'] ?? null) ? (string) $category['id'] : '';
                                     if (Config::categoryUrlStyle() == 'id-name') {
-                                        $sectionString .= '-' . $this->stringUtil->str2url(is_string($category['name'] ?? null) ? $category['name'] : '');
+                                        $sectionString .= '-' . StringUtil::str2url(is_string($category['name'] ?? null) ? $category['name'] : '');
                                     }
                                 } else {
                                     $sectionString .= is_string($category['permalink']) ? $category['permalink'] : '';

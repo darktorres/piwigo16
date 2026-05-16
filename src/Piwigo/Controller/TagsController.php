@@ -35,7 +35,6 @@ final readonly class TagsController implements ControllerInterface
         private HtmlService $htmlService,
         private MenubarRenderer $menubarRenderer,
         private PermissionService $permissionService,
-        private StringUtil $stringUtil,
         private TagService $tagService,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
@@ -56,7 +55,7 @@ final readonly class TagsController implements ControllerInterface
         $tpl = TemplateRegistry::current();
 
         $displayMode  = Config::tagsDefaultDisplayMode();
-        $display_mode = $this->stringUtil->inputString('display_mode', null, $_GET);
+        $display_mode = StringUtil::inputString('display_mode', null, $_GET);
         if ($display_mode !== null && in_array($display_mode, ['cloud', 'letters'])) {
             $displayMode = $display_mode;
         }
@@ -83,7 +82,7 @@ final readonly class TagsController implements ControllerInterface
             foreach ($tags as $tag) {
                 $tagArr      = is_array($tag) ? $tag : [];
                 $tagName     = is_string($tagArr['name'] ?? null) ? $tagArr['name'] : '';
-                $tag_letter  = mb_strtoupper(mb_substr($this->stringUtil->pwgTransliterate($tagName), 0, 1, 'utf-8'), 'utf-8');
+                $tag_letter  = mb_strtoupper(mb_substr(StringUtil::pwgTransliterate($tagName), 0, 1, 'utf-8'), 'utf-8');
 
                 if ($current_tag_idx === 0) {
                     $current_letter  = $tag_letter;

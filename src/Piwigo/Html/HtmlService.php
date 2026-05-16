@@ -37,7 +37,6 @@ final readonly class HtmlService
 {
     public function __construct(
         private Connection $conn,
-        private StringUtil $stringUtil,
         private EventDispatcherInterface $dispatcher,
     ) {
     }
@@ -198,7 +197,7 @@ SELECT id, name, permalink
     {
         foreach ([$a, $b] as $tag) {
             $tagName = is_string($tag['name'] ?? null) ? $tag['name'] : '';
-            RequestCache::remember('tag_alpha', $tagName, fn (): string => $this->stringUtil->pwgTransliterate($tagName));
+            RequestCache::remember('tag_alpha', $tagName, fn (): string => StringUtil::pwgTransliterate($tagName));
         }
 
         $aName = is_string($a['name'] ?? null) ? $a['name'] : '';
@@ -421,7 +420,7 @@ $btraceMsg
             $this->dispatcher->dispatch($nameEvent);
             return $nameEvent->elementName;
         }
-        return $this->stringUtil->getNameFromFile(is_string($info['file'] ?? null) ? $info['file'] : '');
+        return StringUtil::getNameFromFile(is_string($info['file'] ?? null) ? $info['file'] : '');
     }
 
     /** @param array<string, mixed> $info */
@@ -477,7 +476,7 @@ $btraceMsg
     public function getElementUrlProtectionHandler(string $url, array $infos): string
     {
         if ('images' == Config::originalUrlProtection()) {
-            $ext = $this->stringUtil->getExtension(is_string($infos['path'] ?? null) ? $infos['path'] : '');
+            $ext = StringUtil::getExtension(is_string($infos['path'] ?? null) ? $infos['path'] : '');
             if (!in_array($ext, Config::pictureExtensions())) {
                 return $url;
             }

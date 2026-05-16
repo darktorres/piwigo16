@@ -20,7 +20,6 @@ final readonly class MetadataAdminService
         private Connection $conn,
         private ImageRepository $imageRepository,
         private MetadataService $metadataService,
-        private StringUtil $stringUtil,
         private TagAdminService $tagAdminService,
     ) {
     }
@@ -134,13 +133,13 @@ final readonly class MetadataAdminService
         $is_tiff = false;
 
         if (isset($infos['representative_ext'])) {
-            if (is_readable($file) && ($image_size = $this->stringUtil->pwgSafeGetimagesize($file)) !== false) {
+            if (is_readable($file) && ($image_size = StringUtil::pwgSafeGetimagesize($file)) !== false) {
                 $type = $image_size[2];
                 if (IMAGETYPE_TIFF_MM == $type || IMAGETYPE_TIFF_II == $type) {
                     $is_tiff = true;
                 }
             }
-            $file = $this->stringUtil->originalToRepresentative($file, is_string($infos['representative_ext']) ? $infos['representative_ext'] : '');
+            $file = StringUtil::originalToRepresentative($file, is_string($infos['representative_ext']) ? $infos['representative_ext'] : '');
         }
 
         if (function_exists('mime_content_type')) {
@@ -172,7 +171,7 @@ final readonly class MetadataAdminService
                         $infos['height'] = round((float) explode(' ', $vb)[3]);
                     }
                 }
-                if (is_readable($file) && ($image_size = $this->stringUtil->pwgSafeGetimagesize($file)) !== false) {
+                if (is_readable($file) && ($image_size = StringUtil::pwgSafeGetimagesize($file)) !== false) {
                     $infos['width'] = $image_size[0];
                     $infos['height'] = $image_size[1];
                 }

@@ -16,7 +16,6 @@ use Piwigo\Users\PermissionService;
 final readonly class WsHelper
 {
     public function __construct(
-        private StringUtil $stringUtil,
         private PermissionService $permissionService,
         private UrlService $urlService,
     ) {
@@ -43,7 +42,7 @@ final readonly class WsHelper
     public function imageSqlFilter(array $params, string $tbl_name = ''): array
     {
         foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
-            if (isset($params[$datefield]) && !$this->stringUtil->isValidMysqlDatetime(is_scalar($params[$datefield]) ? (string) $params[$datefield] : '')) {
+            if (isset($params[$datefield]) && !StringUtil::isValidMysqlDatetime(is_scalar($params[$datefield]) ? (string) $params[$datefield] : '')) {
                 PwgServerRegistry::current()->sendResponse(new PwgError(WsError::InvalidParam->value, 'Invalid ' . $datefield));
                 exit;
             }

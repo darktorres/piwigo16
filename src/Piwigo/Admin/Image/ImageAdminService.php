@@ -44,7 +44,6 @@ final class ImageAdminService
         private readonly CommentRepository $commentRepository,
         private readonly ConfigService $configService,
         private readonly ImageRepository $imageRepository,
-        private readonly StringUtil $stringUtil,
         private readonly TagRepository $tagRepository,
         private readonly UrlGenerator $urlGenerator,
         private readonly UserRepository $userRepository,
@@ -78,14 +77,14 @@ final class ImageAdminService
                 continue;
             }
             $files   = [];
-            $files[] = $this->stringUtil->getElementPath($row);
+            $files[] = StringUtil::getElementPath($row);
             if (!empty($row['representative_ext'])) {
-                $files[] = $this->stringUtil->originalToRepresentative($files[0], is_string($row['representative_ext']) ? $row['representative_ext'] : '');
+                $files[] = StringUtil::originalToRepresentative($files[0], is_string($row['representative_ext']) ? $row['representative_ext'] : '');
             }
             $rowIdInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
             if (isset($formatsOf[$rowIdInt])) {
                 foreach ($formatsOf[$rowIdInt] as $fmtExt) {
-                    $files[] = $this->stringUtil->originalToFormat($files[0], $fmtExt);
+                    $files[] = StringUtil::originalToFormat($files[0], $fmtExt);
                 }
             }
             if (!Config::has('never_delete_originals')) {
@@ -175,7 +174,7 @@ final class ImageAdminService
     {
         $path = is_string($infos['path'] ?? null) ? $infos['path'] : '';
         if (!empty($infos['representative_ext'])) {
-            $path = $this->stringUtil->originalToRepresentative($path, is_string($infos['representative_ext']) ? $infos['representative_ext'] : '');
+            $path = StringUtil::originalToRepresentative($path, is_string($infos['representative_ext']) ? $infos['representative_ext'] : '');
         }
         if (substr_compare($path, '../', 0, 3) === 0) {
             $path = substr($path, 3);

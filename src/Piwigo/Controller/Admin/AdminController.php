@@ -68,7 +68,6 @@ final readonly class AdminController implements ControllerInterface
         private PermissionService $permissionService,
         private PreferencesService $preferencesService,
         private SessionService $sessionService,
-        private StringUtil $stringUtil,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserAdminService $userAdminService,
@@ -131,13 +130,13 @@ final readonly class AdminController implements ControllerInterface
 
         // ── Direct / AJAX actions ─────────────────────────────────────────────
 
-        $plugins_new_order = $this->stringUtil->inputString('plugins_new_order', null, $_GET);
+        $plugins_new_order = StringUtil::inputString('plugins_new_order', null, $_GET);
         if ($plugins_new_order !== null) {
             $this->sessionService->setSessionVar('plugins_new_order', $plugins_new_order);
             exit;
         }
 
-        if ($this->stringUtil->inputString('change_theme', null, $_GET) !== null) {
+        if (StringUtil::inputString('change_theme', null, $_GET) !== null) {
             $admin_themes = ['dark', 'light'];
             $rawTheme         = $this->preferencesService->userprefsGetParam('admin_theme', 'dark');
             $admin_theme_array = [is_scalar($rawTheme) ? (string) $rawTheme : 'dark'];

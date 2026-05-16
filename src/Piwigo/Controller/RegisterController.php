@@ -43,7 +43,6 @@ final readonly class RegisterController implements ControllerInterface
         private LangService $langService,
         private MenubarRenderer $menubarRenderer,
         private PermissionService $permissionService,
-        private StringUtil $stringUtil,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserService $userService,
@@ -68,12 +67,12 @@ final readonly class RegisterController implements ControllerInterface
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
 
-        $post_login    = $this->stringUtil->inputString('login', null, $_POST);
-        $post_mail     = $this->stringUtil->inputString('mail_address', null, $_POST);
-        $post_key      = $this->stringUtil->inputString('key', null, $_POST) ?? '';
-        $post_send_mail = $this->stringUtil->inputString('send_password_by_mail', null, $_POST) !== null;
+        $post_login    = StringUtil::inputString('login', null, $_POST);
+        $post_mail     = StringUtil::inputString('mail_address', null, $_POST);
+        $post_key      = StringUtil::inputString('key', null, $_POST) ?? '';
+        $post_send_mail = StringUtil::inputString('send_password_by_mail', null, $_POST) !== null;
 
-        if ($this->stringUtil->inputString('submit', null, $_POST) !== null) {
+        if (StringUtil::inputString('submit', null, $_POST) !== null) {
             $pgErrors = [];
 
             if (!$this->ephemeralKeyService->verify($post_key)) {
@@ -96,7 +95,7 @@ final readonly class RegisterController implements ControllerInterface
             }
 
             if (count($pgErrors) == 0) {
-                if ($post_send_mail && $this->stringUtil->emailCheckFormat($post_mail ?? '')) {
+                if ($post_send_mail && StringUtil::emailCheckFormat($post_mail ?? '')) {
                     if (!is_array($_SESSION['page_infos'] ?? null)) {
                         $_SESSION['page_infos'] = [];
                     }
@@ -134,7 +133,7 @@ final readonly class RegisterController implements ControllerInterface
             $this->menubarRenderer->render();
         }
 
-        $cookie_lang = $this->stringUtil->inputString('lang', null, $_COOKIE);
+        $cookie_lang = StringUtil::inputString('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
             if (!array_key_exists($cookie_lang, $this->languageService->getActiveLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');

@@ -38,7 +38,6 @@ final readonly class MailService
 {
     public function __construct(
         private Connection $conn,
-        private StringUtil $stringUtil,
         private UrlGenerator $urlGenerator,
         private UserRepository $userRepository,
         private LangService $langService,
@@ -577,7 +576,7 @@ SELECT
                     'GALLERY_TITLE'    => PageState::current()->galleryTitle ?? Config::galleryTitle(),
                     'VERSION'          => Config::showVersion() ? AppInfo::VERSION : '',
                     'PHPWG_URL'        => defined('PHPWG_URL') ? PHPWG_URL : '',
-                    'CONTENT_ENCODING' => $this->stringUtil->getPwgCharset(),
+                    'CONTENT_ENCODING' => StringUtil::getPwgCharset(),
                     'CONTACT_MAIL'     => $this->getMailSenderEmail(),
                 ]);
 

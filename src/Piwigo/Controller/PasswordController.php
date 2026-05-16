@@ -42,7 +42,6 @@ final readonly class PasswordController implements ControllerInterface
         private MenubarRenderer $menubarRenderer,
         private PasswordService $passwordService,
         private PermissionService $permissionService,
-        private StringUtil $stringUtil,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserService $userService,
@@ -69,9 +68,9 @@ final readonly class PasswordController implements ControllerInterface
 
         $action     = null;
         $username   = null;
-        $get_action = $this->stringUtil->inputString('action', null, $_GET);
+        $get_action = StringUtil::inputString('action', null, $_GET);
 
-        if ($this->stringUtil->inputString('submit', null, $_POST) !== null) {
+        if (StringUtil::inputString('submit', null, $_POST) !== null) {
             $this->csrfService->check();
 
             if ('lost' == $get_action) {
@@ -93,13 +92,13 @@ final readonly class PasswordController implements ControllerInterface
             }
         }
 
-        if ($this->stringUtil->inputString('key', null, $_GET) !== null && !$this->permissionService->isAGuest()) {
+        if (StringUtil::inputString('key', null, $_GET) !== null && !$this->permissionService->isAGuest()) {
             unset($_GET['key']);
         }
 
         $first_login = false;
-        $get_key     = $this->stringUtil->inputString('key', null, $_GET);
-        if ($get_key !== null && $this->stringUtil->inputString('submit', null, $_POST) === null) {
+        $get_key     = StringUtil::inputString('key', null, $_GET);
+        if ($get_key !== null && StringUtil::inputString('submit', null, $_POST) === null) {
             $user_id = $this->passwordService->checkPasswordResetKey($get_key);
             if (is_numeric($user_id)) {
                 $userdata = $this->userService->getuserdata($user_id, false);
@@ -142,7 +141,7 @@ final readonly class PasswordController implements ControllerInterface
 
         if ('lost' == $action) {
             $title       = Lang::t('Forgot your password?');
-            $post_uoe    = $this->stringUtil->inputString('username_or_email', null, $_POST);
+            $post_uoe    = StringUtil::inputString('username_or_email', null, $_POST);
             if ($post_uoe !== null) {
                 $tpl->assign('username_or_email', htmlspecialchars(stripslashes($post_uoe)));
             }
@@ -170,7 +169,7 @@ final readonly class PasswordController implements ControllerInterface
             $this->menubarRenderer->render();
         }
 
-        $cookie_lang = $this->stringUtil->inputString('lang', null, $_COOKIE);
+        $cookie_lang = StringUtil::inputString('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
             if (!array_key_exists($cookie_lang, $this->languageService->getActiveLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');

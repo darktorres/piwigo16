@@ -74,7 +74,6 @@ final readonly class GeneralEndpoints
         private PictureService $pictureService,
         private RateService $rateService,
         private SearchRepository $searchRepository,
-        private StringUtil $stringUtil,
         private TagRepository $tagRepository,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
@@ -348,7 +347,7 @@ final readonly class GeneralEndpoints
         $res['theme']    = $currentUser->theme;
         $res['language'] = $currentUser->language;
         $res['pwg_token'] = $this->csrfService->getToken();
-        $res['charset']   = $this->stringUtil->getPwgCharset();
+        $res['charset']   = StringUtil::getPwgCharset();
         $res['current_datetime'] = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         $res['version']   = AppInfo::VERSION;
         $res['save_visits'] = $this->activityLogger->isLoggingEnabled();
@@ -377,7 +376,7 @@ final readonly class GeneralEndpoints
     public function getActivityList(array $param, PwgServer &$service): PwgError|array
     {
         foreach (['date_min', 'date_max'] as $datefield) {
-            if (!empty($param[$datefield]) && !$this->stringUtil->isValidMysqlDatetime(is_scalar($param[$datefield]) ? (string) $param[$datefield] : '')) {
+            if (!empty($param[$datefield]) && !StringUtil::isValidMysqlDatetime(is_scalar($param[$datefield]) ? (string) $param[$datefield] : '')) {
                 return new PwgError(WsError::InvalidParam->value, 'Invalid ' . $datefield);
             }
         }

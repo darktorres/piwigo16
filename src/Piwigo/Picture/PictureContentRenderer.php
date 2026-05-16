@@ -27,7 +27,7 @@ final class PictureContentRenderer
             return $content;
         }
 
-        $cookiePictureDeriv = Kernel::service(StringUtil::class)->inputString('picture_deriv', null, $_COOKIE);
+        $cookiePictureDeriv = StringUtil::inputString('picture_deriv', null, $_COOKIE);
         if ($cookiePictureDeriv !== null) {
             if (array_key_exists($cookiePictureDeriv, ImageStdParams::getDefinedTypeMap())) {
                 Kernel::service(SessionService::class)->setSessionVar('picture_deriv', $cookiePictureDeriv);

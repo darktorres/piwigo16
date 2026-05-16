@@ -28,7 +28,6 @@ final readonly class AdminService
         private DateService $dateService,
         private HistoryRepository $historyRepository,
         private ImageRepository $imageRepository,
-        private StringUtil $stringUtil,
         private TagRepository $tagRepository,
         private UserRepository $userRepository,
     ) {
@@ -78,7 +77,7 @@ final readonly class AdminService
             $path = $start . '/' . $file;
             if (is_dir($path)) {
                 $extents = array_merge($extents, $this->getExtents($path));
-            } elseif (!is_link($path) && file_exists($path) && $this->stringUtil->getExtension($path) === 'tpl') {
+            } elseif (!is_link($path) && file_exists($path) && StringUtil::getExtension($path) === 'tpl') {
                 $extents[] = substr($path, 21);
             }
         }

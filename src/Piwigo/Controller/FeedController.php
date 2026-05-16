@@ -36,7 +36,6 @@ final readonly class FeedController implements ControllerInterface
         private HtmlService $htmlService,
         private NotificationService $notificationService,
         private PermissionService $permissionService,
-        private StringUtil $stringUtil,
         private UrlService $urlService,
         private UserService $userService,
         private InputValidator $inputValidator,
@@ -49,8 +48,8 @@ final readonly class FeedController implements ControllerInterface
 
         $this->inputValidator->check('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
 
-        $feed_id    = $this->stringUtil->inputString('feed', '', $_GET);
-        $image_only = $this->stringUtil->inputString('image_only', null, $_GET) !== null;
+        $feed_id    = StringUtil::inputString('feed', '', $_GET);
+        $image_only = StringUtil::inputString('image_only', null, $_GET) !== null;
 
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
@@ -77,7 +76,7 @@ final readonly class FeedController implements ControllerInterface
         $this->urlService->setMakeFullUrl();
 
         $rss           = new PiwigoFeedCreator();
-        $rss->encoding = $this->stringUtil->getPwgCharset();
+        $rss->encoding = StringUtil::getPwgCharset();
         $username      = is_string($user['username'] ?? null) ? $user['username'] : '';
         $rss->title    = Config::galleryTitle() . ' (as ' . stripslashes($username) . ')';
         $rss->link     = $this->urlService->getGalleryHomeUrl();

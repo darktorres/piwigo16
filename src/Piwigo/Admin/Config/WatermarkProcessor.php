@@ -23,7 +23,6 @@ final readonly class WatermarkProcessor
 {
     public function __construct(
         private ImageAdminService $imageAdminService,
-        private StringUtil $stringUtil,
         private ActivityLogger $activityLogger,
         private PermissionService $permissionService,
     ) {
@@ -52,12 +51,12 @@ final readonly class WatermarkProcessor
                 if (Filesystem::mkgetdir($upload_dir, Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR)) {
                     $rawWmName    = $watermarkImage['name'] ?? null;
                     $wm_file_name = is_string($rawWmName) ? $rawWmName : '';
-                    $new_name = $this->stringUtil->str2url($this->stringUtil->getFilenameWoExtension($wm_file_name));
+                    $new_name = StringUtil::str2url(StringUtil::getFilenameWoExtension($wm_file_name));
 
                     $watermark_files = [];
                     if (($glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
                         foreach ($glob as $file) {
-                            $watermark_files[] = $this->stringUtil->getFilenameWoExtension(
+                            $watermark_files[] = StringUtil::getFilenameWoExtension(
                                 substr($file, strlen(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/'))
                             );
                         }

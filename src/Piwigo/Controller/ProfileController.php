@@ -45,7 +45,6 @@ final readonly class ProfileController implements ControllerInterface
         private UrlGenerator $urlGenerator,
         private UserRepository $userRepository,
         private CsrfService $csrfService,
-        private StringUtil $stringUtil,
         private PermissionService $permissionService,
         private LangService $langService,
         private UrlService $urlService,
@@ -76,7 +75,7 @@ final readonly class ProfileController implements ControllerInterface
         $tpl = TemplateRegistry::current();
         $tpl->assign('DEFAULT_USER_VALUES', $default_user);
 
-        if ($this->stringUtil->inputString('reset_to_default', null, $_POST) !== null) {
+        if (StringUtil::inputString('reset_to_default', null, $_POST) !== null) {
             $userdata = array_merge($userdata, $default_user ?? []);
         }
 
@@ -143,7 +142,7 @@ final readonly class ProfileController implements ControllerInterface
 
         PageHeaderRenderer::render($title);
 
-        $cookie_lang = $this->stringUtil->inputString('lang', null, $_COOKIE);
+        $cookie_lang = StringUtil::inputString('lang', null, $_COOKIE);
         if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
             if (!array_key_exists($cookie_lang, $this->languageService->getActiveLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');

@@ -44,28 +44,28 @@ final class SrcImage
         $path = is_scalar($pathRaw) ? (string) $pathRaw : '';
         $fileRaw = $infos['file'] ?? '';
         $file = is_scalar($fileRaw) ? (string) $fileRaw : '';
-        $ext = strtolower(Kernel::service(StringUtil::class)->getExtension($path));
-        $infos['file_ext'] = strtolower(Kernel::service(StringUtil::class)->getExtension($file));
+        $ext = strtolower(StringUtil::getExtension($path));
+        $infos['file_ext'] = strtolower(StringUtil::getExtension($file));
         $infos['path_ext'] = $ext;
         if (in_array($ext, Config::pictureExtensions())) {
             $this->rel_path = $path;
             $this->flags |= self::IS_ORIGINAL;
         } elseif (!empty($infos['representative_ext'])) {
             $repExt = $infos['representative_ext'];
-            $this->rel_path = Kernel::service(StringUtil::class)->originalToRepresentative($path, is_scalar($repExt) ? (string) $repExt : '');
+            $this->rel_path = StringUtil::originalToRepresentative($path, is_scalar($repExt) ? (string) $repExt : '');
         } else {
             $mimeIconDir = Kernel::service(ThemeService::class)->getThemeconf('mime_icon_dir');
             $mimeEvent = new GetMimetypeLocation((is_string($mimeIconDir) ? $mimeIconDir : '') . $ext . '.png', $ext);
             Kernel::service(EventDispatcherInterface::class)->dispatch($mimeEvent);
             $this->rel_path = $mimeEvent->url;
             $this->flags |= self::IS_MIMETYPE;
-            if (($size = Kernel::service(StringUtil::class)->pwgSafeGetimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false) {
+            if (($size = StringUtil::pwgSafeGetimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false) {
                 if ('svg' == $ext) {
                     $this->rel_path = $path;
                 } else {
                     $this->rel_path = 'themes/_base/icon/mimetypes/unknown.png';
                 }
-                $size = Kernel::service(StringUtil::class)->pwgSafeGetimagesize(PHPWG_ROOT_PATH.$this->rel_path);
+                $size = StringUtil::pwgSafeGetimagesize(PHPWG_ROOT_PATH.$this->rel_path);
             }
             if ($size === false) {
                 $this->size = null;
@@ -144,7 +144,7 @@ final class SrcImage
             // giving up. Covers e.g. the dupe-image upload path where the
             // returning record only carries id, not width/height.
             $path = $this->getPath();
-            if (is_readable($path) && ($size = Kernel::service(StringUtil::class)->pwgSafeGetimagesize($path)) !== false) {
+            if (is_readable($path) && ($size = StringUtil::pwgSafeGetimagesize($path)) !== false) {
                 $w = $size[0];
                 $h = $size[1];
                 $wi = is_int($w) ? $w : (int) (is_scalar($w) ? $w : 0);

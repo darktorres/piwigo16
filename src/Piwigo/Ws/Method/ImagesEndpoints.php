@@ -70,7 +70,6 @@ final readonly class ImagesEndpoints
         private RateRepository $rateRepository,
         private RateService $rateService,
         private SearchService $searchService,
-        private StringUtil $stringUtil,
         private TagAdminService $tagAdminService,
         private TagService $tagService,
         private UploadService $uploadService,
@@ -946,7 +945,7 @@ final readonly class ImagesEndpoints
         if (!Filesystem::mkgetdir(dirname($chunkfilePath), Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
-        $this->stringUtil->secureDirectory(dirname($chunkfilePath));
+        StringUtil::secureDirectory(dirname($chunkfilePath));
         $filesFile2RawArr  = $_FILES['file'] ?? null;
         $filesFile2        = is_array($filesFile2RawArr) ? $filesFile2RawArr : [];
         $filesFile2TmpRaw  = $filesFile2['tmp_name'] ?? null;
@@ -1100,7 +1099,7 @@ final readonly class ImagesEndpoints
         $candidates = json_decode(stripslashes(is_string($params['filename_list'] ?? null) ? $params['filename_list'] : ''), true);
         $uniqueFilenamesDb = [];
         foreach ($this->imageRepository->findAllIdFilename() as $row) {
-            $filenameWoExt = $this->stringUtil->getFilenameWoExtension(is_string($row['file'] ?? null) ? $row['file'] : '');
+            $filenameWoExt = StringUtil::getFilenameWoExtension(is_string($row['file'] ?? null) ? $row['file'] : '');
             $uniqueFilenamesDb[$filenameWoExt][] = $row['id'];
         }
         $formatExtensions = Config::formatExtensions();
@@ -1183,11 +1182,11 @@ final readonly class ImagesEndpoints
             if (UrlService::urlIsRemote($rowPath)) {
                 continue;
             }
-            $imagePath = $this->stringUtil->getElementPath($row);
+            $imagePath = StringUtil::getElementPath($row);
             $files     = [];
             if (isset($formatsOf[$rowId])) {
                 foreach ($formatsOf[$rowId] as $formatExt) {
-                    $files[] = $this->stringUtil->originalToFormat($imagePath, $formatExt);
+                    $files[] = StringUtil::originalToFormat($imagePath, $formatExt);
                 }
             }
             foreach ($files as $path) {

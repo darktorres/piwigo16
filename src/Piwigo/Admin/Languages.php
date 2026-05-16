@@ -32,7 +32,6 @@ final class Languages
         private readonly AdminService $adminService,
         private readonly HtmlService $htmlService,
         private readonly LanguageRepository $languageRepository,
-        private readonly StringUtil $stringUtil,
         private readonly UserService $userService,
     ) {
         $this->getFsLanguages();
@@ -116,7 +115,7 @@ final class Languages
         $charset = strtolower(
             $target_charset !== ''
                 ? $target_charset
-                : $this->stringUtil->getPwgCharset()
+                : StringUtil::getPwgCharset()
         );
 
         $dir = opendir(PHPWG_ROOT_PATH.'language');
@@ -142,7 +141,7 @@ final class Languages
 
                     if (preg_match('|X-Piwigo-Language-Name:\\s*(.+?)\\\\n|', $plg_data, $val)) {
                         $language['name'] = trim($val[1]);
-                        $language['name'] = $this->stringUtil->convertCharset($language['name'], 'utf-8', $charset);
+                        $language['name'] = StringUtil::convertCharset($language['name'], 'utf-8', $charset);
                     }
 
                     // IMPORTANT SECURITY !

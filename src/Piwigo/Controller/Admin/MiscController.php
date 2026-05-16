@@ -108,7 +108,6 @@ final class MiscController implements AdminSubControllerInterface
         private readonly PreferencesService $preferencesService,
         private readonly ProfileService $profileService,
         private readonly RateRepository $rateRepository,
-        private readonly StringUtil $stringUtil,
         private readonly TagAdminService $tagAdminService,
         private readonly TagRepository $tagRepository,
         private readonly UrlGenerator $urlGenerator,
@@ -652,7 +651,7 @@ final class MiscController implements AdminSubControllerInterface
 
         $cached_activity = is_array($_SESSION['cache_activity_last_weeks'] ?? null) ? $_SESSION['cache_activity_last_weeks'] : null;
         if ($cached_activity === null || (is_numeric($cached_activity['calculated_on']) ? (int) $cached_activity['calculated_on'] : 0) < strtotime('5 minutes ago')) {
-            $start_time = $this->stringUtil->getMoment();
+            $start_time = StringUtil::getMoment();
             $activity_actions = $this->conn->executeQuery("SELECT DATE_FORMAT(occured_on , '%Y-%m-%d') AS activity_day, object, action, COUNT(*) AS activity_counter FROM `" . Tables::activity() . "` WHERE occured_on >= '" . $date_string . "' GROUP BY activity_day, object, action;")->fetchAllAssociative();
 
             foreach ($activity_actions as $action) {
@@ -669,7 +668,7 @@ final class MiscController implements AdminSubControllerInterface
                 $activity_last_weeks[$week][$day_nb]['date']   = $this->dateService->formatDate($day_date->getTimestamp());
             }
 
-            LoggerRegistry::current()->debug('[admin/intro::] recent activity calculated in ' . $this->stringUtil->getElapsedTime($start_time, $this->stringUtil->getMoment()));
+            LoggerRegistry::current()->debug('[admin/intro::] recent activity calculated in ' . StringUtil::getElapsedTime($start_time, StringUtil::getMoment()));
             $_SESSION['cache_activity_last_weeks'] = ['calculated_on' => time(), 'data' => $activity_last_weeks];
         }
 
@@ -1161,7 +1160,7 @@ final class MiscController implements AdminSubControllerInterface
                 $post_keyname_val = is_array($rawPostKeyname) ? array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawPostKeyname) : [];
                 $post_count       = count($post_keyname_val);
                 $treated_count    = count($check_key_treated);
-                $time_refresh     = $treated_count !== 0 ? (int) ceil(($this->stringUtil->getMoment() - $ctx->startTime) * (float) $post_count / (float) $treated_count) : 0;
+                $time_refresh     = $treated_count !== 0 ? (int) ceil((StringUtil::getMoment() - $ctx->startTime) * (float) $post_count / (float) $treated_count) : 0;
                 $_POST[$post_keyname] = array_diff($post_keyname_val, $check_key_treated);
                 $this->mustRepost = true;
                 PageState::current()->addError(Translator::get()->plural('Execution time is out, treatment must be continue [Estimated time: %d second].', 'Execution time is out, treatment must be continue [Estimated time: %d seconds].', $time_refresh));

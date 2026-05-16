@@ -25,7 +25,6 @@ final readonly class NotificationAdminService
     public function __construct(
         private MailService $mailService,
         private NotificationRepository $notificationRepository,
-        private StringUtil $stringUtil,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserService $userService,
@@ -45,7 +44,7 @@ final readonly class NotificationAdminService
     public function checkSendmailTimeout(): bool
     {
         $ctx                   = MailNotificationContext::current();
-        $ctx->isSendmailTimeout = (($this->stringUtil->getMoment() - $ctx->startTime) > $ctx->sendmailTimeout);
+        $ctx->isSendmailTimeout = ((StringUtil::getMoment() - $ctx->startTime) > $ctx->sendmailTimeout);
         return $ctx->isSendmailTimeout;
     }
 

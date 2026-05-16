@@ -40,7 +40,6 @@ final readonly class SearchController implements ControllerInterface
         private TagService $tagService,
         private InputValidator $inputValidator,
         private RedirectResponder $redirectResponder,
-        private StringUtil $stringUtil,
         private PermissionService $permissionService,
         private PreferencesService $preferencesService,
         private EventDispatcherInterface $dispatcher,
@@ -94,7 +93,7 @@ final readonly class SearchController implements ControllerInterface
         }
 
         $words = [];
-        $q     = $this->stringUtil->inputString('q', null, $_GET);
+        $q     = StringUtil::inputString('q', null, $_GET);
         if ($q !== null && $q !== '') {
             $words = $this->searchService->splitAllwords($q);
         }
@@ -108,7 +107,7 @@ final readonly class SearchController implements ControllerInterface
         }
 
         $cat_ids  = [];
-        $cat_id   = $this->stringUtil->inputInt('cat_id', null, $_GET);
+        $cat_id   = StringUtil::inputInt('cat_id', null, $_GET);
         if ($cat_id !== null) {
             $this->inputValidator->check('cat_id', $_GET, false, ValidationPattern::ID);
             $query = '
@@ -130,7 +129,7 @@ SELECT *
 
         if (count($this->tagService->getAvailableTags()) > 0) {
             $tag_ids = [];
-            $tag_id  = $this->stringUtil->inputString('tag_id', null, $_GET);
+            $tag_id  = StringUtil::inputString('tag_id', null, $_GET);
             if ($tag_id !== null) {
                 $this->inputValidator->check('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
                 $tag_ids = explode(',', $tag_id);

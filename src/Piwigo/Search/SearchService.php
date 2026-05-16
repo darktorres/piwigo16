@@ -51,7 +51,6 @@ final class SearchService
         private readonly HtmlService $htmlService,
         private readonly PermissionService $permissionService,
         private readonly PreferencesService $preferencesService,
-        private readonly StringUtil $stringUtil,
         private readonly TagService $tagService,
         private readonly UrlService $urlService,
         private readonly UserService $userService,
@@ -353,7 +352,7 @@ final class SearchService
                         $datePostedSubclauses[] = 'date_available BETWEEN "' . $begin . '" AND "' . $end . '"';
                     }
                 }
-                $datePostedClause = '(' . implode(' OR ', $this->stringUtil->prependAppendArrayItems($datePostedSubclauses, '(', ')')) . ')';
+                $datePostedClause = '(' . implode(' OR ', StringUtil::prependAppendArrayItems($datePostedSubclauses, '(', ')')) . ')';
             }
             $imageIdsForFilter['date_posted'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE ' . $datePostedClause . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
@@ -395,7 +394,7 @@ final class SearchService
                         $dateCreatedSubclauses[] = 'date_creation BETWEEN "' . $begin . '" AND "' . $end . '"';
                     }
                 }
-                $dateCreatedClause = '(' . implode(' OR ', $this->stringUtil->prependAppendArrayItems($dateCreatedSubclauses, '(', ')')) . ')';
+                $dateCreatedClause = '(' . implode(' OR ', StringUtil::prependAppendArrayItems($dateCreatedSubclauses, '(', ')')) . ')';
             }
             $imageIdsForFilter['date_created'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE ' . $dateCreatedClause . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
         }
@@ -520,7 +519,7 @@ final class SearchService
         $cache    = is_array($this->searchDetails['getItemsForFilter'] ?? null) ? $this->searchDetails['getItemsForFilter'] : [];
 
         if (!isset($cache[$cacheKey])) {
-            $functionStart = $this->stringUtil->getMoment();
+            $functionStart = StringUtil::getMoment();
             $firstKey      = array_shift($otherFilters);
             $first         = $imageIdsForFilter[$firstKey] ?? [];
             $otherFiltersItems = is_array($first)
@@ -534,7 +533,7 @@ final class SearchService
             $otherFiltersItems = array_values(array_unique($otherFiltersItems));
             $debugMsg  = '[getItemsForFilter] cache computed for ' . (count($otherFilters) + 1) . ' other filters';
             $debugMsg .= ' (' . count($otherFiltersItems) . ' items)';
-            $debugMsg .= ', time = ' . $this->stringUtil->getElapsedTime($functionStart, $this->stringUtil->getMoment());
+            $debugMsg .= ', time = ' . StringUtil::getElapsedTime($functionStart, StringUtil::getMoment());
             $this->logger->debug($debugMsg);
 
             if (empty($otherFiltersItems)) {

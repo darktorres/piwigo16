@@ -86,7 +86,6 @@ final readonly class PictureController implements ControllerInterface
         private RateService $rateService,
         private SectionInitializer $sectionInitializer,
         private SessionService $sessionService,
-        private StringUtil $stringUtil,
         private TagService $tagService,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
@@ -180,7 +179,7 @@ SELECT id
             }
         }
 
-        if ($this->stringUtil->inputString('metadata', null, $_GET) !== null) {
+        if (StringUtil::inputString('metadata', null, $_GET) !== null) {
             if ($this->sessionService->getSessionVar('show_metadata') == null) {
                 $this->sessionService->setSessionVar('show_metadata', 1);
             } else {
@@ -213,7 +212,7 @@ SELECT id
         $url_self = $this->urlService->duplicatePictureUrl();
 
         // Actions
-        $get_action = $this->stringUtil->inputString('action', null, $_GET);
+        $get_action = StringUtil::inputString('action', null, $_GET);
         if ($get_action !== null) {
             switch ($get_action) {
                 case 'add_to_favorites':
@@ -243,20 +242,20 @@ SELECT id
                     $this->redirectResponder->redirect($url_self);
                     break;
                 case 'rate':
-                    $this->rateService->ratePicture($imageId, $this->stringUtil->inputInt('rate', 0, $_POST));
+                    $this->rateService->ratePicture($imageId, StringUtil::inputInt('rate', 0, $_POST));
                     $this->redirectResponder->redirect($url_self);
                     break;
                 case 'edit_comment':
                     $this->inputValidator->check('comment_to_edit', $_GET, false, ValidationPattern::ID);
-                    $comment_to_edit = $this->stringUtil->inputInt('comment_to_edit', null, $_GET);
+                    $comment_to_edit = StringUtil::inputInt('comment_to_edit', null, $_GET);
                     $author_id       = $this->commentService->getCommentAuthorId($comment_to_edit ?? 0);
                     if ($this->permissionService->canManageComment('edit', $author_id)) {
-                        $post_content = $this->stringUtil->inputString('content', null, $_POST);
+                        $post_content = StringUtil::inputString('content', null, $_POST);
                         if ($post_content !== null && $post_content !== '') {
                             $this->csrfService->check();
                             $comment_action = $this->commentService->updateUserComment(
-                                ['comment_id' => $comment_to_edit, 'image_id' => $imageId, 'content' => $post_content, 'website_url' => $this->stringUtil->inputString('website_url', null, $_POST)],
-                                $this->stringUtil->inputString('key', null, $_POST) ?? ''
+                                ['comment_id' => $comment_to_edit, 'image_id' => $imageId, 'content' => $post_content, 'website_url' => StringUtil::inputString('website_url', null, $_POST)],
+                                StringUtil::inputString('key', null, $_POST) ?? ''
                             );
                             $perform_redirect = false;
                             switch ($comment_action) {
@@ -284,18 +283,18 @@ SELECT id
                 case 'delete_comment':
                     $this->csrfService->check();
                     $this->inputValidator->check('comment_to_delete', $_GET, false, ValidationPattern::ID);
-                    $author_id = $this->commentService->getCommentAuthorId($this->stringUtil->inputInt('comment_to_delete', null, $_GET) ?? 0);
+                    $author_id = $this->commentService->getCommentAuthorId(StringUtil::inputInt('comment_to_delete', null, $_GET) ?? 0);
                     if ($this->permissionService->canManageComment('delete', $author_id)) {
-                        $this->commentService->deleteUserComment($this->stringUtil->inputInt('comment_to_delete', null, $_GET) ?? 0);
+                        $this->commentService->deleteUserComment(StringUtil::inputInt('comment_to_delete', null, $_GET) ?? 0);
                     }
                     $this->redirectResponder->redirect($url_self);
                     break;
                 case 'validate_comment':
                     $this->csrfService->check();
                     $this->inputValidator->check('comment_to_validate', $_GET, false, ValidationPattern::ID);
-                    $author_id = $this->commentService->getCommentAuthorId($this->stringUtil->inputInt('comment_to_validate', null, $_GET) ?? 0);
+                    $author_id = $this->commentService->getCommentAuthorId(StringUtil::inputInt('comment_to_validate', null, $_GET) ?? 0);
                     if ($this->permissionService->canManageComment('validate', $author_id)) {
-                        $this->commentService->validateUserComment($this->stringUtil->inputInt('comment_to_validate', null, $_GET) ?? 0);
+                        $this->commentService->validateUserComment(StringUtil::inputInt('comment_to_validate', null, $_GET) ?? 0);
                     }
                     $this->redirectResponder->redirect($url_self);
                     break;
@@ -303,7 +302,7 @@ SELECT id
         }
 
         // Hit counter
-        $inc_hit_count = $this->stringUtil->inputString('content', null, $_POST) === null;
+        $inc_hit_count = StringUtil::inputString('content', null, $_POST) === null;
         if (isset($_SERVER['HTTP_X_MOZ']) && $_SERVER['HTTP_X_MOZ'] == 'prefetch') {
             $inc_hit_count = false;
         } else {
@@ -360,11 +359,11 @@ SELECT id,uppercats,commentable,visible,status,global_rank
 
             $row['src_image']  = new SrcImage($row);
             $row['derivatives'] = DerivativeImage::getAll($row['src_image']);
-            $row['path_ext']   = strtolower($this->stringUtil->getExtension($src_path));
-            $row['file_ext']   = strtolower($this->stringUtil->getExtension($src_file));
+            $row['path_ext']   = strtolower(StringUtil::getExtension($src_path));
+            $row['file_ext']   = strtolower(StringUtil::getExtension($src_file));
 
             if ($i == 'current') {
-                $row['element_path'] = $this->stringUtil->getElementPath($row);
+                $row['element_path'] = StringUtil::getElementPath($row);
                 if ($row['src_image']->isOriginal()) {
                     if ($user['enabled_high'] == 'true') {
                         $row['element_url']  = $row['src_image']->getUrl();
@@ -395,7 +394,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
 
         $slideshow_params     = [];
         $slideshow_url_params = [];
-        $get_slideshow        = $this->stringUtil->inputString('slideshow', null, $_GET);
+        $get_slideshow        = StringUtil::inputString('slideshow', null, $_GET);
 
         if ($get_slideshow !== null) {
             $slideshowActive  = true;
@@ -433,7 +432,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         $metadata_showable = $metadataEvent->available;
 
         $ps = PageState::current();
-        if ($this->stringUtil->inputString('metadata', null, $_GET) !== null) {
+        if (StringUtil::inputString('metadata', null, $_GET) !== null) {
             $ps->metaRobots = ['noindex' => 1, 'nofollow' => 1];
         }
 
@@ -465,7 +464,7 @@ SELECT *
                 $formats = $this->conn->executeQuery($query)->fetchAllAssociative();
                 array_unshift($formats, [
                     'download_url' => is_scalar($currentPic['download_url'] ?? null) ? $currentPic['download_url'] : '',
-                    'ext'          => $this->stringUtil->getExtension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : ''),
+                    'ext'          => StringUtil::getExtension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : ''),
                     'filesize'     => $currentPic['filesize'] ?? null,
                 ]);
                 foreach ($formats as &$format) {
@@ -626,7 +625,7 @@ SELECT *
             }
         }
 
-        if (in_array(strtolower($this->stringUtil->getExtension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : '')), ['pdf'])) {
+        if (in_array(strtolower(StringUtil::getExtension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : '')), ['pdf'])) {
             $tpl->assign(['PDF_VIEWER_FILESIZE_THRESHOLD' => Config::pdfViewerFilesizeThreshold() * 1024, 'PDF_NB_PAGES' => $this->pictureService->countPdfPages(is_string($currentPic['path'] ?? null) ? $currentPic['path'] : '')]);
         }
 

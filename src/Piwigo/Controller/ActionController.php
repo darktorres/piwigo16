@@ -39,7 +39,6 @@ final readonly class ActionController implements ControllerInterface
         private HtmlService $htmlService,
         private ImageRepository $imageRepository,
         private PermissionService $permissionService,
-        private StringUtil $stringUtil,
         private ActivityLogger $activityLogger,
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
@@ -57,7 +56,7 @@ final readonly class ActionController implements ControllerInterface
 
         if (Config::isFormatsEnabled() && isset($params['format'])) {
             $this->inputValidator->check('format', $_GET, false, ValidationPattern::ID);
-            $get_format = $this->stringUtil->inputInt('format', null, $_GET);
+            $get_format = StringUtil::inputInt('format', null, $_GET);
 
             $query = 'SELECT * FROM ' . Tables::imageFormat() . ' WHERE format_id = ' . ($get_format ?? 0) . ';';
             $formats = $this->conn->executeQuery($query)->fetchAllAssociative();
@@ -71,8 +70,8 @@ final readonly class ActionController implements ControllerInterface
             $_GET['part'] = 'f';
         }
 
-        $get_id   = $this->stringUtil->inputInt('id', null, $_GET);
-        $get_part = $this->stringUtil->inputString('part', null, $_GET);
+        $get_id   = StringUtil::inputInt('id', null, $_GET);
+        $get_part = StringUtil::inputString('part', null, $_GET);
         if ($get_id === null || $get_part === null || !in_array($get_part, ['e', 'r', 'f'])) {
             $this->error(400, 'Invalid request - id/part');
         }
@@ -83,7 +82,7 @@ final readonly class ActionController implements ControllerInterface
         }
 
         $is_admin_download = false;
-        $get_pwg_token     = $this->stringUtil->inputString('pwg_token', null, $_GET);
+        $get_pwg_token     = StringUtil::inputString('pwg_token', null, $_GET);
         if ($this->permissionService->isAdmin() && $get_pwg_token !== null && $this->csrfService->getToken() == $get_pwg_token) {
             $is_admin_download = true;
             if (CurrentUser::isInitialized()) {
@@ -114,16 +113,16 @@ SELECT id FROM ' . Tables::categories() . '
                         $this->error(401, 'Access denied e');
                     }
                 }
-                $file = $this->stringUtil->getElementPath($element_info);
+                $file = StringUtil::getElementPath($element_info);
                 break;
             case 'r':
                 $reprExt = $element_info['representative_ext'] ?? null;
-                $file = $this->stringUtil->originalToRepresentative($this->stringUtil->getElementPath($element_info), is_string($reprExt) ? $reprExt : '');
+                $file = StringUtil::originalToRepresentative(StringUtil::getElementPath($element_info), is_string($reprExt) ? $reprExt : '');
                 break;
             case 'f':
                 $formatExt = $format['ext'] ?? null;
-                $file = $this->stringUtil->originalToFormat($this->stringUtil->getElementPath($element_info), is_string($formatExt) ? $formatExt : '');
-                $element_info['file'] = $this->stringUtil->getFilenameWoExtension(is_string($element_info['file'] ?? null) ? $element_info['file'] : '') . '.' . (is_string($format['ext'] ?? null) ? $format['ext'] : '');
+                $file = StringUtil::originalToFormat(StringUtil::getElementPath($element_info), is_string($formatExt) ? $formatExt : '');
+                $element_info['file'] = StringUtil::getFilenameWoExtension(is_string($element_info['file'] ?? null) ? $element_info['file'] : '') . '.' . (is_string($format['ext'] ?? null) ? $format['ext'] : '');
                 break;
         }
 
@@ -164,14 +163,14 @@ SELECT id FROM ' . Tables::categories() . '
         }
 
         if (!isset($ctype)) {
-            $ctype = $this->guessMimeType($this->stringUtil->getExtension($file));
+            $ctype = $this->guessMimeType(StringUtil::getExtension($file));
         }
 
         $http_headers[] = 'Content-Type: ' . $ctype;
         $http_headers[] = 'Cache-Control: public';
 
         $elementFile = is_scalar($element_info['file'] ?? null) ? (string) $element_info['file'] : basename($file);
-        if ($this->stringUtil->inputString('download', null, $_GET) !== null) {
+        if (StringUtil::inputString('download', null, $_GET) !== null) {
             $http_headers[] = 'Content-Disposition: attachment; filename="' . htmlspecialchars_decode($elementFile) . '";';
             $http_headers[] = 'Content-Transfer-Encoding: binary';
         } else {

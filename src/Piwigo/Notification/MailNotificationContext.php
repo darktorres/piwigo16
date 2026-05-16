@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Notification;
 
 use Piwigo\Config\Config;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
 use Piwigo\Template\Template;
 
@@ -42,7 +41,7 @@ final class MailNotificationContext
 
     private function __construct()
     {
-        $this->startTime = Kernel::service(StringUtil::class)->getMoment();
+        $this->startTime = StringUtil::getMoment();
         $timeout = (float) intval(ini_get('max_execution_time')) * Config::nbmMaxTreatmentTimeoutPercent();
         $this->sendmailTimeout = $timeout > 0 ? $timeout : Config::nbmTreatmentTimeoutDefault();
     }

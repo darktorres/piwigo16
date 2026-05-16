@@ -51,7 +51,6 @@ final readonly class UploadService
         private ImageAdminService $imageAdminService,
         private ImageRepository $imageRepository,
         private MetadataAdminService $metadataAdminService,
-        private StringUtil $stringUtil,
         private UserAdminService $userAdminService,
         private ActivityLogger $activityLogger,
         private EventDispatcherInterface $dispatcher,
@@ -166,7 +165,7 @@ final readonly class UploadService
             } elseif (IMAGETYPE_WEBP == $type) {
                 $filePathPattern .= 'webp';
             } elseif (Config::has('upload_form_all_types') && Config::uploadFormAllTypes()) {
-                $originalExtension = strtolower($this->stringUtil->getExtension($originalFilename ?? ''));
+                $originalExtension = strtolower(StringUtil::getExtension($originalFilename ?? ''));
                 $finfo             = finfo_open(FILEINFO_MIME_TYPE);
                 $finfoType         = $finfo !== false ? finfo_file($finfo, $sourceFilepath) : false;
                 if (in_array($finfoType, ['image/svg', 'image/svg+xml']) && $originalExtension !== 'svg') {
@@ -232,7 +231,7 @@ final readonly class UploadService
             Dml::singleUpdate(Tables::images(), $update, ['id' => $imageId]);
         } else {
             $file   = $originalFilename ?? basename($filePath);
-            $insert = ['file' => $file, 'name' => $this->stringUtil->getNameFromFile($file), 'date_available' => $dbnow, 'path' => preg_replace('#^' . preg_quote(PHPWG_ROOT_PATH) . '#', '', $filePath), 'filesize' => $fileInfos['filesize'], 'width' => $fileInfos['width'], 'height' => $fileInfos['height'], 'md5sum' => $md5sum, 'added_by' => $userId, 'rotation' => $rotation];
+            $insert = ['file' => $file, 'name' => StringUtil::getNameFromFile($file), 'date_available' => $dbnow, 'path' => preg_replace('#^' . preg_quote(PHPWG_ROOT_PATH) . '#', '', $filePath), 'filesize' => $fileInfos['filesize'], 'width' => $fileInfos['width'], 'height' => $fileInfos['height'], 'md5sum' => $md5sum, 'added_by' => $userId, 'rotation' => $rotation];
             if (isset($level)) {
                 $insert['level'] = $level;
             }
@@ -305,7 +304,7 @@ final readonly class UploadService
             throw new NotFoundException('[addFormat] photo does not exist in database');
         }
         $origPath   = is_scalar($images[0]['path']) ? (string) $images[0]['path'] : '';
-        $formatPath = dirname($origPath) . '/pwg_format/' . $this->stringUtil->getFilenameWoExtension(basename($origPath)) . '.' . $formatExt;
+        $formatPath = dirname($origPath) . '/pwg_format/' . StringUtil::getFilenameWoExtension(basename($origPath)) . '.' . $formatExt;
         $this->prepareDirectory(dirname($formatPath));
         $fmtRoot    = PHPWG_ROOT_PATH . Config::uploadDir();
         $fmtAbsPath = PHPWG_ROOT_PATH . ltrim(str_replace(['\\', '/./'], ['/', '/'], $formatPath), '/');
@@ -349,12 +348,12 @@ final readonly class UploadService
         if (PwgImage::getLibrary() !== 'ext_imagick') {
             return $representativeExt;
         }
-        if (!in_array(strtolower($this->stringUtil->getExtension($filePath)), ['pdf'])) {
+        if (!in_array(strtolower(StringUtil::getExtension($filePath)), ['pdf'])) {
             return $representativeExt;
         }
         $ext        = is_string($this->configService->confGetParam('pdf_representative_ext', 'jpg')) ? $this->configService->confGetParam('pdf_representative_ext', 'jpg') : 'jpg';
         $jpgQuality = is_int($this->configService->confGetParam('pdf_jpg_quality', 90)) ? $this->configService->confGetParam('pdf_jpg_quality', 90) : 90;
-        $repFilePath = $this->stringUtil->originalToRepresentative($filePath, $ext);
+        $repFilePath = StringUtil::originalToRepresentative($filePath, $ext);
         $this->prepareDirectory(dirname($repFilePath));
         $rpFilePath0 = realpath($filePath);
         $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . ($rpFilePath0 !== false ? $rpFilePath0 : $filePath) . '"[0]';
@@ -379,11 +378,11 @@ final readonly class UploadService
         if (PwgImage::getLibrary() !== 'ext_imagick') {
             return $representativeExt;
         }
-        if (!in_array(strtolower($this->stringUtil->getExtension($filePath)), ['heic'])) {
+        if (!in_array(strtolower(StringUtil::getExtension($filePath)), ['heic'])) {
             return $representativeExt;
         }
         $ext         = 'jpg';
-        $repFilePath = $this->stringUtil->originalToRepresentative($filePath, $ext);
+        $repFilePath = StringUtil::originalToRepresentative($filePath, $ext);
         $this->prepareDirectory(dirname($repFilePath));
         [$w, $h] = $this->getOptimalDimensionsForRepresentative();
         $rpHeic = realpath($filePath);
@@ -408,11 +407,11 @@ final readonly class UploadService
         if (PwgImage::getLibrary() !== 'ext_imagick') {
             return $representativeExt;
         }
-        if (!in_array(strtolower($this->stringUtil->getExtension($filePath)), ['tif', 'tiff'])) {
+        if (!in_array(strtolower(StringUtil::getExtension($filePath)), ['tif', 'tiff'])) {
             return $representativeExt;
         }
         $representativeExt = Config::tiffRepresentativeExt();
-        $repFilePath       = dirname($filePath) . '/pwg_representative/' . $this->stringUtil->getFilenameWoExtension(basename($filePath)) . '.' . $representativeExt;
+        $repFilePath       = dirname($filePath) . '/pwg_representative/' . StringUtil::getFilenameWoExtension(basename($filePath)) . '.' . $representativeExt;
         $this->prepareDirectory(dirname($repFilePath));
         $rpTiff = realpath($filePath);
         $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . ($rpTiff !== false ? $rpTiff : $filePath) . '"';
@@ -431,7 +430,7 @@ final readonly class UploadService
                 rename($first, $repAbs);
             }
         }
-        return $this->stringUtil->getExtension($repAbs);
+        return StringUtil::getExtension($repAbs);
     }
 
     public function uploadFileVideo(?string $representativeExt, string $filePath): ?string
@@ -442,11 +441,11 @@ final readonly class UploadService
             return $representativeExt;
         }
         $videoExts = ['wmv','mov','mkv','mp4','mpg','flv','asf','xvid','divx','mpeg','avi','rm','m4v','ogg','ogv','webm','webmv'];
-        if (!in_array(strtolower($this->stringUtil->getExtension($filePath)), $videoExts)) {
+        if (!in_array(strtolower(StringUtil::getExtension($filePath)), $videoExts)) {
             return $representativeExt;
         }
         $representativeExt = 'jpg';
-        $repFilePath       = dirname($filePath) . '/pwg_representative/' . $this->stringUtil->getFilenameWoExtension(basename($filePath)) . '.' . $representativeExt;
+        $repFilePath       = dirname($filePath) . '/pwg_representative/' . StringUtil::getFilenameWoExtension(basename($filePath)) . '.' . $representativeExt;
         $this->prepareDirectory(dirname($repFilePath));
         $O = [];
         exec('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1' . " '$filePath'", $O, $S);
@@ -464,11 +463,11 @@ final readonly class UploadService
     public function uploadFilePsd(?string $representativeExt, string $filePath): ?string
     {
         $logger = LoggerRegistry::current();
-        if (isset($representativeExt) || PwgImage::getLibrary() !== 'ext_imagick' || !in_array(strtolower($this->stringUtil->getExtension($filePath)), ['psd'])) {
+        if (isset($representativeExt) || PwgImage::getLibrary() !== 'ext_imagick' || !in_array(strtolower(StringUtil::getExtension($filePath)), ['psd'])) {
             return $representativeExt;
         }
         $representativeExt = 'png';
-        $repFilePath       = dirname($filePath) . '/pwg_representative/' . $this->stringUtil->getFilenameWoExtension(basename($filePath)) . '.png';
+        $repFilePath       = dirname($filePath) . '/pwg_representative/' . StringUtil::getFilenameWoExtension(basename($filePath)) . '.png';
         $this->prepareDirectory(dirname($repFilePath));
         $dest  = pathinfo($repFilePath);
         $destDirPsd = $dest['dirname'];
@@ -484,17 +483,17 @@ final readonly class UploadService
                 rename($first, $repAbs);
             }
         }
-        return $this->stringUtil->getExtension($repAbs);
+        return StringUtil::getExtension($repAbs);
     }
 
     public function uploadFileEps(?string $representativeExt, string $filePath): ?string
     {
         $logger = LoggerRegistry::current();
-        if (isset($representativeExt) || PwgImage::getLibrary() !== 'ext_imagick' || !in_array(strtolower($this->stringUtil->getExtension($filePath)), ['eps'])) {
+        if (isset($representativeExt) || PwgImage::getLibrary() !== 'ext_imagick' || !in_array(strtolower(StringUtil::getExtension($filePath)), ['eps'])) {
             return $representativeExt;
         }
         $ext         = 'png';
-        $repFilePath = $this->stringUtil->originalToRepresentative($filePath, $ext);
+        $repFilePath = StringUtil::originalToRepresentative($filePath, $ext);
         $this->prepareDirectory(dirname($repFilePath));
         $rpEps = realpath($filePath);
         $exec  = Config::extImagickDir() . PwgImage::getExtImagickCommand() . ' "' . ($rpEps !== false ? $rpEps : $filePath) . '" -density 300 -resize 2048x2048 "' . $repFilePath . '" 2>&1';
@@ -519,12 +518,12 @@ final readonly class UploadService
         if (!is_writable($directory)) {
             throw new ConfigException('[prepareDirectory] directory "' . $directory . '" has no write access');
         }
-        $this->stringUtil->secureDirectory($directory);
+        StringUtil::secureDirectory($directory);
     }
 
     public function needResize(string $imageFilepath, int $maxWidth, int $maxHeight): bool
     {
-        if (!in_array(strtolower($this->stringUtil->getExtension($imageFilepath)), Config::pictureExtensions())) {
+        if (!in_array(strtolower(StringUtil::getExtension($imageFilepath)), Config::pictureExtensions())) {
             return false;
         }
         [$width, $height] = getimagesize($imageFilepath) ?: [0, 0];

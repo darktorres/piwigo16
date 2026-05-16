@@ -27,7 +27,6 @@ final readonly class NoPhotoYetRenderer
     public function __construct(
         private ConfigService $configService,
         private ImageRepository $imageRepository,
-        private StringUtil $stringUtil,
         private UrlGenerator $urlGenerator,
         private RedirectResponder $redirectResponder,
         private UrlService $urlService,
@@ -70,7 +69,7 @@ final readonly class NoPhotoYetRenderer
                     }
                 }
 
-                header('Content-Type: text/html; charset=' . $this->stringUtil->getPwgCharset());
+                header('Content-Type: text/html; charset=' . StringUtil::getPwgCharset());
 
                 if ($this->permissionService->isAdmin()) {
                     $url = Config::noPhotoYetUrl();

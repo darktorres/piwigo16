@@ -39,7 +39,6 @@ final readonly class UpgradeController implements ControllerInterface
     public function __construct(
         private ConfigService $configService,
         private Connection $conn,
-        private StringUtil $stringUtil,
         private LangService $langService,
     ) {
     }
@@ -158,7 +157,7 @@ final readonly class UpgradeController implements ControllerInterface
         }
 
         $this->configService->confUpdateParam('piwigo_db_version', AppInfo::branchFromVersion(AppInfo::VERSION));
-        header('Content-Type: text/html; charset=' . $this->stringUtil->getPwgCharset());
+        header('Content-Type: text/html; charset=' . StringUtil::getPwgCharset());
         echo 'No upgrade required, the database structure is up to date';
         echo '<br><a href="index.php">← back to gallery</a>';
         exit();

@@ -53,7 +53,6 @@ final class UserService
         private readonly ActivityRepository $actRepo,
         private readonly GroupRepository $groupRepo,
         private readonly AuthKeyRepository $authKeyRepo,
-        private readonly StringUtil $stringUtil,
         private readonly ActivityLogger $activityLogger,
         private readonly ExecutionMutex $mutex,
         private readonly LangService $langService,
@@ -148,7 +147,7 @@ final class UserService
                 $this->mailService->pwgMailNotificationAdmins($this->langService->getL10nArgs('Registration of %s', stripslashes($login)), $keyargsContent, true, (int) $groupId);
             }
 
-            if ($notifyUser and $this->stringUtil->emailCheckFormat($mailAddress ?? '')) {
+            if ($notifyUser and StringUtil::emailCheckFormat($mailAddress ?? '')) {
                 $length = random_int(10, 15);
                 $keyargsContent = [
                     $this->langService->getL10nArgs('Hello %s,', stripslashes($login)),
@@ -278,11 +277,11 @@ final class UserService
                 $execId = $this->mutex->acquire($cacheTokenName);
                 if (false === $execId) {
                     $logger->info($loggerMsgPrefix . 'starts to wait for another request to build user_cache');
-                    $waitStart = $this->stringUtil->getMoment();
+                    $waitStart = StringUtil::getMoment();
                     for ($k = 0; $k < 20; $k++) {
                         sleep(1);
                         $nbCacheLines = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::userCache() . ' WHERE user_id=' . $udId . ';')->fetchOne();
-                        $waitingTime  = $this->stringUtil->getElapsedTime($waitStart, $this->stringUtil->getMoment());
+                        $waitingTime  = StringUtil::getElapsedTime($waitStart, StringUtil::getMoment());
 
                         if ($nbCacheLines > 0) {
                             $logger->info($loggerMsgPrefix . 'user_cache rebuilt, after waiting ' . $waitingTime);
@@ -294,12 +293,12 @@ final class UserService
                             $logger->info($loggerMsgPrefix . 'user_cache not ready yet, after waiting ' . $waitingTime);
                         }
                     }
-                    $logger->info($loggerMsgPrefix . 'user_cache generation waiting has timed out after ' . $this->stringUtil->getElapsedTime($waitStart, $this->stringUtil->getMoment()));
+                    $logger->info($loggerMsgPrefix . 'user_cache generation waiting has timed out after ' . StringUtil::getElapsedTime($waitStart, StringUtil::getMoment()));
                     $this->htmlService->setStatusHeader(503, 'Service Unavailable');
                     if (!headers_sent()) {
                         header('Retry-After: 900');
                     }
-                    header('Content-Type: text/html; charset=' . $this->stringUtil->getPwgCharset());
+                    header('Content-Type: text/html; charset=' . StringUtil::getPwgCharset());
                     echo Lang::t('Rebuilding user cache takes long. Please, come back later.');
                     echo str_repeat(' ', 512);
                     exit();
@@ -309,7 +308,7 @@ final class UserService
             }
 
             if ($generateUserCache) {
-                $genStart                    = $this->stringUtil->getMoment();
+                $genStart                    = StringUtil::getMoment();
                 $userdata['cache_update_time'] = time();
                 $userdata['need_update']       = false;
 
@@ -374,7 +373,7 @@ final class UserService
                 );
 
                 $this->mutex->release($cacheTokenName);
-                $logger->info($loggerMsgPrefix . 'user_cache generated, executed in ' . $this->stringUtil->getElapsedTime($genStart, $this->stringUtil->getMoment()));
+                $logger->info($loggerMsgPrefix . 'user_cache generated, executed in ' . StringUtil::getElapsedTime($genStart, StringUtil::getMoment()));
             }
         }
 

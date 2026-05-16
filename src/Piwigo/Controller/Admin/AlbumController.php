@@ -77,7 +77,6 @@ final class AlbumController implements AdminSubControllerInterface
         private readonly ImageRepository $imageRepository,
         private readonly MailService $mailService,
         private readonly PermissionRepository $permissionRepository,
-        private readonly StringUtil $stringUtil,
         private readonly UrlGenerator $urlGenerator,
         private readonly UrlService $urlService,
         private readonly UserAdminService $userAdminService,
@@ -221,7 +220,7 @@ final class AlbumController implements AdminSubControllerInterface
                     $rowId    = is_string($rowIdRaw) ? $rowIdRaw : '';
                     $sort[] = $ref_dates[$rowId] ?? null;
                 } else {
-                    $sort[] = $this->stringUtil->removeAccents($row['name']);
+                    $sort[] = StringUtil::removeAccents($row['name']);
                 }
                 $categories[] = ['id' => $row['id'] ?? null, 'id_uppercat' => $row['id_uppercat']];
             }
@@ -1108,7 +1107,7 @@ final class AlbumController implements AdminSubControllerInterface
             $derivativeParams = ImageStdParams::getByType(DerivativeSize::Square->value);
             foreach ($imgRows as $row) {
                 $derivative     = new DerivativeImage($derivativeParams, new SrcImage($row));
-                $thumbnail_name = !empty($row['name']) ? $row['name'] : str_replace('_', ' ', $this->stringUtil->getFilenameWoExtension(is_string($row['file'] ?? null) ? $row['file'] : ''));
+                $thumbnail_name = !empty($row['name']) ? $row['name'] : str_replace('_', ' ', StringUtil::getFilenameWoExtension(is_string($row['file'] ?? null) ? $row['file'] : ''));
                 $current_rank++;
                 $tpl->append('thumbnails', ['ID' => $row['id'], 'NAME' => $thumbnail_name, 'TN_SRC' => $derivative->getUrl(), 'RANK' => $current_rank * 10, 'SIZE' => $derivative->getSize()]);
             }

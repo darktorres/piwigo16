@@ -90,7 +90,6 @@ final class BatchManagerController implements AdminSubControllerInterface
         private readonly PermissionService $permissionService,
         private readonly PluginRegistry $pluginRegistry,
         private readonly SearchService $searchService,
-        private readonly StringUtil $stringUtil,
         private readonly TagAdminService $tagAdminService,
         private readonly TagRepository $tagRepository,
         private readonly TagService $tagService,
@@ -954,7 +953,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                 $src_image   = new SrcImage($row);
                 $ttitle      = $this->htmlService->renderElementName($row);
                 $row_file    = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
-                if ($ttitle != $this->stringUtil->getNameFromFile($row_file)) {
+                if ($ttitle != StringUtil::getNameFromFile($row_file)) {
                     $ttitle .= ' (' . $row_file . ')';
                 }
                 $row_filesize = is_numeric($row['filesize'] ?? null) ? (float) $row['filesize'] : 0.0;
@@ -1146,7 +1145,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                 $tag_selection = $this->tagAdminService->getTaglistFromRows($this->tagRepository->findTagsByImageId(is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0));
                 $legend        = $this->htmlService->renderElementName($row);
                 $row_file_str  = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
-                if ($legend != $this->stringUtil->getNameFromFile($row_file_str)) {
+                if ($legend != StringUtil::getNameFromFile($row_file_str)) {
                     $legend .= ' (' . $row_file_str . ')';
                 }
                 $extTab        = explode('.', is_scalar($row['path'] ?? null) ? (string) $row['path'] : '');

@@ -48,7 +48,6 @@ final class Updates
         private readonly AdminService $adminService,
         private readonly ConfigService $configService,
         private readonly MailService $mailService,
-        private readonly StringUtil $stringUtil,
         private readonly UrlGenerator $urlGenerator,
         private readonly UserAdminService $userAdminService,
         private readonly UserService $userService,
@@ -149,7 +148,7 @@ final class Updates
           'is_dev' => true,
           ];
 
-        [$env, $build_version] = $this->stringUtil->getContainerInfo();
+        [$env, $build_version] = StringUtil::getContainerInfo();
         $build_version = is_string($build_version) ? $build_version : '';
         if (preg_match('/^(\d+\.\d+)\.(\d+)$/', AppInfo::VERSION)) {
             $new_versions['is_dev'] = false;
@@ -456,7 +455,7 @@ final class Updates
                     $fsExtVersion    = is_string($fsExtVersionRaw) ? $fsExtVersionRaw : '';
                     $extRevNameRaw   = $ext_info['revision_name'] ?? null;
                     $extRevName      = is_string($extRevNameRaw) ? $extRevNameRaw : '';
-                    if ($this->stringUtil->safeVersionCompare($fsExtVersion, $extRevName, '<') === true) {
+                    if (StringUtil::safeVersionCompare($fsExtVersion, $extRevName, '<') === true) {
                         if (in_array($ext_id, $typeIgnoreList)) {
                             $ignore_list[] = $ext_id;
                         } else {
@@ -485,7 +484,7 @@ final class Updates
                         ? $typeUpdates[$ext_id]
                         : '';
                     if (isset($typeUpdates[$ext_id])
-                      and $this->stringUtil->safeVersionCompare(is_string($fs_ext['version'] ?? null) ? $fs_ext['version'] : '', $need_update_version, '>=') === true) {
+                      and StringUtil::safeVersionCompare(is_string($fs_ext['version'] ?? null) ? $fs_ext['version'] : '', $need_update_version, '>=') === true) {
                         // Extension have been upgraded
                         $this->checkExtensions();
                         break;

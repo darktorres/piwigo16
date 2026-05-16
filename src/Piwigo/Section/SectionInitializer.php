@@ -54,7 +54,6 @@ final readonly class SectionInitializer
         private PermissionService $permissionService,
         private SearchService $searchService,
         private SessionService $sessionService,
-        private StringUtil $stringUtil,
         private TagService $tagService,
         private UrlService $urlService,
         private UserRepository $userRepository,
@@ -539,7 +538,7 @@ SELECT DISTINCT(id)
             $needRedirect   = false;
 
             if ($catPermalink === '') {
-                if (Config::categoryUrlStyle() === 'id-name' && $hitUrlName !== $this->stringUtil->str2url($catName)) {
+                if (Config::categoryUrlStyle() === 'id-name' && $hitUrlName !== StringUtil::str2url($catName)) {
                     $needRedirect = true;
                 }
             } elseif ($catPermalink !== $hitPermalink) {

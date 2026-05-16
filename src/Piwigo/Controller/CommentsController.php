@@ -57,7 +57,6 @@ final readonly class CommentsController implements ControllerInterface
         private HtmlService $htmlService,
         private MenubarRenderer $menubarRenderer,
         private PermissionService $permissionService,
-        private StringUtil $stringUtil,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private CsrfService $csrfService,
@@ -105,23 +104,23 @@ final readonly class CommentsController implements ControllerInterface
 
         $this->dispatcher->dispatch(new LocBeginComments());
 
-        $get_since = $this->stringUtil->inputInt('since', null, $_GET);
+        $get_since = StringUtil::inputInt('since', null, $_GET);
         $since = ($get_since !== null && $get_since !== 0) ? $get_since : 4;
 
         $sortBy = 'date';
-        $get_sort_by = $this->stringUtil->inputString('sort_by', null, $_GET);
+        $get_sort_by = StringUtil::inputString('sort_by', null, $_GET);
         if ($get_sort_by !== null && isset($sort_by[$get_sort_by])) {
             $sortBy = $get_sort_by;
         }
 
         $sortOrder = 'DESC';
-        $get_sort_order = $this->stringUtil->inputString('sort_order', null, $_GET);
+        $get_sort_order = StringUtil::inputString('sort_order', null, $_GET);
         if ($get_sort_order !== null && isset($sort_order[$get_sort_order])) {
             $sortOrder = $get_sort_order;
         }
 
         $itemsNumber = Config::commentsPageNbComments();
-        $get_items_number = $this->stringUtil->inputString('items_number', null, $_GET);
+        $get_items_number = StringUtil::inputString('items_number', null, $_GET);
         if ($get_items_number !== null) {
             $itemsNumber = $get_items_number;
         }
@@ -131,7 +130,7 @@ final readonly class CommentsController implements ControllerInterface
 
         $whereClauses = [];
 
-        $get_cat = $this->stringUtil->inputInt('cat', null, $_GET);
+        $get_cat = StringUtil::inputInt('cat', null, $_GET);
         if ($get_cat !== null && 0 != $get_cat) {
             $this->inputValidator->check('cat', $_GET, false, ValidationPattern::ID);
             $category_ids = $this->categoryService->getSubcatIds([$get_cat]);
@@ -141,12 +140,12 @@ final readonly class CommentsController implements ControllerInterface
             $whereClauses[] = 'category_id IN (' . implode(',', $category_ids) . ')';
         }
 
-        $get_author = $this->stringUtil->inputString('author', null, $_GET);
+        $get_author = StringUtil::inputString('author', null, $_GET);
         if ($get_author !== null && $get_author !== '') {
             $whereClauses[] = '(u.' . Config::userFields()['username'] . ' = \'' . $get_author . '\' OR author = \'' . $get_author . '\')';
         }
 
-        $get_comment_id_filter = $this->stringUtil->inputInt('comment_id', null, $_GET);
+        $get_comment_id_filter = StringUtil::inputInt('comment_id', null, $_GET);
         if ($get_comment_id_filter !== null && $get_comment_id_filter !== 0) {
             $this->inputValidator->check('comment_id', $_GET, false, ValidationPattern::ID);
             if (!$this->permissionService->isAdmin()) {
@@ -158,7 +157,7 @@ final readonly class CommentsController implements ControllerInterface
             $whereClauses[] = 'com.id = ' . $get_comment_id_filter;
         }
 
-        $get_keyword = $this->stringUtil->inputString('keyword', null, $_GET);
+        $get_keyword = StringUtil::inputString('keyword', null, $_GET);
         if ($get_keyword !== null && $get_keyword !== '') {
             $whereClauses[] = '(' . implode(' AND ', array_map(
                 fn (string $s): string => "content LIKE '%$s%'",
@@ -209,12 +208,12 @@ final readonly class CommentsController implements ControllerInterface
                     $perform_redirect = true;
                 }
                 if ('edit' == $action) {
-                    $post_content = $this->stringUtil->inputString('content', null, $_POST);
+                    $post_content = StringUtil::inputString('content', null, $_POST);
                     if ($post_content !== null && $post_content !== '') {
                         $this->csrfService->check();
                         $comment_action = $this->commentService->updateUserComment(
-                            ['comment_id' => $comment_id, 'image_id' => $this->stringUtil->inputInt('image_id', null, $_POST), 'content' => $post_content, 'website_url' => $this->stringUtil->inputString('website_url', null, $_POST)],
-                            $this->stringUtil->inputString('key', null, $_POST) ?? ''
+                            ['comment_id' => $comment_id, 'image_id' => StringUtil::inputInt('image_id', null, $_POST), 'content' => $post_content, 'website_url' => StringUtil::inputString('website_url', null, $_POST)],
+                            StringUtil::inputString('key', null, $_POST) ?? ''
                         );
                         switch ($comment_action) {
                             case 'moderate':
@@ -284,7 +283,7 @@ SELECT id, name, uppercats, global_rank
         $tpl->assign('item_number_options', $tpl_var);
         $tpl->assign('item_number_options_selected', $itemsNumber);
 
-        $start        = $this->stringUtil->inputInt('start', 0, $_GET);
+        $start        = StringUtil::inputInt('start', 0, $_GET);
         $comments     = [];
         $element_ids  = [];
         $category_ids = [];
@@ -349,7 +348,7 @@ SELECT *
 
                 /** @var array<string, float|int|string|null> $element_row */
                 $element_row  = $elements[(string) $cImageId] ?? [];
-                $name         = (isset($element_row['name']) && $element_row['name'] !== '') ? (string) $element_row['name'] : $this->stringUtil->getNameFromFile((string) ($element_row['file'] ?? ''));
+                $name         = (isset($element_row['name']) && $element_row['name'] !== '') ? (string) $element_row['name'] : StringUtil::getNameFromFile((string) ($element_row['file'] ?? ''));
                 $src_image    = new SrcImage($element_row);
                 $url          = $this->urlService->makePictureUrl([
                     'category'   => $categories[(string) $cCategoryId] ?? [],

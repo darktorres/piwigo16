@@ -33,7 +33,6 @@ final readonly class CommentService
         private LangService $langService,
         private MailService $mailService,
         private PermissionService $permissionService,
-        private StringUtil $stringUtil,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private EphemeralKeyService $ephemeralKeyService,
@@ -177,7 +176,7 @@ final readonly class CommentService
                 if (!preg_match('/^https?/i', $comm['website_url'])) {
                     $comm['website_url'] = 'http://' . $comm['website_url'];
                 }
-                if (!$this->stringUtil->urlCheckFormat($comm['website_url'])) {
+                if (!StringUtil::urlCheckFormat($comm['website_url'])) {
                     $infos[]       = Lang::t('Your website URL is invalid');
                     $commentAction = 'reject';
                 }
@@ -192,7 +191,7 @@ final readonly class CommentService
                 $infos[]       = Lang::t('Email address is missing. Please specify an email address.');
                 $commentAction = 'reject';
             }
-        } elseif (!$this->stringUtil->emailCheckFormat(is_string($comm['email']) ? $comm['email'] : '')) {
+        } elseif (!StringUtil::emailCheckFormat(is_string($comm['email']) ? $comm['email'] : '')) {
             $infos[]       = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
             $commentAction = 'reject';
         }
@@ -344,7 +343,7 @@ final readonly class CommentService
             if (!preg_match('/^https?/i', $comment['website_url'])) {
                 $comment['website_url'] = 'http://' . $comment['website_url'];
             }
-            if (!$this->stringUtil->urlCheckFormat($comment['website_url'])) {
+            if (!StringUtil::urlCheckFormat($comment['website_url'])) {
                 PageState::current()->addError(Lang::t('Your website URL is invalid'));
                 $commentAction = 'reject';
             }

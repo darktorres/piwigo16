@@ -19,7 +19,6 @@ final readonly class HistoryAdminService
     public function __construct(
         private Connection $conn,
         private HistoryRepository $historyRepository,
-        private StringUtil $stringUtil,
     ) {
     }
 
@@ -133,7 +132,7 @@ SELECT
             $clauses[] = "{$p}IP LIKE " . $this->conn->quote(is_string($fields['ip']) ? $fields['ip'] : '');
         }
 
-        $clauses = $this->stringUtil->prependAppendArrayItems($clauses, '(', ')');
+        $clauses = StringUtil::prependAppendArrayItems($clauses, '(', ')');
         return implode("\n    AND ", $clauses);
     }
 

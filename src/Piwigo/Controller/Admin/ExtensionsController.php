@@ -71,7 +71,6 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         private PluginRepository $pluginRepository,
         private PreferencesService $preferencesService,
         private SessionService $sessionService,
-        private StringUtil $stringUtil,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserService $userService,
@@ -686,7 +685,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                     $stdPgsLogoNameRaw = $std_pgs_logo_file['name'] ?? null;
                     $std_pgs_logo_name = is_string($stdPgsLogoNameRaw) ? $stdPgsLogoNameRaw : '';
                     $pathinfo  = pathinfo($std_pgs_logo_name);
-                    $file_path = $upload_dir . '/' . $this->stringUtil->str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];
+                    $file_path = $upload_dir . '/' . StringUtil::str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];
                     $this->configService->confUpdateParam('standard_pages_selected_logo_path', $file_path, true);
                     $logoStream = fopen($std_pgs_logo_tmp, 'rb');
                     if ($logoStream !== false) {
@@ -985,7 +984,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
 
                 $extVersion = is_scalar($fs_ext_item['version'] ?? null) ? (string) $fs_ext_item['version'] : '';
                 $revName = is_scalar($ext_info['revision_name'] ?? null) ? (string) $ext_info['revision_name'] : '';
-                if ($this->stringUtil->safeVersionCompare($extVersion, $revName, '<') === true) {
+                if (StringUtil::safeVersionCompare($extVersion, $revName, '<') === true) {
                     $extId = is_scalar($ext_info['extension_id'] ?? null) ? $ext_info['extension_id'] : '';
                     $revId = is_scalar($ext_info['revision_id'] ?? null) ? $ext_info['revision_id'] : '';
                     $revDesc = is_scalar($ext_info['revision_description'] ?? null) ? (string) $ext_info['revision_description'] : '';
@@ -1029,7 +1028,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
 
         $getStepRaw = $_GET['step'] ?? null;
         $step = is_numeric($getStepRaw) ? (int) $getStepRaw : 0;
-        [$ct_env, $ct_build_version] = $this->stringUtil->getContainerInfo();
+        [$ct_env, $ct_build_version] = StringUtil::getContainerInfo();
 
         if ('Official' === $ct_env) {
             $tpl->assign(['CONTAINER_VERSION' => $ct_build_version, 'DOCKER_UPDATE_GUIDE_URL' => PHPWG_URL . '/guide-update-docker']);

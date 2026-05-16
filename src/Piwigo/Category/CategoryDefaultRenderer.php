@@ -33,7 +33,6 @@ final readonly class CategoryDefaultRenderer
         private HtmlService $htmlService,
         private ImageRepository $imageRepository,
         private SessionService $sessionService,
-        private StringUtil $stringUtil,
         private UrlService $urlService,
         private DebugCollector $debugCollector,
         private EventDispatcherInterface $dispatcher,
@@ -120,8 +119,8 @@ SELECT image_id, COUNT(*) AS nb_comments
                 'URL' => $url,
                 'DESCRIPTION' => $desc,
                 'src_image' => new SrcImage($row),
-                'path_ext' => strtolower($this->stringUtil->getExtension(is_string($rowPath) ? $rowPath : '')),
-                'file_ext' => strtolower($this->stringUtil->getExtension(is_string($rowFile) ? $rowFile : '')),
+                'path_ext' => strtolower(StringUtil::getExtension(is_string($rowPath) ? $rowPath : '')),
+                'file_ext' => strtolower(StringUtil::getExtension(is_string($rowFile) ? $rowFile : '')),
             ]);
 
             if (Config::indexNewIcon()) {

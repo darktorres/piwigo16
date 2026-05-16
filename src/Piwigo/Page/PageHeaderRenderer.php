@@ -48,7 +48,7 @@ final class PageHeaderRenderer
             'GALLERY_TITLE'          => $pageState->galleryTitle ?? Config::galleryTitle(),
             'PAGE_BANNER'            => new Html($bannerEvent->banner),
             'BODY_ID'                => $pageState->bodyId,
-            'CONTENT_ENCODING'       => Kernel::service(StringUtil::class)->getPwgCharset(),
+            'CONTENT_ENCODING'       => StringUtil::getPwgCharset(),
             'PAGE_TITLE'             => strip_tags($title),
             'U_HOME'                 => Kernel::service(UrlService::class)->getGalleryHomeUrl(),
             'LEVEL_SEPARATOR'        => Config::levelSeparator(),
@@ -77,7 +77,7 @@ final class PageHeaderRenderer
 
         $dispatcher->dispatch(new LocEndPageHeader());
 
-        header('Content-Type: text/html; charset=' . Kernel::service(StringUtil::class)->getPwgCharset());
+        header('Content-Type: text/html; charset=' . StringUtil::getPwgCharset());
         $template->parse('header.latte');
 
         $dispatcher->dispatch(new LocAfterPageHeader());

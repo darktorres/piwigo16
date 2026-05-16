@@ -17,13 +17,8 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * leaving the event silently no-op. This subscriber restores the documented
  * behavior by calling StringUtil::str2url() directly.
  */
-final readonly class RenderTagUrlSubscriber implements EventSubscriberInterface
+final class RenderTagUrlSubscriber implements EventSubscriberInterface
 {
-    public function __construct(
-        private StringUtil $stringUtil,
-    ) {
-    }
-
     #[\Override]
     public static function getSubscribedEvents(): array
     {
@@ -32,6 +27,6 @@ final readonly class RenderTagUrlSubscriber implements EventSubscriberInterface
 
     public function onRenderTagUrl(RenderTagUrl $event): void
     {
-        $event->tagName = $this->stringUtil->str2url($event->tagName);
+        $event->tagName = StringUtil::str2url($event->tagName);
     }
 }

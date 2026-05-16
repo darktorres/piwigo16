@@ -100,7 +100,6 @@ final class MaintenanceController implements AdminSubControllerInterface
         private readonly SessionRepository $sessionRepository,
         private readonly SessionService $sessionService,
         private readonly SiteRepository $siteRepository,
-        private readonly StringUtil $stringUtil,
         private readonly TagAdminService $tagAdminService,
         private readonly UrlGenerator $urlGenerator,
         private readonly UrlService $urlService,
@@ -569,7 +568,7 @@ final class MaintenanceController implements AdminSubControllerInterface
         $php_current_timestamp = date('Y-m-d H:i:s');
         $db_version            = DbInfo::version();
         $db_current_date       = new \DateTimeImmutable()->format('Y-m-d H:i:s');
-        [$container_name, $container_version] = $this->stringUtil->getContainerInfo();
+        [$container_name, $container_version] = StringUtil::getContainerInfo();
         if (!in_array($container_name, ['Official', 'none'])) {
             $container_name = '(unofficial) ' . $container_name;
         }
@@ -1187,7 +1186,7 @@ final class MaintenanceController implements AdminSubControllerInterface
         }
 
         if (isset($_POST['submit']) && ($_POST['sync'] == 'dirs' || $_POST['sync'] == 'files') && !$general_failure) {
-            $start = $this->stringUtil->getMoment();
+            $start = StringUtil::getMoment();
             $query = 'SELECT id, uppercats, global_rank, status, visible FROM ' . Tables::categories() . ' WHERE dir IS NOT NULL AND site_id = ' . $site_id;
             if (isset($_POST['cat']) && is_numeric($_POST['cat'])) {
                 if (isset($_POST['subcats-included']) && $_POST['subcats-included'] == 1) {
@@ -1358,15 +1357,15 @@ final class MaintenanceController implements AdminSubControllerInterface
                 }
                 $counts['del_categories'] = count($to_delete);
             }
-            $tpl->append('footer_elements', '<!-- scanning dirs : ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- scanning dirs : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
         }
 
         // ── files / elements ──────────────────────────────────────────────────
 
         if (isset($_POST['submit']) && $_POST['sync'] == 'files' && !$general_failure) {
-            $start_files = $start = $this->stringUtil->getMoment();
+            $start_files = $start = StringUtil::getMoment();
             $fs = $site_reader->getElements($basedir);
-            $tpl->append('footer_elements', '<!-- get_elements: ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- get_elements: ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
 
             $cat_ids    = array_diff(array_keys($db_categories), $to_delete);
             $db_elements = [];
@@ -1378,7 +1377,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             $next_element_id_raw = $this->conn->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . Tables::images() . '`')->fetchOne();
             $next_element_id     = is_numeric($next_element_id_raw) ? (int) $next_element_id_raw : 1;
 
-            $start             = $this->stringUtil->getMoment();
+            $start             = StringUtil::getMoment();
             $inserts           = $insert_links = $insert_formats = $formats_to_delete = [];
 
             foreach (array_diff(array_keys($fs), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $db_elements)) as $path) {
@@ -1391,7 +1390,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                     $errors[] = ['path' => $path, 'type' => 'PWG-UPDATE-1'];
                     continue;
                 }
-                $insert = ['id' => $next_element_id++, 'file' => $filename, 'name' => $this->stringUtil->getNameFromFile($filename), 'date_available' => $nowDateTime, 'path' => $path, 'representative_ext' => is_array($fs[$path]) ? ($fs[$path]['representative_ext'] ?? null) : null, 'storage_category_id' => $db_fulldirs[$dirname], 'added_by' => $user['id']];
+                $insert = ['id' => $next_element_id++, 'file' => $filename, 'name' => StringUtil::getNameFromFile($filename), 'date_available' => $nowDateTime, 'path' => $path, 'representative_ext' => is_array($fs[$path]) ? ($fs[$path]['representative_ext'] ?? null) : null, 'storage_category_id' => $db_fulldirs[$dirname], 'added_by' => $user['id']];
                 if ($_POST['privacy_level'] != 0) {
                     $insert['level'] = $_POST['privacy_level'];
                 }
@@ -1486,22 +1485,22 @@ final class MaintenanceController implements AdminSubControllerInterface
                 } $counts['del_elements'] = count($to_delete_elements);
             }
 
-            $tpl->append('footer_elements', '<!-- scanning files : ' . $this->stringUtil->getElapsedTime($start_files, $this->stringUtil->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- scanning files : ' . StringUtil::getElapsedTime($start_files, StringUtil::getMoment()) . ' -->');
         }
 
         // ── sync categories & files ───────────────────────────────────────────
 
         if (isset($_POST['submit']) && ($_POST['sync'] == 'dirs' || $_POST['sync'] == 'files') && !$general_failure) {
             if (!$simulate) {
-                $start = $this->stringUtil->getMoment();
+                $start = StringUtil::getMoment();
                 $this->categoryAdminService->updateCategory('all');
-                $tpl->append('footer_elements', '<!-- $this->categoryAdminService->updateCategory(all) : ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
-                $start = $this->stringUtil->getMoment();
+                $tpl->append('footer_elements', '<!-- $this->categoryAdminService->updateCategory(all) : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
+                $start = StringUtil::getMoment();
                 $this->categoryAdminService->updateGlobalRank();
-                $tpl->append('footer_elements', '<!-- ordering categories : ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
+                $tpl->append('footer_elements', '<!-- ordering categories : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
             }
             if ($_POST['sync'] == 'files') {
-                $start = $this->stringUtil->getMoment();
+                $start = StringUtil::getMoment();
                 $opts  = ['category_id' => '', 'recursive' => true];
                 if (isset($_POST['cat'])) {
                     $opts['category_id'] = $_POST['cat'];
@@ -1511,8 +1510,8 @@ final class MaintenanceController implements AdminSubControllerInterface
                 }
                 $catIdOpt = is_string($opts['category_id']) ? $opts['category_id'] : '';
                 $files = $this->metadataAdminService->getFilelist($catIdOpt, (int) $site_id, $opts['recursive'], false);
-                $tpl->append('footer_elements', '<!-- get_filelist : ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
-                $start = $this->stringUtil->getMoment();
+                $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
+                $start = StringUtil::getMoment();
                 $datas = [];
                 foreach ($files as $id => $file) {
                     $file_path = is_array($file) && is_scalar($file['path'] ?? null) ? (string) $file['path'] : '';
@@ -1524,7 +1523,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 if (!$simulate && count($datas) > 0) {
                     Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getUpdateAttributes())], $datas);
                 }
-                $tpl->append('footer_elements', '<!-- update files : ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
+                $tpl->append('footer_elements', '<!-- update files : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
             }
         }
 
@@ -1542,11 +1541,11 @@ final class MaintenanceController implements AdminSubControllerInterface
                     $opts['recursive'] = false;
                 }
             }
-            $start       = $this->stringUtil->getMoment();
+            $start       = StringUtil::getMoment();
             $catIdMeta   = is_string($opts['category_id']) ? $opts['category_id'] : '';
             $files = $this->metadataAdminService->getFilelist($catIdMeta, (int) $site_id, $opts['recursive'], $opts['only_new']);
-            $tpl->append('footer_elements', '<!-- get_filelist : ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
-            $start = $this->stringUtil->getMoment();
+            $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
+            $start = StringUtil::getMoment();
             $datas = $tags_of = [];
             foreach ($files as $id => $element_infos) {
                 $element_infos_arr = is_array($element_infos) ? $element_infos : [];
@@ -1575,7 +1574,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 }
                 $this->tagAdminService->setTagsOf($tags_of);
             }
-            $tpl->append('footer_elements', '<!-- metadata update : ' . $this->stringUtil->getElapsedTime($start, $this->stringUtil->getMoment()) . ' -->');
+            $tpl->append('footer_elements', '<!-- metadata update : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
             $tpl->assign('metadata_result', ['NB_ELEMENTS_DONE' => count($datas), 'NB_ELEMENTS_CANDIDATES' => count($files), 'NB_ERRORS' => count($errors)]);
         }
 

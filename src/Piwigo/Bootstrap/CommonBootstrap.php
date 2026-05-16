@@ -277,7 +277,7 @@ final class CommonBootstrap
                 if (!headers_sent()) {
                     header('Retry-After: 900');
                 }
-                header('Content-Type: text/html; charset=' . Kernel::service(StringUtil::class)->getPwgCharset());
+                header('Content-Type: text/html; charset=' . StringUtil::getPwgCharset());
                 echo '<a href="' . Kernel::service(UrlGenerator::class)->identification() . '">' . Lang::t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
                 echo str_repeat(' ', 512);
                 exit();

@@ -34,7 +34,6 @@ final readonly class TelemetryService
         private ConfigService $configService,
         private LoggerInterface $log,
         private AdminService $adminService,
-        private StringUtil $stringUtil,
         private ExecutionMutex $mutex,
     ) {
     }
@@ -54,7 +53,7 @@ final readonly class TelemetryService
 
     public function sendInfos(): void
     {
-        $startTime = $this->stringUtil->getMoment();
+        $startTime = StringUtil::getMoment();
 
         if (!Config::sendPiwigoInfos()) {
             return;
@@ -95,7 +94,7 @@ final readonly class TelemetryService
             $this->configService->confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
         }
 
-        [$containerType, $containerVersion] = $this->stringUtil->getContainerInfo();
+        [$containerType, $containerVersion] = StringUtil::getContainerInfo();
 
         $piwigoInfos = [
             'origin_hash' => Config::sendPiwigoInfosOriginHash(),
@@ -163,7 +162,7 @@ final readonly class TelemetryService
             $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote on ' . $url . ' has failed');
             $this->retryLater(1 * 60 * 60);
             $this->mutex->release('send_piwigo_infos');
-            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . $this->stringUtil->getElapsedTime($startTime, $this->stringUtil->getMoment()));
+            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::getElapsedTime($startTime, StringUtil::getMoment()));
             return;
         }
 
@@ -354,6 +353,6 @@ final readonly class TelemetryService
         }
 
         $this->mutex->release('send_piwigo_infos');
-        $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . $this->stringUtil->getElapsedTime($startTime, $this->stringUtil->getMoment()));
+        $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::getElapsedTime($startTime, StringUtil::getMoment()));
     }
 }

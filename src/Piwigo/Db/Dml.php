@@ -90,7 +90,7 @@ final class Dml
                 $columns[] = $col;
             }
 
-            $tmp = $tablename . '_' . Kernel::service(StringUtil::class)->microSeconds();
+            $tmp = $tablename . '_' . StringUtil::microSeconds();
             $conn->executeStatement(
                 'CREATE TABLE ' . $tmp . ' (' .
                 implode(",\n  ", $columns) . ',' .

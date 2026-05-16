@@ -8,63 +8,63 @@ use Piwigo\Url\UrlService;
 
 final class StringUtil
 {
-    public function microSeconds(): string
+    public static function microSeconds(): string
     {
         $t1 = explode(' ', microtime());
         $t2 = explode('.', $t1[0]);
         return $t1[1] . substr($t2[1], 0, 6);
     }
 
-    public function getMoment(): float
+    public static function getMoment(): float
     {
         return microtime(true);
     }
 
-    public function getElapsedTime(float $start, float $end): string
+    public static function getElapsedTime(float $start, float $end): string
     {
         return number_format($end - $start, 3, '.', ' ') . ' s';
     }
 
     /** @param array<mixed> $source */
-    public function inputInt(string $key, ?int $default = null, array $source = []): ?int
+    public static function inputInt(string $key, ?int $default = null, array $source = []): ?int
     {
         $src = $source ?: ($_POST + $_GET);
         return isset($src[$key]) ? (is_numeric($src[$key]) ? (int) $src[$key] : 0) : $default;
     }
 
     /** @param array<mixed> $source */
-    public function inputString(string $key, ?string $default = null, array $source = []): ?string
+    public static function inputString(string $key, ?string $default = null, array $source = []): ?string
     {
         $src = $source ?: ($_POST + $_GET);
         return isset($src[$key]) ? trim(is_scalar($src[$key]) ? (string) $src[$key] : '') : $default;
     }
 
     /** @param array<mixed> $source */
-    public function inputBool(string $key, ?bool $default = null, array $source = []): ?bool
+    public static function inputBool(string $key, ?bool $default = null, array $source = []): ?bool
     {
         $src = $source ?: ($_POST + $_GET);
         return isset($src[$key]) ? (bool) $src[$key] : $default;
     }
 
-    public function getExtension(string $filename): string
+    public static function getExtension(string $filename): string
     {
         $ext = strrchr($filename, '.');
         return $ext !== false ? substr($ext, 1) : '';
     }
 
-    public function getFilenameWoExtension(string $filename): string
+    public static function getFilenameWoExtension(string $filename): string
     {
         $pos = strrpos($filename, '.');
         return ($pos === false) ? $filename : substr($filename, 0, $pos);
     }
 
-    public function getNameFromFile(string $filename): string
+    public static function getNameFromFile(string $filename): string
     {
-        return str_replace('_', ' ', $this->getFilenameWoExtension($filename));
+        return str_replace('_', ' ', self::getFilenameWoExtension($filename));
     }
 
     /** @return int 0 if ASCII, 1 if UTF-8, -1 otherwise */
-    public function qualifyUtf8(string $str): int
+    public static function qualifyUtf8(string $str): int
     {
         $ret = 0;
         for ($i = 0; $i < strlen($str); $i++) {
@@ -95,9 +95,9 @@ final class StringUtil
         return $ret;
     }
 
-    public function removeAccents(string $string): string
+    public static function removeAccents(string $string): string
     {
-        $utf = $this->qualifyUtf8($string);
+        $utf = self::qualifyUtf8($string);
         if ($utf === 0) {
             return $string;
         }
@@ -223,14 +223,14 @@ final class StringUtil
         return $string;
     }
 
-    public function pwgTransliterate(string $term): string
+    public static function pwgTransliterate(string $term): string
     {
-        return $this->removeAccents(mb_strtolower($term, 'utf-8'));
+        return self::removeAccents(mb_strtolower($term, 'utf-8'));
     }
 
-    public function str2url(string $str): string
+    public static function str2url(string $str): string
     {
-        $str  = $safe = $this->pwgTransliterate($str);
+        $str  = $safe = self::pwgTransliterate($str);
         $str  = preg_replace('/[^\x80-\xffa-z0-9_\s\'\:\/\[\],-]/', '', $str);
         $str  = preg_replace('/[\s\'\:\/\[\],-]+/', ' ', trim((string) $str));
         $res  = str_replace(' ', '_', $str ?? '');
@@ -240,7 +240,7 @@ final class StringUtil
         return $res;
     }
 
-    public function convertCharset(string $str, string $sourceCharset, string $destCharset): string
+    public static function convertCharset(string $str, string $sourceCharset, string $destCharset): string
     {
         if ($sourceCharset === $destCharset) {
             return $str;
@@ -263,7 +263,7 @@ final class StringUtil
         return $result !== false ? $result : $str;
     }
 
-    public function getPwgCharset(): string
+    public static function getPwgCharset(): string
     {
         return 'utf-8';
     }
@@ -272,7 +272,7 @@ final class StringUtil
      * @param string[] $array
      * @return string[]
      */
-    public function prependAppendArrayItems(array $array, string $prependStr, string $appendStr): array
+    public static function prependAppendArrayItems(array $array, string $prependStr, string $appendStr): array
     {
         array_walk($array, static function (mixed &$value, int|string $key) use ($prependStr, $appendStr): void {
             $value = $prependStr . (string) $value . $appendStr;
@@ -283,11 +283,6 @@ final class StringUtil
     /**
      * @param array<mixed>|string $value
      * @return array<mixed>
-     */
-    /**
-     * @param array<mixed>|string $value
-     * @return array<mixed>
-     * @pre-boot Safe to call before Kernel::boot() — no DI container required.
      */
     public static function safeUnserialize(array|string $value): array
     {
@@ -310,7 +305,7 @@ final class StringUtil
      * @param array<mixed>|string $value
      * @return array<mixed>
      */
-    public function safeJsonDecode(array|string $value): array
+    public static function safeJsonDecode(array|string $value): array
     {
         if (is_string($value)) {
             $decoded = json_decode($value, true);
@@ -323,7 +318,7 @@ final class StringUtil
      * @param array<mixed>|null $imageInfo
      * @return array<int|string,mixed>|false
      */
-    public function pwgSafeGetimagesize(string $filename, array|null &$imageInfo = null): array|false
+    public static function pwgSafeGetimagesize(string $filename, array|null &$imageInfo = null): array|false
     {
         set_error_handler(static fn (): bool => true);
         try {
@@ -339,7 +334,7 @@ final class StringUtil
     }
 
     /** @return array<mixed>|false */
-    public function pwgSafeExifReadData(string $filename): array|false
+    public static function pwgSafeExifReadData(string $filename): array|false
     {
         if (!function_exists('exif_read_data')) {
             return false;
@@ -352,7 +347,7 @@ final class StringUtil
         }
     }
 
-    public function originalToRepresentative(string $path, string $representativeExt): string
+    public static function originalToRepresentative(string $path, string $representativeExt): string
     {
         $posSlash = strrpos($path, '/');
         $pos  = $posSlash !== false ? $posSlash : 0;
@@ -362,7 +357,7 @@ final class StringUtil
         return substr_replace($path, $representativeExt, $pos + 1);
     }
 
-    public function originalToFormat(string $path, string $formatExt): string
+    public static function originalToFormat(string $path, string $formatExt): string
     {
         $posSlash = strrpos($path, '/');
         $pos  = $posSlash !== false ? $posSlash : 0;
@@ -373,7 +368,7 @@ final class StringUtil
     }
 
     /** @param array<string,mixed> $elementInfo */
-    public function getElementPath(array $elementInfo): string
+    public static function getElementPath(array $elementInfo): string
     {
         $path = is_string($elementInfo['path'] ?? null) ? $elementInfo['path'] : '';
         if (!UrlService::urlIsRemote($path)) {
@@ -382,14 +377,12 @@ final class StringUtil
         return $path;
     }
 
-    /** @pre-boot Safe to call before Kernel::boot() — no DI container required. */
     public static function generateKey(int $size): string
     {
         $bytes = random_bytes(max(1, $size + 10));
         return substr(str_replace(['+', '/'], '', base64_encode($bytes)), 0, $size);
     }
 
-    /** @pre-boot Safe to call before Kernel::boot() — no DI container required. */
     public static function scriptBasename(): string
     {
         foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $value) {
@@ -404,12 +397,12 @@ final class StringUtil
         return '';
     }
 
-    public function getBranchFromVersion(string $version): string
+    public static function getBranchFromVersion(string $version): string
     {
         return implode('.', array_slice(explode('.', $version), 0, 1));
     }
 
-    public function urlCheckFormat(string $url): bool
+    public static function urlCheckFormat(string $url): bool
     {
         if (str_contains($url, '"')) {
             return false;
@@ -420,7 +413,7 @@ final class StringUtil
         return filter_var($url, FILTER_VALIDATE_URL) !== false;
     }
 
-    public function emailCheckFormat(string $mailAddress): bool
+    public static function emailCheckFormat(string $mailAddress): bool
     {
         return filter_var($mailAddress, FILTER_VALIDATE_EMAIL) !== false;
     }
@@ -428,7 +421,7 @@ final class StringUtil
     /**
      * @psalm-param '<'|'>='|null $op
      */
-    public function safeVersionCompare(string $a, string $b, string|null $op = null): int|bool
+    public static function safeVersionCompare(string $a, string $b, string|null $op = null): int|bool
     {
         $replaceChars = static fn (array $m): string => (string) ord((strtolower(is_string($m[1] ?? null) ? $m[1] : '')[0] ?? '')[0]);
         $aStr = $a;
@@ -445,7 +438,7 @@ final class StringUtil
         return version_compare($aStr, $bStr, $operator);
     }
 
-    public function isValidMysqlDatetime(string $datetime): bool
+    public static function isValidMysqlDatetime(string $datetime): bool
     {
         $format = 'Y-m-d H:i:s';
         $date   = \DateTime::createFromFormat($format, $datetime);
@@ -457,7 +450,7 @@ final class StringUtil
         return $date && $date->format($format) === $datetime;
     }
 
-    public function secureDirectory(string $dir): void
+    public static function secureDirectory(string $dir): void
     {
         $file = $dir . '/index.htm';
         if (!file_exists($file) && is_writable($dir)) {
@@ -466,7 +459,7 @@ final class StringUtil
     }
 
     /** @return array{0: string, 1: string|null} */
-    public function getContainerInfo(): array
+    public static function getContainerInfo(): array
     {
         if (strtoupper(substr(PHP_OS, 0, 5)) === 'LINUX' && (ini_get('open_basedir') === '' || ini_get('open_basedir') === false)) {
             if (file_exists('/proc/2/sched')) {

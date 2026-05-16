@@ -54,8 +54,8 @@ final class LocalSiteReader
                 }
 
                 if (is_file($path.'/'.$node)) {
-                    $extension = strtolower(Kernel::service(StringUtil::class)->getExtension($node));
-                    $filename_wo_ext = Kernel::service(StringUtil::class)->getFilenameWoExtension($node);
+                    $extension = strtolower(StringUtil::getExtension($node));
+                    $filename_wo_ext = StringUtil::getFilenameWoExtension($node);
 
                     if (isset(Config::flipFileExt()[$extension])) {
                         $representative_ext = null;
@@ -99,12 +99,12 @@ final class LocalSiteReader
     {
         $data = [];
         $filename = basename($file);
-        $extension = Kernel::service(StringUtil::class)->getExtension($filename);
+        $extension = StringUtil::getExtension($filename);
 
         $representative_ext = null;
         if (! isset(Config::flipPictureExt()[$extension])) {
             $dirname = dirname($file);
-            $filename_wo_ext = Kernel::service(StringUtil::class)->getFilenameWoExtension($filename);
+            $filename_wo_ext = StringUtil::getFilenameWoExtension($filename);
             $representative_ext = $this->getRepresentativeExt($dirname, $filename_wo_ext);
         }
 

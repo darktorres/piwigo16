@@ -88,7 +88,6 @@ final class PhotoController implements AdminSubControllerInterface
         private readonly PermissionService $permissionService,
         private readonly PreferencesService $preferencesService,
         private readonly RateRepository $rateRepository,
-        private readonly StringUtil $stringUtil,
         private readonly TagAdminService $tagAdminService,
         private readonly TagRepository $tagRepository,
         private readonly UploadService $uploadService,
@@ -380,7 +379,7 @@ SELECT id
 
         $tpl->assign('INTRO', $intro_vars);
 
-        if (in_array($this->stringUtil->getExtension(is_scalar($row['path'] ?? null) ? (string) $row['path'] : ''), Config::pictureExtensions())) {
+        if (in_array(StringUtil::getExtension(is_scalar($row['path'] ?? null) ? (string) $row['path'] : ''), Config::pictureExtensions())) {
             $tpl->assign('U_COI', $this->urlGenerator->admin('picture_coi') . '&image_id=' . $image_id_str);
         }
 

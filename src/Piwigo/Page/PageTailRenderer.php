@@ -67,7 +67,7 @@ final class PageTailRenderer
             $reqTimeFloat = $_SERVER['REQUEST_TIME_FLOAT'] ?? null;
             $t2           = is_float($reqTimeFloat) ? $reqTimeFloat : microtime(true);
             $debug_vars += [
-                'TIME'       => Kernel::service(StringUtil::class)->getElapsedTime($t2, Kernel::service(StringUtil::class)->getMoment()),
+                'TIME'       => StringUtil::getElapsedTime($t2, StringUtil::getMoment()),
                 'NB_QUERIES' => $pageState->countQueries,
                 'SQL_TIME'   => number_format($pageState->queriesTime, 3, '.', ' ') . ' s',
             ];

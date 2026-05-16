@@ -7,6 +7,8 @@ namespace Piwigo\Admin;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\IgnoredUpdatesRepository;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
@@ -27,14 +29,14 @@ use Piwigo\Users\UserService;
 
 final class Updates
 {
-    /** @var string[] */
-    public $types = [];
+    /** @var list<ExtensionType> */
+    public array $types = [];
     /** @var array<string, array<mixed>> */
     public array $missing = [];
     /** @var string[] */
-    public $default_plugins = [];
+    public array $default_plugins = [];
     /** @var string[] */
-    public $default_themes = [];
+    public array $default_themes = [];
     /** @var string[] */
     public array $default_languages = [];
     /** @var array<mixed> */
@@ -53,65 +55,64 @@ final class Updates
         private readonly UserService $userService,
         private readonly ActivityLogger $activityLogger,
         private readonly RedirectResponder $redirectResponder,
+        private readonly IgnoredUpdatesRepository $ignoredUpdates,
     ) {
-        $this->types = ['plugins', 'themes', 'languages'];
+        $this->types = [ExtensionType::Plugin, ExtensionType::Theme, ExtensionType::Language];
         $this->default_themes = ['modus', 'elegant', 'smartpocket'];
         $this->default_plugins = ['AdminTools', 'TakeATour', 'language_switch', 'LocalFilesEditor'];
     }
 
     /**
-     * Narrows the types this Updates instance operates on to a single category
-     * (must be one of 'plugins', 'themes', 'languages'). Anything else is a no-op.
+     * Narrows the types this Updates instance operates on to a single category.
+     * Page string must match an ExtensionType case value
+     * ('plugins'|'themes'|'languages'); anything else is a no-op.
      */
     public function setPage(string $page): self
     {
-        if (in_array($page, $this->types, true)) {
-            $this->types = [$page];
+        $type = ExtensionType::tryFrom($page);
+        if ($type !== null) {
+            $this->types = [$type];
         }
         return $this;
     }
 
     /** @return array<string, array<mixed>> */
-    public function getFsByType(string $type): array
+    public function getFsByType(ExtensionType $type): array
     {
-        return match($type) {
-            'plugins'   => $this->plugins->fs_plugins,
-            'themes'    => $this->themes->fs_themes,
-            'languages' => $this->languages->fs_languages,
-            default     => [],
+        return match ($type) {
+            ExtensionType::Plugin   => $this->plugins->fs_plugins,
+            ExtensionType::Theme    => $this->themes->fs_themes,
+            ExtensionType::Language => $this->languages->fs_languages,
         };
     }
 
     /** @return array<int|string, array<mixed>> */
-    public function getServerByType(string $type): array
+    public function getServerByType(ExtensionType $type): array
     {
-        return match($type) {
-            'plugins'   => $this->plugins->server_plugins,
-            'themes'    => $this->themes->server_themes,
-            'languages' => $this->languages->server_languages,
-            default     => [],
+        return match ($type) {
+            ExtensionType::Plugin   => $this->plugins->server_plugins,
+            ExtensionType::Theme    => $this->themes->server_themes,
+            ExtensionType::Language => $this->languages->server_languages,
         };
     }
 
     /** @param array<int|string, array<mixed>> $data */
-    public function setServerByType(string $type, array $data): void
+    public function setServerByType(ExtensionType $type, array $data): void
     {
-        match($type) {
-            'plugins'   => ($this->plugins->server_plugins = $data),
-            'themes'    => ($this->themes->server_themes = $data),
-            'languages' => ($this->languages->server_languages = $data),
-            default     => null,
+        match ($type) {
+            ExtensionType::Plugin   => ($this->plugins->server_plugins = $data),
+            ExtensionType::Theme    => ($this->themes->server_themes = $data),
+            ExtensionType::Language => ($this->languages->server_languages = $data),
         };
     }
 
     /** @return string[] */
-    public function getDefaultsByType(string $type): array
+    public function getDefaultsByType(ExtensionType $type): array
     {
-        return match($type) {
-            'plugins'   => $this->default_plugins,
-            'themes'    => $this->default_themes,
-            'languages' => $this->default_languages,
-            default     => [],
+        return match ($type) {
+            ExtensionType::Plugin   => $this->default_plugins,
+            ExtensionType::Theme    => $this->default_themes,
+            ExtensionType::Language => $this->default_languages,
         };
     }
 
@@ -353,10 +354,9 @@ final class Updates
         // Extensions to check
         $ext_to_check = [];
         foreach ($this->types as $type) {
-            $fs = 'fs_'.$type;
             foreach ($this->getFsByType($type) as $ext) {
                 if (isset($ext['extension']) && is_string($ext['extension'])) {
-                    $ext_to_check[$ext['extension']] = $type;
+                    $ext_to_check[$ext['extension']] = $type->value;
                 }
             }
         }
@@ -408,9 +408,9 @@ final class Updates
             }
 
             foreach ($servers as $server_type => $extension_list) {
-                $server_string = 'server_'.$server_type;
-
-                $this->setServerByType($server_type, $extension_list);
+                // $server_type came from $ext_to_check, which only ever holds
+                // ExtensionType::value strings — `from()` is safe here.
+                $this->setServerByType(ExtensionType::from($server_type), $extension_list);
             }
 
             $this->checkMissingExtensions($ext_to_check);
@@ -430,16 +430,11 @@ final class Updates
         }
 
         foreach ($this->types as $type) {
-            $fs = 'fs_'.$type;
-            $server = 'server_'.$type;
             $server_ext = $this->getServerByType($type);
             $fs_ext = $this->getFsByType($type);
 
-            $ignore_list = [];
-
-            $updatesIgnored = Config::raw('updates_ignored');
-            $updatesIgnoredArr = is_array($updatesIgnored) ? $updatesIgnored : [];
-            $typeIgnoreList = is_array($updatesIgnoredArr[$type] ?? null) ? $updatesIgnoredArr[$type] : [];
+            $typeIgnoreList = $this->ignoredUpdates->listForType($type);
+            $survivingIgnored = [];
 
             foreach ($fs_ext as $ext_id => $fs_ext_item) {
                 $extKey2 = is_string($fs_ext_item['extension'] ?? null) ? $fs_ext_item['extension'] : null;
@@ -456,18 +451,20 @@ final class Updates
                     $extRevNameRaw   = $ext_info['revision_name'] ?? null;
                     $extRevName      = is_string($extRevNameRaw) ? $extRevNameRaw : '';
                     if (StringUtil::safeVersionCompare($fsExtVersion, $extRevName, '<') === true) {
-                        if (in_array($ext_id, $typeIgnoreList)) {
-                            $ignore_list[] = $ext_id;
+                        $extIdStr = (string) $ext_id;
+                        if (in_array($extIdStr, $typeIgnoreList, true)) {
+                            $survivingIgnored[] = $extIdStr;
                         } else {
-                            $_SESSION['extensions_need_update'][$type][$ext_id] = is_string($ext_info['revision_name'] ?? null) ? $ext_info['revision_name'] : '';
+                            $_SESSION['extensions_need_update'][$type->value][$ext_id] = is_string($ext_info['revision_name'] ?? null) ? $ext_info['revision_name'] : '';
                         }
                     }
                 }
             }
-            $updatesIgnoredArr[$type] = $ignore_list;
-            Config::override('updates_ignored', $updatesIgnoredArr);
+            // Drop any ignored extension whose update is no longer pending
+            // (either because it was upgraded since the last check or
+            // because the extension itself is gone from disk).
+            $this->ignoredUpdates->pruneStale($type, $survivingIgnored);
         }
-        $this->configService->confUpdateParam('updates_ignored', serialize(Config::raw('updates_ignored')));
         return [];
     }
 
@@ -476,9 +473,8 @@ final class Updates
     {
         $extensionsNeedUpdate = is_array($_SESSION['extensions_need_update'] ?? null) ? $_SESSION['extensions_need_update'] : [];
         foreach ($this->types as $type) {
-            $typeUpdates = is_array($extensionsNeedUpdate[$type] ?? null) ? $extensionsNeedUpdate[$type] : [];
+            $typeUpdates = is_array($extensionsNeedUpdate[$type->value] ?? null) ? $extensionsNeedUpdate[$type->value] : [];
             if (count($typeUpdates) > 0) {
-                $fs = 'fs_'.$type;
                 foreach ($this->getFsByType($type) as $ext_id => $fs_ext) {
                     $need_update_version = is_string($typeUpdates[$ext_id] ?? null)
                         ? $typeUpdates[$ext_id]
@@ -501,10 +497,12 @@ final class Updates
             if (!is_string($type)) {
                 continue;
             }
-            $fs = 'fs_'.$type;
-            $default = 'default_'.$type;
-            $defaultList = $this->getDefaultsByType($type);
-            foreach ($this->getFsByType($type) as $ext_id => $ext) {
+            $typeEnum = ExtensionType::tryFrom($type);
+            if ($typeEnum === null) {
+                continue;
+            }
+            $defaultList = $this->getDefaultsByType($typeEnum);
+            foreach ($this->getFsByType($typeEnum) as $ext_id => $ext) {
                 if (isset($ext['extension']) and $id == $ext['extension']
                   and !in_array($ext_id, $defaultList)
                   and !in_array($ext['extension'], $this->merged_extensions)) {

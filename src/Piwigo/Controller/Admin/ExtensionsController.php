@@ -10,6 +10,7 @@ use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\AdminService;
+use Piwigo\Admin\Extensions\IgnoredUpdatesRepository;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Tabsheet;
@@ -68,6 +69,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         private PermissionService $permissionService,
         private Plugins $plugins,
         private PluginRegistry $pluginRegistry,
+        private IgnoredUpdatesRepository $ignoredUpdates,
         private PluginRepository $pluginRepository,
         private PreferencesService $preferencesService,
         private SessionService $sessionService,
@@ -944,9 +946,6 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
             PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
-        $updates_ignored_raw = Config::raw('updates_ignored');
-        Config::override('updates_ignored', StringUtil::safeUnserialize(is_string($updates_ignored_raw) ? $updates_ignored_raw : ''));
-
         $pageRaw = $_GET['page'] ?? null;
         $pageStr = is_string($pageRaw) ? $pageRaw : 'updates';
         $autoupdate = Kernel::service(Updates::class)->setPage($pageStr);
@@ -966,7 +965,12 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
             if (empty($server_ext)) {
                 continue;
             }
-            $updates_extension[$type] = [];
+            $updates_extension[$type->value] = [];
+
+            $updates_ignored_for_type = $this->ignoredUpdates->listForType($type);
+            if ($updates_ignored_for_type !== []) {
+                $show_reset = true;
+            }
 
             foreach ($fs_ext as $ext_id => $fs_ext_item) {
                 $extKey = is_string($fs_ext_item['extension'] ?? null) ? $fs_ext_item['extension'] : null;
@@ -978,9 +982,6 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                 }
 
                 $ext_info = $server_ext[$extKey];
-                $updates_ignored     = Config::raw('updates_ignored');
-                $updates_ignored_arr = is_array($updates_ignored) ? $updates_ignored : [];
-                $updates_ignored_for_type = is_array($updates_ignored_arr[$type] ?? null) ? $updates_ignored_arr[$type] : [];
 
                 $extVersion = is_scalar($fs_ext_item['version'] ?? null) ? (string) $fs_ext_item['version'] : '';
                 $revName = is_scalar($ext_info['revision_name'] ?? null) ? (string) $ext_info['revision_name'] : '';
@@ -989,17 +990,14 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                     $revId = is_scalar($ext_info['revision_id'] ?? null) ? $ext_info['revision_id'] : '';
                     $revDesc = is_scalar($ext_info['revision_description'] ?? null) ? (string) $ext_info['revision_description'] : '';
                     $dlUrl = is_scalar($ext_info['download_url'] ?? null) ? (string) $ext_info['download_url'] : '';
-                    array_push($updates_extension[$type], [
+                    $updates_extension[$type->value][] = [
                         'ID' => $extId, 'REVISION_ID' => $revId, 'EXT_ID' => $ext_id, 'EXT_NAME' => is_scalar($fs_ext_item['name'] ?? null) ? $fs_ext_item['name'] : '',
                         'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . (string) $extId . '#changelog',
                         'REV_DESC' => trim($revDesc, " \n\r"),
                         'CURRENT_VERSION' => $extVersion, 'NEW_VERSION' => $revName,
                         'URL_DOWNLOAD' => $dlUrl . '&origin=piwigo_download',
-                        'IGNORED' => in_array($ext_id, $updates_ignored_for_type),
-                    ]);
-                }
-                if (count($updates_ignored_for_type) > 0) {
-                    $show_reset = true;
+                        'IGNORED' => in_array((string) $ext_id, $updates_ignored_for_type, true),
+                    ];
                 }
             }
         }

@@ -7,12 +7,13 @@ namespace Piwigo\Ws\Method;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\IgnoredUpdatesRepository;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
 use Piwigo\Admin\Updates;
 use Piwigo\Config\Config;
-use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
@@ -29,12 +30,12 @@ use Piwigo\Ws\PwgServer;
 final readonly class ExtensionsEndpoints
 {
     public function __construct(
-        private ConfigService $configService,
         private PermissionService $permissionService,
         private UrlGenerator $urlGenerator,
         private ActivityLogger $activityLogger,
         private CsrfService $csrfService,
         private RedirectResponder $redirectResponder,
+        private IgnoredUpdatesRepository $ignoredUpdates,
     ) {
     }
 
@@ -178,39 +179,26 @@ final readonly class ExtensionsEndpoints
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
-        $updatesIgnoredRaw          = Config::raw('updates_ignored');
-        $updatesIgnoredUnserialized = is_string($updatesIgnoredRaw) ? unserialize($updatesIgnoredRaw) : false;
-        Config::override('updates_ignored', is_array($updatesIgnoredUnserialized) ? $updatesIgnoredUnserialized : []);
+
+        $typeRaw = $params['type'] ?? null;
+        $type    = is_string($typeRaw) ? ExtensionType::tryFrom($typeRaw) : null;
+
         if ($params['reset']) {
-            $updatesIgnored = Config::raw('updates_ignored');
-            $typeRaw1       = $params['type'] ?? null;
-            $ignoreType     = is_string($typeRaw1) ? $typeRaw1 : '';
-            if ($ignoreType !== '' && is_array($updatesIgnored) && isset($updatesIgnored[$ignoreType])) {
-                $updatesIgnored[$ignoreType] = [];
-                Config::override('updates_ignored', $updatesIgnored);
+            if ($type !== null) {
+                $this->ignoredUpdates->clearType($type);
             } else {
-                Config::override('updates_ignored', ['plugins' => [], 'themes' => [], 'languages' => []]);
+                $this->ignoredUpdates->clearAll();
             }
-            $this->configService->confUpdateParam('updates_ignored', serialize(Config::raw('updates_ignored')));
             unset($_SESSION['extensions_need_update']);
             return true;
         }
-        $idRaw       = $params['id'] ?? null;
-        $ignoreId    = is_string($idRaw) ? $idRaw : '';
-        $typeRaw2    = $params['type'] ?? null;
-        $ignoreType2 = is_string($typeRaw2) ? $typeRaw2 : '';
-        if ($ignoreId === '' || $ignoreType2 === '' || !in_array($ignoreType2, ['plugins', 'themes', 'languages'])) {
+
+        $idRaw    = $params['id'] ?? null;
+        $ignoreId = is_string($idRaw) ? $idRaw : '';
+        if ($ignoreId === '' || $type === null) {
             return new PwgError(403, 'Invalid parameters');
         }
-        $ignoredCfgRaw     = Config::raw('updates_ignored');
-        $ignoredCfg        = is_array($ignoredCfgRaw) ? $ignoredCfgRaw : [];
-        $ignoredForType    = is_array($ignoredCfg[$ignoreType2] ?? null) ? $ignoredCfg[$ignoreType2] : [];
-        if (!in_array($ignoreId, $ignoredForType)) {
-            $ignoredForType[]       = $ignoreId;
-            $ignoredCfg[$ignoreType2] = $ignoredForType;
-            Config::override('updates_ignored', $ignoredCfg);
-        }
-        $this->configService->confUpdateParam('updates_ignored', serialize(Config::raw('updates_ignored')));
+        $this->ignoredUpdates->ignore($type, $ignoreId);
         unset($_SESSION['extensions_need_update']);
         return true;
     }
@@ -228,9 +216,6 @@ final readonly class ExtensionsEndpoints
             $update->checkPiwigoUpgrade();
         }
         $result['piwigo_need_update'] = $_SESSION['need_update' . AppInfo::VERSION] ?? null;
-        $cuUpdatesIgnoredRaw = Config::raw('updates_ignored');
-        $cuUpdatesIgnored    = is_string($cuUpdatesIgnoredRaw) ? unserialize($cuUpdatesIgnoredRaw) : false;
-        Config::override('updates_ignored', is_array($cuUpdatesIgnored) ? $cuUpdatesIgnored : []);
         $update->checkExtensions();
         $result['ext_need_update'] = is_array($_SESSION['extensions_need_update']) ? !empty($_SESSION['extensions_need_update']) : null;
         return $result;

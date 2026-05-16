@@ -104,6 +104,8 @@ use Piwigo\Tag\SelectedTagsRenderer;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Telemetry\TelemetryService;
+use Piwigo\Theme\TemplateResolver;
+use Piwigo\Theme\ThemeRegistry;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlGenerator;
@@ -311,6 +313,8 @@ return [
     RedirectResponder::class   => factory(static fn (LangService $lang, EventDispatcherInterface $dispatcher): RedirectResponder => new RedirectResponder($lang, $dispatcher)),
     TelemetryService::class    => factory(static fn (Connection $conn, ConfigService $cfg, LoggerInterface $log, AdminService $admin, StringUtil $s, ExecutionMutex $mutex): TelemetryService => new TelemetryService($conn, $cfg, $log, $admin, $s, $mutex)),
     ThemeService::class        => factory(static fn (ThemeRepository $r, EventDispatcherInterface $dispatcher): ThemeService => new ThemeService($r, $dispatcher)),
+    ThemeRegistry::class       => factory(static fn (ThemeRepository $r, LoggerInterface $log, EventDispatcherInterface $dispatcher): ThemeRegistry => new ThemeRegistry($r, $log, PHPWG_ROOT_PATH . 'themes', PHPWG_ROOT_PATH . 'docs/schemas/theme.schema.json', $dispatcher)),
+    TemplateResolver::class    => factory(static fn (ThemeRegistry $reg): TemplateResolver => new TemplateResolver($reg, PHPWG_ROOT_PATH . 'themes')),
 
     // Domain repositories — injected with the shared DBAL connection and table prefix.
     TagRepository::class          => factory(static fn (Connection $conn): TagRepository => new TagRepository($conn, Config::dbPrefix())),

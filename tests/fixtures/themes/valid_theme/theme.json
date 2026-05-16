@@ -1,0 +1,11 @@
+{
+  "id": "valid_theme",
+  "name": "Valid Theme",
+  "version": "1.0.0",
+  "main": "Piwigo\\Tests\\Fixtures\\Themes\\ValidTheme\\Theme",
+  "assets": {
+    "img": "img",
+    "icon": "icon"
+  },
+  "localHead": "head.latte"
+}

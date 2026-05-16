@@ -7,8 +7,13 @@ namespace Piwigo\Theme;
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
 
-/** Persistence layer for the theme domain. */
-final class ThemeRepository extends AbstractRepository
+/**
+ * Persistence layer for the theme domain.
+ *
+ * Non-final so ThemeRegistryTest can subclass it for an in-memory shim
+ * (no DB needed at unit-test scope). Production code never extends it.
+ */
+class ThemeRepository extends AbstractRepository
 {
     /** Insert a newly activated theme record. */
     public function activate(string $id, string $version, string $name): void

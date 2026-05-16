@@ -1,0 +1,101 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Tests\Unit\Theme;
+
+use PHPUnit\Framework\TestCase;
+use Piwigo\Theme\TemplateResolver;
+use Piwigo\Theme\ThemeRegistry;
+use Piwigo\Theme\ThemeRepository;
+use Psr\Log\NullLogger;
+
+/**
+ * Verifies TemplateResolver's parent-chain walk over the
+ * `child_theme → valid_theme` fixture pair.
+ *
+ *  - child-only.latte exists only under child_theme → resolves to child.
+ *  - index.latte exists only under valid_theme → resolves to parent.
+ *  - head.latte is declared as `localHead` by valid_theme but not by
+ *    child_theme → child inherits the parent's localHead.
+ *  - assetDir falls through: child declares `img`, valid_theme declares
+ *    `icon` — child gets first dibs for kinds it covers, parent fills
+ *    the rest.
+ *  - missing.latte exists in neither → resolves to null.
+ */
+/** @psalm-suppress PropertyNotSetInConstructor — properties initialized in setUp() */
+final class TemplateResolverTest extends TestCase
+{
+    private string $themesDir;
+
+    private ThemeRegistry $registry;
+
+    private TemplateResolver $resolver;
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        $this->themesDir = PHPWG_ROOT_PATH . 'tests/fixtures/themes';
+
+        $repo = new class () extends ThemeRepository {
+            public function __construct()
+            {
+            }
+        };
+        $this->registry = new ThemeRegistry(
+            $repo,
+            new NullLogger(),
+            $this->themesDir,
+            PHPWG_ROOT_PATH . 'docs/schemas/theme.schema.json',
+        );
+        $this->resolver = new TemplateResolver($this->registry, $this->themesDir);
+    }
+
+    public function testResolveReturnsChildOverrideWhenFileExistsOnChild(): void
+    {
+        $path = $this->resolver->resolve('child_theme', 'child-only.latte');
+        self::assertNotNull($path);
+        self::assertSame($this->themesDir . '/child_theme/child-only.latte', $path);
+    }
+
+    public function testResolveFallsThroughToParentWhenChildLacksFile(): void
+    {
+        $path = $this->resolver->resolve('child_theme', 'index.latte');
+        self::assertNotNull($path);
+        self::assertSame($this->themesDir . '/valid_theme/index.latte', $path);
+    }
+
+    public function testResolveReturnsNullForUnknownFile(): void
+    {
+        self::assertNull($this->resolver->resolve('child_theme', 'no-such-file.latte'));
+    }
+
+    public function testResolveReturnsNullForUnknownTheme(): void
+    {
+        self::assertNull($this->resolver->resolve('not_a_theme', 'index.latte'));
+    }
+
+    public function testAssetDirChildOverridesParentForSameKind(): void
+    {
+        $dir = $this->resolver->assetDir('child_theme', 'img');
+        self::assertSame($this->themesDir . '/child_theme/child-img', $dir);
+    }
+
+    public function testAssetDirFallsThroughToParentForChildOnlyMissingKind(): void
+    {
+        $dir = $this->resolver->assetDir('child_theme', 'icon');
+        self::assertSame($this->themesDir . '/valid_theme/icon', $dir);
+    }
+
+    public function testAssetDirReturnsNullForUnknownKind(): void
+    {
+        self::assertNull($this->resolver->assetDir('child_theme', 'mimeIcon'));
+    }
+
+    public function testLocalHeadFallsThroughToParent(): void
+    {
+        // child_theme declares localHead = null (no field) → parent's head.latte.
+        $head = $this->resolver->localHead('child_theme');
+        self::assertSame($this->themesDir . '/valid_theme/head.latte', $head);
+    }
+}

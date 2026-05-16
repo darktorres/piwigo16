@@ -7,7 +7,8 @@ namespace Piwigo\Admin\Image;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
-use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Event\Lifecycle\LoadImageLibrary;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @method bool rotate(int $rotation)
@@ -32,7 +33,7 @@ final class PwgImage
 
     public function __construct(public string $source_filepath, ?string $library = null)
     {
-        EventDispatcher::notify('load_image_library', [&$this]);
+        Kernel::service(EventDispatcherInterface::class)->dispatch(new LoadImageLibrary($this));
 
         if ($this->image !== null) {
             return; // A plugin may have load its own library

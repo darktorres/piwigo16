@@ -24,6 +24,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeImage;
@@ -52,6 +53,7 @@ use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsHelper;
 use Psr\Cache\CacheItemPoolInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class GeneralEndpoints
 {
@@ -82,6 +84,7 @@ final readonly class GeneralEndpoints
         private ActivityLogger $activityLogger,
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -684,7 +687,9 @@ final readonly class GeneralEndpoints
             foreach ($this->tagRepository->findAll() as $row) {
                 $tagIdKey = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
                 if ($tagIdKey !== '') {
-                    $nameOfTag[$tagIdKey] = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
+                    $tagRenderEvent = new RenderTagName(is_string($row['name'] ?? null) ? $row['name'] : '', $row);
+                    $this->dispatcher->dispatch($tagRenderEvent);
+                    $nameOfTag[$tagIdKey] = $tagRenderEvent->tagName;
                 }
             }
         }
@@ -716,7 +721,7 @@ final readonly class GeneralEndpoints
                 $lineTagIds = is_string($line['tag_ids']) ? $line['tag_ids'] : '';
                 $tagNames   = preg_replace_callback('/(\d+)/', function (array $m) use ($nameOfTag): string {
                     $k = $m[1];
-                    return isset($nameOfTag[$k]) && is_string($nameOfTag[$k]) ? $nameOfTag[$k] : $k;
+                    return $nameOfTag[$k] ?? $k;
                 }, $lineTagIds) ?? $lineTagIds;
                 $tagIds     = $lineTagIds;
             }

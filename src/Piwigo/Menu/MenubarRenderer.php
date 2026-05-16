@@ -19,6 +19,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class MenubarRenderer
 {
@@ -30,6 +31,7 @@ final readonly class MenubarRenderer
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private FilterService $filterService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -40,7 +42,7 @@ final readonly class MenubarRenderer
         $ctx = SectionContextRegistry::current();
         $user = CurrentUser::get()->rawAttributes;
 
-        $menu = new BlockManager('menubar');
+        $menu = new BlockManager('menubar', $this->dispatcher);
 
         if (Config::guestAccess() or !$this->permissionService->isAGuest()) {
             $menu->loadRegisteredBlocks();

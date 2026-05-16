@@ -32,8 +32,12 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Admin\GetPopupHelpContent;
+use Piwigo\Event\Lifecycle\NbmEventHandlerAdded;
 use Piwigo\Event\Location\LocEndHelp;
 use Piwigo\Event\Location\LocEndIntro;
+use Piwigo\Event\Mail\NbmRenderUserCustomizeMailContent;
+use Piwigo\Event\Tag\GetTagAltNames;
+use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Exception\AuthException;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
@@ -166,7 +170,7 @@ final class MiscController
         $this->permissionService->checkStatus($this->getTabStatus($mode));
 
         EventDispatcher::addListener('nbm_render_global_customize_mail_content', $this->renderGlobalCustomizeMailContent(...));
-        EventDispatcher::notify('nbm_event_handler_added');
+        $this->dispatcher->dispatch(new NbmEventHandlerAdded());
 
         if (count($_POST) == 0) {
             $this->insertNewDataUserMailNotification($base_url);
@@ -409,7 +413,9 @@ final class MiscController
                 continue;
             }
             $tag_name       = is_scalar($tag['name'] ?? null) ? (string) $tag['name'] : '';
-            $orphan_tag_names[] = EventDispatcher::dispatch('render_tag_name', $tag_name, $tag);
+            $orphanRenderEvent = new RenderTagName($tag_name, $tag);
+            $this->dispatcher->dispatch($orphanRenderEvent);
+            $orphan_tag_names[] = $orphanRenderEvent->tagName;
         }
 
         $orphan_tag_names_array = '[]';
@@ -434,15 +440,19 @@ final class MiscController
         foreach ($_tagRepo->findAll() as $tag) {
             $raw_name       = $tag['name'];
             $tag['raw_name'] = $raw_name;
-            $tag['name']    = EventDispatcher::dispatch('render_tag_name', $raw_name, $tag);
+            $rawNameStr     = is_string($raw_name) ? $raw_name : '';
+            $renderEvent    = new RenderTagName($rawNameStr, $tag);
+            $this->dispatcher->dispatch($renderEvent);
+            $tag['name']    = $renderEvent->tagName;
             $tagIdRaw       = $tag['id'] ?? null;
             $tag_id_key     = is_string($tagIdRaw) ? $tagIdRaw : '';
             $counter        = is_numeric($tag_counters[$tag_id_key] ?? null) ? (int) $tag_counters[$tag_id_key] : 0;
             if ($counter > 0) {
                 $tag['counter'] = $counter;
             }
-            $tagNameStr     = is_scalar($tag['name'] ?? null) ? (string) $tag['name'] : '';
-            $alt_names      = array_diff(array_unique(array_filter(EventDispatcher::dispatch('get_tag_alt_names', [], $raw_name), is_string(...))), [$tagNameStr]);
+            $altEvent       = new GetTagAltNames([], $rawNameStr);
+            $this->dispatcher->dispatch($altEvent);
+            $alt_names      = array_diff(array_unique(array_filter($altEvent->value, is_string(...))), [$tag['name']]);
             if (count($alt_names)) {
                 $tag['alt_names'] = implode(', ', $alt_names);
             }
@@ -795,7 +805,7 @@ final class MiscController
         $tabsheet->select('');
         $tabsheet->assign();
 
-        $menu      = new BlockManager('menubar');
+        $menu      = new BlockManager('menubar', $this->dispatcher);
         $menu->loadRegisteredBlocks();
         $reg_blocks = $menu->getRegisteredBlocks();
 
@@ -1285,7 +1295,9 @@ final class MiscController
                                     $nbmTpl->assign('global_new_lines', $news);
                                 }
 
-                                $nbm_user_customize_mail_content = EventDispatcher::dispatch('nbm_render_user_customize_mail_content', $customize_mail_content, $nbm_user);
+                                $nbmEvent = new NbmRenderUserCustomizeMailContent($customize_mail_content, $nbm_user);
+                                $this->dispatcher->dispatch($nbmEvent);
+                                $nbm_user_customize_mail_content = $nbmEvent->customizeMailContent;
                                 if (!empty($nbm_user_customize_mail_content)) {
                                     $nbmTpl->assign('custom_mail_content', $nbm_user_customize_mail_content);
                                 }

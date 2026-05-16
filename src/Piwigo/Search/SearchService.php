@@ -18,9 +18,10 @@ use Piwigo\Event\Search\QsearchGetImagesSqlScopes;
 use Piwigo\Event\Search\QsearchGetScopes;
 use Piwigo\Event\Search\QsearchPre;
 use Piwigo\Event\Search\QsearchResults;
+use Piwigo\Event\Tag\RenderTagName;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Html\HtmlService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Search\Inflector\InflectorEn;
 use Piwigo\Search\Inflector\InflectorFr;
 use Piwigo\Section\SectionContextRegistry;
@@ -756,8 +757,9 @@ final class SearchService
         $allTags = array_intersect_key($allTags, array_flip(array_diff($positiveIds, $notIds)));
         usort($allTags, $this->htmlService->tagAlphaCompare(...));
         foreach ($allTags as &$tag) {
-            $tagName    = EventDispatcher::dispatch('render_tag_name', $tag['name'], $tag);
-            $tag['name'] = is_string($tagName) ? $tagName : (is_scalar($tagName) ? (string) $tagName : '');
+            $tagRenderEvent = new RenderTagName(is_string($tag['name'] ?? null) ? $tag['name'] : '', $tag);
+            $this->dispatcher->dispatch($tagRenderEvent);
+            $tag['name']    = $tagRenderEvent->tagName;
         }
         $qsr->all_tags = $allTags;
         $qsr->tag_ids  = $tokenTagIds;
@@ -826,8 +828,9 @@ final class SearchService
         $allCats = array_intersect_key($allCats, array_flip(array_diff($positiveIds, $notIds)));
         usort($allCats, $this->htmlService->tagAlphaCompare(...));
         foreach ($allCats as &$cat) {
-            $catName    = EventDispatcher::dispatch('render_category_name', $cat['name'], $cat);
-            $cat['name'] = is_string($catName) ? $catName : (is_scalar($catName) ? (string) $catName : '');
+            $catRenderEvent = new RenderCategoryName(is_string($cat['name'] ?? null) ? $cat['name'] : '', $cat);
+            $this->dispatcher->dispatch($catRenderEvent);
+            $cat['name']    = $catRenderEvent->categoryName;
         }
         $qsr->all_cats = $allCats;
         $qsr->cat_ids  = $tokenCatIds;

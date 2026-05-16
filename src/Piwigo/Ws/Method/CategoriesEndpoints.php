@@ -18,6 +18,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\RenderElementName;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
@@ -249,8 +250,9 @@ final readonly class CategoriesEndpoints
                 $row['name'] = strip_tags($this->htmlService->getCatDisplayNameCache(is_string($uppercatsRaw) ? $uppercatsRaw : '', null));
             } else {
                 $row['name_raw']  = $row['name'];
-                $renderedListName = EventDispatcher::dispatch('render_category_name', is_string($row['name'] ?? null) ? $row['name'] : '', 'ws_categories_getList');
-                $row['name']      = strip_tags((string) $renderedListName);
+                $listRenderEvent  = new RenderCategoryName(is_string($row['name'] ?? null) ? $row['name'] : '', 'ws_categories_getList');
+                $this->dispatcher->dispatch($listRenderEvent);
+                $row['name']      = strip_tags($listRenderEvent->categoryName);
             }
             $row['comment_raw'] = $row['comment'];
             $row['comment']     = EventDispatcher::dispatch('render_category_description', is_string($row['comment'] ?? null) ? $row['comment'] : '', 'ws_categories_getList');
@@ -380,8 +382,9 @@ final readonly class CategoriesEndpoints
             $rowUppercatsRaw = $row['uppercats'] ?? null;
             $catDisplayName  = $this->htmlService->getCatDisplayNameCache(is_string($rowUppercatsRaw) ? $rowUppercatsRaw : '', $this->urlGenerator->admin() . '&page=album-');
             $row['name_raw'] = $row['name'];
-            $renderedAdminName = EventDispatcher::dispatch('render_category_name', is_string($row['name'] ?? null) ? $row['name'] : '', 'ws_categories_getAdminList');
-            $row['name']     = strip_tags((string) $renderedAdminName);
+            $adminRenderEvent = new RenderCategoryName(is_string($row['name'] ?? null) ? $row['name'] : '', 'ws_categories_getAdminList');
+            $this->dispatcher->dispatch($adminRenderEvent);
+            $row['name']     = strip_tags($adminRenderEvent->categoryName);
             $row['fullname'] = strip_tags($catDisplayName);
             $row['comment_raw'] = $row['comment'];
             $row['comment']  = EventDispatcher::dispatch('render_category_description', $row['comment'] ?? '', 'ws_categories_getAdminList');
@@ -658,8 +661,9 @@ final readonly class CategoriesEndpoints
             $rowUppercatsRaw2   = $row['uppercats'] ?? null;
             $updateCatIds = array_merge($updateCatIds, array_slice(explode(',', is_string($rowUppercatsRaw2) ? $rowUppercatsRaw2 : ''), 0, -1));
             if (!empty($row['dir'])) {
-                $renderedMoveName = EventDispatcher::dispatch('render_category_name', is_string($row['name']) ? $row['name'] : '', 'ws_categories_move');
-                $row['name'] = strip_tags((string) $renderedMoveName);
+                $moveRenderEvent = new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', 'ws_categories_move');
+                $this->dispatcher->dispatch($moveRenderEvent);
+                $row['name'] = strip_tags($moveRenderEvent->categoryName);
                 return new PwgError(403, sprintf('Category %s (%u) is not a virtual category, you cannot move it', $row['name'], is_numeric($row['id']) ? (int) $row['id'] : 0));
             }
         }

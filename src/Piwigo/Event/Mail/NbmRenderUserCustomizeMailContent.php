@@ -11,9 +11,12 @@ namespace Piwigo\Event\Mail;
  */
 final readonly class NbmRenderUserCustomizeMailContent
 {
+    /**
+     * @param array<string, mixed> $nbmUser
+     */
     public function __construct(
         public string $customizeMailContent,
-        public string $nbmUser,
+        public array $nbmUser,
     ) {
     }
 

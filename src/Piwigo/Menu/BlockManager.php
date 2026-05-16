@@ -6,8 +6,11 @@ namespace Piwigo\Menu;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\BlockManager\BlockManagerApply;
+use Piwigo\Event\BlockManager\BlockManagerPrepareDisplay;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @package functions\menubar
@@ -25,7 +28,7 @@ final class BlockManager
     /**
      * @param string $id
      */
-    public function __construct(protected $id)
+    public function __construct(protected $id, private readonly EventDispatcherInterface $dispatcher)
     {
     }
 
@@ -93,7 +96,7 @@ final class BlockManager
             $idx++;
         }
         $this->sortBlocks();
-        EventDispatcher::notify('blockmanager_prepare_display', [$this]);
+        $this->dispatcher->dispatch(new BlockManagerPrepareDisplay($this));
         $this->sortBlocks();
     }
 
@@ -156,7 +159,7 @@ final class BlockManager
     {
         $template = TemplateRegistry::current();
 
-        EventDispatcher::notify('blockmanager_apply', [$this]);
+        $this->dispatcher->dispatch(new BlockManagerApply($this));
 
         foreach ($this->display_blocks as $id => $block) {
             if (empty($block->raw_content) and empty($block->template)) {

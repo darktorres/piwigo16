@@ -16,6 +16,7 @@ use Piwigo\Event\Location\LocBeginIndexCategoryThumbnails;
 use Piwigo\Event\Location\LocBeginIndexCategoryThumbnailsQuery;
 use Piwigo\Event\Location\LocEndIndexCategoryThumbnails;
 use Piwigo\Event\Picture\GetIndexAlbumDerivativeParams;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeSize;
@@ -248,11 +249,12 @@ SELECT *
                     continue;
                 }
 
-                $category['name'] = EventDispatcher::dispatch(
-                    'render_category_name',
+                $subcatRenderEvent = new RenderCategoryName(
                     is_scalar($category['name'] ?? null) ? (string) $category['name'] : '',
                     'subcatify_category_name'
                 );
+                $this->dispatcher->dispatch($subcatRenderEvent);
+                $category['name'] = $subcatRenderEvent->categoryName;
 
                 if ($ctx->section == 'recent_cats') {
                     $uppercatsRaw = $category['uppercats'] ?? null;

@@ -14,9 +14,14 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Tag\DeleteTags;
+use Piwigo\Event\Tag\GetTagAltNames;
+use Piwigo\Event\Tag\GetTagNameLikeWhere;
+use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagRepository;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class TagAdminService
 {
@@ -30,6 +35,7 @@ final class TagAdminService
         private readonly TagRepository $tagRepository,
         private readonly UserAdminService $userAdminService,
         private readonly ActivityLogger $activityLogger,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -103,7 +109,7 @@ final class TagAdminService
         $imageIds = $tagRepo->findDistinctImageIdsByTagIds($tagIds);
         $tagRepo->deleteImageTagsByTagIds($tagIds);
         $tagRepo->deleteByIds($tagIds);
-        EventDispatcher::notify('delete_tags', $tagIds);
+        $this->dispatcher->dispatch(new DeleteTags($tagIds));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagIds, 'delete'));
         $this->imageAdminService->updateImagesLastmodified($imageIds);
         $this->userAdminService->invalidateUserCacheNbTags();
@@ -124,7 +130,9 @@ final class TagAdminService
             $foundUrlId = $tagRepo->findIdByUrlName($urlName);
             $existing = $foundUrlId !== null ? [$foundUrlId] : [];
             if (count($existing) === 0) {
-                $extraClauses = EventDispatcher::dispatch('get_tag_name_like_where', [], $tagName);
+                $likeEvent = new GetTagNameLikeWhere([], $tagName);
+                $this->dispatcher->dispatch($likeEvent);
+                $extraClauses = $likeEvent->value;
                 if (count($extraClauses) > 0) {
                     $existing = array_column($this->conn->executeQuery(
                         'SELECT id FROM ' . Tables::tags() . ' WHERE ' . implode(' OR ', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $extraClauses))
@@ -230,11 +238,14 @@ final class TagAdminService
         $altlist = [];
         foreach ($rows as $row) {
             $rawName = is_scalar($row['name'] ?? null) ? (string) $row['name'] : '';
-            $name    = EventDispatcher::dispatch('render_tag_name', $rawName, $row);
+            $renderEvent = new RenderTagName($rawName, $row);
+            $this->dispatcher->dispatch($renderEvent);
+            $name = $renderEvent->tagName;
             $taglist[] = ['name' => $name, 'id' => '~~' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '') . '~~'];
             if (!$onlyUserLanguage) {
-                $altNames = EventDispatcher::dispatch('get_tag_alt_names', [], $rawName);
-                foreach (array_diff(array_unique(array_filter($altNames, is_string(...))), [$name]) as $alt) {
+                $altEvent = new GetTagAltNames([], $rawName);
+                $this->dispatcher->dispatch($altEvent);
+                foreach (array_diff(array_unique(array_filter($altEvent->value, is_string(...))), [$name]) as $alt) {
                     $altlist[] = ['name' => $alt, 'id' => '~~' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '') . '~~'];
                 }
             }

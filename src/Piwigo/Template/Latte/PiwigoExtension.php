@@ -9,13 +9,13 @@ use Latte\Runtime\Html;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Event\Template\CombinedScript;
 use Piwigo\Http\DeviceDetectionService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Combinable;
 use Piwigo\Template\ScriptLoader;
 use Piwigo\Template\Template;
@@ -23,6 +23,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Latte extension wiring Piwigo-specific filters/functions.
@@ -411,12 +412,11 @@ final class PiwigoExtension extends Extension
                 $src .= '?v' . ($script->version !== 0 && $script->version !== '' ? $script->version : AppInfo::VERSION);
             }
         }
-        // The `combined_script` event contract is "first arg is the URL,
-        // mutated in place"; PHPStan's EventDispatcherDispatchDynamicReturnType
-        // extension narrows dispatch's return to the first-arg type, but
-        // psalm sees `mixed`, hence the `(string)` cast — defensive against
-        // a misbehaving plugin and load-bearing for psalm narrowing.
-        $src = (string) EventDispatcher::dispatch('combined_script', $src, $script);
+        // The CombinedScript event lets plugins rewrite the URL (e.g. CDN
+        // routing); the listener mutates $event->ret which we read back here.
+        $scriptEvent = new CombinedScript($src, $script);
+        Kernel::service(EventDispatcherInterface::class)->dispatch($scriptEvent);
+        $src = $scriptEvent->ret;
         $embellished = UrlService::embellishUrl($src);
         // embellishUrl returns string|array, keyed by input shape
         // (string→string, array→array). We always pass a string in,

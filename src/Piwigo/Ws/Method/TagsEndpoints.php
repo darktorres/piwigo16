@@ -15,6 +15,8 @@ use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Album\MergeTags;
 use Piwigo\Event\Picture\RenderElementName;
+use Piwigo\Event\Tag\GetTagAltNames;
+use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Plugins\EventDispatcher;
@@ -222,8 +224,13 @@ final readonly class TagsEndpoints
         Dml::singleUpdate(Tables::tags(), $update, ['id' => $tagId]);
         $tag = $tagRepo->findById($tagId) ?? [];
         $tag['raw_name'] = $tag['name'] ?? '';
-        $tag['name']     = EventDispatcher::dispatch('render_tag_name', $tag['raw_name'], $tag);
-        $tag['alt_names'] = EventDispatcher::dispatch('get_tag_alt_names', [], $tag['raw_name']);
+        $rawTagNameStr   = is_string($tag['raw_name']) ? $tag['raw_name'] : '';
+        $tagRenderEvent  = new RenderTagName($rawTagNameStr, $tag);
+        $this->dispatcher->dispatch($tagRenderEvent);
+        $tag['name']     = $tagRenderEvent->tagName;
+        $altEvent        = new GetTagAltNames([], $rawTagNameStr);
+        $this->dispatcher->dispatch($altEvent);
+        $tag['alt_names'] = $altEvent->value;
         return $tag;
     }
 

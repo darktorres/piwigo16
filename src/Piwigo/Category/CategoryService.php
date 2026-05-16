@@ -14,11 +14,11 @@ use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Album\GetCategoriesMenuSqlWhere;
 use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -104,8 +104,10 @@ WHERE ' . $where . '
         $selectedCategory = $ctx->category;
         foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
             $childDateLast = ($row['max_date_last'] ?? null) > ($row['date_last'] ?? null);
-            $row           = array_merge($row, [
-                'NAME'        => EventDispatcher::dispatch('render_category_name', $row['name'], 'get_categories_menu'),
+            $menuRenderEvent = new RenderCategoryName(is_string($row['name'] ?? null) ? $row['name'] : '', 'get_categories_menu');
+            $this->dispatcher->dispatch($menuRenderEvent);
+            $row             = array_merge($row, [
+                'NAME'        => $menuRenderEvent->categoryName,
                 'TITLE'       => $this->getDisplayImagesCount(
                     is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0,
                     is_numeric($row['count_images']) ? (int) $row['count_images'] : 0,
@@ -205,7 +207,9 @@ WHERE ' . $where . '
             } else {
                 $option  = str_repeat('&nbsp;', (3 * substr_count(is_string($category['global_rank'] ?? null) ? $category['global_rank'] : '', '.')));
                 $option .= '- ';
-                $option .= strip_tags((string) EventDispatcher::dispatch('render_category_name', is_string($category['name'] ?? null) ? $category['name'] : '', 'display_select_categories'));
+                $selectRenderEvent = new RenderCategoryName(is_string($category['name'] ?? null) ? $category['name'] : '', 'display_select_categories');
+                $this->dispatcher->dispatch($selectRenderEvent);
+                $option .= strip_tags($selectRenderEvent->categoryName);
             }
             $tplCats[is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''] = $option;
         }
@@ -588,7 +592,9 @@ SELECT
             $catIdKey             = is_scalar($cat['id'] ?? null) ? (string) $cat['id'] : '';
             $indexOfCat[$catIdKey] = $idx;
             $cats[$idx]['LEVEL']  = substr_count(is_string($cat['global_rank'] ?? null) ? $cat['global_rank'] : '', '.') + 1;
-            $cats[$idx]['name']   = EventDispatcher::dispatch('render_category_name', is_string($cat['name'] ?? null) ? $cat['name'] : '', $cat);
+            $catRenderEvent = new RenderCategoryName(is_string($cat['name'] ?? null) ? $cat['name'] : '', $cat);
+            $this->dispatcher->dispatch($catRenderEvent);
+            $cats[$idx]['name']   = $catRenderEvent->categoryName;
 
             if (isset($commonCats[$catIdKey])) {
                 $cats[$idx]['count_images'] = $commonCats[$catIdKey]['counter'];

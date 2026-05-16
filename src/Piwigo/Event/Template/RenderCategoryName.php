@@ -11,9 +11,12 @@ namespace Piwigo\Event\Template;
  */
 final readonly class RenderCategoryName
 {
+    /**
+     * @param string|array<string, mixed> $location Context label (e.g. 'admin_cat_list') OR the full category row.
+     */
     public function __construct(
         public string $categoryName,
-        public string $location,
+        public string|array $location,
     ) {
     }
 

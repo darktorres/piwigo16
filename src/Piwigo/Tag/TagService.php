@@ -10,11 +10,12 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Html\HtmlService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Psr\Cache\CacheItemPoolInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class TagService
 {
@@ -24,6 +25,7 @@ final readonly class TagService
         private TagRepository $repo,
         private PermissionService $permissionService,
         private CacheItemPoolInterface $pool,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -124,7 +126,9 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
             if (isset($tagCounters[$rowId])) {
                 $row['counter']  = is_scalar($tagCounters[$rowId]) ? intval($tagCounters[$rowId]) : 0;
                 $row['name_raw'] = $row['name'];
-                $row['name']     = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
+                $renderEvent     = new RenderTagName(is_string($row['name']) ? $row['name'] : '', $row);
+                $this->dispatcher->dispatch($renderEvent);
+                $row['name']     = $renderEvent->tagName;
                 $tags[]          = $row;
             }
         }
@@ -137,7 +141,9 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
         $tags = [];
         foreach ($this->repo->findAll() as $row) {
             $row['name_raw'] = $row['name'];
-            $row['name']     = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
+            $renderEvent     = new RenderTagName(is_string($row['name']) ? $row['name'] : '', $row);
+            $this->dispatcher->dispatch($renderEvent);
+            $row['name']     = $renderEvent->tagName;
             $tags[]          = $row;
         }
         usort($tags, $this->htmlService->tagAlphaCompare(...));
@@ -247,7 +253,9 @@ SELECT id
         $rows     = $this->repo->findCommonTags($imageIds, $maxTags, $excludedTagIds);
         $tags     = [];
         foreach ($rows as $row) {
-            $row['name'] = EventDispatcher::dispatch('render_tag_name', $row['name'], $row);
+            $renderEvent = new RenderTagName(is_string($row['name']) ? $row['name'] : '', $row);
+            $this->dispatcher->dispatch($renderEvent);
+            $row['name'] = $renderEvent->tagName;
             $tags[]      = $row;
         }
         usort($tags, $this->htmlService->tagAlphaCompare(...));

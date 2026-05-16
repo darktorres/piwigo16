@@ -31,6 +31,7 @@ use Piwigo\Event\Location\LocBeginCatList;
 use Piwigo\Event\Location\LocBeginCatModify;
 use Piwigo\Event\Location\LocEndCatList;
 use Piwigo\Event\Location\LocEndCatModify;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Group\GroupRepository;
@@ -44,7 +45,6 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -140,9 +140,11 @@ final class AlbumController
         $tabsheet->select($tab);
         $tabsheet->assign();
 
-        $category_name = EventDispatcher::dispatch('render_category_name', $this->albumCategory['name'], 'get_cat_display_name_cache');
+        $titleRenderEvent = new RenderCategoryName(is_string($this->albumCategory['name'] ?? null) ? $this->albumCategory['name'] : '', 'get_cat_display_name_cache');
+        $this->dispatcher->dispatch($titleRenderEvent);
+        $category_name = $titleRenderEvent->categoryName;
         $tpl->assign([
-            'ADMIN_PAGE_TITLE'     => new Html(Lang::t('Edit album') . ' <strong>' . htmlspecialchars(is_scalar($category_name) ? (string) $category_name : '') . '</strong>'),
+            'ADMIN_PAGE_TITLE'     => new Html(Lang::t('Edit album') . ' <strong>' . htmlspecialchars($category_name) . '</strong>'),
             'ADMIN_PAGE_OBJECT_ID' => '#' . (is_scalar($this->albumCategory['id']) ? (string) $this->albumCategory['id'] : ''),
         ]);
         if ($tab === 'properties') {
@@ -209,13 +211,15 @@ final class AlbumController
             }
 
             foreach ($this->categoryRepository->findByIds(array_map(intval(...), $category_ids)) as $row) {
-                $row['name'] = EventDispatcher::dispatch('render_category_name', $row['name'], 'admin_cat_list');
+                $rowRenderEvent = new RenderCategoryName(is_string($row['name'] ?? null) ? $row['name'] : '', 'admin_cat_list');
+                $this->dispatcher->dispatch($rowRenderEvent);
+                $row['name'] = $rowRenderEvent->categoryName;
                 if ($order_by_date) {
                     $rowIdRaw = $row['id'] ?? null;
                     $rowId    = is_string($rowIdRaw) ? $rowIdRaw : '';
                     $sort[] = $ref_dates[$rowId] ?? null;
                 } else {
-                    $sort[] = $this->stringUtil->removeAccents(is_string($row['name']) ? $row['name'] : '');
+                    $sort[] = $this->stringUtil->removeAccents($row['name']);
                 }
                 $categories[] = ['id' => $row['id'] ?? null, 'id_uppercat' => $row['id_uppercat']];
             }
@@ -235,7 +239,9 @@ final class AlbumController
 
         $associatedTree = [];
         foreach ($allAlbum as $album) {
-            $album['name'] = EventDispatcher::dispatch('render_category_name', $album['name'], 'admin_cat_list');
+            $albumRenderEvent = new RenderCategoryName(is_string($album['name'] ?? null) ? $album['name'] : '', 'admin_cat_list');
+            $this->dispatcher->dispatch($albumRenderEvent);
+            $album['name'] = $albumRenderEvent->categoryName;
             $album['lastmodified'] = $this->dateService->timeSince(is_string($album['lastmodified']) || is_int($album['lastmodified']) ? $album['lastmodified'] : null, 'year');
             $albumUppercats = $album['uppercats'] ?? null;
             $parents = array_map(strval(...), explode(',', is_string($albumUppercats) ? $albumUppercats : ''));
@@ -351,14 +357,16 @@ final class AlbumController
                 }
             }
 
-            $renderedName = EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list');
-            $args = ['subject' => Lang::t('[%s] Visit album %s', Config::galleryTitle(), is_string($renderedName) ? $renderedName : '')];
+            $catNameRenderEvent = new RenderCategoryName(is_string($category['name'] ?? null) ? $category['name'] : '', 'admin_cat_list');
+            $this->dispatcher->dispatch($catNameRenderEvent);
+            $renderedName = $catNameRenderEvent->categoryName;
+            $args = ['subject' => Lang::t('[%s] Visit album %s', Config::galleryTitle(), $renderedName)];
             $mailTpl = [
                 'filename' => 'cat_group_info',
                 'assign'   => [
                     'IMG'         => $img,
-                    'CAT_NAME'    => EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list'),
-                    'LINK'        => $this->urlService->makeIndexUrl(['category' => ['id' => $category['id'], 'name' => EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list'), 'permalink' => $category['permalink']]]),
+                    'CAT_NAME'    => $renderedName,
+                    'LINK'        => $this->urlService->makeIndexUrl(['category' => ['id' => $category['id'], 'name' => $renderedName, 'permalink' => $category['permalink']]]),
                     'CPL_CONTENT' => (isset($_POST['mail_content']) && is_string($_POST['mail_content']) && $_POST['mail_content'] !== '') ? stripslashes($_POST['mail_content']) : '',
                 ],
             ];
@@ -579,8 +587,10 @@ final class AlbumController
             }
 
             $catIdStr = (string) (is_numeric($category['id']) ? (int) $category['id'] : 0);
+            $tplCatRenderEvent = new RenderCategoryName(is_string($category['name'] ?? null) ? $category['name'] : '', 'admin_cat_list');
+            $this->dispatcher->dispatch($tplCatRenderEvent);
             $tpl_cat  = [
-                'NAME'             => EventDispatcher::dispatch('render_category_name', $category['name'], 'admin_cat_list'),
+                'NAME'             => $tplCatRenderEvent->categoryName,
                 'NB_PHOTOS'        => $nb_photos_in[$catIdStr] ?? 0,
                 'NB_SUB_PHOTOS'    => $nb_sub_photos[$catIdStr] ?? 0,
                 'NB_SUB_ALBUMS'    => isset($subcats_of[$catIdStr]) ? count($subcats_of[$catIdStr]) : 0,

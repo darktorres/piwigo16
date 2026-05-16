@@ -18,6 +18,10 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Mail\BeforeParseMailTemplate;
+use Piwigo\Event\Mail\BeforeSendMail;
+use Piwigo\Event\Mail\GetWebmasterMailAddress;
+use Piwigo\Event\Mail\RenderLostPasswordMailContent;
 use Piwigo\Lang\LangService;
 use Piwigo\Lang\Translator;
 use Piwigo\Plugins\EventDispatcher;
@@ -28,6 +32,7 @@ use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class MailService
 {
@@ -39,6 +44,7 @@ final readonly class MailService
         private LangService $langService,
         private AuthService $authService,
         private UrlService $urlService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -51,8 +57,9 @@ final readonly class MailService
             Tables::users(),
             Config::webmasterId()
         );
-        $email = EventDispatcher::dispatch('get_webmaster_mail_address', $email);
-        return (string) $email;
+        $webmasterEvent = new GetWebmasterMailAddress($email);
+        $this->dispatcher->dispatch($webmasterEvent);
+        return $webmasterEvent->email;
     }
 
     public function getMailSenderName(): string
@@ -558,7 +565,7 @@ SELECT
             if (!RequestCache::has('mail_tpl', $cacheKey)) {
                 $mailTpl = $this->getMailTemplate($contentType);
                 RequestCache::set('mail_tpl', $cacheKey, $mailTpl);
-                EventDispatcher::notify('before_parse_mail_template', $cacheKey, $contentType);
+                $this->dispatcher->dispatch(new BeforeParseMailTemplate($cacheKey, $contentType));
 
                 $addUrlParams = [];
                 if (isset($args['auth_key']) && $args['auth_key'] !== '') {
@@ -684,7 +691,9 @@ SELECT
         }
 
         $ret        = true;
-        $preResult  = EventDispatcher::dispatch('before_send_mail', true, $to, $args, $mail);
+        $preEvent   = new BeforeSendMail(true, $to, $args, $mail);
+        $this->dispatcher->dispatch($preEvent);
+        $preResult  = $preEvent->result;
 
         if ($preResult !== false) {
             $ret = $mail->send();
@@ -754,7 +763,9 @@ SELECT
 
         $this->urlService->unsetMakeFullUrl();
 
-        $message = EventDispatcher::dispatch('render_lost_password_mail_content', $message);
+        $lostEvent = new RenderLostPasswordMailContent($message);
+        $this->dispatcher->dispatch($lostEvent);
+        $message = $lostEvent->message;
 
         return [
             'subject'        => '[' . $galleryTitle . '] ' . Lang::t('Password Reset'),
@@ -780,7 +791,9 @@ SELECT
 
         $this->urlService->unsetMakeFullUrl();
 
-        $message = EventDispatcher::dispatch('render_lost_password_mail_content', $message);
+        $welcomeEvent = new RenderLostPasswordMailContent($message);
+        $this->dispatcher->dispatch($welcomeEvent);
+        $message = $welcomeEvent->message;
         $subject = Lang::t('Welcome to %s', $galleryTitle);
 
         return [

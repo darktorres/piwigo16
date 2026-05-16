@@ -9,6 +9,7 @@ use Piwigo\Config\Config;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\DisplayBlock;
 use Piwigo\Menu\RegisteredBlock;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 final class BlockManagerTest extends TestCase
 {
@@ -19,7 +20,7 @@ final class BlockManagerTest extends TestCase
     protected function setUp(): void
     {
         Config::reset();
-        $this->mgr = new BlockManager('menubar');
+        $this->mgr = new BlockManager('menubar', new EventDispatcher());
     }
 
     #[\Override]

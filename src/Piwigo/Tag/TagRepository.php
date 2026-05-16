@@ -14,7 +14,7 @@ use Piwigo\Db\AbstractRepository;
  * no raw string interpolation of user-controlled values.
  *
  * Callers remain responsible for permission filtering (get_sql_condition_FandF)
- * and for applying plugin hooks such as EventDispatcher::dispatch('render_tag_name', …).
+ * and for applying plugin hooks such as the RenderTagName typed event.
  */
 final class TagRepository extends AbstractRepository
 {

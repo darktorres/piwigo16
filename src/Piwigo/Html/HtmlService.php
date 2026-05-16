@@ -16,6 +16,8 @@ use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\GetThumbnailTitle;
 use Piwigo\Event\Picture\RenderElementName;
+use Piwigo\Event\Template\RenderCategoryName;
+use Piwigo\Event\Template\SetStatusHeader;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
@@ -50,11 +52,12 @@ final readonly class HtmlService
                 throw new \InvalidArgumentException('get_cat_display_name wrong type for category');
             }
 
-            $cat['name'] = EventDispatcher::dispatch(
-                'render_category_name',
+            $catRenderEvent = new RenderCategoryName(
                 is_string($cat['name'] ?? null) ? $cat['name'] : '',
                 'get_cat_display_name'
             );
+            $this->dispatcher->dispatch($catRenderEvent);
+            $cat['name'] = $catRenderEvent->categoryName;
 
             if ($isFirst) {
                 $isFirst = false;
@@ -116,11 +119,12 @@ SELECT id, name, permalink
                 continue;
             }
 
-            $cat['name'] = EventDispatcher::dispatch(
-                'render_category_name',
+            $catCacheRenderEvent = new RenderCategoryName(
                 is_string($cat['name'] ?? null) ? $cat['name'] : '',
                 'get_cat_display_name_cache'
             );
+            $this->dispatcher->dispatch($catCacheRenderEvent);
+            $cat['name'] = $catCacheRenderEvent->categoryName;
 
             if ($isFirst) {
                 $isFirst = false;
@@ -384,7 +388,7 @@ $btraceMsg
         }
 
         header("$protocol $code $text", true, $code);
-        EventDispatcher::notify('set_status_header', $code, $text);
+        $this->dispatcher->dispatch(new SetStatusHeader($code, $text));
     }
 
     public function renderCategoryLiteralDescription(?string $desc): string

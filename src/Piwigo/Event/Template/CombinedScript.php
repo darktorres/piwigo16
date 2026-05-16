@@ -13,7 +13,7 @@ final readonly class CombinedScript
 {
     public function __construct(
         public string $ret,
-        public string $script,
+        public \Piwigo\Template\Combinable $script,
     ) {
     }
 

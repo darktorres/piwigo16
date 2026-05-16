@@ -29,6 +29,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Picture\WsImagesUploadCompleted;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
@@ -268,8 +269,9 @@ final readonly class ImagesEndpoints
             $row['url']      = $this->urlService->makeIndexUrl(['category' => $row]);
             $row['page_url'] = $this->urlService->makePictureUrl(['image_id' => $imageRowId, 'image_file' => $imageRowFile, 'category' => $row]);
             $row['id']       = is_numeric($row['id']) ? (int) $row['id'] : 0;
-            $catNameRaw      = EventDispatcher::dispatch('render_category_name', $row['name'], __FUNCTION__);
-            $row['name']     = strip_tags(is_scalar($catNameRaw) ? (string) $catNameRaw : '');
+            $catRenderEvent  = new RenderCategoryName(is_string($row['name'] ?? null) ? $row['name'] : '', __FUNCTION__);
+            $this->dispatcher->dispatch($catRenderEvent);
+            $row['name']     = strip_tags($catRenderEvent->categoryName);
             $relatedCategories[] = $row;
         }
         usort($relatedCategories, $this->categoryService->globalRankCompare(...));

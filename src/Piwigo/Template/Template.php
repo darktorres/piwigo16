@@ -12,11 +12,13 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\Template\CombinedCss;
+use Piwigo\Event\Template\CombinedScript;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 /** default rank for buttons */
 define('BUTTONS_RANK_NEUTRAL', 50);
@@ -423,7 +425,9 @@ final class Template
                 $href .= '?v' . ($combi->version ?: AppInfo::VERSION);
             }
             // trigger the event for eventual use of a cdn
-            $href = EventDispatcher::dispatch('combined_css', $href, $combi);
+            $cssEvent = new CombinedCss($href, $combi);
+            Kernel::service(EventDispatcherInterface::class)->dispatch($cssEvent);
+            $href = $cssEvent->href;
             $content[] = '<link rel="stylesheet" type="text/css" href="'.$href.'">';
         }
         $this->output = str_replace(
@@ -468,7 +472,9 @@ final class Template
             }
         }
         // trigger the event for eventual use of a cdn
-        $ret = EventDispatcher::dispatch('combined_script', $ret, $script);
+        $scriptEvent = new CombinedScript($ret, $script);
+        Kernel::service(EventDispatcherInterface::class)->dispatch($scriptEvent);
+        $ret = $scriptEvent->ret;
         return UrlService::embellishUrl($ret);
     }
 

@@ -125,20 +125,20 @@ final class LatteEngineTest extends TestCase
     }
 
     /**
-     * Phase B.1 smoke — proves that PHP-passthrough filters land on the
-     * expected built-in. One representative per dispatch shape: zero-arg
-     * (md5), one-string-arg (sprintf with format-only), two-arg
-     * positional (sprintf with %d substitution), arity ≥ 2 returning
-     * non-string (in_array). If this row is green, the rest of the
-     * Phase B.1 table is wired the same way.
+     * Smoke-test for PHP-passthrough filters — proves they land on the
+     * expected built-in. One representative per dispatch shape:
+     * single-arg (urlencode), one-string-arg (sprintf format-only),
+     * two-arg positional (sprintf with %d substitution), arity ≥ 2
+     * returning non-string (in_array), single-arg on input from
+     * vars (ucfirst).
      */
-    public function test_phase_b1_php_passthrough_filters(): void
+    public function test_php_passthrough_filters(): void
     {
         $engine = new LatteEngine($this->tempDir);
 
         self::assertSame(
-            md5('hi'),
-            $engine->renderFromString("{='hi'|md5}"),
+            urlencode('a b'),
+            $engine->renderFromString("{='a b'|urlencode}"),
         );
         self::assertSame(
             'count: 5',
@@ -146,8 +146,8 @@ final class LatteEngineTest extends TestCase
         );
         self::assertSame(
             'World',
-            $engine->renderFromString('{=$x|strtolower|ucfirst}', ['x' => 'wOrLd']),
-            'sanity-check that registering ucfirst/strtolower under their PHP names dispatches correctly',
+            $engine->renderFromString('{=$x|ucfirst}', ['x' => 'world']),
+            'sanity-check that single-arg PHP passthroughs dispatch via $vars correctly',
         );
         self::assertSame(
             '1',

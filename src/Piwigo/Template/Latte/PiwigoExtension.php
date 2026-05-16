@@ -13,7 +13,6 @@ use Piwigo\Event\Template\CombinedScript;
 use Piwigo\Http\DeviceDetectionService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
-use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Template\Combinable;
@@ -26,38 +25,35 @@ use Piwigo\Users\PermissionService;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
- * Latte extension wiring Piwigo-specific filters/functions.
+ * Piwigo Latte template API.
  *
- * Coverage as of §1.2 Wave 2 Phase B (B.1 + B.2 + B.3):
- *  - Translation pair: translate, translate_dec.
- *  - PHP-passthrough modifiers whose first-arg matches Smarty's "pipe
- *    value goes first" convention (sprintf, urlencode, intval, …).
- *  - Custom stateless modifiers (l10n, explode, ternary, url_is_remote,
- *    is_admin, is_classic_user, get_device, get_gallery_home_url).
- *  - Stateful asset functions delegating to TemplateRegistry::current()
- *    (combineScript, getCombinedScripts, combineCss, getCombinedCss,
- *    defineDerivative, htmlHead, htmlStyle, footerScript).
+ * Registers the filter + function set that core and plugin `.latte`
+ * templates may call. The same set is allowlisted in
+ * [[\Piwigo\Template\Latte\PiwigoPolicy]] — plugin templates compile
+ * through `LatteEngine::sandboxed()` with that policy, so anything
+ * declared here is callable from plugins by definition.
  *
- * Two Smarty filters from Template.php are intentionally not ported —
- * neither maps cleanly onto Latte's compilation model:
+ * The surface has three groups:
  *
- *  - prefilter_white_space: a regex pass over Smarty SOURCE that
- *    strips leading whitespace before specific Smarty tags ({if},
- *    {foreach}, {include}, {else}, {combine_script}, {html_head},
- *    {footer_script}, {section}). Latte preserves output whitespace
- *    by default but provides {spaceless} for explicit zones; the
- *    mechanical Smarty → Latte converter wraps tag-heavy blocks in
- *    {spaceless} where the prefilter would have stripped them, so the
- *    pass is unnecessary on the Latte side.
+ *  - **Translation pair** — `translate` / `translate_dec` (+ `l10n`
+ *    alias) bound to `Lang::t()` / `Translator`.
+ *  - **PHP passthroughs as filters** — `sprintf`, `urlencode`,
+ *    `htmlspecialchars`, etc. The pipe-first arg-order convention
+ *    (`{$x|sprintf:'%d',$n}`) only registers functions whose PHP
+ *    signature already takes the piped value as its first argument;
+ *    pipe-incompatible cases (`implode`, `str_replace`, `preg_match`,
+ *    …) stay un-registered and templates call them inline via
+ *    `{=implode(',', $arr)}`.
+ *  - **Custom helpers + stateful asset functions** — small
+ *    domain-specific filters (`is_admin`, `get_device`, `url_is_remote`,
+ *    …) and the asset-pipeline functions (`combineScript`,
+ *    `combineCss`, `derivative`, …) that delegate to
+ *    [[TemplateRegistry::current()]].
  *
- *  - postfilterLanguage: a regex pass over Smarty's COMPILED PHP that
- *    constant-folds `<?php echo 'literal';?>` after `Lang::t('key')`
- *    is bound at compile time when Config::compiledTemplateCacheLanguage()
- *    is on. Latte compiles |translate to a runtime filter call, so
- *    the constant-fold needs a Latte compiler pass (NodeVisitor) that
- *    rewrites `{=$x|translate}` to a literal string when $x is a
- *    string-literal expression and language caching is enabled. That's
- *    a future optimization once profiling justifies it.
+ * When adding a new filter / function: register it here AND add it
+ * to the matching `PiwigoPolicy::PLUGIN_FILTERS` / `PLUGIN_FUNCTIONS`
+ * (or `CORE_FILTERS` / `CORE_FUNCTIONS` if it should stay core-only)
+ * so plugin templates can use it under the sandbox.
  */
 final class PiwigoExtension extends Extension
 {
@@ -66,44 +62,23 @@ final class PiwigoExtension extends Extension
     public function getFilters(): array
     {
         return [
-            // Phase A — translation pair.
+            // Translation pair.
             'translate' => self::translate(...),
             'translate_dec' => self::translateDec(...),
 
-            // Phase B.1 — PHP passthroughs whose first argument matches
-            // Smarty's "pipe value goes first" convention. Templates that
-            // pipe `{$x|sprintf:'%d',$n}` keep working without a rename
-            // after the Smarty → Latte conversion.
-            //
-            // Pipe-broken on PHP 8+ are deliberately omitted: implode
-            // (PHP wants $glue,$array — Smarty pipes $array first),
-            // str_replace / str_ireplace / preg_match (PHP wants
-            // $search/$pattern first), strstr/stristr where the haystack
-            // matches the pipe value but argument-only PHP signatures
-            // differ. Verified against `themes/ plugins/`: the only
-            // in-the-wild pipe use among these is `|in_array` (1 site,
-            // PHP signature happens to match Smarty's), so the rest can
-            // stay un-registered. Templates that need them in Latte call
-            // the underlying function in an expression: `{=implode(',',
-            // $arr)}` rather than `{$arr|implode:','}`.
+            // PHP passthroughs whose first argument is the piped value.
+            // Pipe-incompatible PHP functions (implode, str_replace,
+            // preg_match, strstr/stristr — those take the needle/glue
+            // first) intentionally stay un-registered; templates call
+            // them inline via `{=implode(',', $arr)}` instead.
             'sprintf' => sprintf(...),
             'urlencode' => urlencode(...),
             'intval' => intval(...),
-            'file_exists' => file_exists(...),
-            'constant' => constant(...),
             'json_encode' => json_encode(...),
-            'json_decode' => json_decode(...),
             'htmlspecialchars' => htmlspecialchars(...),
             'stripslashes' => stripslashes(...),
             'in_array' => in_array(...),
             'ucfirst' => ucfirst(...),
-            'trim' => trim(...),
-            'md5' => md5(...),
-            'strtolower' => strtolower(...),
-            'is_null' => is_null(...),
-            'is_file' => is_file(...),
-            'strpos' => strpos(...),
-            'sizeOf' => sizeof(...),
             'nl2br' => nl2br(...),
             'number_format' => self::numberFormat(...),
             'cat' => self::cat(...),
@@ -113,8 +88,7 @@ final class PiwigoExtension extends Extension
             'default' => self::defaultFilter(...),
             'date_format' => self::dateFormat(...),
 
-            // Phase B.2 — small custom modifiers. Each is a one-liner
-            // delegating to an existing service.
+            // Custom helpers — one-liners delegating to existing services.
             'l10n' => self::translate(...),
             'explode' => self::explode(...),
             'ternary' => self::ternary(...),
@@ -127,11 +101,10 @@ final class PiwigoExtension extends Extension
     }
 
     /**
-     * Latte function tags. Phase B.3: stateful asset-pipeline functions
-     * that delegate to the active Template instance via TemplateRegistry.
-     * Both engines share the same loaders so a Latte template's
-     * `combineScript` accumulates into the same bundle a Smarty
-     * template's `{combine_script}` would.
+     * Latte function tags — stateful asset-pipeline functions that
+     * delegate to the active Template instance via TemplateRegistry,
+     * plus a handful of pre-existing form helpers (`htmlOptions`,
+     * `htmlRadios`, `math`) used by 24 / 2 / 1 templates respectively.
      *
      * @return array<string, callable>
      */
@@ -143,11 +116,8 @@ final class PiwigoExtension extends Extension
             'getCombinedScripts' => self::getCombinedScripts(...),
             'combineCss' => self::combineCss(...),
             'getCombinedCss' => self::getCombinedCss(...),
-            'defineDerivative' => self::defineDerivative(...),
             'derivative' => self::derivative(...),
             'htmlHead' => self::htmlHead(...),
-            'htmlStyle' => self::htmlStyle(...),
-            'footerScript' => self::footerScript(...),
             'htmlOptions' => self::htmlOptions(...),
             'htmlRadios' => self::htmlRadios(...),
             'math' => self::math(...),
@@ -448,46 +418,9 @@ final class PiwigoExtension extends Extension
     }
 
     /**
-     * Returns the configured DerivativeParams. Smarty's
-     * {define_derivative name=foo type=thumb} would assign $foo via the
-     * engine; in Latte the caller does {var $foo = defineDerivative(type:
-     * 'thumb')}.
-     */
-    public static function defineDerivative(
-        ?string $type = null,
-        ?int $width = null,
-        ?int $height = null,
-        bool|int|float|string $crop = false,
-        ?int $minWidth = null,
-        ?int $minHeight = null,
-    ): DerivativeParams {
-        if ($type !== null) {
-            return ImageStdParams::getByType($type);
-        }
-        if ($width === null || $height === null) {
-            throw new \InvalidArgumentException('defineDerivative requires either type, or width and height');
-        }
-        if (is_bool($crop)) {
-            $cropFraction = $crop ? 1 : 0;
-        } else {
-            $cropFraction = round((float) $crop / 100.0, 2);
-        }
-        $effMinW = $cropFraction !== 0 ? ($minWidth ?? $width) : null;
-        $effMinH = $cropFraction !== 0 ? ($minHeight ?? $height) : null;
-        if ($effMinW !== null && $effMinW > $width) {
-            throw new \InvalidArgumentException('defineDerivative: min_width > width');
-        }
-        if ($effMinH !== null && $effMinH > $height) {
-            throw new \InvalidArgumentException('defineDerivative: min_height > height');
-        }
-        return ImageStdParams::getCustom($width, $height, $cropFraction, $effMinW, $effMinH);
-    }
-
-    /**
-     * Builds a `DerivativeImage` from a type/params object and a
-     * source-image array (or SrcImage). Replaces the legacy
-     * `$pwg->derivative(...)` accessor that Smarty made available via
-     * the global `$pwg` template var.
+     * Builds a `DerivativeImage` from a derivative type/params object and a
+     * source-image array (or SrcImage). The native Latte equivalent of
+     * the legacy `$pwg->derivative(...)` template accessor.
      *
      * @param array<mixed>|SrcImage $img
      */
@@ -503,35 +436,6 @@ final class PiwigoExtension extends Extension
         if ($trimmed !== '') {
             TemplateRegistry::current()->html_head_elements[] = $trimmed;
         }
-    }
-
-    public static function htmlStyle(string|Html $content): void
-    {
-        $trimmed = trim((string) $content);
-        if ($trimmed !== '') {
-            $tpl = TemplateRegistry::current();
-            // html_style is private on Template; the field's only mutator is
-            // this exact pattern (Smarty's blockHtmlStyle), so expose via
-            // public method on Template would be cleaner long-term — wired
-            // through a getter for now.
-            $tpl->appendHtmlStyle($trimmed);
-        }
-    }
-
-    /**
-     * @param list<string>|string $require comma-separated string from the
-     *     converter or list<string> from a hand-written Latte template.
-     */
-    public static function footerScript(string|Html $content, array|string $require = []): void
-    {
-        $trimmed = trim((string) $content);
-        if ($trimmed === '') {
-            return;
-        }
-        $requireList = is_string($require)
-            ? ($require === '' ? [] : explode(',', $require))
-            : $require;
-        TemplateRegistry::current()->scriptLoader->addInline($trimmed, $requireList);
     }
 
     /**

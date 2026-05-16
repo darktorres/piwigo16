@@ -68,24 +68,24 @@ final class PiwigoPolicy extends SecurityPolicy
         // Piwigo i18n
         'translate', 'translate_dec', 'l10n',
         // Piwigo display / formatting
-        'sprintf', 'urlencode', 'htmlspecialchars', 'nl2br', 'md5', 'strtolower', 'ucfirst',
+        'sprintf', 'urlencode', 'htmlspecialchars', 'nl2br', 'ucfirst',
         'number_format', 'count', 'strip_tags', 'str_repeat', 'default', 'date_format',
         // Piwigo read-only helpers
         'is_admin', 'is_classic_user', 'get_device', 'url_is_remote', 'get_extent',
-        'get_gallery_home_url', 'explode', 'ternary', 'cat', 'sizeOf',
+        'get_gallery_home_url', 'explode', 'ternary', 'cat',
         // PHP-passthroughs that don't expose state
-        'in_array', 'strpos', 'strstr', 'stristr', 'is_null', 'intval',
+        'in_array', 'strstr', 'stristr', 'intval',
     ];
 
     /**
      * Functions safe for plugin templates: form-rendering helpers and
      * read-only lookups. Excludes the asset-pipeline functions
      * (`combineScript`, `combineCss`, `getCombinedScripts`,
-     * `getCombinedCss`, `defineDerivative`, `htmlHead`, `htmlStyle`,
-     * `footerScript`) — those mutate per-request state owned by the
-     * core layout. Excludes `math()` because even though the
-     * implementation regex-validates against a function whitelist before
-     * eval, exposing it to plugin templates needs a deliberate decision.
+     * `getCombinedCss`, `htmlHead`) — those mutate per-request state
+     * owned by the core layout. Excludes `math()` because even though
+     * the implementation regex-validates against a function whitelist
+     * before eval, exposing it to plugin templates needs a deliberate
+     * decision.
      */
     private const array PLUGIN_FUNCTIONS = [
         'htmlOptions', 'htmlRadios',
@@ -120,15 +120,13 @@ final class PiwigoPolicy extends SecurityPolicy
         ]);
         $policy->allowFilters([
             ...self::PLUGIN_FILTERS,
-            'json_encode', 'json_decode', 'file_exists', 'is_file',
-            'constant', 'stripslashes',
+            'json_encode', 'stripslashes',
         ]);
         $policy->allowFunctions([
             ...self::PLUGIN_FUNCTIONS,
             'combineScript', 'getCombinedScripts',
             'combineCss', 'getCombinedCss',
-            'defineDerivative',
-            'htmlHead', 'htmlStyle', 'footerScript',
+            'htmlHead',
             'math',
         ]);
         return $policy;

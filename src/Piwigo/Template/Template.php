@@ -48,18 +48,6 @@ final class Template
 
     /** @var string[] - Content to add before </head> tag */
     public array $html_head_elements = [];
-    /** @var string - Runtime CSS rules */
-    private string $html_style = '';
-
-    /**
-     * Append a CSS fragment to the runtime <style> block flushed before
-     * </head>. Public because Latte's `htmlStyle` function (via
-     * PiwigoExtension) writes through this buffer during a page render.
-     */
-    public function appendHtmlStyle(string $css): void
-    {
-        $this->html_style .= "\n" . $css;
-    }
 
     /** @const string */
     public const string COMBINED_SCRIPTS_TAG = '<!-- COMBINED_SCRIPTS -->';
@@ -446,18 +434,14 @@ final class Template
         );
         $this->cssLoader->clear();
 
-        if (count($this->html_head_elements) || strlen($this->html_style)) {
+        if (count($this->html_head_elements) > 0) {
             $search = "\n</head>";
             $pos = strpos($this->output, $search);
             if ($pos !== false) {
                 $rep = "\n".implode("\n", $this->html_head_elements);
-                if (strlen($this->html_style)) {
-                    $rep .= '<style type="text/css">'.$this->html_style.'</style>';
-                }
                 $this->output = substr_replace($this->output, $rep, $pos, 0);
             }
             $this->html_head_elements = [];
-            $this->html_style = '';
         }
 
         echo $this->output;

@@ -99,13 +99,16 @@ final class PiwigoPolicyTest extends TestCase
     {
         $policy = PiwigoPolicy::createPluginPolicy();
 
-        // Filesystem touchers — should never reach plugin templates.
+        // Filesystem touchers, PHP-runtime reflection, and opaque payload
+        // decoders are now unregistered entirely (zero in-tree callers at
+        // P3.2 audit); the deny stays meaningful because Latte denies any
+        // unknown filter under a sandbox policy by default.
         self::assertFalse($policy->isFilterAllowed('file_exists'));
         self::assertFalse($policy->isFilterAllowed('is_file'));
-        // PHP-runtime reflection.
         self::assertFalse($policy->isFilterAllowed('constant'));
-        // Opaque payload decoders.
         self::assertFalse($policy->isFilterAllowed('json_decode'));
+        // stripslashes stays registered (1 template caller in core) but
+        // off-limits to plugin templates.
         self::assertFalse($policy->isFilterAllowed('stripslashes'));
     }
 
@@ -122,7 +125,6 @@ final class PiwigoPolicyTest extends TestCase
         self::assertFalse($policy->isFunctionAllowed('combineScript'));
         self::assertFalse($policy->isFunctionAllowed('combineCss'));
         self::assertFalse($policy->isFunctionAllowed('htmlHead'));
-        self::assertFalse($policy->isFunctionAllowed('defineDerivative'));
         // math() eval-evaluates a user-supplied expression — deny for
         // plugins even though regex-validated inside.
         self::assertFalse($policy->isFunctionAllowed('math'));
@@ -134,8 +136,7 @@ final class PiwigoPolicyTest extends TestCase
 
         self::assertTrue($policy->isTagAllowed('do'));
         self::assertTrue($policy->isTagAllowed('include'));
-        self::assertTrue($policy->isFilterAllowed('file_exists'));
-        self::assertTrue($policy->isFilterAllowed('json_decode'));
+        self::assertTrue($policy->isFilterAllowed('stripslashes'));
         self::assertTrue($policy->isFunctionAllowed('combineScript'));
         self::assertTrue($policy->isFunctionAllowed('htmlHead'));
         self::assertTrue($policy->isFunctionAllowed('math'));

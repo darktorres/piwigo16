@@ -12,6 +12,8 @@
     "lint:css:fix": "npm run lint:css -- --fix",
     "lint:md": "markdownlint \"**/*.md\" --ignore-path .markdownlintignore",
     "lint:md:fix": "npm run lint:md -- --fix",
+    "openapi:dump": "php tools/openapi-dump.php > openapi.json",
+    "lint:openapi": "npm run openapi:dump && redocly lint openapi.json",
     "lint": "npm run lint:js && npm run lint:css && npm run lint:md",
     "lint:fix": "npm run lint:js:fix && npm run lint:css:fix && npm run lint:md:fix",
     "format": "prettier --check \"**/*.{ts,json,md,css}\"",
@@ -23,6 +25,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.48.0",
+    "@redocly/cli": "^2.30.6",
     "@types/js-cookie": "^3.0.6",
     "@types/node": "^25.6.2",
     "@typescript-eslint/eslint-plugin": "^8.59.1",

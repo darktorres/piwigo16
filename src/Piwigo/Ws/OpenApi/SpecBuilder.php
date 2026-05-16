@@ -43,6 +43,11 @@ final readonly class SpecBuilder
             $paths['/ws/' . $name] = $this->buildPathItem($name, $method, $def);
         }
 
+        // OpenAPI 3.1: every operation must have security defined on it OR
+        // at the root level. Most methods are anonymous-access — root-level
+        // `[{}]` (one empty requirement object) declares that no security
+        // scheme is required by default. Admin-only operations override
+        // this with their own non-empty `security` array.
         $spec = [
             'openapi' => '3.1.0',
             'info'    => [
@@ -51,8 +56,13 @@ final readonly class SpecBuilder
                 'description' => 'Auto-generated from PwgServer registered methods. '
                     . 'Access via the `/ws` route with `?method=<methodName>` (GET) or POST body.',
                 'contact'     => ['url' => 'https://piwigo.org'],
-                'license'     => ['name' => 'GPL-2.0-or-later'],
+                'license'     => [
+                    'name'       => 'GPL-2.0-or-later',
+                    'identifier' => 'GPL-2.0-or-later',
+                ],
             ],
+            'servers'    => [['url' => $this->serverUrl !== '' ? $this->serverUrl : '/']],
+            'security'   => [new \stdClass()],
             'components' => [
                 'securitySchemes' => [
                     'cookieAuth' => ['type' => 'apiKey', 'in' => 'cookie', 'name' => 'pwg_id'],
@@ -61,10 +71,6 @@ final readonly class SpecBuilder
             ],
             'paths' => $paths,
         ];
-
-        if ($this->serverUrl !== '') {
-            $spec['servers'] = [['url' => $this->serverUrl]];
-        }
 
         return new OpenApiDocument($spec);
     }

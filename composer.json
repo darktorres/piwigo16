@@ -93,6 +93,7 @@
     ],
     "precompile:templates": "@php tools/precompile_templates.php",
     "piwigo:lint": "@php tools/plugin-lint.php",
+    "openapi:dump": "@php tools/openapi-dump.php",
     "test": "@php vendor/bin/phpunit"
   },
   "scripts-descriptions": {
@@ -104,6 +105,7 @@
     "analyse:psalm": "Run Psalm",
     "precompile:templates": "Warm Latte compile cache for every bundled .latte (deploy/CI)",
     "piwigo:lint": "Scan plugin source for forbidden legacy patterns (pwg_query, $GLOBALS, *_TABLE, trigger_change …)",
+    "openapi:dump": "Build the live OpenAPI 3.1 spec and emit it on stdout — paired with `npm run lint:openapi` for redocly CI gate",
     "test": "Run PHPUnit"
   },
   "repositories": [

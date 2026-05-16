@@ -12,6 +12,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Album\GetCategoriesMenuSqlWhere;
+use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
 use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
@@ -22,6 +24,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class CategoryService
 {
@@ -30,6 +33,7 @@ final readonly class CategoryService
         private Connection $conn,
         private FilterService $filterService,
         private PermissionService $permissionService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -88,7 +92,9 @@ FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() .
   ' . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], null, true);
         }
 
-        $where = EventDispatcher::dispatch('get_categories_menu_sql_where', $where, $userExpand, $filter->enabled);
+        $whereEvent = new GetCategoriesMenuSqlWhere($where, (bool) $userExpand, $filter->enabled);
+        $this->dispatcher->dispatch($whereEvent);
+        $where = $whereEvent->where;
 
         $query .= '
 WHERE ' . $where . '
@@ -167,7 +173,7 @@ WHERE ' . $where . '
     /** @return array<mixed> */
     public function getCategoryPreferredImageOrders(): array
     {
-        $result = EventDispatcher::dispatch('get_category_preferred_image_orders', [
+        $ordersEvent = new GetCategoryPreferredImageOrders([
             [Lang::t('Default'),                        '',                     true],
             [Lang::t('Photo title, A &rarr; Z'),        'name ASC',             true],
             [Lang::t('Photo title, Z &rarr; A'),        'name DESC',            true],
@@ -181,7 +187,8 @@ WHERE ' . $where . '
             [Lang::t('Visits, low &rarr; high'),        'hit ASC',              true],
             [Lang::t('Permissions'),                    'level DESC',           $this->permissionService->isAdmin()],
         ]);
-        return $result;
+        $this->dispatcher->dispatch($ordersEvent);
+        return $ordersEvent->value;
     }
 
     /**

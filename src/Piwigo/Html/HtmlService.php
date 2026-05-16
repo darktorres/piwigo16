@@ -14,6 +14,8 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Picture\GetThumbnailTitle;
+use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
@@ -27,12 +29,14 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class HtmlService
 {
     public function __construct(
         private Connection $conn,
         private StringUtil $stringUtil,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
     /** @param array<mixed> $catInformations */
@@ -409,7 +413,9 @@ $btraceMsg
     public function renderElementName(array $info): string
     {
         if (!empty($info['name'])) {
-            return (string) EventDispatcher::dispatch('render_element_name', is_string($info['name']) ? $info['name'] : '', $info);
+            $nameEvent = new RenderElementName(is_string($info['name']) ? $info['name'] : '', $info);
+            $this->dispatcher->dispatch($nameEvent);
+            return $nameEvent->elementName;
         }
         return $this->stringUtil->getNameFromFile(is_string($info['file'] ?? null) ? $info['file'] : '');
     }
@@ -450,9 +456,10 @@ $btraceMsg
         }
 
         $title = htmlspecialchars(strip_tags($title));
-        $title = EventDispatcher::dispatch('get_thumbnail_title', $title, $info);
+        $titleEvent = new GetThumbnailTitle($title, $info);
+        $this->dispatcher->dispatch($titleEvent);
 
-        return $title;
+        return $titleEvent->title;
     }
 
     public function getSrcImageUrlProtectionHandler(string $url, SrcImage $srcImage): string

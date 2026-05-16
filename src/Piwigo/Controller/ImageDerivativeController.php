@@ -10,6 +10,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Event\Picture\DerivativeParamsGet;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Http\ResponseFactory;
@@ -18,7 +19,7 @@ use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageDerivativeContext;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
-use Piwigo\Plugins\EventDispatcher;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -34,8 +35,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final readonly class ImageDerivativeController implements ControllerInterface
 {
-    public function __construct(private Connection $conn)
-    {
+    public function __construct(
+        private Connection $conn,
+        private EventDispatcherInterface $dispatcher,
+    ) {
     }
 
     #[\Override]
@@ -64,7 +67,9 @@ final readonly class ImageDerivativeController implements ControllerInterface
         ImageStdParams::loadFromDb();
 
         $dpRaw  = DerivativePipeline::parseRequest($ctx);
-        $params = EventDispatcher::dispatch('derivative_params_get', $dpRaw);
+        $derivEvent = new DerivativeParamsGet($dpRaw);
+        $this->dispatcher->dispatch($derivEvent);
+        $params = $derivEvent->params;
 
         $src_mtime = Filesystem::tryFileMtime($ctx->srcPath);
         if ($src_mtime === false) {

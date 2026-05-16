@@ -19,17 +19,19 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Picture\BeginDeleteElements;
+use Piwigo\Event\Picture\DeleteElements;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class ImageAdminService
 {
@@ -47,6 +49,7 @@ final class ImageAdminService
         private readonly UrlGenerator $urlGenerator,
         private readonly UserRepository $userRepository,
         private readonly ActivityLogger $activityLogger,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -104,7 +107,7 @@ final class ImageAdminService
         if (count($ids) === 0) {
             return 0;
         }
-        EventDispatcher::notify('begin_delete_elements', $ids);
+        $this->dispatcher->dispatch(new BeginDeleteElements($ids));
         if ($physicalDeletion) {
             $ids = $this->deleteElementFiles($ids);
             if (count($ids) === 0) {
@@ -128,7 +131,7 @@ final class ImageAdminService
         if (count($categoryIds) > 0) {
             $this->categoryAdminService->updateCategory($categoryIds);
         }
-        EventDispatcher::notify('delete_elements', $ids);
+        $this->dispatcher->dispatch(new DeleteElements($ids));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $ids, 'delete'));
         return count($ids);
     }

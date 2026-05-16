@@ -12,12 +12,12 @@ use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocBeginIndexThumbnails;
 use Piwigo\Event\Location\LocEndIndexThumbnails;
 use Piwigo\Event\Location\LocIndexThumbnailsSelection;
+use Piwigo\Event\Picture\GetIndexDerivativeParams;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\TemplateRegistry;
@@ -151,8 +151,10 @@ SELECT image_id, COUNT(*) AS nb_comments
 
         $derivRaw = $this->sessionService->getSessionVar('index_deriv', DerivativeSize::Thumb->value);
         $derivType = is_string($derivRaw) ? $derivRaw : DerivativeSize::Thumb->value;
+        $derivEvent = new GetIndexDerivativeParams(ImageStdParams::getByType($derivType));
+        $this->dispatcher->dispatch($derivEvent);
         $template->assign([
-            'derivative_params' => EventDispatcher::dispatch('get_index_derivative_params', ImageStdParams::getByType($derivType)),
+            'derivative_params' => $derivEvent->value,
             'maxRequests' => Config::maxRequests(),
             'SHOW_THUMBNAIL_CAPTION' => Config::showThumbnailCaption(),
         ]);

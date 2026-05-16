@@ -13,12 +13,14 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Picture\PwgLogAllowed;
+use Piwigo\Event\Picture\PwgLogUpdateLastVisit;
 use Piwigo\History\HistoryRepository;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Persists both the user-visible activity feed (`activity` table, via
@@ -39,6 +41,7 @@ final readonly class ActivityLogger
         private HistoryAdminService $historyAdminService,
         private PermissionService $permissionService,
         private UserRepository $userRepository,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -158,7 +161,13 @@ final readonly class ActivityLogger
         if ($this->permissionService->isAGuest()) {
             $doLog = Config::historyGuest();
         }
-        return (bool) EventDispatcher::dispatch('pwg_log_allowed', $doLog, $imageId, $imageType);
+        $allowEvent = new PwgLogAllowed(
+            $doLog,
+            $imageId !== null ? (int) $imageId : 0,
+            $imageType ?? '',
+        );
+        $this->dispatcher->dispatch($allowEvent);
+        return $allowEvent->doLog;
     }
 
     /**
@@ -179,7 +188,9 @@ final readonly class ActivityLogger
         $userId          = CurrentUser::get()->id;
         $lastVisit       = is_scalar($user['last_visit'] ?? null) ? (string) $user['last_visit'] : '';
         $updateLastVisit = empty($lastVisit) || strtotime($lastVisit) < time() - Config::sessionLength();
-        $updateLastVisit = EventDispatcher::dispatch('pwg_log_update_last_visit', $updateLastVisit);
+        $updateEvent = new PwgLogUpdateLastVisit($updateLastVisit);
+        $this->dispatcher->dispatch($updateEvent);
+        $updateLastVisit = $updateEvent->update;
 
         if ($updateLastVisit) {
             $this->userRepository->updateLastVisit($userId);

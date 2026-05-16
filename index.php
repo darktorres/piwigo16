@@ -15,6 +15,7 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Db\DbConnection;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -41,7 +42,9 @@ if (str_starts_with($_qs, 'i/')) {
         'filename'  => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . Config::dbPassword()) . '.txt',
     ]);
     LoggerRegistry::set($logger);
-    (new ImageDerivativeController(DbConnection::build()))(RequestFactory::fromGlobals());
+    // i/ fast-path deliberately skips Kernel::boot for latency; build a bare
+    // PSR-14 dispatcher (no listeners — plugins haven't loaded anyway).
+    (new ImageDerivativeController(DbConnection::build(), new EventDispatcher()))(RequestFactory::fromGlobals());
     exit;
 }
 

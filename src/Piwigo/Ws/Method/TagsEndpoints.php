@@ -13,6 +13,8 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Album\MergeTags;
+use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Plugins\EventDispatcher;
@@ -25,6 +27,7 @@ use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsHelper;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class TagsEndpoints
 {
@@ -40,6 +43,7 @@ final readonly class TagsEndpoints
         private ActivityLogger $activityLogger,
         private CsrfService $csrfService,
         private WsHelper $wsHelper,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -131,8 +135,9 @@ final readonly class TagsEndpoints
                     $image[$k] = $row[$k] ?? null;
                 }
                 $imgNameStr    = is_scalar($image['name'] ?? null) ? (string) $image['name'] : '';
-                $renderedName  = EventDispatcher::dispatch('render_element_name', $imgNameStr, __FUNCTION__);
-                $image['name']    = strip_tags((string) $renderedName);
+                $renderEvent   = new RenderElementName($imgNameStr, $image);
+                $this->dispatcher->dispatch($renderEvent);
+                $image['name']    = strip_tags($renderEvent->elementName);
                 $image['comment'] = EventDispatcher::dispatch('render_element_description', $image['comment'] ?? null, __FUNCTION__);
                 $image = array_merge($image, $this->wsHelper->getUrls($row));
                 $imgIdRaw   = $image['id'] ?? null;
@@ -284,7 +289,7 @@ final readonly class TagsEndpoints
         foreach ($imageToAdd as $imageId) {
             $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, 'edit', ['tag-add' => $mergeDestId]));
         }
-        EventDispatcher::notify('merge_tags', $mergeDestId, $mergeTag);
+        $this->dispatcher->dispatch(new MergeTags($mergeDestId, $mergeTag));
         $this->tagAdminService->deleteTags($mergeTag);
         return ['destination_tag' => $mergeDestId, 'deleted_tag' => $mergeTagIds, 'images_in_merged_tag' => array_merge($imageInDest, $imageToAdd)];
     }

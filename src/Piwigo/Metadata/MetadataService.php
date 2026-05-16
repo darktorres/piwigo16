@@ -6,8 +6,10 @@ namespace Piwigo\Metadata;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\Picture\CleanIptcValue;
+use Piwigo\Event\Picture\FormatExifData;
 use Piwigo\Exception\ConfigException;
-use Piwigo\Plugins\EventDispatcher;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 
 final readonly class MetadataService
@@ -15,6 +17,7 @@ final readonly class MetadataService
     public function __construct(
         private LoggerInterface $logger,
         private StringUtil $stringUtil,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -72,7 +75,9 @@ final readonly class MetadataService
         $value = str_replace(chr(0x00), ' ', $value);
 
         if (preg_match('/[\x80-\xff]/', $value)) {
-            $value = (string) EventDispatcher::dispatch('clean_iptc_value', $value);
+            $cleanEvent = new CleanIptcValue($value);
+            $this->dispatcher->dispatch($cleanEvent);
+            $value = $cleanEvent->value;
             if (($qual = $this->stringUtil->qualifyUtf8($value)) != 0) {
                 if ($qual > 0) {
                     $inputEncoding = 'utf-8';
@@ -105,8 +110,10 @@ final readonly class MetadataService
 
         $exifResult = $this->stringUtil->pwgSafeExifReadData($filename);
         $exif = $exifResult !== false ? $exifResult : null;
-        $exif = EventDispatcher::dispatch('format_exif_data', $exif, $filename, $map);
-        if (is_array($exif) && count($exif) > 0) {
+        $exifEvent = new FormatExifData($exif ?? [], $filename, $map);
+        $this->dispatcher->dispatch($exifEvent);
+        $exif = $exifEvent->exif;
+        if (count($exif) > 0) {
 
             foreach ($map as $key => $field) {
                 if (!str_contains($field, ';')) {

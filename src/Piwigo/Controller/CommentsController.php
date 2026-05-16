@@ -21,6 +21,7 @@ use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocBeginComments;
 use Piwigo\Event\Location\LocEndComments;
+use Piwigo\Event\Picture\GetCommentsDerivativeParams;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
@@ -399,8 +400,9 @@ SELECT *
             }
         }
 
-        $derivative_params = EventDispatcher::dispatch('get_comments_derivative_params', ImageStdParams::getByType(DerivativeSize::Thumb->value));
-        $tpl->assign('comment_derivative_params', $derivative_params);
+        $commentsDerivEvent = new GetCommentsDerivativeParams(ImageStdParams::getByType(DerivativeSize::Thumb->value));
+        $this->dispatcher->dispatch($commentsDerivEvent);
+        $tpl->assign('comment_derivative_params', $commentsDerivEvent->value);
 
         $themeconf    = $tpl->getTemplateVars('themeconf');
         $themeconfArr = is_array($themeconf) ? $themeconf : [];

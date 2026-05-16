@@ -24,6 +24,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocEndAddFormat;
 use Piwigo\Event\Location\LocEndAddUploadedFile;
+use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
@@ -34,7 +35,6 @@ use Piwigo\Image\DerivativeService;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
@@ -207,7 +207,9 @@ final readonly class UploadService
         }
         Filesystem::tryChmod($filePath, Config::chmodValue() & 0o666);
 
-        $representativeExt = EventDispatcher::dispatch('upload_file', '', $filePath);
+        $uploadEvent = new UploadFile('', $filePath);
+        $this->dispatcher->dispatch($uploadEvent);
+        $representativeExt = $uploadEvent->representativeExt;
         $logger->info('Handling ' . $filePath . ' got ' . $representativeExt);
 
         if (PwgImage::getLibrary() !== 'gd' && Config::originalResize()) {

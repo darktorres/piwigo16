@@ -15,6 +15,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocBeginIndexCategoryThumbnails;
 use Piwigo\Event\Location\LocBeginIndexCategoryThumbnailsQuery;
 use Piwigo\Event\Location\LocEndIndexCategoryThumbnails;
+use Piwigo\Event\Picture\GetIndexAlbumDerivativeParams;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeSize;
@@ -312,7 +313,9 @@ SELECT *
             }
 
             $tpl_thumbnails_var_selection = $tpl_thumbnails_var;
-            $derivative_params = EventDispatcher::dispatch('get_index_album_derivative_params', ImageStdParams::getByType(DerivativeSize::Thumb->value));
+            $albumDerivEvent = new GetIndexAlbumDerivativeParams(ImageStdParams::getByType(DerivativeSize::Thumb->value));
+            $this->dispatcher->dispatch($albumDerivEvent);
+            $derivative_params = $albumDerivEvent->value;
             $catsEvent = new LocEndIndexCategoryThumbnails($tpl_thumbnails_var_selection);
             $this->dispatcher->dispatch($catsEvent);
             $tpl_thumbnails_var_selection = $catsEvent->tplThumbnailsVar;

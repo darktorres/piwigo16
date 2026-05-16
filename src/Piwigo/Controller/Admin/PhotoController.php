@@ -32,6 +32,7 @@ use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocEndPhotoAddDirect;
 use Piwigo\Event\Location\LocEndPictureModify;
+use Piwigo\Event\Picture\PictureModifyBeforeUpdate;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\DerivativeEncoding;
@@ -41,7 +42,6 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\LangService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
@@ -225,7 +225,10 @@ SELECT id
 
             $rawDateCreation = $_POST['date_creation'] ?? null;
             $data['date_creation'] = (is_string($rawDateCreation) && $rawDateCreation !== '') ? $rawDateCreation : null;
-            $data = EventDispatcher::dispatch('picture_modify_before_update', $data);
+            $modifyEvent = new PictureModifyBeforeUpdate($data);
+            $this->dispatcher->dispatch($modifyEvent);
+            /** @var array<string, mixed> $data */
+            $data = $modifyEvent->data;
 
             Dml::singleUpdate(Tables::images(), $data, ['id' => $data['id']]);
 

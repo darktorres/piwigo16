@@ -6,8 +6,10 @@ namespace Piwigo\Image;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
-use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Core\Kernel;
+use Piwigo\Event\Picture\GetDerivativeUrl;
 use Piwigo\Url\UrlService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Holds information (path, url, dimensions) about a derivative image.
@@ -74,8 +76,9 @@ final class DerivativeImage
         if ($params == null) {
             return $src_image->getUrl();
         }
-        $urlArg = EventDispatcher::dispatch('get_derivative_url', UrlService::getRootUrl().$rel_url, $params, $src_image, $rel_url);
-        return UrlService::embellishUrl($urlArg);
+        $urlEvent = new GetDerivativeUrl(UrlService::getRootUrl() . $rel_url, $params, $src_image, $rel_url);
+        Kernel::service(EventDispatcherInterface::class)->dispatch($urlEvent);
+        return UrlService::embellishUrl($urlEvent->url);
     }
 
     /**
@@ -224,8 +227,9 @@ final class DerivativeImage
         if ($this->params == null) {
             return $this->src_image->getUrl();
         }
-        $urlArg2 = EventDispatcher::dispatch('get_derivative_url', UrlService::getRootUrl().$this->rel_url, $this->params, $this->src_image, $this->rel_url);
-        return UrlService::embellishUrl($urlArg2);
+        $urlEvent2 = new GetDerivativeUrl(UrlService::getRootUrl() . $this->rel_url, $this->params, $this->src_image, $this->rel_url);
+        Kernel::service(EventDispatcherInterface::class)->dispatch($urlEvent2);
+        return UrlService::embellishUrl($urlEvent2->url);
     }
 
     public function sameAsSource(): bool

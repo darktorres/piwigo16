@@ -38,6 +38,7 @@ use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Album\GetAdminsSiteLinks;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
@@ -64,6 +65,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Validation\InputValidator;
 use Psr\Cache\CacheItemPoolInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 final class MaintenanceController
@@ -110,6 +112,7 @@ final class MaintenanceController
         private readonly RedirectResponder $redirectResponder,
         private readonly CacheItemPoolInterface $pool,
         private readonly HtmlService $htmlService,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -1080,7 +1083,10 @@ final class MaintenanceController
             if ($row['id'] != 1) {
                 $tpl_var['U_DELETE'] = $base_url . 'delete';
             }
-            $tpl_var['plugin_links'] = EventDispatcher::dispatch('get_admins_site_links', [], $row['id'], $is_remote);
+            $rowId = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
+            $siteLinksEvent = new GetAdminsSiteLinks([], $rowId, (bool) $is_remote);
+            $this->dispatcher->dispatch($siteLinksEvent);
+            $tpl_var['plugin_links'] = $siteLinksEvent->pluginLinks;
             $tpl->append('sites', $tpl_var);
         }
 

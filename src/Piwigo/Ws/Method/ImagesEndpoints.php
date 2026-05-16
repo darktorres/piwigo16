@@ -27,6 +27,8 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Picture\RenderElementName;
+use Piwigo\Event\Picture\WsImagesUploadCompleted;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
@@ -48,6 +50,7 @@ use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsHelper;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class ImagesEndpoints
 {
@@ -75,6 +78,7 @@ final readonly class ImagesEndpoints
         private CsrfService $csrfService,
         private WsHelper $wsHelper,
         private EphemeralKeyService $ephemeralKeyService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -249,8 +253,9 @@ final readonly class ImagesEndpoints
         $imageRowId    = is_numeric($imageRow['id']) ? (int) $imageRow['id'] : 0;
         $imageRowFile  = is_string($imageRow['file'] ?? null) ? $imageRow['file'] : '';
         $imageRow['name_raw']    = $imageRow['name'];
-        $renderName              = EventDispatcher::dispatch('render_element_name', $imageRow['name'], __FUNCTION__);
-        $imageRow['name']        = strip_tags(is_scalar($renderName) ? (string) $renderName : '');
+        $renderEvent             = new RenderElementName(is_string($imageRow['name'] ?? null) ? $imageRow['name'] : '', $imageRow);
+        $this->dispatcher->dispatch($renderEvent);
+        $imageRow['name']        = strip_tags($renderEvent->elementName);
         $imageRow['comment_raw'] = $imageRow['comment'];
         $imageRow['comment']     = EventDispatcher::dispatch('render_element_description', $imageRow['comment'], __FUNCTION__);
         $isCommentable    = false;
@@ -381,8 +386,9 @@ final readonly class ImagesEndpoints
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
                     $image[$k] = $row[$k] ?? null;
                 }
-                $nameRaw     = EventDispatcher::dispatch('render_element_name', $image['name'] ?? '', __FUNCTION__);
-                $image['name']    = strip_tags(is_string($nameRaw) ? $nameRaw : (is_scalar($nameRaw) ? (string) $nameRaw : ''));
+                $renderEvent2     = new RenderElementName(is_string($image['name'] ?? null) ? $image['name'] : '', $image);
+                $this->dispatcher->dispatch($renderEvent2);
+                $image['name']    = strip_tags($renderEvent2->elementName);
                 $image['comment'] = EventDispatcher::dispatch('render_element_description', $image['comment'] ?? null, __FUNCTION__);
                 $image = array_merge($image, $this->wsHelper->getUrls($row));
                 $imgIdRaw = $image['id'] ?? null;
@@ -1318,7 +1324,7 @@ final readonly class ImagesEndpoints
         $movedFromLounge  = $this->categoryAdminService->emptyLounge();
         $categoryInfos    = ['nb_photos' => $this->categoryRepository->countImagesByCategoryId($ucCategoryId)];
         $categoryName     = $this->htmlService->getCatDisplayNameFromId($ucCategoryId, null);
-        EventDispatcher::notify('ws_images_uploadCompleted', ['image_ids' => $imageIds, 'category_id' => $ucCategoryId, 'moved_from_lounge' => $movedFromLounge]);
+        $this->dispatcher->dispatch(new WsImagesUploadCompleted(['image_ids' => $imageIds, 'category_id' => $ucCategoryId, 'moved_from_lounge' => $movedFromLounge]));
         return ['moved_from_lounge' => $movedFromLounge, 'category' => ['id' => $ucCategoryId, 'nb_photos' => $categoryInfos['nb_photos'], 'label' => $categoryName]];
     }
 

@@ -9,10 +9,11 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Picture\UpdateRatingScore;
 use Piwigo\Image\ImageRepository;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class RateService
 {
@@ -21,6 +22,7 @@ final readonly class RateService
         private ImageRepository $imageRepo,
         private CookieService $cookies,
         private PermissionService $permissionService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -81,7 +83,7 @@ final readonly class RateService
      */
     public function updateRatingScore(?int $elementId = null): array
     {
-        $_ = EventDispatcher::dispatch('update_rating_score', false, $elementId);
+        $this->dispatcher->dispatch(new UpdateRatingScore(false, $elementId ?? 0));
 
         $allRatesCount    = 0;
         $allRatesAvg      = 0.0;

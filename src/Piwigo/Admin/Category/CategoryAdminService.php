@@ -21,11 +21,14 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Album\CreateVirtualCategory;
+use Piwigo\Event\Album\DeleteCategories;
+use Piwigo\Event\Album\EmptyLounge;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Lang\Translator;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class CategoryAdminService
 {
@@ -39,6 +42,7 @@ final readonly class CategoryAdminService
         private UserAdminService $userAdminService,
         private UserRepository $userRepository,
         private ActivityLogger $activityLogger,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -86,7 +90,7 @@ final readonly class CategoryAdminService
         $catRepo2->deletePermalinksByCategoryIds($ids);
         $userRepo2->deleteUserCacheByCategoryIds($ids);
 
-        EventDispatcher::notify('delete_categories', $ids);
+        $this->dispatcher->dispatch(new DeleteCategories($ids));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $ids, 'delete', ['photo_deletion_mode' => $photoDeletionMode]));
     }
 
@@ -501,7 +505,7 @@ SELECT DISTINCT id
             $userId = CurrentUser::get()->id;
             $this->addPermissionOnCategory($insertedId, array_unique(array_merge($this->userAdminService->getAdmins(), [$userId])));
         }
-        EventDispatcher::notify('create_virtual_category', array_merge(['id' => $insertedId], $insert));
+        $this->dispatcher->dispatch(new CreateVirtualCategory(array_merge(['id' => $insertedId], $insert)));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $insertedId, 'add'));
         return ['info' => Lang::t('Album added'), 'id' => $insertedId];
     }
@@ -742,7 +746,7 @@ SELECT id FROM ' . Tables::imageCategory() . '
         }
         $this->configService->confDeleteParam('empty_lounge_running');
         $logger->debug('empty_lounge, exec=' . $execId . ', ends');
-        EventDispatcher::notify('empty_lounge', $rows);
+        $this->dispatcher->dispatch(new EmptyLounge($rows));
         return $rows;
     }
 }

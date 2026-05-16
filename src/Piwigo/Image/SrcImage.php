@@ -7,9 +7,11 @@ namespace Piwigo\Image;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\Picture\GetMimetypeLocation;
 use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * A source image is used to get a derivative image. It is either
@@ -53,8 +55,9 @@ final class SrcImage
             $this->rel_path = Kernel::service(StringUtil::class)->originalToRepresentative($path, is_scalar($repExt) ? (string) $repExt : '');
         } else {
             $mimeIconDir = Kernel::service(ThemeService::class)->getThemeconf('mime_icon_dir');
-            $triggerResult = EventDispatcher::dispatch('get_mimetype_location', (is_string($mimeIconDir) ? $mimeIconDir : '').$ext.'.png', $ext);
-            $this->rel_path = $triggerResult;
+            $mimeEvent = new GetMimetypeLocation((is_string($mimeIconDir) ? $mimeIconDir : '') . $ext . '.png', $ext);
+            Kernel::service(EventDispatcherInterface::class)->dispatch($mimeEvent);
+            $this->rel_path = $mimeEvent->url;
             $this->flags |= self::IS_MIMETYPE;
             if (($size = Kernel::service(StringUtil::class)->pwgSafeGetimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false) {
                 if ('svg' == $ext) {

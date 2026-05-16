@@ -12,6 +12,12 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Search\QsearchBeforeEval;
+use Piwigo\Event\Search\QsearchExpressionParsed;
+use Piwigo\Event\Search\QsearchGetImagesSqlScopes;
+use Piwigo\Event\Search\QsearchGetScopes;
+use Piwigo\Event\Search\QsearchPre;
+use Piwigo\Event\Search\QsearchResults;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
@@ -26,6 +32,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
 use Psr\Cache\CacheItemPoolInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 
 final class SearchService
@@ -48,6 +55,7 @@ final class SearchService
         private readonly UrlService $urlService,
         private readonly UserService $userService,
         private readonly CacheItemPoolInterface $pool,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -677,7 +685,9 @@ final class SearchService
                     }
                     break;
                 default:
-                    $clauses = EventDispatcher::dispatch('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
+                    $clausesEvent = new QsearchGetImagesSqlScopes($clauses, $token, $expr);
+                    $this->dispatcher->dispatch($clausesEvent);
+                    $clauses = $clausesEvent->clauses;
                     break;
             }
             if (!empty($clauses)) {
@@ -917,7 +927,9 @@ final class SearchService
     {
         $q             = trim(stripslashes($q));
         $searchResults = ['items' => [], 'qs' => ['q' => $q]];
-        $q             = EventDispatcher::dispatch('qsearch_pre', $q);
+        $qEvent = new QsearchPre($q);
+        $this->dispatcher->dispatch($qEvent);
+        $q = $qEvent->query;
 
         $scopes   = [];
         $scopes[] = new QSearchScope('tag', ['tags']);
@@ -943,7 +955,10 @@ final class SearchService
         $scopes[] = new QDateRangeScope('created', $createdDateAliases, true);
         $scopes[] = new QDateRangeScope('posted', $postedDateAliases);
 
-        $scopes     = EventDispatcher::dispatch('qsearch_get_scopes', $scopes);
+        $scopesEvent = new QsearchGetScopes($scopes);
+        $this->dispatcher->dispatch($scopesEvent);
+        /** @var array<QSearchScope> $scopes */
+        $scopes = $scopesEvent->scopes;
         $expression = new QExpression($q, $scopes);
 
         $langCode = substr($this->userService->getDefaultLanguage(), 0, 2);
@@ -965,7 +980,7 @@ final class SearchService
             }
         }
 
-        EventDispatcher::notify('qsearch_expression_parsed', $expression);
+        $this->dispatcher->dispatch(new QsearchExpressionParsed($expression));
 
         if (count($expression->stokens) == 0) {
             return $searchResults;
@@ -975,7 +990,7 @@ final class SearchService
         $this->qsearchGetCategories($expression, $qsr);
         $this->qsearchGetImages($expression, $qsr);
 
-        EventDispatcher::notify('qsearch_before_eval', $expression, $qsr);
+        $this->dispatcher->dispatch(new QsearchBeforeEval($expression, $qsr));
 
         $tmp   = false;
         $searchResults['qs']['unmatched_terms'] = [];
@@ -997,7 +1012,9 @@ final class SearchService
 
         $searchResults['qs']['matching_tags'] = $qsr->all_tags;
         $searchResults['qs']['matching_cats'] = $qsr->all_cats;
-        $searchResults = EventDispatcher::dispatch('qsearch_results', $searchResults, $expression, $qsr);
+        $resultsEvent = new QsearchResults($searchResults, $expression, $qsr);
+        $this->dispatcher->dispatch($resultsEvent);
+        $searchResults = $resultsEvent->results;
         $rawItems      = is_array($searchResults['items'] ?? null) ? $searchResults['items'] : [];
         $extraItems    = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawItems);
         $ids           = array_merge($ids, $extraItems);

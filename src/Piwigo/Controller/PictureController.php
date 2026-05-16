@@ -24,6 +24,9 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocBeginPicture;
 use Piwigo\Event\Location\LocEndPicture;
+use Piwigo\Event\Picture\AllowIncrementElementHitCount;
+use Piwigo\Event\Picture\GetElementMetadataAvailable;
+use Piwigo\Event\Picture\PicturePicturesData;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
@@ -309,7 +312,9 @@ SELECT id
             }
             $this->sessionService->setSessionVar('referer_image_id', $imageId);
         }
-        if (EventDispatcher::dispatch('allow_increment_element_hit_count', $inc_hit_count, $imageId)) {
+        $allowEvent = new AllowIncrementElementHitCount($inc_hit_count);
+        $this->dispatcher->dispatch($allowEvent);
+        if ($allowEvent->contentNotSet) {
             $this->pictureService->increaseImageVisitCounter($imageId);
         }
 
@@ -420,11 +425,12 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         $url_metadata     = $this->urlService->duplicatePictureUrl();
         $url_metadata     = $this->urlService->addUrlParams($url_metadata, ['metadata' => null]);
         $curSrcImg = $picture['current']['src_image'];
-        $metadata_showable = EventDispatcher::dispatch(
-            'get_element_metadata_available',
+        $metadataEvent = new GetElementMetadataAvailable(
             (Config::showExif() || Config::showIptc()) && !$curSrcImg->isMimetype(),
             $picture['current']
         );
+        $this->dispatcher->dispatch($metadataEvent);
+        $metadata_showable = $metadataEvent->available;
 
         $ps = PageState::current();
         if ($this->stringUtil->inputString('metadata', null, $_GET) !== null) {
@@ -433,8 +439,10 @@ SELECT id,uppercats,commentable,visible,status,global_rank
 
         $ps->bodyId = 'thePicturePage';
 
+        $pictureDataEvent = new PicturePicturesData($picture);
+        $this->dispatcher->dispatch($pictureDataEvent);
         /** @var array<string, array<string, mixed>> $picture */
-        $picture    = EventDispatcher::dispatch('picture_pictures_data', $picture);
+        $picture = $pictureDataEvent->picture;
         $currentPic = is_array($picture['current'] ?? null) ? $picture['current'] : [];
         $currentSrcImage = ($currentPic['src_image'] ?? null) instanceof SrcImage ? $currentPic['src_image'] : null;
 

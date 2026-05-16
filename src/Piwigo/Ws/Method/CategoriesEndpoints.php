@@ -17,6 +17,7 @@ use Piwigo\Config\Config;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
@@ -34,6 +35,7 @@ use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsHelper;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class CategoriesEndpoints
 {
@@ -53,6 +55,7 @@ final readonly class CategoriesEndpoints
         private ActivityLogger $activityLogger,
         private CsrfService $csrfService,
         private WsHelper $wsHelper,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -122,8 +125,9 @@ final readonly class CategoriesEndpoints
                     $image[$k] = $row[$k] ?? null;
                 }
                 $imageName   = is_scalar($image['name'] ?? null) ? (string) $image['name'] : '';
-                $renderedName = EventDispatcher::dispatch('render_element_name', $imageName, __FUNCTION__);
-                $image['name']    = strip_tags((string) $renderedName);
+                $renderEvent = new RenderElementName($imageName, $image);
+                $this->dispatcher->dispatch($renderEvent);
+                $image['name']    = strip_tags($renderEvent->elementName);
                 $image['comment'] = EventDispatcher::dispatch('render_element_description', $image['comment'] ?? null, __FUNCTION__);
                 $image = array_merge($image, $this->wsHelper->getUrls($row));
                 $images[] = $image;

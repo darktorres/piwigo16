@@ -35,8 +35,8 @@ use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Language\LanguageRepository;
+use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Plugin\PluginRepository;
-use Piwigo\Plugins\LoadedPluginRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
@@ -67,6 +67,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         private LanguageRepository $languageRepository,
         private PermissionService $permissionService,
         private Plugins $plugins,
+        private PluginRegistry $pluginRegistry,
         private PluginRepository $pluginRepository,
         private PreferencesService $preferencesService,
         private SessionService $sessionService,
@@ -442,7 +443,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
             throw new ValidationException('Invalid plugin identifier');
         }
 
-        if (!LoadedPluginRegistry::isLoaded($plugin_id)) {
+        if (!$this->pluginRegistry->isActive($plugin_id)) {
             throw new AuthException('Invalid URL - plugin ' . $plugin_id . ' not active');
         }
 

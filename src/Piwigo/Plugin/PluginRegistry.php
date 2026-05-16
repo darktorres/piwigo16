@@ -270,10 +270,35 @@ final class PluginRegistry
         }
     }
 
-    private function isActive(string $pluginId): bool
+    /**
+     * True when the plugin id has state=active in the DB. Cheap repository
+     * lookup — does NOT instantiate the PluginInterface.
+     */
+    public function isActive(string $pluginId): bool
     {
         $rows = $this->repository->findAll('active', $pluginId);
         return $rows !== [];
+    }
+
+    /**
+     * Distinct ids of every plugin currently in state=active. Used by the
+     * admin dashboards (`pwg_loaded_plugins` legacy template vars) and the
+     * extension static-asset proxy. Order matches the repository's natural
+     * scan order — callers that need topological ordering should still
+     * walk [[getLoadOrder]] and filter through [[isActive]].
+     *
+     * @return list<string>
+     */
+    public function getActiveIds(): array
+    {
+        $ids = [];
+        foreach ($this->repository->findAll('active') as $row) {
+            $id = $row['id'] ?? null;
+            if (is_string($id) && $id !== '') {
+                $ids[] = $id;
+            }
+        }
+        return $ids;
     }
 
     /**

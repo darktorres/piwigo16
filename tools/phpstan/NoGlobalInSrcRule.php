@@ -34,8 +34,8 @@ final class NoGlobalInSrcRule implements Rule
         'logger' => 'LoggerRegistry::current()',
         'service' => 'PwgServerRegistry::current()',
         'mysqli' => 'get_dbal_connection() or Kernel::service(Connection::class)',
-        'pwg_event_handlers' => 'EventDispatcher::addListener/dispatch/notify()',
-        'pwg_loaded_plugins' => 'LoadedPluginRegistry::register/get/all()',
+        'pwg_event_handlers' => 'Symfony EventSubscriberInterface or Kernel::service(EventDispatcherInterface::class)->dispatch(new TypedEvent(...))',
+        'pwg_loaded_plugins' => 'PluginRegistry::getActiveIds() / ::isActive($id)',
         'env_nbm' => 'MailNotificationContext::current()',
     ];
 

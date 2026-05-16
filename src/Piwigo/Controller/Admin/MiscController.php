@@ -57,7 +57,7 @@ use Piwigo\Page\PageTailRenderer;
 use Piwigo\Page\PaginationService;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
-use Piwigo\Plugins\LoadedPluginRegistry;
+use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
@@ -104,6 +104,7 @@ final class MiscController implements AdminSubControllerInterface
         private readonly PermalinkRepository $permalinkRepository,
         private readonly PermalinkService $permalinkService,
         private readonly PermissionService $permissionService,
+        private readonly PluginRegistry $pluginRegistry,
         private readonly PreferencesService $preferencesService,
         private readonly ProfileService $profileService,
         private readonly RateRepository $rateRepository,
@@ -551,7 +552,7 @@ final class MiscController implements AdminSubControllerInterface
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
-        $pwg_loaded_plugins = LoadedPluginRegistry::all();
+        $activePluginIds = $this->pluginRegistry->getActiveIds();
 
         if (isset($_GET['action']) && 'hide_newsletter_subscription' == $_GET['action']) {
             $this->preferencesService->userprefsUpdateParam('show_newsletter_subscription', 'false');
@@ -612,7 +613,7 @@ final class MiscController implements AdminSubControllerInterface
             $du_decimals = 0;
         }
 
-        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => $this->adminService->numberFormatHumanReadable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($pwg_loaded_plugins), 'STORAGE_USED' => new Html(str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals)))), 'U_QUICK_SYNC' => $this->urlGenerator->admin('site_update') . '&site=1&quick_sync=1&pwg_token=' . $this->csrfService->getToken(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
+        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => $this->adminService->numberFormatHumanReadable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($activePluginIds), 'STORAGE_USED' => new Html(str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals)))), 'U_QUICK_SYNC' => $this->urlGenerator->admin('site_update') . '&site=1&quick_sync=1&pwg_token=' . $this->csrfService->getToken(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
 
         if (Config::activateComments()) {
             $tpl->assign('NB_COMMENTS', $this->commentRepository->countAll());

@@ -47,7 +47,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Page\PaginationService;
-use Piwigo\Plugins\LoadedPluginRegistry;
+use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Search\SearchService;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Tag\TagRepository;
@@ -88,6 +88,7 @@ final class BatchManagerController implements AdminSubControllerInterface
         private readonly ImageAdminService $imageAdminService,
         private readonly ImageRepository $imageRepository,
         private readonly PermissionService $permissionService,
+        private readonly PluginRegistry $pluginRegistry,
         private readonly SearchService $searchService,
         private readonly StringUtil $stringUtil,
         private readonly TagAdminService $tagAdminService,
@@ -1004,7 +1005,7 @@ final class BatchManagerController implements AdminSubControllerInterface
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
-        $pwg_loaded_plugins = LoadedPluginRegistry::all();
+        $activePluginIds = $this->pluginRegistry->getActiveIds();
         $this->dispatcher->dispatch(new LocBeginElementSetUnit());
 
         if (isset($_POST['submit'])) {
@@ -1086,7 +1087,7 @@ final class BatchManagerController implements AdminSubControllerInterface
             'str_cancel'       => Lang::t('Cancel'),
         ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
 
-        $tpl->assign('ACTIVE_PLUGINS', array_keys($pwg_loaded_plugins));
+        $tpl->assign('ACTIVE_PLUGINS', $activePluginIds);
 
         $catElementsIdU = $this->catElementsId;
         $pageStartU     = $this->pageStart;
@@ -1241,7 +1242,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                 'ROOT_URL'              => UrlService::getRootUrl(),
                 'associated_categories' => $associated_categories,
                 'str_create'            => Lang::t('Create'),
-                'active_plugins'        => array_keys($pwg_loaded_plugins),
+                'active_plugins'        => $activePluginIds,
             ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 

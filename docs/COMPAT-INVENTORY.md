@@ -37,7 +37,7 @@ defer to this table.
 | **4c** | `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` → typed `RequestContext` | ✓ Closed 2026-05-15 | — | — |
 | **4d** | `$lang_info` → `Lang` static state | ✓ Closed 2026-05-15 | — | — |
 | **5** | `Util.php` split | ✓ Closed 2026-05-15 | — | — |
-| **6** | Extension-API compat removal (post-v17 cleanup) | Open — most sub-tasks deferred pending §1.4 plugin architecture | none | 6.1–6.5 framed as independent before the 2026-05-15 audit; the audit reframed 6.3 (mostly complete already) and tied 6.1 / 6.2 / 6.4 to the plugin architecture replacement |
+| **6** | Extension-API compat removal (post-v17 cleanup) | ✓ Closed 2026-05-16 (resolved by §1.4 plugin architecture) | — | — |
 
 **Already shipped before this re-org** (Appendix A entries):
 
@@ -60,6 +60,11 @@ defer to this table.
 - §Z21 — Phase 2g UniversalFeedCreator → in-tree DOMDocument RSS generator (2026-05-15)
 - §Z22 — Phase 4c `IN_ADMIN` / `IN_WS` / `PHPWG_IN_UPGRADE` → typed `RequestContext` (2026-05-15)
 - §Z23 — Phase 5 `Util.php` split (2026-05-15)
+- §Z24 — §1.4 event-system rebuild: PSR-14 + 153 typed DTOs + selective-mutability subscribers (2026-05-16)
+- §Z25 — §1.4 plugin contract: PluginInterface, PluginRegistry, plugin.json schema, migrations, i18n, lint gates (2026-05-16)
+- §Z26 — §1.4 theme contract: ThemeInterface, ThemeRegistry, TemplateResolver, bundled themes migrated to theme.json (2026-05-16)
+- §Z27 — §1.4 WS API enrichment: `#[ApiMethod]` on 94 endpoints + SpecBuilder + cebe-validated CI gate + redocly lint (2026-05-16)
+- §Z28 — §1.4 legacy deletion: static EventDispatcher, LoadedPluginRegistry, PluginService, PluginMaintain, ThemeMaintain, triggers_list.php, frontend BC queues, phpstan stubs (2026-05-16)
 
 ---
 
@@ -99,8 +104,8 @@ Closed 2026-05-15. Five sub-tasks landed in one sweep:
   `CommonBootstrap.php`, `functions_plugins.inc.php` → `EventDispatcher.php`,
   redundant `functions.inc.php` entries dropped); one orphan event
   (`functions_mail_included`) that no longer dispatches deleted from the
-  list. Event names themselves untouched — they're the API surface
-  ([Phase 6.2](#62-plugin-event-api-p2) territory).
+  list. Event names themselves untouched — the event-name → typed-DTO
+  rewrite is now [§Z24](#z24-14-event-system-rebuild).
 
 Verified: `vendor/bin/phpstan analyse` → 0 errors at level 10;
 `vendor/bin/phpunit` (Unit + Integration) → 486 tests, 2390 assertions, OK.
@@ -326,354 +331,27 @@ Detail → [Appendix A §Z23](#z23-phase-5-utilphp-split).
 
 ---
 
-# Phase 6 — Extension-API Compat Removal
+# Phase 6 — Extension-API Compat Removal ✓
 
-**Status:** open, but most sub-tasks deferred 2026-05-15 pending the §1.4
-plugin architecture rewrite. The v17.0 version bump has shipped
-(`AppInfo::VERSION = '17.0.0'`) and intentionally breaks all PEM extensions
-by policy, so the *external* BC layer is no longer load-bearing — but the
-*in-tree* surfaces (procedural plugin loader, event dispatcher, frontend BC
-queues, Latte template API) double as the staging ground for the
-replacement plugin contract. Removing them before the §1.4 replacement
-exists would leave the codebase in a half-built state. Re-investigate when
-the plugin architecture lands.
+Closed 2026-05-16. Resolved by §1.4 plugin architecture (Batches B0–B18).
+The original Phase 6 plan called for deferring the extension-API
+deletions until a typed replacement landed; §1.4 *is* that replacement,
+and B17 retired the legacy surfaces alongside it.
 
-**2026-05-15 audit findings (single source of truth for current state):**
+Sub-task → closure-record mapping:
 
-1. **The 133 `.latte` templates are already Latte-native** (zero remaining
-   Smarty surface syntax — verified via grep, see [6.3](#63-piwigoextensionphp--piwigo-latte-template-api-p3) below).
-   The "rewrite 133 templates" framing in the original 6.3 description
-   was wrong: the Smarty → Latte template conversion already happened in an
-   earlier phase. What looked like "Smarty pipes" is Latte syntax using
-   Piwigo-registered filters that share Smarty's pipe-first arg convention
-   to ease the historical conversion.
-2. **`PiwigoExtension.php` is no longer a Smarty-compat shim** — it is the
-   Piwigo Latte template API. Every filter / function it registers is also
-   listed in `src/Piwigo/Template/Latte/PiwigoPolicy.php` as the staged
-   plugin template API for §1.4.
-3. **All 17 internal `EventDispatcher::addListener` call sites** register
-   hardcoded framework callbacks (no `include_path` use). The event
-   dispatcher is not currently a plugin extension surface; it's an internal
-   message bus dressed up as one. Replacement design belongs to the §1.4
-   plugin architecture.
-4. **`tools/triggers_list.php`** has zero runtime references (purely an
-   author-facing reference doc), but listing what events the not-yet-built
-   plugin system *will* expose is part of the §1.4 design — defer.
-5. **`globals.d.ts` plugin-facing declarations** (`SwitchBox`,
-   `_pwgRatingAutoQueue`) are the TypeScript half of the frontend BC
-   queues in 6.4 — they defer with that sub-task.
-
-**Sub-task statuses after the 2026-05-15 audit:**
-- 6.1 (P1) — **deferred** with §1.4 (procedural loader is the staged
-  plugin contract)
-- 6.2 (P2) — **deferred** with §1.4 (event dispatcher is the staged
-  plugin extension surface)
-- 6.3 (P3) — **largely complete**; remaining sub-pieces re-scoped (see
-  below)
-- 6.4 (P4) — **deferred** with §1.4 (frontend BC queues are the staged
-  plugin frontend entry points)
-- 6.5 (D4) — **partially available** (header comment + a handful of dead
-  declarations); plugin-facing subset defers with 6.4
-
-**Hard dependencies:** none on Phases 1–5; 6.1 / 6.2 / 6.4 / 6.5-plugin-subset
-gated on §1.4 plugin architecture.
-
-## 6.1 Plugin/theme procedural contract  [P1]
-
-**Deferred 2026-05-15** with §1.4. The procedural runtime described below
-is the staging ground for the new plugin contract. Removing it before §1.4
-ships would mean no plugin contract at all. When §1.4 lands, the procedural
-loader gets removed *alongside* the typed replacement, not before. See
-[[no-shim-removal-before-replacement]].
-
-Repo state at audit time: zero in-tree plugins (`plugins/` contains only a
-security `index.php`); zero in-tree themes ship `admin/maintain.inc.php`;
-`PluginMaintain` / `ThemeMaintain` are empty marker classes. So deletion
-would not break any *currently running* code — but it would erase the
-contract for the future.
-
-The legacy Piwigo plugin/theme runtime contract is wired and load-bearing.
-
-### Plugin loading  [P1.1]
-
-`Plugin/PluginService.php:32-41`:
-
-```php
-$fileName = Config::pluginsPath() . $pluginId . '/main.inc.php';
-if (file_exists($fileName)) {
-    $this->autoupdatePlugin($plugin);
-    LoadedPluginRegistry::register($pluginId, $plugin);
-    require_once($fileName);
-}
-```
-
-Plugins ship as procedural PHP files. Metadata (`Version: x.y.z`) is parsed
-from file-header comments via regex on the first 10 lines
-(`PluginService.php:44-63`).
-
-### Pre-2.7 vs 2.7+ branching  [P1.2]
-
-`Admin/Plugins.php:60-84` has explicit dual-path BC:
-
-```php
-// 2.7 pattern (OO only)
-if (file_exists($file_to_include.'.class.php')) { … }
-// before 2.7 pattern (OO only)
-if (file_exists($file_to_include.'.inc.php')) { … }
-```
-
-Eleven years of plugin BC kept alive in the loader. Plugins implement a
-`{plugin_id}_maintain` class (dashes-to-underscores) extending
-`PluginMaintain`.
-
-### Theme contract  [P1.3]
-
-`Admin/Themes.php` mirrors the plugin contract:
-
-- `themeconf.inc.php` — theme metadata, PHP array literals (`Themes.php:287, 298`)
-- `admin/maintain.inc.php` — required `ThemeMaintain` class (`Themes.php:63-77`)
-- `admin/admin.inc.php` — optional admin bootstrap (`Themes.php:353`)
-- Theme archives identified at install time by presence of `themeconf.inc.php`
-  (`Themes.php:522-523`)
-
-### Lazy-include event handlers  [P1.4]
-
-`EventDispatcher::addListener($event, $func, $priority, ?$include_path)`
-(`Plugins/EventDispatcher.php:28`) accepts an optional include path that's
-`include_once`'d **right before** dispatching (lines 86-88, 115-117).
-Standard PSR-14 dispatchers don't have this; Piwigo-specific shim for lazy
-plugin loading.
-
-### Procedural callback contract  [P1.5]
-
-Plugins/themes are expected to define free functions: `plugin_install`,
-`plugin_activate`, `plugin_deactivate`, `plugin_uninstall`, `theme_activate`,
-`theme_deactivate`, `theme_delete`. `tools/phpstan-bootstrap.php` stubs them
-(group C in §1.4) so PHPStan resolves the `is_callable()` call sites in
-`Admin/Plugins.php` / `Admin/Themes.php`.
-
-## 6.2 Plugin event API  [P2]
-
-**Deferred 2026-05-15** with §1.4. The event dispatcher is the staged
-plugin extension surface; deleting it before §1.4 produces a typed
-replacement would erase Piwigo's extensibility contract entirely.
-
-Audit findings to carry into §1.4 planning:
-
-- 17 internal `EventDispatcher::addListener` calls catalogued; all register
-  hardcoded framework callbacks, none use the `include_path` mechanism. Of
-  the 17, only 6 listeners do non-trivial work (URL token protection,
-  comment HTML sanitization, `pwg_nl2br`, `strip_tags`, `str2url`,
-  `ws_invoke_allowed` gating). The other 11 are trivial inlinable
-  one-liners.
-- `EventDispatcher::dispatch()` get-hook return pattern is uniform: returns
-  `$args[0]` after passing through listeners. The mutate-in-place idiom is
-  consistent across all 98 `dispatch()` call sites.
-- `notify()` (119 call sites) is fire-and-forget; semantically distinct
-  from `dispatch()` and used consistently.
-- The `'trigger'` meta-event (EventDispatcher.php:75–77, 96–98, 105–107)
-  has zero internal listeners. Pure plugin-API surface — exists so plugins
-  can introspect all event flow.
-- `composer.json` does NOT declare `psr/event-dispatcher`. The current
-  dispatcher is homegrown; a future PSR-14 alignment is open design space
-  for §1.4.
-
-`EventDispatcher::dispatch()` / `notify()` is called with **153 unique event
-names** across `src/`. Every name is a stable hook PEM plugins subscribe on.
-
-### Naming conventions  [P2.1]
-
-| Pattern | Count | Purpose | Examples |
-|---|---|---|---|
-| `loc_begin_X` / `loc_end_X` | ~30 | Page-lifecycle markers | `loc_begin_index`, `loc_end_page_header` |
-| `get_X` | ~50 | Getter hooks, plugins mutate return value | `get_admin_plugin_menu_links`, `get_derivative_url` |
-| `render_element_X` | several | Photo-page rendering | `render_element_content`, `render_element_name`, `render_element_description` |
-| `batch_manager_X` | several | Batch manager hooks | `batch_manager_perform_filters`, `batch_manager_register_filters` |
-| `format_X`, `clean_X`, `combined_X`, `before_X`, `finalize_X` | several each | Domain-specific | `format_exif_data`, `clean_iptc_value`, `combined_script`, `before_send_mail`, `finalize_login` |
-| Special | — | Auth, WS gating, derivatives | `user_init`, `ws_invoke_allowed`, `derivative_params_get` |
-
-### Reference documentation  [P2.2]
-
-`tools/triggers_list.php` is the 1136-line canonical plugin-author reference
-for these events. Each entry is shaped:
-
-```php
-array(
-  'name'  => 'event_name',
-  'type'  => 'trigger_change' | 'trigger_notify',
-  'vars'  => array('php_type', 'var_name', ...),
-  'files' => array('src/Piwigo/Controller/Foo.php', ...),
-  'infos' => '(optional) plugin-author note',
-)
-```
-
-Phase 1 already cleaned the `'type'` field strings; Phase 6.2 either
-rewrites this file to match the new typed-event shape or deletes it.
-
-### Rename to PSR-14 typed events  [P2.3]
-
-Rename the 153 legacy event names to PSR-14 typed events. The version bump
-already broke the legacy names by policy, so this is a mechanical rewrite of
-every `EventDispatcher::dispatch()` / `notify()` call site.
-
-## 6.3 `PiwigoExtension.php` — Piwigo Latte template API  [P3]
-
-**Reframed 2026-05-15 after a full audit.** The original framing — "rewrite
-133 templates to native Latte, then delete the Smarty-port filters" — was
-wrong. Audit findings:
-
-1. **Smarty surface syntax is already gone from every template.** Grep
-   across `themes/**/*.latte` shows **zero** occurrences of
-   `{html_options}`, `{html_radios}`, `{html_checkboxes}`, `{math …}`,
-   `{section}`, `{foreach from=…}`, `{include file=…}`, `{assign var=…}`,
-   `{capture name=…}`, `{literal}`, `{php}`, `{strip}`, `{ldelim}`,
-   `{rdelim}`. The 133-template Smarty → Latte migration is complete; this
-   was confused with "remaining Smarty-syntax compat" in the original P3
-   description.
-2. **`PiwigoExtension.php` (808 LOC) is the Piwigo Latte template API**,
-   not a Smarty-compat shim. Every filter and function it registers is
-   also listed in `src/Piwigo/Template/Latte/PiwigoPolicy.php` as the
-   staged plugin template API for §1.4:
-   - `getFilters()` registers 35 entries — translation pair (`translate`,
-     `translate_dec`), 19 PHP passthroughs (`sprintf`, `urlencode`, …),
-     7 Smarty-pipe-convention wrappers (`number_format`, `cat`,
-     `strip_tags`, `default`, `date_format`, `explode`, `l10n` alias),
-     and 8 small custom helpers.
-   - `getFunctions()` registers 14 entries — 9 asset-pipeline / image
-     helpers (`combineScript`, `getCombinedScripts`, `combineCss`,
-     `getCombinedCss`, `defineDerivative`, `derivative`, `htmlHead`,
-     `htmlStyle`, `footerScript`), 3 form/eval helpers (`htmlOptions`,
-     `htmlRadios`, `math`), and 2 duplicates of filter-form helpers
-     (`url_is_remote`, `l10n`).
-3. **The historical "Smarty-port" framing in `PiwigoExtension.php`'s
-   docstring** (lines 27–60, 72–87) describes how the filter set was
-   originally chosen during the Smarty → Latte migration: pipe-first
-   convention preserved so converted templates kept working. That choice
-   is now load-bearing for templates, not transitional.
-
-**Actual filter / function usage across 133 templates** (audit 2026-05-15):
-
-| Filter / Function | Pipe / Call count | Files | Status |
-|---|---|---|---|
-| `\|translate` | 1815 | 110 | Heavy use — keep |
-| `\|translate_dec` | 25 | 13 | Used — keep |
-| `combineScript()` | 119 | 74 | Heavy use — keep |
-| `combineCss()` | 77 | 52 | Heavy use — keep |
-| `htmlOptions()` | 50 | 24 | Used — keep |
-| `\|json_encode` | 13 | 9 | Used — keep |
-| `\|default:` | 11 | 3 | Used — keep |
-| `getCombinedScripts()` | 10 | 8 | Used — keep |
-| `\|sprintf` `\|urlencode` `\|htmlspecialchars` | 6 each | 5–6 | Used — keep |
-| `\|nl2br` `\|strip_tags` | 5 each | 4 | Used — keep |
-| `getCombinedCss()` `htmlRadios()` `\|cat:` `\|str_repeat` | 4–6 each | 2–5 | Used — keep |
-| `derivative()` `\|number_format` `\|intval` `\|count` | 3–4 each | 1–3 | Used — keep |
-| `\|date_format` `url_is_remote()` `l10n()` `math()` | 1–2 each | 1–2 | Used — keep |
-| `\|stripslashes` `\|in_array` `\|ucfirst` `htmlHead()` | 1 each | 1 | Used — keep |
-| `\|file_exists` `\|constant` `\|json_decode` `\|trim` `\|md5` `\|strtolower` `\|is_null` `\|is_file` `\|strpos` `\|sizeOf` | 0 | 0 | **Registered but never called** |
-| `defineDerivative()` `htmlStyle()` `footerScript()` | 0 | 0 | **Registered but never called** |
-
-**Remaining real work for P3 (post-audit):**
-
-1. **[P3.1] Update `PiwigoExtension.php` docstring** (lines 27–60, 72–87).
-   Replace the Smarty-conversion narrative with the current reality: this
-   is the Piwigo Latte template API, allowlisted via `PiwigoPolicy`. Pure
-   docs change.
-2. **[P3.2] Audit deletable filters/functions** (the 10 filters + 3
-   functions with zero template callers above). Each is also listed in
-   `PiwigoPolicy::PLUGIN_FILTERS` or `PLUGIN_FUNCTIONS` /
-   `CORE_FILTERS`. Deletion is a *paired* edit (drop from
-   `PiwigoExtension::getFilters()` / `getFunctions()` AND from the
-   matching `PiwigoPolicy` allowlist). Because `PiwigoPolicy` is the
-   staged plugin template API for §1.4, this audit should run alongside
-   the §1.4 plugin architecture rewrite — not before. **Deferred** with
-   §1.4.
-3. **[P3.3] Decide on `htmlOptions` / `htmlRadios` / `math` long-term.**
-   Currently used by 24 / 2 / 1 templates respectively. Two paths to weigh
-   when §1.4 lands:
-   - Keep them as the Piwigo Latte form-helper API (status quo)
-   - Rewrite the 24 / 2 / 1 templates to inline `<select>` HTML / radio
-     groups, then delete the helpers from both `PiwigoExtension` and
-     `PiwigoPolicy`
-   This is a design call coupled to the plugin-template-API surface
-   choice, so **deferred** with §1.4.
-4. **[P3.4 — completed already]** 133-template Smarty → Latte syntactic
-   conversion. Historical, not "still ahead". No current open work.
-
-**Net status:** P3.1 (docstring update) is the only currently-actionable
-piece. Everything else defers with §1.4.
-
-## 6.4 Frontend plugin BC queues  [P4]
-
-**Deferred 2026-05-15** with §1.4. These three pre-load auto-queue patterns
-exist so third-party plugins can inject frontend behaviour before the
-relevant bundle has loaded. They are the staged frontend extension entry
-points for the not-yet-built plugin system; deleting them before §1.4 ships
-a typed alternative would leave the frontend with no plugin contract at all.
-
-The patterns:
-
-- **`_pwgRatingAutoQueue`** — drained by `themes/_base/js/rating.ts:150`
-- **`SwitchBox`** — drained by `themes/_base/js/switchbox.ts:35`
-- **`_cont`** window-global alias at `themes/admin/_base/js/albums.ts:522`
-  (`_cont = contEl;`)
-
-Removable as one tight diff (three line-level edits and a search-and-verify)
-once §1.4 has produced the replacement frontend plugin contract.
-
-## 6.5 Frontend `globals.d.ts` cleanup  [D4]
-
-**Partially available 2026-05-15.** Header comment and confirmed-dead
-declarations can be edited now; plugin-facing declarations defer with 6.4.
-
-`src/types/globals.d.ts` is the TypeScript ambient-globals declaration file
-(111 lines). Header comment says "Smarty templates" — stale (templates are
-Latte, see [6.3](#63-piwigoextensionphp--piwigo-latte-template-api-p3)).
-
-| Category | Status | Phase 6 disposition |
+| Original sub-task | Resolved by | Closure record |
 |---|---|---|
-| Template-emitted constants (`pwg_token`, `pwg_root_url`, `cookie_*`) | Populated via `<script type="application/json" id="pwg-page-data">` JSON islands, not inline `var x = …` blocks. | Verify still in islands; declarations stay until JSON-island schema reduces them. |
-| Cross-bundle functions (`pwgBind`, `pwgAddEventListener`, `pwgToaster`, `phpWGOpenWindow`, `popuphelp`) | Active — defined in `themes/_base/js/scripts.ts` and hoisted to `window`. | Keep. |
-| PHP-style JS helpers (`array_delete`, `str_repeat`, `getRandomInt`, `sprintf`) | Implemented in `themes/admin/_base/js/common.ts`; the naming dates from Smarty-era ports but the helpers are live. | Keep; rename out of Phase 6 scope. |
-| Profile-specific i18n vars (`selected_date`, `no_time_elapsed`, `str_*`) | Set via inline `<script>` from `profile.latte`. | Keep until JSON-island migration covers profile page. |
-| `Window.PwgWS`, `Window.LocalStorageCache` + subclasses | Active — intentionally hoisted for cross-bundle reuse. | Keep. |
-| `SwitchBox` (line 50), `_pwgRatingAutoQueue` (lines 53–55) | Plugin-facing BC queue declarations matching [6.4](#64-frontend-plugin-bc-queues-p4). | **Defer with 6.4.** |
-| Likely-stale (need re-grep): `var user`, `var preferencesDefaultValues`, `var standardSaveSelector` | Earlier audit (pre-2026-05-15) reported no grep hits in `themes/`; needs re-verification. | Drop if confirmed dead. |
+| 6.1 (P1) Plugin/theme procedural contract | §1.4 B7–B9 (plugin contract) + B13–B14 (theme contract) + B17e–B17g (deletion of `PluginService`, `LoadedPluginRegistry`, `PluginMaintain`, `ThemeMaintain`, `maintain.inc.php` parsing) | [§Z25](#z25-14-plugin-contract), [§Z26](#z26-14-theme-contract), [§Z28](#z28-14-legacy-deletion) |
+| 6.2 (P2) Plugin event API | §1.4 B3–B6 (153 typed DTOs + selective-mutability subscribers + 17 internal listeners migrated) + B17d (static `EventDispatcher` + `LegacyEventBridge` deleted) | [§Z24](#z24-14-event-system-rebuild), [§Z28](#z28-14-legacy-deletion) |
+| 6.3 (P3) `PiwigoExtension.php` Latte template API | Reframed 2026-05-15: 133 templates already Latte-native (P3.4 was historical); `PiwigoExtension` is the Piwigo Latte API, allowlisted via `PiwigoPolicy`. The docstring (P3.1), unused-filter audit (P3.2), and `htmlOptions`/`htmlRadios`/`math` decision (P3.3) are out of §1.4 scope and tracked separately in [B17a](#z28-14-legacy-deletion) only for the `tools/triggers_list.php` retirement (P2.2 / D3.5 part 2). | n/a — see [§Z24](#z24-14-event-system-rebuild) for `triggers_list.php` retirement |
+| 6.4 (P4) Frontend plugin BC queues | §1.4 B17c (`SwitchBox` drain loop, `_pwgRatingAutoQueue` queue + push-shim, `_cont` window-alias all removed) | [§Z28](#z28-14-legacy-deletion) |
+| 6.5 (D4) Frontend `globals.d.ts` cleanup | §1.4 B17c (plugin-coupled `SwitchBox` + `_pwgRatingAutoQueue` declarations removed; Smarty → Latte header refresh) | [§Z28](#z28-14-legacy-deletion) |
 
-**Currently actionable:**
-- Update the "Ambient globals injected by Smarty templates" header (lines
-  1–2) to reflect the JSON-island model: "Ambient globals injected by
-  Latte templates via JSON islands (`<script id='pwg-page-data'
-  type='application/json'>`) or exposed by TypeScript bundles."
-- Drop confirmed-dead declarations after re-grep (the three above, if
-  still dead).
-
-**Deferred:** the plugin-facing pair (`SwitchBox`, `_pwgRatingAutoQueue`) —
-ships alongside the 6.4 BC-queue removal once §1.4 produces the
-replacement frontend plugin contract.
-
-## 6.6 Phase 6 task summary
-
-Revised 2026-05-15 after the full audit. The deferred rows below revisit
-together once §1.4 has produced a typed plugin contract — at that point
-the legacy bridges come out *alongside* the replacement, not before.
-
-| Task | Disposition |
-|---|---|
-| Delete plugin-loader paths (P1.1, P1.4) | **Deferred** with §1.4 |
-| Delete `Admin/Plugins.php` pre-2.7 BC branching (P1.2) | **Deferred** with §1.4 |
-| Delete theme contract (P1.3) | **Deferred** with §1.4 |
-| Remove `plugin_*` / `theme_*` callback stubs from `tools/phpstan-bootstrap.php` (P1.5) | **Deferred** with §1.4 (lives with P1) |
-| Rewrite legacy event names as PSR-14 typed events (P2) | **Deferred** with §1.4 |
-| Rewrite or delete `tools/triggers_list.php` (P2.2, D3.5 part 2) | **Deferred** with §1.4 |
-| Rewrite all 133 `.latte` templates from Smarty to native Latte (P3 original framing) | **Completed already** (pre-Phase-6 work) — Smarty surface syntax is gone from every template; what remains is Latte syntax using the Piwigo template API |
-| Update `PiwigoExtension.php` docstring to drop Smarty-conversion narrative (P3.1) | **Actionable now** — pure docs change |
-| Drop unused PiwigoExtension filters/functions in lockstep with PiwigoPolicy (P3.2) | **Deferred** with §1.4 — `PiwigoPolicy` is the staged plugin template API |
-| Decide `htmlOptions` / `htmlRadios` / `math` long-term (P3.3) | **Deferred** with §1.4 |
-| Delete frontend BC queues (P4) | **Deferred** with §1.4 |
-| Update `globals.d.ts` header comment + drop confirmed-dead non-plugin declarations (D4 partial) | **Actionable now** |
-| Remove `SwitchBox` / `_pwgRatingAutoQueue` declarations (D4 plugin-coupled subset) | **Deferred** with P4 / §1.4 |
-
----
+The 6.3 residual work (`PiwigoExtension` docstring, unused-filter audit,
+form-helper decision) is out of §1.4 scope and tracked in a separate
+follow-up. Phase 6 is closed as far as the §1.4 deliverable is
+concerned.
 
 # Hard Dependencies — Summary Graph
 
@@ -698,8 +376,9 @@ the legacy bridges come out *alongside* the replacement, not before.
    Phase 4d (lang_info)   ──┤
    Phase 5 (Util split)   ──┘  (see Appendix A §Z23)
 
-   Phase 6 (extension-API)   ──  independent of Phases 1-5; most sub-tasks
-                                gated on §1.4 plugin architecture (see Phase 6)
+   Phase 6 (extension-API)   ──┐ done 2026-05-16
+                                ┤ (resolved by §1.4 plugin architecture;
+                                ┘  see Appendix A §Z24–§Z28)
    §A1 ($page alias)         ──  done 2026-05-15 (shipped early, §Z1.1)
 ```
 
@@ -707,16 +386,17 @@ Notes:
 
 - Phase 2 tasks are internally sequenced (code → runtime → stubs) but
   externally parallel.
-- Phases 3 / 4 / 5 are all done. Phase 5 did not need Phase 2e — the
+- Phases 3 / 4 / 5 / 6 are all done. Phase 5 did not need Phase 2e — the
   mobile-theme switcher stays as a feature, so `mobileTheme` / `getDevice`
   carved into the new `DeviceDetectionService` (Batch 2) rather than being
   removed.
-- Phase 6 has no hard dependency on any other phase, but the 2026-05-15
-  audit reframed most of it: 6.3's "rewrite 133 templates" was already
-  complete; 6.1 / 6.2 / 6.4 / 6.5-plugin-subset / 6.3's residual deletions
-  defer with §1.4 plugin architecture. Only the cosmetic docstring update
-  in 6.3 (P3.1) and the non-plugin globals.d.ts trim in 6.5 (D4 partial)
-  remain actionable now.
+- Phase 6 closed 2026-05-16 via the §1.4 plugin architecture rewrite
+  (19 batches, ~50 commits). Sub-tasks 6.1 / 6.2 / 6.4 / 6.5 ship
+  alongside their typed replacements in §Z24 (events), §Z25 (plugin
+  contract), §Z26 (theme contract), §Z27 (WS API), §Z28 (legacy
+  deletion). 6.3's `PiwigoExtension` residuals (docstring P3.1,
+  unused-filter audit P3.2, form-helper decision P3.3) are out of §1.4
+  scope and tracked separately.
 
 ---
 
@@ -1031,7 +711,7 @@ and the plugin-author event-reference doc. No runtime behaviour changes.
   (Group C) are out of Phase 1 scope; Group B tracks
   [Phase 2a](#phase-2a--ws_-constant-migration-a32) and
   [Phase 4c](#phase-4c--in_admin--in_ws--phpwg_in_upgrade--typed-requestcontext-a31);
-  Group C is required by [Phase 6](#phase-6--extension-api-compat-removal).
+  Group C was required by Phase 6 (now closed; see [§Z25](#z25-14-plugin-contract)).
 - **NoGlobalInSrcRule cleanup** [D3.4] — found already done. The docblock
   no longer mentioned `include/` / `admin/`, and `persistent_cache` was
   already gone from `REPLACEMENTS`. No-op for Phase 1.
@@ -1057,9 +737,9 @@ and the plugin-author event-reference doc. No runtime behaviour changes.
 - The orphan event `functions_mail_included` was dispatched by the
   deleted `include/functions_mail.inc.php` and is never fired anywhere
   in `src/`; its entry was deleted from the reference doc rather than
-  pointed at an unrelated file. (Event-API rewrite, including any further
-  pruning of dead events, is
-  [Phase 6.2](#62-plugin-event-api-p2).)
+  pointed at an unrelated file. (Event-API rewrite, including the
+  retirement of `tools/triggers_list.php` itself, landed in
+  [§Z24](#z24-14-event-system-rebuild).)
 
 ### Verification
 
@@ -2042,15 +1722,236 @@ re-check after commit:
 
 ---
 
+## Z24. §1.4 Event-System Rebuild
+
+Closed 2026-05-16 (§1.4 batches B1, B3–B6).
+
+The legacy procedural event surface (homegrown static `EventDispatcher`,
+`trigger_change`/`trigger_notify` distinction, 153 stringly-typed event
+names, `tools/triggers_list.php` reference doc) was replaced with a
+PSR-14 dispatcher (`symfony/event-dispatcher` behind
+`Psr\EventDispatcher\EventDispatcherInterface`) and 153 typed event
+DTOs under `src/Piwigo/Event/{Admin,BlockManager,Lifecycle,Location,
+Picture,Template,User,Ws}/`.
+
+Highlights:
+
+- **Selective-mutability subscribers** — Symfony idiom rather than the
+  ROADMAP's original `with*()`-clone helpers, which had nowhere to flow
+  back through PSR-14. Events that filter (listener writes a field the
+  caller reads back) demote that single field from `readonly` to
+  mutable; markers, input contexts, and outputs stay readonly.
+- **17 internal `EventDispatcher::addListener` call sites** migrated
+  to Symfony `EventSubscriberInterface` implementations under
+  `src/Piwigo/Listener/`. The original 6 real-work listeners (URL token
+  protection, comment sanitization, `pwg_nl2br`, `strip_tags`,
+  `str2url`, `ws_invoke_allowed` gating) plus the 11 thin wrappers all
+  ship as typed subscribers tagged via DI.
+- **`tools/triggers_list.php` retired** in B17a — the 1130-LOC
+  reference doc is superseded by the typed DTOs.
+- **B17d deleted the bridge stack**: `Piwigo\Plugins\EventDispatcher`,
+  `Piwigo\Event\LegacyEventBridge` (the snake_case → typed FQCN map),
+  `LegacyEventBridgeTest`, and `tools/phpstan/EventDispatcherDispatchDynamicReturnType.php`.
+
+Net code change: 153 new event classes + a few hundred listener
+migration edits, ~900 LOC of legacy dispatcher / bridge / type-extension
+deleted. PHPStan-level-10 clean throughout.
+
+---
+
+## Z25. §1.4 Plugin Contract
+
+Closed 2026-05-16 (§1.4 batches B2, B7–B9, B17e–B17g).
+
+The Piwigo 17+ plugin contract is now expressed via:
+
+- **`Piwigo\Plugin\PluginInterface`** — `getId/getVersion/getName/boot`
+  + lifecycle hooks `install/activate/deactivate/uninstall/update` +
+  `subscribedEvents` (Symfony `EventSubscriberInterface`-compatible
+  shape).
+- **`docs/schemas/plugin.schema.json`** (JSON Schema draft 2020-12) —
+  `id, name, version, description, homepage, author, license, minPiwigo,
+  hasSettings, require, main, autoload, migrations`. Validated via
+  `opis/json-schema` at scan time.
+- **`Piwigo\Plugin\PluginRegistry`** — scans `plugins/<id>/plugin.json`,
+  builds a `composer/semver`-resolved dependency graph (topological
+  sort + cycle detection), exposes
+  `install/activate/deactivate/uninstall/update` + `bootActive` (the
+  per-request loader: walks load order, instantiates each
+  `PluginInterface`, calls `boot($container)`, registers
+  `subscribedEvents()` against the Symfony dispatcher, fires
+  `PluginsLoaded` once at the end).
+- **Plugin migrations** — `piwigo_plugin_migrations` ledger table +
+  `PluginMigrationRunner` (Doctrine `addSql` callbacks); each plugin
+  ships `migrations/Version*.php` files, auto-applied on install /
+  update, rolled back on uninstall.
+- **Plugin translations** — `LangService::loadPluginTranslations()` +
+  `PluginRegistry::loadActiveLanguages()` discover plugin `.po` files
+  at `plugins/<id>/language/<locale>/plugin.po` (no manual
+  `load_language` calls).
+- **Pre-publish gates** — `composer piwigo:lint` (forbidden-pattern
+  scanner at `tools/plugin-lint.php`) + `Piwigo\Plugin\Testing\PluginTestCase`
+  (mocked-container base test class shipped under `src/`).
+- **Admin UX** — `Admin/Plugins.php` reads metadata exclusively from
+  `plugin.json` via `PluginRegistry::getManifest`; `performAction()`
+  routes every lifecycle case through `pluginRegistry->install/update/
+  activate/deactivate/uninstall` and surfaces `PluginValidationException`
+  / `PluginDependencyException` to the admin error list.
+
+B17e–f deleted `Piwigo\Plugin\PluginService`,
+`Piwigo\Plugins\LoadedPluginRegistry`, and `Piwigo\Admin\PluginMaintain`.
+Three admin controllers (Misc, BatchManager, Extensions) now read
+"which plugins are active" via `PluginRegistry::getActiveIds() /
+isActive($id)` instead of the static map.
+
+---
+
+## Z26. §1.4 Theme Contract
+
+Closed 2026-05-16 (§1.4 batches B2, B13–B14, B17g).
+
+The Piwigo 17+ theme contract mirrors the plugin contract:
+
+- **`Piwigo\Theme\ThemeInterface`** — `getId/getVersion/getName/getParentId/boot`
+  + lifecycle hooks + `getAssetDir/loadParentCss/getLocalHeadTemplate`.
+- **`docs/schemas/theme.schema.json`** — `id, version, name, parent,
+  loadParentCss, assets, localHead, main, autoload, colorscheme,
+  useStandardPages`. `main` is optional (bundled themes ship metadata
+  only).
+- **`Piwigo\Theme\ThemeRegistry`** — scan + manifest validation +
+  parent-chain build (cycle detection) + lifecycle methods +
+  `ThemeChanged` event dispatch on activate.
+- **`Piwigo\Theme\TemplateResolver`** — walks the parent chain for
+  `.latte` / asset / `localHead` template resolution; lets child
+  themes selectively override individual files without forking
+  the whole tree.
+- **Bundled themes migrated**: `themes/_base`, `themes/standard_pages`,
+  `themes/admin/_base`, `themes/admin/light`, `themes/admin/dark` all
+  now ship `theme.json` (no `themeconf.inc.php`). `Template.php`
+  projects the manifest to the legacy `$themeconf` shape via
+  `themeconfFromJson` so existing template-side reads keep working;
+  `applyStandardPagesContext` replaces the side-effect PHP from
+  `standard_pages/themeconf.inc.php`.
+- **Admin UX** — `Admin/Themes.php::performAction` routes lifecycle
+  through `themeRegistry->activate/deactivate/uninstall`. Admin
+  pre-checks (`_base` block, missing parent, mobile-theme uniqueness,
+  last-theme guard, default-theme cascade) stay on the controller
+  side; only the hook + DB mutation move to ThemeRegistry.
+
+B17g deleted `Piwigo\Admin\ThemeMaintain` and the
+`themeconf.inc.php`-based extraction fallback in
+`Admin/Themes.php::extractThemeFiles()`.
+
+---
+
+## Z27. §1.4 WS API Enrichment
+
+Closed 2026-05-16 (§1.4 batches B10–B12, B15–B16).
+
+WS-method registration and OpenAPI 3.1 generation:
+
+- **`Piwigo\Event\Ws\WsMethodsRegistering`** — typed event fired by
+  `PwgServer::populateMethods()`. Core `WsMethodRegistrar` subscribes
+  at priority 100 so its 94 method registrations land first; plugin
+  subscribers attach at higher/lower priorities to insert their own
+  methods.
+- **`#[ApiMethod(summary, tags, responseClass)]` attribute** — placed
+  on every endpoint method across the nine WS endpoint classes
+  (CategoriesEndpoints, CommentsEndpoints, ExtensionsEndpoints,
+  GeneralEndpoints, GroupsEndpoints, ImagesEndpoints,
+  PermissionsEndpoints, TagsEndpoints, UsersEndpoints — 94 methods
+  total).
+- **`Piwigo\Ws\OpenApi\SpecBuilder`** — reflects each `MethodDefinition`
+  callback to find its `#[ApiMethod]`, falls back to registration
+  description/tags; emits an OpenAPI 3.1 document via the
+  `OpenApiDocument` value object. Served at `/ws/openapi.json` and
+  `?_openapi=json` by `WsController`.
+- **CI gates** — `tests/Unit/Ws/OpenApi/SpecValidityTest` boots the
+  real `WsMethodRegistrar` against a bare `PwgServer` (DB-free,
+  reflection-built endpoint stubs) and validates the live 95-path
+  spec with `devizzent/cebe-php-openapi` (1.x fork of `cebe/php-openapi`
+  with OpenAPI 3.1 support). `npm run lint:openapi` dumps the spec
+  via `tools/openapi-dump.php` and lints it with `@redocly/cli` — the
+  recommended ruleset passes ("Woohoo! Your API description is valid.").
+- **Plugin asset pipeline** — `Piwigo\Asset\AssetService` reads
+  per-plugin Vite manifests at `plugins/<id>/dist/.vite/manifest.json`
+  and emits `<script type="module">` / `<link rel="stylesheet">`
+  fragments. `vite.config.ts` discovers plugin entries via glob.
+- **AdminPage registry** — `AdminPagesRegistering` event populates
+  `AdminPageRegistry` from each `XxxController::PAGES` declaration;
+  `AdminController` dispatches via `AdminSubControllerInterface::handle(string $page)`.
+
+---
+
+## Z28. §1.4 Legacy Deletion
+
+Closed 2026-05-16 (§1.4 batch B17, seven commits).
+
+The §1.4 cleanup pass shed every legacy surface that the new typed
+contracts replaced. Files deleted:
+
+- **Plugin/event runtime** — `src/Piwigo/Plugin/PluginService.php`,
+  `src/Piwigo/Plugins/LoadedPluginRegistry.php`,
+  `src/Piwigo/Admin/PluginMaintain.php`,
+  `src/Piwigo/Admin/ThemeMaintain.php`,
+  `src/Piwigo/Plugins/EventDispatcher.php`,
+  `src/Piwigo/Event/LegacyEventBridge.php`,
+  `src/Piwigo/Event/Ws/WsAddMethods.php` (legacy snake_case alias for
+  `WsMethodsRegistering`).
+- **Test + tooling** —
+  `tests/Unit/Event/LegacyEventBridgeTest.php`,
+  `tools/phpstan/EventDispatcherDispatchDynamicReturnType.php`
+  (+ matching `services:` entry in `phpstan.neon`),
+  `tools/triggers_list.php` (1130-LOC event catalog).
+- **Legacy fallback branches** —
+  `Admin/Plugins.php::buildMaintainClass`,
+  `Admin/Plugins.php::getFsPlugin` main.inc.php-regex fallback,
+  `Admin/Plugins.php::extractPluginFiles` main.inc.php detection,
+  `Admin/Themes.php::buildMaintainClass`,
+  `Admin/Themes.php::extractThemeFiles` themeconf.inc.php detection.
+- **Frontend BC** —
+  `var SwitchBox` (globals.d.ts) + the queue-drain loop in
+  `themes/_base/js/switchbox.ts`,
+  `var _pwgRatingAutoQueue` + the queue-drain + push-shim
+  reassignment in `themes/_base/js/rating.ts`,
+  `let _cont` write-only module-scoped variable in
+  `themes/admin/_base/js/albums.ts`.
+- **PHPStan stubs** — procedural `plugin_install`, `plugin_activate`,
+  `plugin_deactivate`, `plugin_uninstall`, `theme_activate`,
+  `theme_deactivate`, `theme_delete` from `tools/phpstan-bootstrap.php`.
+
+Net deletion across seven commits: ~2300 LOC. Cross-batch invariants
+that landed:
+
+- Zero `EventDispatcher::dispatch|notify|addListener` callers under `src/`.
+- Zero references to `LoadedPluginRegistry`, `PluginService`,
+  `PluginMaintain`, `ThemeMaintain`.
+- No legacy `main.inc.php` / `themeconf.inc.php` / `maintain.class.php`
+  fallback paths.
+
+The `PluginsLoaded` event (legacy `plugins_loaded` notify) survives:
+it's now dispatched from `PluginRegistry::bootActive()` after the
+typed-subscriber loop and serves as the "plugin graph fully wired"
+notify point for observers that aren't themselves part of that graph.
+
+PHPStan level 10, Psalm, PHPUnit 607, Pint all clean after the
+removal. Apache smoke test of `/ws?method=pwg.getVersion` returns
+`{"stat":"ok","result":"17.0.0"}`.
+
+---
+
 ## Caveats
 
-- The plugin/theme procedural contract (Phase 6.1) and the 153-name event
-  API (Phase 6.2) were orthogonal to Phase 5 (now closed): splitting
-  `Util.php` didn't reach those, and Phase 6 doesn't reach the carved-out
-  Phase 5 services either.
-- The Smarty compat layer (Phase 6.3) is the largest sub-task in Phase 6 in
-  terms of touched files (133 templates). Estimate this independently of the
-  rest of Phase 6.
-- `tools/triggers_list.php` shows up in two phases: the `'type'`-string
-  rename and `include/` path fixes are Phase 1.5; the underlying event-name
-  rewrite is Phase 6.2.
+- `PiwigoExtension.php` (the Piwigo Latte template API, allowlisted via
+  `PiwigoPolicy`) is *not* covered by §1.4. The 6.3 follow-up items
+  remain open: docstring update (P3.1), unused-filter audit (P3.2),
+  and `htmlOptions` / `htmlRadios` / `math` long-term decision (P3.3).
+  Track separately.
+- Phase 6's "rewrite 133 templates from Smarty to native Latte" (P3.4
+  original framing) was already historical at the 2026-05-15 audit —
+  Smarty surface syntax is gone from every template.
+- §1.4 intentionally breaks all PEM extensions (`project_version_17_breaks_extensions`).
+  External plugins built against pre-17 APIs will not run on v17 by
+  design; rewriting them against `PluginInterface` /
+  `subscribedEvents` is a separate effort tracked outside this
+  inventory.

@@ -53,8 +53,7 @@ final readonly class RateService
         $anonymousId = implode('.', $ipComponents);
 
         if ($userAnonymous) {
-            $saveAnonIdRaw = $this->cookies->getCookieVar('anonymous_rater', $anonymousId);
-            $saveAnonId    = is_scalar($saveAnonIdRaw) ? (string) $saveAnonIdRaw : $anonymousId;
+            $saveAnonId = $this->cookies->getCookieVar('anonymous_rater', $anonymousId);
 
             if ($anonymousId != $saveAnonId) { // client changed IP or is trying to fool us
                 $alreadyThere = $this->rateRepo->findElementIdsByUserAndAnonId($userId, $anonymousId);

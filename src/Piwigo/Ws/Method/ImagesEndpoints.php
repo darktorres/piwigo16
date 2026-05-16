@@ -45,6 +45,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
+use Piwigo\Ws\OpenApi\ApiMethod;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgNamedStruct;
@@ -212,6 +213,7 @@ final readonly class ImagesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Adds a comment to an image.', tags: ['images'])]
     public function addComment(array $params, PwgServer $service): PwgError|array
     {
         if (!Config::activateComments()) {
@@ -241,6 +243,7 @@ final readonly class ImagesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Returns information about an image.', tags: ['images'])]
     public function getInfo(array $params, PwgServer $service): PwgError|array
     {
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
@@ -339,6 +342,7 @@ final readonly class ImagesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Rates an image.', tags: ['images'])]
     public function rate(array $params, PwgServer $service): mixed
     {
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
@@ -358,6 +362,7 @@ final readonly class ImagesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>
      */
+    #[ApiMethod(summary: 'Returns elements for the corresponding query search.', tags: ['images'])]
     public function search(array $params, PwgServer $service): array
     {
         $pQuery    = is_string($params['query'] ?? null) ? $params['query'] : '';
@@ -417,6 +422,7 @@ final readonly class ImagesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Create a filtered search persisted to the search store.', tags: ['images'])]
     public function filteredSearchCreate(array $params, PwgServer $service): PwgError|array
     {
         $searchInfo = null;
@@ -571,6 +577,7 @@ final readonly class ImagesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Sets the privacy levels for the images.', tags: ['images'])]
     public function setPrivacyLevel(array $params, PwgServer $service): mixed
     {
         if (!in_array($params['level'], Config::availablePermissionLevels())) {
@@ -590,6 +597,7 @@ final readonly class ImagesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Sets the rank of a photo for a given album. When image_id is a list, the list order matters and rank is ignored.', tags: ['images'])]
     public function setRank(array $params, PwgServer $service): array|PwgError
     {
         $pImageIdArr   = is_array($params['image_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
@@ -625,6 +633,7 @@ final readonly class ImagesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Add a chunk of a file.', tags: ['images'])]
     public function addChunk(array $params, PwgServer $service): mixed
     {
         $logger    = LoggerRegistry::current();
@@ -645,6 +654,7 @@ final readonly class ImagesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Add or update a file for an existing photo. pwg.images.addChunk must have been called before.', tags: ['images'])]
     public function addFile(array $params, PwgServer $service): mixed
     {
         $logger      = LoggerRegistry::current();
@@ -678,6 +688,7 @@ final readonly class ImagesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Add an image. pwg.images.addChunk must have been called before.', tags: ['images'])]
     public function add(array $params, PwgServer $service): PwgError|array
     {
         $logger = LoggerRegistry::current();
@@ -735,6 +746,7 @@ final readonly class ImagesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Add an image. Use $_FILES[image] for upload, form-data encoding. May update an existing image_id.', tags: ['images'])]
     public function addSimple(array $params, PwgServer $service): PwgError|array
     {
         $logger = LoggerRegistry::current();
@@ -801,6 +813,7 @@ final readonly class ImagesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Add an image. Use $_FILES[image] for upload, form-data encoding.', tags: ['images'])]
     public function upload(array $params, PwgServer $service): mixed
     {
         $formatExt = null;
@@ -912,6 +925,7 @@ final readonly class ImagesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Upload photo by chunks in random order. $_FILES[file] for upload; start with chunk 0.', tags: ['images'])]
     public function uploadAsync(array $params, PwgServer &$service): mixed
     {
         $logger = LoggerRegistry::current();
@@ -1056,6 +1070,7 @@ final readonly class ImagesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>
      */
+    #[ApiMethod(summary: 'Checks existence of images. Give md5sum_list if uniqueness_mode=md5sum, filename_list if uniqueness_mode=filename.', tags: ['images'])]
     public function exist(array $params, PwgServer $service): array
     {
         $splitPattern = '/[\s,;\|]/';
@@ -1079,6 +1094,7 @@ final readonly class ImagesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Search for image ids matching filenames. filename_list is JSON-encoded unique_id:filename. Returns unique_id:image_id.', tags: ['images'])]
     public function formatsSearchImage(array $params, PwgServer $service): mixed
     {
         $candidates = json_decode(stripslashes(is_string($params['filename_list'] ?? null) ? $params['filename_list'] : ''), true);
@@ -1132,6 +1148,7 @@ final readonly class ImagesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Remove a format', tags: ['images'])]
     public function formatsDelete(array $params, PwgServer $service): PwgError|bool
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -1188,6 +1205,7 @@ final readonly class ImagesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Checks if you have updated version of your files for a given photo. Answer: missing, equals, or differs.', tags: ['images'])]
     public function checkFiles(array $params, PwgServer $service): PwgError|array
     {
         $checkImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
@@ -1203,6 +1221,7 @@ final readonly class ImagesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Changes properties of an image. single_value_mode controls whether the input fills empty values or replaces them.', tags: ['images'])]
     public function setInfo(array $params, PwgServer $service): mixed
     {
         if (isset($params['pwg_token']) && $this->csrfService->getToken() !== $params['pwg_token']) {
@@ -1281,6 +1300,7 @@ final readonly class ImagesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Deletes image(s).', tags: ['images'])]
     public function delete(array $params, PwgServer $service): PwgError|int
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -1298,6 +1318,7 @@ final readonly class ImagesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Checks if Piwigo is ready for upload.', tags: ['images'])]
     public function checkUpload(mixed $params, PwgServer $service): mixed
     {
         $ret = [];
@@ -1310,6 +1331,7 @@ final readonly class ImagesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>
      */
+    #[ApiMethod(summary: 'Empty lounge, where images may be waiting before taking off.', tags: ['images'])]
     public function emptyLounge(array $params, PwgServer $service): array
     {
         return ['rows' => $this->categoryAdminService->emptyLounge()];
@@ -1319,6 +1341,7 @@ final readonly class ImagesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Notify Piwigo you have finished uploading a set of photos. It will empty the lounge, if any.', tags: ['images'])]
     public function uploadCompleted(array $params, PwgServer $service): PwgError|array
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -1342,6 +1365,7 @@ final readonly class ImagesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Set md5sum column, by blocks. Returns how many md5sums were added and how many are remaining.', tags: ['images'])]
     public function setMd5sum(array $params, PwgServer $service): PwgError|array
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -1360,6 +1384,7 @@ final readonly class ImagesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Sync metadatas, by blocks. Returns how many images were synchronized.', tags: ['images'])]
     public function syncMetadata(array $params, PwgServer $service): PwgError|array
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -1392,6 +1417,7 @@ final readonly class ImagesEndpoints
      * @param array<mixed> $params
      * @return array<mixed>|PwgError
      */
+    #[ApiMethod(summary: 'Deletes orphans, by blocks. Returns how many orphans were deleted and how many are remaining.', tags: ['images'])]
     public function deleteOrphans(array $params, PwgServer $service): PwgError|array
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {
@@ -1404,6 +1430,7 @@ final readonly class ImagesEndpoints
     }
 
     /** @param array<mixed> $params */
+    #[ApiMethod(summary: 'Manage image-album associations. action: associate (add), dissociate (remove), or move (dissociate from others + add).', tags: ['images'])]
     public function setCategory(array $params, PwgServer $service): mixed
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {

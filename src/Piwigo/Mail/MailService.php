@@ -18,13 +18,13 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Event\Mail\BeforeParseMailTemplate;
 use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Event\Mail\GetWebmasterMailAddress;
 use Piwigo\Event\Mail\RenderLostPasswordMailContent;
 use Piwigo\Lang\LangService;
 use Piwigo\Lang\Translator;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -223,7 +223,7 @@ final readonly class MailService
                 }
             }
 
-            EventDispatcher::notify('loading_lang');
+            $this->dispatcher->dispatch(new LoadingLang());
             $this->langService->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['language' => $language, 'no_fallback' => true, 'local' => true]);
 
             LanguageStack::saveState($language);

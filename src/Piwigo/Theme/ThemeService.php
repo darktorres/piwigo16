@@ -6,13 +6,15 @@ namespace Piwigo\Theme;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
-use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Event\Lifecycle\GetPwgThemes;
 use Piwigo\Template\TemplateRegistry;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class ThemeService
 {
     public function __construct(
         private ThemeRepository $themeRepository,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -33,7 +35,11 @@ final readonly class ThemeService
                 $themes[$themeId] = is_string($row['name'] ?? null) ? $row['name'] : '';
             }
         }
-        return EventDispatcher::dispatch('get_pwg_themes', $themes);
+        $themesEvent = new GetPwgThemes($themes);
+        $this->dispatcher->dispatch($themesEvent);
+        /** @var array<string,string> $result */
+        $result = $themesEvent->themes;
+        return $result;
     }
 
     public function isInstalled(string $themeId): bool

@@ -17,14 +17,15 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ZipExtractor;
+use Piwigo\Event\Lifecycle\ThemeActivateErrors;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class Themes
 {
@@ -48,6 +49,7 @@ final class Themes
         private readonly UrlGenerator $urlGenerator,
         private readonly UserService $userService,
         private readonly ActivityLogger $activityLogger,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
         $this->getFsThemes();
 
@@ -131,7 +133,9 @@ final class Themes
                 $vRaw = $this->fs_themes[$theme_id]['version'] ?? null;
                 $version = is_scalar($vRaw) ? (string) $vRaw : '';
                 $theme_maintain->activate($version, $errors);
-                $errors = EventDispatcher::dispatch('theme_activate_errors', $errors);
+                $activateErrorsEvent = new ThemeActivateErrors($errors);
+                $this->dispatcher->dispatch($activateErrorsEvent);
+                $errors = $activateErrorsEvent->errors;
 
                 if (empty($errors)) {
                     $tvRaw = $this->fs_themes[$theme_id]['version'] ?? null;

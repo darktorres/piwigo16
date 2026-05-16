@@ -11,8 +11,9 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Lifecycle\LoadConf;
 use Piwigo\Html\HtmlService;
-use Piwigo\Plugins\EventDispatcher;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class ConfigService
 {
@@ -46,7 +47,9 @@ final readonly class ConfigService
             Config::override(is_string($row['param'] ?? null) ? $row['param'] : '', $val);
         }
 
-        EventDispatcher::notify('load_conf', $condition);
+        if (Kernel::isBooted()) {
+            Kernel::service(EventDispatcherInterface::class)->dispatch(new LoadConf($condition ?? ''));
+        }
     }
 
     public function pwgIsDbconfWriteable(): bool

@@ -15,11 +15,12 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ZipExtractor;
+use Piwigo\Event\Lifecycle\PluginInstallErrors;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
 use Piwigo\Plugin\PluginRepository;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\CurrentUser;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class Plugins
 {
@@ -41,6 +42,7 @@ final class Plugins
         private readonly LangService $langService,
         private readonly PluginRepository $pluginRepository,
         private readonly ActivityLogger $activityLogger,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
         $this->getFsPlugins();
 
@@ -117,7 +119,9 @@ final class Plugins
                 $installVersionStr = is_string($installVersion) ? $installVersion : '';
                 self::buildMaintainClass($plugin_id)->install($installVersionStr, $errors);
                 $activity_details['version'] = $installVersionStr;
-                $errors = EventDispatcher::dispatch('plugin_install_errors', $errors);
+                $installErrorsEvent = new PluginInstallErrors($errors);
+                $this->dispatcher->dispatch($installErrorsEvent);
+                $errors = $installErrorsEvent->errors;
 
                 if (empty($errors)) {
                     $this->pluginRepository->insert($plugin_id, $installVersionStr);

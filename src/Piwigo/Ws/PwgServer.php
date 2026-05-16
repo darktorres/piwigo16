@@ -6,6 +6,8 @@ namespace Piwigo\Ws;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
+use Piwigo\Event\Ws\SendResponse;
+use Piwigo\Event\Ws\WsAddMethods;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Html\HtmlService;
 use Piwigo\Plugins\EventDispatcher;
@@ -16,6 +18,7 @@ use Piwigo\Ws\Protocol\PwgJsonEncoder;
 use Piwigo\Ws\Protocol\PwgRestEncoder;
 use Piwigo\Ws\Protocol\PwgRestRequestHandler;
 use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @phpstan-type WsParamDef array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string, chooseList?: list<mixed>}
@@ -37,6 +40,7 @@ final class PwgServer
     public function __construct(
         private readonly HtmlService $htmlService,
         private readonly PermissionService $permissionService,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -155,7 +159,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         ));
 
         Kernel::service(WsMethodRegistrar::class)->register($this);
-        EventDispatcher::notify('ws_add_methods', [&$this]);
+        $this->dispatcher->dispatch(new WsAddMethods($this));
         uksort($this->_methods, strnatcmp(...));
     }
 
@@ -182,7 +186,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             header('Content-Type: '.$contentType.'; charset=utf-8');
         }
         print_r($encodedResponse);
-        EventDispatcher::notify('sendResponse', $encodedResponse);
+        $this->dispatcher->dispatch(new SendResponse(is_string($encodedResponse) ? $encodedResponse : ''));
     }
 
     public function hasMethod(string $methodName): bool

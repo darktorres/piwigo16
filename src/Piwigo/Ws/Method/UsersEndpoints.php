@@ -19,11 +19,11 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
+use Piwigo\Event\User\WsUsersGetList;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -36,6 +36,7 @@ use Piwigo\Ws\PwgNamedStruct;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsHelper;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class UsersEndpoints
 {
@@ -54,6 +55,7 @@ final readonly class UsersEndpoints
         private UserService $userService,
         private CsrfService $csrfService,
         private WsHelper $wsHelper,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -249,7 +251,10 @@ final readonly class UsersEndpoints
                 }
             }
         }
-        $users = EventDispatcher::dispatch('ws_users_getList', $users);
+        $usersEvent = new WsUsersGetList($users);
+        $this->dispatcher->dispatch($usersEvent);
+        /** @var array<int|string, array<string, mixed>> $users */
+        $users = $usersEvent->users;
         if ($perPage === 0 && $params['display'] === []) {
             $methodResult = array_column(array_values($users), 'id');
         } else {

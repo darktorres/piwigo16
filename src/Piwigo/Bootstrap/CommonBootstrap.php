@@ -26,6 +26,8 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Lifecycle\Init;
+use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\DeviceDetectionService;
 use Piwigo\Http\RedirectResponder;
@@ -48,6 +50,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserBootstrap;
 use Piwigo\Users\UserService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class CommonBootstrap
 {
@@ -198,7 +201,7 @@ final class CommonBootstrap
             Kernel::service(LangService::class)->loadLanguage('admin.lang');
             Kernel::service(LangService::class)->loadLanguage('whats_new_' . AppInfo::branchFromVersion(AppInfo::VERSION) . '.lang');
         }
-        EventDispatcher::notify('loading_lang');
+        Kernel::service(EventDispatcherInterface::class)->dispatch(new LoadingLang());
         Kernel::service(LangService::class)->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
 
         if (Kernel::service(PermissionService::class)->isAGuest()) {
@@ -310,6 +313,6 @@ final class CommonBootstrap
             EventDispatcher::addListener('UrlService::get()->getElementUrl', 'get_element_url_protection_handler');
             EventDispatcher::addListener('get_src_image_url', 'get_src_image_url_protection_handler');
         }
-        EventDispatcher::notify('init');
+        Kernel::service(EventDispatcherInterface::class)->dispatch(new Init());
     }
 }

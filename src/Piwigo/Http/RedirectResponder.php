@@ -9,14 +9,15 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
+use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Lang\LangService;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Issues HTTP redirects, falling back to an HTML body with `<meta refresh>`
@@ -34,6 +35,7 @@ final readonly class RedirectResponder
 {
     public function __construct(
         private LangService $langService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -63,7 +65,7 @@ final readonly class RedirectResponder
         if (!LanguageStack::initialized() || !TemplateRegistry::isInitialized()) {
             CurrentUser::setRawAttributes(Kernel::service(UserService::class)->buildUser(Config::guestId(), true));
             $this->langService->loadLanguage('common.lang');
-            EventDispatcher::notify('loading_lang');
+            $this->dispatcher->dispatch(new LoadingLang());
             $this->langService->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
             $tpl = new Template(PHPWG_ROOT_PATH . 'themes', Kernel::service(UserService::class)->getDefaultTheme());
             TemplateRegistry::set($tpl);

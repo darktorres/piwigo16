@@ -12,8 +12,9 @@ use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Plugins\EventDispatcher;
+use Piwigo\Event\Lifecycle\PluginsLoaded;
 use Piwigo\Plugins\LoadedPluginRegistry;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class PluginService
 {
@@ -21,6 +22,7 @@ final readonly class PluginService
         private PluginRepository $repo,
         private StringUtil $stringUtil,
         private ActivityLogger $activityLogger,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -108,7 +110,7 @@ final readonly class PluginService
             foreach ($this->getDbPlugins('active') as $plugin) {
                 $this->loadPlugin($plugin);
             }
-            EventDispatcher::notify('plugins_loaded');
+            $this->dispatcher->dispatch(new PluginsLoaded());
         }
     }
 }

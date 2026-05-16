@@ -4,7 +4,7 @@
   "title": "Piwigo theme manifest",
   "description": "Declarative manifest for Piwigo 17+ themes. One file per theme at themes/<id>/theme.json. Read by ThemeRegistry at load time; validated via opis/json-schema.",
   "type": "object",
-  "required": ["id", "version", "name", "main"],
+  "required": ["id", "version", "name"],
   "additionalProperties": false,
   "properties": {
     "$schema": {
@@ -39,6 +39,15 @@
       "type": "boolean",
       "description": "Whether the parent's CSS should be loaded before this theme's CSS. Default: false."
     },
+    "colorscheme": {
+      "type": "string",
+      "enum": ["dark", "light"],
+      "description": "Which CSS variant this theme presents. Read by the standard_pages search-filter and batch-manager-filter templates to pick a colorscheme-suffixed CSS file."
+    },
+    "useStandardPages": {
+      "type": "boolean",
+      "description": "When true, auth pages (identification/register/password/profile) auto-redirect to the standard_pages theme for a cleaner UX. Currently no bundled theme opts in — the global Config flag `use_standard_pages` is the live consumer. Reserved for third-party themes that want to declare the opt-in declaratively. Default: false."
+    },
     "assets": {
       "type": "object",
       "additionalProperties": {
@@ -60,7 +69,7 @@
     "main": {
       "type": "string",
       "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\\\[A-Za-z_][A-Za-z0-9_]*)*$",
-      "description": "Fully-qualified class name implementing Piwigo\\Theme\\ThemeInterface."
+      "description": "Fully-qualified class name implementing Piwigo\\Theme\\ThemeInterface. Optional: bundled themes are pure metadata and ship no PHP class — Template.php reads their manifest directly without going through ThemeRegistry. Third-party themes that omit `main` cannot be activate()'d by the registry."
     },
     "autoload": {
       "type": "object",

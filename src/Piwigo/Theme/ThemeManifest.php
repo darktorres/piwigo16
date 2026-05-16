@@ -16,20 +16,24 @@ namespace Piwigo\Theme;
 final readonly class ThemeManifest
 {
     /**
-     * @param ?string                $parent        Parent theme id for inheritance, null for root themes.
-     * @param bool                   $loadParentCss Whether the parent's CSS loads before this theme's.
-     * @param array<string, string>  $assets        Map of asset kind → directory relative to theme root.
-     * @param array<string, string>  $autoloadPsr4  PSR-4 namespace prefix → directory map, relative to theme root.
+     * @param ?string                $parent           Parent theme id for inheritance, null for root themes.
+     * @param bool                   $loadParentCss    Whether the parent's CSS loads before this theme's.
+     * @param array<string, string>  $assets           Map of asset kind → directory relative to theme root.
+     * @param ?string                $colorscheme      'dark' | 'light' — picks a CSS variant in standard_pages / batch-manager templates. Null when the theme inherits from parent.
+     * @param bool                   $useStandardPages When true, declares this theme opts into the standard_pages auth-page redirect. No bundled theme sets this today; reserved for third-party themes.
+     * @param array<string, string>  $autoloadPsr4     PSR-4 namespace prefix → directory map, relative to theme root.
      */
     public function __construct(
         public string $id,
         public string $name,
         public string $version,
-        public string $main,
+        public string $main = '',
         public ?string $parent = null,
         public bool $loadParentCss = false,
         public array $assets = [],
         public ?string $localHead = null,
+        public ?string $colorscheme = null,
+        public bool $useStandardPages = false,
         public array $autoloadPsr4 = [],
     ) {
     }
@@ -65,16 +69,22 @@ final readonly class ThemeManifest
         $parent = $data['parent'] ?? null;
         $localHead = $data['localHead'] ?? null;
         $loadParentCss = $data['loadParentCss'] ?? false;
+        $colorscheme = $data['colorscheme'] ?? null;
+        $useStandardPages = $data['useStandardPages'] ?? false;
+
+        $main = $data['main'] ?? '';
 
         return new self(
             id: self::requireString($data, 'id'),
             name: self::requireString($data, 'name'),
             version: self::requireString($data, 'version'),
-            main: self::requireString($data, 'main'),
+            main: is_string($main) ? $main : '',
             parent: is_string($parent) ? $parent : null,
             loadParentCss: is_bool($loadParentCss) ? $loadParentCss : false,
             assets: $assets,
             localHead: is_string($localHead) ? $localHead : null,
+            colorscheme: is_string($colorscheme) ? $colorscheme : null,
+            useStandardPages: is_bool($useStandardPages) ? $useStandardPages : false,
             autoloadPsr4: $psr4,
         );
     }

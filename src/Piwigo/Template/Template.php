@@ -141,6 +141,15 @@ final class Template
 
         $this->setTemplateDir($root.'/'.$theme.'/'.$path);
 
+        // Standard-pages active context — replaces the side-effect PHP
+        // in themes/standard_pages/themeconf.inc.php. Idempotent with the
+        // legacy include during the B14 transition: both assign the same
+        // STD_PGS_* template vars to the same values. Once B14c lands
+        // and the legacy file is gone, this is the sole source.
+        if ($theme === 'standard_pages') {
+            $this->applyStandardPagesContext();
+        }
+
         if (isset($themeconf['parent']) and $themeconf['parent'] != $theme) {
             $parentTheme = is_string($themeconf['parent']) ? $themeconf['parent'] : '';
             $parentLoadCss = isset($themeconf['load_parent_css']) ? (bool) $themeconf['load_parent_css'] : $load_css;
@@ -493,12 +502,122 @@ final class Template
         $realpathDir = realpath($dir);
         $dir = $realpathDir !== false ? $realpathDir : $dir;
         if (!isset($this->themeconfs[$dir])) {
-            $themeconf = [];
-            /** @psalm-suppress UnresolvableInclude */
-            require($dir.'/themeconf.inc.php');
-            $this->themeconfs[$dir] = $themeconf;
+            $jsonPath = $dir . '/theme.json';
+            $legacyPath = $dir . '/themeconf.inc.php';
+            if (is_file($jsonPath)) {
+                $this->themeconfs[$dir] = $this->themeconfFromJson($jsonPath);
+            } elseif (is_file($legacyPath)) {
+                $themeconf = [];
+                /** @psalm-suppress UnresolvableInclude */
+                require($legacyPath);
+                $this->themeconfs[$dir] = $themeconf;
+            } else {
+                $this->themeconfs[$dir] = [];
+            }
         }
         return $this->themeconfs[$dir];
+    }
+
+    /**
+     * Project a theme.json manifest into the flat `themeconf` shape
+     * legacy callers (this class's setTheme + 19 Latte sites + 10
+     * controllers + SrcImage) expect. Keys emitted:
+     *
+     *   name, parent, load_parent_css, icon_dir, img_dir, mime_icon_dir,
+     *   admin_icon_dir, local_head, colorscheme, use_standard_pages
+     *
+     * `id` is intentionally omitted — Template::setTheme overwrites it
+     * to the directory basename on line 165 regardless of source.
+     *
+     * @return array<string, mixed>
+     */
+    private function themeconfFromJson(string $jsonPath): array
+    {
+        $raw = file_get_contents($jsonPath);
+        if ($raw === false) {
+            return [];
+        }
+        try {
+            $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return [];
+        }
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        $out = [];
+        foreach (['name', 'parent', 'localHead', 'colorscheme'] as $directKey) {
+            $val = $decoded[$directKey] ?? null;
+            if (is_string($val)) {
+                // legacy localHead → local_head, others 1:1
+                $key = $directKey === 'localHead' ? 'local_head' : $directKey;
+                $out[$key] = $val;
+            }
+        }
+        if (isset($decoded['loadParentCss']) && is_bool($decoded['loadParentCss'])) {
+            $out['load_parent_css'] = $decoded['loadParentCss'];
+        }
+        if (isset($decoded['useStandardPages']) && is_bool($decoded['useStandardPages'])) {
+            $out['use_standard_pages'] = $decoded['useStandardPages'];
+        }
+        $assets = $decoded['assets'] ?? null;
+        if (is_array($assets)) {
+            // assets map → flat *_dir fields the templates read
+            $kindToLegacy = [
+                'icon'      => 'icon_dir',
+                'img'       => 'img_dir',
+                'mimeIcon'  => 'mime_icon_dir',
+                'adminIcon' => 'admin_icon_dir',
+            ];
+            foreach ($kindToLegacy as $kind => $legacy) {
+                $val = $assets[$kind] ?? null;
+                if (is_string($val) && $val !== '') {
+                    $out[$legacy] = $val;
+                }
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Standard_pages active context — used to live as side-effect PHP
+     * inside `themes/standard_pages/themeconf.inc.php`. Assigns four
+     * template variables consumed by every standard_pages Latte file
+     * (identification, register, password, profile, header).
+     *
+     * Called from setTheme() when the resolved theme is
+     * 'standard_pages'. Currently a no-op fallback when the bundled
+     * themeconf.inc.php still exists — once B14c lands, this is the
+     * sole source for the assigns.
+     *
+     * `$page['gallery_title']` from the legacy code was effectively
+     * dead — that global was never in scope inside the include — so
+     * GALLERY_TITLE always falls back to Config::galleryTitle().
+     */
+    private function applyStandardPagesContext(): void
+    {
+        // Use ConfigService::confGetParam() rather than Config::raw() so
+        // PHPStan's ConfigKeyExistsRule doesn't flag the three theme-pref
+        // keys (the rule only inspects Config::raw static-call sites).
+        // ExtensionsController writes these via the same service.
+        $configService = Kernel::service(ConfigService::class);
+        $logoRaw = $configService->confGetParam('standard_pages_selected_logo', 'piwigo_logo');
+        $skinRaw = $configService->confGetParam('standard_pages_selected_skin', 'default');
+        $logo = is_string($logoRaw) ? $logoRaw : 'piwigo_logo';
+        $skin = is_string($skinRaw) ? $skinRaw : 'default';
+
+        $this->assign([
+            'STD_PGS_SELECTED_SKIN' => $skin,
+            'STD_PGS_SELECTED_LOGO' => $logo,
+            'GALLERY_TITLE'         => Config::galleryTitle(),
+        ]);
+        if ($logo === 'custom_logo') {
+            $customPath = $configService->confGetParam('standard_pages_selected_logo_path', '');
+            $this->assign([
+                'STD_PGS_SELECTED_LOGO_PATH' => is_string($customPath) ? $customPath : '',
+            ]);
+        }
     }
 
     /**

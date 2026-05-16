@@ -110,7 +110,10 @@ final class ThemeSchemaTest extends TestCase
         yield 'missing id'      => [$without('id'),      'id is required'];
         yield 'missing version' => [$without('version'), 'version is required'];
         yield 'missing name'    => [$without('name'),    'name is required'];
-        yield 'missing main'    => [$without('main'),    'main is required'];
+        // `main` was demoted from required in B14a — bundled themes are
+        // pure metadata with no PHP class. Third-party themes that omit
+        // it just can't be activate()'d by ThemeRegistry. Not a schema
+        // violation either way.
 
         yield 'id with slash'        => [$with('id', 'admin/dark'), 'id pattern rejects slashes'];
         yield 'parent with space'    => [$with('parent', 'pure default'), 'parent must match id pattern'];

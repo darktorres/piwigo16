@@ -8,14 +8,15 @@ use Latte\Runtime\Html;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Event\Admin\GetPopupHelpContent;
 use Piwigo\Exception\AuthException;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -24,6 +25,7 @@ final readonly class PopuphelpController implements ControllerInterface
     public function __construct(
         private PermissionService $permissionService,
         private LangService $langService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -50,7 +52,9 @@ final readonly class PopuphelpController implements ControllerInterface
 
         $loaded = $this->langService->loadLanguage('help/' . $rawPage . '.html', '', ['return' => true]);
         $helpContent = is_string($loaded) ? $loaded : '';
-        $helpContent = EventDispatcher::dispatch('get_popup_help_content', $helpContent, $rawPage);
+        $helpEvent = new GetPopupHelpContent($helpContent, $rawPage);
+        $this->dispatcher->dispatch($helpEvent);
+        $helpContent = $helpEvent->helpContent;
 
         $tpl = TemplateRegistry::current();
         $tpl->assign(['HELP_CONTENT' => new Html($helpContent)]);

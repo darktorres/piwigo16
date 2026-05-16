@@ -241,7 +241,7 @@ return [
     AlbumsTabRenderer::class         => factory(static fn (CategoryRepository $catR): AlbumsTabRenderer => new AlbumsTabRenderer($catR)),
     UserTabRenderer::class           => factory(static fn (): UserTabRenderer => new UserTabRenderer()),
     DirectPreparer::class            => factory(static fn (AdminService $a, CategoryRepository $catR, HtmlService $h, ImageRepository $i, UploadService $up, CsrfService $csrf, InputValidator $iv): DirectPreparer => new DirectPreparer($a, $catR, $h, $i, $up, $csrf, $iv)),
-    FilterResolver::class            => factory(static fn (Connection $conn, HtmlService $h, TagAdminService $tA, CsrfService $csrf, LangService $lang, UrlService $us): FilterResolver => new FilterResolver($conn, $h, $tA, $csrf, $lang, $us)),
+    FilterResolver::class            => factory(static fn (Connection $conn, HtmlService $h, TagAdminService $tA, CsrfService $csrf, LangService $lang, UrlService $us, EventDispatcherInterface $dispatcher): FilterResolver => new FilterResolver($conn, $h, $tA, $csrf, $lang, $us, $dispatcher)),
     SizesProcessor::class            => factory(static fn (ImageAdminService $iA, UploadService $up, ActivityLogger $al, PermissionService $perm): SizesProcessor => new SizesProcessor($iA, $up, $al, $perm)),
     WatermarkProcessor::class        => factory(static fn (ImageAdminService $iA, StringUtil $s, ActivityLogger $al, PermissionService $perm): WatermarkProcessor => new WatermarkProcessor($iA, $s, $al, $perm)),
     MenubarRenderer::class           => factory(static fn (CategoryService $cat, CommentService $com, PermissionService $perm, TagService $tag, UrlGenerator $ug, UrlService $u, FilterService $f): MenubarRenderer => new MenubarRenderer($cat, $com, $perm, $tag, $ug, $u, $f)),

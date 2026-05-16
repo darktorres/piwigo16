@@ -29,6 +29,11 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Admin\BatchManagerPerformFilters;
+use Piwigo\Event\Admin\BatchManagerRegisterFilters;
+use Piwigo\Event\Admin\BatchManagerUrlFilter;
+use Piwigo\Event\Admin\ElementSetGlobalAction;
+use Piwigo\Event\Admin\PerformBatchManagerPrefilters;
 use Piwigo\Event\Location\LocBeginElementSetGlobal;
 use Piwigo\Event\Location\LocBeginElementSetUnit;
 use Piwigo\Event\Location\LocEndElementSetGlobal;
@@ -42,7 +47,6 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Page\PaginationService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Plugins\LoadedPluginRegistry;
 use Piwigo\Search\SearchService;
 use Piwigo\Site\LocalSiteReader;
@@ -255,7 +259,9 @@ final class BatchManagerController
                 $bmf['search'] = ['q' => $_POST['q']];
             }
 
-            $_SESSION['bulk_manager_filter'] = EventDispatcher::dispatch('batch_manager_register_filters', $bmf);
+            $registerEvent = new BatchManagerRegisterFilters($bmf);
+            $this->dispatcher->dispatch($registerEvent);
+            $_SESSION['bulk_manager_filter'] = $registerEvent->bulkManagerFilter;
         } elseif (isset($_GET['filter'])) {
             if (!is_array($_GET['filter'])) {
                 /** @var string $rawFilter */
@@ -338,7 +344,9 @@ final class BatchManagerController
                         }
                         break;
                     default:
-                        $bmf = EventDispatcher::dispatch('batch_manager_url_filter', $bmf, $filter);
+                        $urlFilterEvent = new BatchManagerUrlFilter($bmf, is_string($filter) ? $filter : '');
+                        $this->dispatcher->dispatch($urlFilterEvent);
+                        $bmf = $urlFilterEvent->bulkManagerFilter;
                         break;
                 }
             }
@@ -424,7 +432,9 @@ final class BatchManagerController
                     }
                     break;
                 default:
-                    $filter_sets = EventDispatcher::dispatch('perform_batch_manager_prefilters', $filter_sets, $bmf_prefilter);
+                    $preEvent = new PerformBatchManagerPrefilters($filter_sets, $bmf_prefilter);
+                    $this->dispatcher->dispatch($preEvent);
+                    $filter_sets = $preEvent->filterSets;
                     break;
             }
         }
@@ -508,7 +518,9 @@ final class BatchManagerController
             }
         }
 
-        $filter_sets = EventDispatcher::dispatch('batch_manager_perform_filters', $filter_sets, $bmf);
+        $performEvent = new BatchManagerPerformFilters($filter_sets, $bmf);
+        $this->dispatcher->dispatch($performEvent);
+        $filter_sets = $performEvent->filterSets;
 
         $current_set = array_shift($filter_sets);
         foreach ($filter_sets as $set) {
@@ -861,7 +873,7 @@ final class BatchManagerController
                 $this->userAdminService->invalidateUserCache();
             }
 
-            EventDispatcher::notify('element_set_global_action', $action, $collection_int);
+            $this->dispatcher->dispatch(new ElementSetGlobalAction($action, $collection_int));
             if ($redirect) {
                 $this->redirectResponder->redirect($redirect_url);
             }

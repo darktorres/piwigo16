@@ -38,6 +38,7 @@ use Piwigo\Db\DbInfo;
 use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Admin\GetAdminAdvancedFeaturesLinks;
 use Piwigo\Event\Album\GetAdminsSiteLinks;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
@@ -50,7 +51,6 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Job\RegenerateAllDerivativesJob;
 use Piwigo\Permission\PermissionRepository;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Session\SessionRepository;
@@ -442,8 +442,9 @@ final class MaintenanceController
         }
 
         $tpl->assign('isWebmaster', $this->permissionService->isWebmaster() ? 1 : 0);
-        $advanced_features = EventDispatcher::dispatch('get_admin_advanced_features_links', []);
-        $tpl->assign('advanced_features', $advanced_features);
+        $featuresEvent = new GetAdminAdvancedFeaturesLinks([]);
+        $this->dispatcher->dispatch($featuresEvent);
+        $tpl->assign('advanced_features', $featuresEvent->advancedFeatures);
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'maintenance_actions.latte');
     }
 
@@ -626,8 +627,9 @@ final class MaintenanceController
             $tpl->assign(['INSTALLED_ON' => $this->dateService->formatDate($installed_on, ['day', 'month', 'year']), 'INSTALLED_SINCE' => $this->dateService->timeSince($installed_on, 'day')]);
         }
 
-        $advanced_features = EventDispatcher::dispatch('get_admin_advanced_features_links', []);
-        $tpl->assign('advanced_features', $advanced_features);
+        $featuresEvent = new GetAdminAdvancedFeaturesLinks([]);
+        $this->dispatcher->dispatch($featuresEvent);
+        $tpl->assign('advanced_features', $featuresEvent->advancedFeatures);
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'maintenance_env.latte');
     }
 

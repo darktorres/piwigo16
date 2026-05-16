@@ -31,6 +31,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Admin\GetPopupHelpContent;
 use Piwigo\Event\Location\LocEndHelp;
 use Piwigo\Event\Location\LocEndIntro;
 use Piwigo\Exception\AuthException;
@@ -513,7 +514,10 @@ final class MiscController
         if (isset($_GET['help']) && preg_match('/^[a-z_]*$/', $helpPage)) {
             $loaded = $this->langService->loadLanguage('help/' . $helpPage . '.html', '', ['force_fallback' => 'en_UK', 'return' => true]);
             $help_content = is_string($loaded) ? $loaded : '';
-            $help_content = EventDispatcher::dispatch('get_popup_help_content', $help_content, $_GET['help']);
+            $rawHelp = is_string($_GET['help']) ? $_GET['help'] : '';
+            $helpEvent = new GetPopupHelpContent($help_content, $rawHelp);
+            $this->dispatcher->dispatch($helpEvent);
+            $help_content = $helpEvent->helpContent;
         } else {
             throw new AuthException('Hacking attempt!');
         }

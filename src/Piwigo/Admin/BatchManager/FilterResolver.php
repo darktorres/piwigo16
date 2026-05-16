@@ -10,11 +10,12 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Admin\GetBatchManagerPrefilters;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class FilterResolver
 {
@@ -25,6 +26,7 @@ final readonly class FilterResolver
         private CsrfService $csrfService,
         private LangService $langService,
         private UrlService $urlService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
     /**
@@ -50,8 +52,10 @@ final readonly class FilterResolver
             $prefilters[] = ['ID' => 'no_sync_md5sum', 'NAME' => Lang::t('With no checksum')];
         }
 
+        $prefilterEvent = new GetBatchManagerPrefilters($prefilters);
+        $this->dispatcher->dispatch($prefilterEvent);
         /** @var list<array<string, string>> $prefilters */
-        $prefilters = EventDispatcher::dispatch('get_batch_manager_prefilters', $prefilters);
+        $prefilters = $prefilterEvent->prefilters;
 
         usort($prefilters, fn (array $a, array $b): int => strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME'])));
 

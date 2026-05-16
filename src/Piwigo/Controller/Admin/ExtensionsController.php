@@ -27,6 +27,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Admin\GetAdminPluginMenuLinks;
 use Piwigo\Event\Location\LocEndThemesInstalled;
 use Piwigo\Exception\AuthException;
 use Piwigo\Exception\ConfigException;
@@ -35,7 +36,6 @@ use Piwigo\Exception\ValidationException;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Plugin\PluginRepository;
-use Piwigo\Plugins\EventDispatcher;
 use Piwigo\Plugins\LoadedPluginRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Storage\StorageRegistry;
@@ -179,7 +179,9 @@ final readonly class ExtensionsController
             exit;
         }
 
-        $plugin_menu_links_deprec = EventDispatcher::dispatch('get_admin_plugin_menu_links', []);
+        $menuLinksEvent = new GetAdminPluginMenuLinks([]);
+        $this->dispatcher->dispatch($menuLinksEvent);
+        $plugin_menu_links_deprec = $menuLinksEvent->value;
         $settings_url_for_plugin_deprec = [];
         foreach ($plugin_menu_links_deprec as $value) {
             if (!is_array($value)) {

@@ -152,9 +152,9 @@ final class ImageExtImagick implements ImageInterface
     }
 
     #[\Override]
-    public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
+    public function compose(PwgImage $overlay, int $x, int $y, int $opacity): bool
     {
-        if (!($overlay instanceof ImageExtImagick)) {
+        if (!($overlay->image instanceof self)) {
             return false;
         }
         $param = 'compose dissolve -define compose:args='.$opacity;

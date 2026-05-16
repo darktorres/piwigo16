@@ -112,12 +112,12 @@ final class ImageGd implements ImageInterface
     }
 
     #[\Override]
-    public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
+    public function compose(PwgImage $overlay, int $x, int $y, int $opacity): bool
     {
-        if (!($overlay instanceof ImageGd)) {
+        if (!($overlay->image instanceof self)) {
             return false;
         }
-        $ioverlay = $overlay->image;
+        $ioverlay = $overlay->image->image;
         /* A replacement for php's imagecopymerge() function that supports the alpha channel
         See php bug #23815:  http://bugs.php.net/bug.php?id=23815 */
 

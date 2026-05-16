@@ -80,12 +80,12 @@ final class ImageImagick implements ImageInterface
     }
 
     #[\Override]
-    public function compose(mixed $overlay, int $x, int $y, int $opacity): bool
+    public function compose(PwgImage $overlay, int $x, int $y, int $opacity): bool
     {
-        if (!($overlay instanceof ImageImagick)) {
+        if (!($overlay->image instanceof self)) {
             return false;
         }
-        $ioverlay = $overlay->image;
+        $ioverlay = $overlay->image->image;
         /*if ($ioverlay->getImageAlphaChannel() !== \Imagick::ALPHACHANNEL_OPAQUE)
         {
           // Force the image to have an alpha channel

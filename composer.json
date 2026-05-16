@@ -39,6 +39,7 @@
     "vlucas/phpdotenv": "^5.6"
   },
   "require-dev": {
+    "devizzent/cebe-php-openapi": "^1.0",
     "efabrica/phpstan-latte": "0.99.*",
     "laravel/pint": "^1.18",
     "phpstan/phpstan": "^2.0",

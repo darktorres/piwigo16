@@ -21,12 +21,4 @@ final readonly class GetTagNameLikeWhere
         public string $tagName,
     ) {
     }
-
-    /**
-     * @param array<mixed> $value
-     */
-    public function withValue(array $value): self
-    {
-        return new self($value, $this->tagName);
-    }
 }

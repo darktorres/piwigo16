@@ -19,9 +19,4 @@ final readonly class RenderElementName
         public array $info,
     ) {
     }
-
-    public function withElementName(string $elementName): self
-    {
-        return new self($elementName, $this->info);
-    }
 }

@@ -21,12 +21,4 @@ final readonly class TabsheetBeforeSelect
         public string $tabsheetId,
     ) {
     }
-
-    /**
-     * @param array<mixed> $sheets
-     */
-    public function withSheets(array $sheets): self
-    {
-        return new self($sheets, $this->tabsheetId);
-    }
 }

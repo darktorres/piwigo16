@@ -16,9 +16,4 @@ final readonly class CombinedCss
         public \Piwigo\Template\Combinable $combinable,
     ) {
     }
-
-    public function withHref(string $href): self
-    {
-        return new self($href, $this->combinable);
-    }
 }

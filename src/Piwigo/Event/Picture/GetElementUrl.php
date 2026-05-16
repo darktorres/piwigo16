@@ -19,9 +19,4 @@ final readonly class GetElementUrl
         public array $elementInfo,
     ) {
     }
-
-    public function withUrl(string $url): self
-    {
-        return new self($url, $this->elementInfo);
-    }
 }

@@ -21,9 +21,4 @@ final readonly class UserCommentCheck
         public array $comm,
     ) {
     }
-
-    public function withCommentAction(string $commentAction): self
-    {
-        return new self($commentAction, $this->comm);
-    }
 }

@@ -19,9 +19,4 @@ final readonly class RenderCategoryName
         public string|array $location,
     ) {
     }
-
-    public function withCategoryName(string $categoryName): self
-    {
-        return new self($categoryName, $this->location);
-    }
 }

@@ -15,9 +15,4 @@ final readonly class GetIndexDerivativeParams
         public \Piwigo\Image\DerivativeParams $value,
     ) {
     }
-
-    public function withValue(\Piwigo\Image\DerivativeParams $value): self
-    {
-        return new self($value);
-    }
 }

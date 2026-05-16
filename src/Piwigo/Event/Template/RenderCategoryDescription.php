@@ -16,9 +16,4 @@ final readonly class RenderCategoryDescription
         public string $action,
     ) {
     }
-
-    public function withCategoryDescription(string $categoryDescription): self
-    {
-        return new self($categoryDescription, $this->action);
-    }
 }

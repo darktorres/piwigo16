@@ -15,9 +15,4 @@ final readonly class RenderCommentContent
         public string $commentContent,
     ) {
     }
-
-    public function withCommentContent(string $commentContent): self
-    {
-        return new self($commentContent);
-    }
 }

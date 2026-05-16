@@ -18,12 +18,4 @@ final readonly class PluginInstallErrors
         public array $errors,
     ) {
     }
-
-    /**
-     * @param array<mixed> $errors
-     */
-    public function withErrors(array $errors): self
-    {
-        return new self($errors);
-    }
 }

@@ -22,12 +22,4 @@ final readonly class BatchManagerPerformFilters
         public array $bulkManagerFilter,
     ) {
     }
-
-    /**
-     * @param array<mixed> $filterSets
-     */
-    public function withFilterSets(array $filterSets): self
-    {
-        return new self($filterSets, $this->bulkManagerFilter);
-    }
 }

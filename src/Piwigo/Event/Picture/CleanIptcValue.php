@@ -15,9 +15,4 @@ final readonly class CleanIptcValue
         public string $value,
     ) {
     }
-
-    public function withValue(string $value): self
-    {
-        return new self($value);
-    }
 }

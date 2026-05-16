@@ -18,12 +18,4 @@ final readonly class GetAdminAdvancedFeaturesLinks
         public array $advancedFeatures,
     ) {
     }
-
-    /**
-     * @param array<mixed> $advancedFeatures
-     */
-    public function withAdvancedFeatures(array $advancedFeatures): self
-    {
-        return new self($advancedFeatures);
-    }
 }

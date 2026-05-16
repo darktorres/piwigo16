@@ -20,12 +20,4 @@ final readonly class GetAdminPluginMenuLinks
         public array $value,
     ) {
     }
-
-    /**
-     * @param array<mixed> $value
-     */
-    public function withValue(array $value): self
-    {
-        return new self($value);
-    }
 }

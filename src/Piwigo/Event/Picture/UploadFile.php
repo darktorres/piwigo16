@@ -16,9 +16,4 @@ final readonly class UploadFile
         public string $filePath,
     ) {
     }
-
-    public function withRepresentativeExt(string $representativeExt): self
-    {
-        return new self($representativeExt, $this->filePath);
-    }
 }

@@ -16,9 +16,4 @@ final readonly class RenderElementDescription
         public string $action,
     ) {
     }
-
-    public function withElementDescription(string $elementDescription): self
-    {
-        return new self($elementDescription, $this->action);
-    }
 }

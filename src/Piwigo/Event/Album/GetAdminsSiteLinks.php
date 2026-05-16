@@ -20,12 +20,4 @@ final readonly class GetAdminsSiteLinks
         public bool $isRemote,
     ) {
     }
-
-    /**
-     * @param array<mixed> $pluginLinks
-     */
-    public function withPluginLinks(array $pluginLinks): self
-    {
-        return new self($pluginLinks, $this->siteId, $this->isRemote);
-    }
 }

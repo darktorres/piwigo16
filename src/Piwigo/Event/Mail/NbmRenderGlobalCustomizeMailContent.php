@@ -15,9 +15,4 @@ final readonly class NbmRenderGlobalCustomizeMailContent
         public string $customizeMailContent,
     ) {
     }
-
-    public function withCustomizeMailContent(string $customizeMailContent): self
-    {
-        return new self($customizeMailContent);
-    }
 }

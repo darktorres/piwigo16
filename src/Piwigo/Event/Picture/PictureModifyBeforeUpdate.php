@@ -20,12 +20,4 @@ final readonly class PictureModifyBeforeUpdate
         public array $data,
     ) {
     }
-
-    /**
-     * @param array<mixed> $data
-     */
-    public function withData(array $data): self
-    {
-        return new self($data);
-    }
 }

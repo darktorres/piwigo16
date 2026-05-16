@@ -20,12 +20,4 @@ final readonly class WsUsersGetList
         public array $users,
     ) {
     }
-
-    /**
-     * @param array<mixed> $users
-     */
-    public function withUsers(array $users): self
-    {
-        return new self($users);
-    }
 }

@@ -15,9 +15,4 @@ final readonly class AllowIncrementElementHitCount
         public bool $contentNotSet,
     ) {
     }
-
-    public function withContentNotSet(bool $contentNotSet): self
-    {
-        return new self($contentNotSet);
-    }
 }

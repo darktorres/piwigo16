@@ -21,12 +21,4 @@ final readonly class FormatExifData
         public array $map,
     ) {
     }
-
-    /**
-     * @param array<mixed> $exif
-     */
-    public function withExif(array $exif): self
-    {
-        return new self($exif, $this->filename, $this->map);
-    }
 }

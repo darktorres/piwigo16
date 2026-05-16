@@ -20,12 +20,4 @@ final readonly class GetBatchManagerPrefilters
         public array $prefilters,
     ) {
     }
-
-    /**
-     * @param array<mixed> $prefilters
-     */
-    public function withPrefilters(array $prefilters): self
-    {
-        return new self($prefilters);
-    }
 }

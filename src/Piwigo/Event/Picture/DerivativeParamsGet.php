@@ -15,9 +15,4 @@ final readonly class DerivativeParamsGet
         public \Piwigo\Image\DerivativeParams $params,
     ) {
     }
-
-    public function withParams(\Piwigo\Image\DerivativeParams $params): self
-    {
-        return new self($params);
-    }
 }

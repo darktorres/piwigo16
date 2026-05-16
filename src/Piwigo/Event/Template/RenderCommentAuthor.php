@@ -15,9 +15,4 @@ final readonly class RenderCommentAuthor
         public string $commentAuthor,
     ) {
     }
-
-    public function withCommentAuthor(string $commentAuthor): self
-    {
-        return new self($commentAuthor);
-    }
 }

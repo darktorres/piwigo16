@@ -20,9 +20,4 @@ final readonly class WsInvokeAllowed
         public array $params,
     ) {
     }
-
-    public function withValue(bool $value): self
-    {
-        return new self($value, $this->methodName, $this->params);
-    }
 }

@@ -26,9 +26,4 @@ final readonly class RenderCategoryLiteralDescription
         public string $description,
     ) {
     }
-
-    public function withDescription(string $description): self
-    {
-        return new self($description);
-    }
 }

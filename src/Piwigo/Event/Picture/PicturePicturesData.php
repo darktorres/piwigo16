@@ -18,12 +18,4 @@ final readonly class PicturePicturesData
         public array $picture,
     ) {
     }
-
-    /**
-     * @param array<mixed> $picture
-     */
-    public function withPicture(array $picture): self
-    {
-        return new self($picture);
-    }
 }

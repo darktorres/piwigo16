@@ -21,12 +21,4 @@ final readonly class BatchManagerUrlFilter
         public string $filter,
     ) {
     }
-
-    /**
-     * @param array<mixed> $bulkManagerFilter
-     */
-    public function withBulkManagerFilter(array $bulkManagerFilter): self
-    {
-        return new self($bulkManagerFilter, $this->filter);
-    }
 }

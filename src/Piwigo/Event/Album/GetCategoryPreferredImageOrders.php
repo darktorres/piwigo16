@@ -18,12 +18,4 @@ final readonly class GetCategoryPreferredImageOrders
         public array $value,
     ) {
     }
-
-    /**
-     * @param array<mixed> $value
-     */
-    public function withValue(array $value): self
-    {
-        return new self($value);
-    }
 }

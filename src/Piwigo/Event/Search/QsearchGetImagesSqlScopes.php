@@ -20,12 +20,4 @@ final readonly class QsearchGetImagesSqlScopes
         public \Piwigo\Search\QExpression $expr,
     ) {
     }
-
-    /**
-     * @param array<mixed> $clauses
-     */
-    public function withClauses(array $clauses): self
-    {
-        return new self($clauses, $this->token, $this->expr);
-    }
 }

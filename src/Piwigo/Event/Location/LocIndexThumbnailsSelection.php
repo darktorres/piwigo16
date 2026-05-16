@@ -21,12 +21,4 @@ final readonly class LocIndexThumbnailsSelection
         public array $selection,
     ) {
     }
-
-    /**
-     * @param array<mixed> $selection
-     */
-    public function withSelection(array $selection): self
-    {
-        return new self($selection);
-    }
 }

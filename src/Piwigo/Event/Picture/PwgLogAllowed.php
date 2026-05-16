@@ -17,9 +17,4 @@ final readonly class PwgLogAllowed
         public string $imageType,
     ) {
     }
-
-    public function withDoLog(bool $doLog): self
-    {
-        return new self($doLog, $this->imageId, $this->imageType);
-    }
 }

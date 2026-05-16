@@ -17,9 +17,4 @@ final readonly class GetCategoriesMenuSqlWhere
         public bool $filterEnabled,
     ) {
     }
-
-    public function withWhere(string $where): self
-    {
-        return new self($where, $this->userExpand, $this->filterEnabled);
-    }
 }

@@ -21,12 +21,4 @@ final readonly class GetTagAltNames
         public string $rawName,
     ) {
     }
-
-    /**
-     * @param array<mixed> $value
-     */
-    public function withValue(array $value): self
-    {
-        return new self($value, $this->rawName);
-    }
 }

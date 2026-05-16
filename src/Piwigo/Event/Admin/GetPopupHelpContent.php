@@ -16,9 +16,4 @@ final readonly class GetPopupHelpContent
         public string $page,
     ) {
     }
-
-    public function withHelpContent(string $helpContent): self
-    {
-        return new self($helpContent, $this->page);
-    }
 }

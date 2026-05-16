@@ -16,9 +16,4 @@ final readonly class GetMimetypeLocation
         public string $ext,
     ) {
     }
-
-    public function withUrl(string $url): self
-    {
-        return new self($url, $this->ext);
-    }
 }

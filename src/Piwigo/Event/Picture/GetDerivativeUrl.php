@@ -20,9 +20,4 @@ final readonly class GetDerivativeUrl
         public string $relUrl,
     ) {
     }
-
-    public function withUrl(string $url): self
-    {
-        return new self($url, $this->value, $this->value2, $this->relUrl);
-    }
 }

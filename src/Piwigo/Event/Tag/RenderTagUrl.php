@@ -15,9 +15,4 @@ final readonly class RenderTagUrl
         public string $tagName,
     ) {
     }
-
-    public function withTagName(string $tagName): self
-    {
-        return new self($tagName);
-    }
 }

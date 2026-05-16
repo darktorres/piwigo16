@@ -18,9 +18,4 @@ final readonly class UpdateRatingScore
         public int $elementId,
     ) {
     }
-
-    public function withDone(bool $done): self
-    {
-        return new self($done, $this->elementId);
-    }
 }

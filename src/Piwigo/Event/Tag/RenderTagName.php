@@ -19,9 +19,4 @@ final readonly class RenderTagName
         public array $tag,
     ) {
     }
-
-    public function withTagName(string $tagName): self
-    {
-        return new self($tagName, $this->tag);
-    }
 }

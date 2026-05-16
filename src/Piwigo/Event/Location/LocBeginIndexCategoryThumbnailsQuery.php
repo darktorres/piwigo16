@@ -15,9 +15,4 @@ final readonly class LocBeginIndexCategoryThumbnailsQuery
         public string $query,
     ) {
     }
-
-    public function withQuery(string $query): self
-    {
-        return new self($query);
-    }
 }

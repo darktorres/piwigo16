@@ -19,9 +19,4 @@ final readonly class RenderElementContent
         public array $currentPicture,
     ) {
     }
-
-    public function withContent(string $content): self
-    {
-        return new self($content, $this->currentPicture);
-    }
 }

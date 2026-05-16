@@ -18,12 +18,4 @@ final readonly class LocEndIndexCategoryThumbnails
         public array $tplThumbnailsVar,
     ) {
     }
-
-    /**
-     * @param array<mixed> $tplThumbnailsVar
-     */
-    public function withTplThumbnailsVar(array $tplThumbnailsVar): self
-    {
-        return new self($tplThumbnailsVar);
-    }
 }

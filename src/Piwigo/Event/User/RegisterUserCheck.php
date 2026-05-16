@@ -20,12 +20,4 @@ final readonly class RegisterUserCheck
         public array $user,
     ) {
     }
-
-    /**
-     * @param list<string> $errors
-     */
-    public function withErrors(array $errors): self
-    {
-        return new self($errors, $this->user);
-    }
 }

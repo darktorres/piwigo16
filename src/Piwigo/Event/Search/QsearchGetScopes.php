@@ -18,12 +18,4 @@ final readonly class QsearchGetScopes
         public array $scopes,
     ) {
     }
-
-    /**
-     * @param array<mixed> $scopes
-     */
-    public function withScopes(array $scopes): self
-    {
-        return new self($scopes);
-    }
 }

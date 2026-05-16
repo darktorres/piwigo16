@@ -19,9 +19,4 @@ final readonly class NbmRenderUserCustomizeMailContent
         public array $nbmUser,
     ) {
     }
-
-    public function withCustomizeMailContent(string $customizeMailContent): self
-    {
-        return new self($customizeMailContent, $this->nbmUser);
-    }
 }

@@ -19,9 +19,4 @@ final readonly class GetThumbnailTitle
         public array $info,
     ) {
     }
-
-    public function withTitle(string $title): self
-    {
-        return new self($title, $this->info);
-    }
 }

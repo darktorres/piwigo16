@@ -21,9 +21,4 @@ final readonly class BeforeSendMail
         public \PHPMailer\PHPMailer\PHPMailer $mail,
     ) {
     }
-
-    public function withResult(bool $result): self
-    {
-        return new self($result, $this->to, $this->arguments, $this->mail);
-    }
 }

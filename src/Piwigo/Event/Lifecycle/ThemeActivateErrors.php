@@ -18,12 +18,4 @@ final readonly class ThemeActivateErrors
         public array $errors,
     ) {
     }
-
-    /**
-     * @param array<mixed> $errors
-     */
-    public function withErrors(array $errors): self
-    {
-        return new self($errors);
-    }
 }

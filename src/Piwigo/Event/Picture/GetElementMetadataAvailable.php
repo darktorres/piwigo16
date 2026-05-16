@@ -23,9 +23,4 @@ final readonly class GetElementMetadataAvailable
         public array $currentPicture,
     ) {
     }
-
-    public function withAvailable(bool $available): self
-    {
-        return new self($available, $this->currentPicture);
-    }
 }

@@ -15,9 +15,4 @@ final readonly class RenderLostPasswordMailContent
         public string $message,
     ) {
     }
-
-    public function withMessage(string $message): self
-    {
-        return new self($message);
-    }
 }

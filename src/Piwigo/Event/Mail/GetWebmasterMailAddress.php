@@ -17,9 +17,4 @@ final readonly class GetWebmasterMailAddress
         public string $email,
     ) {
     }
-
-    public function withEmail(string $email): self
-    {
-        return new self($email);
-    }
 }

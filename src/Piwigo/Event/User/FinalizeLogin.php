@@ -21,12 +21,4 @@ final readonly class FinalizeLogin
         public bool $rememberMe,
     ) {
     }
-
-    /**
-     * @param array<mixed> $state
-     */
-    public function withState(array $state): self
-    {
-        return new self($state, $this->userFound, $this->rememberMe);
-    }
 }

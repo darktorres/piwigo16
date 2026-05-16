@@ -19,12 +19,4 @@ final readonly class PerformBatchManagerPrefilters
         public string $prefilter,
     ) {
     }
-
-    /**
-     * @param array<mixed> $filterSets
-     */
-    public function withFilterSets(array $filterSets): self
-    {
-        return new self($filterSets, $this->prefilter);
-    }
 }

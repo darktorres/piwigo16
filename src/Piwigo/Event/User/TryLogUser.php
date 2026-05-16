@@ -20,9 +20,4 @@ final readonly class TryLogUser
         public bool $rememberMe,
     ) {
     }
-
-    public function withSuccess(bool $success): self
-    {
-        return new self($success, $this->username, $this->password, $this->rememberMe);
-    }
 }

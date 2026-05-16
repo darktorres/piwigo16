@@ -15,9 +15,4 @@ final readonly class PwgLogUpdateLastVisit
         public bool $update,
     ) {
     }
-
-    public function withUpdate(bool $update): self
-    {
-        return new self($update);
-    }
 }

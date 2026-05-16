@@ -20,12 +20,4 @@ final readonly class QsearchResults
         public object $qsr,
     ) {
     }
-
-    /**
-     * @param array<mixed> $results
-     */
-    public function withResults(array $results): self
-    {
-        return new self($results, $this->expression, $this->qsr);
-    }
 }

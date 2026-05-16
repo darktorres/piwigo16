@@ -20,9 +20,4 @@ final readonly class RenderPageBanner
         public string $banner,
     ) {
     }
-
-    public function withBanner(string $banner): self
-    {
-        return new self($banner);
-    }
 }

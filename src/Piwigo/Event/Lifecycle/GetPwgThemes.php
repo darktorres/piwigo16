@@ -18,12 +18,4 @@ final readonly class GetPwgThemes
         public array $themes,
     ) {
     }
-
-    /**
-     * @param array<mixed> $themes
-     */
-    public function withThemes(array $themes): self
-    {
-        return new self($themes);
-    }
 }

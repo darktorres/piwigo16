@@ -18,9 +18,4 @@ final readonly class GetSrcImageUrl
         public \Piwigo\Image\SrcImage $value,
     ) {
     }
-
-    public function withUrl(string $url): self
-    {
-        return new self($url, $this->value);
-    }
 }

@@ -16,9 +16,4 @@ final readonly class CombinedScript
         public \Piwigo\Template\Combinable $script,
     ) {
     }
-
-    public function withRet(string $ret): self
-    {
-        return new self($ret, $this->script);
-    }
 }

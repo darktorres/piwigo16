@@ -706,8 +706,10 @@ SELECT id
                 'haveFormatsOriginal'     => $have_formats_original,
                 'imageFormatsExtensions'  => $formats_ext_info ?? '',
                 'nb_albums'               => $nb_albums,
-                /** @phpstan-ignore-next-line notIdentical.alwaysTrue */
-                'originalImageId'         => $have_formats_original && $formats_original_info !== null && isset($formats_original_info['id']) && is_numeric($formats_original_info['id']) ? (int) $formats_original_info['id'] : -1,
+                // $have_formats_original is true only after the non-null
+                // branch at line 649 ran, so $formats_original_info is
+                // guaranteed array (non-null) here — checking again was dead.
+                'originalImageId'         => $have_formats_original && isset($formats_original_info['id']) && is_numeric($formats_original_info['id']) ? (int) $formats_original_info['id'] : -1,
                 'photosAdded_label'       => Lang::t('%d photos uploaded'),
                 'photosUpdated_label'     => Lang::t('%d photos updated'),
                 'related_categories_ids'  => $selected_category,

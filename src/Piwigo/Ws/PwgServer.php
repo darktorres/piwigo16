@@ -261,6 +261,12 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
                 unset($value);
             } elseif (self::hasFlag($type, WsType::Int->value)) {
                 foreach ($param as &$value) {
+                    // Psalm's filter_var return-type provider checks
+                    // `min_range` against Type::getNumeric() but rejects
+                    // plain int values (only `numeric-string|float`
+                    // pass). Filter_var accepts int at runtime — this is
+                    // a Psalm-internal mismatch; suppress just the
+                    // option-type check.
                     /** @psalm-suppress InvalidArgument */
                     if (($value = filter_var($value, FILTER_VALIDATE_INT, $opts)) === false) {
                         return new PwgError(WsError::InvalidParam->value, $name.' must only contain'.$msg.' integers');
@@ -284,6 +290,9 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
                     return new PwgError(WsError::InvalidParam->value, $name.' must be a boolean');
                 }
             } elseif (self::hasFlag($type, WsType::Int->value)) {
+                // See above: Psalm's filter_var option-type check rejects
+                // int values for `min_range` despite filter_var accepting
+                // them at runtime.
                 /** @psalm-suppress InvalidArgument */
                 if (($param = filter_var($param, FILTER_VALIDATE_INT, $opts)) === false) {
                     return new PwgError(WsError::InvalidParam->value, $name.' must be an'.$msg.' integer');

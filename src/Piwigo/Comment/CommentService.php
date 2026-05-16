@@ -197,9 +197,14 @@ final readonly class CommentService
             $commentAction = 'reject';
         }
 
-        $rawCommIp = $comm['ip'];
+        // $comm['ip'] was set above from $_SERVER['REMOTE_ADDR'] ?? ''
+        // (line 120). PHPStan sees `$comm` as array<string, mixed> so the
+        // is_string narrow stays; Psalm sees `string` and treats the
+        // narrow as redundant — bridge with a single suppress to keep
+        // both tools happy without weakening the runtime fallback.
         /** @psalm-suppress RedundantCondition,TypeDoesNotContainType */
-        $ipComponents = explode('.', is_string($rawCommIp) ? $rawCommIp : '');
+        $rawCommIp = is_string($comm['ip']) ? $comm['ip'] : '';
+        $ipComponents = explode('.', $rawCommIp);
         if (count($ipComponents) > 3) {
             array_pop($ipComponents);
         }

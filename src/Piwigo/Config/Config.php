@@ -90,6 +90,21 @@ final class Config
         return $default;
     }
 
+    /**
+     * Same as getString, but the caller asserts the *default* is
+     * non-empty-string. Lets typed accessors declare
+     * `@return non-empty-string` without per-call-site psalm-suppress
+     * dance around the value-or-default narrowing.
+     *
+     * @param non-empty-string $default
+     * @return non-empty-string
+     */
+    private static function getNonEmptyString(string $key, string $default): string
+    {
+        $value = self::getString($key, $default);
+        return $value !== '' ? $value : $default;
+    }
+
     private static function getInt(string $key, int $default = 0): int
     {
         if (!array_key_exists($key, self::SCHEMA)) {
@@ -1200,25 +1215,16 @@ final class Config
 
     // ---- Custom accessors (hand-written) --------------------------------
 
-    /**
-     * @return non-empty-string
-     * @psalm-suppress MoreSpecificReturnType
-     */
+    /** @return non-empty-string */
     public static function metadataKeywordSeparatorRegex(): string
     {
-        $value = self::getString('metadata_keyword_separator_regex', '/[.,;]/');
-        /** @psalm-suppress LessSpecificReturnStatement */
-        return $value !== '' ? $value : '/[.,;]/';
+        return self::getNonEmptyString('metadata_keyword_separator_regex', '/[.,;]/');
     }
-    /**
-     * @return non-empty-string
-     * @psalm-suppress MoreSpecificReturnType
-     */
+
+    /** @return non-empty-string */
     public static function syncCharsRegex(): string
     {
-        $value = self::getString('sync_chars_regex', '/^[a-zA-Z0-9-_.]+$/');
-        /** @psalm-suppress LessSpecificReturnStatement */
-        return $value !== '' ? $value : '/^[a-zA-Z0-9-_.]+$/';
+        return self::getNonEmptyString('sync_chars_regex', '/^[a-zA-Z0-9-_.]+$/');
     }
     /** @return list<string> */
     public static function pictureExtensions(): array

@@ -35,12 +35,13 @@ final class C13yInternal
     {
         $check_list = [];
 
-        $phpVer = phpversion();
-        /** @phpstan-ignore-next-line notIdentical.alwaysTrue */
-        $phpVerStr = $phpVer !== false ? $phpVer : '0.0.0';
+        // Use the PHP_VERSION constant (always string) instead of
+        // phpversion(), whose return type stubs disagree between PHPStan
+        // (string) and Psalm (string|false). Both tools accept the
+        // constant cleanly.
         $check_list[] = [
             'type' => 'PHP',
-            'current' => $phpVerStr,
+            'current' => PHP_VERSION,
             'required' => AppInfo::REQUIRED_PHP_VERSION,
             ];
 

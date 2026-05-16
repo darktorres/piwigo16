@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/darktorres/piwigo16/16.x-rewrite/docs/schemas/theme.schema.json",
+  "id": "light",
+  "name": "light",
+  "version": "1.0.0",
+  "parent": "_base",
+  "colorscheme": "light",
+  "assets": {
+    "adminIcon": "themes/admin/light/icon"
+  }
+}

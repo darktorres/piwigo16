@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/darktorres/piwigo16/16.x-rewrite/docs/schemas/theme.schema.json",
+  "id": "_base",
+  "name": "default",
+  "version": "1.0.0",
+  "colorscheme": "dark",
+  "assets": {
+    "icon": "themes/_base/icon",
+    "adminIcon": "themes/admin/_base/icon",
+    "mimeIcon": "themes/_base/icon/mimetypes/"
+  }
+}

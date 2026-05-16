@@ -48,7 +48,7 @@ use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-final readonly class ExtensionsController
+final readonly class ExtensionsController implements AdminSubControllerInterface
 {
     /** @var list<string> */
     public const array PAGES = [
@@ -82,6 +82,7 @@ final readonly class ExtensionsController
     ) {
     }
 
+    #[\Override]
     public function handle(string $page): void
     {
         if ($page === 'plugins') {

@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 use Piwigo\Admin\AdminMenuGroup;
 use Piwigo\Admin\AdminPage;
 use Piwigo\Admin\AdminPageRegistry;
+use Piwigo\Controller\Admin\AlbumController;
+use Piwigo\Controller\Admin\ExtensionsController;
+use Piwigo\Controller\Admin\UsersController;
 use Piwigo\Core\AccessLevel;
 
 final class AdminPageRegistryTest extends TestCase
@@ -20,7 +23,7 @@ final class AdminPageRegistryTest extends TestCase
         $page = new AdminPage(
             slug: 'albums',
             label: 'admin.menu.album.albums',
-            controllerClass: 'Piwigo\\Controller\\Admin\\AlbumController',
+            controllerClass: AlbumController::class,
             menuGroup: AdminMenuGroup::Albums,
             permission: AccessLevel::Administrator,
         );
@@ -35,19 +38,19 @@ final class AdminPageRegistryTest extends TestCase
     public function testDoubleRegistrationOfSameSlugThrows(): void
     {
         $registry = new AdminPageRegistry();
-        $registry->register(new AdminPage('users', 'l', 'C', AdminMenuGroup::Users));
+        $registry->register(new AdminPage('users', 'l', UsersController::class, AdminMenuGroup::Users));
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('/already registered/');
-        $registry->register(new AdminPage('users', 'l', 'OtherC', AdminMenuGroup::Users));
+        $registry->register(new AdminPage('users', 'l', ExtensionsController::class, AdminMenuGroup::Users));
     }
 
     public function testByGroupReturnsOnlyMatchingPages(): void
     {
         $registry = new AdminPageRegistry();
-        $registry->register(new AdminPage('albums', 'a', 'AlbumC', AdminMenuGroup::Albums));
-        $registry->register(new AdminPage('cat_modify', 'b', 'AlbumC', AdminMenuGroup::Albums));
-        $registry->register(new AdminPage('user_list', 'c', 'UsersC', AdminMenuGroup::Users));
+        $registry->register(new AdminPage('albums', 'a', AlbumController::class, AdminMenuGroup::Albums));
+        $registry->register(new AdminPage('cat_modify', 'b', AlbumController::class, AdminMenuGroup::Albums));
+        $registry->register(new AdminPage('user_list', 'c', UsersController::class, AdminMenuGroup::Users));
 
         $albums = $registry->byGroup(AdminMenuGroup::Albums);
         self::assertCount(2, $albums);
@@ -62,7 +65,7 @@ final class AdminPageRegistryTest extends TestCase
     public function testAllReturnsMapKeyedBySlug(): void
     {
         $registry = new AdminPageRegistry();
-        $registry->register(new AdminPage('plugins', 'l', 'ExtC', AdminMenuGroup::Plugins));
+        $registry->register(new AdminPage('plugins', 'l', ExtensionsController::class, AdminMenuGroup::Plugins));
         $all = $registry->all();
         self::assertArrayHasKey('plugins', $all);
         self::assertSame('plugins', $all['plugins']->slug);

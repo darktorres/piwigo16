@@ -69,31 +69,33 @@ final class AdminPagesDispatchTest extends TestCase
         );
     }
 
+    /**
+     * B10 replaced AdminController's per-controller dispatch table with
+     * a registry populated by AdminPagesRegisteringSubscriber. Verify
+     * that walking the subscriber yields one registry entry per page in
+     * every sub-controller's PAGES array — that's the new "every page
+     * has a dispatch target" invariant.
+     */
     public function test_AdminController_dispatches_all_sub_controller_PAGES(): void
     {
-        $adminRfFileName = new \ReflectionClass(AdminController::class)->getFileName();
-        $adminSrc = file_get_contents($adminRfFileName !== false ? $adminRfFileName : '');
-        self::assertIsString($adminSrc);
-        self::assertNotEmpty($adminSrc);
-
-        $allSubControllers = [
-            AlbumController::class, BatchManagerController::class,
-            ConfigurationController::class, ExtensionsController::class,
-            GroupsController::class, MaintenanceController::class,
-            PhotoController::class, UsersController::class,
-        ];
+        $registry = new \Piwigo\Admin\AdminPageRegistry();
+        (new \Piwigo\Listener\AdminPagesRegisteringSubscriber())
+            ->onAdminPagesRegistering(new \Piwigo\Event\Admin\AdminPagesRegistering($registry));
 
         $missing = [];
-        foreach ($allSubControllers as $fqcn) {
-            $short = new \ReflectionClass($fqcn)->getShortName();
-            if (!str_contains($adminSrc, $short . '::PAGES')) {
-                $missing[] = $short;
+        foreach (self::subControllerProvider() as [$controllerClass, $pages]) {
+            foreach ($pages as $page) {
+                $entry = $registry->find($page);
+                if ($entry === null || $entry->controllerClass !== $controllerClass) {
+                    $short = new \ReflectionClass($controllerClass)->getShortName();
+                    $missing[] = "{$short}::{$page}";
+                }
             }
         }
 
         self::assertEmpty(
             $missing,
-            'AdminController::dispatchToSubController() does not reference PAGES for: '
+            'AdminPagesRegisteringSubscriber missed registry entries for: '
             . implode(', ', $missing)
         );
     }

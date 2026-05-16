@@ -68,7 +68,7 @@ use Psr\Cache\CacheItemPoolInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-final class MaintenanceController
+final class MaintenanceController implements AdminSubControllerInterface
 {
     /** @var list<string> */
     public const array PAGES = [
@@ -116,6 +116,7 @@ final class MaintenanceController
     ) {
     }
 
+    #[\Override]
     public function handle(string $page): void
     {
         if ($page === 'maintenance') {

@@ -55,7 +55,7 @@ use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-final class PhotoController
+final class PhotoController implements AdminSubControllerInterface
 {
     /** @var list<string> */
     public const array PAGES = [
@@ -105,6 +105,7 @@ final class PhotoController
     ) {
     }
 
+    #[\Override]
     public function handle(string $page): void
     {
         if ($page === 'photo') {

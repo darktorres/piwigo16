@@ -60,7 +60,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Validation\InputValidator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-final class BatchManagerController
+final class BatchManagerController implements AdminSubControllerInterface
 {
     /** @var list<string> */
     public const array PAGES = [
@@ -105,6 +105,7 @@ final class BatchManagerController
     ) {
     }
 
+    #[\Override]
     public function handle(string $page): void
     {
         if ($page === 'batch_manager') {

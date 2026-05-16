@@ -34,7 +34,7 @@ use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 
-final readonly class ConfigurationController
+final readonly class ConfigurationController implements AdminSubControllerInterface
 {
     /** @var list<string> */
     public const array PAGES = [
@@ -58,6 +58,7 @@ final readonly class ConfigurationController
     ) {
     }
 
+    #[\Override]
     public function handle(string $page): void
     {
         if ($page === 'configuration') {

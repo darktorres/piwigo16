@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Controller\Admin\AdminSubControllerInterface;
 use Piwigo\Core\AccessLevel;
 
 /**
@@ -26,6 +27,9 @@ use Piwigo\Core\AccessLevel;
  */
 final readonly class AdminPage
 {
+    /**
+     * @param class-string<AdminSubControllerInterface> $controllerClass
+     */
     public function __construct(
         public string $slug,
         public string $label,

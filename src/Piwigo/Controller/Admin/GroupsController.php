@@ -27,7 +27,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Validation\InputValidator;
 
-final readonly class GroupsController
+final readonly class GroupsController implements AdminSubControllerInterface
 {
     /** @var list<string> */
     public const array PAGES = [
@@ -49,6 +49,7 @@ final readonly class GroupsController
     ) {
     }
 
+    #[\Override]
     public function handle(string $page): void
     {
         if ($page === 'group_list') {

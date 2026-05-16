@@ -73,7 +73,7 @@ use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-final class MiscController
+final class MiscController implements AdminSubControllerInterface
 {
     /** @var list<string> */
     public const array PAGES = [
@@ -122,6 +122,7 @@ final class MiscController
     ) {
     }
 
+    #[\Override]
     public function handle(string $page): void
     {
         if ($page === 'notification_by_mail') {

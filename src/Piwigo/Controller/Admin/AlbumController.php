@@ -53,7 +53,7 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-final class AlbumController
+final class AlbumController implements AdminSubControllerInterface
 {
     /** @var list<string> */
     public const array PAGES = [
@@ -93,6 +93,7 @@ final class AlbumController
     private ?array $albumCategory = null;
     private string $adminAlbumBaseUrl = '';
 
+    #[\Override]
     public function handle(string $page): void
     {
         if ($page === 'album') {

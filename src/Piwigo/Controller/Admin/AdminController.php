@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\AdminPageRegistry;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
@@ -17,6 +18,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\Admin\AdminPagesRegistering;
 use Piwigo\Event\Location\LocBeginAdmin;
 use Piwigo\Event\Location\LocBeginAdminPage;
 use Piwigo\Event\Location\LocEndAdmin;
@@ -74,6 +76,7 @@ final readonly class AdminController implements ControllerInterface
         private InputValidator $inputValidator,
         private RedirectResponder $redirectResponder,
         private EventDispatcherInterface $dispatcher,
+        private AdminPageRegistry $pageRegistry,
     ) {
     }
 
@@ -95,6 +98,12 @@ final readonly class AdminController implements ControllerInterface
         // tabsheet_before_select listener now registers at boot via
         // Piwigo\Listener\TabsheetBeforeSelectSubscriber.
         $this->dispatcher->dispatch(new LocBeginAdmin());
+
+        // Build the admin-page registry: core pages register first via
+        // AdminPagesRegisteringSubscriber, then any plugin subscriber.
+        // Once populated, the registry drives both slug validation and
+        // sub-controller dispatch below.
+        $this->dispatcher->dispatch(new AdminPagesRegistering($this->pageRegistry));
 
         $this->permissionService->checkStatus(AccessLevel::Administrator);
 
@@ -204,21 +213,11 @@ final readonly class AdminController implements ControllerInterface
             $getPage = 'photo';
         }
 
-        // Validate $getPage against the union of all sub-controller PAGES arrays
-        // plus MiscController's known pages.  The old is_file('admin/{page}.php')
-        // check was removed when Wave-B deleted those files.
-        $allKnownPages = array_merge(
-            AlbumController::PAGES,
-            PhotoController::PAGES,
-            BatchManagerController::PAGES,
-            ConfigurationController::PAGES,
-            UsersController::PAGES,
-            GroupsController::PAGES,
-            ExtensionsController::PAGES,
-            MaintenanceController::PAGES,
-            MiscController::PAGES,
-        );
-        $adminPage = ($getPage !== '' && preg_match('/^[a-z_]*$/', $getPage) && in_array($getPage, $allKnownPages, true))
+        // Validate $getPage against the registry populated by the
+        // AdminPagesRegistering subscriber chain above. The regex still
+        // enforces slug shape (no quoting/path traversal) before the
+        // registry lookup.
+        $adminPage = ($getPage !== '' && preg_match('/^[a-z_]*$/', $getPage) && $this->pageRegistry->has($getPage))
             ? $getPage
             : 'intro';
         $adminBase  = $this->urlGenerator->admin();
@@ -418,24 +417,13 @@ final readonly class AdminController implements ControllerInterface
 
     private function dispatchToSubController(string $page): void
     {
-        if (in_array($page, AlbumController::PAGES, true)) {
-            Kernel::service(AlbumController::class)->handle($page);
-        } elseif (in_array($page, PhotoController::PAGES, true)) {
-            Kernel::service(PhotoController::class)->handle($page);
-        } elseif (in_array($page, BatchManagerController::PAGES, true)) {
-            Kernel::service(BatchManagerController::class)->handle($page);
-        } elseif (in_array($page, ConfigurationController::PAGES, true)) {
-            Kernel::service(ConfigurationController::class)->handle($page);
-        } elseif (in_array($page, UsersController::PAGES, true)) {
-            Kernel::service(UsersController::class)->handle($page);
-        } elseif (in_array($page, GroupsController::PAGES, true)) {
-            Kernel::service(GroupsController::class)->handle($page);
-        } elseif (in_array($page, ExtensionsController::PAGES, true)) {
-            Kernel::service(ExtensionsController::class)->handle($page);
-        } elseif (in_array($page, MaintenanceController::PAGES, true)) {
-            Kernel::service(MaintenanceController::class)->handle($page);
-        } else {
-            Kernel::service(MiscController::class)->handle($page);
+        $entry = $this->pageRegistry->find($page);
+        // The slug-validation block earlier rejected anything not in the
+        // registry, so a missing entry here is impossible in practice.
+        // Treat it as a logic error if it ever fires.
+        if ($entry === null) {
+            throw new \LogicException("AdminController dispatched unregistered page '{$page}'");
         }
+        Kernel::service($entry->controllerClass)->handle($page);
     }
 }

@@ -226,6 +226,8 @@ $routes->add('popuphelp', new Route(
 // ── Technical ─────────────────────────────────────────────────────────────────
 
 // Image derivative: /i/path/to/image-thumb.jpg
+// NOTE: index.php intercepts i/ requests before this route is ever reached.
+// The route exists solely for URL generation via UrlGenerator::image().
 $routes->add('image', new Route(
     path:         '/i/{rest}',
     defaults:     ['_controller' => 'Piwigo\Controller\ImageDerivativeController'],

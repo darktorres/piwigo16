@@ -12,10 +12,8 @@ use Piwigo\Controller\UpgradeFeedController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Db\DbConnection;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
-use Symfony\Component\EventDispatcher\EventDispatcher;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -30,7 +28,7 @@ $_qs = ltrim(is_string($_SERVER['QUERY_STRING'] ?? null) ? $_SERVER['QUERY_STRIN
 
 if (str_starts_with($_qs, 'i/')) {
     // Image derivative fast-path — same minimal bootstrap as the former i.php.
-    // Deliberately skips common.inc.php and Kernel::boot() for performance.
+    // Skips CommonBootstrap (no session, no user, no plugins) for performance.
     defined('PWG_LOCAL_DIR')      or define('PWG_LOCAL_DIR', 'local/');
     require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
     ConfigLoader::applyDefaults();
@@ -42,9 +40,8 @@ if (str_starts_with($_qs, 'i/')) {
         'filename'  => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . Config::dbPassword()) . '.txt',
     ]);
     LoggerRegistry::set($logger);
-    // i/ fast-path deliberately skips Kernel::boot for latency; build a bare
-    // PSR-14 dispatcher (no listeners — plugins haven't loaded anyway).
-    (new ImageDerivativeController(DbConnection::build(), new EventDispatcher()))(RequestFactory::fromGlobals());
+    Kernel::bootMinimal();
+    Kernel::service(ImageDerivativeController::class)(RequestFactory::fromGlobals());
     exit;
 }
 

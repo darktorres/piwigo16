@@ -67,6 +67,33 @@ final class Kernel
     }
 
     /**
+     * Minimal boot for entry points that need the DI container but must not
+     * start a session, load user context, or initialise the globals bridges.
+     *
+     * Designed for the image-derivative fast-path (index.php?/i/…). That
+     * path skips CommonBootstrap::run() entirely, so plugins are never loaded
+     * and the EventDispatcher has no plugin subscribers. DerivativeParamsGet
+     * fires into an empty dispatcher — intentional, matching original i.php
+     * behaviour. Do not call bootMinimal() expecting plugin hooks to work.
+     *
+     * Callers must register a real Logger in LoggerRegistry before calling
+     * this if they want one; the NullLogger fallback is just a safety net.
+     */
+    public static function bootMinimal(): void
+    {
+        if (self::$booted) {
+            return;
+        }
+        self::$booted = true;
+
+        if (!LoggerRegistry::isInitialized()) {
+            LoggerRegistry::set(new NullLogger());
+        }
+
+        self::$container = Container::build();
+    }
+
+    /**
      * Run the PSR-15 middleware pipeline for the given request.
      * Must be called after boot().
      */

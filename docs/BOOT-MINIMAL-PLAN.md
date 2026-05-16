@@ -1,4 +1,7 @@
-# Plan: `Kernel::bootMinimal()` — proper fast-path boot
+# Plan: `Kernel::bootMinimal()` — proper fast-path boot ✓ IMPLEMENTED
+
+> Implemented in commit `90dc4afcc` (2026-05-16).
+> All 607 tests pass. PHPStan clean.
 
 ## Audit: entry-point boot behaviour in `index.php`
 
@@ -11,7 +14,7 @@ bypass it.
 | `upgrade_feed` | Yes — directly | Correct |
 | `upgrade` | Yes — directly | Correct |
 | `install` | No at index level; `InstallController::__invoke()` calls it internally | Justified — see §2 |
-| `i/` | No — deliberately skipped | **Needs fix — see §3** |
+| `i/` | No — deliberately skipped | ~~Needs fix~~ **Fixed** — uses `bootMinimal()` |
 
 ---
 
@@ -70,11 +73,11 @@ The idempotency guard prevents double-wiring in nested includes, same as today.
 
 ---
 
-## §4 Implementation steps
+## §4 Implementation steps ✓ Done
 
-### Step A — `src/Piwigo/Core/Kernel.php`
+### Step A — `src/Piwigo/Core/Kernel.php` ✓
 
-Add `bootMinimal()` between `boot()` and `handle()`:
+Added `bootMinimal()` between `boot()` and `handle()`:
 
 ```php
 public static function bootMinimal(): void
@@ -94,9 +97,9 @@ public static function bootMinimal(): void
 
 No changes to `reset()` — it already clears `$booted` and `$container`.
 
-### Step B — `index.php` `i/` block
+### Step B — `index.php` `i/` block ✓
 
-Replace:
+Replaced:
 
 ```php
 // current
@@ -128,7 +131,7 @@ container resolves to the real logger (the container factory reads
 `LoggerRegistry` lazily, but the derivative path needs the real logger set
 before any service resolves it).
 
-### Step C — `config/container.php`
+### Step C — `config/container.php` ✓ (no change needed)
 
 No change. `ImageDerivativeController` has two constructor params — `Connection`
 and `EventDispatcherInterface` — both registered in `container.php`. PHP-DI
@@ -144,12 +147,13 @@ fast-path regardless.
 
 ---
 
-## §5 Files touched
+## §5 Files touched ✓
 
 | File | Change |
 |---|---|
-| `src/Piwigo/Core/Kernel.php` | Add `bootMinimal()` method |
-| `index.php` | Replace manual controller construction with `bootMinimal()` + `Kernel::service()` |
+| `src/Piwigo/Core/Kernel.php` | Added `bootMinimal()` method |
+| `index.php` | Replaced manual controller construction with `bootMinimal()` + `Kernel::service()` |
+| `config/routes.php` | Added note: `image` route exists for URL generation only; `index.php` intercepts `i/` before it is dispatched |
 
-No other files change. `config/container.php`, `Kernel::reset()`, and the
-`install`/`upgrade`/`upgrade_feed` fast-paths are all left as-is.
+`config/container.php`, `Kernel::reset()`, and the `install`/`upgrade`/`upgrade_feed`
+fast-paths left as-is.

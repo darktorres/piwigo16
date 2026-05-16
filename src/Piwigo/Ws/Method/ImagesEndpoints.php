@@ -254,7 +254,8 @@ final readonly class ImagesEndpoints
         $imageRowId    = is_numeric($imageRow['id']) ? (int) $imageRow['id'] : 0;
         $imageRowFile  = is_string($imageRow['file'] ?? null) ? $imageRow['file'] : '';
         $imageRow['name_raw']    = $imageRow['name'];
-        $renderEvent             = new RenderElementName(is_string($imageRow['name'] ?? null) ? $imageRow['name'] : '', $imageRow);
+        $rawImageName            = $imageRow['name'] ?? null;
+        $renderEvent             = new RenderElementName(is_string($rawImageName) ? $rawImageName : '', $imageRow);
         $this->dispatcher->dispatch($renderEvent);
         $imageRow['name']        = strip_tags($renderEvent->elementName);
         $imageRow['comment_raw'] = $imageRow['comment'];
@@ -271,7 +272,8 @@ final readonly class ImagesEndpoints
             $row['url']      = $this->urlService->makeIndexUrl(['category' => $row]);
             $row['page_url'] = $this->urlService->makePictureUrl(['image_id' => $imageRowId, 'image_file' => $imageRowFile, 'category' => $row]);
             $row['id']       = is_numeric($row['id']) ? (int) $row['id'] : 0;
-            $catRenderEvent  = new RenderCategoryName(is_string($row['name'] ?? null) ? $row['name'] : '', __FUNCTION__);
+            $rawCatName      = $row['name'] ?? null;
+            $catRenderEvent  = new RenderCategoryName(is_string($rawCatName) ? $rawCatName : '', __FUNCTION__);
             $this->dispatcher->dispatch($catRenderEvent);
             $row['name']     = strip_tags($catRenderEvent->categoryName);
             $relatedCategories[] = $row;
@@ -390,7 +392,8 @@ final readonly class ImagesEndpoints
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
                     $image[$k] = $row[$k] ?? null;
                 }
-                $renderEvent2     = new RenderElementName(is_string($image['name'] ?? null) ? $image['name'] : '', $image);
+                $rawImage2Name    = $image['name'] ?? null;
+                $renderEvent2     = new RenderElementName(is_string($rawImage2Name) ? $rawImage2Name : '', $image);
                 $this->dispatcher->dispatch($renderEvent2);
                 $image['name']    = strip_tags($renderEvent2->elementName);
                 $imgCommentRaw    = $image['comment'] ?? null;

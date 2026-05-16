@@ -630,7 +630,12 @@ SELECT *
             $tpl->assign(['PDF_VIEWER_FILESIZE_THRESHOLD' => Config::pdfViewerFilesizeThreshold() * 1024, 'PDF_NB_PAGES' => $this->pictureService->countPdfPages(is_string($currentPic['path'] ?? null) ? $currentPic['path'] : '')]);
         }
 
-        $currentPic        = is_array($picture['current'] ?? null) ? $picture['current'] : [];
+        // Local narrow: `is_array($picture['current'] ?? null) ? $picture['current'] : []`
+        // confuses Psalm because the left branch keeps the mixed type of
+        // $picture['current']. Pull through a local so the type-narrow
+        // sticks across the ternary.
+        $rawCurrent = $picture['current'] ?? null;
+        $currentPic = is_array($rawCurrent) ? $rawCurrent : [];
         $contentEvent      = new RenderElementContent('', $currentPic);
         $this->dispatcher->dispatch($contentEvent);
         $tpl->assign('ELEMENT_CONTENT', new Html($contentEvent->content));

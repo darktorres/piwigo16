@@ -187,10 +187,11 @@ SELECT
                     $this->dispatcher->dispatch($contentEvent);
                     $authorEvent = new RenderCommentAuthor(is_string($row['author']) ? $row['author'] : '');
                     $this->dispatcher->dispatch($authorEvent);
+                    $rawDate = $row['date'] ?? null;
                     $tpl_comment = [
                         'ID' => $row['id'],
                         'AUTHOR' => $authorEvent->commentAuthor,
-                        'DATE' => $this->dateService->formatDate(is_string($row['date'] ?? null) ? $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']),
+                        'DATE' => $this->dateService->formatDate(is_string($rawDate) ? $rawDate : '', ['day_name', 'day', 'month', 'year', 'time']),
                         'CONTENT' => new Html($contentEvent->commentContent),
                         'WEBSITE_URL' => $row['website_url'],
                     ];

@@ -254,12 +254,14 @@ final readonly class CategoriesEndpoints
                 $row['name'] = strip_tags($this->htmlService->getCatDisplayNameCache(is_string($uppercatsRaw) ? $uppercatsRaw : '', null));
             } else {
                 $row['name_raw']  = $row['name'];
-                $listRenderEvent  = new RenderCategoryName(is_string($row['name'] ?? null) ? $row['name'] : '', 'ws_categories_getList');
+                $rawName          = $row['name'] ?? null;
+                $listRenderEvent  = new RenderCategoryName(is_string($rawName) ? $rawName : '', 'ws_categories_getList');
                 $this->dispatcher->dispatch($listRenderEvent);
                 $row['name']      = strip_tags($listRenderEvent->categoryName);
             }
             $row['comment_raw'] = $row['comment'];
-            $catDescEvent       = new RenderCategoryDescription(is_string($row['comment'] ?? null) ? $row['comment'] : '', 'ws_categories_getList');
+            $rawComment         = $row['comment'] ?? null;
+            $catDescEvent       = new RenderCategoryDescription(is_string($rawComment) ? $rawComment : '', 'ws_categories_getList');
             $this->dispatcher->dispatch($catDescEvent);
             $row['comment']     = $catDescEvent->categoryDescription;
             $imageId            = null;
@@ -388,7 +390,8 @@ final readonly class CategoriesEndpoints
             $rowUppercatsRaw = $row['uppercats'] ?? null;
             $catDisplayName  = $this->htmlService->getCatDisplayNameCache(is_string($rowUppercatsRaw) ? $rowUppercatsRaw : '', $this->urlGenerator->admin() . '&page=album-');
             $row['name_raw'] = $row['name'];
-            $adminRenderEvent = new RenderCategoryName(is_string($row['name'] ?? null) ? $row['name'] : '', 'ws_categories_getAdminList');
+            $rawAdminName    = $row['name'] ?? null;
+            $adminRenderEvent = new RenderCategoryName(is_string($rawAdminName) ? $rawAdminName : '', 'ws_categories_getAdminList');
             $this->dispatcher->dispatch($adminRenderEvent);
             $row['name']     = strip_tags($adminRenderEvent->categoryName);
             $row['fullname'] = strip_tags($catDisplayName);

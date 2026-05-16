@@ -279,7 +279,7 @@ SELECT *
                 $tpl_var = array_merge($category, [
                     'ID' => $category['id'],
                     'representative' => $representative_infos,
-                    'TN_ALT' => strip_tags((string) $category['name']),
+                    'TN_ALT' => strip_tags($category['name']),
                     'URL' => $this->urlService->makeIndexUrl(['category' => $category]),
                     'CAPTION_NB_IMAGES' => new Html($this->categoryService->getDisplayImagesCount(
                         is_numeric($category['nb_images']) ? (int) $category['nb_images'] : 0,

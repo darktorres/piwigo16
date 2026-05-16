@@ -93,13 +93,13 @@ final class UserService
             $errors[] = Lang::t('html tags are not allowed in login');
         }
         $mailError = $this->authService->validateMailAddress(null, $mailAddress);
-        if ('' != $mailError) {
+        if (is_string($mailError) && $mailError !== '') {
             $errors[] = $mailError;
         }
 
         if (Config::insensitiveCaseLogon() == true) {
             $loginError = $this->authService->validateLoginCase($login);
-            if ($loginError != '') {
+            if (is_string($loginError) && $loginError !== '') {
                 $errors[] = $loginError;
             }
         }

@@ -141,7 +141,8 @@ final class AlbumController implements AdminSubControllerInterface
         $tabsheet->select($tab);
         $tabsheet->assign();
 
-        $titleRenderEvent = new RenderCategoryName(is_string($this->albumCategory['name'] ?? null) ? $this->albumCategory['name'] : '', 'get_cat_display_name_cache');
+        $albumName = $this->albumCategory['name'] ?? '';
+        $titleRenderEvent = new RenderCategoryName(is_string($albumName) ? $albumName : '', 'get_cat_display_name_cache');
         $this->dispatcher->dispatch($titleRenderEvent);
         $category_name = $titleRenderEvent->categoryName;
         $tpl->assign([

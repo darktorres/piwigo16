@@ -146,20 +146,34 @@ return [
         // tests build the dispatcher without pulling DB-bound services.
         foreach (CoreSubscribers::ALL as $subscriberClass) {
             \assert(is_subclass_of($subscriberClass, EventSubscriberInterface::class));
-            foreach ($subscriberClass::getSubscribedEvents() as $eventClass => $config) {
-                if (is_string($config)) {
-                    $method   = $config;
-                    $priority = 0;
+            foreach ($subscriberClass::getSubscribedEvents() as $eventClass => $spec) {
+                // getSubscribedEvents() per-entry shape (Symfony idiom):
+                //   string                           → single handler, priority 0
+                //   array{0:string, 1?:int}          → single handler with priority
+                //   list<array{0:string, 1?:int}>    → multiple handlers
+                // Normalize to list<array{string,int}> so the addListener
+                // loop has one branch and Psalm sees concrete types.
+                $handlers = [];
+                if (is_string($spec)) {
+                    $handlers[] = [$spec, 0];
+                } elseif (isset($spec[0]) && is_string($spec[0])) {
+                    /** @var array{0:string,1?:int} $spec */
+                    $handlers[] = [$spec[0], $spec[1] ?? 0];
                 } else {
-                    \assert(is_array($config));
-                    $method   = (string) $config[0];
-                    $priority = isset($config[1]) ? (int) $config[1] : 0;
+                    /** @var list<array{0:string,1?:int}> $spec */
+                    foreach ($spec as $entry) {
+                        $handlers[] = [$entry[0], $entry[1] ?? 0];
+                    }
                 }
-                $dispatcher->addListener(
-                    (string) $eventClass,
-                    static fn (object $event) => $c->get($subscriberClass)->{$method}($event),
-                    $priority,
-                );
+                foreach ($handlers as [$method, $priority]) {
+                    $dispatcher->addListener(
+                        $eventClass,
+                        static function (object $event) use ($c, $subscriberClass, $method): void {
+                            $c->get($subscriberClass)->{$method}($event);
+                        },
+                        $priority,
+                    );
+                }
             }
         }
         return $dispatcher;

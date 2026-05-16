@@ -1087,7 +1087,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 $tpl_var['U_DELETE'] = $base_url . 'delete';
             }
             $rowId = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-            $siteLinksEvent = new GetAdminsSiteLinks([], $rowId, (bool) $is_remote);
+            $siteLinksEvent = new GetAdminsSiteLinks([], $rowId, $is_remote);
             $this->dispatcher->dispatch($siteLinksEvent);
             $tpl_var['plugin_links'] = $siteLinksEvent->pluginLinks;
             $tpl->append('sites', $tpl_var);

@@ -163,7 +163,7 @@ final readonly class ActivityLogger
         }
         $allowEvent = new PwgLogAllowed(
             $doLog,
-            $imageId !== null ? (int) $imageId : 0,
+            $imageId ?? 0,
             $imageType ?? '',
         );
         $this->dispatcher->dispatch($allowEvent);

@@ -20,12 +20,14 @@ use Psr\Log\NullLogger;
  * The PluginRepository dependency is stubbed with an in-memory shim so
  * we don't need a DB for registry-level tests.
  */
+/** @psalm-suppress PropertyNotSetInConstructor — properties initialized in setUp() */
 final class PluginRegistryTest extends TestCase
 {
     private string $fixturesDir;
 
     private string $schemaPath;
 
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
         // Fixtures live outside the PSR-4 tests/ namespace casing on
@@ -69,22 +71,30 @@ final class PluginRegistryTest extends TestCase
         $registry = $this->makeRegistry($repo);
 
         $registry->install('valid_plugin');
+        // Psalm narrows static-int counters too tightly across method
+        // calls (it sees =int(1) and flags `===1` as redundant). Suppress.
+        /** @psalm-suppress RedundantConditionGivenDocblockType */
         self::assertSame(1, ValidPlugin::$installCount);
         self::assertNotEmpty($repo->findAll('', 'valid_plugin'));
 
         $registry->install('valid_plugin'); // idempotent — install() runs only once
+        /** @psalm-suppress RedundantConditionGivenDocblockType */
         self::assertSame(1, ValidPlugin::$installCount);
 
         $registry->activate('valid_plugin');
+        /** @psalm-suppress RedundantConditionGivenDocblockType */
         self::assertSame(1, ValidPlugin::$activateCount);
 
         $registry->activate('valid_plugin'); // idempotent — already active
+        /** @psalm-suppress RedundantConditionGivenDocblockType */
         self::assertSame(1, ValidPlugin::$activateCount);
 
         $registry->deactivate('valid_plugin');
+        /** @psalm-suppress RedundantConditionGivenDocblockType */
         self::assertSame(1, ValidPlugin::$deactivateCount);
 
         $registry->uninstall('valid_plugin');
+        /** @psalm-suppress RedundantConditionGivenDocblockType */
         self::assertSame(1, ValidPlugin::$uninstallCount);
         self::assertEmpty($repo->findAll('', 'valid_plugin'));
     }
@@ -164,6 +174,7 @@ final class PluginRegistryTest extends TestCase
 
     private function stubRepository(): PluginRepository
     {
+        /** @psalm-suppress PropertyNotSetInConstructor — parent's $conn/$tablePrefix intentionally skipped; stub has no DB */
         return new class () extends PluginRepository {
             /** @var array<string, array<string, mixed>> */
             private array $rows = [];

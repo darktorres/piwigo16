@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/darktorres/piwigo16/16.x-rewrite/docs/schemas/theme.schema.json",
+  "id": "standard_pages",
+  "name": "standard_pages",
+  "version": "1.0.0",
+  "parent": "_base",
+  "loadParentCss": false,
+  "useStandardPages": true,
+  "assets": {
+    "img": "themes/standard_pages/images"
+  }
+}

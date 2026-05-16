@@ -7,7 +7,6 @@ namespace Piwigo\Ws;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Event\Ws\SendResponse;
-use Piwigo\Event\Ws\WsAddMethods;
 use Piwigo\Event\Ws\WsInvokeAllowed;
 use Piwigo\Event\Ws\WsMethodsRegistering;
 use Piwigo\Exception\ConfigException;
@@ -144,11 +143,6 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
      * (B11). The core WsMethodRegistrar subscribes with priority 100 so
      * it lands first; any plugin subscriber may run before or after by
      * choosing a higher or lower priority.
-     *
-     * WsAddMethods still fires for backward compatibility with legacy
-     * plugins still routed through Piwigo\Event\LegacyEventBridge under
-     * the `ws_add_methods` event name — B17 removes the legacy bridge
-     * entry and that dispatch with it.
      */
     public function populateMethods(): void
     {
@@ -167,7 +161,6 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         ));
 
         $this->dispatcher->dispatch(new WsMethodsRegistering($this));
-        $this->dispatcher->dispatch(new WsAddMethods($this));
         uksort($this->_methods, strnatcmp(...));
     }
 

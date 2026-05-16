@@ -74,9 +74,6 @@ rules:
     - Piwigo\Tools\PhpStan\NoGlobalInSrcRule
     - Piwigo\Tools\PhpStan\StrictTypesRequiredRule
 services:
-    -
-        class: Piwigo\Tools\PhpStan\EventDispatcherDispatchDynamicReturnType
-        tags: [phpstan.broker.dynamicStaticMethodReturnTypeExtension]
     - Piwigo\Tools\PhpStan\PiwigoLatteEngineResolver
 includes:
     - vendor/phpstan/phpstan-deprecation-rules/rules.neon

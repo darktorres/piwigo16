@@ -57,4 +57,26 @@ final class ActivityRepository extends AbstractRepository
             ->fetchOne();
         return is_string($value) ? $value : null;
     }
+
+    /**
+     * Return the first `occurred_on` entry for the given (object, object_id, action) tuple.
+     * Used by the admin album-modify page to show when an album was created.
+     */
+    public function findFirstOccurredOnForObject(string $object, int $objectId, string $action): ?string
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('occured_on')
+            ->from($this->table('activity'))
+            ->where('object = :object')
+            ->andWhere('object_id = :objectId')
+            ->andWhere('action = :action')
+            ->orderBy('activity_id', 'ASC')
+            ->setMaxResults(1)
+            ->setParameter('object', $object)
+            ->setParameter('objectId', $objectId)
+            ->setParameter('action', $action)
+            ->executeQuery()
+            ->fetchOne();
+        return is_string($value) ? $value : null;
+    }
 }

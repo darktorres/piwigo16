@@ -738,4 +738,65 @@ final class UserRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAllAssociative();
     }
+
+    /**
+     * Return user_ids from user_infos whose status is anything other than
+     * 'guest'. Used by admin-notification dialogs that exclude the anonymous
+     * placeholder user.
+     *
+     * @return list<int>
+     */
+    public function findNonGuestUserIds(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('user_id')
+            ->from($this->table('user_infos'))
+            ->where("status != 'guest'")
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return id → username map for the given user ids.
+     *
+     * @param  list<int> $ids
+     * @return array<int|string, string>
+     */
+    public function findIdToUsernameMapByIds(string $idField, string $usernameField, string $usersTable, array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $rows = $this->conn->executeQuery(
+            "SELECT $idField AS id, $usernameField AS username FROM $usersTable WHERE $idField IN (?)",
+            [$ids],
+            [ArrayParameterType::INTEGER],
+        )->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $key       = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $out[$key] = is_string($row['username'] ?? null) ? $row['username'] : '';
+        }
+        return $out;
+    }
+
+    /**
+     * Return (user_id, status, language, email, username) rows for the given
+     * user ids — used by admin-notification mailers.
+     *
+     * @param  list<int> $ids
+     * @return list<array<string, mixed>>
+     */
+    public function findMailRecipientInfoByIds(string $idField, string $usernameField, string $emailField, string $usersTable, array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $query = "SELECT ui.user_id, ui.status, ui.language, u.$emailField AS email, u.$usernameField AS username"
+            . ' FROM ' . $this->table('user_infos') . ' AS ui'
+            . " JOIN $usersTable AS u ON u.$idField = ui.user_id"
+            . ' WHERE ui.user_id IN (?)';
+        return $this->conn->executeQuery($query, [$ids], [ArrayParameterType::INTEGER])->fetchAllAssociative();
+    }
 }

@@ -239,4 +239,84 @@ final class GroupRepository extends AbstractRepository
            ->setParameter('userIds', $userIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
+
+    /**
+     * Return ids of every group.
+     *
+     * @return list<int>
+     */
+    public function findAllIds(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('groups'))
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return id → name map for every group, ordered by name ASC.
+     *
+     * @return array<int|string, string>
+     */
+    public function findAllIdToNameMapOrderedByName(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id', 'name')
+            ->from($this->table('groups'))
+            ->orderBy('name', 'ASC')
+            ->executeQuery()
+            ->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $key       = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $out[$key] = is_scalar($row['name']) ? (string) $row['name'] : '';
+        }
+        return $out;
+    }
+
+    /**
+     * Return id → name map for the given group ids, ordered by name ASC.
+     *
+     * @param  list<int> $ids
+     * @return array<int|string, string>
+     */
+    public function findIdToNameMapByIdsOrderedByName(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'name')
+            ->from($this->table('groups'))
+            ->orderBy('name', 'ASC');
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $key       = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $out[$key] = is_scalar($row['name']) ? (string) $row['name'] : '';
+        }
+        return $out;
+    }
+
+    /**
+     * Return user_ids that belong to any of the given groups.
+     *
+     * @param  list<int> $groupIds
+     * @return list<int>
+     */
+    public function findUserIdsByGroupIds(array $groupIds): array
+    {
+        if ($groupIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('user_id')
+            ->from($this->table('user_group'));
+        $qb->where($qb->expr()->in('group_id', ':groupIds'))
+           ->setParameter('groupIds', $groupIds, ArrayParameterType::INTEGER);
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
 }

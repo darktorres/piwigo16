@@ -1575,6 +1575,167 @@ SELECT
     }
 
     /**
+     * Return ids of categories whose `id_uppercat` matches the given parent
+     * (null = root-level categories).
+     *
+     * @return list<int>
+     */
+    public function findIdsByParent(?int $parentId): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('categories'));
+        if ($parentId === null) {
+            $qb->where('id_uppercat IS NULL');
+        } else {
+            $qb->where('id_uppercat = :parent')->setParameter('parent', $parentId);
+        }
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Return (id, name, rank, status, visible, uppercats, lastmodified) for
+     * every category — used by the admin album-tree overview.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAllForAdminTreeOverview(): array
+    {
+        return $this->conn->createQueryBuilder()
+            ->select('id', 'name', '`rank`', 'status', 'visible', 'uppercats', 'lastmodified')
+            ->from($this->table('categories'))
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * For every category, return its number of associated images (zero-count
+     * categories are omitted). Keyed by category_id.
+     *
+     * @return array<int|string, int>
+     */
+    public function findNbPhotosPerCategoryKeyedById(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('category_id', 'COUNT(*) AS nb_photos')
+            ->from($this->table('image_category'))
+            ->groupBy('category_id')
+            ->executeQuery()
+            ->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $key       = is_scalar($row['category_id']) ? (string) $row['category_id'] : '';
+            $out[$key] = is_numeric($row['nb_photos']) ? (int) $row['nb_photos'] : 0;
+        }
+        return $out;
+    }
+
+    /**
+     * Return id → uppercats map for every category.
+     *
+     * @return array<int|string, string>
+     */
+    public function findAllIdToUppercatsMap(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id', 'uppercats')
+            ->from($this->table('categories'))
+            ->executeQuery()
+            ->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $key       = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $out[$key] = is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '';
+        }
+        return $out;
+    }
+
+    /**
+     * Return id → uppercats map for the given category ids.
+     *
+     * @param  list<int> $ids
+     * @return array<int|string, string>
+     */
+    public function findIdToUppercatsMapByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'uppercats')
+            ->from($this->table('categories'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $key       = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $out[$key] = is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '';
+        }
+        return $out;
+    }
+
+    /**
+     * For each given category id, return MIN(field) or MAX(field) of its
+     * associated images' date column. $minmax must be 'min' or 'max',
+     * $field must be a literal `date_creation` or `date_available` from a
+     * trusted source (validated by caller — typed enum eventually).
+     *
+     * @param  list<int>  $catIds
+     * @return array<int|string, string>
+     */
+    public function findRefDatesForCategoriesKeyedById(string $minmax, string $field, array $catIds): array
+    {
+        if ($catIds === []) {
+            return [];
+        }
+        $minmaxUp = strtoupper($minmax) === 'MIN' ? 'MIN' : 'MAX';
+        $fieldSafe = in_array($field, ['date_creation', 'date_available'], true) ? $field : 'date_available';
+        $query = 'SELECT category_id, ' . $minmaxUp . '(' . $fieldSafe . ') AS ref_date FROM ' . $this->table('image_category')
+            . ' JOIN ' . $this->table('images') . ' ON image_id = id'
+            . ' WHERE category_id IN (?) GROUP BY category_id';
+        $rows = $this->conn->executeQuery($query, [$catIds], [ArrayParameterType::INTEGER])->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $key       = is_scalar($row['category_id']) ? (string) $row['category_id'] : '';
+            $out[$key] = is_scalar($row['ref_date']) ? (string) $row['ref_date'] : '';
+        }
+        return $out;
+    }
+
+    /** Count direct sub-categories of the given parent (id_uppercat = $parentId). */
+    public function countByParent(int $parentId): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('categories'))
+            ->where('id_uppercat = :parent')
+            ->setParameter('parent', $parentId)
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Return (id, name, permalink, dir, rank, status) rows for the listing
+     * pane, optionally restricted to direct children of $parentId (null = root).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findCategoryListing(?int $parentId): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'name', 'permalink', 'dir', '`rank`', 'status')
+            ->from($this->table('categories'))
+            ->orderBy('`rank`', 'ASC');
+        if ($parentId === null) {
+            $qb->where('id_uppercat IS NULL');
+        } else {
+            $qb->where('id_uppercat = :parent')->setParameter('parent', $parentId);
+        }
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
      * Run the categories-for-thumbnails query (the SQL_CALC_FOUND_ROWS pattern
      * used by both the category-grid and recent-cats pages) with the caller's
      * pre-composed WHERE fragment and permission filter, plus the LIMIT/OFFSET

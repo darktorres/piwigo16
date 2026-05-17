@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Album\AlbumsTabRenderer;
 use Piwigo\Admin\Category\CategoryAdminService;
@@ -48,6 +48,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 use Piwigo\Validation\InputValidator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
@@ -61,7 +62,7 @@ final class AlbumController implements AdminSubControllerInterface
     ];
 
     public function __construct(
-        private readonly Connection $conn,
+        private readonly ActivityRepository $activityRepository,
         private readonly AdminService $adminService,
         private readonly AlbumsTabRenderer $albumsTabRenderer,
         private readonly AuthService $authService,
@@ -78,6 +79,7 @@ final class AlbumController implements AdminSubControllerInterface
         private readonly UrlGenerator $urlGenerator,
         private readonly UrlService $urlService,
         private readonly UserAdminService $userAdminService,
+        private readonly UserRepository $userRepository,
         private readonly ActivityLogger $activityLogger,
         private readonly CsrfService $csrfService,
         private readonly InputValidator $inputValidator,
@@ -187,8 +189,7 @@ final class AlbumController implements AdminSubControllerInterface
 
             $rawPostId = $_POST['id'] ?? null;
             $post_id_str = is_string($rawPostId) ? $rawPostId : '-1';
-            $query = 'SELECT id FROM ' . Tables::categories() . ' WHERE id_uppercat ' . (($post_id_str === '-1') ? 'IS NULL' : '= ' . $post_id_str) . ';';
-            $category_ids = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'));
+            $category_ids = array_map(static fn (int $v): string => (string) $v, $this->categoryRepository->findIdsByParent($post_id_str === '-1' ? null : (int) $post_id_str));
 
             if (isset($_POST['recursiveAutoOrder'])) {
                 $category_ids = $this->categoryService->getSubcatIds($category_ids);
@@ -234,7 +235,7 @@ final class AlbumController implements AdminSubControllerInterface
         $tpl->assign('delay_before_autoOpen', Config::albumMoveDelayBeforeAutoOpening());
         $tpl->assign('POS_PREF', Config::newcatDefaultPosition());
 
-        $allAlbum = $this->conn->executeQuery('SELECT id,name,`rank`,status, visible, uppercats, lastmodified FROM ' . Tables::categories() . ';')->fetchAllAssociative();
+        $allAlbum = $this->categoryRepository->findAllForAdminTreeOverview();
 
         $associatedTree = [];
         foreach ($allAlbum as $album) {
@@ -253,12 +254,12 @@ final class AlbumController implements AdminSubControllerInterface
             : [];
         $is_forbidden      = array_fill_keys($userForbiddenCats, 1);
 
-        $nb_photos_in = array_column($this->conn->executeQuery('SELECT category_id, COUNT(*) AS nb_photos FROM ' . Tables::imageCategory() . ' GROUP BY category_id;')->fetchAllAssociative(), 'nb_photos', 'category_id');
+        $nb_photos_in = $this->categoryRepository->findNbPhotosPerCategoryKeyedById();
 
-        $all_categories = array_column($this->conn->executeQuery('SELECT id, uppercats FROM ' . Tables::categories() . ';')->fetchAllAssociative(), 'uppercats', 'id');
+        $all_categories = $this->categoryRepository->findAllIdToUppercatsMap();
         $subcats_of = [];
         foreach ($all_categories as $id => $uppercats) {
-            foreach (array_slice(explode(',', is_scalar($uppercats) ? (string) $uppercats : ''), 0, -1) as $uppercat_id) {
+            foreach (array_slice(explode(',', $uppercats), 0, -1) as $uppercat_id) {
                 $subcats_of[$uppercat_id][] = $id;
             }
         }
@@ -377,8 +378,14 @@ final class AlbumController implements AdminSubControllerInterface
             $rawPostUsers = $_POST['users'] ?? null;
             if ('users' == $_POST['who'] && isset($_POST['users']) && is_array($rawPostUsers) && count($rawPostUsers) > 0) {
                 $this->inputValidator->check('users', $_POST, true, ValidationPattern::ID);
-                $query = 'SELECT ui.user_id, ui.status, ui.language, u.' . Config::userFields()['email'] . ' AS email, u.' . Config::userFields()['username'] . ' AS username FROM ' . Tables::userInfos() . ' AS ui JOIN ' . Tables::users() . ' AS u ON u.' . Config::userFields()['id'] . ' = ui.user_id WHERE ui.user_id IN (' . implode(',', array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawPostUsers)) . ');';
-                $users     = $this->conn->executeQuery($query)->fetchAllAssociative();
+                $postUserIds = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawPostUsers));
+                $users = $this->userRepository->findMailRecipientInfoByIds(
+                    Config::userFields()['id'],
+                    Config::userFields()['username'],
+                    Config::userFields()['email'],
+                    Tables::users(),
+                    $postUserIds,
+                );
                 $usernames = [];
                 foreach ($users as $u) {
                     $usernames[] = is_string($u['username'] ?? null) ? $u['username'] : '';
@@ -425,41 +432,46 @@ final class AlbumController implements AdminSubControllerInterface
             $tpl->assign('auth_key_duration', $this->dateService->timeSince($strResult !== false ? $strResult : null, 'second', null, false));
         }
 
-        $all_group_ids = array_column($this->conn->executeQuery('SELECT id AS group_id FROM `' . Tables::groups() . '`;')->fetchAllAssociative(), 'group_id');
+        $all_group_ids = $this->groupRepository->findAllIds();
 
         $group_ids = [];
-        if (count($all_group_ids) == 0) {
+        if (count($all_group_ids) === 0) {
             $tpl->assign('no_group_in_gallery', true);
         } else {
             if ('private' == $category['status']) {
                 $tpl->assign('permission_url', $admin_album_base_url . '-permissions');
                 $catIdInt  = is_numeric($category['id']) ? (int) $category['id'] : 0;
-                $group_ids = array_column($this->conn->executeQuery('SELECT group_id FROM ' . Tables::groupAccess() . ' WHERE cat_id = ' . $catIdInt . ';')->fetchAllAssociative(), 'group_id');
+                $group_ids = $this->permissionRepository->findGroupAccessGroupIdsByCategoryId($catIdInt);
             } else {
                 $group_ids = $all_group_ids;
             }
             if (count($group_ids) > 0) {
-                $tpl->assign('group_mail_options', array_column($this->conn->executeQuery('SELECT id, name FROM `' . Tables::groups() . '` WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $group_ids)) . ') ORDER BY name ASC;')->fetchAllAssociative(), 'name', 'id'));
+                $tpl->assign('group_mail_options', $this->groupRepository->findIdToNameMapByIdsOrderedByName($group_ids));
             }
         }
 
-        $all_user_ids = array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userInfos() . " WHERE status != 'guest';")->fetchAllAssociative(), 'user_id');
+        $all_user_ids = $this->userRepository->findNonGuestUserIds();
 
         if ('private' == $category['status']) {
             $catIdInt2 = is_numeric($category['id']) ? (int) $category['id'] : 0;
             $user_ids_access_indirect = [];
             if (count($group_ids) > 0) {
-                $user_ids_access_indirect = array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userGroup() . ' WHERE group_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $group_ids)) . ');')->fetchAllAssociative(), 'user_id');
+                $user_ids_access_indirect = $this->groupRepository->findUserIdsByGroupIds($group_ids);
             }
-            $user_ids_access_direct = array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userAccess() . ' WHERE cat_id = ' . $catIdInt2 . ';')->fetchAllAssociative(), 'user_id');
-            $user_ids_access = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_merge($user_ids_access_direct, $user_ids_access_indirect)));
-            $user_ids        = array_intersect($user_ids_access, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_user_ids));
+            $user_ids_access_direct = $this->permissionRepository->findUserAccessUserIdsByCategoryId($catIdInt2);
+            $user_ids_access = array_unique([...$user_ids_access_direct, ...$user_ids_access_indirect]);
+            $user_ids        = array_values(array_intersect($user_ids_access, $all_user_ids));
         } else {
-            $user_ids = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_user_ids);
+            $user_ids = $all_user_ids;
         }
 
         if (count($user_ids) > 0) {
-            $tpl->assign('user_options', array_column($this->conn->executeQuery('SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . Tables::users() . ' WHERE id IN (' . implode(',', $user_ids) . ');')->fetchAllAssociative(), 'username', 'id'));
+            $tpl->assign('user_options', $this->userRepository->findIdToUsernameMapByIds(
+                Config::userFields()['id'],
+                Config::userFields()['username'],
+                Tables::users(),
+                $user_ids,
+            ));
         }
 
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'album_notification.latte');
@@ -542,25 +554,26 @@ final class AlbumController implements AdminSubControllerInterface
             'sort_order_checked'  => array_shift($sort_orders_checked),
         ]);
 
-        $query = 'SELECT id, name, permalink, dir, `rank`, status FROM ' . Tables::categories();
-        if (!isset($_GET['parent_id'])) {
-            $query .= ' WHERE id_uppercat IS NULL';
-        } else {
-            $query .= ' WHERE id_uppercat = ' . (is_numeric($_GET['parent_id']) ? (int) $_GET['parent_id'] : 0);
+        $parentIdArg = isset($_GET['parent_id'])
+            ? (is_numeric($_GET['parent_id']) ? (int) $_GET['parent_id'] : 0)
+            : null;
+        $listingRows = $this->categoryRepository->findCategoryListing($parentIdArg);
+        $categories  = [];
+        foreach ($listingRows as $row) {
+            $idKey = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $categories[$idKey] = $row;
         }
-        $query .= ' ORDER BY `rank` ASC;';
-        $categories = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'id');
 
         $nb_photos_in  = [];
         $nb_sub_photos = [];
         $subcats_of    = [];
 
         if (count($categories)) {
-            $nb_photos_in    = array_column($this->conn->executeQuery('SELECT category_id, COUNT(*) AS nb_photos FROM ' . Tables::imageCategory() . ' GROUP BY category_id;')->fetchAllAssociative(), 'nb_photos', 'category_id');
-            $all_categories  = array_column($this->conn->executeQuery('SELECT id, uppercats FROM ' . Tables::categories() . ';')->fetchAllAssociative(), 'uppercats', 'id');
+            $nb_photos_in    = $this->categoryRepository->findNbPhotosPerCategoryKeyedById();
+            $all_categories  = $this->categoryRepository->findAllIdToUppercatsMap();
 
             foreach ($all_categories as $id => $uppercats) {
-                foreach (array_slice(explode(',', is_scalar($uppercats) ? (string) $uppercats : ''), 0, -1) as $uppercat_id) {
+                foreach (array_slice(explode(',', $uppercats), 0, -1) as $uppercat_id) {
                     $subcats_of[$uppercat_id][] = $id;
                 }
             }
@@ -720,17 +733,15 @@ final class AlbumController implements AdminSubControllerInterface
         }
         $tpl->assign(['INFO_PHOTO' => Lang::t('%d photos', $image_count), 'INFO_TITLE' => $info_title]);
 
-        $category['nb_images_recursive'] = count(array_column($this->conn->executeQuery('SELECT DISTINCT (image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $subcat_ids) . ');')->fetchAllAssociative(), 'image_id'));
+        $category['nb_images_recursive'] = count($this->categoryRepository->findImageIdsLinkedToCategories(array_values($subcat_ids)));
 
-        $result = $this->conn->executeQuery('SELECT occured_on FROM `' . Tables::activity() . '` WHERE object_id = ' . $catIntId . ' AND object = "album" AND action = "add"')->fetchAllAssociative();
-        if (count($result) > 0) {
-            $occurred_on = is_scalar($result[0]['occured_on']) ? (string) $result[0]['occured_on'] : '';
+        $occurred_on = $this->activityRepository->findFirstOccurredOnForObject('album', $catIntId, 'add');
+        if ($occurred_on !== null) {
             $tpl->assign(['INFO_CREATION_SINCE' => $this->dateService->timeSince($occurred_on, 'day', null, true, true, true), 'INFO_CREATION' => $this->dateService->formatDate($occurred_on, ['day', 'month', 'year'])]);
         }
 
-        $result = $this->conn->executeQuery('SELECT COUNT(*) FROM `' . Tables::categories() . '` WHERE id_uppercat = ' . $catIntId)->fetchAllAssociative();
-        $countRaw = $result[0]['COUNT(*)'] ?? 0;
-        $tpl->assign(['INFO_DIRECT_SUB' => Lang::t('%d sub-albums', is_numeric($countRaw) ? (int) $countRaw : 0)]);
+        $directSubCount = $this->categoryRepository->countByParent($catIntId);
+        $tpl->assign(['INFO_DIRECT_SUB' => Lang::t('%d sub-albums', $directSubCount)]);
 
         $tpl->assign([
             'INFO_ID'                  => Lang::t('Numeric identifier : %d', $catId),
@@ -917,18 +928,16 @@ final class AlbumController implements AdminSubControllerInterface
             }
 
             if ('private' == $post_status) {
-                $groups_granted     = array_column($this->conn->executeQuery('SELECT group_id FROM ' . Tables::groupAccess() . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'group_id');
+                $groups_granted_int = $this->permissionRepository->findGroupAccessGroupIdsByCategoryId($pageCat);
                 if (!isset($_POST['groups'])) {
                     $_POST['groups'] = [];
                 }
                 /** @var int[] $post_groups */
                 $post_groups        = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['groups']) ? $_POST['groups'] : []);
-                /** @var int[] $groups_granted_int */
-                $groups_granted_int = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $groups_granted);
 
-                $deny_groups = array_diff($groups_granted_int, $post_groups);
+                $deny_groups = array_values(array_diff($groups_granted_int, $post_groups));
                 if (count($deny_groups) > 0) {
-                    $this->permissionRepository->deleteGroupAccess(array_map(intval(...), $deny_groups), array_map(intval(...), $this->categoryService->getSubcatIds([$pageCat])));
+                    $this->permissionRepository->deleteGroupAccess($deny_groups, array_values($this->categoryService->getSubcatIds([$pageCat])));
                 }
 
                 $grant_groups = $post_groups;
@@ -937,35 +946,27 @@ final class AlbumController implements AdminSubControllerInterface
                     if (isset($_POST['apply_on_sub'])) {
                         $cat_ids = array_merge($cat_ids, $this->categoryService->getSubcatIds([$pageCat]));
                     }
-                    $private_cats = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', array_map(fn (int|string $v): string => (string) $v, $cat_ids)) . ") AND status = 'private';")->fetchAllAssociative(), 'id');
+                    $catIdsInt    = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $cat_ids));
+                    $private_cats = $this->categoryRepository->findPrivateByIds($catIdsInt);
                     $inserts = [];
                     foreach ($private_cats as $cid) {
                         foreach ($grant_groups as $gid) {
                             $inserts[] = ['group_id' => $gid, 'cat_id' => $cid];
                         }
                     }
-                    $this->conn->transactional(function () use ($inserts): void {
-                        foreach ($inserts as $row) {
-                            $this->conn->executeStatement(
-                                'INSERT IGNORE INTO ' . Tables::groupAccess() . ' (group_id, cat_id) VALUES (?, ?)',
-                                [$row['group_id'], $row['cat_id']]
-                            );
-                        }
-                    });
+                    $this->permissionRepository->insertGroupAccessIgnoreDuplicates($inserts);
                 }
 
-                $users_granted     = array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userAccess() . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'user_id');
+                $users_granted_int = $this->permissionRepository->findUserAccessUserIdsByCategoryId($pageCat);
                 if (!isset($_POST['users'])) {
                     $_POST['users'] = [];
                 }
                 /** @var int[] $post_users */
                 $post_users        = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['users']) ? $_POST['users'] : []);
-                /** @var int[] $users_granted_int */
-                $users_granted_int = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $users_granted);
 
-                $deny_users = array_diff($users_granted_int, $post_users);
+                $deny_users = array_values(array_diff($users_granted_int, $post_users));
                 if (count($deny_users) > 0) {
-                    $this->permissionRepository->deleteUserAccess(array_map(intval(...), $deny_users), array_map(intval(...), $this->categoryService->getSubcatIds([$pageCat])));
+                    $this->permissionRepository->deleteUserAccess($deny_users, array_values($this->categoryService->getSubcatIds([$pageCat])));
                 }
                 if (count($post_users) > 0) {
                     $this->categoryAdminService->addPermissionOnCategory($pageCat, $post_users);
@@ -982,10 +983,10 @@ final class AlbumController implements AdminSubControllerInterface
             'private'        => ('private' == $category['status']),
         ]);
 
-        $groups          = array_column($this->conn->executeQuery('SELECT id, name FROM `' . Tables::groups() . '` ORDER BY name ASC;')->fetchAllAssociative(), 'name', 'id');
-        $group_granted_ids = array_column($this->conn->executeQuery('SELECT group_id FROM ' . Tables::groupAccess() . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'group_id');
-        $users           = array_column($this->conn->executeQuery('SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . Tables::users() . ';')->fetchAllAssociative(), 'username', 'id');
-        $user_granted_direct_ids = array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userAccess() . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'user_id');
+        $groups          = $this->groupRepository->findAllIdToNameMapOrderedByName();
+        $group_granted_ids = $this->permissionRepository->findGroupAccessGroupIdsByCategoryId($pageCat);
+        $users           = $this->userRepository->findAllUserIdNameMap(Config::userFields()['id'], Config::userFields()['username'], Tables::users());
+        $user_granted_direct_ids = $this->permissionRepository->findUserAccessUserIdsByCategoryId($pageCat);
 
         $tpl->assign('groups', $groups);
         $tpl->assign('groups_selected', $group_granted_ids);
@@ -995,7 +996,7 @@ final class AlbumController implements AdminSubControllerInterface
         $user_granted_indirect_ids = [];
         if (count($group_granted_ids) > 0) {
             $granted_groups = [];
-            foreach ($this->groupRepository->findUserGroupMembersByGroupIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $group_granted_ids)) as $row) {
+            foreach ($this->groupRepository->findUserGroupMembersByGroupIds($group_granted_ids) as $row) {
                 $row_group_id = is_scalar($row['group_id'] ?? null) ? (string) $row['group_id'] : '';
                 if (!isset($granted_groups[$row_group_id])) {
                     $granted_groups[$row_group_id] = [];
@@ -1007,17 +1008,17 @@ final class AlbumController implements AdminSubControllerInterface
                 $user_granted_by_group_ids = array_merge($user_granted_by_group_ids, $group_users);
             }
             $user_granted_by_group_ids = array_unique($user_granted_by_group_ids);
-            $user_granted_indirect_ids = array_diff($user_granted_by_group_ids, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $user_granted_direct_ids));
+            $user_granted_indirect_ids = array_diff($user_granted_by_group_ids, array_map(static fn (int $v): string => (string) $v, $user_granted_direct_ids));
 
             $tpl->assign('nb_users_granted_indirect', count($user_granted_indirect_ids));
             foreach ($granted_groups as $group_id => $group_users) {
                 $group_usernames = [];
                 foreach ($group_users as $user_id) {
                     if (in_array($user_id, $user_granted_indirect_ids)) {
-                        $group_usernames[] = isset($users[$user_id]) ? (is_scalar($users[$user_id]) ? (string) $users[$user_id] : '') : '';
+                        $group_usernames[] = $users[(int) $user_id] ?? '';
                     }
                 }
-                $tpl->append('user_granted_indirect_groups', ['group_name' => isset($groups[$group_id]) ? (is_scalar($groups[$group_id]) ? (string) $groups[$group_id] : '') : '', 'group_users' => implode(', ', $group_usernames)]);
+                $tpl->append('user_granted_indirect_groups', ['group_name' => $groups[$group_id] ?? '', 'group_users' => implode(', ', $group_usernames)]);
             }
         }
 
@@ -1143,16 +1144,14 @@ final class AlbumController implements AdminSubControllerInterface
         if (!is_array($ids)) {
             $ids = [$ids];
         }
-        $category_ids = $this->categoryService->getSubcatIds($ids);
-
-        $ref_dates = array_column($this->conn->executeQuery('SELECT category_id, ' . $minmax . '(' . $field . ') as ref_date FROM ' . Tables::imageCategory() . ' JOIN ' . Tables::images() . ' ON image_id = id WHERE category_id IN (' . implode(',', $category_ids) . ') GROUP BY category_id;')->fetchAllAssociative(), 'ref_date', 'category_id');
-
-        $uppercats_of = array_column($this->conn->executeQuery('SELECT id, uppercats FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $category_ids) . ');')->fetchAllAssociative(), 'uppercats', 'id');
+        $catIdsInt    = array_values($this->categoryService->getSubcatIds($ids));
+        $ref_dates    = $this->categoryRepository->findRefDatesForCategoriesKeyedById($minmax, $field, $catIdsInt);
+        $uppercats_of = $this->categoryRepository->findIdToUppercatsMapByIds($catIdsInt);
 
         foreach (array_keys($uppercats_of) as $cat_id) {
             $subcat_ids = [];
             foreach ($uppercats_of as $id => $uppercats) {
-                if (preg_match('/(^|,)' . $cat_id . '(,|$)/', is_scalar($uppercats) ? (string) $uppercats : '')) {
+                if (preg_match('/(^|,)' . $cat_id . '(,|$)/', $uppercats)) {
                     $subcat_ids[] = $id;
                 }
             }

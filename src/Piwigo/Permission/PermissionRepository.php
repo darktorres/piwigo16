@@ -351,4 +351,25 @@ final class PermissionRepository extends AbstractRepository
             }
         });
     }
+
+    /**
+     * Insert group_access rows atomically with INSERT IGNORE so duplicates of
+     * the (group_id, cat_id) PK are silently skipped.
+     *
+     * @param list<array{group_id: int, cat_id: int}> $rows
+     */
+    public function insertGroupAccessIgnoreDuplicates(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $this->conn->executeStatement(
+                    'INSERT IGNORE INTO ' . $this->table('group_access') . ' (group_id, cat_id) VALUES (?, ?)',
+                    [$row['group_id'], $row['cat_id']],
+                );
+            }
+        });
+    }
 }

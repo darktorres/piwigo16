@@ -72,6 +72,7 @@ use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class MiscController implements AdminSubControllerInterface
@@ -121,6 +122,7 @@ final class MiscController implements AdminSubControllerInterface
         private readonly RedirectResponder $redirectResponder,
         private readonly PaginationService $paginationService,
         private readonly EventDispatcherInterface $dispatcher,
+        private readonly CacheItemPoolInterface $pool,
     ) {
     }
 
@@ -758,11 +760,14 @@ final class MiscController implements AdminSubControllerInterface
             $data_storage[$type]['details'][strtoupper((string) $ext)] = ['filesize' => $ext_details['filesize'], 'nb_files' => $ext_details['ext_counter']];
         }
 
-        if (Config::addCacheToStorageChart() && Config::has('cache_sizes')) {
-            $cache_sizes = unserialize((string) Config::cacheSizes());
-            if (is_array($cache_sizes) && isset($cache_sizes[0]) && is_array($cache_sizes[0]) && isset($cache_sizes[0]['value'])) {
-                $cacheFilesize = (is_numeric($cache_sizes[0]['value']) ? (float) $cache_sizes[0]['value'] : 0.0) / 1024.0;
-                $data_storage['Cache'] = ['total' => ['filesize' => $cacheFilesize, 'nb_files' => 0], 'details' => []];
+        if (Config::addCacheToStorageChart()) {
+            $cacheSizesItem = $this->pool->getItem('piwigo.cache_sizes');
+            if ($cacheSizesItem->isHit()) {
+                $cache_sizes = $cacheSizesItem->get();
+                if (is_array($cache_sizes) && isset($cache_sizes[0]) && is_array($cache_sizes[0]) && isset($cache_sizes[0]['value'])) {
+                    $cacheFilesize = (is_numeric($cache_sizes[0]['value']) ? (float) $cache_sizes[0]['value'] : 0.0) / 1024.0;
+                    $data_storage['Cache'] = ['total' => ['filesize' => $cacheFilesize, 'nb_files' => 0], 'details' => []];
+                }
             }
         }
 

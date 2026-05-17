@@ -28,7 +28,7 @@ final class ConfigLoaderApplyDefaultsTest extends TestCase
 
         // Invariant: every value seeded into Config is non-null. Null-defaulted
         // keys (typically the nullable-string cluster: gallery_url,
-        // cache_sizes, last_major_update, etc.) are intentionally absent —
+        // last_major_update, etc.) are intentionally absent —
         // their absence is the signal Config::has() consumers use to detect
         // first-run state.
         foreach (Config::all() as $key => $value) {
@@ -43,7 +43,7 @@ final class ConfigLoaderApplyDefaultsTest extends TestCase
         }
 
         // Specific nullable keys that MUST be absent (else Config::has() breaks).
-        $mustBeAbsent = ['gallery_url', 'cache_sizes', 'filters_views', 'last_major_update', 'piwigo_db_version'];
+        $mustBeAbsent = ['gallery_url', 'filters_views', 'last_major_update', 'piwigo_db_version'];
         foreach ($mustBeAbsent as $key) {
             self::assertFalse(Config::has($key), "applyDefaults() must NOT populate nullable key '$key'");
         }

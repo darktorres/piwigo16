@@ -96,7 +96,7 @@ final class ConfigLoader
      * from .env via applyEnvOverrides) are skipped.
      *
      * Null-defaulted keys (the nullable-string cluster — gallery_url,
-     * cache_sizes, filters_views, last_major_update, etc.) are intentionally
+     * filters_views, last_major_update, etc.) are intentionally
      * NOT seeded. Their "default" is genuine absence: callers use
      * Config::has() to detect first-run state, and seeding null would flip
      * has() permanently to true and break that detection.

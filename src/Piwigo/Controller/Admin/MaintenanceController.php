@@ -394,15 +394,8 @@ final class MaintenanceController implements AdminSubControllerInterface
             'PHP_DATATIME'                => $php_current_timestamp,
             'DB_DATATIME'                 => $db_current_date,
             'pwg_token'                   => $pwg_token,
-            'cache_sizes'                 => Config::has('cache_sizes') ? StringUtil::safeUnserialize((string) Config::cacheSizes()) : null,
-            'time_elapsed_since_last_calc' => (function (): ?string {
-                if (!Config::has('cache_sizes')) {
-                    return null;
-                }
-                $cs    = StringUtil::safeUnserialize((string) Config::cacheSizes());
-                $entry = is_array($cs[3] ?? null) ? $cs[3] : [];
-                return $this->dateService->timeSince(is_scalar($entry['value'] ?? null) ? (string) $entry['value'] : null, 'year');
-            })(),
+            'cache_sizes'                 => $this->loadCacheSizes(),
+            'time_elapsed_since_last_calc' => $this->cacheSizesLastCalcLabel(),
         ]);
 
         switch (PwgImage::getLibrary()) {
@@ -600,15 +593,8 @@ final class MaintenanceController implements AdminSubControllerInterface
             'U_PHPINFO'                   => sprintf($url_format, 'phpinfo'),
             'PHP_DATATIME'                => $php_current_timestamp,
             'DB_DATATIME'                 => $db_current_date,
-            'cache_sizes'                 => Config::has('cache_sizes') ? StringUtil::safeUnserialize((string) Config::cacheSizes()) : null,
-            'time_elapsed_since_last_calc' => (function (): ?string {
-                if (!Config::has('cache_sizes')) {
-                    return null;
-                }
-                $cs    = StringUtil::safeUnserialize((string) Config::cacheSizes());
-                $entry = is_array($cs[3] ?? null) ? $cs[3] : [];
-                return $this->dateService->timeSince(is_scalar($entry['value'] ?? null) ? (string) $entry['value'] : null, 'year');
-            })(),
+            'cache_sizes'                 => $this->loadCacheSizes(),
+            'time_elapsed_since_last_calc' => $this->cacheSizesLastCalcLabel(),
         ]);
 
         $graphics_library = $this->adminService->getGraphicsLibraryLabel();
@@ -1776,5 +1762,30 @@ final class MaintenanceController implements AdminSubControllerInterface
             $date_string .= '-1';
         }
         return new \DateTime($date_string);
+    }
+
+    /** @return list<mixed>|null */
+    private function loadCacheSizes(): ?array
+    {
+        $item = $this->pool->getItem('piwigo.cache_sizes');
+        if (!$item->isHit()) {
+            return null;
+        }
+        $value = $item->get();
+        return is_array($value) ? array_values($value) : null;
+    }
+
+    private function cacheSizesLastCalcLabel(): ?string
+    {
+        $cs = $this->loadCacheSizes();
+        if ($cs === null) {
+            return null;
+        }
+        $entry = $cs[3] ?? null;
+        if (!is_array($entry)) {
+            return null;
+        }
+        $value = $entry['value'] ?? null;
+        return $this->dateService->timeSince(is_scalar($value) ? (string) $value : null, 'year');
     }
 }

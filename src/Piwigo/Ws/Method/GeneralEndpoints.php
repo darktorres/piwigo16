@@ -13,7 +13,6 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
-use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Filesystem;
@@ -63,7 +62,6 @@ final readonly class GeneralEndpoints
         private AuthService $authService,
         private CategoryRepository $categoryRepository,
         private CommentRepository $commentRepository,
-        private ConfigService $configService,
         private CookieService $cookieService,
         private DateService $dateService,
         private HistoryAdminService $historyAdminService,
@@ -264,7 +262,10 @@ final readonly class GeneralEndpoints
         foreach ($infos as $name => $value) {
             $output[] = ['name' => $name, 'value' => $value];
         }
-        $this->configService->confUpdateParam('cache_sizes', $output, true);
+        $item = $this->pool->getItem('piwigo.cache_sizes');
+        $item->set($output);
+        $this->pool->save($item);
+
         return ['infos' => new PwgNamedArray($output, 'item')];
     }
 

@@ -3,7 +3,7 @@
 > **Generated** by `tools/build-config-reference.php` from `Piwigo\Config\Config::SCHEMA`.
 > Do not edit by hand — re-run the generator after editing SCHEMA.
 
-Total keys: **287**.
+Total keys: **277**.
 
 Access pattern:
 
@@ -47,12 +47,10 @@ with a key not in the table below.
 | `batch_manager_images_per_page_global`    | `int`    | `20`                        | `Config::batchManagerImagesPerPageGlobal()`    | —                         |
 | `batch_manager_images_per_page_unit`      | `int`    | `5`                         | `Config::batchManagerImagesPerPageUnit()`      | —                         |
 | `browser_language`                        | `bool`   | `true`                      | `Config::browserLanguage()`                    | —                         |
-| `c13y_ignore`                             | `string` | `null`                      | `Config::c13yIgnore()`                         | nullable                  |
 | `cache.backend`                           | `string` | `file`                      | `Config::cacheBackend()`                       | —                         |
 | `cache.default_ttl`                       | `int`    | `86400`                     | `Config::cacheDefaultTtl()`                    | —                         |
 | `cache.namespace`                         | `string` | `(empty)`                   | `Config::cacheNamespace()`                     | —                         |
 | `cache.redis_url`                         | `string` | `redis://localhost:6379`    | `Config::cacheRedisUrl()`                      | —                         |
-| `cache_sizes`                             | `string` | `null`                      | `Config::cacheSizes()`                         | nullable                  |
 | `calendar_datefield`                      | `string` | `date_creation`             | `Config::calendarDatefield()`                  | —                         |
 | `calendar_show_any`                       | `bool`   | `true`                      | `Config::calendarShowAny()`                    | —                         |
 | `calendar_show_empty`                     | `bool`   | `true`                      | `Config::calendarShowEmpty()`                  | —                         |
@@ -82,15 +80,12 @@ with a key not in the table below.
 | `debug_l10n`                              | `bool`   | `false`                     | `Config::debugL10n()`                          | —                         |
 | `debug_mail`                              | `bool`   | `false`                     | `Config::debugMail()`                          | —                         |
 | `debug_template`                          | `bool`   | `false`                     | `Config::debugTemplate()`                      | —                         |
-| `default_filters_views`                   | `array`  | `null`                      | `Config::defaultFiltersViews()`                | custom accessor           |
 | `default_redirect_method`                 | `string` | `http`                      | `Config::defaultRedirectMethod()`              | —                         |
 | `default_user_id`                         | `int`    | `2`                         | `Config::defaultUserId()`                      | —                         |
 | `derivative_default_size`                 | `string` | `medium`                    | `Config::derivativeDefaultSize()`              | —                         |
 | `derivative_url_style`                    | `int`    | `0`                         | `Config::derivativeUrlStyle()`                 | —                         |
-| `derivatives`                             | `string` | `null`                      | `Config::derivatives()`                        | nullable                  |
 | `derivatives_strip_metadata_threshold`    | `int`    | `256000`                    | `Config::derivativesStripMetadataThreshold()`  | —                         |
 | `die_on_sql_error`                        | `bool`   | `false`                     | `Config::dieOnSqlError()`                      | —                         |
-| `disabled_derivatives`                    | `string` | `null`                      | `Config::disabledDerivatives()`                | nullable                  |
 | `display_fromto`                          | `bool`   | `false`                     | `Config::displayFromto()`                      | —                         |
 | `double_password_type_in_admin`           | `bool`   | `false`                     | `Config::doublePasswordTypeInAdmin()`          | —                         |
 | `email_admin_on_comment`                  | `string` | `none`                      | `Config::emailAdminOnComment()`                | —                         |
@@ -110,7 +105,6 @@ with a key not in the table below.
 | `ffmpeg_dir`                              | `string` | `(empty)`                   | `Config::ffmpegDir()`                          | —                         |
 | `file_ext`                                | `array`  | `null`                      | `Config::fileExtensions()`                     | custom accessor           |
 | `filter_pages`                            | `array`  | `null`                      | `Config::filterPages()`                        | custom accessor           |
-| `filters_views`                           | `string` | `null`                      | `Config::filtersViews()`                       | nullable                  |
 | `format_ext`                              | `array`  | `null`                      | `Config::formatExtensions()`                   | custom accessor           |
 | `fs_quick_check_last_check`               | `string` | `null`                      | `Config::fsQuickCheckLastCheck()`              | nullable                  |
 | `fs_quick_check_period`                   | `int`    | `86400`                     | `Config::fsQuickCheckPeriod()`                 | —                         |
@@ -127,7 +121,6 @@ with a key not in the table below.
 | `history_autopurge_every`                 | `int`    | `1021`                      | `Config::historyAutopurgeEvery()`              | —                         |
 | `history_autopurge_keep_lines`            | `int`    | `1000000`                   | `Config::historyAutopurgeKeepLines()`          | —                         |
 | `history_guest`                           | `bool`   | `false`                     | `Config::historyGuest()`                       | —                         |
-| `history_sections_cache`                  | `string` | `null`                      | `Config::historySectionsCache()`               | nullable                  |
 | `history_summarized_dropped`              | `bool`   | `false`                     | `Config::historySummarizedDropped()`           | —                         |
 | `home_page`                               | `string` | `recent_pics`               | `Config::homePage()`                           | —                         |
 | `index_caddie_icon`                       | `bool`   | `true`                      | `Config::indexCaddieIcon()`                    | —                         |
@@ -286,9 +279,9 @@ with a key not in the table below.
 | `uniqueness_mode`                         | `string` | `md5sum`                    | `Config::uniquenessMode()`                     | —                         |
 | `update_notify_check_period`              | `int`    | `86400`                     | `Config::updateNotifyCheckPeriod()`            | —                         |
 | `update_notify_last_check`                | `string` | `null`                      | `Config::updateNotifyLastCheck()`              | nullable                  |
-| `update_notify_last_notification`         | `string` | `null`                      | `Config::updateNotifyLastNotification()`       | nullable                  |
+| `update_notify_last_notification_at`      | `string` | `null`                      | `Config::updateNotifyLastNotificationAt()`     | nullable                  |
+| `update_notify_last_notification_version` | `string` | `null`                      | `Config::updateNotifyLastNotificationVersion()`| nullable                  |
 | `update_notify_reminder_period`           | `int`    | `604800`                    | `Config::updateNotifyReminderPeriod()`         | —                         |
-| `updates_ignored`                         | `array`  | `null`                      | `Config::updatesIgnored()`                     | custom accessor           |
 | `upload_detect_duplicate`                 | `bool`   | `true`                      | `Config::uploadDetectDuplicate()`              | —                         |
 | `upload_dir`                              | `string` | `./upload`                  | `Config::uploadDir()`                          | —                         |
 | `upload_form_all_types`                   | `bool`   | `false`                     | `Config::uploadFormAllTypes()`                 | —                         |

@@ -35,7 +35,6 @@ use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\LangService;
-use Piwigo\Migrations\MigrationRunner;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Template\Template;
@@ -117,12 +116,6 @@ final class CommonBootstrap
         // Load application config from the DB. Container is available, so this can
         // go through the typed service path.
         Kernel::service(ConfigService::class)->loadConfFromDb();
-
-        // Run DB migrations only after Config is loaded from the DB, because
-        // migrations may inspect Config values (e.g. Config::autoMigrate()).
-        if (Config::autoMigrate()) {
-            MigrationRunner::migrate();
-        }
 
         LoggerRegistry::set(new Logger([
             'directory'   => PHPWG_ROOT_PATH . Config::dataLocation() . Config::logDir(),

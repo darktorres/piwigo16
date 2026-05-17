@@ -20,7 +20,7 @@ use Piwigo\Tests\Integration\IntegrationTestCase;
  */
 final class MessengerBusTest extends IntegrationTestCase
 {
-    private const string FIXTURE = __DIR__ . '/../../../dev/fixtures/piwigo-16.x.sql';
+    private const string FIXTURE = __DIR__ . '/../../../dev/fixtures/piwigo-17.0.sql';
 
     private ?Connection $conn = null;
     private string $tableName = '';

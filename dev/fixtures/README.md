@@ -1,12 +1,16 @@
 # dev/fixtures
 
-## piwigo-16.x.sql
+## piwigo-17.0.sql
 
-A real Piwigo 16.x database dump used by `UpgradeChainTest` to verify the upgrade path.
+A v17.0 database dump used by `WsApiTest`, `UpgradeChainTest`, and the
+other Integration tests as their baseline. After the B1-B10 storage
+refactor folded all per-batch DDL into `install/piwigo_structure-mysql.sql`,
+this fixture matches the shape a fresh install lands in directly — there
+is no longer a v16→v17 data-migration step.
 
 ### What's in it
 
-A fully installed Piwigo 16.x database with representative data:
+A fully installed Piwigo 17.0 database with representative data:
 
 - At least 2 albums (one root, one sub-album)
 - At least 5 uploaded photos with metadata
@@ -34,8 +38,8 @@ pass/fail.
 After the run completes:
 
 ```bash
-git diff --stat dev/fixtures/piwigo-16.x.sql   # confirm the new dump
-git add dev/fixtures/piwigo-16.x.sql && git commit -m "..."
+git diff --stat dev/fixtures/piwigo-17.0.sql   # confirm the new dump
+git add dev/fixtures/piwigo-17.0.sql && git commit -m "..."
 ```
 
 A clean dump from this spec lands around 45-50 KB (~30 KB for 34 CREATE

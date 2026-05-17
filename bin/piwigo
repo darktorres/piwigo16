@@ -5,12 +5,6 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Doctrine\DBAL\DriverManager;
-use Doctrine\Migrations\Configuration\Connection\ExistingConnection;
-use Doctrine\Migrations\Configuration\Migration\PhpFile;
-use Doctrine\Migrations\DependencyFactory;
-use Doctrine\Migrations\Tools\Console\ConsoleRunner;
-use Piwigo\Config\Config;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\Kernel;
 use Piwigo\Image\ImageStdParams;
@@ -93,19 +87,5 @@ if (isset($argv[1]) && $argv[1] === 'messenger:consume') {
     exit(0);
 }
 
-// ----------------------------------------------------------------
-// Default: Doctrine Migrations console runner
-// ----------------------------------------------------------------
-$connection = DriverManager::getConnection([
-    'driver'   => 'mysqli',
-    'host'     => Config::dbHost(),
-    'user'     => Config::dbUser(),
-    'password' => Config::dbPassword(),
-    'dbname'   => Config::dbName(),
-    'charset'  => 'utf8mb4',
-]);
-
-$config  = new PhpFile(__DIR__ . '/../migrations.php');
-$factory = DependencyFactory::fromConnection($config, new ExistingConnection($connection));
-
-ConsoleRunner::run([], $factory);
+fwrite(STDERR, "Unknown subcommand. Available: messenger:consume\n");
+exit(1);

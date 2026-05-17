@@ -57,8 +57,6 @@ final readonly class UpgradeController implements ControllerInterface
         define('PREFIX_TABLE', $prefixeTable);
         define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
 
-        // Upgrade always reads fresh config from DB; prevent auto_migrate loop.
-        Config::override('auto_migrate', false);
         Kernel::boot();
 
         $languages = Kernel::service(Languages::class);

@@ -1,4 +1,4 @@
-// Regenerates dev/fixtures/piwigo-16.x.sql by driving a fresh install +
+// Regenerates dev/fixtures/piwigo-17.0.sql by driving a fresh install +
 // content seed against a scratch database, then dumping it.
 //
 // Usage:
@@ -23,7 +23,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SCRATCH_DB = 'piwigo_fixture_build';
 const ADMIN_USER = 'fixture_admin';
 const ADMIN_PASS = 'fixture_admin';
-const FIXTURE_PATH = path.resolve(__dirname, '../../dev/fixtures/piwigo-16.x.sql');
+const FIXTURE_PATH = path.resolve(__dirname, '../../dev/fixtures/piwigo-17.0.sql');
 
 const DB_HOST = process.env.PIWIGO_DB_HOST ?? '127.0.0.1';
 const DB_PORT = process.env.PIWIGO_DB_PORT ?? '3306';
@@ -57,7 +57,7 @@ async function callWs(
     }>;
 }
 
-test.describe.serial('regenerate dev/fixtures/piwigo-16.x.sql', () => {
+test.describe.serial('regenerate dev/fixtures/piwigo-17.0.sql', () => {
     test.skip(
         process.env.REGENERATE_FIXTURE !== '1',
         'Set REGENERATE_FIXTURE=1 to regenerate the fixture (writes a real DB and overwrites the committed fixture file).'
@@ -231,7 +231,7 @@ test.describe.serial('regenerate dev/fixtures/piwigo-16.x.sql', () => {
         }
     });
 
-    test('dump scratch DB to dev/fixtures/piwigo-16.x.sql', () => {
+    test('dump scratch DB to dev/fixtures/piwigo-17.0.sql', () => {
         const cmd =
             `mysqldump -h${DB_HOST} -P${DB_PORT} -u${DB_USER} -p${DB_PASS} ` +
             `--no-tablespaces ${SCRATCH_DB}`;

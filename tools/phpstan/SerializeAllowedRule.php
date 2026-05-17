@@ -17,12 +17,10 @@ use PHPStan\Rules\RuleErrorBuilder;
  *
  * The allow-list (file basenames):
  *   - CheckIntegrity.php         in-memory hash input for anomaly dedup
- *   - PreferencesService.php     user_infos.preferences column (next
- *                                refactor pass — out of B1–B10 scope)
+ *   - PreferencesService.php     user_infos.preferences column
  *   - StringUtil.php             implementation of safeUnserialize()
- *                                (migration-only consumer)
- *   - Version2026*.php           data migrations decoding legacy
- *                                serialize() blobs from older installs
+ *                                (sole remaining caller is
+ *                                PreferencesService::decodePreferences)
  *
  * Add a new path to ALLOWED only after writing the rationale next to
  * the use site so future readers know why it survived.
@@ -65,21 +63,14 @@ final class SerializeAllowedRule implements Rule
         if (in_array($basename, self::ALLOWED_BASENAMES, true)) {
             return [];
         }
-        // Data migrations are name-shaped (Version<date><seq>.php) under
-        // src/Piwigo/Migrations/. They keep safeUnserialize() / serialize()
-        // for legacy data ingest.
-        if (str_contains($file, '/src/Piwigo/Migrations/') && preg_match('/^Version\d+\.php$/', $basename)) {
-            return [];
-        }
 
         return [
             RuleErrorBuilder::message(
                 sprintf(
                     'Do not introduce new %s() calls in src/. The B1-B10 storage refactor '
                     . 'moved every persisted blob to JSON, dedicated tables, or PSR-6. '
-                    . 'If you need to ingest a legacy serialize() blob, do it in a Doctrine '
-                    . 'migration; if you genuinely need an in-memory hash input, allow-list '
-                    . 'the file in tools/phpstan/SerializeAllowedRule.php with a rationale.',
+                    . 'If you genuinely need an in-memory hash input, allow-list the file '
+                    . 'in tools/phpstan/SerializeAllowedRule.php with a rationale.',
                     $funcName
                 )
             )

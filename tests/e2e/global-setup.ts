@@ -8,7 +8,7 @@ import { TEST_PHOTOS } from './helpers/test-data.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '../..');
-const FIXTURE = path.join(REPO_ROOT, 'dev', 'fixtures', 'piwigo-16.x.sql');
+const FIXTURE = path.join(REPO_ROOT, 'dev', 'fixtures', 'piwigo-17.0.sql');
 
 const execAsync = promisify(exec);
 

@@ -131,7 +131,7 @@ piwigo-source/
 └── (project root — only meta + tool configs)
     README.md  CONTRIBUTING.md  SECURITY.md  LICENSE.txt  COPYING.txt
     composer.json/lock  package.json/lock
-    phpstan.neon  phpunit.xml.dist  pint.json  rector.php  migrations.php
+    phpstan.neon  phpunit.xml.dist  pint.json  rector.php
     eslint.config.ts  vite.config.ts  tsconfig.json  playwright.config.ts
     .prettierrc.json  .stylelintrc.json  .markdownlint*  .editorconfig
     .env.example  .gitignore  .gitattributes

@@ -15,7 +15,7 @@ namespace Piwigo\Tests\Integration;
  */
 final class WsApiTest extends IntegrationTestCase
 {
-    private const string FIXTURE = __DIR__ . '/../../dev/fixtures/piwigo-16.x.sql';
+    private const string FIXTURE = __DIR__ . '/../../dev/fixtures/piwigo-17.0.sql';
 
     /** @var non-empty-string */
     private string $cookieJar = '/tmp/piwigo_ws_test_default.txt';

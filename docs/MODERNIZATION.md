@@ -138,10 +138,13 @@ Phase 6 and are not coming back. Three rules, enforced by tooling:
 
 1. **Upgrade floor is Piwigo 16.0.0.** `UpgradeController` (mounted at `index.php?/upgrade`)
    refuses databases without `applied_upgrade` id 181 (the 15.0.0 marker) with HTTP 409.
-2. **New schema changes ship as Doctrine migrations** under `src/Piwigo/Migrations/`,
-   driven by `migrations.php` and `MigrationRunner::migrate()`. The Doctrine table is
-   `<prefix>migration_versions`. There is no longer a numbered-script convention.
-3. **`UpgradeChainTest` gates every push.** It loads `dev/fixtures/piwigo-16.x.sql`,
+2. **No core data migrations.** v17 is greenfield: `install/piwigo_structure-mysql.sql`
+   defines the canonical schema directly. The `src/Piwigo/Migrations/` directory was
+   retired along with `MigrationRunner` after the storage refactor (B1-B10) folded its
+   per-batch DDL into the install schema. Per-plugin migrations still ship via
+   `Piwigo\Plugin\Migration\PluginMigrationRunner`, which has its own ledger
+   (`<prefix>plugin_migrations`).
+3. **`UpgradeChainTest` gates every push.** It loads `dev/fixtures/piwigo-17.0.sql`,
    drives `index.php?/upgrade`, and asserts `piwigo_db_version` matches the current
    branch. A second test loads `dev/fixtures/piwigo-15.x.sql` on top to confirm the
    409 refusal path still works.

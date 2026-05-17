@@ -1,6 +1,6 @@
 -- Pre-15.x simulation patch for UpgradeChainTest.
 --
--- Load this AFTER dev/fixtures/piwigo-16.x.sql (already done by setUp()).
+-- Load this AFTER dev/fixtures/piwigo-17.0.sql (already done by setUp()).
 -- Removing applied_upgrade id 181 (the 15.0.0 boundary marker) causes
 -- upgrade.php to reject the database with HTTP 409.
 -- Dropping piwigo_activity mirrors its absence in databases older than 15.x.

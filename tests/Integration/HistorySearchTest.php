@@ -13,7 +13,7 @@ namespace Piwigo\Tests\Integration;
  */
 final class HistorySearchTest extends IntegrationTestCase
 {
-    private const string FIXTURE = __DIR__ . '/../../dev/fixtures/piwigo-16.x.sql';
+    private const string FIXTURE = __DIR__ . '/../../dev/fixtures/piwigo-17.0.sql';
 
     /** @var non-empty-string */
     private string $cookieJar = '/tmp/piwigo_history_search_default.txt';

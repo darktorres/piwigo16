@@ -16,7 +16,7 @@ use Piwigo\Core\Kernel;
  */
 final class ContainerSmokeTest extends IntegrationTestCase
 {
-    private const string FIXTURE = __DIR__ . '/../../dev/fixtures/piwigo-16.x.sql';
+    private const string FIXTURE = __DIR__ . '/../../dev/fixtures/piwigo-17.0.sql';
 
     #[\Override]
     protected function setUp(): void

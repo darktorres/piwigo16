@@ -10,7 +10,6 @@ A map of every significant directory and file grouping in the 16.x-rewrite branc
 index.php               Single HTTP entry point — handles `?/i/`, `?/install`,
                         `?/upgrade`, `?/upgrade_feed` fast paths inline, then
                         dispatches everything else through the full Kernel boot
-migrations.php          Doctrine Migrations CLI config (not a request handler)
 rector.php              Rector static-analysis config (not a request handler)
 ```
 
@@ -126,7 +125,6 @@ PSR-15 `ControllerInterface` implementations. Each `__invoke(Request, args): Res
 | `Mail`            | `MailService`                                                                                                                                                                                                                                       |
 | `Menu`            | `BlockManager`, `DisplayBlock`, `RegisteredBlock`, `MenubarRenderer`                                                                                                                                                                                |
 | `Metadata`        | `MetadataService`                                                                                                                                                                                                                                   |
-| `Migrations`      | `MigrationRunner` (Doctrine Migrations wrapper)                                                                                                                                                                                                     |
 | `Notification`    | `NotificationRepository`, `NotificationService`, `MailNotificationContext`                                                                                                                                                                          |
 | `Page`            | `PageHeaderRenderer`, `PageTailRenderer`, `NoPhotoYetRenderer`, plus `Page/Context/` (`AdminPageContext`, `AlbumPageContext`, `PicturePageContext`, `SearchPageContext`, `TagsPageContext`)                                                         |
 | `Permalink`       | `PermalinkRepository`, `PermalinkService`                                                                                                                                                                                                           |
@@ -262,10 +260,11 @@ obsolete_extensions.list         Extensions that should be removed on upgrade
 index.php                        Directory-protection redirect
 ```
 
-Schema changes after 16.0.0 ship as Doctrine migrations under
-`src/Piwigo/Migrations/`, driven by `migrations.php` and `MigrationRunner::migrate()`.
-The Doctrine table is `<prefix>migration_versions`. There is no longer a
-numbered-script convention.
+v17 is greenfield — the schema is defined entirely by
+`install/piwigo_structure-mysql.sql`. There is no core data-migration
+framework. Per-plugin schema evolution still ships through
+`Piwigo\Plugin\Migration\PluginMigrationRunner`, which keys applied
+versions on (plugin_id, version) in `<prefix>plugin_migrations`.
 
 ---
 
@@ -331,7 +330,7 @@ build/piwigo-manifest-plugin.ts     Custom Vite plugin generating Piwigo-format 
 
 ```text
 dev/fixtures/piwigo-15.x.sql        15.x DB snapshot (UpgradeChainTest 409-refusal path)
-dev/fixtures/piwigo-16.x.sql        16.x DB snapshot for integration + E2E tests
+dev/fixtures/piwigo-17.0.sql        16.x DB snapshot for integration + E2E tests
 dev/vite-entries.json               Vite entry catalog
 ```
 

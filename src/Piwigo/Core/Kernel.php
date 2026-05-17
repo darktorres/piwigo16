@@ -60,10 +60,6 @@ final class Kernel
         // Eagerly wire the StorageRegistry so StorageRegistry::disk() works
         // from procedural upload code without going through the container.
         self::$container->get(StorageRegistry::class);
-
-        // MigrationRunner::migrate() is intentionally NOT called here.
-        // It runs in CommonBootstrap::run() after ConfigService::loadConfFromDb(),
-        // because migrations depend on Config::$data being populated from the DB.
     }
 
     /**

@@ -97,6 +97,49 @@ CREATE TABLE `piwigo_config` (
 ) ENGINE=MyISAM COMMENT='configuration table';
 
 --
+-- Table structure for table `piwigo_derivative_settings`
+--
+
+DROP TABLE IF EXISTS `piwigo_derivative_settings`;
+CREATE TABLE `piwigo_derivative_settings` (
+  `id` tinyint(4) NOT NULL,
+  `default_quality` int(11) NOT NULL default '95',
+  `watermark_json` text NOT NULL,
+  `custom_json` text NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM COMMENT='singleton-row: JPEG quality + watermark + custom-size recency map';
+
+--
+-- Table structure for table `piwigo_derivative_size`
+--
+
+DROP TABLE IF EXISTS `piwigo_derivative_size`;
+CREATE TABLE `piwigo_derivative_size` (
+  `name` varchar(32) CHARACTER SET ascii NOT NULL,
+  `enabled` tinyint(1) NOT NULL default '1',
+  `max_width` int(11) NOT NULL default '0',
+  `max_height` int(11) NOT NULL default '0',
+  `max_crop` decimal(5,4) NOT NULL default '0.0000',
+  `min_width` int(11) default NULL,
+  `min_height` int(11) default NULL,
+  `sharpen` decimal(5,4) NOT NULL default '0.0000',
+  `last_mod_time` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`name`)
+) ENGINE=MyISAM COMMENT='per-size derivative params (replaces the derivatives serialize() blob)';
+
+--
+-- Table structure for table `piwigo_extension_ignored_updates`
+--
+
+DROP TABLE IF EXISTS `piwigo_extension_ignored_updates`;
+CREATE TABLE `piwigo_extension_ignored_updates` (
+  `extension_type` enum('plugins','themes','languages') CHARACTER SET ascii NOT NULL,
+  `extension_id` varchar(64) CHARACTER SET ascii NOT NULL,
+  `ignored_at` datetime NOT NULL,
+  PRIMARY KEY  (`extension_type`,`extension_id`)
+) ENGINE=MyISAM COMMENT='extensions the admin has asked not to notify about (replaces updates_ignored serialize() blob)';
+
+--
 -- Table structure for table `piwigo_favorites`
 --
 
@@ -251,6 +294,18 @@ CREATE TABLE `piwigo_images` (
 ) ENGINE=MyISAM;
 
 --
+-- Table structure for table `piwigo_integrity_ignored_anomalies`
+--
+
+DROP TABLE IF EXISTS `piwigo_integrity_ignored_anomalies`;
+CREATE TABLE `piwigo_integrity_ignored_anomalies` (
+  `anomaly_id` varchar(64) CHARACTER SET ascii NOT NULL,
+  `piwigo_version` varchar(16) CHARACTER SET ascii NOT NULL,
+  `ignored_at` datetime NOT NULL,
+  PRIMARY KEY  (`anomaly_id`,`piwigo_version`)
+) ENGINE=MyISAM COMMENT='integrity-check anomalies the admin has acknowledged (replaces c13y_ignore serialize() blob)';
+
+--
 -- Table structure for table `piwigo_languages`
 --
 
@@ -339,6 +394,18 @@ CREATE TABLE `piwigo_search` (
   `rules` text,
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM;
+
+--
+-- Table structure for table `piwigo_search_filter_view`
+--
+
+DROP TABLE IF EXISTS `piwigo_search_filter_view`;
+CREATE TABLE `piwigo_search_filter_view` (
+  `name` varchar(64) CHARACTER SET ascii NOT NULL,
+  `config_json` text NOT NULL,
+  `created_at` datetime NOT NULL,
+  PRIMARY KEY  (`name`)
+) ENGINE=MyISAM COMMENT='admin search filter-view presets (replaces filters_views serialize() blob)';
 
 --
 -- Table structure for table `piwigo_sessions`

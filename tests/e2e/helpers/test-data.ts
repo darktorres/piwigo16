@@ -8,7 +8,7 @@ export const REPO_ROOT = path.resolve(__dirname, '../../..');
  * Single source of truth for credentials used across e2e specs.
  *
  * The username/password here MUST match what the SQL fixture
- * `dev/fixtures/piwigo-16.x.sql` seeds (it's the same fixture the
+ * `dev/fixtures/piwigo-17.0.sql` seeds (it's the same fixture the
  * integration suite loads). global-setup.ts reloads the fixture before
  * every full e2e run, so the install state is rebuilt to a known shape
  * and both suites stay in agreement.

@@ -197,7 +197,7 @@ test.describe.serial('regenerate dev/fixtures/piwigo-17.0.sql', () => {
             `USE ${SCRATCH_DB}; INSERT INTO piwigo_comments ` +
                 `(image_id, date, author, anonymous_id, author_id, content, validated, validation_date) ` +
                 `VALUES (${photoIds[0]}, NOW(), 'fixture_admin', '127.0.0.1', 1, ` +
-                `'Fixture comment for integration tests.', 'true', NOW());`
+                `'Fixture comment for integration tests.', 1, NOW());`
         );
 
         // 2 additional users with different permission levels

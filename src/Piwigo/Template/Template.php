@@ -334,9 +334,14 @@ final class Template
     public function parse(string $file, bool $return = false): ?string
     {
         $this->assign('ROOT_URL', UrlService::getRootUrl());
-        $wsBase = Kernel::service(UrlGenerator::class)->ws();
-        $this->assign('WS_URL', $wsBase . (str_contains($wsBase, '?') ? '&' : '?'));
-        $this->assign('U_SEARCH', Kernel::service(UrlGenerator::class)->searchPage());
+        // WS_URL/U_SEARCH come from UrlGenerator → UrlService → Connection;
+        // pre-install (no db_base set) the DB credentials don't exist yet,
+        // so skip these assigns. install.latte doesn't reference either var.
+        if (Config::dbName() !== '') {
+            $wsBase = Kernel::service(UrlGenerator::class)->ws();
+            $this->assign('WS_URL', $wsBase . (str_contains($wsBase, '?') ? '&' : '?'));
+            $this->assign('U_SEARCH', Kernel::service(UrlGenerator::class)->searchPage());
+        }
 
         $v = $this->renderLatte($file);
 

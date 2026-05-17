@@ -47,16 +47,11 @@ final class CookieService
             $scr .= '/';
         }
 
-        if (str_starts_with(PHPWG_ROOT_PATH, '../')) { // plugin inside the pwg directory tree
-            $scr = $scr . PHPWG_ROOT_PATH;
-            while (1) {
-                $new = preg_replace('#[^/]+/\.\.(/|$)#', '', (string) $scr);
-                if ($new == $scr) {
-                    break;
-                }
-                $scr = $new;
-            }
-        }
+        // The legacy "plugin inside the pwg directory tree" branch (which
+        // joined PHPWG_ROOT_PATH = '../' onto $scr and normalised the result)
+        // is gone: v17's unified index.php only ever sets PHPWG_ROOT_PATH to
+        // './', so the branch was unreachable. Removed during the
+        // PHPWG_ROOT_PATH elimination work.
         return $scr;
     }
 

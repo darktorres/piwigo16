@@ -78,15 +78,11 @@ final readonly class SectionInitializer
 
         $routePath = is_string($request->getAttribute('_route_path')) ? $request->getAttribute('_route_path') : '/';
 
-        $rewritten         = $routePath;
-        $page['root_path'] = PHPWG_ROOT_PATH;
-
-        /** @psalm-var string $rootPathStr */
-        $rootPathStr = $page['root_path'];
-        if (str_starts_with($rootPathStr, './')) {
-            $page['root_path'] = substr($rootPathStr, 2);
-        }
-
+        $rewritten           = $routePath;
+        // Empty by default — Piwigo URLs resolve relative to the install's
+        // index.php in the browser. SectionContext consumers prepend it as a
+        // literal prefix; an empty value yields correct relative links.
+        $page['root_path']   = '';
         $page['section_url'] = $rewritten;
         $tokens    = explode('/', ltrim((string) $rewritten, '/'));
         $nextToken = 0;

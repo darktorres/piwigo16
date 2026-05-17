@@ -42,16 +42,7 @@ final class UrlService
         if (self::$rootPathOverride !== null) {
             return self::$rootPathOverride;
         }
-        $rootPath = SectionContextRegistry::current()->rootPath;
-        if ($rootPath !== '') {
-            return $rootPath;
-        }
-        /** @psalm-var string $rootUrl */
-        $rootUrl = PHPWG_ROOT_PATH;
-        if (str_starts_with($rootUrl, './')) {
-            return substr($rootUrl, 2);
-        }
-        return $rootUrl;
+        return SectionContextRegistry::current()->rootPath;
     }
 
     public static function getAbsoluteRootUrl(bool $withScheme = true): string

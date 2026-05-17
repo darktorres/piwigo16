@@ -71,7 +71,7 @@ final readonly class HtmlService
                 $output .= $cat['name'] . '</a>';
             } else {
                 $catIdRaw = $cat['id'] ?? null;
-                $output .= '<a href="' . PHPWG_ROOT_PATH . $url . (is_string($catIdRaw) ? $catIdRaw : '') . '">';
+                $output .= '<a href="' . $url . (is_string($catIdRaw) ? $catIdRaw : '') . '">';
                 $output .= $cat['name'] . '</a>';
             }
         }
@@ -139,7 +139,7 @@ SELECT id, name, permalink
 <a href="' . Kernel::service(UrlService::class)->addUrlParams(Kernel::service(UrlService::class)->makeIndexUrl(['category' => $cat]), $addUrlParamsArr) . '">' . $catName . '</a>';
             } else {
                 $output .= '
-<a href="' . PHPWG_ROOT_PATH . $url . $categoryId . '">' . $catName . '</a>';
+<a href="' . $url . $categoryId . '">' . $catName . '</a>';
             }
         }
 

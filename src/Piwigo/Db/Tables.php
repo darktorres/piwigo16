@@ -20,6 +20,14 @@ final class Tables
     {
         return Config::dbPrefix() . 'config';
     }
+    public static function derivativeSettings(): string
+    {
+        return Config::dbPrefix() . 'derivative_settings';
+    }
+    public static function derivativeSize(): string
+    {
+        return Config::dbPrefix() . 'derivative_size';
+    }
     public static function extensionIgnoredUpdates(): string
     {
         return Config::dbPrefix() . 'extension_ignored_updates';

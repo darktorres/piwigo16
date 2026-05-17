@@ -13,7 +13,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\StringUtil;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeSize;
@@ -155,9 +154,8 @@ final class SizesProcessor
             $quality_changed = ImageStdParams::$quality != $resize_quality;
             ImageStdParams::$quality = $resize_quality;
 
-            $enabled = ImageStdParams::getDefinedTypeMap();
-            /** @var array<string, DerivativeParams> $disabled */
-            $disabled = StringUtil::safeUnserialize(ImageStdParams::getDisabledTypeMap());
+            $enabled  = ImageStdParams::getDefinedTypeMap();
+            $disabled = ImageStdParams::getDisabledTypeMap();
             $changed_types = [];
 
             foreach (ImageStdParams::getAllTypes() as $type) {

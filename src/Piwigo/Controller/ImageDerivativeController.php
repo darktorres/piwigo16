@@ -55,15 +55,8 @@ final readonly class ImageDerivativeController implements ControllerInterface
             $timing[$k] = '';
         }
 
-        $prefixeTable  = Config::dbPrefix();
+        $prefixeTable = Config::dbPrefix();
 
-        foreach ($this->conn->executeQuery(
-            'SELECT param, value FROM ' . $prefixeTable . "config WHERE param IN ('derivatives', 'disabled_derivatives')"
-        )->fetchAllAssociative() as $row) {
-            if (is_string($row['param'] ?? null)) {
-                Config::override($row['param'], $row['value']);
-            }
-        }
         ImageStdParams::loadFromDb();
 
         $dpRaw  = DerivativePipeline::parseRequest($ctx);

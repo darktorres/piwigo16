@@ -31,6 +31,31 @@ final class DerivativeParams
     }
 
     /**
+     * @return array{type: string, last_mod_time: int, sharpen: float, sizing: array{ideal_size: array{int, int}, max_crop: float, min_size: array{int, int}|null}}
+     */
+    public function toArray(): array
+    {
+        return [
+            'type'          => $this->type,
+            'last_mod_time' => $this->last_mod_time,
+            'sharpen'       => $this->sharpen,
+            'sizing'        => $this->sizing->toArray(),
+        ];
+    }
+
+    /** @param array<string, mixed> $row */
+    public static function fromArray(array $row): self
+    {
+        /** @var array<string, mixed> $sizingRow */
+        $sizingRow = is_array($row['sizing'] ?? null) ? $row['sizing'] : [];
+        $params = new self(SizingParams::fromArray($sizingRow));
+        $params->type          = is_string($row['type'] ?? null) ? $row['type'] : DerivativeSize::Custom->value;
+        $params->last_mod_time = is_numeric($row['last_mod_time'] ?? null) ? (int) $row['last_mod_time'] : 0;
+        $params->sharpen       = is_numeric($row['sharpen'] ?? null) ? (float) $row['sharpen'] : 0.0;
+        return $params;
+    }
+
+    /**
      * Adds tokens depending on sizing configuration.
      *
      * @param array &$tokens

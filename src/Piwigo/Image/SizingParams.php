@@ -41,6 +41,36 @@ final class SizingParams
     }
 
     /**
+     * @return array{ideal_size: array{int, int}, max_crop: float, min_size: array{int, int}|null}
+     */
+    public function toArray(): array
+    {
+        return [
+            'ideal_size' => [$this->ideal_size[0], $this->ideal_size[1]],
+            'max_crop'   => $this->max_crop,
+            'min_size'   => $this->min_size === null ? null : [$this->min_size[0], $this->min_size[1]],
+        ];
+    }
+
+    /** @param array<string, mixed> $row */
+    public static function fromArray(array $row): self
+    {
+        $ideal = is_array($row['ideal_size'] ?? null) ? $row['ideal_size'] : [0, 0];
+        $idealW = isset($ideal[0]) && is_numeric($ideal[0]) ? (int) $ideal[0] : 0;
+        $idealH = isset($ideal[1]) && is_numeric($ideal[1]) ? (int) $ideal[1] : 0;
+        $maxCrop = is_numeric($row['max_crop'] ?? null) ? (float) $row['max_crop'] : 0.0;
+        $minSizeRaw = $row['min_size'] ?? null;
+        $minSize = null;
+        if (is_array($minSizeRaw)) {
+            $minSize = [
+                isset($minSizeRaw[0]) && is_numeric($minSizeRaw[0]) ? (int) $minSizeRaw[0] : 0,
+                isset($minSizeRaw[1]) && is_numeric($minSizeRaw[1]) ? (int) $minSizeRaw[1] : 0,
+            ];
+        }
+        return new self([$idealW, $idealH], $maxCrop, $minSize);
+    }
+
+    /**
      * Adds tokens depending on sizing configuration.
      *
      * @param array &$tokens

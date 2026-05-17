@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Image;
 
-use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
-use Piwigo\Config\ConfigService;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\StringUtil;
-use Piwigo\Db\Tables;
 
 /**
  * Container for standard derivatives parameters.
@@ -23,21 +18,18 @@ final class ImageStdParams
       ];
     /** @var string[] */
     private static array $disabled_types_by_default = [DerivativeSize::ThreeXLarge->value, DerivativeSize::FourXLarge->value];
-    /** @var DerivativeParams[] */
-    private static $all_type_map = [];
-    /** @var DerivativeParams[] */
-    private static $type_map = [];
-    /** @var DerivativeParams[] */
+    /** @var array<string, DerivativeParams> */
+    private static array $all_type_map = [];
+    /** @var array<string, DerivativeParams> */
+    private static array $type_map = [];
+    /** @var array<string, DerivativeParams> */
     private static array $disabled_type_map = [];
-    /** @var string[] maps undefined type names to defined type names */
-    private static $undefined_type_map = [];
-    /** @var WatermarkParams */
-    private static $watermark;
-    /** @var array */
-    /** @var array<mixed> */
+    /** @var array<string, string> maps undefined type names to defined type names */
+    private static array $undefined_type_map = [];
+    private static WatermarkParams $watermark;
+    /** @var array<string, int> */
     public static array $custom = [];
-    /** @var int */
-    public static $quality = 95;
+    public static int $quality = 95;
 
     /**
      * @return string[]
@@ -48,7 +40,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return array<string, DerivativeParams>
      */
     public static function getAllTypeMap()
     {
@@ -56,7 +48,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return array<string, DerivativeParams>
      */
     public static function getDefinedTypeMap()
     {
@@ -64,14 +56,11 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]|string
+     * @return array<string, DerivativeParams>
      */
-    public static function getDisabledTypeMap(): array|string
+    public static function getDisabledTypeMap(): array
     {
-        if (count(self::$disabled_type_map)) {
-            return self::$disabled_type_map;
-        }
-        return Config::disabledDerivatives() ?? '';
+        return self::$disabled_type_map;
     }
 
     /**
@@ -118,46 +107,32 @@ final class ImageStdParams
     }
 
     /**
-     * Loads derivative configuration from database or initializes it.
+     * Loads derivative configuration from database, or seeds defaults
+     * on first run. Reads through the dedicated
+     * piwigo_derivative_size + piwigo_derivative_settings tables.
      */
     public static function loadFromDb(): void
     {
-        $derivatives = Config::derivatives();
-        $arr = StringUtil::safeUnserialize(is_string($derivatives) ? $derivatives : '');
-        if ($arr !== []) {
-            $typeMapRaw = is_array($arr['d'] ?? null) ? $arr['d'] : [];
-            $typeMap = [];
-            foreach ($typeMapRaw as $k => $v) {
-                if ($v instanceof DerivativeParams) {
-                    $typeMap[$k] = $v;
-                }
-            }
-            self::$type_map = $typeMap;
-            $w = $arr['w'] ?? null;
-            self::$watermark = $w instanceof WatermarkParams ? $w : new WatermarkParams();
-            $c = $arr['c'] ?? null;
-            self::$custom = is_array($c) ? $c : [];
-            $q = $arr['q'] ?? null;
-            if (is_int($q)) {
-                self::$quality = $q;
-            }
-        } else {
-            self::$watermark = new WatermarkParams();
-            self::$type_map = self::getEnabledDefaultSizes();
-            self::save(false);
+        if (!Kernel::isBooted()) {
+            return;
         }
 
-        $rawDisabled = StringUtil::safeUnserialize(self::getDisabledTypeMap());
-        $filteredDisabled = [];
-        foreach ($rawDisabled as $k => $v) {
-            if ($v instanceof DerivativeParams) {
-                $filteredDisabled[$k] = $v;
-            }
-        }
-        self::$disabled_type_map = $filteredDisabled;
-        if (empty(self::$disabled_type_map)) {
+        $sizeRepo     = Kernel::service(DerivativeSizeRepository::class);
+        $settingsRepo = Kernel::service(DerivativeSettingsRepository::class);
+
+        $settings        = $settingsRepo->load();
+        self::$watermark = $settings['watermark'];
+        self::$custom    = $settings['custom'];
+        self::$quality   = $settings['quality'];
+
+        if ($sizeRepo->hasAny()) {
+            $rows = $sizeRepo->loadAll();
+            self::$type_map          = $rows['enabled'];
+            self::$disabled_type_map = $rows['disabled'];
+        } else {
+            self::$type_map          = self::getEnabledDefaultSizes();
             self::$disabled_type_map = self::getDisabledDefaultSizes();
-            self::saveDisabled();
+            self::save();
         }
 
         self::buildMaps();
@@ -174,59 +149,35 @@ final class ImageStdParams
     /**
      * @see ImageStdParams::save()
      *
-     * @param DerivativeParams[] $map
+     * @param array<string, DerivativeParams> $map
      */
     public static function setAndSave($map): void
     {
         self::$type_map = $map;
-        self::save(false);
+        self::save();
         self::buildMaps();
     }
 
     /**
-     * Saves the configuration in database.
+     * Persist the full derivative-config state (sizes + settings)
+     * back to the dedicated tables.
      */
-    public static function save(bool $save_disabled = true): void
+    public static function save(): void
     {
         if (!Kernel::isBooted()) {
             return;
         }
-        $ser = serialize([
-          'd' => self::$type_map,
-          'q' => self::$quality,
-          'w' => self::$watermark,
-          'c' => self::$custom,
-          ]);
-        Kernel::service(ConfigService::class)->confUpdateParam('derivatives', $ser);
-
-        if ($save_disabled) {
-            self::saveDisabled();
-        }
+        Kernel::service(DerivativeSizeRepository::class)
+            ->replaceAll(self::$type_map, self::$disabled_type_map);
+        Kernel::service(DerivativeSettingsRepository::class)
+            ->save(self::$quality, self::$watermark, self::$custom);
     }
 
-    /**
-     * Saves the disabled configuration in database.
-     */
-    public static function saveDisabled(): void
-    {
-        if (!Kernel::isBooted()) {
-            return;
-        }
-        if (count(self::$disabled_type_map) > 0) {
-            $disabled = serialize(self::$disabled_type_map);
-            Kernel::service(ConfigService::class)->confUpdateParam('disabled_derivatives', $disabled);
-        } else {
-            Kernel::service(Connection::class)->executeStatement(
-                'DELETE FROM ' . Tables::config() . ' WHERE param = \'disabled_derivatives\''
-            );
-        }
-    }
-
-    /** @param DerivativeParams[] $map */
+    /** @param array<string, DerivativeParams> $map */
     public static function setAndSaveDisabled(array $map): void
     {
         self::$disabled_type_map = $map;
-        self::saveDisabled();
+        self::save();
     }
 
     public static function restoreDefault(): void
@@ -238,7 +189,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return array<string, DerivativeParams>
      */
     public static function getDefaultSizes(): array
     {
@@ -263,7 +214,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return array<string, DerivativeParams>
      */
     public static function getEnabledDefaultSizes(): array
     {
@@ -275,7 +226,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return array<string, DerivativeParams>
      */
     public static function getDisabledDefaultSizes(): array
     {

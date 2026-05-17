@@ -20,7 +20,6 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\StringUtil;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
@@ -449,9 +448,8 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                         'original_resize' => Config::originalResize(),
                     ], true);
 
-                    $enabled      = ImageStdParams::getDefinedTypeMap();
-                    $disabled_raw = StringUtil::safeUnserialize(ImageStdParams::getDisabledTypeMap());
-                    $disabled     = $disabled_raw;
+                    $enabled  = ImageStdParams::getDefinedTypeMap();
+                    $disabled = ImageStdParams::getDisabledTypeMap();
 
                     $tpl_vars = [];
                     foreach (ImageStdParams::getAllTypes() as $type) {
@@ -485,8 +483,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                     $tpl_vars = [];
                     $now = time();
                     foreach (ImageStdParams::$custom as $custom => $time) {
-                        $time_int         = is_numeric($time) ? (int) $time : 0;
-                        $tpl_vars[$custom] = ($now - $time_int <= 24 * 3600) ? Lang::t('today') : $this->dateService->timeSince($time_int, 'day');
+                        $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? Lang::t('today') : $this->dateService->timeSince($time, 'day');
                     }
                     $tpl->assign('custom_derivatives', $tpl_vars);
                 }

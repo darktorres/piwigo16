@@ -23,6 +23,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
@@ -57,7 +58,7 @@ final class CommonBootstrap
         $v = addslashes(is_scalar($v) ? (string) $v : '');
     }
 
-    public static function run(): void
+    public static function run(Paths $paths): void
     {
         ExceptionHandler::register();
 
@@ -78,7 +79,7 @@ final class CommonBootstrap
 
         defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
-        ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
+        ConfigLoader::loadEnv($paths->root);
         ConfigLoader::applyEnvOverrides();
 
         if (!InstallSentinel::isInstalled()) {
@@ -101,7 +102,7 @@ final class CommonBootstrap
         // Boot the DI container now — env credentials are loaded. The container is
         // lazy (PHP-DI instantiates nothing until first get() call), so booting here
         // does NOT require Config::$data to be populated.
-        Kernel::boot();
+        Kernel::boot($paths);
 
         try {
             Kernel::service(Connection::class);
@@ -118,7 +119,7 @@ final class CommonBootstrap
         Kernel::service(ConfigService::class)->loadConfFromDb();
 
         LoggerRegistry::set(new Logger([
-            'directory'   => PHPWG_ROOT_PATH . Config::dataLocation() . Config::logDir(),
+            'directory'   => $paths->root . Config::dataLocation() . Config::logDir(),
             'severity'    => Config::logLevel(),
             'filename'    => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . Config::dbPassword()) . '.txt',
             'globPattern' => 'log_*.txt',
@@ -199,7 +200,7 @@ final class CommonBootstrap
             Kernel::service(LangService::class)->loadLanguage('whats_new_' . AppInfo::branchFromVersion(AppInfo::VERSION) . '.lang');
         }
         Kernel::service(EventDispatcherInterface::class)->dispatch(new LoadingLang());
-        Kernel::service(LangService::class)->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
+        Kernel::service(LangService::class)->loadLanguage('lang', $paths->root . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
 
         if (Kernel::service(PermissionService::class)->isAGuest()) {
             $guestName = Lang::t('guest');
@@ -240,14 +241,14 @@ final class CommonBootstrap
 
         if (RequestContextRegistry::current() === RequestContext::Admin) {
             $admin_theme_raw = Kernel::service(PreferencesService::class)->userprefsGetParam('admin_theme', 'dark');
-            $template = new Template(PHPWG_ROOT_PATH . 'themes/admin', is_string($admin_theme_raw) ? $admin_theme_raw : 'dark');
+            $template = new Template($paths->root . 'themes/admin', is_string($admin_theme_raw) ? $admin_theme_raw : 'dark');
         } else {
             $theme_raw = CurrentUser::get()->rawAttributes['theme'] ?? '';
             $theme     = is_string($theme_raw) ? $theme_raw : '';
             if (StringUtil::scriptBasename() != 'ws' and Kernel::service(DeviceDetectionService::class)->isMobileTheme()) {
                 $theme = Config::mobilTheme();
             }
-            $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
+            $template = new Template($paths->root . 'themes', $theme);
         }
         TemplateRegistry::set($template);
 

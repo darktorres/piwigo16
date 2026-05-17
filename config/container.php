@@ -187,13 +187,10 @@ return [
     Config::class          => factory(fn () => Config::instance()),
     Translator::class      => factory(fn () => Translator::get()),
     PageState::class       => factory(fn () => PageState::current()),
-    // Filesystem layout of this install. Derived from this file's own
-    // location (config/container.php → parent dir = install root). Decoupled
-    // from PHPWG_ROOT_PATH because that constant carries URL-relative
-    // semantics ('./'); Paths must be absolute for filesystem operations.
-    // Phase 4 will replace this with a Paths instance threaded explicitly
-    // through Container::build().
-    Paths::class           => factory(static fn (): Paths => Paths::fromRoot(dirname(__DIR__))),
+    // Paths is bound explicitly by Container::build() from the entry point
+    // that knows its own location (Paths::fromIndex(__FILE__) in index.php).
+    // No factory needed here; PHP-DI sees the explicit binding from
+    // Container::build's second addDefinitions() call.
     LoggerInterface::class => factory(
         fn () => LoggerRegistry::isInitialized() ? LoggerRegistry::current() : new NullLogger()
     ),

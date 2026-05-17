@@ -44,15 +44,15 @@ if (str_starts_with($_qs, 'i/')) {
     // Skips CommonBootstrap (no session, no user, no plugins) for performance.
     defined('PWG_LOCAL_DIR')      or define('PWG_LOCAL_DIR', 'local/');
     ConfigLoader::applyDefaults();
-    ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
+    ConfigLoader::loadEnv($paths->root);
     ConfigLoader::applyEnvOverrides();
     $logger = new Logger([
-        'directory' => PHPWG_ROOT_PATH . Config::dataLocation() . Config::logDir(),
+        'directory' => $paths->root . Config::dataLocation() . Config::logDir(),
         'severity'  => Config::logLevel(),
         'filename'  => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . Config::dbPassword()) . '.txt',
     ]);
     LoggerRegistry::set($logger);
-    Kernel::bootMinimal();
+    Kernel::bootMinimal($paths);
     Kernel::service(ImageDerivativeController::class)(RequestFactory::fromGlobals());
     exit;
 }
@@ -70,9 +70,9 @@ if (str_starts_with($_qs, 'upgrade_feed')) {
     // Upgrade feed — DB schema may be mid-migration; bypass the full boot pipeline.
     defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
     ConfigLoader::applyDefaults();
-    ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
+    ConfigLoader::loadEnv($paths->root);
     ConfigLoader::applyEnvOverrides();
-    Kernel::boot();
+    Kernel::boot($paths);
     Kernel::service(UpgradeFeedController::class)(RequestFactory::fromGlobals());
     exit;
 }
@@ -84,15 +84,15 @@ if (str_starts_with($_qs, 'upgrade')) {
     }
     defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
     ConfigLoader::applyDefaults();
-    ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
+    ConfigLoader::loadEnv($paths->root);
     ConfigLoader::applyEnvOverrides();
-    Kernel::boot();
+    Kernel::boot($paths);
     Kernel::service(UpgradeController::class)(RequestFactory::fromGlobals());
     exit;
 }
 
-CommonBootstrap::run();
-Kernel::boot();
+CommonBootstrap::run($paths);
+Kernel::boot($paths);
 
 new ResponseEmitter()->emit(
     Kernel::handle(RequestFactory::fromGlobals())

@@ -95,7 +95,7 @@ final readonly class InstallController implements ControllerInterface
         // Languages is intentionally NOT resolved here — its constructor pulls
         // in AdminService/LanguageRepository (and therefore Connection), which
         // would fail on a fresh install where no DB credentials exist yet.
-        Kernel::boot();
+        Kernel::boot($this->paths);
 
         // Scan available languages from the filesystem — no DI or DB needed.
         $fsLanguages = $this->scanFsLanguages();

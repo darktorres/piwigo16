@@ -38,7 +38,13 @@ final class Kernel
     private static bool $booted = false;
     private static ?ContainerInterface $container = null;
 
-    public static function boot(): void
+    /**
+     * Production callers (index.php, controllers) pass the Paths constructed
+     * from `Paths::fromIndex(__FILE__)`. Tests and tools that boot the kernel
+     * without an entry point omit the argument; the fallback derives the
+     * install root from Kernel's own file location.
+     */
+    public static function boot(?Paths $paths = null): void
     {
         if (self::$booted) {
             return;
@@ -49,7 +55,7 @@ final class Kernel
         Lang::attachGlobals();
         CurrentUser::attachGlobals();
 
-        self::$container = Container::build();
+        self::$container = Container::build($paths ?? Paths::fromRoot(dirname(__DIR__, 3)));
 
         // Seed LoggerRegistry with a NullLogger if common.inc.php hasn't set a real one yet
         // (index.php?/install and index.php?/upgrade bypass common.inc.php).
@@ -75,7 +81,7 @@ final class Kernel
      * Callers must register a real Logger in LoggerRegistry before calling
      * this if they want one; the NullLogger fallback is just a safety net.
      */
-    public static function bootMinimal(): void
+    public static function bootMinimal(?Paths $paths = null): void
     {
         if (self::$booted) {
             return;
@@ -86,7 +92,7 @@ final class Kernel
             LoggerRegistry::set(new NullLogger());
         }
 
-        self::$container = Container::build();
+        self::$container = Container::build($paths ?? Paths::fromRoot(dirname(__DIR__, 3)));
     }
 
     /**

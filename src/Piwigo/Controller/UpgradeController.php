@@ -59,7 +59,7 @@ final readonly class UpgradeController implements ControllerInterface
         define('PREFIX_TABLE', $prefixeTable);
         define('UPGRADES_PATH', $this->paths->root . 'install/db');
 
-        Kernel::boot();
+        Kernel::boot($this->paths);
 
         $languages = Kernel::service(Languages::class);
         $languages->getFsLanguages('utf-8');

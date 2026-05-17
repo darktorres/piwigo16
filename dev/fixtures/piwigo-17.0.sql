@@ -178,8 +178,8 @@ DROP TABLE IF EXISTS `piwigo_derivative_settings`;
 CREATE TABLE `piwigo_derivative_settings` (
   `id` tinyint(4) NOT NULL,
   `default_quality` int(11) NOT NULL DEFAULT '95',
-  `watermark_json` text NOT NULL,
-  `custom_json` text NOT NULL,
+  `watermark_json` json NOT NULL,
+  `custom_json` json NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
 
@@ -639,7 +639,7 @@ CREATE TABLE `piwigo_search` (
   `created_on` datetime DEFAULT NULL,
   `created_by` mediumint unsigned DEFAULT NULL,
   `forked_from` int unsigned DEFAULT NULL,
-  `rules` text,
+  `rules` json DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -660,7 +660,7 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `piwigo_search_filter_view`;
 CREATE TABLE `piwigo_search_filter_view` (
   `name` varchar(64) CHARACTER SET ascii NOT NULL,
-  `config_json` text NOT NULL,
+  `config_json` json NOT NULL,
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
@@ -983,7 +983,7 @@ CREATE TABLE `piwigo_user_infos` (
   `last_visit` datetime DEFAULT NULL,
   `last_visit_from_history` tinyint(1) unsigned NOT NULL DEFAULT 0,
   `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `preferences` text,
+  `preferences` json DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   KEY `lastmodified` (`lastmodified`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;

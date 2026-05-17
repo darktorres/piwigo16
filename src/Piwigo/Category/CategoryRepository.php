@@ -1253,6 +1253,328 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
+     * Return categories-menu rows: category meta joined with the user's
+     * user_cache_categories denormalized counts, subject to the caller's
+     * permission filter (or a custom WHERE built by the caller).
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<array<string, mixed>>
+     */
+    public function findCategoriesMenuRows(int $userId, string $whereClause, array $permParams, array $permTypes): array
+    {
+        $query = '
+SELECT
+  id, name, permalink, nb_images, global_rank,
+  date_last, max_date_last, count_images, count_categories
+FROM ' . $this->table('categories') . ' INNER JOIN ' . $this->table('user_cache_categories') . '
+  ON id = cat_id AND user_id = ?
+WHERE ' . $whereClause;
+        $params = [$userId, ...$permParams];
+        $types  = [ParameterType::INTEGER, ...$permTypes];
+        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
+     * Return id-keyed (id, name, permalink) rows for the given category ids.
+     *
+     * @param list<int> $ids
+     * @return array<int|string, array<string, mixed>>
+     */
+    public function findNamePermalinkByIdsKeyedById(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'name', 'permalink')
+            ->from($this->table('categories'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $idKey = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $out[$idKey] = $row;
+        }
+        return $out;
+    }
+
+    /**
+     * Execute the caller-built category-listing query and return its rows.
+     * Transitional shim until F4-e refactors the controllers that pre-compose
+     * dropdown SQL into their own Repository methods; see CategoryService's
+     * displaySelectCatWrapper.
+     *
+     * @param list<mixed>                            $params
+     * @param list<ArrayParameterType|ParameterType> $types
+     * @return list<array<string, mixed>>
+     */
+    public function executeListingQuery(string $query, array $params, array $types): array
+    {
+        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
+     * Return DISTINCT category ids whose `uppercats` REGEXP-matches any of the
+     * given category ids (i.e. the union of subcategory subtrees rooted at
+     * each id).
+     *
+     * @param list<int> $rootIds
+     * @return list<int>
+     */
+    public function findSubcatIdsByRootIds(array $rootIds): array
+    {
+        if ($rootIds === []) {
+            return [];
+        }
+        $clauses = [];
+        $params  = [];
+        $types   = [];
+        foreach ($rootIds as $rootId) {
+            $clauses[] = 'uppercats REGEXP ?';
+            $params[]  = '(^|,)' . $rootId . '(,|$)';
+            $types[]   = ParameterType::STRING;
+        }
+        $query = 'SELECT DISTINCT(id) FROM ' . $this->table('categories') . ' WHERE ' . implode(' OR ', $clauses);
+        $rows  = $this->conn->executeQuery($query, $params, $types)->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Resolve permalinks to category ids by checking both old_permalinks
+     * (historical mappings) and categories.permalink (current values).
+     * Each result row carries an `is_old` flag (1 if from old_permalinks).
+     *
+     * @param  list<string> $permalinks
+     * @return array<string, array<string, mixed>>  Keyed by `permalink`
+     */
+    public function findCategoryIdsByPermalinksKeyedByPermalink(array $permalinks): array
+    {
+        if ($permalinks === []) {
+            return [];
+        }
+        $placeholders = implode(', ', array_fill(0, count($permalinks), '?'));
+        $query = '
+SELECT cat_id AS id, permalink, 1 AS is_old
+  FROM ' . $this->table('old_permalinks') . '
+  WHERE permalink IN (' . $placeholders . ')
+UNION
+SELECT id, permalink, 0 AS is_old
+  FROM ' . $this->table('categories') . '
+  WHERE permalink IN (' . $placeholders . ')';
+        $params = [...$permalinks, ...$permalinks];
+        $types  = array_fill(0, count($params), ParameterType::STRING);
+        $rows = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        $out  = [];
+        foreach ($rows as $row) {
+            $pk = is_string($row['permalink']) ? $row['permalink'] : '';
+            $out[$pk] = $row;
+        }
+        return $out;
+    }
+
+    /**
+     * Return a random image_id in the given category (or in its subtree if
+     * $recursive is true), subject to the caller's permission filter.
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     */
+    public function findRandomImageIdInCategoryWithPermissions(
+        int $categoryId,
+        string $uppercats,
+        bool $recursive,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): ?int {
+        if ($recursive) {
+            $catClause = '(c.id = ? OR uppercats LIKE ?)';
+            $catParams = [$categoryId, $uppercats . ',%'];
+            $catTypes  = [ParameterType::INTEGER, ParameterType::STRING];
+        } else {
+            $catClause = 'c.id = ?';
+            $catParams = [$categoryId];
+            $catTypes  = [ParameterType::INTEGER];
+        }
+        $query = '
+SELECT image_id
+  FROM ' . $this->table('categories') . ' AS c
+    INNER JOIN ' . $this->table('image_category') . ' AS ic ON ic.category_id = c.id
+  WHERE ' . $catClause . ' ' . $permWhere . '
+  ORDER BY RAND()
+  LIMIT 1';
+        $params = [...$catParams, ...$permParams];
+        $types  = [...$catTypes, ...$permTypes];
+        $value  = $this->conn->executeQuery($query, $params, $types)->fetchOne();
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
+     * Computed-category aggregation row used by getComputedCategories():
+     * cat_id, id_uppercat, global_rank, max(date_available) → date_last,
+     * count(date_available) → nb_images. Filters image rows by visibility
+     * level and optional date_available cutoff; optionally excludes forbidden
+     * category ids.
+     *
+     * @param list<int> $forbiddenCategoryIds
+     * @return list<array<string, mixed>>
+     */
+    public function findComputedCategoryAggregates(
+        int $userLevel,
+        ?string $recentDateCutoffSql,
+        array $forbiddenCategoryIds,
+    ): array {
+        $query  = 'SELECT c.id AS cat_id, id_uppercat';
+        $query .= ', global_rank';
+        $query .= ',
+  MAX(date_available) AS date_last, COUNT(date_available) AS nb_images
+FROM ' . $this->table('categories') . ' as c
+  LEFT JOIN ' . $this->table('image_category') . ' AS ic ON ic.category_id = c.id
+  LEFT JOIN ' . $this->table('images') . ' AS i
+    ON ic.image_id = i.id
+      AND i.level <= ?';
+        $params = [$userLevel];
+        $types  = [ParameterType::INTEGER];
+
+        if ($recentDateCutoffSql !== null) {
+            // recentDateCutoffSql comes from SqlExpr::recentPeriodExpr() and is
+            // a server-built fragment (no user data), spliced as-is.
+            $query .= ' AND i.date_available > ' . $recentDateCutoffSql;
+        }
+
+        if ($forbiddenCategoryIds !== []) {
+            $query .= '
+  WHERE c.id NOT IN (?)';
+            $params[] = $forbiddenCategoryIds;
+            $types[]  = ArrayParameterType::INTEGER;
+        }
+
+        $query .= '
+  GROUP BY c.id';
+
+        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
+     * Return image ids associated with any of the given categories, subject
+     * to the caller's permission filter, an optional extra WHERE fragment,
+     * and an ORDER BY. With $mode === 'AND' and >1 category id, only images
+     * present in ALL given categories are returned.
+     *
+     * @param list<int>                              $catIds
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<int>
+     */
+    public function findImageIdsForCategoriesWithPermissions(
+        array $catIds,
+        string $mode,
+        ?string $extraImagesWhereSql,
+        string $orderBySuffix,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): array {
+        if ($catIds === []) {
+            return [];
+        }
+        $query = '
+SELECT id
+  FROM ' . $this->table('images') . ' i
+    INNER JOIN ' . $this->table('image_category') . ' ic ON id = ic.image_id
+  WHERE category_id IN (?)' . $permWhere;
+        $params = [$catIds, ...$permParams];
+        $types  = [ArrayParameterType::INTEGER, ...$permTypes];
+
+        if ($extraImagesWhereSql !== null && $extraImagesWhereSql !== '') {
+            $query .= " \nAND (" . $extraImagesWhereSql . ')';
+        }
+        $query .= '
+  GROUP BY id';
+
+        if ($mode === 'AND' && count($catIds) > 1) {
+            $query .= '
+  HAVING COUNT(DISTINCT category_id) = ' . count($catIds);
+        }
+        $query .= "\n" . $orderBySuffix;
+
+        $rows = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'id'));
+    }
+
+    /**
+     * Categories that appear in image_category for the given images,
+     * with their count of matching images, subject to permission filter.
+     * Optional cap on result rows and category-id exclusion.
+     *
+     * @param list<int>                              $imageIds
+     * @param list<int>                              $excludedCatIds
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<array<string, mixed>>
+     */
+    public function findCommonCategoriesWithPermissions(
+        array $imageIds,
+        ?int $max,
+        array $excludedCatIds,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): array {
+        if ($imageIds === []) {
+            return [];
+        }
+        $query = '
+SELECT
+    c.id,
+    c.uppercats,
+    count(*) AS counter
+  FROM ' . $this->table('image_category') . '
+    INNER JOIN ' . $this->table('categories') . ' c ON category_id = id
+  WHERE image_id IN (?)' . $permWhere;
+        $params = [$imageIds, ...$permParams];
+        $types  = [ArrayParameterType::INTEGER, ...$permTypes];
+        if ($excludedCatIds !== []) {
+            $query .= '
+    AND category_id NOT IN (?)';
+            $params[] = $excludedCatIds;
+            $types[]  = ArrayParameterType::INTEGER;
+        }
+        $query .= '
+  GROUP BY c.id
+  ORDER BY ';
+        if ($max !== null) {
+            $query .= 'counter DESC
+  LIMIT ' . $max;
+        } else {
+            $query .= 'NULL';
+        }
+        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
+     * Return (id, name, permalink, id_uppercat, uppercats, global_rank) for
+     * the given category ids. Used by getRelatedCategoriesMenu to render the
+     * "related albums" navigation strip.
+     *
+     * @param list<int> $ids
+     * @return list<array<string, mixed>>
+     */
+    public function findRelatedNavRowsByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'name', 'permalink', 'id_uppercat', 'uppercats', 'global_rank')
+            ->from($this->table('categories'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
      * Update image_category `rank` for many image/category pairs atomically.
      *
      * @param list<array{image_id: int|string, category_id: int, rank: int}> $rows

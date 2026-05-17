@@ -5,14 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Db\SqlExpr;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Album\GetCategoriesMenuSqlWhere;
 use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
 use Piwigo\Event\Template\RenderCategoryName;
@@ -31,7 +29,6 @@ final readonly class CategoryService
 {
     public function __construct(
         private CategoryRepository $catRepo,
-        private Connection $conn,
         private FilterService $filterService,
         private PermissionService $permissionService,
         private EventDispatcherInterface $dispatcher,
@@ -72,18 +69,10 @@ final readonly class CategoryService
         $currentUser = CurrentUser::get();
         $userExpand  = $currentUser->rawAttributes['expand'] ?? false;
 
-        $query = '
-SELECT
-  id, name, permalink, nb_images, global_rank,
-  date_last, max_date_last, count_images, count_categories
-FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . '
-  ON id = cat_id and user_id = ' . $currentUser->id;
-
         $permParams = [];
         $permTypes  = [];
         if (($userExpand === false || $userExpand === 0 || $userExpand === '') and !$filter->enabled) {
-            $where = '
-(id_uppercat is NULL';
+            $where = '(id_uppercat IS NULL';
             $category = $ctx->category;
             if ($category !== null) {
                 $uppercats = is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '';
@@ -92,21 +81,16 @@ FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() .
             $where .= ')';
         } else {
             [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], null, true);
-            $where = '
-  ' . $permSql;
+            $where = $permSql;
         }
 
         $whereEvent = new GetCategoriesMenuSqlWhere($where, (bool) $userExpand, $filter->enabled);
         $this->dispatcher->dispatch($whereEvent);
         $where = $whereEvent->where;
 
-        $query .= '
-WHERE ' . $where . '
-;';
-
         $cats             = [];
         $selectedCategory = $ctx->category;
-        foreach ($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative() as $row) {
+        foreach ($this->catRepo->findCategoriesMenuRows((int) $currentUser->id, $where, $permParams, $permTypes) as $row) {
             $childDateLast = ($row['max_date_last'] ?? null) > ($row['date_last'] ?? null);
             $menuRenderEvent = new RenderCategoryName(is_string($row['name'] ?? null) ? $row['name'] : '', 'get_categories_menu');
             $this->dispatcher->dispatch($menuRenderEvent);
@@ -161,12 +145,8 @@ WHERE ' . $where . '
                 'permalink' => $cat['permalink'],
             ]];
         } else {
-            $query = '
-  SELECT id, name, permalink
-    FROM ' . Tables::categories() . '
-    WHERE id IN (' . (is_string($cat['uppercats'] ?? null) ? $cat['uppercats'] : '') . ')
-  ;';
-            $names = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'id');
+            $upperIdsInt = array_map(static fn (string $v): int => (int) $v, $upperIds);
+            $names = $this->catRepo->findNamePermalinkByIdsKeyedById($upperIdsInt);
 
             $cat['upper_names'] = [];
             foreach ($upperIds as $catId) {
@@ -229,7 +209,7 @@ WHERE ' . $where . '
      */
     public function displaySelectCatWrapper(string $query, array|string $selecteds, string $blockname, bool|string $fullname = true, array $params = [], array $types = []): void
     {
-        $categories = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        $categories = $this->catRepo->executeListingQuery($query, $params, $types);
         usort($categories, $this->globalRankCompare(...));
         $this->displaySelectCategories($categories, $selecteds, $blockname, $fullname);
     }
@@ -243,23 +223,14 @@ WHERE ' . $where . '
         if (!is_array($ids)) {
             $ids = [$ids];
         }
-        $query = '
-SELECT DISTINCT(id)
-  FROM ' . Tables::categories() . '
-  WHERE ';
-        foreach ($ids as $num => $categoryId) {
+        $idsInt = [];
+        foreach ($ids as $categoryId) {
             if (!is_numeric($categoryId)) {
                 throw new \InvalidArgumentException('get_subcat_ids expecting numeric, not ' . gettype($categoryId));
             }
-            if ($num > 0) {
-                $query .= '
-    OR ';
-            }
-            $query .= 'uppercats REGEXP \'(^|,)' . $categoryId . '(,|$)\'';
+            $idsInt[] = (int) $categoryId;
         }
-        $query .= '
-;';
-        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'));
+        return $this->catRepo->findSubcatIdsByRootIds($idsInt);
     }
 
     /**
@@ -267,23 +238,7 @@ SELECT DISTINCT(id)
      */
     public function getCatIdFromPermalinks(array $permalinks, int &$idx): ?int
     {
-        $in = '';
-        foreach ($permalinks as $permalink) {
-            if (!empty($in)) {
-                $in .= ', ';
-            }
-            $in .= '\'' . $permalink . '\'';
-        }
-        $query = '
-SELECT cat_id AS id, permalink, 1 AS is_old
-  FROM ' . Tables::oldPermalinks() . '
-  WHERE permalink IN (' . $in . ')
-UNION
-SELECT id, permalink, 0 AS is_old
-  FROM ' . Tables::categories() . '
-  WHERE permalink IN (' . $in . ')
-;';
-        $permaHash = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'permalink');
+        $permaHash = $this->catRepo->findCategoryIdsByPermalinksKeyedByPermalink(array_values($permalinks));
 
         if (empty($permaHash)) {
             return null;
@@ -329,33 +284,20 @@ SELECT id, permalink, 0 AS is_old
     /** @param array<string, mixed> $category */
     public function getRandomImageInCategory(array $category, bool $recursive = true): ?int
     {
-        $imageId = null;
-        if ($category['count_images'] > 0) {
-            $query = '
-SELECT image_id
-  FROM ' . Tables::categories() . ' AS c
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON ic.category_id = c.id
-  WHERE ';
-            if ($recursive) {
-                $query .= '
-    (c.id=' . (is_numeric($category['id']) ? (int) $category['id'] : 0) . ' OR uppercats LIKE \'' . addslashes(is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '') . ',%\')';
-            } else {
-                $query .= '
-    c.id=' . (is_numeric($category['id']) ? (int) $category['id'] : 0);
-            }
-            [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'c.id', 'visible_categories' => 'c.id', 'visible_images' => 'image_id'], "\n  AND");
-            $query .= '
-    ' . $permSql . '
-  ORDER BY RAND()
-  LIMIT 1
-;';
-            $val = $this->conn->executeQuery($query, $permParams, $permTypes)->fetchOne();
-            if ($val !== false) {
-                $imageId = is_numeric($val) ? (int) $val : null;
-            }
+        if (!($category['count_images'] > 0)) {
+            return null;
         }
-
-        return $imageId;
+        $catId       = is_numeric($category['id']) ? (int) $category['id'] : 0;
+        $uppercats   = is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '';
+        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'c.id', 'visible_categories' => 'c.id', 'visible_images' => 'image_id'], "\n  AND");
+        return $this->catRepo->findRandomImageIdInCategoryWithPermissions(
+            $catId,
+            $uppercats,
+            $recursive,
+            $permSql,
+            $permParams,
+            $permTypes,
+        );
     }
 
     /**
@@ -364,35 +306,15 @@ SELECT image_id
      */
     public function getComputedCategories(array &$userdata, ?int $filterDays = null): array
     {
-        $query  = 'SELECT c.id AS cat_id, id_uppercat';
-        $query .= ', global_rank';
-        $query .= ',
-  MAX(date_available) AS date_last, COUNT(date_available) AS nb_images
-FROM ' . Tables::categories() . ' as c
-  LEFT JOIN ' . Tables::imageCategory() . ' AS ic ON ic.category_id = c.id
-  LEFT JOIN ' . Tables::images() . ' AS i
-    ON ic.image_id = i.id
-      AND i.level<=' . (is_numeric($userdata['level']) ? (int) $userdata['level'] : 0);
-
-        if (isset($filterDays)) {
-            $query .= ' AND i.date_available > ' . SqlExpr::recentPeriodExpr($filterDays);
-        }
-
-        $forbiddenCatsParams = [];
-        $forbiddenCatsTypes  = [];
-        if (!empty($userdata['forbidden_categories']) && is_array($userdata['forbidden_categories'])) {
-            $query .= '
-  WHERE c.id NOT IN (?)';
-            $forbiddenCatsParams = [array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userdata['forbidden_categories']))];
-            $forbiddenCatsTypes  = [ArrayParameterType::INTEGER];
-        }
-
-        $query .= '
-  GROUP BY c.id';
+        $userLevel = is_numeric($userdata['level']) ? (int) $userdata['level'] : 0;
+        $recentSql = $filterDays !== null ? SqlExpr::recentPeriodExpr($filterDays) : null;
+        $forbidden = (!empty($userdata['forbidden_categories']) && is_array($userdata['forbidden_categories']))
+            ? array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userdata['forbidden_categories']))
+            : [];
 
         $userdata['last_photo_date'] = null;
         $cats                        = [];
-        foreach ($this->conn->executeQuery($query, $forbiddenCatsParams, $forbiddenCatsTypes)->fetchAllAssociative() as $row) {
+        foreach ($this->catRepo->findComputedCategoryAggregates($userLevel, $recentSql, $forbidden) as $row) {
             $udIdRaw = $userdata['id'] ?? null;
             $row['user_id']          = is_scalar($udIdRaw) ? $udIdRaw : 0;
             $row['nb_categories']    = 0;
@@ -504,30 +426,24 @@ FROM ' . Tables::categories() . ' as c
         if (!is_array($catIds)) {
             $catIds = [$catIds];
         }
-
-        $query = '
-SELECT id
-  FROM ' . Tables::images() . ' i
-    INNER JOIN ' . Tables::imageCategory() . ' ic ON id=ic.image_id
-  WHERE category_id IN (' . implode(',', $catIds) . ')';
+        $catIdsInt = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $catIds));
 
         $permParams = [];
         $permTypes  = [];
+        $permSql    = '';
         if ($usePermissions) {
             [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'], "\n  AND");
-            $query .= $permSql;
         }
 
-        $query .= (($extraImagesWhereSql === null || $extraImagesWhereSql === '') ? '' : " \nAND (" . $extraImagesWhereSql . ')') . '
-  GROUP BY id';
-
-        if ($mode == 'AND' and count($catIds) > 1) {
-            $query .= '
-  HAVING COUNT(DISTINCT category_id)=' . count($catIds);
-        }
-        $query .= "\n" . (empty($orderBy) ? Config::orderBy() : $orderBy);
-
-        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative(), 'id'));
+        return $this->catRepo->findImageIdsForCategoriesWithPermissions(
+            $catIdsInt,
+            $mode,
+            $extraImagesWhereSql,
+            empty($orderBy) ? Config::orderBy() : $orderBy,
+            $permSql,
+            $permParams,
+            $permTypes,
+        );
     }
 
     /**
@@ -542,34 +458,11 @@ SELECT id
         }
 
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id'], "\n    AND");
-        $query = '
-SELECT
-    c.id,
-    c.uppercats,
-    count(*) AS counter
-  FROM ' . Tables::imageCategory() . '
-    INNER JOIN ' . Tables::categories() . ' c ON category_id = id
-  WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $items)) . ')';
-
-        $query .= $permSql;
-
-        if (!empty($excludedCatIds)) {
-            $query .= '
-    AND category_id NOT IN (' . implode(',', $excludedCatIds) . ')';
-        }
-
-        $query .= '
-  GROUP BY c.id
-  ORDER BY ';
-        if (isset($max)) {
-            $query .= 'counter DESC
-  LIMIT ' . $max;
-        } else {
-            $query .= 'NULL';
-        }
+        $imageIds = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $items));
+        $excluded = array_values($excludedCatIds);
 
         $cats = [];
-        foreach ($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative() as $row) {
+        foreach ($this->catRepo->findCommonCategoriesWithPermissions($imageIds, $max, $excluded, $permSql, $permParams, $permTypes) as $row) {
             $cats[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $row;
         }
 
@@ -597,18 +490,8 @@ SELECT
             }
         }
 
-        $query = '
-SELECT
-    id,
-    name,
-    permalink,
-    id_uppercat,
-    uppercats,
-    global_rank
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', array_keys($catIds)) . ')
-;';
-        $cats = $this->conn->executeQuery($query)->fetchAllAssociative();
+        $navIds = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($catIds));
+        $cats = $this->catRepo->findRelatedNavRowsByIds($navIds);
         usort($cats, $this->globalRankCompare(...));
 
         $indexOfCat = [];

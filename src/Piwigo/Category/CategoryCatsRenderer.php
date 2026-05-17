@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
-use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\DebugCollector;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocBeginIndexCategoryThumbnails;
 use Piwigo\Event\Location\LocBeginIndexCategoryThumbnailsQuery;
 use Piwigo\Event\Location\LocEndIndexCategoryThumbnails;
@@ -21,6 +19,7 @@ use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeSize;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Page\PaginationService;
@@ -34,11 +33,12 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class CategoryCatsRenderer
 {
     public function __construct(
-        private Connection $conn,
+        private CategoryRepository $categoryRepository,
         private CategoryService $categoryService,
         private DateService $dateService,
         private FilterService $filterService,
         private HtmlService $htmlService,
+        private ImageRepository $imageRepository,
         private PermissionService $permissionService,
         private UrlService $urlService,
         private DebugCollector $debugCollector,
@@ -55,55 +55,34 @@ final readonly class CategoryCatsRenderer
         $currentUser = CurrentUser::get();
         $user = $currentUser->rawAttributes;
 
-        $query = '
-SELECT SQL_CALC_FOUND_ROWS
-    c.*,
-    user_representative_picture_id,
-    nb_images,
-    date_last,
-    max_date_last,
-    count_images,
-    nb_categories,
-    count_categories
-  FROM ' . Tables::categories() . ' c
-    INNER JOIN ' . Tables::userCacheCategories() . ' ucc
-    ON id = cat_id
-    AND user_id = ' . $currentUser->id . '
-  WHERE count_images > 0
-';
-
-        if ('recent_cats' == $ctx->section) {
-            $query .= '
-  AND ' . $this->permissionService->getRecentPhotosSql('date_last');
+        if ('recent_cats' === $ctx->section) {
+            $whereExtra = $this->permissionService->getRecentPhotosSql('date_last');
         } else {
-            $query .= '
-  AND id_uppercat ' . ($ctx->category === null ? 'is NULL' : '= ' . (is_scalar($ctx->category['id'] ?? null) ? (string) $ctx->category['id'] : ''));
+            $whereExtra = 'id_uppercat ' . ($ctx->category === null ? 'IS NULL' : '= ' . (is_numeric($ctx->category['id'] ?? null) ? (int) $ctx->category['id'] : 0));
         }
 
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], 'AND');
-        $query .= '
-      ' . $permSql;
-        $query .= '
--- after conditions
-';
 
-        if ('recent_cats' != $ctx->section) {
-            $query .= '
-  ORDER BY `rank`';
-        }
+        $orderBy = ('recent_cats' === $ctx->section) ? '' : 'ORDER BY `rank`';
 
-        $nb_cats_page = Config::nbCategoriesPage();
-        $query .= '
-  LIMIT ' . $nb_cats_page . ' OFFSET ' . $ctx->startcat . '
-;';
-
-        $queryEvent = new LocBeginIndexCategoryThumbnailsQuery($query);
+        // LocBeginIndexCategoryThumbnailsQuery is preserved as a no-op event
+        // for plugin compatibility — plugins that rebuilt the SQL string can
+        // no longer intercept it now that composition lives in the repository.
+        $queryEvent = new LocBeginIndexCategoryThumbnailsQuery('');
         $this->dispatcher->dispatch($queryEvent);
-        $query = $queryEvent->query;
 
-        $conn = $this->conn;
-        $catCatsRows = $conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative();
-        $totalCategories = $conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
+        $result = $this->categoryRepository->findCatsForThumbnailsWithFoundRows(
+            (int) $currentUser->id,
+            $whereExtra,
+            $orderBy,
+            Config::nbCategoriesPage(),
+            $ctx->startcat,
+            $permSql,
+            $permParams,
+            $permTypes,
+        );
+        $catCatsRows     = $result['rows'];
+        $totalCategories = $result['total'];
 
         $categories = [];
         $category_ids = [];
@@ -120,22 +99,15 @@ SELECT SQL_CALC_FOUND_ROWS
             } elseif (Config::allowRandomRepresentative()) {
                 $image_id = $this->categoryService->getRandomImageInCategory($row);
             } elseif ($row['count_categories'] > 0 and $row['count_images'] > 0) {
-                $rowUppercatsForQuery = $row['uppercats'] ?? null;
+                $rowUppercatsForQuery = is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '';
                 [$subPermSql, $subPermParams, $subPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND");
-                $subquery = '
-SELECT representative_picture_id
-  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . '
-  ON id = cat_id and user_id = ' . $currentUser->id . '
-  WHERE uppercats LIKE \'' . (is_string($rowUppercatsForQuery) ? $rowUppercatsForQuery : '') . ',%\'
-    AND representative_picture_id IS NOT NULL'
-                    . $subPermSql . '
-  ORDER BY RAND()
-  LIMIT 1
-;';
-                $subval = $this->conn->executeQuery($subquery, $subPermParams, $subPermTypes)->fetchOne();
-                if ($subval !== false) {
-                    $image_id = is_numeric($subval) ? (int) $subval : null;
-                }
+                $image_id = $this->categoryRepository->findRandomSubcatRepresentativeForUser(
+                    (int) $currentUser->id,
+                    $rowUppercatsForQuery,
+                    $subPermSql,
+                    $subPermParams,
+                    $subPermTypes,
+                );
             }
 
             if (isset($image_id)) {
@@ -159,18 +131,13 @@ SELECT representative_picture_id
         if (Config::displayFromto()) {
             if (count($category_ids) > 0) {
                 [$datesPermSql, $datesPermParams, $datesPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'category_id', 'visible_images' => 'id'], 'AND');
-                $query = '
-SELECT
-    category_id,
-    MIN(date_creation) AS `from`,
-    MAX(date_creation) AS `to`
-  FROM ' . Tables::imageCategory() . '
-    INNER JOIN ' . Tables::images() . ' ON image_id = id
-  WHERE category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $category_ids)) . ')
-' . $datesPermSql . '
-  GROUP BY category_id
-;';
-                $dates_of_category = array_column($this->conn->executeQuery($query, $datesPermParams, $datesPermTypes)->fetchAllAssociative(), null, 'category_id');
+                $catIdsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $category_ids);
+                $dates_of_category = $this->categoryRepository->findDateRangesForCategoriesKeyedById(
+                    $catIdsInt,
+                    $datesPermSql,
+                    $datesPermParams,
+                    $datesPermTypes,
+                );
             }
         }
 
@@ -182,12 +149,8 @@ SELECT
         if (count($categories) > 0) {
             $new_image_ids = [];
 
-            $query = '
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids)) . ')
-;';
-            foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
+            $imageIdsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $image_ids);
+            foreach ($this->imageRepository->findByIds($imageIdsInt) as $row) {
                 if ($row['level'] <= $user['level']) {
                     $infos_of_image[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $row;
                 } else {
@@ -209,12 +172,7 @@ SELECT *
             }
 
             if (count($new_image_ids) > 0) {
-                $query = '
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $new_image_ids) . ')
-;';
-                foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
+                foreach ($this->imageRepository->findByIds($new_image_ids) as $row) {
                     $infos_of_image[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $row;
                 }
             }
@@ -229,20 +187,12 @@ SELECT *
             $updates = [];
             foreach ($user_representative_updates_for as $cat_id => $image_id) {
                 $updates[] = [
-                    'user_id' => $user['id'],
-                    'cat_id' => $cat_id,
-                    'user_representative_picture_id' => $image_id,
+                    'cat_id'   => $cat_id,
+                    'image_id' => is_numeric($image_id) ? (int) $image_id : null,
                 ];
             }
-            $this->conn->transactional(function () use ($updates): void {
-                foreach ($updates as $row) {
-                    $this->conn->update(
-                        Tables::userCacheCategories(),
-                        ['user_representative_picture_id' => $row['user_representative_picture_id']],
-                        ['user_id' => $row['user_id'], 'cat_id' => $row['cat_id']]
-                    );
-                }
-            });
+            $userIdInt = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+            $this->categoryRepository->setUserRepresentativeBatch($userIdInt, $updates);
         }
 
         if (count($categories) > 0) {
@@ -339,11 +289,10 @@ SELECT *
             $template->assignVarFromTemplate('CATEGORIES', 'mainpage_categories.latte');
 
             $catsNavigationBar = [];
-            $totalCats = is_numeric($totalCategories) ? (int) $totalCategories : 0;
-            if ($totalCats > Config::nbCategoriesPage()) {
+            if ($totalCategories > Config::nbCategoriesPage()) {
                 $catsNavigationBar = $this->paginationService->createNavigationBar(
                     $this->urlService->duplicateIndexUrl([], ['startcat']),
-                    $totalCats,
+                    $totalCategories,
                     $ctx->startcat,
                     Config::nbCategoriesPage(),
                     true,

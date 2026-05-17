@@ -1575,6 +1575,148 @@ SELECT
     }
 
     /**
+     * Run the categories-for-thumbnails query (the SQL_CALC_FOUND_ROWS pattern
+     * used by both the category-grid and recent-cats pages) with the caller's
+     * pre-composed WHERE fragment and permission filter, plus the LIMIT/OFFSET
+     * page window. Returns rows and the total row count for pagination.
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return array{rows: list<array<string, mixed>>, total: int}
+     */
+    public function findCatsForThumbnailsWithFoundRows(
+        int $userId,
+        string $whereExtraSql,
+        string $orderBySuffix,
+        int $limit,
+        int $offset,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): array {
+        $query = '
+SELECT SQL_CALC_FOUND_ROWS
+    c.*,
+    user_representative_picture_id,
+    nb_images,
+    date_last,
+    max_date_last,
+    count_images,
+    nb_categories,
+    count_categories
+  FROM ' . $this->table('categories') . ' c
+    INNER JOIN ' . $this->table('user_cache_categories') . ' ucc
+    ON id = cat_id
+    AND user_id = ?
+  WHERE count_images > 0
+    AND ' . $whereExtraSql . '
+    ' . $permWhere . '
+  ' . $orderBySuffix . '
+  LIMIT ' . $limit . ' OFFSET ' . $offset;
+        $params = [$userId, ...$permParams];
+        $types  = [ParameterType::INTEGER, ...$permTypes];
+        $rows   = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        $totalRaw = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
+        return [
+            'rows'  => $rows,
+            'total' => is_numeric($totalRaw) ? (int) $totalRaw : 0,
+        ];
+    }
+
+    /**
+     * Find a random representative_picture_id from the descendant subtree of
+     * the category whose `uppercats` matches the given prefix, restricted to
+     * categories with a non-null representative and the caller's permission
+     * filter. Returns null if no candidate.
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     */
+    public function findRandomSubcatRepresentativeForUser(
+        int $userId,
+        string $uppercatsPrefix,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): ?int {
+        $query = '
+SELECT representative_picture_id
+  FROM ' . $this->table('categories') . ' INNER JOIN ' . $this->table('user_cache_categories') . '
+  ON id = cat_id AND user_id = ?
+  WHERE uppercats LIKE ?
+    AND representative_picture_id IS NOT NULL
+    ' . $permWhere . '
+  ORDER BY RAND()
+  LIMIT 1';
+        $params = [$userId, $uppercatsPrefix . ',%', ...$permParams];
+        $types  = [ParameterType::INTEGER, ParameterType::STRING, ...$permTypes];
+        $value  = $this->conn->executeQuery($query, $params, $types)->fetchOne();
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
+     * For each category id, return its MIN(date_creation) and MAX(date_creation)
+     * for the images it contains, subject to permissions. Result keyed by
+     * category_id.
+     *
+     * @param list<int>                              $catIds
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return array<int|string, array<string, mixed>>
+     */
+    public function findDateRangesForCategoriesKeyedById(
+        array $catIds,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): array {
+        if ($catIds === []) {
+            return [];
+        }
+        $query = '
+SELECT
+    category_id,
+    MIN(date_creation) AS `from`,
+    MAX(date_creation) AS `to`
+  FROM ' . $this->table('image_category') . '
+    INNER JOIN ' . $this->table('images') . ' ON image_id = id
+  WHERE category_id IN (?)
+    ' . $permWhere . '
+  GROUP BY category_id';
+        $params = [$catIds, ...$permParams];
+        $types  = [ArrayParameterType::INTEGER, ...$permTypes];
+        $out = [];
+        foreach ($this->conn->executeQuery($query, $params, $types)->fetchAllAssociative() as $row) {
+            $key = is_scalar($row['category_id']) ? (string) $row['category_id'] : '';
+            $out[$key] = $row;
+        }
+        return $out;
+    }
+
+    /**
+     * Set user_representative_picture_id on user_cache_categories rows
+     * atomically for the given user and (cat_id, image_id) pairs.
+     *
+     * @param list<array{cat_id: int|string, image_id: int|null}> $rows
+     */
+    public function setUserRepresentativeBatch(int $userId, array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($userId, $rows): void {
+            foreach ($rows as $row) {
+                $catIdInt = is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0;
+                $this->conn->update(
+                    $this->table('user_cache_categories'),
+                    ['user_representative_picture_id' => $row['image_id']],
+                    ['user_id' => $userId, 'cat_id' => $catIdInt],
+                );
+            }
+        });
+    }
+
+    /**
      * Update image_category `rank` for many image/category pairs atomically.
      *
      * @param list<array{image_id: int|string, category_id: int, rank: int}> $rows

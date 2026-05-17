@@ -45,6 +45,7 @@ use Piwigo\Core\DebugCollector;
 use Piwigo\Core\ExecutionMutex;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\QueryHelper;
@@ -185,6 +186,11 @@ return [
     Config::class          => factory(fn () => Config::instance()),
     Translator::class      => factory(fn () => Translator::get()),
     PageState::class       => factory(fn () => PageState::current()),
+    // Filesystem layout of this install. Derived from PHPWG_ROOT_PATH during
+    // the Phase 1 transition (single source of truth in index.php). Later
+    // phases will replace this with a Paths instance threaded explicitly
+    // through Container::build() so PHPWG_ROOT_PATH can be deleted.
+    Paths::class           => factory(static fn (): Paths => Paths::fromRoot(PHPWG_ROOT_PATH)),
     LoggerInterface::class => factory(
         fn () => LoggerRegistry::isInitialized() ? LoggerRegistry::current() : new NullLogger()
     ),

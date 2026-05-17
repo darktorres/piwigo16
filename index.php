@@ -12,6 +12,7 @@ use Piwigo\Controller\UpgradeFeedController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\Paths;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
@@ -22,7 +23,15 @@ use Piwigo\Http\ResponseEmitter;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-define('PHPWG_ROOT_PATH', './');
+require_once __DIR__ . '/vendor/autoload.php';
+
+$paths = Paths::fromIndex(__FILE__);
+
+// PHPWG_ROOT_PATH is the legacy global path constant — still read by 195
+// callsites across src/ and tests/. We derive it from $paths so the value
+// is absolute and CWD-independent (was './'). Phases 2-5 migrate every
+// reader to inject Paths via DI; Phase 6 deletes this define.
+define('PHPWG_ROOT_PATH', $paths->root);
 
 $_qs = ltrim(is_string($_SERVER['QUERY_STRING'] ?? null) ? $_SERVER['QUERY_STRING'] : '', '/');
 
@@ -30,7 +39,6 @@ if (str_starts_with($_qs, 'i/')) {
     // Image derivative fast-path — same minimal bootstrap as the former i.php.
     // Skips CommonBootstrap (no session, no user, no plugins) for performance.
     defined('PWG_LOCAL_DIR')      or define('PWG_LOCAL_DIR', 'local/');
-    require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
     ConfigLoader::applyDefaults();
     ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
     ConfigLoader::applyEnvOverrides();
@@ -49,7 +57,6 @@ if (str_starts_with($_qs, 'install')) {
     // Install wizard — no DB yet; bypass the full boot pipeline.
     defined('DEFAULT_PREFIX_TABLE') or define('DEFAULT_PREFIX_TABLE', 'piwigo_');
     defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
-    require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
     ConfigLoader::applyDefaults();
     (new InstallController())(RequestFactory::fromGlobals());
     exit;
@@ -58,7 +65,6 @@ if (str_starts_with($_qs, 'install')) {
 if (str_starts_with($_qs, 'upgrade_feed')) {
     // Upgrade feed — DB schema may be mid-migration; bypass the full boot pipeline.
     defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
-    require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
     ConfigLoader::applyDefaults();
     ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
     ConfigLoader::applyEnvOverrides();
@@ -73,7 +79,6 @@ if (str_starts_with($_qs, 'upgrade')) {
         ini_set('opcache.enable', '0');
     }
     defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
-    require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
     ConfigLoader::applyDefaults();
     ConfigLoader::loadEnv(PHPWG_ROOT_PATH);
     ConfigLoader::applyEnvOverrides();
@@ -82,7 +87,6 @@ if (str_starts_with($_qs, 'upgrade')) {
     exit;
 }
 
-require_once PHPWG_ROOT_PATH . 'vendor/autoload.php';
 CommonBootstrap::run();
 Kernel::boot();
 

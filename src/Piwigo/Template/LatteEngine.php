@@ -57,7 +57,7 @@ final class LatteEngine implements TemplateEngine
      */
     public static function default(): self
     {
-        $cacheDir = (Kernel::isBooted() ? Kernel::service(Paths::class)->root : PHPWG_ROOT_PATH) . Config::dataLocation() . 'templates_c/latte';
+        $cacheDir = Kernel::service(Paths::class)->root . Config::dataLocation() . 'templates_c/latte';
         Filesystem::mkgetdir($cacheDir);
         self::ensureGroupWritable($cacheDir);
 
@@ -77,7 +77,7 @@ final class LatteEngine implements TemplateEngine
      */
     public static function sandboxed(): self
     {
-        $cacheDir = (Kernel::isBooted() ? Kernel::service(Paths::class)->root : PHPWG_ROOT_PATH) . Config::dataLocation() . 'templates_c/latte_plugin';
+        $cacheDir = Kernel::service(Paths::class)->root . Config::dataLocation() . 'templates_c/latte_plugin';
         Filesystem::mkgetdir($cacheDir);
         self::ensureGroupWritable($cacheDir);
 

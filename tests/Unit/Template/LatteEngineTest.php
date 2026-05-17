@@ -35,6 +35,12 @@ final class LatteEngineTest extends TestCase
         Lang::reset();
         Translator::reset();
         unset($GLOBALS['lang']);
+
+        // A few tests reach ScriptLoader::manifest() and LatteEngine::default()
+        // via PiwigoExtension / Template::renderLatte — both resolve Paths
+        // through the DI container, so the kernel must be booted.
+        \Piwigo\Core\Kernel::reset();
+        \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
     }
 
     #[\Override]
@@ -43,6 +49,7 @@ final class LatteEngineTest extends TestCase
         Lang::reset();
         Translator::reset();
         TemplateRegistry::reset();
+        \Piwigo\Core\Kernel::reset();
         unset($GLOBALS['lang']);
         unset($GLOBALS['template']);
 

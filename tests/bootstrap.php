@@ -26,16 +26,9 @@ if (!is_file($envTestPath)) {
 ConfigLoader::loadEnv(dirname(__DIR__), ['.env.test']);
 
 // PHPWG_VERSION migrated to AppInfo::VERSION — no PHP define needed.
-// Tests have been migrated to construct Paths::fromRoot(dirname(__DIR__, N))
-// directly. The legacy PHPWG_ROOT_PATH define is kept here as a backstop
-// for the three remaining `Kernel::isBooted() ? Paths : PHPWG_ROOT_PATH`
-// fallbacks in production code (ScriptLoader::manifest, LatteEngine's
-// default/sandboxed cache dirs). Those fallbacks fire only when a unit
-// test exercises those classes without booting Kernel, and Phase 6
-// removes both the fallbacks and this define together.
-if (!defined('PHPWG_ROOT_PATH')) {
-    define('PHPWG_ROOT_PATH', dirname(__DIR__) . '/');
-}
+// PHPWG_ROOT_PATH eliminated in Phase 6: tests construct
+// Paths::fromRoot(dirname(__DIR__, N)) directly and boot Kernel with it
+// when exercising production code that resolves Paths via DI.
 
 // Search-module constants from include/functions_search.inc.php.
 if (!defined('QST_QUOTED')) {

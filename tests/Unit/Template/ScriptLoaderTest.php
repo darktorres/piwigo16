@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Template;
 
 use PHPUnit\Framework\TestCase;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Template\Script;
 use Piwigo\Template\ScriptLoader;
 use ReflectionClass;
@@ -18,7 +20,13 @@ final class ScriptLoaderTest extends TestCase
     #[\Override]
     protected function setUp(): void
     {
+        // ScriptLoader::manifest() reads the dist path via the DI container.
+        // Boot a Kernel rooted at the repo so manifest() finds dist/ where
+        // the test stages its fixtures.
         $repoRoot = dirname(__DIR__, 3);
+        Kernel::reset();
+        Kernel::boot(Paths::fromRoot($repoRoot));
+
         $this->realManifest = $repoRoot . '/dist/manifest.json';
         $this->backupManifest = $repoRoot . '/dist/manifest.json.bak_test';
         if (is_file($this->realManifest)) {
@@ -38,6 +46,7 @@ final class ScriptLoaderTest extends TestCase
         if ($this->manifestExisted && is_file($this->backupManifest)) {
             rename($this->backupManifest, $this->realManifest);
         }
+        Kernel::reset();
     }
 
     // ── manifest() ──────────────────────────────────────────────────────────

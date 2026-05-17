@@ -243,7 +243,7 @@ final class ScriptLoader
         if (self::$manifest !== null) {
             return self::$manifest !== false ? self::$manifest : null;
         }
-        $f = (Kernel::isBooted() ? Kernel::service(Paths::class)->root : PHPWG_ROOT_PATH) . 'dist/manifest.json';
+        $f = Kernel::service(Paths::class)->root . 'dist/manifest.json';
         if (!is_file($f)) {
             self::$manifest = false;
             return null;

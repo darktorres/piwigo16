@@ -27,16 +27,6 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 $paths = Paths::fromIndex(__FILE__);
 
-// PHPWG_ROOT_PATH has dual semantics: a URL-relative prefix in HTML link
-// rendering (HtmlService, UrlService, CookieService) AND a filesystem path
-// in legacy file ops. The URL semantics require './'; switching it to an
-// absolute filesystem path breaks every emitted <a href>. Filesystem
-// callers should migrate to $paths->root via DI — that resolves the
-// CWD-independence concern without touching the URL semantics. Phase 6
-// will replace this define once the URL callsites have a proper URL-root
-// mechanism.
-define('PHPWG_ROOT_PATH', './');
-
 $_qs = ltrim(is_string($_SERVER['QUERY_STRING'] ?? null) ? $_SERVER['QUERY_STRING'] : '', '/');
 
 if (str_starts_with($_qs, 'i/')) {

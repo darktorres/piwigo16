@@ -113,15 +113,17 @@ INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id';
                 }
                 $innerSql .= '
 WHERE category_id IN (' . implode(',', $subIds) . ')';
+                [$innerPermSql, $innerParams, $innerTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND', false);
                 $innerSql .= '
-    ' . $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND', false);
+    ' . $innerPermSql;
             } else {
-                $innerSql .= '
-    ' . $this->permissionService->getSqlConditionFandF(
+                [$innerPermSql, $innerParams, $innerTypes] = $this->permissionService->getSqlConditionFandF(
                     ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
                     'WHERE',
                     true
                 );
+                $innerSql .= '
+    ' . $innerPermSql;
             }
         } else {
             if (empty($sectionItems)) {
@@ -133,6 +135,8 @@ WHERE category_id IN (' . implode(',', $subIds) . ')';
             }
             $innerSql .= '
 WHERE id IN (' . implode(',', $items) . ')';
+            $innerParams = [];
+            $innerTypes  = [];
         }
 
         $this->debugCollector->collect('start initialize_calendar');
@@ -195,7 +199,7 @@ WHERE id IN (' . implode(',', $items) . ')';
         $calendar->chronologyField = $chronologyField;
         $calendar->chronologyView  = $resolvedView;
         $calendar->chronologyDate  = $this->chronologyDate;
-        $calendar->initialize($innerSql);
+        $calendar->initialize($innerSql, $innerParams, $innerTypes);
 
         $mustShowList = true;
         if (StringUtil::scriptBasename() !== 'picture') {
@@ -280,7 +284,7 @@ WHERE id IN (' . implode(',', $items) . ')';
                   . $calendar->inner_sql . '
   ' . $calendar->getDateWhere() . '
   ' . $orderBy;
-                $rows = $this->conn->executeQuery($query)->fetchAllAssociative();
+                $rows = $this->conn->executeQuery($query, $calendar->inner_params, $calendar->inner_types)->fetchAllAssociative();
                 $this->items = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($rows, 'id'));
                 if ($cacheItem !== null) {
                     $cacheItem->set($this->items);

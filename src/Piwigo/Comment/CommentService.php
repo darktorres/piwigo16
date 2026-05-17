@@ -51,15 +51,16 @@ final readonly class CommentService
             if (!$this->permissionService->isAdmin()) {
                 $where[] = 'validated=1';
             }
-            $where[] = $this->permissionService->getSqlConditionFandF(
+            [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'forbidden_images' => 'ic.image_id'],
                 '',
                 true
             );
+            $where[] = $permSql;
             $query = 'SELECT COUNT(DISTINCT(com.id)) FROM ' . Tables::imageCategory() . ' AS ic'
                 . ' INNER JOIN ' . Tables::comments() . ' AS com ON ic.image_id = com.image_id'
                 . ' WHERE ' . implode(' AND ', $where);
-            $count = $this->conn->executeQuery($query)->fetchOne();
+            $count = $this->conn->executeQuery($query, $permParams, $permTypes)->fetchOne();
             $nb    = is_numeric($count) ? (int) $count : 0;
             $this->conn->update(Tables::userCache(), ['nb_available_comments' => $nb], ['user_id' => CurrentUser::get()->id]);
             return $nb;

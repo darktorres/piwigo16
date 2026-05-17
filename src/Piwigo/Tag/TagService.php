@@ -66,13 +66,7 @@ final readonly class TagService
 
         $useCache = true;
 
-        $query = '
-SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
-  FROM ' . Tables::imageCategory() . ' ic
-    INNER JOIN ' . Tables::imageTag() . ' it
-    ON ic.image_id=it.image_id
-  WHERE 1=1
-  ' . $this->permissionService->getSqlConditionFandF(
+        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(
             [
                 'forbidden_categories' => 'category_id',
                 'visible_categories'   => 'category_id',
@@ -80,6 +74,13 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
             ],
             ' AND '
         );
+        $query = '
+SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
+  FROM ' . Tables::imageCategory() . ' ic
+    INNER JOIN ' . Tables::imageTag() . ' it
+    ON ic.image_id=it.image_id
+  WHERE 1=1
+  ' . $permSql;
 
         if (count($tagIds) > 0) {
             $useCache = false;
@@ -101,13 +102,13 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
                 /** @var array<mixed> $tagCounters */
                 $tagCounters = $item->get();
             } else {
-                $tagCounters = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
+                $tagCounters = array_column($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative(), 'counter', 'tag_id');
                 $item->set($tagCounters);
                 $item->expiresAfter(86400);
                 $this->pool->save($item);
             }
         } else {
-            $tagCounters = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'counter', 'tag_id');
+            $tagCounters = array_column($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative(), 'counter', 'tag_id');
         }
 
         if (empty($tagCounters)) {
@@ -215,8 +216,10 @@ SELECT id
     INNER JOIN ' . Tables::imageTag() . ' it ON id=it.image_id
     WHERE tag_id IN (' . implode(',', $tagIds) . ')';
 
+        $permParams = [];
+        $permTypes  = [];
         if ($usePermissions) {
-            $query .= $this->permissionService->getSqlConditionFandF(
+            [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(
                 [
                     'forbidden_categories' => 'category_id',
                     'visible_categories'   => 'category_id',
@@ -224,6 +227,7 @@ SELECT id
                 ],
                 "\n  AND"
             );
+            $query .= $permSql;
         }
 
         $query .= (($extraImagesWhereSql === null || $extraImagesWhereSql === '') ? '' : " \nAND (" . $extraImagesWhereSql . ')') . '
@@ -235,7 +239,7 @@ SELECT id
         }
         $query .= "\n" . (($orderBy === null || $orderBy === '') ? Config::orderBy() : $orderBy);
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'));
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative(), 'id'));
     }
 
     /**

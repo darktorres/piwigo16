@@ -142,18 +142,19 @@ SELECT *
         }
 
         if (in_array('author', $fields)) {
+            [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(
+                ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
+                ' WHERE '
+            );
             $query = '
 SELECT id
   FROM ' . Tables::images() . ' AS i
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  ' . $this->permissionService->getSqlConditionFandF(
-                ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
-                ' WHERE '
-            ) . '
+  ' . $permSql . '
     AND author IS NOT NULL
     LIMIT 1
 ;';
-            $first_author = $this->conn->executeQuery($query)->fetchAllAssociative();
+            $first_author = $this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative();
             if (count($first_author) > 0) {
                 $search['fields']['author'] = ['words' => [], 'mode' => 'OR'];
             }

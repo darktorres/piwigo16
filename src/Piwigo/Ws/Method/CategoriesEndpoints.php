@@ -92,10 +92,11 @@ final readonly class CategoriesEndpoints
         if (!empty($whereClauses)) {
             $whereClauses = ['(' . implode("\n    OR ", $whereClauses) . ')'];
         }
-        $whereClauses[] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id'], null, true);
+        [$permSql1, $permParams1, $permTypes1] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id'], null, true);
+        $whereClauses[] = $permSql1;
         $catConn = $this->conn;
         $cats    = [];
-        foreach ($catConn->executeQuery('SELECT id, image_order FROM ' . Tables::categories() . ' WHERE ' . implode("\n    AND ", $whereClauses) . ';')->fetchAllAssociative() as $row) {
+        foreach ($catConn->executeQuery('SELECT id, image_order FROM ' . Tables::categories() . ' WHERE ' . implode("\n    AND ", $whereClauses) . ';', $permParams1, $permTypes1)->fetchAllAssociative() as $row) {
             $row['id']       = is_numeric($row['id']) ? (int) $row['id'] : 0;
             $cats[$row['id']] = $row;
         }
@@ -103,7 +104,8 @@ final readonly class CategoriesEndpoints
             /** @var string[] $whereClauses2 */
             $whereClauses2   = $this->wsHelper->imageSqlFilter($params, 'i.');
             $whereClauses2[] = 'category_id IN (' . implode(',', array_keys($cats)) . ')';
-            $whereClauses2[] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'i.id'], null, true);
+            [$permSql2, $permParams2, $permTypes2] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'i.id'], null, true);
+            $whereClauses2[] = $permSql2;
             $orderBy         = $this->wsHelper->imageSqlOrder($params, 'i.');
             if (empty($orderBy) && count($catIds) === 1 && isset($cats[$catIds[0]]['image_order'])) {
                 $orderBy = is_scalar($cats[$catIds[0]]['image_order']) ? (string) $cats[$catIds[0]]['image_order'] : '';
@@ -113,7 +115,7 @@ final readonly class CategoriesEndpoints
             $perPage     = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
             $page        = is_numeric($params['page']) ? (int) $params['page'] : 0;
             $query       = 'SELECT SQL_CALC_FOUND_ROWS i.* FROM ' . Tables::images() . ' i INNER JOIN ' . Tables::imageCategory() . ' ON i.id=image_id WHERE ' . implode("\n    AND ", $whereClauses2) . ' GROUP BY i.id ' . $orderBy . ' LIMIT ' . $perPage . ' OFFSET ' . ($perPage * $page) . ';';
-            $catImgRows  = $catConn->executeQuery($query)->fetchAllAssociative();
+            $catImgRows  = $catConn->executeQuery($query, $permParams2, $permTypes2)->fetchAllAssociative();
             foreach ($catImgRows as $row) {
                 $imageIds[]  = $row['id'];
                 $image       = [];
@@ -143,7 +145,8 @@ final readonly class CategoriesEndpoints
             if (count($imageIds) > 0) {
                 $categoryIds = [];
                 $categoriesOfImage = [];
-                foreach ($catConn->executeQuery('SELECT image_id, category_id FROM ' . Tables::imageCategory() . ' WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIds)) . ') AND ' . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], null, true) . ';')->fetchAllAssociative() as $row) {
+                [$permSql3, $permParams3, $permTypes3] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], null, true);
+                foreach ($catConn->executeQuery('SELECT image_id, category_id FROM ' . Tables::imageCategory() . ' WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIds)) . ') AND ' . $permSql3 . ';', $permParams3, $permTypes3)->fetchAllAssociative() as $row) {
                     $categoryIds[] = $row['category_id'];
                     $rowImgId = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
                     if ($rowImgId !== '') {
@@ -280,8 +283,9 @@ final readonly class CategoriesEndpoints
             } else {
                 if ($row['count_categories'] > 0 && $row['count_images'] > 0) {
                     $rowUppercatsRaw = $row['uppercats'] ?? null;
-                    $subQuery = 'SELECT representative_picture_id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id=cat_id AND user_id=' . $currentUser->id . " WHERE uppercats LIKE '" . (is_string($rowUppercatsRaw) ? $rowUppercatsRaw : '') . ",%' AND representative_picture_id IS NOT NULL" . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . ' ORDER BY RAND() LIMIT 1;';
-                    $subval = $this->conn->executeQuery($subQuery)->fetchOne();
+                    [$permSubSql, $permSubParams, $permSubTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND");
+                    $subQuery = 'SELECT representative_picture_id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id=cat_id AND user_id=' . $currentUser->id . " WHERE uppercats LIKE '" . (is_string($rowUppercatsRaw) ? $rowUppercatsRaw : '') . ",%' AND representative_picture_id IS NOT NULL" . $permSubSql . ' ORDER BY RAND() LIMIT 1;';
+                    $subval = $this->conn->executeQuery($subQuery, $permSubParams, $permSubTypes)->fetchOne();
                     if ($subval !== false) {
                         $imageId = is_numeric($subval) ? (int) $subval : null;
                     }

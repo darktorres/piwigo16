@@ -170,14 +170,19 @@ final readonly class CommentsController implements ControllerInterface
         $whereClauses[] = $since_options[$pageSince]['clause'];
 
         if (!$this->permissionService->isAdmin()) {
-            $whereClauses[] = 'validated=\'true\'';
+            // `validated` is TINYINT(1) post-E2; the legacy 'true' coerces to 0,
+            // i.e. "not validated", which was a bug — fixed to 1.
+            $whereClauses[] = 'validated=1';
         }
 
-        $whereClauses[] = $this->permissionService->getSqlConditionFandF(
+        $permParams1 = [];
+        $permTypes1  = [];
+        [$permSql1, $permParams1, $permTypes1] = $this->permissionService->getSqlConditionFandF(
             ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'ic.image_id'],
             '',
             true
         );
+        $whereClauses[] = $permSql1;
 
         // Comment actions
         $comment_id = 0;
@@ -259,12 +264,13 @@ final readonly class CommentsController implements ControllerInterface
         ]);
 
         $blockname = 'categories';
+        [$catPermSql, $catPermParams, $catPermTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'WHERE');
         $query = '
 SELECT id, name, uppercats, global_rank
   FROM ' . Tables::categories() . '
-' . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'WHERE') . '
+' . $catPermSql . '
 ;';
-        $this->categoryService->displaySelectCatWrapper($query, array_filter([$get_cat], fn (mixed $v): bool => $v !== null), $blockname, true);
+        $this->categoryService->displaySelectCatWrapper($query, array_filter([$get_cat], fn (mixed $v): bool => $v !== null), $blockname, true, $catPermParams, $catPermTypes);
 
         $tpl_var = [];
         foreach ($since_options as $id => $option) {
@@ -298,7 +304,7 @@ SELECT id, name, uppercats, global_rank
   WHERE ' . implode("\n    AND ", $whereClauses);
 
         $conn    = $this->conn;
-        $counter = $conn->executeQuery('SELECT COUNT(DISTINCT com.id)' . $joinBase)->fetchOne();
+        $counter = $conn->executeQuery('SELECT COUNT(DISTINCT com.id)' . $joinBase, $permParams1, $permTypes1)->fetchOne();
 
         $pageItemsNumber = $itemsNumber;
         $dataQuery = 'SELECT com.id AS comment_id, com.image_id, ic.category_id, com.author, com.author_id,'
@@ -311,7 +317,7 @@ SELECT id, name, uppercats, global_rank
   LIMIT ' . $pageItemsNumber . ' OFFSET ' . ($start ?? 0);
         }
 
-        foreach ($conn->executeQuery($dataQuery)->fetchAllAssociative() as $row) {
+        foreach ($conn->executeQuery($dataQuery, $permParams1, $permTypes1)->fetchAllAssociative() as $row) {
             $comments[]     = $row;
             $element_ids[]  = $row['image_id'];
             $category_ids[] = $row['category_id'];

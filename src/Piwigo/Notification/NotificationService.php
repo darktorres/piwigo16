@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Notification;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Db\Tables;
@@ -29,7 +31,10 @@ final readonly class NotificationService
     ) {
     }
 
-    public function getStdSqlWhereRestrictFilter(string $prefixCondition, string $imgField = 'ic.image_id', bool $forceOneCondition = false): string
+    /**
+     * @return array{0: string, 1: list<mixed>, 2: list<ArrayParameterType|ParameterType>}
+     */
+    public function getStdSqlWhereRestrictFilter(string $prefixCondition, string $imgField = 'ic.image_id', bool $forceOneCondition = false): array
     {
         return $this->permissionService->getSqlConditionFandF(
             [
@@ -45,6 +50,8 @@ final readonly class NotificationService
     /** @return array<mixed>|int|null */
     public function customNotificationQuery(string $action, string $type, ?string $start = null, ?string $end = null): array|int|null
     {
+        $params = [];
+        $types  = [];
         switch ($type) {
             case 'new_comments':
                 $query = '
@@ -59,7 +66,8 @@ final readonly class NotificationService
                     $query .= '
     AND c.validation_date <= \'' . $end . '\'';
                 }
-                $query .= $this->getStdSqlWhereRestrictFilter('AND');
+                [$permSql, $params, $types] = $this->getStdSqlWhereRestrictFilter('AND');
+                $query .= $permSql;
                 break;
 
             case 'unvalidated_comments':
@@ -74,8 +82,10 @@ final readonly class NotificationService
                     $query .= '
     AND date <= \'' . $end . '\'';
                 }
+                // `validated` is TINYINT(1) post-E2; legacy 'false' coerced to 0
+                // which is "not validated" — the semantic was right by accident.
                 $query .= '
-    AND validated = \'false\'';
+    AND validated = 0';
                 break;
 
             case 'new_elements':
@@ -91,7 +101,8 @@ final readonly class NotificationService
                     $query .= '
     AND date_available <= \'' . $end . '\'';
                 }
-                $query .= $this->getStdSqlWhereRestrictFilter('AND', 'id');
+                [$permSql, $params, $types] = $this->getStdSqlWhereRestrictFilter('AND', 'id');
+                $query .= $permSql;
                 break;
 
             case 'updated_categories':
@@ -107,7 +118,8 @@ final readonly class NotificationService
                     $query .= '
     AND date_available <= \'' . $end . '\'';
                 }
-                $query .= $this->getStdSqlWhereRestrictFilter('AND', 'id');
+                [$permSql, $params, $types] = $this->getStdSqlWhereRestrictFilter('AND', 'id');
+                $query .= $permSql;
                 break;
 
             case 'new_users':
@@ -137,7 +149,7 @@ final readonly class NotificationService
                     'updated_categories'   => 'category_id',
                     default                => 'user_id', // new_users
                 };
-                $count = $this->conn->executeQuery('SELECT COUNT(DISTINCT ' . $fieldId . ') ' . $query)->fetchOne();
+                $count = $this->conn->executeQuery('SELECT COUNT(DISTINCT ' . $fieldId . ') ' . $query, $params, $types)->fetchOne();
                 return is_numeric($count) ? (int) $count : null;
 
             case 'info':
@@ -148,7 +160,7 @@ final readonly class NotificationService
                     'updated_categories'   => 'category_id',
                     default                => 'user_id', // new_users
                 };
-                return $this->conn->executeQuery('SELECT DISTINCT ' . $fieldId . ' ' . $query . ';')->fetchAllAssociative();
+                return $this->conn->executeQuery('SELECT DISTINCT ' . $fieldId . ' ' . $query . ';', $params, $types)->fetchAllAssociative();
 
             default:
                 return null;
@@ -278,7 +290,7 @@ final readonly class NotificationService
             $cached = $item->get();
             return is_array($cached) ? $cached : null;
         }
-        $whereSql = $this->getStdSqlWhereRestrictFilter('WHERE', 'i.id', true);
+        [$whereSql, $whereParams, $whereTypes] = $this->getStdSqlWhereRestrictFilter('WHERE', 'i.id', true);
 
         $query = '
 SELECT
@@ -291,7 +303,7 @@ SELECT
   ORDER BY date_available DESC
   LIMIT ' . $maxDates . '
 ;';
-        $dates = $this->conn->executeQuery($query)->fetchAllAssociative();
+        $dates = $this->conn->executeQuery($query, $whereParams, $whereTypes)->fetchAllAssociative();
 
         for ($i = 0; $i < count($dates); $i++) {
             $dateAvailable = is_scalar($dates[$i]['date_available']) ? (string) $dates[$i]['date_available'] : '';
@@ -305,7 +317,7 @@ SELECT DISTINCT i.*
   ORDER BY RAND()
   LIMIT ' . $maxElements . '
 ;';
-                $dates[$i]['elements'] = $this->conn->executeQuery($query)->fetchAllAssociative();
+                $dates[$i]['elements'] = $this->conn->executeQuery($query, $whereParams, $whereTypes)->fetchAllAssociative();
             }
 
             if ($maxCats > 0) {
@@ -322,7 +334,7 @@ SELECT
   ORDER BY img_count DESC
   LIMIT ' . $maxCats . '
 ;';
-                $dates[$i]['categories'] = $this->conn->executeQuery($query)->fetchAllAssociative();
+                $dates[$i]['categories'] = $this->conn->executeQuery($query, $whereParams, $whereTypes)->fetchAllAssociative();
             }
         }
 

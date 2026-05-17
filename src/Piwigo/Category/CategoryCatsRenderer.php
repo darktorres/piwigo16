@@ -80,8 +80,9 @@ SELECT SQL_CALC_FOUND_ROWS
   AND id_uppercat ' . ($ctx->category === null ? 'is NULL' : '= ' . (is_scalar($ctx->category['id'] ?? null) ? (string) $ctx->category['id'] : ''));
         }
 
+        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], 'AND');
         $query .= '
-      ' . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], 'AND');
+      ' . $permSql;
         $query .= '
 -- after conditions
 ';
@@ -101,7 +102,7 @@ SELECT SQL_CALC_FOUND_ROWS
         $query = $queryEvent->query;
 
         $conn = $this->conn;
-        $catCatsRows = $conn->executeQuery($query)->fetchAllAssociative();
+        $catCatsRows = $conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative();
         $totalCategories = $conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
 
         $categories = [];
@@ -120,17 +121,18 @@ SELECT SQL_CALC_FOUND_ROWS
                 $image_id = $this->categoryService->getRandomImageInCategory($row);
             } elseif ($row['count_categories'] > 0 and $row['count_images'] > 0) {
                 $rowUppercatsForQuery = $row['uppercats'] ?? null;
+                [$subPermSql, $subPermParams, $subPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND");
                 $subquery = '
 SELECT representative_picture_id
   FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . '
   ON id = cat_id and user_id = ' . $currentUser->id . '
   WHERE uppercats LIKE \'' . (is_string($rowUppercatsForQuery) ? $rowUppercatsForQuery : '') . ',%\'
     AND representative_picture_id IS NOT NULL'
-                    . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . '
+                    . $subPermSql . '
   ORDER BY RAND()
   LIMIT 1
 ;';
-                $subval = $this->conn->executeQuery($subquery)->fetchOne();
+                $subval = $this->conn->executeQuery($subquery, $subPermParams, $subPermTypes)->fetchOne();
                 if ($subval !== false) {
                     $image_id = is_numeric($subval) ? (int) $subval : null;
                 }
@@ -156,6 +158,7 @@ SELECT representative_picture_id
 
         if (Config::displayFromto()) {
             if (count($category_ids) > 0) {
+                [$datesPermSql, $datesPermParams, $datesPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'category_id', 'visible_images' => 'id'], 'AND');
                 $query = '
 SELECT
     category_id,
@@ -164,10 +167,10 @@ SELECT
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::images() . ' ON image_id = id
   WHERE category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $category_ids)) . ')
-' . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'category_id', 'visible_images' => 'id'], 'AND') . '
+' . $datesPermSql . '
   GROUP BY category_id
 ;';
-                $dates_of_category = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'category_id');
+                $dates_of_category = array_column($this->conn->executeQuery($query, $datesPermParams, $datesPermTypes)->fetchAllAssociative(), null, 'category_id');
             }
         }
 

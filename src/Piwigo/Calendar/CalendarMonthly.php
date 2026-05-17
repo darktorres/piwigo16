@@ -27,12 +27,14 @@ final class CalendarMonthly extends CalendarBase
 {
     /**
      * Initialize the calendar.
-     * @param string $inner_sql
+     *
+     * @param list<mixed>                                                        $inner_params
+     * @param list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $inner_types
      */
     #[\Override]
-    public function initialize(mixed $inner_sql): void
+    public function initialize(string $inner_sql, array $inner_params = [], array $inner_types = []): void
     {
-        parent::initialize($inner_sql);
+        parent::initialize($inner_sql, $inner_params, $inner_types);
         $monthLabels = Lang::months() ?: null;
         $dayLabels   = Lang::days() ?: null;
         $this->calendar_levels = [
@@ -220,7 +222,7 @@ final class CalendarMonthly extends CalendarBase
     ORDER BY '.SqlExpr::year($this->date_field).' DESC, '.SqlExpr::month($this->date_field).' ASC';
 
         $items = [];
-        foreach (Kernel::service(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach (Kernel::service(Connection::class)->executeQuery($query, $this->inner_params, $this->inner_types)->fetchAllAssociative() as $row) {
             $periodRaw = $row['period'] ?? '';
             $periodStr = is_scalar($periodRaw) ? (string) $periodRaw : '';
             $y = substr($periodStr, 0, 4);
@@ -287,7 +289,7 @@ final class CalendarMonthly extends CalendarBase
     ORDER BY period ASC';
 
         $items = [];
-        foreach (Kernel::service(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach (Kernel::service(Connection::class)->executeQuery($query, $this->inner_params, $this->inner_types)->fetchAllAssociative() as $row) {
             $periodRaw = $row['period'] ?? '';
             $periodStr = is_scalar($periodRaw) ? (string) $periodRaw : '';
             $m = (int) substr($periodStr, 0, 2);
@@ -350,7 +352,7 @@ final class CalendarMonthly extends CalendarBase
     ORDER BY period ASC';
 
         $day_counts = [];
-        foreach (Kernel::service(Connection::class)->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach (Kernel::service(Connection::class)->executeQuery($query, $this->inner_params, $this->inner_types)->fetchAllAssociative() as $row) {
             $periodRaw = $row['period'] ?? 0;
             $d = is_int($periodRaw) ? $periodRaw : (is_numeric($periodRaw) ? (int) $periodRaw : 0);
             $day_counts[$d] = $row['count'];
@@ -368,7 +370,7 @@ final class CalendarMonthly extends CalendarBase
     LIMIT 1';
             unset($this->chronologyDate[CDAY]);
 
-            $rowResult = Kernel::service(Connection::class)->executeQuery($query)->fetchAssociative();
+            $rowResult = Kernel::service(Connection::class)->executeQuery($query, $this->inner_params, $this->inner_types)->fetchAssociative();
             $row = $rowResult !== false ? $rowResult : null;
             if ($row === null) {
                 continue;

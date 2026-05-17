@@ -19,12 +19,14 @@ final class CalendarWeekly extends CalendarBase
 {
     /**
      * Initialize the calendar
-     * @param string $inner_sql
+     *
+     * @param list<mixed>                                                        $inner_params
+     * @param list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $inner_types
      */
     #[\Override]
-    public function initialize(mixed $inner_sql): void
+    public function initialize(string $inner_sql, array $inner_params = [], array $inner_types = []): void
     {
-        parent::initialize($inner_sql);
+        parent::initialize($inner_sql, $inner_params, $inner_types);
         $week_no_labels = [];
         for ($i = 1; $i <= 53; $i++) {
             $week_no_labels[$i] = Lang::t('Week %d', $i);

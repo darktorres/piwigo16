@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Kernel;
@@ -77,6 +79,8 @@ SELECT
 FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . '
   ON id = cat_id and user_id = ' . $currentUser->id;
 
+        $permParams = [];
+        $permTypes  = [];
         if (($userExpand === false || $userExpand === 0 || $userExpand === '') and !$filter->enabled) {
             $where = '
 (id_uppercat is NULL';
@@ -87,8 +91,9 @@ FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() .
             }
             $where .= ')';
         } else {
+            [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], null, true);
             $where = '
-  ' . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], null, true);
+  ' . $permSql;
         }
 
         $whereEvent = new GetCategoriesMenuSqlWhere($where, (bool) $userExpand, $filter->enabled);
@@ -101,7 +106,7 @@ WHERE ' . $where . '
 
         $cats             = [];
         $selectedCategory = $ctx->category;
-        foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach ($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative() as $row) {
             $childDateLast = ($row['max_date_last'] ?? null) > ($row['date_last'] ?? null);
             $menuRenderEvent = new RenderCategoryName(is_string($row['name'] ?? null) ? $row['name'] : '', 'get_categories_menu');
             $this->dispatcher->dispatch($menuRenderEvent);
@@ -217,9 +222,14 @@ WHERE ' . $where . '
     }
 
     /** @param int[]|string $selecteds */
-    public function displaySelectCatWrapper(string $query, array|string $selecteds, string $blockname, bool|string $fullname = true): void
+    /**
+     * @param array<int>|string                       $selecteds
+     * @param list<mixed>                             $params
+     * @param list<ArrayParameterType|ParameterType>  $types
+     */
+    public function displaySelectCatWrapper(string $query, array|string $selecteds, string $blockname, bool|string $fullname = true, array $params = [], array $types = []): void
     {
-        $categories = $this->conn->executeQuery($query)->fetchAllAssociative();
+        $categories = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
         usort($categories, $this->globalRankCompare(...));
         $this->displaySelectCategories($categories, $selecteds, $blockname, $fullname);
     }
@@ -333,12 +343,13 @@ SELECT image_id
                 $query .= '
     c.id=' . (is_numeric($category['id']) ? (int) $category['id'] : 0);
             }
+            [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'c.id', 'visible_categories' => 'c.id', 'visible_images' => 'image_id'], "\n  AND");
             $query .= '
-    ' . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'c.id', 'visible_categories' => 'c.id', 'visible_images' => 'image_id'], "\n  AND") . '
+    ' . $permSql . '
   ORDER BY RAND()
   LIMIT 1
 ;';
-            $val = $this->conn->executeQuery($query)->fetchOne();
+            $val = $this->conn->executeQuery($query, $permParams, $permTypes)->fetchOne();
             if ($val !== false) {
                 $imageId = is_numeric($val) ? (int) $val : null;
             }
@@ -496,8 +507,11 @@ SELECT id
     INNER JOIN ' . Tables::imageCategory() . ' ic ON id=ic.image_id
   WHERE category_id IN (' . implode(',', $catIds) . ')';
 
+        $permParams = [];
+        $permTypes  = [];
         if ($usePermissions) {
-            $query .= $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'], "\n  AND");
+            [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'], "\n  AND");
+            $query .= $permSql;
         }
 
         $query .= (($extraImagesWhereSql === null || $extraImagesWhereSql === '') ? '' : " \nAND (" . $extraImagesWhereSql . ')') . '
@@ -509,7 +523,7 @@ SELECT id
         }
         $query .= "\n" . (empty($orderBy) ? Config::orderBy() : $orderBy);
 
-        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'));
+        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative(), 'id'));
     }
 
     /**
@@ -523,6 +537,7 @@ SELECT id
             return [];
         }
 
+        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id'], "\n    AND");
         $query = '
 SELECT
     c.id,
@@ -532,7 +547,7 @@ SELECT
     INNER JOIN ' . Tables::categories() . ' c ON category_id = id
   WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $items)) . ')';
 
-        $query .= $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id'], "\n    AND");
+        $query .= $permSql;
 
         if (!empty($excludedCatIds)) {
             $query .= '
@@ -550,7 +565,7 @@ SELECT
         }
 
         $cats = [];
-        foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach ($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative() as $row) {
             $cats[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $row;
         }
 

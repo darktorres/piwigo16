@@ -451,9 +451,10 @@ final readonly class UsersEndpoints
         $this->userService->checkUserFavorites();
         $orderBy = $this->wsHelper->imageSqlOrder($params, 'i.');
         $orderBy = empty($orderBy) ? Config::orderBy() : 'ORDER BY ' . $orderBy;
-        $query   = 'SELECT i.* FROM ' . Tables::favorites() . ' INNER JOIN ' . Tables::images() . ' i ON image_id = i.id WHERE user_id = ' . $userId . ' ' . $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND') . ' ' . $orderBy . ';';
+        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
+        $query   = 'SELECT i.* FROM ' . Tables::favorites() . ' INNER JOIN ' . Tables::images() . ' i ON image_id = i.id WHERE user_id = ' . $userId . ' ' . $permSql . ' ' . $orderBy . ';';
         $images  = [];
-        foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach ($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative() as $row) {
             $image = [];
             foreach (['id', 'width', 'height', 'hit'] as $k) {
                 if (isset($row[$k])) {

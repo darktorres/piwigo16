@@ -158,13 +158,14 @@ final readonly class PictureController implements ControllerInterface
                 if ($ctx->section === 'categories' && $ctx->category === null) {
                     $this->htmlService->accessDenied();
                 } else {
+                    [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND');
                     $query = '
 SELECT id
   FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
   WHERE id=' . $imageId
-                        . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND') . '
+                        . $permSql . '
   LIMIT 1';
-                    if ($this->conn->executeQuery($query)->fetchOne() === false) {
+                    if ($this->conn->executeQuery($query, $permParams, $permTypes)->fetchOne() === false) {
                         $this->htmlService->accessDenied();
                     } else {
                         if ($ctx->section === 'best_rated') {
@@ -319,14 +320,15 @@ SELECT id
         }
 
         // Related categories
+        [$relPermSql, $relPermParams, $relPermTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'AND');
         $query = '
 SELECT id,uppercats,commentable,visible,status,global_rank
   FROM ' . Tables::imageCategory() . '
     INNER JOIN ' . Tables::categories() . ' ON category_id = id
   WHERE image_id = ' . $imageId . '
-' . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'AND') . '
+' . $relPermSql . '
 ;';
-        $related_categories = $this->conn->executeQuery($query)->fetchAllAssociative();
+        $related_categories = $this->conn->executeQuery($query, $relPermParams, $relPermTypes)->fetchAllAssociative();
         usort($related_categories, $this->categoryService->globalRankCompare(...));
 
         // Load prev/current/next picture data

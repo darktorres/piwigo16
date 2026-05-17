@@ -226,8 +226,11 @@ final readonly class ImagesEndpoints
             return new PwgError(403, 'Comments are disabled');
         }
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $query    = 'SELECT DISTINCT image_id FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id=id WHERE commentable="true" AND image_id=' . $pImageId . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id', 'visible_images' => 'image_id'], ' AND') . ';';
-        if ($this->conn->executeQuery($query)->fetchOne() === false) {
+        // `commentable` is TINYINT(1) post-E2; the legacy 'true' coerces to 0,
+        // which would return NOT-commentable rows — fixed to 1.
+        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id', 'visible_images' => 'image_id'], ' AND');
+        $query    = 'SELECT DISTINCT image_id FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id=id WHERE commentable=1 AND image_id=' . $pImageId . $permSql . ';';
+        if ($this->conn->executeQuery($query, $permParams, $permTypes)->fetchOne() === false) {
             return new PwgError(WsError::InvalidParam->value, 'Invalid image_id');
         }
         $comm = ['author' => trim(is_string($params['author'] ?? null) ? $params['author'] : ''), 'content' => trim(is_string($params['content'] ?? null) ? $params['content'] : ''), 'image_id' => $pImageId];
@@ -253,8 +256,9 @@ final readonly class ImagesEndpoints
     public function getInfo(array $params, PwgServer $service): PwgError|array
     {
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $query    = 'SELECT * FROM ' . Tables::images() . ' WHERE id=' . $pImageId . $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], ' AND') . ' LIMIT 1;';
-        $imageRow = $this->conn->executeQuery($query)->fetchAssociative();
+        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], ' AND');
+        $query    = 'SELECT * FROM ' . Tables::images() . ' WHERE id=' . $pImageId . $permSql . ' LIMIT 1;';
+        $imageRow = $this->conn->executeQuery($query, $permParams, $permTypes)->fetchAssociative();
         if ($imageRow === false) {
             return new PwgError(404, 'image_id not found');
         }
@@ -273,7 +277,8 @@ final readonly class ImagesEndpoints
         $imageRow['comment']     = $rowDescEvent->elementDescription;
         $isCommentable    = false;
         $relatedCategories = [];
-        foreach ($this->conn->executeQuery('SELECT id, name, permalink, uppercats, global_rank, commentable FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id = id WHERE image_id = ' . $imageRowId . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND') . ';')->fetchAllAssociative() as $row) {
+        [$relPermSql, $relPermParams, $relPermTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND');
+        foreach ($this->conn->executeQuery('SELECT id, name, permalink, uppercats, global_rank, commentable FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id = id WHERE image_id = ' . $imageRowId . $relPermSql . ';', $relPermParams, $relPermTypes)->fetchAllAssociative() as $row) {
             if (BoolUtil::fromMixed($row['commentable'])) {
                 $isCommentable = true;
             }
@@ -353,8 +358,9 @@ final readonly class ImagesEndpoints
     {
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
         $pRate    = is_numeric($params['rate']) ? (int) $params['rate'] : 0;
-        $query    = 'SELECT DISTINCT id FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id WHERE id=' . $pImageId . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'id'], '    AND') . ' LIMIT 1;';
-        if ($this->conn->executeQuery($query)->fetchOne() === false) {
+        [$ratePermSql, $ratePermParams, $ratePermTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'id'], '    AND');
+        $query    = 'SELECT DISTINCT id FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id WHERE id=' . $pImageId . $ratePermSql . ' LIMIT 1;';
+        if ($this->conn->executeQuery($query, $ratePermParams, $ratePermTypes)->fetchOne() === false) {
             return new PwgError(404, 'Invalid image_id or access denied');
         }
         $res = $this->rateService->ratePicture($pImageId, $pRate);

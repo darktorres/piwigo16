@@ -78,12 +78,24 @@ final readonly class SearchFilterRenderer
             $my_search_fields_tmp = is_array($my_search['fields'] ?? null) ? $my_search['fields'] : [];
             $my_search['fields'] = $my_search_fields_tmp;
 
-            $forbidden = $this->permissionService->getSqlConditionFandF(
+            // SearchService::setForbidden / getClauseForFilter still use the
+            // string-fragment shape (10 splice callers downstream). Inline the
+            // tuple's int[] params into the SQL fragment here for now; F5-d
+            // will migrate the persistence layer + downstream callers in
+            // SearchFilterRenderer to the tuple form.
+            [$forbiddenSql, $forbiddenParams] = $this->permissionService->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
                 "\n  AND"
             );
-            $search_details['forbidden'] = $forbidden;
-            $this->searchService->setForbidden($forbidden);
+            $forbiddenInlined = $forbiddenSql;
+            foreach ($forbiddenParams as $p) {
+                $rep = is_array($p)
+                    ? implode(',', array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $p))
+                    : (string) (is_numeric($p) ? (int) $p : 0);
+                $forbiddenInlined = (string) preg_replace('/\?/', $rep, $forbiddenInlined, 1);
+            }
+            $search_details['forbidden'] = $forbiddenInlined;
+            $this->searchService->setForbidden($forbiddenInlined);
 
             if ($search_details['has_filters_filled']) {
                 $search_items = [-1];

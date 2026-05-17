@@ -190,7 +190,7 @@ final readonly class SectionInitializer
             }
         }
 
-        $forbidden = $this->permissionService->getSqlConditionFandF(
+        [$forbiddenSql, $forbiddenParams, $forbiddenTypes] = $this->permissionService->getSqlConditionFandF(
             [
                 'forbidden_categories' => 'category_id',
                 'visible_categories'   => 'category_id',
@@ -200,20 +200,18 @@ final readonly class SectionInitializer
         );
 
         // Closure for "SELECT DISTINCT(id) FROM images JOIN image_category
-        // WHERE <X> $forbidden ORDER BY <config> [LIMIT N]" — used by 4
+        // WHERE <X> $forbiddenSql ORDER BY <config> [LIMIT N]" — used by 4
         // section branches below (recent_pics, most_visited, best_rated, list).
-        // F5-c will swap the body for parameterized binding when the
-        // PermissionService API returns a tuple.
         $sectionImageIds =
             /** @return list<int|string> */
-            function (string $whereClause, ?int $limit = null) use ($forbidden): array {
+            function (string $whereClause, ?int $limit = null) use ($forbiddenSql, $forbiddenParams, $forbiddenTypes): array {
                 $query = 'SELECT DISTINCT(id) FROM ' . Tables::images()
                     . ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id'
-                    . ' WHERE ' . $whereClause . ' ' . $forbidden . ' ' . Config::orderBy();
+                    . ' WHERE ' . $whereClause . ' ' . $forbiddenSql . ' ' . Config::orderBy();
                 if ($limit !== null) {
                     $query .= ' LIMIT ' . $limit;
                 }
-                return array_column($this->conn->executeQuery($query . ';')->fetchAllAssociative(), 'id');
+                return array_column($this->conn->executeQuery($query . ';', $forbiddenParams, $forbiddenTypes)->fetchAllAssociative(), 'id');
             };
 
         // ── Categories ────────────────────────────────────────────────────────
@@ -259,24 +257,27 @@ final readonly class SectionInitializer
                     Config::override('order_by', ' ORDER BY ' . $catImageOrder);
                 }
 
+                $flatPermSql    = '';
+                $flatPermParams = [];
+                $flatPermTypes  = [];
                 if (isset($page['flat'])) {
                     if ($category !== null) {
                         $catUppercats = is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '';
                         $catId        = is_scalar($category['id'] ?? null) ? (string) $category['id'] : '0';
+                        [$subcatPermSql, $subcatPermParams, $subcatPermTypes] = $this->permissionService->getSqlConditionFandF(
+                            ['forbidden_categories' => 'id', 'visible_categories' => 'id'],
+                            "\n  AND"
+                        );
                         $query = '
 SELECT id
   FROM ' . Tables::categories() . '
   WHERE
-    uppercats LIKE \'' . $catUppercats . ',%\' '
-                            . $this->permissionService->getSqlConditionFandF(
-                                ['forbidden_categories' => 'id', 'visible_categories' => 'id'],
-                                "\n  AND"
-                            );
-                        $subcatIds   = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
+    uppercats LIKE \'' . $catUppercats . ',%\' ' . $subcatPermSql;
+                        $subcatIds   = array_column($this->conn->executeQuery($query, $subcatPermParams, $subcatPermTypes)->fetchAllAssociative(), 'id');
                         $subcatIds[] = $catId;
                         $subcatIdsStr = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $subcatIds);
                         $whereSql    = 'category_id IN (' . implode(',', $subcatIdsStr) . ')';
-                        $forbidden   = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
+                        [$flatPermSql, $flatPermParams, $flatPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
                     } else {
                         $userId    = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
                         $cacheTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
@@ -300,10 +301,10 @@ SELECT DISTINCT(image_id)
     INNER JOIN ' . Tables::images() . ' ON id = image_id
   WHERE
     ' . $whereSql . '
-' . $forbidden . '
+' . $flatPermSql . '
   ' . Config::orderBy() . '
 ;';
-                    $page['items'] = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'image_id');
+                    $page['items'] = array_column($this->conn->executeQuery($query, $flatPermParams, $flatPermTypes)->fetchAllAssociative(), 'image_id');
                     if ($cacheItem !== null) {
                         $cacheItem->set($page['items']);
                         $cacheItem->expiresAfter(86400);
@@ -367,16 +368,17 @@ SELECT DISTINCT(image_id)
                 $this->redirectResponder->redirect($this->urlService->makeIndexUrl(['section' => 'favorites']));
             } else {
                 $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
+                [$favPermSql, $favPermParams, $favPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
                 $query  = '
 SELECT image_id
   FROM ' . Tables::favorites() . '
     INNER JOIN ' . Tables::images() . ' ON image_id = id
   WHERE user_id = ' . $userId . '
-' . $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND') . '
+' . $favPermSql . '
   ' . Config::orderBy() . '
 ;';
                 $page = array_merge($page, [
-                    'items' => array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'image_id'),
+                    'items' => array_column($this->conn->executeQuery($query, $favPermParams, $favPermTypes)->fetchAllAssociative(), 'image_id'),
                 ]);
                 if (count($page['items']) > 0) {
                     TemplateRegistry::current()->assign('favorite', [

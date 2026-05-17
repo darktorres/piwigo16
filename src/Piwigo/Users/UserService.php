@@ -437,14 +437,15 @@ final class UserService
             return;
         }
 
+        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'ic.category_id'], 'AND');
         $query = '
 SELECT DISTINCT f.image_id
   FROM ' . Tables::favorites() . ' AS f INNER JOIN ' . Tables::imageCategory() . ' AS ic
     ON f.image_id = ic.image_id
   WHERE f.user_id = ' . $currentUser->id . '
-  ' . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'ic.category_id'], 'AND') . '
+  ' . $permSql . '
 ;';
-        $authorizeds = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'image_id');
+        $authorizeds = array_column($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative(), 'image_id');
         $favorites   = array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::favorites() . ' WHERE user_id = ' . $currentUser->id . ';')->fetchAllAssociative(), 'image_id');
 
         $toDeletes = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $favorites), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $authorizeds));

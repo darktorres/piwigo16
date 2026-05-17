@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -24,6 +26,11 @@ abstract class CalendarBase
     public string $date_field = '';
     /** used for queries (INNER JOIN or normal) */
     public string $inner_sql = '';
+    /** parameterized bindings paired with $inner_sql (filled by CalendarService) */
+    /** @var list<mixed> */
+    public array $inner_params = [];
+    /** @var list<ArrayParameterType|ParameterType> */
+    public array $inner_types = [];
     /** used to store db fields */
     /** @var array<mixed> */
     public array $calendar_levels = [];
@@ -53,16 +60,19 @@ abstract class CalendarBase
     /**
      * Initialize the calendar.
      *
-     * @param string $inner_sql
+     * @param list<mixed>                            $inner_params
+     * @param list<ArrayParameterType|ParameterType> $inner_types
      */
-    public function initialize(mixed $inner_sql): void
+    public function initialize(string $inner_sql, array $inner_params = [], array $inner_types = []): void
     {
         if ($this->chronologyField === 'posted') {
             $this->date_field = 'date_available';
         } else {
             $this->date_field = 'date_creation';
         }
-        $this->inner_sql = $inner_sql;
+        $this->inner_sql    = $inner_sql;
+        $this->inner_params = $inner_params;
+        $this->inner_types  = $inner_types;
     }
 
     /**
@@ -230,7 +240,7 @@ $this->inner_sql.
 $this->getDateWhere($level).'
   GROUP BY period;';
 
-        $level_items = array_column(Kernel::service(Connection::class)->executeQuery($query)->fetchAllAssociative(), 'nb_images', 'period');
+        $level_items = array_column(Kernel::service(Connection::class)->executeQuery($query, $this->inner_params, $this->inner_types)->fetchAllAssociative(), 'nb_images', 'period');
 
         $chronologyDate = $this->chronologyDate;
 
@@ -308,7 +318,7 @@ GROUP BY period';
             $stringDate[] = (string) $d;
         }
         $current = implode('-', $stringDate);
-        $upper_items = array_column(Kernel::service(Connection::class)->executeQuery($query)->fetchAllAssociative(), 'period');
+        $upper_items = array_column(Kernel::service(Connection::class)->executeQuery($query, $this->inner_params, $this->inner_types)->fetchAllAssociative(), 'period');
 
         usort($upper_items, fn (mixed $a, mixed $b): int => version_compare(is_scalar($a) ? (string) $a : '', is_scalar($b) ? (string) $b : ''));
         $upper_items_str = array_map(fn (mixed $x): string => is_scalar($x) ? (string) $x : '', $upper_items);

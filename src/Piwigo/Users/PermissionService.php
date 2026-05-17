@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\SqlExpr;
@@ -147,44 +149,85 @@ final readonly class PermissionService
         return $forbiddenIds === [] ? [0] : array_values($forbiddenIds);
     }
 
-    /** @param array<string,string> $conditionFields */
-    public function getSqlConditionFandF(array $conditionFields, ?string $prefixCondition = null, bool $forceOneCondition = false): string
+    /**
+     * Build a parameterized WHERE-fragment from the current user's permission state.
+     *
+     * The returned `$sql` uses positional `?` placeholders; `$params` and `$types`
+     * align by index. Each caller appends `$sql` to its query string and
+     * `$params`/`$types` to the executeQuery bound-parameter arrays.
+     *
+     * @param array<string,string> $conditionFields condition-name → DB column expression
+     *
+     * @return array{0: string, 1: list<mixed>, 2: list<ArrayParameterType|ParameterType>}
+     */
+    public function getSqlConditionFandF(array $conditionFields, ?string $prefixCondition = null, bool $forceOneCondition = false): array
     {
         $filter = FilterContextRegistry::current();
         $user   = CurrentUser::get()->rawAttributes;
 
-        $sqlList = [];
+        $toIntArray = static function (mixed $csv): array {
+            if (!is_string($csv) || $csv === '') {
+                return [];
+            }
+            $out = [];
+            foreach (explode(',', $csv) as $tok) {
+                if (is_numeric($tok)) {
+                    $out[] = (int) $tok;
+                }
+            }
+            return $out;
+        };
+
+        $clauses = [];
+        $params  = [];
+        $types   = [];
 
         foreach ($conditionFields as $condition => $fieldName) {
             switch ($condition) {
                 case 'forbidden_categories':
-                    if (!empty($user['forbidden_categories'])) {
-                        $sqlList[] = $fieldName . ' NOT IN (' . (is_string($user['forbidden_categories']) ? $user['forbidden_categories'] : '') . ')';
+                    $ids = $toIntArray($user['forbidden_categories'] ?? null);
+                    if ($ids !== []) {
+                        $clauses[] = $fieldName . ' NOT IN (?)';
+                        $params[]  = $ids;
+                        $types[]   = ArrayParameterType::INTEGER;
                     }
                     break;
                 case 'visible_categories':
-                    if ($filter->visibleCategories !== '') {
-                        $sqlList[] = $fieldName . ' IN (' . $filter->visibleCategories . ')';
+                    $ids = $toIntArray($filter->visibleCategories);
+                    if ($ids !== []) {
+                        $clauses[] = $fieldName . ' IN (?)';
+                        $params[]  = $ids;
+                        $types[]   = ArrayParameterType::INTEGER;
                     }
                     break;
                 case 'visible_images':
-                    if ($filter->visibleImages !== '') {
-                        $sqlList[] = $fieldName . ' IN (' . $filter->visibleImages . ')';
+                    $ids = $toIntArray($filter->visibleImages);
+                    if ($ids !== []) {
+                        $clauses[] = $fieldName . ' IN (?)';
+                        $params[]  = $ids;
+                        $types[]   = ArrayParameterType::INTEGER;
                     }
                     // no break — visible includes forbidden
                 case 'forbidden_images':
                     if (!empty($user['image_access_list']) or ($user['image_access_type'] ?? null) != 'NOT IN') {
                         $tablePrefix = null;
-                        if ($fieldName == 'id') {
+                        if ($fieldName === 'id') {
                             $tablePrefix = '';
-                        } elseif ($fieldName == 'i.id') {
+                        } elseif ($fieldName === 'i.id') {
                             $tablePrefix = 'i.';
                         }
                         if (isset($tablePrefix)) {
-                            $sqlList[] = $tablePrefix . 'level<=' . (is_string($user['level'] ?? null) ? $user['level'] : '0');
+                            $clauses[] = $tablePrefix . 'level <= ?';
+                            $params[]  = is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0;
+                            $types[]   = ParameterType::INTEGER;
                         } elseif (!empty($user['image_access_list']) and !empty($user['image_access_type'])) {
-                            $sqlList[] = $fieldName . ' ' . (is_string($user['image_access_type']) ? $user['image_access_type'] : '')
-                                . ' (' . (is_string($user['image_access_list']) ? $user['image_access_list'] : '') . ')';
+                            $accessIds = $toIntArray($user['image_access_list']);
+                            $op = (is_string($user['image_access_type']) && $user['image_access_type'] === 'IN') ? 'IN' : 'NOT IN';
+                            if ($accessIds !== []) {
+                                $clauses[] = $fieldName . ' ' . $op . ' (?)';
+                                $params[]  = $accessIds;
+                                $types[]   = ArrayParameterType::INTEGER;
+                            }
                         }
                     }
                     break;
@@ -193,17 +236,17 @@ final readonly class PermissionService
             }
         }
 
-        if (count($sqlList) > 0) {
-            $sql = '(' . implode(' AND ', $sqlList) . ')';
+        if ($clauses !== []) {
+            $sql = '(' . implode(' AND ', $clauses) . ')';
         } else {
             $sql = $forceOneCondition ? '1 = 1' : '';
         }
 
-        if (isset($prefixCondition) and !empty($sql)) {
+        if ($prefixCondition !== null && $sql !== '') {
             $sql = $prefixCondition . ' ' . $sql;
         }
 
-        return $sql;
+        return [$sql, $params, $types];
     }
 
     public function getRecentPhotosSql(string $dbField): string

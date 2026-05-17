@@ -93,13 +93,14 @@ final readonly class ActionController implements ControllerInterface
 
         $src_image = new SrcImage($element_info);
 
+        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'image_id'], '    AND');
         $query = '
 SELECT id FROM ' . Tables::categories() . '
     INNER JOIN ' . Tables::imageCategory() . ' ON category_id = id
   WHERE image_id = ' . $get_id . '
-' . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'image_id'], '    AND') . '
+' . $permSql . '
   LIMIT 1;';
-        if (!$is_admin_download && $this->conn->executeQuery($query)->fetchOne() === false) {
+        if (!$is_admin_download && $this->conn->executeQuery($query, $permParams, $permTypes)->fetchOne() === false) {
             $this->error(401, 'Access denied');
         }
 

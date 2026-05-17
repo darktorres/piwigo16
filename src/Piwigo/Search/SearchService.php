@@ -148,23 +148,24 @@ final class SearchService
 
         $hasFilersFilled = false;
 
-        $forbidden = $this->permissionService->getSqlConditionFandF(
+        [$forbiddenSql, $forbiddenParams, $forbiddenTypes] = $this->permissionService->getSqlConditionFandF(
             ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
             "\n  AND"
         );
 
-        // Closure binds $forbidden once and runs the per-filter "SELECT
-        // DISTINCT(id) FROM images JOIN image_category WHERE <filter> $forbidden"
-        // shape used by every filter below. F5-c will swap the body to a
-        // parameterized form when the PermissionService API returns a tuple.
+        // Closure binds the parameterized permission filter once and runs the
+        // per-filter "SELECT DISTINCT(id) FROM images JOIN image_category
+        // WHERE <filter> $forbiddenSql" shape used by every filter below.
         $filterImageIds =
             /** @return list<int|string> */
-            function (string $whereClause) use ($forbidden): array {
+            function (string $whereClause) use ($forbiddenSql, $forbiddenParams, $forbiddenTypes): array {
                 return array_column(
                     $this->conn->executeQuery(
                         'SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i'
                         . ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id'
-                        . ' WHERE ' . $whereClause . ' ' . $forbidden . ';'
+                        . ' WHERE ' . $whereClause . ' ' . $forbiddenSql . ';',
+                        $forbiddenParams,
+                        $forbiddenTypes
                     )->fetchAllAssociative(),
                     'id'
                 );
@@ -1053,8 +1054,11 @@ final class SearchService
         if (isset($options['images_where']) && $options['images_where'] !== '') {
             $whereClauses[] = '(' . (is_string($options['images_where']) ? $options['images_where'] : '') . ')';
         }
+        $permParams = [];
+        $permTypes  = [];
         if ($permissions) {
-            $whereClauses[] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'i.id'], null, true);
+            [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'i.id'], null, true);
+            $whereClauses[] = $permSql;
         }
 
         $query = 'SELECT DISTINCT(id) FROM ' . Tables::images() . ' i';
@@ -1062,7 +1066,7 @@ final class SearchService
             $query .= ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id';
         }
         $query .= ' WHERE ' . implode("\n AND ", $whereClauses) . "\n" . Config::orderBy();
-        $ids   = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
+        $ids   = array_column($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative(), 'id');
 
         $debug[] = count($ids) . ' final photo count -->';
         TemplateRegistry::current()->append('footer_elements', implode("\n", $debug));

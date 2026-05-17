@@ -17,11 +17,10 @@ use PHPStan\Rules\RuleErrorBuilder;
  *
  * The allow-list (file basenames):
  *   - CheckIntegrity.php         in-memory hash input for anomaly dedup
- *   - ConfigService.php          legacy array → serialize fallback in
- *                                confUpdateParam (kept until callers
- *                                migrate off arrays)
  *   - PreferencesService.php     user_infos.preferences column (next
  *                                refactor pass — out of B1–B10 scope)
+ *   - StringUtil.php             implementation of safeUnserialize()
+ *                                (migration-only consumer)
  *   - Version2026*.php           data migrations decoding legacy
  *                                serialize() blobs from older installs
  *
@@ -36,7 +35,6 @@ final class SerializeAllowedRule implements Rule
 
     private const ALLOWED_BASENAMES = [
         'CheckIntegrity.php',
-        'ConfigService.php',
         'PreferencesService.php',
         // StringUtil::safeUnserialize() is the helper migrations call to
         // ingest legacy blobs; the implementation has to call unserialize.

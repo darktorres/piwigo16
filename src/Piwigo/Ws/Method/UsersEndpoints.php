@@ -538,7 +538,7 @@ final readonly class UsersEndpoints
         if ($newMainUser['status'] !== 'webmaster') {
             return new PwgError(403, 'This user cannot become a main user because he is not a webmaster.');
         }
-        $this->configService->confUpdateParam('webmaster_id', $params['user_id']);
+        $this->configService->confUpdateParam('webmaster_id', $mainUserId);
         return 'The main user has been changed.';
     }
 

@@ -68,18 +68,18 @@ final readonly class ConfigService
     }
 
     /**
-     * @param callable-string|null $parser
+     * Persist a single key/value to the conf table.
+     *
+     * The value is stored as a string — booleans go through BoolUtil
+     * (which emits 'true'/'false' matching the on-read decode in
+     * loadConfFromDb), other scalars stringify naturally. Arrays
+     * are no longer accepted: every B1-B10 caller that used to pass
+     * one now JSON-encodes upstream (the encoded string lands here as
+     * a regular string). See SerializeAllowedRule for the rationale.
      */
-    public function confUpdateParam(string $param, mixed $value, bool $updateGlobal = false, ?string $parser = null): void
+    public function confUpdateParam(string $param, string|int|float|bool|null $value, bool $updateGlobal = false): void
     {
-        if ($parser !== null) {
-            $raw     = call_user_func($parser, $value);
-            $dbValue = is_scalar($raw) ? (string) $raw : '';
-        } elseif (is_array($value)) {
-            $dbValue = serialize($value);
-        } else {
-            $dbValue = BoolUtil::toString(is_bool($value) ? $value : (is_scalar($value) ? (string) $value : ''));
-        }
+        $dbValue = is_bool($value) ? BoolUtil::toString($value) : (string) ($value ?? '');
 
         $this->conn->executeStatement(
             'INSERT INTO ' . Tables::config() . ' (param, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',

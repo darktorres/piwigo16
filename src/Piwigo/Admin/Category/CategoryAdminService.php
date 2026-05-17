@@ -58,6 +58,8 @@ final readonly class CategoryAdminService
         }
         $ids        = $this->categoryService->getSubcatIds($ids);
         $elementIds = $this->imageRepository->findIdsByStorageCategoryIds($ids);
+        // Each deleteElements call has its own transaction; filesystem cleanup
+        // in the physical-deletion modes runs before the inner DB delete.
         $this->imageAdminService->deleteElements($elementIds);
 
         if ($photoDeletionMode === 'delete_orphans' || $photoDeletionMode === 'force_delete') {
@@ -76,17 +78,19 @@ final readonly class CategoryAdminService
             }
         }
 
-        $catRepo2 = $this->categoryRepository;
-        $catRepo2->deleteByIds($ids);
-        // FK CASCADE clears the cat_id side of image_category, user_access,
-        // group_access, user_cache_categories. FK SET NULL nulls
-        // images.storage_category_id and self-ref categories.id_uppercat
-        // (subtree promotion). old_permalinks.cat_id has no FK — keep
-        // the manual cleanup.
-        $catRepo2->deletePermalinksByCategoryIds($ids);
+        $this->conn->transactional(function () use ($ids, $photoDeletionMode): void {
+            $catRepo2 = $this->categoryRepository;
+            $catRepo2->deleteByIds($ids);
+            // FK CASCADE clears the cat_id side of image_category, user_access,
+            // group_access, user_cache_categories. FK SET NULL nulls
+            // images.storage_category_id and self-ref categories.id_uppercat
+            // (subtree promotion). old_permalinks.cat_id has no FK — keep
+            // the manual cleanup.
+            $catRepo2->deletePermalinksByCategoryIds($ids);
 
-        $this->dispatcher->dispatch(new DeleteCategories($ids));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $ids, 'delete', ['photo_deletion_mode' => $photoDeletionMode]));
+            $this->dispatcher->dispatch(new DeleteCategories($ids));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $ids, 'delete', ['photo_deletion_mode' => $photoDeletionMode]));
+        });
     }
 
     public function imagesIntegrity(): void

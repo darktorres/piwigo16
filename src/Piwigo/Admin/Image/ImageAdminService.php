@@ -103,27 +103,31 @@ final class ImageAdminService
         }
         $this->dispatcher->dispatch(new BeginDeleteElements($ids));
         if ($physicalDeletion) {
+            // Filesystem op — cannot participate in DB transaction. Runs first
+            // so a failure aborts before any DB rows are touched.
             $ids = $this->deleteElementFiles($ids);
             if (count($ids) === 0) {
                 return 0;
             }
         }
-        // Find categories whose representative picture is in $ids BEFORE
-        // deleting — after the parent delete fires the FK SET NULL,
-        // categories.representative_picture_id is already NULL for those
-        // rows and the query would return nothing. updateCategory then
-        // picks a fresh representative for each affected category.
-        $catRepo     = $this->categoryRepository;
-        $categoryIds = $catRepo->findIdsByRepresentativePicture($ids);
-        $this->imageRepository->deleteByIds($ids);
-        // FK CASCADE has cleared child rows in comments, image_category,
-        // image_format, image_tag, favorites, rate, caddie, lounge.
-        if (count($categoryIds) > 0) {
-            $this->categoryAdminService->updateCategory($categoryIds);
-        }
-        $this->dispatcher->dispatch(new DeleteElements($ids));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $ids, 'delete'));
-        return count($ids);
+        return $this->conn->transactional(function () use ($ids): int {
+            // Find categories whose representative picture is in $ids BEFORE
+            // deleting — after the parent delete fires the FK SET NULL,
+            // categories.representative_picture_id is already NULL for those
+            // rows and the query would return nothing. updateCategory then
+            // picks a fresh representative for each affected category.
+            $catRepo     = $this->categoryRepository;
+            $categoryIds = $catRepo->findIdsByRepresentativePicture($ids);
+            $this->imageRepository->deleteByIds($ids);
+            // FK CASCADE has cleared child rows in comments, image_category,
+            // image_format, image_tag, favorites, rate, caddie, lounge.
+            if (count($categoryIds) > 0) {
+                $this->categoryAdminService->updateCategory($categoryIds);
+            }
+            $this->dispatcher->dispatch(new DeleteElements($ids));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $ids, 'delete'));
+            return count($ids);
+        });
     }
 
     /** @return array<mixed> */

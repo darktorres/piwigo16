@@ -2640,3 +2640,83 @@ vendor/bin/phpunit --filter DerivativeToken  # unit tests for sign/verify
 # 7. Public image: no _sig, still served
 # 8. Private image with valid _sig → 200
 ```
+
+---
+
+## #33 — Eliminate `PHPWG_ROOT_PATH` global; replace with typed `Paths`
+
+**Status:** ✅ Done (2026-05-17) &nbsp;|&nbsp; **Size:** L
+
+### Background
+
+`define('PHPWG_ROOT_PATH', './')` was the last surviving piece of pre-PSR-4,
+pre-DI Piwigo bootstrap. After §1.4 collapsed every entry point into a single
+`index.php` and wired the typed-service `Kernel`, the constant remained as a
+global string used by **195 reads across 72 files** to compose include paths
+and filesystem locations.
+
+Three problems with keeping it:
+
+1. **CWD-dependence.** `'./'` only worked because Apache and the CLI happened
+   to invoke `index.php` with CWD = install dir. A worker that `chdir()`s, a
+   CLI tool run from a sibling, or a Flysystem adapter that normalises paths
+   could all break silently.
+2. **Antithesis of typed services.** `Kernel`'s docblock explicitly says
+   service classes must declare dependencies in constructors. The 195
+   in-tree reads were a hidden global dependency invisible to PHPStan, the
+   container, and tests.
+3. **Dual semantics — silent landmine.** The constant carried URL-relative
+   prefix semantics in `HtmlService` / `UrlService` / `CookieService` AND
+   filesystem-path semantics everywhere else. Making it absolute (an early
+   attempt to fix #1) broke every emitted `<a href>` because the integration
+   tests don't assert on rendered URL prefixes.
+
+### What shipped
+
+13 commits + 1 fix on `16.x-rewrite`:
+
+| Phase   | Scope                                                                                                                                          |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1       | `Piwigo\Core\Paths` value object (immutable, absolute, `fromIndex()` / `fromRoot()` factories) + initial DI wiring.                            |
+| 2       | `config/container.php` and `config/storage.php` factories autowire `Paths`; storage closures wrapped in `Closure(Paths): array`.               |
+| 3a      | `Image/*` services and `ImageDerivativeController`. `DerivativePipeline` converted from all-static to a DI instance class.                     |
+| 3b      | `Admin/Updates.php` (12 reads — biggest single file).                                                                                          |
+| 3c      | `Admin/Languages.php` + `Admin/Upload/UploadService.php`.                                                                                       |
+| 3d      | 9 controllers (Install, Upgrade, UpgradeFeed, NBM, Admin/Configuration, Admin/Extensions, Admin/Maintenance, Admin/Users, Admin/AdminController). |
+| 3e1     | Remaining `Admin/*` services (`ImageAdminService`, `WatermarkProcessor`, `MetadataAdminService`, `Themes`, `Plugins`, `UpgradeService`).        |
+| (fix)   | URL-semantics regression — reverted `define('PHPWG_ROOT_PATH', $paths->root)` back to `'./'` after `<a href>` URLs were rendering as `/home/.../themes/...`. |
+| 3e2     | Remaining `src/` filesystem services; `Kernel::isBooted ? : PHPWG_ROOT_PATH` fallbacks added to the static-utility classes.                    |
+| 4       | `Container::build(Paths $paths, …)` + `Kernel::boot/bootMinimal(?Paths $paths = null)` + `CommonBootstrap::run(Paths $paths)`.                  |
+| 4.5     | URL-root cleanup: `UrlService::getRootUrl` simplified; `HtmlService` drops the no-op `./` prefix; `CookieService::cookiePath` deletes the dead `str_starts_with('../')` branch; `SectionInitializer` sets `root_path=''` directly. Net –18 LOC. |
+| 5       | 31 test/tool files migrated to inline `dirname(__DIR__, N)`. `InstallSentinel` refactored to take `Paths` explicitly (it ran pre-Kernel-boot in `CommonBootstrap`, so a service-locator dependency wouldn't have worked). `MessengerFactory::build(Connection, Paths $paths)`. |
+| 6       | Final fallbacks removed from `ScriptLoader`, `LatteEngine::default`, `LatteEngine::sandboxed`. Tests boot `Kernel(Paths::fromRoot(...))` in `setUp`. `define('PHPWG_ROOT_PATH', ...)` deleted from `index.php`, `tests/bootstrap.php`, `tools/phpstan-bootstrap.php`, `tools/psalm-stubs.phpstub`. |
+
+### End state in `index.php`
+
+```php
+require_once __DIR__ . '/vendor/autoload.php';
+$paths = Paths::fromIndex(__FILE__);
+```
+
+The install root is a typed value object minted from the entry point's
+physical location, threaded explicitly through `Container::build($paths)`
+→ `Kernel::boot($paths)` → service constructors that declare `Paths` in
+their signature. No global string constant, no dual semantics, no CWD
+dependence.
+
+### Verification
+
+```bash
+grep -rn 'define.*PHPWG_ROOT_PATH\|const PHPWG_ROOT_PATH' \
+  src/ tests/ tools/ config/ index.php          # zero matches
+vendor/bin/pint --test                          # passed
+vendor/bin/phpstan analyse                      # green
+vendor/bin/psalm                                # no errors found
+vendor/bin/phpunit                              # 648 tests / 3341 assertions green
+```
+
+Apache smoke on all five entry shapes (`/`, `/install`, `/upgrade`,
+`/upgrade_feed`, `/i/<derivative>`) returns 200; nested `/category/1`
+returns 200; rendered HTML contains zero filesystem paths (the
+regression-detection grep that caught the §3e2/§4.5 bug).
+

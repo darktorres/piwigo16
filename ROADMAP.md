@@ -19,6 +19,7 @@
 | 1.7 | Typed boundaries              | 🟡 **Not started**     | L         | HTTP request DTOs (Phase 1) → repository entity layer (Phase 2)                                                                   |
 | 1.8 | Test infrastructure           | 🟡 **Not started**     | M + L + S | Pest → coverage → Infection (chained)                                                                                             |
 | 1.9 | Deferred / on-demand          | 🟠 **On-demand**       | —         | Monolog · S3/SFTP · supervisor · Renovate · ScriptLoader dep graph                                                                |
+| 1.10 | `PHPWG_ROOT_PATH` elimination | ✅ **Done**           | L         | shipped 2026-05-17 in 13 commits + 1 fix on `16.x-rewrite`: `Piwigo\Core\Paths` value object replaces the legacy global string, threaded through DI from `Paths::fromIndex(__FILE__)` in `index.php` → `Container::build($paths)` → service constructors; 195 reads across 72 files migrated; URL-context callers cleaned up (see [#33](docs/ROADMAP-PHP.md#33--eliminate-phpwg_root_path-global-replace-with-typed-paths)) |
 | 2.1 | TS `any` reduction            | 🟡 **Not started**     | M         | 478 → ≤250 patterns                                                                                                               |
 | 2.2 | Vitest unit tests             | 🟡 **Not started**     | M         | TS unit-test runner + first wave                                                                                                  |
 | 2.3 | Bundle size budgets           | 🟡 **Not started**     | S         | per-entrypoint gzip limits in CI                                                                                                  |
@@ -3029,6 +3030,41 @@ To remove:
 
 Net delta: another ~80 lines off `ScriptLoader.php` plus one named arg
 gone from the public asset-pipeline surface.
+
+---
+
+### 1.10 `PHPWG_ROOT_PATH` elimination
+
+**Status:** ✅ Done (2026-05-17) · **Effort:** L · 13 commits + 1 fix
+
+`define('PHPWG_ROOT_PATH', './')` was the last surviving piece of pre-PSR-4,
+pre-DI Piwigo bootstrap — a global string with **195 reads across 72 files**
+that carried _dual_ semantics (URL-relative prefix AND filesystem path).
+Replaced by `Piwigo\Core\Paths`, an immutable value object minted once from
+the entry point's physical location and threaded explicitly through DI:
+
+```php
+// index.php — the entire bootstrap setup
+require_once __DIR__ . '/vendor/autoload.php';
+$paths = Paths::fromIndex(__FILE__);
+```
+
+`Container::build(Paths $paths)` binds it; `Kernel::boot/bootMinimal` and
+`CommonBootstrap::run` accept it; service constructors declare
+`private readonly Paths $paths`. URL-context callers (`HtmlService`,
+`UrlService::getRootUrl`, `CookieService::cookiePath`, `SectionInitializer`)
+were simplified separately — the "URL root" in v17 is always the empty
+string (the legacy `./`-stripping dance produced the same result), so those
+prefixes are gone too. Net –18 LOC just on the URL cleanup pass.
+
+Full phase-by-phase narrative in [docs/ROADMAP-PHP.md #33](docs/ROADMAP-PHP.md#33--eliminate-phpwg_root_path-global-replace-with-typed-paths).
+A regression detected mid-migration (absolute filesystem paths leaking into
+`<a href>` because tests don't assert on rendered URL prefixes) added a
+permanent verification step:
+
+```bash
+curl -sS http://localhost/piwigo16/ | grep -c '/home/' && echo 'leak!'
+```
 
 ---
 

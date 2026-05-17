@@ -262,21 +262,17 @@ final class Updates
         // 3. no new versions but reminder needed
 
         $notify = false;
-        if (!Config::has('update_notify_last_notification')) {
+        $last_notification  = Config::updateNotifyLastNotificationAt();
+        $last_notif_version = Config::updateNotifyLastNotificationVersion();
+        if ($last_notification === null || $last_notif_version === null) {
             $notify = true;
-        } else {
-            $lastNotifArr = StringUtil::safeUnserialize(Config::updateNotifyLastNotification() ?? '');
-            $last_notification = is_string($lastNotifArr['notified_on'] ?? null) ? $lastNotifArr['notified_on'] : '';
-            $last_notif_version = is_string($lastNotifArr['version'] ?? null) ? $lastNotifArr['version'] : '';
-
-            if ($new_versions_string != $last_notif_version) {
-                $notify = true;
-            } elseif (
-                Config::updateNotifyReminderPeriod() > 0
-                and strtotime($last_notification) < strtotime(Config::updateNotifyReminderPeriod().' seconds ago')
-            ) {
-                $notify = true;
-            }
+        } elseif ($new_versions_string !== $last_notif_version) {
+            $notify = true;
+        } elseif (
+            Config::updateNotifyReminderPeriod() > 0
+            && strtotime($last_notification) < strtotime(Config::updateNotifyReminderPeriod() . ' seconds ago')
+        ) {
+            $notify = true;
         }
 
         if ($notify) {
@@ -309,13 +305,8 @@ final class Updates
             $this->mailService->switchLangBack();
 
             // save notify
-            $this->configService->confUpdateParam(
-                'update_notify_last_notification',
-                [
-                'version' => $new_versions_string,
-                'notified_on' => date('c'),
-                ]
-            );
+            $this->configService->confUpdateParam('update_notify_last_notification_version', $new_versions_string);
+            $this->configService->confUpdateParam('update_notify_last_notification_at', date('c'));
         }
     }
 

@@ -7,7 +7,6 @@ namespace Piwigo\Activity;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\History\HistoryAdminService;
 use Piwigo\Config\Config;
-use Piwigo\Config\ConfigService;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
@@ -36,7 +35,6 @@ final readonly class ActivityLogger
 {
     public function __construct(
         private Connection $conn,
-        private ConfigService $configService,
         private HistoryRepository $historyRepository,
         private HistoryAdminService $historyAdminService,
         private PermissionService $permissionService,
@@ -221,24 +219,16 @@ final readonly class ActivityLogger
         }
 
         if ($pageSection !== '') {
-            if (!Config::has('history_sections_cache')) {
-                $this->configService->confUpdateParam('history_sections_cache', SchemaHelper::getEnums(Tables::history(), 'section'), true);
-            }
-            $historySectionsCache = StringUtil::safeUnserialize(Config::historySectionsCache() ?? '');
-            Config::override('history_sections_cache', $historySectionsCache);
-            if (
-                in_array($pageSection, $historySectionsCache)
-                || in_array(strtolower($pageSection), array_map(static fn (mixed $s): string => strtolower(is_scalar($s) ? (string) $s : ''), $historySectionsCache))
-            ) {
+            $historySections = SchemaHelper::getEnums(Tables::history(), 'section');
+            $lowerSet        = array_flip(array_map(strtolower(...), $historySections));
+            if (isset($lowerSet[strtolower($pageSection)])) {
                 $section = $pageSection;
             } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $pageSection)) {
-                $historySections   = SchemaHelper::getEnums(Tables::history(), 'section');
                 $historySections[] = $pageSection;
                 $this->conn->executeStatement(
                     'ALTER TABLE ' . Tables::history() . " CHANGE section section enum('" .
                     implode("','", array_unique($historySections)) . "') DEFAULT NULL"
                 );
-                $this->configService->confUpdateParam('history_sections_cache', SchemaHelper::getEnums(Tables::history(), 'section'), true);
                 $section = $pageSection;
             }
         }

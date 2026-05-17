@@ -316,7 +316,7 @@ return [
     LangService::class         => factory(static fn (): LangService => new LangService()),
     ConfigService::class       => factory(static fn (Connection $conn): ConfigService => new ConfigService($conn)),
     QueryHelper::class         => factory(static fn (Connection $conn): QueryHelper => new QueryHelper($conn)),
-    ActivityLogger::class      => factory(static fn (Connection $conn, ConfigService $cfg, HistoryRepository $hist, HistoryAdminService $histA, PermissionService $perm, UserRepository $u, EventDispatcherInterface $d): ActivityLogger => new ActivityLogger($conn, $cfg, $hist, $histA, $perm, $u, $d)),
+    ActivityLogger::class      => factory(static fn (Connection $conn, HistoryRepository $hist, HistoryAdminService $histA, PermissionService $perm, UserRepository $u, EventDispatcherInterface $d): ActivityLogger => new ActivityLogger($conn, $hist, $histA, $perm, $u, $d)),
     CsrfService::class         => factory(static fn (HtmlService $h): CsrfService => new CsrfService($h)),
     DebugCollector::class      => factory(static fn (): DebugCollector => new DebugCollector()),
     DeviceDetectionService::class => factory(static fn (SessionService $sess): DeviceDetectionService => new DeviceDetectionService($sess)),

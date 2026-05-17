@@ -8,6 +8,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ZipExtractor;
 use Piwigo\Html\HtmlService;
@@ -33,6 +34,7 @@ final class Languages
         private readonly HtmlService $htmlService,
         private readonly LanguageRepository $languageRepository,
         private readonly UserService $userService,
+        private readonly Paths $paths,
     ) {
         $this->getFsLanguages();
     }
@@ -94,7 +96,7 @@ final class Languages
                 // Set default language to users who are using this language
                 $this->languageRepository->reassignUsers($language_id, $this->userService->getDefaultLanguage());
 
-                $this->adminService->deltree(PHPWG_ROOT_PATH.'language/'.$language_id, PHPWG_ROOT_PATH.'language/trash');
+                $this->adminService->deltree($this->paths->root . 'language/' . $language_id, $this->paths->root . 'language/trash');
                 break;
 
             case 'set_default':
@@ -118,13 +120,13 @@ final class Languages
                 : StringUtil::getPwgCharset()
         );
 
-        $dir = opendir(PHPWG_ROOT_PATH.'language');
+        $dir = opendir($this->paths->root . 'language');
         if ($dir === false) {
             return;
         }
         while ($file = readdir($dir)) {
             if ($file != '.' and $file != '..') {
-                $path = PHPWG_ROOT_PATH.'language/'.$file;
+                $path = $this->paths->root . 'language/' . $file;
                 if (is_dir($path) and !is_link($path)
                     and preg_match('/^[a-zA-Z0-9-_]+$/', $file)
                     and file_exists($path.'/common.po')
@@ -258,7 +260,7 @@ final class Languages
     {
         $logger = LoggerRegistry::current();
 
-        if (($archive = tempnam(PHPWG_ROOT_PATH.'language', 'zip')) !== false) {
+        if (($archive = tempnam($this->paths->root . 'language', 'zip')) !== false) {
             $url = PEM_URL . '/download.php';
             $get_data = [
               'rid' => $revision,
@@ -291,7 +293,7 @@ final class Languages
                             if ($action == 'install') {
                                 $dest = $root;
                             }
-                            $extract_path = PHPWG_ROOT_PATH.'language/'.$dest;
+                            $extract_path = $this->paths->root . 'language/' . $dest;
 
                             $logger->debug(__FUNCTION__.', $extract_path = '.$extract_path);
 
@@ -337,7 +339,7 @@ final class Languages
                                         if (is_file($path)) {
                                             Filesystem::tryUnlink($path);
                                         } elseif (is_dir($path)) {
-                                            $this->adminService->deltree($path, PHPWG_ROOT_PATH.'language/trash');
+                                            $this->adminService->deltree($path, $this->paths->root . 'language/trash');
                                         }
                                     }
                                 }

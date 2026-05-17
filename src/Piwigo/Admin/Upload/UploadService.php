@@ -19,6 +19,7 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
@@ -54,6 +55,7 @@ final readonly class UploadService
         private UserAdminService $userAdminService,
         private ActivityLogger $activityLogger,
         private EventDispatcherInterface $dispatcher,
+        private Paths $paths,
     ) {
     }
 
@@ -149,7 +151,7 @@ final readonly class UploadService
             $year  = $splitDate[0];
             $month = $splitDate[1] ?? '';
             $day   = $splitDate[2] ?? '';
-            $uploadDir = sprintf(PHPWG_ROOT_PATH . Config::uploadDir() . '/%s/%s/%s', $year, $month, $day);
+            $uploadDir = sprintf($this->paths->root . Config::uploadDir() . '/%s/%s/%s', $year, $month, $day);
             $dateString = (string) preg_replace('/[^\d]/', '', $dbnow);
             $randomString  = substr($md5sum, 0, 4) . '%s';
             $filePathPattern = $uploadDir . '/' . $dateString . '-' . $randomString . '.';
@@ -194,7 +196,7 @@ final readonly class UploadService
             } while (file_exists($filePath));
         }
 
-        $uploadRoot    = PHPWG_ROOT_PATH . Config::uploadDir();
+        $uploadRoot    = $this->paths->root . Config::uploadDir();
         $uploadRelPath = StorageRegistry::stripRoot($uploadRoot, $filePath);
         $uploadStream  = fopen($sourceFilepath, 'rb');
         if ($uploadStream !== false) {
@@ -231,7 +233,7 @@ final readonly class UploadService
             Dml::singleUpdate(Tables::images(), $update, ['id' => $imageId]);
         } else {
             $file   = $originalFilename ?? basename($filePath);
-            $insert = ['file' => $file, 'name' => StringUtil::getNameFromFile($file), 'date_available' => $dbnow, 'path' => preg_replace('#^' . preg_quote(PHPWG_ROOT_PATH) . '#', '', $filePath), 'filesize' => $fileInfos['filesize'], 'width' => $fileInfos['width'], 'height' => $fileInfos['height'], 'md5sum' => $md5sum, 'added_by' => $userId, 'rotation' => $rotation];
+            $insert = ['file' => $file, 'name' => StringUtil::getNameFromFile($file), 'date_available' => $dbnow, 'path' => preg_replace('#^' . preg_quote($this->paths->root) . '#', '', $filePath), 'filesize' => $fileInfos['filesize'], 'width' => $fileInfos['width'], 'height' => $fileInfos['height'], 'md5sum' => $md5sum, 'added_by' => $userId, 'rotation' => $rotation];
             if (isset($level)) {
                 $insert['level'] = $level;
             }
@@ -306,8 +308,8 @@ final readonly class UploadService
         $origPath   = is_scalar($images[0]['path']) ? (string) $images[0]['path'] : '';
         $formatPath = dirname($origPath) . '/pwg_format/' . StringUtil::getFilenameWoExtension(basename($origPath)) . '.' . $formatExt;
         $this->prepareDirectory(dirname($formatPath));
-        $fmtRoot    = PHPWG_ROOT_PATH . Config::uploadDir();
-        $fmtAbsPath = PHPWG_ROOT_PATH . ltrim(str_replace(['\\', '/./'], ['/', '/'], $formatPath), '/');
+        $fmtRoot    = $this->paths->root . Config::uploadDir();
+        $fmtAbsPath = $this->paths->root . ltrim(str_replace(['\\', '/./'], ['/', '/'], $formatPath), '/');
         $fmtRelPath = StorageRegistry::stripRoot($fmtRoot, $fmtAbsPath);
         $fmtStream  = fopen($sourceFilepath, 'rb');
         if ($fmtStream !== false) {
@@ -600,7 +602,7 @@ final readonly class UploadService
 
     public function readyForUploadMessage(): ?string
     {
-        $relativeDir = (string) preg_replace('#^' . PHPWG_ROOT_PATH . '#', '', Config::uploadDir());
+        $relativeDir = (string) preg_replace('#^' . preg_quote($this->paths->root, '#') . '#', '', Config::uploadDir());
         if (!is_dir(Config::uploadDir())) {
             if (!is_writable(dirname(Config::uploadDir()))) {
                 return sprintf(Lang::t('Create the "%s" directory at the root of your Piwigo installation'), $relativeDir);

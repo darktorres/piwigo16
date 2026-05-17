@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -212,27 +211,18 @@ final class CalendarMonthly extends CalendarBase
         $chronologyDate = $this->chronologyDate;
 
         assert(count($chronologyDate) == 0);
-        $query = '
-  SELECT '.SqlExpr::dateYYYYMM($this->date_field).' as period,
-    COUNT(distinct id) as count';
-        $query .= $this->inner_sql;
-        $query .= $this->getDateWhere();
-        $query .= '
-    GROUP BY period
-    ORDER BY '.SqlExpr::year($this->date_field).' DESC, '.SqlExpr::month($this->date_field).' ASC';
+        $orderBy = 'ORDER BY '.SqlExpr::year($this->date_field).' DESC, '.SqlExpr::month($this->date_field).' ASC';
 
         $items = [];
-        foreach (Kernel::service(Connection::class)->executeQuery($query, $this->inner_params, $this->inner_types)->fetchAllAssociative() as $row) {
-            $periodRaw = $row['period'] ?? '';
-            $periodStr = is_scalar($periodRaw) ? (string) $periodRaw : '';
+        foreach ($this->calRepo->findCalendarPeriodCounts(SqlExpr::dateYYYYMM($this->date_field), $this->inner_sql, $this->getDateWhere(), $orderBy, $this->inner_params, $this->inner_types) as $row) {
+            $periodStr = $row['period'];
             $y = substr($periodStr, 0, 4);
             $m = (int) substr($periodStr, 4, 2);
             if (! isset($items[$y])) {
                 $items[$y] = ['nb_images' => 0, 'children' => [] ];
             }
-            $countRaw = $row['count'] ?? 0;
-            $items[$y]['children'][$m] = $countRaw;
-            $items[$y]['nb_images'] += is_int($countRaw) ? $countRaw : (is_numeric($countRaw) ? (int) $countRaw : 0);
+            $items[$y]['children'][$m] = $row['count'];
+            $items[$y]['nb_images'] += $row['count'];
         }
         if (count($items) == 1) {// only one year exists so bail out to year view
             $first_year = array_key_first($items);
@@ -280,26 +270,17 @@ final class CalendarMonthly extends CalendarBase
         $chronologyDate = $this->chronologyDate;
 
         assert(count($chronologyDate) == 1);
-        $query = 'SELECT '.SqlExpr::dateMMDD($this->date_field).' as period,
-              COUNT(DISTINCT id) as count';
-        $query .= $this->inner_sql;
-        $query .= $this->getDateWhere();
-        $query .= '
-    GROUP BY period
-    ORDER BY period ASC';
 
         $items = [];
-        foreach (Kernel::service(Connection::class)->executeQuery($query, $this->inner_params, $this->inner_types)->fetchAllAssociative() as $row) {
-            $periodRaw = $row['period'] ?? '';
-            $periodStr = is_scalar($periodRaw) ? (string) $periodRaw : '';
+        foreach ($this->calRepo->findCalendarPeriodCounts(SqlExpr::dateMMDD($this->date_field), $this->inner_sql, $this->getDateWhere(), 'ORDER BY period ASC', $this->inner_params, $this->inner_types) as $row) {
+            $periodStr = $row['period'];
             $m = (int) substr($periodStr, 0, 2);
             $d = substr($periodStr, 2, 2);
             if (! isset($items[$m])) {
                 $items[$m] = ['nb_images' => 0, 'children' => [] ];
             }
-            $countRaw = $row['count'] ?? 0;
-            $items[$m]['children'][$d] = $countRaw;
-            $items[$m]['nb_images'] += is_int($countRaw) ? $countRaw : (is_numeric($countRaw) ? (int) $countRaw : 0);
+            $items[$m]['children'][$d] = $row['count'];
+            $items[$m]['nb_images'] += $row['count'];
         }
         if (count($items) == 1) { // only one month exists so bail out to month view
             [$m] = array_keys($items);
@@ -343,35 +324,19 @@ final class CalendarMonthly extends CalendarBase
     /** @param array<mixed> $tpl_var */
     protected function buildMonthCalendar(array &$tpl_var): bool
     {
-        $query = 'SELECT '.SqlExpr::dayOfMonth($this->date_field).' as period,
-              COUNT(DISTINCT id) as count';
-        $query .= $this->inner_sql;
-        $query .= $this->getDateWhere();
-        $query .= '
-    GROUP BY period
-    ORDER BY period ASC';
-
         $day_counts = [];
-        foreach (Kernel::service(Connection::class)->executeQuery($query, $this->inner_params, $this->inner_types)->fetchAllAssociative() as $row) {
-            $periodRaw = $row['period'] ?? 0;
-            $d = is_int($periodRaw) ? $periodRaw : (is_numeric($periodRaw) ? (int) $periodRaw : 0);
+        foreach ($this->calRepo->findCalendarPeriodCounts(SqlExpr::dayOfMonth($this->date_field), $this->inner_sql, $this->getDateWhere(), 'ORDER BY period ASC', $this->inner_params, $this->inner_types) as $row) {
+            $d = (int) $row['period'];
             $day_counts[$d] = $row['count'];
         }
 
         $items = [];
         foreach ($day_counts as $day => $nb_images) {
             $this->chronologyDate[CDAY] = $day;
-            $query = '
-  SELECT id, file,representative_ext,path,width,height,rotation, '.SqlExpr::dayOfWeek($this->date_field).'-1 as dow';
-            $query .= $this->inner_sql;
-            $query .= $this->getDateWhere();
-            $query .= '
-    ORDER BY RAND()
-    LIMIT 1';
+            $dateWhere = $this->getDateWhere();
             unset($this->chronologyDate[CDAY]);
 
-            $rowResult = Kernel::service(Connection::class)->executeQuery($query, $this->inner_params, $this->inner_types)->fetchAssociative();
-            $row = $rowResult !== false ? $rowResult : null;
+            $row = $this->calRepo->findRandomImageInCalendarPeriod(SqlExpr::dayOfWeek($this->date_field), $this->inner_sql, $dateWhere, $this->inner_params, $this->inner_types);
             if ($row === null) {
                 continue;
             }

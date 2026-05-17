@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
-use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
@@ -31,8 +30,8 @@ final class CalendarService
     private array $items = [];
 
     public function __construct(
+        private readonly CalendarRepository $calRepo,
         private readonly CategoryService $categoryService,
-        private readonly Connection $conn,
         private readonly DebugCollector $debugCollector,
         private readonly PermissionService $permissionService,
         private readonly UrlService $urlService,
@@ -103,9 +102,13 @@ INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id';
 
             if ($category !== null) {
                 $categoryIdRaw = $category['id'] ?? null;
+                $forbiddenRaw  = $user['forbidden_categories'] ?? null;
+                $forbidden     = is_array($forbiddenRaw)
+                    ? array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $forbiddenRaw)
+                    : [];
                 $subIds = array_diff(
                     $this->categoryService->getSubcatIds([is_numeric($categoryIdRaw) ? (int) $categoryIdRaw : 0]),
-                    explode(',', is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : '')
+                    $forbidden,
                 );
 
                 if (empty($subIds)) {
@@ -158,8 +161,8 @@ WHERE id IN (' . implode(',', $items) . ')';
         $calStyle = (is_string($chronologyStyle) && isset($styles[$chronologyStyle])) ? $chronologyStyle : 'monthly';
         $this->chronologyStyle = $calStyle;
         $calendar = match ($calStyle) {
-            'monthly' => new CalendarMonthly(),
-            default   => new CalendarWeekly(),
+            'monthly' => new CalendarMonthly($this->calRepo),
+            default   => new CalendarWeekly($this->calRepo),
         };
 
         $resolvedView = (is_string($chronologyView) && in_array($chronologyView, $views, true)) ? $chronologyView : CAL_VIEW_LIST;
@@ -280,12 +283,8 @@ WHERE id IN (' . implode(',', $items) . ')';
                 $cachedItems   = $cacheItem->get();
                 $this->items   = is_array($cachedItems) ? array_values(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $cachedItems)) : [];
             } else {
-                $query = 'SELECT DISTINCT id '
-                  . $calendar->inner_sql . '
-  ' . $calendar->getDateWhere() . '
-  ' . $orderBy;
-                $rows = $this->conn->executeQuery($query, $calendar->inner_params, $calendar->inner_types)->fetchAllAssociative();
-                $this->items = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($rows, 'id'));
+                $ids = $this->calRepo->findImageIdsForCalendar($calendar->inner_sql, $calendar->getDateWhere(), $orderBy, $calendar->inner_params, $calendar->inner_types);
+                $this->items = array_map(static fn (int $v): string => (string) $v, $ids);
                 if ($cacheItem !== null) {
                     $cacheItem->set($this->items);
                     $cacheItem->expiresAfter(86400);

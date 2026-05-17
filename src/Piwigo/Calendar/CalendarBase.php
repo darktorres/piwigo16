@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
@@ -22,6 +21,11 @@ use Piwigo\Url\UrlService;
  */
 abstract class CalendarBase
 {
+    public function __construct(
+        protected readonly CalendarRepository $calRepo,
+    ) {
+    }
+
     /** db column on which this calendar works */
     public string $date_field = '';
     /** used for queries (INNER JOIN or normal) */
@@ -233,14 +237,13 @@ abstract class CalendarBase
         $level_data = $this->calendar_levels[$level] ?? [];
         $levelSql = is_array($level_data) ? (is_string($level_data['sql'] ?? null) ? $level_data['sql'] : '') : '';
 
-        $query = '
-SELECT DISTINCT('.$levelSql.') as period,
-  COUNT(DISTINCT id) as nb_images'.
-$this->inner_sql.
-$this->getDateWhere($level).'
-  GROUP BY period;';
-
-        $level_items = array_column(Kernel::service(Connection::class)->executeQuery($query, $this->inner_params, $this->inner_types)->fetchAllAssociative(), 'nb_images', 'period');
+        $level_items = $this->calRepo->findNavBarPeriodImageCounts(
+            $levelSql,
+            $this->inner_sql,
+            $this->getDateWhere($level),
+            $this->inner_params,
+            $this->inner_types,
+        );
 
         $chronologyDate = $this->chronologyDate;
 
@@ -308,20 +311,21 @@ $this->getDateWhere($level).'
                 $sub_queries[] = ($levelSql);
             }
         }
-        $query = 'SELECT '.SqlExpr::concatWs($sub_queries, '-').' AS period';
-        $query .= $this->inner_sql .'
-AND ' . $this->date_field . ' IS NOT NULL
-GROUP BY period';
-
         $stringDate = [];
         foreach ($chronologyDate as $d) {
             $stringDate[] = (string) $d;
         }
         $current = implode('-', $stringDate);
-        $upper_items = array_column(Kernel::service(Connection::class)->executeQuery($query, $this->inner_params, $this->inner_types)->fetchAllAssociative(), 'period');
+        $upper_items = $this->calRepo->findChronologyPeriods(
+            SqlExpr::concatWs($sub_queries, '-'),
+            $this->inner_sql,
+            $this->date_field,
+            $this->inner_params,
+            $this->inner_types,
+        );
 
-        usort($upper_items, fn (mixed $a, mixed $b): int => version_compare(is_scalar($a) ? (string) $a : '', is_scalar($b) ? (string) $b : ''));
-        $upper_items_str = array_map(fn (mixed $x): string => is_scalar($x) ? (string) $x : '', $upper_items);
+        usort($upper_items, static fn (string $a, string $b): int => version_compare($a, $b));
+        $upper_items_str = $upper_items;
         $upper_items_rank = array_flip($upper_items_str);
         if (!isset($upper_items_rank[$current])) {
             $upper_items_str[] = $current;// just in case (external link)

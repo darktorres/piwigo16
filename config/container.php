@@ -31,6 +31,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Cache\CacheFactory;
+use Piwigo\Calendar\CalendarRepository;
 use Piwigo\Calendar\CalendarService;
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryDefaultRenderer;
@@ -218,7 +219,8 @@ return [
     CommentService::class  => factory(static fn (Connection $conn, CommentRepository $repo, LangService $lang, MailService $mail, PermissionService $perm, UrlGenerator $ug, UrlService $u, EphemeralKeyService $eks, EventDispatcherInterface $dispatcher): CommentService => new CommentService($conn, $repo, $lang, $mail, $perm, $ug, $u, $eks, $dispatcher)),
     AuthService::class         => factory(static fn (UserRepository $u, AuthKeyRepository $ak, Connection $conn, ActivityLogger $al, SessionService $sess, UrlGenerator $ug, UrlService $us, DateService $d, LanguageService $lang, EventDispatcherInterface $dispatcher, Paths $paths): AuthService => new AuthService($u, $ak, $conn, $al, $sess, $ug, $us, $d, $lang, $dispatcher, $paths)),
     PasswordService::class     => factory(static fn (Connection $conn, AuthService $auth, MailService $mail, PermissionService $perm, PreferencesService $pref, UrlGenerator $ug, UserRepository $u, UserService $us, ActivityLogger $al): PasswordService => new PasswordService($conn, $auth, $mail, $perm, $pref, $ug, $u, $us, $al)),
-    CalendarService::class     => factory(static fn (CategoryService $cat, Connection $conn, DebugCollector $dbg, PermissionService $perm, UrlService $us, CacheItemPoolInterface $pool): CalendarService => new CalendarService($cat, $conn, $dbg, $perm, $us, $pool)),
+    CalendarRepository::class  => factory(static fn (Connection $conn): CalendarRepository => new CalendarRepository($conn, Config::dbPrefix())),
+    CalendarService::class     => factory(static fn (CalendarRepository $cr, CategoryService $cat, DebugCollector $dbg, PermissionService $perm, UrlService $us, CacheItemPoolInterface $pool): CalendarService => new CalendarService($cr, $cat, $dbg, $perm, $us, $pool)),
     MailService::class         => factory(static fn (Connection $conn, UrlGenerator $ug, UserRepository $u, LangService $lang, AuthService $auth, UrlService $us, EventDispatcherInterface $dispatcher, Paths $paths): MailService => new MailService($conn, $ug, $u, $lang, $auth, $us, $dispatcher, $paths)),
     PermissionService::class   => factory(static fn (Connection $conn, HtmlService $h): PermissionService => new PermissionService($conn, $h)),
     PreferencesService::class  => factory(static fn (LanguageService $lang, UserRepository $r): PreferencesService => new PreferencesService($lang, $r)),

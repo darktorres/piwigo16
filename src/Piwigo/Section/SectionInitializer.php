@@ -199,6 +199,23 @@ final readonly class SectionInitializer
             'AND'
         );
 
+        // Closure for "SELECT DISTINCT(id) FROM images JOIN image_category
+        // WHERE <X> $forbidden ORDER BY <config> [LIMIT N]" — used by 4
+        // section branches below (recent_pics, most_visited, best_rated, list).
+        // F5-c will swap the body for parameterized binding when the
+        // PermissionService API returns a tuple.
+        $sectionImageIds =
+            /** @return list<int|string> */
+            function (string $whereClause, ?int $limit = null) use ($forbidden): array {
+                $query = 'SELECT DISTINCT(id) FROM ' . Tables::images()
+                    . ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id'
+                    . ' WHERE ' . $whereClause . ' ' . $forbidden . ' ' . Config::orderBy();
+                if ($limit !== null) {
+                    $query .= ' LIMIT ' . $limit;
+                }
+                return array_column($this->conn->executeQuery($query . ';')->fetchAllAssociative(), 'id');
+            };
+
         // ── Categories ────────────────────────────────────────────────────────
 
         if ($section === 'categories') {
@@ -378,16 +395,9 @@ SELECT image_id
                     Config::orderBy()
                 ));
             }
-            $query = '
-SELECT DISTINCT(id)
-  FROM ' . Tables::images() . '
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
-  WHERE ' . $this->permissionService->getRecentPhotosSql('date_available') . '
-  ' . $forbidden . Config::orderBy() . '
-;';
             $page = array_merge($page, [
                 'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Recent photos') . '</a>',
-                'items' => array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'),
+                'items' => $sectionImageIds($this->permissionService->getRecentPhotosSql('date_available')),
             ]);
         } elseif ($section === 'recent_cats') {
             $page = array_merge($page, [
@@ -396,50 +406,24 @@ SELECT DISTINCT(id)
         } elseif ($section === 'most_visited') {
             $page['super_order_by'] = true;
             Config::override('order_by', ' ORDER BY hit DESC, id DESC');
-            $query = '
-SELECT DISTINCT(id)
-  FROM ' . Tables::images() . '
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
-  WHERE hit > 0
-    ' . $forbidden . '
-    ' . Config::orderBy() . '
-  LIMIT ' . Config::topNumber() . '
-;';
             $page = array_merge($page, [
                 'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">'
                            . Config::topNumber() . ' ' . Lang::t('Most visited') . '</a>',
-                'items' => array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'),
+                'items' => $sectionImageIds('hit > 0', Config::topNumber()),
             ]);
         } elseif ($section === 'best_rated') {
             $page['super_order_by'] = true;
             Config::override('order_by', ' ORDER BY rating_score DESC, id DESC');
-            $query = '
-SELECT DISTINCT(id)
-  FROM ' . Tables::images() . '
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
-  WHERE rating_score IS NOT NULL
-    ' . $forbidden . '
-    ' . Config::orderBy() . '
-  LIMIT ' . Config::topNumber() . '
-;';
             $page = array_merge($page, [
                 'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">'
                            . Config::topNumber() . ' ' . Lang::t('Best rated') . '</a>',
-                'items' => array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'),
+                'items' => $sectionImageIds('rating_score IS NOT NULL', Config::topNumber()),
             ]);
         } elseif ($section === 'list') {
             $listIds = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $pageList);
-            $query   = '
-SELECT DISTINCT(id)
-  FROM ' . Tables::images() . '
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
-  WHERE image_id IN (' . implode(',', $listIds) . ')
-    ' . $forbidden . '
-  ' . Config::orderBy() . '
-;';
-            $page = array_merge($page, [
+            $page    = array_merge($page, [
                 'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Random photos') . '</a>',
-                'items' => array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'),
+                'items' => $sectionImageIds('image_id IN (' . implode(',', $listIds) . ')'),
             ]);
         }
 

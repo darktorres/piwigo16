@@ -16,6 +16,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Lifecycle\LoadingLang;
@@ -44,6 +45,7 @@ final readonly class MailService
         private AuthService $authService,
         private UrlService $urlService,
         private EventDispatcherInterface $dispatcher,
+        private Paths $paths,
     ) {
     }
 
@@ -185,7 +187,7 @@ final readonly class MailService
 
     public function getMailTemplate(string $emailFormat): Template
     {
-        return new Template(PHPWG_ROOT_PATH . 'themes', '_base', 'template/mail/' . $emailFormat);
+        return new Template($this->paths->root . 'themes', '_base', 'template/mail/' . $emailFormat);
     }
 
     public function getStrEmailFormat(bool $isHtml): string
@@ -223,7 +225,7 @@ final readonly class MailService
             }
 
             $this->dispatcher->dispatch(new LoadingLang());
-            $this->langService->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['language' => $language, 'no_fallback' => true, 'local' => true]);
+            $this->langService->loadLanguage('lang', $this->paths->root . PWG_LOCAL_DIR, ['language' => $language, 'no_fallback' => true, 'local' => true]);
 
             LanguageStack::saveState($language);
             Translator::saveForLanguage($language);
@@ -725,7 +727,7 @@ SELECT
         $info     = LanguageStack::info();
         $langCode = is_scalar($info['code'] ?? null) ? (string) $info['code'] : '';
 
-        $dir = PHPWG_ROOT_PATH . Config::dataLocation() . 'tmp';
+        $dir = $this->paths->root . Config::dataLocation() . 'tmp';
         if (Filesystem::mkgetdir($dir, Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR)) {
             $filename = $dir . '/mail.' . stripslashes(CurrentUser::get()->username) . '.' . $langCode . '-' . date('YmdHis') . ($success ? '' : '.ERROR');
             if ($args['content_format'] == 'text/plain') {

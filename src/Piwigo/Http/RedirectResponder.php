@@ -9,6 +9,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
+use Piwigo\Core\Paths;
 use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Lang\LangService;
 use Piwigo\Page\PageHeaderRenderer;
@@ -36,6 +37,7 @@ final readonly class RedirectResponder
     public function __construct(
         private LangService $langService,
         private EventDispatcherInterface $dispatcher,
+        private Paths $paths,
     ) {
     }
 
@@ -66,11 +68,11 @@ final readonly class RedirectResponder
             CurrentUser::setRawAttributes(Kernel::service(UserService::class)->buildUser(Config::guestId(), true));
             $this->langService->loadLanguage('common.lang');
             $this->dispatcher->dispatch(new LoadingLang());
-            $this->langService->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
-            $tpl = new Template(PHPWG_ROOT_PATH . 'themes', Kernel::service(UserService::class)->getDefaultTheme());
+            $this->langService->loadLanguage('lang', $this->paths->root . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
+            $tpl = new Template($this->paths->root . 'themes', Kernel::service(UserService::class)->getDefaultTheme());
             TemplateRegistry::set($tpl);
         } elseif (RequestContextRegistry::current() === RequestContext::Admin) {
-            $tpl = new Template(PHPWG_ROOT_PATH . 'themes', Kernel::service(UserService::class)->getDefaultTheme());
+            $tpl = new Template($this->paths->root . 'themes', Kernel::service(UserService::class)->getDefaultTheme());
             TemplateRegistry::set($tpl);
         }
 

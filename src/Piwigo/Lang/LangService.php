@@ -10,12 +10,17 @@ use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
+use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
 final class LangService
 {
+    public function __construct(private readonly Paths $paths)
+    {
+    }
+
     public function l10n(?string $key, string|int|float|bool|null ...$args): string
     {
         return Lang::t($key ?? '', ...$args);
@@ -101,7 +106,7 @@ final class LangService
             $parent = $info['parent'] ?? null;
             return is_string($parent) && $parent !== '' ? $parent : null;
         }
-        $f = PHPWG_ROOT_PATH . 'language/' . $langId . '/common.lang.php';
+        $f = $this->paths->root . 'language/' . $langId . '/common.lang.php';
         if (file_exists($f)) {
             include $f;
             /** @var array<string,mixed> $lang_info */
@@ -121,7 +126,7 @@ final class LangService
         }
 
         if (empty($dirname)) {
-            $dirname = PHPWG_ROOT_PATH;
+            $dirname = $this->paths->root;
         }
         $langDir = $dirname . 'language/';
 

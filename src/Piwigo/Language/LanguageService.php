@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Language;
 
+use Piwigo\Core\Paths;
+
 final readonly class LanguageService
 {
     public function __construct(
         private LanguageRepository $languageRepository,
+        private Paths $paths,
     ) {
     }
 
@@ -16,7 +19,7 @@ final readonly class LanguageService
     {
         $languages = [];
         foreach ($this->languageRepository->findIdNameMap() as $id => $name) {
-            if (is_dir(PHPWG_ROOT_PATH . 'language/' . $id)) {
+            if (is_dir($this->paths->root . 'language/' . $id)) {
                 $languages[$id] = $name;
             }
         }

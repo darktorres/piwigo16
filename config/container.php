@@ -187,11 +187,13 @@ return [
     Config::class          => factory(fn () => Config::instance()),
     Translator::class      => factory(fn () => Translator::get()),
     PageState::class       => factory(fn () => PageState::current()),
-    // Filesystem layout of this install. Derived from PHPWG_ROOT_PATH during
-    // the Phase 1 transition (single source of truth in index.php). Later
-    // phases will replace this with a Paths instance threaded explicitly
-    // through Container::build() so PHPWG_ROOT_PATH can be deleted.
-    Paths::class           => factory(static fn (): Paths => Paths::fromRoot(PHPWG_ROOT_PATH)),
+    // Filesystem layout of this install. Derived from this file's own
+    // location (config/container.php → parent dir = install root). Decoupled
+    // from PHPWG_ROOT_PATH because that constant carries URL-relative
+    // semantics ('./'); Paths must be absolute for filesystem operations.
+    // Phase 4 will replace this with a Paths instance threaded explicitly
+    // through Container::build().
+    Paths::class           => factory(static fn (): Paths => Paths::fromRoot(dirname(__DIR__))),
     LoggerInterface::class => factory(
         fn () => LoggerRegistry::isInitialized() ? LoggerRegistry::current() : new NullLogger()
     ),
@@ -220,7 +222,7 @@ return [
     AuthService::class         => factory(static fn (UserRepository $u, AuthKeyRepository $ak, Connection $conn, ActivityLogger $al, SessionService $sess, UrlGenerator $ug, UrlService $us, DateService $d, LanguageService $lang, EventDispatcherInterface $dispatcher): AuthService => new AuthService($u, $ak, $conn, $al, $sess, $ug, $us, $d, $lang, $dispatcher)),
     PasswordService::class     => factory(static fn (AuthService $auth, MailService $mail, PermissionService $perm, PreferencesService $pref, UrlGenerator $ug, UserRepository $u, UserService $us, ActivityLogger $al): PasswordService => new PasswordService($auth, $mail, $perm, $pref, $ug, $u, $us, $al)),
     CalendarService::class     => factory(static fn (CategoryService $cat, Connection $conn, DebugCollector $dbg, PermissionService $perm, UrlService $us, CacheItemPoolInterface $pool): CalendarService => new CalendarService($cat, $conn, $dbg, $perm, $us, $pool)),
-    MailService::class         => factory(static fn (Connection $conn, UrlGenerator $ug, UserRepository $u, LangService $lang, AuthService $auth, UrlService $us, EventDispatcherInterface $dispatcher): MailService => new MailService($conn, $ug, $u, $lang, $auth, $us, $dispatcher)),
+    MailService::class         => factory(static fn (Connection $conn, UrlGenerator $ug, UserRepository $u, LangService $lang, AuthService $auth, UrlService $us, EventDispatcherInterface $dispatcher, Paths $paths): MailService => new MailService($conn, $ug, $u, $lang, $auth, $us, $dispatcher, $paths)),
     PermissionService::class   => factory(static fn (Connection $conn, HtmlService $h): PermissionService => new PermissionService($conn, $h)),
     PreferencesService::class  => factory(static fn (LanguageService $lang, UserRepository $r): PreferencesService => new PreferencesService($lang, $r)),
     UserService::class         => factory(static fn (UserRepository $u, Connection $conn, HistoryRepository $h, ActivityRepository $a, GroupRepository $g, AuthKeyRepository $ak, ActivityLogger $al, ExecutionMutex $mutex, LangService $lang, UrlGenerator $ug, MailService $mail, MessageBusInterface $bus, HtmlService $html, DateService $date, CategoryService $cat, UserAdminService $uas, SessionService $sess, AuthService $auth, PreferencesService $pref, PermissionService $perm, LanguageService $langSvc, ThemeService $theme, EventDispatcherInterface $dispatcher): UserService => new UserService($u, $conn, $h, $a, $g, $ak, $al, $mutex, $lang, $ug, $mail, $bus, $html, $date, $cat, $uas, $sess, $auth, $pref, $perm, $langSvc, $theme, $dispatcher)),
@@ -323,7 +325,7 @@ return [
     HistoryAdminService::class       => factory(static fn (Connection $conn, HistoryRepository $hR): HistoryAdminService => new HistoryAdminService($conn, $hR)),
     WsHelper::class                  => factory(static fn (PermissionService $perm, UrlService $us): WsHelper => new WsHelper($perm, $us)),
     DateService::class         => factory(static fn (): DateService => new DateService()),
-    LangService::class         => factory(static fn (): LangService => new LangService()),
+    LangService::class         => factory(static fn (Paths $paths): LangService => new LangService($paths)),
     ConfigService::class       => factory(static fn (Connection $conn): ConfigService => new ConfigService($conn)),
     QueryHelper::class         => factory(static fn (Connection $conn): QueryHelper => new QueryHelper($conn)),
     ActivityLogger::class      => factory(static fn (Connection $conn, HistoryRepository $hist, HistoryAdminService $histA, PermissionService $perm, UserRepository $u, EventDispatcherInterface $d): ActivityLogger => new ActivityLogger($conn, $hist, $histA, $perm, $u, $d)),
@@ -333,9 +335,9 @@ return [
     EphemeralKeyService::class => factory(static fn (): EphemeralKeyService => new EphemeralKeyService()),
     ExecutionMutex::class      => factory(static fn (Connection $conn, ConfigService $cfg, LoggerInterface $log): ExecutionMutex => new ExecutionMutex($conn, $cfg, $log)),
     InputValidator::class      => factory(static fn (): InputValidator => new InputValidator()),
-    LanguageService::class     => factory(static fn (LanguageRepository $r): LanguageService => new LanguageService($r)),
+    LanguageService::class     => factory(static fn (LanguageRepository $r, Paths $paths): LanguageService => new LanguageService($r, $paths)),
     PaginationService::class   => factory(static fn (): PaginationService => new PaginationService()),
-    RedirectResponder::class   => factory(static fn (LangService $lang, EventDispatcherInterface $dispatcher): RedirectResponder => new RedirectResponder($lang, $dispatcher)),
+    RedirectResponder::class   => factory(static fn (LangService $lang, EventDispatcherInterface $dispatcher, Paths $paths): RedirectResponder => new RedirectResponder($lang, $dispatcher, $paths)),
     TelemetryService::class    => factory(static fn (Connection $conn, ConfigService $cfg, LoggerInterface $log, AdminService $admin, ExecutionMutex $mutex): TelemetryService => new TelemetryService($conn, $cfg, $log, $admin, $mutex)),
     ThemeService::class        => factory(static fn (ThemeRepository $r, EventDispatcherInterface $dispatcher): ThemeService => new ThemeService($r, $dispatcher)),
     ThemeRegistry::class       => factory(static fn (ThemeRepository $r, LoggerInterface $log, EventDispatcherInterface $dispatcher, Paths $paths): ThemeRegistry => new ThemeRegistry($r, $log, $paths->root . 'themes', $paths->root . 'docs/schemas/theme.schema.json', $dispatcher)),

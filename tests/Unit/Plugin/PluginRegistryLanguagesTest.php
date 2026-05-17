@@ -38,7 +38,7 @@ final class PluginRegistryLanguagesTest extends TestCase
         InstallSentinel::markUninstalled();
         Lang::reset();
         Translator::reset();
-        $this->lang = new LangService();
+        $this->lang = new LangService(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
     }
 
     #[\Override]

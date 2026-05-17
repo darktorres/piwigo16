@@ -17,6 +17,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ZipExtractor;
 use Piwigo\Http\RedirectResponder;
@@ -56,6 +57,7 @@ final class Updates
         private readonly ActivityLogger $activityLogger,
         private readonly RedirectResponder $redirectResponder,
         private readonly IgnoredUpdatesRepository $ignoredUpdates,
+        private readonly Paths $paths,
     ) {
         $this->types = [ExtensionType::Plugin, ExtensionType::Theme, ExtensionType::Language];
         $this->default_themes = ['modus', 'elegant', 'smartpocket'];
@@ -520,15 +522,15 @@ final class Updates
 
     public function processObsoleteList(string $file): void
     {
-        if (file_exists(PHPWG_ROOT_PATH.$file)
-          and ($old_files = file(PHPWG_ROOT_PATH.$file, FILE_IGNORE_NEW_LINES)) !== false) {
+        if (file_exists($this->paths->root . $file)
+          and ($old_files = file($this->paths->root . $file, FILE_IGNORE_NEW_LINES)) !== false) {
             $old_files[] = $file;
             foreach ($old_files as $old_file) {
-                $path = PHPWG_ROOT_PATH.$old_file;
+                $path = $this->paths->root . $old_file;
                 if (is_file($path)) {
                     Filesystem::tryUnlink($path);
                 } elseif (is_dir($path)) {
-                    $this->adminService->deltree($path, PHPWG_ROOT_PATH.'_trash');
+                    $this->adminService->deltree($path, $this->paths->root . '_trash');
                 }
             }
         }
@@ -554,11 +556,11 @@ final class Updates
             $code = $upgrade_to;
             $dl_code = $code;
             $remove_path = version_compare($code, '2.0.8', '>=') ? 'piwigo' : 'piwigo-'.$code;
-            $obsolete_list = PHPWG_ROOT_PATH.'install/obsolete.list';
+            $obsolete_list = $this->paths->root . 'install/obsolete.list';
         }
 
         if (empty(PageState::current()->errors)) {
-            $path = PHPWG_ROOT_PATH.Config::dataLocation().'update';
+            $path = $this->paths->root . Config::dataLocation() . 'update';
             $filename = $path.'/'.$code.'.zip';
             Filesystem::mkgetdir($path);
 
@@ -588,7 +590,7 @@ final class Updates
 
             $filesize = Filesystem::tryFilesize($filename);
             if ($filesize !== false && $filesize > 0) {
-                $result = ZipExtractor::extract($filename, PHPWG_ROOT_PATH, $remove_path, null, 0755);
+                $result = ZipExtractor::extract($filename, $this->paths->root, $remove_path, null, 0755);
                 if ($result !== []) {
                     //Check if all files were extracted
                     $error = '';
@@ -598,8 +600,8 @@ final class Updates
                         $extractStoredName = $extract['stored_filename'];
                         if (!in_array($extractStatus, ['ok', 'filtered', 'already_a_directory'])) {
                             // Try to change chmod and extract
-                            $retry = Filesystem::tryChmod(PHPWG_ROOT_PATH.$extractFilename, Config::chmodValue())
-                              ? ZipExtractor::extract($filename, PHPWG_ROOT_PATH, $remove_path, [$extractStoredName], 0755)
+                            $retry = Filesystem::tryChmod($this->paths->root . $extractFilename, Config::chmodValue())
+                              ? ZipExtractor::extract($filename, $this->paths->root, $remove_path, [$extractStoredName], 0755)
                               : [];
                             $retryEntry = array_find($retry, fn ($row): bool => $row['stored_filename'] === $extractStoredName);
                             if ($retryEntry !== null && $retryEntry['status'] === 'ok') {
@@ -615,7 +617,7 @@ final class Updates
                             $this->processObsoleteList($obsolete_list);
                         }
 
-                        $this->adminService->deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
+                        $this->adminService->deltree($this->paths->root . Config::dataLocation() . 'update');
                         $this->userAdminService->invalidateUserCache(true);
                         $this->configService->confUpdateParam('piwigo_installed_version', $upgrade_to);
                         $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'update', ['from_version' => AppInfo::VERSION, 'to_version' => $upgrade_to]));
@@ -634,7 +636,7 @@ final class Updates
                             $this->redirectResponder->redirect(UrlService::getRootUrl() . 'index.php?/upgrade');
                         }
                     } else {
-                        file_put_contents(PHPWG_ROOT_PATH.Config::dataLocation().'update/log_error.txt', $error);
+                        file_put_contents($this->paths->root . Config::dataLocation() . 'update/log_error.txt', $error);
 
                         PageState::current()->addError(Lang::t(
                             'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
@@ -642,7 +644,7 @@ final class Updates
                         ));
                     }
                 } else {
-                    $this->adminService->deltree(PHPWG_ROOT_PATH.Config::dataLocation().'update');
+                    $this->adminService->deltree($this->paths->root . Config::dataLocation() . 'update');
                     PageState::current()->addError(Lang::t('An error has occured during upgrade.'));
                 }
             } else {

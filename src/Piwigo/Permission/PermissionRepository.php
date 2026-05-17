@@ -231,4 +231,124 @@ final class PermissionRepository extends AbstractRepository
            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();
     }
+
+    /**
+     * Return user_ids that have direct access to the given category.
+     *
+     * @return list<int>
+     */
+    public function findUserAccessUserIdsByCategoryId(int $catId): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('user_id')
+            ->from($this->table('user_access'))
+            ->where('cat_id = :catId')
+            ->setParameter('catId', $catId)
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return group_ids that have access to the given category.
+     *
+     * @return list<int>
+     */
+    public function findGroupAccessGroupIdsByCategoryId(int $catId): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('group_id')
+            ->from($this->table('group_access'))
+            ->where('cat_id = :catId')
+            ->setParameter('catId', $catId)
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Prune user_access rows in the given categories whose user_id is NOT in
+     * the keep list. Used when a parent category turns private to align its
+     * subcategory ACLs with the parent's.
+     *
+     * @param list<int> $keepUserIds  May contain -1 sentinel when empty.
+     * @param list<int> $catIds
+     */
+    public function deleteUserAccessNotInForCategoryIds(array $keepUserIds, array $catIds): void
+    {
+        if ($catIds === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('user_access'))
+            ->where($this->conn->createQueryBuilder()->expr()->in('cat_id', ':catIds'))
+            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
+        if ($keepUserIds !== []) {
+            $qb->andWhere($qb->expr()->notIn('user_id', ':keepUserIds'))
+               ->setParameter('keepUserIds', $keepUserIds, ArrayParameterType::INTEGER);
+        }
+        $qb->executeStatement();
+    }
+
+    /**
+     * Prune group_access rows in the given categories whose group_id is NOT
+     * in the keep list. Used when a parent category turns private to align
+     * its subcategory ACLs with the parent's.
+     *
+     * @param list<int> $keepGroupIds  May contain -1 sentinel when empty.
+     * @param list<int> $catIds
+     */
+    public function deleteGroupAccessNotInForCategoryIds(array $keepGroupIds, array $catIds): void
+    {
+        if ($catIds === []) {
+            return;
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('group_access'))
+            ->where($this->conn->createQueryBuilder()->expr()->in('cat_id', ':catIds'))
+            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
+        if ($keepGroupIds !== []) {
+            $qb->andWhere($qb->expr()->notIn('group_id', ':keepGroupIds'))
+               ->setParameter('keepGroupIds', $keepGroupIds, ArrayParameterType::INTEGER);
+        }
+        $qb->executeStatement();
+    }
+
+    /**
+     * Insert group_access rows atomically. Each row {group_id, cat_id}.
+     *
+     * @param list<array{group_id: int, cat_id: int}> $rows
+     */
+    public function insertGroupAccessRows(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $this->conn->insert($this->table('group_access'), $row);
+            }
+        });
+    }
+
+    /**
+     * Insert user_access rows atomically with INSERT IGNORE so duplicates of
+     * the (user_id, cat_id) PK are silently skipped.
+     *
+     * @param list<array{user_id: int, cat_id: int}> $rows
+     */
+    public function insertUserAccessIgnoreDuplicates(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $this->conn->executeStatement(
+                    'INSERT IGNORE INTO ' . $this->table('user_access') . ' (user_id, cat_id) VALUES (?, ?)',
+                    [$row['user_id'], $row['cat_id']],
+                );
+            }
+        });
+    }
 }

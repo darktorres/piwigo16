@@ -251,11 +251,12 @@ return [
     CategoryAdminService::class      => factory(static function (ContainerInterface $c): CategoryAdminService {
         return (new \ReflectionClass(CategoryAdminService::class))->newLazyProxy(
             static fn (): CategoryAdminService => new CategoryAdminService(
-                $c->get(Connection::class),
                 $c->get(CategoryRepository::class),
                 $c->get(CategoryService::class),
                 $c->get(ImageAdminService::class),
                 $c->get(ImageRepository::class),
+                $c->get(PermissionRepository::class),
+                $c->get(SiteRepository::class),
                 $c->get(UserAdminService::class),
                 $c->get(ActivityLogger::class),
                 $c->get(ExecutionMutex::class),

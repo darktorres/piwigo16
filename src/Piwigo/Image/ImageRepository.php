@@ -743,6 +743,81 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Return every distinct, non-null `storage_category_id` from the images table.
+     *
+     * @return list<int>
+     */
+    public function findDistinctStorageCategoryIds(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('DISTINCT storage_category_id')
+            ->from($this->table('images'))
+            ->where('storage_category_id IS NOT NULL')
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return the oldest lounge entry joined with its image, including the
+     * server's NOW(). Used by lounge age-out cleanup.
+     *
+     * @return array{image_id: int, date_available: string, dbnow: string}|null
+     */
+    public function findOldestLoungeEntry(): ?array
+    {
+        $row = $this->conn->executeQuery(
+            'SELECT image_id, date_available, NOW() AS dbnow FROM ' . $this->table('lounge') . ' JOIN ' . $this->table('images') . ' ON image_id = id ORDER BY image_id ASC LIMIT 1'
+        )->fetchAssociative();
+        if ($row === false) {
+            return null;
+        }
+        return [
+            'image_id'       => is_numeric($row['image_id']) ? (int) $row['image_id'] : 0,
+            'date_available' => is_string($row['date_available'] ?? null) ? $row['date_available'] : '',
+            'dbnow'          => is_string($row['dbnow'] ?? null) ? $row['dbnow'] : '',
+        ];
+    }
+
+    /**
+     * Return every (image_id, category_id) row in the lounge, ordered for
+     * batch processing by emptyLounge().
+     *
+     * @return list<array{image_id: int, category_id: int}>
+     */
+    public function findAllLoungeEntries(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT image_id, category_id FROM ' . $this->table('lounge') . ' ORDER BY category_id ASC, image_id ASC'
+        )->fetchAllAssociative();
+        return array_map(static fn (array $row): array => [
+            'image_id'    => is_numeric($row['image_id']) ? (int) $row['image_id'] : 0,
+            'category_id' => is_numeric($row['category_id']) ? (int) $row['category_id'] : 0,
+        ], $rows);
+    }
+
+    /**
+     * Insert lounge rows atomically with INSERT IGNORE so duplicates of the
+     * (image_id, category_id) PK are silently skipped.
+     *
+     * @param list<array{image_id: int, category_id: int}> $rows
+     */
+    public function insertLoungeIgnoreDuplicates(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $this->conn->executeStatement(
+                    'INSERT IGNORE INTO ' . $this->table('lounge') . ' (image_id, category_id) VALUES (?, ?)',
+                    [$row['image_id'], $row['category_id']],
+                );
+            }
+        });
+    }
+
+    /**
      * Find image ids in the given user's favorites, subject to the caller's
      * permission filter and ORDER BY suffix.
      *

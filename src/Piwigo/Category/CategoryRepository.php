@@ -66,6 +66,26 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
+     * Delete categories and their permalink history atomically. FK CASCADE
+     * clears child rows in image_category, user_access, group_access,
+     * user_cache_categories; FK SET NULL nulls images.storage_category_id and
+     * self-ref categories.id_uppercat (subtree promotion). old_permalinks has
+     * no FK, hence the explicit cleanup.
+     *
+     * @param int[] $ids
+     */
+    public function deleteCategoriesAndPermalinksAtomically(array $ids): void
+    {
+        if ($ids === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($ids): void {
+            $this->deleteByIds($ids);
+            $this->deletePermalinksByCategoryIds($ids);
+        });
+    }
+
+    /**
      * Delete permalink history for the given category ids.
      *
      * @param int[] $categoryIds
@@ -872,5 +892,386 @@ final class CategoryRepository extends AbstractRepository
         $types  = [ParameterType::STRING, ...$permTypes];
         $rows = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'id'));
+    }
+
+    /**
+     * Find ids of categories whose `representative_picture_id` points at an
+     * image that no longer exists. Pass null to scan all categories, an int
+     * for a single category, or a list of ints to limit the scan.
+     *
+     * @param int|list<int>|null $scope
+     * @return list<int>
+     */
+    public function findIdsWithDeadRepresentative(int|array|null $scope = null): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('DISTINCT c.id')
+            ->from($this->table('categories'), 'c')
+            ->leftJoin('c', $this->table('images'), 'i', 'c.representative_picture_id = i.id')
+            ->where('c.representative_picture_id IS NOT NULL')
+            ->andWhere('i.id IS NULL');
+        if (is_int($scope)) {
+            $qb->andWhere('c.id = :scopeId')->setParameter('scopeId', $scope);
+        } elseif (is_array($scope) && $scope !== []) {
+            $qb->andWhere($qb->expr()->in('c.id', ':scopeIds'))
+               ->setParameter('scopeIds', $scope, ArrayParameterType::INTEGER);
+        }
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Find ids of categories that have linked images but no
+     * representative_picture_id set. Used by updateCategory() when
+     * allow_random_representative is off, to surface candidates for
+     * random-rep assignment. Scope follows {@see findIdsWithDeadRepresentative}.
+     *
+     * @param int|list<int>|null $scope
+     * @return list<int>
+     */
+    public function findIdsMissingRepresentativeAmong(int|array|null $scope = null): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('DISTINCT c.id')
+            ->from($this->table('categories'), 'c')
+            ->innerJoin('c', $this->table('image_category'), 'ic', 'c.id = ic.category_id')
+            ->where('c.representative_picture_id IS NULL');
+        if (is_int($scope)) {
+            $qb->andWhere('ic.category_id = :scopeId')->setParameter('scopeId', $scope);
+        } elseif (is_array($scope) && $scope !== []) {
+            $qb->andWhere($qb->expr()->in('ic.category_id', ':scopeIds'))
+               ->setParameter('scopeIds', $scope, ArrayParameterType::INTEGER);
+        }
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Prune rows in tables that point at a non-existent category id (FK
+     * orphans). With v17's FK CASCADE/SET NULL infrastructure most of these
+     * cannot actually occur, but `old_permalinks.cat_id` has no FK so the
+     * sweep remains useful there; the rest are harmless no-ops kept as a
+     * defensive safety net during the schema-upgrade transition.
+     */
+    public function pruneOrphanRelations(): void
+    {
+        $relations = [
+            $this->table('image_category')       => 'category_id',
+            $this->table('user_access')          => 'cat_id',
+            $this->table('group_access')         => 'cat_id',
+            $this->table('old_permalinks')       => 'cat_id',
+            $this->table('user_cache_categories') => 'cat_id',
+        ];
+        $catTable = $this->table('categories');
+        foreach ($relations as $table => $column) {
+            $orphans = $this->conn->executeQuery(
+                'SELECT DISTINCT ' . $column . ' FROM ' . $table . ' LEFT JOIN ' . $catTable . ' ON id = ' . $column . ' WHERE id IS NULL'
+            )->fetchFirstColumn();
+            $orphanIds = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $orphans);
+            if ($orphanIds === []) {
+                continue;
+            }
+            $this->conn->executeStatement(
+                'DELETE FROM ' . $table . ' WHERE ' . $column . ' IN (?)',
+                [$orphanIds],
+                [ArrayParameterType::INTEGER],
+            );
+        }
+    }
+
+    /**
+     * Persist new `rank` values for the given category ids atomically.
+     *
+     * @param list<array{id: int|string, rank: int}> $rows
+     */
+    public function setRanks(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $idInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
+                // `rank` is a MySQL 8.0 reserved word — backtick the set-array key.
+                $this->conn->update($this->table('categories'), ['`rank`' => $row['rank']], ['id' => $idInt]);
+            }
+        });
+    }
+
+    /**
+     * Persist new `rank` and `global_rank` values atomically.
+     *
+     * @param list<array{id: int|string, rank: int, global_rank: string}> $rows
+     */
+    public function setRanksAndGlobalRanks(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $idInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
+                // `rank` is a MySQL 8.0 reserved word — backtick the set-array key.
+                $this->conn->update($this->table('categories'), ['`rank`' => $row['rank'], 'global_rank' => $row['global_rank']], ['id' => $idInt]);
+            }
+        });
+    }
+
+    /**
+     * Update representative_picture_id for many categories atomically.
+     *
+     * @param list<array{id: int|string, representative_picture_id: int|null}> $rows
+     */
+    public function setRepresentatives(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $idInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
+                $this->conn->update($this->table('categories'), ['representative_picture_id' => $row['representative_picture_id']], ['id' => $idInt]);
+            }
+        });
+    }
+
+    /**
+     * Return id → dir for every physical category (dir IS NOT NULL).
+     *
+     * @return array<int, string>
+     */
+    public function findAllIdToDirMap(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id', 'dir')
+            ->from($this->table('categories'))
+            ->where('dir IS NOT NULL')
+            ->executeQuery()
+            ->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $idInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
+            $out[$idInt] = is_string($row['dir']) ? $row['dir'] : '';
+        }
+        return $out;
+    }
+
+    /**
+     * Return (id, uppercats, site_id) for physical categories in the given list.
+     *
+     * @param list<int> $ids
+     * @return list<array<string, mixed>>
+     */
+    public function findUppercatsAndSiteByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'uppercats', 'site_id')
+            ->from($this->table('categories'))
+            ->where('dir IS NOT NULL');
+        $qb->andWhere($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
+     * Return (id, id_uppercat, uppercats) rows for every category, keyed by id.
+     *
+     * @return array<int|string, array<string, mixed>>
+     */
+    public function findAllIdUppercatRowsKeyedById(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id', 'id_uppercat', 'uppercats')
+            ->from($this->table('categories'))
+            ->executeQuery()
+            ->fetchAllAssociative();
+        $keyed = [];
+        foreach ($rows as $row) {
+            $idKey = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
+            $keyed[$idKey] = $row;
+        }
+        return $keyed;
+    }
+
+    /**
+     * Update `uppercats` for many categories atomically.
+     *
+     * @param list<array{id: int|string, uppercats: string}> $rows
+     */
+    public function setUppercatsBatch(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $idInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
+                $this->conn->update($this->table('categories'), ['uppercats' => $row['uppercats']], ['id' => $idInt]);
+            }
+        });
+    }
+
+    /**
+     * Insert a virtual category with the given column values then fix up its
+     * `uppercats` column to include the new id. Returns the inserted id.
+     *
+     * @param array<string, mixed> $insert
+     */
+    public function insertVirtualAndFixUppercats(array $insert, string $uppercatsPrefix): int
+    {
+        $this->conn->insert($this->table('categories'), $insert);
+        $insertedId = (int) $this->conn->lastInsertId();
+        $this->conn->update($this->table('categories'), ['uppercats' => $uppercatsPrefix . $insertedId], ['id' => $insertedId]);
+        return $insertedId;
+    }
+
+    /**
+     * For each category in $catIds, return its current max(`rank`) in the
+     * image_category join, or omit it from the map if no ranked images exist.
+     *
+     * @param list<int> $catIds
+     * @return array<int, int>
+     */
+    public function findMaxImageRankPerCategoryIn(array $catIds): array
+    {
+        if ($catIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('category_id', 'MAX(`rank`) AS max_rank')
+            ->from($this->table('image_category'))
+            ->where('`rank` IS NOT NULL');
+        $qb->andWhere($qb->expr()->in('category_id', ':catIds'))
+           ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
+           ->groupBy('category_id');
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $catId = is_numeric($row['category_id']) ? (int) $row['category_id'] : 0;
+            $out[$catId] = is_numeric($row['max_rank']) ? (int) $row['max_rank'] : 0;
+        }
+        return $out;
+    }
+
+    /**
+     * Insert image_category links atomically. Each row {image_id, category_id, rank}.
+     * Caller is responsible for ensuring no duplicate (image_id, category_id) pairs.
+     *
+     * @param list<array{image_id: int, category_id: int, rank: int}> $rows
+     */
+    public function insertImageCategoryLinks(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                // `rank` is a MySQL 8.0 reserved word — backtick the set-array key.
+                $this->conn->insert($this->table('image_category'), [
+                    'image_id'    => $row['image_id'],
+                    'category_id' => $row['category_id'],
+                    '`rank`'      => $row['rank'],
+                ]);
+            }
+        });
+    }
+
+    /**
+     * Among $imageIds, return those that can be safely dissociated from
+     * $categoryId: image must exist AND its row in image_category for that
+     * category must not be the canonical "storage" link.
+     *
+     * @param list<int> $imageIds
+     * @return list<int>
+     */
+    public function findDissociableImageIdsForCategory(int $categoryId, array $imageIds): array
+    {
+        if ($imageIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('image_category'))
+            ->innerJoin($this->table('image_category'), $this->table('images'), 'i', 'image_id = i.id')
+            ->where('category_id = :catId')
+            ->setParameter('catId', $categoryId)
+            ->andWhere('(category_id != storage_category_id OR storage_category_id IS NULL)');
+        $qb->andWhere($qb->expr()->in('id', ':imageIds'))
+           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Delete image_category links for $imageIds, but only the non-storage
+     * (virtual) ones. If $keepCategoryIds is non-empty, skip links that point
+     * at any of those categories (used by moveImagesToCategories so the
+     * targets keep their existing virtual associations).
+     *
+     * @param list<int> $imageIds
+     * @param list<int> $keepCategoryIds
+     */
+    public function deleteVirtualImageCategoryLinksExcept(array $imageIds, array $keepCategoryIds): void
+    {
+        if ($imageIds === []) {
+            return;
+        }
+        $sql = 'DELETE ic.* FROM ' . $this->table('image_category') . ' ic'
+            . ' JOIN ' . $this->table('images') . ' i ON ic.image_id = i.id'
+            . ' WHERE i.id IN (?)'
+            . ' AND (i.storage_category_id IS NULL OR i.storage_category_id != ic.category_id)';
+        $params = [$imageIds];
+        $types  = [ArrayParameterType::INTEGER];
+        if ($keepCategoryIds !== []) {
+            $sql      = str_replace(
+                'WHERE i.id IN (?)',
+                'WHERE i.id IN (?) AND ic.category_id NOT IN (?)',
+                $sql,
+            );
+            $params[] = $keepCategoryIds;
+            $types[]  = ArrayParameterType::INTEGER;
+        }
+        $this->conn->executeStatement($sql, $params, $types);
+    }
+
+    /**
+     * Return image ids linked to any category in the given list.
+     *
+     * @param list<int> $categoryIds
+     * @return list<int>
+     */
+    public function findImageIdsLinkedToCategories(array $categoryIds): array
+    {
+        if ($categoryIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('image_id')
+            ->from($this->table('image_category'));
+        $qb->where($qb->expr()->in('category_id', ':catIds'))
+           ->setParameter('catIds', $categoryIds, ArrayParameterType::INTEGER);
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Update image_category `rank` for many image/category pairs atomically.
+     *
+     * @param list<array{image_id: int|string, category_id: int, rank: int}> $rows
+     */
+    public function setImageRanksInCategory(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $imageIdInt = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
+                // `rank` is a MySQL 8.0 reserved word — backtick the set-array key.
+                $this->conn->update(
+                    $this->table('image_category'),
+                    ['`rank`' => $row['rank']],
+                    ['image_id' => $imageIdInt, 'category_id' => $row['category_id']],
+                );
+            }
+        });
     }
 }

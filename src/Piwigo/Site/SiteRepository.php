@@ -55,4 +55,24 @@ final class SiteRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAllAssociative();
     }
+
+    /**
+     * Return id → galleries_url for every site.
+     *
+     * @return array<int, string>
+     */
+    public function findIdToGalleriesUrlMap(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id', 'galleries_url')
+            ->from($this->table('sites'))
+            ->executeQuery()
+            ->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $idInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
+            $out[$idInt] = is_string($row['galleries_url']) ? $row['galleries_url'] : '';
+        }
+        return $out;
+    }
 }

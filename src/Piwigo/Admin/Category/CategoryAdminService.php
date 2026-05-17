@@ -25,7 +25,6 @@ use Piwigo\Event\Album\EmptyLounge;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\UserRepository;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class CategoryAdminService
@@ -37,7 +36,6 @@ final readonly class CategoryAdminService
         private ImageAdminService $imageAdminService,
         private ImageRepository $imageRepository,
         private UserAdminService $userAdminService,
-        private UserRepository $userRepository,
         private ActivityLogger $activityLogger,
         private ExecutionMutex $mutex,
         private EventDispatcherInterface $dispatcher,
@@ -79,14 +77,14 @@ final readonly class CategoryAdminService
             }
         }
 
-        $catRepo2  = $this->categoryRepository;
-        $userRepo2 = $this->userRepository;
-        $catRepo2->deleteImageCategoryByCategoryIds($ids);
-        $userRepo2->deleteUserAccessByCategoryIds($ids);
-        $catRepo2->deleteGroupAccessByCategoryIds($ids);
+        $catRepo2 = $this->categoryRepository;
         $catRepo2->deleteByIds($ids);
+        // FK CASCADE clears the cat_id side of image_category, user_access,
+        // group_access, user_cache_categories. FK SET NULL nulls
+        // images.storage_category_id and self-ref categories.id_uppercat
+        // (subtree promotion). old_permalinks.cat_id has no FK — keep
+        // the manual cleanup.
         $catRepo2->deletePermalinksByCategoryIds($ids);
-        $userRepo2->deleteUserCacheByCategoryIds($ids);
 
         $this->dispatcher->dispatch(new DeleteCategories($ids));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $ids, 'delete', ['photo_deletion_mode' => $photoDeletionMode]));

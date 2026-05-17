@@ -48,23 +48,6 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
-     * Remove image→category links for the given category ids.
-     *
-     * @param int[] $categoryIds
-     */
-    public function deleteImageCategoryByCategoryIds(array $categoryIds): void
-    {
-        if ($categoryIds === []) {
-            return;
-        }
-        $qb = $this->conn->createQueryBuilder()
-            ->delete($this->table('image_category'));
-        $qb->where($qb->expr()->in('category_id', ':ids'))
-           ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER);
-        $qb->executeStatement();
-    }
-
-    /**
      * Delete categories by id.
      *
      * @param int[] $ids
@@ -93,23 +76,6 @@ final class CategoryRepository extends AbstractRepository
         }
         $qb = $this->conn->createQueryBuilder()
             ->delete($this->table('old_permalinks'));
-        $qb->where($qb->expr()->in('cat_id', ':ids'))
-           ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER);
-        $qb->executeStatement();
-    }
-
-    /**
-     * Delete group→category access records for the given category ids.
-     *
-     * @param int[] $categoryIds
-     */
-    public function deleteGroupAccessByCategoryIds(array $categoryIds): void
-    {
-        if ($categoryIds === []) {
-            return;
-        }
-        $qb = $this->conn->createQueryBuilder()
-            ->delete($this->table('group_access'));
         $qb->where($qb->expr()->in('cat_id', ':ids'))
            ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER);
         $qb->executeStatement();

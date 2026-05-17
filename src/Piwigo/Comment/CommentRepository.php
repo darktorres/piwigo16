@@ -197,24 +197,6 @@ final class CommentRepository extends AbstractRepository
         $qb->executeStatement();
     }
 
-    /**
-     * Delete all comments on the given images.
-     * Called when images are permanently deleted.
-     *
-     * @param int[] $imageIds
-     */
-    public function deleteByImageIds(array $imageIds): void
-    {
-        if ($imageIds === []) {
-            return;
-        }
-        $qb = $this->conn->createQueryBuilder()
-            ->delete($this->table('comments'));
-        $qb->where($qb->expr()->in('image_id', ':imageIds'))
-           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
-        $qb->executeStatement();
-    }
-
     /** Total number of comments (validated and unvalidated). */
     public function countAll(): int
     {

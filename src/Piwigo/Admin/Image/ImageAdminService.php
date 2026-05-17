@@ -10,7 +10,6 @@ use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
-use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Filesystem;
@@ -28,10 +27,8 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
-use Piwigo\Users\UserRepository;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class ImageAdminService
@@ -42,12 +39,9 @@ final class ImageAdminService
         private readonly Connection $conn,
         private readonly CategoryAdminService $categoryAdminService,
         private readonly CategoryRepository $categoryRepository,
-        private readonly CommentRepository $commentRepository,
         private readonly ConfigService $configService,
         private readonly ImageRepository $imageRepository,
-        private readonly TagRepository $tagRepository,
         private readonly UrlGenerator $urlGenerator,
-        private readonly UserRepository $userRepository,
         private readonly ActivityLogger $activityLogger,
         private readonly EventDispatcherInterface $dispatcher,
         private readonly Paths $paths,
@@ -115,20 +109,16 @@ final class ImageAdminService
                 return 0;
             }
         }
-        $imgRepo  = $this->imageRepository;
-        $catRepo  = $this->categoryRepository;
-        $comRepo  = $this->commentRepository;
-        $userRepo = $this->userRepository;
-        $tagRepo  = $this->tagRepository;
-        $comRepo->deleteByImageIds($ids);
-        $catRepo->deleteImageCategoryByImageIds($ids);
-        $imgRepo->deleteFormatsByImageIds($ids);
-        $tagRepo->deleteImageTagsByImageIds($ids);
-        $userRepo->deleteFavoritesByImageIds($ids);
-        $imgRepo->deleteRatingsByImageIds($ids);
-        $imgRepo->deleteCaddieByImageIds($ids);
-        $imgRepo->deleteByIds($ids);
+        // Find categories whose representative picture is in $ids BEFORE
+        // deleting — after the parent delete fires the FK SET NULL,
+        // categories.representative_picture_id is already NULL for those
+        // rows and the query would return nothing. updateCategory then
+        // picks a fresh representative for each affected category.
+        $catRepo     = $this->categoryRepository;
         $categoryIds = $catRepo->findIdsByRepresentativePicture($ids);
+        $this->imageRepository->deleteByIds($ids);
+        // FK CASCADE has cleared child rows in comments, image_category,
+        // image_format, image_tag, favorites, rate, caddie, lounge.
         if (count($categoryIds) > 0) {
             $this->categoryAdminService->updateCategory($categoryIds);
         }

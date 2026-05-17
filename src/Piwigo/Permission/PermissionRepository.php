@@ -193,23 +193,6 @@ final class PermissionRepository extends AbstractRepository
     }
 
     /**
-     * Delete all group_access entries for the given groups (no category filter).
-     *
-     * @param int[] $groupIds
-     */
-    public function deleteGroupAccessByGroups(array $groupIds): void
-    {
-        if ($groupIds === []) {
-            return;
-        }
-        $qb = $this->conn->createQueryBuilder()
-            ->delete($this->table('group_access'));
-        $qb->where($qb->expr()->in('group_id', ':groupIds'))
-           ->setParameter('groupIds', $groupIds, ArrayParameterType::INTEGER);
-        $qb->executeStatement();
-    }
-
-    /**
      * Delete group access entries for the given groups and categories.
      *
      * @param int[] $groupIds

@@ -40,25 +40,6 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
-     * Delete all user-related records from every dependent table.
-     * Call this before deleting the user from the users table itself.
-     */
-    public function deleteAllRelatedData(int $userId): void
-    {
-        foreach ([
-            'user_access', 'user_mail_notification', 'user_feed',
-            'user_cache', 'user_cache_categories', 'user_group',
-            'favorites', 'caddie', 'user_infos', 'user_auth_keys',
-        ] as $suffix) {
-            $this->conn->createQueryBuilder()
-                ->delete($this->table($suffix))
-                ->where('user_id = :userId')
-                ->setParameter('userId', $userId)
-                ->executeStatement();
-        }
-    }
-
-    /**
      * Delete the user row from the users table.
      *
      * $usersTable and $idField come from admin config (Config::usersTable,
@@ -121,39 +102,6 @@ final class UserRepository extends AbstractRepository
         $qb->executeStatement();
     }
 
-    /**
-     * Delete user→category access grants for the given category ids.
-     *
-     * @param int[] $categoryIds
-     */
-    public function deleteUserAccessByCategoryIds(array $categoryIds): void
-    {
-        if ($categoryIds === []) {
-            return;
-        }
-        $qb = $this->conn->createQueryBuilder()
-            ->delete($this->table('user_access'));
-        $qb->where($qb->expr()->in('cat_id', ':ids'))
-           ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER);
-        $qb->executeStatement();
-    }
-
-    /**
-     * Delete user category cache for the given category ids.
-     *
-     * @param int[] $categoryIds
-     */
-    public function deleteUserCacheByCategoryIds(array $categoryIds): void
-    {
-        if ($categoryIds === []) {
-            return;
-        }
-        $qb = $this->conn->createQueryBuilder()
-            ->delete($this->table('user_cache_categories'));
-        $qb->where($qb->expr()->in('cat_id', ':ids'))
-           ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER);
-        $qb->executeStatement();
-    }
 
     /** Total number of registered users. */
     public function countAll(string $usersTable): int

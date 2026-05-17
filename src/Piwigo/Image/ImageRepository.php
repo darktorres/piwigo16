@@ -473,56 +473,6 @@ final class ImageRepository extends AbstractRepository
         return $qb->executeQuery()->fetchAllAssociative();
     }
 
-    /**
-     * Delete alternate format records for the given image ids.
-     *
-     * @param int[] $imageIds
-     */
-    public function deleteFormatsByImageIds(array $imageIds): void
-    {
-        if ($imageIds === []) {
-            return;
-        }
-        $qb = $this->conn->createQueryBuilder()
-            ->delete($this->table('image_format'));
-        $qb->where($qb->expr()->in('image_id', ':imageIds'))
-           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
-        $qb->executeStatement();
-    }
-
-    /**
-     * Delete ratings for the given image ids (rate.element_id).
-     *
-     * @param int[] $imageIds
-     */
-    public function deleteRatingsByImageIds(array $imageIds): void
-    {
-        if ($imageIds === []) {
-            return;
-        }
-        $qb = $this->conn->createQueryBuilder()
-            ->delete($this->table('rate'));
-        $qb->where($qb->expr()->in('element_id', ':imageIds'))
-           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
-        $qb->executeStatement();
-    }
-
-    /**
-     * Remove caddie entries for the given image ids (caddie.element_id).
-     *
-     * @param int[] $imageIds
-     */
-    public function deleteCaddieByImageIds(array $imageIds): void
-    {
-        if ($imageIds === []) {
-            return;
-        }
-        $qb = $this->conn->createQueryBuilder()
-            ->delete($this->table('caddie'));
-        $qb->where($qb->expr()->in('element_id', ':imageIds'))
-           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
-        $qb->executeStatement();
-    }
 
     /**
      * Delete image rows by id.

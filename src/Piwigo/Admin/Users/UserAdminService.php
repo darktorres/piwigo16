@@ -18,7 +18,6 @@ use Piwigo\Event\User\DeleteGroup;
 use Piwigo\Event\User\DeleteUser;
 use Piwigo\Event\User\InvalidateUserCache;
 use Piwigo\Group\GroupRepository;
-use Piwigo\Permission\PermissionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
@@ -32,7 +31,6 @@ final readonly class UserAdminService
         private Connection $conn,
         private ConfigService $configService,
         private GroupRepository $groupRepository,
-        private PermissionRepository $permissionRepository,
         private SessionService $sessionService,
         private UserRepository $userRepository,
         private UserService $userService,
@@ -44,10 +42,15 @@ final readonly class UserAdminService
 
     public function deleteUser(int $userId): void
     {
-        $uRepo = $this->userRepository;
-        $uRepo->deleteAllRelatedData($userId);
+        // piwigo_sessions has no FK on user_id (session-id keyed); the
+        // sessions table holds serialized session payloads, not a
+        // user-row pointer the FK can hang off of. Manual cleanup stays.
         $this->sessionService->deleteUserSessions($userId);
-        $uRepo->deleteByUserId($userId, Tables::users(), Config::userFields()['id']);
+        $this->userRepository->deleteByUserId($userId, Tables::users(), Config::userFields()['id']);
+        // FK CASCADE on the user_id of: user_access, user_mail_notification,
+        // user_feed, user_cache, user_cache_categories, user_group,
+        // favorites, caddie, user_infos, user_auth_keys.
+        // FK SET NULL on: comments.author_id, images.added_by.
         $this->dispatcher->dispatch(new DeleteUser($userId));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'delete'));
     }
@@ -141,15 +144,13 @@ final readonly class UserAdminService
             }
         }
         $groupIdString = implode(',', $groupIds);
-        $permRepo      = $this->permissionRepository;
         $groupRepo     = $this->groupRepository;
-        $permRepo->deleteGroupAccessByGroups($groupIds);
-        $groupRepo->deleteUserGroupByGroupIds($groupIds);
         $groupList = array_column($this->conn->executeQuery(
             'SELECT id, name FROM `' . Tables::groups() . '` WHERE id IN (' . $groupIdString . ')'
         )->fetchAllAssociative(), 'name', 'id');
         $groupids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($groupList));
         $groupRepo->deleteByIds($groupIds);
+        // FK CASCADE clears group_access.group_id + user_group.group_id.
         $this->dispatcher->dispatch(new DeleteGroup($groupids));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $groupids, 'delete'));
         return $groupList;

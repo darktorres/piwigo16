@@ -6,6 +6,8 @@ namespace Piwigo\Job;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Job\Handler\BatchUploadHandler;
 use Piwigo\Job\Handler\GenerateDerivativeHandler;
 use Piwigo\Job\Handler\RegenerateAllDerivativesHandler;
@@ -43,7 +45,12 @@ final class MessengerFactory
         ]);
 
         /** @var array{transports: array<string, array<string,mixed>>, routing: array<string, string>} $messengerConfig */
-        $messengerConfig = require PHPWG_ROOT_PATH . 'config/messenger.php';
+        // Dynamic require — Psalm can't follow the runtime Kernel::isBooted branch.
+        // The require path is always the install's config/messenger.php; the
+        // ternary only chooses how to resolve the install root (Paths via DI when
+        // the kernel is up, PHPWG_ROOT_PATH fallback for test/CLI invocations).
+        /** @psalm-suppress UnresolvableInclude */
+        $messengerConfig = require (Kernel::isBooted() ? Kernel::service(Paths::class)->root : PHPWG_ROOT_PATH) . 'config/messenger.php';
 
         /** @var array<string, list<string>> $sendersMap */
         $sendersMap = array_map(

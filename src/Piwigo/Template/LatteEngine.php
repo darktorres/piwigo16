@@ -10,6 +10,8 @@ use Latte\Loaders\StringLoader;
 use Latte\Policy;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Template\Latte\PiwigoExtension;
 use Piwigo\Template\Latte\PiwigoPolicy;
 
@@ -55,7 +57,7 @@ final class LatteEngine implements TemplateEngine
      */
     public static function default(): self
     {
-        $cacheDir = PHPWG_ROOT_PATH . Config::dataLocation() . 'templates_c/latte';
+        $cacheDir = (Kernel::isBooted() ? Kernel::service(Paths::class)->root : PHPWG_ROOT_PATH) . Config::dataLocation() . 'templates_c/latte';
         Filesystem::mkgetdir($cacheDir);
         self::ensureGroupWritable($cacheDir);
 
@@ -75,7 +77,7 @@ final class LatteEngine implements TemplateEngine
      */
     public static function sandboxed(): self
     {
-        $cacheDir = PHPWG_ROOT_PATH . Config::dataLocation() . 'templates_c/latte_plugin';
+        $cacheDir = (Kernel::isBooted() ? Kernel::service(Paths::class)->root : PHPWG_ROOT_PATH) . Config::dataLocation() . 'templates_c/latte_plugin';
         Filesystem::mkgetdir($cacheDir);
         self::ensureGroupWritable($cacheDir);
 

@@ -372,7 +372,7 @@ final class StringUtil
     {
         $path = is_string($elementInfo['path'] ?? null) ? $elementInfo['path'] : '';
         if (!UrlService::urlIsRemote($path)) {
-            $path = PHPWG_ROOT_PATH . $path;
+            $path = Kernel::service(Paths::class)->root . $path;
         }
         return $path;
     }

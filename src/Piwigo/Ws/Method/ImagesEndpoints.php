@@ -22,6 +22,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
@@ -80,6 +81,7 @@ final readonly class ImagesEndpoints
         private WsHelper $wsHelper,
         private EphemeralKeyService $ephemeralKeyService,
         private EventDispatcherInterface $dispatcher,
+        private Paths $paths,
     ) {
     }
 
@@ -950,8 +952,8 @@ final readonly class ImagesEndpoints
         $filesFile2        = is_array($filesFile2RawArr) ? $filesFile2RawArr : [];
         $filesFile2TmpRaw  = $filesFile2['tmp_name'] ?? null;
         $filesFile2TmpName = is_string($filesFile2TmpRaw) ? $filesFile2TmpRaw : '';
-        $chunkRoot     = PHPWG_ROOT_PATH . Config::uploadDir();
-        $chunkAbsPath  = PHPWG_ROOT_PATH . ltrim(str_replace(['\\', '/./'], ['/', '/'], $chunkfilePath), '/');
+        $chunkRoot     = $this->paths->root . Config::uploadDir();
+        $chunkAbsPath  = $this->paths->root . ltrim(str_replace(['\\', '/./'], ['/', '/'], $chunkfilePath), '/');
         $chunkRelPath  = StorageRegistry::stripRoot($chunkRoot, $chunkAbsPath);
         $chunkStream   = fopen($filesFile2TmpName, 'rb');
         if ($chunkStream !== false) {

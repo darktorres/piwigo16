@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Config;
 
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 
 /**
  * Typed facade over Piwigo's runtime configuration.
@@ -1149,12 +1150,12 @@ final class Config
 
     public static function pluginsPath(): string
     {
-        return PHPWG_ROOT_PATH . 'plugins/';
+        return Kernel::service(Paths::class)->root . 'plugins/';
     }
     public static function themesPath(): string
     {
         $dir = self::src()['themes_dir'] ?? null;
-        return (is_string($dir) && $dir !== '' ? $dir : PHPWG_ROOT_PATH . 'themes') . '/';
+        return (is_string($dir) && $dir !== '' ? $dir : Kernel::service(Paths::class)->root . 'themes') . '/';
     }
     public static function derivativeDir(): string
     {

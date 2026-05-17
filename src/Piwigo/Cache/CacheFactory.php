@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Cache;
 
 use Piwigo\Config\Config;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\Adapter\ApcuAdapter;
 use Symfony\Component\Cache\Adapter\ChainAdapter;
@@ -42,8 +44,8 @@ final class CacheFactory
 
     private static function buildFile(string $namespace, int $defaultTtl): FilesystemAdapter
     {
-        $directory = defined('PHPWG_ROOT_PATH')
-            ? PHPWG_ROOT_PATH . Config::dataLocation() . 'cache/'
+        $directory = Kernel::isBooted()
+            ? Kernel::service(Paths::class)->root . Config::dataLocation() . 'cache/'
             : sys_get_temp_dir() . '/piwigo/cache/';
         return new FilesystemAdapter($namespace, $defaultTtl, $directory);
     }

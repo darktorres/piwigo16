@@ -57,6 +57,8 @@ final class InstallSentinel
 
     private static function stampFile(): string
     {
-        return PHPWG_ROOT_PATH . 'local/' . TestMode::installedStamp();
+        return Kernel::isBooted()
+            ? Kernel::service(Paths::class)->root . 'local/' . TestMode::installedStamp()
+            : (defined('PHPWG_ROOT_PATH') ? PHPWG_ROOT_PATH . 'local/' . TestMode::installedStamp() : '');
     }
 }

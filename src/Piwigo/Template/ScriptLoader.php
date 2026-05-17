@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 
 /**
@@ -241,7 +243,7 @@ final class ScriptLoader
         if (self::$manifest !== null) {
             return self::$manifest !== false ? self::$manifest : null;
         }
-        $f = PHPWG_ROOT_PATH . 'dist/manifest.json';
+        $f = (Kernel::isBooted() ? Kernel::service(Paths::class)->root : PHPWG_ROOT_PATH) . 'dist/manifest.json';
         if (!is_file($f)) {
             self::$manifest = false;
             return null;

@@ -11,6 +11,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Event\Template\CombinedCss;
 use Piwigo\Event\Template\CombinedScript;
@@ -78,7 +79,7 @@ final class Template
         $this->cssLoader = new CssLoader();
 
         if (!Config::has('data_dir_checked')) {
-            $dir = PHPWG_ROOT_PATH.Config::dataLocation();
+            $dir = Kernel::service(Paths::class)->root . Config::dataLocation();
             Filesystem::mkgetdir($dir, Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR);
             if (!is_writable($dir)) {
                 Kernel::service(LangService::class)->loadLanguage('admin.lang');
@@ -96,7 +97,7 @@ final class Template
             }
         }
 
-        $compile_dir = PHPWG_ROOT_PATH.Config::dataLocation().'templates_c';
+        $compile_dir = Kernel::service(Paths::class)->root . Config::dataLocation() . 'templates_c';
         Filesystem::mkgetdir($compile_dir);
 
         if (!empty($theme)) {
@@ -208,7 +209,7 @@ final class Template
      */
     public function deleteCompiledTemplates(): void
     {
-        $compile_dir = PHPWG_ROOT_PATH.Config::dataLocation().'templates_c';
+        $compile_dir = Kernel::service(Paths::class)->root . Config::dataLocation() . 'templates_c';
         self::rrmdirContents($compile_dir);
         Filesystem::mkgetdir($compile_dir);
         file_put_contents($compile_dir.'/index.htm', 'Not allowed!');

@@ -7,6 +7,7 @@ namespace Piwigo\Page;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Event\Location\LocEndNoPhotoYet;
 use Piwigo\Http\PathExtractor;
@@ -32,6 +33,7 @@ final readonly class NoPhotoYetRenderer
         private UrlService $urlService,
         private PermissionService $permissionService,
         private EventDispatcherInterface $dispatcher,
+        private Paths $paths,
     ) {
     }
     public function render(): void
@@ -52,7 +54,7 @@ final readonly class NoPhotoYetRenderer
             $nb_photos = $this->imageRepository->countAll();
             if (0 == $nb_photos) {
                 $theme = is_string($user['theme'] ?? null) ? $user['theme'] : '_base';
-                $template = new Template(PHPWG_ROOT_PATH . 'themes', $theme);
+                $template = new Template($this->paths->root . 'themes', $theme);
                 TemplateRegistry::set($template);
 
                 if (isset($_GET['no_photo_yet'])) {

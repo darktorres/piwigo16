@@ -16,6 +16,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
@@ -49,6 +50,7 @@ final class ImageAdminService
         private readonly UserRepository $userRepository,
         private readonly ActivityLogger $activityLogger,
         private readonly EventDispatcherInterface $dispatcher,
+        private readonly Paths $paths,
     ) {
     }
 
@@ -187,7 +189,7 @@ final class ImageAdminService
         /** @var array<int, string>|string $replaced */
         $replaced = substr_replace($path, $pattern, $dot, 0);
         $pathStr  = is_array($replaced) ? '' : $replaced;
-        if (($glob = glob(PHPWG_ROOT_PATH . Config::derivativeDir() . $pathStr)) !== false) {
+        if (($glob = glob($this->paths->root . Config::derivativeDir() . $pathStr)) !== false) {
             foreach ($glob as $file) {
                 Filesystem::tryUnlink($file);
             }
@@ -217,11 +219,11 @@ final class ImageAdminService
         $pattern = '#.*-';
         $pattern .= count($stringTypes) > 1 ? '(' . implode('|', $stringTypes) . ')' : ($stringTypes[0] ?? '');
         $pattern .= '\.[a-zA-Z0-9]{3,4}$#';
-        $derivDir = PHPWG_ROOT_PATH . Config::derivativeDir();
+        $derivDir = $this->paths->root . Config::derivativeDir();
         if (is_dir($derivDir) && ($contents = opendir($derivDir)) !== false) {
             while (($node = readdir($contents)) !== false) {
-                if ($node !== '.' && $node !== '..' && is_dir(PHPWG_ROOT_PATH . Config::derivativeDir() . $node)) {
-                    $this->clearDerivativeCacheRec(PHPWG_ROOT_PATH . Config::derivativeDir() . $node, $pattern);
+                if ($node !== '.' && $node !== '..' && is_dir($this->paths->root . Config::derivativeDir() . $node)) {
+                    $this->clearDerivativeCacheRec($this->paths->root . Config::derivativeDir() . $node, $pattern);
                 }
             }
             closedir($contents);
@@ -337,7 +339,7 @@ final class ImageAdminService
         )->fetchAllAssociative(), 'path', 'id');
         $updates = [];
         foreach ($pathForId as $id => $path) {
-            $updates[] = ['id' => $id, 'md5sum' => md5_file(PHPWG_ROOT_PATH . (is_string($path) ? $path : ''))];
+            $updates[] = ['id' => $id, 'md5sum' => md5_file($this->paths->root . (is_string($path) ? $path : ''))];
         }
         Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['md5sum']], $updates);
         return count($pathForId);

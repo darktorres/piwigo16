@@ -12,6 +12,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\WatermarkParams;
@@ -25,6 +26,7 @@ final readonly class WatermarkProcessor
         private ImageAdminService $imageAdminService,
         private ActivityLogger $activityLogger,
         private PermissionService $permissionService,
+        private Paths $paths,
     ) {
     }
     public function process(): void
@@ -47,17 +49,17 @@ final readonly class WatermarkProcessor
             if (IMAGETYPE_PNG != $type) {
                 $errors['watermarkImage'] = sprintf(Lang::t('Allowed file types: %s.'), 'PNG');
             } else {
-                $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks';
+                $upload_dir = $this->paths->root . PWG_LOCAL_DIR . 'watermarks';
                 if (Filesystem::mkgetdir($upload_dir, Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR)) {
                     $rawWmName    = $watermarkImage['name'] ?? null;
                     $wm_file_name = is_string($rawWmName) ? $rawWmName : '';
                     $new_name = StringUtil::str2url(StringUtil::getFilenameWoExtension($wm_file_name));
 
                     $watermark_files = [];
-                    if (($glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
+                    if (($glob = glob($this->paths->root . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
                         foreach ($glob as $file) {
                             $watermark_files[] = StringUtil::getFilenameWoExtension(
-                                substr($file, strlen(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/'))
+                                substr($file, strlen($this->paths->root . PWG_LOCAL_DIR . 'watermarks/'))
                             );
                         }
                     }
@@ -71,7 +73,7 @@ final readonly class WatermarkProcessor
                             $wmStream
                         );
                         fclose($wmStream);
-                        $pwatermark['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
+                        $pwatermark['file'] = substr($file_path, strlen($this->paths->root));
                     } else {
                         PageState::current()->addError($errors['watermarkImage'] = "$file_path " . Lang::t('no write access'));
                     }

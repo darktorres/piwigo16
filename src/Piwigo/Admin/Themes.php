@@ -14,6 +14,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ZipExtractor;
 use Piwigo\Event\Lifecycle\ThemeActivateErrors;
 use Piwigo\Html\HtmlService;
@@ -52,6 +53,7 @@ final class Themes
         private readonly UserService $userService,
         private readonly ActivityLogger $activityLogger,
         private readonly EventDispatcherInterface $dispatcher,
+        private readonly Paths $paths,
     ) {
         $this->getFsThemes();
 
@@ -333,7 +335,7 @@ final class Themes
             } else {
                 $admin_theme = $this->preferencesService->userprefsGetParam('admin_theme', 'dark');
                 $admin_theme = is_scalar($admin_theme) ? (string) $admin_theme : 'dark';
-                $theme['screenshot'] = PHPWG_ROOT_PATH . 'themes/admin/' . $admin_theme . '/images/missing_screenshot.png';
+                $theme['screenshot'] = $this->paths->root . 'themes/admin/' . $admin_theme . '/images/missing_screenshot.png';
             }
 
             $admin_file = $path . '/admin/admin.inc.php';

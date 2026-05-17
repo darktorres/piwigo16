@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
@@ -21,6 +22,7 @@ final readonly class MetadataAdminService
         private ImageRepository $imageRepository,
         private MetadataService $metadataService,
         private TagAdminService $tagAdminService,
+        private Paths $paths,
     ) {
     }
     /**
@@ -122,7 +124,7 @@ final readonly class MetadataAdminService
      */
     public function getSyncMetadata(array $infos): array|false
     {
-        $file = PHPWG_ROOT_PATH . (is_scalar($infos['path'] ?? null) ? (string) $infos['path'] : '');
+        $file = $this->paths->root . (is_scalar($infos['path'] ?? null) ? (string) $infos['path'] : '');
         $fs = Filesystem::tryFilesize($file);
 
         if ($fs === false) {
@@ -180,7 +182,7 @@ final readonly class MetadataAdminService
 
         if ($is_tiff) {
             $rawPath = $infos['path'] ?? null;
-            $file = PHPWG_ROOT_PATH . (is_scalar($rawPath) ? (string) $rawPath : '');
+            $file = $this->paths->root . (is_scalar($rawPath) ? (string) $rawPath : '');
         }
 
         if (Config::useExif()) {

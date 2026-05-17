@@ -13,6 +13,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ZipExtractor;
 use Piwigo\Event\Lifecycle\PluginInstallErrors;
 use Piwigo\Html\HtmlService;
@@ -44,6 +45,7 @@ final class Plugins
         private readonly ActivityLogger $activityLogger,
         private readonly EventDispatcherInterface $dispatcher,
         private readonly PluginRegistry $pluginRegistry,
+        private readonly Paths $paths,
     ) {
         $this->getFsPlugins();
 
@@ -598,7 +600,7 @@ final class Plugins
     /** @return array<mixed> */
     public function getMergedExtensions(string $version = AppInfo::VERSION): array
     {
-        $file = PHPWG_ROOT_PATH.'install/obsolete_extensions.list';
+        $file = $this->paths->root . 'install/obsolete_extensions.list';
         $merged_extensions = [];
 
         if (file_exists($file) and ($obsolete_ext = file($file, FILE_IGNORE_NEW_LINES)) !== false) {

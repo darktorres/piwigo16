@@ -11,6 +11,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Theme\ThemeRepository;
@@ -153,7 +154,7 @@ final class UpgradeService
     /** @return string[] */
     public static function getAvailableUpgradeIds(): array
     {
-        $upgrades_path = PHPWG_ROOT_PATH.'install/db';
+        $upgrades_path = Kernel::service(Paths::class)->root . 'install/db';
 
         $available_upgrade_ids = [];
 

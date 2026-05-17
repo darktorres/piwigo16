@@ -279,6 +279,7 @@ return [
                 $c->get(UserRepository::class),
                 $c->get(ActivityLogger::class),
                 $c->get(EventDispatcherInterface::class),
+                $c->get(Paths::class),
             )
         );
     }),
@@ -306,7 +307,7 @@ return [
     DirectPreparer::class            => factory(static fn (AdminService $a, CategoryRepository $catR, HtmlService $h, ImageRepository $i, UploadService $up, CsrfService $csrf, InputValidator $iv): DirectPreparer => new DirectPreparer($a, $catR, $h, $i, $up, $csrf, $iv)),
     FilterResolver::class            => factory(static fn (Connection $conn, HtmlService $h, TagAdminService $tA, CsrfService $csrf, LangService $lang, UrlService $us, EventDispatcherInterface $dispatcher): FilterResolver => new FilterResolver($conn, $h, $tA, $csrf, $lang, $us, $dispatcher)),
     SizesProcessor::class            => factory(static fn (ImageAdminService $iA, UploadService $up, ActivityLogger $al, PermissionService $perm): SizesProcessor => new SizesProcessor($iA, $up, $al, $perm)),
-    WatermarkProcessor::class        => factory(static fn (ImageAdminService $iA, ActivityLogger $al, PermissionService $perm): WatermarkProcessor => new WatermarkProcessor($iA, $al, $perm)),
+    WatermarkProcessor::class        => factory(static fn (ImageAdminService $iA, ActivityLogger $al, PermissionService $perm, Paths $paths): WatermarkProcessor => new WatermarkProcessor($iA, $al, $perm, $paths)),
     MenubarRenderer::class           => factory(static fn (CategoryService $cat, CommentService $com, PermissionService $perm, TagService $tag, UrlGenerator $ug, UrlService $u, FilterService $f, MenubarLayoutRepository $ml, EventDispatcherInterface $dispatcher): MenubarRenderer => new MenubarRenderer($cat, $com, $perm, $tag, $ug, $u, $f, $ml, $dispatcher)),
     MenubarLayoutRepository::class   => factory(static fn (ConfigService $cfg): MenubarLayoutRepository => new MenubarLayoutRepository($cfg)),
     IgnoredUpdatesRepository::class  => factory(static fn (Connection $conn): IgnoredUpdatesRepository => new IgnoredUpdatesRepository($conn)),
@@ -318,7 +319,7 @@ return [
     PictureRateRenderer::class       => factory(static fn (RateRepository $rR, PermissionService $perm, UrlService $us): PictureRateRenderer => new PictureRateRenderer($rR, $perm, $us)),
     PictureCommentRenderer::class    => factory(static fn (Connection $conn, CommentService $com, DateService $d, HtmlService $h, PermissionService $perm, SessionService $sess, UrlService $u, CsrfService $csrf, EphemeralKeyService $eks, PaginationService $pag, EventDispatcherInterface $dispatcher): PictureCommentRenderer => new PictureCommentRenderer($conn, $com, $d, $h, $perm, $sess, $u, $csrf, $eks, $pag, $dispatcher)),
     PictureMetadataRenderer::class   => factory(static fn (MetadataService $m): PictureMetadataRenderer => new PictureMetadataRenderer($m)),
-    MetadataAdminService::class      => factory(static fn (Connection $conn, ImageRepository $i, MetadataService $m, TagAdminService $tA): MetadataAdminService => new MetadataAdminService($conn, $i, $m, $tA)),
+    MetadataAdminService::class      => factory(static fn (Connection $conn, ImageRepository $i, MetadataService $m, TagAdminService $tA, Paths $paths): MetadataAdminService => new MetadataAdminService($conn, $i, $m, $tA, $paths)),
     HistoryAdminService::class       => factory(static fn (Connection $conn, HistoryRepository $hR): HistoryAdminService => new HistoryAdminService($conn, $hR)),
     WsHelper::class                  => factory(static fn (PermissionService $perm, UrlService $us): WsHelper => new WsHelper($perm, $us)),
     DateService::class         => factory(static fn (): DateService => new DateService()),

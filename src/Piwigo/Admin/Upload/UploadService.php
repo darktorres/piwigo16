@@ -240,7 +240,7 @@ final readonly class UploadService
             if ($representativeExt !== '') {
                 $insert['representative_ext'] = $representativeExt;
             }
-            Dml::singleInsert(Tables::images(), $insert);
+            $this->conn->insert(Tables::images(), $insert);
             $imageId = (int) $this->conn->lastInsertId();
             $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, 'add'));
         }
@@ -330,7 +330,7 @@ final readonly class UploadService
             $formatId  = $formats[0]['format_id'];
             $addStatus = 'update';
         } else {
-            Dml::singleInsert(Tables::imageFormat(), $insert);
+            $this->conn->insert(Tables::imageFormat(), $insert);
             $formatId  = (int) $this->conn->lastInsertId();
             $addStatus = 'add';
         }

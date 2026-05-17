@@ -16,7 +16,6 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
 use Piwigo\Event\User\WsUsersGetList;
@@ -415,7 +414,10 @@ final readonly class UsersEndpoints
         if (!$this->imageRepository->existsById($favImageId)) {
             return new PwgError(404, 'image_id not found');
         }
-        Dml::singleInsert(Tables::favorites(), ['image_id' => $favImageId, 'user_id' => $userId], ['ignore' => true]);
+        $this->conn->executeStatement(
+            'INSERT IGNORE INTO ' . Tables::favorites() . ' (image_id, user_id) VALUES (?, ?)',
+            [$favImageId, $userId]
+        );
         return true;
     }
 

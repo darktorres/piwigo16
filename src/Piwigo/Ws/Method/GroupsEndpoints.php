@@ -73,7 +73,7 @@ final readonly class GroupsEndpoints
         }
         $isDefaultRaw = $params['is_default'];
         $isDefaultVal = is_bool($isDefaultRaw) ? $isDefaultRaw : (is_string($isDefaultRaw) ? $isDefaultRaw : '');
-        Dml::singleInsert(Tables::groups(), ['name' => $params['name'], 'is_default' => BoolUtil::toInt($isDefaultVal)]);
+        $this->conn->insert(Tables::groups(), ['name' => $params['name'], 'is_default' => BoolUtil::toInt($isDefaultVal)]);
         $insertedId = (int) $this->conn->lastInsertId();
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $insertedId, 'add'));
         return $service->invoke('pwg.groups.getList', ['group_id' => $insertedId]);
@@ -203,7 +203,7 @@ final readonly class GroupsEndpoints
             return new PwgError(WsError::InvalidParam->value, 'This group does not exist.');
         }
         $isDefault = $groupRepo->findIsDefault($dupGroupId);
-        Dml::singleInsert(Tables::groups(), ['name' => $copyNameStr, 'is_default' => BoolUtil::toInt($isDefault)]);
+        $this->conn->insert(Tables::groups(), ['name' => $copyNameStr, 'is_default' => BoolUtil::toInt($isDefault)]);
         $insertedId = (int) $this->conn->lastInsertId();
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $insertedId, 'add'));
         $users   = array_column($this->conn->executeQuery('SELECT user_id FROM `' . Tables::userGroup() . '` WHERE group_id = ' . $dupGroupId . ';')->fetchAllAssociative(), 'user_id');

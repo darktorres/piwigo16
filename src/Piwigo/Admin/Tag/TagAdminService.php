@@ -291,7 +291,7 @@ final class TagAdminService
         if ($existingId === null) {
             $createUrlEvent = new RenderTagUrl($tagName);
             $this->dispatcher->dispatch($createUrlEvent);
-            Dml::singleInsert(Tables::tags(), ['name' => $tagName, 'url_name' => $createUrlEvent->tagName]);
+            $this->conn->insert(Tables::tags(), ['name' => $tagName, 'url_name' => $createUrlEvent->tagName]);
             return ['info' => Lang::t('Tag "%s" was added', stripslashes($tagName)), 'id' => (int) $this->conn->lastInsertId()];
         }
         return ['error' => Lang::t('Tag "%s" already exists', stripslashes($tagName))];

@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\UpgradeService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Paths;
-use Piwigo\Db\Dml;
 use Piwigo\Http\ResponseFactory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -56,7 +55,7 @@ final readonly class UpgradeFeedController implements ControllerInterface
             require(UPGRADES_PATH . '/' . $upgrade_id . '-database.php');
             /** @var string|null $upgrade_description -- may be set by the required migration file */
 
-            Dml::singleInsert(PREFIX_TABLE . 'upgrade', [
+            $this->conn->insert(PREFIX_TABLE . 'upgrade', [
                 'id'          => $upgrade_id,
                 'applied'     => new \DateTimeImmutable()->format('Y-m-d H:i:s'),
                 'description' => is_string($upgrade_description) ? $upgrade_description : '',

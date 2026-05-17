@@ -459,7 +459,9 @@ SELECT DISTINCT id
                 $rank = $maxRank + 1;
             }
         }
-        $insert = ['name' => $categoryName, 'rank' => $rank, 'global_rank' => 0];
+        // `rank` is a MySQL 8.0 reserved word — backtick the key so Connection::insert
+        // concatenates it as a quoted identifier.
+        $insert = ['name' => $categoryName, '`rank`' => $rank, 'global_rank' => 0];
         $insert['commentable'] = BoolUtil::toInt(isset($options['commentable']) && is_bool($options['commentable']) ? $options['commentable'] : Config::newcatDefaultCommentable());
         $insert['visible']     = BoolUtil::toInt(isset($options['visible']) && is_bool($options['visible']) ? $options['visible'] : Config::newcatDefaultVisible());
         $insert['status']      = (isset($options['status']) && $options['status'] === 'private') ? 'private' : Config::newcatDefaultStatus();
@@ -472,7 +474,7 @@ SELECT DISTINCT id
             $parent = $this->categoryRepository->findCategoryById((int) $parentId);
             if ($parent !== null) {
                 $insert['id_uppercat'] = $parent['id'];
-                $insert['global_rank'] = (is_string($parent['global_rank'] ?? null) ? $parent['global_rank'] : '') . '.' . (string) $insert['rank'];
+                $insert['global_rank'] = (is_string($parent['global_rank'] ?? null) ? $parent['global_rank'] : '') . '.' . (string) $rank;
                 if (isset($parent['visible']) && !BoolUtil::fromMixed($parent['visible'])) {
                     $insert['visible'] = 0;
                 }
@@ -482,7 +484,7 @@ SELECT DISTINCT id
                 $uppercatsPrefix = (is_string($parent['uppercats'] ?? null) ? $parent['uppercats'] : '') . ',';
             }
         }
-        Dml::singleInsert(Tables::categories(), $insert);
+        $this->conn->insert(Tables::categories(), $insert);
         $insertedId = (int) $this->conn->lastInsertId();
         Dml::singleUpdate(Tables::categories(), ['uppercats' => $uppercatsPrefix . $insertedId], ['id' => $insertedId]);
         $this->updateGlobalRank();

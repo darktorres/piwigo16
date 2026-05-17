@@ -418,7 +418,7 @@ SELECT
                 'expired_on' => $expiry,
                 'key_type'   => 'auth_key',
             ];
-            Dml::singleInsert(Tables::userAuthKeys(), $key);
+            $this->conn->insert(Tables::userAuthKeys(), $key);
             $lastId = $this->conn->lastInsertId();
             $key['auth_key_id'] = is_numeric($lastId) ? (int) $lastId : 0;
             return $key;

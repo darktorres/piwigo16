@@ -114,7 +114,7 @@ final class UserService
                 Config::userFields()['email']    => $mailAddress,
             ];
 
-            Dml::singleInsert(Tables::users(), $insert);
+            $this->conn->insert(Tables::users(), $insert);
             $userId = (int) $this->conn->lastInsertId();
 
             $inserts = [];
@@ -699,7 +699,7 @@ SELECT DISTINCT f.image_id
         }
         $key['expired_on'] = $expiration;
 
-        Dml::singleInsert(Tables::userAuthKeys(), $key);
+        $this->conn->insert(Tables::userAuthKeys(), $key);
         $key['apikey_secret'] = $keySecret;
         return $key;
     }

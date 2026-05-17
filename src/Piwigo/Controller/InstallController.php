@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
@@ -224,7 +225,7 @@ final readonly class InstallController implements ControllerInterface
                 InstallService::executeSqlFile($this->paths->root . 'install/piwigo_structure-mysql.sql', DEFAULT_PREFIX_TABLE, $prefixeTable);
                 InstallService::executeSqlFile($this->paths->root . 'install/config.sql', DEFAULT_PREFIX_TABLE, $prefixeTable);
 
-                Dml::singleInsert($prefixeTable . 'config', [
+                Kernel::service(Connection::class)->insert($prefixeTable . 'config', [
                     'param'   => 'secret_key',
                     'value'   => sha1(random_bytes(1000)),
                     'comment' => 'a secret key specific to the gallery for internal use',

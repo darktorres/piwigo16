@@ -10,7 +10,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbInfo;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Search\QsearchBeforeEval;
 use Piwigo\Event\Search\QsearchExpressionParsed;
@@ -1102,7 +1101,7 @@ final class SearchService
         $dbnow      = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         $searchUuid = $this->getAvailableSearchUuid();
 
-        Dml::singleInsert(Tables::search(), [
+        $this->conn->insert(Tables::search(), [
             'rules'       => json_encode($rules, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
             'created_on'  => $dbnow,
             'created_by'  => $createdBy,

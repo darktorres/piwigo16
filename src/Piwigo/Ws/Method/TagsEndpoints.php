@@ -269,7 +269,7 @@ final readonly class TagsEndpoints
         $dupUrlEvent = new RenderTagUrl($dupCopyName);
         $this->dispatcher->dispatch($dupUrlEvent);
         $dupUrlName  = $dupUrlEvent->tagName;
-        Dml::singleInsert(Tables::tags(), ['name' => $dupCopyName, 'url_name' => $dupUrlName]);
+        $this->conn->insert(Tables::tags(), ['name' => $dupCopyName, 'url_name' => $dupUrlName]);
         $destinationTagId = (int) $this->conn->lastInsertId();
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $destinationTagId, 'add', ['action' => 'duplicate', 'source_tag' => $dupTagId]));
         $destinationTagImageIds = $dupTagRepo->findImageIdsByTagId($dupTagId);

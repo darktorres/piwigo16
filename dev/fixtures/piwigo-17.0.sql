@@ -96,6 +96,7 @@ CREATE TABLE `piwigo_categories` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `categories_i3` (`permalink`),
   KEY `categories_i2` (`id_uppercat`),
+  KEY `categories_status_idx` (`status`),
   KEY `lastmodified` (`lastmodified`)
 ) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -131,7 +132,7 @@ CREATE TABLE `piwigo_comments` (
   `validation_date` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `comments_i2` (`validation_date`),
-  KEY `comments_i1` (`image_id`)
+  KEY `comments_image_validated_idx` (`image_id`,`validated`)
 ) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -464,6 +465,7 @@ CREATE TABLE `piwigo_images` (
   KEY `images_i1` (`storage_category_id`),
   KEY `images_i6` (`latitude`),
   KEY `images_i7` (`path`),
+  KEY `images_added_by_idx` (`added_by`),
   KEY `lastmodified` (`lastmodified`)
 ) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -866,7 +868,8 @@ CREATE TABLE `piwigo_user_cache` (
   `nb_available_comments` int DEFAULT NULL,
   `image_access_type` enum('NOT IN','IN') NOT NULL DEFAULT 'NOT IN',
   `image_access_list` mediumtext,
-  PRIMARY KEY (`user_id`)
+  PRIMARY KEY (`user_id`),
+  KEY `user_cache_need_update_idx` (`need_update`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1038,7 +1041,8 @@ CREATE TABLE `piwigo_users` (
   `password` varchar(255) DEFAULT NULL,
   `mail_address` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `users_ui1` (`username`)
+  UNIQUE KEY `users_ui1` (`username`),
+  UNIQUE KEY `users_mail_idx` (`mail_address`)
 ) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

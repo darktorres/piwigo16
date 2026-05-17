@@ -55,6 +55,7 @@ CREATE TABLE `piwigo_categories` (
   PRIMARY KEY  (`id`),
   UNIQUE KEY `categories_i3` (`permalink`),
   KEY `categories_i2` (`id_uppercat`),
+  KEY `categories_status_idx` (`status`),
   KEY `lastmodified` (`lastmodified`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -77,7 +78,7 @@ CREATE TABLE `piwigo_comments` (
   `validation_date` datetime default NULL,
   PRIMARY KEY  (`id`),
   KEY `comments_i2` (`validation_date`),
-  KEY `comments_i1` (`image_id`)
+  KEY `comments_image_validated_idx` (`image_id`,`validated`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -288,6 +289,7 @@ CREATE TABLE `piwigo_images` (
   KEY `images_i1` (`storage_category_id`),
   KEY `images_i6` (`latitude`),
   KEY `images_i7` (`path`),
+  KEY `images_added_by_idx` (`added_by`),
   KEY `lastmodified` (`lastmodified`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -516,7 +518,8 @@ CREATE TABLE `piwigo_user_cache` (
   `nb_available_comments` INT(5) DEFAULT NULL,
   `image_access_type` enum('NOT IN','IN') NOT NULL default 'NOT IN',
   `image_access_list` mediumtext default NULL,
-  PRIMARY KEY  (`user_id`)
+  PRIMARY KEY  (`user_id`),
+  KEY `user_cache_need_update_idx` (`need_update`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -613,5 +616,6 @@ CREATE TABLE `piwigo_users` (
   `password` varchar(255) default NULL,
   `mail_address` varchar(255) default NULL,
   PRIMARY KEY  (`id`),
-  UNIQUE KEY `users_ui1` (`username`)
+  UNIQUE KEY `users_ui1` (`username`),
+  UNIQUE KEY `users_mail_idx` (`mail_address`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

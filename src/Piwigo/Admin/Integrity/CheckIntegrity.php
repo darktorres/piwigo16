@@ -222,7 +222,7 @@ final class CheckIntegrity
     /** @param array<mixed>|null $correction_fct_args */
     public function addAnomaly(string $anomaly, ?callable $correction_fct = null, ?array $correction_fct_args = null, ?string $correction_msg = null): void
     {
-        $id = md5($anomaly.(is_callable($correction_fct) ? serialize($correction_fct) : '').serialize($correction_fct_args).($correction_msg ?? ''));
+        $id = md5($anomaly.'|'.self::fingerprintCallable($correction_fct).'|'.json_encode($correction_fct_args, JSON_THROW_ON_ERROR).'|'.($correction_msg ?? ''));
 
         if (in_array($id, $this->ignore_list)) {
             $this->build_ignore_list[] = $id;
@@ -247,6 +247,36 @@ final class CheckIntegrity
     public function updateConf(array $conf_ignore_list = []): void
     {
         $this->ignoredAnomaliesRepo->replaceForVersion(AppInfo::VERSION, $conf_ignore_list);
+    }
+
+    /**
+     * Stable string fingerprint of a callable, used as part of the md5 hash
+     * input that identifies an anomaly row. Closures cannot be fingerprinted
+     * stably across requests (no class name); the sole production caller
+     * passes [$this, 'method'], so the Closure branch is defensive only.
+     */
+    private static function fingerprintCallable(?callable $fct): string
+    {
+        if ($fct === null) {
+            return '';
+        }
+        if (is_string($fct)) {
+            return $fct;
+        }
+        if (is_array($fct)) {
+            $target = $fct[0];
+            $class  = is_object($target) ? $target::class : (string) $target;
+            return $class.'::'.$fct[1];
+        }
+        if ($fct instanceof \Closure) {
+            // Request-scoped — Closures break dedup across requests. Loud
+            // failure mode (anomaly keeps reappearing) beats silent collision.
+            return spl_object_hash($fct);
+        }
+        if (is_object($fct)) {
+            return $fct::class;
+        }
+        return '';
     }
 
     /**

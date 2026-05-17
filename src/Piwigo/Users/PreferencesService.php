@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
-use Piwigo\Core\StringUtil;
 use Piwigo\Language\LanguageService;
 
 final readonly class PreferencesService
@@ -87,15 +86,16 @@ final readonly class PreferencesService
         $user        = CurrentUser::isInitialized() ? CurrentUser::get()->rawAttributes : [];
         $preferences = $user['preferences'] ?? [];
 
-        $this->userRepository->updatePreferences(CurrentUser::get()->id, serialize($preferences));
+        $this->userRepository->updatePreferences(
+            CurrentUser::get()->id,
+            json_encode($preferences, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        );
     }
 
     /**
-     * Decode a serialized `user_infos.preferences` column value into the
-     * per-user prefs array. Companion to {@see userprefsSave()} — kept
-     * here so the encode + decode pair stays colocated, and so
-     * callers (UserService::getuserdata) don't need a separate
-     * SerializeAllowedRule exemption. Static because it has no instance
+     * Decode a `user_infos.preferences` column value into the per-user prefs
+     * array. Companion to {@see userprefsSave()} — kept here so the encode +
+     * decode pair stays colocated. Static because it has no instance
      * dependencies — keeps the unit test trivial to construct.
      *
      * @return array<string, mixed>
@@ -105,8 +105,15 @@ final readonly class PreferencesService
         if (!is_string($raw) || $raw === '') {
             return [];
         }
-        $decoded = StringUtil::safeUnserialize($raw);
-        $out     = [];
+        try {
+            $decoded = json_decode($raw, associative: true, flags: JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return [];
+        }
+        if (!is_array($decoded)) {
+            return [];
+        }
+        $out = [];
         foreach ($decoded as $key => $value) {
             if (is_string($key)) {
                 $out[$key] = $value;

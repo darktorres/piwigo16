@@ -320,16 +320,17 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
-     * Persist serialized user preferences to user_infos.
-     * Called by PreferencesService::get()->userprefsSave() after updating the in-memory preferences array.
+     * Persist the JSON-encoded user preferences blob to user_infos. Called by
+     * {@see PreferencesService::userprefsSave()} after updating the in-memory
+     * preferences array.
      */
-    public function updatePreferences(int $userId, string $serializedPreferences): void
+    public function updatePreferences(int $userId, string $encodedPreferences): void
     {
         $this->conn->createQueryBuilder()
             ->update($this->table('user_infos'))
             ->set('preferences', ':prefs')
             ->where('user_id = :userId')
-            ->setParameter('prefs', $serializedPreferences)
+            ->setParameter('prefs', $encodedPreferences)
             ->setParameter('userId', $userId)
             ->executeStatement();
     }

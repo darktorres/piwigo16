@@ -284,27 +284,6 @@ final class StringUtil
      * @param array<mixed>|string $value
      * @return array<mixed>
      */
-    public static function safeUnserialize(array|string $value): array
-    {
-        if (is_string($value)) {
-            set_error_handler(static fn (): bool => true);
-            try {
-                $unserialized = unserialize($value);
-                if (!is_array($unserialized) && $value !== '') {
-                    $unserialized = unserialize(stripslashes($value));
-                }
-            } finally {
-                restore_error_handler();
-            }
-            return is_array($unserialized) ? $unserialized : [];
-        }
-        return $value;
-    }
-
-    /**
-     * @param array<mixed>|string $value
-     * @return array<mixed>
-     */
     public static function safeJsonDecode(array|string $value): array
     {
         if (is_string($value)) {

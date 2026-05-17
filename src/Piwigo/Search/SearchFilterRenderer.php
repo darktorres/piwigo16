@@ -6,11 +6,9 @@ namespace Piwigo\Search;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
-use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
-use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
@@ -26,12 +24,12 @@ final readonly class SearchFilterRenderer
 {
     public function __construct(
         private Connection $conn,
-        private ConfigService $configService,
         private DateService $dateService,
         private HtmlService $htmlService,
         private LangService $langService,
         private PermissionService $permissionService,
         private SearchService $searchService,
+        private SearchFilterViewRepository $filterViewRepo,
         private TagService $tagService,
         private UrlService $urlService,
         private CacheItemPoolInterface $pool,
@@ -45,10 +43,11 @@ final readonly class SearchFilterRenderer
         $user = CurrentUser::get()->rawAttributes;
         $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '';
         $userCacheTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
-        $filters_views_raw = $this->configService->confGetParam('filters_views', Config::defaultFiltersViews());
-        $filters_views_str = is_array($filters_views_raw) ? $filters_views_raw : (is_string($filters_views_raw) ? $filters_views_raw : '');
+        $filters_views = $this->filterViewRepo->listAll();
+        if ($filters_views === []) {
+            $filters_views = Config::defaultFiltersViews();
+        }
         /** @var array<string, array<string,mixed>> $filters_views */
-        $filters_views = StringUtil::safeUnserialize($filters_views_str);
 
         $template->assign('display_filter', $filters_views);
 

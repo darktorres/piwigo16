@@ -26,6 +26,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Search\SearchFilterViewRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -55,6 +56,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
         private WatermarkProcessor $watermarkProcessor,
+        private SearchFilterViewRepository $filterViewRepo,
     ) {
     }
 
@@ -105,11 +107,11 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
 
         $display_info_checkboxes = ['author', 'created_on', 'posted_on', 'dimensions', 'file', 'filesize', 'tags', 'categories', 'visits', 'rating_score'];
 
-        if (!Config::has('filters_views')) {
-            Config::persist('filters_views', serialize(Config::defaultFiltersViews()));
+        if (!$this->filterViewRepo->hasAny()) {
+            $this->filterViewRepo->replaceAll(Config::defaultFiltersViews());
         }
 
-        $filters_views_raw = StringUtil::safeUnserialize(Config::filtersViews() ?? '');
+        $filters_views_raw        = $this->filterViewRepo->listAll();
         $filters_names_checkboxes = array_values(array_diff(array_keys($filters_views_raw), ['last_filters_conf']));
 
         $sort_fields = [
@@ -228,9 +230,16 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
 
                 case 'search':
                     $filtersViewsRaw = $_POST['filters_views'] ?? null;
-                    $post_filters_views = is_array($filtersViewsRaw) ? $filtersViewsRaw : [];
+                    $rawSrc = is_array($filtersViewsRaw) ? $filtersViewsRaw : [];
                     $filtersViewsBoxRaw = $_POST['filters_views_box'] ?? null;
                     $post_filters_views_box = is_array($filtersViewsBoxRaw) ? $filtersViewsBoxRaw : [];
+                    /** @var array<string, mixed> $post_filters_views */
+                    $post_filters_views = [];
+                    foreach ($rawSrc as $key => $val) {
+                        if (is_string($key)) {
+                            $post_filters_views[$key] = $val;
+                        }
+                    }
                     foreach ($filters_names_checkboxes as $checkbox) {
                         $fvRaw = $post_filters_views[$checkbox] ?? null;
                         $fv_entry = is_array($fvRaw) ? $fvRaw : [];
@@ -246,7 +255,10 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                     }
                     $lastFiltersConfVal = $post_filters_views['last_filters_conf'] ?? null;
                     $post_filters_views['last_filters_conf'] = $lastFiltersConfVal !== null && $lastFiltersConfVal !== '';
-                    $_POST['filters_views'] = addslashes(serialize($post_filters_views));
+                    $this->filterViewRepo->replaceAll($post_filters_views);
+                    // Removed from $_POST so the conf-table loop below
+                    // doesn't try to mirror this key back into config.
+                    unset($_POST['filters_views']);
                     break;
             }
 
@@ -545,7 +557,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
 
             case 'search':
                 $tpl->assign('search', [
-                    'filters_views' => StringUtil::safeUnserialize(Config::filtersViews() ?? ''),
+                    'filters_views' => $this->filterViewRepo->listAll(),
                     'filters_names' => $filters_names_checkboxes,
                 ]);
                 $tpl->assign('SHOW_FILTER_RATINGS', Config::rateEnabled());

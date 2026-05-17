@@ -43,7 +43,7 @@ final class ConfigLoaderApplyDefaultsTest extends TestCase
         }
 
         // Specific nullable keys that MUST be absent (else Config::has() breaks).
-        $mustBeAbsent = ['gallery_url', 'filters_views', 'last_major_update', 'piwigo_db_version'];
+        $mustBeAbsent = ['gallery_url', 'last_major_update', 'piwigo_db_version'];
         foreach ($mustBeAbsent as $key) {
             self::assertFalse(Config::has($key), "applyDefaults() must NOT populate nullable key '$key'");
         }

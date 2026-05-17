@@ -88,6 +88,10 @@ final class Tables
     {
         return Config::dbPrefix() . 'search';
     }
+    public static function searchFilterView(): string
+    {
+        return Config::dbPrefix() . 'search_filter_view';
+    }
     public static function sessions(): string
     {
         return Config::dbPrefix() . 'sessions';

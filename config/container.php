@@ -93,6 +93,7 @@ use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Routing\Router;
 use Piwigo\Search\SearchFilterRenderer;
+use Piwigo\Search\SearchFilterViewRepository;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Section\SectionInitializer;
@@ -222,7 +223,7 @@ return [
     PluginMigrationLedger::class  => factory(static fn (Connection $conn): PluginMigrationLedger => new PluginMigrationLedger($conn, Config::dbPrefix())),
     PluginMigrationRunner::class  => factory(static fn (Connection $conn, PluginMigrationLedger $ledger, LoggerInterface $log): PluginMigrationRunner => new PluginMigrationRunner($conn, $ledger, $log)),
     PluginRegistry::class      => factory(static fn (PluginRepository $repo, LoggerInterface $log, PluginMigrationRunner $runner): PluginRegistry => new PluginRegistry($repo, $log, PHPWG_ROOT_PATH . 'plugins', PHPWG_ROOT_PATH . 'docs/schemas/plugin.schema.json', $runner)),
-    SearchService::class       => factory(static fn (SearchRepository $repo, Connection $conn, LoggerInterface $log, CategoryService $cat, HtmlService $h, PermissionService $perm, PreferencesService $pref, TagService $tag, UrlService $u, UserService $us, CacheItemPoolInterface $pool, EventDispatcherInterface $d): SearchService => new SearchService($repo, $conn, $log, $cat, $h, $perm, $pref, $tag, $u, $us, $pool, $d)),
+    SearchService::class       => factory(static fn (SearchRepository $repo, SearchFilterViewRepository $fv, Connection $conn, LoggerInterface $log, CategoryService $cat, HtmlService $h, PermissionService $perm, PreferencesService $pref, TagService $tag, UrlService $u, UserService $us, CacheItemPoolInterface $pool, EventDispatcherInterface $d): SearchService => new SearchService($repo, $fv, $conn, $log, $cat, $h, $perm, $pref, $tag, $u, $us, $pool, $d)),
     SessionService::class      => factory(static fn (SessionRepository $repo): SessionService => new SessionService($repo)),
     TagService::class          => factory(static fn (Connection $conn, HtmlService $h, TagRepository $repo, PermissionService $perm, CacheItemPoolInterface $pool, EventDispatcherInterface $dispatcher): TagService => new TagService($conn, $h, $repo, $perm, $pool, $dispatcher)),
     UrlService::class          => factory(static fn (Connection $conn, CategoryService $cat, HtmlService $h, TagService $tag, PermissionService $perm, EventDispatcherInterface $dispatcher): UrlService => new UrlService($conn, $cat, $h, $tag, $perm, $dispatcher)),
@@ -301,7 +302,7 @@ return [
     MenubarRenderer::class           => factory(static fn (CategoryService $cat, CommentService $com, PermissionService $perm, TagService $tag, UrlGenerator $ug, UrlService $u, FilterService $f, MenubarLayoutRepository $ml, EventDispatcherInterface $dispatcher): MenubarRenderer => new MenubarRenderer($cat, $com, $perm, $tag, $ug, $u, $f, $ml, $dispatcher)),
     MenubarLayoutRepository::class   => factory(static fn (ConfigService $cfg): MenubarLayoutRepository => new MenubarLayoutRepository($cfg)),
     IgnoredUpdatesRepository::class  => factory(static fn (Connection $conn): IgnoredUpdatesRepository => new IgnoredUpdatesRepository($conn)),
-    SearchFilterRenderer::class      => factory(static fn (Connection $conn, ConfigService $cfg, DateService $d, HtmlService $h, LangService $lang, PermissionService $perm, SearchService $sr, TagService $tag, UrlService $u, CacheItemPoolInterface $pool): SearchFilterRenderer => new SearchFilterRenderer($conn, $cfg, $d, $h, $lang, $perm, $sr, $tag, $u, $pool)),
+    SearchFilterRenderer::class      => factory(static fn (Connection $conn, DateService $d, HtmlService $h, LangService $lang, PermissionService $perm, SearchService $sr, SearchFilterViewRepository $fv, TagService $tag, UrlService $u, CacheItemPoolInterface $pool): SearchFilterRenderer => new SearchFilterRenderer($conn, $d, $h, $lang, $perm, $sr, $fv, $tag, $u, $pool)),
     CategoryCatsRenderer::class      => factory(static fn (Connection $conn, CategoryService $cat, DateService $d, FilterService $f, HtmlService $h, PermissionService $perm, UrlService $u, DebugCollector $dbg, PaginationService $pag, EventDispatcherInterface $dispatcher): CategoryCatsRenderer => new CategoryCatsRenderer($conn, $cat, $d, $f, $h, $perm, $u, $dbg, $pag, $dispatcher)),
     CategoryDefaultRenderer::class   => factory(static fn (Connection $conn, CategoryService $cat, HtmlService $h, ImageRepository $i, SessionService $sess, UrlService $u, DebugCollector $dbg, EventDispatcherInterface $dispatcher): CategoryDefaultRenderer => new CategoryDefaultRenderer($conn, $cat, $h, $i, $sess, $u, $dbg, $dispatcher)),
     SelectedTagsRenderer::class      => factory(static fn (UrlService $us, EventDispatcherInterface $dispatcher): SelectedTagsRenderer => new SelectedTagsRenderer($us, $dispatcher)),

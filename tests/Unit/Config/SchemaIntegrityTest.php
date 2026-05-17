@@ -30,6 +30,9 @@ final class SchemaIntegrityTest extends TestCase
         'reset',
         // Derived accessors (no SCHEMA key — call other accessors)
         'flipPictureExt', 'flipFileExt',
+        // Hard-coded seed defaults consumed by repositories rather than
+        // mirrored as conf rows.
+        'defaultFiltersViews',
         // Path helpers (formerly PHP define()s in include/constants.php)
         'pluginsPath', 'themesPath', 'combinedDir', 'derivativeDir', 'usersTable',
     ];

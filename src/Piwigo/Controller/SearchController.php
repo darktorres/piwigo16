@@ -6,7 +6,6 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
-use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
@@ -16,6 +15,7 @@ use Piwigo\Event\Location\LocBeginSearch;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Search\SearchFilterViewRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
@@ -34,9 +34,9 @@ final readonly class SearchController implements ControllerInterface
 {
     public function __construct(
         private Connection $conn,
-        private ConfigService $configService,
         private HtmlService $htmlService,
         private SearchService $searchService,
+        private SearchFilterViewRepository $filterViewRepo,
         private TagService $tagService,
         private InputValidator $inputValidator,
         private RedirectResponder $redirectResponder,
@@ -58,8 +58,10 @@ final readonly class SearchController implements ControllerInterface
 
         $search = ['mode' => 'AND', 'fields' => []];
 
-        $filters_views_raw = $this->configService->confGetParam('filters_views', Config::defaultFiltersViews());
-        $filters_views     = StringUtil::safeUnserialize(is_scalar($filters_views_raw) ? (string) $filters_views_raw : '');
+        $filters_views = $this->filterViewRepo->listAll();
+        if ($filters_views === []) {
+            $filters_views = Config::defaultFiltersViews();
+        }
 
         $filter_rename_for = [
             'words'         => 'allwords',

@@ -45,6 +45,7 @@ final class SearchService
 
     public function __construct(
         private readonly SearchRepository $searchRepo,
+        private readonly SearchFilterViewRepository $filterViewRepo,
         private readonly Connection $conn,
         private readonly LoggerInterface $logger,
         private readonly CategoryService $categoryService,
@@ -155,20 +156,19 @@ final class SearchService
 
         $imageIdsForFilter = [];
 
-        $displayFilters = StringUtil::safeUnserialize(Config::filtersViews() ?? '');
+        $displayFilters = $this->filterViewRepo->listAll();
 
         foreach ($displayFilters as $filtName => $filtConf) {
             $filtConf = is_array($filtConf) ? $filtConf : [];
             if (isset($filtConf['access'])) {
-                $access      = is_string($filtConf['access']) ? $filtConf['access'] : '';
-                $filtNameStr = (string) $filtName;
-                $filtEntry   = is_array($displayFilters[$filtNameStr] ?? null) ? (array) $displayFilters[$filtNameStr] : [];
+                $access    = is_string($filtConf['access']) ? $filtConf['access'] : '';
+                $filtEntry = is_array($displayFilters[$filtName] ?? null) ? (array) $displayFilters[$filtName] : [];
                 if ($access == 'everybody' or ($access == 'admins-only' and $this->permissionService->isAdmin()) or ($access == 'registered-users' and $this->permissionService->isClassicUser())) {
                     $filtEntry['access'] = true;
                 } else {
                     $filtEntry['access'] = false;
                 }
-                $displayFilters[$filtNameStr] = $filtEntry;
+                $displayFilters[$filtName] = $filtEntry;
             }
         }
 

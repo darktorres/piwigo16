@@ -13,7 +13,6 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\StringUtil;
 use Piwigo\Core\ZipExtractor;
 use Piwigo\Event\Lifecycle\PluginInstallErrors;
 use Piwigo\Html\HtmlService;
@@ -305,9 +304,9 @@ final class Plugins
     public function getVersionsToCheck(): array
     {
         $versions_to_check = [];
-        $url = PEM_URL . '/api/get_version_list.php?category_id='. Config::pemPluginsCategory() .'&format=php';
+        $url = PEM_URL . '/api/get_version_list.php?category_id='. Config::pemPluginsCategory();
         $result = '';
-        if ($this->adminService->fetchRemote($url, $result) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
+        if ($this->adminService->fetchRemote($url, $result) and is_string($result) and ($pem_versions = json_decode($result, associative: true)) !== null and is_array($pem_versions)) {
             foreach ($pem_versions as $entry) {
                 if (!is_array($entry) || !isset($entry['name'], $entry['id'])) {
                     continue;
@@ -343,7 +342,6 @@ final class Plugins
         $url = PEM_URL . '/api/get_revision_list-next.php';
         $get_data = [
           'category_id' => Config::pemPluginsCategory(),
-          'format' => 'php',
           'last_revision_only' => 'true',
           'version' => implode(',', $versions_to_check),
           'lang' => substr(CurrentUser::get()->language, 0, 2),
@@ -359,7 +357,8 @@ final class Plugins
         }
         $result = '';
         if ($this->adminService->fetchRemote($url, $result, $get_data) && is_string($result)) {
-            $pem_plugins = StringUtil::safeUnserialize($result);
+            $decoded     = json_decode($result, associative: true);
+            $pem_plugins = is_array($decoded) ? $decoded : [];
             if ($pem_plugins === []) {
                 return false;
             }
@@ -402,14 +401,14 @@ final class Plugins
         $url = PEM_URL . '/api/get_revision_list.php';
         $get_data = [
           'category_id' => Config::pemPluginsCategory(),
-          'format' => 'php',
           'version' => implode(',', $versions_to_check),
           'extension_include' => implode(',', $plugins_to_check),
         ];
 
         $result = '';
         if ($this->adminService->fetchRemote($url, $result, $get_data) && is_string($result)) {
-            $pem_plugins = StringUtil::safeUnserialize($result);
+            $decoded     = json_decode($result, associative: true);
+            $pem_plugins = is_array($decoded) ? $decoded : [];
             if ($pem_plugins === []) {
                 return false;
             }

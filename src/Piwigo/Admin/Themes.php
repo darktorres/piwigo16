@@ -14,7 +14,6 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\StringUtil;
 use Piwigo\Core\ZipExtractor;
 use Piwigo\Event\Lifecycle\ThemeActivateErrors;
 use Piwigo\Html\HtmlService;
@@ -377,7 +376,6 @@ final class Themes
     {
         $get_data = [
           'category_id' => Config::pemThemesCategory(),
-          'format' => 'php',
         ];
 
         // Retrieve PEM versions
@@ -385,7 +383,7 @@ final class Themes
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         $result = '';
-        if ($this->adminService->fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
+        if ($this->adminService->fetchRemote($url, $result, $get_data) and is_string($result) and ($pem_versions = json_decode($result, associative: true)) !== null and is_array($pem_versions)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pv0 = $pem_versions[0] ?? null;
                 $pv0name = is_array($pv0) && isset($pv0['name']) ? $pv0['name'] : null;
@@ -435,7 +433,8 @@ final class Themes
             }
         }
         if ($this->adminService->fetchRemote($url, $result, $get_data) && is_string($result)) {
-            $pem_themes = StringUtil::safeUnserialize($result);
+            $decoded    = json_decode($result, associative: true);
+            $pem_themes = is_array($decoded) ? $decoded : [];
             if ($pem_themes === []) {
                 return false;
             }

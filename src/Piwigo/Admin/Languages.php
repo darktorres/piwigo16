@@ -172,7 +172,6 @@ final class Languages
     {
         $get_data = [
           'category_id' => Config::pemLanguagesCategory(),
-          'format' => 'php',
         ];
 
         // Retrieve PEM versions
@@ -180,7 +179,7 @@ final class Languages
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         $result = '';
-        if ($this->adminService->fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
+        if ($this->adminService->fetchRemote($url, $result, $get_data) and is_string($result) and ($pem_versions = json_decode($result, associative: true)) !== null and is_array($pem_versions)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pem_ver0 = $pem_versions[0] ?? null;
                 $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
@@ -230,7 +229,8 @@ final class Languages
         }
 
         if ($this->adminService->fetchRemote($url, $result, $get_data) && is_string($result)) {
-            $pem_languages = StringUtil::safeUnserialize($result);
+            $decoded       = json_decode($result, associative: true);
+            $pem_languages = is_array($decoded) ? $decoded : [];
             if ($pem_languages === []) {
                 return false;
             }

@@ -143,9 +143,13 @@ final readonly class TelemetryService
             $piwigoInfos['file_extensions'] = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'ext');
         }
 
-        $url           = PEM_URL . '/api/get_extension_list.php';
-        $result        = '';
-        $pemExtensions = $this->adminService->fetchRemote($url, $result) && is_string($result) ? StringUtil::safeUnserialize($result) : [];
+        $url    = PEM_URL . '/api/get_extension_list.php';
+        $result = '';
+        $pemExtensions = [];
+        if ($this->adminService->fetchRemote($url, $result) && is_string($result)) {
+            $decoded       = json_decode($result, associative: true);
+            $pemExtensions = is_array($decoded) ? $decoded : [];
+        }
 
         if ($pemExtensions !== []) {
             $officialExts = [];
@@ -343,7 +347,7 @@ final readonly class TelemetryService
         $updateUrl = $this->configService->confGetParam('send_piwigo_infos_update_url', PHPWG_URL);
         $url = (is_scalar($updateUrl) ? (string) $updateUrl : PHPWG_URL) . '/ws.php';
 
-        $getData  = ['format' => 'php', 'method' => 'porg.installs.update', 'origin_hash' => $piwigoInfos['origin_hash']];
+        $getData  = ['method' => 'porg.installs.update', 'origin_hash' => $piwigoInfos['origin_hash']];
         $postData = ['data' => json_encode($piwigoInfos)];
 
         if (!$this->adminService->fetchRemote($url, $result, $getData, $postData)) {

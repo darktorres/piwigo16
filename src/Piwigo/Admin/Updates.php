@@ -312,15 +312,13 @@ final class Updates
 
     public function getServerExtensions(string $version = AppInfo::VERSION): bool
     {
-        $get_data = [
-          'format' => 'php',
-        ];
+        $get_data = [];
 
         // Retrieve PEM versions
         $versions_to_check = [];
         $url = PEM_URL . '/api/get_version_list.php';
         $result = '';
-        if ($this->adminService->fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = StringUtil::safeUnserialize($result)) {
+        if ($this->adminService->fetchRemote($url, $result, $get_data) and is_string($result) and ($pem_versions = json_decode($result, associative: true)) !== null and is_array($pem_versions)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
                 $pem_ver0 = $pem_versions[0] ?? null;
                 $pem_ver0_name = is_array($pem_ver0) && isset($pem_ver0['name']) ? $pem_ver0['name'] : null;
@@ -370,7 +368,8 @@ final class Updates
         }
 
         if ($this->adminService->fetchRemote($url, $result, $get_data, $post_data) && is_string($result)) {
-            $pem_exts = StringUtil::safeUnserialize($result);
+            $decoded  = json_decode($result, associative: true);
+            $pem_exts = is_array($decoded) ? $decoded : [];
             if ($pem_exts === []) {
                 return false;
             }
@@ -572,7 +571,7 @@ final class Updates
                 $chunk_num++;
                 if ($this->adminService->fetchRemote(PHPWG_URL.'/download/dlcounter.php?code='.$dl_code.'&chunk_num='.$chunk_num, $result)
                   and is_string($result)
-                  and $input = StringUtil::safeUnserialize($result)) {
+                  and is_array($input = json_decode($result, associative: true))) {
                     if (0 == ($input['remaining'] ?? -1)) {
                         $end = true;
                     }

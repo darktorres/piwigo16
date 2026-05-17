@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Section;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Calendar\CalendarService;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
@@ -13,12 +13,12 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocEndSectionInit;
 use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
@@ -47,10 +47,11 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class SectionInitializer
 {
     public function __construct(
-        private Connection $conn,
         private CalendarService $calendarService,
+        private CategoryRepository $categoryRepository,
         private CategoryService $categoryService,
         private HtmlService $htmlService,
+        private ImageRepository $imageRepository,
         private PermissionService $permissionService,
         private SearchService $searchService,
         private SessionService $sessionService,
@@ -199,20 +200,20 @@ final readonly class SectionInitializer
             'AND'
         );
 
-        // Closure for "SELECT DISTINCT(id) FROM images JOIN image_category
-        // WHERE <X> $forbiddenSql ORDER BY <config> [LIMIT N]" — used by 4
-        // section branches below (recent_pics, most_visited, best_rated, list).
+        // Closure for the "select image ids from images join image_category
+        // subject to permissions, ordered, optionally limited" pattern used by
+        // 4 section branches below (recent_pics, most_visited, best_rated, list).
         $sectionImageIds =
-            /** @return list<int|string> */
-            function (string $whereClause, ?int $limit = null) use ($forbiddenSql, $forbiddenParams, $forbiddenTypes): array {
-                $query = 'SELECT DISTINCT(id) FROM ' . Tables::images()
-                    . ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id'
-                    . ' WHERE ' . $whereClause . ' ' . $forbiddenSql . ' ' . Config::orderBy();
-                if ($limit !== null) {
-                    $query .= ' LIMIT ' . $limit;
-                }
-                return array_column($this->conn->executeQuery($query . ';', $forbiddenParams, $forbiddenTypes)->fetchAllAssociative(), 'id');
-            };
+            /** @return list<int> */
+            fn (string $whereClause, ?int $limit = null): array =>
+                $this->imageRepository->findSectionImageIdsByPredicate(
+                    $whereClause,
+                    $forbiddenSql,
+                    $forbiddenParams,
+                    $forbiddenTypes,
+                    Config::orderBy(),
+                    $limit,
+                );
 
         // ── Categories ────────────────────────────────────────────────────────
 
@@ -263,20 +264,19 @@ final readonly class SectionInitializer
                 if (isset($page['flat'])) {
                     if ($category !== null) {
                         $catUppercats = is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '';
-                        $catId        = is_scalar($category['id'] ?? null) ? (string) $category['id'] : '0';
+                        $catId        = is_numeric($category['id'] ?? null) ? (int) $category['id'] : 0;
                         [$subcatPermSql, $subcatPermParams, $subcatPermTypes] = $this->permissionService->getSqlConditionFandF(
                             ['forbidden_categories' => 'id', 'visible_categories' => 'id'],
                             "\n  AND"
                         );
-                        $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE
-    uppercats LIKE \'' . $catUppercats . ',%\' ' . $subcatPermSql;
-                        $subcatIds   = array_column($this->conn->executeQuery($query, $subcatPermParams, $subcatPermTypes)->fetchAllAssociative(), 'id');
+                        $subcatIds = $this->categoryRepository->findSubcategoryIdsByUppercatsPrefix(
+                            $catUppercats,
+                            $subcatPermSql,
+                            $subcatPermParams,
+                            $subcatPermTypes,
+                        );
                         $subcatIds[] = $catId;
-                        $subcatIdsStr = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $subcatIds);
-                        $whereSql    = 'category_id IN (' . implode(',', $subcatIdsStr) . ')';
+                        $whereSql    = 'category_id IN (' . implode(',', array_map(static fn (int $v): string => (string) $v, $subcatIds)) . ')';
                         [$flatPermSql, $flatPermParams, $flatPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
                     } else {
                         $userId    = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
@@ -295,16 +295,13 @@ SELECT id
                     $cachedItems   = $cacheItem->get();
                     $page['items'] = is_array($cachedItems) ? $cachedItems : [];
                 } else {
-                    $query = '
-SELECT DISTINCT(image_id)
-  FROM ' . Tables::imageCategory() . '
-    INNER JOIN ' . Tables::images() . ' ON id = image_id
-  WHERE
-    ' . $whereSql . '
-' . $flatPermSql . '
-  ' . Config::orderBy() . '
-;';
-                    $page['items'] = array_column($this->conn->executeQuery($query, $flatPermParams, $flatPermTypes)->fetchAllAssociative(), 'image_id');
+                    $page['items'] = $this->imageRepository->findImageIdsInCategoriesByWhere(
+                        $whereSql,
+                        $flatPermSql,
+                        $flatPermParams,
+                        $flatPermTypes,
+                        Config::orderBy(),
+                    );
                     if ($cacheItem !== null) {
                         $cacheItem->set($page['items']);
                         $cacheItem->expiresAfter(86400);
@@ -367,18 +364,16 @@ SELECT DISTINCT(image_id)
                 $this->userRepository->deleteAllFavoritesByUserId($userId);
                 $this->redirectResponder->redirect($this->urlService->makeIndexUrl(['section' => 'favorites']));
             } else {
-                $userId = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
+                $userIdInt = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
                 [$favPermSql, $favPermParams, $favPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
-                $query  = '
-SELECT image_id
-  FROM ' . Tables::favorites() . '
-    INNER JOIN ' . Tables::images() . ' ON image_id = id
-  WHERE user_id = ' . $userId . '
-' . $favPermSql . '
-  ' . Config::orderBy() . '
-;';
                 $page = array_merge($page, [
-                    'items' => array_column($this->conn->executeQuery($query, $favPermParams, $favPermTypes)->fetchAllAssociative(), 'image_id'),
+                    'items' => $this->imageRepository->findFavoriteImageIdsByUserId(
+                        $userIdInt,
+                        $favPermSql,
+                        $favPermParams,
+                        $favPermTypes,
+                        Config::orderBy(),
+                    ),
                 ]);
                 if (count($page['items']) > 0) {
                     TemplateRegistry::current()->assign('favorite', [

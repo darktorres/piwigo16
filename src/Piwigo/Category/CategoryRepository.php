@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the category domain. */
@@ -848,5 +849,28 @@ final class CategoryRepository extends AbstractRepository
             ->setParameter('permalink', $permalink)
             ->setParameter('catId', $catId)
             ->executeStatement();
+    }
+
+    /**
+     * Find subcategory ids whose `uppercats` column starts with the given
+     * comma-separated prefix (i.e. all descendants of the matching ancestor),
+     * subject to the caller's permission filter.
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<int>
+     */
+    public function findSubcategoryIdsByUppercatsPrefix(
+        string $catUppercats,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): array {
+        $query = 'SELECT id FROM ' . $this->table('categories')
+            . ' WHERE uppercats LIKE ? ' . $permWhere;
+        $params = [$catUppercats . ',%', ...$permParams];
+        $types  = [ParameterType::STRING, ...$permTypes];
+        $rows = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'id'));
     }
 }

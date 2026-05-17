@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the image domain. */
@@ -686,5 +687,82 @@ final class ImageRepository extends AbstractRepository
             ->executeQuery()
             ->fetchAssociative();
         return $row !== false ? $row : null;
+    }
+
+    /**
+     * Find image ids subject to a free-form WHERE predicate and the caller's
+     * permission filter, with the caller's ORDER BY suffix and optional LIMIT.
+     * Used by gallery section branches (recent_pics, most_visited, best_rated,
+     * list) where the WHERE predicate varies per branch but the join shape and
+     * permission/order are uniform.
+     *
+     * @param list<mixed>                            $permParams Bound permission params (positional ?)
+     * @param list<ArrayParameterType|ParameterType> $permTypes  Permission param types
+     * @return list<int>
+     */
+    public function findSectionImageIdsByPredicate(
+        string $wherePredicate,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+        string $orderBySuffix,
+        ?int $limit = null,
+    ): array {
+        $query = 'SELECT DISTINCT(id) FROM ' . $this->table('images')
+            . ' INNER JOIN ' . $this->table('image_category') . ' AS ic ON id = ic.image_id'
+            . ' WHERE ' . $wherePredicate . ' ' . $permWhere . ' ' . $orderBySuffix;
+        if ($limit !== null) {
+            $query .= ' LIMIT ' . $limit;
+        }
+        $rows = $this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'id'));
+    }
+
+    /**
+     * Find image ids in a set of categories (flat-section variant) — joins
+     * image_category → images and applies the caller's permission filter and
+     * ORDER BY. The WHERE predicate is the category-id restriction
+     * (e.g. 'category_id IN (1,2,3)' or '1=1' for "all categories").
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<int>
+     */
+    public function findImageIdsInCategoriesByWhere(
+        string $whereClause,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+        string $orderBySuffix,
+    ): array {
+        $query = 'SELECT DISTINCT(image_id) FROM ' . $this->table('image_category')
+            . ' INNER JOIN ' . $this->table('images') . ' ON id = image_id'
+            . ' WHERE ' . $whereClause . ' ' . $permWhere . ' ' . $orderBySuffix;
+        $rows = $this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'image_id'));
+    }
+
+    /**
+     * Find image ids in the given user's favorites, subject to the caller's
+     * permission filter and ORDER BY suffix.
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<int>
+     */
+    public function findFavoriteImageIdsByUserId(
+        int $userId,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+        string $orderBySuffix,
+    ): array {
+        $query = 'SELECT image_id FROM ' . $this->table('favorites')
+            . ' INNER JOIN ' . $this->table('images') . ' ON image_id = id'
+            . ' WHERE user_id = ? ' . $permWhere . ' ' . $orderBySuffix;
+        $params = [$userId, ...$permParams];
+        $types  = [ParameterType::INTEGER, ...$permTypes];
+        $rows = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'image_id'));
     }
 }

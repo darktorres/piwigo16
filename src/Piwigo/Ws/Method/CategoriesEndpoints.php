@@ -208,11 +208,15 @@ final readonly class CategoriesEndpoints
         }
         if ($params['public']) {
             $where[]  = 'status = "public"';
-            $where[]  = 'visible = "true"';
+            // `visible` is TINYINT(1) post-E2; 1 = shown, 0 = locked.
+            // The pre-E2 'visible = "true"' silently coerced to `visible = 0`,
+            // returning LOCKED rows for guest queries — fixed to `visible = 1`.
+            $where[]  = 'visible = 1';
             $joinUser = Config::guestId();
         } elseif ($this->permissionService->isAdmin()) {
             $forbiddenCategories = $this->permissionService->calculatePermissions($currentUser->id, $currentUser->status);
-            $where[]  = 'id NOT IN (' . $forbiddenCategories . ')';
+            // F5-b will parameterize this splice; for now re-stringify the int[].
+            $where[]  = 'id NOT IN (' . implode(',', $forbiddenCategories) . ')';
             $joinType = 'LEFT';
         }
         $query = 'SELECT SQL_CALC_FOUND_ROWS id, name, comment, permalink, status, uppercats, global_rank, id_uppercat, nb_images, count_images AS total_nb_images, representative_picture_id, user_representative_picture_id, count_images, count_categories, date_last, max_date_last, count_categories AS nb_categories, image_order FROM ' . Tables::categories() . ' ' . $joinType . ' JOIN ' . Tables::userCacheCategories() . ' ON id=cat_id AND user_id=' . $joinUser . ' WHERE ' . implode("\n    AND ", $where);

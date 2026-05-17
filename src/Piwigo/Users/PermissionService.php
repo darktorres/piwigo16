@@ -112,30 +112,39 @@ final readonly class PermissionService
         return false;
     }
 
-    public function calculatePermissions(int $userId, string $userStatus): string
+    /** @return list<int> category ids the user is not allowed to see (always non-empty; placeholder 0 if user has full access) */
+    public function calculatePermissions(int $userId, string $userStatus): array
     {
-        $privateArray = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE status = \'private\';')->fetchAllAssociative(), 'id');
+        $toInt = static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0;
 
-        $authorizedArray = array_column($this->conn->executeQuery('SELECT cat_id FROM ' . Tables::userAccess() . ' WHERE user_id = ' . $userId . ';')->fetchAllAssociative(), 'cat_id');
+        $privateIds = array_map($toInt, array_column(
+            $this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . " WHERE status = 'private';")->fetchAllAssociative(),
+            'id'
+        ));
 
-        $authorizedArray = array_merge(
-            $authorizedArray,
-            array_column($this->conn->executeQuery('SELECT cat_id FROM ' . Tables::userGroup() . ' AS ug INNER JOIN ' . Tables::groupAccess() . ' AS ga ON ug.group_id = ga.group_id WHERE ug.user_id = ' . $userId . ';')->fetchAllAssociative(), 'cat_id')
-        );
+        $authorizedIds = array_map($toInt, array_column(
+            $this->conn->executeQuery('SELECT cat_id FROM ' . Tables::userAccess() . ' WHERE user_id = ?', [$userId])->fetchAllAssociative(),
+            'cat_id'
+        ));
+        $authorizedIds = array_merge($authorizedIds, array_map($toInt, array_column(
+            $this->conn->executeQuery(
+                'SELECT cat_id FROM ' . Tables::userGroup() . ' AS ug INNER JOIN ' . Tables::groupAccess() . ' AS ga ON ug.group_id = ga.group_id WHERE ug.user_id = ?',
+                [$userId]
+            )->fetchAllAssociative(),
+            'cat_id'
+        )));
 
-        $authorizedArray = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $authorizedArray));
-        $forbiddenArray  = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $privateArray), $authorizedArray);
+        $forbiddenIds = array_diff($privateIds, $authorizedIds);
 
         if (!$this->isAdmin($userStatus)) {
-            $forbiddenArray = array_merge($forbiddenArray, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE visible = \'false\';')->fetchAllAssociative(), 'id')));
-            $forbiddenArray = array_unique($forbiddenArray);
+            $forbiddenIds = array_merge($forbiddenIds, array_map($toInt, array_column(
+                $this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE visible = 0;')->fetchAllAssociative(),
+                'id'
+            )));
+            $forbiddenIds = array_unique($forbiddenIds);
         }
 
-        if (empty($forbiddenArray)) {
-            $forbiddenArray[] = 0;
-        }
-
-        return implode(',', $forbiddenArray);
+        return $forbiddenIds === [] ? [0] : array_values($forbiddenIds);
     }
 
     /** @param array<string,string> $conditionFields */

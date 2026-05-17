@@ -407,7 +407,7 @@ SELECT id
         } elseif ($userLevel >= $imageLevel) {
             $authorizeds = array_diff(
                 array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . ($getImageIdInt) . ';')->fetchAllAssociative(), 'category_id')),
-                explode(',', $this->permissionService->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
+                array_map(static fn (int $v): string => (string) $v, $this->permissionService->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
             );
             if (count($authorizeds) > 0) {
                 $category = $authorizeds[array_rand($authorizeds)];

@@ -511,13 +511,13 @@ CREATE TABLE `piwigo_user_cache` (
   `user_id` mediumint(8) unsigned NOT NULL default '0',
   `need_update` tinyint(1) unsigned NOT NULL default 1,
   `cache_update_time` integer unsigned NOT NULL default 0,
-  `forbidden_categories` mediumtext,
+  `forbidden_categories` JSON DEFAULT NULL,
   `nb_total_images` mediumint(8) unsigned default NULL,
   `last_photo_date` datetime DEFAULT NULL,
   `nb_available_tags` INT(5) DEFAULT NULL,
   `nb_available_comments` INT(5) DEFAULT NULL,
   `image_access_type` enum('NOT IN','IN') NOT NULL default 'NOT IN',
-  `image_access_list` mediumtext default NULL,
+  `image_access_list` JSON DEFAULT NULL,
   PRIMARY KEY  (`user_id`),
   KEY `user_cache_need_update_idx` (`need_update`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

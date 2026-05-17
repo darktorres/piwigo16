@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -267,6 +269,28 @@ final class UserService
 
         $userdata['preferences'] = PreferencesService::decodePreferences($userdata['preferences'] ?? null);
 
+        // forbidden_categories / image_access_list are stored as JSON arrays
+        // on the DB (post-F5-a) but downstream readers in rawAttributes still
+        // expect the legacy comma-string shape. Transcode JSON → comma-string
+        // here; F5-b migrates the readers to consume int[] directly.
+        foreach (['forbidden_categories', 'image_access_list'] as $jsonCol) {
+            if (!array_key_exists($jsonCol, $userdata) || $userdata[$jsonCol] === null) {
+                continue;
+            }
+            $raw = $userdata[$jsonCol];
+            if (!is_string($raw)) {
+                continue;
+            }
+            try {
+                $decoded = json_decode($raw, true, 8, JSON_THROW_ON_ERROR);
+            } catch (\JsonException) {
+                $decoded = null;
+            }
+            $userdata[$jsonCol] = is_array($decoded)
+                ? implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $decoded))
+                : '';
+        }
+
         if ($useCache) {
             $generateUserCache = false;
             $udId              = is_numeric($userdata['id']) ? (int) $userdata['id'] : 0;
@@ -315,36 +339,53 @@ final class UserService
                 $userdata['cache_update_time'] = time();
                 $userdata['need_update']       = false;
 
-                $udStatusRaw         = $userdata['status'] ?? null;
-                $udStatus            = is_string($udStatusRaw) ? $udStatusRaw : '';
-                $udLevel             = is_numeric($userdata['level']) ? (int) $userdata['level'] : 0;
-                $udForbiddenCats     = $this->permissionService->calculatePermissions($udId, $udStatus);
-                $userdata['forbidden_categories'] = $udForbiddenCats;
+                $udStatusRaw     = $userdata['status'] ?? null;
+                $udStatus        = is_string($udStatusRaw) ? $udStatusRaw : '';
+                $udLevel         = is_numeric($userdata['level']) ? (int) $userdata['level'] : 0;
+                // forbidden_categories carried as int[] internally; encoded as
+                // JSON for DB write and (transiently, for back-compat) as a
+                // comma-string in $userdata for downstream rawAttributes
+                // readers — F5-b will switch those readers to int[].
+                $forbiddenCatIds = $this->permissionService->calculatePermissions($udId, $udStatus);
+                $userdata['forbidden_categories'] = implode(',', $forbiddenCatIds);
 
-                $query = 'SELECT DISTINCT(id) FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id WHERE category_id NOT IN (' . $udForbiddenCats . ') AND level>' . $udLevel;
-                $forbiddenIds = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
-                if (empty($forbiddenIds)) {
-                    $forbiddenIds[] = 0;
+                $forbiddenImageIds = array_map(
+                    static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+                    array_column(
+                        $this->conn->executeQuery(
+                            'SELECT DISTINCT(id) FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory()
+                            . ' ON id=image_id WHERE category_id NOT IN (?) AND level > ?',
+                            [$forbiddenCatIds, $udLevel],
+                            [ArrayParameterType::INTEGER, ParameterType::INTEGER]
+                        )->fetchAllAssociative(),
+                        'id'
+                    )
+                );
+                if ($forbiddenImageIds === []) {
+                    $forbiddenImageIds = [0];
                 }
                 $userdata['image_access_type'] = 'NOT IN';
-                $userdata['image_access_list'] = implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $forbiddenIds));
+                $userdata['image_access_list'] = implode(',', array_map(static fn (int $v): string => (string) $v, $forbiddenImageIds));
 
-                $query = 'SELECT COUNT(DISTINCT(image_id)) as total FROM ' . Tables::imageCategory() . ' WHERE category_id NOT IN (' . $udForbiddenCats . ') AND image_id ' . $userdata['image_access_type'] . ' (' . $userdata['image_access_list'] . ')';
-                $userdata['nb_total_images'] = $this->conn->executeQuery($query)->fetchOne();
+                $userdata['nb_total_images'] = $this->conn->executeQuery(
+                    'SELECT COUNT(DISTINCT(image_id)) AS total FROM ' . Tables::imageCategory()
+                    . ' WHERE category_id NOT IN (?) AND image_id NOT IN (?)',
+                    [$forbiddenCatIds, $forbiddenImageIds],
+                    [ArrayParameterType::INTEGER, ArrayParameterType::INTEGER]
+                )->fetchOne();
 
                 $userCacheCats = $this->categoryService->getComputedCategories($userdata, null);
                 if (!$this->permissionService->isAdmin($udStatus)) {
-                    $forbiddenIds = [];
+                    $emptyCatIds = [];
                     foreach ($userCacheCats as $cat) {
                         if ($cat['count_images'] == 0) {
-                            $forbiddenIds[] = is_numeric($cat['cat_id']) ? (int) $cat['cat_id'] : 0;
+                            $emptyCatIds[] = is_numeric($cat['cat_id']) ? (int) $cat['cat_id'] : 0;
                             $this->categoryService->removeComputedCategory($userCacheCats, $cat);
                         }
                     }
-                    if (!empty($forbiddenIds)) {
-                        $udForbiddenCatsStr = is_string($userdata['forbidden_categories']) ? $userdata['forbidden_categories'] : '';
-                        $forbiddenIdsStr    = implode(',', array_map(static fn (int $v): string => (string) $v, $forbiddenIds));
-                        $userdata['forbidden_categories'] = empty($udForbiddenCatsStr) ? $forbiddenIdsStr : $udForbiddenCatsStr . ',' . $forbiddenIdsStr;
+                    if ($emptyCatIds !== []) {
+                        $forbiddenCatIds = array_values(array_unique(array_merge($forbiddenCatIds, $emptyCatIds)));
+                        $userdata['forbidden_categories'] = implode(',', $forbiddenCatIds);
                     }
                 }
 
@@ -359,18 +400,15 @@ final class UserService
                 });
 
                 $this->conn->executeStatement('DELETE FROM ' . Tables::userCache() . ' WHERE user_id = ?', [$udId]);
-                $udNeedUpdate        = BoolUtil::fromMixed($userdata['need_update'] ?? null);
-                $udCacheUpdateTime   = is_numeric($userdata['cache_update_time']) ? (int) $userdata['cache_update_time'] : 0;
-                $udForbiddenCatsStr2 = is_string($userdata['forbidden_categories'] ?? null) ? $userdata['forbidden_categories'] : '';
-                $udNbTotalImages     = is_numeric($userdata['nb_total_images']) ? (int) $userdata['nb_total_images'] : 0;
-                $lastPhotoDateRaw    = $userdata['last_photo_date'] ?? null;
-                $udLastPhotoDate     = is_string($lastPhotoDateRaw) ? $lastPhotoDateRaw : '';
-                $imageAccessTypeRaw  = $userdata['image_access_type'] ?? null;
-                $udImageAccessType   = is_string($imageAccessTypeRaw) ? $imageAccessTypeRaw : '';
-                $imageAccessListRaw  = $userdata['image_access_list'] ?? null;
-                $udImageAccessList   = is_string($imageAccessListRaw) ? $imageAccessListRaw : '';
+                $udNeedUpdate      = BoolUtil::fromMixed($userdata['need_update'] ?? null);
+                $udCacheUpdateTime = is_numeric($userdata['cache_update_time']) ? (int) $userdata['cache_update_time'] : 0;
+                $udNbTotalImages   = is_numeric($userdata['nb_total_images']) ? (int) $userdata['nb_total_images'] : 0;
+                $lastPhotoDateRaw  = $userdata['last_photo_date'] ?? null;
+                $udLastPhotoDate   = is_string($lastPhotoDateRaw) ? $lastPhotoDateRaw : '';
+                $forbiddenCatsJson = json_encode($forbiddenCatIds, JSON_THROW_ON_ERROR);
+                $imageAccessJson   = json_encode($forbiddenImageIds, JSON_THROW_ON_ERROR);
                 $lastPhotoPlaceholder = $udLastPhotoDate === '' ? 'NULL' : '?';
-                $cacheParams = [$udId, $udNeedUpdate ? 1 : 0, $udCacheUpdateTime, $udForbiddenCatsStr2, $udNbTotalImages, $udImageAccessType, $udImageAccessList];
+                $cacheParams = [$udId, $udNeedUpdate ? 1 : 0, $udCacheUpdateTime, $forbiddenCatsJson, $udNbTotalImages, 'NOT IN', $imageAccessJson];
                 if ($udLastPhotoDate !== '') {
                     array_splice($cacheParams, 5, 0, [$udLastPhotoDate]);
                 }

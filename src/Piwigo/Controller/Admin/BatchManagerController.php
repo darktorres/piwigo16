@@ -1192,7 +1192,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                 $row_id_str = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
                 $authorizeds = array_diff(
                     array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $row_id_str . ';')->fetchAllAssociative(), 'category_id')),
-                    explode(',', $this->permissionService->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
+                    array_map(static fn (int $v): string => (string) $v, $this->permissionService->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
                 );
 
                 $catNames = RequestCache::remember('cat_names', 'all', fn (): array => array_column($this->conn->executeQuery('SELECT id, name, permalink FROM ' . Tables::categories() . ';')->fetchAllAssociative(), null, 'id') ?: []);

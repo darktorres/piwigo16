@@ -13,7 +13,7 @@ CREATE TABLE `piwigo_activity` (
   `performed_by` mediumint(8) unsigned NOT NULL,
   `session_idx` varchar(255) NOT NULL,
   `ip_address` varchar(50) DEFAULT NULL,
-  `occured_on` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `occured_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `details` varchar(255) DEFAULT NULL,
   `user_agent` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`activity_id`)
@@ -51,7 +51,7 @@ CREATE TABLE `piwigo_categories` (
   `global_rank` varchar(255) default NULL,
   `image_order` varchar(128) default NULL,
   `permalink` varchar(64) COLLATE utf8mb4_bin default NULL,
-  `lastmodified` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `categories_i3` (`permalink`),
   KEY `categories_i2` (`id_uppercat`),
@@ -66,7 +66,7 @@ DROP TABLE IF EXISTS `piwigo_comments`;
 CREATE TABLE `piwigo_comments` (
   `id` int(11) unsigned NOT NULL auto_increment,
   `image_id` mediumint(8) unsigned NOT NULL default '0',
-  `date` datetime NOT NULL default '1970-01-01 00:00:00',
+  `date` datetime DEFAULT NULL,
   `author` varchar(255) default NULL,
   `email` varchar(255) default NULL,
   `author_id` mediumint(8) unsigned DEFAULT NULL,
@@ -166,7 +166,7 @@ CREATE TABLE `piwigo_groups` (
   `id` smallint(5) unsigned NOT NULL auto_increment,
   `name` varchar(255) NOT NULL default '',
   `is_default` tinyint(1) unsigned NOT NULL default 0,
-  `lastmodified` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `groups_ui1` (`name`),
   KEY `lastmodified` (`lastmodified`)
@@ -179,7 +179,7 @@ CREATE TABLE `piwigo_groups` (
 DROP TABLE IF EXISTS `piwigo_history`;
 CREATE TABLE `piwigo_history` (
   `id` int(10) unsigned NOT NULL auto_increment,
-  `date` date NOT NULL default '1970-01-01',
+  `date` date DEFAULT NULL,
   `time` time NOT NULL default '00:00:00',
   `user_id` mediumint(8) unsigned NOT NULL default '0',
   `IP` char(39) NOT NULL default '',
@@ -258,7 +258,7 @@ DROP TABLE IF EXISTS `piwigo_images`;
 CREATE TABLE `piwigo_images` (
   `id` mediumint(8) unsigned NOT NULL auto_increment,
   `file` varchar(255) COLLATE utf8mb4_bin NOT NULL default '',
-  `date_available` datetime NOT NULL default '1970-01-01 00:00:00',
+  `date_available` datetime DEFAULT NULL,
   `date_creation` datetime default NULL,
   `name` varchar(255) default NULL,
   `comment` text,
@@ -279,7 +279,7 @@ CREATE TABLE `piwigo_images` (
   `rotation` tinyint unsigned default NULL,
   `latitude` double(8, 6) default NULL,
   `longitude` double(9, 6) default NULL,
-  `lastmodified` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`),
   KEY `images_i2` (`date_available`),
   KEY `images_i3` (`rating_score`),
@@ -334,7 +334,7 @@ DROP TABLE IF EXISTS `piwigo_old_permalinks`;
 CREATE TABLE `piwigo_old_permalinks` (
   `cat_id` smallint(5) unsigned NOT NULL default '0',
   `permalink` varchar(64) COLLATE utf8mb4_bin NOT NULL default '',
-  `date_deleted` datetime NOT NULL default '1970-01-01 00:00:00',
+  `date_deleted` datetime DEFAULT NULL,
   `last_hit` datetime default NULL,
   `hit` int(10) unsigned NOT NULL default '0',
   PRIMARY KEY  (`permalink`)
@@ -374,7 +374,7 @@ CREATE TABLE `piwigo_rate` (
   `element_id` mediumint(8) unsigned NOT NULL default '0',
   `anonymous_id` varchar(45) NOT NULL default '',
   `rate` tinyint(2) unsigned NOT NULL default '0',
-  `date` date NOT NULL default '1970-01-01',
+  `date` date DEFAULT NULL,
   PRIMARY KEY  (`element_id`,`user_id`,`anonymous_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -413,7 +413,7 @@ DROP TABLE IF EXISTS `piwigo_sessions`;
 CREATE TABLE `piwigo_sessions` (
   `id` varchar(50) COLLATE utf8mb4_bin NOT NULL default '',
   `data` mediumtext NOT NULL,
-  `expiration` datetime NOT NULL default '1970-01-01 00:00:00',
+  `expiration` datetime DEFAULT NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -438,7 +438,7 @@ CREATE TABLE `piwigo_tags` (
   `id` smallint(5) unsigned NOT NULL auto_increment,
   `name` varchar(255) NOT NULL default '',
   `url_name` varchar(255) COLLATE utf8mb4_bin NOT NULL default '',
-  `lastmodified` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`),
   KEY `tags_i1` (`url_name`),
   KEY `lastmodified` (`lastmodified`)
@@ -463,7 +463,7 @@ CREATE TABLE `piwigo_themes` (
 DROP TABLE IF EXISTS `piwigo_upgrade`;
 CREATE TABLE `piwigo_upgrade` (
   `id` varchar(20) NOT NULL default '',
-  `applied` datetime NOT NULL default '1970-01-01 00:00:00',
+  `applied` datetime DEFAULT NULL,
   `description` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -575,14 +575,14 @@ CREATE TABLE `piwigo_user_infos` (
   `show_nb_hits` tinyint(1) unsigned NOT NULL default 0,
   `recent_period` tinyint(3) unsigned NOT NULL default '7',
   `theme` varchar(255) NOT NULL default 'modus',
-  `registration_date` datetime NOT NULL default '1970-01-01 00:00:00',
+  `registration_date` datetime DEFAULT NULL,
   `enabled_high` tinyint(1) unsigned NOT NULL default 1,
   `level` tinyint unsigned NOT NULL default '0',
   `activation_key` varchar(255) default NULL,
   `activation_key_expire` datetime default NULL,
   `last_visit` datetime default NULL,
   `last_visit_from_history` tinyint(1) unsigned NOT NULL default 0,
-  `lastmodified` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `preferences` TEXT default NULL,
   PRIMARY KEY (`user_id`),
   KEY `lastmodified` (`lastmodified`)

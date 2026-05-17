@@ -30,7 +30,7 @@ CREATE TABLE `piwigo_activity` (
   `performed_by` mediumint unsigned NOT NULL,
   `session_idx` varchar(255) NOT NULL,
   `ip_address` varchar(50) DEFAULT NULL,
-  `occured_on` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `occured_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `details` varchar(255) DEFAULT NULL,
   `user_agent` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`activity_id`)
@@ -92,7 +92,7 @@ CREATE TABLE `piwigo_categories` (
   `global_rank` varchar(255) DEFAULT NULL,
   `image_order` varchar(128) DEFAULT NULL,
   `permalink` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin DEFAULT NULL,
-  `lastmodified` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `categories_i3` (`permalink`),
   KEY `categories_i2` (`id_uppercat`),
@@ -120,7 +120,7 @@ DROP TABLE IF EXISTS `piwigo_comments`;
 CREATE TABLE `piwigo_comments` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `image_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `date` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
+  `date` datetime DEFAULT NULL,
   `author` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
   `author_id` mediumint unsigned DEFAULT NULL,
@@ -270,7 +270,7 @@ CREATE TABLE `piwigo_groups` (
   `id` smallint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL DEFAULT '',
   `is_default` tinyint(1) unsigned NOT NULL DEFAULT 0,
-  `lastmodified` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `groups_ui1` (`name`),
   KEY `lastmodified` (`lastmodified`)
@@ -295,7 +295,7 @@ DROP TABLE IF EXISTS `piwigo_history`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_history` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `date` date NOT NULL DEFAULT '1970-01-01',
+  `date` date DEFAULT NULL,
   `time` time NOT NULL DEFAULT '00:00:00',
   `user_id` mediumint unsigned NOT NULL DEFAULT '0',
   `IP` char(39) NOT NULL DEFAULT '',
@@ -434,7 +434,7 @@ DROP TABLE IF EXISTS `piwigo_images`;
 CREATE TABLE `piwigo_images` (
   `id` mediumint unsigned NOT NULL AUTO_INCREMENT,
   `file` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL DEFAULT '',
-  `date_available` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
+  `date_available` datetime DEFAULT NULL,
   `date_creation` datetime DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
   `comment` text,
@@ -455,7 +455,7 @@ CREATE TABLE `piwigo_images` (
   `rotation` tinyint unsigned DEFAULT NULL,
   `latitude` double(8,6) DEFAULT NULL,
   `longitude` double(9,6) DEFAULT NULL,
-  `lastmodified` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `images_i2` (`date_available`),
   KEY `images_i3` (`rating_score`),
@@ -548,7 +548,7 @@ DROP TABLE IF EXISTS `piwigo_old_permalinks`;
 CREATE TABLE `piwigo_old_permalinks` (
   `cat_id` smallint unsigned NOT NULL DEFAULT '0',
   `permalink` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL DEFAULT '',
-  `date_deleted` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
+  `date_deleted` datetime DEFAULT NULL,
   `last_hit` datetime DEFAULT NULL,
   `hit` int unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`permalink`)
@@ -612,7 +612,7 @@ CREATE TABLE `piwigo_rate` (
   `element_id` mediumint unsigned NOT NULL DEFAULT '0',
   `anonymous_id` varchar(45) NOT NULL DEFAULT '',
   `rate` tinyint unsigned NOT NULL DEFAULT '0',
-  `date` date NOT NULL DEFAULT '1970-01-01',
+  `date` date DEFAULT NULL,
   PRIMARY KEY (`element_id`,`user_id`,`anonymous_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -675,7 +675,7 @@ DROP TABLE IF EXISTS `piwigo_sessions`;
 CREATE TABLE `piwigo_sessions` (
   `id` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL DEFAULT '',
   `data` mediumtext NOT NULL,
-  `expiration` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
+  `expiration` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -726,7 +726,7 @@ CREATE TABLE `piwigo_tags` (
   `id` smallint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL DEFAULT '',
   `url_name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL DEFAULT '',
-  `lastmodified` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `tags_i1` (`url_name`),
   KEY `lastmodified` (`lastmodified`)
@@ -776,7 +776,7 @@ DROP TABLE IF EXISTS `piwigo_upgrade`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_upgrade` (
   `id` varchar(20) NOT NULL DEFAULT '',
-  `applied` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
+  `applied` datetime DEFAULT NULL,
   `description` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
@@ -975,14 +975,14 @@ CREATE TABLE `piwigo_user_infos` (
   `show_nb_hits` tinyint(1) unsigned NOT NULL DEFAULT 0,
   `recent_period` tinyint unsigned NOT NULL DEFAULT '7',
   `theme` varchar(255) NOT NULL DEFAULT 'modus',
-  `registration_date` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
+  `registration_date` datetime DEFAULT NULL,
   `enabled_high` tinyint(1) unsigned NOT NULL DEFAULT 1,
   `level` tinyint unsigned NOT NULL DEFAULT '0',
   `activation_key` varchar(255) DEFAULT NULL,
   `activation_key_expire` datetime DEFAULT NULL,
   `last_visit` datetime DEFAULT NULL,
   `last_visit_from_history` tinyint(1) unsigned NOT NULL DEFAULT 0,
-  `lastmodified` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `preferences` text,
   PRIMARY KEY (`user_id`),
   KEY `lastmodified` (`lastmodified`)

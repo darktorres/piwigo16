@@ -247,7 +247,11 @@ final class AlbumController implements AdminSubControllerInterface
             self::placeAlbumInTree($associatedTree, $parents, $album);
         }
 
-        $is_forbidden = array_fill_keys(explode(',', is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : ''), 1);
+        $userForbiddenCats = $user['forbidden_categories'] ?? [];
+        $userForbiddenCats = is_array($userForbiddenCats)
+            ? array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userForbiddenCats)
+            : [];
+        $is_forbidden      = array_fill_keys($userForbiddenCats, 1);
 
         $nb_photos_in = array_column($this->conn->executeQuery('SELECT category_id, COUNT(*) AS nb_photos FROM ' . Tables::imageCategory() . ' GROUP BY category_id;')->fetchAllAssociative(), 'nb_photos', 'category_id');
 

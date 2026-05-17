@@ -78,24 +78,15 @@ final readonly class SearchFilterRenderer
             $my_search_fields_tmp = is_array($my_search['fields'] ?? null) ? $my_search['fields'] : [];
             $my_search['fields'] = $my_search_fields_tmp;
 
-            // SearchService::setForbidden / getClauseForFilter still use the
-            // string-fragment shape (10 splice callers downstream). Inline the
-            // tuple's int[] params into the SQL fragment here for now; F5-d
-            // will migrate the persistence layer + downstream callers in
-            // SearchFilterRenderer to the tuple form.
-            [$forbiddenSql, $forbiddenParams] = $this->permissionService->getSqlConditionFandF(
+            $forbidden = $this->permissionService->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
                 "\n  AND"
             );
-            $forbiddenInlined = $forbiddenSql;
-            foreach ($forbiddenParams as $p) {
-                $rep = is_array($p)
-                    ? implode(',', array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $p))
-                    : (string) (is_numeric($p) ? (int) $p : 0);
-                $forbiddenInlined = (string) preg_replace('/\?/', $rep, $forbiddenInlined, 1);
-            }
-            $search_details['forbidden'] = $forbiddenInlined;
-            $this->searchService->setForbidden($forbiddenInlined);
+            // Search details carry only the SQL-fragment portion for the
+            // hash-as-cache-key path; the params/types travel via setForbidden
+            // for reuse by getClauseForFilter below.
+            $search_details['forbidden'] = $forbidden[0];
+            $this->searchService->setForbidden($forbidden);
 
             if ($search_details['has_filters_filled']) {
                 $search_items = [-1];
@@ -157,7 +148,7 @@ final readonly class SearchFilterRenderer
             }
 
             if (isset($my_search['fields']['author']) and $display_filters['author']['access']) {
-                $filter_clause = $this->searchService->getClauseForFilter('author');
+                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('author');
 
                 $query = '
 SELECT
@@ -177,14 +168,14 @@ SELECT
                         $filter_rows_raw = $item->get();
                         $filter_rows     = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
                     } else {
-                        $db_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
+                        $db_rows = $this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative();
                         $item->set($db_rows);
                         $item->expiresAfter(86400);
                         $this->pool->save($item);
                         $filter_rows = $this->normalizeRows($db_rows);
                     }
                 } else {
-                    $filter_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
+                    $filter_rows = $this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative();
                 }
 
                 $author_names = [];
@@ -204,7 +195,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['date_posted']) and $display_filters['post_date']['access']) {
-                $filter_clause = $this->searchService->getClauseForFilter('date_posted');
+                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('date_posted');
                 $cache_key     = md5('filter_date_posted' . $userId . $userCacheTime . AppInfo::VERSION);
                 $item_dp       = $this->pool->getItem($cache_key);
                 $cache_hit_date_posted = !preg_match('/^image_id IN/', $filter_clause) && $item_dp->isHit();
@@ -239,7 +230,7 @@ SELECT
                     $list_of_dates = [];
                     $pre_counters = [];
 
-                    foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
+                    foreach ($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative() as $row) {
                         foreach ($thresholds as $threshold => $date_limit) {
                             if ($row['date'] > $date_limit) {
                                 $pre_counters[$threshold] = ($pre_counters[$threshold] ?? 0) + 1;
@@ -314,7 +305,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['date_created']) and $display_filters['creation_date']['access']) {
-                $filter_clause = $this->searchService->getClauseForFilter('date_created');
+                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('date_created');
                 $cache_key     = md5('filter_date_created' . $userId . $userCacheTime . AppInfo::VERSION);
                 $item_dc       = $this->pool->getItem($cache_key);
                 $cache_hit_date_created = !preg_match('/^image_id IN/', $filter_clause) && $item_dc->isHit();
@@ -349,7 +340,7 @@ SELECT
                     $list_of_dates = [];
                     $pre_counters = [];
 
-                    foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
+                    foreach ($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative() as $row) {
                         if (!empty($row['date'])) {
                             foreach ($thresholds as $threshold => $date_limit) {
                                 if ($row['date'] > $date_limit) {
@@ -426,7 +417,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['added_by']) and $display_filters['added_by']['access']) {
-                $filter_clause = $this->searchService->getClauseForFilter('added_by');
+                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('added_by');
 
                 $query = '
 SELECT
@@ -446,14 +437,14 @@ SELECT
                         $filter_rows_raw = $item_ab->get();
                         $filter_rows     = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
                     } else {
-                        $db_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
+                        $db_rows = $this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative();
                         $item_ab->set($db_rows);
                         $item_ab->expiresAfter(86400);
                         $this->pool->save($item_ab);
                         $filter_rows = $this->normalizeRows($db_rows);
                     }
                 } else {
-                    $filter_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
+                    $filter_rows = $this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative();
                 }
 
                 $added_by = $filter_rows;
@@ -525,7 +516,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['filetypes']) and $display_filters['file_type']['access']) {
-                $filter_clause = $this->searchService->getClauseForFilter('filetypes');
+                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('filetypes');
 
                 $cache_key    = md5('file_exts' . $userId . $userCacheTime . AppInfo::VERSION);
                 $item_fe      = $this->pool->getItem($cache_key);
@@ -539,11 +530,11 @@ SELECT
     COUNT(DISTINCT(id)) AS counter
   FROM ' . Tables::images() . ' AS i
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE 1=1' . $search_details['forbidden'] . '
+  WHERE 1=1' . $forbidden[0] . '
   GROUP BY ext
   ORDER BY counter DESC
 ;';
-                    $all_exts = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'counter', 'ext');
+                    $all_exts = array_column($this->conn->executeQuery($query, $forbidden[1], $forbidden[2])->fetchAllAssociative(), 'counter', 'ext');
                     $item_fe->set($all_exts);
                     $item_fe->expiresAfter(86400);
                     $this->pool->save($item_fe);
@@ -560,7 +551,7 @@ SELECT
   GROUP BY ext
   ORDER BY counter DESC
 ;';
-                    $filtered_exts = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'counter', 'ext');
+                    $filtered_exts = array_column($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative(), 'counter', 'ext');
 
                     $exts = [];
                     foreach ($all_exts as $ext => $counter) {
@@ -578,7 +569,7 @@ SELECT
                 $template->assign('SHOW_FILTER_RATINGS', true);
 
                 if (isset($my_search['fields']['ratings']) and $display_filters['rating']['access']) {
-                    $filter_clause = $this->searchService->getClauseForFilter('ratings');
+                    [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('ratings');
                     $cache_key         = md5('filter_ratings' . $userId . $userCacheTime . AppInfo::VERSION);
                     $item_rat          = $this->pool->getItem($cache_key);
                     $cache_hit_ratings = !preg_match('/^image_id IN/', $filter_clause) && $item_rat->isHit();
@@ -599,7 +590,7 @@ SELECT
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause;
 
-                        $filter_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
+                        $filter_rows = $this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative();
                         $ratings = array_fill(0, 6, 0);
 
                         foreach ($filter_rows as $row) {
@@ -635,7 +626,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['filesize_min']) && isset($my_search['fields']['filesize_max']) and $display_filters['file_size']['access']) {
-                $filter_clause = $this->searchService->getClauseForFilter('filesize');
+                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('filesize');
                 $filesizes = [];
                 $filesize = [];
 
@@ -647,7 +638,7 @@ SELECT
     JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
   WHERE ' . $filter_clause . '
 ;';
-                foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
+                foreach ($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative() as $row) {
                     $fs_val = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
                     $key_fs = sprintf('%.1f', $fs_val / 1024.0);
                     $filesizes[$key_fs] = ($filesizes[$key_fs] ?? 0) + 1;
@@ -677,7 +668,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['ratios']) and $display_filters['ratio']['access']) {
-                $filter_clause = $this->searchService->getClauseForFilter('ratios');
+                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('ratios');
                 $cache_key         = md5('filter_ratios' . $userId . $userCacheTime . AppInfo::VERSION);
                 $item_ratio        = $this->pool->getItem($cache_key);
                 $cache_hit_ratios  = !preg_match('/^image_id IN/', $filter_clause) && $item_ratio->isHit();
@@ -702,7 +693,7 @@ SELECT
     AND height IS NOT NULL
 ;';
 
-                    $filter_rows = $this->conn->executeQuery($query)->fetchAllAssociative();
+                    $filter_rows = $this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative();
                     $ratios = ['Portrait' => 0, 'square' => 0, 'Landscape' => 0, 'Panorama' => 0];
 
                     foreach ($filter_rows as $row) {
@@ -735,7 +726,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['height_min']) and isset($my_search['fields']['height_max']) and $display_filters['height']['access']) {
-                $filter_clause = $this->searchService->getClauseForFilter('height');
+                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('height');
 
                 $query = '
 SELECT
@@ -755,13 +746,13 @@ SELECT
                         $filter_rows_raw = $item_h->get();
                         $filter_rows     = is_array($filter_rows_raw) ? $filter_rows_raw : [];
                     } else {
-                        $filter_rows = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'height');
+                        $filter_rows = array_column($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative(), 'height');
                         $item_h->set($filter_rows);
                         $item_h->expiresAfter(86400);
                         $this->pool->save($item_h);
                     }
                 } else {
-                    $filter_rows = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'height');
+                    $filter_rows = array_column($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative(), 'height');
                 }
 
                 $heights = $filter_rows;
@@ -780,7 +771,7 @@ SELECT
             }
 
             if (isset($my_search['fields']['width_min']) and isset($my_search['fields']['width_max']) and $display_filters['width']['access']) {
-                $filter_clause = $this->searchService->getClauseForFilter('width');
+                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('width');
 
                 $query = '
 SELECT
@@ -800,13 +791,13 @@ SELECT
                         $filter_rows_raw = $item_w->get();
                         $filter_rows     = is_array($filter_rows_raw) ? $filter_rows_raw : [];
                     } else {
-                        $filter_rows = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'width');
+                        $filter_rows = array_column($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative(), 'width');
                         $item_w->set($filter_rows);
                         $item_w->expiresAfter(86400);
                         $this->pool->save($item_w);
                     }
                 } else {
-                    $filter_rows = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'width');
+                    $filter_rows = array_column($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative(), 'width');
                 }
 
                 $widths = $filter_rows;

@@ -151,7 +151,7 @@ final readonly class PictureController implements ControllerInterface
 
             if (!isset($rankOf[$imageId])) {
                 $visibleImages = FilterContextRegistry::current()->visibleImages;
-                if ($visibleImages !== '' && !in_array($imageId, explode(',', $visibleImages))) {
+                if ($visibleImages !== [] && !in_array($imageId, $visibleImages, true)) {
                     $this->htmlService->pageNotFound('The requested image is filtered', $this->urlService->duplicateIndexUrl());
                     return ResponseFactory::create(404);
                 }

@@ -58,8 +58,8 @@ final readonly class CategoryService
 
     public function checkRestrictions(int $categoryId): void
     {
-        $forbidden = CurrentUser::get()->rawAttributes['forbidden_categories'] ?? '';
-        if (in_array($categoryId, explode(',', is_scalar($forbidden) ? (string) $forbidden : ''))) {
+        $forbidden = CurrentUser::get()->rawAttributes['forbidden_categories'] ?? [];
+        if (is_array($forbidden) && in_array($categoryId, $forbidden, true)) {
             Kernel::service(HtmlService::class)->accessDenied();
         }
     }
@@ -378,9 +378,13 @@ FROM ' . Tables::categories() . ' as c
             $query .= ' AND i.date_available > ' . SqlExpr::recentPeriodExpr($filterDays);
         }
 
-        if (!empty($userdata['forbidden_categories'])) {
+        $forbiddenCatsParams = [];
+        $forbiddenCatsTypes  = [];
+        if (!empty($userdata['forbidden_categories']) && is_array($userdata['forbidden_categories'])) {
             $query .= '
-  WHERE c.id NOT IN (' . (is_string($userdata['forbidden_categories']) ? $userdata['forbidden_categories'] : '') . ')';
+  WHERE c.id NOT IN (?)';
+            $forbiddenCatsParams = [array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userdata['forbidden_categories']))];
+            $forbiddenCatsTypes  = [ArrayParameterType::INTEGER];
         }
 
         $query .= '
@@ -388,7 +392,7 @@ FROM ' . Tables::categories() . ' as c
 
         $userdata['last_photo_date'] = null;
         $cats                        = [];
-        foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach ($this->conn->executeQuery($query, $forbiddenCatsParams, $forbiddenCatsTypes)->fetchAllAssociative() as $row) {
             $udIdRaw = $userdata['id'] ?? null;
             $row['user_id']          = is_scalar($udIdRaw) ? $udIdRaw : 0;
             $row['nb_categories']    = 0;

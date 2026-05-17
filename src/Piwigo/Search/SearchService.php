@@ -76,7 +76,10 @@ final class SearchService
         $this->searchDetails = $normalized;
     }
 
-    public function setForbidden(string $forbidden): void
+    /**
+     * @param array{0: string, 1: list<mixed>, 2: list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType>} $forbidden
+     */
+    public function setForbidden(array $forbidden): void
     {
         $this->searchDetails['forbidden'] = $forbidden;
     }
@@ -515,14 +518,27 @@ final class SearchService
         ];
     }
 
-    public function getClauseForFilter(string $filterName): string
+    /**
+     * @return array{0: string, 1: list<mixed>, 2: list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType>}
+     */
+    public function getClauseForFilter(string $filterName): array
     {
         $otherFiltersItems = $this->getItemsForFilter($filterName);
         if (false === $otherFiltersItems) {
-            $forbidden = is_string($this->searchDetails['forbidden'] ?? null) ? $this->searchDetails['forbidden'] : '';
-            return '1=1' . $forbidden;
+            $forbidden = $this->searchDetails['forbidden'] ?? null;
+            if (is_array($forbidden) && isset($forbidden[0], $forbidden[1], $forbidden[2]) && is_string($forbidden[0]) && is_array($forbidden[1]) && is_array($forbidden[2])) {
+                $sql = '1=1' . $forbidden[0];
+                /**
+                 * Psalm/MoreSpecificReturnType: cannot prove list-shape after array-element narrowing.
+                 * @psalm-suppress LessSpecificReturnStatement
+                 * @var array{0: string, 1: list<mixed>, 2: list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType>} $tuple
+                 */
+                $tuple = [$sql, $forbidden[1], $forbidden[2]];
+                return $tuple;
+            }
+            return ['1=1', [], []];
         }
-        return 'image_id IN (' . implode(',', $otherFiltersItems) . ')';
+        return ['image_id IN (' . implode(',', $otherFiltersItems) . ')', [], []];
     }
 
     /** @return array<int>|false */

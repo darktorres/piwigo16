@@ -269,12 +269,12 @@ final class UserService
 
         $userdata['preferences'] = PreferencesService::decodePreferences($userdata['preferences'] ?? null);
 
-        // forbidden_categories / image_access_list are stored as JSON arrays
-        // on the DB (post-F5-a) but downstream readers in rawAttributes still
-        // expect the legacy comma-string shape. Transcode JSON → comma-string
-        // here; F5-b migrates the readers to consume int[] directly.
+        // forbidden_categories / image_access_list are stored as JSON int[]
+        // on the DB (post-F5-a). Decode to native int[] for rawAttributes
+        // consumers (PermissionService, CategoryService, AlbumController, etc.).
         foreach (['forbidden_categories', 'image_access_list'] as $jsonCol) {
             if (!array_key_exists($jsonCol, $userdata) || $userdata[$jsonCol] === null) {
+                $userdata[$jsonCol] = [];
                 continue;
             }
             $raw = $userdata[$jsonCol];
@@ -287,8 +287,8 @@ final class UserService
                 $decoded = null;
             }
             $userdata[$jsonCol] = is_array($decoded)
-                ? implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $decoded))
-                : '';
+                ? array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $decoded))
+                : [];
         }
 
         if ($useCache) {
@@ -342,12 +342,10 @@ final class UserService
                 $udStatusRaw     = $userdata['status'] ?? null;
                 $udStatus        = is_string($udStatusRaw) ? $udStatusRaw : '';
                 $udLevel         = is_numeric($userdata['level']) ? (int) $userdata['level'] : 0;
-                // forbidden_categories carried as int[] internally; encoded as
-                // JSON for DB write and (transiently, for back-compat) as a
-                // comma-string in $userdata for downstream rawAttributes
-                // readers — F5-b will switch those readers to int[].
+                // forbidden_categories carried as int[] both in $userdata and
+                // on the DB (JSON column post-F5-a).
                 $forbiddenCatIds = $this->permissionService->calculatePermissions($udId, $udStatus);
-                $userdata['forbidden_categories'] = implode(',', $forbiddenCatIds);
+                $userdata['forbidden_categories'] = $forbiddenCatIds;
 
                 $forbiddenImageIds = array_map(
                     static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
@@ -365,7 +363,7 @@ final class UserService
                     $forbiddenImageIds = [0];
                 }
                 $userdata['image_access_type'] = 'NOT IN';
-                $userdata['image_access_list'] = implode(',', array_map(static fn (int $v): string => (string) $v, $forbiddenImageIds));
+                $userdata['image_access_list'] = $forbiddenImageIds;
 
                 $userdata['nb_total_images'] = $this->conn->executeQuery(
                     'SELECT COUNT(DISTINCT(image_id)) AS total FROM ' . Tables::imageCategory()
@@ -385,7 +383,7 @@ final class UserService
                     }
                     if ($emptyCatIds !== []) {
                         $forbiddenCatIds = array_values(array_unique(array_merge($forbiddenCatIds, $emptyCatIds)));
-                        $userdata['forbidden_categories'] = implode(',', $forbiddenCatIds);
+                        $userdata['forbidden_categories'] = $forbiddenCatIds;
                     }
                 }
 
@@ -433,7 +431,7 @@ final class UserService
         $currentUser = CurrentUser::get();
         $user        = $currentUser->rawAttributes;
 
-        if (($user['forbidden_categories'] ?? '') == '') {
+        if (empty($user['forbidden_categories'])) {
             return;
         }
 

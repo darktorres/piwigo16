@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
@@ -209,6 +210,8 @@ final readonly class CategoriesEndpoints
         } elseif ($getlistCatId > 0) {
             $where[] = "uppercats REGEXP '(^|,)" . $getlistCatId . "(,|$)'";
         }
+        $listPermParams = [];
+        $listPermTypes  = [];
         if ($params['public']) {
             $where[]  = 'status = "public"';
             // `visible` is TINYINT(1) post-E2; 1 = shown, 0 = locked.
@@ -218,9 +221,10 @@ final readonly class CategoriesEndpoints
             $joinUser = Config::guestId();
         } elseif ($this->permissionService->isAdmin()) {
             $forbiddenCategories = $this->permissionService->calculatePermissions($currentUser->id, $currentUser->status);
-            // F5-b will parameterize this splice; for now re-stringify the int[].
-            $where[]  = 'id NOT IN (' . implode(',', $forbiddenCategories) . ')';
-            $joinType = 'LEFT';
+            $where[]  = 'id NOT IN (?)';
+            $listPermParams = [$forbiddenCategories];
+            $listPermTypes  = [ArrayParameterType::INTEGER];
+            $joinType       = 'LEFT';
         }
         $query = 'SELECT SQL_CALC_FOUND_ROWS id, name, comment, permalink, status, uppercats, global_rank, id_uppercat, nb_images, count_images AS total_nb_images, representative_picture_id, user_representative_picture_id, count_images, count_categories, date_last, max_date_last, count_categories AS nb_categories, image_order FROM ' . Tables::categories() . ' ' . $joinType . ' JOIN ' . Tables::userCacheCategories() . ' ON id=cat_id AND user_id=' . $joinUser . ' WHERE ' . implode("\n    AND ", $where);
         if (isset($params['search']) && $params['search'] !== '') {
@@ -238,7 +242,7 @@ final readonly class CategoriesEndpoints
         }
         $query .= ';';
         $getListConn = $this->conn;
-        $getListRows = $getListConn->executeQuery($query)->fetchAllAssociative();
+        $getListRows = $getListConn->executeQuery($query, $listPermParams, $listPermTypes)->fetchAllAssociative();
         if (isset($params['limit'])) {
             $resultCount    = $getListConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
             $resultCountInt = is_numeric($resultCount) ? (int) $resultCount : 0;

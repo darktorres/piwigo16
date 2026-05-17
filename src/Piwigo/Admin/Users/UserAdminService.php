@@ -199,7 +199,7 @@ final readonly class UserAdminService
     public function catAdminAccess(int $categoryId): bool
     {
         $user      = CurrentUser::isInitialized() ? CurrentUser::get()->rawAttributes : [];
-        $forbidden = is_scalar($user['forbidden_categories'] ?? null) ? (string) $user['forbidden_categories'] : '';
-        return !in_array($categoryId, explode(',', $forbidden));
+        $forbidden = $user['forbidden_categories'] ?? [];
+        return !is_array($forbidden) || !in_array($categoryId, $forbidden, true);
     }
 }

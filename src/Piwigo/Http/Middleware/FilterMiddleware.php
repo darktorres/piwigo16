@@ -123,24 +123,36 @@ final readonly class FilterMiddleware implements MiddlewareInterface
 
             $computedCategories = $this->categoryService->getComputedCategories($user, $recentPeriod);
 
-            $visibleCatKeys    = array_map(static fn (string $k): string => $k, array_keys($computedCategories));
-            $visibleCatStr     = implode(',', $visibleCatKeys);
-            $visibleCategories = $visibleCatStr !== '' ? $visibleCatStr : '-1';
+            $visibleCategories = array_map(
+                static fn (mixed $k): int => is_numeric($k) ? (int) $k : 0,
+                array_keys($computedCategories)
+            );
 
-            $catClause = $visibleCatStr !== ''
-                ? "\n  category_id IN ($visibleCatStr) and"
-                : '';
+            $catParams = [];
+            $catTypes  = [];
+            $catClause = '';
+            if ($visibleCategories !== []) {
+                $catClause = "\n  category_id IN (?) and";
+                $catParams = [$visibleCategories];
+                $catTypes  = [\Doctrine\DBAL\ArrayParameterType::INTEGER];
+            }
             $query = '
 SELECT distinct image_id
 FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::images() . ' ON image_id = id
 WHERE ' . $catClause . '
     date_available >= ' . SqlExpr::recentPeriodExpr($recentPeriod);
 
-            $visibleImageStr = implode(',', array_map(
-                static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
-                array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'image_id')
-            ));
-            $visibleImages = $visibleImageStr !== '' ? $visibleImageStr : '-1';
+            $visibleImages = array_map(
+                static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+                array_column($this->conn->executeQuery($query, $catParams, $catTypes)->fetchAllAssociative(), 'image_id')
+            );
+            // Empty result while filter is on: -1 sentinel so `IN (?)` matches nothing.
+            if ($visibleCategories === []) {
+                $visibleCategories = [-1];
+            }
+            if ($visibleImages === []) {
+                $visibleImages = [-1];
+            }
 
             $this->sessionService->setSessionVar('filter_enabled', true);
             $this->sessionService->setSessionVar('filter_check_key', $filterKey);
@@ -162,10 +174,14 @@ WHERE ' . $catClause . '
                     $computedCategories[$catKey] = $row;
                 }
             }
-            $visibleCategoriesRaw = $this->sessionService->getSessionVar('filter_visible_categories', '');
-            $visibleCategories    = is_scalar($visibleCategoriesRaw) ? (string) $visibleCategoriesRaw : '';
-            $visibleImagesRaw     = $this->sessionService->getSessionVar('filter_visible_images', '');
-            $visibleImages        = is_scalar($visibleImagesRaw) ? (string) $visibleImagesRaw : '';
+            $visibleCategoriesRaw = $this->sessionService->getSessionVar('filter_visible_categories');
+            $visibleCategories    = is_array($visibleCategoriesRaw)
+                ? array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $visibleCategoriesRaw))
+                : [];
+            $visibleImagesRaw     = $this->sessionService->getSessionVar('filter_visible_images');
+            $visibleImages        = is_array($visibleImagesRaw)
+                ? array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $visibleImagesRaw))
+                : [];
         }
 
         if ($this->filterService->getFilterPageValue('add_notes')) {

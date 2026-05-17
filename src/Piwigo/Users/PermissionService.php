@@ -165,14 +165,16 @@ final readonly class PermissionService
         $filter = FilterContextRegistry::current();
         $user   = CurrentUser::get()->rawAttributes;
 
-        $toIntArray = static function (mixed $csv): array {
-            if (!is_string($csv) || $csv === '') {
+        $asIntArray = static function (mixed $v): array {
+            if (!is_array($v)) {
                 return [];
             }
             $out = [];
-            foreach (explode(',', $csv) as $tok) {
-                if (is_numeric($tok)) {
-                    $out[] = (int) $tok;
+            foreach ($v as $item) {
+                if (is_int($item)) {
+                    $out[] = $item;
+                } elseif (is_numeric($item)) {
+                    $out[] = (int) $item;
                 }
             }
             return $out;
@@ -185,7 +187,7 @@ final readonly class PermissionService
         foreach ($conditionFields as $condition => $fieldName) {
             switch ($condition) {
                 case 'forbidden_categories':
-                    $ids = $toIntArray($user['forbidden_categories'] ?? null);
+                    $ids = $asIntArray($user['forbidden_categories'] ?? null);
                     if ($ids !== []) {
                         $clauses[] = $fieldName . ' NOT IN (?)';
                         $params[]  = $ids;
@@ -193,7 +195,7 @@ final readonly class PermissionService
                     }
                     break;
                 case 'visible_categories':
-                    $ids = $toIntArray($filter->visibleCategories);
+                    $ids = $asIntArray($filter->visibleCategories);
                     if ($ids !== []) {
                         $clauses[] = $fieldName . ' IN (?)';
                         $params[]  = $ids;
@@ -201,7 +203,7 @@ final readonly class PermissionService
                     }
                     break;
                 case 'visible_images':
-                    $ids = $toIntArray($filter->visibleImages);
+                    $ids = $asIntArray($filter->visibleImages);
                     if ($ids !== []) {
                         $clauses[] = $fieldName . ' IN (?)';
                         $params[]  = $ids;
@@ -221,7 +223,7 @@ final readonly class PermissionService
                             $params[]  = is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0;
                             $types[]   = ParameterType::INTEGER;
                         } elseif (!empty($user['image_access_list']) and !empty($user['image_access_type'])) {
-                            $accessIds = $toIntArray($user['image_access_list']);
+                            $accessIds = $asIntArray($user['image_access_list']);
                             $op = (is_string($user['image_access_type']) && $user['image_access_type'] === 'IN') ? 'IN' : 'NOT IN';
                             if ($accessIds !== []) {
                                 $clauses[] = $fieldName . ' ' . $op . ' (?)';

@@ -234,7 +234,7 @@ final readonly class TagsEndpoints
             $update = ['name' => $tagName, 'url_name' => $urlEvent->tagName];
         }
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagId, 'edit'));
-        Dml::singleUpdate(Tables::tags(), $update, ['id' => $tagId]);
+        $this->conn->update(Tables::tags(), $update, ['id' => $tagId]);
         $tag = $tagRepo->findById($tagId) ?? [];
         $tag['raw_name'] = $tag['name'] ?? '';
         $rawTagNameStr   = is_string($tag['raw_name']) ? $tag['raw_name'] : '';

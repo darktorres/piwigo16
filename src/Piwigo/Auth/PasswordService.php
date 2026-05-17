@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
@@ -13,7 +14,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Mail\MailService;
 use Piwigo\Url\UrlGenerator;
@@ -27,6 +27,7 @@ use Piwigo\Users\UserService;
 final readonly class PasswordService
 {
     public function __construct(
+        private Connection $conn,
         private AuthService $authService,
         private MailService $mailService,
         private PermissionService $permissionService,
@@ -229,7 +230,7 @@ final readonly class PasswordService
             return false;
         }
 
-        Dml::singleUpdate(
+        $this->conn->update(
             Tables::users(),
             [Config::userFields()['password'] => password_hash(is_string($newPwd = $_POST['use_new_pwd'] ?? null) ? $newPwd : '', PASSWORD_BCRYPT)],
             [Config::userFields()['id'] => $user_id]

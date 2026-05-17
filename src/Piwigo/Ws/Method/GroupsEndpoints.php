@@ -121,7 +121,7 @@ final readonly class GroupsEndpoints
             $isDefaultUpd          = $params['is_default'];
             $updates['is_default'] = BoolUtil::toInt(is_bool($isDefaultUpd) ? $isDefaultUpd : (is_string($isDefaultUpd) ? $isDefaultUpd : ''));
         }
-        Dml::singleUpdate(Tables::groups(), $updates, ['id' => $setinfoGroupId]);
+        $this->conn->update(Tables::groups(), $updates, ['id' => $setinfoGroupId]);
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $setinfoGroupId, 'edit'));
         return $service->invoke('pwg.groups.getList', ['group_id' => $setinfoGroupId]);
     }

@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Html\HtmlService;
@@ -34,7 +33,7 @@ final readonly class TagService
         $user = CurrentUser::get()->rawAttributes;
         if (!isset($user['nb_available_tags'])) {
             $user['nb_available_tags'] = count($this->getAvailableTags());
-            Dml::singleUpdate(
+            $this->conn->update(
                 Tables::userCache(),
                 ['nb_available_tags' => $user['nb_available_tags']],
                 ['user_id' => CurrentUser::get()->id]

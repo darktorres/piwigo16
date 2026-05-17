@@ -230,7 +230,7 @@ final readonly class UploadService
             if (isset($level)) {
                 $update['level'] = $level;
             }
-            Dml::singleUpdate(Tables::images(), $update, ['id' => $imageId]);
+            $this->conn->update(Tables::images(), $update, ['id' => $imageId]);
         } else {
             $file   = $originalFilename ?? basename($filePath);
             $insert = ['file' => $file, 'name' => StringUtil::getNameFromFile($file), 'date_available' => $dbnow, 'path' => preg_replace('#^' . preg_quote($this->paths->root) . '#', '', $filePath), 'filesize' => $fileInfos['filesize'], 'width' => $fileInfos['width'], 'height' => $fileInfos['height'], 'md5sum' => $md5sum, 'added_by' => $userId, 'rotation' => $rotation];
@@ -326,7 +326,7 @@ final readonly class UploadService
             'SELECT format_id FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . $formatOf . ' AND ext = "' . $formatExt . '"'
         )->fetchAllAssociative();
         if ($formats) {
-            Dml::singleUpdate(Tables::imageFormat(), ['filesize' => $fileInfos['filesize']], ['format_id' => $formats[0]['format_id'], 'image_id' => $formatOf, 'ext' => $formatExt]);
+            $this->conn->update(Tables::imageFormat(), ['filesize' => $fileInfos['filesize']], ['format_id' => $formats[0]['format_id'], 'image_id' => $formatOf, 'ext' => $formatExt]);
             $formatId  = $formats[0]['format_id'];
             $addStatus = 'update';
         } else {

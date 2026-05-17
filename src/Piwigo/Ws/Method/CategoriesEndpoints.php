@@ -559,7 +559,7 @@ final readonly class CategoriesEndpoints
             }
         }
         if ($performUpdate) {
-            Dml::singleUpdate(Tables::categories(), $update, ['id' => $update['id']]);
+            $this->conn->update(Tables::categories(), $update, ['id' => $update['id']]);
         }
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, 'edit', ['fields' => implode(',', array_keys($update))]));
         return null;

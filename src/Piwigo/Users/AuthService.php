@@ -17,7 +17,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\User\FinalizeLogin;
 use Piwigo\Event\User\LoginFailure;
@@ -134,7 +133,7 @@ final readonly class AuthService
             if (!array_key_exists($cookieLang, $this->languageService->getActiveLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookieLang . '" is not valid');
             }
-            Dml::singleUpdate(Tables::userInfos(), ['language' => $cookieLang], ['user_id' => $userId]);
+            $this->conn->update(Tables::userInfos(), ['language' => $cookieLang], ['user_id' => $userId]);
             setcookie('lang', '', ['expires' => time() - 3600, 'samesite' => 'Strict']);
         }
 
@@ -371,7 +370,7 @@ SELECT
         $user['id'] = $key['user_id'];
         CurrentUser::setRawAttributes($user);
 
-        Dml::singleUpdate(Tables::userAuthKeys(), ['last_used_on' => $key['dbnow']], ['user_id' => $user['id'], 'auth_key' => $key['auth_key']]);
+        $this->conn->update(Tables::userAuthKeys(), ['last_used_on' => $key['dbnow']], ['user_id' => $user['id'], 'auth_key' => $key['auth_key']]);
 
         $_SESSION['connected_with'] = $validKey;
 
@@ -434,7 +433,7 @@ SELECT
 
     public function deactivatePasswordResetKey(int $userId): void
     {
-        Dml::singleUpdate(Tables::userInfos(), ['activation_key' => null, 'activation_key_expire' => null], ['user_id' => $userId]);
+        $this->conn->update(Tables::userInfos(), ['activation_key' => null, 'activation_key_expire' => null], ['user_id' => $userId]);
     }
 
     /** @return array<string,mixed> */
@@ -444,7 +443,7 @@ SELECT
         $duration      = $firstLogin ? Config::passwordActivationDuration() : Config::passwordResetDuration();
         $expire        = new \DateTimeImmutable()->modify('+' . $duration . ' seconds')->format('Y-m-d H:i:s');
 
-        Dml::singleUpdate(Tables::userInfos(), [
+        $this->conn->update(Tables::userInfos(), [
             'activation_key'        => password_hash($activationKey, PASSWORD_BCRYPT),
             'activation_key_expire' => $expire,
         ], ['user_id' => $userId]);

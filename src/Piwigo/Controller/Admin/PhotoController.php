@@ -230,7 +230,7 @@ SELECT id
             /** @var array<string, mixed> $data */
             $data = $modifyEvent->data;
 
-            Dml::singleUpdate(Tables::images(), $data, ['id' => $data['id']]);
+            $this->conn->update(Tables::images(), $data, ['id' => $data['id']]);
 
             $tag_ids = [];
             $tags_post = $_POST['tags'] ?? null;

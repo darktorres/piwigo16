@@ -621,7 +621,7 @@ SELECT DISTINCT f.image_id
         $paramUid0   = is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : 0;
         $paramGroupId = is_array($params['group_id'] ?? null) ? $params['group_id'] : [];
 
-        Dml::singleUpdate(Tables::users(), $updates, [Config::userFields()['id'] => $paramUid0]);
+        $this->conn->update(Tables::users(), $updates, [Config::userFields()['id'] => $paramUid0]);
 
         if (isset($updates[Config::userFields()['password']])) {
             $this->authService->deactivateUserAuthKeys($paramUid0);
@@ -710,7 +710,7 @@ SELECT DISTINCT f.image_id
         if (!$this->authKeyRepo->existsByKeyAndUser($pkid, $uid)) {
             return Lang::t('API Key not found');
         }
-        Dml::singleUpdate(Tables::userAuthKeys(), ['revoked_on' => new \DateTimeImmutable()->format('Y-m-d H:i:s')], ['auth_key' => $pkid, 'user_id' => $uid]);
+        $this->conn->update(Tables::userAuthKeys(), ['revoked_on' => new \DateTimeImmutable()->format('Y-m-d H:i:s')], ['auth_key' => $pkid, 'user_id' => $uid]);
         return true;
     }
 
@@ -719,7 +719,7 @@ SELECT DISTINCT f.image_id
         if (!$this->authKeyRepo->existsByKeyAndUser($pkid, $userId)) {
             return Lang::t('API Key not found');
         }
-        Dml::singleUpdate(Tables::userAuthKeys(), ['apikey_name' => $apiName], ['auth_key' => $pkid, 'user_id' => $userId]);
+        $this->conn->update(Tables::userAuthKeys(), ['apikey_name' => $apiName], ['auth_key' => $pkid, 'user_id' => $userId]);
         return true;
     }
 

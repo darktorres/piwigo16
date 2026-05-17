@@ -486,7 +486,7 @@ SELECT DISTINCT id
         }
         $this->conn->insert(Tables::categories(), $insert);
         $insertedId = (int) $this->conn->lastInsertId();
-        Dml::singleUpdate(Tables::categories(), ['uppercats' => $uppercatsPrefix . $insertedId], ['id' => $insertedId]);
+        $this->conn->update(Tables::categories(), ['uppercats' => $uppercatsPrefix . $insertedId], ['id' => $insertedId]);
         $this->updateGlobalRank();
         $idUppercatRaw = $insert['id_uppercat'] ?? null;
         $idUppercatStr = is_string($idUppercatRaw) ? $idUppercatRaw : (is_numeric($idUppercatRaw) ? (string) $idUppercatRaw : '0');

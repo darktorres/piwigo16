@@ -725,7 +725,7 @@ final readonly class ImagesEndpoints
             }
         }
         if (count($update) > 0) {
-            Dml::singleUpdate(Tables::images(), $update, ['id' => $imageId]);
+            $this->conn->update(Tables::images(), $update, ['id' => $imageId]);
         }
         $urlParams = ['image_id' => $imageId];
         if (isset($params['categories'])) {
@@ -787,7 +787,7 @@ final readonly class ImagesEndpoints
                 $update[$key] = $params[$key];
             }
         }
-        Dml::singleUpdate(Tables::images(), $update, ['id' => $imageId]);
+        $this->conn->update(Tables::images(), $update, ['id' => $imageId]);
         if (isset($params['tags']) && !empty($params['tags'])) {
             $tagIds = [];
             if (is_array($params['tags'])) {
@@ -1045,7 +1045,7 @@ final readonly class ImagesEndpoints
             }
         }
         if (count($update) > 0) {
-            Dml::singleUpdate(Tables::images(), $update, ['id' => $imageId]);
+            $this->conn->update(Tables::images(), $update, ['id' => $imageId]);
         }
         $this->userAdminService->invalidateUserCache();
         if (CurrentUser::isInitialized() && !empty($params['level']) && $params['level'] > (CurrentUser::get()->rawAttributes['level'] ?? 0)) {
@@ -1264,7 +1264,7 @@ final readonly class ImagesEndpoints
         }
         if (count($update) > 0) {
             $update['id'] = $setImageId;
-            Dml::singleUpdate(Tables::images(), $update, ['id' => $update['id']]);
+            $this->conn->update(Tables::images(), $update, ['id' => $update['id']]);
             $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $setImageId, 'edit'));
         }
         if (isset($params['categories'])) {

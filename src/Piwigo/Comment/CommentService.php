@@ -11,7 +11,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\User\UserCommentCheck;
 use Piwigo\Event\User\UserCommentDeletion;
@@ -62,7 +61,7 @@ final readonly class CommentService
                 . ' WHERE ' . implode(' AND ', $where);
             $count = $this->conn->executeQuery($query)->fetchOne();
             $nb    = is_numeric($count) ? (int) $count : 0;
-            Dml::singleUpdate(Tables::userCache(), ['nb_available_comments' => $nb], ['user_id' => CurrentUser::get()->id]);
+            $this->conn->update(Tables::userCache(), ['nb_available_comments' => $nb], ['user_id' => CurrentUser::get()->id]);
             return $nb;
         });
         return is_int($cached) ? $cached : 0;

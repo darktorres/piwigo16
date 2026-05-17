@@ -25,7 +25,6 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Lifecycle\Init;
 use Piwigo\Event\Lifecycle\LoadingLang;
@@ -226,7 +225,7 @@ final class CommonBootstrap
             );
 
             if ($is_mail_send) {
-                Dml::singleUpdate(
+                Kernel::service(Connection::class)->update(
                     Tables::userAuthKeys(),
                     ['last_notified_on' => $notify_exp['dbnow']],
                     [

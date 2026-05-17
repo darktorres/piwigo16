@@ -19,6 +19,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\UserRepository;
+use Psr\Cache\CacheItemPoolInterface;
 
 final readonly class AdminService
 {
@@ -30,6 +31,7 @@ final readonly class AdminService
         private ImageRepository $imageRepository,
         private TagRepository $tagRepository,
         private UserRepository $userRepository,
+        private CacheItemPoolInterface $cachePool,
     ) {
     }
 
@@ -404,36 +406,37 @@ final readonly class AdminService
     {
         $langInfo = Lang::langInfo();
         $langCode = is_scalar($langInfo['code'] ?? null) ? (string) $langInfo['code'] : '';
-        $news     = null;
-        $cachePath = PHPWG_ROOT_PATH . Config::dataLocation() . 'cache/piwigo_latest_news-' . $langCode . '.cache.php';
-        if (!is_file($cachePath) || filemtime($cachePath) < strtotime('24 hours ago')) {
-            $url     = PHPWG_URL . '/ws.php?method=porg.news.getLatest&format=json';
-            $content = '';
-            if ($this->fetchRemote($url, $content) && is_string($content)) {
-                $porgNews = json_decode($content, true);
-                if (is_array($porgNews) && isset($porgNews['result']) && is_array($porgNews['result'])) {
-                    $topic    = $porgNews['result'];
-                    $postedOn = is_scalar($topic['posted_on'] ?? null) ? (string) $topic['posted_on'] : null;
-                    $news     = [
-                        'id'        => $topic['topic_id'] ?? null,
-                        'subject'   => $topic['subject'] ?? null,
-                        'posted_on' => $postedOn,
-                        'posted'    => $this->dateService->formatDate($postedOn),
-                        'url'       => $topic['url'] ?? null,
-                    ];
-                }
-                if (Filesystem::mkgetdir(dirname($cachePath))) {
-                    file_put_contents($cachePath, serialize($news));
-                }
-            } else {
-                return [];
-            }
+        $cacheKey = 'piwigo_news.' . preg_replace('/[^a-z0-9_-]/i', '_', $langCode);
+        $item     = $this->cachePool->getItem($cacheKey);
+
+        if ($item->isHit()) {
+            $cached = $item->get();
+            return is_array($cached) ? $cached : [];
         }
-        if ($news === null) {
-            $cacheContents = file_get_contents($cachePath);
-            $unserialized  = $cacheContents !== false ? unserialize($cacheContents) : [];
-            $news          = is_array($unserialized) ? $unserialized : [];
+
+        $url     = PHPWG_URL . '/ws.php?method=porg.news.getLatest&format=json';
+        $content = '';
+        if (!$this->fetchRemote($url, $content) || !is_string($content)) {
+            return [];
         }
+
+        $porgNews = json_decode($content, true);
+        $news     = [];
+        if (is_array($porgNews) && isset($porgNews['result']) && is_array($porgNews['result'])) {
+            $topic    = $porgNews['result'];
+            $postedOn = is_scalar($topic['posted_on'] ?? null) ? (string) $topic['posted_on'] : null;
+            $news     = [
+                'id'        => $topic['topic_id'] ?? null,
+                'subject'   => $topic['subject'] ?? null,
+                'posted_on' => $postedOn,
+                'posted'    => $this->dateService->formatDate($postedOn),
+                'url'       => $topic['url'] ?? null,
+            ];
+        }
+
+        $item->set($news)->expiresAfter(24 * 60 * 60);
+        $this->cachePool->save($item);
+
         return $news;
     }
 

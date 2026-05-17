@@ -144,15 +144,14 @@ WHERE ' . $catClause . '
 
             $this->sessionService->setSessionVar('filter_enabled', true);
             $this->sessionService->setSessionVar('filter_check_key', $filterKey);
-            $this->sessionService->setSessionVar('filter_categories', serialize($computedCategories));
+            $this->sessionService->setSessionVar('filter_categories', $computedCategories);
             $this->sessionService->setSessionVar('filter_visible_categories', $visibleCategories);
             $this->sessionService->setSessionVar('filter_visible_images', $visibleImages);
         } else {
-            $rawCategories      = $this->sessionService->getSessionVar('filter_categories', serialize([]));
-            $unserialized       = unserialize(is_string($rawCategories) ? $rawCategories : serialize([]));
+            $rawCategories      = $this->sessionService->getSessionVar('filter_categories');
             $computedCategories = [];
-            if (is_array($unserialized)) {
-                foreach ($unserialized as $catKey => $catRow) {
+            if (is_array($rawCategories)) {
+                foreach ($rawCategories as $catKey => $catRow) {
                     if (!is_array($catRow)) {
                         continue;
                     }

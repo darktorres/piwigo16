@@ -36,6 +36,10 @@ final class Tables
     {
         return Config::dbPrefix() . 'groups';
     }
+    public static function integrityIgnoredAnomalies(): string
+    {
+        return Config::dbPrefix() . 'integrity_ignored_anomalies';
+    }
     public static function history(): string
     {
         return Config::dbPrefix() . 'history';

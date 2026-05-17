@@ -11,6 +11,7 @@ use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Album\AlbumsTabRenderer;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomaliesRepository;
 use Piwigo\Admin\Notification\NotificationAdminService;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Tag\TagAdminService;
@@ -123,6 +124,7 @@ final class MiscController implements AdminSubControllerInterface
         private readonly PaginationService $paginationService,
         private readonly EventDispatcherInterface $dispatcher,
         private readonly CacheItemPoolInterface $pool,
+        private readonly IntegrityIgnoredAnomaliesRepository $integrityIgnoredAnomaliesRepo,
     ) {
     }
 
@@ -794,7 +796,7 @@ final class MiscController implements AdminSubControllerInterface
 
         // C13yInternal's listener registration moved to
         // Piwigo\Listener\ListCheckIntegritySubscriber (boot-time).
-        $c13y = new CheckIntegrity();
+        $c13y = new CheckIntegrity($this->integrityIgnoredAnomaliesRepo);
         $c13y->check();
         $c13y->display();
     }

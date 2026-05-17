@@ -6,8 +6,6 @@ namespace Piwigo\Admin\Integrity;
 
 use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
-use Piwigo\Config\Config;
-use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -19,14 +17,14 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class CheckIntegrity
 {
-    /** @var array<string> */
+    /** @var list<string> */
     public array $ignore_list = [];
     /** @var array<int, array<string, mixed>> */
     public array $retrieve_list = [];
-    /** @var array<string> */
+    /** @var list<string> */
     public array $build_ignore_list = [];
 
-    public function __construct()
+    public function __construct(private readonly IntegrityIgnoredAnomaliesRepository $ignoredAnomaliesRepo)
     {
         $this->ignore_list = [];
         $this->retrieve_list = [];
@@ -40,20 +38,7 @@ final class CheckIntegrity
      */
     public function check(): void
     {
-        // Ignore list
-        $conf_c13y_ignore = unserialize(Config::c13yIgnore() ?? '');
-        if (
-            is_array($conf_c13y_ignore) and
-            isset($conf_c13y_ignore['version']) and
-            ($conf_c13y_ignore['version'] == AppInfo::VERSION) and
-            is_array($conf_c13y_ignore['list'])
-        ) {
-            $ignore_list_changed = false;
-            $this->ignore_list = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $conf_c13y_ignore['list']);
-        } else {
-            $ignore_list_changed = true;
-            $this->ignore_list = [];
-        }
+        $this->ignore_list = $this->ignoredAnomaliesRepo->listForVersion(AppInfo::VERSION);
 
         // Retrieve list
         $this->retrieve_list = [];
@@ -144,14 +129,10 @@ final class CheckIntegrity
             }
         }
 
-        $ignore_list_changed =
-          (
-              ($ignore_list_changed) or
-        (count(array_diff($this->ignore_list, $this->build_ignore_list)) > 0) or
-        (count(array_diff($this->build_ignore_list, $this->ignore_list)) > 0)
-          );
-
-        if ($ignore_list_changed) {
+        if (
+            count(array_diff($this->ignore_list, $this->build_ignore_list)) > 0
+            || count(array_diff($this->build_ignore_list, $this->ignore_list)) > 0
+        ) {
             $this->updateConf($this->build_ignore_list);
         }
     }
@@ -262,13 +243,10 @@ final class CheckIntegrity
      *
      *  string[]  array
      */
-    /** @param array<mixed> $conf_ignore_list */
+    /** @param list<string> $conf_ignore_list */
     public function updateConf(array $conf_ignore_list = []): void
     {
-        $conf_c13y_ignore =  [];
-        $conf_c13y_ignore['version'] = AppInfo::VERSION;
-        $conf_c13y_ignore['list'] = $conf_ignore_list;
-        Kernel::service(ConfigService::class)->confUpdateParam('c13y_ignore', serialize($conf_c13y_ignore));
+        $this->ignoredAnomaliesRepo->replaceForVersion(AppInfo::VERSION, $conf_ignore_list);
     }
 
     /**

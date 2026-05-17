@@ -15,6 +15,7 @@ use Piwigo\Admin\History\HistoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Admin\Integrity\IntegrityIgnoredAnomaliesRepository;
 use Piwigo\Admin\MaintenanceService;
 use Piwigo\Admin\Metadata\MetadataAdminService;
 use Piwigo\Admin\Tabsheet;
@@ -112,6 +113,7 @@ final class MaintenanceController implements AdminSubControllerInterface
         private readonly CacheItemPoolInterface $pool,
         private readonly HtmlService $htmlService,
         private readonly EventDispatcherInterface $dispatcher,
+        private readonly IntegrityIgnoredAnomaliesRepository $integrityIgnoredAnomaliesRepo,
     ) {
     }
 
@@ -273,7 +275,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 MaintenanceService::repairAndOptimize();
                 break;
             case 'c13y':
-                $c13y = new CheckIntegrity();
+                $c13y = new CheckIntegrity($this->integrityIgnoredAnomaliesRepo);
                 $c13y->maintenance();
                 PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Reinitialize check integrity'), Lang::t('action successfully performed.')));
                 break;
@@ -504,7 +506,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 break;
             case 'database':        MaintenanceService::repairAndOptimize();
                 break;
-            case 'c13y':            $c13y = new CheckIntegrity();
+            case 'c13y':            $c13y = new CheckIntegrity($this->integrityIgnoredAnomaliesRepo);
                 $c13y->maintenance();
                 break;
             case 'search':          $this->searchRepository->deleteAll();

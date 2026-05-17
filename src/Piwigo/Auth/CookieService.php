@@ -6,7 +6,7 @@ namespace Piwigo\Auth;
 
 final class CookieService
 {
-    public static function cookiePath(): ?string
+    public static function cookiePath(): string
     {
         $redirectScriptNameRaw = $_SERVER['REDIRECT_SCRIPT_NAME'] ?? null;
         $redirectScriptName    = is_string($redirectScriptNameRaw) ? $redirectScriptNameRaw : '';
@@ -59,11 +59,11 @@ final class CookieService
     {
         if ($value == null or $expire === 0) {
             unset($_COOKIE['pwg_' . $var]);
-            return setcookie('pwg_' . $var, '', ['expires' => 0, 'path' => self::cookiePath() ?? '/', 'samesite' => 'Strict']);
+            return setcookie('pwg_' . $var, '', ['expires' => 0, 'path' => self::cookiePath(), 'samesite' => 'Strict']);
         } else {
             $_COOKIE['pwg_' . $var] = $value;
             $expire = is_numeric($expire) ? $expire : strtotime('+10 years');
-            return setcookie('pwg_' . $var, $value, ['expires' => $expire, 'path' => self::cookiePath() ?? '/', 'samesite' => 'Strict']);
+            return setcookie('pwg_' . $var, $value, ['expires' => $expire, 'path' => self::cookiePath(), 'samesite' => 'Strict']);
         }
     }
 

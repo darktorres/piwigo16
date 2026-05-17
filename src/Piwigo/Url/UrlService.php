@@ -92,7 +92,7 @@ final class UrlService
                 }
             }
         }
-        $url .= CookieService::cookiePath() ?? '';
+        $url .= CookieService::cookiePath();
         return $url;
     }
 

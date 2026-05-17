@@ -69,7 +69,7 @@ final readonly class IdentificationController implements ControllerInterface
         if ($post_redirect !== null) {
             $_POST['redirect_decoded'] = urldecode($post_redirect);
         }
-        $this->inputValidator->check('redirect_decoded', $_POST, false, '{^' . preg_quote((string) CookieService::cookiePath()) . '}');
+        $this->inputValidator->check('redirect_decoded', $_POST, false, '{^' . preg_quote(CookieService::cookiePath()) . '}');
 
         $redirect_to = '';
         $get_redirect = StringUtil::inputString('redirect', null, $_GET);
@@ -97,7 +97,7 @@ final readonly class IdentificationController implements ControllerInterface
                     $this->redirectResponder->redirect(
                         empty($redirect_to)
                         ? $this->urlService->getGalleryHomeUrl()
-                        : substr($root_url, 0, strlen($root_url) - strlen(CookieService::cookiePath() ?? '')) . $redirect_to
+                        : substr($root_url, 0, strlen($root_url) - strlen(CookieService::cookiePath())) . $redirect_to
                     );
                 } else {
                     PageState::current()->keyedErrors['login_form_error'] = Lang::t('Invalid username or password!');

@@ -166,7 +166,7 @@ final readonly class DerivativePipeline
         return $dp;
     }
 
-    public function trySwitchSource(DerivativeParams $params, ?int $original_mtime, ImageDerivativeContext $ctx): bool
+    public function trySwitchSource(DerivativeParams $params, int $original_mtime, ImageDerivativeContext $ctx): bool
     {
         if ($ctx->originalSize === null) {
             return false;

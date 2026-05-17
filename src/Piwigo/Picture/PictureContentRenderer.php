@@ -32,7 +32,7 @@ final class PictureContentRenderer
             if (array_key_exists($cookiePictureDeriv, ImageStdParams::getDefinedTypeMap())) {
                 Kernel::service(SessionService::class)->setSessionVar('picture_deriv', $cookiePictureDeriv);
             }
-            setcookie('picture_deriv', '', ['expires' => 0, 'path' => CookieService::cookiePath() ?? '']);
+            setcookie('picture_deriv', '', ['expires' => 0, 'path' => CookieService::cookiePath()]);
         }
 
         $derivRaw            = Kernel::service(SessionService::class)->getSessionVar('picture_deriv', Config::derivativeDefaultSize());

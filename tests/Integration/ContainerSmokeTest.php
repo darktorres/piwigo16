@@ -47,9 +47,15 @@ final class ContainerSmokeTest extends IntegrationTestCase
         Kernel::boot();
         $container   = Kernel::container();
         $definitions = require dirname(__DIR__, 2) . '/config/container.php';
+        if (!is_array($definitions)) {
+            self::fail('config/container.php must return an array of service definitions');
+        }
 
         $failures = [];
         foreach ($definitions as $id => $definition) {
+            if (!is_string($id)) {
+                self::fail('Non-string key in container.php: ' . var_export($id, true));
+            }
             try {
                 $container->get($id);
             } catch (\Throwable $e) {

@@ -153,7 +153,7 @@ final readonly class AuthService
                 ]);
             }
         } else {
-            setcookie(Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) CookieService::cookiePath(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
+            setcookie(Config::rememberMeName(), '', ['expires' => 0, 'path' => CookieService::cookiePath(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
         }
         if (session_id() != '') {
             session_regenerate_id(true);
@@ -187,7 +187,7 @@ final readonly class AuthService
                     return true;
                 }
             }
-            setcookie(Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) CookieService::cookiePath(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
+            setcookie(Config::rememberMeName(), '', ['expires' => 0, 'path' => CookieService::cookiePath(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
         }
         return false;
     }
@@ -295,7 +295,7 @@ final readonly class AuthService
         session_unset();
         session_destroy();
         setcookie((string) session_name(), '', ['expires' => 0, 'path' => (string) ini_get('session.cookie_path'), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
-        setcookie(Config::rememberMeName(), '', ['expires' => 0, 'path' => (string) CookieService::cookiePath(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
+        setcookie(Config::rememberMeName(), '', ['expires' => 0, 'path' => CookieService::cookiePath(), 'domain' => (string) ini_get('session.cookie_domain'), 'samesite' => 'Strict']);
     }
 
     public function authKeyLogin(string $authKey, bool $connectionByHeader = false): bool

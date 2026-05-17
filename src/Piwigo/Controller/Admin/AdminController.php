@@ -17,6 +17,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Event\Admin\AdminPagesRegistering;
 use Piwigo\Event\Location\LocBeginAdmin;
@@ -76,6 +77,7 @@ final readonly class AdminController implements ControllerInterface
         private RedirectResponder $redirectResponder,
         private EventDispatcherInterface $dispatcher,
         private AdminPageRegistry $pageRegistry,
+        private Paths $paths,
     ) {
     }
 
@@ -88,7 +90,7 @@ final readonly class AdminController implements ControllerInterface
         // runs. Replace it with the admin-theme template now.
         $admin_theme_raw = $this->preferencesService->userprefsGetParam('admin_theme', 'dark');
         $admin_theme     = is_scalar($admin_theme_raw) ? (string) $admin_theme_raw : 'dark';
-        $adminTpl        = new Template(PHPWG_ROOT_PATH . 'themes/admin', $admin_theme);
+        $adminTpl        = new Template($this->paths->root . 'themes/admin', $admin_theme);
         TemplateRegistry::set($adminTpl);
 
         /** @var array<string, mixed> $user */

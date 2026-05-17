@@ -22,6 +22,7 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -46,8 +47,12 @@ use Psr\Http\Message\ServerRequestInterface;
  * (the DB may not exist yet). The shim loads vendor/autoload.php and
  * functions.inc.php before calling this controller.
  */
-final class InstallController implements ControllerInterface
+final readonly class InstallController implements ControllerInterface
 {
+    public function __construct(private Paths $paths)
+    {
+    }
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request, array $args = []): ResponseInterface
     {
@@ -93,7 +98,7 @@ final class InstallController implements ControllerInterface
         Kernel::boot();
 
         // Scan available languages from the filesystem — no DI or DB needed.
-        $fsLanguages = self::scanFsLanguages();
+        $fsLanguages = $this->scanFsLanguages();
 
         if (isset($_GET['language'])) {
             $language = strip_tags(is_string($rawLang = $_GET['language']) ? $rawLang : '');
@@ -147,7 +152,7 @@ final class InstallController implements ControllerInterface
             $errors[] = Lang::t('PHP version %s required (you are running on PHP %s)', AppInfo::REQUIRED_PHP_VERSION, PHP_VERSION);
         }
 
-        $tpl = new Template(PHPWG_ROOT_PATH . 'themes/admin', 'dark');
+        $tpl = new Template($this->paths->root . 'themes/admin', 'dark');
         TemplateRegistry::set($tpl);
         $step = 1;
 
@@ -187,7 +192,7 @@ final class InstallController implements ControllerInterface
             if (count($errors) == 0) {
                 $step = 2;
 
-                $envPath = PHPWG_ROOT_PATH . TestMode::envFile();
+                $envPath = $this->paths->root . TestMode::envFile();
                 $envBody = "PIWIGO_DB_HOST={$dbhost}\n"
                          . "PIWIGO_DB_USER={$dbuser}\n"
                          . "PIWIGO_DB_PASSWORD={$dbpasswd}\n"
@@ -216,8 +221,8 @@ final class InstallController implements ControllerInterface
 
                 $configService = Kernel::service(ConfigService::class);
 
-                InstallService::executeSqlFile(PHPWG_ROOT_PATH . 'install/piwigo_structure-mysql.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
-                InstallService::executeSqlFile(PHPWG_ROOT_PATH . 'install/config.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
+                InstallService::executeSqlFile($this->paths->root . 'install/piwigo_structure-mysql.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
+                InstallService::executeSqlFile($this->paths->root . 'install/config.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
 
                 Dml::singleInsert($prefixeTable . 'config', [
                     'param'   => 'secret_key',
@@ -234,7 +239,7 @@ final class InstallController implements ControllerInterface
                 InstallService::activateCoreThemes();
                 InstallService::activateCorePlugins();
 
-                Dml::massInserts(Tables::sites(), ['id', 'galleries_url'], [['id' => 1, 'galleries_url' => PHPWG_ROOT_PATH . 'galleries/']]);
+                Dml::massInserts(Tables::sites(), ['id', 'galleries_url'], [['id' => 1, 'galleries_url' => $this->paths->root . 'galleries/']]);
 
                 $inserts = [
                     ['id' => 1, 'username' => $admin_name, 'password' => password_hash($admin_pass1, PASSWORD_BCRYPT), 'mail_address' => $admin_mail],
@@ -351,10 +356,10 @@ final class InstallController implements ControllerInterface
      *
      * @return array<string, array<string, string>>
      */
-    private static function scanFsLanguages(): array
+    private function scanFsLanguages(): array
     {
         $langs = [];
-        $dir = opendir(PHPWG_ROOT_PATH . 'language');
+        $dir = opendir($this->paths->root . 'language');
         if ($dir === false) {
             return $langs;
         }
@@ -362,7 +367,7 @@ final class InstallController implements ControllerInterface
             if ($file === '.' || $file === '..') {
                 continue;
             }
-            $path = PHPWG_ROOT_PATH . 'language/' . $file;
+            $path = $this->paths->root . 'language/' . $file;
             if (!is_dir($path) || is_link($path)
                 || !preg_match('/^[a-zA-Z0-9-_]+$/', $file)
                 || !file_exists($path . '/common.po')

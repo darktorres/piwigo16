@@ -8,6 +8,7 @@ use Piwigo\Admin\Notification\NotificationAdminService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
@@ -31,6 +32,7 @@ final readonly class NbmController implements ControllerInterface
         private PermissionService $permissionService,
         private LangService $langService,
         private EventDispatcherInterface $dispatcher,
+        private Paths $paths,
     ) {
     }
 
@@ -42,7 +44,7 @@ final readonly class NbmController implements ControllerInterface
         MailNotificationContext::init();
         $this->langService->loadLanguage('admin.lang');
         $this->dispatcher->dispatch(new LoadingLang());
-        $this->langService->loadLanguage('lang', PHPWG_ROOT_PATH . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
+        $this->langService->loadLanguage('lang', $this->paths->root . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
 
         $rawSubscribe   = $_GET['subscribe']   ?? null;
         $rawUnsubscribe = $_GET['unsubscribe'] ?? null;

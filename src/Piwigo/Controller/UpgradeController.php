@@ -15,6 +15,7 @@ use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
 use Piwigo\Http\RequestContext;
@@ -40,6 +41,7 @@ final readonly class UpgradeController implements ControllerInterface
         private ConfigService $configService,
         private Connection $conn,
         private LangService $langService,
+        private Paths $paths,
     ) {
     }
 
@@ -55,7 +57,7 @@ final readonly class UpgradeController implements ControllerInterface
         }
 
         define('PREFIX_TABLE', $prefixeTable);
-        define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
+        define('UPGRADES_PATH', $this->paths->root . 'install/db');
 
         Kernel::boot();
 
@@ -125,7 +127,7 @@ final readonly class UpgradeController implements ControllerInterface
             exit;
         }
 
-        $tpl = new Template(PHPWG_ROOT_PATH . 'themes/admin', 'dark');
+        $tpl = new Template($this->paths->root . 'themes/admin', 'dark');
         TemplateRegistry::set($tpl);
         $tpl->assign([
             'RELEASE'        => AppInfo::VERSION,

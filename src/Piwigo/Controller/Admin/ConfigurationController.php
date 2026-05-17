@@ -20,6 +20,7 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
@@ -56,6 +57,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
         private InputValidator $inputValidator,
         private WatermarkProcessor $watermarkProcessor,
         private SearchFilterViewRepository $filterViewRepo,
+        private Paths $paths,
     ) {
     }
 
@@ -499,13 +501,13 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
 
             case 'watermark':
                 $watermark_files = [];
-                $watermarkGlob = glob(PHPWG_ROOT_PATH . 'themes/_base/watermarks/*.png');
+                $watermarkGlob = glob($this->paths->root . 'themes/_base/watermarks/*.png');
                 foreach ($watermarkGlob !== false ? $watermarkGlob : [] as $file) {
-                    $watermark_files[] = substr($file, strlen(PHPWG_ROOT_PATH));
+                    $watermark_files[] = substr($file, strlen($this->paths->root));
                 }
-                if (($glob = glob(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
+                if (($glob = glob($this->paths->root . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
                     foreach ($glob as $file) {
-                        $watermark_files[] = substr($file, strlen(PHPWG_ROOT_PATH));
+                        $watermark_files[] = substr($file, strlen($this->paths->root));
                     }
                 }
                 $watermark_filemap = ['' => '---'];
@@ -570,8 +572,8 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
     private function orderByIsLocal(): bool
     {
         $candidates = [
-            PHPWG_ROOT_PATH . 'local/config/config.inc.php',
-            PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.inc.php',
+            $this->paths->root . 'local/config/config.inc.php',
+            $this->paths->root . PWG_LOCAL_DIR . 'config/config.inc.php',
         ];
         foreach ($candidates as $path) {
             $real = realpath($path);

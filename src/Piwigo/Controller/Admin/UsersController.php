@@ -15,6 +15,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\SchemaHelper;
@@ -62,6 +63,7 @@ final readonly class UsersController implements AdminSubControllerInterface
         private InputValidator $inputValidator,
         private LanguageService $languageService,
         private ThemeService $themeService,
+        private Paths $paths,
     ) {
     }
 
@@ -528,8 +530,8 @@ final readonly class UsersController implements AdminSubControllerInterface
     private function webmasterIdIsLocal(): bool
     {
         $candidates = [
-            PHPWG_ROOT_PATH . 'local/config/config.inc.php',
-            PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.inc.php',
+            $this->paths->root . 'local/config/config.inc.php',
+            $this->paths->root . PWG_LOCAL_DIR . 'config/config.inc.php',
         ];
         foreach ($candidates as $path) {
             $real = realpath($path);

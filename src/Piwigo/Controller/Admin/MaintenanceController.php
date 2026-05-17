@@ -32,6 +32,7 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
@@ -114,6 +115,7 @@ final class MaintenanceController implements AdminSubControllerInterface
         private readonly HtmlService $htmlService,
         private readonly EventDispatcherInterface $dispatcher,
         private readonly IntegrityIgnoredAnomaliesRepository $integrityIgnoredAnomaliesRepo,
+        private readonly Paths $paths,
     ) {
     }
 
@@ -1332,7 +1334,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 if (substr_compare($fulldir, '../', 0, 3) == 0) {
                     $fulldir = substr($fulldir, 3);
                 }
-                $to_delete_derivative_dirs[] = PHPWG_ROOT_PATH . Config::derivativeDir() . $fulldir;
+                $to_delete_derivative_dirs[] = $this->paths->root . Config::derivativeDir() . $fulldir;
             }
             if (count($to_delete) > 0) {
                 if (!$simulate) {

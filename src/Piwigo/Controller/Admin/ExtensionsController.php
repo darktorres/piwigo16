@@ -25,6 +25,7 @@ use Piwigo\Core\Filesystem;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
@@ -81,6 +82,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         private InputValidator $inputValidator,
         private RedirectResponder $redirectResponder,
         private EventDispatcherInterface $dispatcher,
+        private Paths $paths,
     ) {
     }
 
@@ -592,7 +594,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         $base_url = $this->urlGenerator->admin($pageStr) . '&tab=' . $tabStr;
         $themes   = Kernel::service(Themes::class);
 
-        $themes_dir = PHPWG_ROOT_PATH . 'themes';
+        $themes_dir = $this->paths->root . 'themes';
         if (!is_writable($themes_dir)) {
             PageState::current()->addError(Lang::t('Add write access to the "%s" directory', 'themes'));
         }
@@ -682,7 +684,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
             if ($mime_type === false || !in_array($mime_type, array_keys($allowed_mimes))) {
                 $tpl->assign(['save_error' => 'Invalid image file.']);
             } else {
-                $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'logo';
+                $upload_dir = $this->paths->root . PWG_LOCAL_DIR . 'logo';
                 if (Filesystem::mkgetdir($upload_dir, Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR)) {
                     $stdPgsLogoNameRaw = $std_pgs_logo_file['name'] ?? null;
                     $std_pgs_logo_name = is_string($stdPgsLogoNameRaw) ? $stdPgsLogoNameRaw : '';
@@ -867,7 +869,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         $languages = Kernel::service(Languages::class);
         $languages->getDbLanguages();
 
-        $languages_dir = PHPWG_ROOT_PATH . 'language';
+        $languages_dir = $this->paths->root . 'language';
         if (!is_writable($languages_dir)) {
             PageState::current()->addError(Lang::t('Add write access to the "%s" directory', 'language'));
         }
@@ -1128,7 +1130,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         $eligible_templates = ['----------' => 'N/A', 'about.tpl' => 'about', 'comments.tpl' => 'comments', 'comment_list.tpl' => 'comment_list', 'footer.tpl' => 'tail', 'header.tpl' => 'header', 'identification.tpl' => 'identification', 'index.tpl' => 'index', 'mainpage_categories.tpl' => 'index_category_thumbnails', 'menubar.tpl' => 'menubar', 'menubar_categories.tpl' => 'mbCategories', 'menubar_identification.tpl' => 'mbIdentification', 'menubar_links.tpl' => 'mbLinks', 'menubar_menu.tpl' => 'mbMenu', 'menubar_specials.tpl' => 'mbSpecials', 'menubar_tags.tpl' => 'mbTags', 'month_calendar.tpl' => 'month_calendar', 'navigation_bar.tpl' => 'navbar', 'nbm.tpl' => 'nbm', 'notification.tpl' => 'notification', 'password.tpl' => 'password', 'picture.tpl' => 'picture', 'picture_content.tpl' => 'default_content', 'picture_nav_buttons.tpl' => 'picture_nav_buttons', 'popuphelp.tpl' => 'popuphelp', 'profile.tpl' => 'profile', 'profile_content.tpl' => 'profile_content', 'redirect.tpl' => 'redirect', 'register.tpl' => 'register', 'search.tpl' => 'search', 'slideshow.tpl' => 'slideshow', 'tags.tpl' => 'tags', 'thumbnails.tpl' => 'index_thumbnails'];
 
         $flip_templates      = array_flip($eligible_templates);
-        $available_templates = array_merge(['N/A' => '----------'], $this->adminService->getDirs(PHPWG_ROOT_PATH . 'themes'));
+        $available_templates = array_merge(['N/A' => '----------'], $this->adminService->getDirs($this->paths->root . 'themes'));
 
         if (isset($_POST['submit'])) {
             $reptplRaw   = $_POST['reptpl'] ?? null;

@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\UpgradeService;
 use Piwigo\Config\Config;
+use Piwigo\Core\Paths;
 use Piwigo\Db\Dml;
 use Piwigo\Http\ResponseFactory;
 use Psr\Http\Message\ResponseInterface;
@@ -23,6 +24,7 @@ final readonly class UpgradeFeedController implements ControllerInterface
 {
     public function __construct(
         private Connection $conn,
+        private Paths $paths,
     ) {
     }
 
@@ -34,7 +36,7 @@ final readonly class UpgradeFeedController implements ControllerInterface
         }
 
         define('PREFIX_TABLE', Config::dbPrefix());
-        define('UPGRADES_PATH', PHPWG_ROOT_PATH . 'install/db');
+        define('UPGRADES_PATH', $this->paths->root . 'install/db');
 
         $applied  = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT id FROM ' . PREFIX_TABLE . 'upgrade')->fetchAllAssociative(), 'id'));
         $existing = UpgradeService::getAvailableUpgradeIds();

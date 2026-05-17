@@ -153,6 +153,23 @@ final class SearchService
             "\n  AND"
         );
 
+        // Closure binds $forbidden once and runs the per-filter "SELECT
+        // DISTINCT(id) FROM images JOIN image_category WHERE <filter> $forbidden"
+        // shape used by every filter below. F5-c will swap the body to a
+        // parameterized form when the PermissionService API returns a tuple.
+        $filterImageIds =
+            /** @return list<int|string> */
+            function (string $whereClause) use ($forbidden): array {
+                return array_column(
+                    $this->conn->executeQuery(
+                        'SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i'
+                        . ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id'
+                        . ' WHERE ' . $whereClause . ' ' . $forbidden . ';'
+                    )->fetchAllAssociative(),
+                    'id'
+                );
+            };
+
         $imageIdsForFilter = [];
 
         $displayFilters = $this->filterViewRepo->listAll();
@@ -261,7 +278,7 @@ final class SearchService
                 $allwordsMode = 'AND';
             }
             $filterClause = "\n         " . implode("\n         " . $allwordsMode . "\n         ", $wordClauses);
-            $imageIdsForFilter['allwords'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE ' . $filterClause . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['allwords'] = $filterImageIds($filterClause);
 
             if (count($catIdsByWord) > 0) {
                 $matchingCatIds = null;
@@ -287,7 +304,7 @@ final class SearchService
             foreach ($authorWords as $word) {
                 $authorClauses[] = "author = '" . (is_scalar($word) ? (string) $word : '') . "'";
             }
-            $imageIdsForFilter['author'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE (' . implode(' OR ', $authorClauses) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['author'] = $filterImageIds('(' . implode(' OR ', $authorClauses) . ')');
         }
 
         $filetypesList = is_array($searchFields['filetypes'] ?? null) ? $searchFields['filetypes'] : [];
@@ -297,13 +314,13 @@ final class SearchService
             foreach ($filetypesList as $ext) {
                 $filetypesClauses[] = 'path LIKE \'%.' . (is_scalar($ext) ? (string) $ext : '') . '\'';
             }
-            $imageIdsForFilter['filetypes'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE (' . implode(' OR ', $filetypesClauses) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['filetypes'] = $filterImageIds('(' . implode(' OR ', $filetypesClauses) . ')');
         }
 
         $addedByList = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($searchFields['added_by'] ?? null) ? $searchFields['added_by'] : []);
         if (!empty($searchFields['added_by']) and $addedByFilter['access']) {
             $hasFilersFilled = true;
-            $imageIdsForFilter['added_by'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE added_by IN (' . implode(',', $addedByList) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['added_by'] = $filterImageIds('added_by IN (' . implode(',', $addedByList) . ')');
         }
 
         $catFieldsData = is_array($searchFields['cat'] ?? null) ? $searchFields['cat'] : [];
@@ -313,7 +330,7 @@ final class SearchService
             $catSubInc = !empty($catFieldsData['sub_inc']);
             $catIds    = $catSubInc ? $this->categoryService->getSubcatIds($catWords) : $catWords;
             if (!empty($catIds)) {
-                $imageIdsForFilter['cat'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE category_id IN (' . implode(',', $catIds) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+                $imageIdsForFilter['cat'] = $filterImageIds('category_id IN (' . implode(',', $catIds) . ')');
             }
         }
 
@@ -356,7 +373,7 @@ final class SearchService
                 }
                 $datePostedClause = '(' . implode(' OR ', StringUtil::prependAppendArrayItems($datePostedSubclauses, '(', ')')) . ')';
             }
-            $imageIdsForFilter['date_posted'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE ' . $datePostedClause . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['date_posted'] = $filterImageIds($datePostedClause);
         }
 
         // date_created
@@ -398,7 +415,7 @@ final class SearchService
                 }
                 $dateCreatedClause = '(' . implode(' OR ', StringUtil::prependAppendArrayItems($dateCreatedSubclauses, '(', ')')) . ')';
             }
-            $imageIdsForFilter['date_created'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE ' . $dateCreatedClause . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['date_created'] = $filterImageIds($dateCreatedClause);
         }
 
         // ratios
@@ -410,7 +427,7 @@ final class SearchService
             foreach ($ratiosList as $r) {
                 $ratiosClauses[] = $clauseForRatio[is_scalar($r) ? (string) $r : ''] ?? '1=1';
             }
-            $imageIdsForFilter['ratios'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE (' . implode(' OR ', $ratiosClauses) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['ratios'] = $filterImageIds('(' . implode(' OR ', $ratiosClauses) . ')');
         }
 
         // ratings
@@ -422,7 +439,7 @@ final class SearchService
                 $r = is_scalar($r) ? (int) $r : 0;
                 $filterClauses[] = 0 == $r ? 'rating_score IS NULL' : '(rating_score >= ' . ($r - 1) . ' AND rating_score < ' . $r . ')';
             }
-            $imageIdsForFilter['ratings'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE (' . implode(' OR ', $filterClauses) . ') ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['ratings'] = $filterImageIds('(' . implode(' OR ', $filterClauses) . ')');
         }
 
         // filesize
@@ -430,7 +447,7 @@ final class SearchService
         $filesizeMax = is_numeric($searchFields['filesize_max'] ?? null) ? (int) $searchFields['filesize_max'] : 0;
         if (!empty($searchFields['filesize_min']) and !empty($searchFields['filesize_max']) and $fileSizeFilter['access']) {
             $hasFilersFilled = true;
-            $imageIdsForFilter['filesize'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE filesize BETWEEN ' . ($filesizeMin - 100) . ' AND ' . ($filesizeMax + 100) . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['filesize'] = $filterImageIds('filesize BETWEEN ' . ($filesizeMin - 100) . ' AND ' . ($filesizeMax + 100));
         }
 
         // height
@@ -438,7 +455,7 @@ final class SearchService
         $heightMax = is_numeric($searchFields['height_max'] ?? null) ? (int) $searchFields['height_max'] : 0;
         if (!empty($searchFields['height_min']) and !empty($searchFields['height_max']) and $heightFilter['access']) {
             $hasFilersFilled = true;
-            $imageIdsForFilter['height'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE height BETWEEN ' . $heightMin . ' AND ' . $heightMax . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['height'] = $filterImageIds('height BETWEEN ' . $heightMin . ' AND ' . $heightMax);
         }
 
         // width
@@ -446,7 +463,7 @@ final class SearchService
         $widthMax = is_numeric($searchFields['width_max'] ?? null) ? (int) $searchFields['width_max'] : 0;
         if (!empty($searchFields['width_min']) and !empty($searchFields['width_max']) and $widthFilter['access']) {
             $hasFilersFilled = true;
-            $imageIdsForFilter['width'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE width BETWEEN ' . $widthMin . ' AND ' . $widthMax . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['width'] = $filterImageIds('width BETWEEN ' . $widthMin . ' AND ' . $widthMax);
         }
 
         // tags
@@ -459,7 +476,7 @@ final class SearchService
         }
 
         if (!empty($imagesWhere)) {
-            $imageIdsForFilter['custom'] = array_column($this->conn->executeQuery('SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id WHERE ' . $imagesWhere . ' ' . $forbidden . ';')->fetchAllAssociative(), 'id');
+            $imageIdsForFilter['custom'] = $filterImageIds($imagesWhere);
         }
 
         $items = [];

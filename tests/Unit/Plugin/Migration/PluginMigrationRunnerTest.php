@@ -46,8 +46,9 @@ final class PluginMigrationRunnerTest extends TestCase
     {
         // Fixtures live outside the PSR-4 tests/ casing — load explicitly
         // so reflection-style class_exists checks succeed inside the runner.
-        require_once PHPWG_ROOT_PATH . 'tests/fixtures/plugins/migration_plugin/migrations/Version20260516000001.php';
-        require_once PHPWG_ROOT_PATH . 'tests/fixtures/plugins/migration_plugin/migrations/Version20260516000002.php';
+        $repoRoot = dirname(__DIR__, 4);
+        require_once $repoRoot . '/tests/fixtures/plugins/migration_plugin/migrations/Version20260516000001.php';
+        require_once $repoRoot . '/tests/fixtures/plugins/migration_plugin/migrations/Version20260516000002.php';
     }
 
     #[\Override]
@@ -71,7 +72,7 @@ final class PluginMigrationRunnerTest extends TestCase
 
         $this->ledger = new PluginMigrationLedger($this->conn, 'test_');
         $this->runner = new PluginMigrationRunner($this->conn, $this->ledger, new NullLogger());
-        $this->migrationsDir = PHPWG_ROOT_PATH . 'tests/fixtures/plugins/migration_plugin/migrations';
+        $this->migrationsDir = dirname(__DIR__, 4) . '/tests/fixtures/plugins/migration_plugin/migrations';
     }
 
     public function testRunUpAppliesPendingMigrationsInVersionOrder(): void

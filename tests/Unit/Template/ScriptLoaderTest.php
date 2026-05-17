@@ -18,8 +18,9 @@ final class ScriptLoaderTest extends TestCase
     #[\Override]
     protected function setUp(): void
     {
-        $this->realManifest = PHPWG_ROOT_PATH . 'dist/manifest.json';
-        $this->backupManifest = PHPWG_ROOT_PATH . 'dist/manifest.json.bak_test';
+        $repoRoot = dirname(__DIR__, 3);
+        $this->realManifest = $repoRoot . '/dist/manifest.json';
+        $this->backupManifest = $repoRoot . '/dist/manifest.json.bak_test';
         if (is_file($this->realManifest)) {
             $this->manifestExisted = true;
             rename($this->realManifest, $this->backupManifest);
@@ -158,7 +159,7 @@ final class ScriptLoaderTest extends TestCase
     /** @param array<mixed> $data */
     private function writeManifest(array $data, bool $resetCache = true): void
     {
-        $distDir = PHPWG_ROOT_PATH . 'dist/';
+        $distDir = dirname(__DIR__, 3) . '/dist/';
         if (!is_dir($distDir)) {
             mkdir($distDir, 0755, true);
         }

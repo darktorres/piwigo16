@@ -44,7 +44,7 @@ final class TemplateLoadThemeconfTest extends TestCase
 
     public function testReadsThemeJsonAndProjectsToLegacyShape(): void
     {
-        $dir = PHPWG_ROOT_PATH . 'tests/fixtures/themes/bundled_fixture';
+        $dir = dirname(__DIR__, 3) . '/tests/fixtures/themes/bundled_fixture';
         $themeconf = $this->template->loadThemeconf($dir);
 
         self::assertSame('bundled_fixture', $themeconf['name'] ?? null);
@@ -67,7 +67,7 @@ final class TemplateLoadThemeconfTest extends TestCase
         // orphan_parent fixture has theme.json with parent: does_not_exist
         // — verifies the parent field comes through the JSON projection
         // even when the rest of the manifest is minimal.
-        $themeconf = $this->template->loadThemeconf(PHPWG_ROOT_PATH . 'tests/fixtures/themes/orphan_parent');
+        $themeconf = $this->template->loadThemeconf(dirname(__DIR__, 3) . '/tests/fixtures/themes/orphan_parent');
         self::assertSame('does_not_exist', $themeconf['parent'] ?? null);
     }
 

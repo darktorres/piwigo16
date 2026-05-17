@@ -17,9 +17,9 @@ use Piwigo\Url\UrlService;
  *
  * Config defaults (php_extension_in_urls=true, question_mark_in_urls=true) are
  * used because the Config store is not initialised in unit-test context.
- * UrlService::getRootUrl() falls back to PHPWG_ROOT_PATH when neither a
- * setMakeFullUrl override nor a SectionContext rootPath is set; assertions
- * use assertStringContainsString so they're root-path-agnostic.
+ * UrlService::getRootUrl() returns '' when neither a setMakeFullUrl
+ * override nor a SectionContext rootPath is set; assertions use
+ * assertStringContainsString so they're root-path-agnostic.
  */
 final class UrlGeneratorTest extends TestCase
 {

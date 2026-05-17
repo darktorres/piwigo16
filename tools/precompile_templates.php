@@ -15,10 +15,11 @@ declare(strict_types=1);
  * paths to `LatteEngine::warmupCache()` for the warmed entry to match
  * what runtime hits.
  *
- * Bootstrap: only `PHPWG_ROOT_PATH` and `Config::dataLocation()` are
- * required; the latter falls back to its `'_data/'` default when
- * `Config::$data` is empty, so no `Kernel::boot()` / DB connection is
- * needed (and would be unhelpful in CI).
+ * Bootstrap: a Paths instance is constructed from this file's location
+ * and Kernel::boot() runs with it so LatteEngine::default() resolves
+ * the cache dir through DI exactly as in production. The DB connection
+ * is never resolved (factory closures are lazy), so this is safe to run
+ * in CI before the DB exists.
  *
  * Plugin sandbox cache (`_data/templates_c/latte_plugin/`) is not warmed
  * here — there are zero plugin `.latte` templates in tree today, and
@@ -31,13 +32,14 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-if (!defined('PHPWG_ROOT_PATH')) {
-    define('PHPWG_ROOT_PATH', dirname(__DIR__) . '/');
-}
-
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Template\LatteEngine;
 
-$root = PHPWG_ROOT_PATH . 'themes';
+$paths = Paths::fromRoot(dirname(__DIR__));
+Kernel::boot($paths);
+
+$root = $paths->root . 'themes';
 
 $engine = LatteEngine::default();
 $failed = [];

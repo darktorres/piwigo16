@@ -23,7 +23,7 @@ final class PluginLintTest extends TestCase
 
     public function testCleanPluginExitsZero(): void
     {
-        [$exit, $output] = $this->runLint(PHPWG_ROOT_PATH . 'tests/fixtures/plugins/valid_plugin');
+        [$exit, $output] = $this->runLint(dirname(__DIR__, 3) . '/tests/fixtures/plugins/valid_plugin');
 
         self::assertSame(0, $exit, 'Clean fixture must exit 0; got output: ' . implode("\n", $output));
         self::assertStringContainsString('plugin-lint: clean', implode("\n", $output));
@@ -31,7 +31,7 @@ final class PluginLintTest extends TestCase
 
     public function testDirtyPluginExitsOneAndFlagsEveryRule(): void
     {
-        [$exit, $output] = $this->runLint(PHPWG_ROOT_PATH . 'tests/fixtures/plugins/dirty_plugin');
+        [$exit, $output] = $this->runLint(dirname(__DIR__, 3) . '/tests/fixtures/plugins/dirty_plugin');
 
         $joined = implode("\n", $output);
         self::assertSame(1, $exit, 'Dirty fixture must exit 1; got output: ' . $joined);

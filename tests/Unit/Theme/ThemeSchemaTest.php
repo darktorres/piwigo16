@@ -23,7 +23,7 @@ final class ThemeSchemaTest extends TestCase
     #[\Override]
     protected function setUp(): void
     {
-        $schemaJson = file_get_contents(PHPWG_ROOT_PATH . 'docs/schemas/theme.schema.json');
+        $schemaJson = file_get_contents(dirname(__DIR__, 3) . '/docs/schemas/theme.schema.json');
         self::assertNotFalse($schemaJson, 'theme.schema.json missing');
         $decoded = json_decode($schemaJson, false, 512, JSON_THROW_ON_ERROR);
         self::assertIsObject($decoded, 'theme.schema.json must decode to an object');

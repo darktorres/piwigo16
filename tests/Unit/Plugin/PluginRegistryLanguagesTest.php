@@ -28,17 +28,18 @@ final class PluginRegistryLanguagesTest extends TestCase
     #[\Override]
     public static function setUpBeforeClass(): void
     {
-        require_once PHPWG_ROOT_PATH . 'tests/fixtures/plugins/valid_plugin/Plugin.php';
+        require_once dirname(__DIR__, 3) . '/tests/fixtures/plugins/valid_plugin/Plugin.php';
     }
 
     #[\Override]
     protected function setUp(): void
     {
-        $this->wasInstalled = InstallSentinel::isInstalled();
-        InstallSentinel::markUninstalled();
+        $paths              = \Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3));
+        $this->wasInstalled = InstallSentinel::isInstalled($paths);
+        InstallSentinel::markUninstalled($paths);
         Lang::reset();
         Translator::reset();
-        $this->lang = new LangService(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
+        $this->lang = new LangService($paths);
     }
 
     #[\Override]
@@ -47,7 +48,7 @@ final class PluginRegistryLanguagesTest extends TestCase
         Lang::reset();
         Translator::reset();
         if ($this->wasInstalled) {
-            InstallSentinel::markInstalled();
+            InstallSentinel::markInstalled(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
         }
     }
 
@@ -77,8 +78,8 @@ final class PluginRegistryLanguagesTest extends TestCase
         return new PluginRegistry(
             $repo,
             new NullLogger(),
-            PHPWG_ROOT_PATH . 'tests/fixtures/plugins',
-            PHPWG_ROOT_PATH . 'docs/schemas/plugin.schema.json',
+            dirname(__DIR__, 3) . '/tests/fixtures/plugins',
+            dirname(__DIR__, 3) . '/docs/schemas/plugin.schema.json',
         );
     }
 

@@ -34,7 +34,7 @@ final class TemplateResolverTest extends TestCase
     #[\Override]
     protected function setUp(): void
     {
-        $this->themesDir = PHPWG_ROOT_PATH . 'tests/fixtures/themes';
+        $this->themesDir = dirname(__DIR__, 3) . '/tests/fixtures/themes';
 
         /** @psalm-suppress PropertyNotSetInConstructor — parent's $conn/$tablePrefix intentionally skipped; stub has no DB */
         $repo = new class () extends ThemeRepository {
@@ -46,7 +46,7 @@ final class TemplateResolverTest extends TestCase
             $repo,
             new NullLogger(),
             $this->themesDir,
-            PHPWG_ROOT_PATH . 'docs/schemas/theme.schema.json',
+            dirname(__DIR__, 3) . '/docs/schemas/theme.schema.json',
         );
         $this->resolver = new TemplateResolver($this->registry, $this->themesDir);
     }

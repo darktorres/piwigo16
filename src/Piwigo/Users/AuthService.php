@@ -15,6 +15,7 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
@@ -45,6 +46,7 @@ final readonly class AuthService
         private DateService $dateService,
         private LanguageService $languageService,
         private EventDispatcherInterface $dispatcher,
+        private Paths $paths,
     ) {
     }
 
@@ -59,7 +61,7 @@ final readonly class AuthService
             return Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
-        if (InstallSentinel::isInstalled() and $mailAddress !== null && $mailAddress !== '') {
+        if (InstallSentinel::isInstalled($this->paths) and $mailAddress !== null && $mailAddress !== '') {
             $userFields = Config::userFields();
             $count = $this->userRepo->countByEmail(
                 $userFields['email'],
@@ -77,7 +79,7 @@ final readonly class AuthService
 
     public function validateLoginCase(string $login): string|null
     {
-        if (InstallSentinel::isInstalled()) {
+        if (InstallSentinel::isInstalled($this->paths)) {
             $count = $this->userRepo->countByUsernameInsensitive(
                 Config::userFields()['username'],
                 Tables::users(),

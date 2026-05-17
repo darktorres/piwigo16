@@ -15,39 +15,20 @@ use Psr\Cache\CacheItemPoolInterface;
  */
 final class CacheFactoryTest extends TestCase
 {
-    private string $tmpRoot = '';
-
     #[\Override]
     protected function setUp(): void
     {
-        $this->tmpRoot = PHPWG_ROOT_PATH . 'tmp_factory_test_' . (int) getmypid() . '_' . mt_rand() . '/';
-        mkdir($this->tmpRoot . 'cache/', 0755, true);
-
-        $rel = str_replace(PHPWG_ROOT_PATH, '', $this->tmpRoot);
-        Config::loadArray(['data_location' => $rel, 'cache.backend' => 'file']);
+        // CacheFactory's buildFile() falls back to sys_get_temp_dir() when
+        // Kernel isn't booted (this unit test never boots). The cache pool
+        // lands in /tmp/piwigo/cache/; we don't assert about the location,
+        // just round-trip behaviour.
+        Config::loadArray(['cache.backend' => 'file']);
     }
 
     #[\Override]
     protected function tearDown(): void
     {
         Config::reset();
-        $this->deleteDir($this->tmpRoot);
-    }
-
-    private function deleteDir(string $dir): void
-    {
-        if (!is_dir($dir)) {
-            return;
-        }
-        $items = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST
-        );
-        foreach ($items as $item) {
-            /** @var \SplFileInfo $item */
-            $item->isDir() ? rmdir($item->getPathname()) : unlink($item->getPathname());
-        }
-        rmdir($dir);
     }
 
     public function test_create_returns_psr6_pool(): void

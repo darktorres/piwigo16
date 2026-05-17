@@ -46,17 +46,10 @@ final class ContainerSmokeTest extends IntegrationTestCase
     {
         Kernel::boot();
         $container   = Kernel::container();
-        $definitions = require PHPWG_ROOT_PATH . 'config/container.php';
-
-        if (!is_array($definitions)) {
-            self::fail('config/container.php did not return an array');
-        }
+        $definitions = require dirname(__DIR__, 2) . '/config/container.php';
 
         $failures = [];
         foreach ($definitions as $id => $definition) {
-            if (!is_string($id)) {
-                continue;
-            }
             try {
                 $container->get($id);
             } catch (\Throwable $e) {

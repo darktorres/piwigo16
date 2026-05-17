@@ -207,7 +207,7 @@ return [
     DerivativePipeline::class  => factory(static fn (Paths $paths): DerivativePipeline => new DerivativePipeline($paths)),
 
     // Symfony Messenger bus — transports backed by the shared DBAL connection.
-    MessageBusInterface::class => factory(static fn (Connection $conn): MessageBusInterface => MessengerFactory::build($conn)),
+    MessageBusInterface::class => factory(static fn (Connection $conn, Paths $paths): MessageBusInterface => MessengerFactory::build($conn, $paths)),
 
     // Domain services — stateless; inject only what they need.
     CookieService::class   => factory(static fn (): CookieService => new CookieService()),
@@ -216,7 +216,7 @@ return [
     PictureService::class  => factory(static fn (ImageRepository $r): PictureService => new PictureService($r)),
     RateService::class     => factory(static fn (RateRepository $rate, ImageRepository $img, CookieService $c, PermissionService $perm, EventDispatcherInterface $d): RateService => new RateService($rate, $img, $c, $perm, $d)),
     CommentService::class  => factory(static fn (Connection $conn, CommentRepository $repo, LangService $lang, MailService $mail, PermissionService $perm, UrlGenerator $ug, UrlService $u, EphemeralKeyService $eks, EventDispatcherInterface $dispatcher): CommentService => new CommentService($conn, $repo, $lang, $mail, $perm, $ug, $u, $eks, $dispatcher)),
-    AuthService::class         => factory(static fn (UserRepository $u, AuthKeyRepository $ak, Connection $conn, ActivityLogger $al, SessionService $sess, UrlGenerator $ug, UrlService $us, DateService $d, LanguageService $lang, EventDispatcherInterface $dispatcher): AuthService => new AuthService($u, $ak, $conn, $al, $sess, $ug, $us, $d, $lang, $dispatcher)),
+    AuthService::class         => factory(static fn (UserRepository $u, AuthKeyRepository $ak, Connection $conn, ActivityLogger $al, SessionService $sess, UrlGenerator $ug, UrlService $us, DateService $d, LanguageService $lang, EventDispatcherInterface $dispatcher, Paths $paths): AuthService => new AuthService($u, $ak, $conn, $al, $sess, $ug, $us, $d, $lang, $dispatcher, $paths)),
     PasswordService::class     => factory(static fn (AuthService $auth, MailService $mail, PermissionService $perm, PreferencesService $pref, UrlGenerator $ug, UserRepository $u, UserService $us, ActivityLogger $al): PasswordService => new PasswordService($auth, $mail, $perm, $pref, $ug, $u, $us, $al)),
     CalendarService::class     => factory(static fn (CategoryService $cat, Connection $conn, DebugCollector $dbg, PermissionService $perm, UrlService $us, CacheItemPoolInterface $pool): CalendarService => new CalendarService($cat, $conn, $dbg, $perm, $us, $pool)),
     MailService::class         => factory(static fn (Connection $conn, UrlGenerator $ug, UserRepository $u, LangService $lang, AuthService $auth, UrlService $us, EventDispatcherInterface $dispatcher, Paths $paths): MailService => new MailService($conn, $ug, $u, $lang, $auth, $us, $dispatcher, $paths)),

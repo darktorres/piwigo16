@@ -23,7 +23,7 @@ final class PluginSchemaTest extends TestCase
     #[\Override]
     protected function setUp(): void
     {
-        $schemaJson = file_get_contents(PHPWG_ROOT_PATH . 'docs/schemas/plugin.schema.json');
+        $schemaJson = file_get_contents(dirname(__DIR__, 3) . '/docs/schemas/plugin.schema.json');
         self::assertNotFalse($schemaJson, 'plugin.schema.json missing');
         $decoded = json_decode($schemaJson, false, 512, JSON_THROW_ON_ERROR);
         self::assertIsObject($decoded, 'plugin.schema.json must decode to an object');

@@ -89,7 +89,7 @@ final class StorageRegistry
     /**
      * Strip $root from the beginning of $absolutePath to produce a relative
      * Flysystem path. Normalises backslashes and /./  segments so that paths
-     * built with PHPWG_ROOT_PATH . './upload' match correctly.
+     * built with $paths->root . './upload' match correctly.
      */
     public static function stripRoot(string $root, string $absolutePath): string
     {

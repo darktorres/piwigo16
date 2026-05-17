@@ -9,31 +9,28 @@ use Piwigo\Config\TestMode;
 /**
  * Authoritative answer to "is Piwigo installed on this filesystem?".
  *
- * Sole signal: an empty stamp file under `local/` (created by InstallController (index.php?/install)
- * at the end of a successful install).
+ * Sole signal: an empty stamp file under `local/` (created by InstallController
+ * (index.php?/install) at the end of a successful install).
  *
- * The stamp filename depends on TestMode — production uses
- * `local/.installed`, test runs use `local/.installed.test`. Tests
- * therefore have their own install lifecycle and never affect the prod
- * sentinel.
+ * The stamp filename depends on TestMode — production uses `local/.installed`,
+ * test runs use `local/.installed.test`. Tests therefore have their own
+ * install lifecycle and never affect the prod sentinel.
  *
- * Used by:
- *   - index.php?/install  (refuse to re-install)
- *   - common.inc.php (redirect to index.php?/install on first request)
- *   - functions_session.inc.php (gate the DB session handler)
- *   - functions_user.inc.php (skip user-mail / registration before install)
- *   - functions.inc.php (language fallback during upgrade)
+ * Each method takes a Paths argument explicitly because the sentinel is
+ * checked at the very beginning of CommonBootstrap, before Kernel::boot()
+ * runs. Static-method-plus-Paths-arg avoids the chicken-and-egg of needing
+ * the DI container to find out whether to bother building it.
  */
 final class InstallSentinel
 {
-    public static function isInstalled(): bool
+    public static function isInstalled(Paths $paths): bool
     {
-        return file_exists(self::stampFile());
+        return file_exists(self::stampFile($paths));
     }
 
-    public static function markInstalled(): void
+    public static function markInstalled(Paths $paths): void
     {
-        $path = self::stampFile();
+        $path = self::stampFile($paths);
         $dir  = dirname($path);
         if (!is_dir($dir)) {
             Filesystem::mkgetdir($dir, Filesystem::FLAG_RECURSIVE);
@@ -47,18 +44,16 @@ final class InstallSentinel
     }
 
     /** Test helper. Removes the stamp file if it exists. */
-    public static function markUninstalled(): void
+    public static function markUninstalled(Paths $paths): void
     {
-        $path = self::stampFile();
+        $path = self::stampFile($paths);
         if (is_file($path)) {
             unlink($path);
         }
     }
 
-    private static function stampFile(): string
+    private static function stampFile(Paths $paths): string
     {
-        return Kernel::isBooted()
-            ? Kernel::service(Paths::class)->root . 'local/' . TestMode::installedStamp()
-            : (defined('PHPWG_ROOT_PATH') ? PHPWG_ROOT_PATH . 'local/' . TestMode::installedStamp() : '');
+        return $paths->local . TestMode::installedStamp();
     }
 }

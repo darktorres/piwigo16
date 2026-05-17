@@ -130,7 +130,7 @@ final class LangService
         }
         $langDir = $dirname . 'language/';
 
-        $defaultLanguage = (InstallSentinel::isInstalled() && !defined('UPGRADES_PATH'))
+        $defaultLanguage = (InstallSentinel::isInstalled($this->paths) && !defined('UPGRADES_PATH'))
             ? Kernel::service(UserService::class)->getDefaultLanguage()
             : AppInfo::DEFAULT_LANGUAGE;
 

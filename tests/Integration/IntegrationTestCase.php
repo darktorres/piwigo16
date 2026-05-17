@@ -101,10 +101,7 @@ abstract class IntegrationTestCase extends TestCase
      */
     protected function markTestInstalled(): void
     {
-        if (!defined('PHPWG_ROOT_PATH')) {
-            define('PHPWG_ROOT_PATH', __DIR__ . '/../../');
-        }
-        InstallSentinel::markInstalled();
+        InstallSentinel::markInstalled(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 2)));
     }
 
     private function newMysqli(string $dbName): \mysqli

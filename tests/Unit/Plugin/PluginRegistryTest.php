@@ -32,14 +32,15 @@ final class PluginRegistryTest extends TestCase
         // Fixtures live outside the PSR-4 tests/ namespace casing on
         // purpose (lowercase dir names mirror real plugins/ layout), so
         // the autoloader skips them. Load the fixture class once here.
-        require_once PHPWG_ROOT_PATH . 'tests/fixtures/plugins/valid_plugin/Plugin.php';
+        require_once dirname(__DIR__, 3) . '/tests/fixtures/plugins/valid_plugin/Plugin.php';
     }
 
     #[\Override]
     protected function setUp(): void
     {
-        $this->fixturesDir = PHPWG_ROOT_PATH . 'tests/fixtures/plugins';
-        $this->schemaPath  = PHPWG_ROOT_PATH . 'docs/schemas/plugin.schema.json';
+        $repoRoot          = dirname(__DIR__, 3);
+        $this->fixturesDir = $repoRoot . '/tests/fixtures/plugins';
+        $this->schemaPath  = $repoRoot . '/docs/schemas/plugin.schema.json';
 
         ValidPlugin::$installCount   = 0;
         ValidPlugin::$activateCount  = 0;
@@ -114,7 +115,7 @@ final class PluginRegistryTest extends TestCase
         $registry = new PluginRegistry(
             $this->stubRepository(),
             new NullLogger(),
-            PHPWG_ROOT_PATH . 'tests/fixtures/plugin_cycles',
+            dirname(__DIR__, 3) . '/tests/fixtures/plugin_cycles',
             $this->schemaPath,
         );
 

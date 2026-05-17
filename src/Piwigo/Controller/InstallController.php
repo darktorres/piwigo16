@@ -85,7 +85,7 @@ final readonly class InstallController implements ControllerInterface
         $infos  = [];
         $errors = [];
 
-        if (InstallSentinel::isInstalled()) {
+        if (InstallSentinel::isInstalled($this->paths)) {
             die('Piwigo is already installed');
         }
 
@@ -256,7 +256,7 @@ final readonly class InstallController implements ControllerInterface
                 if (!empty($datas)) {
                     Dml::massInserts(Tables::upgrade(), array_keys($datas[0]), $datas);
                 }
-                InstallSentinel::markInstalled();
+                InstallSentinel::markInstalled($this->paths);
             }
         }
 

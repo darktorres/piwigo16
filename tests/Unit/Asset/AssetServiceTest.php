@@ -34,7 +34,7 @@ final class AssetServiceTest extends TestCase
     #[\Override]
     protected function setUp(): void
     {
-        $this->pluginsDir = PHPWG_ROOT_PATH . 'tests/fixtures/plugins';
+        $this->pluginsDir = dirname(__DIR__, 3) . '/tests/fixtures/plugins';
     }
 
     public function testRegisterAndRenderEmitsCssThenScriptForSingleEntry(): void

@@ -82,7 +82,7 @@ final class CommonBootstrap
         ConfigLoader::loadEnv($paths->root);
         ConfigLoader::applyEnvOverrides();
 
-        if (!InstallSentinel::isInstalled()) {
+        if (!InstallSentinel::isInstalled($paths)) {
             header('Location: index.php?/install');
             exit;
         }

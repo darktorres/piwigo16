@@ -52,7 +52,7 @@ final readonly class UpgradeController implements ControllerInterface
 
         $prefixeTable = Config::dbPrefix();
 
-        if (!InstallSentinel::isInstalled()) {
+        if (!InstallSentinel::isInstalled($this->paths)) {
             die('Piwigo is not installed yet — navigate to index.php?/install first.');
         }
 

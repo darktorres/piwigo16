@@ -6,7 +6,6 @@ namespace Piwigo\Job;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Job\Handler\BatchUploadHandler;
 use Piwigo\Job\Handler\GenerateDerivativeHandler;
@@ -25,7 +24,7 @@ use Symfony\Component\Messenger\Transport\Serialization\PhpSerializer;
 
 final class MessengerFactory
 {
-    public static function build(Connection $dbalConn): MessageBus
+    public static function build(Connection $dbalConn, Paths $paths): MessageBus
     {
         $serializer = new PhpSerializer();
         $tableName  = Config::dbPrefix() . 'messenger_messages';
@@ -45,12 +44,9 @@ final class MessengerFactory
         ]);
 
         /** @var array{transports: array<string, array<string,mixed>>, routing: array<string, string>} $messengerConfig */
-        // Dynamic require — Psalm can't follow the runtime Kernel::isBooted branch.
-        // The require path is always the install's config/messenger.php; the
-        // ternary only chooses how to resolve the install root (Paths via DI when
-        // the kernel is up, PHPWG_ROOT_PATH fallback for test/CLI invocations).
+        // Path resolved from the injected Paths — Psalm can't follow the require.
         /** @psalm-suppress UnresolvableInclude */
-        $messengerConfig = require (Kernel::isBooted() ? Kernel::service(Paths::class)->root : PHPWG_ROOT_PATH) . 'config/messenger.php';
+        $messengerConfig = require $paths->config . 'messenger.php';
 
         /** @var array<string, list<string>> $sendersMap */
         $sendersMap = array_map(

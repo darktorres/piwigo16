@@ -32,12 +32,13 @@ final class LangServicePluginTranslationsTest extends TestCase
         // install sentinel is set — but Kernel isn't booted in unit scope.
         // Flip the stamp off so the fallback to AppInfo::DEFAULT_LANGUAGE
         // (en_UK) takes over, and restore in tearDown.
-        $this->wasInstalled = InstallSentinel::isInstalled();
-        InstallSentinel::markUninstalled();
+        $paths              = \Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3));
+        $this->wasInstalled = InstallSentinel::isInstalled($paths);
+        InstallSentinel::markUninstalled($paths);
 
         Lang::reset();
         Translator::reset();
-        $this->lang = new LangService(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
+        $this->lang = new LangService($paths);
     }
 
     #[\Override]
@@ -46,7 +47,7 @@ final class LangServicePluginTranslationsTest extends TestCase
         Lang::reset();
         Translator::reset();
         if ($this->wasInstalled) {
-            InstallSentinel::markInstalled();
+            InstallSentinel::markInstalled(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
         }
     }
 
@@ -57,7 +58,7 @@ final class LangServicePluginTranslationsTest extends TestCase
 
     public function testLoadPluginTranslationsMergesFixturePoFile(): void
     {
-        $pluginDir = PHPWG_ROOT_PATH . 'tests/fixtures/plugins/valid_plugin';
+        $pluginDir = dirname(__DIR__, 3) . '/tests/fixtures/plugins/valid_plugin';
         $loaded = $this->lang->loadPluginTranslations('valid_plugin', $pluginDir);
 
         self::assertTrue($loaded, 'Fixture plugin.po must be discoverable under language/en_UK/');
@@ -68,13 +69,13 @@ final class LangServicePluginTranslationsTest extends TestCase
     public function testLoadPluginTranslationsReturnsFalseWhenNoPoFile(): void
     {
         // orphan_class fixture has no language/ subdirectory.
-        $pluginDir = PHPWG_ROOT_PATH . 'tests/fixtures/plugins/orphan_class';
+        $pluginDir = dirname(__DIR__, 3) . '/tests/fixtures/plugins/orphan_class';
         self::assertFalse($this->lang->loadPluginTranslations('orphan_class', $pluginDir));
     }
 
     public function testLoadPluginTranslationsShortCircuitsOnEmptyInputs(): void
     {
-        self::assertFalse($this->lang->loadPluginTranslations('', PHPWG_ROOT_PATH . 'tests/fixtures/plugins/valid_plugin'));
+        self::assertFalse($this->lang->loadPluginTranslations('', dirname(__DIR__, 3) . '/tests/fixtures/plugins/valid_plugin'));
         self::assertFalse($this->lang->loadPluginTranslations('valid_plugin', ''));
     }
 }

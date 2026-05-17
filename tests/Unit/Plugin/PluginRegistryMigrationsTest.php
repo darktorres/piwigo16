@@ -35,9 +35,10 @@ final class PluginRegistryMigrationsTest extends TestCase
     #[\Override]
     public static function setUpBeforeClass(): void
     {
-        require_once PHPWG_ROOT_PATH . 'tests/fixtures/plugins/migration_plugin/Plugin.php';
-        require_once PHPWG_ROOT_PATH . 'tests/fixtures/plugins/migration_plugin/migrations/Version20260516000001.php';
-        require_once PHPWG_ROOT_PATH . 'tests/fixtures/plugins/migration_plugin/migrations/Version20260516000002.php';
+        $repoRoot = dirname(__DIR__, 3);
+        require_once $repoRoot . '/tests/fixtures/plugins/migration_plugin/Plugin.php';
+        require_once $repoRoot . '/tests/fixtures/plugins/migration_plugin/migrations/Version20260516000001.php';
+        require_once $repoRoot . '/tests/fixtures/plugins/migration_plugin/migrations/Version20260516000002.php';
     }
 
     #[\Override]
@@ -61,8 +62,8 @@ final class PluginRegistryMigrationsTest extends TestCase
         $this->registry = new PluginRegistry(
             $this->stubRepository(),
             new NullLogger(),
-            PHPWG_ROOT_PATH . 'tests/fixtures/plugins',
-            PHPWG_ROOT_PATH . 'docs/schemas/plugin.schema.json',
+            dirname(__DIR__, 3) . '/tests/fixtures/plugins',
+            dirname(__DIR__, 3) . '/docs/schemas/plugin.schema.json',
             $runner,
         );
 

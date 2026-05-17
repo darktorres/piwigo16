@@ -31,15 +31,17 @@ final class ThemeRegistryTest extends TestCase
         // Fixture classes live outside the PSR-4 tests/ namespace casing
         // (lowercase dir names mirror real themes/ layout), so the
         // autoloader skips them. Load the ones we instantiate below.
-        require_once PHPWG_ROOT_PATH . 'tests/fixtures/themes/valid_theme/Theme.php';
-        require_once PHPWG_ROOT_PATH . 'tests/fixtures/themes/child_theme/Theme.php';
+        $repoRoot = dirname(__DIR__, 3);
+        require_once $repoRoot . '/tests/fixtures/themes/valid_theme/Theme.php';
+        require_once $repoRoot . '/tests/fixtures/themes/child_theme/Theme.php';
     }
 
     #[\Override]
     protected function setUp(): void
     {
-        $this->fixturesDir = PHPWG_ROOT_PATH . 'tests/fixtures/themes';
-        $this->schemaPath  = PHPWG_ROOT_PATH . 'docs/schemas/theme.schema.json';
+        $repoRoot          = dirname(__DIR__, 3);
+        $this->fixturesDir = $repoRoot . '/tests/fixtures/themes';
+        $this->schemaPath  = $repoRoot . '/docs/schemas/theme.schema.json';
 
         ValidTheme::$installCount    = 0;
         ValidTheme::$activateCount   = 0;
@@ -128,7 +130,7 @@ final class ThemeRegistryTest extends TestCase
         $registry = new ThemeRegistry(
             $this->stubRepository(),
             new NullLogger(),
-            PHPWG_ROOT_PATH . 'tests/fixtures/theme_cycles',
+            dirname(__DIR__, 3) . '/tests/fixtures/theme_cycles',
             $this->schemaPath,
         );
 

@@ -112,7 +112,7 @@ final class StorageRegistryTest extends TestCase
 
     public function test_strip_root_normalises_dot_slash(): void
     {
-        // PHPWG_ROOT_PATH . './upload' vs absolute path without ./
+        // $paths->root . './upload' vs absolute path without ./
         self::assertSame(
             '2025/05/05/photo.jpg',
             StorageRegistry::stripRoot('/var/www/./upload', '/var/www/upload/2025/05/05/photo.jpg')

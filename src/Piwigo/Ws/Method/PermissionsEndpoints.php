@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Ws\OpenApi\ApiMethod;
@@ -114,7 +113,14 @@ final readonly class PermissionsEndpoints
                     $inserts[] = ['group_id' => $groupId, 'cat_id' => $catId];
                 }
             }
-            Dml::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts, ['ignore' => true]);
+            $this->conn->transactional(function () use ($inserts): void {
+                foreach ($inserts as $row) {
+                    $this->conn->executeStatement(
+                        'INSERT IGNORE INTO ' . Tables::groupAccess() . ' (group_id, cat_id) VALUES (?, ?)',
+                        [$row['group_id'], $row['cat_id']]
+                    );
+                }
+            });
         }
         if (!empty($params['user_id'])) {
             if ($params['recursive']) {

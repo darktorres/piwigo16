@@ -24,7 +24,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocBeginCatList;
 use Piwigo\Event\Location\LocBeginCatModify;
@@ -941,7 +940,14 @@ final class AlbumController implements AdminSubControllerInterface
                             $inserts[] = ['group_id' => $gid, 'cat_id' => $cid];
                         }
                     }
-                    Dml::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts, ['ignore' => true]);
+                    $this->conn->transactional(function () use ($inserts): void {
+                        foreach ($inserts as $row) {
+                            $this->conn->executeStatement(
+                                'INSERT IGNORE INTO ' . Tables::groupAccess() . ' (group_id, cat_id) VALUES (?, ?)',
+                                [$row['group_id'], $row['cat_id']]
+                            );
+                        }
+                    });
                 }
 
                 $users_granted     = array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userAccess() . ' WHERE cat_id = ' . $pageCat . ';')->fetchAllAssociative(), 'user_id');

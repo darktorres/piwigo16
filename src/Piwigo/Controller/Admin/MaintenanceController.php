@@ -1262,7 +1262,17 @@ final class MaintenanceController implements AdminSubControllerInterface
             }
 
             if (count($inserts) > 0 && !$simulate) {
-                Dml::massInserts(Tables::categories(), ['id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable', 'visible', 'status', 'rank', 'global_rank'], $inserts);
+                // `rank` is a MySQL 8.0 reserved word — backtick the array key per row.
+                $catRows = array_map(static function (array $r): array {
+                    $r['`rank`'] = $r['rank'];
+                    unset($r['rank']);
+                    return $r;
+                }, $inserts);
+                $this->conn->transactional(function () use ($catRows): void {
+                    foreach ($catRows as $row) {
+                        $this->conn->insert(Tables::categories(), $row);
+                    }
+                });
                 $category_ids = $category_up = [];
                 foreach ($inserts as $category) {
                     $category_ids[] = $category['id'];
@@ -1318,8 +1328,14 @@ final class MaintenanceController implements AdminSubControllerInterface
                             }
                         }
                     }
-                    Dml::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $insert_granted_grps);
-                    Dml::massInserts(Tables::userAccess(), ['user_id', 'cat_id'], array_unique($insert_granted_users, SORT_REGULAR));
+                    $this->conn->transactional(function () use ($insert_granted_grps, $insert_granted_users): void {
+                        foreach ($insert_granted_grps as $row) {
+                            $this->conn->insert(Tables::groupAccess(), $row);
+                        }
+                        foreach (array_unique($insert_granted_users, SORT_REGULAR) as $row) {
+                            $this->conn->insert(Tables::userAccess(), $row);
+                        }
+                    });
                 } else {
                     $this->categoryAdminService->addPermissionOnCategory($category_ids, $this->userAdminService->getAdmins());
                 }
@@ -1445,15 +1461,25 @@ final class MaintenanceController implements AdminSubControllerInterface
 
             if (!$simulate) {
                 if (count($inserts) > 0) {
-                    Dml::massInserts(Tables::images(), array_keys($inserts[0]), $inserts);
-                    Dml::massInserts(Tables::imageCategory(), array_keys($insert_links[0]), $insert_links);
+                    $this->conn->transactional(function () use ($inserts, $insert_links): void {
+                        foreach ($inserts as $row) {
+                            $this->conn->insert(Tables::images(), $row);
+                        }
+                        foreach ($insert_links as $row) {
+                            $this->conn->insert(Tables::imageCategory(), $row);
+                        }
+                    });
                     $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $caddiables, 'add', ['sync' => true]));
                     if (isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1) {
                         $this->imageRepository->addToUserCaddie(CurrentUser::get()->id, $caddiables);
                     }
                 }
                 if (count($insert_formats) > 0) {
-                    Dml::massInserts(Tables::imageFormat(), array_keys($insert_formats[0]), $insert_formats);
+                    $this->conn->transactional(function () use ($insert_formats): void {
+                        foreach ($insert_formats as $row) {
+                            $this->conn->insert(Tables::imageFormat(), $row);
+                        }
+                    });
                 }
                 if (count($formats_to_delete) > 0) {
                     $this->imageRepository->deleteFormatsByFormatIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));

@@ -27,7 +27,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
@@ -152,9 +151,14 @@ final readonly class ImagesEndpoints
         }
         $inserts = [];
         foreach ($newCatIds as $catId) {
-            $inserts[] = ['image_id' => $imageId, 'category_id' => $catId, 'rank' => $rankOnCategory[$catId]];
+            // `rank` is a MySQL 8.0 reserved word — backtick the array key.
+            $inserts[] = ['image_id' => $imageId, 'category_id' => $catId, '`rank`' => $rankOnCategory[$catId]];
         }
-        Dml::massInserts(Tables::imageCategory(), array_keys($inserts[0]), $inserts);
+        $this->conn->transactional(function () use ($inserts): void {
+            foreach ($inserts as $row) {
+                $this->conn->insert(Tables::imageCategory(), $row);
+            }
+        });
         $this->categoryAdminService->updateCategory($newCatIds);
         return true;
     }

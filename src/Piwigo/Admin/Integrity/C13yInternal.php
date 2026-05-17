@@ -189,7 +189,12 @@ final class C13yInternal
                             'password' => $password,
                             ],
                           ];
-                        Dml::massInserts(Tables::users(), array_keys($inserts[0]), $inserts);
+                        $conn = Kernel::service(Connection::class);
+                        $conn->transactional(static function (Connection $conn) use ($inserts): void {
+                            foreach ($inserts as $row) {
+                                $conn->insert(Tables::users(), $row);
+                            }
+                        });
 
                         Kernel::service(UserService::class)->createUserInfos($id);
 

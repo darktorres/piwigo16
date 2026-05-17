@@ -496,7 +496,11 @@ SELECT DISTINCT id
             foreach ($grantedGrps as $grp) {
                 $inserts[] = ['group_id' => $grp, 'cat_id' => $insertedId];
             }
-            Dml::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts);
+            $this->conn->transactional(function () use ($inserts): void {
+                foreach ($inserts as $row) {
+                    $this->conn->insert(Tables::groupAccess(), $row);
+                }
+            });
             $grantedUsers = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userAccess() . ' WHERE cat_id = ' . $idUppercatStr)->fetchAllAssociative(), 'user_id'));
             $this->addPermissionOnCategory($insertedId, $grantedUsers);
         } elseif ($insert['status'] === 'private') {
@@ -537,12 +541,17 @@ SELECT DISTINCT id
             foreach ($images as $imageId) {
                 if (!in_array($imageId, $existing[$categoryId])) {
                     $currentRankOf[$categoryId] = (is_numeric($currentRankOf[$categoryId]) ? (int) $currentRankOf[$categoryId] : 0) + 1;
-                    $inserts[] = ['image_id' => $imageId, 'category_id' => $categoryId, 'rank' => $currentRankOf[$categoryId]];
+                    // `rank` is a MySQL 8.0 reserved word — backtick the array key.
+                    $inserts[] = ['image_id' => $imageId, 'category_id' => $categoryId, '`rank`' => $currentRankOf[$categoryId]];
                 }
             }
         }
         if (count($inserts)) {
-            Dml::massInserts(Tables::imageCategory(), array_keys($inserts[0]), $inserts);
+            $this->conn->transactional(function () use ($inserts): void {
+                foreach ($inserts as $row) {
+                    $this->conn->insert(Tables::imageCategory(), $row);
+                }
+            });
             $this->updateCategory($categories);
         }
     }
@@ -638,7 +647,14 @@ SELECT id FROM ' . Tables::imageCategory() . '
                 $inserts[] = ['user_id' => $userId, 'cat_id' => $catId];
             }
         }
-        Dml::massInserts(Tables::userAccess(), ['user_id', 'cat_id'], $inserts, ['ignore' => true]);
+        $this->conn->transactional(function () use ($inserts): void {
+            foreach ($inserts as $row) {
+                $this->conn->executeStatement(
+                    'INSERT IGNORE INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (?, ?)',
+                    [$row['user_id'], $row['cat_id']]
+                );
+            }
+        });
     }
 
     /**
@@ -669,7 +685,14 @@ SELECT id FROM ' . Tables::imageCategory() . '
             }
         }
         if (count($inserts)) {
-            Dml::massInserts(Tables::lounge(), array_keys($inserts[0]), $inserts, ['ignore' => true]);
+            $this->conn->transactional(function () use ($inserts): void {
+                foreach ($inserts as $row) {
+                    $this->conn->executeStatement(
+                        'INSERT IGNORE INTO ' . Tables::lounge() . ' (image_id, category_id) VALUES (?, ?)',
+                        [$row['image_id'], $row['category_id']]
+                    );
+                }
+            });
         }
     }
 

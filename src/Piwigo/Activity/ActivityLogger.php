@@ -9,7 +9,6 @@ use Piwigo\Admin\History\HistoryAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\PwgLogAllowed;
@@ -141,7 +140,11 @@ final readonly class ActivityLogger
                 'user_agent'   => $userAgent ?? '',
             ];
         }
-        Dml::massInserts(Tables::activity(), array_keys($inserts[0]), $inserts);
+        $this->conn->transactional(function () use ($inserts): void {
+            foreach ($inserts as $row) {
+                $this->conn->insert(Tables::activity(), $row);
+            }
+        });
     }
 
     /**

@@ -422,7 +422,11 @@ SELECT *
         }
 
         if (count($inserts) > 0) {
-            Dml::massInserts(Tables::historySummary(), array_keys($inserts[0]), $inserts);
+            $this->conn->transactional(function () use ($inserts): void {
+                foreach ($inserts as $row) {
+                    $this->conn->insert(Tables::historySummary(), $row);
+                }
+            });
         }
     }
 

@@ -21,7 +21,6 @@ use Piwigo\Core\ExecutionMutex;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\User\RegisterUser;
 use Piwigo\Event\User\RegisterUserCheck;
@@ -122,7 +121,11 @@ final class UserService
                 $inserts[] = ['user_id' => $userId, 'group_id' => $groupId];
             }
             if (count($inserts) != 0) {
-                Dml::massInserts(Tables::userGroup(), ['user_id', 'group_id'], $inserts);
+                $this->conn->transactional(function () use ($inserts): void {
+                    foreach ($inserts as $row) {
+                        $this->conn->insert(Tables::userGroup(), $row);
+                    }
+                });
             }
 
             $override = [];
@@ -346,7 +349,14 @@ final class UserService
                 }
 
                 $this->conn->executeStatement('DELETE FROM ' . Tables::userCacheCategories() . ' WHERE user_id = ?', [$udId]);
-                Dml::massInserts(Tables::userCacheCategories(), ['user_id', 'cat_id', 'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories'], $userCacheCats, ['ignore' => true]);
+                $this->conn->transactional(function () use ($userCacheCats): void {
+                    foreach ($userCacheCats as $row) {
+                        $this->conn->executeStatement(
+                            'INSERT IGNORE INTO ' . Tables::userCacheCategories() . ' (user_id, cat_id, date_last, max_date_last, nb_images, count_images, nb_categories, count_categories) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                            [$row['user_id'] ?? null, $row['cat_id'] ?? null, $row['date_last'] ?? null, $row['max_date_last'] ?? null, $row['nb_images'] ?? null, $row['count_images'] ?? null, $row['nb_categories'] ?? null, $row['count_categories'] ?? null]
+                        );
+                    }
+                });
 
                 $this->conn->executeStatement('DELETE FROM ' . Tables::userCache() . ' WHERE user_id = ?', [$udId]);
                 $udNeedUpdate        = BoolUtil::fromMixed($userdata['need_update'] ?? null);
@@ -472,8 +482,8 @@ SELECT DISTINCT f.image_id
     }
 
     /**
-     * @param int[]|int         $userIds
-     * @param array<mixed>|null $overrideValues
+     * @param int[]|int                $userIds
+     * @param array<string, mixed>|null $overrideValues
      */
     public function createUserInfos(array|int $userIds, ?array $overrideValues = null): void
     {
@@ -483,6 +493,7 @@ SELECT DISTINCT f.image_id
         if (!empty($userIds)) {
             $inserts     = [];
             $dbnow       = new \DateTimeImmutable()->format('Y-m-d H:i:s');
+            /** @var array<string, mixed> $defaultUser  DB rows are always string-keyed; getDefaultUserInfo's broader signature is shaped by internal foreach-by-ref. */
             $defaultUser = $this->getDefaultUserInfo(false) ?? [];
 
             if (!is_null($overrideValues)) {
@@ -504,7 +515,11 @@ SELECT DISTINCT f.image_id
                 $inserts[] = $insert;
             }
 
-            Dml::massInserts(Tables::userInfos(), array_keys($inserts[0]), $inserts);
+            $this->conn->transactional(function () use ($inserts): void {
+                foreach ($inserts as $row) {
+                    $this->conn->insert(Tables::userInfos(), $row);
+                }
+            });
         }
     }
 
@@ -666,7 +681,11 @@ SELECT DISTINCT f.image_id
                         $inserts[] = ['user_id' => $uid, 'group_id' => $gid];
                     }
                 }
-                Dml::massInserts(Tables::userGroup(), array_keys($inserts[0]), $inserts);
+                $this->conn->transactional(function () use ($inserts): void {
+                    foreach ($inserts as $row) {
+                        $this->conn->insert(Tables::userGroup(), $row);
+                    }
+                });
             }
         }
 

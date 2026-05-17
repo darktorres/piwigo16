@@ -12,7 +12,6 @@ use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Tag\DeleteTags;
 use Piwigo\Event\Tag\GetTagAltNames;
@@ -92,7 +91,11 @@ final class TagAdminService
                 $inserts[] = ['image_id' => $imageId, 'tag_id' => $tagId];
             }
         }
-        Dml::massInserts(Tables::imageTag(), array_keys($inserts[0]), $inserts);
+        $this->conn->transactional(function () use ($inserts): void {
+            foreach ($inserts as $row) {
+                $this->conn->insert(Tables::imageTag(), $row);
+            }
+        });
         $taglistAfter  = $this->getImageTagIds($imagesArr);
         $toUpdate      = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->compareImageTagLists($taglistBefore, $taglistAfter));
         $this->imageAdminService->updateImagesLastmodified($toUpdate);
@@ -141,7 +144,7 @@ final class TagAdminService
                     )->fetchAllAssociative(), 'id');
                 }
                 if (count($existing) === 0) {
-                    Dml::massInserts(Tables::tags(), ['name', 'url_name'], [['name' => $tagName, 'url_name' => $urlName]]);
+                    $this->conn->insert(Tables::tags(), ['name' => $tagName, 'url_name' => $urlName]);
                     $newId = (int) $this->conn->lastInsertId();
                     $this->tagCache[$tagName] = $newId;
                     $this->userAdminService->invalidateUserCacheNbTags();
@@ -173,7 +176,11 @@ final class TagAdminService
             }
         }
         if (count($inserts)) {
-            Dml::massInserts(Tables::imageTag(), array_keys($inserts[0]), $inserts);
+            $this->conn->transactional(function () use ($inserts): void {
+                foreach ($inserts as $row) {
+                    $this->conn->insert(Tables::imageTag(), $row);
+                }
+            });
         }
         $taglistAfter = $this->getImageTagIds($imageIds);
         $logger->debug('taglist_after', $taglistAfter);

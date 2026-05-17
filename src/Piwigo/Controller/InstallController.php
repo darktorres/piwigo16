@@ -24,7 +24,6 @@ use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
@@ -240,22 +239,21 @@ final readonly class InstallController implements ControllerInterface
                 InstallService::activateCoreThemes();
                 InstallService::activateCorePlugins();
 
-                Dml::massInserts(Tables::sites(), ['id', 'galleries_url'], [['id' => 1, 'galleries_url' => $this->paths->root . 'galleries/']]);
+                $conn = Kernel::service(Connection::class);
+                $conn->insert(Tables::sites(), ['id' => 1, 'galleries_url' => $this->paths->root . 'galleries/']);
 
-                $inserts = [
-                    ['id' => 1, 'username' => $admin_name, 'password' => password_hash($admin_pass1, PASSWORD_BCRYPT), 'mail_address' => $admin_mail],
-                    ['id' => 2, 'username' => 'guest'],
-                ];
-                Dml::massInserts(Tables::users(), array_keys($inserts[0]), $inserts);
+                $conn->insert(Tables::users(), ['id' => 1, 'username' => $admin_name, 'password' => password_hash($admin_pass1, PASSWORD_BCRYPT), 'mail_address' => $admin_mail]);
+                $conn->insert(Tables::users(), ['id' => 2, 'username' => 'guest']);
                 Kernel::service(UserService::class)->createUserInfos([1, 2], ['language' => $language]);
 
                 $now = new \DateTimeImmutable()->format('Y-m-d H:i:s');
-                $datas = [];
-                foreach (UpgradeService::getAvailableUpgradeIds() as $upgrade_id) {
-                    $datas[] = ['id' => $upgrade_id, 'applied' => $now, 'description' => 'upgrade included in installation'];
-                }
-                if (!empty($datas)) {
-                    Dml::massInserts(Tables::upgrade(), array_keys($datas[0]), $datas);
+                $upgradeIds = UpgradeService::getAvailableUpgradeIds();
+                if ($upgradeIds !== []) {
+                    $conn->transactional(static function (Connection $conn) use ($upgradeIds, $now): void {
+                        foreach ($upgradeIds as $upgrade_id) {
+                            $conn->insert(Tables::upgrade(), ['id' => $upgrade_id, 'applied' => $now, 'description' => 'upgrade included in installation']);
+                        }
+                    });
                 }
                 InstallSentinel::markInstalled($this->paths);
             }

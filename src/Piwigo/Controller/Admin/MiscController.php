@@ -1200,7 +1200,11 @@ final class MiscController implements AdminSubControllerInterface
                 $usernameRaw    = $nbm_user['username'] ?? null;
                 PageState::current()->addInfo(Lang::t('User %s [%s] added.', stripslashes(is_string($usernameRaw) ? $usernameRaw : ''), is_string($mailAddressRaw) ? $mailAddressRaw : ''));
             }
-            Dml::massInserts(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
+            $this->conn->transactional(function () use ($inserts): void {
+                foreach ($inserts as $row) {
+                    $this->conn->insert(Tables::userMailNotification(), $row);
+                }
+            });
             $check_key_treated = $this->notificationAdminService->doSubscribeUnsubscribeNotificationByMail(true, Config::nbmDefaultValueUserEnabled(), $check_key_list);
 
             if ($ctx->isSendmailTimeout) {

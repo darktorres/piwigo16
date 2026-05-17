@@ -12,7 +12,6 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Ws\OpenApi\ApiMethod;
@@ -142,7 +141,14 @@ final readonly class GroupsEndpoints
         foreach ($userIds as $userId) {
             $inserts[] = ['group_id' => $adduserGroupId, 'user_id' => $userId];
         }
-        Dml::massInserts(Tables::userGroup(), ['group_id', 'user_id'], $inserts, ['ignore' => true]);
+        $this->conn->transactional(function () use ($inserts): void {
+            foreach ($inserts as $row) {
+                $this->conn->executeStatement(
+                    'INSERT IGNORE INTO ' . Tables::userGroup() . ' (group_id, user_id) VALUES (?, ?)',
+                    [$row['group_id'], $row['user_id']]
+                );
+            }
+        });
         $this->userAdminService->invalidateUserCache();
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $adduserGroupId, 'edit'));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::User, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIds), 'edit'));
@@ -175,7 +181,14 @@ final readonly class GroupsEndpoints
         foreach ($userToAdd as $user) {
             $inserts[] = ['group_id' => $destGroupId, 'user_id' => $user];
         }
-        Dml::massInserts(Tables::userGroup(), ['group_id', 'user_id'], $inserts, ['ignore' => true]);
+        $this->conn->transactional(function () use ($inserts): void {
+            foreach ($inserts as $row) {
+                $this->conn->executeStatement(
+                    'INSERT IGNORE INTO ' . Tables::userGroup() . ' (group_id, user_id) VALUES (?, ?)',
+                    [$row['group_id'], $row['user_id']]
+                );
+            }
+        });
         $this->userAdminService->invalidateUserCache();
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $destGroupId, 'edit'));
         foreach ($userToAdd as $userId) {
@@ -211,7 +224,14 @@ final readonly class GroupsEndpoints
         foreach ($users as $user) {
             $inserts[] = ['group_id' => $insertedId, 'user_id' => $user];
         }
-        Dml::massInserts(Tables::userGroup(), ['group_id', 'user_id'], $inserts, ['ignore' => true]);
+        $this->conn->transactional(function () use ($inserts): void {
+            foreach ($inserts as $row) {
+                $this->conn->executeStatement(
+                    'INSERT IGNORE INTO ' . Tables::userGroup() . ' (group_id, user_id) VALUES (?, ?)',
+                    [$row['group_id'], $row['user_id']]
+                );
+            }
+        });
         $this->userAdminService->invalidateUserCache();
         foreach ($users as $userId) {
             $uid = is_numeric($userId) ? (int) $userId : 0;

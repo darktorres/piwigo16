@@ -28,7 +28,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocEndPhotoAddDirect;
 use Piwigo\Event\Location\LocEndPictureModify;
@@ -624,7 +623,11 @@ SELECT id
             foreach (array_unique(explode(',', is_string($rawGetBatch = $_GET['batch']) ? $rawGetBatch : '')) as $image_id) {
                 $inserts[] = ['user_id' => $user['id'], 'element_id' => $image_id];
             }
-            Dml::massInserts(Tables::caddie(), array_keys($inserts[0]), $inserts);
+            $this->conn->transactional(function () use ($inserts): void {
+                foreach ($inserts as $row) {
+                    $this->conn->insert(Tables::caddie(), $row);
+                }
+            });
             $this->redirectResponder->redirect($this->urlGenerator->admin('batch_manager') . '&filter=prefilter-caddie');
         }
 

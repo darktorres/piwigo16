@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Category\CategoryAdminService;
@@ -16,7 +17,6 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -36,6 +36,7 @@ final readonly class GroupsController implements AdminSubControllerInterface
     ];
 
     public function __construct(
+        private Connection $conn,
         private AdminService $adminService,
         private CategoryAdminService $categoryAdminService,
         private CategoryRepository $categoryRepository,
@@ -184,7 +185,11 @@ final readonly class GroupsController implements AdminSubControllerInterface
             foreach (array_diff($private_uppercats, $authorized_ids) as $to_autorize_id) {
                 $inserts[] = ['group_id' => $group_id, 'cat_id' => $to_autorize_id];
             }
-            Dml::massInserts(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts);
+            $this->conn->transactional(function () use ($inserts): void {
+                foreach ($inserts as $row) {
+                    $this->conn->insert(Tables::groupAccess(), $row);
+                }
+            });
             $this->userAdminService->invalidateUserCache();
         }
 

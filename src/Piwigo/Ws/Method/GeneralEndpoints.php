@@ -20,7 +20,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\RenderElementDescription;
@@ -281,7 +280,11 @@ final readonly class GeneralEndpoints
             $datas[] = ['element_id' => $id, 'user_id' => $userId];
         }
         if (count($datas)) {
-            Dml::massInserts(Tables::caddie(), ['element_id', 'user_id'], $datas);
+            $this->conn->transactional(function () use ($datas): void {
+                foreach ($datas as $row) {
+                    $this->conn->insert(Tables::caddie(), $row);
+                }
+            });
         }
         return count($datas);
     }

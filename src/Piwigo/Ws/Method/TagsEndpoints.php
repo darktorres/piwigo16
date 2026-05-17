@@ -11,7 +11,6 @@ use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Album\MergeTags;
 use Piwigo\Event\Picture\RenderElementDescription;
@@ -279,7 +278,11 @@ final readonly class TagsEndpoints
             $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, 'edit', ['add-tag' => $destinationTagId]));
         }
         if (count($inserts) > 0) {
-            Dml::massInserts(Tables::imageTag(), array_keys($inserts[0]), $inserts);
+            $this->conn->transactional(function () use ($inserts): void {
+                foreach ($inserts as $row) {
+                    $this->conn->insert(Tables::imageTag(), $row);
+                }
+            });
         }
         return ['id' => $destinationTagId, 'name' => $dupCopyName, 'url_name' => $dupUrlName, 'count' => count($inserts)];
     }
@@ -309,7 +312,14 @@ final readonly class TagsEndpoints
         foreach ($imageToAdd as $image) {
             $inserts[] = ['tag_id' => $mergeDestId, 'image_id' => $image];
         }
-        Dml::massInserts(Tables::imageTag(), ['tag_id', 'image_id'], $inserts, ['ignore' => true]);
+        $this->conn->transactional(function () use ($inserts): void {
+            foreach ($inserts as $row) {
+                $this->conn->executeStatement(
+                    'INSERT IGNORE INTO ' . Tables::imageTag() . ' (tag_id, image_id) VALUES (?, ?)',
+                    [$row['tag_id'], $row['image_id']]
+                );
+            }
+        });
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $mergeDestId, 'edit'));
         foreach ($imageToAdd as $imageId) {
             $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, 'edit', ['tag-add' => $mergeDestId]));

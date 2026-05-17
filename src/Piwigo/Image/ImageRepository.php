@@ -38,7 +38,11 @@ final class ImageRepository extends AbstractRepository
             static fn (int|string $id): array => ['element_id' => $id, 'user_id' => $userId],
             $toInsert
         );
-        \Piwigo\Db\Dml::massInserts($this->table('caddie'), ['element_id', 'user_id'], $rows);
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $this->conn->insert($this->table('caddie'), $row);
+            }
+        });
     }
 
     /**

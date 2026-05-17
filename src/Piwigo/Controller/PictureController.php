@@ -595,7 +595,7 @@ SELECT *
         $infos['INFO_FILE']   = $currentPic['file'] ?? null;
 
         $tpl->assign($infos);
-        $tpl->assign('display_info', unserialize(Config::pictureInformations() ?? ''));
+        $tpl->assign('display_info', Config::pictureInformations());
 
         // Related tags
         $tags = $this->tagService->getCommonTags([$imageId], -1);

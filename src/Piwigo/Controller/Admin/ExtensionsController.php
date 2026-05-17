@@ -1118,7 +1118,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
     private function extendForTemplates(): void
     {
         $tpl = TemplateRegistry::current();
-        $tpl_extension = StringUtil::safeUnserialize(Config::extentsForTemplates() ?? '');
+        $tpl_extension = Config::extentsForTemplates();
         $new_extensions = $this->adminService->getExtents();
 
         $relevant_parameters = ['----------', 'category', 'favorites', 'most_visited', 'best_rated', 'recent_pics', 'recent_cats', 'created-monthly-calendar', 'posted-monthly-calendar', 'search', 'flat', 'list', 'tags'];
@@ -1161,9 +1161,10 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                 }
                 $i++;
             }
-            Config::override('extents_for_templates', serialize($replacements));
+            $encoded = json_encode($replacements, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+            Config::override('extents_for_templates', $encoded);
             $tpl_extension = $replacements;
-            $this->configService->confUpdateParam('extents_for_templates', Config::extentsForTemplates());
+            $this->configService->confUpdateParam('extents_for_templates', $encoded);
             PageState::current()->addInfo(Lang::t('Templates configuration has been recorded.'));
         }
 

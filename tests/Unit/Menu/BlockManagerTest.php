@@ -63,7 +63,7 @@ final class BlockManagerTest extends TestCase
     {
         $block = new RegisteredBlock('nav', 'Navigation', 'piwigo');
         $this->mgr->registerBlock($block);
-        Config::loadArray(['blk_menubar' => serialize([])]);
+        Config::loadArray(['blk_menubar' => '{}']);
         $this->mgr->prepareDisplay();
 
         self::assertFalse($this->mgr->isHidden('nav'), 'should be visible after prepare_display');
@@ -82,7 +82,7 @@ final class BlockManagerTest extends TestCase
     {
         $block = new RegisteredBlock('nav', 'Navigation', 'piwigo');
         $this->mgr->registerBlock($block);
-        Config::loadArray(['blk_menubar' => serialize([])]);
+        Config::loadArray(['blk_menubar' => '{}']);
         $this->mgr->prepareDisplay();
         self::assertInstanceOf(DisplayBlock::class, $this->mgr->getBlock('nav'));
     }
@@ -91,7 +91,7 @@ final class BlockManagerTest extends TestCase
     {
         $block = new RegisteredBlock('nav', 'Navigation', 'piwigo');
         $this->mgr->registerBlock($block);
-        Config::loadArray(['blk_menubar' => serialize([])]);
+        Config::loadArray(['blk_menubar' => '{}']);
         $this->mgr->prepareDisplay();
         $this->mgr->setBlockPosition('nav', 999);
         $block = $this->mgr->getBlock('nav');

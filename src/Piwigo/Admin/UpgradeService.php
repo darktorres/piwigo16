@@ -98,7 +98,7 @@ final class UpgradeService
 
     public static function deactivateTemplates(): void
     {
-        Kernel::service(ConfigService::class)->confUpdateParam('extents_for_templates', []);
+        Kernel::service(ConfigService::class)->confUpdateParam('extents_for_templates', '[]');
     }
 
     public static function checkUpgradeAccessRights(): void

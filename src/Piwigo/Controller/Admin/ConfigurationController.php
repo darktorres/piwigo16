@@ -223,7 +223,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                         $picInfoVal = $post_picture_informations[$checkbox] ?? null;
                         $post_picture_informations[$checkbox] = $picInfoVal !== null;
                     }
-                    $_POST['picture_informations'] = addslashes(serialize($post_picture_informations));
+                    $_POST['picture_informations'] = json_encode($post_picture_informations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
                     break;
 
                 case 'search':
@@ -419,7 +419,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                     'picture_menu'                => Config::pictureMenu(),
                 ], true);
                 $tpl->append('display', [
-                    'picture_informations' => StringUtil::safeUnserialize(Config::pictureInformations() ?? ''),
+                    'picture_informations' => Config::pictureInformations(),
                     'NB_CATEGORIES_PAGE'   => Config::nbCategoriesPage(),
                 ], true);
                 break;

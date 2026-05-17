@@ -656,7 +656,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                     $object = $object_icon = $action_icon = $action_color = '';
                     $action = $rows['action'];
                     $date = $hour = '';
-                    $detailsRaw = unserialize(is_string($rows['details'] ?? null) ? $rows['details'] : '');
+                    $detailsRaw = json_decode(is_string($rows['details'] ?? null) ? $rows['details'] : '', associative: true);
                     $details    = is_array($detailsRaw) ? $detailsRaw : [];
                     $detail     = ['type' => 'empty'];
 

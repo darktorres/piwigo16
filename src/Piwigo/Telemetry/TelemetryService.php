@@ -281,7 +281,8 @@ final readonly class TelemetryService
         $query   = 'SELECT action, occured_on, details FROM ' . Tables::activity() . " WHERE object = 'system' AND object_id = " . ActivitySystem::Core . " AND action IN ('update', 'autoupdate') ORDER BY activity_id ASC;";
         $updates = $this->conn->executeQuery($query)->fetchAllAssociative();
         foreach ($updates as $update) {
-            $details = StringUtil::safeUnserialize(is_string($update['details']) ? $update['details'] : '');
+            $detailsDecoded = json_decode(is_string($update['details']) ? $update['details'] : '', associative: true);
+            $details        = is_array($detailsDecoded) ? $detailsDecoded : [];
             if (isset($details['from_version']) && isset($details['to_version'])) {
                 $piwigoInfos['updates'][] = [
                     'action'       => $update['action'],

@@ -28,16 +28,16 @@ final class SearchRepository extends AbstractRepository
     }
 
     /**
-     * Insert a new search row with the given serialized rules and return its id.
+     * Insert a new search row with the given JSON-encoded rules and return its id.
      */
-    public function insertSearch(string $serializedRules): int
+    public function insertSearch(string $encodedRules): int
     {
-        $this->conn->insert($this->table('search'), ['rules' => $serializedRules]);
+        $this->conn->insert($this->table('search'), ['rules' => $encodedRules]);
         return (int) $this->conn->lastInsertId();
     }
 
     /**
-     * Return the serialized rules string for a search by id, or null if not found.
+     * Return the JSON-encoded rules string for a search by id, or null if not found.
      */
     public function findRulesById(int $id): ?string
     {

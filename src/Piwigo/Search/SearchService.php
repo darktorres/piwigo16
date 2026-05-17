@@ -131,7 +131,10 @@ final class SearchService
             $this->htmlService->badRequest('this search identifier does not exist');
         }
         $rules  = $search['rules'] ?? '';
-        $result = unserialize(is_string($rules) ? $rules : '');
+        if (!is_string($rules) || $rules === '') {
+            return [];
+        }
+        $result = json_decode($rules, associative: true);
         return is_array($result) ? $result : [];
     }
 
@@ -1100,7 +1103,7 @@ final class SearchService
         $searchUuid = $this->getAvailableSearchUuid();
 
         Dml::singleInsert(Tables::search(), [
-            'rules'       => serialize($rules),
+            'rules'       => json_encode($rules, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
             'created_on'  => $dbnow,
             'created_by'  => $createdBy,
             'search_uuid' => $searchUuid,

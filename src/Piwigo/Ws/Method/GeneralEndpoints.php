@@ -446,9 +446,10 @@ final readonly class GeneralEndpoints
                         $outputLines[count($outputLines) - 1]['counter']++;
                         $outputLines[count($outputLines) - 1]['object_id'][] = $row['object_id'];
                     } else {
-                        $rowDetailsStr = is_string($row['details'] ?? null) ? $row['details'] : '';
-                        $rowDetailsStr = str_replace(['`groups`', '`rank`'], ['groups', 'rank'], $rowDetailsStr);
-                        $details       = StringUtil::safeUnserialize($rowDetailsStr);
+                        $rowDetailsStr  = is_string($row['details'] ?? null) ? $row['details'] : '';
+                        $sanitized      = strtr($rowDetailsStr, ['`groups`' => 'groups', '`rank`' => 'rank']);
+                        $detailsDecoded = json_decode($sanitized, associative: true);
+                        $details        = is_array($detailsDecoded) ? $detailsDecoded : [];
                         if (isset($row['user_agent'])) {
                             $details['agent'] = $row['user_agent'];
                         }
@@ -608,10 +609,10 @@ final readonly class GeneralEndpoints
         /** @var int|false $strtotimeMonth */
         $this->cookieService->setCookieVar('display_thumbnail', $cookieVal, $strtotimeMonth === false ? null : $strtotimeMonth);
         $searchRepo = $this->searchRepository;
-        $searchId   = $searchRepo->insertSearch(serialize($search));
-        $serializedRules = $searchRepo->findRulesById($searchId);
-        $searchRules = unserialize(is_string($serializedRules) ? $serializedRules : '');
-        $search = is_array($searchRules) ? $searchRules : [];
+        $searchId   = $searchRepo->insertSearch(json_encode($search, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+        $encodedRules = $searchRepo->findRulesById($searchId);
+        $searchRules  = json_decode(is_string($encodedRules) ? $encodedRules : '', associative: true);
+        $search       = is_array($searchRules) ? $searchRules : [];
         $historyService = $this->historyAdminService;
         $search         = $historyService->prepareSearch($search);
 
@@ -653,7 +654,8 @@ final readonly class GeneralEndpoints
             $sdQuery       = 'SELECT id, rules FROM ' . Tables::search() . ' WHERE id IN (' . implode(',', array_map(intval(...), $searchIds)) . ');';
             $searchDetails = array_column($this->conn->executeQuery($sdQuery)->fetchAllAssociative(), 'rules', 'id');
             foreach ($searchDetails as $idSearch => $rulesSearch) {
-                $rulesArr    = StringUtil::safeUnserialize(is_scalar($rulesSearch) ? (string) $rulesSearch : '');
+                $rulesArr    = json_decode(is_scalar($rulesSearch) ? (string) $rulesSearch : '', associative: true);
+                $rulesArr    = is_array($rulesArr) ? $rulesArr : [];
                 $rulesFields = is_array($rulesArr['fields'] ?? null) ? $rulesArr['fields'] : [];
                 $rfTags      = is_array($rulesFields['tags'] ?? null) ? $rulesFields['tags'] : [];
                 $rfCat       = is_array($rulesFields['cat'] ?? null) ? $rulesFields['cat'] : [];

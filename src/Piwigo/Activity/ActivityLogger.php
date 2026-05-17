@@ -123,7 +123,7 @@ final readonly class ActivityLogger
         }
 
         $inserts       = [];
-        $detailsInsert = serialize($details);
+        $detailsInsert = json_encode($details, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
         $ipAddress     = $_SERVER['REMOTE_ADDR'] ?? null;
         $sessionId     = session_id() !== '' ? session_id() : 'none';
 

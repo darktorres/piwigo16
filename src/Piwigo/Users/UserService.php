@@ -360,7 +360,7 @@ final class UserService
                 $imageAccessListRaw  = $userdata['image_access_list'] ?? null;
                 $udImageAccessList   = is_string($imageAccessListRaw) ? $imageAccessListRaw : '';
                 $lastPhotoPlaceholder = $udLastPhotoDate === '' ? 'NULL' : '?';
-                $cacheParams = [$udId, $udNeedUpdate ? 'true' : 'false', $udCacheUpdateTime, $udForbiddenCatsStr2, $udNbTotalImages, $udImageAccessType, $udImageAccessList];
+                $cacheParams = [$udId, $udNeedUpdate ? 1 : 0, $udCacheUpdateTime, $udForbiddenCatsStr2, $udNbTotalImages, $udImageAccessType, $udImageAccessList];
                 if ($udLastPhotoDate !== '') {
                     array_splice($cacheParams, 5, 0, [$udLastPhotoDate]);
                 }

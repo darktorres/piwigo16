@@ -114,7 +114,7 @@ final class NotificationRepository extends AbstractRepository
         if ($action === 'send') {
             $qb->andWhere('N.enabled = :enabledSend')
                ->andWhere("U.{$emailField} IS NOT NULL")
-               ->setParameter('enabledSend', 'true');
+               ->setParameter('enabledSend', 1);
         }
 
         if ($checkKeyList !== []) {
@@ -124,7 +124,7 @@ final class NotificationRepository extends AbstractRepository
 
         if ($enabledFilter !== null) {
             $qb->andWhere('N.enabled = :enabledFilter')
-               ->setParameter('enabledFilter', $enabledFilter ? 'true' : 'false');
+               ->setParameter('enabledFilter', $enabledFilter ? 1 : 0);
         }
 
         if ($action === 'send') {

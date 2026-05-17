@@ -6,10 +6,12 @@ namespace Piwigo\Core;
 
 final class AppInfo
 {
-    public const string VERSION              = '17.0.0';
-    public const string DEFAULT_LANGUAGE     = 'en_UK';
-    public const string DEFAULT_TEMPLATE     = 'modus';
-    public const string REQUIRED_PHP_VERSION = '8.5.0';
+    public const string VERSION                = '17.0.0';
+    public const string DEFAULT_LANGUAGE       = 'en_UK';
+    public const string DEFAULT_TEMPLATE       = 'modus';
+    public const string REQUIRED_PHP_VERSION   = '8.5.0';
+    /** Minimum server version: MySQL 8.0+ or MariaDB 10.5+. */
+    public const string REQUIRED_MYSQL_VERSION = '8.0.0';
 
     public static function branchFromVersion(string $version): string
     {

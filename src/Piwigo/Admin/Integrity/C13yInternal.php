@@ -14,7 +14,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbInfo;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Users\UserService;
 
@@ -48,7 +47,7 @@ final class C13yInternal
         $check_list[] = [
             'type' => 'MySQL',
             'current' => DbInfo::version(),
-            'required' => Dml::REQUIRED_MYSQL_VERSION,
+            'required' => AppInfo::REQUIRED_MYSQL_VERSION,
             ];
 
         foreach ($check_list as $elem) {

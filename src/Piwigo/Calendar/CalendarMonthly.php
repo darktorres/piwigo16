@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
@@ -365,7 +364,7 @@ final class CalendarMonthly extends CalendarBase
             $query .= $this->inner_sql;
             $query .= $this->getDateWhere();
             $query .= '
-    ORDER BY '.Dml::RANDOM_FUNCTION.'()
+    ORDER BY RAND()
     LIMIT 1';
             unset($this->chronologyDate[CDAY]);
 

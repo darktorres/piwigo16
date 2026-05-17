@@ -7,7 +7,6 @@ namespace Piwigo\Notification;
 use Doctrine\DBAL\Connection;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
@@ -303,7 +302,7 @@ SELECT DISTINCT i.*
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id=image_id
   ' . $whereSql . '
     AND date_available=\'' . $dateAvailable . '\'
-  ORDER BY ' . Dml::RANDOM_FUNCTION . '()
+  ORDER BY RAND()
   LIMIT ' . $maxElements . '
 ;';
                 $dates[$i]['elements'] = $this->conn->executeQuery($query)->fetchAllAssociative();

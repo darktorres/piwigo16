@@ -9,7 +9,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Album\GetCategoriesMenuSqlWhere;
@@ -246,7 +245,7 @@ SELECT DISTINCT(id)
                 $query .= '
     OR ';
             }
-            $query .= 'uppercats ' . Dml::REGEX_OPERATOR . ' \'(^|,)' . $categoryId . '(,|$)\'';
+            $query .= 'uppercats REGEXP \'(^|,)' . $categoryId . '(,|$)\'';
         }
         $query .= '
 ;';
@@ -336,7 +335,7 @@ SELECT image_id
             }
             $query .= '
     ' . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'c.id', 'visible_categories' => 'c.id', 'visible_images' => 'image_id'], "\n  AND") . '
-  ORDER BY ' . Dml::RANDOM_FUNCTION . '()
+  ORDER BY RAND()
   LIMIT 1
 ;';
             $val = $this->conn->executeQuery($query)->fetchOne();

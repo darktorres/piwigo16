@@ -15,7 +15,6 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
@@ -85,7 +84,7 @@ final readonly class CategoriesEndpoints
         $whereClauses = [];
         foreach ($catIds as $catIdInt) {
             if ($params['recursive']) {
-                $whereClauses[] = 'uppercats ' . Dml::REGEX_OPERATOR . " '(^|,)" . $catIdInt . "(,|$)'";
+                $whereClauses[] = "uppercats REGEXP '(^|,)" . $catIdInt . "(,|$)'";
             } else {
                 $whereClauses[] = 'id=' . $catIdInt;
             }
@@ -205,7 +204,7 @@ final readonly class CategoriesEndpoints
                 $where[] = 'id_uppercat IS NULL';
             }
         } elseif ($getlistCatId > 0) {
-            $where[] = 'uppercats ' . Dml::REGEX_OPERATOR . " '(^|,)" . $getlistCatId . "(,|$)'";
+            $where[] = "uppercats REGEXP '(^|,)" . $getlistCatId . "(,|$)'";
         }
         if ($params['public']) {
             $where[]  = 'status = "public"';
@@ -277,7 +276,7 @@ final readonly class CategoriesEndpoints
             } else {
                 if ($row['count_categories'] > 0 && $row['count_images'] > 0) {
                     $rowUppercatsRaw = $row['uppercats'] ?? null;
-                    $subQuery = 'SELECT representative_picture_id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id=cat_id AND user_id=' . $currentUser->id . " WHERE uppercats LIKE '" . (is_string($rowUppercatsRaw) ? $rowUppercatsRaw : '') . ",%' AND representative_picture_id IS NOT NULL" . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . ' ORDER BY ' . Dml::RANDOM_FUNCTION . '() LIMIT 1;';
+                    $subQuery = 'SELECT representative_picture_id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id=cat_id AND user_id=' . $currentUser->id . " WHERE uppercats LIKE '" . (is_string($rowUppercatsRaw) ? $rowUppercatsRaw : '') . ",%' AND representative_picture_id IS NOT NULL" . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . ' ORDER BY RAND() LIMIT 1;';
                     $subval = $this->conn->executeQuery($subQuery)->fetchOne();
                     if ($subval !== false) {
                         $imageId = is_numeric($subval) ? (int) $subval : null;
@@ -384,7 +383,7 @@ final readonly class CategoriesEndpoints
                 $where[] = 'id_uppercat IS NULL';
             }
         } elseif ($adminCatId > 0) {
-            $where[] = 'uppercats ' . Dml::REGEX_OPERATOR . " '(^|,)" . $adminCatId . "(,|$)'";
+            $where[] = "uppercats REGEXP '(^|,)" . $adminCatId . "(,|$)'";
         }
         $query = 'SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, status, image_order FROM ' . Tables::categories() . ' WHERE ' . implode("\n    AND ", $where);
         if (isset($params['search']) && $params['search'] !== '') {

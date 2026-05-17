@@ -6,7 +6,6 @@ namespace Piwigo\Ws;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Dml;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 use Piwigo\Url\UrlService;
@@ -107,15 +106,15 @@ final readonly class WsHelper
                     $matches[1][$i] = 'date_available';
                     break;
                 case 'rand': case 'random':
-                    $matches[1][$i] = Dml::RANDOM_FUNCTION . '()';
+                    $matches[1][$i] = 'RAND()';
                     break;
             }
-            $sortable_fields = ['id', 'file', 'name', 'hit', 'rating_score', 'date_creation', 'date_available', Dml::RANDOM_FUNCTION . '()'];
+            $sortable_fields = ['id', 'file', 'name', 'hit', 'rating_score', 'date_creation', 'date_available', 'RAND()'];
             if (in_array($matches[1][$i], $sortable_fields)) {
                 if (!empty($ret)) {
                     $ret .= ', ';
                 }
-                if ($matches[1][$i] != Dml::RANDOM_FUNCTION . '()') {
+                if ($matches[1][$i] != 'RAND()') {
                     $ret .= $tbl_name;
                 }
                 $ret .= $matches[1][$i];

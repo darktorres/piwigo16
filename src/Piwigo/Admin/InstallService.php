@@ -6,11 +6,11 @@ namespace Piwigo\Admin;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
-use Piwigo\Db\Dml;
 use Piwigo\Exception\DbException;
 
 final class InstallService
@@ -114,11 +114,11 @@ final class InstallService
         try {
             Kernel::service(Connection::class);
             $dbVersion = DbInfo::version();
-            if (version_compare($dbVersion, Dml::REQUIRED_MYSQL_VERSION, '<')) {
+            if (version_compare($dbVersion, AppInfo::REQUIRED_MYSQL_VERSION, '<')) {
                 $errors[] = sprintf(
                     'your MySQL version is too old, you have "%s" and you need at least "%s"',
                     $dbVersion,
-                    Dml::REQUIRED_MYSQL_VERSION
+                    AppInfo::REQUIRED_MYSQL_VERSION
                 );
             }
         } catch (\Exception $e) {

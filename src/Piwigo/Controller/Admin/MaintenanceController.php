@@ -37,7 +37,6 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbInfo;
-use Piwigo\Db\Dml;
 use Piwigo\Db\SchemaHelper;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Admin\GetAdminAdvancedFeaturesLinks;
@@ -1180,7 +1179,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             $query = 'SELECT id, uppercats, global_rank, status, visible FROM ' . Tables::categories() . ' WHERE dir IS NOT NULL AND site_id = ' . $site_id;
             if (isset($_POST['cat']) && is_numeric($_POST['cat'])) {
                 if (isset($_POST['subcats-included']) && $_POST['subcats-included'] == 1) {
-                    $query .= ' AND uppercats ' . Dml::REGEX_OPERATOR . " '(^|,)" . $_POST['cat'] . "(,|$)'";
+                    $query .= " AND uppercats REGEXP '(^|,)" . $_POST['cat'] . "(,|$)'";
                 } else {
                     $query .= ' AND id = ' . $_POST['cat'];
                 }

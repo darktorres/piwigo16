@@ -10,7 +10,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\DebugCollector;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocBeginIndexCategoryThumbnails;
 use Piwigo\Event\Location\LocBeginIndexCategoryThumbnailsQuery;
@@ -128,7 +127,7 @@ SELECT representative_picture_id
   WHERE uppercats LIKE \'' . (is_string($rowUppercatsForQuery) ? $rowUppercatsForQuery : '') . ',%\'
     AND representative_picture_id IS NOT NULL'
                     . $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND") . '
-  ORDER BY ' . Dml::RANDOM_FUNCTION . '()
+  ORDER BY RAND()
   LIMIT 1
 ;';
                 $subval = $this->conn->executeQuery($subquery)->fetchOne();

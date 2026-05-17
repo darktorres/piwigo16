@@ -10,7 +10,6 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Metadata\MetadataService;
@@ -280,7 +279,7 @@ SELECT id
         if (is_numeric($category_id)) {
             if ($recursive) {
                 $query .= '
-    AND uppercats ' . Dml::REGEX_OPERATOR . " '(^|,)" . $category_id . "(,|$)'";
+    AND uppercats REGEXP \'(^|,)' . $category_id . '(,|$)\'';
             } else {
                 $query .= '
     AND id = ' . $category_id;

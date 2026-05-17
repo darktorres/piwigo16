@@ -262,7 +262,7 @@ final class UserService
         }
         unset($value);
 
-        $userdata['preferences'] = [];
+        $userdata['preferences'] = PreferencesService::decodePreferences($userdata['preferences'] ?? null);
 
         if ($useCache) {
             $generateUserCache = false;

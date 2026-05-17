@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Piwigo\Core\StringUtil;
 use Piwigo\Language\LanguageService;
 
 final readonly class PreferencesService
@@ -87,6 +88,31 @@ final readonly class PreferencesService
         $preferences = $user['preferences'] ?? [];
 
         $this->userRepository->updatePreferences(CurrentUser::get()->id, serialize($preferences));
+    }
+
+    /**
+     * Decode a serialized `user_infos.preferences` column value into the
+     * per-user prefs array. Companion to {@see userprefsSave()} — kept
+     * here so the encode + decode pair stays colocated, and so
+     * callers (UserService::getuserdata) don't need a separate
+     * SerializeAllowedRule exemption. Static because it has no instance
+     * dependencies — keeps the unit test trivial to construct.
+     *
+     * @return array<string, mixed>
+     */
+    public static function decodePreferences(mixed $raw): array
+    {
+        if (!is_string($raw) || $raw === '') {
+            return [];
+        }
+        $decoded = StringUtil::safeUnserialize($raw);
+        $out     = [];
+        foreach ($decoded as $key => $value) {
+            if (is_string($key)) {
+                $out[$key] = $value;
+            }
+        }
+        return $out;
     }
 
     public function userprefsUpdateParam(string $param, mixed $value): void

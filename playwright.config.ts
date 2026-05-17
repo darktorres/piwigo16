@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-    testDir: './tests/e2e',
-    globalSetup: './tests/e2e/global-setup.ts',
+    testDir: './tests/E2e',
+    globalSetup: './tests/E2e/global-setup.ts',
     fullyParallel: false,
     forbidOnly: Boolean(process.env.CI),
     retries: process.env.CI !== undefined && process.env.CI !== '' ? 1 : 0,

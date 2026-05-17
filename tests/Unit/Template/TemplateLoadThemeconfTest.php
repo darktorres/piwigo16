@@ -12,7 +12,7 @@ use Piwigo\Template\Template;
  * the legacy flat themeconf shape that setTheme() + 19 Latte sites +
  * controllers + SrcImage continue to read.
  *
- * The fixture at `tests/fixtures/themes/bundled_fixture/` covers every
+ * The fixture at `tests/Fixtures/Themes/BundledFixture/` covers every
  * field a bundled theme can declare. Verifies the legacy key mapping:
  *
  *   theme.json key    →  legacy themeconf key
@@ -44,10 +44,10 @@ final class TemplateLoadThemeconfTest extends TestCase
 
     public function testReadsThemeJsonAndProjectsToLegacyShape(): void
     {
-        $dir = dirname(__DIR__, 3) . '/tests/fixtures/themes/bundled_fixture';
+        $dir = dirname(__DIR__, 3) . '/tests/Fixtures/Themes/BundledFixture';
         $themeconf = $this->template->loadThemeconf($dir);
 
-        self::assertSame('bundled_fixture', $themeconf['name'] ?? null);
+        self::assertSame('BundledFixture', $themeconf['name'] ?? null);
         self::assertSame('_base', $themeconf['parent'] ?? null);
         self::assertTrue($themeconf['load_parent_css'] ?? false);
         self::assertSame('head.latte', $themeconf['local_head'] ?? null);
@@ -64,10 +64,10 @@ final class TemplateLoadThemeconfTest extends TestCase
 
     public function testParentOnlyManifestYieldsParentKey(): void
     {
-        // orphan_parent fixture has theme.json with parent: does_not_exist
+        // OrphanParent fixture has theme.json with parent: does_not_exist
         // — verifies the parent field comes through the JSON projection
         // even when the rest of the manifest is minimal.
-        $themeconf = $this->template->loadThemeconf(dirname(__DIR__, 3) . '/tests/fixtures/themes/orphan_parent');
+        $themeconf = $this->template->loadThemeconf(dirname(__DIR__, 3) . '/tests/Fixtures/Themes/OrphanParent');
         self::assertSame('does_not_exist', $themeconf['parent'] ?? null);
     }
 

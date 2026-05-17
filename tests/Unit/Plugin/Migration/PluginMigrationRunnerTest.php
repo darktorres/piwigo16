@@ -15,7 +15,7 @@ use Psr\Log\NullLogger;
 /**
  * Exercises PluginMigrationRunner end-to-end against an in-memory SQLite
  * connection — no MySQL test DB needed. The fixture plugin under
- * tests/fixtures/plugins/migration_plugin ships two migration files that
+ * tests/Fixtures/Plugins/MigrationPlugin ships two migration files that
  * deliberately use SQLite-compatible DDL.
  *
  * Verifies:
@@ -37,19 +37,9 @@ final class PluginMigrationRunnerTest extends TestCase
 
     private string $migrationsDir;
 
-    private const string PLUGIN_ID = 'migration_plugin';
+    private const string PLUGIN_ID = 'MigrationPlugin';
 
     private const string NAMESPACE_ = 'Piwigo\\Tests\\Fixtures\\Plugins\\MigrationPlugin\\Migrations';
-
-    #[\Override]
-    public static function setUpBeforeClass(): void
-    {
-        // Fixtures live outside the PSR-4 tests/ casing — load explicitly
-        // so reflection-style class_exists checks succeed inside the runner.
-        $repoRoot = dirname(__DIR__, 4);
-        require_once $repoRoot . '/tests/fixtures/plugins/migration_plugin/migrations/Version20260516000001.php';
-        require_once $repoRoot . '/tests/fixtures/plugins/migration_plugin/migrations/Version20260516000002.php';
-    }
 
     #[\Override]
     protected function setUp(): void
@@ -72,7 +62,7 @@ final class PluginMigrationRunnerTest extends TestCase
 
         $this->ledger = new PluginMigrationLedger($this->conn, 'test_');
         $this->runner = new PluginMigrationRunner($this->conn, $this->ledger, new NullLogger());
-        $this->migrationsDir = dirname(__DIR__, 4) . '/tests/fixtures/plugins/migration_plugin/migrations';
+        $this->migrationsDir = dirname(__DIR__, 4) . '/tests/Fixtures/Plugins/MigrationPlugin/Migrations';
     }
 
     public function testRunUpAppliesPendingMigrationsInVersionOrder(): void

@@ -2383,7 +2383,7 @@ Replace the two-runner test setup (PHPUnit 13 for unit tests + Playwright TypeSc
 ### Current state
 
 - **Unit tests:** 378 PHPUnit 13 tests in `tests/Unit/` (48 files), written with raw `$this->assert*` style.
-- **E2E tests:** 16 Playwright TypeScript test files in `tests/e2e/` driven by `npx playwright test` / `playwright.config.ts` (reduced from original 51 spec files as suite was written fresh in Phase 0).
+- **E2E tests:** 16 Playwright TypeScript test files in `tests/E2e/` driven by `npx playwright test` / `playwright.config.ts` (reduced from original 51 spec files as suite was written fresh in Phase 0).
 - **CI:** two separate steps — PHP (`vendor/bin/phpunit`) and Node (`npx playwright test`).
 - **Pest** not installed; `pest-plugin-browser` not installed.
 
@@ -2416,7 +2416,7 @@ Replace the two-runner test setup (PHPUnit 13 for unit tests + Playwright TypeSc
 
    Base URL points to the local Apache instance already used by the existing Playwright suite.
 
-4. **Port E2E tests from TypeScript to PHP.** Move each `tests/e2e/*.spec.ts` to `tests/Browser/*.php` using Pest browser syntax:
+4. **Port E2E tests from TypeScript to PHP.** Move each `tests/E2e/*.spec.ts` to `tests/Browser/*.php` using Pest browser syntax:
 
    ```php
    // Before (TypeScript):
@@ -2450,7 +2450,7 @@ Replace the two-runner test setup (PHPUnit 13 for unit tests + Playwright TypeSc
 6. **Drop TypeScript test infrastructure.**
 
    ```bash
-   rm -rf tests/e2e playwright.config.ts
+   rm -rf tests/E2e playwright.config.ts
    ```
 
    Remove the `npx playwright test` step from CI. Replace with `vendor/bin/pest --group=browser`.
@@ -2469,7 +2469,7 @@ Replace the two-runner test setup (PHPUnit 13 for unit tests + Playwright TypeSc
 vendor/bin/pest                          # all unit + browser tests green
 vendor/bin/pest --group=browser          # only browser tests
 vendor/bin/pest --group=unit             # only unit tests
-find tests/e2e -name '*.spec.ts' | wc -l   # 0 — all ported
+find tests/E2e -name '*.spec.ts' | wc -l   # 0 — all ported
 find tests/Browser -name '*.php' | wc -l   # 16 — one per original spec
 ```
 

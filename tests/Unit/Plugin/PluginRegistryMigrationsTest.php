@@ -33,15 +33,6 @@ final class PluginRegistryMigrationsTest extends TestCase
     private PluginMigrationLedger $ledger;
 
     #[\Override]
-    public static function setUpBeforeClass(): void
-    {
-        $repoRoot = dirname(__DIR__, 3);
-        require_once $repoRoot . '/tests/fixtures/plugins/migration_plugin/Plugin.php';
-        require_once $repoRoot . '/tests/fixtures/plugins/migration_plugin/migrations/Version20260516000001.php';
-        require_once $repoRoot . '/tests/fixtures/plugins/migration_plugin/migrations/Version20260516000002.php';
-    }
-
-    #[\Override]
     protected function setUp(): void
     {
         $this->conn = DriverManager::getConnection([
@@ -62,7 +53,7 @@ final class PluginRegistryMigrationsTest extends TestCase
         $this->registry = new PluginRegistry(
             $this->stubRepository(),
             new NullLogger(),
-            dirname(__DIR__, 3) . '/tests/fixtures/plugins',
+            dirname(__DIR__, 3) . '/tests/Fixtures/Plugins',
             dirname(__DIR__, 3) . '/docs/schemas/plugin.schema.json',
             $runner,
         );
@@ -73,10 +64,10 @@ final class PluginRegistryMigrationsTest extends TestCase
 
     public function testInstallRunsAllMigrationsBeforeCallingPluginInstall(): void
     {
-        $this->registry->install('migration_plugin');
+        $this->registry->install('MigrationPlugin');
 
         self::assertSame(1, MigrationPlugin::$installCount);
-        self::assertCount(2, $this->ledger->getApplied('migration_plugin'));
+        self::assertCount(2, $this->ledger->getApplied('MigrationPlugin'));
 
         $sm = $this->conn->createSchemaManager();
         self::assertTrue($sm->tablesExist(['fixture_one']));
@@ -87,11 +78,11 @@ final class PluginRegistryMigrationsTest extends TestCase
 
     public function testUninstallRunsDownMigrationsBeforeCallingPluginUninstall(): void
     {
-        $this->registry->install('migration_plugin');
-        $this->registry->uninstall('migration_plugin');
+        $this->registry->install('MigrationPlugin');
+        $this->registry->uninstall('MigrationPlugin');
 
         self::assertSame(1, MigrationPlugin::$uninstallCount);
-        self::assertSame([], $this->ledger->getApplied('migration_plugin'));
+        self::assertSame([], $this->ledger->getApplied('MigrationPlugin'));
         self::assertFalse(
             $this->conn->createSchemaManager()->tablesExist(['fixture_one']),
             'Reverse migrations must drop fixture_one before plugin uninstall() runs.',

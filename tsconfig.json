@@ -27,5 +27,5 @@
     "playwright.config.ts",
     "eslint.config.ts"
   ],
-  "exclude": ["node_modules", "dist", "tests/e2e/**"]
+  "exclude": ["node_modules", "dist", "tests/E2e/**"]
 }

@@ -23,11 +23,11 @@ A fully installed Piwigo 17.0 database with representative data:
 
 Automated via Playwright. Drives a full install + content seed against a
 scratch database (`piwigo_fixture_build`), then dumps it. Credentials come
-from `.env.test` (loaded by `tests/e2e/global-setup.ts`); see `.env.example`
+from `.env.test` (loaded by `tests/E2e/global-setup.ts`); see `.env.example`
 for the variable list.
 
 ```bash
-REGENERATE_FIXTURE=1 npx playwright test tests/e2e/regenerate-fixture.spec.ts
+REGENERATE_FIXTURE=1 npx playwright test tests/E2e/regenerate-fixture.spec.ts
 ```
 
 The spec is skipped by default — it writes a real local database and

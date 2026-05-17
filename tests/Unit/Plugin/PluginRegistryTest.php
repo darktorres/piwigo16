@@ -14,7 +14,7 @@ use Psr\Log\NullLogger;
 
 /**
  * Exercises PluginRegistry against the per-test fixture trees under
- * tests/fixtures/plugins/. Each fixture is a self-contained plugin
+ * tests/Fixtures/Plugins/. Each fixture is a self-contained plugin
  * directory with a plugin.json (and, when relevant, a Plugin.php).
  *
  * The PluginRepository dependency is stubbed with an in-memory shim so
@@ -27,19 +27,10 @@ final class PluginRegistryTest extends TestCase
     private string $schemaPath;
 
     #[\Override]
-    public static function setUpBeforeClass(): void
-    {
-        // Fixtures live outside the PSR-4 tests/ namespace casing on
-        // purpose (lowercase dir names mirror real plugins/ layout), so
-        // the autoloader skips them. Load the fixture class once here.
-        require_once dirname(__DIR__, 3) . '/tests/fixtures/plugins/valid_plugin/Plugin.php';
-    }
-
-    #[\Override]
     protected function setUp(): void
     {
         $repoRoot          = dirname(__DIR__, 3);
-        $this->fixturesDir = $repoRoot . '/tests/fixtures/plugins';
+        $this->fixturesDir = $repoRoot . '/tests/Fixtures/Plugins';
         $this->schemaPath  = $repoRoot . '/docs/schemas/plugin.schema.json';
 
         ValidPlugin::$installCount   = 0;
@@ -55,14 +46,13 @@ final class PluginRegistryTest extends TestCase
         $registry = $this->makeRegistry();
         $registry->load();
 
-        // valid + missing_dep + cycle_a + cycle_b + orphan_class survive schema.
-        // invalid_schema is silently skipped (logged at warning level).
+        // ValidPlugin + MissingDep + OrphanClass survive schema.
+        // InvalidSchema is silently skipped (logged at warning level);
+        // PluginCycles live under a separate fixture root.
         $ids = array_keys($registry->getAllManifests());
         sort($ids);
-        // cycle_a/cycle_b will be schema-valid; topological sort throws below.
-        // So the test relies on a registry built from JUST the valid fixture.
-        self::assertContains('valid_plugin', $ids);
-        self::assertNotContains('invalid_schema', $ids, 'malformed manifest must be skipped');
+        self::assertContains('ValidPlugin', $ids);
+        self::assertNotContains('InvalidSchema', $ids, 'malformed manifest must be skipped');
     }
 
     public function testValidPluginInstallActivateDeactivateUninstallLifecycle(): void
@@ -70,30 +60,30 @@ final class PluginRegistryTest extends TestCase
         $repo = $this->stubRepository();
         $registry = $this->makeRegistry($repo);
 
-        $registry->install('valid_plugin');
+        $registry->install('ValidPlugin');
         self::assertSame(1, ValidPlugin::$installCount);
-        self::assertNotEmpty($repo->findAll('', 'valid_plugin'));
+        self::assertNotEmpty($repo->findAll('', 'ValidPlugin'));
 
-        $registry->install('valid_plugin'); // idempotent — install() runs only once
+        $registry->install('ValidPlugin'); // idempotent — install() runs only once
         /** @psalm-suppress RedundantConditionGivenDocblockType — static counter narrowed to =int(1) after idempotent re-run */
         self::assertSame(1, ValidPlugin::$installCount);
 
-        $registry->activate('valid_plugin');
+        $registry->activate('ValidPlugin');
         /** @psalm-suppress RedundantConditionGivenDocblockType — same Psalm static-counter narrowing as the install case above */
         self::assertSame(1, ValidPlugin::$activateCount);
 
-        $registry->activate('valid_plugin'); // idempotent — already active
+        $registry->activate('ValidPlugin'); // idempotent — already active
         /** @psalm-suppress RedundantConditionGivenDocblockType — same Psalm static-counter narrowing as the install case above */
         self::assertSame(1, ValidPlugin::$activateCount);
 
-        $registry->deactivate('valid_plugin');
+        $registry->deactivate('ValidPlugin');
         /** @psalm-suppress RedundantConditionGivenDocblockType — same Psalm static-counter narrowing as the install case above */
         self::assertSame(1, ValidPlugin::$deactivateCount);
 
-        $registry->uninstall('valid_plugin');
+        $registry->uninstall('ValidPlugin');
         /** @psalm-suppress RedundantConditionGivenDocblockType — same Psalm static-counter narrowing as the install case above */
         self::assertSame(1, ValidPlugin::$uninstallCount);
-        self::assertEmpty($repo->findAll('', 'valid_plugin'));
+        self::assertEmpty($repo->findAll('', 'ValidPlugin'));
     }
 
     public function testMissingDependencyRefusesActivation(): void
@@ -102,20 +92,20 @@ final class PluginRegistryTest extends TestCase
         $registry->load();
 
         $this->expectException(PluginDependencyException::class);
-        $this->expectExceptionMessageMatches('/missing_dep.*does_not_exist/');
-        $registry->install('missing_dep');
+        $this->expectExceptionMessageMatches('/MissingDep.*does_not_exist/');
+        $registry->install('MissingDep');
     }
 
     public function testDependencyCycleRefusesLoad(): void
     {
-        // The cycle pair lives in tests/fixtures/plugin_cycles/ so the
+        // The cycle pair lives in tests/Fixtures/PluginCycles/ so the
         // main fixtures dir stays acyclic — Kahn's algorithm there must
         // drain cleanly. This test points the registry at the isolated
         // cycle directory and asserts the dependency exception.
         $registry = new PluginRegistry(
             $this->stubRepository(),
             new NullLogger(),
-            dirname(__DIR__, 3) . '/tests/fixtures/plugin_cycles',
+            dirname(__DIR__, 3) . '/tests/Fixtures/PluginCycles',
             $this->schemaPath,
         );
 
@@ -131,7 +121,7 @@ final class PluginRegistryTest extends TestCase
 
         $this->expectException(PluginValidationException::class);
         $this->expectExceptionMessageMatches('/main class.*does not exist/');
-        $registry->install('orphan_class');
+        $registry->install('OrphanClass');
     }
 
     public function testUpdateRunsWhenManifestVersionChanges(): void
@@ -139,24 +129,24 @@ final class PluginRegistryTest extends TestCase
         $repo = $this->stubRepository();
         $registry = $this->makeRegistry($repo);
 
-        $registry->install('valid_plugin');
+        $registry->install('ValidPlugin');
         // Simulate filesystem version > DB version (mimics a fresh tarball drop).
-        $repo->updateVersion('valid_plugin', '0.9.0');
+        $repo->updateVersion('ValidPlugin', '0.9.0');
 
-        $registry->update('valid_plugin');
+        $registry->update('ValidPlugin');
         self::assertSame('0.9.0', ValidPlugin::$lastUpdateOldVersion);
         self::assertSame('1.0.0', ValidPlugin::$lastUpdateNewVersion);
-        self::assertSame('1.0.0', $repo->findAll('', 'valid_plugin')[0]['version']);
+        self::assertSame('1.0.0', $repo->findAll('', 'ValidPlugin')[0]['version']);
     }
 
     public function testGetPathReturnsAbsoluteFilesystemPath(): void
     {
         $registry = $this->makeRegistry();
-        $path = $registry->getPath('valid_plugin');
+        $path = $registry->getPath('ValidPlugin');
         self::assertNotNull($path);
-        self::assertSame($this->fixturesDir . '/valid_plugin', $path);
+        self::assertSame($this->fixturesDir . '/ValidPlugin', $path);
 
-        self::assertNull($registry->getPath('not_a_plugin'));
+        self::assertNull($registry->getPath('NotAPlugin'));
     }
 
     private function makeRegistry(?PluginRepository $repo = null): PluginRegistry

@@ -186,7 +186,7 @@ file-concatenation path — the gallery still works without a build step.
 ```bash
 npm run build        # production build — creates dist/ and dist/manifest.json
 npm run dev          # Vite dev server with HMR
-npm run typecheck    # tsc --noEmit across .ts files (incl. tests/e2e)
+npm run typecheck    # tsc --noEmit across .ts files (incl. tests/E2e)
 npm run clean        # remove dist/ and _data/combined/
 ```
 

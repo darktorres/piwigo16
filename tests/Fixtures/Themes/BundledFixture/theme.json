@@ -1,0 +1,16 @@
+{
+  "id": "BundledFixture",
+  "name": "BundledFixture",
+  "version": "1.0.0",
+  "parent": "_base",
+  "loadParentCss": true,
+  "localHead": "head.latte",
+  "colorscheme": "dark",
+  "useStandardPages": false,
+  "assets": {
+    "icon": "icon",
+    "img": "images",
+    "mimeIcon": "icon/mimetypes",
+    "adminIcon": "admin/icon"
+  }
+}

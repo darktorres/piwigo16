@@ -1,0 +1,9 @@
+{
+  "id": "ValidPlugin",
+  "name": "Valid Plugin",
+  "version": "1.0.0",
+  "description": "A well-formed plugin used by PluginRegistryTest.",
+  "license": "MIT",
+  "minPiwigo": "17.0",
+  "main": "Piwigo\\Tests\\Fixtures\\Plugins\\ValidPlugin\\Plugin"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "CycleA",
+  "name": "Cycle A",
+  "version": "1.0.0",
+  "description": "Half of an A<->B dependency cycle.",
+  "license": "MIT",
+  "minPiwigo": "17.0",
+  "main": "Piwigo\\Tests\\Fixtures\\PluginCycles\\CycleA\\Plugin",
+  "require": {
+    "plugin/CycleB": "^1.0"
+  }
+}

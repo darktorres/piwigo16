@@ -1,0 +1,7 @@
+{
+  "id": "CycleA",
+  "name": "Cycle A",
+  "version": "1.0.0",
+  "parent": "CycleB",
+  "main": "Piwigo\\Tests\\Fixtures\\ThemeCycles\\CycleA\\Theme"
+}

@@ -276,7 +276,7 @@ tests/Unit/             PHPUnit unit tests (no DB required)
   Plugins/ Routing/ Search/ Session/ Storage/ Tag/ Template/ Url/ Users/ Ws/
 tests/Integration/      PHPUnit integration tests (need .env.local + DB)
   InstallChainTest.php  IntegrationTestCase.php  Job/  UpgradeChainTest.php  WsApiTest.php
-tests/e2e/              Playwright end-to-end tests
+tests/E2e/              Playwright end-to-end tests
   config/               Playwright fixtures and test configuration
   helpers/              Page-object helpers (admin-login, debug-helpers,
                         page-monitor, strict-assertions, test-data, upload-photo, url)

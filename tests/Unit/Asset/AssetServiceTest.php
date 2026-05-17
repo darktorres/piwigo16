@@ -9,7 +9,7 @@ use Piwigo\Asset\AssetService;
 use Psr\Log\NullLogger;
 
 /**
- * Exercises AssetService against `tests/fixtures/plugins/asset_plugin/`
+ * Exercises AssetService against `tests/Fixtures/Plugins/AssetPlugin/`
  * — a fixture tree that ships a Vite-format `dist/manifest.json` with
  * three entries (one CSS-bearing admin entry, one JS-only public
  * entry, one entry with multiple CSS bundles).
@@ -34,49 +34,49 @@ final class AssetServiceTest extends TestCase
     #[\Override]
     protected function setUp(): void
     {
-        $this->pluginsDir = dirname(__DIR__, 3) . '/tests/fixtures/plugins';
+        $this->pluginsDir = dirname(__DIR__, 3) . '/tests/Fixtures/Plugins';
     }
 
     public function testRegisterAndRenderEmitsCssThenScriptForSingleEntry(): void
     {
         $service = $this->makeService();
-        $service->registerEntry('asset_plugin/admin');
+        $service->registerEntry('AssetPlugin/admin');
 
         $tags = $service->renderHeadTags();
         self::assertSame([
-            '<link rel="stylesheet" href="plugins/asset_plugin/dist/assets/admin-style-def456.css">',
-            '<script type="module" src="plugins/asset_plugin/dist/assets/admin-abc123.js"></script>',
+            '<link rel="stylesheet" href="plugins/AssetPlugin/dist/assets/admin-style-def456.css">',
+            '<script type="module" src="plugins/AssetPlugin/dist/assets/admin-abc123.js"></script>',
         ], $tags);
     }
 
     public function testJsOnlyEntryEmitsOnlyScript(): void
     {
         $service = $this->makeService();
-        $service->registerEntry('asset_plugin/public');
+        $service->registerEntry('AssetPlugin/public');
 
         $tags = $service->renderHeadTags();
         self::assertSame([
-            '<script type="module" src="plugins/asset_plugin/dist/assets/public-789xyz.js"></script>',
+            '<script type="module" src="plugins/AssetPlugin/dist/assets/public-789xyz.js"></script>',
         ], $tags);
     }
 
     public function testMultipleCssBundlesAllEmit(): void
     {
         $service = $this->makeService();
-        $service->registerEntry('asset_plugin/extras');
+        $service->registerEntry('AssetPlugin/extras');
 
         $tags = $service->renderHeadTags();
         self::assertCount(3, $tags);
         self::assertSame(
-            '<link rel="stylesheet" href="plugins/asset_plugin/dist/assets/extras-jkl012.css">',
+            '<link rel="stylesheet" href="plugins/AssetPlugin/dist/assets/extras-jkl012.css">',
             $tags[0],
         );
         self::assertSame(
-            '<link rel="stylesheet" href="plugins/asset_plugin/dist/assets/extras-mno345.css">',
+            '<link rel="stylesheet" href="plugins/AssetPlugin/dist/assets/extras-mno345.css">',
             $tags[1],
         );
         self::assertSame(
-            '<script type="module" src="plugins/asset_plugin/dist/assets/extras-ghi789.js"></script>',
+            '<script type="module" src="plugins/AssetPlugin/dist/assets/extras-ghi789.js"></script>',
             $tags[2],
         );
     }
@@ -84,8 +84,8 @@ final class AssetServiceTest extends TestCase
     public function testDuplicateRegistrationFoldsSilently(): void
     {
         $service = $this->makeService();
-        $service->registerEntry('asset_plugin/admin');
-        $service->registerEntry('asset_plugin/admin');
+        $service->registerEntry('AssetPlugin/admin');
+        $service->registerEntry('AssetPlugin/admin');
 
         // Two registrations → still one set of tags.
         self::assertCount(2, $service->renderHeadTags());
@@ -102,7 +102,7 @@ final class AssetServiceTest extends TestCase
     public function testUnknownEntryInKnownPluginYieldsNoTags(): void
     {
         $service = $this->makeService();
-        $service->registerEntry('asset_plugin/no_such_entry');
+        $service->registerEntry('AssetPlugin/no_such_entry');
 
         self::assertSame([], $service->renderHeadTags());
     }
@@ -122,12 +122,12 @@ final class AssetServiceTest extends TestCase
     {
         // Re-register two distinct entries to verify cross-plugin ordering.
         $service = $this->makeService();
-        $service->registerEntry('asset_plugin/public');
-        $service->registerEntry('asset_plugin/admin');
+        $service->registerEntry('AssetPlugin/public');
+        $service->registerEntry('AssetPlugin/admin');
 
         $tags = $service->renderHeadTags();
         self::assertSame(
-            '<script type="module" src="plugins/asset_plugin/dist/assets/public-789xyz.js"></script>',
+            '<script type="module" src="plugins/AssetPlugin/dist/assets/public-789xyz.js"></script>',
             $tags[0],
             'public registered first — its script should lead',
         );

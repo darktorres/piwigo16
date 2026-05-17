@@ -58,24 +58,24 @@ final class LangServicePluginTranslationsTest extends TestCase
 
     public function testLoadPluginTranslationsMergesFixturePoFile(): void
     {
-        $pluginDir = dirname(__DIR__, 3) . '/tests/fixtures/plugins/valid_plugin';
-        $loaded = $this->lang->loadPluginTranslations('valid_plugin', $pluginDir);
+        $pluginDir = dirname(__DIR__, 3) . '/tests/Fixtures/Plugins/ValidPlugin';
+        $loaded = $this->lang->loadPluginTranslations('ValidPlugin', $pluginDir);
 
         self::assertTrue($loaded, 'Fixture plugin.po must be discoverable under language/en_UK/');
-        self::assertSame('Hello from valid_plugin fixture', $this->lang->t('hello_plugin'));
+        self::assertSame('Hello from ValidPlugin fixture', $this->lang->t('hello_plugin'));
         self::assertSame('Welcome, Alice', $this->lang->t('greeting', 'Alice'));
     }
 
     public function testLoadPluginTranslationsReturnsFalseWhenNoPoFile(): void
     {
-        // orphan_class fixture has no language/ subdirectory.
-        $pluginDir = dirname(__DIR__, 3) . '/tests/fixtures/plugins/orphan_class';
-        self::assertFalse($this->lang->loadPluginTranslations('orphan_class', $pluginDir));
+        // OrphanClass fixture has no language/ subdirectory.
+        $pluginDir = dirname(__DIR__, 3) . '/tests/Fixtures/Plugins/OrphanClass';
+        self::assertFalse($this->lang->loadPluginTranslations('OrphanClass', $pluginDir));
     }
 
     public function testLoadPluginTranslationsShortCircuitsOnEmptyInputs(): void
     {
-        self::assertFalse($this->lang->loadPluginTranslations('', dirname(__DIR__, 3) . '/tests/fixtures/plugins/valid_plugin'));
-        self::assertFalse($this->lang->loadPluginTranslations('valid_plugin', ''));
+        self::assertFalse($this->lang->loadPluginTranslations('', dirname(__DIR__, 3) . '/tests/Fixtures/Plugins/ValidPlugin'));
+        self::assertFalse($this->lang->loadPluginTranslations('ValidPlugin', ''));
     }
 }

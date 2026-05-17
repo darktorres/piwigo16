@@ -2751,7 +2751,7 @@ uses()->browser(baseUrl: 'http://localhost')->in('tests/Browser');
 ##### Port E2E specs from TypeScript to PHP
 
 ```typescript
-// before — tests/e2e/gallery-home.spec.ts
+// before — tests/E2e/gallery-home.spec.ts
 test('gallery home loads', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('h1')).toBeVisible();
@@ -2791,7 +2791,7 @@ during debugging:
 ##### Drop TypeScript test infrastructure
 
 ```bash
-rm -rf tests/e2e playwright.config.ts
+rm -rf tests/E2e playwright.config.ts
 ```
 
 Remove the `npx playwright test` step from CI. Vitest stays for TS unit
@@ -2801,7 +2801,7 @@ tests (separate boundary — see 2.2).
 
 ```bash
 vendor/bin/pest                              # all green
-find tests/e2e -name '*.spec.ts' | wc -l     # 0 — all ported
+find tests/E2e -name '*.spec.ts' | wc -l     # 0 — all ported
 find tests/Browser -name '*.php' | wc -l     # 16 — one per original spec
 ```
 
@@ -3697,7 +3697,7 @@ into a documented allowlist.
 
 ##### Current state
 
-- **Zero accessibility testing.** 16 Playwright E2E specs in `tests/e2e/`
+- **Zero accessibility testing.** 16 Playwright E2E specs in `tests/E2e/`
   cover functional flows but never invoke axe-core.
 - No `aria-*` audit, no focus-management tests, no contrast checks.
 - Color contrast issues are likely once 3.1 design tokens land — values
@@ -3713,7 +3713,7 @@ npm i -D @axe-core/playwright axe-core
 ##### Helper
 
 ```typescript
-// tests/e2e/utils/a11y.ts
+// tests/E2e/utils/a11y.ts
 import AxeBuilder from '@axe-core/playwright';
 import { expect, Page } from '@playwright/test';
 
@@ -3770,10 +3770,10 @@ Add an "Accessibility" section to `CONTRIBUTING.md` with:
 ##### Verification
 
 ```bash
-npx playwright test tests/e2e/                     # all pages green, a11y included
+npx playwright test tests/E2e/                     # all pages green, a11y included
 npx playwright test --grep '@a11y'                 # focused a11y-only run
 
 # Regression check: introduce a button without label, expect failure
 echo '<button>X</button>' > /tmp/probe && \
-  ! npx playwright test tests/e2e/probe.spec.ts    # exits non-zero
+  ! npx playwright test tests/E2e/probe.spec.ts    # exits non-zero
 ```

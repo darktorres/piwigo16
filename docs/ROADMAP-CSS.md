@@ -340,7 +340,7 @@ Integrate `@axe-core/playwright` into the existing E2E suite. WCAG 2.1 AA violat
 
 ### Current state
 
-- **Zero accessibility testing.** 16 Playwright E2E specs in `tests/e2e/` cover functional flows but never invoke axe-core.
+- **Zero accessibility testing.** 16 Playwright E2E specs in `tests/E2e/` cover functional flows but never invoke axe-core.
 - No `aria-*` audit, no focus-management tests, no contrast checks.
 - Color contrast issues are likely once #1 design tokens land — values currently inline are easier to evaluate against tokenized variables.
 - `package.json` has Playwright; no axe-core dependency yet.
@@ -353,7 +353,7 @@ Integrate `@axe-core/playwright` into the existing E2E suite. WCAG 2.1 AA violat
    npm i -D @axe-core/playwright axe-core
    ```
 
-2. **Helper at `tests/e2e/utils/a11y.ts`.**
+2. **Helper at `tests/E2e/utils/a11y.ts`.**
 
    ```typescript
    import AxeBuilder from '@axe-core/playwright';
@@ -387,10 +387,10 @@ Integrate `@axe-core/playwright` into the existing E2E suite. WCAG 2.1 AA violat
 ### Verification
 
 ```bash
-npx playwright test tests/e2e/                              # all pages green, a11y included
+npx playwright test tests/E2e/                              # all pages green, a11y included
 npx playwright test --grep '@a11y'                          # focused a11y-only run
 
 # Regression check: introduce a button without label, expect failure
 echo '<button>X</button>' > /tmp/probe && \
-  ! npx playwright test tests/e2e/probe.spec.ts             # exits non-zero
+  ! npx playwright test tests/E2e/probe.spec.ts             # exits non-zero
 ```

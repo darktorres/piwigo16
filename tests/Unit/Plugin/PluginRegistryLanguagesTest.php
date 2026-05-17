@@ -26,12 +26,6 @@ final class PluginRegistryLanguagesTest extends TestCase
     private bool $wasInstalled = false;
 
     #[\Override]
-    public static function setUpBeforeClass(): void
-    {
-        require_once dirname(__DIR__, 3) . '/tests/fixtures/plugins/valid_plugin/Plugin.php';
-    }
-
-    #[\Override]
     protected function setUp(): void
     {
         $paths              = \Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3));
@@ -54,17 +48,17 @@ final class PluginRegistryLanguagesTest extends TestCase
 
     public function testLoadActiveLanguagesMergesOnlyActivePluginPo(): void
     {
-        $repo = $this->stubRepository(['valid_plugin' => 'active']);
+        $repo = $this->stubRepository(['ValidPlugin' => 'active']);
         $registry = $this->makeRegistry($repo);
 
         $registry->loadActiveLanguages($this->lang);
 
-        self::assertSame('Hello from valid_plugin fixture', $this->lang->t('hello_plugin'));
+        self::assertSame('Hello from ValidPlugin fixture', $this->lang->t('hello_plugin'));
     }
 
     public function testInactivePluginsAreSkipped(): void
     {
-        $repo = $this->stubRepository(['valid_plugin' => 'inactive']);
+        $repo = $this->stubRepository(['ValidPlugin' => 'inactive']);
         $registry = $this->makeRegistry($repo);
 
         $registry->loadActiveLanguages($this->lang);
@@ -78,7 +72,7 @@ final class PluginRegistryLanguagesTest extends TestCase
         return new PluginRegistry(
             $repo,
             new NullLogger(),
-            dirname(__DIR__, 3) . '/tests/fixtures/plugins',
+            dirname(__DIR__, 3) . '/tests/Fixtures/Plugins',
             dirname(__DIR__, 3) . '/docs/schemas/plugin.schema.json',
         );
     }

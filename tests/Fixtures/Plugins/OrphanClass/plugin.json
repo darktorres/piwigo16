@@ -1,0 +1,9 @@
+{
+  "id": "OrphanClass",
+  "name": "Orphan Class Plugin",
+  "version": "1.0.0",
+  "description": "Manifest references a class that is not autoloadable.",
+  "license": "MIT",
+  "minPiwigo": "17.0",
+  "main": "Piwigo\\Tests\\Fixtures\\Plugins\\OrphanClass\\NotARealClass"
+}

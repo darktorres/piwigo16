@@ -13,8 +13,8 @@ use PHPUnit\Framework\TestCase;
  * Exercises `tools/plugin-lint.php` end-to-end via shell so the test
  * mirrors how a plugin author actually invokes `composer piwigo:lint`.
  *
- * - A clean fixture (`valid_plugin`) must exit 0.
- * - A dirty fixture (`dirty_plugin`) must exit 1 and surface every
+ * - A clean fixture (`ValidPlugin`) must exit 0.
+ * - A dirty fixture (`DirtyPlugin`) must exit 1 and surface every
  *   rule we ship in the regex table.
  */
 final class PluginLintTest extends TestCase
@@ -23,7 +23,7 @@ final class PluginLintTest extends TestCase
 
     public function testCleanPluginExitsZero(): void
     {
-        [$exit, $output] = $this->runLint(dirname(__DIR__, 3) . '/tests/fixtures/plugins/valid_plugin');
+        [$exit, $output] = $this->runLint(dirname(__DIR__, 3) . '/tests/Fixtures/Plugins/ValidPlugin');
 
         self::assertSame(0, $exit, 'Clean fixture must exit 0; got output: ' . implode("\n", $output));
         self::assertStringContainsString('plugin-lint: clean', implode("\n", $output));
@@ -31,7 +31,7 @@ final class PluginLintTest extends TestCase
 
     public function testDirtyPluginExitsOneAndFlagsEveryRule(): void
     {
-        [$exit, $output] = $this->runLint(dirname(__DIR__, 3) . '/tests/fixtures/plugins/dirty_plugin');
+        [$exit, $output] = $this->runLint(dirname(__DIR__, 3) . '/tests/Fixtures/Plugins/DirtyPlugin');
 
         $joined = implode("\n", $output);
         self::assertSame(1, $exit, 'Dirty fixture must exit 1; got output: ' . $joined);

@@ -1,0 +1,7 @@
+{
+  "id": "OrphanParent",
+  "name": "Orphan Parent",
+  "version": "1.0.0",
+  "parent": "does_not_exist",
+  "main": "Piwigo\\Tests\\Fixtures\\Themes\\OrphanParent\\Theme"
+}

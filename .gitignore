@@ -34,8 +34,8 @@ test-results/
 dist/
 # Test fixtures intentionally ship a pre-built dist/ tree as input to
 # AssetServiceTest — exempt them from the dist/ rule above.
-!tests/fixtures/plugins/*/dist/
-!tests/fixtures/plugins/*/dist/**
+!tests/Fixtures/Plugins/*/dist/
+!tests/Fixtures/Plugins/*/dist/**
 
 # Composer dependencies
 /vendor/

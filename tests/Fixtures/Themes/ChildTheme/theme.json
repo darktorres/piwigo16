@@ -1,0 +1,11 @@
+{
+  "id": "ChildTheme",
+  "name": "Child Theme",
+  "version": "1.0.0",
+  "parent": "ValidTheme",
+  "loadParentCss": true,
+  "main": "Piwigo\\Tests\\Fixtures\\Themes\\ChildTheme\\Theme",
+  "assets": {
+    "img": "child-img"
+  }
+}

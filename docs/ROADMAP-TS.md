@@ -141,7 +141,7 @@ Add a unit-test framework for non-DOM TypeScript logic. Today the only JS test i
 
 ### Current state
 
-- `package.json` contains Playwright 1.48 only — 16 E2E specs in `tests/e2e/`.
+- `package.json` contains Playwright 1.48 only — 16 E2E specs in `tests/E2e/`.
 - No Vitest, Jest, or other unit-test runner.
 - Pure-logic candidates with no test coverage today: number/date formatters in `common.ts`, URL builders, batch-manager state transitions in `batchManagerGlobal.ts`, validators in `user_list.ts`, the `getPageData` helper.
 

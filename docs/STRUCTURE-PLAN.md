@@ -266,7 +266,7 @@ If any of these defaults are wrong I'd rather know now than after the migration 
 
 ### Step 5 — Move tests fixtures + delete `dev/`
 
-- `dev/fixtures/` → `tests/fixtures/`.
+- `dev/fixtures/` → `tests/Fixtures/`.
 - Update `tests/bootstrap.php` and `playwright.config.ts`.
 
 ### Step 6 — Move build/ + delete one-shot scripts

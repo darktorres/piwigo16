@@ -15,7 +15,7 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
  * Exercises ThemeRegistry against the fixture trees under
- * tests/fixtures/themes/. Mirrors PluginRegistryTest's structural
+ * tests/Fixtures/Themes/. Mirrors PluginRegistryTest's structural
  * approach — in-memory ThemeRepository stub, isolated cycle fixture
  * outside the main scan dir.
  */
@@ -26,21 +26,10 @@ final class ThemeRegistryTest extends TestCase
     private string $schemaPath;
 
     #[\Override]
-    public static function setUpBeforeClass(): void
-    {
-        // Fixture classes live outside the PSR-4 tests/ namespace casing
-        // (lowercase dir names mirror real themes/ layout), so the
-        // autoloader skips them. Load the ones we instantiate below.
-        $repoRoot = dirname(__DIR__, 3);
-        require_once $repoRoot . '/tests/fixtures/themes/valid_theme/Theme.php';
-        require_once $repoRoot . '/tests/fixtures/themes/child_theme/Theme.php';
-    }
-
-    #[\Override]
     protected function setUp(): void
     {
         $repoRoot          = dirname(__DIR__, 3);
-        $this->fixturesDir = $repoRoot . '/tests/fixtures/themes';
+        $this->fixturesDir = $repoRoot . '/tests/Fixtures/Themes';
         $this->schemaPath  = $repoRoot . '/docs/schemas/theme.schema.json';
 
         ValidTheme::$installCount    = 0;
@@ -58,9 +47,9 @@ final class ThemeRegistryTest extends TestCase
 
         $ids = array_keys($registry->getAllManifests());
         sort($ids);
-        self::assertContains('valid_theme', $ids);
-        self::assertContains('child_theme', $ids);
-        self::assertNotContains('invalid_schema', $ids, 'malformed manifest must be skipped');
+        self::assertContains('ValidTheme', $ids);
+        self::assertContains('ChildTheme', $ids);
+        self::assertNotContains('InvalidSchema', $ids, 'malformed manifest must be skipped');
     }
 
     public function testValidThemeInstallActivateDeactivateUninstallLifecycle(): void
@@ -73,22 +62,22 @@ final class ThemeRegistryTest extends TestCase
         // can't model static-counter mutation across calls so a second
         // bump trips DocblockTypeContradiction; same flaw is already
         // baked into PluginRegistryTest's baseline noise.
-        $registry->install('valid_theme');
-        self::assertNotEmpty($repo->findAll('valid_theme'));
+        $registry->install('ValidTheme');
+        self::assertNotEmpty($repo->findAll('ValidTheme'));
         self::assertSame(1, ValidTheme::$installCount);
 
-        $registry->activate('valid_theme');
+        $registry->activate('ValidTheme');
         self::assertSame(1, ValidTheme::$activateCount);
 
-        $registry->deactivate('valid_theme');
+        $registry->deactivate('ValidTheme');
         self::assertSame(1, ValidTheme::$deactivateCount);
 
         // uninstall after deactivate: repository row is already gone, so
         // uninstall() short-circuits without firing the plugin hook. The
         // deactivate path is symmetric with the legacy themes-table semantics.
-        $registry->uninstall('valid_theme');
+        $registry->uninstall('ValidTheme');
         self::assertSame(0, ValidTheme::$uninstallCount);
-        self::assertEmpty($repo->findAll('valid_theme'));
+        self::assertEmpty($repo->findAll('ValidTheme'));
     }
 
     public function testActivateFiresThemeChangedEventWithBothIds(): void
@@ -109,9 +98,9 @@ final class ThemeRegistryTest extends TestCase
             $this->schemaPath,
             $dispatcher,
         );
-        $registry->activate('valid_theme', 'old_theme');
+        $registry->activate('ValidTheme', 'OldTheme');
 
-        self::assertSame([['old_theme', 'valid_theme']], $captured);
+        self::assertSame([['OldTheme', 'ValidTheme']], $captured);
     }
 
     public function testOrphanParentThrowsOnInstall(): void
@@ -120,7 +109,7 @@ final class ThemeRegistryTest extends TestCase
 
         $this->expectException(ThemeDependencyException::class);
         $this->expectExceptionMessageMatches('/parent.*does_not_exist/');
-        $registry->install('orphan_parent');
+        $registry->install('OrphanParent');
     }
 
     public function testParentCycleThrowsDuringLoad(): void
@@ -130,7 +119,7 @@ final class ThemeRegistryTest extends TestCase
         $registry = new ThemeRegistry(
             $this->stubRepository(),
             new NullLogger(),
-            dirname(__DIR__, 3) . '/tests/fixtures/theme_cycles',
+            dirname(__DIR__, 3) . '/tests/Fixtures/ThemeCycles',
             $this->schemaPath,
         );
 
@@ -144,36 +133,36 @@ final class ThemeRegistryTest extends TestCase
         $registry = $this->makeRegistry();
         $registry->load();
 
-        $chain = $registry->getResolutionChain('child_theme');
-        self::assertSame(['child_theme', 'valid_theme'], $chain);
+        $chain = $registry->getResolutionChain('ChildTheme');
+        self::assertSame(['ChildTheme', 'ValidTheme'], $chain);
 
-        $rootChain = $registry->getResolutionChain('valid_theme');
-        self::assertSame(['valid_theme'], $rootChain);
+        $rootChain = $registry->getResolutionChain('ValidTheme');
+        self::assertSame(['ValidTheme'], $rootChain);
 
-        self::assertSame([], $registry->getResolutionChain('does_not_exist'));
+        self::assertSame([], $registry->getResolutionChain('DoesNotExist'));
     }
 
     public function testGetPathReturnsAbsoluteFilesystemPath(): void
     {
         $registry = $this->makeRegistry();
-        $path = $registry->getPath('valid_theme');
+        $path = $registry->getPath('ValidTheme');
         self::assertNotNull($path);
-        self::assertSame($this->fixturesDir . '/valid_theme', $path);
+        self::assertSame($this->fixturesDir . '/ValidTheme', $path);
 
-        self::assertNull($registry->getPath('not_a_theme'));
+        self::assertNull($registry->getPath('NotATheme'));
     }
 
     public function testUpdateRunsWhenManifestVersionChanges(): void
     {
         $repo = $this->stubRepository();
-        // Pre-seed the repo with valid_theme @ 0.9.0 (mimics a tarball
+        // Pre-seed the repo with ValidTheme @ 0.9.0 (mimics a tarball
         // drop on top of an older install). activate() is the public
         // insert path on ThemeRepository, so this stays inside the
         // typed surface without leaning on stub-only helpers.
-        $repo->activate('valid_theme', '0.9.0', 'Valid Theme');
+        $repo->activate('ValidTheme', '0.9.0', 'Valid Theme');
 
         $registry = $this->makeRegistry($repo);
-        $registry->update('valid_theme');
+        $registry->update('ValidTheme');
         self::assertSame('0.9.0', ValidTheme::$lastUpdateOldVersion);
         self::assertSame('1.0.0', ValidTheme::$lastUpdateNewVersion);
     }

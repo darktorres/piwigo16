@@ -1,8 +1,4 @@
--- MySQL dump 9.11
---
--- Host: localhost    Database: pwg-bsf
--- ------------------------------------------------------
--- Server version	4.0.24_Debian-10-log
+-- Piwigo v17 canonical database schema (MySQL 8.0+ / MariaDB 10.5+).
 
 --
 -- Table structure for table `piwigo_activity`

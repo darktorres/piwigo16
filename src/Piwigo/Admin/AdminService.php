@@ -12,7 +12,6 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageRepository;
@@ -46,19 +45,6 @@ final readonly class AdminService
             'BUGS'       => PHPWG_URL . '/bugs',
             'EXTENSIONS' => PHPWG_URL . '/ext',
         ];
-    }
-
-    public function createTableAddCharacterSet(mixed $query): string
-    {
-        $query = is_scalar($query) ? (string) $query : '';
-        if (version_compare(DbInfo::version(), '4.1.0', '<')) {
-            return $query;
-        }
-        $query = trim($query, ';');
-        if (preg_match('/^CREATE\s+TABLE/i', $query)) {
-            $query .= ' DEFAULT CHARACTER SET utf8';
-        }
-        return $query . ';';
     }
 
     /** @return string[] */

@@ -13,7 +13,8 @@ final class Dml
     public const int SKIP_EMPTY             = 1;
     public const string REGEX_OPERATOR         = 'REGEXP';
     public const string RANDOM_FUNCTION        = 'RAND';
-    public const string REQUIRED_MYSQL_VERSION = '5.0.0';
+    /** Minimum server version: MySQL 8.0+ or MariaDB 10.5+. */
+    public const string REQUIRED_MYSQL_VERSION = '8.0.0';
 
     /**
      * Updates multiple rows in a table.

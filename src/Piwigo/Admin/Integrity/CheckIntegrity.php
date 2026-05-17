@@ -265,7 +265,7 @@ final class CheckIntegrity
         }
         if (is_array($fct)) {
             $target = $fct[0];
-            $class  = is_object($target) ? $target::class : (string) $target;
+            $class  = is_object($target) ? $target::class : $target;
             return $class.'::'.$fct[1];
         }
         if ($fct instanceof \Closure) {
@@ -273,6 +273,10 @@ final class CheckIntegrity
             // failure mode (anomaly keeps reappearing) beats silent collision.
             return spl_object_hash($fct);
         }
+        // PHPStan can't narrow `callable` to object after the other branches;
+        // Psalm can. Guard stays for PHPStan; Psalm's redundant-condition
+        // is suppressed here.
+        /** @psalm-suppress RedundantCondition */
         if (is_object($fct)) {
             return $fct::class;
         }

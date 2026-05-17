@@ -47,12 +47,16 @@ final class ContainerSmokeTest extends IntegrationTestCase
         Kernel::boot();
         $container   = Kernel::container();
         $definitions = require dirname(__DIR__, 2) . '/config/container.php';
+        // PHPStan sees `require` as mixed; Psalm narrows from the file's
+        // typed return. Guards are belt-and-suspenders for PHPStan.
+        /** @psalm-suppress TypeDoesNotContainType */
         if (!is_array($definitions)) {
             self::fail('config/container.php must return an array of service definitions');
         }
 
         $failures = [];
         foreach ($definitions as $id => $definition) {
+            /** @psalm-suppress TypeDoesNotContainType */
             if (!is_string($id)) {
                 self::fail('Non-string key in container.php: ' . var_export($id, true));
             }

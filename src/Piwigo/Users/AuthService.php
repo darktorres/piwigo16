@@ -145,7 +145,7 @@ final readonly class AuthService
                 $cookie = $userId . '-' . $now . '-' . $key;
                 setcookie(Config::rememberMeName(), $cookie, [
                     'expires'  => time() + Config::rememberMeLength(),
-                    'path'     => (string) CookieService::cookiePath(),
+                    'path'     => CookieService::cookiePath(),
                     'domain'   => (string) ini_get('session.cookie_domain'),
                     'secure'   => (bool) ini_get('session.cookie_secure'),
                     'httponly' => (bool) ini_get('session.cookie_httponly'),

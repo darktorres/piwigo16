@@ -996,7 +996,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                         'REV_DESC' => trim($revDesc, " \n\r"),
                         'CURRENT_VERSION' => $extVersion, 'NEW_VERSION' => $revName,
                         'URL_DOWNLOAD' => $dlUrl . '&origin=piwigo_download',
-                        'IGNORED' => in_array((string) $ext_id, $updates_ignored_for_type, true),
+                        'IGNORED' => in_array($ext_id, $updates_ignored_for_type, true),
                     ];
                 }
             }

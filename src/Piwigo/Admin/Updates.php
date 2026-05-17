@@ -441,9 +441,8 @@ final class Updates
                     $extRevNameRaw   = $ext_info['revision_name'] ?? null;
                     $extRevName      = is_string($extRevNameRaw) ? $extRevNameRaw : '';
                     if (StringUtil::safeVersionCompare($fsExtVersion, $extRevName, '<') === true) {
-                        $extIdStr = (string) $ext_id;
-                        if (in_array($extIdStr, $typeIgnoreList, true)) {
-                            $survivingIgnored[] = $extIdStr;
+                        if (in_array($ext_id, $typeIgnoreList, true)) {
+                            $survivingIgnored[] = $ext_id;
                         } else {
                             $_SESSION['extensions_need_update'][$type->value][$ext_id] = is_string($ext_info['revision_name'] ?? null) ? $ext_info['revision_name'] : '';
                         }

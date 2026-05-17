@@ -170,7 +170,8 @@ final class HistorySearchTest extends IntegrationTestCase
      * 12-row deterministic snapshot covering: 4 distinct user_ids
      * (admin/guest/regular/power), 3 distinct guest IPs, mixed image_type
      * including 'high' rows whose image_id either resolves (filesize
-     * contributes) or doesn't (one row points at deleted image_id 999).
+     * contributes) or doesn't (one row has image_id NULL — the post-FK
+     * SET NULL equivalent of "history of a deleted image").
      * All rows on 2026-01-01 with distinct ascending times.
      */
     private function seedSummarySnapshot(): void
@@ -200,7 +201,7 @@ final class HistorySearchTest extends IntegrationTestCase
             ['09:08:00', 3, '192.168.1.10', 'NULL',          4,    "'picture'"],
             ['09:09:00', 1, '10.0.0.1',     "'categories'",  'NULL', 'NULL'],
             ['09:10:00', 4, '192.168.1.21', 'NULL',          5,    "'high'"],
-            ['09:11:00', 2, '10.0.0.10',    'NULL',          999,  "'high'"],
+            ['09:11:00', 2, '10.0.0.10',    'NULL',          'NULL', "'high'"],
         ];
         $values = [];
         foreach ($rows as $r) {

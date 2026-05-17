@@ -26,7 +26,7 @@ CREATE TABLE `piwigo_activity` (
 DROP TABLE IF EXISTS `piwigo_caddie`;
 CREATE TABLE `piwigo_caddie` (
   `user_id` mediumint(8) unsigned NOT NULL default '0',
-  `element_id` mediumint(8) NOT NULL default '0',
+  `element_id` mediumint(8) unsigned NOT NULL default '0',
   PRIMARY KEY  (`user_id`,`element_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -619,3 +619,97 @@ CREATE TABLE `piwigo_users` (
   UNIQUE KEY `users_ui1` (`username`),
   UNIQUE KEY `users_mail_idx` (`mail_address`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Foreign-key constraints.
+-- ON DELETE CASCADE: deleting the parent removes child rows (junction
+--   tables and rows that only exist as children of their parent).
+-- ON DELETE SET NULL: deleting the parent leaves the child but blanks
+--   the link (audit metadata, optional ownership pointers, hierarchies
+--   that should promote children to root rather than vanish).
+-- Three FKs are intentionally NOT declared because the column uses 0 as
+-- a "system / anonymous" sentinel that has no users(id)=0 row:
+--   piwigo_activity.performed_by  (read at MaintenanceController.php:641)
+--   piwigo_history.user_id        (guest/unauthenticated browse tracking)
+--   piwigo_rate.user_id           (anonymous rate rows; pairs with anonymous_id)
+--
+
+ALTER TABLE `piwigo_image_category`
+  ADD CONSTRAINT `fk_image_category_image_id`    FOREIGN KEY (`image_id`)    REFERENCES `piwigo_images`(`id`)     ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_image_category_category_id` FOREIGN KEY (`category_id`) REFERENCES `piwigo_categories`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_image_tag`
+  ADD CONSTRAINT `fk_image_tag_image_id` FOREIGN KEY (`image_id`) REFERENCES `piwigo_images`(`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_image_tag_tag_id`   FOREIGN KEY (`tag_id`)   REFERENCES `piwigo_tags`(`id`)  ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_image_format`
+  ADD CONSTRAINT `fk_image_format_image_id` FOREIGN KEY (`image_id`) REFERENCES `piwigo_images`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_comments`
+  ADD CONSTRAINT `fk_comments_image_id`  FOREIGN KEY (`image_id`)  REFERENCES `piwigo_images`(`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_comments_author_id` FOREIGN KEY (`author_id`) REFERENCES `piwigo_users`(`id`)  ON DELETE SET NULL;
+
+ALTER TABLE `piwigo_favorites`
+  ADD CONSTRAINT `fk_favorites_image_id` FOREIGN KEY (`image_id`) REFERENCES `piwigo_images`(`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_favorites_user_id`  FOREIGN KEY (`user_id`)  REFERENCES `piwigo_users`(`id`)  ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_user_access`
+  ADD CONSTRAINT `fk_user_access_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users`(`id`)      ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_user_access_cat_id`  FOREIGN KEY (`cat_id`)  REFERENCES `piwigo_categories`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_user_group`
+  ADD CONSTRAINT `fk_user_group_user_id`  FOREIGN KEY (`user_id`)  REFERENCES `piwigo_users`(`id`)  ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_user_group_group_id` FOREIGN KEY (`group_id`) REFERENCES `piwigo_groups`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_group_access`
+  ADD CONSTRAINT `fk_group_access_group_id` FOREIGN KEY (`group_id`) REFERENCES `piwigo_groups`(`id`)     ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_group_access_cat_id`   FOREIGN KEY (`cat_id`)   REFERENCES `piwigo_categories`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_user_cache`
+  ADD CONSTRAINT `fk_user_cache_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_user_cache_categories`
+  ADD CONSTRAINT `fk_user_cache_categories_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users`(`id`)      ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_user_cache_categories_cat_id`  FOREIGN KEY (`cat_id`)  REFERENCES `piwigo_categories`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_user_infos`
+  ADD CONSTRAINT `fk_user_infos_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_user_feed`
+  ADD CONSTRAINT `fk_user_feed_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_user_mail_notification`
+  ADD CONSTRAINT `fk_user_mail_notification_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_user_auth_keys`
+  ADD CONSTRAINT `fk_user_auth_keys_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_caddie`
+  ADD CONSTRAINT `fk_caddie_user_id`    FOREIGN KEY (`user_id`)    REFERENCES `piwigo_users`(`id`)  ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_caddie_element_id` FOREIGN KEY (`element_id`) REFERENCES `piwigo_images`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_lounge`
+  ADD CONSTRAINT `fk_lounge_image_id`    FOREIGN KEY (`image_id`)    REFERENCES `piwigo_images`(`id`)     ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_lounge_category_id` FOREIGN KEY (`category_id`) REFERENCES `piwigo_categories`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_rate`
+  ADD CONSTRAINT `fk_rate_element_id` FOREIGN KEY (`element_id`) REFERENCES `piwigo_images`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_categories`
+  ADD CONSTRAINT `fk_categories_id_uppercat`               FOREIGN KEY (`id_uppercat`)               REFERENCES `piwigo_categories`(`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_categories_representative_picture_id` FOREIGN KEY (`representative_picture_id`) REFERENCES `piwigo_images`(`id`)     ON DELETE SET NULL;
+
+ALTER TABLE `piwigo_images`
+  ADD CONSTRAINT `fk_images_storage_category_id` FOREIGN KEY (`storage_category_id`) REFERENCES `piwigo_categories`(`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_images_added_by`            FOREIGN KEY (`added_by`)            REFERENCES `piwigo_users`(`id`)      ON DELETE SET NULL;
+
+ALTER TABLE `piwigo_history`
+  ADD CONSTRAINT `fk_history_image_id`    FOREIGN KEY (`image_id`)    REFERENCES `piwigo_images`(`id`)         ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_history_category_id` FOREIGN KEY (`category_id`) REFERENCES `piwigo_categories`(`id`)     ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_history_search_id`   FOREIGN KEY (`search_id`)   REFERENCES `piwigo_search`(`id`)         ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_history_format_id`   FOREIGN KEY (`format_id`)   REFERENCES `piwigo_image_format`(`format_id`)   ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_history_auth_key_id` FOREIGN KEY (`auth_key_id`) REFERENCES `piwigo_user_auth_keys`(`auth_key_id`) ON DELETE SET NULL;
+
+ALTER TABLE `piwigo_search`
+  ADD CONSTRAINT `fk_search_created_by` FOREIGN KEY (`created_by`)  REFERENCES `piwigo_users`(`id`)  ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_search_forked_from` FOREIGN KEY (`forked_from`) REFERENCES `piwigo_search`(`id`) ON DELETE SET NULL;

@@ -21,6 +21,11 @@ return [
     'migrations_paths' => [
         'Piwigo\\Migrations' => __DIR__ . '/src/Piwigo/Migrations',
     ],
-    'all_or_nothing'          => true,
+    // Per-migration transactional behavior via isTransactional(). The
+    // MyISAM-DDL migrations under src/Piwigo/Migrations/Version2026052*
+    // opt out of transactions because CREATE TABLE implicit-commits;
+    // all_or_nothing=true would refuse to run them. Each migration is
+    // responsible for its own atomicity.
+    'all_or_nothing'          => false,
     'check_database_platform' => false,
 ];

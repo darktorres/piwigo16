@@ -54,8 +54,12 @@ final class MigrationRunner
 
         // Same rationale as line 48: Doctrine marks these as @internal but
         // exposes no public alternative for programmatic migration runs.
+        // setAllOrNothing(false) so each migration honors its own
+        // isTransactional() — the B6/B7/B8 MyISAM-DDL migrations are
+        // marked non-transactional because CREATE TABLE implicit-commits,
+        // and all-or-nothing=true would refuse to run them.
         /** @psalm-suppress InternalClass, InternalMethod */
-        $migratorConfig = new MigratorConfiguration()->setAllOrNothing(true);
+        $migratorConfig = new MigratorConfiguration()->setAllOrNothing(false);
         /** @psalm-suppress InternalMethod */
         $factory->getMigrator()->migrate($plan, $migratorConfig);
     }

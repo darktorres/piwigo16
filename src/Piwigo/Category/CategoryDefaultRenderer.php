@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
-use Doctrine\DBAL\Connection;
+use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\DebugCollector;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocBeginIndexThumbnails;
 use Piwigo\Event\Location\LocEndIndexThumbnails;
 use Piwigo\Event\Location\LocIndexThumbnailsSelection;
@@ -28,8 +27,8 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class CategoryDefaultRenderer
 {
     public function __construct(
-        private Connection $conn,
         private CategoryService $categoryService,
+        private CommentRepository $commentRepository,
         private HtmlService $htmlService,
         private ImageRepository $imageRepository,
         private SessionService $sessionService,
@@ -81,14 +80,8 @@ final readonly class CategoryDefaultRenderer
             ));
 
             if (Config::activateComments() and $user['show_nb_comments']) {
-                $query = '
-SELECT image_id, COUNT(*) AS nb_comments
-  FROM ' . Tables::comments() . '
-  WHERE validated = \'true\'
-    AND image_id IN (' . implode(',', array_map(strval(...), $selection)) . ')
-  GROUP BY image_id
-;';
-                $nb_comments_of = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'nb_comments', 'image_id');
+                $imageIdsInt    = array_values(array_map(intval(...), $selection));
+                $nb_comments_of = $this->commentRepository->countValidatedByImageIdsKeyedByImageId($imageIdsInt);
             }
         }
 
@@ -105,7 +98,7 @@ SELECT image_id, COUNT(*) AS nb_comments
             if (isset($nb_comments_of)) {
                 $rowId = is_numeric($row['id']) ? (int) $row['id'] : 0;
                 $nbVal = $nb_comments_of[$rowId] ?? 0;
-                $row['NB_COMMENTS'] = $row['nb_comments'] = is_numeric($nbVal) ? (int) $nbVal : 0;
+                $row['NB_COMMENTS'] = $row['nb_comments'] = $nbVal;
             }
 
             $name = $this->htmlService->renderElementName($row);

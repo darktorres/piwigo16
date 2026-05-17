@@ -231,4 +231,31 @@ final class CommentRepository extends AbstractRepository
             ->set('nb_available_comments', 'NULL')
             ->executeStatement();
     }
+
+    /**
+     * For each given image id, return its count of validated comments. Result
+     * is keyed by image_id; images with no validated comments are omitted.
+     *
+     * @param list<int> $imageIds
+     * @return array<int|string, int>
+     */
+    public function countValidatedByImageIdsKeyedByImageId(array $imageIds): array
+    {
+        if ($imageIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('image_id', 'COUNT(*) AS nb_comments')
+            ->from($this->table('comments'))
+            ->where('validated = 1')
+            ->groupBy('image_id');
+        $qb->andWhere($qb->expr()->in('image_id', ':imageIds'))
+           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $key       = is_scalar($row['image_id']) ? (string) $row['image_id'] : '';
+            $out[$key] = is_numeric($row['nb_comments']) ? (int) $row['nb_comments'] : 0;
+        }
+        return $out;
+    }
 }

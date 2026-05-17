@@ -214,7 +214,7 @@ return [
     FilterService::class   => factory(static fn (): FilterService => new FilterService()),
     MetadataService::class => factory(static fn (LoggerInterface $log, EventDispatcherInterface $d): MetadataService => new MetadataService($log, $d)),
     PictureService::class  => factory(static fn (ImageRepository $r): PictureService => new PictureService($r)),
-    RateService::class     => factory(static fn (RateRepository $rate, ImageRepository $img, CookieService $c, PermissionService $perm, EventDispatcherInterface $d): RateService => new RateService($rate, $img, $c, $perm, $d)),
+    RateService::class     => factory(static fn (Connection $conn, RateRepository $rate, ImageRepository $img, CookieService $c, PermissionService $perm, EventDispatcherInterface $d): RateService => new RateService($conn, $rate, $img, $c, $perm, $d)),
     CommentService::class  => factory(static fn (Connection $conn, CommentRepository $repo, LangService $lang, MailService $mail, PermissionService $perm, UrlGenerator $ug, UrlService $u, EphemeralKeyService $eks, EventDispatcherInterface $dispatcher): CommentService => new CommentService($conn, $repo, $lang, $mail, $perm, $ug, $u, $eks, $dispatcher)),
     AuthService::class         => factory(static fn (UserRepository $u, AuthKeyRepository $ak, Connection $conn, ActivityLogger $al, SessionService $sess, UrlGenerator $ug, UrlService $us, DateService $d, LanguageService $lang, EventDispatcherInterface $dispatcher, Paths $paths): AuthService => new AuthService($u, $ak, $conn, $al, $sess, $ug, $us, $d, $lang, $dispatcher, $paths)),
     PasswordService::class     => factory(static fn (Connection $conn, AuthService $auth, MailService $mail, PermissionService $perm, PreferencesService $pref, UrlGenerator $ug, UserRepository $u, UserService $us, ActivityLogger $al): PasswordService => new PasswordService($conn, $auth, $mail, $perm, $pref, $ug, $u, $us, $al)),
@@ -294,7 +294,7 @@ return [
             )
         );
     }),
-    NotificationAdminService::class  => factory(static fn (MailService $mail, NotificationRepository $nR, UrlGenerator $ug, UrlService $u, UserService $us): NotificationAdminService => new NotificationAdminService($mail, $nR, $ug, $u, $us)),
+    NotificationAdminService::class  => factory(static fn (Connection $conn, MailService $mail, NotificationRepository $nR, UrlGenerator $ug, UrlService $u, UserService $us): NotificationAdminService => new NotificationAdminService($conn, $mail, $nR, $ug, $u, $us)),
     UploadService::class             => factory(static fn (Connection $conn, CategoryAdminService $catA, ConfigService $cfg, DerivativeService $der, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, UserAdminService $uA, ActivityLogger $al, EventDispatcherInterface $dispatcher, Paths $paths): UploadService => new UploadService($conn, $catA, $cfg, $der, $iA, $i, $mA, $uA, $al, $dispatcher, $paths)),
     AlbumsTabRenderer::class         => factory(static fn (CategoryRepository $catR): AlbumsTabRenderer => new AlbumsTabRenderer($catR)),
     UserTabRenderer::class           => factory(static fn (): UserTabRenderer => new UserTabRenderer()),

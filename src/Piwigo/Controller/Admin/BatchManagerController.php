@@ -26,7 +26,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Admin\BatchManagerPerformFilters;
@@ -797,7 +796,11 @@ final class BatchManagerController implements AdminSubControllerInterface
                 foreach ($collection_int as $image_id) {
                     $datas[] = ['id' => $image_id, 'author' => $authorValue];
                 }
-                Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['author']], $datas);
+                $this->conn->transactional(function () use ($datas): void {
+                    foreach ($datas as $row) {
+                        $this->conn->update(Tables::images(), ['author' => $row['author']], ['id' => $row['id']]);
+                    }
+                });
                 $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'author']));
             } elseif ('title' == $action) {
                 $titleValue = isset($_POST['remove_title']) ? null : ($_POST['title'] ?? null);
@@ -805,7 +808,11 @@ final class BatchManagerController implements AdminSubControllerInterface
                 foreach ($collection_int as $image_id) {
                     $datas[] = ['id' => $image_id, 'name' => $titleValue];
                 }
-                Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['name']], $datas);
+                $this->conn->transactional(function () use ($datas): void {
+                    foreach ($datas as $row) {
+                        $this->conn->update(Tables::images(), ['name' => $row['name']], ['id' => $row['id']]);
+                    }
+                });
                 $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'title']));
             } elseif ('date_creation' == $action) {
                 $date_creation = (isset($_POST['remove_date_creation']) || !isset($_POST['date_creation']) || $_POST['date_creation'] === '') ? null : $_POST['date_creation'];
@@ -813,7 +820,11 @@ final class BatchManagerController implements AdminSubControllerInterface
                 foreach ($collection_int as $image_id) {
                     $datas[] = ['id' => $image_id, 'date_creation' => $date_creation];
                 }
-                Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['date_creation']], $datas);
+                $this->conn->transactional(function () use ($datas): void {
+                    foreach ($datas as $row) {
+                        $this->conn->update(Tables::images(), ['date_creation' => $row['date_creation']], ['id' => $row['id']]);
+                    }
+                });
                 $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'date_creation']));
             } elseif ('level' == $action) {
                 $levelValue = $_POST['level'] ?? null;
@@ -821,7 +832,11 @@ final class BatchManagerController implements AdminSubControllerInterface
                 foreach ($collection_int as $image_id) {
                     $datas[] = ['id' => $image_id, 'level' => $levelValue];
                 }
-                Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['level']], $datas);
+                $this->conn->transactional(function () use ($datas): void {
+                    foreach ($datas as $row) {
+                        $this->conn->update(Tables::images(), ['level' => $row['level']], ['id' => $row['id']]);
+                    }
+                });
                 $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'privacy_level']));
                 if (isset($bmf['level'])) {
                     $bmf_level_val  = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
@@ -1044,7 +1059,15 @@ final class BatchManagerController implements AdminSubControllerInterface
                 $this->tagAdminService->setTags($tag_ids, is_numeric($row['id']) ? (int) $row['id'] : 0);
             }
 
-            Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['name', 'author', 'level', 'comment', 'date_creation']], $datas);
+            $this->conn->transactional(function () use ($datas): void {
+                foreach ($datas as $row) {
+                    $this->conn->update(
+                        Tables::images(),
+                        ['name' => $row['name'] ?? null, 'author' => $row['author'] ?? null, 'level' => $row['level'] ?? null, 'comment' => $row['comment'] ?? null, 'date_creation' => $row['date_creation'] ?? null],
+                        ['id' => $row['id']]
+                    );
+                }
+            });
             PageState::current()->addInfo(Lang::t('Photo informations updated'));
             $this->userAdminService->invalidateUserCache();
         }

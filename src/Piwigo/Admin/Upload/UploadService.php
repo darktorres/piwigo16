@@ -21,7 +21,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocEndAddFormat;
 use Piwigo\Event\Location\LocEndAddUploadedFile;
@@ -106,7 +105,11 @@ final readonly class UploadService
             }
         }
         if (count($errors) === 0) {
-            Dml::massUpdates(Tables::config(), ['primary' => ['param'], 'update' => ['value']], $updates);
+            $this->conn->transactional(function () use ($updates): void {
+                foreach ($updates as $row) {
+                    $this->conn->update(Tables::config(), ['value' => $row['value']], ['param' => $row['param']]);
+                }
+            });
             return true;
         }
         return false;

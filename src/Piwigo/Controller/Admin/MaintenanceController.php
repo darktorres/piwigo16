@@ -1537,7 +1537,16 @@ final class MaintenanceController implements AdminSubControllerInterface
                 }
                 $counts['upd_elements'] = count($datas);
                 if (!$simulate && count($datas) > 0) {
-                    Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getUpdateAttributes())], $datas);
+                    $updFields = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getUpdateAttributes());
+                    $this->conn->transactional(function () use ($datas, $updFields): void {
+                        foreach ($datas as $row) {
+                            $set = [];
+                            foreach ($updFields as $field) {
+                                $set[$field] = $row[$field] ?? null;
+                            }
+                            $this->conn->update(Tables::images(), $set, ['id' => $row['id']]);
+                        }
+                    });
                 }
                 $tpl->append('footer_elements', '<!-- update files : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
             }
@@ -1586,7 +1595,32 @@ final class MaintenanceController implements AdminSubControllerInterface
             }
             if (!$simulate) {
                 if (count($datas) > 0) {
-                    Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => array_unique(array_merge(array_values(array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getMetadataAttributes()), ['keywords', 'tags'])), ['date_metadata_update']))], $datas, isset($_POST['meta_empty_overrides']) ? 0 : Dml::SKIP_EMPTY);
+                    $updFields = array_unique(array_merge(
+                        array_values(array_diff(
+                            array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getMetadataAttributes()),
+                            ['keywords', 'tags']
+                        )),
+                        ['date_metadata_update']
+                    ));
+                    // 'meta_empty_overrides' toggles SKIP_EMPTY semantics:
+                    //   set → empty values overwrite as NULL
+                    //   unset → empty values are skipped (not written)
+                    $skipEmpty = !isset($_POST['meta_empty_overrides']);
+                    $this->conn->transactional(function () use ($datas, $updFields, $skipEmpty): void {
+                        foreach ($datas as $row) {
+                            $set = [];
+                            foreach ($updFields as $field) {
+                                $val = $row[$field] ?? null;
+                                if ($skipEmpty && ($val === null || $val === '')) {
+                                    continue;
+                                }
+                                $set[$field] = ($val === '' ? null : $val);
+                            }
+                            if ($set !== []) {
+                                $this->conn->update(Tables::images(), $set, ['id' => $row['id']]);
+                            }
+                        }
+                    });
                 }
                 $this->tagAdminService->setTagsOf($tags_of);
             }

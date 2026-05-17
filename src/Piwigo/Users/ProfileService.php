@@ -14,7 +14,6 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\User\LoadProfileInTemplate;
 use Piwigo\Event\User\SaveProfileFromPost;
@@ -155,7 +154,12 @@ final readonly class ProfileService
                     }
                 }
 
-                Dml::massUpdates(Tables::users(), ['primary' => [Config::userFields()['id']], 'update' => $fields], [$data]);
+                $idField = Config::userFields()['id'];
+                $set     = [];
+                foreach ($fields as $field) {
+                    $set[$field] = $data[$field] ?? null;
+                }
+                $this->conn->update(Tables::users(), $set, [$idField => $data[$idField]]);
 
                 if ($_POST['mail_address'] != $userdata['email']) {
                     $this->authService->deactivatePasswordResetKey(is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0);
@@ -175,7 +179,15 @@ final readonly class ProfileService
                         $data[$field] = $_POST[$field];
                     }
                 }
-                Dml::massUpdates(Tables::userInfos(), ['primary' => ['user_id'], 'update' => $fields], [$data]);
+                $set = [];
+                foreach ($fields as $field) {
+                    if (array_key_exists($field, $data)) {
+                        $set[$field] = $data[$field];
+                    }
+                }
+                if ($set !== []) {
+                    $this->conn->update(Tables::userInfos(), $set, ['user_id' => $data['user_id']]);
+                }
                 $activity_details_tables[] = 'user_infos';
             }
 

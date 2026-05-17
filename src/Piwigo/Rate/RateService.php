@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Rate;
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Auth\CookieService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\UpdateRatingScore;
 use Piwigo\Image\ImageRepository;
@@ -18,6 +18,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class RateService
 {
     public function __construct(
+        private Connection $conn,
         private RateRepository $rateRepo,
         private ImageRepository $imageRepo,
         private CookieService $cookies,
@@ -118,14 +119,11 @@ final readonly class RateService
             }
             $updates[] = ['id' => $id, 'rating_score' => $score];
         }
-        Dml::massUpdates(
-            Tables::images(),
-            [
-                'primary' => ['id'],
-                'update'  => ['rating_score'],
-            ],
-            $updates
-        );
+        $this->conn->transactional(function () use ($updates): void {
+            foreach ($updates as $row) {
+                $this->conn->update(Tables::images(), ['rating_score' => $row['rating_score']], ['id' => $row['id']]);
+            }
+        });
 
         if ($elementId === null || !isset($byItem[$elementId])) {
             $toUpdate = $this->rateRepo->findImageIdsWithNoRates();

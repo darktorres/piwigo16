@@ -17,7 +17,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\BeginDeleteElements;
 use Piwigo\Event\Picture\DeleteElements;
@@ -331,7 +330,11 @@ final class ImageAdminService
         foreach ($pathForId as $id => $path) {
             $updates[] = ['id' => $id, 'md5sum' => md5_file($this->paths->root . (is_string($path) ? $path : ''))];
         }
-        Dml::massUpdates(Tables::images(), ['primary' => ['id'], 'update' => ['md5sum']], $updates);
+        $this->conn->transactional(function () use ($updates): void {
+            foreach ($updates as $row) {
+                $this->conn->update(Tables::images(), ['md5sum' => $row['md5sum']], ['id' => $row['id']]);
+            }
+        });
         return count($pathForId);
     }
 

@@ -219,11 +219,12 @@ final class C13yInternal
                             'status'  => $status,
                             ],
                           ];
-                        Dml::massUpdates(
-                            Tables::userInfos(),
-                            ['primary' => ['user_id'],'update' => ['status']],
-                            $updates
-                        );
+                        $conn = Kernel::service(Connection::class);
+                        $conn->transactional(static function (Connection $conn) use ($updates): void {
+                            foreach ($updates as $row) {
+                                $conn->update(Tables::userInfos(), ['status' => $row['status']], ['user_id' => $row['user_id']]);
+                            }
+                        });
 
                         $usernameResult = Kernel::service(UserAdminService::class)->getUsername($id);
                         PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $usernameResult !== false ? $usernameResult : (string) $id));

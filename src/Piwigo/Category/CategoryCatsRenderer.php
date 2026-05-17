@@ -232,11 +232,15 @@ SELECT *
                     'user_representative_picture_id' => $image_id,
                 ];
             }
-            Dml::massUpdates(
-                Tables::userCacheCategories(),
-                ['primary' => ['user_id', 'cat_id'], 'update' => ['user_representative_picture_id']],
-                $updates
-            );
+            $this->conn->transactional(function () use ($updates): void {
+                foreach ($updates as $row) {
+                    $this->conn->update(
+                        Tables::userCacheCategories(),
+                        ['user_representative_picture_id' => $row['user_representative_picture_id']],
+                        ['user_id' => $row['user_id'], 'cat_id' => $row['cat_id']]
+                    );
+                }
+            });
         }
 
         if (count($categories) > 0) {

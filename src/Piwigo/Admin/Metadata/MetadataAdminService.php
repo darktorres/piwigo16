@@ -243,12 +243,21 @@ final readonly class MetadataAdminService
             $update_fields[] = 'date_metadata_update';
             $update_fields = array_diff($update_fields, ['tags', 'keywords']);
 
-            Dml::massUpdates(
-                Tables::images(),
-                ['primary' => ['id'], 'update' => $update_fields],
-                $datas,
-                Dml::SKIP_EMPTY
-            );
+            // SKIP_EMPTY semantics: include each update column only if its
+            // value is set and non-empty-string; skip otherwise (no NULL write).
+            $this->conn->transactional(function () use ($datas, $update_fields): void {
+                foreach ($datas as $row) {
+                    $set = [];
+                    foreach ($update_fields as $field) {
+                        if (isset($row[$field]) && $row[$field] !== '') {
+                            $set[$field] = $row[$field];
+                        }
+                    }
+                    if ($set !== []) {
+                        $this->conn->update(Tables::images(), $set, ['id' => $row['id']]);
+                    }
+                }
+            });
         }
 
         $this->tagAdminService->setTagsOf($tags_of);

@@ -9,7 +9,6 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Dml;
 use Piwigo\Db\SqlExpr;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
@@ -414,11 +413,15 @@ SELECT *
         }
 
         if (count($updates) > 0) {
-            Dml::massUpdates(
-                Tables::historySummary(),
-                ['primary' => ['year', 'month', 'day', 'hour'], 'update' => ['nb_pages', 'history_id_to']],
-                $updates
-            );
+            $this->conn->transactional(function () use ($updates): void {
+                foreach ($updates as $row) {
+                    $this->conn->update(
+                        Tables::historySummary(),
+                        ['nb_pages' => $row['nb_pages'], 'history_id_to' => $row['history_id_to']],
+                        ['year' => $row['year'], 'month' => $row['month'], 'day' => $row['day'], 'hour' => $row['hour']]
+                    );
+                }
+            });
         }
 
         if (count($inserts) > 0) {

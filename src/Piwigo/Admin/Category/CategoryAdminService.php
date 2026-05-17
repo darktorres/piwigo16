@@ -17,7 +17,6 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ExecutionMutex;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Album\CreateVirtualCategory;
 use Piwigo\Event\Album\DeleteCategories;
@@ -183,7 +182,13 @@ SELECT DISTINCT id
             }
             $keyed[(string) (is_scalar($id) ? $id : '')] = ['id' => $id, 'rank' => $currentRank];
         }
-        Dml::massUpdates(Tables::categories(), ['primary' => ['id'], 'update' => ['rank']], array_values($keyed));
+        $rows = array_values($keyed);
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                // `rank` is a MySQL 8.0 reserved word — backtick the set-array key.
+                $this->conn->update(Tables::categories(), ['`rank`' => $row['rank']], ['id' => $row['id']]);
+            }
+        });
         $this->updateGlobalRank();
     }
 
@@ -215,7 +220,12 @@ SELECT DISTINCT id
                 $datas[] = ['id' => $id, 'rank' => $cat['rank'], 'global_rank' => $newGlobalRank];
             }
         }
-        Dml::massUpdates(Tables::categories(), ['primary' => ['id'], 'update' => ['rank', 'global_rank']], $datas);
+        $this->conn->transactional(function () use ($datas): void {
+            foreach ($datas as $row) {
+                // `rank` is a MySQL 8.0 reserved word — backtick the set-array key.
+                $this->conn->update(Tables::categories(), ['`rank`' => $row['rank'], 'global_rank' => $row['global_rank']], ['id' => $row['id']]);
+            }
+        });
         return count($datas);
     }
 
@@ -339,7 +349,11 @@ SELECT DISTINCT id
         foreach ($categories as $categoryId) {
             $datas[] = ['id' => $categoryId, 'representative_picture_id' => $imgRepo->findRandomIdByCategoryId($categoryId)];
         }
-        Dml::massUpdates(Tables::categories(), ['primary' => ['id'], 'update' => ['representative_picture_id']], $datas);
+        $this->conn->transactional(function () use ($datas): void {
+            foreach ($datas as $row) {
+                $this->conn->update(Tables::categories(), ['representative_picture_id' => $row['representative_picture_id']], ['id' => $row['id']]);
+            }
+        });
     }
 
     /**
@@ -392,7 +406,11 @@ SELECT DISTINCT id
                 $datas[] = ['id' => $id, 'uppercats' => $newUppercats];
             }
         }
-        Dml::massUpdates(Tables::categories(), ['primary' => ['id'], 'update' => ['uppercats']], $datas);
+        $this->conn->transactional(function () use ($datas): void {
+            foreach ($datas as $row) {
+                $this->conn->update(Tables::categories(), ['uppercats' => $row['uppercats']], ['id' => $row['id']]);
+            }
+        });
     }
 
     public function updatePath(): void
@@ -669,7 +687,12 @@ SELECT id FROM ' . Tables::imageCategory() . '
         foreach ($images as $id) {
             $datas[] = ['category_id' => $categoryId, 'image_id' => $id, 'rank' => ++$currentRank];
         }
-        Dml::massUpdates(Tables::imageCategory(), ['primary' => ['image_id', 'category_id'], 'update' => ['rank']], $datas);
+        $this->conn->transactional(function () use ($datas): void {
+            foreach ($datas as $row) {
+                // `rank` is a MySQL 8.0 reserved word — backtick the set-array key.
+                $this->conn->update(Tables::imageCategory(), ['`rank`' => $row['rank']], ['image_id' => $row['image_id'], 'category_id' => $row['category_id']]);
+            }
+        });
     }
 
     /**

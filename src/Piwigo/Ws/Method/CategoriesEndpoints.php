@@ -336,7 +336,15 @@ final readonly class CategoriesEndpoints
             foreach ($userRepresentativeUpdatesFor as $catId => $imageId) {
                 $updates[] = ['user_id' => $user['id'], 'cat_id' => $catId, 'user_representative_picture_id' => $imageId];
             }
-            Dml::massUpdates(Tables::userCacheCategories(), ['primary' => ['user_id', 'cat_id'], 'update' => ['user_representative_picture_id']], $updates);
+            $this->conn->transactional(function () use ($updates): void {
+                foreach ($updates as $row) {
+                    $this->conn->update(
+                        Tables::userCacheCategories(),
+                        ['user_representative_picture_id' => $row['user_representative_picture_id']],
+                        ['user_id' => $row['user_id'], 'cat_id' => $row['cat_id']]
+                    );
+                }
+            });
         }
         foreach ($cats as &$cat) {
             foreach ($categories as $category) {

@@ -29,7 +29,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Dml;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Admin\GetPopupHelpContent;
 use Piwigo\Event\Lifecycle\NbmEventHandlerAdded;
@@ -1332,7 +1331,11 @@ final class MiscController implements AdminSubControllerInterface
                     $this->notificationAdminService->endUsersEnvNbm();
 
                     if ($is_action_send) {
-                        Dml::massUpdates(Tables::userMailNotification(), ['primary' => ['user_id'], 'update' => ['last_send']], $datas);
+                        $this->conn->transactional(function () use ($datas): void {
+                            foreach ($datas as $row) {
+                                $this->conn->update(Tables::userMailNotification(), ['last_send' => $row['last_send']], ['user_id' => $row['user_id']]);
+                            }
+                        });
                         $this->notificationAdminService->displayCounterInfo();
                     }
                 } else {

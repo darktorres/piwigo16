@@ -305,7 +305,7 @@ final class UserRepository extends AbstractRepository
     {
         $qb = $this->conn->createQueryBuilder()
             ->update($this->table('user_infos'))
-            ->set('last_visit_from_history', "'true'")
+            ->set('last_visit_from_history', '1')
             ->set('lastmodified', 'lastmodified')
             ->where('user_id = :userId')
             ->setParameter('userId', $userId);
@@ -368,7 +368,7 @@ final class UserRepository extends AbstractRepository
     {
         $this->conn->createQueryBuilder()
             ->update($this->table('user_cache'))
-            ->set('need_update', "'true'")
+            ->set('need_update', '1')
             ->executeStatement();
     }
 
@@ -610,7 +610,7 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
-     * Return ids of all groups that have is_default = 'true', ordered by id.
+     * Return ids of all groups that have is_default = 1, ordered by id.
      *
      * @return int[]
      */
@@ -619,7 +619,7 @@ final class UserRepository extends AbstractRepository
         $rows = $this->conn->createQueryBuilder()
             ->select('id')
             ->from($this->table('groups'))
-            ->where("is_default = 'true'")
+            ->where('is_default = 1')
             ->orderBy('id', 'ASC')
             ->executeQuery()
             ->fetchFirstColumn();

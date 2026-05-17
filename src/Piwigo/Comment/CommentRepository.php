@@ -85,7 +85,7 @@ final class CommentRepository extends AbstractRepository
             'anonymous_id'    => $data['anonymous_id'],
             'content'         => $data['content'],
             'date'            => $now,
-            'validated'       => $data['validated'] ? 'true' : 'false',
+            'validated'       => $data['validated'] ? 1 : 0,
             'validation_date' => $data['validated'] ? $now : null,
             'image_id'        => $data['image_id'],
             'website_url'     => $data['website_url'] ?? null,
@@ -142,7 +142,7 @@ final class CommentRepository extends AbstractRepository
             ->where('id = :id')
             ->setParameter('content', $data['content'])
             ->setParameter('websiteUrl', $data['website_url'] ?? null)
-            ->setParameter('validated', $validated ? 'true' : 'false')
+            ->setParameter('validated', $validated ? 1 : 0)
             ->setParameter('validationDate', $validated ? $now : null)
             ->setParameter('id', $commentId);
 
@@ -183,7 +183,7 @@ final class CommentRepository extends AbstractRepository
             ->update($this->table('comments'))
             ->set('validated', ':validated')
             ->set('validation_date', ':now')
-            ->setParameter('validated', 'true')
+            ->setParameter('validated', 1)
             ->setParameter('now', $now);
 
         if (is_array($commentId)) {
@@ -232,7 +232,7 @@ final class CommentRepository extends AbstractRepository
         $value = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
             ->from($this->table('comments'))
-            ->where("validated = 'false'")
+            ->where('validated = 0')
             ->executeQuery()
             ->fetchOne();
         return is_numeric($value) ? (int) $value : 0;

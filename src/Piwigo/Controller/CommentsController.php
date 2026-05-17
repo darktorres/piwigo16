@@ -11,6 +11,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\BoolUtil;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -397,7 +398,7 @@ SELECT *
                         $tpl_comment['U_CANCEL']  = $url_self;
                     }
                 }
-                if ($this->permissionService->canManageComment('validate', $cAuthorId) && 'true' != $comment['validated']) {
+                if ($this->permissionService->canManageComment('validate', $cAuthorId) && !BoolUtil::fromMixed($comment['validated'])) {
                     $tpl_comment['U_VALIDATE'] = $this->urlService->addUrlParams($url_self, ['validate' => $cId, 'pwg_token' => $this->csrfService->getToken()]);
                 }
                 $tpl->append('comments', $tpl_comment);

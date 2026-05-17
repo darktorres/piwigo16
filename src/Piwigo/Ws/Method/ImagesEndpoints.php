@@ -19,6 +19,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
+use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
@@ -269,7 +270,7 @@ final readonly class ImagesEndpoints
         $isCommentable    = false;
         $relatedCategories = [];
         foreach ($this->conn->executeQuery('SELECT id, name, permalink, uppercats, global_rank, commentable FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id = id WHERE image_id = ' . $imageRowId . $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND') . ';')->fetchAllAssociative() as $row) {
-            if ($row['commentable'] === 'true') {
+            if (BoolUtil::fromMixed($row['commentable'])) {
                 $isCommentable = true;
             }
             unset($row['commentable']);

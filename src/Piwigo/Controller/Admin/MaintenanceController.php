@@ -1227,7 +1227,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
                 $dir = basename($fulldir);
                 if (preg_match(Config::syncCharsRegex(), $dir)) {
-                    $insert = ['id' => $next_id++, 'dir' => $dir, 'name' => str_replace('_', ' ', $dir), 'site_id' => $site_id, 'commentable' => BoolUtil::toString(Config::newcatDefaultCommentable()), 'status' => Config::newcatDefaultStatus(), 'visible' => BoolUtil::toString(Config::newcatDefaultVisible())];
+                    $insert = ['id' => $next_id++, 'dir' => $dir, 'name' => str_replace('_', ' ', $dir), 'site_id' => $site_id, 'commentable' => BoolUtil::toInt(Config::newcatDefaultCommentable()), 'status' => Config::newcatDefaultStatus(), 'visible' => BoolUtil::toInt(Config::newcatDefaultVisible())];
                     if (isset($db_fulldirs[dirname($fulldir)])) {
                         $parent    = $db_fulldirs[dirname($fulldir)];
                         $parentKey = $parent;
@@ -1241,8 +1241,8 @@ final class MaintenanceController implements AdminSubControllerInterface
                         if ('private' == ($parentRow['status'] ?? '')) {
                             $insert['status'] = 'private';
                         }
-                        if ('false' == ($parentRow['visible'] ?? '')) {
-                            $insert['visible'] = 'false';
+                        if (isset($parentRow['visible']) && !BoolUtil::fromMixed($parentRow['visible'])) {
+                            $insert['visible'] = 0;
                         }
                     } else {
                         $insert['uppercats']   = $insert['id'];

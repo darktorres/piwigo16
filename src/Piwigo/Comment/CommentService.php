@@ -50,7 +50,7 @@ final readonly class CommentService
         $cached = RequestCache::remember('user', 'nb_available_comments', function (): int {
             $where = [];
             if (!$this->permissionService->isAdmin()) {
-                $where[] = "validated='true'";
+                $where[] = 'validated=1';
             }
             $where[] = $this->permissionService->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'forbidden_images' => 'ic.image_id'],

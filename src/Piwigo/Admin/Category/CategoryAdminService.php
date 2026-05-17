@@ -462,8 +462,8 @@ SELECT DISTINCT id
             }
         }
         $insert = ['name' => $categoryName, 'rank' => $rank, 'global_rank' => 0];
-        $insert['commentable'] = BoolUtil::toString(isset($options['commentable']) && is_bool($options['commentable']) ? $options['commentable'] : Config::newcatDefaultCommentable());
-        $insert['visible']     = BoolUtil::toString(isset($options['visible']) && is_bool($options['visible']) ? $options['visible'] : Config::newcatDefaultVisible());
+        $insert['commentable'] = BoolUtil::toInt(isset($options['commentable']) && is_bool($options['commentable']) ? $options['commentable'] : Config::newcatDefaultCommentable());
+        $insert['visible']     = BoolUtil::toInt(isset($options['visible']) && is_bool($options['visible']) ? $options['visible'] : Config::newcatDefaultVisible());
         $insert['status']      = (isset($options['status']) && $options['status'] === 'private') ? 'private' : Config::newcatDefaultStatus();
         if (isset($options['comment'])) {
             $cv = is_string($options['comment']) ? $options['comment'] : '';
@@ -475,8 +475,8 @@ SELECT DISTINCT id
             if ($parent !== null) {
                 $insert['id_uppercat'] = $parent['id'];
                 $insert['global_rank'] = (is_string($parent['global_rank'] ?? null) ? $parent['global_rank'] : '') . '.' . (string) $insert['rank'];
-                if ($parent['visible'] === 'false') {
-                    $insert['visible'] = 'false';
+                if (isset($parent['visible']) && !BoolUtil::fromMixed($parent['visible'])) {
+                    $insert['visible'] = 0;
                 }
                 if ($parent['status'] === 'private') {
                     $insert['status'] = 'private';

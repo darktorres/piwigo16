@@ -186,7 +186,7 @@ final readonly class NotificationAdminService
 
         if (count($checkKeyList) != 0) {
             $updates       = [];
-            $enabledValue  = BoolUtil::toString($isSubscribe);
+            $enabledValue  = BoolUtil::toInt($isSubscribe);
             $dataUsers     = $this->getUserNotifications('subscribe', $checkKeyList, !$isSubscribe);
             $msgBreakTimeout = Lang::t('Time to send mail is limited. Others mails are skipped.');
             $this->beginUsersEnvNbm(true);

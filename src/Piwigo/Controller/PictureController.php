@@ -15,6 +15,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Core\BoolUtil;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -365,7 +366,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             if ($i == 'current') {
                 $row['element_path'] = StringUtil::getElementPath($row);
                 if ($row['src_image']->isOriginal()) {
-                    if ($user['enabled_high'] == 'true') {
+                    if (BoolUtil::fromMixed($user['enabled_high'])) {
                         $row['element_url']  = $row['src_image']->getUrl();
                         $row['download_url'] = $this->urlService->getActionUrl($src_id, 'e', true);
                     }
@@ -452,7 +453,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             }
         }
 
-        if (Config::pictureDownloadIcon() && isset($picture['current']['download_url']) && $picture['current']['download_url'] !== '' && $user['enabled_high'] == 'true') {
+        if (Config::pictureDownloadIcon() && isset($picture['current']['download_url']) && $picture['current']['download_url'] !== '' && BoolUtil::fromMixed($user['enabled_high'])) {
             $tpl->append('current', ['U_DOWNLOAD' => $picture['current']['download_url']], true);
 
             if (Config::isFormatsEnabled()) {

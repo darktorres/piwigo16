@@ -18,7 +18,6 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
-use Piwigo\Core\BoolUtil;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -652,13 +651,13 @@ final class AlbumController implements AdminSubControllerInterface
         $catIntId     = is_numeric($category['id']) ? (int) $category['id'] : 0;
         $catName      = is_scalar($category['name'] ?? null) ? (string) $category['name'] : '';
         $catComment   = is_string($category['comment']) ? $category['comment'] : '';
-        $catVisible   = is_string($category['visible'] ?? null) ? $category['visible'] : 'false';
+        $catVisible   = isset($category['visible']) && is_scalar($category['visible']) ? (int) $category['visible'] : 0;
         $catUppercats = is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '';
         $catUppercat  = is_scalar($category['id_uppercat']) ? (string) $category['id_uppercat'] : '';
         $catSiteId    = is_scalar($category['site_id']) ? (string) $category['site_id'] : '';
         $catLastmod   = is_string($category['lastmodified'] ?? null) || is_int($category['lastmodified'] ?? null) ? $category['lastmodified'] : null;
         $catRepPic    = is_scalar($category['representative_picture_id'] ?? null) ? (string) $category['representative_picture_id'] : '';
-        $catComment_b = is_string($category['commentable'] ?? null) ? $category['commentable'] : 'false';
+        $catComment_b = isset($category['commentable']) && is_scalar($category['commentable']) ? (int) $category['commentable'] : 0;
 
         $category['is_virtual'] = empty($category['dir']);
         $category['has_images'] = $this->categoryRepository->hasCategoryImages($catIntId);
@@ -691,7 +690,7 @@ final class AlbumController implements AdminSubControllerInterface
             'CAT_ID'                => $catId,
             'CAT_NAME'              => htmlspecialchars($catName),
             'CAT_COMMENT'           => htmlspecialchars($catComment),
-            'IS_VISIBLE'            => BoolUtil::toString($catVisible),
+            'IS_VISIBLE'            => $catVisible,
             'CAT_ADMIN_ACCESS'      => $this->userAdminService->catAdminAccess($catIntId),
             'U_DELETE'              => $base_url . 'albums',
             'U_JUMPTO'              => $this->urlService->makeIndexUrl(['category' => $category]),
@@ -702,7 +701,7 @@ final class AlbumController implements AdminSubControllerInterface
         ]);
 
         if (Config::activateComments()) {
-            $tpl->assign('CAT_COMMENTABLE', BoolUtil::toString($catComment_b));
+            $tpl->assign('CAT_COMMENTABLE', $catComment_b);
         }
 
         $image_count = 0;
@@ -782,7 +781,7 @@ final class AlbumController implements AdminSubControllerInterface
             'album_id'                             => $catIntId,
             'album_name'                           => $catName,
             'default_parent_album'                 => $parent_cat_id,
-            'is_visible'                           => BoolUtil::toString($catVisible),
+            'is_visible'                           => (bool) $catVisible,
             'nb_sub_albums'                        => $category['nb_subcats'],
             'parent_album'                         => $parent_cat_id,
             'related_categories_ids'               => [$catId, (string) $parent_cat_id],
@@ -855,12 +854,12 @@ final class AlbumController implements AdminSubControllerInterface
 
         $query_true = $query_false = '';
         if ($section === 'comments') {
-            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE commentable = 'true';";
-            $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE commentable = 'false';";
+            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' WHERE commentable = 1;';
+            $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' WHERE commentable = 0;';
             $tpl->assign(['L_SECTION' => Lang::t('Authorize users to add comments on selected albums'), 'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'), 'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden')]);
         } elseif ($section === 'visible') {
-            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE visible = 'true';";
-            $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE visible = 'false';";
+            $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' WHERE visible = 1;';
+            $query_false = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' WHERE visible = 0;';
             $tpl->assign(['L_SECTION' => Lang::t('Lock albums'), 'L_CAT_OPTIONS_TRUE' => Lang::t('Unlocked'), 'L_CAT_OPTIONS_FALSE' => Lang::t('Locked')]);
         } elseif ($section === 'status') {
             $query_true  = 'SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . " WHERE status = 'public';";

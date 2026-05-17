@@ -349,7 +349,7 @@ final class UserService
                 Dml::massInserts(Tables::userCacheCategories(), ['user_id', 'cat_id', 'date_last', 'max_date_last', 'nb_images', 'count_images', 'nb_categories', 'count_categories'], $userCacheCats, ['ignore' => true]);
 
                 $this->conn->executeStatement('DELETE FROM ' . Tables::userCache() . ' WHERE user_id = ?', [$udId]);
-                $udNeedUpdate        = ($userdata['need_update'] ?? '') === 'true';
+                $udNeedUpdate        = BoolUtil::fromMixed($userdata['need_update'] ?? null);
                 $udCacheUpdateTime   = is_numeric($userdata['cache_update_time']) ? (int) $userdata['cache_update_time'] : 0;
                 $udForbiddenCatsStr2 = is_string($userdata['forbidden_categories'] ?? null) ? $userdata['forbidden_categories'] : '';
                 $udNbTotalImages     = is_numeric($userdata['nb_total_images']) ? (int) $userdata['nb_total_images'] : 0;
@@ -599,7 +599,7 @@ SELECT DISTINCT f.image_id
             if (!empty($params[$field]) or ($params[$field] ?? null) === 0 or ($params[$field] ?? null) === false) {
                 $v = $params[$field];
                 if (in_array($field, ['expand', 'show_nb_comments', 'show_nb_hits', 'enabled_high'])) {
-                    $updatesInfos[$field] = BoolUtil::toString(is_bool($v) ? $v : (is_string($v) ? $v : ''));
+                    $updatesInfos[$field] = BoolUtil::toInt(is_bool($v) ? $v : (is_string($v) ? $v : ''));
                 } else {
                     $updatesInfos[$field] = $v;
                 }

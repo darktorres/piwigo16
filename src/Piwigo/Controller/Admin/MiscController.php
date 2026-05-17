@@ -1195,7 +1195,7 @@ final class MiscController implements AdminSubControllerInterface
             foreach ($users_without_notif as $nbm_user) {
                 $nbm_user['check_key'] = $this->notificationAdminService->findAvailableCheckKey();
                 $check_key_list[]      = $nbm_user['check_key'];
-                $inserts[]             = ['user_id' => $nbm_user['user_id'], 'check_key' => $nbm_user['check_key'], 'enabled' => 'false'];
+                $inserts[]             = ['user_id' => $nbm_user['user_id'], 'check_key' => $nbm_user['check_key'], 'enabled' => 0];
                 $mailAddressRaw = $nbm_user['mail_address'] ?? null;
                 $usernameRaw    = $nbm_user['username'] ?? null;
                 PageState::current()->addInfo(Lang::t('User %s [%s] added.', stripslashes(is_string($usernameRaw) ? $usernameRaw : ''), is_string($mailAddressRaw) ? $mailAddressRaw : ''));

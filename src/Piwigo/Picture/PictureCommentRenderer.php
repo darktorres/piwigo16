@@ -9,6 +9,7 @@ use Latte\Runtime\Html;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
+use Piwigo\Core\BoolUtil;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -52,7 +53,7 @@ final readonly class PictureCommentRenderer
         $imageId            = $picCtx->currentItem;
         $related_categories = $picCtx->relatedCategories;
         $url_self           = $this->urlService->duplicatePictureUrl();
-        $showComments = array_any($related_categories, fn ($category): bool => ($category['commentable'] ?? '') == 'true');
+        $showComments = array_any($related_categories, fn ($category): bool => BoolUtil::fromMixed($category['commentable'] ?? null));
 
         $comment_action = null;
 
@@ -111,7 +112,7 @@ final readonly class PictureCommentRenderer
             $rowFetch = $this->conn
                 ->executeQuery(
                     'SELECT COUNT(*) AS nb_comments FROM ' . Tables::comments() .
-                    ' WHERE image_id = ?' . ($validated_clause !== '' ? " AND validated = 'true'" : ''),
+                    ' WHERE image_id = ?' . ($validated_clause !== '' ? ' AND validated = 1' : ''),
                     [$imageId]
                 )
                 ->fetchAssociative();
@@ -220,7 +221,7 @@ SELECT
                     if ($this->permissionService->isAdmin()) {
                         $tpl_comment['EMAIL'] = $email;
 
-                        if ($row['validated'] != 'true') {
+                        if (!BoolUtil::fromMixed($row['validated'])) {
                             $tpl_comment['U_VALIDATE'] = $this->urlService->addUrlParams($url_self, [
                                 'action' => 'validate_comment',
                                 'comment_to_validate' => $row['id'],

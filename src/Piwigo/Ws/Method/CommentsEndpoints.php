@@ -7,6 +7,7 @@ namespace Piwigo\Ws\Method;
 use Doctrine\DBAL\Connection;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
+use Piwigo\Core\BoolUtil;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
@@ -81,11 +82,11 @@ final readonly class CommentsEndpoints
         $totalComments = $summary['all_comments'] ?? null;
         switch ($params['status']) {
             case 'pending':
-                $whereClauses[] = "validated = 'false'";
+                $whereClauses[] = 'validated = 0';
                 $totalComments  = $summary['pending'] ?? null;
                 break;
             case 'validated':
-                $whereClauses[] = "validated = 'true'";
+                $whereClauses[] = 'validated = 1';
                 $totalComments  = $summary['validated'] ?? null;
                 break;
         }
@@ -107,7 +108,7 @@ final readonly class CommentsEndpoints
             $this->dispatcher->dispatch($authorEvent);
             $contentEvent = new RenderCommentContent(is_string($row['content']) ? $row['content'] : '');
             $this->dispatcher->dispatch($contentEvent);
-            $list[] = ['id' => $row['id'], 'admin_link' => $this->urlGenerator->admin('photo-' . (is_string($row['image_id'] ?? null) ? $row['image_id'] : '')), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => $this->dateService->formatDate(is_string($row['date_available'] ?? null) ? $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => $authorEvent->commentAuthor, 'author_status' => Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => $this->dateService->formatDate(is_string($row['date'] ?? null) ? $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => $contentEvent->commentContent, 'raw_content' => $row['content'], 'is_pending' => ('false' === $row['validated'])];
+            $list[] = ['id' => $row['id'], 'admin_link' => $this->urlGenerator->admin('photo-' . (is_string($row['image_id'] ?? null) ? $row['image_id'] : '')), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => $this->dateService->formatDate(is_string($row['date_available'] ?? null) ? $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => $authorEvent->commentAuthor, 'author_status' => Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => $this->dateService->formatDate(is_string($row['date'] ?? null) ? $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => $contentEvent->commentContent, 'raw_content' => $row['content'], 'is_pending' => !BoolUtil::fromMixed($row['validated'])];
         }
         $datesQuery = 'SELECT MIN(date) AS started_at, MAX(date) AS ended_at FROM ' . Tables::comments() . ' WHERE ' . implode(' AND ', $whereClauses) . ';';
         $datesResult = $conn->executeQuery($datesQuery)->fetchAssociative();

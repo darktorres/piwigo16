@@ -449,7 +449,7 @@ final class CategoryRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->update($this->table('categories'))
             ->set('commentable', ':val')
-            ->setParameter('val', $commentable ? 'true' : 'false');
+            ->setParameter('val', $commentable ? 1 : 0);
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $qb->executeStatement();
@@ -475,13 +475,13 @@ final class CategoryRepository extends AbstractRepository
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
     }
 
-    /** Count hidden (locked) albums (visible = 'false'). */
+    /** Count hidden (locked) albums (visible = 0). */
     public function countHidden(): int
     {
         $value = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
             ->from($this->table('categories'))
-            ->where("visible = 'false'")
+            ->where('visible = 0')
             ->executeQuery()
             ->fetchOne();
         return is_numeric($value) ? (int) $value : 0;
@@ -780,7 +780,7 @@ final class CategoryRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->update($this->table('categories'))
             ->set('visible', ':visible')
-            ->setParameter('visible', $visible ? 'true' : 'false');
+            ->setParameter('visible', $visible ? 1 : 0);
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $qb->executeStatement();

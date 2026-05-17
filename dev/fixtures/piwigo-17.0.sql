@@ -85,10 +85,10 @@ CREATE TABLE `piwigo_categories` (
   `rank` smallint unsigned DEFAULT NULL,
   `status` enum('public','private') NOT NULL DEFAULT 'public',
   `site_id` tinyint unsigned DEFAULT NULL,
-  `visible` enum('true','false') NOT NULL DEFAULT 'true',
+  `visible` tinyint(1) unsigned NOT NULL DEFAULT 1,
   `representative_picture_id` mediumint unsigned DEFAULT NULL,
   `uppercats` varchar(255) NOT NULL DEFAULT '',
-  `commentable` enum('true','false') NOT NULL DEFAULT 'true',
+  `commentable` tinyint(1) unsigned NOT NULL DEFAULT 1,
   `global_rank` varchar(255) DEFAULT NULL,
   `image_order` varchar(128) DEFAULT NULL,
   `permalink` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin DEFAULT NULL,
@@ -106,7 +106,7 @@ CREATE TABLE `piwigo_categories` (
 
 LOCK TABLES `piwigo_categories` WRITE;
 /*!40000 ALTER TABLE `piwigo_categories` DISABLE KEYS */;
-INSERT INTO `piwigo_categories` VALUES (1,'Sample Album',NULL,NULL,NULL,1,'public',NULL,'true',1,'1','true','1',NULL,NULL,'2026-05-07 17:30:04'),(2,'Nested Sub Album',1,NULL,NULL,1,'public',NULL,'true',4,'1,2','true','1.1',NULL,NULL,'2026-05-07 17:30:06');
+INSERT INTO `piwigo_categories` VALUES (1,'Sample Album',NULL,NULL,NULL,1,'public',NULL,1,1,'1',1,'1',NULL,NULL,'2026-05-07 17:30:04'),(2,'Nested Sub Album',1,NULL,NULL,1,'public',NULL,1,4,'1,2',1,'1.1',NULL,NULL,'2026-05-07 17:30:06');
 /*!40000 ALTER TABLE `piwigo_categories` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -127,7 +127,7 @@ CREATE TABLE `piwigo_comments` (
   `anonymous_id` varchar(45) NOT NULL,
   `website_url` varchar(255) DEFAULT NULL,
   `content` longtext,
-  `validated` enum('true','false') NOT NULL DEFAULT 'false',
+  `validated` tinyint(1) unsigned NOT NULL DEFAULT 0,
   `validation_date` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `comments_i2` (`validation_date`),
@@ -141,7 +141,7 @@ CREATE TABLE `piwigo_comments` (
 
 LOCK TABLES `piwigo_comments` WRITE;
 /*!40000 ALTER TABLE `piwigo_comments` DISABLE KEYS */;
-INSERT INTO `piwigo_comments` VALUES (1,1,'2026-05-07 14:30:07','fixture_admin',NULL,1,'127.0.0.1',NULL,'Fixture comment for integration tests.','true','2026-05-07 14:30:07');
+INSERT INTO `piwigo_comments` VALUES (1,1,'2026-05-07 14:30:07','fixture_admin',NULL,1,'127.0.0.1',NULL,'Fixture comment for integration tests.',1,'2026-05-07 14:30:07');
 /*!40000 ALTER TABLE `piwigo_comments` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -269,7 +269,7 @@ DROP TABLE IF EXISTS `piwigo_groups`;
 CREATE TABLE `piwigo_groups` (
   `id` smallint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL DEFAULT '',
-  `is_default` enum('true','false') NOT NULL DEFAULT 'false',
+  `is_default` tinyint(1) unsigned NOT NULL DEFAULT 0,
   `lastmodified` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `groups_ui1` (`name`),
@@ -857,7 +857,7 @@ DROP TABLE IF EXISTS `piwigo_user_cache`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_user_cache` (
   `user_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `need_update` enum('true','false') NOT NULL DEFAULT 'true',
+  `need_update` tinyint(1) unsigned NOT NULL DEFAULT 1,
   `cache_update_time` int unsigned NOT NULL DEFAULT '0',
   `forbidden_categories` mediumtext,
   `nb_total_images` mediumint unsigned DEFAULT NULL,
@@ -876,7 +876,7 @@ CREATE TABLE `piwigo_user_cache` (
 
 LOCK TABLES `piwigo_user_cache` WRITE;
 /*!40000 ALTER TABLE `piwigo_user_cache` DISABLE KEYS */;
-INSERT INTO `piwigo_user_cache` VALUES (1,'false',1778175007,'0',5,'2026-05-07 17:30:06',NULL,NULL,'NOT IN','0');
+INSERT INTO `piwigo_user_cache` VALUES (1,0,1778175007,'0',5,'2026-05-07 17:30:06',NULL,NULL,'NOT IN','0');
 /*!40000 ALTER TABLE `piwigo_user_cache` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -970,18 +970,18 @@ CREATE TABLE `piwigo_user_infos` (
   `nb_image_page` smallint unsigned NOT NULL DEFAULT '15',
   `status` enum('webmaster','admin','normal','generic','guest') NOT NULL DEFAULT 'guest',
   `language` varchar(50) NOT NULL DEFAULT 'en_UK',
-  `expand` enum('true','false') NOT NULL DEFAULT 'false',
-  `show_nb_comments` enum('true','false') NOT NULL DEFAULT 'false',
-  `show_nb_hits` enum('true','false') NOT NULL DEFAULT 'false',
+  `expand` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `show_nb_comments` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `show_nb_hits` tinyint(1) unsigned NOT NULL DEFAULT 0,
   `recent_period` tinyint unsigned NOT NULL DEFAULT '7',
   `theme` varchar(255) NOT NULL DEFAULT 'modus',
   `registration_date` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
-  `enabled_high` enum('true','false') NOT NULL DEFAULT 'true',
+  `enabled_high` tinyint(1) unsigned NOT NULL DEFAULT 1,
   `level` tinyint unsigned NOT NULL DEFAULT '0',
   `activation_key` varchar(255) DEFAULT NULL,
   `activation_key_expire` datetime DEFAULT NULL,
   `last_visit` datetime DEFAULT NULL,
-  `last_visit_from_history` enum('true','false') NOT NULL DEFAULT 'false',
+  `last_visit_from_history` tinyint(1) unsigned NOT NULL DEFAULT 0,
   `lastmodified` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `preferences` text,
   PRIMARY KEY (`user_id`),
@@ -995,7 +995,7 @@ CREATE TABLE `piwigo_user_infos` (
 
 LOCK TABLES `piwigo_user_infos` WRITE;
 /*!40000 ALTER TABLE `piwigo_user_infos` DISABLE KEYS */;
-INSERT INTO `piwigo_user_infos` VALUES (1,15,'webmaster','en_GB','false','false','false',7,'modus','2026-05-07 17:30:01','true',8,NULL,NULL,NULL,'false','2026-05-07 17:30:01',NULL),(2,15,'guest','en_GB','false','false','false',7,'modus','2026-05-07 17:30:01','true',0,NULL,NULL,NULL,'false','2026-05-07 17:30:01',NULL),(3,15,'normal','en_GB','false','false','false',7,'modus','2026-05-07 17:30:08','true',0,NULL,NULL,NULL,'false','2026-05-07 17:30:01',NULL),(4,15,'normal','en_GB','false','false','false',7,'modus','2026-05-07 17:30:08','true',0,NULL,NULL,NULL,'false','2026-05-07 17:30:01',NULL);
+INSERT INTO `piwigo_user_infos` VALUES (1,15,'webmaster','en_GB',0,0,0,7,'modus','2026-05-07 17:30:01',1,8,NULL,NULL,NULL,0,'2026-05-07 17:30:01',NULL),(2,15,'guest','en_GB',0,0,0,7,'modus','2026-05-07 17:30:01',1,0,NULL,NULL,NULL,0,'2026-05-07 17:30:01',NULL),(3,15,'normal','en_GB',0,0,0,7,'modus','2026-05-07 17:30:08',1,0,NULL,NULL,NULL,0,'2026-05-07 17:30:01',NULL),(4,15,'normal','en_GB',0,0,0,7,'modus','2026-05-07 17:30:08',1,0,NULL,NULL,NULL,0,'2026-05-07 17:30:01',NULL);
 /*!40000 ALTER TABLE `piwigo_user_infos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1009,7 +1009,7 @@ DROP TABLE IF EXISTS `piwigo_user_mail_notification`;
 CREATE TABLE `piwigo_user_mail_notification` (
   `user_id` mediumint unsigned NOT NULL DEFAULT '0',
   `check_key` varchar(16) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL DEFAULT '',
-  `enabled` enum('true','false') NOT NULL DEFAULT 'false',
+  `enabled` tinyint(1) unsigned NOT NULL DEFAULT 0,
   `last_send` datetime DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `user_mail_notification_ui1` (`check_key`)

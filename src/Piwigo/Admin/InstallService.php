@@ -15,7 +15,7 @@ use Piwigo\Exception\DbException;
 
 final class InstallService
 {
-    public static function executeSqlFile(string $filepath, string $replaced, string $replacing, string $dblayer): void
+    public static function executeSqlFile(string $filepath, string $replaced, string $replacing): void
     {
         if (Kernel::isBooted()) {
             $conn = Kernel::service(Connection::class);
@@ -35,11 +35,6 @@ final class InstallService
             if (preg_match('/;$/', $sql_line)) {
                 $query = trim($query);
                 $query = str_replace($replaced, $replacing, $query);
-                if ('mysql' == $dblayer) {
-                    if (preg_match('/^(CREATE TABLE .*)[\s]*;[\s]*/im', $query, $matches)) {
-                        $query = $matches[1].' DEFAULT CHARACTER SET utf8'.';';
-                    }
-                }
                 $conn->executeStatement($query);
                 $query = '';
             }

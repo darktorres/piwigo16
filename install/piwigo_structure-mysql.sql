@@ -17,7 +17,7 @@ CREATE TABLE `piwigo_activity` (
   `details` varchar(255) DEFAULT NULL,
   `user_agent` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`activity_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_caddie`
@@ -28,7 +28,7 @@ CREATE TABLE `piwigo_caddie` (
   `user_id` mediumint(8) unsigned NOT NULL default '0',
   `element_id` mediumint(8) NOT NULL default '0',
   PRIMARY KEY  (`user_id`,`element_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_categories`
@@ -50,13 +50,13 @@ CREATE TABLE `piwigo_categories` (
   `commentable` enum('true','false') NOT NULL default 'true',
   `global_rank` varchar(255) default NULL,
   `image_order` varchar(128) default NULL,
-  `permalink` varchar(64) binary default NULL,
+  `permalink` varchar(64) COLLATE utf8mb4_bin default NULL,
   `lastmodified` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `categories_i3` (`permalink`),
   KEY `categories_i2` (`id_uppercat`),
   KEY `lastmodified` (`lastmodified`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_comments`
@@ -78,7 +78,7 @@ CREATE TABLE `piwigo_comments` (
   PRIMARY KEY  (`id`),
   KEY `comments_i2` (`validation_date`),
   KEY `comments_i1` (`image_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_config`
@@ -90,7 +90,7 @@ CREATE TABLE `piwigo_config` (
   `value` text,
   `comment` varchar(255) default NULL,
   PRIMARY KEY  (`param`)
-) ENGINE=MyISAM COMMENT='configuration table';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='configuration table';
 
 --
 -- Table structure for table `piwigo_derivative_settings`
@@ -103,7 +103,7 @@ CREATE TABLE `piwigo_derivative_settings` (
   `watermark_json` text NOT NULL,
   `custom_json` text NOT NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM COMMENT='singleton-row: JPEG quality + watermark + custom-size recency map';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='singleton-row: JPEG quality + watermark + custom-size recency map';
 
 --
 -- Table structure for table `piwigo_derivative_size`
@@ -121,7 +121,7 @@ CREATE TABLE `piwigo_derivative_size` (
   `sharpen` decimal(5,4) NOT NULL default '0.0000',
   `last_mod_time` int(11) NOT NULL default '0',
   PRIMARY KEY  (`name`)
-) ENGINE=MyISAM COMMENT='per-size derivative params (replaces the derivatives serialize() blob)';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-size derivative params (replaces the derivatives serialize() blob)';
 
 --
 -- Table structure for table `piwigo_extension_ignored_updates`
@@ -133,7 +133,7 @@ CREATE TABLE `piwigo_extension_ignored_updates` (
   `extension_id` varchar(64) CHARACTER SET ascii NOT NULL,
   `ignored_at` datetime NOT NULL,
   PRIMARY KEY  (`extension_type`,`extension_id`)
-) ENGINE=MyISAM COMMENT='extensions the admin has asked not to notify about (replaces updates_ignored serialize() blob)';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='extensions the admin has asked not to notify about (replaces updates_ignored serialize() blob)';
 
 --
 -- Table structure for table `piwigo_favorites`
@@ -144,7 +144,7 @@ CREATE TABLE `piwigo_favorites` (
   `user_id` mediumint(8) unsigned NOT NULL default '0',
   `image_id` mediumint(8) unsigned NOT NULL default '0',
   PRIMARY KEY  (`user_id`,`image_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_group_access`
@@ -155,7 +155,7 @@ CREATE TABLE `piwigo_group_access` (
   `group_id` smallint(5) unsigned NOT NULL default '0',
   `cat_id` smallint(5) unsigned NOT NULL default '0',
   PRIMARY KEY  (`group_id`,`cat_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_groups`
@@ -170,7 +170,7 @@ CREATE TABLE `piwigo_groups` (
   PRIMARY KEY  (`id`),
   UNIQUE KEY `groups_ui1` (`name`),
   KEY `lastmodified` (`lastmodified`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_history`
@@ -192,7 +192,7 @@ CREATE TABLE `piwigo_history` (
   `format_id` int(11) unsigned default NULL,
   `auth_key_id` int(11) unsigned DEFAULT NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_history_summary`
@@ -200,6 +200,7 @@ CREATE TABLE `piwigo_history` (
 
 DROP TABLE IF EXISTS `piwigo_history_summary`;
 CREATE TABLE `piwigo_history_summary` (
+  `summary_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `year` smallint(4) NOT NULL default '0',
   `month` tinyint(2) default NULL,
   `day` tinyint(2) default NULL,
@@ -207,8 +208,9 @@ CREATE TABLE `piwigo_history_summary` (
   `nb_pages` int(11) default NULL,
   `history_id_from` int(10) unsigned default NULL,
   `history_id_to` int(10) unsigned default NULL,
-  UNIQUE KEY history_summary_ymdh (`year`,`month`,`day`,`hour`)
-) ENGINE=MyISAM;
+  PRIMARY KEY (`summary_id`),
+  UNIQUE KEY `history_summary_ymdh` (`year`,`month`,`day`,`hour`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_image_category`
@@ -221,7 +223,7 @@ CREATE TABLE `piwigo_image_category` (
   `rank` mediumint(8) unsigned default NULL,
   PRIMARY KEY  (`image_id`,`category_id`),
   KEY `image_category_i1` (`category_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_image_format`
@@ -234,7 +236,7 @@ CREATE TABLE `piwigo_image_format` (
   `ext` varchar(255) NOT NULL,
   `filesize` mediumint(9) unsigned DEFAULT NULL,
   PRIMARY KEY  (`format_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_image_tag`
@@ -246,7 +248,7 @@ CREATE TABLE `piwigo_image_tag` (
   `tag_id` smallint(5) unsigned NOT NULL default '0',
   PRIMARY KEY  (`image_id`,`tag_id`),
   KEY `image_tag_i1` (`tag_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_images`
@@ -255,7 +257,7 @@ CREATE TABLE `piwigo_image_tag` (
 DROP TABLE IF EXISTS `piwigo_images`;
 CREATE TABLE `piwigo_images` (
   `id` mediumint(8) unsigned NOT NULL auto_increment,
-  `file` varchar(255) binary NOT NULL default '',
+  `file` varchar(255) COLLATE utf8mb4_bin NOT NULL default '',
   `date_available` datetime NOT NULL default '1970-01-01 00:00:00',
   `date_creation` datetime default NULL,
   `name` varchar(255) default NULL,
@@ -287,7 +289,7 @@ CREATE TABLE `piwigo_images` (
   KEY `images_i6` (`latitude`),
   KEY `images_i7` (`path`),
   KEY `lastmodified` (`lastmodified`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_integrity_ignored_anomalies`
@@ -299,7 +301,7 @@ CREATE TABLE `piwigo_integrity_ignored_anomalies` (
   `piwigo_version` varchar(16) CHARACTER SET ascii NOT NULL,
   `ignored_at` datetime NOT NULL,
   PRIMARY KEY  (`anomaly_id`,`piwigo_version`)
-) ENGINE=MyISAM COMMENT='integrity-check anomalies the admin has acknowledged (replaces c13y_ignore serialize() blob)';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='integrity-check anomalies the admin has acknowledged (replaces c13y_ignore serialize() blob)';
 
 --
 -- Table structure for table `piwigo_languages`
@@ -311,7 +313,7 @@ CREATE TABLE `piwigo_languages` (
   `version` varchar(64) NOT NULL default '0',
   `name` varchar(64) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_lounge`
@@ -322,7 +324,7 @@ CREATE TABLE `piwigo_lounge` (
   `image_id` mediumint(8) unsigned NOT NULL DEFAULT '0',
   `category_id` smallint(5) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`image_id`,`category_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_old_permalinks`
@@ -331,12 +333,12 @@ CREATE TABLE `piwigo_lounge` (
 DROP TABLE IF EXISTS `piwigo_old_permalinks`;
 CREATE TABLE `piwigo_old_permalinks` (
   `cat_id` smallint(5) unsigned NOT NULL default '0',
-  `permalink` varchar(64) binary NOT NULL default '',
+  `permalink` varchar(64) COLLATE utf8mb4_bin NOT NULL default '',
   `date_deleted` datetime NOT NULL default '1970-01-01 00:00:00',
   `last_hit` datetime default NULL,
   `hit` int(10) unsigned NOT NULL default '0',
   PRIMARY KEY  (`permalink`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_plugins`
@@ -344,11 +346,11 @@ CREATE TABLE `piwigo_old_permalinks` (
 
 DROP TABLE IF EXISTS `piwigo_plugins`;
 CREATE TABLE `piwigo_plugins` (
-  `id` varchar(64) binary NOT NULL default '',
+  `id` varchar(64) COLLATE utf8mb4_bin NOT NULL default '',
   `state` enum('inactive','active') NOT NULL default 'inactive',
   `version` varchar(64) NOT NULL default '0',
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_plugin_migrations`
@@ -360,7 +362,7 @@ CREATE TABLE `piwigo_plugin_migrations` (
   `version` varchar(191) CHARACTER SET ascii NOT NULL,
   `executed_at` datetime NOT NULL,
   PRIMARY KEY (`plugin_id`, `version`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_rate`
@@ -374,7 +376,7 @@ CREATE TABLE `piwigo_rate` (
   `rate` tinyint(2) unsigned NOT NULL default '0',
   `date` date NOT NULL default '1970-01-01',
   PRIMARY KEY  (`element_id`,`user_id`,`anonymous_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_search`
@@ -389,7 +391,7 @@ CREATE TABLE `piwigo_search` (
   `forked_from` INT(10) UNSIGNED,
   `rules` text,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_search_filter_view`
@@ -401,7 +403,7 @@ CREATE TABLE `piwigo_search_filter_view` (
   `config_json` text NOT NULL,
   `created_at` datetime NOT NULL,
   PRIMARY KEY  (`name`)
-) ENGINE=MyISAM COMMENT='admin search filter-view presets (replaces filters_views serialize() blob)';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='admin search filter-view presets (replaces filters_views serialize() blob)';
 
 --
 -- Table structure for table `piwigo_sessions`
@@ -409,11 +411,11 @@ CREATE TABLE `piwigo_search_filter_view` (
 
 DROP TABLE IF EXISTS `piwigo_sessions`;
 CREATE TABLE `piwigo_sessions` (
-  `id` varchar(50) binary NOT NULL default '',
+  `id` varchar(50) COLLATE utf8mb4_bin NOT NULL default '',
   `data` mediumtext NOT NULL,
   `expiration` datetime NOT NULL default '1970-01-01 00:00:00',
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_sites`
@@ -425,7 +427,7 @@ CREATE TABLE `piwigo_sites` (
   `galleries_url` varchar(255) NOT NULL default '',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `sites_ui1` (`galleries_url`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_tags`
@@ -435,12 +437,12 @@ DROP TABLE IF EXISTS `piwigo_tags`;
 CREATE TABLE `piwigo_tags` (
   `id` smallint(5) unsigned NOT NULL auto_increment,
   `name` varchar(255) NOT NULL default '',
-  `url_name` varchar(255) binary NOT NULL default '',
+  `url_name` varchar(255) COLLATE utf8mb4_bin NOT NULL default '',
   `lastmodified` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`),
   KEY `tags_i1` (`url_name`),
   KEY `lastmodified` (`lastmodified`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_themes`
@@ -452,7 +454,7 @@ CREATE TABLE `piwigo_themes` (
   `version` varchar(64) NOT NULL default '0',
   `name` varchar(64) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_upgrade`
@@ -464,7 +466,7 @@ CREATE TABLE `piwigo_upgrade` (
   `applied` datetime NOT NULL default '1970-01-01 00:00:00',
   `description` varchar(255) default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_user_access`
@@ -475,7 +477,7 @@ CREATE TABLE `piwigo_user_access` (
   `user_id` mediumint(8) unsigned NOT NULL default '0',
   `cat_id` smallint(5) unsigned NOT NULL default '0',
   PRIMARY KEY  (`user_id`,`cat_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_user_auth_keys`
@@ -496,7 +498,7 @@ CREATE TABLE `piwigo_user_auth_keys` (
   `last_used_on` datetime DEFAULT NULL,
   `last_notified_on` datetime DEFAULT NULL,
   PRIMARY KEY (`auth_key_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_user_cache`
@@ -515,7 +517,7 @@ CREATE TABLE `piwigo_user_cache` (
   `image_access_type` enum('NOT IN','IN') NOT NULL default 'NOT IN',
   `image_access_list` mediumtext default NULL,
   PRIMARY KEY  (`user_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_user_cache_categories`
@@ -533,7 +535,7 @@ CREATE TABLE `piwigo_user_cache_categories` (
   `count_categories` mediumint(8) unsigned default '0',
   `user_representative_picture_id` mediumint(8) unsigned default NULL,
   PRIMARY KEY  (`user_id`,`cat_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_user_feed`
@@ -541,11 +543,11 @@ CREATE TABLE `piwigo_user_cache_categories` (
 
 DROP TABLE IF EXISTS `piwigo_user_feed`;
 CREATE TABLE `piwigo_user_feed` (
-  `id` varchar(50) binary NOT NULL default '',
+  `id` varchar(50) COLLATE utf8mb4_bin NOT NULL default '',
   `user_id` mediumint(8) unsigned NOT NULL default '0',
   `last_check` datetime default NULL,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_user_group`
@@ -556,7 +558,7 @@ CREATE TABLE `piwigo_user_group` (
   `user_id` mediumint(8) unsigned NOT NULL default '0',
   `group_id` smallint(5) unsigned NOT NULL default '0',
   PRIMARY KEY  (`group_id`,`user_id`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_user_infos`
@@ -584,7 +586,7 @@ CREATE TABLE `piwigo_user_infos` (
   `preferences` TEXT default NULL,
   PRIMARY KEY (`user_id`),
   KEY `lastmodified` (`lastmodified`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_user_mail_notification`
@@ -593,12 +595,12 @@ CREATE TABLE `piwigo_user_infos` (
 DROP TABLE IF EXISTS `piwigo_user_mail_notification`;
 CREATE TABLE `piwigo_user_mail_notification` (
   `user_id` mediumint(8) unsigned NOT NULL default '0',
-  `check_key` varchar(16) binary NOT NULL default '',
+  `check_key` varchar(16) COLLATE utf8mb4_bin NOT NULL default '',
   `enabled` enum('true','false') NOT NULL default 'false',
   `last_send` datetime default NULL,
   PRIMARY KEY  (`user_id`),
   UNIQUE KEY `user_mail_notification_ui1` (`check_key`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `piwigo_users`
@@ -607,9 +609,9 @@ CREATE TABLE `piwigo_user_mail_notification` (
 DROP TABLE IF EXISTS `piwigo_users`;
 CREATE TABLE `piwigo_users` (
   `id` mediumint(8) unsigned NOT NULL auto_increment,
-  `username` varchar(100) binary NOT NULL default '',
+  `username` varchar(100) COLLATE utf8mb4_bin NOT NULL default '',
   `password` varchar(255) default NULL,
   `mail_address` varchar(255) default NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `users_ui1` (`username`)
-) ENGINE=MyISAM;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

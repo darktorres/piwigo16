@@ -221,8 +221,8 @@ final readonly class InstallController implements ControllerInterface
 
                 $configService = Kernel::service(ConfigService::class);
 
-                InstallService::executeSqlFile($this->paths->root . 'install/piwigo_structure-mysql.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
-                InstallService::executeSqlFile($this->paths->root . 'install/config.sql', DEFAULT_PREFIX_TABLE, $prefixeTable, 'mysql');
+                InstallService::executeSqlFile($this->paths->root . 'install/piwigo_structure-mysql.sql', DEFAULT_PREFIX_TABLE, $prefixeTable);
+                InstallService::executeSqlFile($this->paths->root . 'install/config.sql', DEFAULT_PREFIX_TABLE, $prefixeTable);
 
                 Dml::singleInsert($prefixeTable . 'config', [
                     'param'   => 'secret_key',

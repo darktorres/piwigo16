@@ -43,6 +43,12 @@ final class DbConnection
             'password' => Config::dbPassword(),
             'dbname'  => Config::dbName(),
             'charset' => 'utf8mb4',
+            // Return native int/float types instead of strings for integer
+            // and floating-point columns. Without this, mysqli stringifies
+            // every numeric column and every read site must re-cast.
+            'driverOptions' => [
+                MYSQLI_OPT_INT_AND_FLOAT_NATIVE => true,
+            ],
         ];
 
         // A host starting with '/' is treated as a Unix socket path.

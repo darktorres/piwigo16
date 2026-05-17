@@ -7,12 +7,14 @@ namespace Piwigo\Image;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
+use Piwigo\Core\Paths;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class DerivativeService
 {
     public function __construct(
         private EventDispatcherInterface $dispatcher,
+        private Paths $paths,
     ) {
     }
     /**
@@ -41,7 +43,7 @@ final readonly class DerivativeService
             return;
         }
 
-        $srcPath   = PHPWG_ROOT_PATH . $srcImage->rel_path;
+        $srcPath   = $this->paths->root . $srcImage->rel_path;
         $derivPath = $derivImage->getPath();
 
         $srcMtime = Filesystem::tryFileMtime($srcPath);
@@ -94,7 +96,7 @@ final readonly class DerivativeService
 
         if ($params->willWatermark($d_size)) {
             $wm       = ImageStdParams::getWatermark();
-            $wm_image = new PwgImage(PHPWG_ROOT_PATH . $wm->file, $this->dispatcher);
+            $wm_image = new PwgImage($this->paths->root . $wm->file, $this->dispatcher);
             /** @var array<int, int> $wm_size */
             $wm_size  = [$wm_image->getWidth(), $wm_image->getHeight()];
 

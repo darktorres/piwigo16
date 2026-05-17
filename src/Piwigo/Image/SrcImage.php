@@ -6,6 +6,7 @@ namespace Piwigo\Image;
 
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Event\Picture\GetMimetypeLocation;
 use Piwigo\Event\Picture\GetSrcImageUrl;
@@ -59,13 +60,14 @@ final class SrcImage
             Kernel::service(EventDispatcherInterface::class)->dispatch($mimeEvent);
             $this->rel_path = $mimeEvent->url;
             $this->flags |= self::IS_MIMETYPE;
-            if (($size = StringUtil::pwgSafeGetimagesize(PHPWG_ROOT_PATH.$this->rel_path)) === false) {
+            $rootPath = Kernel::service(Paths::class)->root;
+            if (($size = StringUtil::pwgSafeGetimagesize($rootPath . $this->rel_path)) === false) {
                 if ('svg' == $ext) {
                     $this->rel_path = $path;
                 } else {
                     $this->rel_path = 'themes/_base/icon/mimetypes/unknown.png';
                 }
-                $size = StringUtil::pwgSafeGetimagesize(PHPWG_ROOT_PATH.$this->rel_path);
+                $size = StringUtil::pwgSafeGetimagesize($rootPath . $this->rel_path);
             }
             if ($size === false) {
                 $this->size = null;
@@ -111,7 +113,7 @@ final class SrcImage
 
     public function getPath(): string
     {
-        return PHPWG_ROOT_PATH.$this->rel_path;
+        return Kernel::service(Paths::class)->root . $this->rel_path;
     }
 
     /**

@@ -63,6 +63,7 @@ use Piwigo\Http\Middleware\FilterMiddleware;
 use Piwigo\Http\Middleware\RoutingMiddleware;
 use Piwigo\Http\Middleware\SessionMiddleware;
 use Piwigo\Http\RedirectResponder;
+use Piwigo\Image\DerivativePipeline;
 use Piwigo\Image\DerivativeService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Job\MessengerFactory;
@@ -203,7 +204,8 @@ return [
     // Doctrine DBAL shared connection — applies utf8mb4 and removes ONLY_FULL_GROUP_BY.
     Connection::class => factory(static fn (): Connection => DbConnection::build()),
 
-    DerivativeService::class   => factory(static fn (EventDispatcherInterface $d): DerivativeService => new DerivativeService($d)),
+    DerivativeService::class   => factory(static fn (EventDispatcherInterface $d, Paths $paths): DerivativeService => new DerivativeService($d, $paths)),
+    DerivativePipeline::class  => factory(static fn (Paths $paths): DerivativePipeline => new DerivativePipeline($paths)),
 
     // Symfony Messenger bus — transports backed by the shared DBAL connection.
     MessageBusInterface::class => factory(static fn (Connection $conn): MessageBusInterface => MessengerFactory::build($conn)),

@@ -7,11 +7,16 @@ namespace Piwigo\Image;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
+use Piwigo\Core\Paths;
 use Piwigo\Url\UrlService;
 
-final class DerivativePipeline
+final readonly class DerivativePipeline
 {
-    public static function ierror(string $msg, int $code): never
+    public function __construct(private Paths $paths)
+    {
+    }
+
+    public function ierror(string $msg, int $code): never
     {
         $logger = LoggerRegistry::current();
         if ($code == 301 || $code == 302) {
@@ -39,7 +44,7 @@ final class DerivativePipeline
         exit;
     }
 
-    public static function timeStep(float &$step): int
+    public function timeStep(float &$step): int
     {
         $tmp  = $step;
         $step = microtime(true);
@@ -47,10 +52,10 @@ final class DerivativePipeline
     }
 
     /** @param string[] $tokens */
-    public static function parseCustomParams(array $tokens): DerivativeParams
+    public function parseCustomParams(array $tokens): DerivativeParams
     {
         if (count($tokens) < 1) {
-            self::ierror('Empty array while parsing Sizing', 400);
+            $this->ierror('Empty array while parsing Sizing', 400);
         }
 
         $crop     = 0;
@@ -65,7 +70,7 @@ final class DerivativePipeline
         } else {
             $size = DerivativeEncoding::urlToSize($token);
             if (count($tokens) < 2) {
-                self::ierror('Sizing arr', 400);
+                $this->ierror('Sizing arr', 400);
             }
             $token    = array_shift($tokens);
             $crop     = DerivativeEncoding::charToFraction($token);
@@ -75,7 +80,7 @@ final class DerivativePipeline
         return new DerivativeParams(new SizingParams($size, $crop, $min_size ?? [0, 0]));
     }
 
-    public static function parseRequest(ImageDerivativeContext $ctx): DerivativeParams
+    public function parseRequest(ImageDerivativeContext $ctx): DerivativeParams
     {
         /** @var mixed $reqRaw */
         $reqRaw = $_SERVER['QUERY_STRING'] ?? '';
@@ -84,7 +89,7 @@ final class DerivativePipeline
             $req = substr($req, 0, $pos);
         }
         $req           = rawurldecode($req);
-        $ctx->rootPath = PHPWG_ROOT_PATH;
+        $ctx->rootPath = $this->paths->root;
 
         $req = ltrim($req, '/');
         if (str_starts_with($req, 'i/')) {
@@ -92,19 +97,19 @@ final class DerivativePipeline
         }
 
         foreach (preg_split('#/+#', $req) ?: [] as $token) {
-            preg_match(Config::syncCharsRegex(), $token) or self::ierror('Invalid chars in request', 400);
+            preg_match(Config::syncCharsRegex(), $token) or $this->ierror('Invalid chars in request', 400);
         }
 
-        $ctx->derivativePath = PHPWG_ROOT_PATH . Config::derivativeDir() . $req;
+        $ctx->derivativePath = $this->paths->root . Config::derivativeDir() . $req;
 
         $pos = strrpos($req, '.');
-        $pos !== false || self::ierror('Missing .', 400);
+        $pos !== false || $this->ierror('Missing .', 400);
         $ext                = substr($req, $pos);
         $ctx->derivativeExt = $ext;
         $req                = substr($req, 0, $pos);
 
         $pos = strrpos($req, '-');
-        $pos !== false || self::ierror('Missing -', 400);
+        $pos !== false || $this->ierror('Missing -', 400);
         $deriv = substr($req, $pos + 1);
         $req   = substr($req, 0, $pos);
         $deriv = explode('_', $deriv);
@@ -121,47 +126,47 @@ final class DerivativePipeline
             if (DerivativeEncoding::derivativeToUrl(DerivativeSize::Custom->value) == $deriv[0]) {
                 $ctx->derivativeType = DerivativeSize::Custom->value;
             } else {
-                self::ierror('Unknown parsing type', 400);
+                $this->ierror('Unknown parsing type', 400);
             }
         }
         array_shift($deriv);
 
         if ($ctx->derivativeType == DerivativeSize::Custom->value) {
-            $params = $ctx->derivativeParams = self::parseCustomParams($deriv);
+            $params = $ctx->derivativeParams = $this->parseCustomParams($deriv);
             ImageStdParams::applyGlobal($params);
 
             if ($params->sizing->ideal_size[0] < 20 || $params->sizing->ideal_size[1] < 20) {
-                self::ierror('Invalid size', 400);
+                $this->ierror('Invalid size', 400);
             }
             if ($params->sizing->max_crop < 0 || $params->sizing->max_crop > 1) {
-                self::ierror('Invalid crop', 400);
+                $this->ierror('Invalid crop', 400);
             }
             $keyTokens = [];
             $params->addUrlTokens($keyTokens);
             $key = implode('_', $keyTokens);
             if (!isset(ImageStdParams::$custom[$key])) {
-                self::ierror('Size not allowed', 403);
+                $this->ierror('Size not allowed', 403);
             }
         }
 
-        if (is_file(PHPWG_ROOT_PATH . $req . $ext)) {
+        if (is_file($this->paths->root . $req . $ext)) {
             $req = './' . $req;
-        } elseif (is_file(PHPWG_ROOT_PATH . '../' . $req . $ext)) {
+        } elseif (is_file($this->paths->root . '../' . $req . $ext)) {
             $req = '../' . $req;
         }
 
         $ctx->srcLocation = $req . $ext;
-        $ctx->srcPath     = PHPWG_ROOT_PATH . $ctx->srcLocation;
+        $ctx->srcPath     = $this->paths->root . $ctx->srcLocation;
         $ctx->srcUrl      = $ctx->rootPath . $ctx->srcLocation;
 
         $dp = $ctx->derivativeParams;
         if (!($dp instanceof DerivativeParams)) {
-            self::ierror('Invalid derivative params', 400);
+            $this->ierror('Invalid derivative params', 400);
         }
         return $dp;
     }
 
-    public static function trySwitchSource(DerivativeParams $params, ?int $original_mtime, ImageDerivativeContext $ctx): bool
+    public function trySwitchSource(DerivativeParams $params, ?int $original_mtime, ImageDerivativeContext $ctx): bool
     {
         if ($ctx->originalSize === null) {
             return false;
@@ -224,14 +229,14 @@ final class DerivativePipeline
             $params->use_watermark = false;
             $params->sharpen       = min(1, $params->sharpen);
             $ctx->srcPath          = $candidate_path;
-            $ctx->srcUrl           = $ctx->rootPath . substr($candidate_path, strlen(PHPWG_ROOT_PATH));
+            $ctx->srcUrl           = $ctx->rootPath . substr($candidate_path, strlen($this->paths->root));
             $ctx->rotationAngle    = 0;
             return true;
         }
         return false;
     }
 
-    public static function sendDerivative(int|false $expires, ImageDerivativeContext $ctx): void
+    public function sendDerivative(int|false $expires, ImageDerivativeContext $ctx): void
     {
         if (isset($_GET['ajaxload']) && $_GET['ajaxload'] == 'true') {
             echo json_encode(['url' => UrlService::embellishUrl(UrlService::getAbsoluteRootUrl() . $ctx->derivativePath)]);
@@ -239,7 +244,7 @@ final class DerivativePipeline
         }
         $fp = fopen($ctx->derivativePath, 'rb');
         if ($fp === false) {
-            self::ierror('Cannot open derivative file', 500);
+            $this->ierror('Cannot open derivative file', 500);
         }
         $fstat = fstat($fp);
         header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $fstat !== false ? $fstat['mtime'] : 0) . ' GMT');

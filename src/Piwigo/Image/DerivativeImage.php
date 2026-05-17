@@ -7,6 +7,7 @@ namespace Piwigo\Image;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Event\Picture\GetDerivativeUrl;
 use Piwigo\Url\UrlService;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -197,7 +198,7 @@ final class DerivativeImage
 
         $url_style = Config::derivativeUrlStyle();
         if (!$url_style) {
-            $mtime = Filesystem::tryFileMtime(PHPWG_ROOT_PATH.$rel_path);
+            $mtime = Filesystem::tryFileMtime(Kernel::service(Paths::class)->root . $rel_path);
             if ($mtime === false or $mtime < $params->last_mod_time) {
                 $is_cached = false;
                 $url_style = 2;
@@ -215,7 +216,7 @@ final class DerivativeImage
 
     public function getPath(): string
     {
-        return PHPWG_ROOT_PATH.$this->rel_path;
+        return Kernel::service(Paths::class)->root . $this->rel_path;
     }
 
     /**

@@ -72,6 +72,7 @@ rules:
     - Piwigo\Tools\PhpStan\NoDynamicNewRule
     - Piwigo\Tools\PhpStan\NoErrorSuppressionRule
     - Piwigo\Tools\PhpStan\NoGlobalInSrcRule
+    - Piwigo\Tools\PhpStan\SerializeAllowedRule
     - Piwigo\Tools\PhpStan\StrictTypesRequiredRule
 services:
     - Piwigo\Tools\PhpStan\PiwigoLatteEngineResolver

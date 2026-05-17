@@ -17,7 +17,6 @@ use Piwigo\Ws\Encoder\PwgResponseEncoder;
 use Piwigo\Ws\Protocol\PwgJsonEncoder;
 use Piwigo\Ws\Protocol\PwgRestEncoder;
 use Piwigo\Ws\Protocol\PwgRestRequestHandler;
-use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -510,9 +509,6 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         switch ($responseFormat) {
             case 'rest':
                 $encoder = new PwgRestEncoder();
-                break;
-            case 'php':
-                $encoder = new PwgSerialPhpEncoder();
                 break;
             case 'json':
                 $encoder = new PwgJsonEncoder();

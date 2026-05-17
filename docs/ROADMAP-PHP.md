@@ -2719,4 +2719,3 @@ Apache smoke on all five entry shapes (`/`, `/install`, `/upgrade`,
 `/upgrade_feed`, `/i/<derivative>`) returns 200; nested `/category/1`
 returns 200; rendered HTML contains zero filesystem paths (the
 regression-detection grep that caught the §3e2/§4.5 bug).
-

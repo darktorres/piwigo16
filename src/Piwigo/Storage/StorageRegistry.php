@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Storage;
 
 use League\Flysystem\FilesystemOperator;
+use Piwigo\Core\Paths;
 
 /**
  * Named-disk registry. Each entry is a lazy closure that creates the
@@ -29,14 +30,19 @@ final class StorageRegistry
     {
     }
 
-    /** Load factories from config/storage.php (returns an array of closures). */
-    public static function fromConfig(string $configPath): self
+    /**
+     * Load factories from config/storage.php. The file returns a wrapper
+     * closure of shape `Closure(Paths): array<string, Closure(): FilesystemOperator>`
+     * — we invoke it with the supplied Paths so each disk closure can build
+     * its adapter root from the install layout.
+     */
+    public static function fromConfig(string $configPath, Paths $paths): self
     {
-        /** @var array<string, \Closure(): FilesystemOperator> $factories */
+        /** @var \Closure(Paths): array<string, \Closure(): FilesystemOperator> $loader */
         // Config path is a parameter — Psalm cannot follow the require.
         /** @psalm-suppress UnresolvableInclude */
-        $factories = require $configPath;
-        return new self($factories);
+        $loader = require $configPath;
+        return new self($loader($paths));
     }
 
     public static function setInstance(self $registry): void

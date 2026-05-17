@@ -135,11 +135,12 @@ final class StorageRegistryTest extends TestCase
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\FilesystemOperator;
-return [
+use Piwigo\Core\Paths;
+return static fn (Paths $paths): array => [
     "scratch" => static fn (): FilesystemOperator => new Filesystem(new LocalFilesystemAdapter(' . var_export($tmpDir, true) . ')),
 ];
 ');
-        $registry = StorageRegistry::fromConfig($configPath);
+        $registry = StorageRegistry::fromConfig($configPath, \Piwigo\Core\Paths::fromRoot($this->tmpDir));
         self::assertInstanceOf(FilesystemOperator::class, $registry->get('scratch'));
     }
 }

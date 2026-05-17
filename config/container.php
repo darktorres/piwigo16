@@ -194,8 +194,8 @@ return [
     LoggerInterface::class => factory(
         fn () => LoggerRegistry::isInitialized() ? LoggerRegistry::current() : new NullLogger()
     ),
-    StorageRegistry::class => factory(static function (): StorageRegistry {
-        $registry = StorageRegistry::fromConfig(PHPWG_ROOT_PATH . 'config/storage.php');
+    StorageRegistry::class => factory(static function (Paths $paths): StorageRegistry {
+        $registry = StorageRegistry::fromConfig($paths->config . 'storage.php', $paths);
         StorageRegistry::setInstance($registry);
         return $registry;
     }),
@@ -228,7 +228,7 @@ return [
     NotificationService::class => factory(static fn (Connection $conn, HtmlService $h, UrlGenerator $ug, PermissionService $perm, UrlService $us, CacheItemPoolInterface $pool): NotificationService => new NotificationService($conn, $h, $ug, $perm, $us, $pool)),
     PluginMigrationLedger::class  => factory(static fn (Connection $conn): PluginMigrationLedger => new PluginMigrationLedger($conn, Config::dbPrefix())),
     PluginMigrationRunner::class  => factory(static fn (Connection $conn, PluginMigrationLedger $ledger, LoggerInterface $log): PluginMigrationRunner => new PluginMigrationRunner($conn, $ledger, $log)),
-    PluginRegistry::class      => factory(static fn (PluginRepository $repo, LoggerInterface $log, PluginMigrationRunner $runner): PluginRegistry => new PluginRegistry($repo, $log, PHPWG_ROOT_PATH . 'plugins', PHPWG_ROOT_PATH . 'docs/schemas/plugin.schema.json', $runner)),
+    PluginRegistry::class      => factory(static fn (PluginRepository $repo, LoggerInterface $log, PluginMigrationRunner $runner, Paths $paths): PluginRegistry => new PluginRegistry($repo, $log, $paths->root . 'plugins', $paths->root . 'docs/schemas/plugin.schema.json', $runner)),
     SearchService::class       => factory(static fn (SearchRepository $repo, SearchFilterViewRepository $fv, Connection $conn, LoggerInterface $log, CategoryService $cat, HtmlService $h, PermissionService $perm, PreferencesService $pref, TagService $tag, UrlService $u, UserService $us, CacheItemPoolInterface $pool, EventDispatcherInterface $d): SearchService => new SearchService($repo, $fv, $conn, $log, $cat, $h, $perm, $pref, $tag, $u, $us, $pool, $d)),
     SessionService::class      => factory(static fn (SessionRepository $repo): SessionService => new SessionService($repo)),
     TagService::class          => factory(static fn (Connection $conn, HtmlService $h, TagRepository $repo, PermissionService $perm, CacheItemPoolInterface $pool, EventDispatcherInterface $dispatcher): TagService => new TagService($conn, $h, $repo, $perm, $pool, $dispatcher)),
@@ -245,7 +245,7 @@ return [
     CategoriesEndpoints::class       => factory(static fn (Connection $conn, CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, HtmlService $h, ImageAdminService $iA, ImageRepository $i, PermissionService $perm, UrlGenerator $ug, UrlService $us, UserAdminService $uA, UserRepository $u, ActivityLogger $al, CsrfService $csrf, WsHelper $ws, EventDispatcherInterface $d): CategoriesEndpoints => new CategoriesEndpoints($conn, $catA, $catR, $cat, $h, $iA, $i, $perm, $ug, $us, $uA, $u, $al, $csrf, $ws, $d)),
     ImagesEndpoints::class           => factory(static fn (Connection $conn, CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, CommentService $com, HtmlService $h, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, PermissionService $perm, RateRepository $rR, RateService $rate, SearchService $sr, TagAdminService $tA, TagService $tag, UploadService $up, UrlService $u, UserAdminService $uA, ActivityLogger $al, CsrfService $csrf, WsHelper $ws, EphemeralKeyService $eks, EventDispatcherInterface $d): ImagesEndpoints => new ImagesEndpoints($conn, $catA, $catR, $cat, $com, $h, $iA, $i, $mA, $perm, $rR, $rate, $sr, $tA, $tag, $up, $u, $uA, $al, $csrf, $ws, $eks, $d)),
     AdminPageRegistry::class         => factory(static fn (): AdminPageRegistry => new AdminPageRegistry()),
-    AssetService::class              => factory(static fn (LoggerInterface $log): AssetService => new AssetService(PHPWG_ROOT_PATH . 'plugins', $log)),
+    AssetService::class              => factory(static fn (LoggerInterface $log, Paths $paths): AssetService => new AssetService($paths->root . 'plugins', $log)),
     AdminService::class              => factory(static fn (Connection $conn, CategoryRepository $catR, DateService $d, HistoryRepository $hR, ImageRepository $i, TagRepository $tR, UserRepository $u, CacheItemPoolInterface $pool): AdminService => new AdminService($conn, $catR, $d, $hR, $i, $tR, $u, $pool)),
     CategoryAdminService::class      => factory(static function (ContainerInterface $c): CategoryAdminService {
         return (new \ReflectionClass(CategoryAdminService::class))->newLazyProxy(
@@ -335,8 +335,8 @@ return [
     RedirectResponder::class   => factory(static fn (LangService $lang, EventDispatcherInterface $dispatcher): RedirectResponder => new RedirectResponder($lang, $dispatcher)),
     TelemetryService::class    => factory(static fn (Connection $conn, ConfigService $cfg, LoggerInterface $log, AdminService $admin, ExecutionMutex $mutex): TelemetryService => new TelemetryService($conn, $cfg, $log, $admin, $mutex)),
     ThemeService::class        => factory(static fn (ThemeRepository $r, EventDispatcherInterface $dispatcher): ThemeService => new ThemeService($r, $dispatcher)),
-    ThemeRegistry::class       => factory(static fn (ThemeRepository $r, LoggerInterface $log, EventDispatcherInterface $dispatcher): ThemeRegistry => new ThemeRegistry($r, $log, PHPWG_ROOT_PATH . 'themes', PHPWG_ROOT_PATH . 'docs/schemas/theme.schema.json', $dispatcher)),
-    TemplateResolver::class    => factory(static fn (ThemeRegistry $reg): TemplateResolver => new TemplateResolver($reg, PHPWG_ROOT_PATH . 'themes')),
+    ThemeRegistry::class       => factory(static fn (ThemeRepository $r, LoggerInterface $log, EventDispatcherInterface $dispatcher, Paths $paths): ThemeRegistry => new ThemeRegistry($r, $log, $paths->root . 'themes', $paths->root . 'docs/schemas/theme.schema.json', $dispatcher)),
+    TemplateResolver::class    => factory(static fn (ThemeRegistry $reg, Paths $paths): TemplateResolver => new TemplateResolver($reg, $paths->root . 'themes')),
 
     // Domain repositories — injected with the shared DBAL connection and table prefix.
     TagRepository::class          => factory(static fn (Connection $conn): TagRepository => new TagRepository($conn, Config::dbPrefix())),

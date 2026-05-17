@@ -5,6 +5,7 @@ declare(strict_types=1);
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Piwigo\Config\Config;
+use Piwigo\Core\Paths;
 
 /**
  * Named-disk configuration for StorageRegistry.
@@ -50,40 +51,40 @@ use Piwigo\Config\Config;
  *
  * All other disks remain on local storage — only the closure changes.
  */
-return [
+return static fn (Paths $paths): array => [
     // User photo uploads: ./upload/YYYY/MM/DD/
     'uploads' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter(rtrim(PHPWG_ROOT_PATH . Config::uploadDir(), '/'))
+        new LocalFilesystemAdapter(rtrim($paths->root . Config::uploadDir(), '/'))
     ),
 
     // Derivative/thumbnail tree: _data/i/
     'derivatives' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter(PHPWG_ROOT_PATH . Config::dataLocation() . 'i')
+        new LocalFilesystemAdapter($paths->root . Config::dataLocation() . 'i')
     ),
 
     // Watermark PNG files: local/watermarks/
     'watermarks' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks')
+        new LocalFilesystemAdapter($paths->root . PWG_LOCAL_DIR . 'watermarks')
     ),
 
     // Theme files
     'themes' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter(PHPWG_ROOT_PATH . ltrim(Config::themesDir(), './'))
+        new LocalFilesystemAdapter($paths->root . ltrim(Config::themesDir(), './'))
     ),
 
     // Plugin files
     'plugins' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter(PHPWG_ROOT_PATH . 'plugins')
+        new LocalFilesystemAdapter($paths->root . 'plugins')
     ),
 
     // Data exports
     'exports' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter(PHPWG_ROOT_PATH . Config::dataLocation() . 'exports')
+        new LocalFilesystemAdapter($paths->root . Config::dataLocation() . 'exports')
     ),
 
     // Site-local overrides: local/watermarks/, local/logo/, local/config/, …
     'local' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter(PHPWG_ROOT_PATH . PWG_LOCAL_DIR)
+        new LocalFilesystemAdapter($paths->root . PWG_LOCAL_DIR)
     ),
 
     // Temporary scratch space (chunk assembly, image processing)

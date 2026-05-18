@@ -869,7 +869,7 @@ CREATE TABLE `piwigo_sites` (
 
 LOCK TABLES `piwigo_sites` WRITE;
 /*!40000 ALTER TABLE `piwigo_sites` DISABLE KEYS */;
-INSERT INTO `piwigo_sites` VALUES (1,'/home/torres/piwigo16/galleries/');
+INSERT INTO `piwigo_sites` VALUES (1,'./galleries/');
 /*!40000 ALTER TABLE `piwigo_sites` ENABLE KEYS */;
 UNLOCK TABLES;
 

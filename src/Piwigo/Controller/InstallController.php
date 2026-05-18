@@ -210,7 +210,7 @@ final readonly class InstallController implements ControllerInterface
                 InstallService::activateCorePlugins();
 
                 $conn = Kernel::service(Connection::class);
-                $conn->insert(Tables::sites(), ['id' => 1, 'galleries_url' => $this->paths->root . 'galleries/']);
+                $conn->insert(Tables::sites(), ['id' => 1, 'galleries_url' => './galleries/']);
 
                 $conn->insert(Tables::users(), ['id' => 1, 'username' => $admin_name, 'password' => password_hash($admin_pass1, PASSWORD_BCRYPT), 'mail_address' => $admin_mail]);
                 $conn->insert(Tables::users(), ['id' => 2, 'username' => 'guest']);

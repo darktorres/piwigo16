@@ -52,6 +52,28 @@ final class RateRepository extends AbstractRepository
         $qb->executeStatement();
     }
 
+    /**
+     * Delete rate rows matching ws/rate.delete's optional filter combination:
+     * a user_id is always required; anonymous_id and element_id are optional
+     * additional restrictions. Returns the number of rows removed.
+     */
+    public function deleteByUserOptionalAnonAndElement(int $userId, ?string $anonId, ?int $elementId): int
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->delete($this->table('rate'))
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId);
+        if ($anonId !== null && $anonId !== '') {
+            $qb->andWhere('anonymous_id = :anonId')
+               ->setParameter('anonId', $anonId);
+        }
+        if ($elementId !== null) {
+            $qb->andWhere('element_id = :elementId')
+               ->setParameter('elementId', $elementId);
+        }
+        return (int) $qb->executeStatement();
+    }
+
     /** Reassign all rate rows from $oldAnonId to $newAnonId for the given user. */
     public function updateAnonId(int $userId, string $oldAnonId, string $newAnonId): void
     {

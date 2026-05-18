@@ -612,6 +612,27 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Return summary image rows used by the activity-feed endpoint: id,
+     * label (= COALESCE(name, file)), filesize, file, path, representative_ext.
+     * Result keyed by id.
+     *
+     * @param  list<int> $ids
+     * @return array<int|string, array<string, mixed>>
+     */
+    public function findActivityFeedSummaryByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'IF(name IS NULL, file, name) AS label', 'filesize', 'file', 'path', 'representative_ext')
+            ->from($this->table('images'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        return array_column($qb->executeQuery()->fetchAllAssociative(), null, 'id');
+    }
+
+    /**
      * Return an image_format row by format_id, or null when not found.
      *
      * @return array<string, mixed>|null
@@ -648,6 +669,30 @@ final class ImageRepository extends AbstractRepository
             [ParameterType::INTEGER, ...$permTypes],
         )->fetchOne();
         return $value !== false;
+    }
+
+    /**
+     * Return a window of "older than $startId" image rows used by the
+     * missing-derivatives generator. Pulls (id, path, representative_ext,
+     * width, height, rotation) ordered by id DESC, with caller-supplied
+     * extra WHERE clauses joined in.
+     *
+     * @param  list<string> $extraWhereClauses
+     * @return list<array<string, mixed>>
+     */
+    public function findDerivativeCandidatesBeforeId(int $startId, array $extraWhereClauses, int $limit): array
+    {
+        $clauses = $extraWhereClauses;
+        $clauses[] = 'id < ?';
+        $sql = 'SELECT id, path, representative_ext, width, height, rotation'
+            . ' FROM ' . $this->table('images')
+            . ' WHERE ' . implode(' AND ', $clauses)
+            . ' ORDER BY id DESC LIMIT ' . $limit;
+        return $this->conn->executeQuery(
+            $sql,
+            [$startId],
+            [\Doctrine\DBAL\ParameterType::INTEGER],
+        )->fetchAllAssociative();
     }
 
     /** Count images whose storage_category_id is NOT NULL (filesystem-synced). */

@@ -31,6 +31,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Cache\CacheFactory;
+use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Calendar\CalendarRepository;
 use Piwigo\Calendar\CalendarService;
 use Piwigo\Category\CategoryCatsRenderer;
@@ -240,7 +241,7 @@ return [
     UrlService::class          => factory(static fn (CategoryService $cat, HtmlService $h, TagService $tag, PermissionService $perm, UserRepository $u, EventDispatcherInterface $dispatcher): UrlService => new UrlService($cat, $h, $tag, $perm, $u, $dispatcher)),
     UrlGenerator::class          => factory(static fn (Router $r, UrlService $u): UrlGenerator => new UrlGenerator($r, $u)),
     SectionInitializer::class    => factory(static fn (CalendarService $cal, CategoryRepository $catR, CategoryService $cat, HtmlService $h, ImageRepository $i, PermissionService $perm, SearchService $sr, SessionService $sess, TagService $tag, UrlService $u, UserRepository $ur, UserService $us, RedirectResponder $redirect, CacheItemPoolInterface $pool, EventDispatcherInterface $dispatcher): SectionInitializer => new SectionInitializer($cal, $catR, $cat, $h, $i, $perm, $sr, $sess, $tag, $u, $ur, $us, $redirect, $pool, $dispatcher)),
-    GeneralEndpoints::class          => factory(static fn (Connection $conn, AuthService $auth, CategoryRepository $catR, CommentRepository $com, CookieService $cookie, DateService $d, HistoryAdminService $hA, HtmlService $h, ImageAdminService $iA, ImageRepository $i, PermissionService $perm, PictureService $pic, RateService $rate, SearchRepository $sR, TagRepository $tR, UrlGenerator $ug, UrlService $us, UserAdminService $uA, UserRepository $u, WsHelper $ws, CacheItemPoolInterface $pool, ActivityLogger $al, CsrfService $csrf, InputValidator $iv, EventDispatcherInterface $dispatcher): GeneralEndpoints => new GeneralEndpoints($conn, $auth, $catR, $com, $cookie, $d, $hA, $h, $iA, $i, $perm, $pic, $rate, $sR, $tR, $ug, $us, $uA, $u, $ws, $pool, $al, $csrf, $iv, $dispatcher)),
+    GeneralEndpoints::class          => factory(static fn (ActivityRepository $aR, AuthService $auth, CaddieRepository $cadR, CategoryRepository $catR, CommentRepository $com, CookieService $cookie, DateService $d, HistoryAdminService $hA, HtmlService $h, ImageAdminService $iA, ImageRepository $i, PermissionService $perm, PictureService $pic, RateRepository $rR, RateService $rate, SearchRepository $sR, TagRepository $tR, UrlGenerator $ug, UrlService $us, UserAdminService $uA, UserRepository $u, WsHelper $ws, CacheItemPoolInterface $pool, ActivityLogger $al, CsrfService $csrf, InputValidator $iv, EventDispatcherInterface $dispatcher): GeneralEndpoints => new GeneralEndpoints($aR, $auth, $cadR, $catR, $com, $cookie, $d, $hA, $h, $iA, $i, $perm, $pic, $rR, $rate, $sR, $tR, $ug, $us, $uA, $u, $ws, $pool, $al, $csrf, $iv, $dispatcher)),
     TagsEndpoints::class             => factory(static fn (CategoryService $cat, HtmlService $h, ImageRepository $i, TagAdminService $tA, TagRepository $tR, TagService $tag, UrlService $u, ActivityLogger $al, CsrfService $csrf, WsHelper $ws, EventDispatcherInterface $d): TagsEndpoints => new TagsEndpoints($cat, $h, $i, $tA, $tR, $tag, $u, $al, $csrf, $ws, $d)),
     CommentsEndpoints::class         => factory(static fn (CommentRepository $cR, CommentService $com, DateService $d, UrlGenerator $ug, CsrfService $csrf, EventDispatcherInterface $dispatcher): CommentsEndpoints => new CommentsEndpoints($cR, $com, $d, $ug, $csrf, $dispatcher)),
     PermissionsEndpoints::class      => factory(static fn (CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, PermissionRepository $perm, CsrfService $csrf): PermissionsEndpoints => new PermissionsEndpoints($catA, $catR, $cat, $perm, $csrf)),
@@ -344,6 +345,7 @@ return [
     CommentRepository::class      => factory(static fn (Connection $conn): CommentRepository => new CommentRepository($conn, Config::dbPrefix())),
     SearchRepository::class       => factory(static fn (Connection $conn): SearchRepository => new SearchRepository($conn, Config::dbPrefix())),
     DbMaintenanceRepository::class => factory(static fn (Connection $conn): DbMaintenanceRepository => new DbMaintenanceRepository($conn, Config::dbPrefix())),
+    CaddieRepository::class       => factory(static fn (Connection $conn): CaddieRepository => new CaddieRepository($conn, Config::dbPrefix())),
     CategoryRepository::class     => factory(static fn (Connection $conn): CategoryRepository => new CategoryRepository($conn, Config::dbPrefix())),
     ImageRepository::class        => factory(static fn (Connection $conn): ImageRepository => new ImageRepository($conn, Config::dbPrefix())),
     UserRepository::class         => factory(static fn (Connection $conn): UserRepository => new UserRepository($conn, Config::dbPrefix())),

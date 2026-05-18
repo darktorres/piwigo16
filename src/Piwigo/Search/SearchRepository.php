@@ -14,6 +14,26 @@ use Piwigo\Db\AbstractRepository;
 final class SearchRepository extends AbstractRepository
 {
     /**
+     * Return search rows keyed by id, restricted to the supplied id list.
+     * Used by the activity-feed endpoint to enrich saved-search references.
+     *
+     * @param  list<int> $ids
+     * @return array<int|string, mixed>  id → rules JSON string
+     */
+    public function findRulesByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'rules')
+            ->from($this->table('search'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        return array_column($qb->executeQuery()->fetchAllAssociative(), 'rules', 'id');
+    }
+
+    /**
      * Return the saved-search row whose id or search_uuid matches $candidate.
      * $idColumn is one of 'id' / 'search_uuid' (caller-controlled, validated
      * by the caller).

@@ -208,6 +208,72 @@ final class ActivityRepository extends AbstractRepository
     }
 
     /**
+     * Paginated activity rows for the admin history endpoint. Filters each
+     * bind as DBAL parameters; the connections-mode controls visibility of
+     * login/logout rows ('none' = hide all, 'admins_only' = hide unless the
+     * object_id is in $adminIds).
+     *
+     * @param  list<int> $adminIds  required when $connectionsMode = 'admins_only'
+     * @return list<array<string, mixed>>
+     */
+    public function findActivityPage(
+        ?int $performedBy,
+        ?string $action,
+        ?string $object,
+        ?string $dateMin,
+        ?string $dateMax,
+        ?int $objectId,
+        string $connectionsMode,
+        array $adminIds,
+        int $limit,
+        int $offset,
+    ): array {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('activity_id', 'performed_by', 'object', 'object_id', 'action', 'session_idx', 'ip_address', 'occured_on', 'details', 'user_agent')
+            ->from($this->table('activity'))
+            ->where("object != 'system'")
+            ->orderBy('activity_id', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
+        if ($performedBy !== null) {
+            $qb->andWhere('performed_by = :uid')
+               ->setParameter('uid', $performedBy);
+        }
+        if ($action !== null) {
+            $qb->andWhere('action = :action')
+               ->setParameter('action', $action);
+        }
+        if ($object !== null) {
+            $qb->andWhere('object = :object')
+               ->setParameter('object', $object);
+        }
+        if ($dateMin !== null && $dateMin !== '') {
+            $qb->andWhere('occured_on >= :dmin')
+               ->setParameter('dmin', $dateMin);
+        }
+        if ($dateMax !== null && $dateMax !== '') {
+            $qb->andWhere('occured_on <= :dmax')
+               ->setParameter('dmax', $dateMax);
+        }
+        if ($objectId !== null) {
+            $qb->andWhere('object_id = :oid')
+               ->setParameter('oid', $objectId);
+        }
+        if ($connectionsMode === 'none') {
+            $qb->andWhere("action NOT IN ('login', 'logout')");
+        } elseif ($connectionsMode === 'admins_only') {
+            // Hide login/logout rows whose object_id is not an admin user id.
+            if ($adminIds === []) {
+                $qb->andWhere("action NOT IN ('login', 'logout')");
+            } else {
+                $qb->andWhere("NOT (action IN ('login', 'logout') AND object_id NOT IN (:adminIds))")
+                   ->setParameter('adminIds', $adminIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
+            }
+        }
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
      * Per-user_agent counter + first/last sighting timestamps, excluding the
      * generic "Mozilla/5*" browser bucket. Used by telemetry's "apps" feed.
      *

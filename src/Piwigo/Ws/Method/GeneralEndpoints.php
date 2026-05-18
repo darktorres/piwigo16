@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityLogger;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Admin\History\HistoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Auth\CookieService;
+use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
@@ -33,6 +34,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Picture\PictureService;
+use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Section\SectionContext;
@@ -57,8 +59,9 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class GeneralEndpoints
 {
     public function __construct(
-        private Connection $conn,
+        private ActivityRepository $activityRepository,
         private AuthService $authService,
+        private CaddieRepository $caddieRepository,
         private CategoryRepository $categoryRepository,
         private CommentRepository $commentRepository,
         private CookieService $cookieService,
@@ -69,6 +72,7 @@ final readonly class GeneralEndpoints
         private ImageRepository $imageRepository,
         private PermissionService $permissionService,
         private PictureService $pictureService,
+        private RateRepository $rateRepository,
         private RateService $rateService,
         private SearchRepository $searchRepository,
         private TagRepository $tagRepository,
@@ -146,17 +150,14 @@ final readonly class GeneralEndpoints
         Config::override('derivative_url_style', 2);
         $qlimit = min(5000, (int) ceil(max($imageCount / 500, $maxUrls / count($types))));
         /** @var array<string> $whereClauses */
-        $whereClauses   = $this->wsHelper->imageSqlFilter($params, '');
-        $whereClauses[] = 'id<start_id';
+        $whereClauses = $this->wsHelper->imageSqlFilter($params, '');
         if (!empty($params['ids'])) {
             $idsArr         = is_array($params['ids']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['ids']) : [];
             $whereClauses[] = 'id IN (' . implode(',', $idsArr) . ')';
         }
-        $queryModel = 'SELECT id, path, representative_ext, width, height, rotation FROM ' . Tables::images() . ' WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY id DESC LIMIT ' . $qlimit . ';';
-        $conn       = $this->conn;
-        $urls       = [];
+        $urls = [];
         do {
-            $rows   = $conn->executeQuery(str_replace('start_id', (string) $startId, $queryModel))->fetchAllAssociative();
+            $rows   = $this->imageRepository->findDerivativeCandidatesBeforeId($startId, array_values($whereClauses), $qlimit);
             $isLast = count($rows) < $qlimit;
             foreach ($rows as $row) {
                 $startId  = is_numeric($row['id']) ? (int) $row['id'] : 0;
@@ -272,36 +273,22 @@ final readonly class GeneralEndpoints
     #[ApiMethod(summary: 'Adds elements to the caddie. Returns the number of elements added.', tags: ['caddie'])]
     public function caddieAdd(array $params, PwgServer &$service): int
     {
-        $userId = CurrentUser::get()->id;
-        $query  = 'SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::caddie() . ' ON id=element_id AND user_id=' . $userId . ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['image_id']) ? $params['image_id'] : [])) . ') AND element_id IS NULL;';
-        $result = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
-        $datas  = [];
-        foreach ($result as $id) {
-            $datas[] = ['element_id' => $id, 'user_id' => $userId];
-        }
-        if (count($datas)) {
-            $this->conn->transactional(function () use ($datas): void {
-                foreach ($datas as $row) {
-                    $this->conn->insert(Tables::caddie(), $row);
-                }
-            });
-        }
-        return count($datas);
+        $userId   = CurrentUser::get()->id;
+        $rawIds   = is_array($params['image_id']) ? $params['image_id'] : [];
+        $imageIds = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawIds));
+        $newIds   = $this->caddieRepository->findImagesNotInCaddie($imageIds, $userId);
+        $this->caddieRepository->insertImageIdsBatch($userId, $newIds);
+        return count($newIds);
     }
 
     /** @param array<mixed> $params */
     #[ApiMethod(summary: 'Deletes all rates for a user.', tags: ['rates'])]
     public function ratesDelete(array $params, PwgServer &$service): mixed
     {
-        $userId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
-        $query  = 'DELETE FROM ' . Tables::rate() . ' WHERE user_id=' . $userId;
-        if (!empty($params['anonymous_id'])) {
-            $query .= " AND anonymous_id='" . (is_string($params['anonymous_id']) ? $params['anonymous_id'] : '') . "'";
-        }
-        if (!empty($params['image_id'])) {
-            $query .= ' AND element_id=' . (is_numeric($params['image_id']) ? (int) $params['image_id'] : 0);
-        }
-        $changes = $this->conn->executeStatement($query);
+        $userId  = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
+        $anonId  = !empty($params['anonymous_id']) && is_string($params['anonymous_id']) ? $params['anonymous_id'] : null;
+        $imageId = !empty($params['image_id']) && is_numeric($params['image_id']) ? (int) $params['image_id'] : null;
+        $changes = $this->rateRepository->deleteByUserOptionalAnonAndElement($userId, $anonId, $imageId);
         if ($changes > 0) {
             $this->rateService->updateRatingScore();
         }
@@ -406,36 +393,31 @@ final readonly class GeneralEndpoints
             $dmax2       = date_create($dateMaxStr2);
             $max         = $dmax2 !== false ? date_format($dmax2, 'Y-m-d 23:59:59') : '';
         }
-        $where = "WHERE object != 'system'";
-        if (isset($param['uid'])) {
-            $where .= ' AND performed_by=' . (is_numeric($param['uid']) ? (int) $param['uid'] : 0);
-        }
-        if (isset($param['action'])) {
-            $where .= ' AND action=' . $this->conn->quote(is_string($param['action']) ? $param['action'] : '');
-        }
-        if (isset($param['object'])) {
-            $where .= ' AND object=' . $this->conn->quote(is_string($param['object']) ? $param['object'] : '');
-        }
-        $dateMinVal = $param['date_min'] ?? null;
-        if ($dateMinVal !== null && $dateMinVal !== '' && $dateMinVal !== false && $dateMinVal !== 0) {
-            $where .= ' AND occured_on >= "' . $min . '"';
-        }
-        $dateMaxVal = $param['date_max'] ?? null;
-        if ($dateMaxVal !== null && $dateMaxVal !== '' && $dateMaxVal !== false && $dateMaxVal !== 0) {
-            $where .= ' AND occured_on <= "' . $max . '"';
-        }
-        if (!empty($param['id'])) {
-            $where .= ' AND object_id=' . (is_numeric($param['id']) ? (int) $param['id'] : 0);
-        }
-        if ('none' === Config::activityDisplayConnections()) {
-            $where .= " AND action NOT IN ('login', 'logout')";
-        } elseif ('admins_only' === Config::activityDisplayConnections()) {
-            $where .= ' AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN (' . implode(',', $this->userAdminService->getAdmins()) . '))';
-        }
+        $performedBy = isset($param['uid']) && is_numeric($param['uid']) ? (int) $param['uid'] : null;
+        $actionVal   = isset($param['action']) && is_string($param['action']) ? $param['action'] : null;
+        $objectVal   = isset($param['object']) && is_string($param['object']) ? $param['object'] : null;
+        $dateMinVal  = $param['date_min'] ?? null;
+        $dateMinSet  = $dateMinVal !== null && $dateMinVal !== '' && $dateMinVal !== false && $dateMinVal !== 0;
+        $dateMaxVal  = $param['date_max'] ?? null;
+        $dateMaxSet  = $dateMaxVal !== null && $dateMaxVal !== '' && $dateMaxVal !== false && $dateMaxVal !== 0;
+        $objectId    = !empty($param['id']) && is_numeric($param['id']) ? (int) $param['id'] : null;
+        $connections = Config::activityDisplayConnections();
+        $adminIds    = $connections === 'admins_only' ? array_values($this->userAdminService->getAdmins()) : [];
+
         $moreRowsAvailable = true;
         while (count($outputLines) < $pageSize && $moreRowsAvailable) {
-            $query = 'SELECT activity_id, performed_by, object, object_id, action, session_idx, ip_address, occured_on, details, user_agent FROM ' . Tables::activity() . ' ' . $where . ' ORDER BY activity_id DESC LIMIT ' . $nbRowsToFetch . ' OFFSET ' . $pageOffset . ';';
-            $rows  = $this->conn->executeQuery($query)->fetchAllAssociative();
+            $rows = $this->activityRepository->findActivityPage(
+                $performedBy,
+                $actionVal,
+                $objectVal,
+                $dateMinSet ? $min : null,
+                $dateMaxSet ? $max : null,
+                $objectId,
+                $connections,
+                $adminIds,
+                $nbRowsToFetch,
+                $pageOffset,
+            );
             if (count($rows) < $nbRowsToFetch) {
                 $moreRowsAvailable = false;
             }
@@ -489,8 +471,13 @@ final readonly class GeneralEndpoints
         }
         $usernameOf = [];
         if (count($userIds) > 0) {
-            $query = 'SELECT `' . Config::userFields()['id'] . '` AS user_id, `' . Config::userFields()['username'] . '` AS username FROM ' . Tables::users() . ' WHERE `' . Config::userFields()['id'] . '` IN (' . implode(',', array_keys($userIds)) . ');';
-            $usernameOf = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'username', 'user_id');
+            $userFields = Config::userFields();
+            $usernameOf = $this->userRepository->findUsernamesByIds(
+                $userFields['id'],
+                $userFields['username'],
+                Tables::users(),
+                array_map(intval(...), array_keys($userIds)),
+            );
         }
         foreach ($outputLines as $idx => $outputLine) {
             if ('user' === ($outputLine['object'] ?? '')) {
@@ -655,8 +642,7 @@ final readonly class GeneralEndpoints
         $usernameOf    = [];
         $searchDetails = [];
         if (count($searchIds) > 0) {
-            $sdQuery       = 'SELECT id, rules FROM ' . Tables::search() . ' WHERE id IN (' . implode(',', array_map(intval(...), $searchIds)) . ');';
-            $searchDetails = array_column($this->conn->executeQuery($sdQuery)->fetchAllAssociative(), 'rules', 'id');
+            $searchDetails = $this->searchRepository->findRulesByIds(array_map(intval(...), $searchIds));
             foreach ($searchDetails as $idSearch => $rulesSearch) {
                 $rulesArr    = json_decode(is_scalar($rulesSearch) ? (string) $rulesSearch : '', associative: true);
                 $rulesArr    = is_array($rulesArr) ? $rulesArr : [];
@@ -693,8 +679,8 @@ final readonly class GeneralEndpoints
         $imageInfos     = [];
         $fullCatPath    = [];
         if (count($categoryIds) > 0) {
-            $categoryIdsStr = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $categoryIds);
-            $uppercatsOf    = array_column($this->conn->executeQuery('SELECT id, uppercats FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $categoryIdsStr) . ');')->fetchAllAssociative(), 'uppercats', 'id');
+            $categoryIdsInt = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $categoryIds));
+            $uppercatsOf    = $this->categoryRepository->findUppercatsMapByIds($categoryIdsInt);
             foreach ($uppercatsOf as $categoryId => $uppercats) {
                 $uppercatsS           = is_scalar($uppercats) ? (string) $uppercats : '';
                 $albumBase = $this->urlGenerator->admin() . '&page=album-';
@@ -704,7 +690,7 @@ final readonly class GeneralEndpoints
             }
         }
         if (count($imageIds) > 0) {
-            $imageInfos = array_column($this->conn->executeQuery('SELECT id, IF(name IS NULL, file, name) AS label, filesize, file, path, representative_ext FROM ' . Tables::images() . ' WHERE id IN (' . implode(',', array_keys($imageIds)) . ');')->fetchAllAssociative(), null, 'id');
+            $imageInfos = $this->imageRepository->findActivityFeedSummaryByIds(array_map(intval(...), array_keys($imageIds)));
         }
         $nameOfTag = [];
         if ($hasTags) {

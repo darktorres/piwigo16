@@ -751,6 +751,26 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
+     * Return id → uppercats map for the given category ids, regardless of
+     * visibility. Used by the admin activity feed to show category paths.
+     *
+     * @param  list<int> $catIds
+     * @return array<int|string, mixed>
+     */
+    public function findUppercatsMapByIds(array $catIds): array
+    {
+        if ($catIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'uppercats')
+            ->from($this->table('categories'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $catIds, ArrayParameterType::INTEGER);
+        return array_column($qb->executeQuery()->fetchAllAssociative(), 'uppercats', 'id');
+    }
+
+    /**
      * Return (id, uppercats) for categories in $catIds that are also visible
      * to $userId (i.e. present in user_cache_categories).
      *

@@ -76,8 +76,12 @@ final class SessionTest extends TestCase
         self::assertSame([], $s->filterCategories);
     }
 
-    public function testPersistRoundTrip(): void
+    public function testPersistRoundTripPreservesUnmutatedState(): void
     {
+        // Snapshot-diff: hydrate from a populated $_SESSION, persist back
+        // without mutations — the original keys must still be there because
+        // they were preserved (not because Session re-wrote them; persistInto
+        // sees no diff and leaves the target alone).
         $raw = [
             'pwg_uid'            => 11,
             'connected_with'     => 'pwg_ui',
@@ -87,14 +91,10 @@ final class SessionTest extends TestCase
         ];
 
         $s = Session::fromSuperglobal($raw);
-        $target = [];
+        $target = $raw;          // simulate the in-place $_SESSION mutation pattern
         $s->persistInto($target);
 
-        self::assertSame(11, $target['pwg_uid']);
-        self::assertSame('pwg_ui', $target['connected_with']);
-        self::assertSame(true, $target['pwg_show_metadata']);
-        self::assertSame([1, 2, 3], $target['pwg_filter_categories']);
-        self::assertSame(['a', 'b'], $target['page_infos']);
+        self::assertSame($raw, $target);
     }
 
     public function testPersistOmitsNullAndFalseSlots(): void
@@ -142,12 +142,26 @@ final class SessionTest extends TestCase
     public function testValidResetPasswordCodeIsArrayPayload(): void
     {
         $payload = ['code' => 'abc', 'pwg_uid' => 7];
-        $s = Session::fromSuperglobal(['valid_reset_password_code' => $payload]);
+        $target  = ['valid_reset_password_code' => $payload];
+        $s = Session::fromSuperglobal($target);
         self::assertSame($payload, $s->validResetPasswordCode);
+
+        // No mutation — payload survives the hydrate/persist round-trip
+        // because snapshot-diff sees no change for this slot.
+        $s->persistInto($target);
+        self::assertSame($payload, $target['valid_reset_password_code']);
+    }
+
+    public function testValidResetPasswordCodeMutationPersists(): void
+    {
+        // Mutate the slot — snapshot-diff writes the new payload to target.
+        $s = Session::fromSuperglobal([]);
+        $newPayload = ['code' => 'xyz', 'pwg_uid' => 9];
+        $s->validResetPasswordCode = $newPayload;
 
         $target = [];
         $s->persistInto($target);
-        self::assertSame($payload, $target['valid_reset_password_code']);
+        self::assertSame($newPayload, $target['valid_reset_password_code']);
     }
 
     public function testPersistDoesNotClobberUnknownKeys(): void
@@ -210,28 +224,58 @@ final class SessionTest extends TestCase
         self::assertFalse($s->flash->hasAny());
     }
 
-    public function testPersistFlashOnlyWritesFlashKeys(): void
+    public function testPersistLeavesForeignKeysAlone(): void
     {
-        // Migration-window contract: SessionMiddleware calls persistFlashInto
-        // until every canonical-slot writer migrates. The non-flash keys must
-        // be untouched so raw $_SESSION writes by unmigrated consumers (e.g.
-        // AuthService writing pwg_uid during login) survive the round-trip.
+        // Snapshot-diff contract: Session has no snapshot entry for keys it
+        // didn't read (plugin scratch, raw $_SESSION writes by unmigrated
+        // consumers like AuthService writing pwg_uid during login), so the
+        // diff is empty for those keys and persistInto must leave them
+        // untouched.
         $target = [
-            'pwg_uid'             => 7,
-            'connected_with'      => 'pwg_ui',
-            'pwg_show_metadata'   => true,
+            'plugin_foo'        => ['some' => 'state'],
+            'pwg_uid'           => 7,        // unmigrated AuthService write
+            'pwg_show_metadata' => true,     // unmigrated toggle
         ];
 
-        $s = Session::fromSuperglobal([]);   // empty hydration: every slot at default
-        $s->flash->add('info', 'hello');
-        $s->persistFlashInto($target);
+        $s = Session::fromSuperglobal([]);   // hydrate from empty: every slot at default
+        $s->flash->add('info', 'hello');     // ONLY mutation
+        $s->persistInto($target);
 
-        // Flash made it in.
+        // Flash mutation made it in.
         self::assertSame(['hello'], $target['page_infos']);
-        // Non-flash keys are exactly as the caller left them — Session
-        // did NOT unset them just because its own slots are at defaults.
+        // Foreign keys are exactly as the caller left them.
+        self::assertSame(['some' => 'state'], $target['plugin_foo']);
         self::assertSame(7, $target['pwg_uid']);
-        self::assertSame('pwg_ui', $target['connected_with']);
         self::assertSame(true, $target['pwg_show_metadata']);
+    }
+
+    public function testPersistUnsetsSlotThatWentToDefault(): void
+    {
+        // Hydrate with userId set, mutate to null (logout-style), persist:
+        // the key must be removed from target. Snapshot.pwg_uid = 5,
+        // current state has no pwg_uid → diff → unset target['pwg_uid'].
+        $s = Session::fromSuperglobal(['pwg_uid' => 5]);
+        $s->userId = null;
+
+        $target = ['pwg_uid' => 5];
+        $s->persistInto($target);
+        self::assertArrayNotHasKey('pwg_uid', $target);
+    }
+
+    public function testPersistIsNoOpWhenNothingChanged(): void
+    {
+        $raw = [
+            'pwg_uid'           => 5,
+            'connected_with'    => 'pwg_ui',
+            'pwg_show_metadata' => true,
+        ];
+        $s = Session::fromSuperglobal($raw);
+
+        // No mutations.
+        $target = $raw;
+        $s->persistInto($target);
+
+        // Target unchanged.
+        self::assertSame($raw, $target);
     }
 }

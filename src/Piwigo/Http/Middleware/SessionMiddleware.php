@@ -12,21 +12,19 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * Ensures the PHP session is active before the rest of the pipeline runs
- * and persists Session-owned flash messages back into `$_SESSION` after
- * the handler returns.
+ * and persists Session mutations back into `$_SESSION` after the handler
+ * returns.
  *
  * The Session factory in container.php hydrates from `$_SESSION` on first
  * resolution (the container is per-request, so this fires at most once per
  * request). Constructor injection here makes that resolution eager — every
- * pipeline run produces a hydrated Session, so downstream consumers that
- * still touch raw `$_SESSION` are not racing with the typed VO.
+ * pipeline run produces a hydrated Session.
  *
- * During the F5-c migration window the middleware only calls
- * persistFlashInto() — Session's flash bag is the one slot exclusively
- * owned by the typed VO. A full persistInto() would clobber `$_SESSION`
- * writes still made by unmigrated consumers (e.g. AuthService writing
- * pwg_uid directly during login). Once F5-c is complete this swaps to
- * persistInto() in one line.
+ * persistInto() is snapshot-diff: it writes only the slots whose values
+ * differ from the hydration snapshot, so raw `$_SESSION` writes made by
+ * still-unmigrated consumers (e.g. AuthService writing pwg_uid during
+ * login) survive untouched — Session has no diff for keys it didn't
+ * mutate.
  */
 final readonly class SessionMiddleware implements MiddlewareInterface
 {
@@ -44,7 +42,7 @@ final readonly class SessionMiddleware implements MiddlewareInterface
         try {
             return $handler->handle($request);
         } finally {
-            $this->session->persistFlashInto($_SESSION);
+            $this->session->persistInto($_SESSION);
         }
     }
 }

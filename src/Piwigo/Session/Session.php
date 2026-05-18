@@ -103,6 +103,16 @@ final class Session
     // -- Flash messages ----------------------------------------------------
     public readonly FlashBag $flash;
 
+    /**
+     * Frozen serialization of Session state at hydration time. persistInto()
+     * diffs the current state against this and writes only what changed —
+     * unmigrated consumers' raw `$_SESSION` writes survive untouched because
+     * Session has no snapshot entry for keys it doesn't own.
+     *
+     * @var array<string, mixed>
+     */
+    private array $snapshot = [];
+
     public function __construct(?FlashBag $flash = null)
     {
         $this->flash = $flash ?? FlashBag::empty();
@@ -152,85 +162,165 @@ final class Session
         $s->uploadsError       = is_array($raw['uploads_error'] ?? null) ? $raw['uploads_error'] : null;
         $s->uploadHideWarnings = (bool) ($raw['upload_hide_warnings'] ?? false);
 
+        $s->snapshot = $s->currentState();
         return $s;
     }
 
     /**
-     * Persist only the flash-bag slots. Used by SessionMiddleware during
-     * the F5-c migration window: until every consumer that mutates a
-     * canonical Session slot has migrated, a full persistInto() would
-     * clobber raw `$_SESSION` writes made by unmigrated code (e.g.
-     * AuthService writing `pwg_uid` directly during login). The flash
-     * keys are safe — they're now exclusively owned by Session::$flash.
+     * Serialize Session state back into a `$_SESSION`-shaped array.
      *
-     * Once F5-c is complete the SessionMiddleware switch to persistInto()
-     * is a one-line change.
+     * Snapshot-diff semantics: only the keys whose value differs from the
+     * hydration snapshot are written. Keys absent from both snapshot and
+     * current state are left alone. Keys present in snapshot but absent
+     * from current state are unset. Unknown keys in `$target` (plugin
+     * scratch, raw `$_SESSION` writes by unmigrated consumers) are never
+     * touched — Session has no snapshot entry to diff against, so it
+     * makes no changes.
      *
-     * @param array<mixed> $target
-     */
-    public function persistFlashInto(array &$target): void
-    {
-        $flashByKind = $this->flash->toArray();
-        $this->writeListOrUnset($target, 'page_infos', $flashByKind['info'] ?? []);
-        $this->writeListOrUnset($target, 'page_errors', $flashByKind['error'] ?? []);
-        $this->writeListOrUnset($target, 'message_tags', $flashByKind['tag'] ?? []);
-    }
-
-    /**
-     * Serialize back into a `$_SESSION`-shaped array. Only canonical keys
-     * are written; pre-existing unknown keys in `$target` are left in
-     * place so plugin / legacy scratch survives the round-trip.
-     *
-     * Not yet wired into SessionMiddleware — see persistFlashInto() above
-     * for the migration-window persistence path.
+     * This is what makes the F5-c migration window safe: AuthService can
+     * still write `$_SESSION['pwg_uid']` directly during login; Session's
+     * `userId` slot is unchanged from its initial hydration, so the
+     * diff is empty and persistInto leaves `pwg_uid` alone.
      *
      * @param array<mixed> $target
      */
     public function persistInto(array &$target): void
     {
-        $this->writeOrUnset($target, 'pwg_uid', $this->userId?->value);
-        $this->writeOrUnset($target, 'connected_with', $this->connectedWith);
-        $this->writeOrUnset($target, 'fake_user_cache', $this->fakeUserCache);
+        $current = $this->currentState();
 
-        $this->writeOrUnset($target, 'pwg_index_deriv', $this->indexDeriv?->value);
-        $this->writeOrUnset($target, 'pwg_picture_deriv', $this->pictureDeriv?->value);
-        $this->writeOrUnset($target, 'pwg_mobile_theme', $this->mobileTheme?->value);
-        $this->writeOrUnset($target, 'pwg_device', $this->device);
-        $this->writeOrUnset($target, 'pwg_comments_order', $this->commentsOrder);
-        $this->writeOrUnset($target, 'pwg_image_order', $this->imageOrder);
-        // Booleans are persisted only when true: legacy callers detect "on"
-        // via isset(), so writing false would falsely make the key look set.
-        $this->writeBoolFlag($target, 'pwg_show_metadata', $this->showMetadata);
-        $this->writeBoolFlag($target, 'pwg_filter_enabled', $this->filterEnabled);
-        $this->writeOrUnset($target, 'pwg_referer_image_id', $this->refererImageId?->value);
-        $this->writeOrUnset($target, 'pwg_plugins_show_details', $this->pluginsShowDetails);
-        $this->writeOrUnset($target, 'pwg_plugins_new_order', $this->pluginsNewOrder);
+        // Union of canonical keys that appear in either side of the diff.
+        $allKeys = array_unique([...array_keys($this->snapshot), ...array_keys($current)]);
 
-        $this->writeOrUnset($target, 'pwg_filter_check_key', $this->filterCheckKey);
-        $this->writeListOrUnset($target, 'pwg_filter_categories', $this->filterCategories);
-        $this->writeListOrUnset($target, 'pwg_filter_visible_categories', $this->filterVisibleCategories);
-        $this->writeListOrUnset($target, 'pwg_filter_visible_images', $this->filterVisibleImages);
+        foreach ($allKeys as $key) {
+            $hasCurrent  = array_key_exists($key, $current);
+            $hasSnapshot = array_key_exists($key, $this->snapshot);
 
-        $this->writeOrUnset($target, 'bulk_manager_filter', $this->bulkManagerFilter);
-        $this->writeOrUnset($target, 'edit_context', $this->editContext);
+            if ($hasCurrent && $hasSnapshot && $current[$key] === $this->snapshot[$key]) {
+                continue;   // unchanged — leave target alone.
+            }
 
-        $this->writeListOrUnset($target, 'extensions_need_update', $this->extensionsNeedUpdate);
-        $this->writeOrUnset($target, 'dismissed_upgrade_version', $this->dismissedUpgradeVersion);
-        $this->writeBoolFlag($target, 'no_photo_yet', $this->noPhotoYet);
+            if ($hasCurrent) {
+                $target[$key] = $current[$key];
+            } else {
+                unset($target[$key]);
+            }
+        }
+    }
 
-        $this->writeOrUnset($target, 'reset_password_code', $this->resetPasswordCode);
-        $this->writeOrUnset($target, 'valid_reset_password_code', $this->validResetPasswordCode);
+    /**
+     * Project the current Session state to a `$_SESSION`-shaped map.
+     *
+     * Encoding rules per slot type:
+     *   - nullable scalar / VO / array: present iff non-null.
+     *   - bool flag: present iff true (matches `isset()` semantics legacy
+     *     callers rely on).
+     *   - list<T>: present iff non-empty.
+     *   - flash bag: split into three legacy keys (page_infos / page_errors /
+     *     message_tags), present iff non-empty.
+     *
+     * Used both as the hydration snapshot and as the "current" side of
+     * the persistInto() diff.
+     *
+     * @return array<string, mixed>
+     */
+    private function currentState(): array
+    {
+        $state = [];
 
-        $this->writeOrUnset($target, 'uploads_error', $this->uploadsError);
-        $this->writeBoolFlag($target, 'upload_hide_warnings', $this->uploadHideWarnings);
+        if ($this->userId !== null) {
+            $state['pwg_uid'] = $this->userId->value;
+        }
+        if ($this->connectedWith !== null) {
+            $state['connected_with'] = $this->connectedWith;
+        }
+        if ($this->fakeUserCache !== null) {
+            $state['fake_user_cache'] = $this->fakeUserCache;
+        }
+        if ($this->indexDeriv !== null) {
+            $state['pwg_index_deriv'] = $this->indexDeriv->value;
+        }
+        if ($this->pictureDeriv !== null) {
+            $state['pwg_picture_deriv'] = $this->pictureDeriv->value;
+        }
+        if ($this->mobileTheme !== null) {
+            $state['pwg_mobile_theme'] = $this->mobileTheme->value;
+        }
+        if ($this->device !== null) {
+            $state['pwg_device'] = $this->device;
+        }
+        if ($this->commentsOrder !== null) {
+            $state['pwg_comments_order'] = $this->commentsOrder;
+        }
+        if ($this->imageOrder !== null) {
+            $state['pwg_image_order'] = $this->imageOrder;
+        }
+        if ($this->showMetadata) {
+            $state['pwg_show_metadata'] = true;
+        }
+        if ($this->filterEnabled) {
+            $state['pwg_filter_enabled'] = true;
+        }
+        if ($this->refererImageId !== null) {
+            $state['pwg_referer_image_id'] = $this->refererImageId->value;
+        }
+        if ($this->pluginsShowDetails !== null) {
+            $state['pwg_plugins_show_details'] = $this->pluginsShowDetails;
+        }
+        if ($this->pluginsNewOrder !== null) {
+            $state['pwg_plugins_new_order'] = $this->pluginsNewOrder;
+        }
+        if ($this->filterCheckKey !== null) {
+            $state['pwg_filter_check_key'] = $this->filterCheckKey;
+        }
+        if ($this->filterCategories !== []) {
+            $state['pwg_filter_categories'] = $this->filterCategories;
+        }
+        if ($this->filterVisibleCategories !== []) {
+            $state['pwg_filter_visible_categories'] = $this->filterVisibleCategories;
+        }
+        if ($this->filterVisibleImages !== []) {
+            $state['pwg_filter_visible_images'] = $this->filterVisibleImages;
+        }
+        if ($this->bulkManagerFilter !== null) {
+            $state['bulk_manager_filter'] = $this->bulkManagerFilter;
+        }
+        if ($this->editContext !== null) {
+            $state['edit_context'] = $this->editContext;
+        }
+        if ($this->extensionsNeedUpdate !== []) {
+            $state['extensions_need_update'] = $this->extensionsNeedUpdate;
+        }
+        if ($this->dismissedUpgradeVersion !== null) {
+            $state['dismissed_upgrade_version'] = $this->dismissedUpgradeVersion;
+        }
+        if ($this->noPhotoYet) {
+            $state['no_photo_yet'] = true;
+        }
+        if ($this->resetPasswordCode !== null) {
+            $state['reset_password_code'] = $this->resetPasswordCode;
+        }
+        if ($this->validResetPasswordCode !== null) {
+            $state['valid_reset_password_code'] = $this->validResetPasswordCode;
+        }
+        if ($this->uploadsError !== null) {
+            $state['uploads_error'] = $this->uploadsError;
+        }
+        if ($this->uploadHideWarnings) {
+            $state['upload_hide_warnings'] = true;
+        }
 
-        // Flash bag splits into its three legacy keys for backward-compatible
-        // hydration on the next request — until the renderer consumer migrates
-        // to consume($kind) directly.
         $flashByKind = $this->flash->toArray();
-        $this->writeListOrUnset($target, 'page_infos', $flashByKind['info'] ?? []);
-        $this->writeListOrUnset($target, 'page_errors', $flashByKind['error'] ?? []);
-        $this->writeListOrUnset($target, 'message_tags', $flashByKind['tag'] ?? []);
+        if (($flashByKind['info'] ?? []) !== []) {
+            $state['page_infos'] = $flashByKind['info'];
+        }
+        if (($flashByKind['error'] ?? []) !== []) {
+            $state['page_errors'] = $flashByKind['error'];
+        }
+        if (($flashByKind['tag'] ?? []) !== []) {
+            $state['message_tags'] = $flashByKind['tag'];
+        }
+
+        return $state;
     }
 
     /** Reset every typed slot to its default — used by logout. */
@@ -323,51 +413,4 @@ final class Session
         return $out;
     }
 
-    /**
-     * Write the value at $key, or unset the key if value is null. Keeps
-     * `$_SESSION` from accumulating null markers for slots that aren't set.
-     *
-     * @param array<mixed> $target
-     */
-    private function writeOrUnset(array &$target, string $key, mixed $value): void
-    {
-        if ($value === null) {
-            unset($target[$key]);
-            return;
-        }
-        $target[$key] = $value;
-    }
-
-    /**
-     * Same as writeOrUnset but for list-typed slots — an empty list also
-     * unsets the key (matches the historical "absent means empty" idiom).
-     *
-     * @param array<mixed> $target
-     * @param list<mixed>  $value
-     */
-    private function writeListOrUnset(array &$target, string $key, array $value): void
-    {
-        if ($value === []) {
-            unset($target[$key]);
-            return;
-        }
-        $target[$key] = $value;
-    }
-
-    /**
-     * Persist a "flag" boolean: write `true` when on, unset when off. Matches
-     * the legacy session idiom where `isset($_SESSION[$key])` means the flag
-     * is set; downstream consumers that still use `isset()` see consistent
-     * truthiness with the typed slot.
-     *
-     * @param array<mixed> $target
-     */
-    private function writeBoolFlag(array &$target, string $key, bool $value): void
-    {
-        if ($value) {
-            $target[$key] = true;
-            return;
-        }
-        unset($target[$key]);
-    }
 }

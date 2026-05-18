@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
@@ -22,7 +21,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocBeginPicture;
 use Piwigo\Event\Location\LocEndPicture;
 use Piwigo\Event\Picture\AllowIncrementElementHitCount;
@@ -71,7 +69,6 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class PictureController implements ControllerInterface
 {
     public function __construct(
-        private Connection $conn,
         private CategoryRepository $categoryRepository,
         private CategoryService $categoryService,
         private CommentService $commentService,
@@ -159,13 +156,7 @@ final readonly class PictureController implements ControllerInterface
                     $this->htmlService->accessDenied();
                 } else {
                     [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND');
-                    $query = '
-SELECT id
-  FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
-  WHERE id=' . $imageId
-                        . $permSql . '
-  LIMIT 1';
-                    if ($this->conn->executeQuery($query, $permParams, $permTypes)->fetchOne() === false) {
+                    if (!$this->categoryRepository->isImageInVisibleCategory($imageId, $permSql, $permParams, $permTypes)) {
                         $this->htmlService->accessDenied();
                     } else {
                         if ($ctx->section === 'best_rated') {
@@ -321,14 +312,7 @@ SELECT id
 
         // Related categories
         [$relPermSql, $relPermParams, $relPermTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'AND');
-        $query = '
-SELECT id,uppercats,commentable,visible,status,global_rank
-  FROM ' . Tables::imageCategory() . '
-    INNER JOIN ' . Tables::categories() . ' ON category_id = id
-  WHERE image_id = ' . $imageId . '
-' . $relPermSql . '
-;';
-        $related_categories = $this->conn->executeQuery($query, $relPermParams, $relPermTypes)->fetchAllAssociative();
+        $related_categories = $this->categoryRepository->findPictureNavCategoriesForImage($imageId, $relPermSql, $relPermParams, $relPermTypes);
         usort($related_categories, $this->categoryService->globalRankCompare(...));
 
         // Load prev/current/next picture data
@@ -459,12 +443,8 @@ SELECT id,uppercats,commentable,visible,status,global_rank
             $tpl->append('current', ['U_DOWNLOAD' => $picture['current']['download_url']], true);
 
             if (Config::isFormatsEnabled()) {
-                $query = '
-SELECT *
-  FROM ' . Tables::imageFormat() . '
-  WHERE image_id = ' . (is_scalar($currentPic['id'] ?? null) ? (int) $currentPic['id'] : 0) . '
-;';
-                $formats = $this->conn->executeQuery($query)->fetchAllAssociative();
+                $currentPicId = is_scalar($currentPic['id'] ?? null) ? (int) $currentPic['id'] : 0;
+                $formats      = $this->imageRepository->findFormatsByImageIds([$currentPicId]);
                 array_unshift($formats, [
                     'download_url' => is_scalar($currentPic['download_url'] ?? null) ? $currentPic['download_url'] : '',
                     'ext'          => StringUtil::getExtension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : ''),
@@ -616,9 +596,8 @@ SELECT *
             foreach ($related_categories as $category) {
                 $ids = array_merge($ids, explode(',', is_string($category['uppercats'] ?? null) ? $category['uppercats'] : ''));
             }
-            $ids    = array_unique($ids);
-            $query  = 'SELECT id, name, permalink FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $ids) . ')';
-            $catMap = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'id');
+            $idsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_values(array_unique($ids)));
+            $catMap = $this->categoryRepository->findNamePermalinkByIdsKeyedById($idsInt);
             foreach ($related_categories as $category) {
                 $cats = [];
                 foreach (explode(',', is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '') as $id) {

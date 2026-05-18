@@ -1617,6 +1617,29 @@ SELECT
     }
 
     /**
+     * Return (id, uppercats, commentable, visible, status, global_rank) for
+     * categories linked to the given image, subject to permission filter.
+     * Used by the picture page to compute navigation/commentable state.
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<array<string, mixed>>
+     */
+    public function findPictureNavCategoriesForImage(
+        int $imageId,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): array {
+        $query  = 'SELECT id, uppercats, commentable, visible, status, global_rank'
+            . ' FROM ' . $this->table('image_category') . ' INNER JOIN ' . $this->table('categories')
+            . ' ON category_id = id WHERE image_id = ? ' . $permWhere;
+        $params = [$imageId, ...$permParams];
+        $types  = [ParameterType::INTEGER, ...$permTypes];
+        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
      * Return related category info for the given image — id, name, permalink,
      * uppercats, global_rank, commentable. Subject to permission filter.
      *

@@ -14,7 +14,6 @@ use Piwigo\Admin\Metadata\MetadataAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
-use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
@@ -83,10 +82,10 @@ final readonly class UploadService
                 continue;
             }
             if (is_bool($config[$field]['default'])) {
-                $value    = isset($value) ? true : false;
-                $updates[] = ['param' => $field, 'value' => BoolUtil::toString($value)];
+                $value     = isset($value);
+                $updates[] = ['param' => $field, 'value' => $value];
             } elseif ($config[$field]['can_be_null'] && empty($value)) {
-                $updates[] = ['param' => $field, 'value' => 'false'];
+                $updates[] = ['param' => $field, 'value' => false];
             } else {
                 $min     = $config[$field]['min'] ?? 0;
                 $max     = $config[$field]['max'] ?? PHP_INT_MAX;

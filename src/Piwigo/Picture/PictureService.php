@@ -81,7 +81,7 @@ final readonly class PictureService
                 continue;
             }
             $bool_val = is_bool($value) ? $value : (is_string($value) ? $value : '');
-            $result .= '+' . $name . '-' . BoolUtil::toString($bool_val);
+            $result .= '+' . $name . '-' . (is_bool($bool_val) ? ($bool_val ? 'true' : 'false') : $bool_val);
         }
 
         return $result;

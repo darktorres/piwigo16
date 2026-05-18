@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Core\InstallSentinel;
 use Symfony\Component\Process\Process;
@@ -110,6 +112,33 @@ abstract class IntegrationTestCase extends TestCase
             return new \mysqli('localhost', $this->dbUser, $this->dbPass, $dbName, 0, $this->dbHost);
         }
         return new \mysqli($this->dbHost, $this->dbUser, $this->dbPass, $dbName, $this->dbPort);
+    }
+
+    /**
+     * Build a DBAL connection to the test database from the env-sourced
+     * credentials populated by {@see self::setUpConnectionFromEnv()}.
+     * Used by the per-Repository integration tests so they can construct
+     * Repository instances without booting the DI container.
+     */
+    protected function newDbalConnection(): Connection
+    {
+        $params = [
+            'driver'   => 'mysqli',
+            'user'     => $this->dbUser,
+            'password' => $this->dbPass,
+            'dbname'   => $this->dbName,
+            'charset'  => 'utf8mb4',
+            'driverOptions' => [
+                MYSQLI_OPT_INT_AND_FLOAT_NATIVE => true,
+            ],
+        ];
+        if (str_starts_with($this->dbHost, '/')) {
+            $params['unix_socket'] = $this->dbHost;
+        } else {
+            $params['host'] = $this->dbHost;
+            $params['port'] = $this->dbPort;
+        }
+        return DriverManager::getConnection($params);
     }
 
     protected function queryScalar(string $sql): string

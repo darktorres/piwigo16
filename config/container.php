@@ -314,7 +314,7 @@ return [
     PictureRateRenderer::class       => factory(static fn (RateRepository $rR, PermissionService $perm, UrlService $us): PictureRateRenderer => new PictureRateRenderer($rR, $perm, $us)),
     PictureCommentRenderer::class    => factory(static fn (Connection $conn, CommentService $com, DateService $d, HtmlService $h, PermissionService $perm, SessionService $sess, UrlService $u, CsrfService $csrf, EphemeralKeyService $eks, PaginationService $pag, EventDispatcherInterface $dispatcher): PictureCommentRenderer => new PictureCommentRenderer($conn, $com, $d, $h, $perm, $sess, $u, $csrf, $eks, $pag, $dispatcher)),
     PictureMetadataRenderer::class   => factory(static fn (MetadataService $m): PictureMetadataRenderer => new PictureMetadataRenderer($m)),
-    MetadataAdminService::class      => factory(static fn (Connection $conn, ImageRepository $i, MetadataService $m, TagAdminService $tA, Paths $paths): MetadataAdminService => new MetadataAdminService($conn, $i, $m, $tA, $paths)),
+    MetadataAdminService::class      => factory(static fn (CategoryRepository $catR, ImageRepository $i, MetadataService $m, TagAdminService $tA, Paths $paths): MetadataAdminService => new MetadataAdminService($catR, $i, $m, $tA, $paths)),
     HistoryAdminService::class       => factory(static fn (Connection $conn, HistoryRepository $hR): HistoryAdminService => new HistoryAdminService($conn, $hR)),
     WsHelper::class                  => factory(static fn (PermissionService $perm, UrlService $us): WsHelper => new WsHelper($perm, $us)),
     DateService::class         => factory(static fn (): DateService => new DateService()),

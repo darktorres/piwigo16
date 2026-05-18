@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Metadata;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tag\TagAdminService;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Metadata\MetadataService;
 
 final readonly class MetadataAdminService
 {
     public function __construct(
-        private Connection $conn,
+        private CategoryRepository $categoryRepository,
         private ImageRepository $imageRepository,
         private MetadataService $metadataService,
         private TagAdminService $tagAdminService,
@@ -244,19 +243,20 @@ final readonly class MetadataAdminService
 
             // SKIP_EMPTY semantics: include each update column only if its
             // value is set and non-empty-string; skip otherwise (no NULL write).
-            $this->conn->transactional(function () use ($datas, $update_fields): void {
-                foreach ($datas as $row) {
-                    $set = [];
-                    foreach ($update_fields as $field) {
-                        if (isset($row[$field]) && $row[$field] !== '') {
-                            $set[$field] = $row[$field];
-                        }
-                    }
-                    if ($set !== []) {
-                        $this->conn->update(Tables::images(), $set, ['id' => $row['id']]);
+            $updates = [];
+            foreach ($datas as $row) {
+                $set = [];
+                foreach ($update_fields as $field) {
+                    if (isset($row[$field]) && $row[$field] !== '') {
+                        $set[$field] = $row[$field];
                     }
                 }
-            });
+                if ($set !== []) {
+                    $rowId = is_numeric($row['id']) ? (int) $row['id'] : 0;
+                    $updates[] = ['id' => $rowId, 'fields' => $set];
+                }
+            }
+            $this->imageRepository->updateBatchByIds($updates);
         }
 
         $this->tagAdminService->setTagsOf($tags_of);
@@ -269,43 +269,12 @@ final readonly class MetadataAdminService
         bool $recursive = false,
         bool $only_new = false
     ): array {
-        $cat_ids = [];
-
-        $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE site_id = ' . $site_id . '
-    AND dir IS NOT NULL';
-        if (is_numeric($category_id)) {
-            if ($recursive) {
-                $query .= '
-    AND uppercats REGEXP \'(^|,)' . $category_id . '(,|$)\'';
-            } else {
-                $query .= '
-    AND id = ' . $category_id;
-            }
-        }
-        $query .= ';';
-
-        foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
-            $cat_ids[] = $row['id'];
-        }
-
-        if (count($cat_ids) == 0) {
+        $categoryFilter = is_numeric($category_id) ? (int) $category_id : null;
+        $cat_ids = $this->categoryRepository->findFilelistCategoryIds($site_id, $categoryFilter, $recursive);
+        if ($cat_ids === []) {
             return [];
         }
-
-        $query = '
-SELECT id, path, representative_ext
-  FROM ' . Tables::images() . '
-  WHERE storage_category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $cat_ids)) . ')';
-        if ($only_new) {
-            $query .= '
-    AND date_metadata_update IS NULL';
-        }
-        $query .= ';';
-
-        return array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'id');
+        return $this->imageRepository->findFilelistByStorageCategoryIds($cat_ids, $only_new);
     }
 
     public function normalizeKeywordsString(string $keywordsString): string

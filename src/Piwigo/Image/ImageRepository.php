@@ -541,6 +541,30 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Return (id, path, representative_ext) for images stored in the given
+     * category ids, optionally restricted to rows that have never been
+     * metadata-synced. Result keyed by id, used by the metadata sync filelist.
+     *
+     * @param int[] $categoryIds
+     * @return array<int|string, array<string, mixed>>
+     */
+    public function findFilelistByStorageCategoryIds(array $categoryIds, bool $onlyNew): array
+    {
+        if ($categoryIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'path', 'representative_ext')
+            ->from($this->table('images'));
+        $qb->where($qb->expr()->in('storage_category_id', ':ids'))
+           ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER);
+        if ($onlyNew) {
+            $qb->andWhere('date_metadata_update IS NULL');
+        }
+        return array_column($qb->executeQuery()->fetchAllAssociative(), null, 'id');
+    }
+
+    /**
      * Return image ids whose storage_category_id is one of the given values.
      * Used by delete_categories() to find physically-linked images.
      *

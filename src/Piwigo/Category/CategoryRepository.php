@@ -630,6 +630,34 @@ final class CategoryRepository extends AbstractRepository
         return $row !== false ? $row : null;
     }
 
+    /**
+     * Return category ids visible to the metadata-sync filelist scan: physical
+     * (dir IS NOT NULL) and on the given site, optionally restricted to a
+     * single uppercats subtree.
+     *
+     * @return int[]
+     */
+    public function findFilelistCategoryIds(int $siteId, ?int $categoryId, bool $recursive): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('categories'))
+            ->where('site_id = :siteId')
+            ->andWhere('dir IS NOT NULL')
+            ->setParameter('siteId', $siteId);
+        if ($categoryId !== null) {
+            if ($recursive) {
+                $qb->andWhere('uppercats REGEXP :uppercatsPattern')
+                   ->setParameter('uppercatsPattern', '(^|,)' . $categoryId . '(,|$)');
+            } else {
+                $qb->andWhere('id = :catId')
+                   ->setParameter('catId', $categoryId);
+            }
+        }
+        $rows = $qb->executeQuery()->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
     /** Return category ids whose site_id matches the given value. */
     /** @return int[] */
     public function findIdsBySiteId(int $siteId): array

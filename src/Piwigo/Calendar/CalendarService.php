@@ -13,6 +13,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Image\OrderByService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -36,6 +37,7 @@ final class CalendarService
         private readonly PermissionService $permissionService,
         private readonly UrlService $urlService,
         private readonly CacheItemPoolInterface $pool,
+        private readonly OrderByService $orderByService,
     ) {
     }
 
@@ -254,8 +256,9 @@ WHERE id IN (' . implode(',', $items) . ')';
 
         if ($mustShowList) {
             $chronologyDateList = $this->chronologyDate;
+            $configOrderBy = $this->orderByService->buildOrderByClause(Config::orderBy());
             if ($superOrderBy) {
-                $orderBy = Config::orderBy();
+                $orderBy = $configOrderBy;
             } else {
                 if (count($chronologyDateList) === 0 || in_array('any', $chronologyDateList, true)) {
                     $order = ' DESC, ';
@@ -265,7 +268,7 @@ WHERE id IN (' . implode(',', $items) . ')';
                 $orderBy = str_replace(
                     'ORDER BY ',
                     'ORDER BY ' . $calendar->date_field . $order,
-                    Config::orderBy()
+                    $configOrderBy
                 );
             }
 

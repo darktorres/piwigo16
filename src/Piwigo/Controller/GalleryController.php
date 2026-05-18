@@ -23,6 +23,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\OrderByService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
@@ -71,6 +72,7 @@ final readonly class GalleryController implements ControllerInterface
         private RedirectResponder $redirectResponder,
         private PaginationService $paginationService,
         private EventDispatcherInterface $dispatcher,
+        private OrderByService $orderByService,
     ) {
     }
 
@@ -298,11 +300,8 @@ final readonly class GalleryController implements ControllerInterface
                 $preferredOrders = $this->categoryService->getCategoryPreferredImageOrders();
                 $rawOrder        = $this->sessionService->getSessionVar('image_order', 0);
                 $orderIdx        = is_numeric($rawOrder) ? (int) $rawOrder : 0;
-                $firstOrder      = trim(substr(Config::orderBy(), 9));
-                if (($pos = strpos($firstOrder, ',')) !== false) {
-                    $firstOrder = substr($firstOrder, 0, $pos);
-                }
-                $firstOrder    = trim($firstOrder);
+                $orderEntries  = Config::orderBy();
+                $firstOrder    = $orderEntries === [] ? '' : $this->orderByService->toFormToken($orderEntries[0]);
                 $url           = $this->urlService->addUrlParams($this->urlService->duplicateIndexUrl(), ['image_order' => '']);
                 $tplOrders     = [];
                 $orderSelected = false;

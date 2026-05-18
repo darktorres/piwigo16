@@ -26,6 +26,7 @@ use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\OrderByService;
 use Piwigo\Search\SearchFilterViewRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -59,6 +60,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
         private WatermarkProcessor $watermarkProcessor,
         private SearchFilterViewRepository $filterViewRepo,
         private Paths $paths,
+        private OrderByService $orderByService,
     ) {
     }
 
@@ -150,28 +152,36 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                         if (isset($_POST['order_by']) && $_POST['order_by'] !== '') {
                             $this->inputValidator->check('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
                             $post_order_by = is_array($_POST['order_by']) ? $_POST['order_by'] : [];
-                            $used = [];
-                            foreach ($post_order_by as $i => $val) {
-                                $val_str = is_string($val) ? $val : '';
-                                if ($val_str === '' || isset($used[$val_str])) {
-                                    unset($post_order_by[$i]);
-                                } else {
-                                    $used[$val_str] = true;
+                            /** @var list<array{field: string, dir: string}> $parsed */
+                            $parsed = [];
+                            $seen = [];
+                            foreach ($post_order_by as $val) {
+                                if (!is_string($val) || $val === '') {
+                                    continue;
                                 }
+                                $entry = $this->orderByService->parseFormToken($val);
+                                if ($entry === null) {
+                                    continue;
+                                }
+                                $key = $entry['field'] . ' ' . $entry['dir'];
+                                if (isset($seen[$key])) {
+                                    continue;
+                                }
+                                $seen[$key] = true;
+                                $parsed[]   = $entry;
                             }
-                            $_POST['order_by'] = $post_order_by;
-                            if (!count($post_order_by)) {
+                            if ($parsed === []) {
                                 PageState::current()->addError(Lang::t('No order field selected'));
                             } else {
-                                $order_by = $order_by_inside_category = array_slice($post_order_by, 0, (int) ceil(count($sort_fields) / 2));
-                                if (($idx = array_search('`rank` ASC', $order_by)) !== false) {
-                                    unset($order_by[$idx]);
+                                $sliced = array_slice($parsed, 0, (int) ceil(count($sort_fields) / 2));
+                                // `order_by` is the gallery-wide (non-category) ordering — strip `rank`
+                                // since manual rank only applies inside a category context.
+                                $orderBy = array_values(array_filter($sliced, static fn (array $e): bool => $e['field'] !== 'rank'));
+                                if ($orderBy === []) {
+                                    $orderBy = [['field' => 'id', 'dir' => 'ASC']];
                                 }
-                                if (count($order_by) == 0) {
-                                    $order_by = ['id ASC'];
-                                }
-                                $_POST['order_by'] = 'ORDER BY ' . implode(', ', array_map(fn (mixed $v): string => is_string($v) ? $v : '', $order_by));
-                                $_POST['order_by_inside_category'] = 'ORDER BY ' . implode(', ', array_map(fn (mixed $v): string => is_string($v) ? $v : '', $order_by_inside_category));
+                                $_POST['order_by']                  = $orderBy;
+                                $_POST['order_by_inside_category']  = $sliced;
                             }
                         } else {
                             PageState::current()->addError(Lang::t('No order field selected'));
@@ -267,7 +277,15 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
             if (!in_array($section, ['sizes', 'watermark']) && count(PageState::current()->errors) == 0 && $this->permissionService->isWebmaster()) {
                 foreach ($this->configRepository->findAllParams() as $row_param) {
                     if (isset($_POST[$row_param])) {
-                        $value = is_string($_POST[$row_param]) ? $_POST[$row_param] : '';
+                        /** @var mixed $raw */
+                        $raw = $_POST[$row_param];
+                        if (is_array($raw)) {
+                            // order_by / order_by_inside_category land here as
+                            // structured list<array{field, dir}> — pass through.
+                            $this->configService->confUpdateParam($row_param, $raw);
+                            continue;
+                        }
+                        $value = is_string($raw) ? $raw : '';
                         if ('gallery_title' == $row_param && !Config::allowHtmlDescriptions()) {
                             $value = strip_tags($value);
                         }
@@ -318,9 +336,10 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                     $order_by = [''];
                     $tpl->assign('ORDER_BY_IS_CUSTOM', true);
                 } else {
-                    $order_by_str = trim(Config::orderByInsideCategory());
-                    $order_by_str = str_replace('ORDER BY ', '', $order_by_str);
-                    $order_by     = explode(', ', $order_by_str);
+                    $order_by = array_map(
+                        fn (array $e): string => $this->orderByService->toFormToken($e),
+                        Config::orderByInsideCategory()
+                    );
                 }
 
                 $tpl->assign('main', [

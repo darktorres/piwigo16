@@ -10,6 +10,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Html\HtmlService;
+use Piwigo\Image\OrderByService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Psr\Cache\CacheItemPoolInterface;
@@ -23,6 +24,7 @@ final readonly class TagService
         private PermissionService $permissionService,
         private CacheItemPoolInterface $pool,
         private EventDispatcherInterface $dispatcher,
+        private OrderByService $orderByService,
     ) {
     }
 
@@ -214,7 +216,7 @@ SELECT id
             $mode === 'AND' && count($intTagIds) > 1,
             count($intTagIds),
             $extraImagesWhereSql,
-            ($orderBy === null || $orderBy === '') ? Config::orderBy() : $orderBy,
+            ($orderBy === null || $orderBy === '') ? $this->orderByService->buildOrderByClause(Config::orderBy()) : $orderBy,
             $permParams,
             $permTypes,
         );

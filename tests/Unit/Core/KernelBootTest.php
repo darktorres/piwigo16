@@ -54,12 +54,12 @@ final class KernelBootTest extends TestCase
 
     public function test_override_after_boot_visible_via_typed_accessor(): void
     {
-        $this->simulateGlobals(['conf' => ['order_by' => 'ORDER BY id ASC']]);
+        $this->simulateGlobals(['conf' => ['order_by' => [['field' => 'id', 'dir' => 'ASC']]]]);
         Kernel::boot();
 
-        Config::override('order_by', 'ORDER BY date_creation DESC');
+        Config::override('order_by', [['field' => 'date_creation', 'dir' => 'DESC']]);
 
-        self::assertSame('ORDER BY date_creation DESC', Config::orderBy());
+        self::assertSame([['field' => 'date_creation', 'dir' => 'DESC']], Config::orderBy());
     }
 
     public function test_PageState_addError_works_after_boot(): void

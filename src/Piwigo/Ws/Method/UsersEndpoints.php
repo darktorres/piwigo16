@@ -19,6 +19,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Event\User\WsUsersGetList;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\OrderByService;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\Users\AuthService;
@@ -53,6 +54,7 @@ final readonly class UsersEndpoints
         private CsrfService $csrfService,
         private WsHelper $wsHelper,
         private EventDispatcherInterface $dispatcher,
+        private OrderByService $orderByService,
     ) {
     }
 
@@ -447,7 +449,7 @@ final readonly class UsersEndpoints
         $userId = CurrentUser::get()->id;
         $this->userService->checkUserFavorites();
         $orderBy = $this->wsHelper->imageSqlOrder($params, 'i.');
-        $orderBy = empty($orderBy) ? Config::orderBy() : 'ORDER BY ' . $orderBy;
+        $orderBy = empty($orderBy) ? $this->orderByService->buildOrderByClause(Config::orderBy()) : 'ORDER BY ' . $orderBy;
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
         $images  = [];
         foreach ($this->userRepository->findFavoriteImagesWithDetails($userId, $permSql, $permParams, $permTypes, $orderBy) as $row) {

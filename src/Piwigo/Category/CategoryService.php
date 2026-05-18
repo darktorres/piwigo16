@@ -17,6 +17,7 @@ use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
+use Piwigo\Image\OrderByService;
 use Piwigo\Lang\Translator;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Template\TemplateRegistry;
@@ -32,6 +33,7 @@ final readonly class CategoryService
         private FilterService $filterService,
         private PermissionService $permissionService,
         private EventDispatcherInterface $dispatcher,
+        private OrderByService $orderByService,
     ) {
     }
 
@@ -439,7 +441,7 @@ final readonly class CategoryService
             $catIdsInt,
             $mode,
             $extraImagesWhereSql,
-            empty($orderBy) ? Config::orderBy() : $orderBy,
+            empty($orderBy) ? $this->orderByService->buildOrderByClause(Config::orderBy()) : $orderBy,
             $permSql,
             $permParams,
             $permTypes,

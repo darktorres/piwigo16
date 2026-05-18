@@ -25,6 +25,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\OrderByService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -57,6 +58,7 @@ final readonly class CategoriesEndpoints
         private CsrfService $csrfService,
         private WsHelper $wsHelper,
         private EventDispatcherInterface $dispatcher,
+        private OrderByService $orderByService,
     ) {
     }
 
@@ -98,7 +100,7 @@ final readonly class CategoriesEndpoints
             if (empty($orderBy) && count($catIds) === 1 && isset($cats[$catIds[0]]['image_order'])) {
                 $orderBy = is_scalar($cats[$catIds[0]]['image_order']) ? (string) $cats[$catIds[0]]['image_order'] : '';
             }
-            $orderBy     = empty($orderBy) ? Config::orderBy() : 'ORDER BY ' . $orderBy;
+            $orderBy     = empty($orderBy) ? $this->orderByService->buildOrderByClause(Config::orderBy()) : 'ORDER BY ' . $orderBy;
             $favoriteIds = $this->urlService->getUserFavorites();
             $perPage     = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
             $page        = is_numeric($params['page']) ? (int) $params['page'] : 0;
@@ -309,7 +311,7 @@ final readonly class CategoriesEndpoints
             }
             unset($imageId);
             if (empty($row['image_order'])) {
-                $row['image_order'] = str_replace('ORDER BY ', '', Config::orderBy());
+                $row['image_order'] = $this->orderByService->buildBareOrderByClause(Config::orderBy());
             }
             $cats[] = $row;
         }
@@ -425,7 +427,7 @@ final readonly class CategoriesEndpoints
             $this->dispatcher->dispatch($adminCatDescEvent);
             $row['comment']      = $adminCatDescEvent->categoryDescription;
             if (empty($row['image_order'])) {
-                $row['image_order'] = str_replace('ORDER BY ', '', Config::orderBy());
+                $row['image_order'] = $this->orderByService->buildBareOrderByClause(Config::orderBy());
             }
             if (in_array('full_name_with_admin_links', $params['additional_output'])) {
                 $row['full_name_with_admin_links'] = $catDisplayName;

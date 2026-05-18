@@ -20,6 +20,7 @@ use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Html\HtmlService;
+use Piwigo\Image\OrderByService;
 use Piwigo\Search\Inflector\InflectorEn;
 use Piwigo\Search\Inflector\InflectorFr;
 use Piwigo\Section\SectionContextRegistry;
@@ -57,6 +58,7 @@ final class SearchService
         private readonly UserService $userService,
         private readonly CacheItemPoolInterface $pool,
         private readonly EventDispatcherInterface $dispatcher,
+        private readonly OrderByService $orderByService,
     ) {
     }
 
@@ -494,7 +496,7 @@ final class SearchService
         if (count($items) > 1) {
             $items = $this->searchRepo->orderImageIds(
                 array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $items)),
-                Config::orderBy(),
+                $this->orderByService->buildOrderByClause(Config::orderBy()),
             );
         }
 
@@ -929,7 +931,7 @@ final class SearchService
             static fn (mixed $k): string => is_scalar($k) ? (string) $k : '',
             [
                 strtolower($q),
-                Config::orderBy(),
+                $this->orderByService->toCacheKey(Config::orderBy()),
                 $currentUser->id, $cacheUpdate,
                 isset($options['permissions']) ? (bool) $options['permissions'] : true,
                 $options['images_where'] ?? '',
@@ -1077,7 +1079,7 @@ final class SearchService
             $permissions,
             $permParams,
             $permTypes,
-            Config::orderBy(),
+            $this->orderByService->buildOrderByClause(Config::orderBy()),
         );
 
         $debug[] = count($ids) . ' final photo count -->';

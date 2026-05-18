@@ -50,8 +50,8 @@ INSERT INTO piwigo_config (param,value,comment) VALUES ('picture_navigation_thum
 INSERT INTO piwigo_config (param,value,comment) VALUES ('picture_menu','false','Show menubar on picture page');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('picture_informations','{"author":true,"created_on":true,"posted_on":true,"dimensions":false,"file":false,"filesize":false,"tags":true,"categories":true,"visits":true,"rating_score":true,"privacy_level":true}','Information displayed on picture page');
 INSERT INTO piwigo_config (param,value,comment) VALUES ('week_starts_on','"monday"','Monday may not be the first day of the week');
-INSERT INTO piwigo_config (param,value,comment) VALUES ('order_by','"ORDER BY date_available DESC, file ASC, id ASC"','default photo order');
-INSERT INTO piwigo_config (param,value,comment) VALUES ('order_by_inside_category','"ORDER BY date_available DESC, file ASC, id ASC"','default photo order inside category');
+INSERT INTO piwigo_config (param,value,comment) VALUES ('order_by','[{"field":"date_available","dir":"DESC"},{"field":"file","dir":"ASC"},{"field":"id","dir":"ASC"}]','default photo order');
+INSERT INTO piwigo_config (param,value,comment) VALUES ('order_by_inside_category','[{"field":"date_available","dir":"DESC"},{"field":"file","dir":"ASC"},{"field":"id","dir":"ASC"}]','default photo order inside category');
 INSERT INTO piwigo_config (param,value) VALUES ('original_resize','false');
 INSERT INTO piwigo_config (param,value) VALUES ('original_resize_maxwidth','2016');
 INSERT INTO piwigo_config (param,value) VALUES ('original_resize_maxheight','2016');

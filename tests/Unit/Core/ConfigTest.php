@@ -198,10 +198,10 @@ final class ConfigTest extends TestCase
 
     public function test_override_updates_typed_accessor_without_persisting(): void
     {
-        Config::loadArray(['order_by' => 'ORDER BY id ASC']);
-        Config::override('order_by', 'ORDER BY date_creation DESC');
+        Config::loadArray(['order_by' => [['field' => 'id', 'dir' => 'ASC']]]);
+        Config::override('order_by', [['field' => 'date_creation', 'dir' => 'DESC']]);
 
-        self::assertSame('ORDER BY date_creation DESC', Config::orderBy());
+        self::assertSame([['field' => 'date_creation', 'dir' => 'DESC']], Config::orderBy());
     }
 
     public function test_galleryUrl_returns_null_when_unset(): void

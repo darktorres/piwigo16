@@ -19,6 +19,7 @@ use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\OrderByService;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
@@ -62,6 +63,7 @@ final readonly class SectionInitializer
         private RedirectResponder $redirectResponder,
         private CacheItemPoolInterface $pool,
         private EventDispatcherInterface $dispatcher,
+        private OrderByService $orderByService,
     ) {
     }
 
@@ -178,12 +180,11 @@ final readonly class SectionInitializer
             $orderEntry  = is_array($ordersEntry) ? $ordersEntry : [];
             $orderEntry2 = $orderEntry[2] ?? null;
             if ($orderEntry2 !== null && $orderEntry2 !== false && $orderEntry2 !== '' && $orderEntry2 !== 0) {
-                $orderCol = is_scalar($orderEntry[1] ?? null) ? (string) $orderEntry[1] : '';
-                Config::override('order_by', str_replace(
-                    'ORDER BY ',
-                    'ORDER BY ' . $orderCol . ',',
-                    Config::orderBy()
-                ));
+                $orderCol      = is_scalar($orderEntry[1] ?? null) ? (string) $orderEntry[1] : '';
+                $prependEntry  = $this->orderByService->parseFormToken($orderCol);
+                if ($prependEntry !== null) {
+                    Config::override('order_by', [$prependEntry, ...Config::orderBy()]);
+                }
                 $page['super_order_by'] = true;
             } else {
                 $this->sessionService->unsetSessionVar('image_order');
@@ -211,7 +212,7 @@ final readonly class SectionInitializer
                     $forbiddenSql,
                     $forbiddenParams,
                     $forbiddenTypes,
-                    Config::orderBy(),
+                    $this->orderByService->buildOrderByClause(Config::orderBy()),
                     $limit,
                 );
 
@@ -281,7 +282,7 @@ final readonly class SectionInitializer
                     } else {
                         $userId    = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
                         $cacheTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
-                        $cacheKey  = md5('all_iids' . $userId . $cacheTime . Config::orderBy() . AppInfo::VERSION);
+                        $cacheKey  = md5('all_iids' . $userId . $cacheTime . $this->orderByService->toCacheKey(Config::orderBy()) . AppInfo::VERSION);
                         unset($page['is_homepage']);
                         $whereSql = '1=1';
                     }
@@ -300,7 +301,7 @@ final readonly class SectionInitializer
                         $flatPermSql,
                         $flatPermParams,
                         $flatPermTypes,
-                        Config::orderBy(),
+                        $this->orderByService->buildOrderByClause(Config::orderBy()),
                     );
                     if ($cacheItem !== null) {
                         $cacheItem->set($page['items']);
@@ -372,7 +373,7 @@ final readonly class SectionInitializer
                         $favPermSql,
                         $favPermParams,
                         $favPermTypes,
-                        Config::orderBy(),
+                        $this->orderByService->buildOrderByClause(Config::orderBy()),
                     ),
                 ]);
                 if (count($page['items']) > 0) {
@@ -386,11 +387,10 @@ final readonly class SectionInitializer
             }
         } elseif ($section === 'recent_pics') {
             if (!isset($page['super_order_by'])) {
-                Config::override('order_by', str_replace(
-                    'ORDER BY ',
-                    'ORDER BY date_available DESC,',
-                    Config::orderBy()
-                ));
+                Config::override('order_by', [
+                    ['field' => 'date_available', 'dir' => 'DESC'],
+                    ...Config::orderBy(),
+                ]);
             }
             $page = array_merge($page, [
                 'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Recent photos') . '</a>',

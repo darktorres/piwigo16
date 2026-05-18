@@ -43,6 +43,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\OrderByService;
 use Piwigo\Image\SrcImage;
 use Piwigo\Job\MessengerRepository;
 use Piwigo\Lang\Translator;
@@ -104,6 +105,7 @@ final class BatchManagerController implements AdminSubControllerInterface
         private readonly RedirectResponder $redirectResponder,
         private readonly PaginationService $paginationService,
         private readonly EventDispatcherInterface $dispatcher,
+        private readonly OrderByService $orderByService,
     ) {
     }
 
@@ -421,7 +423,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                     break;
                 case 'all_photos':
                     if (count($bmf) == 1) {
-                        $filter_sets[] = $this->imageRepository->findAllIdsWithOrderSuffix(Config::orderBy());
+                        $filter_sets[] = $this->imageRepository->findAllIdsWithOrderSuffix($this->orderByService->buildOrderByClause(Config::orderBy()));
                     }
                     break;
                 default:
@@ -445,7 +447,7 @@ final class BatchManagerController implements AdminSubControllerInterface
         if (isset($bmf['level'])) {
             $operator  = isset($bmf['level_include_lower']) ? '<=' : '=';
             $bmf_level = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
-            $filter_sets[] = $this->imageRepository->findIdsByLevelComparison($operator, $bmf_level, Config::orderBy());
+            $filter_sets[] = $this->imageRepository->findIdsByLevelComparison($operator, $bmf_level, $this->orderByService->buildOrderByClause(Config::orderBy()));
         }
 
         if (!empty($bmf['tags'])) {
@@ -483,7 +485,7 @@ final class BatchManagerController implements AdminSubControllerInterface
             if (!empty($where_clauses)) {
                 $filter_sets[] = $this->imageRepository->findIdsByWhereFragment(
                     implode(' AND ', $where_clauses),
-                    Config::orderBy(),
+                    $this->orderByService->buildOrderByClause(Config::orderBy()),
                     $where_params,
                     $where_types,
                 );
@@ -510,7 +512,7 @@ final class BatchManagerController implements AdminSubControllerInterface
             if (!empty($where_clauses)) {
                 $filter_sets[] = $this->imageRepository->findIdsByWhereFragment(
                     implode(' AND ', $where_clauses),
-                    Config::orderBy(),
+                    $this->orderByService->buildOrderByClause(Config::orderBy()),
                     $where_params,
                     $where_types,
                 );
@@ -962,7 +964,7 @@ final class BatchManagerController implements AdminSubControllerInterface
             $batchQuery = 'SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation FROM '
                 . Tables::images() . $batchJoin
                 . ' WHERE ' . implode(' AND ', $batchClauses)
-                . ' ' . Config::orderBy() . ' LIMIT ' . $nbImages . ' OFFSET ' . $pageStart;
+                . ' ' . $this->orderByService->buildOrderByClause(Config::orderBy()) . ' LIMIT ' . $nbImages . ' OFFSET ' . $pageStart;
             $batchRows  = $this->imageRepository->findRowsByRawQuery($batchQuery, $batchParams, $batchTypes);
             $thumb_params = ImageStdParams::getByType(DerivativeSize::Square->value);
 
@@ -1155,7 +1157,7 @@ final class BatchManagerController implements AdminSubControllerInterface
             }
             $unitQuery = 'SELECT * FROM ' . Tables::images() . $unitJoin
                 . ' WHERE ' . implode(' AND ', $unitClauses)
-                . ' ' . Config::orderBy() . ' LIMIT ' . $nbImagesU . ' OFFSET ' . $pageStartU;
+                . ' ' . $this->orderByService->buildOrderByClause(Config::orderBy()) . ' LIMIT ' . $nbImagesU . ' OFFSET ' . $pageStartU;
             $images    = $this->imageRepository->findRowsByRawQuery($unitQuery, $unitParams, $unitTypes);
 
             $added_by_ids   = array_values(array_unique(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($images, 'added_by'))));

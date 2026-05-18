@@ -751,6 +751,20 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
+     * Return every non-null permalink string assigned to a category.
+     * Used by the admin extensions page to populate the URL-pattern picker.
+     *
+     * @return list<string>
+     */
+    public function findAllPermalinks(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT permalink FROM ' . $this->table('categories') . ' WHERE permalink IS NOT NULL',
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rows);
+    }
+
+    /**
      * Return id → uppercats map for the given category ids, regardless of
      * visibility. Used by the admin activity feed to show category paths.
      *

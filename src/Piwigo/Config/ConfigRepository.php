@@ -28,6 +28,20 @@ final class ConfigRepository extends AbstractRepository
         return $this->conn->executeQuery($sql)->fetchAllAssociative();
     }
 
+    /**
+     * Return the full list of config param names. Used by the admin
+     * configuration form to detect which posted keys are already tracked.
+     *
+     * @return list<string>
+     */
+    public function findAllParams(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT param FROM ' . $this->table('config'),
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rows);
+    }
+
     /** Return the stored value for $param, or null when the row is absent. */
     public function findValueByParam(string $param): ?string
     {

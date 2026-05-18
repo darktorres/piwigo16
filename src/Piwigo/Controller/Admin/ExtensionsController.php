@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
@@ -16,6 +15,7 @@ use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Themes;
 use Piwigo\Admin\Updates;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
@@ -28,7 +28,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Admin\GetAdminPluginMenuLinks;
 use Piwigo\Event\Location\LocEndThemesInstalled;
 use Piwigo\Exception\AuthException;
@@ -62,8 +61,8 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
     ];
 
     public function __construct(
-        private Connection $conn,
         private AdminService $adminService,
+        private CategoryRepository $categoryRepository,
         private ConfigService $configService,
         private DateService $dateService,
         private LanguageRepository $languageRepository,
@@ -1124,7 +1123,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         $new_extensions = $this->adminService->getExtents();
 
         $relevant_parameters = ['----------', 'category', 'favorites', 'most_visited', 'best_rated', 'recent_pics', 'recent_cats', 'created-monthly-calendar', 'posted-monthly-calendar', 'search', 'flat', 'list', 'tags'];
-        $permalinks = array_column($this->conn->executeQuery('SELECT permalink FROM ' . Tables::categories() . ' WHERE permalink IS NOT NULL')->fetchAllAssociative(), 'permalink');
+        $permalinks = $this->categoryRepository->findAllPermalinks();
         $relevant_parameters = array_merge($relevant_parameters, $permalinks);
 
         $eligible_templates = ['----------' => 'N/A', 'about.tpl' => 'about', 'comments.tpl' => 'comments', 'comment_list.tpl' => 'comment_list', 'footer.tpl' => 'tail', 'header.tpl' => 'header', 'identification.tpl' => 'identification', 'index.tpl' => 'index', 'mainpage_categories.tpl' => 'index_category_thumbnails', 'menubar.tpl' => 'menubar', 'menubar_categories.tpl' => 'mbCategories', 'menubar_identification.tpl' => 'mbIdentification', 'menubar_links.tpl' => 'mbLinks', 'menubar_menu.tpl' => 'mbMenu', 'menubar_specials.tpl' => 'mbSpecials', 'menubar_tags.tpl' => 'mbTags', 'month_calendar.tpl' => 'month_calendar', 'navigation_bar.tpl' => 'navbar', 'nbm.tpl' => 'nbm', 'notification.tpl' => 'notification', 'password.tpl' => 'password', 'picture.tpl' => 'picture', 'picture_content.tpl' => 'default_content', 'picture_nav_buttons.tpl' => 'picture_nav_buttons', 'popuphelp.tpl' => 'popuphelp', 'profile.tpl' => 'profile', 'profile_content.tpl' => 'profile_content', 'redirect.tpl' => 'redirect', 'register.tpl' => 'register', 'search.tpl' => 'search', 'slideshow.tpl' => 'slideshow', 'tags.tpl' => 'tags', 'thumbnails.tpl' => 'index_thumbnails'];

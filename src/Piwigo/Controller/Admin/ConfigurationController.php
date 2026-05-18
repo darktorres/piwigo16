@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
@@ -15,6 +14,7 @@ use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\DateService;
@@ -22,7 +22,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Tables;
+use Piwigo\Group\GroupRepository;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
@@ -43,9 +43,10 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
     ];
 
     public function __construct(
-        private Connection $conn,
+        private ConfigRepository $configRepository,
         private ConfigService $configService,
         private DateService $dateService,
+        private GroupRepository $groupRepository,
         private ImageAdminService $imageAdminService,
         private PermissionService $permissionService,
         private ProfileService $profileService,
@@ -264,8 +265,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
             }
 
             if (!in_array($section, ['sizes', 'watermark']) && count(PageState::current()->errors) == 0 && $this->permissionService->isWebmaster()) {
-                foreach ($this->conn->executeQuery('SELECT param FROM ' . Tables::config())->fetchFirstColumn() as $row_param) {
-                    $row_param = is_scalar($row_param) ? (string) $row_param : '';
+                foreach ($this->configRepository->findAllParams() as $row_param) {
                     if (isset($_POST[$row_param])) {
                         $value = is_string($_POST[$row_param]) ? $_POST[$row_param] : '';
                         if ('gallery_title' == $row_param && !Config::allowHtmlDescriptions()) {
@@ -340,10 +340,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                     'email_admin_on_new_user_filter_group'  => preg_match('/^group:(\d+)$/', Config::emailAdminOnNewUser(), $matches) ? $matches[1] : -1,
                 ]);
 
-                $groups = array_map(
-                    fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
-                    array_column($this->conn->executeQuery('SELECT id, name FROM `' . Tables::groups() . '`;')->fetchAllAssociative(), 'name', 'id')
-                );
+                $groups = $this->groupRepository->findAllIdToNameMapOrderedByName();
                 natcasesort($groups);
                 $tpl->assign(['group_options' => $groups]);
 

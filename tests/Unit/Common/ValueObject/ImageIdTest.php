@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Unit\Common\ValueObject;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\UserId;
 
 final class ImageIdTest extends TestCase
 {
@@ -73,5 +74,13 @@ final class ImageIdTest extends TestCase
     public function testStringableProducesNumericForm(): void
     {
         self::assertSame('123', (string) ImageId::from(123));
+    }
+
+    public function testEqualsRejectsOtherNumericIdTypes(): void
+    {
+        // Same numeric value, different ID type — equals must return false.
+        // Locks down the `$other instanceof self` guard that makes the typed
+        // ID family meaningful at runtime as well as at the type-check layer.
+        self::assertFalse(ImageId::from(5)->equals(UserId::from(5)));
     }
 }

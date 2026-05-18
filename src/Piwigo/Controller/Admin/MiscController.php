@@ -507,8 +507,6 @@ final class MiscController implements AdminSubControllerInterface
     {
         $tpl = TemplateRegistry::current();
 
-        defined('PWG_HELP') or define('PWG_HELP', true);
-
         if (!isset($_GET['output']) || 'content_only' != $_GET['output']) {
             $title = Lang::t('Piwigo Help');
             $ps = PageState::current();

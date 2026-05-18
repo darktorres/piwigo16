@@ -165,22 +165,9 @@ final class CommonBootstrap
 
         Kernel::service(CategoryAdminService::class)->checkLounge();
 
-        $user_language = is_scalar(CurrentUser::get()->rawAttributes['language'] ?? null)
-            ? (string) CurrentUser::get()->rawAttributes['language']
-            : '';
-        if (in_array(substr($user_language, 0, 2), ['fr', 'it', 'de', 'es', 'pl', 'ru', 'nl', 'tr', 'da'])) {
-            define('PHPWG_DOMAIN', substr($user_language, 0, 2) . '.piwigo.org');
-        } elseif ('zh_CN' == $user_language) {
-            define('PHPWG_DOMAIN', 'cn.piwigo.org');
-        } elseif ('pt_BR' == $user_language) {
-            define('PHPWG_DOMAIN', 'br.piwigo.org');
-        } else {
-            define('PHPWG_DOMAIN', 'piwigo.org');
-        }
-        // Fork policy: blanked so this install never sends telemetry to
-        // upstream piwigo.org via porg.installs.update, and never pulls
-        // version/news/download metadata from there either. PHPWG_DOMAIN is
-        // left intact above to ease upstream merges.
+        // Fork policy: PHPWG_URL is blanked so this install never sends
+        // telemetry to upstream piwigo.org via porg.installs.update, and
+        // never pulls version/news/download metadata from there either.
         define('PHPWG_URL', '');
 
         if (Config::has('alternative_pem_url') and Config::alternativePemUrl() != '') {

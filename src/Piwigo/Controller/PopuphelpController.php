@@ -34,10 +34,6 @@ final readonly class PopuphelpController implements ControllerInterface
     {
         $this->permissionService->checkStatus(AccessLevel::Guest);
 
-        if (!defined('PWG_HELP')) {
-            define('PWG_HELP', true);
-        }
-
         $title = Lang::t('Piwigo Help');
         $ps = PageState::current();
         $ps->bodyId     = 'thePopuphelpPage';

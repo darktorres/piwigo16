@@ -11,8 +11,7 @@ define('PWG_LOCAL_DIR', 'local/');
 define('PREFIX_TABLE', 'piwigo_');
 
 // Runtime constants from CommonBootstrap::run() — placeholder values for static analysis.
-if (!defined('PHPWG_DOMAIN')) {
-    define('PHPWG_DOMAIN', 'piwigo.org');
+if (!defined('PHPWG_URL')) {
     define('PHPWG_URL', 'https://piwigo.org');
     define('PEM_URL', 'https://piwigo.org/ext');
 }

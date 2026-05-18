@@ -78,31 +78,6 @@ final readonly class UpgradeController implements ControllerInterface
             $language = $matched !== false ? $matched : AppInfo::DEFAULT_LANGUAGE;
         }
 
-        if ('fr_FR' == $language) {
-            define('PHPWG_DOMAIN', 'fr.piwigo.org');
-        } elseif ('it_IT' == $language) {
-            define('PHPWG_DOMAIN', 'it.piwigo.org');
-        } elseif ('de_DE' == $language) {
-            define('PHPWG_DOMAIN', 'de.piwigo.org');
-        } elseif ('es_ES' == $language) {
-            define('PHPWG_DOMAIN', 'es.piwigo.org');
-        } elseif ('pl_PL' == $language) {
-            define('PHPWG_DOMAIN', 'pl.piwigo.org');
-        } elseif ('zh_CN' == $language) {
-            define('PHPWG_DOMAIN', 'cn.piwigo.org');
-        } elseif ('ru_RU' == $language) {
-            define('PHPWG_DOMAIN', 'ru.piwigo.org');
-        } elseif ('nl_NL' == $language) {
-            define('PHPWG_DOMAIN', 'nl.piwigo.org');
-        } elseif ('tr_TR' == $language) {
-            define('PHPWG_DOMAIN', 'tr.piwigo.org');
-        } elseif ('da_DK' == $language) {
-            define('PHPWG_DOMAIN', 'da.piwigo.org');
-        } elseif ('pt_BR' == $language) {
-            define('PHPWG_DOMAIN', 'br.piwigo.org');
-        } else {
-            define('PHPWG_DOMAIN', 'piwigo.org');
-        }
         // Fork policy — see CommonBootstrap.php for the rationale.
         define('PHPWG_URL', '');
 

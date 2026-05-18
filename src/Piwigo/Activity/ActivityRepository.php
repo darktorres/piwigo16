@@ -274,6 +274,26 @@ final class ActivityRepository extends AbstractRepository
     }
 
     /**
+     * Daily activity-action histogram since $sinceDate (YYYY-MM-DD): one row
+     * per (day, object, action) tuple with a counter. Used by the admin
+     * dashboard last-weeks-activity heatmap.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findDailyActionCountsSince(string $sinceDate): array
+    {
+        return $this->conn->executeQuery(
+            "SELECT DATE_FORMAT(occured_on, '%Y-%m-%d') AS activity_day,"
+            . ' object, action, COUNT(*) AS activity_counter'
+            . ' FROM ' . $this->table('activity')
+            . ' WHERE occured_on >= ?'
+            . ' GROUP BY activity_day, object, action',
+            [$sinceDate],
+            [\Doctrine\DBAL\ParameterType::STRING],
+        )->fetchAllAssociative();
+    }
+
+    /**
      * Per-user_agent counter + first/last sighting timestamps, excluding the
      * generic "Mozilla/5*" browser bucket. Used by telemetry's "apps" feed.
      *

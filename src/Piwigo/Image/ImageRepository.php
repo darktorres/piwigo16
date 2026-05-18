@@ -695,6 +695,60 @@ final class ImageRepository extends AbstractRepository
         )->fetchAllAssociative();
     }
 
+    /**
+     * Return (ext, ext_counter, filesize) totals across all images, keyed by ext.
+     * Used by the admin maintenance page's storage breakdown.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function findFileExtensionTotals(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT COUNT(*) AS ext_counter, SUBSTRING_INDEX(path, ".", -1) AS ext, SUM(filesize) AS filesize'
+            . ' FROM ' . $this->table('images') . ' GROUP BY ext',
+        )->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $ext = is_string($row['ext'] ?? null) ? $row['ext'] : '';
+            $out[$ext] = $row;
+        }
+        return $out;
+    }
+
+    /**
+     * Same shape as findFileExtensionTotals but over the image_format table —
+     * image-format rows store ext explicitly rather than via SUBSTRING_INDEX.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function findImageFormatExtensionTotals(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT COUNT(*) AS ext_counter, ext, SUM(filesize) AS filesize'
+            . ' FROM ' . $this->table('image_format') . ' GROUP BY ext',
+        )->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $ext = is_string($row['ext'] ?? null) ? $row['ext'] : '';
+            $out[$ext] = $row;
+        }
+        return $out;
+    }
+
+    /**
+     * Return the image ids with the top $limit rating_score (DESC). Used by
+     * the admin "consensus deviation" tool.
+     *
+     * @return list<int>
+     */
+    public function findTopRatedIds(int $limit): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT id FROM ' . $this->table('images') . ' ORDER BY rating_score DESC LIMIT ' . $limit,
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
     /** Count images whose storage_category_id is NOT NULL (filesystem-synced). */
     public function countWithStorageCategorySet(): int
     {

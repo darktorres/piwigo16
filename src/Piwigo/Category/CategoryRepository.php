@@ -751,6 +751,43 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
+     * Return (id, permalink, uppercats, global_rank) for every category that
+     * has a permalink set. $orderBy is restricted to 'id' / 'permalink' by
+     * the caller (admin permalinks page sort).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findCategoriesWithPermalink(string $orderBy): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'permalink', 'uppercats', 'global_rank')
+            ->from($this->table('categories'))
+            ->where('permalink IS NOT NULL');
+        if ($orderBy === 'id' || $orderBy === 'permalink') {
+            $qb->orderBy($orderBy);
+        }
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
+     * Return every row from old_permalinks, ordered by a caller-validated column.
+     * $orderBy whitelist: cat_id / permalink / date_deleted / last_hit / hit.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findOldPermalinks(string $orderBy): array
+    {
+        $whitelist = ['cat_id', 'permalink', 'date_deleted', 'last_hit', 'hit'];
+        $qb = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from($this->table('old_permalinks'));
+        if (in_array($orderBy, $whitelist, true)) {
+            $qb->orderBy($orderBy);
+        }
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
      * Return every non-null permalink string assigned to a category.
      * Used by the admin extensions page to populate the URL-pattern picker.
      *

@@ -139,6 +139,44 @@ final class NotificationRepository extends AbstractRepository
     }
 
     /**
+     * Insert user_mail_notification rows atomically.
+     *
+     * @param list<array<string, mixed>> $rows
+     */
+    public function insertSubscriptionsBatch(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $this->conn->insert($this->table('user_mail_notification'), $row);
+            }
+        });
+    }
+
+    /**
+     * Apply per-user last_send updates atomically.
+     *
+     * @param list<array{user_id: int, last_send: string}> $rows
+     */
+    public function setLastSendBatch(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $this->conn->update(
+                    $this->table('user_mail_notification'),
+                    ['last_send' => $row['last_send']],
+                    ['user_id'   => $row['user_id']],
+                );
+            }
+        });
+    }
+
+    /**
      * Apply a list of (check_key, enabled) updates atomically.
      *
      * @param list<array{check_key: mixed, enabled: mixed}> $updates

@@ -42,6 +42,22 @@ final class ConfigRepository extends AbstractRepository
         return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rows);
     }
 
+    /**
+     * Return (param, value) rows whose param matches the supplied LIKE
+     * pattern. Used by the admin NBM configuration form to mirror all
+     * "nbm_%" config rows from POST.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findByParamPattern(string $pattern): array
+    {
+        return $this->conn->executeQuery(
+            'SELECT param, value FROM ' . $this->table('config') . ' WHERE param LIKE ?',
+            [$pattern],
+            [\Doctrine\DBAL\ParameterType::STRING],
+        )->fetchAllAssociative();
+    }
+
     /** Return the stored value for $param, or null when the row is absent. */
     public function findValueByParam(string $param): ?string
     {

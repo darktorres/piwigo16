@@ -74,6 +74,78 @@ final class RateRepository extends AbstractRepository
         return (int) $qb->executeStatement();
     }
 
+    /**
+     * Count distinct rated images, optionally restricted by user-class filter
+     * ('all'|'user'|'guest') and by an explicit list of category ids.
+     *
+     * @param list<int> $catFilterIds
+     */
+    public function countDistinctRatedImagesAdmin(string $userClass, int $guestId, array $catFilterIds): int
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('COUNT(DISTINCT(r.element_id))')
+            ->from($this->table('rate'), 'r');
+        if ($catFilterIds !== []) {
+            $qb->innerJoin('r', $this->table('images'), 'i', 'r.element_id = i.id')
+               ->innerJoin('i', $this->table('image_category'), 'ic', 'ic.image_id = i.id')
+               ->andWhere($qb->expr()->in('ic.category_id', ':catIds'))
+               ->setParameter('catIds', $catFilterIds, ArrayParameterType::INTEGER);
+        }
+        if ($userClass === 'user') {
+            $qb->andWhere('r.user_id <> :guestId')->setParameter('guestId', $guestId);
+        } elseif ($userClass === 'guest') {
+            $qb->andWhere('r.user_id = :guestId')->setParameter('guestId', $guestId);
+        }
+        $value = $qb->executeQuery()->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Paginated admin "rated images" listing. $orderBy is caller-built but
+     * comes from a static whitelist; user-class/cat filters are bound.
+     *
+     * @param list<int> $catFilterIds
+     * @return list<array<string, mixed>>
+     */
+    public function findRatedImagesAdminPage(
+        string $userClass,
+        int $guestId,
+        array $catFilterIds,
+        string $orderBy,
+        int $limit,
+        int $offset,
+    ): array {
+        $sql = 'SELECT i.id, i.path, i.file, i.representative_ext, i.rating_score AS score,'
+            . ' MAX(r.date) AS recently_rated, ROUND(AVG(r.rate),2) AS avg_rates,'
+            . ' COUNT(r.rate) AS nb_rates, SUM(r.rate) AS sum_rates'
+            . ' FROM ' . $this->table('rate') . ' AS r'
+            . ' LEFT JOIN ' . $this->table('images') . ' AS i ON r.element_id = i.id';
+        $params = [];
+        $types  = [];
+        if ($catFilterIds !== []) {
+            $sql       .= ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id';
+        }
+        $sql .= ' WHERE 1 = 1';
+        if ($userClass === 'user') {
+            $sql      .= ' AND r.user_id <> ?';
+            $params[]  = $guestId;
+            $types[]   = \Doctrine\DBAL\ParameterType::INTEGER;
+        } elseif ($userClass === 'guest') {
+            $sql      .= ' AND r.user_id = ?';
+            $params[]  = $guestId;
+            $types[]   = \Doctrine\DBAL\ParameterType::INTEGER;
+        }
+        if ($catFilterIds !== []) {
+            $sql      .= ' AND ic.category_id IN (?)';
+            $params[]  = $catFilterIds;
+            $types[]   = ArrayParameterType::INTEGER;
+        }
+        $sql .= ' GROUP BY i.id, i.path, i.file, i.representative_ext, i.rating_score, r.element_id'
+              . ' ORDER BY ' . $orderBy
+              . ' LIMIT ' . $limit . ' OFFSET ' . $offset;
+        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+    }
+
     /** Reassign all rate rows from $oldAnonId to $newAnonId for the given user. */
     public function updateAnonId(int $userId, string $oldAnonId, string $newAnonId): void
     {

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Detection\MobileDetect;
-use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Album\AlbumsTabRenderer;
 use Piwigo\Admin\Image\ImageAdminService;
@@ -19,6 +19,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\BoolUtil;
@@ -86,13 +87,14 @@ final class MiscController implements AdminSubControllerInterface
     private bool $mustRepost = false;
 
     public function __construct(
-        private readonly Connection $conn,
+        private readonly ActivityRepository $activityRepository,
         private readonly AdminService $adminService,
         private readonly AlbumsTabRenderer $albumsTabRenderer,
         private readonly AuthService $authService,
         private readonly CategoryRepository $categoryRepository,
         private readonly CategoryService $categoryService,
         private readonly CommentRepository $commentRepository,
+        private readonly ConfigRepository $configRepository,
         private readonly ConfigService $configService,
         private readonly DateService $dateService,
         private readonly HtmlService $htmlService,
@@ -195,7 +197,7 @@ final class MiscController implements AdminSubControllerInterface
                     $this->inputValidator->check('nbm_send_detailed_content', $_POST, false, '/^(true|false)$/');
                     $this->inputValidator->check('nbm_send_recent_post_dates', $_POST, false, '/^(true|false)$/');
                     $updated_param_count = 0;
-                    foreach ($this->conn->executeQuery('SELECT param, value FROM ' . Tables::config() . " WHERE param LIKE 'nbm\\_%'")->fetchAllAssociative() as $nbm_user) {
+                    foreach ($this->configRepository->findByParamPattern('nbm\\_%') as $nbm_user) {
                         $param = is_string($nbm_user['param'] ?? null) ? $nbm_user['param'] : '';
                         if (isset($_POST[$param])) {
                             /** @var string $rawParamVal */
@@ -359,12 +361,8 @@ final class MiscController implements AdminSubControllerInterface
 
         $sort_by = $this->parseSortVariables(['id', 'name', 'permalink'], 'name', 'psf', ['delete_permanent'], 'SORT_');
         $sortBy0  = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
-        $permalinkQuery = 'SELECT id, permalink, uppercats, global_rank FROM ' . Tables::categories() . ' WHERE permalink IS NOT NULL';
-        if ($sortBy0 === 'id' || $sortBy0 === 'permalink') {
-            $permalinkQuery .= ' ORDER BY ' . $sortBy0;
-        }
         $categories = [];
-        foreach ($this->conn->executeQuery($permalinkQuery)->fetchAllAssociative() as $row) {
+        foreach ($this->categoryRepository->findCategoriesWithPermalink($sortBy0) as $row) {
             $row['name'] = $this->htmlService->getCatDisplayNameCache(is_scalar($row['uppercats'] ?? null) ? (string) $row['uppercats'] : '');
             $categories[] = $row;
         }
@@ -375,13 +373,9 @@ final class MiscController implements AdminSubControllerInterface
 
         $sort_by = $this->parseSortVariables(['cat_id', 'permalink', 'date_deleted', 'last_hit', 'hit'], null, 'dpsf', ['delete_permanent'], 'SORT_OLD_', '#old_permalinks');
         $url_del_base    = $this->urlGenerator->admin('permalinks');
-        $sortByOld0      = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
-        $oldPermalinkQuery = 'SELECT * FROM ' . Tables::oldPermalinks();
-        if (count($sort_by) && $sortByOld0 !== '') {
-            $oldPermalinkQuery .= ' ORDER BY ' . $sortByOld0;
-        }
+        $sortByOld0         = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
         $deleted_permalinks = [];
-        foreach ($this->conn->executeQuery($oldPermalinkQuery)->fetchAllAssociative() as $row) {
+        foreach ($this->categoryRepository->findOldPermalinks($sortByOld0) as $row) {
             $row['name']     = $this->htmlService->getCatDisplayNameCache((string) (is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0));
             $row['U_DELETE'] = $this->urlService->addUrlParams($url_del_base, ['delete_permanent' => $row['permalink'], 'pwg_token' => $pwg_token]);
             $deleted_permalinks[] = $row;
@@ -657,7 +651,7 @@ final class MiscController implements AdminSubControllerInterface
         $cached_activity = is_array($_SESSION['cache_activity_last_weeks'] ?? null) ? $_SESSION['cache_activity_last_weeks'] : null;
         if ($cached_activity === null || (is_numeric($cached_activity['calculated_on']) ? (int) $cached_activity['calculated_on'] : 0) < strtotime('5 minutes ago')) {
             $start_time = StringUtil::getMoment();
-            $activity_actions = $this->conn->executeQuery("SELECT DATE_FORMAT(occured_on , '%Y-%m-%d') AS activity_day, object, action, COUNT(*) AS activity_counter FROM `" . Tables::activity() . "` WHERE occured_on >= '" . $date_string . "' GROUP BY activity_day, object, action;")->fetchAllAssociative();
+            $activity_actions = $this->activityRepository->findDailyActionCountsSince($date_string);
 
             foreach ($activity_actions as $action) {
                 $day_date = new \DateTime((is_string($action['activity_day'] ?? null) ? $action['activity_day'] : '') . ' 12:00:00');
@@ -748,17 +742,17 @@ final class MiscController implements AdminSubControllerInterface
 
         $video_format = ['webm', 'webmv', 'ogg', 'ogv', 'mp4', 'm4v', 'mov'];
         $data_storage = [];
-        foreach (array_column($this->conn->executeQuery("SELECT COUNT(*) AS ext_counter, SUBSTRING_INDEX(path,'.',-1) AS ext, SUM(filesize) AS filesize FROM `" . Tables::images() . '` GROUP BY ext;')->fetchAllAssociative(), null, 'ext') as $ext => $ext_details) {
-            $type = in_array(strtolower((string) $ext), Config::pictureExtensions()) ? 'Photos' : (in_array(strtolower((string) $ext), $video_format) ? 'Videos' : 'Other');
+        foreach ($this->imageRepository->findFileExtensionTotals() as $ext => $ext_details) {
+            $type = in_array(strtolower($ext), Config::pictureExtensions()) ? 'Photos' : (in_array(strtolower($ext), $video_format) ? 'Videos' : 'Other');
             $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + (is_numeric($ext_details['filesize']) ? (int) $ext_details['filesize'] : 0);
             $data_storage[$type]['total']['nb_files']  = ($data_storage[$type]['total']['nb_files'] ?? 0) + (is_numeric($ext_details['ext_counter']) ? (int) $ext_details['ext_counter'] : 0);
-            $data_storage[$type]['details'][strtoupper((string) $ext)] = ['filesize' => $ext_details['filesize'], 'nb_files' => $ext_details['ext_counter']];
+            $data_storage[$type]['details'][strtoupper($ext)] = ['filesize' => $ext_details['filesize'], 'nb_files' => $ext_details['ext_counter']];
         }
-        foreach (array_column($this->conn->executeQuery('SELECT COUNT(*) AS ext_counter, ext, SUM(filesize) AS filesize FROM `' . Tables::imageFormat() . '` GROUP BY ext;')->fetchAllAssociative(), null, 'ext') as $ext => $ext_details) {
+        foreach ($this->imageRepository->findImageFormatExtensionTotals() as $ext => $ext_details) {
             $type = 'Formats';
             $data_storage[$type]['total']['filesize'] = ($data_storage[$type]['total']['filesize'] ?? 0) + (is_numeric($ext_details['filesize']) ? (int) $ext_details['filesize'] : 0);
             $data_storage[$type]['total']['nb_files']  = ($data_storage[$type]['total']['nb_files'] ?? 0) + (is_numeric($ext_details['ext_counter']) ? (int) $ext_details['ext_counter'] : 0);
-            $data_storage[$type]['details'][strtoupper((string) $ext)] = ['filesize' => $ext_details['filesize'], 'nb_files' => $ext_details['ext_counter']];
+            $data_storage[$type]['details'][strtoupper($ext)] = ['filesize' => $ext_details['filesize'], 'nb_files' => $ext_details['ext_counter']];
         }
 
         if (Config::addCacheToStorageChart()) {
@@ -916,21 +910,14 @@ final class MiscController implements AdminSubControllerInterface
         $elements_per_page = isset($_GET['display']) && is_numeric($_GET['display']) ? (int) $_GET['display'] : 10;
         $order_by_index  = isset($_GET['order_by']) && is_numeric($_GET['order_by']) ? (int) $_GET['order_by'] : 0;
 
-        $userFilter = '';
-        if (isset($_GET['users'])) {
-            if ($_GET['users'] == 'user') {
-                $userFilter = ' AND r.user_id <> ' . Config::guestId();
-            } elseif ($_GET['users'] == 'guest') {
-                $userFilter = ' AND r.user_id = ' . Config::guestId();
-            }
+        $userClass = 'all';
+        if (isset($_GET['users']) && ($_GET['users'] === 'user' || $_GET['users'] === 'guest')) {
+            $userClass = $_GET['users'];
         }
 
-        $catFilter = '';
+        $catFilterIds = [];
         if (isset($_GET['cat']) && is_numeric($_GET['cat'])) {
-            $cat_ids = $this->categoryService->getSubcatIds([(int) $_GET['cat']]);
-            if (count($cat_ids) > 0) {
-                $catFilter = ' AND ic.category_id IN (' . implode(',', $cat_ids) . ')';
-            }
+            $catFilterIds = array_values($this->categoryService->getSubcatIds([(int) $_GET['cat']]));
         }
 
         $userFields = Config::userFields();
@@ -939,14 +926,8 @@ final class MiscController implements AdminSubControllerInterface
             $users[$id] = stripslashes($username);
         }
 
-        $query = 'SELECT COUNT(DISTINCT(r.element_id)) FROM ' . Tables::rate() . ' AS r';
-        if (!empty($catFilter)) {
-            $query .= ' JOIN ' . Tables::images() . ' AS i ON r.element_id = i.id JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id';
-        }
-        $query .= ' WHERE 1=1' . $userFilter;
-        $nb_images_raw = $this->conn->executeQuery($query)->fetchOne();
-        $nb_images     = is_numeric($nb_images_raw) ? (int) $nb_images_raw : 0;
-        $nb_elements   = $this->imageRepository->countRatings();
+        $nb_images   = $this->rateRepository->countDistinctRatedImagesAdmin($userClass, Config::guestId(), $catFilterIds);
+        $nb_elements = $this->imageRepository->countRatings();
 
         $cache_keys  = $this->adminService->getAdminClientCacheKeys(['categories']);
         $rating_page_data = ['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => Lang::t('Create'), 'nb_elements' => $nb_elements];
@@ -964,13 +945,14 @@ final class MiscController implements AdminSubControllerInterface
         $tpl->assign('user_options_selected', [$_GET['users'] ?? null]);
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Rating'));
 
-        $query = 'SELECT i.id, i.path, i.file, i.representative_ext, i.rating_score AS score, MAX(r.date) AS recently_rated, ROUND(AVG(r.rate),2) AS avg_rates, COUNT(r.rate) AS nb_rates, SUM(r.rate) AS sum_rates FROM ' . Tables::rate() . ' AS r LEFT JOIN ' . Tables::images() . ' AS i ON r.element_id = i.id';
-        if (!empty($catFilter)) {
-            $query .= ' JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id';
-        }
-        $query .= ' WHERE 1 = 1 ' . $userFilter . $catFilter . ' GROUP BY i.id, i.path, i.file, i.representative_ext, i.rating_score, r.element_id ORDER BY ' . $available_order_by[$order_by_index][1] . ' LIMIT ' . $elements_per_page . ' OFFSET ' . $start . ';';
-
-        $images = $this->conn->executeQuery($query)->fetchAllAssociative();
+        $images = $this->rateRepository->findRatedImagesAdminPage(
+            $userClass,
+            Config::guestId(),
+            $catFilterIds,
+            $available_order_by[$order_by_index][1],
+            $elements_per_page,
+            $start,
+        );
         $tpl->assign('images', []);
         foreach ($images as $image) {
             $thumbnail_src = DerivativeImage::thumbUrl($image);
@@ -1059,7 +1041,7 @@ final class MiscController implements AdminSubControllerInterface
             $all_img_sum[is_numeric($row['element_id']) ? (int) $row['element_id'] : 0] = ['avg' => is_numeric($row['avg_rate']) ? (float) $row['avg_rate'] : 0.0];
         }
 
-        $best_rated = array_flip(array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' ORDER by rating_score DESC LIMIT ' . $consensus_top_number)->fetchAllAssociative(), 'id')));
+        $best_rated = array_flip($this->imageRepository->findTopRatedIds($consensus_top_number));
 
         foreach ($by_user_ratings as $id => &$rating) {
             $c = $s = $ss = $consensus_dev = $consensus_dev_top = 0.0;
@@ -1199,11 +1181,7 @@ final class MiscController implements AdminSubControllerInterface
                 $usernameRaw    = $nbm_user['username'] ?? null;
                 PageState::current()->addInfo(Lang::t('User %s [%s] added.', stripslashes(is_string($usernameRaw) ? $usernameRaw : ''), is_string($mailAddressRaw) ? $mailAddressRaw : ''));
             }
-            $this->conn->transactional(function () use ($inserts): void {
-                foreach ($inserts as $row) {
-                    $this->conn->insert(Tables::userMailNotification(), $row);
-                }
-            });
+            $this->notificationRepository->insertSubscriptionsBatch($inserts);
             $check_key_treated = $this->notificationAdminService->doSubscribeUnsubscribeNotificationByMail(true, Config::nbmDefaultValueUserEnabled(), $check_key_list);
 
             if ($ctx->isSendmailTimeout) {
@@ -1314,7 +1292,7 @@ final class MiscController implements AdminSubControllerInterface
 
                                 if ($ret) {
                                     $this->notificationAdminService->incMailSentSuccess($nbm_user);
-                                    $datas[] = ['user_id' => $nbm_user['user_id'], 'last_send' => $dbnow];
+                                    $datas[] = ['user_id' => is_numeric($nbm_user['user_id']) ? (int) $nbm_user['user_id'] : 0, 'last_send' => $dbnow];
                                 } else {
                                     $this->notificationAdminService->incMailSentFailed($nbm_user);
                                 }
@@ -1331,11 +1309,7 @@ final class MiscController implements AdminSubControllerInterface
                     $this->notificationAdminService->endUsersEnvNbm();
 
                     if ($is_action_send) {
-                        $this->conn->transactional(function () use ($datas): void {
-                            foreach ($datas as $row) {
-                                $this->conn->update(Tables::userMailNotification(), ['last_send' => $row['last_send']], ['user_id' => $row['user_id']]);
-                            }
-                        });
+                        $this->notificationRepository->setLastSendBatch($datas);
                         $this->notificationAdminService->displayCounterInfo();
                     }
                 } else {

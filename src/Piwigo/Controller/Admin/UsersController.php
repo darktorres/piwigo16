@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Admin\Users\UserTabRenderer;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
@@ -23,6 +23,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Exception\ValidationException;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Language\LanguageService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
@@ -45,13 +46,14 @@ final readonly class UsersController implements AdminSubControllerInterface
     ];
 
     public function __construct(
-        private Connection $conn,
         private ActivityRepository $activityRepository,
         private AdminService $adminService,
         private CategoryAdminService $categoryAdminService,
+        private CategoryRepository $categoryRepository,
         private CategoryService $categoryService,
         private GroupRepository $groupRepository,
         private HtmlService $htmlService,
+        private ImageRepository $imageRepository,
         private PermissionRepository $permissionRepository,
         private PreferencesService $preferencesService,
         private UrlGenerator $urlGenerator,
@@ -124,13 +126,19 @@ final readonly class UsersController implements AdminSubControllerInterface
         $password_protected_users = [(string) Config::guestId()];
 
         if ($userStatus === 'admin') {
-            $admin_ids = array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userInfos() . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id');
-            $admin_ids_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $admin_ids);
+            $admin_ids     = $this->userRepository->findAdminUserIds();
+            $admin_ids_str = array_map(static fn (int $v): string => (string) $v, $admin_ids);
             $protected_users = array_merge($protected_users, $admin_ids_str);
             $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids_str, [(string) $userId]));
         }
 
-        $owner_username = array_column($this->conn->executeQuery('SELECT ' . Config::userFields()['username'] . ' AS username FROM ' . Tables::users() . ' WHERE ' . Config::userFields()['id'] . ' = ' . Config::webmasterId() . ';')->fetchAllAssociative(), 'username');
+        $webmasterUsername = $this->userRepository->findUsernameById(
+            Config::userFields()['username'],
+            Config::userFields()['id'],
+            Tables::users(),
+            Config::webmasterId(),
+        );
+        $owner_username = $webmasterUsername !== null ? [$webmasterUsername] : [];
 
         $tpl->assign([
             'U_HISTORY'                 => $this->urlGenerator->admin('history') . '&filter_user_id=',
@@ -369,9 +377,7 @@ final readonly class UsersController implements AdminSubControllerInterface
         if (isset($_GET['type']) && 'download_logs' == $_GET['type']) {
             $usernameField = Config::userFields()['username'];
             $idField       = Config::userFields()['id'];
-            $activityRows  = $this->conn
-                ->executeQuery("SELECT activity_id, performed_by, object, object_id, action, ip_address, occured_on, details, $usernameField AS username FROM " . Tables::activity() . ' JOIN ' . Tables::users() . " AS u ON performed_by = u.$idField WHERE object = 'user' ORDER BY activity_id DESC")
-                ->fetchAllAssociative();
+            $activityRows  = $this->activityRepository->findAllByObjectWithUsername('user', $idField, $usernameField, Tables::users());
 
             $output_lines = [['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details']];
             foreach ($activityRows as $row) {
@@ -405,14 +411,15 @@ final readonly class UsersController implements AdminSubControllerInterface
             'user_activity_page_data_json' => json_encode(['CACHE_KEYS' => $cache_keys, 'ROOT_URL' => UrlService::getRootUrl(), 'str_create' => Lang::t('Create')]),
         ]);
 
-        $nb_lines_for_user = array_column($this->conn->executeQuery('SELECT performed_by, COUNT(*) as counter FROM ' . Tables::activity() . " WHERE object != 'system' GROUP BY performed_by;")->fetchAllAssociative(), 'counter', 'performed_by');
+        $nb_lines_for_user = $this->activityRepository->findActivityCountByPerformer();
 
-        $query = 'SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . Tables::users() . ' WHERE ' . Config::userFields()['id'] . ' IN (0);';
-        if (count($nb_lines_for_user) > 0) {
-            $query = 'SELECT ' . Config::userFields()['id'] . ' AS id, ' . Config::userFields()['username'] . ' AS username FROM ' . Tables::users() . ' WHERE ' . Config::userFields()['id'] . ' IN (' . implode(',', array_keys($nb_lines_for_user)) . ');';
-        }
-
-        $username_of = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
+        $performerIds = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($nb_lines_for_user));
+        $username_of  = $this->userRepository->findIdToUsernameMapByIds(
+            Config::userFields()['id'],
+            Config::userFields()['username'],
+            Tables::users(),
+            $performerIds,
+        );
 
         $filterable_users = [];
         foreach ($nb_lines_for_user as $id => $nb_line) {
@@ -433,29 +440,27 @@ final readonly class UsersController implements AdminSubControllerInterface
         $additional_filt_name  = null;
         $additional_filt_value = null;
 
-        foreach (['photo' => Tables::images(), 'album' => Tables::categories(), 'group' => Tables::groups()] as $filter_key => $filter_table) {
+        foreach (['photo', 'album', 'group'] as $filter_key) {
             if (isset($_GET[$filter_key])) {
-                $filterId = is_string($_GET[$filter_key]) ? $_GET[$filter_key] : '0';
-                $rows = $this->conn->executeQuery('SELECT name FROM ' . $filter_table . ' WHERE id = ' . $filterId . ';')->fetchAllAssociative();
-                if (count($rows) == 0) {
+                $filterId = is_string($_GET[$filter_key]) ? (int) $_GET[$filter_key] : 0;
+                $name = match ($filter_key) {
+                    'photo' => $this->imageRepository->findById($filterId)['name'] ?? null,
+                    'album' => $this->categoryRepository->findCategoryById($filterId)['name'] ?? null,
+                    default => $this->groupRepository->findNameById($filterId),
+                };
+                if ($name === null) {
                     HtmlService::fatalError($filter_key . ' #' . $filterId . ' does not exist');
                 }
                 $additional_filt_type  = $filter_key;
-                $additional_filt_name  = $rows[0]['name'];
-                $additional_filt_value = $filterId;
+                $additional_filt_name  = $name;
+                $additional_filt_value = (string) $filterId;
                 break;
             }
         }
 
         $tpl->assign('ADDITIONAL_FILT', ['type' => $additional_filt_type, 'name' => $additional_filt_name, 'value' => $additional_filt_value]);
 
-        $query = 'SELECT object, action, count(*) AS counter FROM ' . Tables::activity() . " WHERE object != 'system'";
-        if ($additional_filt_type) {
-            $query .= ' AND object = "' . $additional_filt_type . '"';
-        }
-        $query .= ' GROUP BY action, object ORDER BY object ASC;';
-
-        $actions = $this->conn->executeQuery($query)->fetchAllAssociative();
+        $actions = $this->activityRepository->findActionCountsByObject(is_string($additional_filt_type) ? $additional_filt_type : null);
         foreach ($actions as &$action) {
             $action['value'] = (is_string($action['object'] ?? null) ? $action['object'] : '') . '/' . (is_string($action['action'] ?? null) ? $action['action'] : '');
         }
@@ -465,7 +470,7 @@ final readonly class UsersController implements AdminSubControllerInterface
         $tpl->assign('page_data_json', json_encode([
             'nb_users'                      => $nb_users,
             'additional_filt_type'          => $additional_filt_type ?: null,
-            'additional_filt_value'         => $additional_filt_value !== null ? (is_numeric($additional_filt_value) ? (int) $additional_filt_value : 0) : null,
+            'additional_filt_value'         => $additional_filt_value !== null ? (int) $additional_filt_value : null,
             'date_min'                      => ($min_date === null || $min_date === '') ? '' : substr($min_date, 0, 10),
             'date_max'                      => ($max_date === null || $max_date === '') ? '' : substr($max_date, 0, 10),
             'color_icons'                   => ['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'],

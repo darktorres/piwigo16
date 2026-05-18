@@ -139,6 +139,27 @@ final class NotificationRepository extends AbstractRepository
     }
 
     /**
+     * Apply a list of (check_key, enabled) updates atomically.
+     *
+     * @param list<array{check_key: mixed, enabled: mixed}> $updates
+     */
+    public function setEnabledByCheckKeysBatch(array $updates): void
+    {
+        if ($updates === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($updates): void {
+            foreach ($updates as $row) {
+                $this->conn->update(
+                    $this->table('user_mail_notification'),
+                    ['enabled' => $row['enabled']],
+                    ['check_key' => $row['check_key']],
+                );
+            }
+        });
+    }
+
+    /**
      * Build (params, types) for a date-range filter on a single column.
      * Empty start/end means "no bound on that side".
      *

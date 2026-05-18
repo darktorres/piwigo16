@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Notification;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\Notification\MailNotificationContext;
@@ -23,7 +21,6 @@ use Piwigo\Users\UserService;
 final readonly class NotificationAdminService
 {
     public function __construct(
-        private Connection $conn,
         private MailService $mailService,
         private NotificationRepository $notificationRepository,
         private UrlGenerator $urlGenerator,
@@ -233,11 +230,7 @@ final readonly class NotificationAdminService
 
             $this->endUsersEnvNbm();
             $this->displayCounterInfo();
-            $this->conn->transactional(function () use ($updates): void {
-                foreach ($updates as $row) {
-                    $this->conn->update(Tables::userMailNotification(), ['enabled' => $row['enabled']], ['check_key' => $row['check_key']]);
-                }
-            });
+            $this->notificationRepository->setEnabledByCheckKeysBatch($updates);
         }
 
         PageState::current()->addInfo(Translator::get()->plural('%d user was updated.', '%d users were updated.', $updatedDataCount));

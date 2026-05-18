@@ -690,6 +690,35 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Run the categories-getImages paginated query (the SQL_CALC_FOUND_ROWS
+     * pattern used by the REST endpoint), returning the image rows and the
+     * total FOUND_ROWS() count.
+     *
+     * @param list<string>                           $whereClauses
+     * @param list<mixed>                            $params
+     * @param list<ArrayParameterType|ParameterType> $types
+     * @return array{rows: list<array<string, mixed>>, total: int}
+     */
+    public function findCategoryImagesPaginated(
+        array $whereClauses,
+        string $orderBySuffix,
+        int $perPage,
+        int $offset,
+        array $params,
+        array $types,
+    ): array {
+        $query = 'SELECT SQL_CALC_FOUND_ROWS i.* FROM ' . $this->table('images') . ' i'
+            . ' INNER JOIN ' . $this->table('image_category') . ' ON i.id = image_id'
+            . ' WHERE ' . implode("\n    AND ", $whereClauses)
+            . ' GROUP BY i.id '
+            . $orderBySuffix
+            . ' LIMIT ' . $perPage . ' OFFSET ' . $offset;
+        $rows     = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        $totalRaw = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
+        return ['rows' => $rows, 'total' => is_numeric($totalRaw) ? (int) $totalRaw : 0];
+    }
+
+    /**
      * Find image ids subject to a free-form WHERE predicate and the caller's
      * permission filter, with the caller's ORDER BY suffix and optional LIMIT.
      * Used by gallery section branches (recent_pics, most_visited, best_rated,

@@ -1878,6 +1878,309 @@ SELECT
     }
 
     /**
+     * Among the given category ids, return those that exist in the
+     * categories table. Used to validate user-supplied id lists.
+     *
+     * @param int[] $ids
+     * @return list<int>
+     */
+    public function findExistingIdsAmong(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('categories'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * For each parent id, return the number of categories whose id_uppercat
+     * matches it. Keyed by id_uppercat.
+     *
+     * @param list<int> $parentIds
+     * @return array<int|string, int>
+     */
+    public function countSubcatsByParentIdsKeyedByParent(array $parentIds): array
+    {
+        if ($parentIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id_uppercat', 'COUNT(*) AS nb_subcats')
+            ->from($this->table('categories'))
+            ->groupBy('id_uppercat');
+        $qb->where($qb->expr()->in('id_uppercat', ':ids'))
+           ->setParameter('ids', $parentIds, ArrayParameterType::INTEGER);
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $key       = is_scalar($row['id_uppercat']) ? (string) $row['id_uppercat'] : '';
+            $out[$key] = is_numeric($row['nb_subcats']) ? (int) $row['nb_subcats'] : 0;
+        }
+        return $out;
+    }
+
+    /**
+     * Return (id, id_uppercat, rank) rows for the given category ids.
+     *
+     * @param int[] $ids
+     * @return list<array<string, mixed>>
+     */
+    public function findIdIdUppercatRankByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'id_uppercat', '`rank`')
+            ->from($this->table('categories'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
+     * Return ids of categories whose id_uppercat matches $parent
+     * (null = root), ordered by id ASC.
+     *
+     * @return list<int>
+     */
+    public function findIdsByParentOrderedById(?int $parent): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('categories'))
+            ->orderBy('id', 'ASC');
+        if ($parent === null) {
+            $qb->where('id_uppercat IS NULL');
+        } else {
+            $qb->where('id_uppercat = :parent')->setParameter('parent', $parent);
+        }
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Return ids of categories whose id_uppercat matches $parent (null = root)
+     * excluding $excludeId, ordered by `rank` ASC.
+     *
+     * @return list<int>
+     */
+    public function findOtherIdsByParentOrderedByRank(?int $parent, int $excludeId): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('categories'))
+            ->orderBy('`rank`', 'ASC')
+            ->andWhere('id != :excludeId')
+            ->setParameter('excludeId', $excludeId);
+        if ($parent === null) {
+            $qb->andWhere('id_uppercat IS NULL');
+        } else {
+            $qb->andWhere('id_uppercat = :parent')->setParameter('parent', $parent);
+        }
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Among $imageIds, return those that are also linked to at least one
+     * category OUTSIDE $excludeCategoryIds. Used by calculateOrphans to find
+     * "becoming orphan" images when a subtree is deleted.
+     *
+     * @param  list<int> $excludeCategoryIds
+     * @param  list<int> $imageIds
+     * @return list<int>
+     */
+    public function findImageIdsAssociatedOutsideCategories(array $excludeCategoryIds, array $imageIds): array
+    {
+        if ($imageIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('DISTINCT image_id')
+            ->from($this->table('image_category'));
+        if ($excludeCategoryIds !== []) {
+            $qb->where($qb->expr()->notIn('category_id', ':excludeCats'))
+               ->setParameter('excludeCats', $excludeCategoryIds, ArrayParameterType::INTEGER);
+        }
+        $qb->andWhere($qb->expr()->in('image_id', ':imageIds'))
+           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Return image_ids that appear in image_category rows where category_id
+     * is NOT in the given set. Used by the >1000-row calculateOrphans path
+     * to find all "outside" image ids without splicing the recursive image
+     * list into the SQL.
+     *
+     * @param  list<int> $excludeCategoryIds
+     * @return list<int>
+     */
+    public function findImageIdsAssociatedOutsideCategoriesAll(array $excludeCategoryIds): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('image_id')
+            ->from($this->table('image_category'));
+        if ($excludeCategoryIds !== []) {
+            $qb->where($qb->expr()->notIn('category_id', ':excludeCats'))
+               ->setParameter('excludeCats', $excludeCategoryIds, ArrayParameterType::INTEGER);
+        }
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Update arbitrary columns on a single category by id.
+     *
+     * @param array<string, mixed> $fields
+     */
+    public function updateById(int $id, array $fields): void
+    {
+        if ($fields === []) {
+            return;
+        }
+        $this->conn->update($this->table('categories'), $fields, ['id' => $id]);
+    }
+
+    /**
+     * Return (id, image_order) for the categories matching the WHERE
+     * fragment composed by getImages — REGEXP'd uppercats OR id-equality —
+     * plus the caller's permission filter. Result keyed by id.
+     *
+     * @param int[]                                  $catIds  Ids the WHERE was built from (defines the REGEXP/id-eq alternation)
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return array<int|string, array<string, mixed>>
+     */
+    public function findIdAndImageOrderForGetImages(
+        array $catIds,
+        bool $recursive,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): array {
+        if ($catIds === []) {
+            return [];
+        }
+        $clauses = [];
+        $params  = [];
+        $types   = [];
+        foreach ($catIds as $cid) {
+            if ($recursive) {
+                $clauses[] = 'uppercats REGEXP ?';
+                $params[]  = '(^|,)' . $cid . '(,|$)';
+                $types[]   = ParameterType::STRING;
+            } else {
+                $clauses[] = 'id = ?';
+                $params[]  = $cid;
+                $types[]   = ParameterType::INTEGER;
+            }
+        }
+        $where = '(' . implode("\n    OR ", $clauses) . ') ' . $permWhere;
+        $params = [...$params, ...$permParams];
+        $types  = [...$types, ...$permTypes];
+        $sql    = 'SELECT id, image_order FROM ' . $this->table('categories') . ' WHERE ' . $where;
+        $rows   = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        $out    = [];
+        foreach ($rows as $row) {
+            $idInt       = is_numeric($row['id']) ? (int) $row['id'] : 0;
+            $out[$idInt] = $row;
+        }
+        return $out;
+    }
+
+    /**
+     * Return image_id → list<int> category_id map for the given images,
+     * filtered by the caller's permission WHERE.
+     *
+     * @param list<int>                              $imageIds
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<array{image_id: int, category_id: int}>
+     */
+    public function findImageCategoryPairsWithPermissions(
+        array $imageIds,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): array {
+        if ($imageIds === []) {
+            return [];
+        }
+        $sql = 'SELECT image_id, category_id FROM ' . $this->table('image_category')
+            . ' WHERE image_id IN (?) ' . $permWhere;
+        $params = [$imageIds, ...$permParams];
+        $types  = [ArrayParameterType::INTEGER, ...$permTypes];
+        $rows = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(static fn (array $r): array => [
+            'image_id'    => is_numeric($r['image_id']) ? (int) $r['image_id'] : 0,
+            'category_id' => is_numeric($r['category_id']) ? (int) $r['category_id'] : 0,
+        ], $rows);
+    }
+
+    /**
+     * Run the categories-getList query (configurable INNER/LEFT join with
+     * user_cache_categories, configurable WHERE composed by the caller),
+     * returning the rows and the FOUND_ROWS() total when LIMIT was applied.
+     *
+     * @param list<string>                           $whereClauses
+     * @param list<mixed>                            $params
+     * @param list<ArrayParameterType|ParameterType> $types
+     * @return array{rows: list<array<string, mixed>>, total: int|null}
+     */
+    public function findGetListPage(
+        string $joinType,
+        int $joinUserId,
+        array $whereClauses,
+        string $orderLimit,
+        bool $useSqlCalcFoundRows,
+        array $params,
+        array $types,
+    ): array {
+        $select = ($useSqlCalcFoundRows ? 'SQL_CALC_FOUND_ROWS ' : '')
+            . 'id, name, comment, permalink, status, uppercats, global_rank, id_uppercat, nb_images, count_images AS total_nb_images, representative_picture_id, user_representative_picture_id, count_images, count_categories, date_last, max_date_last, count_categories AS nb_categories, image_order';
+        $sql = 'SELECT ' . $select
+            . ' FROM ' . $this->table('categories')
+            . ' ' . $joinType . ' JOIN ' . $this->table('user_cache_categories')
+            . ' ON id = cat_id AND user_id = ' . $joinUserId
+            . ' WHERE ' . implode("\n    AND ", $whereClauses)
+            . ' ' . $orderLimit;
+        $rows = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        $total = null;
+        if ($useSqlCalcFoundRows) {
+            $totalRaw = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
+            $total = is_numeric($totalRaw) ? (int) $totalRaw : 0;
+        }
+        return ['rows' => $rows, 'total' => $total];
+    }
+
+    /**
+     * Run the admin-list query (no join, just the core category columns,
+     * configurable WHERE composed by the caller, SQL_CALC_FOUND_ROWS).
+     *
+     * @param list<string>                           $whereClauses
+     * @param list<mixed>                            $params
+     * @param list<ArrayParameterType|ParameterType> $types
+     * @return array{rows: list<array<string, mixed>>, total: int}
+     */
+    public function findAdminListPage(
+        array $whereClauses,
+        string $tailFragment,
+        array $params,
+        array $types,
+    ): array {
+        $sql = 'SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, status, image_order'
+            . ' FROM ' . $this->table('categories')
+            . ' WHERE ' . implode("\n    AND ", $whereClauses)
+            . ' ' . $tailFragment;
+        $rows     = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        $totalRaw = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
+        return ['rows' => $rows, 'total' => is_numeric($totalRaw) ? (int) $totalRaw : 0];
+    }
+
+    /**
      * Update image_category `rank` for many image/category pairs atomically.
      *
      * @param list<array{image_id: int|string, category_id: int, rank: int}> $rows

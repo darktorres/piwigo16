@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Method;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -16,7 +16,6 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryDescription;
@@ -43,7 +42,6 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class CategoriesEndpoints
 {
     public function __construct(
-        private Connection $conn,
         private CategoryAdminService $categoryAdminService,
         private CategoryRepository $categoryRepository,
         private CategoryService $categoryService,
@@ -73,8 +71,8 @@ final readonly class CategoriesEndpoints
         /** @var int[] $catIds */
         $catIds = array_values(array_unique(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawCatId)));
         if (count($catIds) > 0) {
-            $dbCatIds     = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $catIds) . ');')->fetchAllAssociative(), 'id');
-            $missingCatIds = array_diff($catIds, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $dbCatIds));
+            $dbCatIds = $this->categoryRepository->findExistingIdsAmong($catIds);
+            $missingCatIds = array_values(array_diff($catIds, $dbCatIds));
             if (count($missingCatIds) > 0) {
                 return new PwgError(404, 'cat_id {' . implode(',', $missingCatIds) . '} not found');
             }
@@ -82,27 +80,16 @@ final readonly class CategoriesEndpoints
         $images      = [];
         $imageIds    = [];
         $totalImages = 0;
-        $whereClauses = [];
-        foreach ($catIds as $catIdInt) {
-            if ($params['recursive']) {
-                $whereClauses[] = "uppercats REGEXP '(^|,)" . $catIdInt . "(,|$)'";
-            } else {
-                $whereClauses[] = 'id=' . $catIdInt;
-            }
-        }
-        if (!empty($whereClauses)) {
-            $whereClauses = ['(' . implode("\n    OR ", $whereClauses) . ')'];
-        }
         [$permSql1, $permParams1, $permTypes1] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id'], null, true);
-        $whereClauses[] = $permSql1;
-        $catConn = $this->conn;
-        $cats    = [];
-        foreach ($catConn->executeQuery('SELECT id, image_order FROM ' . Tables::categories() . ' WHERE ' . implode("\n    AND ", $whereClauses) . ';', $permParams1, $permTypes1)->fetchAllAssociative() as $row) {
-            $row['id']       = is_numeric($row['id']) ? (int) $row['id'] : 0;
-            $cats[$row['id']] = $row;
-        }
+        $cats = $this->categoryRepository->findIdAndImageOrderForGetImages(
+            $catIds,
+            (bool) $params['recursive'],
+            'AND ' . $permSql1,
+            $permParams1,
+            $permTypes1,
+        );
         if (!empty($cats)) {
-            /** @var string[] $whereClauses2 */
+            /** @var list<string> $whereClauses2 */
             $whereClauses2   = $this->wsHelper->imageSqlFilter($params, 'i.');
             $whereClauses2[] = 'category_id IN (' . implode(',', array_keys($cats)) . ')';
             [$permSql2, $permParams2, $permTypes2] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'i.id'], null, true);
@@ -115,8 +102,15 @@ final readonly class CategoriesEndpoints
             $favoriteIds = $this->urlService->getUserFavorites();
             $perPage     = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
             $page        = is_numeric($params['page']) ? (int) $params['page'] : 0;
-            $query       = 'SELECT SQL_CALC_FOUND_ROWS i.* FROM ' . Tables::images() . ' i INNER JOIN ' . Tables::imageCategory() . ' ON i.id=image_id WHERE ' . implode("\n    AND ", $whereClauses2) . ' GROUP BY i.id ' . $orderBy . ' LIMIT ' . $perPage . ' OFFSET ' . ($perPage * $page) . ';';
-            $catImgRows  = $catConn->executeQuery($query, $permParams2, $permTypes2)->fetchAllAssociative();
+            $paginated   = $this->imageRepository->findCategoryImagesPaginated(
+                $whereClauses2,
+                $orderBy,
+                $perPage,
+                $perPage * $page,
+                $permParams2,
+                $permTypes2,
+            );
+            $catImgRows  = $paginated['rows'];
             foreach ($catImgRows as $row) {
                 $imageIds[]  = $row['id'];
                 $image       = [];
@@ -141,22 +135,20 @@ final readonly class CategoriesEndpoints
                 $image = array_merge($image, $this->wsHelper->getUrls($row));
                 $images[] = $image;
             }
-            $totalImagesRaw = $catConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
-            $totalImages    = is_numeric($totalImagesRaw) ? (int) $totalImagesRaw : 0;
+            $totalImages = $paginated['total'];
             if (count($imageIds) > 0) {
                 $categoryIds = [];
                 $categoriesOfImage = [];
                 [$permSql3, $permParams3, $permTypes3] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], null, true);
-                foreach ($catConn->executeQuery('SELECT image_id, category_id FROM ' . Tables::imageCategory() . ' WHERE image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIds)) . ') AND ' . $permSql3 . ';', $permParams3, $permTypes3)->fetchAllAssociative() as $row) {
-                    $categoryIds[] = $row['category_id'];
-                    $rowImgId = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
-                    if ($rowImgId !== '') {
-                        $categoriesOfImage[$rowImgId][] = $row['category_id'];
-                    }
+                $imageIdsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $imageIds);
+                foreach ($this->categoryRepository->findImageCategoryPairsWithPermissions($imageIdsInt, 'AND ' . $permSql3, $permParams3, $permTypes3) as $row) {
+                    $categoryIds[]     = $row['category_id'];
+                    $rowImgId          = (string) $row['image_id'];
+                    $categoriesOfImage[$rowImgId][] = $row['category_id'];
                 }
                 $detailsForCategory = [];
                 if (count($categoryIds) > 0) {
-                    $detailsForCategory = array_column($this->conn->executeQuery('SELECT id, name, permalink FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $categoryIds)) . ');')->fetchAllAssociative(), null, 'id');
+                    $detailsForCategory = $this->categoryRepository->findNamePermalinkByIdsKeyedById($categoryIds);
                 }
                 foreach ($images as $idx => $image) {
                     $imageCats  = [];
@@ -166,13 +158,13 @@ final readonly class CategoriesEndpoints
                         continue;
                     }
                     foreach ($categoriesOfImage[$imageIdKey] as $catId) {
-                        $catIdKey = is_scalar($catId) ? (string) $catId : '';
+                        $catIdKey = (string) $catId;
                         if (!isset($detailsForCategory[$catIdKey])) {
                             continue;
                         }
                         $url     = $this->urlService->makeIndexUrl(['category' => $detailsForCategory[$catIdKey]]);
                         $pageUrl = $this->urlService->makePictureUrl(['category' => $detailsForCategory[$catIdKey], 'image_id' => $image['id'] ?? null, 'image_file' => $image['file']]);
-                        $imageCats[] = ['id' => is_numeric($catId) ? (int) $catId : 0, 'url' => $url, 'page_url' => $pageUrl];
+                        $imageCats[] = ['id' => $catId, 'url' => $url, 'page_url' => $pageUrl];
                     }
                     $images[$idx]['categories'] = new PwgNamedArray($imageCats, 'category', ['id', 'url', 'page_url']);
                 }
@@ -226,26 +218,35 @@ final readonly class CategoriesEndpoints
             $listPermTypes  = [ArrayParameterType::INTEGER];
             $joinType       = 'LEFT';
         }
-        $query = 'SELECT SQL_CALC_FOUND_ROWS id, name, comment, permalink, status, uppercats, global_rank, id_uppercat, nb_images, count_images AS total_nb_images, representative_picture_id, user_representative_picture_id, count_images, count_categories, date_last, max_date_last, count_categories AS nb_categories, image_order FROM ' . Tables::categories() . ' ' . $joinType . ' JOIN ' . Tables::userCacheCategories() . ' ON id=cat_id AND user_id=' . $joinUser . ' WHERE ' . implode("\n    AND ", $where);
         if (isset($params['search']) && $params['search'] !== '') {
-            $query .= ' AND name LIKE ' . $this->conn->quote('%' . (is_string($params['search']) ? $params['search'] : '') . '%');
-            if (!isset($params['limit'])) {
-                $query .= ' LIMIT ' . Config::linkedAlbumSearchLimit();
-            }
+            $where[] = 'name LIKE ?';
+            $listPermParams[] = '%' . (is_string($params['search']) ? $params['search'] : '') . '%';
+            $listPermTypes[]  = ParameterType::STRING;
         }
         $limitRaw = $params['limit'] ?? null;
         $limitParam = is_numeric($limitRaw) ? (int) $limitRaw : 0;
         $catIdRaw = $params['cat_id'] ?? null;
         $catIdParam = is_numeric($catIdRaw) ? (int) $catIdRaw : 0;
+        $orderLimit = '';
+        $useFoundRows = false;
         if (isset($params['limit'])) {
-            $query .= ' ORDER BY `rank` ASC LIMIT ' . ($limitParam + ($catIdParam > 0 ? 1 : 0));
+            $orderLimit   = 'ORDER BY `rank` ASC LIMIT ' . ($limitParam + ($catIdParam > 0 ? 1 : 0));
+            $useFoundRows = true;
+        } elseif (isset($params['search']) && $params['search'] !== '') {
+            $orderLimit = 'LIMIT ' . Config::linkedAlbumSearchLimit();
         }
-        $query .= ';';
-        $getListConn = $this->conn;
-        $getListRows = $getListConn->executeQuery($query, $listPermParams, $listPermTypes)->fetchAllAssociative();
-        if (isset($params['limit'])) {
-            $resultCount    = $getListConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
-            $resultCountInt = is_numeric($resultCount) ? (int) $resultCount : 0;
+        $page = $this->categoryRepository->findGetListPage(
+            $joinType,
+            $joinUser,
+            $where,
+            $orderLimit,
+            $useFoundRows,
+            $listPermParams,
+            $listPermTypes,
+        );
+        $getListRows = $page['rows'];
+        if ($useFoundRows && $page['total'] !== null) {
+            $resultCountInt = $page['total'];
             if ($catIdParam > 0) {
                 $resultCountInt--;
             }
@@ -286,13 +287,15 @@ final readonly class CategoriesEndpoints
                 $imageId = $this->categoryService->getRandomImageInCategory($row);
             } else {
                 if ($row['count_categories'] > 0 && $row['count_images'] > 0) {
-                    $rowUppercatsRaw = $row['uppercats'] ?? null;
+                    $rowUppercatsRaw = is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '';
                     [$permSubSql, $permSubParams, $permSubTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND");
-                    $subQuery = 'SELECT representative_picture_id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id=cat_id AND user_id=' . $currentUser->id . " WHERE uppercats LIKE '" . (is_string($rowUppercatsRaw) ? $rowUppercatsRaw : '') . ",%' AND representative_picture_id IS NOT NULL" . $permSubSql . ' ORDER BY RAND() LIMIT 1;';
-                    $subval = $this->conn->executeQuery($subQuery, $permSubParams, $permSubTypes)->fetchOne();
-                    if ($subval !== false) {
-                        $imageId = is_numeric($subval) ? (int) $subval : null;
-                    }
+                    $imageId = $this->categoryRepository->findRandomSubcatRepresentativeForUser(
+                        (int) $currentUser->id,
+                        $rowUppercatsRaw,
+                        $permSubSql,
+                        $permSubParams,
+                        $permSubTypes,
+                    );
                 }
             }
             if (isset($imageId)) {
@@ -345,17 +348,10 @@ final readonly class CategoriesEndpoints
         if (!$params['public'] && count($userRepresentativeUpdatesFor)) {
             $updates = [];
             foreach ($userRepresentativeUpdatesFor as $catId => $imageId) {
-                $updates[] = ['user_id' => $user['id'], 'cat_id' => $catId, 'user_representative_picture_id' => $imageId];
+                $updates[] = ['cat_id' => $catId, 'image_id' => is_numeric($imageId) ? (int) $imageId : null];
             }
-            $this->conn->transactional(function () use ($updates): void {
-                foreach ($updates as $row) {
-                    $this->conn->update(
-                        Tables::userCacheCategories(),
-                        ['user_representative_picture_id' => $row['user_representative_picture_id']],
-                        ['user_id' => $row['user_id'], 'cat_id' => $row['cat_id']]
-                    );
-                }
-            });
+            $userIdInt = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+            $this->categoryRepository->setUserRepresentativeBatch($userIdInt, $updates);
         }
         foreach ($cats as &$cat) {
             foreach ($categories as $category) {
@@ -385,7 +381,7 @@ final readonly class CategoriesEndpoints
             $params['additional_output'] = '';
         }
         $params['additional_output'] = array_map(trim(...), explode(',', is_string($params['additional_output']) ? $params['additional_output'] : ''));
-        $nbImagesOf = array_column($this->conn->executeQuery('SELECT category_id, COUNT(*) AS counter FROM ' . Tables::imageCategory() . ' GROUP BY category_id;')->fetchAllAssociative(), 'counter', 'category_id');
+        $nbImagesOf = $this->categoryRepository->findNbPhotosPerCategoryKeyedById();
         $where      = ['1=1'];
         $adminCatId = is_numeric($params['cat_id']) ? (int) $params['cat_id'] : 0;
         if (!$params['recursive']) {
@@ -397,14 +393,18 @@ final readonly class CategoriesEndpoints
         } elseif ($adminCatId > 0) {
             $where[] = "uppercats REGEXP '(^|,)" . $adminCatId . "(,|$)'";
         }
-        $query = 'SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, status, image_order FROM ' . Tables::categories() . ' WHERE ' . implode("\n    AND ", $where);
+        $listParams = [];
+        $listTypes  = [];
+        $tail       = '';
         if (isset($params['search']) && $params['search'] !== '') {
-            $query .= ' AND name LIKE ' . $this->conn->quote('%' . (is_string($params['search']) ? $params['search'] : '') . '%') . ' LIMIT ' . Config::linkedAlbumSearchLimit();
+            $where[]      = 'name LIKE ?';
+            $listParams[] = '%' . (is_string($params['search']) ? $params['search'] : '') . '%';
+            $listTypes[]  = ParameterType::STRING;
+            $tail         = 'LIMIT ' . Config::linkedAlbumSearchLimit();
         }
-        $query     .= ';';
-        $searchConn = $this->conn;
-        $searchRows = $searchConn->executeQuery($query)->fetchAllAssociative();
-        $counter    = $searchConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
+        $adminPage = $this->categoryRepository->findAdminListPage($where, $tail, $listParams, $listTypes);
+        $searchRows = $adminPage['rows'];
+        $counter    = $adminPage['total'];
         $cats       = [];
         foreach ($searchRows as $row) {
             $rowIdRaw        = $row['id'] ?? null;
@@ -433,10 +433,8 @@ final readonly class CategoriesEndpoints
         }
         if (!$params['recursive']) {
             $catsIds    = array_column($cats, 'id');
-            $nbSubcatsOf = [];
-            if (!empty($catsIds)) {
-                $nbSubcatsOf = array_column($this->conn->executeQuery('SELECT id_uppercat, COUNT(*) AS nb_subcats FROM ' . Tables::categories() . ' WHERE id_uppercat IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catsIds)) . ') GROUP BY id_uppercat;')->fetchAllAssociative(), 'nb_subcats', 'id_uppercat');
-            }
+            $catsIdsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $catsIds);
+            $nbSubcatsOf = $this->categoryRepository->countSubcatsByParentIdsKeyedByParent($catsIdsInt);
             foreach ($cats as $idx => $cat) {
                 $catIdRaw2           = $cat['id'] ?? null;
                 $catIdKey            = is_string($catIdRaw2) ? $catIdRaw2 : '';
@@ -489,7 +487,7 @@ final readonly class CategoriesEndpoints
         $rawSetrankIds  = is_array($params['category_id']) ? $params['category_id'] : [];
         /** @var int[] $setrankCategoryIds */
         $setrankCategoryIds = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawSetrankIds);
-        $categories     = $this->conn->executeQuery('SELECT id, id_uppercat, `rank` FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $setrankCategoryIds) . ');')->fetchAllAssociative();
+        $categories = $this->categoryRepository->findIdIdUppercatRankByIds($setrankCategoryIds);
         if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
         }
@@ -498,18 +496,17 @@ final readonly class CategoriesEndpoints
             $orderNew      = $setrankCategoryIds;
             $orderNewById  = $orderNew;
             sort($orderNewById, SORT_NUMERIC);
-            $catAsc        = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id_uppercat ' . (empty($category['id_uppercat']) ? 'IS NULL' : '= ' . (is_scalar($category['id_uppercat']) ? (string) $category['id_uppercat'] : '0')) . ' ORDER BY `id` ASC;')->fetchAllAssociative(), 'id');
-            $catAscStr     = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catAsc);
-            $orderNewStr   = array_map(fn (int $v): string => (string) $v, $orderNewById);
-            if (strcmp(implode(',', $catAscStr), implode(',', $orderNewStr)) !== 0) {
+            $parentForAsc  = empty($category['id_uppercat']) ? null : (is_numeric($category['id_uppercat']) ? (int) $category['id_uppercat'] : 0);
+            $catAsc        = $this->categoryRepository->findIdsByParentOrderedById($parentForAsc);
+            if ($catAsc !== $orderNewById) {
                 return new PwgError(WsError::InvalidParam->value, 'you need to provide all sub-category ids for a given category');
             }
             $orderNew = $setrankCategoryIds;
         } else {
-            $singleCatId    = implode('', array_map(fn (int $v): string => (string) $v, $setrankCategoryIds));
+            $singleCatId    = $setrankCategoryIds[0];
             $idUppercatRaw  = $category['id_uppercat'] ?? null;
-            $idUppercatStr  = is_string($idUppercatRaw) ? $idUppercatRaw : '';
-            $orderOld       = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id_uppercat ' . ($idUppercatStr === '' ? 'IS NULL' : '= ' . $idUppercatStr) . ' AND id != ' . $singleCatId . ' ORDER BY `rank` ASC;')->fetchAllAssociative(), 'id');
+            $parentForOld   = is_numeric($idUppercatRaw) ? (int) $idUppercatRaw : null;
+            $orderOld       = $this->categoryRepository->findOtherIdsByParentOrderedByRank($parentForOld, $singleCatId);
             $rankTarget     = is_numeric($params['rank']) ? (int) $params['rank'] : 0;
             $orderNew       = [];
             $wasInserted    = false;
@@ -538,11 +535,10 @@ final readonly class CategoriesEndpoints
             return new PwgError(403, 'Invalid security token');
         }
         $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
-        $categories = $this->conn->executeQuery('SELECT * FROM ' . Tables::categories() . ' WHERE id = ' . $categoryId . ';')->fetchAllAssociative();
-        if (count($categories) === 0) {
+        $category   = $this->categoryRepository->findCategoryById($categoryId);
+        if ($category === null) {
             return new PwgError(404, 'category_id not found');
         }
-        $category = $categories[0];
         if (!empty($params['status'])) {
             if (!in_array($params['status'], ['private', 'public'])) {
                 return new PwgError(WsError::InvalidParam->value, 'Invalid status, only public/private');
@@ -578,7 +574,9 @@ final readonly class CategoriesEndpoints
             }
         }
         if ($performUpdate) {
-            $this->conn->update(Tables::categories(), $update, ['id' => $update['id']]);
+            $updateFields = $update;
+            unset($updateFields['id']);
+            $this->categoryRepository->updateById($categoryId, $updateFields);
         }
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, 'edit', ['fields' => implode(',', array_keys($update))]));
         return null;
@@ -665,11 +663,11 @@ final readonly class CategoriesEndpoints
         if (count($categoryIds) === 0) {
             return null;
         }
-        $rawCategoryIds = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $categoryIds) . ');')->fetchAllAssociative(), 'id');
+        $rawCategoryIds = $this->categoryRepository->findExistingIdsAmong(array_values($categoryIds));
         if (count($rawCategoryIds) === 0) {
             return null;
         }
-        $this->categoryAdminService->deleteCategories(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawCategoryIds), $photoDeletionMode);
+        $this->categoryAdminService->deleteCategories($rawCategoryIds, $photoDeletionMode);
         $this->categoryAdminService->updateGlobalRank();
         $this->userAdminService->invalidateUserCache();
         return null;
@@ -727,7 +725,7 @@ final readonly class CategoriesEndpoints
             $catDisplayName = $this->htmlService->getCatDisplayNameCache($uppercatsStr, $this->urlGenerator->admin() . '&page=album-');
             $updateCatIds   = array_merge($updateCatIds, array_slice(explode(',', $uppercatsStr), 0, -1));
         }
-        $nbPhotosIn = array_column($this->conn->executeQuery('SELECT category_id, COUNT(*) AS nb_photos FROM ' . Tables::imageCategory() . ' GROUP BY category_id;')->fetchAllAssociative(), 'nb_photos', 'category_id');
+        $nbPhotosIn = $this->categoryRepository->findNbPhotosPerCategoryKeyedById();
         $updateCats = [];
         foreach (array_unique($updateCatIds) as $updateCat) {
             $nbSubPhotos      = 0;
@@ -750,28 +748,27 @@ final readonly class CategoriesEndpoints
         $category['has_images'] = $this->categoryRepository->hasCategoryImages($categoryId);
         $subcatIds     = $this->categoryService->getSubcatIds([$categoryId]);
         $category['nb_subcats'] = count($subcatIds) - 1;
-        $imageIdsRecursive = array_column($this->conn->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $subcatIds) . ');')->fetchAllAssociative(), 'image_id');
+        $subcatIdsInt      = array_values($subcatIds);
+        $imageIdsRecursive = $this->categoryRepository->findImageIdsLinkedToCategories($subcatIdsInt);
         $category['nb_images_recursive'] = count($imageIdsRecursive);
         $category['nb_images_becoming_orphan']     = 0;
         $category['nb_images_associated_outside']  = 0;
         if ($category['nb_images_recursive'] > 0) {
             if ($category['nb_images_recursive'] < 1000) {
-                $imageIdsAssociatedOutside = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id NOT IN (' . implode(',', $subcatIds) . ') AND image_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIdsRecursive)) . ');')->fetchAllAssociative(), 'image_id'));
+                $imageIdsAssociatedOutside = $this->categoryRepository->findImageIdsAssociatedOutsideCategories($subcatIdsInt, $imageIdsRecursive);
                 $category['nb_images_associated_outside'] = count($imageIdsAssociatedOutside);
-                $imageIdsBecomingOrphan = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIdsRecursive), $imageIdsAssociatedOutside);
-                $category['nb_images_becoming_orphan'] = count($imageIdsBecomingOrphan);
+                $category['nb_images_becoming_orphan']    = count(array_diff($imageIdsRecursive, $imageIdsAssociatedOutside));
             } else {
-                $imageIdsRecursiveKeys = array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIdsRecursive));
-                $imageIdsAssociatedOutside2 = array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::imageCategory() . ' WHERE category_id NOT IN (' . implode(',', $subcatIds) . ');')->fetchAllAssociative(), 'image_id');
+                $recursiveKeys     = array_flip($imageIdsRecursive);
+                $outsideAll        = $this->categoryRepository->findImageIdsAssociatedOutsideCategoriesAll($subcatIdsInt);
                 $imageIdsNotOrphan = [];
-                foreach ($imageIdsAssociatedOutside2 as $imageId) {
-                    if (isset($imageIdsRecursiveKeys[is_scalar($imageId) ? (string) $imageId : ''])) {
+                foreach ($outsideAll as $imageId) {
+                    if (isset($recursiveKeys[$imageId])) {
                         $imageIdsNotOrphan[] = $imageId;
                     }
                 }
-                $category['nb_images_associated_outside'] = count(array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIdsNotOrphan)));
-                $imageIdsBecomingOrphan2 = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIdsRecursive), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $imageIdsNotOrphan));
-                $category['nb_images_becoming_orphan'] = count($imageIdsBecomingOrphan2);
+                $category['nb_images_associated_outside'] = count(array_unique($imageIdsNotOrphan));
+                $category['nb_images_becoming_orphan']    = count(array_diff($imageIdsRecursive, $imageIdsNotOrphan));
             }
         }
         return [['nb_images_associated_outside' => $category['nb_images_associated_outside'], 'nb_images_becoming_orphan' => $category['nb_images_becoming_orphan'], 'nb_images_recursive' => $category['nb_images_recursive']]];

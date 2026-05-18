@@ -104,9 +104,11 @@ final class ActivityRepository extends AbstractRepository
     /**
      * Return performed_by → row-count map for non-system activities.
      * The NULL `performed_by` bucket (system events without a current user)
-     * maps to the dedicated 'system' string key.
+     * maps to the dedicated 'system' string key. Numeric performed_by ids
+     * end up as int keys at runtime because PHP coerces numeric strings to
+     * ints when used as array keys — the annotation reflects that.
      *
-     * @return array<string, int>
+     * @return array<int|string, int>
      */
     public function findActivityCountByPerformer(): array
     {

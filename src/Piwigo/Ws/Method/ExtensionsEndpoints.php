@@ -15,11 +15,11 @@ use Piwigo\Admin\Themes;
 use Piwigo\Admin\Updates;
 use Piwigo\Config\Config;
 use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Http\RedirectResponder;
+use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
@@ -36,6 +36,7 @@ final readonly class ExtensionsEndpoints
         private CsrfService $csrfService,
         private RedirectResponder $redirectResponder,
         private IgnoredUpdatesRepository $ignoredUpdates,
+        private Session $session,
     ) {
     }
 
@@ -189,7 +190,7 @@ final readonly class ExtensionsEndpoints
             } else {
                 $this->ignoredUpdates->clearAll();
             }
-            unset($_SESSION['extensions_need_update']);
+            $this->session->extensionsNeedUpdate = null;
             return true;
         }
 
@@ -199,7 +200,7 @@ final readonly class ExtensionsEndpoints
             return new PwgError(403, 'Invalid parameters');
         }
         $this->ignoredUpdates->ignore($type, $ignoreId);
-        unset($_SESSION['extensions_need_update']);
+        $this->session->extensionsNeedUpdate = null;
         return true;
     }
 
@@ -212,12 +213,14 @@ final readonly class ExtensionsEndpoints
     {
         $update  = Kernel::service(Updates::class);
         $result  = [];
-        if (!isset($_SESSION['need_update' . AppInfo::VERSION])) {
+        if ($this->session->piwigoNeedsUpdate === null) {
             $update->checkPiwigoUpgrade();
         }
-        $result['piwigo_need_update'] = $_SESSION['need_update' . AppInfo::VERSION] ?? null;
+        $result['piwigo_need_update'] = $this->session->piwigoNeedsUpdate;
         $update->checkExtensions();
-        $result['ext_need_update'] = is_array($_SESSION['extensions_need_update']) ? !empty($_SESSION['extensions_need_update']) : null;
+        $result['ext_need_update'] = $this->session->extensionsNeedUpdate !== null
+            ? $this->session->extensionsNeedUpdate !== []
+            : null;
         return $result;
     }
 }

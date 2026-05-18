@@ -33,6 +33,7 @@ use Piwigo\Lang\LangService;
 use Piwigo\Language\LanguageService;
 use Piwigo\Mail\MailService;
 use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Session\Session;
 use Piwigo\Session\SessionService;
 use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlGenerator;
@@ -63,6 +64,7 @@ final class UserService
         private readonly CategoryService $categoryService,
         private readonly \Piwigo\Image\ImageRepository $imageRepository,
         private readonly UserAdminService $userAdminService,
+        private readonly Session $session,
         private readonly SessionService $sessionService,
         private readonly AuthService $authService,
         private readonly PreferencesService $preferencesService,
@@ -795,17 +797,16 @@ final class UserService
         if (!$this->permissionService->isAdmin() or $ctx->sectionUrl === '' or $ctx->imageId === null) {
             return;
         }
-        $_SESSION['edit_context'] ??= [];
-        $existingContext          = is_array($_SESSION['edit_context']) ? $_SESSION['edit_context'] : [];
-        $imageId                  = $ctx->imageId;
-        $sectionUrl               = $ctx->sectionUrl;
-        $_SESSION['edit_context'] = array_slice([$imageId => $sectionUrl] + $existingContext, 0, 10, true);
+        $existingContext = $this->session->editContext ?? [];
+        $imageId         = $ctx->imageId;
+        $sectionUrl      = $ctx->sectionUrl;
+        $this->session->editContext = array_slice([$imageId => $sectionUrl] + $existingContext, 0, 10, true);
     }
 
     public function getEditContext(int $imageId): false|string|null
     {
         $imageIdStr  = (string) $imageId;
-        $editContext = is_array($_SESSION['edit_context'] ?? null) ? $_SESSION['edit_context'] : [];
+        $editContext = $this->session->editContext ?? [];
         if (!isset($editContext[$imageIdStr])) {
             return false;
         }

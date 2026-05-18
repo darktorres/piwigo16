@@ -22,6 +22,7 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Core\ZipExtractor;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Mail\MailService;
+use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -59,6 +60,7 @@ final class Updates
         private readonly IgnoredUpdatesRepository $ignoredUpdates,
         private readonly Paths $paths,
         private readonly PemUrlResolver $pemUrlResolver,
+        private readonly Session $session,
     ) {
         $this->types = [ExtensionType::Plugin, ExtensionType::Theme, ExtensionType::Language];
         $this->default_themes = ['modus', 'elegant', 'smartpocket'];
@@ -121,7 +123,7 @@ final class Updates
 
     public function checkPiwigoUpgrade(): void
     {
-        $_SESSION['need_update'.AppInfo::VERSION] = null;
+        $this->session->piwigoNeedsUpdate = null;
 
         $result = '';
         if (preg_match('/(\d+\.\d+)\.(\d+)/', AppInfo::VERSION, $matches)
@@ -129,7 +131,7 @@ final class Updates
           and is_string($result)) {
             $all_versions = explode("\n", $result);
             $new_version = trim($all_versions[0]);
-            $_SESSION['need_update'.AppInfo::VERSION] = version_compare(AppInfo::VERSION, $new_version, '<');
+            $this->session->piwigoNeedsUpdate = version_compare(AppInfo::VERSION, $new_version, '<');
         }
     }
 
@@ -416,7 +418,7 @@ final class Updates
     /** @return array<mixed>|false */
     public function checkExtensions(): array|false
     {
-        $_SESSION['extensions_need_update'] = [];
+        $this->session->extensionsNeedUpdate = [];
 
         if (!$this->getServerExtensions()) {
             return false;
@@ -447,7 +449,7 @@ final class Updates
                         if (in_array($ext_id, $typeIgnoreList, true)) {
                             $survivingIgnored[] = $ext_id;
                         } else {
-                            $_SESSION['extensions_need_update'][$type->value][$ext_id] = is_string($ext_info['revision_name'] ?? null) ? $ext_info['revision_name'] : '';
+                            $this->session->extensionsNeedUpdate[$type->value][$ext_id] = is_string($ext_info['revision_name'] ?? null) ? $ext_info['revision_name'] : '';
                         }
                     }
                 }
@@ -463,7 +465,7 @@ final class Updates
     // Check if extension have been upgraded since last check
     public function checkUpdatedExtensions(): void
     {
-        $extensionsNeedUpdate = is_array($_SESSION['extensions_need_update'] ?? null) ? $_SESSION['extensions_need_update'] : [];
+        $extensionsNeedUpdate = $this->session->extensionsNeedUpdate ?? [];
         foreach ($this->types as $type) {
             $typeUpdates = is_array($extensionsNeedUpdate[$type->value] ?? null) ? $extensionsNeedUpdate[$type->value] : [];
             if (count($typeUpdates) > 0) {

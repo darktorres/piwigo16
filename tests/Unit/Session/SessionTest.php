@@ -39,7 +39,7 @@ final class SessionTest extends TestCase
             'pwg_filter_categories' => [1, '2', 3, 'bad'],
             'page_infos'           => ['hello', 'world'],
             'page_errors'          => ['oops'],
-            'dismissed_upgrade_version' => '17.0.0',
+            'piwigo_needs_update'  => true,
         ];
 
         $s = Session::fromSuperglobal($raw);
@@ -55,7 +55,7 @@ final class SessionTest extends TestCase
         self::assertSame([1, 2, 3], $s->filterCategories);
         self::assertSame(['hello', 'world'], $s->flash->peek('info'));
         self::assertSame(['oops'], $s->flash->peek('error'));
-        self::assertSame('17.0.0', $s->dismissedUpgradeVersion);
+        self::assertTrue($s->piwigoNeedsUpdate);
     }
 
     public function testMalformedValuesNarrowToDefaults(): void

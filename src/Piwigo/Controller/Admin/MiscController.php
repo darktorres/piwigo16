@@ -61,6 +61,7 @@ use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
 use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Rate\RateRepository;
+use Piwigo\Session\Session;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -113,6 +114,7 @@ final class MiscController implements AdminSubControllerInterface
         private readonly PreferencesService $preferencesService,
         private readonly ProfileService $profileService,
         private readonly RateRepository $rateRepository,
+        private readonly Session $session,
         private readonly TagAdminService $tagAdminService,
         private readonly TagRepository $tagRepository,
         private readonly UrlGenerator $urlGenerator,
@@ -399,7 +401,7 @@ final class MiscController implements AdminSubControllerInterface
         if (isset($_GET['action']) && 'delete_orphans' == $_GET['action']) {
             $this->csrfService->check();
             $this->tagAdminService->deleteOrphanTags();
-            $_SESSION['message_tags'] = Lang::t('Orphan tags deleted');
+            $this->session->messageTags = Lang::t('Orphan tags deleted');
             $this->redirectResponder->redirect($this->urlGenerator->admin('tags'));
         }
 
@@ -425,12 +427,8 @@ final class MiscController implements AdminSubControllerInterface
         }
         $tpl->assign(['orphan_tag_names_array' => $orphan_tag_names_array, 'warning_tags' => $warning_tags]);
 
-        $message_tags = '';
-        if (isset($_SESSION['message_tags'])) {
-            $rawMessageTags = $_SESSION['message_tags'];
-            $message_tags   = is_string($rawMessageTags) ? $rawMessageTags : '';
-            unset($_SESSION['message_tags']);
-        }
+        $message_tags = $this->session->messageTags ?? '';
+        $this->session->messageTags = null;   // one-shot flash: consume and clear.
         $tpl->assign('message_tags', $message_tags);
 
         $per_page   = 100;

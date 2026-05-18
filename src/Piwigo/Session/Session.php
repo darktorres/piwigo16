@@ -73,14 +73,25 @@ final class Session
     public ?array $editContext = null;              // edit_context
 
     // -- Upgrade / install -------------------------------------------------
-    /** @var list<string> */
-    public array $extensionsNeedUpdate = [];        // extensions_need_update
     /**
-     * Version the user dismissed the upgrade banner for. Replaces the
-     * historical dynamic key `'need_update' . AppInfo::VERSION` — single
-     * slot, simpler lifecycle, callers compare `=== AppInfo::VERSION`.
+     * Pending extension updates keyed by extension type (plugins / themes /
+     * languages) → extension id → latest revision name. Null when the cache
+     * is uninitialized; empty array when initialized but no updates. Slot
+     * type is loose (`array<mixed>|null`) to match what `is_array()` returns
+     * out of `$_SESSION`; the nested-shape contract is owned by
+     * `Admin\Updates` and `Ws\Method\ExtensionsEndpoints`.
+     *
+     * @var array<mixed>|null
      */
-    public ?string $dismissedUpgradeVersion = null;
+    public ?array $extensionsNeedUpdate = null;     // extensions_need_update
+    /**
+     * Cached result of the last Piwigo-version upgrade check: true when a
+     * newer core version is available, false when up to date, null when the
+     * check hasn't run this session. Replaces the historical dynamic key
+     * `'need_update' . AppInfo::VERSION` — the version-keyed cache busts
+     * automatically when AppInfo::VERSION changes (deploy / upgrade).
+     */
+    public ?bool $piwigoNeedsUpdate = null;
     public bool $noPhotoYet = false;                // no_photo_yet
 
     // -- Password reset ----------------------------------------------------
@@ -106,6 +117,14 @@ final class Session
     /** @var array<mixed>|null */
     public ?array $uploadsError = null;             // uploads_error
     public bool $uploadHideWarnings = false;        // upload_hide_warnings
+
+    /**
+     * One-shot success message displayed under the tags section of admin
+     * tools (e.g. "Orphan tags deleted"). Single string, not a flash list —
+     * the legacy session shape is scalar and the template assigns it as
+     * a single template variable.
+     */
+    public ?string $messageTags = null;             // message_tags
 
     // -- Flash messages ----------------------------------------------------
     public readonly FlashBag $flash;
@@ -159,8 +178,8 @@ final class Session
         $s->bulkManagerFilter = is_array($raw['bulk_manager_filter'] ?? null) ? $raw['bulk_manager_filter'] : null;
         $s->editContext       = is_array($raw['edit_context'] ?? null) ? $raw['edit_context'] : null;
 
-        $s->extensionsNeedUpdate     = self::stringList($raw['extensions_need_update'] ?? null);
-        $s->dismissedUpgradeVersion  = is_string($raw['dismissed_upgrade_version'] ?? null) ? $raw['dismissed_upgrade_version'] : null;
+        $s->extensionsNeedUpdate     = is_array($raw['extensions_need_update'] ?? null) ? $raw['extensions_need_update'] : null;
+        $s->piwigoNeedsUpdate        = is_bool($raw['piwigo_needs_update'] ?? null) ? $raw['piwigo_needs_update'] : null;
         $s->noPhotoYet               = (bool) ($raw['no_photo_yet'] ?? false);
 
         $s->resetPasswordCode      = is_array($raw['reset_password_code'] ?? null) ? $raw['reset_password_code'] : null;
@@ -168,6 +187,7 @@ final class Session
 
         $s->uploadsError       = is_array($raw['uploads_error'] ?? null) ? $raw['uploads_error'] : null;
         $s->uploadHideWarnings = (bool) ($raw['upload_hide_warnings'] ?? false);
+        $s->messageTags        = is_string($raw['message_tags'] ?? null) ? $raw['message_tags'] : null;
 
         $s->snapshot = $s->currentState();
         return $s;
@@ -294,11 +314,11 @@ final class Session
         if ($this->editContext !== null) {
             $state['edit_context'] = $this->editContext;
         }
-        if ($this->extensionsNeedUpdate !== []) {
+        if ($this->extensionsNeedUpdate !== null) {
             $state['extensions_need_update'] = $this->extensionsNeedUpdate;
         }
-        if ($this->dismissedUpgradeVersion !== null) {
-            $state['dismissed_upgrade_version'] = $this->dismissedUpgradeVersion;
+        if ($this->piwigoNeedsUpdate !== null) {
+            $state['piwigo_needs_update'] = $this->piwigoNeedsUpdate;
         }
         if ($this->noPhotoYet) {
             $state['no_photo_yet'] = true;
@@ -315,6 +335,9 @@ final class Session
         if ($this->uploadHideWarnings) {
             $state['upload_hide_warnings'] = true;
         }
+        if ($this->messageTags !== null) {
+            $state['message_tags'] = $this->messageTags;
+        }
 
         $flashByKind = $this->flash->toArray();
         if (($flashByKind['info'] ?? []) !== []) {
@@ -322,9 +345,6 @@ final class Session
         }
         if (($flashByKind['error'] ?? []) !== []) {
             $state['page_errors'] = $flashByKind['error'];
-        }
-        if (($flashByKind['tag'] ?? []) !== []) {
-            $state['message_tags'] = $flashByKind['tag'];
         }
 
         return $state;
@@ -353,13 +373,14 @@ final class Session
         $this->filterVisibleImages  = [];
         $this->bulkManagerFilter    = null;
         $this->editContext          = null;
-        $this->extensionsNeedUpdate = [];
-        $this->dismissedUpgradeVersion = null;
+        $this->extensionsNeedUpdate = null;
+        $this->piwigoNeedsUpdate    = null;
         $this->noPhotoYet           = false;
         $this->resetPasswordCode    = null;
         $this->validResetPasswordCode = null;
         $this->uploadsError         = null;
         $this->uploadHideWarnings   = false;
+        $this->messageTags          = null;
     }
 
     // -- internal helpers --------------------------------------------------
@@ -370,15 +391,11 @@ final class Session
         $messages = [];
         $info  = self::stringList($raw['page_infos'] ?? null);
         $error = self::stringList($raw['page_errors'] ?? null);
-        $tag   = self::stringList($raw['message_tags'] ?? null);
         if ($info !== []) {
-            $messages['info']  = $info;
+            $messages['info'] = $info;
         }
         if ($error !== []) {
             $messages['error'] = $error;
-        }
-        if ($tag !== []) {
-            $messages['tag']   = $tag;
         }
         return FlashBag::fromArray($messages);
     }

@@ -1691,6 +1691,38 @@ SELECT
     }
 
     /**
+     * Return ids of private categories.
+     *
+     * @return list<int>
+     */
+    public function findPrivateIds(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('categories'))
+            ->where("status = 'private'")
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return ids of locked categories (visible = 0).
+     *
+     * @return list<int>
+     */
+    public function findLockedIds(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('categories'))
+            ->where('visible = 0')
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
      * Return ids of virtual categories (dir IS NULL — categories without
      * a filesystem directory).
      *

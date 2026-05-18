@@ -233,6 +233,39 @@ final class PermissionRepository extends AbstractRepository
     }
 
     /**
+     * Return cat_ids that the given user has direct access to.
+     *
+     * @return list<int>
+     */
+    public function findCatIdsByUserAccess(int $userId): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('cat_id')
+            ->from($this->table('user_access'))
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return cat_ids accessible via the user's group memberships.
+     *
+     * @return list<int>
+     */
+    public function findCatIdsByUserGroupAccess(int $userId): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT cat_id FROM ' . $this->table('user_group') . ' AS ug'
+            . ' INNER JOIN ' . $this->table('group_access') . ' AS ga ON ug.group_id = ga.group_id'
+            . ' WHERE ug.user_id = ?',
+            [$userId],
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
      * Return user_ids that have direct access to the given category.
      *
      * @return list<int>

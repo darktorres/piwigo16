@@ -5,19 +5,20 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\SqlExpr;
-use Piwigo\Db\Tables;
 use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
+use Piwigo\Permission\PermissionRepository;
 
 final readonly class PermissionService
 {
     public function __construct(
-        private Connection $conn,
+        private CategoryRepository $categoryRepository,
+        private PermissionRepository $permissionRepository,
         private HtmlService $htmlService,
     ) {
     }
@@ -117,33 +118,16 @@ final readonly class PermissionService
     /** @return list<int> category ids the user is not allowed to see (always non-empty; placeholder 0 if user has full access) */
     public function calculatePermissions(int $userId, string $userStatus): array
     {
-        $toInt = static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0;
-
-        $privateIds = array_map($toInt, array_column(
-            $this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . " WHERE status = 'private';")->fetchAllAssociative(),
-            'id'
-        ));
-
-        $authorizedIds = array_map($toInt, array_column(
-            $this->conn->executeQuery('SELECT cat_id FROM ' . Tables::userAccess() . ' WHERE user_id = ?', [$userId])->fetchAllAssociative(),
-            'cat_id'
-        ));
-        $authorizedIds = array_merge($authorizedIds, array_map($toInt, array_column(
-            $this->conn->executeQuery(
-                'SELECT cat_id FROM ' . Tables::userGroup() . ' AS ug INNER JOIN ' . Tables::groupAccess() . ' AS ga ON ug.group_id = ga.group_id WHERE ug.user_id = ?',
-                [$userId]
-            )->fetchAllAssociative(),
-            'cat_id'
-        )));
+        $privateIds    = $this->categoryRepository->findPrivateIds();
+        $authorizedIds = array_merge(
+            $this->permissionRepository->findCatIdsByUserAccess($userId),
+            $this->permissionRepository->findCatIdsByUserGroupAccess($userId),
+        );
 
         $forbiddenIds = array_diff($privateIds, $authorizedIds);
 
         if (!$this->isAdmin($userStatus)) {
-            $forbiddenIds = array_merge($forbiddenIds, array_map($toInt, array_column(
-                $this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE visible = 0;')->fetchAllAssociative(),
-                'id'
-            )));
-            $forbiddenIds = array_unique($forbiddenIds);
+            $forbiddenIds = array_unique(array_merge($forbiddenIds, $this->categoryRepository->findLockedIds()));
         }
 
         return $forbiddenIds === [] ? [0] : array_values($forbiddenIds);

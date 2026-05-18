@@ -22,9 +22,13 @@ final class DbMaintenanceRepository extends AbstractRepository
      */
     public function findAllPiwigoTableNames(): array
     {
+        // SHOW TABLES doesn't accept prepared-statement parameter binding
+        // under the mysqli protocol; splice the prefix in literally. The
+        // prefix is Config::dbPrefix() — admin-configured, not user input —
+        // but escape LIKE specials defensively.
+        $like = str_replace(['\\', '%', '_', "'"], ['\\\\', '\\%', '\\_', "''"], $this->tablePrefix) . '%';
         $rows = $this->conn->executeQuery(
-            'SHOW TABLES LIKE ?',
-            [$this->tablePrefix . '%'],
+            "SHOW TABLES LIKE '" . $like . "'",
         )->fetchFirstColumn();
         return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rows);
     }

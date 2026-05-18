@@ -375,7 +375,7 @@ CREATE TABLE `piwigo_plugin_migrations` (
 
 DROP TABLE IF EXISTS `piwigo_rate`;
 CREATE TABLE `piwigo_rate` (
-  `user_id` mediumint(8) unsigned NOT NULL default '0',
+  `user_id` mediumint(8) unsigned NOT NULL,
   `element_id` mediumint(8) unsigned NOT NULL default '0',
   `anonymous_id` varchar(45) NOT NULL default '',
   `rate` tinyint(2) unsigned NOT NULL default '0',
@@ -695,7 +695,8 @@ ALTER TABLE `piwigo_lounge`
   ADD CONSTRAINT `fk_lounge_category_id` FOREIGN KEY (`category_id`) REFERENCES `piwigo_categories`(`id`) ON DELETE CASCADE;
 
 ALTER TABLE `piwigo_rate`
-  ADD CONSTRAINT `fk_rate_element_id` FOREIGN KEY (`element_id`) REFERENCES `piwigo_images`(`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_rate_element_id` FOREIGN KEY (`element_id`) REFERENCES `piwigo_images`(`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_rate_user_id`    FOREIGN KEY (`user_id`)    REFERENCES `piwigo_users`(`id`)  ON DELETE CASCADE;
 
 ALTER TABLE `piwigo_categories`
   ADD CONSTRAINT `fk_categories_id_uppercat`               FOREIGN KEY (`id_uppercat`)               REFERENCES `piwigo_categories`(`id`) ON DELETE SET NULL,

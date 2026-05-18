@@ -55,6 +55,7 @@ use Piwigo\Job\RegenerateAllDerivativesJob;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
+use Piwigo\Session\Session;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\LocalSiteReader;
@@ -100,6 +101,7 @@ final class MaintenanceController implements AdminSubControllerInterface
         private readonly PermissionService $permissionService,
         private readonly RateService $rateService,
         private readonly SearchRepository $searchRepository,
+        private readonly Session $session,
         private readonly SessionRepository $sessionRepository,
         private readonly SessionService $sessionService,
         private readonly SiteRepository $siteRepository,
@@ -215,7 +217,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 break;
             case 'unlock_gallery':
                 $this->configService->confUpdateParam('gallery_locked', 'false');
-                $_SESSION['page_infos'] = [Lang::t('Gallery unlocked')];
+                $this->session->flash->add('info', Lang::t('Gallery unlocked'));
                 $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]));
                 $this->redirectResponder->redirect($this->urlGenerator->admin('maintenance'));
                 break;
@@ -464,7 +466,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 $this->redirectResponder->redirect($this->urlGenerator->admin('maintenance'));
                 break;
             case 'unlock_gallery':  $this->configService->confUpdateParam('gallery_locked', 'false');
-                $_SESSION['page_infos'] = [Lang::t('Gallery unlocked')];
+                $this->session->flash->add('info', Lang::t('Gallery unlocked'));
                 $this->redirectResponder->redirect($this->urlGenerator->admin('maintenance'));
                 break;
             case 'categories':      $this->categoryAdminService->imagesIntegrity();

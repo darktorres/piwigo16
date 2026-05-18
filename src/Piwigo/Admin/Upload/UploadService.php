@@ -32,6 +32,7 @@ use Piwigo\Image\DerivativeService;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Session\Session;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\PwgError;
@@ -51,6 +52,7 @@ final readonly class UploadService
         private ActivityLogger $activityLogger,
         private EventDispatcherInterface $dispatcher,
         private Paths $paths,
+        private Session $session,
     ) {
     }
 
@@ -587,11 +589,11 @@ final readonly class UploadService
 
     public function addUploadError(string $uploadId, string $errorMessage): void
     {
-        $uploadsError                = is_array($_SESSION['uploads_error'] ?? null) ? $_SESSION['uploads_error'] : [];
-        $slot                        = is_array($uploadsError[$uploadId] ?? null) ? $uploadsError[$uploadId] : [];
-        $slot[]                      = $errorMessage;
-        $uploadsError[$uploadId]     = $slot;
-        $_SESSION['uploads_error']   = $uploadsError;
+        $uploadsError                 = $this->session->uploadsError ?? [];
+        $slot                         = is_array($uploadsError[$uploadId] ?? null) ? $uploadsError[$uploadId] : [];
+        $slot[]                       = $errorMessage;
+        $uploadsError[$uploadId]      = $slot;
+        $this->session->uploadsError  = $uploadsError;
     }
 
     public function readyForUploadMessage(): ?string

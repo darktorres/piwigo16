@@ -14,6 +14,7 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Validation\InputValidator;
 
@@ -27,6 +28,7 @@ final readonly class DirectPreparer
         private UploadService $uploadService,
         private CsrfService $csrfService,
         private InputValidator $inputValidator,
+        private Session $session,
     ) {
     }
 
@@ -134,9 +136,9 @@ final readonly class DirectPreparer
         ]);
 
         if (isset($_GET['hide_warnings'])) {
-            $_SESSION['upload_hide_warnings'] = true;
+            $this->session->uploadHideWarnings = true;
         }
-        if (!isset($_SESSION['upload_hide_warnings'])) {
+        if (!$this->session->uploadHideWarnings) {
             $setup_warnings = [];
             if (Config::useExif() && !function_exists('exif_read_data')) {
                 $setup_warnings[] = Lang::t('Exif extension not available, admin should disable exif use');

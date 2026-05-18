@@ -15,6 +15,7 @@ use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Session\Session;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -32,6 +33,7 @@ final readonly class NoPhotoYetRenderer
         private RedirectResponder $redirectResponder,
         private UrlService $urlService,
         private PermissionService $permissionService,
+        private Session $session,
         private EventDispatcherInterface $dispatcher,
         private Paths $paths,
     ) {
@@ -49,7 +51,7 @@ final readonly class NoPhotoYetRenderer
             and !str_starts_with($_no_photo_yet_route, '/ws')
             and StringUtil::scriptBasename() != 'popuphelp'
             and ($this->permissionService->isAGuest() or $this->permissionService->isAdmin())
-            and !isset($_SESSION['no_photo_yet'])
+            and $this->session->noPhotoYet === null
         ) {
             $nb_photos = $this->imageRepository->countAll();
             if (0 == $nb_photos) {
@@ -59,7 +61,7 @@ final readonly class NoPhotoYetRenderer
 
                 if (isset($_GET['no_photo_yet'])) {
                     if ('browse' == $_GET['no_photo_yet']) {
-                        $_SESSION['no_photo_yet'] = 'browse';
+                        $this->session->noPhotoYet = 'browse';
                         $this->redirectResponder->redirect($this->urlService->makeIndexUrl());
                         exit();
                     }

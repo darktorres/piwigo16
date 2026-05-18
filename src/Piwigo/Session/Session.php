@@ -92,7 +92,13 @@ final class Session
      * automatically when AppInfo::VERSION changes (deploy / upgrade).
      */
     public ?bool $piwigoNeedsUpdate = null;
-    public bool $noPhotoYet = false;                // no_photo_yet
+    /**
+     * Mode flag controlling the "no photos yet" admin onboarding banner.
+     * Only documented value today is `'browse'` (user dismissed the banner
+     * by clicking Browse). Null means the banner has not been dismissed.
+     * Legacy callers gate behavior on isset().
+     */
+    public ?string $noPhotoYet = null;              // no_photo_yet
 
     // -- Password reset ----------------------------------------------------
     /**
@@ -180,7 +186,7 @@ final class Session
 
         $s->extensionsNeedUpdate     = is_array($raw['extensions_need_update'] ?? null) ? $raw['extensions_need_update'] : null;
         $s->piwigoNeedsUpdate        = is_bool($raw['piwigo_needs_update'] ?? null) ? $raw['piwigo_needs_update'] : null;
-        $s->noPhotoYet               = (bool) ($raw['no_photo_yet'] ?? false);
+        $s->noPhotoYet               = is_string($raw['no_photo_yet'] ?? null) ? $raw['no_photo_yet'] : null;
 
         $s->resetPasswordCode      = is_array($raw['reset_password_code'] ?? null) ? $raw['reset_password_code'] : null;
         $s->validResetPasswordCode = is_array($raw['valid_reset_password_code'] ?? null) ? $raw['valid_reset_password_code'] : null;
@@ -320,8 +326,8 @@ final class Session
         if ($this->piwigoNeedsUpdate !== null) {
             $state['piwigo_needs_update'] = $this->piwigoNeedsUpdate;
         }
-        if ($this->noPhotoYet) {
-            $state['no_photo_yet'] = true;
+        if ($this->noPhotoYet !== null) {
+            $state['no_photo_yet'] = $this->noPhotoYet;
         }
         if ($this->resetPasswordCode !== null) {
             $state['reset_password_code'] = $this->resetPasswordCode;
@@ -375,7 +381,7 @@ final class Session
         $this->editContext          = null;
         $this->extensionsNeedUpdate = null;
         $this->piwigoNeedsUpdate    = null;
-        $this->noPhotoYet           = false;
+        $this->noPhotoYet           = null;
         $this->resetPasswordCode    = null;
         $this->validResetPasswordCode = null;
         $this->uploadsError         = null;

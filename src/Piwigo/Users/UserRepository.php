@@ -1295,4 +1295,44 @@ final class UserRepository extends AbstractRepository
             . ' WHERE ui.user_id IN (?)';
         return $this->conn->executeQuery($query, [$ids], [ArrayParameterType::INTEGER])->fetchAllAssociative();
     }
+
+    /**
+     * Map of theme → number of users selecting it. Used by telemetry.
+     *
+     * @return array<string, int>
+     */
+    public function findThemeUsage(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT theme, COUNT(*) AS theme_counter'
+            . ' FROM ' . $this->table('user_infos')
+            . ' GROUP BY theme ORDER BY theme',
+        )->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $theme       = is_string($row['theme'] ?? null) ? $row['theme'] : '';
+            $out[$theme] = is_numeric($row['theme_counter'] ?? null) ? (int) $row['theme_counter'] : 0;
+        }
+        return $out;
+    }
+
+    /**
+     * Map of language → number of users selecting it. Used by telemetry.
+     *
+     * @return array<string, int>
+     */
+    public function findLanguageUsage(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT language, COUNT(*) AS language_counter'
+            . ' FROM ' . $this->table('user_infos')
+            . ' GROUP BY language ORDER BY language',
+        )->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $lang       = is_string($row['language'] ?? null) ? $row['language'] : '';
+            $out[$lang] = is_numeric($row['language_counter'] ?? null) ? (int) $row['language_counter'] : 0;
+        }
+        return $out;
+    }
 }

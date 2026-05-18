@@ -331,7 +331,7 @@ return [
     LanguageService::class     => factory(static fn (LanguageRepository $r, Paths $paths): LanguageService => new LanguageService($r, $paths)),
     PaginationService::class   => factory(static fn (): PaginationService => new PaginationService()),
     RedirectResponder::class   => factory(static fn (LangService $lang, EventDispatcherInterface $dispatcher, Paths $paths): RedirectResponder => new RedirectResponder($lang, $dispatcher, $paths)),
-    TelemetryService::class    => factory(static fn (Connection $conn, ConfigService $cfg, LoggerInterface $log, AdminService $admin, ExecutionMutex $mutex): TelemetryService => new TelemetryService($conn, $cfg, $log, $admin, $mutex)),
+    TelemetryService::class    => factory(static fn (ActivityRepository $aR, ConfigService $cfg, ImageRepository $i, LoggerInterface $log, AdminService $admin, ExecutionMutex $mutex, UserRepository $u): TelemetryService => new TelemetryService($aR, $cfg, $i, $log, $admin, $mutex, $u)),
     ThemeService::class        => factory(static fn (ThemeRepository $r, EventDispatcherInterface $dispatcher): ThemeService => new ThemeService($r, $dispatcher)),
     ThemeRegistry::class       => factory(static fn (ThemeRepository $r, LoggerInterface $log, EventDispatcherInterface $dispatcher, Paths $paths): ThemeRegistry => new ThemeRegistry($r, $log, $paths->root . 'themes', $paths->root . 'docs/schemas/theme.schema.json', $dispatcher)),
     TemplateResolver::class    => factory(static fn (ThemeRegistry $reg, Paths $paths): TemplateResolver => new TemplateResolver($reg, $paths->root . 'themes')),

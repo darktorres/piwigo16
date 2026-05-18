@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Telemetry;
 
-use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
@@ -16,8 +16,9 @@ use Piwigo\Core\ExecutionMutex;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbInfo;
-use Piwigo\Db\Tables;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Log\LoggerInterface;
 
@@ -30,11 +31,13 @@ use Psr\Log\LoggerInterface;
 final readonly class TelemetryService
 {
     public function __construct(
-        private Connection $conn,
+        private ActivityRepository $activityRepository,
         private ConfigService $configService,
+        private ImageRepository $imageRepository,
         private LoggerInterface $log,
         private AdminService $adminService,
         private ExecutionMutex $mutex,
+        private UserRepository $userRepository,
     ) {
     }
 
@@ -120,27 +123,23 @@ final readonly class TelemetryService
         $piwigoInfos['general_stats']['last_photo']        = null;
 
         if ($piwigoInfos['general_stats']['nb_photos'] > 0) {
-            $query = 'SELECT COUNT(*) AS counter FROM `' . Tables::images() . '` WHERE storage_category_id IS NOT NULL;';
-            if (array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'counter')[0] > 0) {
-                $query = 'SELECT IF(storage_category_id IS NULL, \'api\', \'sync\') AS add_method, MAX(date_available) AS last_added_on, COUNT(*) AS nb_files FROM `' . Tables::images() . '` GROUP BY add_method;';
-                $filesByMethod = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'add_method');
-                $piwigoInfos['general_stats']['nb_photos_synced']  = $filesByMethod['sync']['nb_files'];
-                $piwigoInfos['general_stats']['last_photo_synced'] = $filesByMethod['sync']['last_added_on'];
+            if ($this->imageRepository->countWithStorageCategorySet() > 0) {
+                $filesByMethod = $this->imageRepository->findFilesAddedByMethod();
+                $syncFiles = $filesByMethod['sync'] ?? null;
+                $piwigoInfos['general_stats']['nb_photos_synced']  = $syncFiles['nb_files'] ?? 0;
+                $piwigoInfos['general_stats']['last_photo_synced'] = $syncFiles['last_added_on'] ?? null;
                 $methodOfLastPhoto = 'sync';
-                if (isset($filesByMethod['api']) && strtotime(is_scalar($filesByMethod['api']['last_added_on']) ? (string) $filesByMethod['api']['last_added_on'] : '') > strtotime(is_scalar($filesByMethod['sync']['last_added_on']) ? (string) $filesByMethod['sync']['last_added_on'] : '')) {
+                if (isset($filesByMethod['api'])
+                    && strtotime($filesByMethod['api']['last_added_on']) > strtotime($syncFiles['last_added_on'] ?? '')
+                ) {
                     $methodOfLastPhoto = 'api';
                 }
-                $piwigoInfos['general_stats']['last_photo'] = $filesByMethod[$methodOfLastPhoto]['last_added_on'];
+                $piwigoInfos['general_stats']['last_photo'] = $filesByMethod[$methodOfLastPhoto]['last_added_on'] ?? null;
             } else {
-                $query  = 'SELECT date_available FROM `' . Tables::images() . '` ORDER BY id DESC LIMIT 1;';
-                $images = $this->conn->executeQuery($query)->fetchAllAssociative();
-                if (count($images) > 0) {
-                    $piwigoInfos['general_stats']['last_photo'] = $images[0]['date_available'];
-                }
+                $piwigoInfos['general_stats']['last_photo'] = $this->imageRepository->findLatestDateAvailable();
             }
 
-            $query = 'SELECT SUBSTRING_INDEX(path,".",-1) AS ext, COUNT(*) AS counter, SUM(filesize) AS filesize FROM `' . Tables::images() . '` GROUP BY ext;';
-            $piwigoInfos['file_extensions'] = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'ext');
+            $piwigoInfos['file_extensions'] = $this->imageRepository->findFileExtensionUsage();
         }
 
         $url    = PEM_URL . '/api/get_extension_list.php';
@@ -238,26 +237,20 @@ final readonly class TelemetryService
         $piwigoInfos['general_stats']['default_theme'] = $defaultTheme;
 
         $piwigoInfos['themes_usage'] = [];
-        $query      = 'SELECT theme, COUNT(*) AS theme_counter FROM ' . Tables::userInfos() . ' GROUP BY theme ORDER BY theme;';
-        $themesUsed = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'theme_counter', 'theme');
-        foreach ($themesUsed as $themeUsed => $counter) {
+        foreach ($this->userRepository->findThemeUsage() as $themeUsed => $counter) {
             if (isset($privateThemes[$themeUsed])) {
                 $themeUsed = 'private theme';
             }
-            $piwigoInfos['themes_usage'][$themeUsed] = ($piwigoInfos['themes_usage'][$themeUsed] ?? 0) + (is_numeric($counter) ? (int) $counter : 0);
+            $piwigoInfos['themes_usage'][$themeUsed] = ($piwigoInfos['themes_usage'][$themeUsed] ?? 0) + $counter;
         }
 
         $piwigoInfos['general_stats']['default_language'] = Kernel::service(UserService::class)->getDefaultLanguage();
-
-        $query = 'SELECT language, COUNT(*) AS language_counter FROM ' . Tables::userInfos() . ' GROUP BY language ORDER BY language;';
-        $piwigoInfos['languages_usage'] = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'language_counter', 'language');
+        $piwigoInfos['languages_usage'] = $this->userRepository->findLanguageUsage();
 
         $piwigoInfos['activities']                      = [];
         $piwigoInfos['general_stats']['nb_activities']  = 0;
 
-        $query      = 'SELECT object, action, COUNT(*) AS counter FROM ' . Tables::activity() . " WHERE object != 'system' GROUP BY object, action;";
-        $activities = $this->conn->executeQuery($query)->fetchAllAssociative();
-        foreach ($activities as $activity) {
+        foreach ($this->activityRepository->findUserActivityGroupCounts() as $activity) {
             $piwigoInfos['general_stats']['nb_activities'] += is_numeric($activity['counter']) ? (int) $activity['counter'] : 0;
             $objectKey = is_string($activity['object'] ?? null) ? $activity['object'] : '';
             $actionKey = is_string($activity['action'] ?? null) ? $activity['action'] : '';
@@ -268,10 +261,8 @@ final readonly class TelemetryService
         }
 
         $labelForSystemObjectId = [1 => 'core', 2 => 'plugin', 3 => 'theme'];
-        $query      = 'SELECT object, object_id, action, COUNT(*) AS counter FROM ' . Tables::activity() . " WHERE object = 'system' GROUP BY object, object_id, action;";
-        $activities = $this->conn->executeQuery($query)->fetchAllAssociative();
         $systemActivities = [];
-        foreach ($activities as $activity) {
+        foreach ($this->activityRepository->findSystemActivityGroupCounts() as $activity) {
             $objectIdKey = is_numeric($activity['object_id']) ? (int) $activity['object_id'] : 0;
             $actionKey   = is_string($activity['action'] ?? null) ? $activity['action'] : '';
             $labelKey    = $labelForSystemObjectId[$objectIdKey] ?? 'undefined';
@@ -282,8 +273,7 @@ final readonly class TelemetryService
         }
         $piwigoInfos['activities']['system'] = $systemActivities;
 
-        $query   = 'SELECT action, occured_on, details FROM ' . Tables::activity() . " WHERE object = 'system' AND object_id = " . ActivitySystem::Core . " AND action IN ('update', 'autoupdate') ORDER BY activity_id ASC;";
-        $updates = $this->conn->executeQuery($query)->fetchAllAssociative();
+        $updates = $this->activityRepository->findCoreUpdateActivities(ActivitySystem::Core);
         foreach ($updates as $update) {
             $detailsDecoded = json_decode(is_string($update['details']) ? $update['details'] : '', associative: true);
             $details        = is_array($detailsDecoded) ? $detailsDecoded : [];
@@ -300,8 +290,7 @@ final readonly class TelemetryService
         $watermark = ImageStdParams::getWatermark();
         $piwigoInfos['features'] = ['use_watermark' => !empty($watermark->file) ? 'yes' : 'no'];
 
-        $query      = 'SELECT user_agent, COUNT(*) AS counter, MIN(occured_on) AS first_encounter, MAX(occured_on) AS last_encounter FROM ' . Tables::activity() . " WHERE user_agent NOT LIKE 'Mozilla/5%' GROUP BY user_agent;";
-        $activities = $this->conn->executeQuery($query)->fetchAllAssociative();
+        $activities = $this->activityRepository->findAppUserAgentStats();
         $apps       = [];
         $appsPattern = [
             'Piwigo iOS'          => '/^Piwigo\/\d+ CFNetwork/',

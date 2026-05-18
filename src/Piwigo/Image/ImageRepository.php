@@ -564,6 +564,82 @@ final class ImageRepository extends AbstractRepository
         return array_column($qb->executeQuery()->fetchAllAssociative(), null, 'id');
     }
 
+    /** Count images whose storage_category_id is NOT NULL (filesystem-synced). */
+    public function countWithStorageCategorySet(): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('images'))
+            ->where('storage_category_id IS NOT NULL')
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Group images by add_method (sync vs api, derived from
+     * storage_category_id IS NULL) and return aggregated per-method stats.
+     * Result keyed by add_method.
+     *
+     * @return array<string, array{nb_files: int, last_added_on: string}>
+     */
+    public function findFilesAddedByMethod(): array
+    {
+        $rows = $this->conn->executeQuery(
+            "SELECT IF(storage_category_id IS NULL, 'api', 'sync') AS add_method,"
+            . ' MAX(date_available) AS last_added_on, COUNT(*) AS nb_files'
+            . ' FROM ' . $this->table('images')
+            . ' GROUP BY add_method',
+        )->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $method = is_string($row['add_method'] ?? null) ? $row['add_method'] : '';
+            $out[$method] = [
+                'nb_files'      => is_numeric($row['nb_files'] ?? null) ? (int) $row['nb_files'] : 0,
+                'last_added_on' => is_scalar($row['last_added_on'] ?? null) ? (string) $row['last_added_on'] : '',
+            ];
+        }
+        return $out;
+    }
+
+    /** Return the date_available of the most recently inserted image, or null. */
+    public function findLatestDateAvailable(): ?string
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('date_available')
+            ->from($this->table('images'))
+            ->orderBy('id', 'DESC')
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchOne();
+        return is_scalar($value) ? (string) $value : null;
+    }
+
+    /**
+     * Group all images by file extension (last token after the final dot in
+     * path) and return per-extension counter + total filesize.
+     *
+     * @return array<string, array{counter: int, filesize: int}>
+     */
+    public function findFileExtensionUsage(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT SUBSTRING_INDEX(path, ".", -1) AS ext,'
+            . ' COUNT(*) AS counter, SUM(filesize) AS filesize'
+            . ' FROM ' . $this->table('images')
+            . ' GROUP BY ext',
+        )->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $ext        = is_string($row['ext'] ?? null) ? $row['ext'] : '';
+            $out[$ext]  = [
+                'counter'  => is_numeric($row['counter'] ?? null) ? (int) $row['counter'] : 0,
+                'filesize' => is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0,
+            ];
+        }
+        return $out;
+    }
+
     /**
      * Return image ids whose storage_category_id is one of the given values.
      * Used by delete_categories() to find physically-linked images.

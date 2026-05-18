@@ -4,42 +4,32 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\Connection;
-use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Db\DbMaintenanceRepository;
 
 final class MaintenanceService
 {
     public static function repairAndOptimize(): void
     {
-        $prefixeTable = Config::dbPrefix();
-        $conn = Kernel::service(Connection::class);
+        $repo = Kernel::service(DbMaintenanceRepository::class);
 
-        $allTables = $conn->executeQuery("SHOW TABLES LIKE '" . $prefixeTable . "%'")->fetchFirstColumn();
+        $allTables = $repo->findAllPiwigoTableNames();
         if ($allTables === []) {
             return;
         }
 
         $success = true;
         try {
-            $allTablesStr = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $allTables);
-            $conn->executeStatement('REPAIR TABLE ' . implode(', ', $allTablesStr));
+            $repo->repairTables($allTables);
 
-            foreach ($allTablesStr as $tableName) {
-                $primaryKeys = [];
-                foreach ($conn->executeQuery('DESC ' . $tableName)->fetchAllAssociative() as $row) {
-                    if ($row['Key'] === 'PRI') {
-                        $primaryKeys[] = is_string($row['Field'] ?? null) ? $row['Field'] : '';
-                    }
-                }
-                if ($primaryKeys !== []) {
-                    $conn->executeStatement('ALTER TABLE ' . $tableName . ' ORDER BY ' . implode(', ', $primaryKeys));
-                }
+            foreach ($allTables as $tableName) {
+                $primaryKeys = $repo->findPrimaryKeyColumns($tableName);
+                $repo->reorderTableByPrimaryKeys($tableName, $primaryKeys);
             }
 
-            $conn->executeStatement('OPTIMIZE TABLE ' . implode(', ', $allTablesStr));
+            $repo->optimizeTables($allTables);
         } catch (\Exception) {
             $success = false;
         }

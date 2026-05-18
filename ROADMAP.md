@@ -20,6 +20,7 @@
 | 1.8 | Test infrastructure           | 🟡 **Not started**     | M + L + S | Pest → coverage → Infection (chained)                                                                                             |
 | 1.9 | Deferred / on-demand          | 🟠 **On-demand**       | —         | Monolog · S3/SFTP · supervisor · Renovate · ScriptLoader dep graph                                                                |
 | 1.10 | `PHPWG_ROOT_PATH` elimination | ✅ **Done**           | L         | shipped 2026-05-17 in 13 commits + 1 fix on `16.x-rewrite`: `Piwigo\Core\Paths` value object replaces the legacy global string, threaded through DI from `Paths::fromIndex(__FILE__)` in `index.php` → `Container::build($paths)` → service constructors; 195 reads across 72 files migrated; URL-context callers cleaned up (see [#33](docs/ROADMAP-PHP.md#33--eliminate-phpwg_root_path-global-replace-with-typed-paths)) |
+| 1.11 | Second-wave `define()` retirement | ✅ **Done**       | M         | shipped 2026-05-18 in 6 commits on `16.x-rewrite`: 11 of the remaining 12 runtime `define()` constants retired — `PHPWG_DOMAIN` + `PWG_HELP` deleted as dead code, `PWG_LOCAL_DIR` → `Paths::$local`, `PREFIX_TABLE` + `UPGRADES_PATH` → `Tables::upgrade()` + `RequestContextRegistry`, `PWG_API_KEY_REQUEST` → `ApiKeyAuthRegistry`, `PEM_URL` → typed `PemUrlResolver` service, plus trivial moves for `BUTTONS_RANK_NEUTRAL` / `DEFAULT_PREFIX_TABLE` / `PHOTOS_ADD_BASE_URL`; `PHPWG_URL` deferred until the fork's brand-URL plan lands (see [#34](docs/ROADMAP-PHP.md#34--retire-the-remaining-define-constants)) |
 | 2.1 | TS `any` reduction            | 🟡 **Not started**     | M         | 478 → ≤250 patterns                                                                                                               |
 | 2.2 | Vitest unit tests             | 🟡 **Not started**     | M         | TS unit-test runner + first wave                                                                                                  |
 | 2.3 | Bundle size budgets           | 🟡 **Not started**     | S         | per-entrypoint gzip limits in CI                                                                                                  |
@@ -3065,6 +3066,52 @@ permanent verification step:
 ```bash
 curl -sS http://localhost/piwigo16/ | grep -c '/home/' && echo 'leak!'
 ```
+
+### 1.11 Second-wave `define()` retirement
+
+**Status:** ✅ Done (2026-05-18) · **Effort:** M · 6 commits
+
+After §1.10 retired `PHPWG_ROOT_PATH`, twelve runtime `define()`-style
+constants survived as residual pre-PSR-4 globals. A survey turned up a
+mix of pure dead code, mechanical moves, and a few that needed proper
+typed homes. Eleven were retired in this pass; `PHPWG_URL` was
+deliberately deferred (the fork plans to reimplement upstream-piwigo.org
+features under its own domain later, so the ~30 link readers stay).
+
+Dispositions:
+
+- **Pure deletions** — `PHPWG_DOMAIN` (3 writers, 0 readers — 36 lines of
+  locale-keyed `*.piwigo.org` subdomain switching, never consumed) and
+  `PWG_HELP` (2 writers, 0 readers).
+- **Class constants** — `BUTTONS_RANK_NEUTRAL` →
+  `Template::BUTTONS_RANK_NEUTRAL`, `DEFAULT_PREFIX_TABLE` →
+  `InstallController::DEFAULT_DB_PREFIX`.
+- **Inlined at use site** — `PHOTOS_ADD_BASE_URL` becomes
+  `$urlGenerator->admin('photos_add')` at the four readers;
+  `PREFIX_TABLE` becomes `Tables::upgrade()` in `UpgradeFeedController`;
+  `UPGRADES_PATH` becomes `$this->paths->root . 'install/db/'`.
+- **Routed through existing Paths** — `PWG_LOCAL_DIR` reads migrate to
+  `$paths->local` (already on `Piwigo\Core\Paths` since §1.10); 17
+  composition sites updated, 6 writers deleted.
+- **Replaced by typed context flags** — `PWG_API_KEY_REQUEST` becomes
+  `Piwigo\Http\ApiKeyAuthRegistry::isApiKeyAuth()`, a thin static
+  singleton matching the established `RequestContextRegistry` shape;
+  `defined('UPGRADES_PATH')` in `LangService` becomes
+  `RequestContextRegistry::current() !== RequestContext::Upgrade`.
+- **Replaced by typed service** — `PEM_URL` becomes
+  `Piwigo\Admin\PemUrlResolver::url()`, constructor-injected into the
+  9 services that consume the extension-marketplace base URL
+  (Plugins/Themes/Languages/Updates/TelemetryService/ExtensionsController).
+
+The final invariant:
+
+```bash
+grep -rn 'define(' src/ index.php config/ tools/ --include='*.php' --include='*.phpstub' \
+  | grep -v PHPWG_URL
+# returns zero
+```
+
+Full phase-by-phase narrative in [docs/ROADMAP-PHP.md #34](docs/ROADMAP-PHP.md#34--retire-the-remaining-define-constants).
 
 ---
 

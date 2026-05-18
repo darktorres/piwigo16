@@ -29,14 +29,3 @@ ConfigLoader::loadEnv(dirname(__DIR__), ['.env.test']);
 // PHPWG_ROOT_PATH eliminated in Phase 6: tests construct
 // Paths::fromRoot(dirname(__DIR__, N)) directly and boot Kernel with it
 // when exercising production code that resolves Paths via DI.
-
-// Search-module constants from include/functions_search.inc.php.
-if (!defined('QST_QUOTED')) {
-    define('QST_QUOTED', 0x01);
-    define('QST_NOT', 0x02);
-    define('QST_OR', 0x04);
-    define('QST_WILDCARD_BEGIN', 0x08);
-    define('QST_WILDCARD_END', 0x10);
-    define('QST_WILDCARD', QST_WILDCARD_BEGIN | QST_WILDCARD_END);
-    define('QST_BREAK', 0x20);
-}

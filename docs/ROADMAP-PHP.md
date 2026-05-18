@@ -2719,3 +2719,103 @@ Apache smoke on all five entry shapes (`/`, `/install`, `/upgrade`,
 `/upgrade_feed`, `/i/<derivative>`) returns 200; nested `/category/1`
 returns 200; rendered HTML contains zero filesystem paths (the
 regression-detection grep that caught the §3e2/§4.5 bug).
+
+---
+
+## #34 — Retire the remaining `define()` constants
+
+**Status:** ✅ Done (2026-05-18) &nbsp;|&nbsp; **Size:** M
+
+### Background
+
+After [#33](#33--eliminate-phpwg_root_path-global-replace-with-typed-paths)
+retired `PHPWG_ROOT_PATH`, twelve `define()`-style global constants
+remained as residual pre-PSR-4 debris:
+
+| # | Constant | Readers | Disposition |
+|---|----------|---------|-------------|
+| 1 | `PHPWG_DOMAIN` | **0** | DELETE — 3 writers, 36 lines of locale switch, never read. |
+| 2 | `PWG_HELP` | **0** | DELETE — 2 writers, never read. |
+| 3 | `PHPWG_URL` | ~30 | **Deferred** — fork may reimplement upstream-piwigo.org features later. |
+| 4 | `PEM_URL` | ~20 | New `PemUrlResolver` service, constructor-injected. |
+| 5 | `PWG_API_KEY_REQUEST` | 4 | New `ApiKeyAuthRegistry` (mirrors `RequestContextRegistry`). |
+| 6 | `PWG_LOCAL_DIR` | 17 | Route through existing `Paths::$local`. |
+| 7 | `DEFAULT_PREFIX_TABLE` | 3 | Class const `InstallController::DEFAULT_DB_PREFIX`. |
+| 8 | `PREFIX_TABLE` | 2 | Inline `Tables::upgrade()` at the 2 reader sites. |
+| 9 | `UPGRADES_PATH` | 2 | Inline path + switch the second reader to `RequestContextRegistry`. |
+| 10 | `PHOTOS_ADD_BASE_URL` | 4 | Inline `$urlGenerator->admin('photos_add')`. |
+| 11 | `BUTTONS_RANK_NEUTRAL` | 2 | Class const `Template::BUTTONS_RANK_NEUTRAL`. |
+| 12 | `QST_*` (7 flags) | — | `tests/bootstrap.php` stubs deleted; `QConstants.php` already file-autoloaded via composer's `"files"`. |
+
+### What shipped
+
+6 commits on `16.x-rewrite`:
+
+| Phase | Constants                                                              | Commit       |
+| ----- | ---------------------------------------------------------------------- | ------------ |
+| A     | `PHPWG_DOMAIN` + `PWG_HELP` (pure deletes)                             | `ca00c194c`  |
+| B     | `BUTTONS_RANK_NEUTRAL` + `DEFAULT_PREFIX_TABLE` + `PHOTOS_ADD_BASE_URL`| `5a23a7185`  |
+| C     | `PWG_LOCAL_DIR` → `Paths::$local`                                      | `086a9f8ac`  |
+| D     | `PREFIX_TABLE` + `UPGRADES_PATH` + `RequestContext::Upgrade` switch    | `348e1fb1c`  |
+| E     | `PWG_API_KEY_REQUEST` → `ApiKeyAuthRegistry`                           | `f0d3e0e91`  |
+| F     | `PEM_URL` → `PemUrlResolver` service                                   | `2a6781e22`  |
+| G     | `QST_*` test stub cleanup + roadmap                                    | (this commit)|
+
+Each phase passed the same gate: Pint, PHPStan, Psalm, full PHPUnit
+suite, and `grep -rn 'define('` to confirm the targeted writers were
+gone.
+
+### Architecture notes
+
+**`ApiKeyAuthRegistry`** lives at `src/Piwigo/Http/ApiKeyAuthRegistry.php`
+and matches the established thin-static-singleton pattern
+(`RequestContextRegistry`, `SectionContextRegistry`,
+`FilterContextRegistry`). The flag is orthogonal to `RequestContext` —
+a Ws request may or may not be API-key-authed — so a separate registry
+is cleaner than overloading the enum. The writer is
+`UserBootstrap::markApiKeyAuth()` (called after a successful
+`AuthService::authKeyLogin()`); four readers (`SessionService::write`,
+`PwgServer::isAuthorizedMethodForAPIKEY`, `GeneralEndpoints::sessionLogin`
+/ `sessionLogout`) switch from `defined('PWG_API_KEY_REQUEST')` to
+`ApiKeyAuthRegistry::isApiKeyAuth()`.
+
+**`PemUrlResolver`** lives at `src/Piwigo/Admin/PemUrlResolver.php`. Same
+logic as the legacy `define('PEM_URL', …)` writer:
+`Config::alternativePemUrl()` takes precedence when set, otherwise
+compose `scheme://host/piwigo16-ext` from `$_SERVER`. Stateless class,
+no constructor deps — PHP-DI autowires it as a singleton. 5 of the 6
+consumers (Plugins/Themes/Languages/Updates/ExtensionsController) are
+also autowired so constructor extension is enough; `TelemetryService`
+has an explicit factory in `config/container.php` that gains the new
+parameter.
+
+**`Tables::upgrade()`** existed since the §2b table-constant retirement;
+`UpgradeFeedController` just hadn't been migrated to use it yet. Phase D
+finished that job.
+
+### Why `PHPWG_URL` was deferred
+
+The constant has dual semantics:
+
+1. **Telemetry endpoint prefix** for `porg.installs.update` and the news
+   feed — set to `''` deliberately so the fork doesn't phone home.
+2. **User-facing brand URL** for ~28 admin/footer/mail-body links to
+   upstream piwigo.org (`/forum`, `/doc`, `/releases/X`,
+   `/mobile-applications`, etc.).
+
+The user plans to reimplement (2) under the fork's own domain. The right
+shape — typed `Config::piwigoForkUrl()` accessor, default `''`,
+admin-configurable; rename the 6 Latte template variables — needs to
+be coordinated with whatever fork-site URL gets chosen. Out of scope
+for this define-retirement pass; lands as its own follow-up plan.
+
+### Verification
+
+```bash
+grep -rn 'define(' src/ index.php config/ tools/ --include='*.php' --include='*.phpstub' \
+  | grep -v PHPWG_URL                          # zero matches
+vendor/bin/pint --test                         # passed
+vendor/bin/phpstan analyse                     # green
+vendor/bin/psalm                               # no errors found
+vendor/bin/phpunit                             # 659 tests / 3356 assertions green
+```

@@ -802,6 +802,115 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
+     * Per-site (categories, images) counts: result keyed by site_id with
+     * {nb_categories, nb_images}. Used by the admin sites listing.
+     *
+     * @return array<int|string, array<string, mixed>>
+     */
+    public function findSiteStorageStats(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_images'
+            . ' FROM ' . $this->table('categories') . ' AS c'
+            . ' LEFT JOIN ' . $this->table('images') . ' AS i ON c.id = i.storage_category_id'
+            . ' WHERE c.site_id IS NOT NULL'
+            . ' GROUP BY c.site_id',
+        )->fetchAllAssociative();
+        return array_column($rows, null, 'site_id');
+    }
+
+    /**
+     * Return all category ids in the table, in insertion order. Used by the
+     * site_update sync to seed the next-rank-per-parent map.
+     *
+     * @return list<int>
+     */
+    public function findAllIds(): array
+    {
+        $rows = $this->conn->executeQuery('SELECT id FROM ' . $this->table('categories'))->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return id_uppercat → MAX(rank)+1 map. Rows with NULL id_uppercat are
+     * keyed under 'NULL' in the result. Used by site_update to compute the
+     * next rank when inserting freshly-discovered categories.
+     *
+     * @return array<int|string, int>
+     */
+    public function findNextRankByParent(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT id_uppercat, MAX(`rank`)+1 AS next_rank FROM ' . $this->table('categories') . ' GROUP BY id_uppercat',
+        )->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $key       = (isset($row['id_uppercat']) && is_scalar($row['id_uppercat']) && $row['id_uppercat'] !== '') ? (string) $row['id_uppercat'] : 'NULL';
+            $out[$key] = is_numeric($row['next_rank'] ?? null) ? (int) $row['next_rank'] : 1;
+        }
+        return $out;
+    }
+
+    /** Return MAX(id)+1 (the next inferred id) over the categories table; 1 when empty. */
+    public function findNextAvailableId(): int
+    {
+        $value = $this->conn->executeQuery(
+            'SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM ' . $this->table('categories'),
+        )->fetchOne();
+        return is_numeric($value) ? (int) $value : 1;
+    }
+
+    /**
+     * Physical-syncable category rows for $siteId — only rows whose dir is
+     * not null. Optional $catFilter restricts to a single id (subcats included
+     * via uppercats REGEXP when $subcatsIncluded is true). Result keyed by id.
+     *
+     * @return array<int|string, array<string, mixed>>
+     */
+    public function findPhysicalSyncableForSite(int $siteId, ?int $catFilter, bool $subcatsIncluded): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'uppercats', 'global_rank', 'status', 'visible')
+            ->from($this->table('categories'))
+            ->where('dir IS NOT NULL')
+            ->andWhere('site_id = :siteId')
+            ->setParameter('siteId', $siteId);
+        if ($catFilter !== null) {
+            if ($subcatsIncluded) {
+                $qb->andWhere('uppercats REGEXP :uppercatsPattern')
+                   ->setParameter('uppercatsPattern', '(^|,)' . $catFilter . '(,|$)');
+            } else {
+                $qb->andWhere('id = :catId')
+                   ->setParameter('catId', $catFilter);
+            }
+        }
+        return array_column($qb->executeQuery()->fetchAllAssociative(), null, 'id');
+    }
+
+    /**
+     * Insert a batch of new category rows atomically. The 'rank' column on
+     * each row is renamed to backticked '`rank`' inside the method since
+     * MySQL 8.0 reserves the bare identifier.
+     *
+     * @param list<array<string, mixed>> $rows
+     */
+    public function insertCategoryRowsBatch(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                if (array_key_exists('rank', $row)) {
+                    $row['`rank`'] = $row['rank'];
+                    unset($row['rank']);
+                }
+                $this->conn->insert($this->table('categories'), $row);
+            }
+        });
+    }
+
+    /**
      * Return id → uppercats map for the given category ids, regardless of
      * visibility. Used by the admin activity feed to show category paths.
      *

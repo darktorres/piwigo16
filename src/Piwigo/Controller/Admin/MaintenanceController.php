@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\ActivityRepository;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\History\HistoryAdminService;
@@ -22,6 +22,7 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Auth\CookieService;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
@@ -81,9 +82,10 @@ final class MaintenanceController implements AdminSubControllerInterface
     private array $maintActions = [];
 
     public function __construct(
-        private readonly Connection $conn,
+        private readonly ActivityRepository $activityRepository,
         private readonly AdminService $adminService,
         private readonly CategoryAdminService $categoryAdminService,
+        private readonly CategoryRepository $categoryRepository,
         private readonly CategoryService $categoryService,
         private readonly ConfigService $configService,
         private readonly CookieService $cookieService,
@@ -636,9 +638,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 $data     = [];
                 $usernameField = Config::userFields()['username'];
                 $idField       = Config::userFields()['id'];
-                $activityRows  = $this->conn
-                    ->executeQuery("SELECT activity_id, object, object_id, action, performed_by, occured_on, details, IF(performed_by = 0, 'System', $usernameField) AS username FROM " . Tables::activity() . ' LEFT JOIN ' . Tables::users() . " ON performed_by = $idField WHERE object = 'system' ORDER BY activity_id DESC")
-                    ->fetchAllAssociative();
+                $activityRows  = $this->activityRepository->findSystemActivityRows(Tables::users(), $idField, $usernameField);
 
                 foreach ($activityRows as $rows) {
                     $major_infos = false;
@@ -1054,7 +1054,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             'page_data_json' => json_encode(['str_delete_site_confirm' => Lang::t('Are you sure you want to delete this site?')], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE),
         ]);
 
-        $sites_detail = array_column($this->conn->executeQuery('SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_images FROM ' . Tables::categories() . ' AS c LEFT JOIN ' . Tables::images() . ' AS i ON c.id=i.storage_category_id WHERE c.site_id IS NOT NULL GROUP BY c.site_id;')->fetchAllAssociative(), null, 'site_id');
+        $sites_detail = $this->categoryRepository->findSiteStorageStats();
 
         foreach ($this->siteRepository->findAll() as $row) {
             $row_id_str = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
@@ -1106,9 +1106,9 @@ final class MaintenanceController implements AdminSubControllerInterface
         if (!is_numeric($_GET['site'])) {
             throw new ValidationException('site param missing or invalid');
         }
-        $site_id = $_GET['site'];
+        $site_id = (int) $_GET['site'];
 
-        $site_url = $this->siteRepository->findGalleriesUrlById((int) $site_id);
+        $site_url = $this->siteRepository->findGalleriesUrlById($site_id);
         if (!isset($site_url)) {
             throw new NotFoundException('site ' . $site_id . ' does not exist');
         }
@@ -1176,15 +1176,9 @@ final class MaintenanceController implements AdminSubControllerInterface
 
         if (isset($_POST['submit']) && ($_POST['sync'] == 'dirs' || $_POST['sync'] == 'files') && !$general_failure) {
             $start = StringUtil::getMoment();
-            $query = 'SELECT id, uppercats, global_rank, status, visible FROM ' . Tables::categories() . ' WHERE dir IS NOT NULL AND site_id = ' . $site_id;
-            if (isset($_POST['cat']) && is_numeric($_POST['cat'])) {
-                if (isset($_POST['subcats-included']) && $_POST['subcats-included'] == 1) {
-                    $query .= " AND uppercats REGEXP '(^|,)" . $_POST['cat'] . "(,|$)'";
-                } else {
-                    $query .= ' AND id = ' . $_POST['cat'];
-                }
-            }
-            $db_categories = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'id');
+            $catFilter = isset($_POST['cat']) && is_numeric($_POST['cat']) ? (int) $_POST['cat'] : null;
+            $subcatsIncluded = isset($_POST['subcats-included']) && $_POST['subcats-included'] == 1;
+            $db_categories = $this->categoryRepository->findPhysicalSyncableForSite($site_id, $catFilter, $subcatsIncluded);
             $db_fulldirs   = $this->categoryAdminService->getFulldirs(array_map(intval(...), array_keys($db_categories)));
 
             if (isset($_POST['cat']) && is_numeric($_POST['cat'])) {
@@ -1195,24 +1189,14 @@ final class MaintenanceController implements AdminSubControllerInterface
 
             $db_fulldirs = array_flip($db_fulldirs);
             $next_rank   = ['NULL' => 1];
-            $conn        = $this->conn;
-            foreach ($conn->executeQuery('SELECT id FROM ' . Tables::categories())->fetchAllAssociative() as $row) {
-                $rowIdKey = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
-                if ($rowIdKey !== '') {
-                    $next_rank[$rowIdKey] = 1;
-                }
+            foreach ($this->categoryRepository->findAllIds() as $catId) {
+                $next_rank[(string) $catId] = 1;
             }
-            foreach ($conn->executeQuery('SELECT id_uppercat, MAX(`rank`)+1 AS next_rank FROM ' . Tables::categories() . ' GROUP BY id_uppercat')->fetchAllAssociative() as $row) {
-                if (!isset($row['id_uppercat']) || $row['id_uppercat'] == '') {
-                    $row['id_uppercat'] = 'NULL';
-                }
-                $rowIdUppercatRaw = $row['id_uppercat'];
-                $ruk = is_string($rowIdUppercatRaw) ? $rowIdUppercatRaw : 'NULL';
-                $next_rank[$ruk] = $row['next_rank'];
+            foreach ($this->categoryRepository->findNextRankByParent() as $parentKey => $nextRank) {
+                $next_rank[$parentKey] = $nextRank;
             }
 
-            $next_id_raw = $this->conn->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . Tables::categories() . '`')->fetchOne();
-            $next_id     = is_numeric($next_id_raw) ? (int) $next_id_raw : 1;
+            $next_id = $this->categoryRepository->findNextAvailableId();
 
             $fs_fulldirs = $site_reader->getFullDirectories($basedir);
             if (isset($_POST['cat'])) {
@@ -1261,17 +1245,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             }
 
             if (count($inserts) > 0 && !$simulate) {
-                // `rank` is a MySQL 8.0 reserved word — backtick the array key per row.
-                $catRows = array_map(static function (array $r): array {
-                    $r['`rank`'] = $r['rank'];
-                    unset($r['rank']);
-                    return $r;
-                }, $inserts);
-                $this->conn->transactional(function () use ($catRows): void {
-                    foreach ($catRows as $row) {
-                        $this->conn->insert(Tables::categories(), $row);
-                    }
-                });
+                $this->categoryRepository->insertCategoryRowsBatch($inserts);
                 $category_ids = $category_up = [];
                 foreach ($inserts as $category) {
                     $category_ids[] = $category['id'];
@@ -1315,26 +1289,21 @@ final class MaintenanceController implements AdminSubControllerInterface
                             $parent_id = is_numeric($pidRow['parent'] ?? null) ? (int) $pidRow['parent'] : null;
                         }
                         if (($idsRow['status'] ?? '') == 'private' && $parent_id !== null) {
+                            $idsInt = (int) $ids;
                             if (isset($granted_grps[$parent_id])) {
                                 foreach ($granted_grps[$parent_id] as $granted_grp) {
-                                    $insert_granted_grps[] = ['group_id' => $granted_grp, 'cat_id' => $ids];
+                                    $insert_granted_grps[] = ['group_id' => is_numeric($granted_grp) ? (int) $granted_grp : 0, 'cat_id' => $idsInt];
                                 }
                             }
                             if (isset($granted_users[$parent_id])) {
                                 foreach ($granted_users[$parent_id] as $granted_user) {
-                                    $insert_granted_users[] = ['user_id' => $granted_user, 'cat_id' => $ids];
+                                    $insert_granted_users[] = ['user_id' => is_numeric($granted_user) ? (int) $granted_user : 0, 'cat_id' => $idsInt];
                                 }
                             }
                         }
                     }
-                    $this->conn->transactional(function () use ($insert_granted_grps, $insert_granted_users): void {
-                        foreach ($insert_granted_grps as $row) {
-                            $this->conn->insert(Tables::groupAccess(), $row);
-                        }
-                        foreach (array_unique($insert_granted_users, SORT_REGULAR) as $row) {
-                            $this->conn->insert(Tables::userAccess(), $row);
-                        }
-                    });
+                    $this->permissionRepository->insertGroupAccessRows($insert_granted_grps);
+                    $this->permissionRepository->insertUserAccessIgnoreDuplicates(array_values(array_unique($insert_granted_users, SORT_REGULAR)));
                 } else {
                     $this->categoryAdminService->addPermissionOnCategory($category_ids, $this->userAdminService->getAdmins());
                 }
@@ -1372,20 +1341,16 @@ final class MaintenanceController implements AdminSubControllerInterface
             $fs = $site_reader->getElements($basedir);
             $tpl->append('footer_elements', '<!-- get_elements: ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
 
-            $cat_ids    = array_diff(array_keys($db_categories), $to_delete);
-            $db_elements = [];
-            if (count($cat_ids) > 0) {
-                $query       = 'SELECT id, path FROM ' . Tables::images() . ' WHERE storage_category_id IN (' . wordwrap(implode(', ', $cat_ids), 160, "\n") . ')';
-                $db_elements = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'path', 'id');
-            }
+            $cat_ids     = array_diff(array_keys($db_categories), $to_delete);
+            $cat_ids_int = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $cat_ids));
+            $db_elements = $this->imageRepository->findIdPathByStorageCategoryIds($cat_ids_int);
 
-            $next_element_id_raw = $this->conn->executeQuery('SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM `' . Tables::images() . '`')->fetchOne();
-            $next_element_id     = is_numeric($next_element_id_raw) ? (int) $next_element_id_raw : 1;
+            $next_element_id = $this->imageRepository->findNextAvailableId();
 
             $start             = StringUtil::getMoment();
             $inserts           = $insert_links = $insert_formats = $formats_to_delete = [];
 
-            foreach (array_diff(array_keys($fs), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $db_elements)) as $path) {
+            foreach (array_diff(array_keys($fs), array_values($db_elements)) as $path) {
                 $dirname  = dirname((string) $path);
                 if (!isset($db_fulldirs[$dirname])) {
                     continue;
@@ -1413,8 +1378,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             }
 
             if (Config::isFormatsEnabled()) {
-                $db_elements_str  = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $db_elements);
-                $db_elements_flip = array_flip($db_elements_str);
+                $db_elements_flip = array_flip($db_elements);
                 $existing_ids     = [];
                 foreach (array_intersect_key($fs, $db_elements_flip) as $path => $existing) {
                     $existing_ids[] = $db_elements_flip[$path];
@@ -1432,7 +1396,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                         $db_formats[$row_image_id][$row_ext] = $row['format_id'];
                     }
                     foreach ($db_formats as $image_id => $formats) {
-                        $db_elem_path  = is_scalar($db_elements[$image_id] ?? null) ? (string) ($db_elements[$image_id] ?? '') : '';
+                        $db_elem_path  = $db_elements[$image_id] ?? '';
                         $fs_elem       = is_array($fs[$db_elem_path] ?? null) ? $fs[$db_elem_path] : [];
                         $fs_formats    = is_array($fs_elem['formats'] ?? null) ? $fs_elem['formats'] : [];
                         $image_formats_to_delete = array_diff_key($formats, $fs_formats);
@@ -1444,7 +1408,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                     }
                     foreach ($existing_ids as $image_id) {
                         $image_id_str  = (string) $image_id;
-                        $path          = is_scalar($db_elements[$image_id_str] ?? null) ? (string) ($db_elements[$image_id_str] ?? '') : '';
+                        $path          = $db_elements[$image_id_str] ?? '';
                         $formats       = $db_formats[$image_id_str] ?? [];
                         $fs_path_data  = is_array($fs[$path] ?? null) ? $fs[$path] : [];
                         $fs_path_formats = is_array($fs_path_data['formats'] ?? null) ? $fs_path_data['formats'] : [];
@@ -1460,25 +1424,14 @@ final class MaintenanceController implements AdminSubControllerInterface
 
             if (!$simulate) {
                 if (count($inserts) > 0) {
-                    $this->conn->transactional(function () use ($inserts, $insert_links): void {
-                        foreach ($inserts as $row) {
-                            $this->conn->insert(Tables::images(), $row);
-                        }
-                        foreach ($insert_links as $row) {
-                            $this->conn->insert(Tables::imageCategory(), $row);
-                        }
-                    });
+                    $this->imageRepository->insertImageRowsBatch($inserts, $insert_links);
                     $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $caddiables, 'add', ['sync' => true]));
                     if (isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1) {
                         $this->imageRepository->addToUserCaddie(CurrentUser::get()->id, $caddiables);
                     }
                 }
                 if (count($insert_formats) > 0) {
-                    $this->conn->transactional(function () use ($insert_formats): void {
-                        foreach ($insert_formats as $row) {
-                            $this->conn->insert(Tables::imageFormat(), $row);
-                        }
-                    });
+                    $this->imageRepository->insertImageFormatRowsBatch($insert_formats);
                 }
                 if (count($formats_to_delete) > 0) {
                     $this->imageRepository->deleteFormatsByFormatIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));
@@ -1487,7 +1440,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             $counts['new_elements'] = count($inserts);
 
             $to_delete_elements = [];
-            foreach (array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $db_elements), array_keys($fs)) as $path) {
+            foreach (array_diff(array_values($db_elements), array_keys($fs)) as $path) {
                 $found = array_search($path, $db_elements);
                 if ($found !== false) {
                     $to_delete_elements[] = (int) $found;
@@ -1524,7 +1477,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                     }
                 }
                 $catIdOpt = is_string($opts['category_id']) ? $opts['category_id'] : '';
-                $files = $this->metadataAdminService->getFilelist($catIdOpt, (int) $site_id, $opts['recursive'], false);
+                $files = $this->metadataAdminService->getFilelist($catIdOpt, $site_id, $opts['recursive'], false);
                 $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
                 $start = StringUtil::getMoment();
                 $datas = [];
@@ -1537,15 +1490,18 @@ final class MaintenanceController implements AdminSubControllerInterface
                 $counts['upd_elements'] = count($datas);
                 if (!$simulate && count($datas) > 0) {
                     $updFields = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getUpdateAttributes());
-                    $this->conn->transactional(function () use ($datas, $updFields): void {
-                        foreach ($datas as $row) {
-                            $set = [];
-                            foreach ($updFields as $field) {
-                                $set[$field] = $row[$field] ?? null;
-                            }
-                            $this->conn->update(Tables::images(), $set, ['id' => $row['id']]);
+                    $updates = [];
+                    foreach ($datas as $row) {
+                        $set = [];
+                        foreach ($updFields as $field) {
+                            $set[$field] = $row[$field] ?? null;
                         }
-                    });
+                        $updates[] = [
+                            'id'     => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                            'fields' => $set,
+                        ];
+                    }
+                    $this->imageRepository->updateBatchByIds($updates);
                 }
                 $tpl->append('footer_elements', '<!-- update files : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
             }
@@ -1567,7 +1523,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             }
             $start       = StringUtil::getMoment();
             $catIdMeta   = is_string($opts['category_id']) ? $opts['category_id'] : '';
-            $files = $this->metadataAdminService->getFilelist($catIdMeta, (int) $site_id, $opts['recursive'], $opts['only_new']);
+            $files = $this->metadataAdminService->getFilelist($catIdMeta, $site_id, $opts['recursive'], $opts['only_new']);
             $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
             $start = StringUtil::getMoment();
             $datas = $tags_of = [];
@@ -1605,21 +1561,24 @@ final class MaintenanceController implements AdminSubControllerInterface
                     //   set → empty values overwrite as NULL
                     //   unset → empty values are skipped (not written)
                     $skipEmpty = !isset($_POST['meta_empty_overrides']);
-                    $this->conn->transactional(function () use ($datas, $updFields, $skipEmpty): void {
-                        foreach ($datas as $row) {
-                            $set = [];
-                            foreach ($updFields as $field) {
-                                $val = $row[$field] ?? null;
-                                if ($skipEmpty && ($val === null || $val === '')) {
-                                    continue;
-                                }
-                                $set[$field] = ($val === '' ? null : $val);
+                    $updates = [];
+                    foreach ($datas as $row) {
+                        $set = [];
+                        foreach ($updFields as $field) {
+                            $val = $row[$field] ?? null;
+                            if ($skipEmpty && ($val === null || $val === '')) {
+                                continue;
                             }
-                            if ($set !== []) {
-                                $this->conn->update(Tables::images(), $set, ['id' => $row['id']]);
-                            }
+                            $set[$field] = ($val === '' ? null : $val);
                         }
-                    });
+                        if ($set !== []) {
+                            $updates[] = [
+                                'id'     => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                                'fields' => $set,
+                            ];
+                        }
+                    }
+                    $this->imageRepository->updateBatchByIds($updates);
                 }
                 $this->tagAdminService->setTagsOf($tags_of);
             }

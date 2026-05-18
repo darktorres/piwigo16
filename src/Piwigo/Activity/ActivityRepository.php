@@ -274,6 +274,25 @@ final class ActivityRepository extends AbstractRepository
     }
 
     /**
+     * Return system-activity log rows joined with the actor's username for
+     * the admin "system activity" page. $usernameField and $idField come
+     * from Config — admin-configured. performed_by=0 is mapped to 'System'.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findSystemActivityRows(string $usersTable, string $idField, string $usernameField): array
+    {
+        return $this->conn->executeQuery(
+            'SELECT activity_id, object, object_id, action, performed_by, occured_on, details,'
+            . " IF(performed_by = 0, 'System', {$usernameField}) AS username"
+            . ' FROM ' . $this->table('activity')
+            . " LEFT JOIN $usersTable ON performed_by = {$idField}"
+            . " WHERE object = 'system'"
+            . ' ORDER BY activity_id DESC',
+        )->fetchAllAssociative();
+    }
+
+    /**
      * Daily activity-action histogram since $sinceDate (YYYY-MM-DD): one row
      * per (day, object, action) tuple with a counter. Used by the admin
      * dashboard last-weeks-activity heatmap.

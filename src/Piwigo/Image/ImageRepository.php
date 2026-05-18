@@ -749,6 +749,79 @@ final class ImageRepository extends AbstractRepository
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 
+    /** Return MAX(id)+1 (the next inferred id) over the images table; 1 when empty. */
+    public function findNextAvailableId(): int
+    {
+        $value = $this->conn->executeQuery(
+            'SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) FROM ' . $this->table('images'),
+        )->fetchOne();
+        return is_numeric($value) ? (int) $value : 1;
+    }
+
+    /**
+     * Return id → path map for images stored in the given category ids.
+     * Used by site_update to find existing images in the synced category tree.
+     *
+     * @param list<int> $catIds
+     * @return array<int|string, string>
+     */
+    public function findIdPathByStorageCategoryIds(array $catIds): array
+    {
+        if ($catIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'path')
+            ->from($this->table('images'));
+        $qb->where($qb->expr()->in('storage_category_id', ':ids'))
+           ->setParameter('ids', $catIds, ArrayParameterType::INTEGER);
+        $rows = $qb->executeQuery()->fetchAllAssociative();
+        $out  = [];
+        foreach ($rows as $row) {
+            $idKey       = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
+            $out[$idKey] = is_scalar($row['path'] ?? null) ? (string) $row['path'] : '';
+        }
+        return $out;
+    }
+
+    /**
+     * Insert a batch of (image, image_category link) tuples atomically.
+     *
+     * @param list<array<string, mixed>> $imageRows
+     * @param list<array<string, mixed>> $linkRows
+     */
+    public function insertImageRowsBatch(array $imageRows, array $linkRows): void
+    {
+        if ($imageRows === [] && $linkRows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($imageRows, $linkRows): void {
+            foreach ($imageRows as $row) {
+                $this->conn->insert($this->table('images'), $row);
+            }
+            foreach ($linkRows as $row) {
+                $this->conn->insert($this->table('image_category'), $row);
+            }
+        });
+    }
+
+    /**
+     * Insert a batch of image_format rows atomically.
+     *
+     * @param list<array<string, mixed>> $rows
+     */
+    public function insertImageFormatRowsBatch(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $this->conn->insert($this->table('image_format'), $row);
+            }
+        });
+    }
+
     /** Count images whose storage_category_id is NOT NULL (filesystem-synced). */
     public function countWithStorageCategorySet(): int
     {

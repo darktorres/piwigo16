@@ -649,6 +649,19 @@ final class ImageRepository extends AbstractRepository
         return $out;
     }
 
+    /** Return the date_available of the earliest-inserted image, or null. */
+    public function findEarliestDateAvailable(): ?string
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('date_available')
+            ->from($this->table('images'))
+            ->orderBy('id', 'ASC')
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchOne();
+        return is_scalar($value) ? (string) $value : null;
+    }
+
     /** Return the date_available of the most recently inserted image, or null. */
     public function findLatestDateAvailable(): ?string
     {

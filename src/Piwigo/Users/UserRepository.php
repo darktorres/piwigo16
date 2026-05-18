@@ -1317,6 +1317,37 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
+     * Return the registration_date for the given user id, or null.
+     * Used by AdminService::getInstallationDate to bootstrap the
+     * "installed on" telemetry value from user_id=2 (first non-guest user).
+     */
+    public function findRegistrationDateByUserId(int $userId): ?string
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('registration_date')
+            ->from($this->table('user_infos'))
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchOne();
+        return is_scalar($value) ? (string) $value : null;
+    }
+
+    /**
+     * Earliest registration_date strictly greater than $threshold (used to
+     * skip the placeholder rows that lived in pre-2001 Piwigo dumps).
+     */
+    public function findEarliestRegistrationAfter(string $threshold): ?string
+    {
+        $value = $this->conn->executeQuery(
+            'SELECT MIN(registration_date) FROM ' . $this->table('user_infos') . ' WHERE registration_date > ?',
+            [$threshold],
+            [\Doctrine\DBAL\ParameterType::STRING],
+        )->fetchOne();
+        return is_scalar($value) ? (string) $value : null;
+    }
+
+    /**
      * Return the admin/webmaster recipient rows used by MailService.
      * $statuses must already be whitelisted by the caller; $groupId restricts
      * to that group via user_group join; $excludeUserId skips one user.

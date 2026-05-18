@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
@@ -12,6 +11,7 @@ use Piwigo\Core\DateService;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
+use Piwigo\Db\DbMaintenanceRepository;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageRepository;
@@ -23,9 +23,9 @@ use Psr\Cache\CacheItemPoolInterface;
 final readonly class AdminService
 {
     public function __construct(
-        private Connection $conn,
         private CategoryRepository $categoryRepository,
         private DateService $dateService,
+        private DbMaintenanceRepository $dbMaintenanceRepository,
         private HistoryRepository $historyRepository,
         private ImageRepository $imageRepository,
         private TagRepository $tagRepository,
@@ -147,9 +147,7 @@ final readonly class AdminService
         }
         $keys = ['_hash' => md5(UrlService::getAbsoluteRootUrl())];
         foreach ($requested as $item) {
-            $keys[$item] = $this->conn->executeQuery(
-                'SELECT CONCAT(UNIX_TIMESTAMP(MAX(lastmodified)), "_", COUNT(*)) FROM `' . $tables[$item] . '`'
-            )->fetchOne();
+            $keys[$item] = $this->dbMaintenanceRepository->findTableFingerprint($tables[$item]);
         }
         return $keys;
     }
@@ -493,29 +491,14 @@ final readonly class AdminService
     public function getInstallationDate(): ?string
     {
         $piwigoOrigins = '2001-09-01 00:00:00';
-        $candidate     = null;
-        $users = $this->conn->executeQuery(
-            'SELECT registration_date FROM ' . Tables::userInfos() . ' WHERE user_id = 2'
-        )->fetchAllAssociative();
-        if (count($users) > 0) {
-            $candidate = $users[0]['registration_date'];
+        $candidate     = $this->userRepository->findRegistrationDateByUserId(2);
+
+        if ($candidate === null || $candidate === '' || strtotime($candidate) < strtotime($piwigoOrigins)) {
+            $candidate = $this->userRepository->findEarliestRegistrationAfter($piwigoOrigins);
         }
-        if ($candidate === null || $candidate === '' || strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigoOrigins)) {
-            $users = $this->conn->executeQuery(
-                'SELECT MIN(registration_date) AS min_registration_date FROM ' . Tables::userInfos() . " WHERE registration_date > '$piwigoOrigins'"
-            )->fetchAllAssociative();
-            if (count($users) > 0) {
-                $candidate = $users[0]['min_registration_date'];
-            }
+        if ($candidate === null || $candidate === '' || strtotime($candidate) < strtotime($piwigoOrigins)) {
+            $candidate = $this->imageRepository->findEarliestDateAvailable();
         }
-        if ($candidate === null || $candidate === '' || strtotime(is_scalar($candidate) ? (string) $candidate : '') < strtotime($piwigoOrigins)) {
-            $images = $this->conn->executeQuery(
-                'SELECT date_available FROM ' . Tables::images() . ' ORDER BY id ASC LIMIT 1'
-            )->fetchAllAssociative();
-            if (count($images) > 0) {
-                $candidate = $images[0]['date_available'];
-            }
-        }
-        return ($candidate !== null && $candidate !== '' && is_scalar($candidate)) ? (string) $candidate : null;
+        return ($candidate !== null && $candidate !== '') ? $candidate : null;
     }
 }

@@ -66,6 +66,20 @@ final class DbMaintenanceRepository extends AbstractRepository
         return $cols;
     }
 
+    /**
+     * Return a content-fingerprint string for $tableName: "<unix_ts>_<count>"
+     * where unix_ts is the table's MAX(lastmodified) and count is the row
+     * count. Used by AdminService::keys to build an etag-style cache key.
+     * $tableName is admin-controlled (from an allowlist), not user input.
+     */
+    public function findTableFingerprint(string $tableName): string
+    {
+        $value = $this->conn->executeQuery(
+            'SELECT CONCAT(UNIX_TIMESTAMP(MAX(lastmodified)), "_", COUNT(*)) FROM `' . $tableName . '`',
+        )->fetchOne();
+        return is_scalar($value) ? (string) $value : '';
+    }
+
     /** ALTER TABLE $tableName ORDER BY $primaryKeys. */
     /** @param list<string> $primaryKeys */
     public function reorderTableByPrimaryKeys(string $tableName, array $primaryKeys): void

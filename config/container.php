@@ -50,6 +50,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbMaintenanceRepository;
 use Piwigo\Db\QueryHelper;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Filter\FilterService;
@@ -250,7 +251,7 @@ return [
     ImagesEndpoints::class           => factory(static fn (CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, CommentRepository $comR, CommentService $com, HtmlService $h, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, PermissionService $perm, RateRepository $rR, RateService $rate, SearchService $sr, TagAdminService $tA, TagService $tag, UploadService $up, UrlService $u, UserAdminService $uA, ActivityLogger $al, CsrfService $csrf, WsHelper $ws, EphemeralKeyService $eks, EventDispatcherInterface $d, Paths $paths): ImagesEndpoints => new ImagesEndpoints($catA, $catR, $cat, $comR, $com, $h, $iA, $i, $mA, $perm, $rR, $rate, $sr, $tA, $tag, $up, $u, $uA, $al, $csrf, $ws, $eks, $d, $paths)),
     AdminPageRegistry::class         => factory(static fn (): AdminPageRegistry => new AdminPageRegistry()),
     AssetService::class              => factory(static fn (LoggerInterface $log, Paths $paths): AssetService => new AssetService($paths->root . 'plugins', $log)),
-    AdminService::class              => factory(static fn (Connection $conn, CategoryRepository $catR, DateService $d, HistoryRepository $hR, ImageRepository $i, TagRepository $tR, UserRepository $u, CacheItemPoolInterface $pool): AdminService => new AdminService($conn, $catR, $d, $hR, $i, $tR, $u, $pool)),
+    AdminService::class              => factory(static fn (CategoryRepository $catR, DateService $d, DbMaintenanceRepository $dbM, HistoryRepository $hR, ImageRepository $i, TagRepository $tR, UserRepository $u, CacheItemPoolInterface $pool): AdminService => new AdminService($catR, $d, $dbM, $hR, $i, $tR, $u, $pool)),
     CategoryAdminService::class      => factory(static function (ContainerInterface $c): CategoryAdminService {
         return (new \ReflectionClass(CategoryAdminService::class))->newLazyProxy(
             static fn (): CategoryAdminService => new CategoryAdminService(
@@ -342,6 +343,7 @@ return [
     TagRepository::class          => factory(static fn (Connection $conn): TagRepository => new TagRepository($conn, Config::dbPrefix())),
     CommentRepository::class      => factory(static fn (Connection $conn): CommentRepository => new CommentRepository($conn, Config::dbPrefix())),
     SearchRepository::class       => factory(static fn (Connection $conn): SearchRepository => new SearchRepository($conn, Config::dbPrefix())),
+    DbMaintenanceRepository::class => factory(static fn (Connection $conn): DbMaintenanceRepository => new DbMaintenanceRepository($conn, Config::dbPrefix())),
     CategoryRepository::class     => factory(static fn (Connection $conn): CategoryRepository => new CategoryRepository($conn, Config::dbPrefix())),
     ImageRepository::class        => factory(static fn (Connection $conn): ImageRepository => new ImageRepository($conn, Config::dbPrefix())),
     UserRepository::class         => factory(static fn (Connection $conn): UserRepository => new UserRepository($conn, Config::dbPrefix())),

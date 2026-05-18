@@ -56,7 +56,8 @@ CREATE TABLE `piwigo_categories` (
   UNIQUE KEY `categories_i3` (`permalink`),
   KEY `categories_i2` (`id_uppercat`),
   KEY `categories_status_idx` (`status`),
-  KEY `lastmodified` (`lastmodified`)
+  KEY `lastmodified` (`lastmodified`),
+  FULLTEXT KEY `categories_ft_name_comment` (`name`, `comment`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -290,7 +291,9 @@ CREATE TABLE `piwigo_images` (
   KEY `images_i6` (`latitude`),
   KEY `images_i7` (`path`),
   KEY `images_added_by_idx` (`added_by`),
-  KEY `lastmodified` (`lastmodified`)
+  KEY `lastmodified` (`lastmodified`),
+  FULLTEXT KEY `images_ft_name_comment` (`name`, `comment`),
+  FULLTEXT KEY `images_ft_author` (`author`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -443,7 +446,8 @@ CREATE TABLE `piwigo_tags` (
   `lastmodified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`),
   KEY `tags_i1` (`url_name`),
-  KEY `lastmodified` (`lastmodified`)
+  KEY `lastmodified` (`lastmodified`),
+  FULLTEXT KEY `tags_ft_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --

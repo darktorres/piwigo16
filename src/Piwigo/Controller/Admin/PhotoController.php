@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Detection\MobileDetect;
-use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
@@ -73,7 +72,6 @@ final class PhotoController implements AdminSubControllerInterface
     private ?array $imageInfo = null;
 
     public function __construct(
-        private readonly Connection $conn,
         private readonly AdminService $adminService,
         private readonly CategoryAdminService $categoryAdminService,
         private readonly CategoryRepository $categoryRepository,
@@ -186,12 +184,7 @@ final class PhotoController implements AdminSubControllerInterface
 
         $getImageId = $_GET['image_id'] ?? null;
         $getImageIdInt = is_numeric($getImageId) ? (int) $getImageId : 0;
-        $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE representative_picture_id = ' . $getImageIdInt . '
-;';
-        $represented_albums = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
+        $represented_albums = $this->categoryRepository->findIdsByRepresentativePicture([$getImageIdInt]);
 
         if (isset($_GET['delete'])) {
             $this->csrfService->check();
@@ -229,7 +222,9 @@ SELECT id
             /** @var array<string, mixed> $data */
             $data = $modifyEvent->data;
 
-            $this->conn->update(Tables::images(), $data, ['id' => $data['id']]);
+            $updateFields = $data;
+            unset($updateFields['id']);
+            $this->imageRepository->updateById($getImageIdInt, $updateFields);
 
             $tag_ids = [];
             $tags_post = $_POST['tags'] ?? null;
@@ -264,7 +259,7 @@ SELECT id
             }
             $this->inputValidator->check('represent', $_POST, true, ValidationPattern::ID);
 
-            $represented_albums_int = array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $represented_albums);
+            $represented_albums_int = $represented_albums;
             $represent_post_int     = is_array($_POST['represent']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['represent']) : [];
 
             $no_longer = array_diff($represented_albums_int, $represent_post_int);
@@ -367,7 +362,8 @@ SELECT id
             $intro_vars['stats'] .= ', ' . sprintf(Lang::t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
         }
 
-        $formats = $this->conn->executeQuery('SELECT * FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . (is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0') . ';')->fetchAllAssociative();
+        $rowImageId = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
+        $formats    = $this->imageRepository->findFormatsByImageIds([$rowImageId]);
         if (!empty($formats)) {
             $format_strings = [];
             foreach ($formats as $format) {
@@ -405,22 +401,24 @@ SELECT id
         if (($custom_context = $this->userService->getEditContext($getImageIdInt)) !== false && $custom_context !== null && $custom_context !== '') {
             $tpl->assign('U_JUMPTO', $this->urlService->makePictureUrl(['image_id' => $_GET['image_id'] ?? '']) . '/' . $custom_context);
         } elseif ($userLevel >= $imageLevel) {
-            $authorizeds = array_diff(
-                array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . ($getImageIdInt) . ';')->fetchAllAssociative(), 'category_id')),
-                array_map(static fn (int $v): string => (string) $v, $this->permissionService->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
-            );
+            $forbidden   = $this->permissionService->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : '');
+            $authorizeds = array_values(array_diff(
+                $this->categoryRepository->findCategoryIdsByImageId($getImageIdInt),
+                $forbidden,
+            ));
             if (count($authorizeds) > 0) {
-                $category = $authorizeds[array_rand($authorizeds)];
-                $catNames = RequestCache::remember('cat_names', 'all', fn (): array => array_column($this->conn->executeQuery('SELECT id, name, permalink FROM ' . Tables::categories() . ';')->fetchAllAssociative(), null, 'id') ?: []);
+                $category    = $authorizeds[array_rand($authorizeds)];
+                $catNamesRaw = RequestCache::remember('cat_names', 'all', fn (): array => $this->categoryRepository->findAllIdNamePermalinkMap());
+                $catNames    = is_array($catNamesRaw) ? $catNamesRaw : [];
                 $tpl->assign('U_JUMPTO', $this->urlService->makePictureUrl([
                     'image_id'   => $_GET['image_id'],
                     'image_file' => $image_file,
-                    'category'   => is_array($catNames) ? ($catNames[$category] ?? null) : null,
+                    'category'   => $catNames[(string) $category] ?? null,
                 ]));
             }
         }
 
-        $associated_albums = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id = category_id WHERE image_id = ' . ($getImageIdInt) . ';')->fetchAllAssociative(), 'id');
+        $associated_albums = $this->categoryRepository->findCategoryIdsByImageId($getImageIdInt);
 
         $cache_keys = $this->adminService->getAdminClientCacheKeys(['tags', 'categories']);
         $tpl->assign([
@@ -543,9 +541,9 @@ SELECT id
         $rawPicFmtId = $_GET['image_id'] ?? null;
         $picFmtId = is_string($rawPicFmtId) ? $rawPicFmtId : '0';
 
-        $images  = $this->conn->executeQuery('SELECT * FROM ' . Tables::images() . ' WHERE id = ' . $picFmtId . ';')->fetchAllAssociative();
-        $image   = $images[0];
-        $formats = $this->conn->executeQuery('SELECT * FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . $picFmtId . ';')->fetchAllAssociative();
+        $picFmtIdInt = (int) $picFmtId;
+        $image       = $this->imageRepository->findById($picFmtIdInt) ?? [];
+        $formats     = $this->imageRepository->findFormatsByImageIds([$picFmtIdInt]);
 
         foreach ($formats as &$format) {
             $format['download_url'] = $this->urlGenerator->actionFormat((int) (is_scalar($format['format_id']) ? $format['format_id'] : 0));
@@ -618,16 +616,10 @@ SELECT id
 
         if (isset($_GET['batch'])) {
             $this->inputValidator->check('batch', $_GET, false, '/^\d+(,\d+)*$/');
-            $this->imageRepository->deleteUserCaddie(is_numeric($user['id']) ? (int) $user['id'] : 0);
-            $inserts = [];
-            foreach (array_unique(explode(',', is_string($rawGetBatch = $_GET['batch']) ? $rawGetBatch : '')) as $image_id) {
-                $inserts[] = ['user_id' => $user['id'], 'element_id' => $image_id];
-            }
-            $this->conn->transactional(function () use ($inserts): void {
-                foreach ($inserts as $row) {
-                    $this->conn->insert(Tables::caddie(), $row);
-                }
-            });
+            $userIdInt = is_numeric($user['id']) ? (int) $user['id'] : 0;
+            $this->imageRepository->deleteUserCaddie($userIdInt);
+            $elementIds = array_values(array_unique(array_map(static fn (string $v): int => (int) $v, explode(',', is_string($rawGetBatch = $_GET['batch']) ? $rawGetBatch : ''))));
+            $this->imageRepository->addToUserCaddie($userIdInt, $elementIds);
             $this->redirectResponder->redirect($this->urlGenerator->admin('batch_manager') . '&filter=prefilter-caddie');
         }
 
@@ -657,8 +649,8 @@ SELECT id
                 $src_image = new SrcImage($formats_original_info);
                 $formats_original_info['src'] = DerivativeImage::url(DerivativeSize::Square->value, $src_image);
                 $fmtIdRaw = $formats_original_info['id'] ?? null;
-                $fmtId  = is_scalar($fmtIdRaw) ? (string) $fmtIdRaw : '0';
-                $fmtRow = $this->conn->executeQuery('SELECT * FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . $fmtId . ';')->fetchAllAssociative();
+                $fmtIdInt = is_numeric($fmtIdRaw) ? (int) $fmtIdRaw : 0;
+                $fmtRow   = $this->imageRepository->findFormatsByImageIds([$fmtIdInt]);
                 if (!empty($fmtRow)) {
                     $format_strings = [];
                     $formats_exts   = [];
@@ -673,7 +665,7 @@ SELECT id
                 $fmtFileRaw = $formats_original_info['file'] ?? null;
                 $extTab = explode('.', is_scalar($fmtFileRaw) ? (string) $fmtFileRaw : '');
                 $formats_original_info['ext']    = Lang::t('%s file type', strtoupper(end($extTab)));
-                $formats_original_info['u_edit'] = $this->urlGenerator->admin('photo-' . $fmtId);
+                $formats_original_info['u_edit'] = $this->urlGenerator->admin('photo-' . $fmtIdInt);
                 $have_formats_original           = true;
             } else {
                 PageState::current()->addError(Lang::t('The original picture selected dosen\'t exists.'));

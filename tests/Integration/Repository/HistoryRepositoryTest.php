@@ -26,8 +26,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
     protected function setUp(): void
     {
         $this->setUpConnectionFromEnv();
-        $this->resetDatabase();
-        $this->loadFixture(self::FIXTURE);
+        $this->resetDatabaseFast(self::FIXTURE);
         $this->conn = $this->newDbalConnection();
         $this->repo = new HistoryRepository($this->conn, 'piwigo_');
     }
@@ -60,6 +59,11 @@ final class HistoryRepositoryTest extends IntegrationTestCase
 
     public function test_extendSectionEnum_alters_enum_values(): void
     {
+        // ALTER TABLE … CHANGE rewrites the column DDL — the fast template
+        // reset only refreshes data, so flag the schema dirty so the next
+        // test reloads the fixture from scratch.
+        $this->markSchemaDirty();
+
         $newEnumValues = ['categories', 'tags', 'search', 'list', 'favorites',
             'most_visited', 'best_rated', 'recent_pics', 'recent_cats', 'custom_section'];
         $this->repo->extendSectionEnum($newEnumValues);

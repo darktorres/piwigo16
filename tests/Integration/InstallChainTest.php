@@ -15,6 +15,9 @@ final class InstallChainTest extends IntegrationTestCase
         $this->setUpConnectionFromEnv();
         $this->requireBaseUrl();
         $this->resetDatabase();
+        // install.php builds its own schema; ours diverges from the
+        // template once it runs. Force a full reload on the next setUp.
+        $this->markSchemaDirty();
         if (file_exists(self::INSTALLED_STAMP)) {
             unlink(self::INSTALLED_STAMP);
         }

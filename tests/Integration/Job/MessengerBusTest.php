@@ -29,8 +29,7 @@ final class MessengerBusTest extends IntegrationTestCase
     protected function setUp(): void
     {
         $this->setUpConnectionFromEnv();
-        $this->resetDatabase();
-        $this->loadFixture(self::FIXTURE);
+        $this->resetDatabaseFast(self::FIXTURE);
         $this->markTestInstalled();
 
         // Seed Config with the test DB prefix so MessengerFactory reads the right table name.

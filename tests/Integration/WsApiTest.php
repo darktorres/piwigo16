@@ -26,8 +26,7 @@ final class WsApiTest extends IntegrationTestCase
         $this->setUpConnectionFromEnv();
         $this->requireBaseUrl();
         $this->cookieJar = sys_get_temp_dir() . '/piwigo_ws_test_' . (int) getmypid() . '.txt';
-        $this->resetDatabase();
-        $this->loadFixture(self::FIXTURE);
+        $this->resetDatabaseFast(self::FIXTURE);
         $this->markTestInstalled();
     }
 

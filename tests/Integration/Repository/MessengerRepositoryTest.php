@@ -25,8 +25,7 @@ final class MessengerRepositoryTest extends IntegrationTestCase
     protected function setUp(): void
     {
         $this->setUpConnectionFromEnv();
-        $this->resetDatabase();
-        $this->loadFixture(self::FIXTURE);
+        $this->resetDatabaseFast(self::FIXTURE);
         $this->conn = $this->newDbalConnection();
         $this->repo = new MessengerRepository($this->conn, 'piwigo_');
     }

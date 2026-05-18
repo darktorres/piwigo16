@@ -27,8 +27,7 @@ final class SearchFilterViewRepositoryTest extends IntegrationTestCase
     protected function setUp(): void
     {
         $this->setUpConnectionFromEnv();
-        $this->resetDatabase();
-        $this->loadFixture(self::FIXTURE);
+        $this->resetDatabaseFast(self::FIXTURE);
         Config::loadArray(['db_prefix' => 'piwigo_']);
         $this->conn = $this->newDbalConnection();
         $this->repo = new SearchFilterViewRepository($this->conn);

@@ -22,8 +22,7 @@ final class ContainerSmokeTest extends IntegrationTestCase
     protected function setUp(): void
     {
         $this->setUpConnectionFromEnv();
-        $this->resetDatabase();
-        $this->loadFixture(self::FIXTURE);
+        $this->resetDatabaseFast(self::FIXTURE);
         $this->markTestInstalled();
 
         // Globals still consumed by container factories (CurrentUser, Lang).

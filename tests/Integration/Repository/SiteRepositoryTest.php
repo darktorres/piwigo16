@@ -23,8 +23,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
     protected function setUp(): void
     {
         $this->setUpConnectionFromEnv();
-        $this->resetDatabase();
-        $this->loadFixture(self::FIXTURE);
+        $this->resetDatabaseFast(self::FIXTURE);
         $this->conn = $this->newDbalConnection();
         $this->repo = new SiteRepository($this->conn, 'piwigo_');
     }

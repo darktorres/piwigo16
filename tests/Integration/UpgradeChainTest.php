@@ -16,6 +16,10 @@ final class UpgradeChainTest extends IntegrationTestCase
         $this->requireBaseUrl();
         $this->resetDatabase();
         $this->loadFixture(self::FIXTURE);
+        // This class manages its own DB lifecycle (loads pre-15 SQL on
+        // top of the fixture) so the schema diverges from the template.
+        // Force the next IntegrationTestCase setUp to do a full reload.
+        $this->markSchemaDirty();
         $this->markTestInstalled();
     }
 

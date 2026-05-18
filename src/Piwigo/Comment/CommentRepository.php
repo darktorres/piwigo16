@@ -328,6 +328,120 @@ final class CommentRepository extends AbstractRepository
     }
 
     /**
+     * Return (all_comments, validated, pending) counters matching the supplied
+     * WHERE fragment list. Used by the admin comments-list API to render the
+     * top summary row.
+     *
+     * @param list<string>                                $whereClauses
+     * @param list<mixed>                                 $params
+     * @param list<ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
+     * @return array{all_comments: int, validated: int, pending: int}
+     */
+    public function findCommentsSummary(array $whereClauses, array $params, array $types): array
+    {
+        if ($whereClauses === []) {
+            $whereClauses = ['1=1'];
+        }
+        $sql = 'SELECT COUNT(*) AS all_comments,'
+            . ' SUM(validated = 1) AS validated, SUM(validated = 0) AS pending'
+            . ' FROM ' . $this->table('comments')
+            . ' WHERE ' . implode(' AND ', $whereClauses);
+        $row = $this->conn->executeQuery($sql, $params, $types)->fetchAssociative();
+        if ($row === false) {
+            return ['all_comments' => 0, 'validated' => 0, 'pending' => 0];
+        }
+        return [
+            'all_comments' => is_numeric($row['all_comments'] ?? null) ? (int) $row['all_comments'] : 0,
+            'validated'    => is_numeric($row['validated'] ?? null) ? (int) $row['validated'] : 0,
+            'pending'      => is_numeric($row['pending'] ?? null) ? (int) $row['pending'] : 0,
+        ];
+    }
+
+    /**
+     * Paginated admin comments listing — comments joined with image, optional
+     * user, and user_infos rows.
+     *
+     * @param list<string>                                $whereClauses
+     * @param list<mixed>                                 $params
+     * @param list<ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
+     * @return list<array<string, mixed>>
+     */
+    public function findCommentsAdminList(
+        array $whereClauses,
+        array $params,
+        array $types,
+        string $usersTable,
+        string $userIdField,
+        string $usernameField,
+        int $limit,
+        int $offset,
+    ): array {
+        if ($whereClauses === []) {
+            $whereClauses = ['1=1'];
+        }
+        $sql = 'SELECT c.id, c.image_id, c.date, c.author, c.author_id, ' . $usernameField . ' AS username,'
+            . ' ui.status, c.content, i.path, i.representative_ext, i.file, i.date_available, validated, c.anonymous_id'
+            . ' FROM ' . $this->table('comments') . ' AS c'
+            . ' INNER JOIN ' . $this->table('images') . ' AS i ON i.id = c.image_id'
+            . ' LEFT JOIN ' . $usersTable . ' AS u ON u.' . $userIdField . ' = c.author_id'
+            . ' LEFT JOIN ' . $this->table('user_infos') . ' AS ui ON ui.user_id = c.author_id'
+            . ' WHERE ' . implode(' AND ', $whereClauses)
+            . ' ORDER BY c.date DESC'
+            . ' LIMIT ' . $limit . ' OFFSET ' . $offset;
+        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
+     * MIN(date) / MAX(date) over the filtered comment set.
+     *
+     * @param list<string>                                $whereClauses
+     * @param list<mixed>                                 $params
+     * @param list<ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
+     * @return array{started_at: ?string, ended_at: ?string}
+     */
+    public function findCommentDateRange(array $whereClauses, array $params, array $types): array
+    {
+        if ($whereClauses === []) {
+            $whereClauses = ['1=1'];
+        }
+        $row = $this->conn->executeQuery(
+            'SELECT MIN(date) AS started_at, MAX(date) AS ended_at FROM ' . $this->table('comments')
+            . ' WHERE ' . implode(' AND ', $whereClauses),
+            $params,
+            $types,
+        )->fetchAssociative();
+        if ($row === false) {
+            return ['started_at' => null, 'ended_at' => null];
+        }
+        return [
+            'started_at' => is_string($row['started_at'] ?? null) ? $row['started_at'] : null,
+            'ended_at'   => is_string($row['ended_at'] ?? null) ? $row['ended_at'] : null,
+        ];
+    }
+
+    /**
+     * Author breakdown — (author, author_id, nb_authors) tuples grouped by author_id.
+     *
+     * @param list<string>                                $whereClauses
+     * @param list<mixed>                                 $params
+     * @param list<ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
+     * @return list<array<string, mixed>>
+     */
+    public function findCommentAuthorCounts(array $whereClauses, array $params, array $types): array
+    {
+        if ($whereClauses === []) {
+            $whereClauses = ['1=1'];
+        }
+        return $this->conn->executeQuery(
+            'SELECT author, author_id, COUNT(*) AS nb_authors FROM ' . $this->table('comments')
+            . ' WHERE ' . implode(' AND ', $whereClauses)
+            . ' GROUP BY author_id',
+            $params,
+            $types,
+        )->fetchAllAssociative();
+    }
+
+    /**
      * Count comments matching $whereClauses (joined with AND), with the
      * standard "image_category JOIN comments LEFT JOIN users" plumbing.
      *

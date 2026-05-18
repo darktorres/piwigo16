@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
+use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
@@ -25,7 +26,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class CommentsEndpoints
 {
     public function __construct(
-        private Connection $conn,
+        private CommentRepository $commentRepository,
         private CommentService $commentService,
         private DateService $dateService,
         private UrlGenerator $urlGenerator,
@@ -52,50 +53,72 @@ final readonly class CommentsEndpoints
         if (!in_array($params['per_page'], $itemsNumber)) {
             return new PwgError(401, 'Per page must be: 5, 10, 25 or 50');
         }
-        $whereClauses = ['1=1'];
-        if (isset($params['author_id']) && !empty($params['author_id'])) {
-            $whereClauses['author_id'] = 'author_id = ' . (is_numeric($params['author_id']) ? (int) $params['author_id'] : 0);
+        /** @var list<array{sql: string, param: mixed, type: ParameterType, kind: string}> $filters */
+        $filters = [];
+        if (!empty($params['author_id'])) {
+            $filters[] = ['sql' => 'author_id = ?', 'param' => is_numeric($params['author_id']) ? (int) $params['author_id'] : 0, 'type' => ParameterType::INTEGER, 'kind' => 'author'];
         }
-        if (isset($params['image_id']) && !empty($params['image_id'])) {
-            $whereClauses[] = 'image_id = ' . (is_numeric($params['image_id']) ? (int) $params['image_id'] : 0);
+        if (!empty($params['image_id'])) {
+            $filters[] = ['sql' => 'image_id = ?', 'param' => is_numeric($params['image_id']) ? (int) $params['image_id'] : 0, 'type' => ParameterType::INTEGER, 'kind' => 'image'];
         }
         if (!empty($params['f_min_date'])) {
             $dmin = date_create(is_string($params['f_min_date']) ? $params['f_min_date'] : '');
             if ($dmin !== false) {
-                $whereClauses[] = "date >= '" . date_format($dmin, 'Y-m-d 00:00:00') . "'";
+                $filters[] = ['sql' => 'date >= ?', 'param' => date_format($dmin, 'Y-m-d 00:00:00'), 'type' => ParameterType::STRING, 'kind' => 'min_date'];
             }
         }
         if (!empty($params['f_max_date'])) {
             $dmax = date_create(is_string($params['f_max_date']) ? $params['f_max_date'] : '');
             if ($dmax !== false) {
-                $whereClauses[] = "date <= '" . date_format($dmax, 'Y-m-d 23:59:59') . "'";
+                $filters[] = ['sql' => 'date <= ?', 'param' => date_format($dmax, 'Y-m-d 23:59:59'), 'type' => ParameterType::STRING, 'kind' => 'max_date'];
             }
         }
         if (!empty($params['search'])) {
-            $whereClauses   = ['1=1'];
-            $whereClauses[] = 'content LIKE ' . $this->conn->quote('%' . (is_string($params['search']) ? $params['search'] : '') . '%');
+            // 'search' is exclusive — overrides the other field filters above.
+            $filters = [['sql' => 'content LIKE ?', 'param' => '%' . (is_string($params['search']) ? $params['search'] : '') . '%', 'type' => ParameterType::STRING, 'kind' => 'search']];
         }
-        $conn = $this->conn;
-        $querySum = 'SELECT count(*) as all_comments, sum(validated = \'true\') as validated, sum(validated = \'false\') as pending FROM ' . Tables::comments() . ' WHERE ' . implode(' AND ', $whereClauses) . ';';
-        $summaryResult = $conn->executeQuery($querySum)->fetchAssociative();
-        $summary  = $summaryResult !== false ? $summaryResult : [];
-        $totalComments = $summary['all_comments'] ?? null;
+
+        $build = static function (array $rows): array {
+            /** @var list<array{sql: string, param: mixed, type: ParameterType, kind: string}> $rows */
+            $where = ['1=1'];
+            $params = [];
+            $types  = [];
+            foreach ($rows as $row) {
+                $where[]  = $row['sql'];
+                $params[] = $row['param'];
+                $types[]  = $row['type'];
+            }
+            return [$where, $params, $types];
+        };
+        [$whereClauses, $qParams, $qTypes] = $build($filters);
+
+        $summary = $this->commentRepository->findCommentsSummary($whereClauses, $qParams, $qTypes);
+        $totalComments = $summary['all_comments'];
         switch ($params['status']) {
             case 'pending':
                 $whereClauses[] = 'validated = 0';
-                $totalComments  = $summary['pending'] ?? null;
+                $totalComments  = $summary['pending'];
                 break;
             case 'validated':
                 $whereClauses[] = 'validated = 1';
-                $totalComments  = $summary['validated'] ?? null;
+                $totalComments  = $summary['validated'];
                 break;
         }
         $perPage = is_numeric($params['per_page']) ? (int) $params['per_page'] : 10;
         $pageNum = is_numeric($params['page']) ? (int) $params['page'] : 0;
         $userFields = Config::userFields();
-        $query = 'SELECT c.id, c.image_id, c.date, c.author, c.author_id, ' . $userFields['username'] . ' AS username, ui.status, c.content, i.path, i.representative_ext, i.file, i.date_available, validated, c.anonymous_id FROM ' . Tables::comments() . ' AS c INNER JOIN ' . Tables::images() . ' AS i ON i.id = c.image_id LEFT JOIN ' . Tables::users() . ' AS u ON u.' . $userFields['id'] . ' = c.author_id LEFT JOIN ' . Tables::userInfos() . ' AS ui ON ui.user_id = c.author_id WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY c.date DESC LIMIT ' . ($perPage * $pageNum) . ', ' . $perPage . ';';
+        $rows = $this->commentRepository->findCommentsAdminList(
+            $whereClauses,
+            $qParams,
+            $qTypes,
+            Tables::users(),
+            $userFields['id'],
+            $userFields['username'],
+            $perPage,
+            $perPage * $pageNum,
+        );
         $list = [];
-        foreach ($conn->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach ($rows as $row) {
             $mediumDerivative = DerivativeImage::getOne(DerivativeSize::Medium->value, ['id' => $row['image_id'], 'path' => $row['path'], 'representative_ext' => $row['representative_ext']]);
             $medium = $mediumDerivative !== null ? $mediumDerivative->getUrl() : null;
             if (empty($row['author_id']) || $row['author_id'] == Config::guestId()) {
@@ -110,14 +133,18 @@ final readonly class CommentsEndpoints
             $this->dispatcher->dispatch($contentEvent);
             $list[] = ['id' => $row['id'], 'admin_link' => $this->urlGenerator->admin('photo-' . (is_string($row['image_id'] ?? null) ? $row['image_id'] : '')), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => $this->dateService->formatDate(is_string($row['date_available'] ?? null) ? $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => $authorEvent->commentAuthor, 'author_status' => Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => $this->dateService->formatDate(is_string($row['date'] ?? null) ? $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => $contentEvent->commentContent, 'raw_content' => $row['content'], 'is_pending' => !BoolUtil::fromMixed($row['validated'])];
         }
-        $datesQuery = 'SELECT MIN(date) AS started_at, MAX(date) AS ended_at FROM ' . Tables::comments() . ' WHERE ' . implode(' AND ', $whereClauses) . ';';
-        $datesResult = $conn->executeQuery($datesQuery)->fetchAssociative();
-        $dates      = $datesResult !== false ? $datesResult : [];
-        unset($whereClauses['author_id']);
-        $authorsQuery = 'SELECT author, author_id, count(*) as nb_authors FROM ' . Tables::comments() . ' WHERE ' . implode(' AND ', $whereClauses) . ' GROUP BY author_id;';
-        $nbAuthorsIn  = $this->conn->executeQuery($authorsQuery)->fetchAllAssociative();
-        $totalCount   = is_numeric($totalComments) ? (int) $totalComments : 0;
-        return ['summary' => $summary, 'comments' => $list, 'filters' => ['nb_authors' => $nbAuthorsIn, 'started_at' => $dates['started_at'] ?? null, 'ended_at' => $dates['ended_at'] ?? null], 'paging' => ['page' => $params['page'], 'per_page' => $params['per_page'], 'total_pages' => max(0, (int) ceil((float) $totalCount / (float) max(1, $perPage)) - 1)]];
+        $dates = $this->commentRepository->findCommentDateRange($whereClauses, $qParams, $qTypes);
+
+        // "Authors" filter histogram intentionally excludes the author_id
+        // filter clause itself, so the picker shows every author present in
+        // the remaining filter set rather than just the currently-picked one.
+        [$authorsWhere, $authorsParams, $authorsTypes] = $build(array_values(array_filter(
+            $filters,
+            static fn (array $f): bool => $f['kind'] !== 'author',
+        )));
+        $nbAuthorsIn = $this->commentRepository->findCommentAuthorCounts($authorsWhere, $authorsParams, $authorsTypes);
+
+        return ['summary' => $summary, 'comments' => $list, 'filters' => ['nb_authors' => $nbAuthorsIn, 'started_at' => $dates['started_at'], 'ended_at' => $dates['ended_at']], 'paging' => ['page' => $params['page'], 'per_page' => $params['per_page'], 'total_pages' => max(0, (int) ceil((float) $totalComments / (float) max(1, $perPage)) - 1)]];
     }
 
     /** @param array<mixed> $params */

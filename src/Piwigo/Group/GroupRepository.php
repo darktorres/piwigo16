@@ -241,6 +241,107 @@ final class GroupRepository extends AbstractRepository
     }
 
     /**
+     * Run the groups.getList query (groups with user_group LEFT JOIN counter)
+     * and return the paged result.
+     *
+     * @param  list<string>                                                $whereClauses
+     * @param  list<mixed>                                                 $params
+     * @param  list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
+     * @return list<array<string, mixed>>
+     */
+    public function findListPage(array $whereClauses, string $orderBy, int $perPage, int $offset, array $params = [], array $types = []): array
+    {
+        $where = $whereClauses !== [] ? implode(' AND ', $whereClauses) : '1=1';
+        return $this->conn->executeQuery(
+            'SELECT g.*, COUNT(user_id) AS nb_users FROM ' . $this->table('groups') . ' AS g'
+            . ' LEFT JOIN ' . $this->table('user_group') . ' AS ug ON ug.group_id = g.id'
+            . ' WHERE ' . $where
+            . ' GROUP BY id'
+            . ' ORDER BY ' . $orderBy
+            . ' LIMIT ' . $perPage . ' OFFSET ' . $offset,
+            $params,
+            $types,
+        )->fetchAllAssociative();
+    }
+
+    /** Insert a new group row and return its id. */
+    public function insertNew(string $name, int $isDefault): int
+    {
+        $this->conn->insert($this->table('groups'), ['name' => $name, 'is_default' => $isDefault]);
+        return (int) $this->conn->lastInsertId();
+    }
+
+    /**
+     * Update arbitrary columns on a single group.
+     *
+     * @param array<string, mixed> $fields
+     */
+    public function updateById(int $id, array $fields): void
+    {
+        if ($fields === []) {
+            return;
+        }
+        $this->conn->update($this->table('groups'), $fields, ['id' => $id]);
+    }
+
+    /**
+     * Insert user_group rows atomically with INSERT IGNORE on the
+     * (group_id, user_id) PK.
+     *
+     * @param list<array{group_id: int, user_id: int}> $rows
+     */
+    public function insertUserGroupIgnoreDuplicates(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $this->conn->executeStatement(
+                    'INSERT IGNORE INTO ' . $this->table('user_group') . ' (group_id, user_id) VALUES (?, ?)',
+                    [$row['group_id'], $row['user_id']],
+                );
+            }
+        });
+    }
+
+    /**
+     * Return DISTINCT user_ids that belong to any of the given groups.
+     *
+     * @param  list<int> $groupIds
+     * @return list<int>
+     */
+    public function findDistinctUserIdsInGroups(array $groupIds): array
+    {
+        if ($groupIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('DISTINCT user_id')
+            ->from($this->table('user_group'));
+        $qb->where($qb->expr()->in('group_id', ':ids'))
+           ->setParameter('ids', $groupIds, ArrayParameterType::INTEGER);
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Return user_ids in the given group.
+     *
+     * @return list<int>
+     */
+    public function findUserIdsByGroupId(int $groupId): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('user_id')
+            ->from($this->table('user_group'))
+            ->where('group_id = :groupId')
+            ->setParameter('groupId', $groupId)
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
      * Return id → name map for the given group ids (no order).
      *
      * @param  int[] $ids

@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Url;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Html\HtmlService;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserRepository;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class UrlService
@@ -28,11 +27,11 @@ final class UrlService
     private static int $rootPathRefCount = 0;
 
     public function __construct(
-        private readonly Connection $conn,
         private readonly CategoryService $categoryService,
         private readonly HtmlService $htmlService,
         private readonly TagService $tagService,
         private readonly PermissionService $permissionService,
+        private readonly UserRepository $userRepository,
         private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
@@ -699,19 +698,9 @@ final class UrlService
         if ($this->permissionService->isAGuest()) {
             return [];
         }
-
-        $query = '
-SELECT
-    image_id,
-    1 as fake_value
-  FROM ' . Tables::favorites() . '
-  WHERE user_id = ' . CurrentUser::get()->id . '
-';
-
-        $raw    = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'fake_value', 'image_id');
         $result = [];
-        foreach ($raw as $imageId => $val) {
-            $result[(int) $imageId] = true;
+        foreach ($this->userRepository->findFavoriteImageIdsByUserPlain(CurrentUser::get()->id) as $imageId) {
+            $result[$imageId] = true;
         }
         return $result;
     }

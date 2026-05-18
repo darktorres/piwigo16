@@ -222,9 +222,16 @@ test.describe.serial('regenerate dev/fixtures/piwigo-17.0.sql', () => {
                 pwg_token: pwgToken,
             });
             // pwg.config.setKeyValue may not exist in 16.x; fall back to direct UPDATE.
+            // piwigo_config.value is a JSON column (F7-a) so the value must
+            // round-trip through JSON.stringify on the fallback path.
             if (res.stat !== 'ok') {
+                const jsonValue =
+                    value === 'true' ? 'true'
+                    : value === 'false' ? 'false'
+                    : /^-?\d+(\.\d+)?$/.test(value) ? value
+                    : JSON.stringify(value);
                 mysqlExec(
-                    `USE ${SCRATCH_DB}; UPDATE piwigo_config SET value=${shellQuote(value)} ` +
+                    `USE ${SCRATCH_DB}; UPDATE piwigo_config SET value=${shellQuote(jsonValue)} ` +
                         `WHERE param=${shellQuote(param)};`
                 );
             }

@@ -1168,15 +1168,11 @@ final class Config
     public static function pictureInformations(): array
     {
         $v = self::src()['picture_informations'] ?? null;
-        if (!is_string($v) || $v === '') {
-            return [];
-        }
-        $decoded = json_decode($v, associative: true);
-        if (!is_array($decoded)) {
+        if (!is_array($v)) {
             return [];
         }
         $out = [];
-        foreach ($decoded as $key => $value) {
+        foreach ($v as $key => $value) {
             if (is_string($key) && is_bool($value)) {
                 $out[$key] = $value;
             }
@@ -1382,11 +1378,7 @@ final class Config
     public static function extentsForTemplates(): array
     {
         $v = self::src()['extents_for_templates'] ?? null;
-        if (!is_string($v) || $v === '') {
-            return [];
-        }
-        $decoded = json_decode($v, associative: true);
-        return is_array($decoded) ? $decoded : [];
+        return is_array($v) ? $v : [];
     }
     /** @return list<int> */
     public static function rateItems(): array

@@ -199,12 +199,7 @@ final readonly class InstallController implements ControllerInterface
                 InstallService::executeSqlFile($this->paths->root . 'install/piwigo_structure-mysql.sql', self::DEFAULT_DB_PREFIX, $prefixeTable);
                 InstallService::executeSqlFile($this->paths->root . 'install/config.sql', self::DEFAULT_DB_PREFIX, $prefixeTable);
 
-                Kernel::service(Connection::class)->insert($prefixeTable . 'config', [
-                    'param'   => 'secret_key',
-                    'value'   => sha1(random_bytes(1000)),
-                    'comment' => 'a secret key specific to the gallery for internal use',
-                ]);
-
+                $configService->confUpdateParam('secret_key', sha1(random_bytes(1000)));
                 $configService->confUpdateParam('piwigo_db_version', AppInfo::branchFromVersion(AppInfo::VERSION));
                 $configService->confUpdateParam('gallery_title', Lang::t('Just another Piwigo gallery'));
                 $configService->confUpdateParam('page_banner', '<h1>%gallery_title%</h1>' . "\n\n<p>" . Lang::t('Welcome to my photo gallery') . '</p>');

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
-use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbConnection;
@@ -33,13 +32,10 @@ final readonly class ConfigService
         }
 
         foreach ($rows as $row) {
-            $val = $row['value'] ?? '';
-            if ($val === 'true') {
-                $val = true;
-            } elseif ($val === 'false') {
-                $val = false;
-            }
+            // ConfigRepository json-decodes values; they arrive as native PHP
+            // bool/int/float/string/array/null with no further parsing needed.
             /** @var array<mixed>|bool|float|int|string|null $val */
+            $val = $row['value'];
             Config::override($row['param'], $val);
         }
 
@@ -62,17 +58,17 @@ final readonly class ConfigService
     /**
      * Persist a single key/value to the conf table.
      *
-     * The value is stored as a string — booleans go through BoolUtil
-     * (which emits 'true'/'false' matching the on-read decode in
-     * loadConfFromDb), other scalars stringify naturally. Arrays
-     * are no longer accepted: every B1-B10 caller that used to pass
-     * one now JSON-encodes upstream (the encoded string lands here as
-     * a regular string). See SerializeAllowedRule for the rationale.
+     * Values flow through ConfigRepository which JSON-encodes them into the
+     * `piwigo_config.value json` column. Arrays are accepted again now that
+     * the column holds structured JSON (callers no longer need to
+     * json_encode upstream); the SerializeAllowedRule policy still rules
+     * out PHP serialize().
+     *
+     * @param array<mixed>|bool|float|int|string|null $value
      */
-    public function confUpdateParam(string $param, string|int|float|bool|null $value, bool $updateGlobal = false): void
+    public function confUpdateParam(string $param, array|string|int|float|bool|null $value, bool $updateGlobal = false): void
     {
-        $dbValue = is_bool($value) ? BoolUtil::toString($value) : (string) ($value ?? '');
-        $this->repo->upsertParamValue($param, $dbValue);
+        $this->repo->upsertParamValue($param, $value);
 
         if ($updateGlobal) {
             Config::override($param, $value);

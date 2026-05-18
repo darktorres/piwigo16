@@ -89,7 +89,7 @@ CREATE TABLE `piwigo_comments` (
 DROP TABLE IF EXISTS `piwigo_config`;
 CREATE TABLE `piwigo_config` (
   `param` varchar(40) NOT NULL default '',
-  `value` text,
+  `value` json DEFAULT NULL,
   `comment` varchar(255) default NULL,
   PRIMARY KEY  (`param`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='configuration table';

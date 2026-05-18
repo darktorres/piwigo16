@@ -62,8 +62,10 @@ final class UpgradeChainTest extends IntegrationTestCase
 
         self::assertSame(200, $statusCode, 'index.php?/upgrade must return 200');
 
+        // piwigo_config.value is a JSON column (F7-a); JSON_UNQUOTE strips the
+        // JSON-string wrapping so the assertion stays on the decoded value.
         $version = $this->queryScalar(
-            "SELECT value FROM piwigo_config WHERE param = 'piwigo_db_version'"
+            "SELECT JSON_UNQUOTE(value) FROM piwigo_config WHERE param = 'piwigo_db_version'"
         );
         // AppInfo::branchFromVersion('17.0.0') returns '17' (first segment only, per Piwigo ≥ 11 convention)
         self::assertSame('17', $version, 'index.php?/upgrade must land on current branch version');

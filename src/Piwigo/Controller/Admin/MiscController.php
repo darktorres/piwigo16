@@ -198,7 +198,7 @@ final class MiscController implements AdminSubControllerInterface
                     $this->inputValidator->check('nbm_send_recent_post_dates', $_POST, false, '/^(true|false)$/');
                     $updated_param_count = 0;
                     foreach ($this->configRepository->findByParamPattern('nbm\\_%') as $nbm_user) {
-                        $param = is_string($nbm_user['param'] ?? null) ? $nbm_user['param'] : '';
+                        $param = $nbm_user['param'];
                         if (isset($_POST[$param])) {
                             /** @var string $rawParamVal */
                             $rawParamVal = $_POST[$param];

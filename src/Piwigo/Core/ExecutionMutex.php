@@ -41,7 +41,7 @@ final readonly class ExecutionMutex
         $this->log->info('[' . $tokenName . '][exec=' . $execId . '] starts now');
 
         $existing = $this->configRepository->findValueByParam($tokenParam);
-        if ($existing !== null && $existing !== '') {
+        if (is_string($existing) && $existing !== '') {
             [$runningExecId, $runningExecStartTime] = explode('-', $existing);
             if (time() - (int) $runningExecStartTime > $timeout) {
                 $this->log->info('[' . $tokenName . '][exec=' . $execId . '] exec=' . $runningExecId . ', timeout stopped by another call');
@@ -50,7 +50,10 @@ final readonly class ExecutionMutex
         }
 
         $this->configRepository->insertIgnoreParamValue($tokenParam, $execId . '-' . time());
-        $runningExec = $this->configRepository->findValueByParam($tokenParam) ?? '';
+        $runningExec = $this->configRepository->findValueByParam($tokenParam);
+        if (!is_string($runningExec)) {
+            $runningExec = '';
+        }
         [$runningExecId] = explode('-', $runningExec);
 
         if ($runningExecId !== $execId) {

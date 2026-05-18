@@ -68,8 +68,10 @@ final class InstallChainTest extends IntegrationTestCase
             'install.php response must contain success message — body: ' . substr(strip_tags($body), 0, 500)
         );
 
+        // piwigo_config.value is a JSON column (F7-a); JSON_UNQUOTE strips
+        // the JSON-string wrapping so the assertion stays on the decoded value.
         $version = $this->queryScalar(
-            "SELECT value FROM piwigo_config WHERE param = 'piwigo_db_version'"
+            "SELECT JSON_UNQUOTE(value) FROM piwigo_config WHERE param = 'piwigo_db_version'"
         );
         self::assertSame('17', $version, 'install must write piwigo_db_version = 17');
 

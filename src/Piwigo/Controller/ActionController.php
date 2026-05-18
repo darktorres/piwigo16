@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Lifecycle\LocActionBeforeHttpHeaders;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
@@ -35,7 +33,6 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class ActionController implements ControllerInterface
 {
     public function __construct(
-        private Connection $conn,
         private HtmlService $htmlService,
         private ImageRepository $imageRepository,
         private PermissionService $permissionService,
@@ -58,14 +55,10 @@ final readonly class ActionController implements ControllerInterface
             $this->inputValidator->check('format', $_GET, false, ValidationPattern::ID);
             $get_format = StringUtil::inputInt('format', null, $_GET);
 
-            $query = 'SELECT * FROM ' . Tables::imageFormat() . ' WHERE format_id = ' . ($get_format ?? 0) . ';';
-            $formats = $this->conn->executeQuery($query)->fetchAllAssociative();
-
-            if (count($formats) == 0) {
+            $format = $this->imageRepository->findImageFormatById($get_format ?? 0);
+            if ($format === null) {
                 $this->error(400, 'Invalid request - format');
             }
-
-            $format = $formats[0];
             $_GET['id'] = $format['image_id'];
             $_GET['part'] = 'f';
         }
@@ -94,13 +87,7 @@ final readonly class ActionController implements ControllerInterface
         $src_image = new SrcImage($element_info);
 
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'image_id'], '    AND');
-        $query = '
-SELECT id FROM ' . Tables::categories() . '
-    INNER JOIN ' . Tables::imageCategory() . ' ON category_id = id
-  WHERE image_id = ' . $get_id . '
-' . $permSql . '
-  LIMIT 1;';
-        if (!$is_admin_download && $this->conn->executeQuery($query, $permParams, $permTypes)->fetchOne() === false) {
+        if (!$is_admin_download && !$this->imageRepository->existsImageInVisibleCategory($get_id, $permSql, $permParams, $permTypes)) {
             $this->error(401, 'Access denied');
         }
 

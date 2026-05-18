@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Job\Handler;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Db\Tables;
 use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Mail\MailService;
+use Piwigo\Users\UserRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler]
@@ -21,26 +21,17 @@ final class SendNotificationEmailHandler
         $to = is_string($job->params['to'] ?? null) ? (string) $job->params['to'] : '';
 
         if ($to === '') {
-            $emailField = Config::userFields()['email'];
-            $idField    = Config::userFields()['id'];
-
-            $row = Kernel::service(Connection::class)
-                ->executeQuery(
-                    'SELECT ' . $emailField . ' AS email FROM ' . Tables::users() . ' WHERE ' . $idField . ' = ?',
-                    [$job->userId]
-                )
-                ->fetchAssociative();
-
-            if ($row === false || empty($row['email'])) {
+            $userFields = Config::userFields();
+            $to = Kernel::service(UserRepository::class)->findEmailByUserId(
+                $userFields['email'],
+                $userFields['id'],
+                Tables::users(),
+                $job->userId,
+            );
+            if ($to === '') {
                 LoggerRegistry::current()->warning('notification.user_not_found', ['user_id' => $job->userId]);
                 return;
             }
-
-            $to = is_string($row['email']) ? $row['email'] : '';
-        }
-
-        if ($to === '') {
-            return;
         }
 
         Kernel::service(MailService::class)->pwgMail(

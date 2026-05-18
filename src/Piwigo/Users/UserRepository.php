@@ -71,17 +71,23 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
-     * Return the webmaster's email address.
+     * Return the email address for a user id, or '' when not found.
      * $emailField, $idField, $usersTable come from Config — admin-configured,
      * not user-supplied, safe to embed in SQL.
      */
-    public function getWebmasterEmail(string $emailField, string $idField, string $usersTable, int $webmasterId): string
+    public function findEmailByUserId(string $emailField, string $idField, string $usersTable, int $userId): string
     {
         $value = $this->conn->executeQuery(
             "SELECT $emailField FROM $usersTable WHERE $idField = ?",
-            [$webmasterId]
+            [$userId]
         )->fetchOne();
         return is_scalar($value) ? (string) $value : '';
+    }
+
+    /** Convenience wrapper around findEmailByUserId for the webmaster id. */
+    public function getWebmasterEmail(string $emailField, string $idField, string $usersTable, int $webmasterId): string
+    {
+        return $this->findEmailByUserId($emailField, $idField, $usersTable, $webmasterId);
     }
 
     /**

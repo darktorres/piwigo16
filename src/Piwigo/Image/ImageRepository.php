@@ -611,6 +611,45 @@ final class ImageRepository extends AbstractRepository
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'image_id'));
     }
 
+    /**
+     * Return an image_format row by format_id, or null when not found.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findImageFormatById(int $formatId): ?array
+    {
+        $row = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from($this->table('image_format'))
+            ->where('format_id = :id')
+            ->setParameter('id', $formatId)
+            ->executeQuery()
+            ->fetchAssociative();
+        return $row !== false ? $row : null;
+    }
+
+    /**
+     * True when at least one image_category row for $imageId lives in a
+     * category that passes the supplied permission filter — i.e. the image
+     * is visible to the current user.
+     *
+     * @param list<mixed>                                  $permParams
+     * @param list<ArrayParameterType|ParameterType>       $permTypes
+     */
+    public function existsImageInVisibleCategory(int $imageId, string $permWhere, array $permParams, array $permTypes): bool
+    {
+        $sql = 'SELECT id FROM ' . $this->table('categories')
+            . ' INNER JOIN ' . $this->table('image_category') . ' ON category_id = id'
+            . ' WHERE image_id = ?' . $permWhere
+            . ' LIMIT 1';
+        $value = $this->conn->executeQuery(
+            $sql,
+            [$imageId, ...$permParams],
+            [ParameterType::INTEGER, ...$permTypes],
+        )->fetchOne();
+        return $value !== false;
+    }
+
     /** Count images whose storage_category_id is NOT NULL (filesystem-synced). */
     public function countWithStorageCategorySet(): int
     {

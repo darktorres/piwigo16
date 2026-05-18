@@ -376,8 +376,8 @@ final class UserService
         }
 
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'ic.category_id'], 'AND');
-        $authorizeds = $this->userRepo->findAuthorizedFavoriteImageIds((int) $currentUser->id, $permSql, $permParams, $permTypes);
-        $favorites   = $this->userRepo->findFavoriteImageIdsByUserPlain((int) $currentUser->id);
+        $authorizeds = $this->userRepo->findAuthorizedFavoriteImageIds($currentUser->id, $permSql, $permParams, $permTypes);
+        $favorites   = $this->userRepo->findFavoriteImageIdsByUserPlain($currentUser->id);
 
         $toDeletes = array_values(array_diff($favorites, $authorizeds));
         if (count($toDeletes) > 0) {
@@ -602,7 +602,7 @@ final class UserService
         $paramUid0   = is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : 0;
         $paramGroupId = is_array($params['group_id'] ?? null) ? $params['group_id'] : [];
 
-        $this->userRepo->updateUserById(Tables::users(), Config::userFields()['id'], (int) $paramUid0, $updates);
+        $this->userRepo->updateUserById(Tables::users(), Config::userFields()['id'], $paramUid0, $updates);
 
         if (isset($updates[Config::userFields()['password']])) {
             $this->authService->deactivateUserAuthKeys($paramUid0);

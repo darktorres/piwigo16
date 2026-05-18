@@ -810,8 +810,7 @@ final class UserRepository extends AbstractRepository
         }
         $exprs = [];
         foreach ($days as $day) {
-            $dayInt   = (int) $day;
-            $exprs[]  = 'ADDDATE(NOW(), INTERVAL ' . $dayInt . ' DAY) AS `' . $dayInt . '`';
+            $exprs[]  = 'ADDDATE(NOW(), INTERVAL ' . $day . ' DAY) AS `' . $day . '`';
         }
         $row = $this->conn->executeQuery('SELECT ' . implode(', ', $exprs))->fetchAssociative();
         if ($row === false) {
@@ -819,7 +818,7 @@ final class UserRepository extends AbstractRepository
         }
         $out = [];
         foreach ($row as $key => $value) {
-            $out[(string) $key] = is_scalar($value) ? (string) $value : '';
+            $out[$key] = is_scalar($value) ? (string) $value : '';
         }
         return $out;
     }

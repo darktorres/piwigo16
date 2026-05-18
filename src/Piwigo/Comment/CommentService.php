@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Comment;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Tables;
 use Piwigo\Event\User\UserCommentCheck;
 use Piwigo\Event\User\UserCommentDeletion;
 use Piwigo\Event\User\UserCommentValidation;
@@ -27,7 +25,6 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class CommentService
 {
     public function __construct(
-        private Connection $conn,
         private CommentRepository $repo,
         private LangService $langService,
         private MailService $mailService,
@@ -57,12 +54,8 @@ final readonly class CommentService
                 true
             );
             $where[] = $permSql;
-            $query = 'SELECT COUNT(DISTINCT(com.id)) FROM ' . Tables::imageCategory() . ' AS ic'
-                . ' INNER JOIN ' . Tables::comments() . ' AS com ON ic.image_id = com.image_id'
-                . ' WHERE ' . implode(' AND ', $where);
-            $count = $this->conn->executeQuery($query, $permParams, $permTypes)->fetchOne();
-            $nb    = is_numeric($count) ? (int) $count : 0;
-            $this->conn->update(Tables::userCache(), ['nb_available_comments' => $nb], ['user_id' => CurrentUser::get()->id]);
+            $nb = $this->repo->countAvailableCommentsForUser($where, $permParams, $permTypes);
+            $this->repo->setNbAvailableCommentsCache(CurrentUser::get()->id, $nb);
             return $nb;
         });
         return is_int($cached) ? $cached : 0;

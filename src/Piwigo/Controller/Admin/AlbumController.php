@@ -268,7 +268,7 @@ final class AlbumController implements AdminSubControllerInterface
         foreach ($subcats_of as $cat_id => $subcat_ids) {
             $nb_photos = 0;
             foreach ($subcat_ids as $id) {
-                $nb_photos += is_numeric($nb_photos_in[$id] ?? null) ? (int) $nb_photos_in[$id] : 0;
+                $nb_photos += $nb_photos_in[$id] ?? 0;
             }
             $nb_sub_photos[$cat_id] = $nb_photos;
         }
@@ -581,7 +581,7 @@ final class AlbumController implements AdminSubControllerInterface
             foreach ($subcats_of as $cat_id => $subcat_ids) {
                 $nb_photos = 0;
                 foreach ($subcat_ids as $id) {
-                    $nb_photos += is_numeric($nb_photos_in[$id] ?? null) ? (int) $nb_photos_in[$id] : 0;
+                    $nb_photos += $nb_photos_in[$id] ?? 0;
                 }
                 $nb_sub_photos[$cat_id] = $nb_photos;
             }

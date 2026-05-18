@@ -59,6 +59,23 @@ final class ActivityRepository extends AbstractRepository
     }
 
     /**
+     * Insert activity log rows atomically.
+     *
+     * @param list<array<string, mixed>> $rows
+     */
+    public function insertActivityRowsBatch(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $this->conn->insert($this->table('activity'), $row);
+            }
+        });
+    }
+
+    /**
      * Return the activity entries joined with the actor's username for the
      * given object kind. Used by the activity-log CSV export.
      *

@@ -157,7 +157,8 @@ final readonly class ProfileService
                 foreach ($fields as $field) {
                     $set[$field] = $data[$field] ?? null;
                 }
-                $userIdInt = is_numeric($data[$idField] ?? null) ? (int) $data[$idField] : 0;
+                $userIdRaw = $data[$idField] ?? null;
+                $userIdInt = is_numeric($userIdRaw) ? (int) $userIdRaw : 0;
                 $this->userRepository->updateUserById(Tables::users(), $idField, $userIdInt, $set);
 
                 if ($_POST['mail_address'] != $userdata['email']) {

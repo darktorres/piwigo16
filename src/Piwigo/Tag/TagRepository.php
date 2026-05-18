@@ -54,6 +54,89 @@ final class TagRepository extends AbstractRepository
     }
 
     /**
+     * Count image associations per tag, subject to the caller's permission
+     * filter. Optionally restricts to a tag subset. Result keyed by tag_id.
+     *
+     * @param  list<int>                                                   $tagIds  Empty = all tags
+     * @param  list<mixed>                                                 $permParams
+     * @param  list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $permTypes
+     * @return array<int|string, int>
+     */
+    public function findTagCountersWithPermissions(
+        array $tagIds,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): array {
+        $sql = 'SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter'
+            . ' FROM ' . $this->table('image_category') . ' ic'
+            . ' INNER JOIN ' . $this->table('image_tag') . ' it ON ic.image_id = it.image_id'
+            . ' WHERE 1=1 ' . $permWhere;
+        $params = $permParams;
+        $types  = $permTypes;
+        if ($tagIds !== []) {
+            $sql .= ' AND tag_id IN (?)';
+            $params[] = $tagIds;
+            $types[]  = \Doctrine\DBAL\ArrayParameterType::INTEGER;
+        }
+        $sql .= ' GROUP BY tag_id';
+        $rows = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        $out  = [];
+        foreach ($rows as $row) {
+            $key       = is_scalar($row['tag_id']) ? (string) $row['tag_id'] : '';
+            $out[$key] = is_numeric($row['counter']) ? (int) $row['counter'] : 0;
+        }
+        return $out;
+    }
+
+    /**
+     * Update arbitrary columns on user_cache for the given user. Used by
+     * TagService to store the nb_available_tags counter.
+     *
+     * @param array<string, mixed> $fields
+     */
+    public function setUserCacheFields(int $userId, array $fields): void
+    {
+        if ($fields === []) {
+            return;
+        }
+        $this->conn->update($this->table('user_cache'), $fields, ['user_id' => $userId]);
+    }
+
+    /**
+     * Return image ids matching tag intersection — used by
+     * TagService::getImageIdsForTags — joins image_tag with image_category
+     * and image, applies permission filter and ORDER BY suffix, with
+     * optional extra WHERE and HAVING COUNT(tag_id) = N for AND-mode.
+     *
+     * @param  list<mixed>                                                 $permParams
+     * @param  list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $permTypes
+     * @return list<int>
+     */
+    public function findImageIdsForTagsWithPermissions(
+        string $baseQuery,
+        string $permWhere,
+        bool $useAndMode,
+        int $tagCountForHaving,
+        ?string $extraWhere,
+        string $orderBySuffix,
+        array $permParams,
+        array $permTypes,
+    ): array {
+        $sql = $baseQuery . $permWhere;
+        if ($extraWhere !== null && $extraWhere !== '') {
+            $sql .= " \nAND (" . $extraWhere . ')';
+        }
+        $sql .= "\n  GROUP BY id";
+        if ($useAndMode) {
+            $sql .= "\n  HAVING COUNT(DISTINCT tag_id)=" . $tagCountForHaving;
+        }
+        $sql .= "\n" . $orderBySuffix;
+        $rows = $this->conn->executeQuery($sql, $permParams, $permTypes)->fetchAllAssociative();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'id'));
+    }
+
+    /**
      * Return tags shared by all given images (common-tags query).
      *
      * @param int[]  $imageIds     Image ids to intersect tags for.

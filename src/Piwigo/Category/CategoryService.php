@@ -90,7 +90,7 @@ final readonly class CategoryService
 
         $cats             = [];
         $selectedCategory = $ctx->category;
-        foreach ($this->catRepo->findCategoriesMenuRows((int) $currentUser->id, $where, $permParams, $permTypes) as $row) {
+        foreach ($this->catRepo->findCategoriesMenuRows($currentUser->id, $where, $permParams, $permTypes) as $row) {
             $childDateLast = ($row['max_date_last'] ?? null) > ($row['date_last'] ?? null);
             $menuRenderEvent = new RenderCategoryName(is_string($row['name'] ?? null) ? $row['name'] : '', 'get_categories_menu');
             $this->dispatcher->dispatch($menuRenderEvent);

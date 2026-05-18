@@ -72,7 +72,7 @@ final readonly class CategoryCatsRenderer
         $this->dispatcher->dispatch($queryEvent);
 
         $result = $this->categoryRepository->findCatsForThumbnailsWithFoundRows(
-            (int) $currentUser->id,
+            $currentUser->id,
             $whereExtra,
             $orderBy,
             Config::nbCategoriesPage(),
@@ -99,10 +99,11 @@ final readonly class CategoryCatsRenderer
             } elseif (Config::allowRandomRepresentative()) {
                 $image_id = $this->categoryService->getRandomImageInCategory($row);
             } elseif ($row['count_categories'] > 0 and $row['count_images'] > 0) {
-                $rowUppercatsForQuery = is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '';
+                $rowUppercatsRaw      = $row['uppercats'] ?? null;
+                $rowUppercatsForQuery = is_string($rowUppercatsRaw) ? $rowUppercatsRaw : '';
                 [$subPermSql, $subPermParams, $subPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND");
                 $image_id = $this->categoryRepository->findRandomSubcatRepresentativeForUser(
-                    (int) $currentUser->id,
+                    $currentUser->id,
                     $rowUppercatsForQuery,
                     $subPermSql,
                     $subPermParams,
@@ -188,7 +189,7 @@ final readonly class CategoryCatsRenderer
             foreach ($user_representative_updates_for as $cat_id => $image_id) {
                 $updates[] = [
                     'cat_id'   => $cat_id,
-                    'image_id' => is_numeric($image_id) ? (int) $image_id : null,
+                    'image_id' => is_int($image_id) ? $image_id : null,
                 ];
             }
             $userIdInt = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;

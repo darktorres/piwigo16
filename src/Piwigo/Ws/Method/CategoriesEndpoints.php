@@ -287,10 +287,11 @@ final readonly class CategoriesEndpoints
                 $imageId = $this->categoryService->getRandomImageInCategory($row);
             } else {
                 if ($row['count_categories'] > 0 && $row['count_images'] > 0) {
-                    $rowUppercatsRaw = is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '';
+                    $rowUppercatsAny = $row['uppercats'] ?? null;
+                    $rowUppercatsRaw = is_string($rowUppercatsAny) ? $rowUppercatsAny : '';
                     [$permSubSql, $permSubParams, $permSubTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND");
                     $imageId = $this->categoryRepository->findRandomSubcatRepresentativeForUser(
-                        (int) $currentUser->id,
+                        $currentUser->id,
                         $rowUppercatsRaw,
                         $permSubSql,
                         $permSubParams,
@@ -438,8 +439,7 @@ final readonly class CategoriesEndpoints
             foreach ($cats as $idx => $cat) {
                 $catIdRaw2           = $cat['id'] ?? null;
                 $catIdKey            = is_string($catIdRaw2) ? $catIdRaw2 : '';
-                $nbSubcatsRaw        = $nbSubcatsOf[$catIdKey] ?? null;
-                $cats[$idx]['nb_categories'] = is_numeric($nbSubcatsRaw) ? (int) $nbSubcatsRaw : 0;
+                $cats[$idx]['nb_categories'] = $nbSubcatsOf[$catIdKey] ?? 0;
             }
         }
         $limitReached = ($counter > Config::linkedAlbumSearchLimit());
@@ -731,7 +731,7 @@ final readonly class CategoriesEndpoints
             $nbSubPhotos      = 0;
             $subCatWithoutParent = array_diff($this->categoryService->getSubcatIds([$updateCat]), [$updateCat]);
             foreach ($subCatWithoutParent as $idSubCat) {
-                $nbSubPhotos += is_numeric($nbPhotosIn[(string) $idSubCat] ?? null) ? (int) $nbPhotosIn[(string) $idSubCat] : 0;
+                $nbSubPhotos += $nbPhotosIn[(string) $idSubCat] ?? 0;
             }
             $updateCats[] = ['cat_id' => $updateCat, 'nb_sub_photos' => $nbSubPhotos];
         }

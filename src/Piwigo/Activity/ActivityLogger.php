@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Admin\History\HistoryAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
@@ -33,7 +32,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class ActivityLogger
 {
     public function __construct(
-        private Connection $conn,
+        private ActivityRepository $activityRepository,
         private HistoryRepository $historyRepository,
         private HistoryAdminService $historyAdminService,
         private PermissionService $permissionService,
@@ -140,11 +139,7 @@ final readonly class ActivityLogger
                 'user_agent'   => $userAgent ?? '',
             ];
         }
-        $this->conn->transactional(function () use ($inserts): void {
-            foreach ($inserts as $row) {
-                $this->conn->insert(Tables::activity(), $row);
-            }
-        });
+        $this->activityRepository->insertActivityRowsBatch($inserts);
     }
 
     /**
@@ -228,10 +223,7 @@ final readonly class ActivityLogger
                 $section = $pageSection;
             } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $pageSection)) {
                 $historySections[] = $pageSection;
-                $this->conn->executeStatement(
-                    'ALTER TABLE ' . Tables::history() . " CHANGE section section enum('" .
-                    implode("','", array_unique($historySections)) . "') DEFAULT NULL"
-                );
+                $this->historyRepository->extendSectionEnum(array_values($historySections));
                 $section = $pageSection;
             }
         }

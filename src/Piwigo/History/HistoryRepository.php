@@ -167,4 +167,25 @@ final class HistoryRepository extends AbstractRepository
     {
         $this->conn->executeStatement('DELETE FROM ' . $this->table('history_summary'));
     }
+
+    /**
+     * Extend the `section` ENUM on the history table to include the given
+     * list of values. Used by ActivityLogger when a page-view comes in for
+     * a plugin-defined section name not yet in the enum.
+     *
+     * @param list<string> $sections  Plugin-controlled but pre-filtered by
+     *                                ActivityLogger to a strict charset; embedded
+     *                                directly in DDL because DDL doesn't accept
+     *                                bound parameters.
+     */
+    public function extendSectionEnum(array $sections): void
+    {
+        if ($sections === []) {
+            return;
+        }
+        $this->conn->executeStatement(
+            'ALTER TABLE ' . $this->table('history') . " CHANGE section section enum('"
+            . implode("','", array_unique($sections)) . "') DEFAULT NULL"
+        );
+    }
 }

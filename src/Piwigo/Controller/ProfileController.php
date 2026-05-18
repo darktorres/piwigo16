@@ -146,7 +146,8 @@ final readonly class ProfileController implements ControllerInterface
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
             $user['language'] = $cookie_lang;
-            $userIdInt        = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+            $userIdRaw        = $user['id'] ?? null;
+            $userIdInt        = is_numeric($userIdRaw) ? (int) $userIdRaw : 0;
             $this->userRepository->updateLanguage($userIdInt, $cookie_lang);
             $this->langService->loadLanguage('common.lang', '', ['language' => $cookie_lang]);
         }

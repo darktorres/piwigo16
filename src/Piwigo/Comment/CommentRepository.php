@@ -233,6 +233,33 @@ final class CommentRepository extends AbstractRepository
     }
 
     /**
+     * Count available comments for the user's permission state — joins
+     * comments to image_category and applies the caller's permission filter.
+     *
+     * @param list<string>                                                $where
+     * @param list<mixed>                                                 $params
+     * @param list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
+     */
+    public function countAvailableCommentsForUser(array $where, array $params, array $types): int
+    {
+        $sql = 'SELECT COUNT(DISTINCT(com.id)) FROM ' . $this->table('image_category') . ' AS ic'
+            . ' INNER JOIN ' . $this->table('comments') . ' AS com ON ic.image_id = com.image_id'
+            . ' WHERE ' . implode(' AND ', $where);
+        $value = $this->conn->executeQuery($sql, $params, $types)->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /** Store the per-user nb_available_comments cache value. */
+    public function setNbAvailableCommentsCache(int $userId, int $nb): void
+    {
+        $this->conn->update(
+            $this->table('user_cache'),
+            ['nb_available_comments' => $nb],
+            ['user_id' => $userId],
+        );
+    }
+
+    /**
      * Count comments matching a caller-built WHERE fragment with bound
      * params. Used by the WS getInfo endpoint which composes WHERE based on
      * visibility/admin-vs-public branching.

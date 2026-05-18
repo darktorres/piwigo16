@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
@@ -19,7 +18,6 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class TagService
 {
     public function __construct(
-        private Connection $conn,
         private HtmlService $htmlService,
         private TagRepository $repo,
         private PermissionService $permissionService,
@@ -33,11 +31,7 @@ final readonly class TagService
         $user = CurrentUser::get()->rawAttributes;
         if (!isset($user['nb_available_tags'])) {
             $user['nb_available_tags'] = count($this->getAvailableTags());
-            $this->conn->update(
-                Tables::userCache(),
-                ['nb_available_tags' => $user['nb_available_tags']],
-                ['user_id' => CurrentUser::get()->id]
-            );
+            $this->repo->setUserCacheFields(CurrentUser::get()->id, ['nb_available_tags' => $user['nb_available_tags']]);
         }
         $nb = $user['nb_available_tags'];
         return is_numeric($nb) ? (int) $nb : 0;
@@ -64,7 +58,7 @@ final readonly class TagService
     {
         $user = CurrentUser::get()->rawAttributes;
 
-        $useCache = true;
+        $useCache = count($tagIds) === 0;
 
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(
             [
@@ -74,24 +68,6 @@ final readonly class TagService
             ],
             ' AND '
         );
-        $query = '
-SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
-  FROM ' . Tables::imageCategory() . ' ic
-    INNER JOIN ' . Tables::imageTag() . ' it
-    ON ic.image_id=it.image_id
-  WHERE 1=1
-  ' . $permSql;
-
-        if (count($tagIds) > 0) {
-            $useCache = false;
-            $query .= '
-    AND tag_id IN (' . implode(',', $tagIds) . ')
-';
-        }
-
-        $query .= '
-  GROUP BY tag_id
-;';
 
         if ($useCache) {
             $userId      = CurrentUser::get()->id;
@@ -102,13 +78,13 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
                 /** @var array<mixed> $tagCounters */
                 $tagCounters = $item->get();
             } else {
-                $tagCounters = array_column($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative(), 'counter', 'tag_id');
+                $tagCounters = $this->repo->findTagCountersWithPermissions([], $permSql, $permParams, $permTypes);
                 $item->set($tagCounters);
                 $item->expiresAfter(86400);
                 $this->pool->save($item);
             }
         } else {
-            $tagCounters = array_column($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative(), 'counter', 'tag_id');
+            $tagCounters = $this->repo->findTagCountersWithPermissions(array_values($tagIds), $permSql, $permParams, $permTypes);
         }
 
         if (empty($tagCounters)) {
@@ -203,19 +179,22 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
             return [];
         }
 
-        $query = '
+        $intTagIds = array_map(intval(...), $tagIds);
+
+        $baseQuery = '
 SELECT id
   FROM ' . Tables::images() . ' i ';
 
         if ($usePermissions) {
-            $query .= '
+            $baseQuery .= '
     INNER JOIN ' . Tables::imageCategory() . ' ic ON id=ic.image_id';
         }
 
-        $query .= '
+        $baseQuery .= '
     INNER JOIN ' . Tables::imageTag() . ' it ON id=it.image_id
-    WHERE tag_id IN (' . implode(',', $tagIds) . ')';
+    WHERE tag_id IN (' . implode(',', $intTagIds) . ')';
 
+        $permSql    = '';
         $permParams = [];
         $permTypes  = [];
         if ($usePermissions) {
@@ -227,19 +206,18 @@ SELECT id
                 ],
                 "\n  AND"
             );
-            $query .= $permSql;
         }
 
-        $query .= (($extraImagesWhereSql === null || $extraImagesWhereSql === '') ? '' : " \nAND (" . $extraImagesWhereSql . ')') . '
-  GROUP BY id';
-
-        if ($mode == 'AND' and count($tagIds) > 1) {
-            $query .= '
-  HAVING COUNT(DISTINCT tag_id)=' . count($tagIds);
-        }
-        $query .= "\n" . (($orderBy === null || $orderBy === '') ? Config::orderBy() : $orderBy);
-
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative(), 'id'));
+        return $this->repo->findImageIdsForTagsWithPermissions(
+            $baseQuery,
+            $permSql,
+            $mode === 'AND' && count($intTagIds) > 1,
+            count($intTagIds),
+            $extraImagesWhereSql,
+            ($orderBy === null || $orderBy === '') ? Config::orderBy() : $orderBy,
+            $permParams,
+            $permTypes,
+        );
     }
 
     /**

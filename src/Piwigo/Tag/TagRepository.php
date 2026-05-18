@@ -449,6 +449,56 @@ final class TagRepository extends AbstractRepository
     }
 
     /**
+     * Update arbitrary columns on a single tag row.
+     *
+     * @param array<string, mixed> $fields
+     */
+    public function updateById(int $id, array $fields): void
+    {
+        if ($fields === []) {
+            return;
+        }
+        $this->conn->update($this->table('tags'), $fields, ['id' => $id]);
+    }
+
+    /**
+     * Insert a new tag row and return its id.
+     *
+     * @param array<string, mixed> $fields
+     */
+    public function insertNewTag(array $fields): int
+    {
+        $this->conn->insert($this->table('tags'), $fields);
+        return (int) $this->conn->lastInsertId();
+    }
+
+    /**
+     * Bulk-insert image→tag rows atomically. If $ignoreDuplicates is true,
+     * existing (tag_id, image_id) rows are silently skipped via INSERT IGNORE.
+     *
+     * @param list<array{tag_id: int, image_id: int}> $rows
+     */
+    public function insertImageTagsBatch(array $rows, bool $ignoreDuplicates): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows, $ignoreDuplicates): void {
+            $table = $this->table('image_tag');
+            foreach ($rows as $row) {
+                if ($ignoreDuplicates) {
+                    $this->conn->executeStatement(
+                        'INSERT IGNORE INTO ' . $table . ' (tag_id, image_id) VALUES (?, ?)',
+                        [$row['tag_id'], $row['image_id']],
+                    );
+                } else {
+                    $this->conn->insert($table, $row);
+                }
+            }
+        });
+    }
+
+    /**
      * Return the id of the tag whose url_name exactly matches $urlName, or null.
      */
     public function findIdByUrlName(string $urlName): ?int

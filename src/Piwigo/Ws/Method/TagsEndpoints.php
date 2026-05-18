@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Album\MergeTags;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
@@ -35,7 +33,6 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class TagsEndpoints
 {
     public function __construct(
-        private Connection $conn,
         private CategoryService $categoryService,
         private HtmlService $htmlService,
         private ImageRepository $imageRepository,
@@ -233,7 +230,7 @@ final readonly class TagsEndpoints
             $update = ['name' => $tagName, 'url_name' => $urlEvent->tagName];
         }
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagId, 'edit'));
-        $this->conn->update(Tables::tags(), $update, ['id' => $tagId]);
+        $this->tagRepository->updateById($tagId, $update);
         $tag = $tagRepo->findById($tagId) ?? [];
         $tag['raw_name'] = $tag['name'] ?? '';
         $rawTagNameStr   = is_string($tag['raw_name']) ? $tag['raw_name'] : '';
@@ -268,8 +265,7 @@ final readonly class TagsEndpoints
         $dupUrlEvent = new RenderTagUrl($dupCopyName);
         $this->dispatcher->dispatch($dupUrlEvent);
         $dupUrlName  = $dupUrlEvent->tagName;
-        $this->conn->insert(Tables::tags(), ['name' => $dupCopyName, 'url_name' => $dupUrlName]);
-        $destinationTagId = (int) $this->conn->lastInsertId();
+        $destinationTagId = $this->tagRepository->insertNewTag(['name' => $dupCopyName, 'url_name' => $dupUrlName]);
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $destinationTagId, 'add', ['action' => 'duplicate', 'source_tag' => $dupTagId]));
         $destinationTagImageIds = $dupTagRepo->findImageIdsByTagId($dupTagId);
         $inserts = [];
@@ -277,13 +273,7 @@ final readonly class TagsEndpoints
             $inserts[] = ['tag_id' => $destinationTagId, 'image_id' => $imageId];
             $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, 'edit', ['add-tag' => $destinationTagId]));
         }
-        if (count($inserts) > 0) {
-            $this->conn->transactional(function () use ($inserts): void {
-                foreach ($inserts as $row) {
-                    $this->conn->insert(Tables::imageTag(), $row);
-                }
-            });
-        }
+        $this->tagRepository->insertImageTagsBatch($inserts, false);
         return ['id' => $destinationTagId, 'name' => $dupCopyName, 'url_name' => $dupUrlName, 'count' => count($inserts)];
     }
 
@@ -312,14 +302,7 @@ final readonly class TagsEndpoints
         foreach ($imageToAdd as $image) {
             $inserts[] = ['tag_id' => $mergeDestId, 'image_id' => $image];
         }
-        $this->conn->transactional(function () use ($inserts): void {
-            foreach ($inserts as $row) {
-                $this->conn->executeStatement(
-                    'INSERT IGNORE INTO ' . Tables::imageTag() . ' (tag_id, image_id) VALUES (?, ?)',
-                    [$row['tag_id'], $row['image_id']]
-                );
-            }
-        });
+        $this->tagRepository->insertImageTagsBatch($inserts, true);
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $mergeDestId, 'edit'));
         foreach ($imageToAdd as $imageId) {
             $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, 'edit', ['tag-add' => $mergeDestId]));

@@ -1297,6 +1297,34 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
+     * Return id → status for the given user ids, joining the configurable
+     * users table with user_infos. Missing user_infos rows return null
+     * status. Used by the integrity check to verify required users still
+     * exist and hold the expected status.
+     *
+     * @param  list<int> $ids
+     * @return array<int, mixed>
+     */
+    public function findStatusByUserIds(string $usersTable, string $idField, array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select("u.$idField AS id", 'ui.status')
+            ->from($usersTable, 'u')
+            ->leftJoin('u', $this->table('user_infos'), 'ui', "u.$idField = ui.user_id");
+        $qb->where($qb->expr()->in("u.$idField", ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $key       = is_numeric($row['id']) ? (int) $row['id'] : 0;
+            $out[$key] = $row['status'];
+        }
+        return $out;
+    }
+
+    /**
      * Map of theme → number of users selecting it. Used by telemetry.
      *
      * @return array<string, int>

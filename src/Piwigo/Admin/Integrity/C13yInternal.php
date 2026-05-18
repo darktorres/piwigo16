@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
-use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
@@ -15,6 +13,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 final class C13yInternal
@@ -118,18 +117,11 @@ final class C13yInternal
           'l10n_bad_status' => 'Main "webmaster" user status is incorrect'];
 
         $idField = Config::userFields()['id'];
-        $conn = Kernel::service(Connection::class);
-        $qb = $conn->createQueryBuilder()
-            ->select("u.$idField AS id", 'ui.status')
-            ->from(Tables::users(), 'u')
-            ->leftJoin('u', Tables::userInfos(), 'ui', "u.$idField = ui.user_id");
-        $qb->where($qb->expr()->in("u.$idField", ':ids'))
-           ->setParameter('ids', array_keys($c13y_users), ArrayParameterType::INTEGER);
-
-        $status = [];
-        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
-            $status[is_numeric($row['id']) ? (int)$row['id'] : 0] = $row['status'];
-        }
+        $status  = Kernel::service(UserRepository::class)->findStatusByUserIds(
+            Tables::users(),
+            $idField,
+            array_map(intval(...), array_keys($c13y_users)),
+        );
 
         foreach ($c13y_users as $id => $data) {
             if (!array_key_exists($id, $status)) {
@@ -181,19 +173,14 @@ final class C13yInternal
                             }
                         }
 
-                        $inserts = [
-                          [
-                            'id'       => $id,
-                            'username' => addslashes($name),
-                            'password' => $password,
+                        Kernel::service(UserRepository::class)->insertNew(
+                            Tables::users(),
+                            [
+                                'id'       => $id,
+                                'username' => addslashes($name),
+                                'password' => $password,
                             ],
-                          ];
-                        $conn = Kernel::service(Connection::class);
-                        $conn->transactional(static function (Connection $conn) use ($inserts): void {
-                            foreach ($inserts as $row) {
-                                $conn->insert(Tables::users(), $row);
-                            }
-                        });
+                        );
 
                         Kernel::service(UserService::class)->createUserInfos($id);
 
@@ -212,18 +199,7 @@ final class C13yInternal
                     }
 
                     if (isset($status)) {
-                        $updates = [
-                          [
-                            'user_id' => $id,
-                            'status'  => $status,
-                            ],
-                          ];
-                        $conn = Kernel::service(Connection::class);
-                        $conn->transactional(static function (Connection $conn) use ($updates): void {
-                            foreach ($updates as $row) {
-                                $conn->update(Tables::userInfos(), ['status' => $row['status']], ['user_id' => $row['user_id']]);
-                            }
-                        });
+                        Kernel::service(UserRepository::class)->updateUserInfosById($id, ['status' => $status]);
 
                         $usernameResult = Kernel::service(UserAdminService::class)->getUsername($id);
                         PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $usernameResult !== false ? $usernameResult : (string) $id));

@@ -9,6 +9,7 @@ use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\CookieService;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\InstallSentinel;
@@ -26,6 +27,7 @@ use Piwigo\Event\User\UserLogin;
 use Piwigo\Event\User\UserLogout;
 use Piwigo\Html\HtmlService;
 use Piwigo\Language\LanguageService;
+use Piwigo\Session\Session;
 use Piwigo\Session\SessionService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -38,6 +40,7 @@ final readonly class AuthService
         private AuthKeyRepository $authKeyRepo,
         private ActivityLogger $activityLogger,
         private SessionService $sessionService,
+        private Session $session,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private DateService $dateService,
@@ -157,7 +160,7 @@ final readonly class AuthService
         } else {
             session_start();
         }
-        $_SESSION['pwg_uid'] = $userId;
+        $this->session->userId = UserId::from($userId);
 
         $this->dispatcher->dispatch(new UserLogin($userId));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'login'));
@@ -177,7 +180,7 @@ final readonly class AuthService
                 $key = $this->calculateAutoLoginKey((int) $cookie[0], (int) $cookie[1], $username);
                 if ($key !== false and $key === $cookie[2]) {
                     if (StringUtil::scriptBasename() != 'ws') {
-                        $_SESSION['connected_with'] = 'pwg_ui';
+                        $this->session->connectedWith = 'pwg_ui';
                     }
                     $this->logUser((int) $cookie[0], true);
                     $this->dispatcher->dispatch(new LoginSuccess(is_scalar($username) ? stripslashes((string) $username) : ''));
@@ -266,28 +269,32 @@ final readonly class AuthService
     /** @return array<mixed> */
     public function generateFakeUser(): array
     {
-        if (!isset($_SESSION['fake_user_cache'])) {
+        if ($this->session->fakeUserCache === null) {
             $fakePassword = bin2hex(random_bytes(10));
-            $_SESSION['fake_user_cache'] = [
+            $this->session->fakeUserCache = [
                 'id'       => null,
                 'password' => password_hash($fakePassword, PASSWORD_BCRYPT),
             ];
         }
-        $fakeCache = $_SESSION['fake_user_cache'];
-        return is_array($fakeCache) ? $fakeCache : ['id' => null, 'password' => ''];
+        return $this->session->fakeUserCache;
     }
 
     public function clearFakeUserCache(): void
     {
-        unset($_SESSION['fake_user_cache']);
+        $this->session->fakeUserCache = null;
     }
 
     public function logoutUser(): void
     {
-        $logoutUid = isset($_SESSION['pwg_uid']) && is_numeric($_SESSION['pwg_uid']) ? (int) $_SESSION['pwg_uid'] : 0;
+        $logoutUid = $this->session->userId !== null ? $this->session->userId->value : 0;
         $this->dispatcher->dispatch(new UserLogout($logoutUid));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $logoutUid, 'logout'));
 
+        // Reset typed Session slots; persistInto() at request end will then
+        // diff against the hydration snapshot and unset every key Session
+        // had populated. session_unset() also wipes $_SESSION so any plugin
+        // / legacy scratch goes with it.
+        $this->session->logout();
         $_SESSION = [];
         session_unset();
         session_destroy();
@@ -363,7 +370,7 @@ final readonly class AuthService
         $keyDbnow   = is_string($key['dbnow'] ?? null) ? $key['dbnow'] : '';
         $this->authKeyRepo->updateLastUsedOn($authUserId, $keyAuth, $keyDbnow);
 
-        $_SESSION['connected_with'] = $validKey;
+        $this->session->connectedWith = $validKey;
 
         if ($connectionByHeader) {
             return true;
@@ -445,6 +452,6 @@ final readonly class AuthService
 
     public function connectedWithPwgUi(): bool
     {
-        return isset($_SESSION['connected_with']) and 'pwg_ui' === $_SESSION['connected_with'];
+        return $this->session->connectedWith === 'pwg_ui';
     }
 }

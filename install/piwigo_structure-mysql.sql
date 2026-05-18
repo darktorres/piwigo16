@@ -183,7 +183,7 @@ CREATE TABLE `piwigo_history` (
   `id` int(10) unsigned NOT NULL auto_increment,
   `date` date DEFAULT NULL,
   `time` time NOT NULL default '00:00:00',
-  `user_id` mediumint(8) unsigned NOT NULL default '0',
+  `user_id` mediumint(8) unsigned NOT NULL,
   `IP` char(39) NOT NULL default '',
   `section` enum('categories','tags','search','list','favorites','most_visited','best_rated','recent_pics','recent_cats') default NULL,
   `category_id` smallint(5) unsigned default NULL,
@@ -710,7 +710,8 @@ ALTER TABLE `piwigo_history`
   ADD CONSTRAINT `fk_history_category_id` FOREIGN KEY (`category_id`) REFERENCES `piwigo_categories`(`id`)     ON DELETE SET NULL,
   ADD CONSTRAINT `fk_history_search_id`   FOREIGN KEY (`search_id`)   REFERENCES `piwigo_search`(`id`)         ON DELETE SET NULL,
   ADD CONSTRAINT `fk_history_format_id`   FOREIGN KEY (`format_id`)   REFERENCES `piwigo_image_format`(`format_id`)   ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_history_auth_key_id` FOREIGN KEY (`auth_key_id`) REFERENCES `piwigo_user_auth_keys`(`auth_key_id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `fk_history_auth_key_id` FOREIGN KEY (`auth_key_id`) REFERENCES `piwigo_user_auth_keys`(`auth_key_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_history_user_id`     FOREIGN KEY (`user_id`)     REFERENCES `piwigo_users`(`id`)          ON DELETE CASCADE;
 
 ALTER TABLE `piwigo_search`
   ADD CONSTRAINT `fk_search_created_by` FOREIGN KEY (`created_by`)  REFERENCES `piwigo_users`(`id`)  ON DELETE SET NULL,

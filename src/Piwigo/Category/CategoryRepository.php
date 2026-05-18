@@ -244,6 +244,26 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
+     * Return (id, name, permalink, uppercats) for the given ids, keyed by id.
+     * Used by the admin comments page and the recent-cats listing.
+     *
+     * @param int[] $ids
+     * @return array<int|string, array<string, mixed>>
+     */
+    public function findNamePermalinkUppercatsByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'name', 'permalink', 'uppercats')
+            ->from($this->table('categories'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        return array_column($qb->executeQuery()->fetchAllAssociative(), null, 'id');
+    }
+
+    /**
      * Return all columns for the given category ids.
      *
      * @param int[] $ids

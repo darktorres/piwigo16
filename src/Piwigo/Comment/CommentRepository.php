@@ -328,6 +328,70 @@ final class CommentRepository extends AbstractRepository
     }
 
     /**
+     * Count comments matching $whereClauses (joined with AND), with the
+     * standard "image_category JOIN comments LEFT JOIN users" plumbing.
+     *
+     * $usersTable and $userIdField are admin-configured.
+     *
+     * @param list<string>                                $whereClauses
+     * @param list<mixed>                                 $params
+     * @param list<ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
+     */
+    public function countFilteredComments(
+        array $whereClauses,
+        array $params,
+        array $types,
+        string $usersTable,
+        string $userIdField,
+    ): int {
+        $sql = 'SELECT COUNT(DISTINCT com.id)'
+            . ' FROM ' . $this->table('image_category') . ' AS ic'
+            . ' INNER JOIN ' . $this->table('comments') . ' AS com ON ic.image_id = com.image_id'
+            . ' LEFT JOIN ' . $usersTable . ' AS u ON u.' . $userIdField . ' = com.author_id'
+            . ' WHERE ' . implode("\n    AND ", $whereClauses);
+        $value = $this->conn->executeQuery($sql, $params, $types)->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Paginated list of comments for the admin "Recent comments" page. Same
+     * JOIN plumbing as countFilteredComments; ORDER BY composes $sortBy +
+     * $sortOrder which the caller is responsible for whitelisting.
+     *
+     * Pass $limit = -1 to skip the LIMIT/OFFSET clause ("all").
+     *
+     * @param list<string>                                $whereClauses
+     * @param list<mixed>                                 $params
+     * @param list<ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
+     * @return list<array<string, mixed>>
+     */
+    public function findFilteredComments(
+        array $whereClauses,
+        array $params,
+        array $types,
+        string $usersTable,
+        string $userIdField,
+        string $userEmailField,
+        string $sortBy,
+        string $sortOrder,
+        int $limit,
+        int $offset,
+    ): array {
+        $sql = 'SELECT com.id AS comment_id, com.image_id, ic.category_id, com.author, com.author_id,'
+            . ' u.' . $userEmailField . ' AS user_email, com.email, com.date, com.website_url, com.content, com.validated'
+            . ' FROM ' . $this->table('image_category') . ' AS ic'
+            . ' INNER JOIN ' . $this->table('comments') . ' AS com ON ic.image_id = com.image_id'
+            . ' LEFT JOIN ' . $usersTable . ' AS u ON u.' . $userIdField . ' = com.author_id'
+            . ' WHERE ' . implode("\n    AND ", $whereClauses)
+            . ' GROUP BY comment_id'
+            . ' ORDER BY ' . $sortBy . ' ' . $sortOrder;
+        if ($limit >= 0) {
+            $sql .= ' LIMIT ' . $limit . ' OFFSET ' . $offset;
+        }
+        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
      * COUNT(*) of comments on a single image, optionally filtered to only the
      * validated ones (validated = 1).
      */

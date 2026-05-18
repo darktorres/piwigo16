@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
@@ -29,6 +30,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeSize;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\MenubarRenderer;
@@ -51,9 +53,11 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class CommentsController implements ControllerInterface
 {
     public function __construct(
-        private Connection $conn,
+        private CategoryRepository $categoryRepository,
         private CategoryService $categoryService,
+        private CommentRepository $commentRepository,
         private CommentService $commentService,
+        private ImageRepository $imageRepository,
         private DateService $dateService,
         private HtmlService $htmlService,
         private MenubarRenderer $menubarRenderer,
@@ -297,27 +301,25 @@ SELECT id, name, uppercats, global_rank
 
         $userEmailField = Config::userFields()['email'];
         $userIdField    = Config::userFields()['id'];
-        $joinBase = '
-  FROM ' . Tables::imageCategory() . ' AS ic
-    INNER JOIN ' . Tables::comments() . ' AS com ON ic.image_id = com.image_id
-    LEFT JOIN ' . Tables::users() . ' AS u ON u.' . $userIdField . ' = com.author_id
-  WHERE ' . implode("\n    AND ", $whereClauses);
+        $usersTable     = Tables::users();
 
-        $conn    = $this->conn;
-        $counter = $conn->executeQuery('SELECT COUNT(DISTINCT com.id)' . $joinBase, $permParams1, $permTypes1)->fetchOne();
+        $counter = $this->commentRepository->countFilteredComments($whereClauses, $permParams1, $permTypes1, $usersTable, $userIdField);
 
         $pageItemsNumber = $itemsNumber;
-        $dataQuery = 'SELECT com.id AS comment_id, com.image_id, ic.category_id, com.author, com.author_id,'
-            . " u.$userEmailField AS user_email, com.email, com.date, com.website_url, com.content, com.validated"
-            . $joinBase . '
-  GROUP BY comment_id
-  ORDER BY ' . $sortBy . ' ' . $sortOrder;
-        if ('all' != $pageItemsNumber) {
-            $dataQuery .= '
-  LIMIT ' . $pageItemsNumber . ' OFFSET ' . ($start ?? 0);
-        }
-
-        foreach ($conn->executeQuery($dataQuery, $permParams1, $permTypes1)->fetchAllAssociative() as $row) {
+        $rowLimit  = 'all' == $pageItemsNumber ? -1 : (int) $pageItemsNumber;
+        $rowOffset = $start ?? 0;
+        foreach ($this->commentRepository->findFilteredComments(
+            $whereClauses,
+            $permParams1,
+            $permTypes1,
+            $usersTable,
+            $userIdField,
+            $userEmailField,
+            $sortBy,
+            $sortOrder,
+            $rowLimit,
+            $rowOffset,
+        ) as $row) {
             $comments[]     = $row;
             $element_ids[]  = $row['image_id'];
             $category_ids[] = $row['category_id'];
@@ -326,7 +328,7 @@ SELECT id, name, uppercats, global_rank
         $url     = $this->urlGenerator->comments() . $this->urlService->getQueryStringDiff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
         $navbar  = $this->paginationService->createNavigationBar(
             $url,
-            is_numeric($counter) ? (int) $counter : 0,
+            $counter,
             $start ?? 0,
             (int) $pageItemsNumber,
             false
@@ -334,17 +336,10 @@ SELECT id, name, uppercats, global_rank
         $tpl->assign('navbar', $navbar);
 
         if (count($comments) > 0) {
-            $query = '
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $element_ids)) . ')
-;';
-            $elements = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'id');
-
-            $query = 'SELECT id, name, permalink, uppercats
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $category_ids)) . ')';
-            $categories = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'id');
+            $elementIdsInt  = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $element_ids);
+            $categoryIdsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $category_ids);
+            $elements   = array_column($this->imageRepository->findByIds($elementIdsInt), null, 'id');
+            $categories = $this->categoryRepository->findNamePermalinkUppercatsByIds($categoryIdsInt);
 
             foreach ($comments as $comment) {
                 /** @var array<string, float|int|string|null> $comment */

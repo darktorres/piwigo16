@@ -424,6 +424,56 @@ SELECT *
     }
 
     /**
+     * Monthly aggregates from history_summary (rows where month is set and
+     * day is null), newest first. Caller supplies optional row limit.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findMonthlyRollups(?int $limit): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('year', 'month', 'day', 'hour', 'nb_pages')
+            ->from($this->table('history_summary'))
+            ->where('month IS NOT NULL')
+            ->andWhere('day IS NULL')
+            ->orderBy('year', 'DESC')
+            ->addOrderBy('month', 'DESC');
+        if ($limit !== null) {
+            $qb->setMaxResults($limit);
+        }
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
+     * Daily history_summary rows for the three months passed in $months
+     * (each a {year:int, month:int} tuple). Used by the admin stats page.
+     *
+     * @param  list<array{year: int, month: int}> $months
+     * @return list<array<string, mixed>>
+     */
+    public function findDailyStatsForMonths(array $months): array
+    {
+        if ($months === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('year', 'month', 'day', 'hour', 'nb_pages')
+            ->from($this->table('history_summary'))
+            ->andWhere('day IS NOT NULL')
+            ->andWhere('hour IS NULL')
+            ->orderBy('year', 'DESC')
+            ->addOrderBy('month', 'DESC');
+        $orParts = [];
+        foreach ($months as $i => $month) {
+            $orParts[] = "(year = :y$i AND month = :m$i)";
+            $qb->setParameter("y$i", $month['year']);
+            $qb->setParameter("m$i", $month['month']);
+        }
+        $qb->where(implode(' OR ', $orParts));
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
      * Extend the `section` ENUM on the history table to include the given
      * list of values. Used by ActivityLogger when a page-view comes in for
      * a plugin-defined section name not yet in the enum.

@@ -1702,21 +1702,19 @@ final class MaintenanceController implements AdminSubControllerInterface
     /** @return array<mixed> */
     private function getMonthOfLastYears(string|int $last = 'all'): array
     {
-        $query = 'SELECT year, month, day, hour, nb_pages FROM ' . Tables::historySummary() . ' WHERE month IS NOT NULL AND day IS NULL ORDER BY year DESC, month DESC';
         if ($last !== 'all') {
-            $date  = new \DateTime();
-            $limit = ((int) $last - 1) * 12 + (int) $date->format('n') - 1;
-            $query .= ' LIMIT ' . $limit;
-            $result   = $this->conn->executeQuery($query . ';')->fetchAllAssociative();
+            $date     = new \DateTime();
+            $limit    = ((int) $last - 1) * 12 + (int) $date->format('n') - 1;
+            $result   = $this->historyRepository->findMonthlyRollups($limit);
             $lastDate = $date->sub(new \DateInterval('P' . ((int) $last - 1) . 'Y' . ((int) $date->format('n') - 1) . 'M'));
             return $this->setMissingValues('month', $result, $lastDate, new \DateTime());
         }
-        if (count($this->conn->executeQuery($query . ';')->fetchAllAssociative()) > 1) {
-            return $this->setMissingValues('month', $this->conn->executeQuery($query . ';')->fetchAllAssociative());
-        } else {
-            $last_year_date = new \DateTime();
-            return $this->setMissingValues('month', $this->conn->executeQuery($query . ';')->fetchAllAssociative(), $last_year_date->sub(new \DateInterval('P1Y')), new \DateTime());
+        $rows = $this->historyRepository->findMonthlyRollups(null);
+        if (count($rows) > 1) {
+            return $this->setMissingValues('month', $rows);
         }
+        $last_year_date = new \DateTime();
+        return $this->setMissingValues('month', $rows, $last_year_date->sub(new \DateInterval('P1Y')), new \DateTime());
     }
 
     /** @return array<mixed> */
@@ -1729,11 +1727,14 @@ final class MaintenanceController implements AdminSubControllerInterface
         $date_last_month->sub(new \DateInterval('P1M'));
         $date_last_year->sub(new \DateInterval('P1Y'));
 
-        $query = 'SELECT year, month, day, hour, nb_pages FROM ' . Tables::historySummary() .
-            ' WHERE ((year = ' . $date->format('Y') . ' AND month = ' . $date->format('n') . ') OR (year = ' . $date_last_month->format('Y') . ' AND month = ' . $date_last_month->format('n') . ') OR (year = ' . $date_last_year->format('Y') . ' AND month = ' . $date_last_year->format('n') . ')) AND day IS NOT NULL AND hour IS NULL ORDER BY year DESC, month DESC;';
+        $monthTuples = [
+            ['year' => (int) $date->format('Y'),            'month' => (int) $date->format('n')],
+            ['year' => (int) $date_last_month->format('Y'), 'month' => (int) $date_last_month->format('n')],
+            ['year' => (int) $date_last_year->format('Y'),  'month' => (int) $date_last_year->format('n')],
+        ];
 
         $months = [];
-        foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $value) {
+        foreach ($this->historyRepository->findDailyStatsForMonths($monthTuples) as $value) {
             $dt = $this->getDateObject($value);
             $months[$dt->format('Y/m/1')][] = $value;
         }

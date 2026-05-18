@@ -52,7 +52,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbMaintenanceRepository;
-use Piwigo\Db\QueryHelper;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupRepository;
@@ -324,7 +323,6 @@ return [
     LangService::class         => factory(static fn (Paths $paths): LangService => new LangService($paths)),
     ConfigRepository::class    => factory(static fn (Connection $conn): ConfigRepository => new ConfigRepository($conn, Config::dbPrefix())),
     ConfigService::class       => factory(static fn (ConfigRepository $repo): ConfigService => new ConfigService($repo)),
-    QueryHelper::class         => factory(static fn (Connection $conn): QueryHelper => new QueryHelper($conn)),
     ActivityLogger::class      => factory(static fn (ActivityRepository $aR, HistoryRepository $hist, HistoryAdminService $histA, PermissionService $perm, UserRepository $u, EventDispatcherInterface $d): ActivityLogger => new ActivityLogger($aR, $hist, $histA, $perm, $u, $d)),
     CsrfService::class         => factory(static fn (HtmlService $h): CsrfService => new CsrfService($h)),
     DebugCollector::class      => factory(static fn (): DebugCollector => new DebugCollector()),

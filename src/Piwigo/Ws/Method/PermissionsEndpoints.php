@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Ws\OpenApi\ApiMethod;
 use Piwigo\Ws\PwgError;
@@ -19,8 +18,8 @@ use Piwigo\Ws\WsError;
 final readonly class PermissionsEndpoints
 {
     public function __construct(
-        private Connection $conn,
         private CategoryAdminService $categoryAdminService,
+        private CategoryRepository $categoryRepository,
         private CategoryService $categoryService,
         private PermissionRepository $permissionRepository,
         private CsrfService $csrfService,
@@ -103,24 +102,16 @@ final readonly class PermissionsEndpoints
             if ($params['recursive']) {
                 $catIds = array_merge($catIds, $this->categoryService->getSubcatIds($catIdParamInt));
             }
-            $catIdsStr = array_map(fn (mixed $v): string => (string) $v, $catIds);
-            $query     = 'SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $catIdsStr) . ") AND status = 'private';";
-            $privateCats = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
+            $catIdsInt   = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $catIds);
+            $privateCats = $this->categoryRepository->findPrivateByIds($catIdsInt);
             $inserts     = [];
             $groupIdParam = is_array($params['group_id']) ? $params['group_id'] : [];
             foreach ($privateCats as $catId) {
                 foreach ($groupIdParam as $groupId) {
-                    $inserts[] = ['group_id' => $groupId, 'cat_id' => $catId];
+                    $inserts[] = ['group_id' => is_numeric($groupId) ? (int) $groupId : 0, 'cat_id' => $catId];
                 }
             }
-            $this->conn->transactional(function () use ($inserts): void {
-                foreach ($inserts as $row) {
-                    $this->conn->executeStatement(
-                        'INSERT IGNORE INTO ' . Tables::groupAccess() . ' (group_id, cat_id) VALUES (?, ?)',
-                        [$row['group_id'], $row['cat_id']]
-                    );
-                }
-            });
+            $this->permissionRepository->insertGroupAccessIgnoreDuplicates($inserts);
         }
         if (!empty($params['user_id'])) {
             if ($params['recursive']) {

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
-use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
@@ -41,7 +39,6 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class UsersEndpoints
 {
     public function __construct(
-        private Connection $conn,
         private AuthService $authService,
         private ConfigService $configService,
         private DateService $dateService,
@@ -78,17 +75,25 @@ final readonly class UsersEndpoints
             $userIdArr      = is_array($params['user_id']) ? $params['user_id'] : [];
             $whereClauses[] = 'u.' . Config::userFields()['id'] . ' IN(' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIdArr)) . ')';
         }
+        $listParams = [];
+        $listTypes  = [];
         if (!empty($params['username'])) {
-            $whereClauses[] = 'u.' . Config::userFields()['username'] . ' LIKE ' . $this->conn->quote(is_string($params['username']) ? $params['username'] : '');
+            $whereClauses[] = 'u.' . Config::userFields()['username'] . ' LIKE ?';
+            $listParams[]   = is_string($params['username']) ? $params['username'] : '';
+            $listTypes[]    = \Doctrine\DBAL\ParameterType::STRING;
         }
         $filteredGroups = [];
         if (!empty($params['filter'])) {
             $filterStr      = is_string($params['filter']) ? $params['filter'] : '';
             $filteredGroups = $this->groupRepository->findIdsByNameLike($filterStr);
-            $filterQuoted   = $this->conn->quote('%' . $filterStr . '%');
-            $filterWhere    = '(u.' . Config::userFields()['username'] . ' LIKE ' . $filterQuoted . ' OR u.' . Config::userFields()['email'] . ' LIKE ' . $filterQuoted;
+            $filterLike     = '%' . $filterStr . '%';
+            $filterWhere    = '(u.' . Config::userFields()['username'] . ' LIKE ? OR u.' . Config::userFields()['email'] . ' LIKE ?';
+            $listParams[]   = $filterLike;
+            $listParams[]   = $filterLike;
+            $listTypes[]    = \Doctrine\DBAL\ParameterType::STRING;
+            $listTypes[]    = \Doctrine\DBAL\ParameterType::STRING;
             if (!empty($filteredGroups)) {
-                $filterWhere .= ' OR ug.group_id IN (' . implode(',', array_map(fn (int $v): string => (string) $v, $filteredGroups)) . ')';
+                $filterWhere .= ' OR ug.group_id IN (' . implode(',', array_map(static fn (int $v): string => (string) $v, $filteredGroups)) . ')';
             }
             $whereClauses[] = $filterWhere . ')';
         }
@@ -196,13 +201,10 @@ final readonly class UsersEndpoints
             $query .= ' LIMIT ' . $perPage . ' OFFSET ' . ($perPage * $page) . ';';
         }
         $users      = [];
-        $usersConn  = $this->conn;
-        $usersRows  = $usersConn->executeQuery($query)->fetchAllAssociative();
-        $totalCount = 0;
-        if (isset($params['display']['total_count'])) {
-            $found      = $usersConn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
-            $totalCount = is_numeric($found) ? (int) $found : 0;
-        }
+        $captureFoundRows = isset($params['display']['total_count']);
+        $listResult       = $this->userRepository->findUsersListPage($query, $captureFoundRows, $listParams, $listTypes);
+        $usersRows        = $listResult['rows'];
+        $totalCount       = $listResult['total'] ?? 0;
         foreach ($usersRows as $row) {
             $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
             if (isset($params['display']['groups'])) {
@@ -212,15 +214,13 @@ final readonly class UsersEndpoints
         }
         if (count($users) > 0) {
             if (array_key_exists('groups', $params['display'])) {
-                $conn = $this->conn;
-                $qb   = $conn->createQueryBuilder()->select('user_id', 'group_id')->from(Tables::userGroup());
-                $qb->where($qb->expr()->in('user_id', ':ids'))->setParameter('ids', array_keys($users), ArrayParameterType::INTEGER);
-                foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
-                    $grpUid = is_numeric($row['user_id']) ? (int) $row['user_id'] : 0;
+                $userIds = array_keys($users);
+                foreach ($this->userRepository->findUserGroupPairsByUserIds($userIds) as $row) {
+                    $grpUid = $row['user_id'];
                     if (!isset($users[$grpUid]['groups']) || !is_array($users[$grpUid]['groups'])) {
                         $users[$grpUid]['groups'] = [];
                     }
-                    $users[$grpUid]['groups'][] = is_numeric($row['group_id']) ? (int) $row['group_id'] : 0;
+                    $users[$grpUid]['groups'][] = $row['group_id'];
                 }
             }
             foreach ($users as $curUser) {
@@ -316,10 +316,10 @@ final readonly class UsersEndpoints
         $currentUser = CurrentUser::get();
         $protectedUsers = [$currentUser->id, Config::guestId(), Config::defaultUserId(), Config::webmasterId()];
         if ($currentUser->status === 'admin') {
-            $protectedUsers = array_merge($protectedUsers, array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userInfos() . " WHERE status IN ('webmaster', 'admin');")->fetchAllAssociative(), 'user_id'));
+            $protectedUsers = array_merge($protectedUsers, $this->userRepository->findAdminUserIds());
         }
         $userIdArr = is_array($params['user_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['user_id']) : [];
-        $userIdArr = array_diff($userIdArr, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $protectedUsers));
+        $userIdArr = array_diff($userIdArr, $protectedUsers);
         $counter   = 0;
         foreach ($userIdArr as $userId) {
             $this->userAdminService->deleteUser($userId);
@@ -414,10 +414,7 @@ final readonly class UsersEndpoints
         if (!$this->imageRepository->existsById($favImageId)) {
             return new PwgError(404, 'image_id not found');
         }
-        $this->conn->executeStatement(
-            'INSERT IGNORE INTO ' . Tables::favorites() . ' (image_id, user_id) VALUES (?, ?)',
-            [$favImageId, $userId]
-        );
+        $this->userRepository->insertFavoriteIgnore($userId, $favImageId);
         return true;
     }
 
@@ -452,9 +449,8 @@ final readonly class UsersEndpoints
         $orderBy = $this->wsHelper->imageSqlOrder($params, 'i.');
         $orderBy = empty($orderBy) ? Config::orderBy() : 'ORDER BY ' . $orderBy;
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
-        $query   = 'SELECT i.* FROM ' . Tables::favorites() . ' INNER JOIN ' . Tables::images() . ' i ON image_id = i.id WHERE user_id = ' . $userId . ' ' . $permSql . ' ' . $orderBy . ';';
         $images  = [];
-        foreach ($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative() as $row) {
+        foreach ($this->userRepository->findFavoriteImagesWithDetails($userId, $permSql, $permParams, $permTypes, $orderBy) as $row) {
             $image = [];
             foreach (['id', 'width', 'height', 'hit'] as $k) {
                 if (isset($row[$k])) {

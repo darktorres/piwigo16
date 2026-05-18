@@ -741,6 +741,48 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
+     * Run the caller-built user-listing query for the WS users.getList
+     * endpoint and return rows + the optional FOUND_ROWS total when
+     * SQL_CALC_FOUND_ROWS was requested.
+     *
+     * @param  list<mixed>                                $params
+     * @param  list<ArrayParameterType|ParameterType>     $types
+     * @return array{rows: list<array<string, mixed>>, total: int|null}
+     */
+    public function findUsersListPage(string $query, bool $captureFoundRows, array $params = [], array $types = []): array
+    {
+        $rows  = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        $total = null;
+        if ($captureFoundRows) {
+            $value = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
+            $total = is_numeric($value) ? (int) $value : 0;
+        }
+        return ['rows' => $rows, 'total' => $total];
+    }
+
+    /**
+     * Return (user_id, group_id) rows for the given users.
+     *
+     * @param  list<int> $userIds
+     * @return list<array{user_id: int, group_id: int}>
+     */
+    public function findUserGroupPairsByUserIds(array $userIds): array
+    {
+        if ($userIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('user_id', 'group_id')
+            ->from($this->table('user_group'));
+        $qb->where($qb->expr()->in('user_id', ':ids'))
+           ->setParameter('ids', $userIds, ArrayParameterType::INTEGER);
+        return array_map(static fn (array $row): array => [
+            'user_id'  => is_numeric($row['user_id']) ? (int) $row['user_id'] : 0,
+            'group_id' => is_numeric($row['group_id']) ? (int) $row['group_id'] : 0,
+        ], $qb->executeQuery()->fetchAllAssociative());
+    }
+
+    /**
      * Update arbitrary columns on user_infos for one user.
      *
      * @param array<string, mixed> $fields
@@ -1128,6 +1170,40 @@ final class UserRepository extends AbstractRepository
     public function executeRawStatement(string $sql, array $params = [], array $types = []): void
     {
         $this->conn->executeStatement($sql, $params, $types);
+    }
+
+    /**
+     * Insert a single favorite row, ignoring (image_id, user_id) PK conflicts.
+     */
+    public function insertFavoriteIgnore(int $userId, int $imageId): void
+    {
+        $this->conn->executeStatement(
+            'INSERT IGNORE INTO ' . $this->table('favorites') . ' (image_id, user_id) VALUES (?, ?)',
+            [$imageId, $userId],
+            [ParameterType::INTEGER, ParameterType::INTEGER],
+        );
+    }
+
+    /**
+     * Return full image rows for the user's favorites, subject to the
+     * caller's permission filter and ORDER BY suffix.
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<array<string, mixed>>
+     */
+    public function findFavoriteImagesWithDetails(
+        int $userId,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+        string $orderBySuffix,
+    ): array {
+        $query  = 'SELECT i.* FROM ' . $this->table('favorites') . ' INNER JOIN ' . $this->table('images') . ' i'
+            . ' ON image_id = i.id WHERE user_id = ? ' . $permWhere . ' ' . $orderBySuffix;
+        $params = [$userId, ...$permParams];
+        $types  = [ParameterType::INTEGER, ...$permTypes];
+        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
     }
 
     /** Update `language` for the given user (used after Accept-Language detection). */

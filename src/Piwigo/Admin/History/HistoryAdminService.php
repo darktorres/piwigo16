@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\History;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\SqlExpr;
-use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
+use Piwigo\Image\ImageRepository;
 
 final readonly class HistoryAdminService
 {
     public function __construct(
-        private Connection $conn,
         private HistoryRepository $historyRepository,
+        private ImageRepository $imageRepository,
     ) {
     }
 
@@ -48,13 +48,8 @@ final readonly class HistoryAdminService
         }
 
         if (isset($fields['filename'])) {
-            $query = '
-SELECT
-    id
-  FROM ' . Tables::images() . '
-  WHERE file LIKE ' . $this->conn->quote(is_string($fields['filename']) ? $fields['filename'] : '') . '
-;';
-            $search['image_ids'] = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id');
+            $pattern             = is_string($fields['filename']) ? $fields['filename'] : '';
+            $search['image_ids'] = $this->imageRepository->findIdsByFileLike($pattern);
         }
 
         $search['fields'] = $fields;
@@ -62,15 +57,16 @@ SELECT
     }
 
     /**
-     * Returns the WHERE fragment for a `history` query (joined with
-     * `AND`, each clause already wrapped in parens). When `$alias` is
-     * non-empty, columns are emitted as `<alias>.<col>` so the fragment
-     * works inside a JOIN (see getHistoryTotalFilesizeForHigh).
+     * Returns the WHERE fragment plus bound parameters for a `history` query
+     * (joined with `AND`, each clause already wrapped in parens). When
+     * `$alias` is non-empty, columns are emitted as `<alias>.<col>` so the
+     * fragment works inside a JOIN (see getHistoryTotalFilesizeForHigh).
      *
      * @param array<mixed> $search must already be passed through prepareSearch()
      * @param string[]|string $types image_type enum values to keep
+     * @return array{0: string, 1: list<mixed>, 2: list<ArrayParameterType|ParameterType>}
      */
-    private function buildHistoryWhereSql(array $search, array|string $types, string $alias = ''): string
+    private function buildHistoryWhereSql(array $search, array|string $types, string $alias = ''): array
     {
         if (!is_array($types)) {
             $types = [$types];
@@ -79,29 +75,35 @@ SELECT
         $fields = is_array($search['fields'] ?? null) ? $search['fields'] : [];
         $p = $alias === '' ? '' : $alias . '.';
 
-        $clauses = [];
+        $clauses     = [];
+        $params      = [];
+        $paramTypes  = [];
 
         if (isset($fields['date-after'])) {
-            $clauses[] = "{$p}date >= '" . (is_string($fields['date-after']) ? $fields['date-after'] : '') . "'";
+            $clauses[]     = "{$p}date >= ?";
+            $params[]      = is_string($fields['date-after']) ? $fields['date-after'] : '';
+            $paramTypes[]  = ParameterType::STRING;
         }
 
         if (isset($fields['date-before'])) {
-            $clauses[] = "{$p}date <= '" . (is_string($fields['date-before']) ? $fields['date-before'] : '') . "'";
+            $clauses[]     = "{$p}date <= ?";
+            $params[]      = is_string($fields['date-before']) ? $fields['date-before'] : '';
+            $paramTypes[]  = ParameterType::STRING;
         }
 
         if (isset($fields['types'])) {
             $local_clauses = [];
-            $types_field = is_array($fields['types']) ? $fields['types'] : [];
+            $types_field   = is_array($fields['types']) ? $fields['types'] : [];
 
             foreach ($types as $type) {
                 if (in_array($type, $types_field)) {
-                    $clause = "{$p}image_type ";
-                    if ($type == 'none') {
-                        $clause .= 'IS NULL';
+                    if ($type === 'none') {
+                        $local_clauses[] = "{$p}image_type IS NULL";
                     } else {
-                        $clause .= "= '" . $type . "'";
+                        $local_clauses[]   = "{$p}image_type = ?";
+                        $params[]          = $type;
+                        $paramTypes[]      = ParameterType::STRING;
                     }
-                    $local_clauses[] = $clause;
                 }
             }
 
@@ -111,28 +113,37 @@ SELECT
         }
 
         if (isset($fields['user']) && $fields['user'] != -1) {
-            $clauses[] = "{$p}user_id = " . (is_scalar($fields['user']) ? (string) $fields['user'] : '0');
+            $clauses[]    = "{$p}user_id = ?";
+            $params[]     = is_numeric($fields['user']) ? (int) $fields['user'] : 0;
+            $paramTypes[] = ParameterType::INTEGER;
         }
 
         if (isset($fields['image_id'])) {
-            $clauses[] = "{$p}image_id = " . (is_scalar($fields['image_id']) ? (string) $fields['image_id'] : '0');
+            $clauses[]    = "{$p}image_id = ?";
+            $params[]     = is_numeric($fields['image_id']) ? (int) $fields['image_id'] : 0;
+            $paramTypes[] = ParameterType::INTEGER;
         }
 
         if (isset($fields['filename'])) {
-            $image_ids = is_array($search['image_ids'] ?? null) ? $search['image_ids'] : [];
-            if (count($image_ids) == 0) {
+            /** @var list<int> $image_ids */
+            $image_ids = is_array($search['image_ids'] ?? null) ? array_values($search['image_ids']) : [];
+            if ($image_ids === []) {
                 $clauses[] = '1 = 2 ';
             } else {
-                $clauses[] = "{$p}image_id IN (" . implode(', ', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $image_ids)) . ')';
+                $clauses[]    = "{$p}image_id IN (?)";
+                $params[]     = $image_ids;
+                $paramTypes[] = ArrayParameterType::INTEGER;
             }
         }
 
         if (isset($fields['ip'])) {
-            $clauses[] = "{$p}IP LIKE " . $this->conn->quote(is_string($fields['ip']) ? $fields['ip'] : '');
+            $clauses[]    = "{$p}IP LIKE ?";
+            $params[]     = is_string($fields['ip']) ? $fields['ip'] : '';
+            $paramTypes[] = ParameterType::STRING;
         }
 
         $clauses = StringUtil::prependAppendArrayItems($clauses, '(', ')');
-        return implode("\n    AND ", $clauses);
+        return [implode("\n    AND ", $clauses), $params, $paramTypes];
     }
 
     /**
@@ -141,10 +152,8 @@ SELECT
      */
     public function getHistoryCount(array $search, array|string $types): int
     {
-        $where = $this->buildHistoryWhereSql($search, $types);
-        $sql   = 'SELECT COUNT(*) AS c FROM ' . Tables::history() . ' WHERE ' . $where . ';';
-        $row   = $this->conn->executeQuery($sql)->fetchAssociative();
-        return is_array($row) && is_numeric($row['c'] ?? null) ? (int) $row['c'] : 0;
+        [$where, $params, $ptypes] = $this->buildHistoryWhereSql($search, $types);
+        return $this->historyRepository->countByWhere($where, $params, $ptypes);
     }
 
     /**
@@ -158,13 +167,8 @@ SELECT
      */
     public function getHistoryTotalFilesizeForHigh(array $search, array|string $types): int
     {
-        $where = $this->buildHistoryWhereSql($search, $types, 'h');
-        $sql   = 'SELECT COALESCE(SUM(i.filesize), 0) AS s'
-               . ' FROM ' . Tables::history() . ' h'
-               . ' INNER JOIN ' . Tables::images() . ' i ON i.id = h.image_id'
-               . " WHERE h.image_type = 'high' AND " . $where . ';';
-        $row   = $this->conn->executeQuery($sql)->fetchAssociative();
-        return is_array($row) && is_numeric($row['s'] ?? null) ? (int) $row['s'] : 0;
+        [$where, $params, $ptypes] = $this->buildHistoryWhereSql($search, $types, 'h');
+        return $this->historyRepository->sumHighFilesizeByWhere($where, $params, $ptypes);
     }
 
     /**
@@ -176,16 +180,8 @@ SELECT
      */
     public function getHistoryGuestIpHistogram(array $search, array|string $types, int $guestId): array
     {
-        $where = $this->buildHistoryWhereSql($search, $types);
-        $sql   = 'SELECT IP, COUNT(*) AS c FROM ' . Tables::history()
-               . ' WHERE user_id = ' . $guestId . ' AND ' . $where
-               . ' GROUP BY IP;';
-        $out = [];
-        foreach ($this->conn->executeQuery($sql)->fetchAllAssociative() as $row) {
-            $ip  = is_string($row['IP'] ?? null) ? $row['IP'] : '';
-            $out[$ip] = is_numeric($row['c'] ?? null) ? (int) $row['c'] : 0;
-        }
-        return $out;
+        [$where, $params, $ptypes] = $this->buildHistoryWhereSql($search, $types);
+        return $this->historyRepository->findIpHitCountsForUser($guestId, $where, $params, $ptypes);
     }
 
     /**
@@ -198,18 +194,8 @@ SELECT
      */
     public function getHistoryUserHitCounts(array $search, array|string $types): array
     {
-        $where = $this->buildHistoryWhereSql($search, $types);
-        $sql   = 'SELECT user_id, COUNT(*) AS c FROM ' . Tables::history()
-               . ' WHERE ' . $where
-               . ' GROUP BY user_id;';
-        $out = [];
-        foreach ($this->conn->executeQuery($sql)->fetchAllAssociative() as $row) {
-            if (!is_numeric($row['user_id'] ?? null)) {
-                continue;
-            }
-            $out[(int) $row['user_id']] = is_numeric($row['c'] ?? null) ? (int) $row['c'] : 0;
-        }
-        return $out;
+        [$where, $params, $ptypes] = $this->buildHistoryWhereSql($search, $types);
+        return $this->historyRepository->findUserHitCountsByWhere($where, $params, $ptypes);
     }
 
     /**
@@ -219,16 +205,8 @@ SELECT
      */
     public function getHistoryDistinctSearchIds(array $search, array|string $types): array
     {
-        $where = $this->buildHistoryWhereSql($search, $types);
-        $sql   = 'SELECT DISTINCT search_id FROM ' . Tables::history()
-               . ' WHERE search_id IS NOT NULL AND ' . $where . ';';
-        $out = [];
-        foreach ($this->conn->executeQuery($sql)->fetchAllAssociative() as $row) {
-            if (is_numeric($row['search_id'] ?? null)) {
-                $out[] = (int) $row['search_id'];
-            }
-        }
-        return $out;
+        [$where, $params, $ptypes] = $this->buildHistoryWhereSql($search, $types);
+        return $this->historyRepository->findDistinctSearchIdsByWhere($where, $params, $ptypes);
     }
 
     /**
@@ -240,88 +218,32 @@ SELECT
      */
     public function getHistoryPage(array $search, array|string $types, int $offset, int $limit): array
     {
-        $where = $this->buildHistoryWhereSql($search, $types);
-        $sql   = '
-SELECT
-    date,
-    time,
-    user_id,
-    IP,
-    section,
-    category_id,
-    search_id,
-    tag_ids,
-    image_id,
-    image_type
-  FROM ' . Tables::history() . '
-  WHERE ' . $where . '
-  ORDER BY date DESC, time DESC
-  LIMIT ' . $limit . ' OFFSET ' . $offset . '
-;';
-        return $this->conn->executeQuery($sql)->fetchAllAssociative();
+        [$where, $params, $ptypes] = $this->buildHistoryWhereSql($search, $types);
+        return $this->historyRepository->findPageByWhere($where, $params, $ptypes, $offset, $limit);
     }
 
     public function historySummarize(?int $max_lines = null): void
     {
-        $query = '
-SELECT
-    *
-  FROM ' . Tables::historySummary() . '
-  WHERE history_id_to IS NOT NULL
-  ORDER BY history_id_to DESC
-  LIMIT 1
-;';
-        $summary_lines = $this->conn->executeQuery($query)->fetchAllAssociative();
-
+        $last_summary = $this->historyRepository->findLastSummaryWithIdTo();
         $history_min_id = 0;
-        if (count($summary_lines) > 0) {
-            $last_summary = $summary_lines[0];
+        if ($last_summary !== null) {
             $history_min_id = is_numeric($last_summary['history_id_to'] ?? null) ? (int) $last_summary['history_id_to'] : 0;
         } else {
-            $query = '
-SELECT
-    MIN(id) AS min_id
-  FROM ' . Tables::history() . '
-;';
-            $history_lines = $this->conn->executeQuery($query)->fetchAllAssociative();
-            if (count($history_lines) > 0) {
-                $history_min_id = (is_numeric($history_lines[0]['min_id']) ? (int) $history_lines[0]['min_id'] : 0) - 1;
+            $minId = $this->historyRepository->findMinId();
+            if ($minId !== null) {
+                $history_min_id = $minId - 1;
             }
         }
 
-        $query = '
-SELECT
-    date,
-    ' . SqlExpr::hour('time') . ' AS hour,
-    MIN(id) AS min_id,
-    MAX(id) AS max_id,
-    COUNT(*) AS nb_pages
-  FROM ' . Tables::history() . '
-  WHERE id > ' . $history_min_id;
+        $historyRows = $this->historyRepository->findHourlyGroupingAfterId($history_min_id, $max_lines);
 
-        if (isset($max_lines)) {
-            $query .= '
-    AND id <= ' . ($history_min_id + $max_lines);
-        }
-
-        $query .= '
-  GROUP BY
-    date,
-    hour
-  ORDER BY
-    date ASC,
-    hour ASC
-;';
-        $historyRows = $this->conn
-            ->executeQuery($query)->fetchAllAssociative();
-
-        $need_update = [];
-        $is_first = true;
+        $need_update    = [];
+        $is_first       = true;
         $first_time_key = null;
 
         foreach ($historyRows as $row) {
-            $row_date = is_string($row['date'] ?? null) ? $row['date'] : '';
-            $row_hour = is_numeric($row['hour']) ? (int) $row['hour'] : 0;
+            $row_date  = is_string($row['date'] ?? null) ? $row['date'] : '';
+            $row_hour  = is_numeric($row['hour']) ? (int) $row['hour'] : 0;
             $time_keys = [
                 substr($row_date, 0, 4),
                 substr($row_date, 0, 7),
@@ -332,9 +254,9 @@ SELECT
             foreach ($time_keys as $time_key) {
                 if (!isset($need_update[$time_key])) {
                     $need_update[$time_key] = [
-                        'nb_pages' => 0,
+                        'nb_pages'        => 0,
                         'history_id_from' => $row['min_id'],
-                        'history_id_to' => $row['max_id'],
+                        'history_id_to'   => $row['max_id'],
                     ];
                 }
                 $need_update[$time_key]['nb_pages'] += is_numeric($row['nb_pages']) ? (int) $row['nb_pages'] : 0;
@@ -348,7 +270,7 @@ SELECT
             }
 
             if ($is_first) {
-                $is_first = false;
+                $is_first       = false;
                 $first_time_key = $time_keys[3];
             }
         }
@@ -358,23 +280,7 @@ SELECT
 
         if (isset($first_time_key)) {
             [$year, $month, $day, $hour] = explode('-', $first_time_key);
-
-            $query = '
-SELECT *
-  FROM ' . Tables::historySummary() . '
-  WHERE year=' . $year . '
-    AND ( month IS NULL
-      OR ( month=' . $month . '
-        AND ( day is NULL
-          OR (day=' . $day . '
-            AND (hour IS NULL OR hour=' . $hour . ')
-          )
-        )
-      )
-    )
-;';
-            foreach ($this->conn
-                ->executeQuery($query)->fetchAllAssociative() as $row) {
+            foreach ($this->historyRepository->findSummariesAtTime((int) $year, (int) $month, (int) $day, (int) $hour) as $row) {
                 $key = sprintf('%4u', is_numeric($row['year']) ? (int) $row['year'] : 0);
                 if (isset($row['month'])) {
                     $key .= sprintf('-%02u', is_numeric($row['month']) ? (int) $row['month'] : 0);
@@ -387,9 +293,9 @@ SELECT *
                 }
 
                 if (isset($need_update[$key])) {
-                    $row['nb_pages'] = (is_numeric($row['nb_pages']) ? (int) $row['nb_pages'] : 0) + $need_update[$key]['nb_pages'];
+                    $row['nb_pages']      = (is_numeric($row['nb_pages']) ? (int) $row['nb_pages'] : 0) + $need_update[$key]['nb_pages'];
                     $row['history_id_to'] = $need_update[$key]['history_id_to'];
-                    $updates[] = $row;
+                    $updates[]            = $row;
                     unset($need_update[$key]);
                 }
             }
@@ -402,35 +308,18 @@ SELECT *
             /** @psalm-suppress RedundantCastGivenDocblockType */
             $time_tokens = explode('-', (string) $time_key);
             $inserts[] = [
-                'year'     => $time_tokens[0],
-                'month'    => $time_tokens[1] ?? null,
-                'day'      => $time_tokens[2] ?? null,
-                'hour'     => $time_tokens[3] ?? null,
-                'nb_pages' => $summary['nb_pages'],
+                'year'            => $time_tokens[0],
+                'month'           => $time_tokens[1] ?? null,
+                'day'             => $time_tokens[2] ?? null,
+                'hour'            => $time_tokens[3] ?? null,
+                'nb_pages'        => $summary['nb_pages'],
                 'history_id_from' => $summary['history_id_from'],
                 'history_id_to'   => $summary['history_id_to'],
             ];
         }
 
-        if (count($updates) > 0) {
-            $this->conn->transactional(function () use ($updates): void {
-                foreach ($updates as $row) {
-                    $this->conn->update(
-                        Tables::historySummary(),
-                        ['nb_pages' => $row['nb_pages'], 'history_id_to' => $row['history_id_to']],
-                        ['year' => $row['year'], 'month' => $row['month'], 'day' => $row['day'], 'hour' => $row['hour']]
-                    );
-                }
-            });
-        }
-
-        if (count($inserts) > 0) {
-            $this->conn->transactional(function () use ($inserts): void {
-                foreach ($inserts as $row) {
-                    $this->conn->insert(Tables::historySummary(), $row);
-                }
-            });
-        }
+        $this->historyRepository->updateSummaryBatch($updates);
+        $this->historyRepository->insertSummaryBatch($inserts);
     }
 
     public function historyAutopurge(): void
@@ -441,50 +330,22 @@ SELECT *
             return;
         }
 
-        $histRepo = $this->historyRepository;
-        $count = $histRepo->countAll();
-
+        $count = $this->historyRepository->countAll();
         if ($count <= Config::historyAutopurgeKeepLines()) {
             return;
         }
 
-        $query = '
-SELECT
-    *
-  FROM ' . Tables::historySummary() . '
-  WHERE history_id_to IS NOT NULL
-  ORDER BY history_id_to DESC
-  LIMIT 1
-;';
-        $summary_lines = $this->conn->executeQuery($query)->fetchAllAssociative();
-        if (count($summary_lines) == 0) {
+        $lastSummary = $this->historyRepository->findLastSummaryWithIdTo();
+        if ($lastSummary === null) {
             return;
         }
+        $history_id_last_summarized = is_numeric($lastSummary['history_id_to'] ?? null) ? (int) $lastSummary['history_id_to'] : 0;
 
-        $history_id_last_summarized = is_numeric($summary_lines[0]['history_id_to']) ? (int) $summary_lines[0]['history_id_to'] : 0;
-
-        $query = '
-SELECT
-    id
-  FROM ' . Tables::history() . '
-  ORDER BY id DESC
-  LIMIT 1
-;';
-        $history_lines = $this->conn->executeQuery($query)->fetchAllAssociative();
-        if (count($history_lines) == 0) {
+        $history_id_latest = $this->historyRepository->findMaxId();
+        if ($history_id_latest === null) {
             return;
         }
-        $history_id_latest = is_numeric($history_lines[0]['id']) ? (int) $history_lines[0]['id'] : 0;
-
-        $query = '
-SELECT
-    id
-  FROM ' . Tables::history() . '
-  ORDER BY id ASC
-  LIMIT 1
-;';
-        $history_lines = $this->conn->executeQuery($query)->fetchAllAssociative();
-        $history_id_oldest = is_numeric($history_lines[0]['id']) ? (int) $history_lines[0]['id'] : 0;
+        $history_id_oldest = $this->historyRepository->findMinId() ?? 0;
 
         $search_min = [
             $history_id_last_summarized,
@@ -495,6 +356,6 @@ SELECT
         $history_id_delete_before = min($search_min);
         $logger->debug(__FUNCTION__ . ', ' . join('/', $search_min));
 
-        $histRepo->deleteBeforeId($history_id_delete_before);
+        $this->historyRepository->deleteBeforeId($history_id_delete_before);
     }
 }

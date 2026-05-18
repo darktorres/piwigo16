@@ -668,6 +668,23 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Return image ids matching `file LIKE $pattern` (no ESCAPE). Used by
+     * the history admin filter form, where the user types a free-form pattern
+     * with `%` / `_` semantics.
+     *
+     * @return list<int>
+     */
+    public function findIdsByFileLike(string $pattern): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT id FROM ' . $this->table('images') . ' WHERE file LIKE ?',
+            [$pattern],
+            [\Doctrine\DBAL\ParameterType::STRING],
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
      * Find a single image row where file LIKE $pattern ESCAPE '/'.
      * Caller must pre-escape '_' and '%' in the base name, then append '.%'.
      *

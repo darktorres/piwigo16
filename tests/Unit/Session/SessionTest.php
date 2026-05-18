@@ -97,7 +97,7 @@ final class SessionTest extends TestCase
         self::assertSame(['a', 'b'], $target['page_infos']);
     }
 
-    public function testPersistOmitsNullSlots(): void
+    public function testPersistOmitsNullAndFalseSlots(): void
     {
         $s = new Session();   // all defaults: null / false / []
         $target = [];
@@ -107,9 +107,47 @@ final class SessionTest extends TestCase
         self::assertArrayNotHasKey('connected_with', $target);
         self::assertArrayNotHasKey('pwg_filter_categories', $target);
         self::assertArrayNotHasKey('page_infos', $target);
-        // Booleans are always written (their default is meaningful state).
-        self::assertSame(false, $target['pwg_show_metadata']);
-        self::assertSame(false, $target['pwg_filter_enabled']);
+        // Bool flags persist only when true so legacy isset() checks stay
+        // accurate — a false flag must NOT leave a set key behind.
+        self::assertArrayNotHasKey('pwg_show_metadata', $target);
+        self::assertArrayNotHasKey('pwg_filter_enabled', $target);
+        self::assertArrayNotHasKey('no_photo_yet', $target);
+        self::assertArrayNotHasKey('upload_hide_warnings', $target);
+    }
+
+    public function testTrueBoolFlagPersists(): void
+    {
+        $s = new Session();
+        $s->showMetadata = true;
+        $target = [];
+        $s->persistInto($target);
+        // Round-trip matches what `isset($_SESSION['pwg_show_metadata'])`
+        // sees on the legacy side.
+        self::assertTrue(isset($target['pwg_show_metadata']));
+        self::assertSame(true, $target['pwg_show_metadata']);
+    }
+
+    public function testFalseBoolFlagClearsExistingKey(): void
+    {
+        // Hydrate with the flag set, flip it off, persist — the key must be
+        // removed so legacy isset() checks return false.
+        $s = Session::fromSuperglobal(['pwg_show_metadata' => true]);
+        self::assertTrue($s->showMetadata);
+        $s->showMetadata = false;
+        $target = ['pwg_show_metadata' => true];
+        $s->persistInto($target);
+        self::assertArrayNotHasKey('pwg_show_metadata', $target);
+    }
+
+    public function testValidResetPasswordCodeIsArrayPayload(): void
+    {
+        $payload = ['code' => 'abc', 'pwg_uid' => 7];
+        $s = Session::fromSuperglobal(['valid_reset_password_code' => $payload]);
+        self::assertSame($payload, $s->validResetPasswordCode);
+
+        $target = [];
+        $s->persistInto($target);
+        self::assertSame($payload, $target['valid_reset_password_code']);
     }
 
     public function testPersistDoesNotClobberUnknownKeys(): void
@@ -170,5 +208,30 @@ final class SessionTest extends TestCase
         $s = new Session();
         self::assertInstanceOf(FlashBag::class, $s->flash);
         self::assertFalse($s->flash->hasAny());
+    }
+
+    public function testPersistFlashOnlyWritesFlashKeys(): void
+    {
+        // Migration-window contract: SessionMiddleware calls persistFlashInto
+        // until every canonical-slot writer migrates. The non-flash keys must
+        // be untouched so raw $_SESSION writes by unmigrated consumers (e.g.
+        // AuthService writing pwg_uid during login) survive the round-trip.
+        $target = [
+            'pwg_uid'             => 7,
+            'connected_with'      => 'pwg_ui',
+            'pwg_show_metadata'   => true,
+        ];
+
+        $s = Session::fromSuperglobal([]);   // empty hydration: every slot at default
+        $s->flash->add('info', 'hello');
+        $s->persistFlashInto($target);
+
+        // Flash made it in.
+        self::assertSame(['hello'], $target['page_infos']);
+        // Non-flash keys are exactly as the caller left them — Session
+        // did NOT unset them just because its own slots are at defaults.
+        self::assertSame(7, $target['pwg_uid']);
+        self::assertSame('pwg_ui', $target['connected_with']);
+        self::assertSame(true, $target['pwg_show_metadata']);
     }
 }

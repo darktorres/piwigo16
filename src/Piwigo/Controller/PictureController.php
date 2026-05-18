@@ -48,6 +48,7 @@ use Piwigo\Picture\PictureService;
 use Piwigo\Rate\RateService;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionInitializer;
+use Piwigo\Session\Session;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
@@ -83,6 +84,7 @@ final readonly class PictureController implements ControllerInterface
         private PictureService $pictureService,
         private RateService $rateService,
         private SectionInitializer $sectionInitializer,
+        private Session $session,
         private SessionService $sessionService,
         private TagService $tagService,
         private UrlGenerator $urlGenerator,
@@ -645,7 +647,7 @@ final readonly class PictureController implements ControllerInterface
         if (Config::activateComments()) {
             $this->pictureCommentRenderer->render($edit_comment ?? null);
         }
-        if ($metadata_showable && isset($_SESSION['pwg_show_metadata'])) {
+        if ($metadata_showable && $this->session->showMetadata) {
             $this->pictureMetadataRenderer->render();
         }
 

@@ -108,6 +108,7 @@ use Piwigo\Search\SearchFilterViewRepository;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Section\SectionInitializer;
+use Piwigo\Session\Session;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\SiteRepository;
@@ -233,7 +234,7 @@ return [
     PermissionService::class   => factory(static fn (CategoryRepository $catR, PermissionRepository $permR, HtmlService $h): PermissionService => new PermissionService($catR, $permR, $h)),
     PreferencesService::class  => factory(static fn (LanguageService $lang, UserRepository $r): PreferencesService => new PreferencesService($lang, $r)),
     UserService::class         => factory(static fn (UserRepository $u, HistoryRepository $h, ActivityRepository $a, GroupRepository $g, AuthKeyRepository $ak, ActivityLogger $al, ExecutionMutex $mutex, LangService $lang, UrlGenerator $ug, MailService $mail, MessageBusInterface $bus, HtmlService $html, DateService $date, CategoryService $cat, ImageRepository $i, UserAdminService $uas, SessionService $sess, AuthService $auth, PreferencesService $pref, PermissionService $perm, LanguageService $langSvc, ThemeService $theme, EventDispatcherInterface $dispatcher): UserService => new UserService($u, $h, $a, $g, $ak, $al, $mutex, $lang, $ug, $mail, $bus, $html, $date, $cat, $i, $uas, $sess, $auth, $pref, $perm, $langSvc, $theme, $dispatcher)),
-    ProfileService::class      => factory(static fn (AuthService $auth, DateService $d, LangService $lang, MailService $mail, UserRepository $u, UserService $us, ActivityLogger $al, CsrfService $csrf, RedirectResponder $redirect, LanguageService $langSvc, ThemeService $theme, EventDispatcherInterface $dispatcher): ProfileService => new ProfileService($auth, $d, $lang, $mail, $u, $us, $al, $csrf, $redirect, $langSvc, $theme, $dispatcher)),
+    ProfileService::class      => factory(static fn (AuthService $auth, DateService $d, LangService $lang, MailService $mail, UserRepository $u, UserService $us, ActivityLogger $al, CsrfService $csrf, RedirectResponder $redirect, LanguageService $langSvc, ThemeService $theme, Session $session, EventDispatcherInterface $dispatcher): ProfileService => new ProfileService($auth, $d, $lang, $mail, $u, $us, $al, $csrf, $redirect, $langSvc, $theme, $session, $dispatcher)),
     CategoryService::class     => factory(static fn (CategoryRepository $cat, FilterService $f, PermissionService $perm, EventDispatcherInterface $d, OrderByService $orderBy): CategoryService => new CategoryService($cat, $f, $perm, $d, $orderBy)),
     HtmlService::class         => factory(static fn (CategoryRepository $catR, EventDispatcherInterface $d): HtmlService => new HtmlService($catR, $d)),
     NotificationService::class => factory(static fn (NotificationRepository $nR, HtmlService $h, UrlGenerator $ug, PermissionService $perm, UrlService $us, CacheItemPoolInterface $pool): NotificationService => new NotificationService($nR, $h, $ug, $perm, $us, $pool)),
@@ -242,6 +243,13 @@ return [
     PluginRegistry::class      => factory(static fn (PluginRepository $repo, LoggerInterface $log, PluginMigrationRunner $runner, Paths $paths): PluginRegistry => new PluginRegistry($repo, $log, $paths->root . 'plugins', $paths->root . 'docs/schemas/plugin.schema.json', $runner)),
     SearchService::class       => factory(static fn (SearchRepository $repo, SearchFilterViewRepository $fv, CategoryRepository $catR, LoggerInterface $log, CategoryService $cat, HtmlService $h, PermissionService $perm, PreferencesService $pref, TagRepository $tR, TagService $tag, UrlService $u, UserService $us, CacheItemPoolInterface $pool, EventDispatcherInterface $d, OrderByService $orderBy): SearchService => new SearchService($repo, $fv, $catR, $log, $cat, $h, $perm, $pref, $tR, $tag, $u, $us, $pool, $d, $orderBy)),
     SessionService::class      => factory(static fn (SessionRepository $repo): SessionService => new SessionService($repo)),
+    // Request-scoped: the container is rebuilt per request, so a single
+    // Session instance is shared across every consumer in the pipeline.
+    // CommonBootstrap::run() calls session_start() before Kernel::boot()
+    // builds the container, so $_SESSION is populated when this factory fires
+    // in production. The `?? []` guard covers the container-smoke test and
+    // any other code path that resolves Session without a started session.
+    Session::class             => factory(static fn (): Session => Session::fromSuperglobal($_SESSION ?? [])),
     TagService::class          => factory(static fn (HtmlService $h, TagRepository $repo, PermissionService $perm, CacheItemPoolInterface $pool, EventDispatcherInterface $dispatcher, OrderByService $orderBy): TagService => new TagService($h, $repo, $perm, $pool, $dispatcher, $orderBy)),
     UrlService::class          => factory(static fn (CategoryService $cat, HtmlService $h, TagService $tag, PermissionService $perm, UserRepository $u, EventDispatcherInterface $dispatcher): UrlService => new UrlService($cat, $h, $tag, $perm, $u, $dispatcher)),
     UrlGenerator::class          => factory(static fn (Router $r, UrlService $u): UrlGenerator => new UrlGenerator($r, $u)),
@@ -374,7 +382,7 @@ return [
     // ── PSR-7/15 routing infrastructure ──────────────────────────────────────
     Router::class                     => factory(static fn (): Router => new Router(dirname(__DIR__) . '/config/routes.php')),
     ExceptionHandlerMiddleware::class => factory(static fn (): ExceptionHandlerMiddleware => new ExceptionHandlerMiddleware()),
-    SessionMiddleware::class          => factory(static fn (): SessionMiddleware => new SessionMiddleware()),
+    SessionMiddleware::class          => factory(static fn (Session $session): SessionMiddleware => new SessionMiddleware($session)),
     AuthMiddleware::class             => factory(static fn (): AuthMiddleware => new AuthMiddleware()),
     FilterMiddleware::class           => factory(static fn (CategoryService $cat, ImageRepository $i, SessionService $sess, FilterService $f): FilterMiddleware => new FilterMiddleware($cat, $i, $sess, $f)),
     CsrfMiddleware::class             => factory(static fn (CsrfService $csrf): CsrfMiddleware => new CsrfMiddleware($csrf)),

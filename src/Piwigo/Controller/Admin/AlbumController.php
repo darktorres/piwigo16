@@ -43,6 +43,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
+use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -76,6 +77,7 @@ final class AlbumController implements AdminSubControllerInterface
         private readonly ImageRepository $imageRepository,
         private readonly MailService $mailService,
         private readonly PermissionRepository $permissionRepository,
+        private readonly Session $session,
         private readonly UrlGenerator $urlGenerator,
         private readonly UrlService $urlService,
         private readonly UserAdminService $userAdminService,
@@ -511,7 +513,7 @@ final class AlbumController implements AdminSubControllerInterface
                 $photo_deletion_mode = is_string($rawPhotoDeletion) ? $rawPhotoDeletion : 'no_delete';
             }
             $this->categoryAdminService->deleteCategories([(int) $_GET['delete']], $photo_deletion_mode);
-            $_SESSION['page_infos'] = [Lang::t('Virtual album deleted')];
+            $this->session->flash->add('info', Lang::t('Virtual album deleted'));
             $this->categoryAdminService->updateGlobalRank();
             $this->userAdminService->invalidateUserCache();
             $redirect_url = $this->urlGenerator->admin('cat_list');

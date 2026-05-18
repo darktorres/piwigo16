@@ -85,7 +85,15 @@ final class Session
 
     // -- Password reset ----------------------------------------------------
     public ?string $resetPasswordCode = null;       // reset_password_code
-    public bool $validResetPasswordCode = false;    // valid_reset_password_code
+    /**
+     * Active valid-reset-code payload (array shape is owned by PasswordService:
+     * `['code' => string, 'mail_address' => string, 'pwg_uid' => int, …]`).
+     * Null means "no valid code currently issued"; legacy callers detect this
+     * with `isset($_SESSION['valid_reset_password_code'])`.
+     *
+     * @var array<mixed>|null
+     */
+    public ?array $validResetPasswordCode = null;   // valid_reset_password_code
 
     // -- Upload ------------------------------------------------------------
     /** @var array<mixed>|null */
@@ -139,7 +147,7 @@ final class Session
         $s->noPhotoYet               = (bool) ($raw['no_photo_yet'] ?? false);
 
         $s->resetPasswordCode      = is_string($raw['reset_password_code'] ?? null) ? $raw['reset_password_code'] : null;
-        $s->validResetPasswordCode = (bool) ($raw['valid_reset_password_code'] ?? false);
+        $s->validResetPasswordCode = is_array($raw['valid_reset_password_code'] ?? null) ? $raw['valid_reset_password_code'] : null;
 
         $s->uploadsError       = is_array($raw['uploads_error'] ?? null) ? $raw['uploads_error'] : null;
         $s->uploadHideWarnings = (bool) ($raw['upload_hide_warnings'] ?? false);
@@ -148,9 +156,33 @@ final class Session
     }
 
     /**
+     * Persist only the flash-bag slots. Used by SessionMiddleware during
+     * the F5-c migration window: until every consumer that mutates a
+     * canonical Session slot has migrated, a full persistInto() would
+     * clobber raw `$_SESSION` writes made by unmigrated code (e.g.
+     * AuthService writing `pwg_uid` directly during login). The flash
+     * keys are safe — they're now exclusively owned by Session::$flash.
+     *
+     * Once F5-c is complete the SessionMiddleware switch to persistInto()
+     * is a one-line change.
+     *
+     * @param array<mixed> $target
+     */
+    public function persistFlashInto(array &$target): void
+    {
+        $flashByKind = $this->flash->toArray();
+        $this->writeListOrUnset($target, 'page_infos', $flashByKind['info'] ?? []);
+        $this->writeListOrUnset($target, 'page_errors', $flashByKind['error'] ?? []);
+        $this->writeListOrUnset($target, 'message_tags', $flashByKind['tag'] ?? []);
+    }
+
+    /**
      * Serialize back into a `$_SESSION`-shaped array. Only canonical keys
      * are written; pre-existing unknown keys in `$target` are left in
      * place so plugin / legacy scratch survives the round-trip.
+     *
+     * Not yet wired into SessionMiddleware — see persistFlashInto() above
+     * for the migration-window persistence path.
      *
      * @param array<mixed> $target
      */
@@ -166,8 +198,10 @@ final class Session
         $this->writeOrUnset($target, 'pwg_device', $this->device);
         $this->writeOrUnset($target, 'pwg_comments_order', $this->commentsOrder);
         $this->writeOrUnset($target, 'pwg_image_order', $this->imageOrder);
-        $target['pwg_show_metadata'] = $this->showMetadata;
-        $target['pwg_filter_enabled'] = $this->filterEnabled;
+        // Booleans are persisted only when true: legacy callers detect "on"
+        // via isset(), so writing false would falsely make the key look set.
+        $this->writeBoolFlag($target, 'pwg_show_metadata', $this->showMetadata);
+        $this->writeBoolFlag($target, 'pwg_filter_enabled', $this->filterEnabled);
         $this->writeOrUnset($target, 'pwg_referer_image_id', $this->refererImageId?->value);
         $this->writeOrUnset($target, 'pwg_plugins_show_details', $this->pluginsShowDetails);
         $this->writeOrUnset($target, 'pwg_plugins_new_order', $this->pluginsNewOrder);
@@ -182,13 +216,13 @@ final class Session
 
         $this->writeListOrUnset($target, 'extensions_need_update', $this->extensionsNeedUpdate);
         $this->writeOrUnset($target, 'dismissed_upgrade_version', $this->dismissedUpgradeVersion);
-        $target['no_photo_yet'] = $this->noPhotoYet;
+        $this->writeBoolFlag($target, 'no_photo_yet', $this->noPhotoYet);
 
         $this->writeOrUnset($target, 'reset_password_code', $this->resetPasswordCode);
-        $target['valid_reset_password_code'] = $this->validResetPasswordCode;
+        $this->writeOrUnset($target, 'valid_reset_password_code', $this->validResetPasswordCode);
 
         $this->writeOrUnset($target, 'uploads_error', $this->uploadsError);
-        $target['upload_hide_warnings'] = $this->uploadHideWarnings;
+        $this->writeBoolFlag($target, 'upload_hide_warnings', $this->uploadHideWarnings);
 
         // Flash bag splits into its three legacy keys for backward-compatible
         // hydration on the next request — until the renderer consumer migrates
@@ -226,7 +260,7 @@ final class Session
         $this->dismissedUpgradeVersion = null;
         $this->noPhotoYet           = false;
         $this->resetPasswordCode    = null;
-        $this->validResetPasswordCode = false;
+        $this->validResetPasswordCode = null;
         $this->uploadsError         = null;
         $this->uploadHideWarnings   = false;
     }
@@ -318,5 +352,22 @@ final class Session
             return;
         }
         $target[$key] = $value;
+    }
+
+    /**
+     * Persist a "flag" boolean: write `true` when on, unset when off. Matches
+     * the legacy session idiom where `isset($_SESSION[$key])` means the flag
+     * is set; downstream consumers that still use `isset()` see consistent
+     * truthiness with the typed slot.
+     *
+     * @param array<mixed> $target
+     */
+    private function writeBoolFlag(array &$target, string $key, bool $value): void
+    {
+        if ($value) {
+            $target[$key] = true;
+            return;
+        }
+        unset($target[$key]);
     }
 }

@@ -385,7 +385,10 @@ final readonly class UsersController implements AdminSubControllerInterface
                 $row['details'] = str_replace('`rank`', 'rank', $row['details']);
                 $occurredOnRaw = $row['occured_on'] ?? null;
                 [$date, $hour] = explode(' ', is_string($occurredOnRaw) ? $occurredOnRaw : '');
-                $output_lines[] = ['username' => $row['username'], 'user_id' => $row['performed_by'], 'object' => $row['object'], 'object_id' => $row['object_id'], 'action' => $row['action'], 'date' => $date, 'hour' => $hour, 'ip_address' => $row['ip_address'], 'details' => $row['details']];
+                // F8-a: LEFT JOIN may return null username for system events
+                // (performed_by IS NULL); render 'System' in the CSV export.
+                $usernameRaw = $row['username'] ?? null;
+                $output_lines[] = ['username' => is_string($usernameRaw) ? $usernameRaw : 'System', 'user_id' => $row['performed_by'], 'object' => $row['object'], 'object_id' => $row['object_id'], 'action' => $row['action'], 'date' => $date, 'hour' => $hour, 'ip_address' => $row['ip_address'], 'details' => $row['details']];
             }
 
             header('Content-type: application/csv');

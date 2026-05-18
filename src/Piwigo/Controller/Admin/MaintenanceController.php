@@ -822,7 +822,11 @@ final class MaintenanceController implements AdminSubControllerInterface
                     }
 
                     [$date, $hour] = explode(' ', is_string($rows['occured_on'] ?? null) ? $rows['occured_on'] : '');
-                    $data[] = ['major_infos' => $major_infos, 'id' => $rows['activity_id'], 'object_icon' => $object_icon, 'object' => ucwords($object), 'action_icon' => $action_icon, 'action_color' => $action_color, 'action' => $action, 'user_id' => $rows['performed_by'], 'username' => $rows['username'], 'date' => $this->dateService->formatDate($date), 'hour' => $hour, 'detail' => $detail];
+                    // performed_by IS NULL = system event (cron, install,
+                    // core update). Render the 'System' label client-side
+                    // when username is null.
+                    $usernameRaw = $rows['username'] ?? null;
+                    $data[] = ['major_infos' => $major_infos, 'id' => $rows['activity_id'], 'object_icon' => $object_icon, 'object' => ucwords($object), 'action_icon' => $action_icon, 'action_color' => $action_color, 'action' => $action, 'user_id' => $rows['performed_by'], 'username' => is_string($usernameRaw) ? $usernameRaw : 'System', 'date' => $this->dateService->formatDate($date), 'hour' => $hour, 'detail' => $detail];
                 }
 
                 $response = ['data' => $data];

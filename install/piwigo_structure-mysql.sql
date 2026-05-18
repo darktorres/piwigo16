@@ -10,7 +10,7 @@ CREATE TABLE `piwigo_activity` (
   `object` varchar(255) NOT NULL,
   `object_id` int(11) unsigned NOT NULL,
   `action` varchar(255) NOT NULL,
-  `performed_by` mediumint(8) unsigned NOT NULL,
+  `performed_by` mediumint(8) unsigned DEFAULT NULL,
   `session_idx` varchar(255) NOT NULL,
   `ip_address` varchar(50) DEFAULT NULL,
   `occured_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -631,11 +631,9 @@ CREATE TABLE `piwigo_users` (
 -- ON DELETE SET NULL: deleting the parent leaves the child but blanks
 --   the link (audit metadata, optional ownership pointers, hierarchies
 --   that should promote children to root rather than vanish).
--- Three FKs are intentionally NOT declared because the column uses 0 as
--- a "system / anonymous" sentinel that has no users(id)=0 row:
---   piwigo_activity.performed_by  (read at MaintenanceController.php:641)
---   piwigo_history.user_id        (guest/unauthenticated browse tracking)
---   piwigo_rate.user_id           (anonymous rate rows; pairs with anonymous_id)
+-- piwigo_activity.performed_by is nullable; NULL means "system event"
+-- (no current user — install, cron, core update). Display layer renders
+-- the 'System' label when the LEFT JOIN finds no matching row.
 --
 
 ALTER TABLE `piwigo_image_category`
@@ -717,3 +715,6 @@ ALTER TABLE `piwigo_history`
 ALTER TABLE `piwigo_search`
   ADD CONSTRAINT `fk_search_created_by` FOREIGN KEY (`created_by`)  REFERENCES `piwigo_users`(`id`)  ON DELETE SET NULL,
   ADD CONSTRAINT `fk_search_forked_from` FOREIGN KEY (`forked_from`) REFERENCES `piwigo_search`(`id`) ON DELETE SET NULL;
+
+ALTER TABLE `piwigo_activity`
+  ADD CONSTRAINT `fk_activity_performed_by` FOREIGN KEY (`performed_by`) REFERENCES `piwigo_users`(`id`) ON DELETE SET NULL;

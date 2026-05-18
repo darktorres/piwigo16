@@ -513,9 +513,11 @@ final readonly class GeneralEndpoints
             }
             $lineUserId    = $outputLines[$idx]['user_id'] ?? null;
             $lineUserIdStr = is_scalar($lineUserId) ? (string) $lineUserId : '';
-            $outputLines[$idx]['username'] = 'user#' . $lineUserIdStr;
-            if ($lineUserIdStr !== '' && isset($usernameOf[$lineUserIdStr])) {
-                $outputLines[$idx]['username'] = $usernameOf[$lineUserIdStr];
+            // F8-a: user_id IS NULL = system event (no actor); render 'System'.
+            if ($lineUserId === null) {
+                $outputLines[$idx]['username'] = 'System';
+            } else {
+                $outputLines[$idx]['username'] = $usernameOf[$lineUserIdStr] ?? ('user#' . $lineUserIdStr);
             }
         }
         return ['result_lines' => $outputLines, 'page_offset' => $pageOffset, 'end_page' => !$moreRowsAvailable, 'params' => $param];

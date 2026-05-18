@@ -124,7 +124,7 @@ final readonly class ActivityLogger
         $sessionId     = session_id() !== '' ? session_id() : 'none';
 
         foreach ($objectIds as $loopObjectId) {
-            $performedBy = CurrentUser::isInitialized() ? CurrentUser::get()->id : 0;
+            $performedBy = CurrentUser::isInitialized() ? CurrentUser::get()->id : null;
             if ($action === 'logout') {
                 $performedBy = $loopObjectId;
             }

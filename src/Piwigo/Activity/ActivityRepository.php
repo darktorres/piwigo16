@@ -80,6 +80,8 @@ final class ActivityRepository extends AbstractRepository
      * given object kind. Used by the activity-log CSV export.
      *
      * $idField/$usernameField/$usersTable come from Config — admin-configured.
+     * LEFT JOIN preserves system-event rows (performed_by IS NULL); the
+     * caller renders the 'System' label when username is null.
      *
      * @return list<array<string, mixed>>
      */
@@ -92,7 +94,7 @@ final class ActivityRepository extends AbstractRepository
         return $this->conn->executeQuery(
             "SELECT activity_id, performed_by, object, object_id, action, ip_address, occured_on, details, $usernameField AS username"
             . ' FROM ' . $this->table('activity')
-            . " JOIN $usersTable AS u ON performed_by = u.$idField"
+            . " LEFT JOIN $usersTable AS u ON performed_by = u.$idField"
             . ' WHERE object = ?'
             . ' ORDER BY activity_id DESC',
             [$object]
@@ -101,8 +103,10 @@ final class ActivityRepository extends AbstractRepository
 
     /**
      * Return performed_by → row-count map for non-system activities.
+     * The NULL `performed_by` bucket (system events without a current user)
+     * maps to the dedicated 'system' string key.
      *
-     * @return array<int|string, int>
+     * @return array<string, int>
      */
     public function findActivityCountByPerformer(): array
     {
@@ -112,7 +116,8 @@ final class ActivityRepository extends AbstractRepository
         )->fetchAllAssociative();
         $out = [];
         foreach ($rows as $row) {
-            $key       = is_scalar($row['performed_by']) ? (string) $row['performed_by'] : '';
+            $key       = $row['performed_by'] === null ? 'system'
+                : (is_scalar($row['performed_by']) ? (string) $row['performed_by'] : '');
             $out[$key] = is_numeric($row['counter']) ? (int) $row['counter'] : 0;
         }
         return $out;
@@ -211,7 +216,8 @@ final class ActivityRepository extends AbstractRepository
      * Paginated activity rows for the admin history endpoint. Filters each
      * bind as DBAL parameters; the connections-mode controls visibility of
      * login/logout rows ('none' = hide all, 'admins_only' = hide unless the
-     * object_id is in $adminIds).
+     * object_id is in $adminIds). When $systemOnly = true, only rows with
+     * performed_by IS NULL are returned (system events without a user actor).
      *
      * @param  list<int> $adminIds  required when $connectionsMode = 'admins_only'
      * @return list<array<string, mixed>>
@@ -227,6 +233,7 @@ final class ActivityRepository extends AbstractRepository
         array $adminIds,
         int $limit,
         int $offset,
+        bool $systemOnly = false,
     ): array {
         $qb = $this->conn->createQueryBuilder()
             ->select('activity_id', 'performed_by', 'object', 'object_id', 'action', 'session_idx', 'ip_address', 'occured_on', 'details', 'user_agent')
@@ -235,7 +242,9 @@ final class ActivityRepository extends AbstractRepository
             ->orderBy('activity_id', 'DESC')
             ->setMaxResults($limit)
             ->setFirstResult($offset);
-        if ($performedBy !== null) {
+        if ($systemOnly) {
+            $qb->andWhere('performed_by IS NULL');
+        } elseif ($performedBy !== null) {
             $qb->andWhere('performed_by = :uid')
                ->setParameter('uid', $performedBy);
         }
@@ -276,7 +285,9 @@ final class ActivityRepository extends AbstractRepository
     /**
      * Return system-activity log rows joined with the actor's username for
      * the admin "system activity" page. $usernameField and $idField come
-     * from Config — admin-configured. performed_by=0 is mapped to 'System'.
+     * from Config — admin-configured. username is null for rows with
+     * `performed_by IS NULL` (system events without an actor) and the
+     * caller renders the 'System' label.
      *
      * @return list<array<string, mixed>>
      */
@@ -284,7 +295,7 @@ final class ActivityRepository extends AbstractRepository
     {
         return $this->conn->executeQuery(
             'SELECT activity_id, object, object_id, action, performed_by, occured_on, details,'
-            . " IF(performed_by = 0, 'System', {$usernameField}) AS username"
+            . " {$usernameField} AS username"
             . ' FROM ' . $this->table('activity')
             . " LEFT JOIN $usersTable ON performed_by = {$idField}"
             . " WHERE object = 'system'"

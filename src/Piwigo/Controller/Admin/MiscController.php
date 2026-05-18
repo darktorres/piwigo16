@@ -646,8 +646,15 @@ final class MiscController implements AdminSubControllerInterface
         $week_number = array_reverse($week_number);
         $date_string = $date->format('Y-m-d');
 
-        $cached_activity = is_array($_SESSION['cache_activity_last_weeks'] ?? null) ? $_SESSION['cache_activity_last_weeks'] : null;
-        if ($cached_activity === null || (is_numeric($cached_activity['calculated_on']) ? (int) $cached_activity['calculated_on'] : 0) < strtotime('5 minutes ago')) {
+        // Dashboard activity is global (not per-user) and the underlying
+        // query is expensive on busy installs — cache it in the shared pool
+        // with a 5-minute TTL. Key includes $nb_weeks because that's the
+        // shape parameter; changing it invalidates the cached layout.
+        $item = $this->pool->getItem('admin.dashboard.activity_last_weeks.' . $nb_weeks);
+        if ($item->isHit()) {
+            $cached = $item->get();
+            $activity_last_weeks = is_array($cached) ? $cached : [];
+        } else {
             $start_time = StringUtil::getMoment();
             $activity_actions = $this->activityRepository->findDailyActionCountsSince($date_string);
 
@@ -666,11 +673,10 @@ final class MiscController implements AdminSubControllerInterface
             }
 
             LoggerRegistry::current()->debug('[admin/intro::] recent activity calculated in ' . StringUtil::getElapsedTime($start_time, StringUtil::getMoment()));
-            $_SESSION['cache_activity_last_weeks'] = ['calculated_on' => time(), 'data' => $activity_last_weeks];
+            $item->set($activity_last_weeks);
+            $item->expiresAfter(300);
+            $this->pool->save($item);
         }
-
-        $cached_activity     = is_array($_SESSION['cache_activity_last_weeks'] ?? null) ? $_SESSION['cache_activity_last_weeks'] : [];
-        $activity_last_weeks = is_array($cached_activity['data'] ?? null) ? $cached_activity['data'] : [];
 
         foreach ($activity_last_weeks as $week => $i) {
             if (!is_array($i)) {

@@ -329,14 +329,17 @@ final class Themes
                 $theme['description'] = trim($desc);
             }
 
-            // screenshot fallback when the theme didn't ship one.
+            // screenshot fallback when the theme didn't ship one. Stored as a
+            // URL-relative path (browser resolves against the install root) —
+            // emitted into <img src> / <a href> in themes_installed.latte, so
+            // it must not be an absolute filesystem path.
             $screenshot_path = $path . '/screenshot.png';
             if (file_exists($screenshot_path)) {
-                $theme['screenshot'] = $screenshot_path;
+                $theme['screenshot'] = 'themes/' . $file . '/screenshot.png';
             } else {
                 $admin_theme = $this->preferencesService->userprefsGetParam('admin_theme', 'dark');
                 $admin_theme = is_scalar($admin_theme) ? (string) $admin_theme : 'dark';
-                $theme['screenshot'] = $this->paths->root . 'themes/admin/' . $admin_theme . '/images/missing_screenshot.png';
+                $theme['screenshot'] = 'themes/admin/' . $admin_theme . '/images/missing_screenshot.png';
             }
 
             $admin_file = $path . '/admin/admin.inc.php';

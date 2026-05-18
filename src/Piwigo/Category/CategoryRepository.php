@@ -722,6 +722,50 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
+     * Return (id, uppercats) for categories in $catIds that are also visible
+     * to $userId (i.e. present in user_cache_categories).
+     *
+     * @param  list<int> $catIds
+     * @return list<array<string, mixed>>
+     */
+    public function findIdUppercatsForVisibleIds(int $userId, array $catIds): array
+    {
+        if ($catIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('c.id', 'c.uppercats')
+            ->from($this->table('categories'), 'c')
+            ->innerJoin('c', $this->table('user_cache_categories'), 'ucc', 'c.id = ucc.cat_id AND ucc.user_id = :userId')
+            ->setParameter('userId', $userId);
+        $qb->where($qb->expr()->in('c.id', ':catIds'))
+           ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
+     * Return c.* rows for categories in $catIds that are visible to $userId,
+     * keyed numerically.
+     *
+     * @param  list<int> $catIds
+     * @return list<array<string, mixed>>
+     */
+    public function findAllColumnsForVisibleIds(int $userId, array $catIds): array
+    {
+        if ($catIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('c.*')
+            ->from($this->table('categories'), 'c')
+            ->innerJoin('c', $this->table('user_cache_categories'), 'ucc', 'c.id = ucc.cat_id AND ucc.user_id = :userId')
+            ->setParameter('userId', $userId);
+        $qb->where($qb->expr()->in('c.id', ':catIds'))
+           ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
      * Filter the given category ids down to those visible to $userId
      * (i.e. present in user_cache_categories). Used by SearchService qsearch.
      *

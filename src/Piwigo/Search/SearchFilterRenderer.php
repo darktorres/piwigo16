@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
-use Doctrine\DBAL\Connection;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DateService;
@@ -18,20 +18,23 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserRepository;
 use Psr\Cache\CacheItemPoolInterface;
 
 final readonly class SearchFilterRenderer
 {
     public function __construct(
-        private Connection $conn,
+        private CategoryRepository $categoryRepository,
         private DateService $dateService,
         private HtmlService $htmlService,
         private LangService $langService,
         private PermissionService $permissionService,
+        private SearchRepository $searchRepository,
         private SearchService $searchService,
         private SearchFilterViewRepository $filterViewRepo,
         private TagService $tagService,
         private UrlService $urlService,
+        private UserRepository $userRepository,
         private CacheItemPoolInterface $pool,
     ) {
     }
@@ -150,17 +153,6 @@ final readonly class SearchFilterRenderer
             if (isset($my_search['fields']['author']) and $display_filters['author']['access']) {
                 [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('author');
 
-                $query = '
-SELECT
-    author,
-    COUNT(DISTINCT(id)) AS counter
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filter_clause . '
-    AND author IS NOT NULL
-  GROUP BY author
-;';
-
                 if (!preg_match('/^image_id IN/', $filter_clause)) {
                     $cache_key = md5('filter_author_rows' . $userId . $userCacheTime . AppInfo::VERSION);
                     $item      = $this->pool->getItem($cache_key);
@@ -168,14 +160,14 @@ SELECT
                         $filter_rows_raw = $item->get();
                         $filter_rows     = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
                     } else {
-                        $db_rows = $this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative();
+                        $db_rows = $this->searchRepository->findAuthorsForFilter($filter_clause, $filterParams, $filterTypes);
                         $item->set($db_rows);
                         $item->expiresAfter(86400);
                         $this->pool->save($item);
                         $filter_rows = $this->normalizeRows($db_rows);
                     }
                 } else {
-                    $filter_rows = $this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative();
+                    $filter_rows = $this->searchRepository->findAuthorsForFilter($filter_clause, $filterParams, $filterTypes);
                 }
 
                 $author_names = [];
@@ -208,29 +200,12 @@ SELECT
                 $set_cache_dp = !preg_match('/^image_id IN/', $filter_clause) && !$cache_hit_date_posted;
 
                 if (!$cache_hit_date_posted) {
-                    $query = '
-SELECT
-    SUBDATE(NOW(), INTERVAL 24 HOUR) AS 24h,
-    SUBDATE(NOW(), INTERVAL 7 DAY) AS 7d,
-    SUBDATE(NOW(), INTERVAL 30 DAY) AS 30d,
-    SUBDATE(NOW(), INTERVAL 3 MONTH) AS 3m,
-    SUBDATE(NOW(), INTERVAL 6 MONTH) AS 6m
-;';
-                    $thresholds = $this->conn->executeQuery($query)->fetchAllAssociative()[0];
-
-                    $query = '
-SELECT
-    DISTINCT id,
-    date_available as date
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filter_clause . '
-;';
+                    $thresholds = $this->searchRepository->findDatePostedThresholds();
 
                     $list_of_dates = [];
                     $pre_counters = [];
 
-                    foreach ($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative() as $row) {
+                    foreach ($this->searchRepository->findImageDatePostedRows($filter_clause, $filterParams, $filterTypes) as $row) {
                         foreach ($thresholds as $threshold => $date_limit) {
                             if ($row['date'] > $date_limit) {
                                 $pre_counters[$threshold] = ($pre_counters[$threshold] ?? 0) + 1;
@@ -318,29 +293,12 @@ SELECT
                 $set_cache_dc  = !preg_match('/^image_id IN/', $filter_clause) && !$cache_hit_date_created;
 
                 if (!$cache_hit_date_created) {
-                    $query = '
-SELECT
-    SUBDATE(NOW(), INTERVAL 7 DAY) AS 7d,
-    SUBDATE(NOW(), INTERVAL 30 DAY) AS 30d,
-    SUBDATE(NOW(), INTERVAL 3 MONTH) AS 3m,
-    SUBDATE(NOW(), INTERVAL 6 MONTH) AS 6m,
-    SUBDATE(NOW(), INTERVAL 12 MONTH) AS 12m
-;';
-                    $thresholds = $this->conn->executeQuery($query)->fetchAllAssociative()[0];
-
-                    $query = '
-SELECT
-    DISTINCT id,
-    date_creation as date
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filter_clause . '
-;';
+                    $thresholds = $this->searchRepository->findDateCreatedThresholds();
 
                     $list_of_dates = [];
                     $pre_counters = [];
 
-                    foreach ($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative() as $row) {
+                    foreach ($this->searchRepository->findImageDateCreatedRows($filter_clause, $filterParams, $filterTypes) as $row) {
                         if (!empty($row['date'])) {
                             foreach ($thresholds as $threshold => $date_limit) {
                                 if ($row['date'] > $date_limit) {
@@ -419,17 +377,6 @@ SELECT
             if (isset($my_search['fields']['added_by']) and $display_filters['added_by']['access']) {
                 [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('added_by');
 
-                $query = '
-SELECT
-    COUNT(DISTINCT(id)) AS counter,
-    added_by AS added_by_id
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filter_clause . '
-  GROUP BY added_by_id
-  ORDER BY counter DESC
-;';
-
                 if (!preg_match('/^image_id IN/', $filter_clause)) {
                     $cache_key = md5('filter_added_by_rows' . $userId . $userCacheTime . AppInfo::VERSION);
                     $item_ab   = $this->pool->getItem($cache_key);
@@ -437,14 +384,14 @@ SELECT
                         $filter_rows_raw = $item_ab->get();
                         $filter_rows     = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
                     } else {
-                        $db_rows = $this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative();
+                        $db_rows = $this->searchRepository->findAddedByForFilter($filter_clause, $filterParams, $filterTypes);
                         $item_ab->set($db_rows);
                         $item_ab->expiresAfter(86400);
                         $this->pool->save($item_ab);
                         $filter_rows = $this->normalizeRows($db_rows);
                     }
                 } else {
-                    $filter_rows = $this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative();
+                    $filter_rows = $this->searchRepository->findAddedByForFilter($filter_clause, $filterParams, $filterTypes);
                 }
 
                 $added_by = $filter_rows;
@@ -455,14 +402,12 @@ SELECT
                         $user_ids[] = is_numeric($i['added_by_id']) ? (int) $i['added_by_id'] : 0;
                     }
 
-                    $query = '
-SELECT
-    ' . Config::userFields()['id'] . ' AS id,
-    ' . Config::userFields()['username'] . ' AS username
-  FROM ' . Tables::users() . '
-  WHERE ' . Config::userFields()['id'] . ' IN (' . implode(',', $user_ids) . ')
-;';
-                    $username_of = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'username', 'id');
+                    $username_of = $this->userRepository->findUsernamesByIds(
+                        Config::userFields()['id'],
+                        Config::userFields()['username'],
+                        Tables::users(),
+                        $user_ids,
+                    );
 
                     foreach (array_keys($added_by) as $added_by_idx) {
                         $added_by_id_raw = $added_by[$added_by_idx]['added_by_id'];
@@ -486,15 +431,8 @@ SELECT
                 if (count($cat_words) > 0) {
                     $fullname_of = [];
 
-                    $query = '
-SELECT
-    id,
-    uppercats
-  FROM ' . Tables::categories() . '
-    INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id AND user_id = ' . $userId . '
-  WHERE id IN (' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $cat_words)) . ')
-;';
-                    foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $row) {
+                    $catWordsInt = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $cat_words));
+                    foreach ($this->categoryRepository->findIdUppercatsForVisibleIds((int) $userId, $catWordsInt) as $row) {
                         $uppercats_val = $row['uppercats'];
                         $cat_display_name = $this->htmlService->getCatDisplayNameCache(
                             is_scalar($uppercats_val) ? (string) $uppercats_val : '',
@@ -524,34 +462,14 @@ SELECT
                     $all_exts_raw = $item_fe->get();
                     $all_exts     = is_array($all_exts_raw) ? $all_exts_raw : [];
                 } else {
-                    $query = '
-SELECT
-    SUBSTRING_INDEX(path, ".", -1) AS ext,
-    COUNT(DISTINCT(id)) AS counter
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE 1=1' . $forbidden[0] . '
-  GROUP BY ext
-  ORDER BY counter DESC
-;';
-                    $all_exts = array_column($this->conn->executeQuery($query, $forbidden[1], $forbidden[2])->fetchAllAssociative(), 'counter', 'ext');
+                    $all_exts = $this->searchRepository->findAllFileExtensions($forbidden[0], $forbidden[1], $forbidden[2]);
                     $item_fe->set($all_exts);
                     $item_fe->expiresAfter(86400);
                     $this->pool->save($item_fe);
                 }
 
                 if (preg_match('/^image_id IN/', $filter_clause)) {
-                    $query = '
-SELECT
-    SUBSTRING_INDEX(path, ".", -1) AS ext,
-    COUNT(DISTINCT(id)) AS counter
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filter_clause . '
-  GROUP BY ext
-  ORDER BY counter DESC
-;';
-                    $filtered_exts = array_column($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative(), 'counter', 'ext');
+                    $filtered_exts = $this->searchRepository->findFilteredFileExtensions($filter_clause, $filterParams, $filterTypes);
 
                     $exts = [];
                     foreach ($all_exts as $ext => $counter) {
@@ -582,15 +500,7 @@ SELECT
                     $set_cache_rat = !preg_match('/^image_id IN/', $filter_clause) && !$cache_hit_ratings;
 
                     if (!$cache_hit_ratings) {
-                        $query = '
-SELECT
-    DISTINCT id,
-    rating_score
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filter_clause;
-
-                        $filter_rows = $this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative();
+                        $filter_rows = $this->searchRepository->findRatingsForFilter($filter_clause, $filterParams, $filterTypes);
                         $ratings = array_fill(0, 6, 0);
 
                         foreach ($filter_rows as $row) {
@@ -630,15 +540,7 @@ SELECT
                 $filesizes = [];
                 $filesize = [];
 
-                $query = '
-SELECT
-    DISTINCT id,
-    filesize
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filter_clause . '
-;';
-                foreach ($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative() as $row) {
+                foreach ($this->searchRepository->findFilesizesForFilter($filter_clause, $filterParams, $filterTypes) as $row) {
                     $fs_val = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
                     $key_fs = sprintf('%.1f', $fs_val / 1024.0);
                     $filesizes[$key_fs] = ($filesizes[$key_fs] ?? 0) + 1;
@@ -681,19 +583,7 @@ SELECT
                 $set_cache_ratio = !preg_match('/^image_id IN/', $filter_clause) && !$cache_hit_ratios;
 
                 if (!$cache_hit_ratios) {
-                    $query = '
-SELECT
-    DISTINCT id,
-    width,
-    height
-  FROM ' . Tables::images() . ' as i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filter_clause . '
-    AND width IS NOT NULL
-    AND height IS NOT NULL
-;';
-
-                    $filter_rows = $this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative();
+                    $filter_rows = $this->searchRepository->findRatiosForFilter($filter_clause, $filterParams, $filterTypes);
                     $ratios = ['Portrait' => 0, 'square' => 0, 'Landscape' => 0, 'Panorama' => 0];
 
                     foreach ($filter_rows as $row) {
@@ -728,17 +618,6 @@ SELECT
             if (isset($my_search['fields']['height_min']) and isset($my_search['fields']['height_max']) and $display_filters['height']['access']) {
                 [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('height');
 
-                $query = '
-SELECT
-    height
-  FROM ' . Tables::images() . ' as i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filter_clause . '
-    AND height IS NOT NULL
-  GROUP BY height
-  ORDER BY height ASC
-;';
-
                 if (!preg_match('/^image_id IN/', $filter_clause)) {
                     $cache_key = md5('filter_height_rows' . $userId . $userCacheTime . AppInfo::VERSION);
                     $item_h    = $this->pool->getItem($cache_key);
@@ -746,13 +625,13 @@ SELECT
                         $filter_rows_raw = $item_h->get();
                         $filter_rows     = is_array($filter_rows_raw) ? $filter_rows_raw : [];
                     } else {
-                        $filter_rows = array_column($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative(), 'height');
+                        $filter_rows = $this->searchRepository->findDistinctHeightsForFilter($filter_clause, $filterParams, $filterTypes);
                         $item_h->set($filter_rows);
                         $item_h->expiresAfter(86400);
                         $this->pool->save($item_h);
                     }
                 } else {
-                    $filter_rows = array_column($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative(), 'height');
+                    $filter_rows = $this->searchRepository->findDistinctHeightsForFilter($filter_clause, $filterParams, $filterTypes);
                 }
 
                 $heights = $filter_rows;
@@ -773,17 +652,6 @@ SELECT
             if (isset($my_search['fields']['width_min']) and isset($my_search['fields']['width_max']) and $display_filters['width']['access']) {
                 [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('width');
 
-                $query = '
-SELECT
-    width
-  FROM ' . Tables::images() . ' as i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filter_clause . '
-    AND width IS NOT NULL
-  GROUP BY width
-  ORDER BY width ASC
-;';
-
                 if (!preg_match('/^image_id IN/', $filter_clause)) {
                     $cache_key = md5('filter_width_rows' . $userId . $userCacheTime . AppInfo::VERSION);
                     $item_w    = $this->pool->getItem($cache_key);
@@ -791,13 +659,13 @@ SELECT
                         $filter_rows_raw = $item_w->get();
                         $filter_rows     = is_array($filter_rows_raw) ? $filter_rows_raw : [];
                     } else {
-                        $filter_rows = array_column($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative(), 'width');
+                        $filter_rows = $this->searchRepository->findDistinctWidthsForFilter($filter_clause, $filterParams, $filterTypes);
                         $item_w->set($filter_rows);
                         $item_w->expiresAfter(86400);
                         $this->pool->save($item_w);
                     }
                 } else {
-                    $filter_rows = array_column($this->conn->executeQuery($query, $filterParams, $filterTypes)->fetchAllAssociative(), 'width');
+                    $filter_rows = $this->searchRepository->findDistinctWidthsForFilter($filter_clause, $filterParams, $filterTypes);
                 }
 
                 $widths = $filter_rows;
@@ -878,16 +746,9 @@ SELECT
                 $matchingCatIdsRaw = $search_details['matching_cat_ids'] ?? null;
                 $matchingCatIds = is_array($matchingCatIdsRaw) ? $matchingCatIdsRaw : null;
                 if ($matchingCatIds !== null) {
-                    $cat_ids = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $matchingCatIds);
-                    if (count($cat_ids)) {
-                        $query = '
-SELECT
-    c.*
-  FROM ' . Tables::categories() . ' AS c
-    INNER JOIN ' . Tables::userCacheCategories() . ' ON c.id = cat_id and user_id = ' . $userId . '
-  WHERE id IN (' . implode(',', $cat_ids) . ')
-;';
-                        $cats = $this->conn->executeQuery($query)->fetchAllAssociative();
+                    $cat_ids_int = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $matchingCatIds));
+                    if (count($cat_ids_int)) {
+                        $cats = $this->categoryRepository->findAllColumnsForVisibleIds((int) $userId, $cat_ids_int);
                         usort($cats, fn (array $a, array $b): int => $this->htmlService->nameCompare($a, $b));
                         $albums_found = [];
                         foreach ($cats as $cat) {

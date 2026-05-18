@@ -96,6 +96,250 @@ final class SearchRepository extends AbstractRepository
         );
     }
 
+    // -------------------------------------------------------------------------
+    // SearchFilterRenderer queries — one method per filter-data fetch
+    // -------------------------------------------------------------------------
+
+    /**
+     * Author histogram for the "author" filter widget.
+     *
+     * @param list<mixed>                                              $params
+     * @param list<ArrayParameterType|ParameterType>                   $types
+     * @return list<array<string, mixed>>
+     */
+    public function findAuthorsForFilter(string $filterClause, array $params, array $types): array
+    {
+        $sql = 'SELECT author, COUNT(DISTINCT(id)) AS counter'
+            . ' FROM ' . $this->table('images') . ' AS i'
+            . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
+            . ' WHERE ' . $filterClause
+            . ' AND author IS NOT NULL'
+            . ' GROUP BY author';
+        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
+     * Date thresholds row (24h/7d/30d/3m/6m) for the "date_posted" widget.
+     *
+     * @return array<string, mixed>
+     */
+    public function findDatePostedThresholds(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT SUBDATE(NOW(), INTERVAL 24 HOUR) AS `24h`,'
+            . ' SUBDATE(NOW(), INTERVAL 7 DAY) AS `7d`,'
+            . ' SUBDATE(NOW(), INTERVAL 30 DAY) AS `30d`,'
+            . ' SUBDATE(NOW(), INTERVAL 3 MONTH) AS `3m`,'
+            . ' SUBDATE(NOW(), INTERVAL 6 MONTH) AS `6m`',
+        )->fetchAllAssociative();
+        return $rows[0] ?? [];
+    }
+
+    /**
+     * Date thresholds row (7d/30d/3m/6m/12m) for the "date_created" widget.
+     *
+     * @return array<string, mixed>
+     */
+    public function findDateCreatedThresholds(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT SUBDATE(NOW(), INTERVAL 7 DAY) AS `7d`,'
+            . ' SUBDATE(NOW(), INTERVAL 30 DAY) AS `30d`,'
+            . ' SUBDATE(NOW(), INTERVAL 3 MONTH) AS `3m`,'
+            . ' SUBDATE(NOW(), INTERVAL 6 MONTH) AS `6m`,'
+            . ' SUBDATE(NOW(), INTERVAL 12 MONTH) AS `12m`',
+        )->fetchAllAssociative();
+        return $rows[0] ?? [];
+    }
+
+    /**
+     * (id, date_available AS date) rows for the date_posted filter widget.
+     *
+     * @param list<mixed>                                              $params
+     * @param list<ArrayParameterType|ParameterType>                   $types
+     * @return list<array<string, mixed>>
+     */
+    public function findImageDatePostedRows(string $filterClause, array $params, array $types): array
+    {
+        $sql = 'SELECT DISTINCT id, date_available AS date'
+            . ' FROM ' . $this->table('images') . ' AS i'
+            . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
+            . ' WHERE ' . $filterClause;
+        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
+     * (id, date_creation AS date) rows for the date_created filter widget.
+     *
+     * @param list<mixed>                                              $params
+     * @param list<ArrayParameterType|ParameterType>                   $types
+     * @return list<array<string, mixed>>
+     */
+    public function findImageDateCreatedRows(string $filterClause, array $params, array $types): array
+    {
+        $sql = 'SELECT DISTINCT id, date_creation AS date'
+            . ' FROM ' . $this->table('images') . ' AS i'
+            . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
+            . ' WHERE ' . $filterClause;
+        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
+     * (counter, added_by_id) histogram for the "added_by" filter widget.
+     *
+     * @param list<mixed>                                              $params
+     * @param list<ArrayParameterType|ParameterType>                   $types
+     * @return list<array<string, mixed>>
+     */
+    public function findAddedByForFilter(string $filterClause, array $params, array $types): array
+    {
+        $sql = 'SELECT COUNT(DISTINCT(id)) AS counter, added_by AS added_by_id'
+            . ' FROM ' . $this->table('images') . ' AS i'
+            . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
+            . ' WHERE ' . $filterClause
+            . ' GROUP BY added_by_id'
+            . ' ORDER BY counter DESC';
+        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
+     * (ext → counter) for the file_type filter widget. $forbiddenWhere is the
+     * caller's permission filter; the WHERE clause is always "1=1 $forbidden"
+     * so this is the "all images visible to me" histogram (cached aggressively
+     * upstream).
+     *
+     * @param list<mixed>                                              $params
+     * @param list<ArrayParameterType|ParameterType>                   $types
+     * @return array<int|string, mixed>
+     */
+    public function findAllFileExtensions(string $forbiddenWhere, array $params, array $types): array
+    {
+        $sql = 'SELECT SUBSTRING_INDEX(path, ".", -1) AS ext, COUNT(DISTINCT(id)) AS counter'
+            . ' FROM ' . $this->table('images') . ' AS i'
+            . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
+            . ' WHERE 1=1' . $forbiddenWhere
+            . ' GROUP BY ext'
+            . ' ORDER BY counter DESC';
+        return array_column(
+            $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative(),
+            'counter',
+            'ext',
+        );
+    }
+
+    /**
+     * Per-extension counter restricted to the current filter selection.
+     *
+     * @param list<mixed>                                              $params
+     * @param list<ArrayParameterType|ParameterType>                   $types
+     * @return array<int|string, mixed>
+     */
+    public function findFilteredFileExtensions(string $filterClause, array $params, array $types): array
+    {
+        $sql = 'SELECT SUBSTRING_INDEX(path, ".", -1) AS ext, COUNT(DISTINCT(id)) AS counter'
+            . ' FROM ' . $this->table('images') . ' AS i'
+            . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
+            . ' WHERE ' . $filterClause
+            . ' GROUP BY ext'
+            . ' ORDER BY counter DESC';
+        return array_column(
+            $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative(),
+            'counter',
+            'ext',
+        );
+    }
+
+    /**
+     * (id, rating_score) tuples for the "ratings" filter widget.
+     *
+     * @param list<mixed>                                              $params
+     * @param list<ArrayParameterType|ParameterType>                   $types
+     * @return list<array<string, mixed>>
+     */
+    public function findRatingsForFilter(string $filterClause, array $params, array $types): array
+    {
+        $sql = 'SELECT DISTINCT id, rating_score'
+            . ' FROM ' . $this->table('images') . ' AS i'
+            . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
+            . ' WHERE ' . $filterClause;
+        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
+     * (id, filesize) tuples for the filesize slider widget.
+     *
+     * @param list<mixed>                                              $params
+     * @param list<ArrayParameterType|ParameterType>                   $types
+     * @return list<array<string, mixed>>
+     */
+    public function findFilesizesForFilter(string $filterClause, array $params, array $types): array
+    {
+        $sql = 'SELECT DISTINCT id, filesize'
+            . ' FROM ' . $this->table('images') . ' AS i'
+            . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
+            . ' WHERE ' . $filterClause;
+        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
+     * (id, width, height) tuples for the aspect-ratio bucket widget.
+     *
+     * @param list<mixed>                                              $params
+     * @param list<ArrayParameterType|ParameterType>                   $types
+     * @return list<array<string, mixed>>
+     */
+    public function findRatiosForFilter(string $filterClause, array $params, array $types): array
+    {
+        $sql = 'SELECT DISTINCT id, width, height'
+            . ' FROM ' . $this->table('images') . ' AS i'
+            . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
+            . ' WHERE ' . $filterClause
+            . ' AND width IS NOT NULL'
+            . ' AND height IS NOT NULL';
+        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
+     * Distinct height values present under the filter, ascending — used to
+     * populate the height-slider tick marks.
+     *
+     * @param list<mixed>                                              $params
+     * @param list<ArrayParameterType|ParameterType>                   $types
+     * @return list<int>
+     */
+    public function findDistinctHeightsForFilter(string $filterClause, array $params, array $types): array
+    {
+        $sql = 'SELECT height'
+            . ' FROM ' . $this->table('images') . ' AS i'
+            . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
+            . ' WHERE ' . $filterClause
+            . ' AND height IS NOT NULL'
+            . ' GROUP BY height'
+            . ' ORDER BY height ASC';
+        $rows = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'height'));
+    }
+
+    /**
+     * Distinct width values present under the filter, ascending.
+     *
+     * @param list<mixed>                                              $params
+     * @param list<ArrayParameterType|ParameterType>                   $types
+     * @return list<int>
+     */
+    public function findDistinctWidthsForFilter(string $filterClause, array $params, array $types): array
+    {
+        $sql = 'SELECT width'
+            . ' FROM ' . $this->table('images') . ' AS i'
+            . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
+            . ' WHERE ' . $filterClause
+            . ' AND width IS NOT NULL'
+            . ' GROUP BY width'
+            . ' ORDER BY width ASC';
+        $rows = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'width'));
+    }
+
     /**
      * Run a caller-built qsearch images query and return image ids. The
      * token clauses are caller-constructed SQL (text-match clauses pre-

@@ -434,6 +434,25 @@ final class TagRepository extends AbstractRepository
     }
 
     /**
+     * Return tag ids matching a caller-built OR of clauses. Clauses come
+     * from the GetTagNameLikeWhere plugin event — admin-controlled SQL
+     * fragments (e.g. "name LIKE '%foo%'"), not user input.
+     *
+     * @param  list<string> $orClauses
+     * @return list<int>
+     */
+    public function findIdsByOrClauses(array $orClauses): array
+    {
+        if ($orClauses === []) {
+            return [];
+        }
+        $rows = $this->conn->executeQuery(
+            'SELECT id FROM ' . $this->table('tags') . ' WHERE ' . implode(' OR ', $orClauses),
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
      * Return tag ids whose name matches "%$word%". Used by SearchService
      * allwords decomposition (a free-form user term is wrapped in % wildcards).
      *

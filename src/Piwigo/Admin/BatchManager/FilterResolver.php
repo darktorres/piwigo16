@@ -9,7 +9,6 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Admin\GetBatchManagerPrefilters;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
@@ -89,14 +88,8 @@ final readonly class FilterResolver
         $filter_tags = [];
         $filter_tags_raw = $bulk_manager_filter['tags'] ?? null;
         if ($filter_tags_raw !== null && is_array($filter_tags_raw) && count($filter_tags_raw) > 0) {
-            $query = '
-SELECT
-    id,
-    name
-  FROM ' . Tables::tags() . '
-  WHERE id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $filter_tags_raw)) . ')
-;';
-            $filter_tags = $this->tagAdminService->getTaglist($query);
+            $tagIds      = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $filter_tags_raw));
+            $filter_tags = $this->tagAdminService->getTaglistForIds($tagIds);
         }
         $tpl->assign('filter_tags', $filter_tags);
 

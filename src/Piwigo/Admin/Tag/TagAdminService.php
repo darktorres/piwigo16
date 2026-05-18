@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Tag;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -12,7 +11,6 @@ use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Tag\DeleteTags;
 use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\GetTagNameLikeWhere;
@@ -28,7 +26,6 @@ final class TagAdminService
     private array $tagCache = [];
 
     public function __construct(
-        private readonly Connection $conn,
         private readonly HtmlService $htmlService,
         private readonly ImageAdminService $imageAdminService,
         private readonly TagRepository $tagRepository,
@@ -88,14 +85,10 @@ final class TagAdminService
         $inserts = [];
         foreach ($imagesArr as $imageId) {
             foreach (array_unique($tagInts) as $tagId) {
-                $inserts[] = ['image_id' => $imageId, 'tag_id' => $tagId];
+                $inserts[] = ['tag_id' => $tagId, 'image_id' => $imageId];
             }
         }
-        $this->conn->transactional(function () use ($inserts): void {
-            foreach ($inserts as $row) {
-                $this->conn->insert(Tables::imageTag(), $row);
-            }
-        });
+        $this->tagRepository->insertImageTagsBatch($inserts, false);
         $taglistAfter  = $this->getImageTagIds($imagesArr);
         $toUpdate      = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->compareImageTagLists($taglistBefore, $taglistAfter));
         $this->imageAdminService->updateImagesLastmodified($toUpdate);
@@ -139,20 +132,18 @@ final class TagAdminService
                 $this->dispatcher->dispatch($likeEvent);
                 $extraClauses = $likeEvent->value;
                 if (count($extraClauses) > 0) {
-                    $existing = array_column($this->conn->executeQuery(
-                        'SELECT id FROM ' . Tables::tags() . ' WHERE ' . implode(' OR ', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $extraClauses))
-                    )->fetchAllAssociative(), 'id');
+                    $clauses  = array_values(array_filter($extraClauses, is_string(...)));
+                    $existing = $this->tagRepository->findIdsByOrClauses($clauses);
                 }
                 if (count($existing) === 0) {
-                    $this->conn->insert(Tables::tags(), ['name' => $tagName, 'url_name' => $urlName]);
-                    $newId = (int) $this->conn->lastInsertId();
+                    $newId = $this->tagRepository->insertNewTag(['name' => $tagName, 'url_name' => $urlName]);
                     $this->tagCache[$tagName] = $newId;
                     $this->userAdminService->invalidateUserCacheNbTags();
                     return $newId;
                 }
             }
         }
-        $resolved = is_numeric($existing[0]) ? (int) $existing[0] : (is_scalar($existing[0]) ? (string) $existing[0] : '');
+        $resolved = $existing[0];
         $this->tagCache[$tagName] = $resolved;
         return $resolved;
     }
@@ -175,12 +166,15 @@ final class TagAdminService
                 $inserts[] = ['image_id' => $imageId, 'tag_id' => $tagId];
             }
         }
-        if (count($inserts)) {
-            $this->conn->transactional(function () use ($inserts): void {
-                foreach ($inserts as $row) {
-                    $this->conn->insert(Tables::imageTag(), $row);
-                }
-            });
+        if (count($inserts) > 0) {
+            $batch = [];
+            foreach ($inserts as $row) {
+                $batch[] = [
+                    'tag_id'   => is_numeric($row['tag_id']) ? (int) $row['tag_id'] : 0,
+                    'image_id' => is_numeric($row['image_id']) ? (int) $row['image_id'] : 0,
+                ];
+            }
+            $this->tagRepository->insertImageTagsBatch($batch, false);
         }
         $taglistAfter = $this->getImageTagIds($imageIds);
         $logger->debug('taglist_after', $taglistAfter);
@@ -230,11 +224,20 @@ final class TagAdminService
         return $toUpdate;
     }
 
-    /** @return array<mixed> */
-    public function getTaglist(string $query, bool $onlyUserLanguage = true): array
+    /**
+     * Return a display-ready tag list (name+id, optionally with alt-name
+     * synonyms) for the given tag ids. Used by the batch-manager filter
+     * row to render the currently-selected tags.
+     *
+     * @param  list<int> $tagIds
+     * @return array<mixed>
+     */
+    public function getTaglistForIds(array $tagIds, bool $onlyUserLanguage = true): array
     {
-        $rows = $this->conn->executeQuery($query)->fetchAllAssociative();
-        return $this->getTaglistFromRows($rows, $onlyUserLanguage);
+        if ($tagIds === []) {
+            return [];
+        }
+        return $this->getTaglistFromRows($this->tagRepository->findByIds($tagIds), $onlyUserLanguage);
     }
 
     /**
@@ -298,8 +301,8 @@ final class TagAdminService
         if ($existingId === null) {
             $createUrlEvent = new RenderTagUrl($tagName);
             $this->dispatcher->dispatch($createUrlEvent);
-            $this->conn->insert(Tables::tags(), ['name' => $tagName, 'url_name' => $createUrlEvent->tagName]);
-            return ['info' => Lang::t('Tag "%s" was added', stripslashes($tagName)), 'id' => (int) $this->conn->lastInsertId()];
+            $newId = $this->tagRepository->insertNewTag(['name' => $tagName, 'url_name' => $createUrlEvent->tagName]);
+            return ['info' => Lang::t('Tag "%s" was added', stripslashes($tagName)), 'id' => $newId];
         }
         return ['error' => Lang::t('Tag "%s" already exists', stripslashes($tagName))];
     }

@@ -282,7 +282,7 @@ return [
             )
         );
     }),
-    TagAdminService::class           => factory(static fn (Connection $conn, HtmlService $h, ImageAdminService $iA, TagRepository $tR, UserAdminService $uA, ActivityLogger $al, EventDispatcherInterface $dispatcher): TagAdminService => new TagAdminService($conn, $h, $iA, $tR, $uA, $al, $dispatcher)),
+    TagAdminService::class           => factory(static fn (HtmlService $h, ImageAdminService $iA, TagRepository $tR, UserAdminService $uA, ActivityLogger $al, EventDispatcherInterface $dispatcher): TagAdminService => new TagAdminService($h, $iA, $tR, $uA, $al, $dispatcher)),
     UserAdminService::class          => factory(static function (ContainerInterface $c): UserAdminService {
         return (new \ReflectionClass(UserAdminService::class))->newLazyProxy(
             static fn (): UserAdminService => new UserAdminService(

@@ -297,7 +297,7 @@ return [
         );
     }),
     NotificationAdminService::class  => factory(static fn (Connection $conn, MailService $mail, NotificationRepository $nR, UrlGenerator $ug, UrlService $u, UserService $us): NotificationAdminService => new NotificationAdminService($conn, $mail, $nR, $ug, $u, $us)),
-    UploadService::class             => factory(static fn (Connection $conn, CategoryAdminService $catA, ConfigService $cfg, DerivativeService $der, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, UserAdminService $uA, ActivityLogger $al, EventDispatcherInterface $dispatcher, Paths $paths): UploadService => new UploadService($conn, $catA, $cfg, $der, $iA, $i, $mA, $uA, $al, $dispatcher, $paths)),
+    UploadService::class             => factory(static fn (CategoryAdminService $catA, ConfigService $cfg, DerivativeService $der, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, UserAdminService $uA, ActivityLogger $al, EventDispatcherInterface $dispatcher, Paths $paths): UploadService => new UploadService($catA, $cfg, $der, $iA, $i, $mA, $uA, $al, $dispatcher, $paths)),
     AlbumsTabRenderer::class         => factory(static fn (CategoryRepository $catR): AlbumsTabRenderer => new AlbumsTabRenderer($catR)),
     UserTabRenderer::class           => factory(static fn (): UserTabRenderer => new UserTabRenderer()),
     DirectPreparer::class            => factory(static fn (AdminService $a, CategoryRepository $catR, HtmlService $h, ImageRepository $i, UploadService $up, CsrfService $csrf, InputValidator $iv): DirectPreparer => new DirectPreparer($a, $catR, $h, $i, $up, $csrf, $iv)),

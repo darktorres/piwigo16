@@ -672,6 +672,91 @@ final class ImageRepository extends AbstractRepository
             ->executeStatement();
     }
 
+    /**
+     * Return the id of the image whose md5sum matches, or null if none.
+     * Used by the upload pipeline's duplicate-detection.
+     */
+    public function findIdByMd5sum(string $md5sum): ?int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('images'))
+            ->where('md5sum = :md5')
+            ->setParameter('md5', $md5sum)
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
+     * Update arbitrary column-set on a single image.
+     *
+     * @param array<string, mixed> $fields
+     */
+    public function updateById(int $id, array $fields): void
+    {
+        if ($fields === []) {
+            return;
+        }
+        $this->conn->update($this->table('images'), $fields, ['id' => $id]);
+    }
+
+    /**
+     * Insert a new image row and return the inserted id.
+     *
+     * @param array<string, mixed> $fields
+     */
+    public function insertNew(array $fields): int
+    {
+        $this->conn->insert($this->table('images'), $fields);
+        return (int) $this->conn->lastInsertId();
+    }
+
+    /**
+     * Find the existing image_format row for the given image/ext pair, or null.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findImageFormatByImageAndExt(int $imageId, string $ext): ?array
+    {
+        $row = $this->conn->createQueryBuilder()
+            ->select('*')
+            ->from($this->table('image_format'))
+            ->where('image_id = :imageId')
+            ->andWhere('ext = :ext')
+            ->setParameter('imageId', $imageId)
+            ->setParameter('ext', $ext)
+            ->executeQuery()
+            ->fetchAssociative();
+        return $row !== false ? $row : null;
+    }
+
+    /**
+     * Update an image_format row.
+     *
+     * @param array<string, mixed> $fields
+     */
+    public function updateImageFormat(int $formatId, int $imageId, string $ext, array $fields): void
+    {
+        $this->conn->update(
+            $this->table('image_format'),
+            $fields,
+            ['format_id' => $formatId, 'image_id' => $imageId, 'ext' => $ext],
+        );
+    }
+
+    /**
+     * Insert an image_format row and return the new id.
+     *
+     * @param array<string, mixed> $fields
+     */
+    public function insertImageFormat(array $fields): int
+    {
+        $this->conn->insert($this->table('image_format'), $fields);
+        return (int) $this->conn->lastInsertId();
+    }
+
     /** Update the `rotation` code (0..7) for a single image. */
     public function updateRotation(int $id, int $rotationCode): void
     {

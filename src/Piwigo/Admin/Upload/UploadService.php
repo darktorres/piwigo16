@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -21,7 +20,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocEndAddFormat;
 use Piwigo\Event\Location\LocEndAddUploadedFile;
 use Piwigo\Event\Picture\UploadFile;
@@ -44,7 +42,6 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class UploadService
 {
     public function __construct(
-        private Connection $conn,
         private CategoryAdminService $categoryAdminService,
         private ConfigService $configService,
         private DerivativeService $derivativeService,
@@ -105,11 +102,12 @@ final readonly class UploadService
             }
         }
         if (count($errors) === 0) {
-            $this->conn->transactional(function () use ($updates): void {
-                foreach ($updates as $row) {
-                    $this->conn->update(Tables::config(), ['value' => $row['value']], ['param' => $row['param']]);
-                }
-            });
+            foreach ($updates as $row) {
+                $paramName = is_string($row['param']) ? $row['param'] : '';
+                $value     = $row['value'];
+                $coerced   = (is_string($value) || is_int($value) || is_float($value) || is_bool($value) || $value === null) ? $value : null;
+                $this->configService->confUpdateParam($paramName, $coerced);
+            }
             return true;
         }
         return false;
@@ -127,11 +125,9 @@ final readonly class UploadService
         $md5sum = $originalMd5sum ?? ($md5fileResult !== false ? $md5fileResult : '');
 
         if (!isset($imageId) && Config::uploadDetectDuplicate()) {
-            $imagesFound = $this->conn->executeQuery(
-                'SELECT id FROM ' . Tables::images() . " WHERE md5sum = '$md5sum'"
-            )->fetchAllAssociative();
-            if (count($imagesFound) > 0) {
-                $imageId = is_numeric($imagesFound[0]['id']) ? (int) $imagesFound[0]['id'] : 0;
+            $existingId = $this->imageRepository->findIdByMd5sum($md5sum);
+            if ($existingId !== null) {
+                $imageId = $existingId;
                 $logger->info('[addUploadedFile] image already exists #' . $imageId . ', deleting: ' . $sourceFilepath);
                 unlink($sourceFilepath);
                 $this->addUploadedFileAddToCategories($imageId, $categories);
@@ -233,7 +229,7 @@ final readonly class UploadService
             if (isset($level)) {
                 $update['level'] = $level;
             }
-            $this->conn->update(Tables::images(), $update, ['id' => $imageId]);
+            $this->imageRepository->updateById($imageId, $update);
         } else {
             $file   = $originalFilename ?? basename($filePath);
             $insert = ['file' => $file, 'name' => StringUtil::getNameFromFile($file), 'date_available' => $dbnow, 'path' => preg_replace('#^' . preg_quote($this->paths->root) . '#', '', $filePath), 'filesize' => $fileInfos['filesize'], 'width' => $fileInfos['width'], 'height' => $fileInfos['height'], 'md5sum' => $md5sum, 'added_by' => $userId, 'rotation' => $rotation];
@@ -243,8 +239,7 @@ final readonly class UploadService
             if ($representativeExt !== '') {
                 $insert['representative_ext'] = $representativeExt;
             }
-            $this->conn->insert(Tables::images(), $insert);
-            $imageId = (int) $this->conn->lastInsertId();
+            $imageId = $this->imageRepository->insertNew($insert);
             $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, 'add'));
         }
 
@@ -304,11 +299,10 @@ final readonly class UploadService
             $extList = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $formatExtList);
             throw new ValidationException('[addFormat] unexpected format extension "' . $formatExt . '" (authorized: ' . implode(', ', $extList) . ')');
         }
-        $images = $this->conn->executeQuery('SELECT path FROM ' . Tables::images() . ' WHERE id = ' . $formatOf)->fetchAllAssociative();
-        if (!isset($images[0])) {
+        $origPath = $this->imageRepository->findPathById((int) $formatOf);
+        if ($origPath === null) {
             throw new NotFoundException('[addFormat] photo does not exist in database');
         }
-        $origPath   = is_scalar($images[0]['path']) ? (string) $images[0]['path'] : '';
         $formatPath = dirname($origPath) . '/pwg_format/' . StringUtil::getFilenameWoExtension(basename($origPath)) . '.' . $formatExt;
         $this->prepareDirectory(dirname($formatPath));
         $fmtRoot    = $this->paths->root . Config::uploadDir();
@@ -323,18 +317,16 @@ final readonly class UploadService
             }
         }
         Filesystem::tryChmod($formatPath, Config::chmodValue() & 0o666);
-        $fileInfos = $this->pwgImageInfos($formatPath);
-        $insert    = ['image_id' => $formatOf, 'ext' => $formatExt, 'filesize' => $fileInfos['filesize']];
-        $formats   = $this->conn->executeQuery(
-            'SELECT format_id FROM ' . Tables::imageFormat() . ' WHERE image_id = ' . $formatOf . ' AND ext = "' . $formatExt . '"'
-        )->fetchAllAssociative();
-        if ($formats) {
-            $this->conn->update(Tables::imageFormat(), ['filesize' => $fileInfos['filesize']], ['format_id' => $formats[0]['format_id'], 'image_id' => $formatOf, 'ext' => $formatExt]);
-            $formatId  = $formats[0]['format_id'];
+        $fileInfos      = $this->pwgImageInfos($formatPath);
+        $insert         = ['image_id' => $formatOf, 'ext' => $formatExt, 'filesize' => $fileInfos['filesize']];
+        $existingFormat = $this->imageRepository->findImageFormatByImageAndExt((int) $formatOf, $formatExt);
+        if ($existingFormat !== null) {
+            $existingFormatId = is_numeric($existingFormat['format_id'] ?? null) ? (int) $existingFormat['format_id'] : 0;
+            $this->imageRepository->updateImageFormat($existingFormatId, (int) $formatOf, $formatExt, ['filesize' => $fileInfos['filesize']]);
+            $formatId  = $existingFormatId;
             $addStatus = 'update';
         } else {
-            $this->conn->insert(Tables::imageFormat(), $insert);
-            $formatId  = (int) $this->conn->lastInsertId();
+            $formatId  = $this->imageRepository->insertImageFormat($insert);
             $addStatus = 'add';
         }
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, (int) $formatOf, 'edit', ['action' => 'add format', 'format_ext' => $formatExt, 'format_id' => $formatId]));

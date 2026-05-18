@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Notification;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
-use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Lang\Translator;
@@ -22,7 +20,7 @@ use Psr\Cache\CacheItemPoolInterface;
 final readonly class NotificationService
 {
     public function __construct(
-        private Connection $conn,
+        private NotificationRepository $repo,
         private HtmlService $htmlService,
         private UrlGenerator $urlGenerator,
         private PermissionService $permissionService,
@@ -47,177 +45,59 @@ final readonly class NotificationService
         );
     }
 
-    /** @return array<mixed>|int|null */
-    public function customNotificationQuery(string $action, string $type, ?string $start = null, ?string $end = null): array|int|null
+    public function nbNewComments(?string $start = null, ?string $end = null): int
     {
-        $params = [];
-        $types  = [];
-        switch ($type) {
-            case 'new_comments':
-                $query = '
-  FROM ' . Tables::comments() . ' AS c
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON c.image_id = ic.image_id
-  WHERE 1=1';
-                if ($start !== null && $start !== '') {
-                    $query .= '
-    AND c.validation_date > \'' . $start . '\'';
-                }
-                if ($end !== null && $end !== '') {
-                    $query .= '
-    AND c.validation_date <= \'' . $end . '\'';
-                }
-                [$permSql, $params, $types] = $this->getStdSqlWhereRestrictFilter('AND');
-                $query .= $permSql;
-                break;
-
-            case 'unvalidated_comments':
-                $query = '
-  FROM ' . Tables::comments() . '
-  WHERE 1=1';
-                if ($start !== null && $start !== '') {
-                    $query .= '
-    AND date > \'' . $start . '\'';
-                }
-                if ($end !== null && $end !== '') {
-                    $query .= '
-    AND date <= \'' . $end . '\'';
-                }
-                // `validated` is TINYINT(1) post-E2; legacy 'false' coerced to 0
-                // which is "not validated" — the semantic was right by accident.
-                $query .= '
-    AND validated = 0';
-                break;
-
-            case 'new_elements':
-                $query = '
-  FROM ' . Tables::images() . '
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON image_id = id
-  WHERE 1=1';
-                if ($start !== null && $start !== '') {
-                    $query .= '
-    AND date_available > \'' . $start . '\'';
-                }
-                if ($end !== null && $end !== '') {
-                    $query .= '
-    AND date_available <= \'' . $end . '\'';
-                }
-                [$permSql, $params, $types] = $this->getStdSqlWhereRestrictFilter('AND', 'id');
-                $query .= $permSql;
-                break;
-
-            case 'updated_categories':
-                $query = '
-  FROM ' . Tables::images() . '
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON image_id = id
-  WHERE 1=1';
-                if ($start !== null && $start !== '') {
-                    $query .= '
-    AND date_available > \'' . $start . '\'';
-                }
-                if ($end !== null && $end !== '') {
-                    $query .= '
-    AND date_available <= \'' . $end . '\'';
-                }
-                [$permSql, $params, $types] = $this->getStdSqlWhereRestrictFilter('AND', 'id');
-                $query .= $permSql;
-                break;
-
-            case 'new_users':
-                $query = '
-  FROM ' . Tables::userInfos() . '
-  WHERE 1=1';
-                if ($start !== null && $start !== '') {
-                    $query .= '
-    AND registration_date > \'' . $start . '\'';
-                }
-                if ($end !== null && $end !== '') {
-                    $query .= '
-    AND registration_date <= \'' . $end . '\'';
-                }
-                break;
-
-            default:
-                return null;
-        }
-
-        switch ($action) {
-            case 'count':
-                $fieldId = match ($type) {
-                    'new_comments'         => 'c.id',
-                    'unvalidated_comments' => 'id',
-                    'new_elements'         => 'image_id',
-                    'updated_categories'   => 'category_id',
-                    default                => 'user_id', // new_users
-                };
-                $count = $this->conn->executeQuery('SELECT COUNT(DISTINCT ' . $fieldId . ') ' . $query, $params, $types)->fetchOne();
-                return is_numeric($count) ? (int) $count : null;
-
-            case 'info':
-                $fieldId = match ($type) {
-                    'new_comments'         => 'c.id',
-                    'unvalidated_comments' => 'id',
-                    'new_elements'         => 'image_id',
-                    'updated_categories'   => 'category_id',
-                    default                => 'user_id', // new_users
-                };
-                return $this->conn->executeQuery('SELECT DISTINCT ' . $fieldId . ' ' . $query . ';', $params, $types)->fetchAllAssociative();
-
-            default:
-                return null;
-        }
+        [$permSql, $permParams, $permTypes] = $this->getStdSqlWhereRestrictFilter('AND');
+        return $this->repo->countNewComments($start, $end, $permSql, $permParams, $permTypes);
     }
 
-    public function nbNewComments(?string $start = null, ?string $end = null): mixed
-    {
-        return $this->customNotificationQuery('count', 'new_comments', $start, $end);
-    }
-
-    /** @return array<mixed> */
+    /** @return list<int> */
     public function newComments(?string $start = null, ?string $end = null): array
     {
-        $result = $this->customNotificationQuery('info', 'new_comments', $start, $end);
-        return is_array($result) ? $result : [];
+        [$permSql, $permParams, $permTypes] = $this->getStdSqlWhereRestrictFilter('AND');
+        return $this->repo->findNewCommentIds($start, $end, $permSql, $permParams, $permTypes);
     }
 
-    public function nbUnvalidatedComments(?string $start = null, ?string $end = null): mixed
+    public function nbUnvalidatedComments(?string $start = null, ?string $end = null): int
     {
-        return $this->customNotificationQuery('count', 'unvalidated_comments', $start, $end);
+        return $this->repo->countUnvalidatedComments($start, $end);
     }
 
-    public function nbNewElements(?string $start = null, ?string $end = null): mixed
+    public function nbNewElements(?string $start = null, ?string $end = null): int
     {
-        return $this->customNotificationQuery('count', 'new_elements', $start, $end);
+        [$permSql, $permParams, $permTypes] = $this->getStdSqlWhereRestrictFilter('AND', 'id');
+        return $this->repo->countNewElements($start, $end, $permSql, $permParams, $permTypes);
     }
 
-    /** @return array<mixed> */
+    /** @return list<int> */
     public function newElements(?string $start = null, ?string $end = null): array
     {
-        $result = $this->customNotificationQuery('info', 'new_elements', $start, $end);
-        return is_array($result) ? $result : [];
+        [$permSql, $permParams, $permTypes] = $this->getStdSqlWhereRestrictFilter('AND', 'id');
+        return $this->repo->findNewElementIds($start, $end, $permSql, $permParams, $permTypes);
     }
 
-    public function nbUpdatedCategories(?string $start = null, ?string $end = null): mixed
+    public function nbUpdatedCategories(?string $start = null, ?string $end = null): int
     {
-        return $this->customNotificationQuery('count', 'updated_categories', $start, $end);
+        [$permSql, $permParams, $permTypes] = $this->getStdSqlWhereRestrictFilter('AND', 'id');
+        return $this->repo->countUpdatedCategories($start, $end, $permSql, $permParams, $permTypes);
     }
 
-    /** @return array<mixed> */
+    /** @return list<int> */
     public function updatedCategories(?string $start = null, ?string $end = null): array
     {
-        $result = $this->customNotificationQuery('info', 'updated_categories', $start, $end);
-        return is_array($result) ? $result : [];
+        [$permSql, $permParams, $permTypes] = $this->getStdSqlWhereRestrictFilter('AND', 'id');
+        return $this->repo->findUpdatedCategoryIds($start, $end, $permSql, $permParams, $permTypes);
     }
 
-    public function nbNewUsers(?string $start = null, ?string $end = null): mixed
+    public function nbNewUsers(?string $start = null, ?string $end = null): int
     {
-        return $this->customNotificationQuery('count', 'new_users', $start, $end);
+        return $this->repo->countNewUsers($start, $end);
     }
 
-    /** @return array<mixed> */
+    /** @return list<int> */
     public function newUsers(?string $start = null, ?string $end = null): array
     {
-        $result = $this->customNotificationQuery('info', 'new_users', $start, $end);
-        return is_array($result) ? $result : [];
+        return $this->repo->findNewUserIds($start, $end);
     }
 
     public function newsExists(?string $start = null, ?string $end = null): bool
@@ -254,22 +134,15 @@ final readonly class NotificationService
         }
 
         if (!$excludeImgCats) {
-            $nbElements = $this->nbNewElements($start, $end);
-            $this->addNewsLine($newsArr, is_numeric($nbElements) ? (int) $nbElements : 0, '%d new photo', '%d new photos', $this->urlService->addUrlParams($this->urlService->makeIndexUrl(['section' => 'recent_pics']), $addUrlParams), $addUrl);
-
-            $nbCats = $this->nbUpdatedCategories($start, $end);
-            $this->addNewsLine($newsArr, is_numeric($nbCats) ? (int) $nbCats : 0, '%d album updated', '%d albums updated', $this->urlService->addUrlParams($this->urlService->makeIndexUrl(['section' => 'recent_cats']), $addUrlParams), $addUrl);
+            $this->addNewsLine($newsArr, $this->nbNewElements($start, $end), '%d new photo', '%d new photos', $this->urlService->addUrlParams($this->urlService->makeIndexUrl(['section' => 'recent_pics']), $addUrlParams), $addUrl);
+            $this->addNewsLine($newsArr, $this->nbUpdatedCategories($start, $end), '%d album updated', '%d albums updated', $this->urlService->addUrlParams($this->urlService->makeIndexUrl(['section' => 'recent_cats']), $addUrlParams), $addUrl);
         }
 
-        $nbComments = $this->nbNewComments($start, $end);
-        $this->addNewsLine($newsArr, is_numeric($nbComments) ? (int) $nbComments : 0, '%d new comment', '%d new comments', $this->urlService->addUrlParams($this->urlGenerator->comments(), $addUrlParams), $addUrl);
+        $this->addNewsLine($newsArr, $this->nbNewComments($start, $end), '%d new comment', '%d new comments', $this->urlService->addUrlParams($this->urlGenerator->comments(), $addUrlParams), $addUrl);
 
         if ($this->permissionService->isAdmin()) {
-            $nbUnvalidated = $this->nbUnvalidatedComments($start, $end);
-            $this->addNewsLine($newsArr, is_numeric($nbUnvalidated) ? (int) $nbUnvalidated : 0, '%d comment to validate', '%d comments to validate', $this->urlGenerator->admin('comments'), $addUrl);
-
-            $nbUsers = $this->nbNewUsers($start, $end);
-            $this->addNewsLine($newsArr, is_numeric($nbUsers) ? (int) $nbUsers : 0, '%d new user', '%d new users', $this->urlGenerator->admin('user_list'), $addUrl);
+            $this->addNewsLine($newsArr, $this->nbUnvalidatedComments($start, $end), '%d comment to validate', '%d comments to validate', $this->urlGenerator->admin('comments'), $addUrl);
+            $this->addNewsLine($newsArr, $this->nbNewUsers($start, $end), '%d new user', '%d new users', $this->urlGenerator->admin('user_list'), $addUrl);
         }
 
         /** @var string[] $newsArr */
@@ -292,49 +165,15 @@ final readonly class NotificationService
         }
         [$whereSql, $whereParams, $whereTypes] = $this->getStdSqlWhereRestrictFilter('WHERE', 'i.id', true);
 
-        $query = '
-SELECT
-    date_available,
-    COUNT(DISTINCT id) AS nb_elements,
-    COUNT(DISTINCT category_id) AS nb_cats
-  FROM ' . Tables::images() . ' i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id=image_id
-  ' . $whereSql . '
-  GROUP BY date_available
-  ORDER BY date_available DESC
-  LIMIT ' . $maxDates . '
-;';
-        $dates = $this->conn->executeQuery($query, $whereParams, $whereTypes)->fetchAllAssociative();
+        $dates = $this->repo->findRecentPostDates($maxDates, $whereSql, $whereParams, $whereTypes);
 
         for ($i = 0; $i < count($dates); $i++) {
             $dateAvailable = is_scalar($dates[$i]['date_available']) ? (string) $dates[$i]['date_available'] : '';
             if ($maxElements > 0) {
-                $query = '
-SELECT DISTINCT i.*
-  FROM ' . Tables::images() . ' i
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id=image_id
-  ' . $whereSql . '
-    AND date_available=\'' . $dateAvailable . '\'
-  ORDER BY RAND()
-  LIMIT ' . $maxElements . '
-;';
-                $dates[$i]['elements'] = $this->conn->executeQuery($query, $whereParams, $whereTypes)->fetchAllAssociative();
+                $dates[$i]['elements'] = $this->repo->findRecentImagesForDate($dateAvailable, $maxElements, $whereSql, $whereParams, $whereTypes);
             }
-
             if ($maxCats > 0) {
-                $query = '
-SELECT
-    DISTINCT c.uppercats,
-    COUNT(DISTINCT i.id) AS img_count
-  FROM ' . Tables::images() . ' i
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON i.id=image_id
-    INNER JOIN ' . Tables::categories() . ' c ON c.id=category_id
-  ' . $whereSql . '
-    AND date_available=\'' . $dateAvailable . '\'
-  GROUP BY category_id, c.uppercats
-  ORDER BY img_count DESC
-  LIMIT ' . $maxCats . '
-;';
-                $dates[$i]['categories'] = $this->conn->executeQuery($query, $whereParams, $whereTypes)->fetchAllAssociative();
+                $dates[$i]['categories'] = $this->repo->findRecentCategoriesForDate($dateAvailable, $maxCats, $whereSql, $whereParams, $whereTypes);
             }
         }
 

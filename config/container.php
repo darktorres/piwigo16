@@ -70,6 +70,7 @@ use Piwigo\Image\DerivativePipeline;
 use Piwigo\Image\DerivativeService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Job\MessengerFactory;
+use Piwigo\Job\MessengerRepository;
 use Piwigo\Lang\LangService;
 use Piwigo\Lang\Translator;
 use Piwigo\Language\LanguageRepository;
@@ -362,6 +363,7 @@ return [
     ActivityRepository::class     => factory(static fn (Connection $conn): ActivityRepository => new ActivityRepository($conn, Config::dbPrefix())),
     AuthKeyRepository::class      => factory(static fn (Connection $conn): AuthKeyRepository => new AuthKeyRepository($conn, Config::dbPrefix())),
     FeedRepository::class         => factory(static fn (Connection $conn): FeedRepository => new FeedRepository($conn, Config::dbPrefix())),
+    MessengerRepository::class    => factory(static fn (Connection $conn): MessengerRepository => new MessengerRepository($conn, Config::dbPrefix())),
 
     // ── PSR-7/15 routing infrastructure ──────────────────────────────────────
     Router::class                     => factory(static fn (): Router => new Router(dirname(__DIR__) . '/config/routes.php')),

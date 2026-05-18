@@ -4,23 +4,23 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocBeginSearch;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Search\SearchFilterViewRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserRepository;
 use Piwigo\Validation\InputValidator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -33,8 +33,8 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class SearchController implements ControllerInterface
 {
     public function __construct(
-        private Connection $conn,
         private HtmlService $htmlService,
+        private ImageRepository $imageRepository,
         private SearchService $searchService,
         private SearchFilterViewRepository $filterViewRepo,
         private TagService $tagService,
@@ -42,6 +42,7 @@ final readonly class SearchController implements ControllerInterface
         private RedirectResponder $redirectResponder,
         private PermissionService $permissionService,
         private PreferencesService $preferencesService,
+        private UserRepository $userRepository,
         private EventDispatcherInterface $dispatcher,
     ) {
     }
@@ -112,14 +113,8 @@ final readonly class SearchController implements ControllerInterface
         $cat_id   = StringUtil::inputInt('cat_id', null, $_GET);
         if ($cat_id !== null) {
             $this->inputValidator->check('cat_id', $_GET, false, ValidationPattern::ID);
-            $query = '
-SELECT *
-  FROM ' . Tables::userCacheCategories() . '
-  WHERE cat_id = ' . $cat_id . '
-    AND user_id = ' . (is_scalar($user['id']) ? (int) $user['id'] : 0) . '
-;';
-            $found_categories = $this->conn->executeQuery($query)->fetchAllAssociative();
-            if (empty($found_categories)) {
+            $userIdInt = is_scalar($user['id']) ? (int) $user['id'] : 0;
+            if (!$this->userRepository->userCacheCategoryExists($cat_id, $userIdInt)) {
                 $this->htmlService->pageNotFound(Lang::t('Requested album does not exist'));
             }
             $cat_ids = [$cat_id];
@@ -146,16 +141,7 @@ SELECT *
                 ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
                 ' WHERE '
             );
-            $query = '
-SELECT id
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  ' . $permSql . '
-    AND author IS NOT NULL
-    LIMIT 1
-;';
-            $first_author = $this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative();
-            if (count($first_author) > 0) {
+            if ($this->imageRepository->existsAuthorUnderPermissions($permSql, $permParams, $permTypes)) {
                 $search['fields']['author'] = ['words' => [], 'mode' => 'OR'];
             }
         }

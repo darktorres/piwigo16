@@ -1297,6 +1297,26 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
+     * True when a user_cache_categories row exists for (cat_id, user_id) — i.e.
+     * the cache says this category is visible to the user. Used by the
+     * SearchController to validate the cat_id input before suggesting search
+     * filters.
+     */
+    public function userCacheCategoryExists(int $catId, int $userId): bool
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('user_cache_categories'))
+            ->where('cat_id = :catId')
+            ->andWhere('user_id = :userId')
+            ->setParameter('catId', $catId)
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) && (int) $value > 0;
+    }
+
+    /**
      * Return id → status for the given user ids, joining the configurable
      * users table with user_infos. Missing user_infos rows return null
      * status. Used by the integrity check to verify required users still

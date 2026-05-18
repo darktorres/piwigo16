@@ -541,6 +541,26 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Return true when at least one image with non-null author exists under
+     * the supplied permission filter. Used by the search form to decide
+     * whether to expose an "author" filter input.
+     *
+     * @param list<mixed>                                  $permParams
+     * @param list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $permTypes
+     */
+    public function existsAuthorUnderPermissions(string $permWhere, array $permParams, array $permTypes): bool
+    {
+        $sql = 'SELECT id'
+            . ' FROM ' . $this->table('images') . ' AS i'
+            . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
+            . ' ' . $permWhere
+            . ' AND author IS NOT NULL'
+            . ' LIMIT 1';
+        $rows = $this->conn->executeQuery($sql, $permParams, $permTypes)->fetchAllAssociative();
+        return $rows !== [];
+    }
+
+    /**
      * Return (id, path, representative_ext) for images stored in the given
      * category ids, optionally restricted to rows that have never been
      * metadata-synced. Result keyed by id, used by the metadata sync filelist.

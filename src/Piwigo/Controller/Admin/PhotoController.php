@@ -21,6 +21,7 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -629,7 +630,7 @@ final class PhotoController implements AdminSubControllerInterface
             $tpl->assign('PROMOTE_MOBILE_APPS', false);
         }
 
-        $tpl->assign('PHPWG_URL', PHPWG_URL);
+        $tpl->assign('PHPWG_URL', AppInfo::PROJECT_URL);
 
         $display_formats       = Config::isFormatsEnabled() && isset($_GET['formats']);
         $have_formats_original = false;

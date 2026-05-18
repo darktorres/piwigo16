@@ -73,9 +73,6 @@ final readonly class UpgradeController implements ControllerInterface
             $language = $matched !== false ? $matched : AppInfo::DEFAULT_LANGUAGE;
         }
 
-        // Fork policy — see CommonBootstrap.php for the rationale.
-        define('PHPWG_URL', '');
-
         $this->langService->loadLanguage('common.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
         $this->langService->loadLanguage('admin.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
         $this->langService->loadLanguage('install.lang', '', ['language' => $language, 'target_charset' => 'utf-8', 'no_fallback' => true]);
@@ -101,7 +98,7 @@ final readonly class UpgradeController implements ControllerInterface
         TemplateRegistry::set($tpl);
         $tpl->assign([
             'RELEASE'        => AppInfo::VERSION,
-            'L_UPGRADE_HELP' => Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum'),
+            'L_UPGRADE_HELP' => Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', AppInfo::PROJECT_URL . '/forum'),
         ]);
 
         $has_remote_site = false;

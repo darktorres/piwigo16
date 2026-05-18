@@ -535,7 +535,7 @@ final readonly class MailService
                     'GALLERY_URL'      => $this->urlService->addUrlParams($this->urlService->getGalleryHomeUrl(), $addUrlParams),
                     'GALLERY_TITLE'    => PageState::current()->galleryTitle ?? Config::galleryTitle(),
                     'VERSION'          => Config::showVersion() ? AppInfo::VERSION : '',
-                    'PHPWG_URL'        => defined('PHPWG_URL') ? PHPWG_URL : '',
+                    'PHPWG_URL'        => AppInfo::PROJECT_URL,
                     'CONTENT_ENCODING' => StringUtil::getPwgCharset(),
                     'CONTACT_MAIL'     => $this->getMailSenderEmail(),
                 ]);

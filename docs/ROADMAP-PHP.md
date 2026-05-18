@@ -2736,7 +2736,7 @@ remained as residual pre-PSR-4 debris:
 |---|----------|---------|-------------|
 | 1 | `PHPWG_DOMAIN` | **0** | DELETE — 3 writers, 36 lines of locale switch, never read. |
 | 2 | `PWG_HELP` | **0** | DELETE — 2 writers, never read. |
-| 3 | `PHPWG_URL` | ~30 | **Deferred** — fork may reimplement upstream-piwigo.org features later. |
+| 3 | `PHPWG_URL` | ~30 | Class const `AppInfo::PROJECT_URL = 'https://piwigo.example'` (RFC 2606 placeholder pending fork-site launch). |
 | 4 | `PEM_URL` | ~20 | New `PemUrlResolver` service, constructor-injected. |
 | 5 | `PWG_API_KEY_REQUEST` | 4 | New `ApiKeyAuthRegistry` (mirrors `RequestContextRegistry`). |
 | 6 | `PWG_LOCAL_DIR` | 17 | Route through existing `Paths::$local`. |
@@ -2749,7 +2749,7 @@ remained as residual pre-PSR-4 debris:
 
 ### What shipped
 
-6 commits on `16.x-rewrite`:
+7 commits + 1 follow-up on `16.x-rewrite`:
 
 | Phase | Constants                                                              | Commit       |
 | ----- | ---------------------------------------------------------------------- | ------------ |
@@ -2759,7 +2759,8 @@ remained as residual pre-PSR-4 debris:
 | D     | `PREFIX_TABLE` + `UPGRADES_PATH` + `RequestContext::Upgrade` switch    | `348e1fb1c`  |
 | E     | `PWG_API_KEY_REQUEST` → `ApiKeyAuthRegistry`                           | `f0d3e0e91`  |
 | F     | `PEM_URL` → `PemUrlResolver` service                                   | `2a6781e22`  |
-| G     | `QST_*` test stub cleanup + roadmap                                    | (this commit)|
+| G     | `QST_*` test stub cleanup + roadmap                                    | `efaa150b3`  |
+| H     | `PHPWG_URL` → `AppInfo::PROJECT_URL` placeholder                       | (this commit)|
 
 Each phase passed the same gate: Pint, PHPStan, Psalm, full PHPUnit
 suite, and `grep -rn 'define('` to confirm the targeted writers were
@@ -2793,29 +2794,49 @@ parameter.
 `UpgradeFeedController` just hadn't been migrated to use it yet. Phase D
 finished that job.
 
-### Why `PHPWG_URL` was deferred
+### `PHPWG_URL` → `AppInfo::PROJECT_URL`
 
 The constant has dual semantics:
 
 1. **Telemetry endpoint prefix** for `porg.installs.update` and the news
-   feed — set to `''` deliberately so the fork doesn't phone home.
+   feed — was set to `''` so the fork didn't phone home.
 2. **User-facing brand URL** for ~28 admin/footer/mail-body links to
    upstream piwigo.org (`/forum`, `/doc`, `/releases/X`,
    `/mobile-applications`, etc.).
 
-The user plans to reimplement (2) under the fork's own domain. The right
-shape — typed `Config::piwigoForkUrl()` accessor, default `''`,
-admin-configurable; rename the 6 Latte template variables — needs to
-be coordinated with whatever fork-site URL gets chosen. Out of scope
-for this define-retirement pass; lands as its own follow-up plan.
+Phase H replaces both with a single placeholder URL on `AppInfo`:
 
-### Verification
+```php
+public const string PROJECT_URL = 'https://piwigo.example';
+```
+
+The `.example` TLD is reserved by RFC 2606, so the placeholder never
+resolves to a real host — telemetry/version-check requests fail closed
+(DNS NXDOMAIN), preserving the "never phone home" invariant the old
+empty-string convention enforced. User-facing brand links now point to
+the same visibly-placeholder host pending the fork-site launch; when
+that domain is chosen, this one constant flips and all 30 readers light
+up. The two defensive `defined('PHPWG_URL') ? … : ''` guards
+(`PageTailRenderer`, `MailService`) go away — `AppInfo::PROJECT_URL` is
+always defined. `PageTailRenderer`'s `str_replace('http:', 'https:', …)`
+also goes — the new value is already https.
+
+The six Latte templates that render `{$PHPWG_URL}` keep the variable
+name (no template churn); the assigning PHP code switches to passing
+`AppInfo::PROJECT_URL` under the same name.
+
+### Final invariant
 
 ```bash
-grep -rn 'define(' src/ index.php config/ tools/ --include='*.php' --include='*.phpstub' \
-  | grep -v PHPWG_URL                          # zero matches
+grep -rn 'define(' src/ index.php config/ tools/ --include='*.php' --include='*.phpstub'
+# returns zero
 vendor/bin/pint --test                         # passed
 vendor/bin/phpstan analyse                     # green
 vendor/bin/psalm                               # no errors found
 vendor/bin/phpunit                             # 659 tests / 3356 assertions green
 ```
+
+Manual smoke against `http://localhost/piwigo16/` confirms the home-page
+footer renders `<a href="https://piwigo.example">Piwigo</a>` (visible
+placeholder, harmless); all four entry shapes return 200; derivative
+fast path serves a valid JPEG.

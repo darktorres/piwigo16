@@ -1032,7 +1032,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         [$ct_env, $ct_build_version] = StringUtil::getContainerInfo();
 
         if ('Official' === $ct_env) {
-            $tpl->assign(['CONTAINER_VERSION' => $ct_build_version, 'DOCKER_UPDATE_GUIDE_URL' => PHPWG_URL . '/guide-update-docker']);
+            $tpl->assign(['CONTAINER_VERSION' => $ct_build_version, 'DOCKER_UPDATE_GUIDE_URL' => AppInfo::PROJECT_URL . '/guide-update-docker']);
             $this->inputValidator->check('to', $_GET, false, '/^\d+\.\d+\.\d+[a-z]?$/');
             $rawUpgradeTo   = $_GET['to'] ?? null;
             $upgrade_to_raw = is_string($rawUpgradeTo) ? $rawUpgradeTo : '';
@@ -1101,14 +1101,14 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
 
         if (isset($new_versions['minor'])) {
             $minor_ver = is_string($new_versions['minor']) ? $new_versions['minor'] : '';
-            $tpl->assign(['MINOR_VERSION' => $minor_ver, 'MINOR_RELEASE_URL' => (('Official' === $ct_env) ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . (string) preg_replace('/\./', '', $minor_ver) : PHPWG_URL . '/releases/' . $minor_ver)]);
+            $tpl->assign(['MINOR_VERSION' => $minor_ver, 'MINOR_RELEASE_URL' => (('Official' === $ct_env) ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . (string) preg_replace('/\./', '', $minor_ver) : AppInfo::PROJECT_URL . '/releases/' . $minor_ver)]);
         }
 
         if (isset($new_versions['major'])) {
             $major_ver = is_string($new_versions['major']) ? $new_versions['major'] : '';
             $majorVerNoDots = preg_replace('/\./', '', $major_ver) ?? '';
             $majorVerNoAlpha = preg_replace('/[a-z]$/', '', $major_ver) ?? '';
-            $tpl->assign(['MAJOR_VERSION' => $major_ver, 'MAJOR_RELEASE_URL' => PHPWG_URL . '/releases/' . (('Official' === $ct_env) ? substr($major_ver, 0, -1) : $major_ver), 'MAJOR_DOCKER_RELEASE_URL' => 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . $majorVerNoDots, 'MAJOR_VERSION_PWG' => $majorVerNoAlpha]);
+            $tpl->assign(['MAJOR_VERSION' => $major_ver, 'MAJOR_RELEASE_URL' => AppInfo::PROJECT_URL . '/releases/' . (('Official' === $ct_env) ? substr($major_ver, 0, -1) : $major_ver), 'MAJOR_DOCKER_RELEASE_URL' => 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . $majorVerNoDots, 'MAJOR_VERSION_PWG' => $majorVerNoAlpha]);
         }
 
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Updates'));

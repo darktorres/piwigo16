@@ -305,7 +305,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 break;
             case 'check_upgrade':
                 $result = '';
-                if (!$this->adminService->fetchRemote(PHPWG_URL . '/download/latest_version', $result) || !is_string($result)) {
+                if (!$this->adminService->fetchRemote(AppInfo::PROJECT_URL . '/download/latest_version', $result) || !is_string($result)) {
                     PageState::current()->addError(Lang::t('Unable to check for upgrade.'));
                 } else {
                     $versions = ['current' => AppInfo::VERSION];
@@ -388,7 +388,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             'U_MAINT_DERIVATIVES'         => sprintf($url_format, 'derivatives'),
             'purge_derivatives'           => $purge_urls,
             'U_HELP'                      => $this->urlGenerator->adminPopupHelp('maintenance'),
-            'PHPWG_URL'                   => PHPWG_URL,
+            'PHPWG_URL'                   => AppInfo::PROJECT_URL,
             'PWG_VERSION'                 => AppInfo::VERSION,
             'U_CHECK_UPGRADE'             => sprintf($url_format, 'check_upgrade'),
             'OS'                          => PHP_OS,
@@ -524,7 +524,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 break;
             case 'check_upgrade':
                 $result = '';
-                if (!$this->adminService->fetchRemote(PHPWG_URL . '/download/latest_version', $result) || !is_string($result)) {
+                if (!$this->adminService->fetchRemote(AppInfo::PROJECT_URL . '/download/latest_version', $result) || !is_string($result)) {
                     PageState::current()->addError(Lang::t('Unable to check for upgrade.'));
                 } else {
                     $versions = ['current' => AppInfo::VERSION];
@@ -587,7 +587,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             'U_MAINT_DERIVATIVES'         => sprintf($url_format, 'derivatives'),
             'purge_derivatives'           => $purge_urls,
             'U_HELP'                      => $this->urlGenerator->adminPopupHelp('maintenance'),
-            'PHPWG_URL'                   => PHPWG_URL,
+            'PHPWG_URL'                   => AppInfo::PROJECT_URL,
             'PWG_VERSION'                 => AppInfo::VERSION,
             'U_CHECK_UPGRADE'             => sprintf($url_format, 'check_upgrade'),
             'OS'                          => PHP_OS,

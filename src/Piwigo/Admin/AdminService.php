@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
@@ -38,12 +39,12 @@ final readonly class AdminService
     public function pwgURL(): array
     {
         return [
-            'HOME'       => PHPWG_URL,
-            'WIKI'       => PHPWG_URL . '/doc',
-            'DEMO'       => PHPWG_URL . '/demo',
-            'FORUM'      => PHPWG_URL . '/forum',
-            'BUGS'       => PHPWG_URL . '/bugs',
-            'EXTENSIONS' => PHPWG_URL . '/ext',
+            'HOME'       => AppInfo::PROJECT_URL,
+            'WIKI'       => AppInfo::PROJECT_URL . '/doc',
+            'DEMO'       => AppInfo::PROJECT_URL . '/demo',
+            'FORUM'      => AppInfo::PROJECT_URL . '/forum',
+            'BUGS'       => AppInfo::PROJECT_URL . '/bugs',
+            'EXTENSIONS' => AppInfo::PROJECT_URL . '/ext',
         ];
     }
 
@@ -172,12 +173,12 @@ final readonly class AdminService
 
     public function getNewsletterSubscribeBaseUrl(string $language = 'en_UK'): string
     {
-        return PHPWG_URL . '/announcement/subscribe/';
+        return AppInfo::PROJECT_URL . '/announcement/subscribe/';
     }
 
     public function getOldNewslettersBaseUrl(string $language = 'en_UK'): string
     {
-        return PHPWG_URL . '/newsletter';
+        return AppInfo::PROJECT_URL . '/newsletter';
     }
 
     public function getActiveMenu(string $menuPage): int
@@ -398,7 +399,7 @@ final readonly class AdminService
             return is_array($cached) ? $cached : [];
         }
 
-        $url     = PHPWG_URL . '/ws.php?method=porg.news.getLatest&format=json';
+        $url     = AppInfo::PROJECT_URL . '/ws.php?method=porg.news.getLatest&format=json';
         $content = '';
         if (!$this->fetchRemote($url, $content) || !is_string($content)) {
             return [];

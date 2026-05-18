@@ -125,7 +125,7 @@ final class Updates
 
         $result = '';
         if (preg_match('/(\d+\.\d+)\.(\d+)/', AppInfo::VERSION, $matches)
-          and $this->adminService->fetchRemote(PHPWG_URL.'/download/all_versions.php?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)), $result)
+          and $this->adminService->fetchRemote(AppInfo::PROJECT_URL.'/download/all_versions.php?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)), $result)
           and is_string($result)) {
             $all_versions = explode("\n", $result);
             $new_version = trim($all_versions[0]);
@@ -162,7 +162,7 @@ final class Updates
         : AppInfo::VERSION
             );
 
-            $url = PHPWG_URL.'/download/all_versions.php';
+            $url = AppInfo::PROJECT_URL.'/download/all_versions.php';
             $url .= '?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)); // Avoid server cache
             $url .= ('Official' === $env) ? '&docker' : '&show_requirements'; // Check docker version if in container
             $url .= '&origin_hash='.sha1(Config::secretKey().UrlService::getAbsoluteRootUrl());
@@ -571,7 +571,7 @@ final class Updates
 
             while (!$end) {
                 $chunk_num++;
-                if ($this->adminService->fetchRemote(PHPWG_URL.'/download/dlcounter.php?code='.$dl_code.'&chunk_num='.$chunk_num, $result)
+                if ($this->adminService->fetchRemote(AppInfo::PROJECT_URL.'/download/dlcounter.php?code='.$dl_code.'&chunk_num='.$chunk_num, $result)
                   and is_string($result)
                   and is_array($input = json_decode($result, associative: true))) {
                     if (0 == ($input['remaining'] ?? -1)) {

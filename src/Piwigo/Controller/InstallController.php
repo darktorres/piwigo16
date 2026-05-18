@@ -117,9 +117,6 @@ final readonly class InstallController implements ControllerInterface
             $language = $matched !== false ? $matched : AppInfo::DEFAULT_LANGUAGE;
         }
 
-        // Fork policy — see CommonBootstrap.php for the rationale.
-        define('PHPWG_URL', '');
-
         Kernel::service(LangService::class)->loadLanguage('common.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
         Kernel::service(LangService::class)->loadLanguage('admin.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
         Kernel::service(LangService::class)->loadLanguage('install.lang', '', ['language' => $language, 'target_charset' => 'utf-8']);
@@ -260,7 +257,7 @@ final readonly class InstallController implements ControllerInterface
             'F_ADMIN_EMAIL'          => $admin_mail,
             'EMAIL'                  => new Html('<span class="adminEmail">' . htmlspecialchars($admin_mail) . '</span>'),
             'F_NEWSLETTER_SUBSCRIBE' => $is_newsletter_subscribe,
-            'L_INSTALL_HELP'         => new Html(Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', PHPWG_URL . '/forum')),
+            'L_INSTALL_HELP'         => new Html(Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', AppInfo::PROJECT_URL . '/forum')),
         ]);
 
         if ($step == 1) {
@@ -307,7 +304,7 @@ final readonly class InstallController implements ControllerInterface
                         Kernel::service(LangService::class)->getL10nArgs('Password: ********** (no copy by email)', ''),
                         Kernel::service(LangService::class)->getL10nArgs('Email: %s', $admin_mail),
                         Kernel::service(LangService::class)->getL10nArgs('', ''),
-                        Kernel::service(LangService::class)->getL10nArgs('Don\'t hesitate to consult our forums for any help: %s', PHPWG_URL),
+                        Kernel::service(LangService::class)->getL10nArgs('Don\'t hesitate to consult our forums for any help: %s', AppInfo::PROJECT_URL),
                     ];
                     Kernel::service(MailService::class)->pwgMail($admin_mail, ['subject' => Lang::t('Just another Piwigo gallery'), 'content' => Kernel::service(LangService::class)->l10nArgs($keyargs_content), 'content_format' => 'text/plain']);
                 }

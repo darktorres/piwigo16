@@ -354,7 +354,7 @@ final readonly class AdminController implements ControllerInterface
             }
         }
 
-        $release_note_url = PHPWG_URL . '/releases/' . $whats_new_major_version . '.0.0';
+        $release_note_url = AppInfo::PROJECT_URL . '/releases/' . $whats_new_major_version . '.0.0';
 
         $whats_new_imgs = [
             '1' => 'https://ressources.piwigo.com/uploads/c/v/7/cv7jpz6hf8//2025/11/12/20251112112645-7e309b67.png',

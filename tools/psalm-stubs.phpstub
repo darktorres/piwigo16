@@ -8,9 +8,8 @@ namespace {
     // Runtime constants
     // -------------------------------------------------------------------------
 
-    // PHPWG_ROOT_PATH eliminated in Phase 6; the URL constants below remain
-    // as Psalm stubs for the few remaining define()-driven URLs.
-    const PHPWG_URL = '';
+    // PHPWG_ROOT_PATH retired (§1.10), PHPWG_URL replaced by
+    // AppInfo::PROJECT_URL (§1.11). No legacy define()-driven URLs remain.
 
     // mkgetdir flags
     const MKGETDIR_NONE = 0;

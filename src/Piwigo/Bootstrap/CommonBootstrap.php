@@ -163,11 +163,6 @@ final class CommonBootstrap
 
         Kernel::service(CategoryAdminService::class)->checkLounge();
 
-        // Fork policy: PHPWG_URL is blanked so this install never sends
-        // telemetry to upstream piwigo.org via porg.installs.update, and
-        // never pulls version/news/download metadata from there either.
-        define('PHPWG_URL', '');
-
         Kernel::service(LangService::class)->loadLanguage('common.lang');
         if (Kernel::service(PermissionService::class)->isAdmin() || RequestContextRegistry::current() === RequestContext::Admin) {
             Kernel::service(LangService::class)->loadLanguage('admin.lang');

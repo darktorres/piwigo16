@@ -335,8 +335,8 @@ final readonly class TelemetryService
         $piwigoInfos['features']['history_guest']     = Config::historyGuest() ? 'yes' : 'no';
         $piwigoInfos['features']['history_admin']     = Config::historyAdmin() ? 'yes' : 'no';
 
-        $updateUrl = $this->configService->confGetParam('send_piwigo_infos_update_url', PHPWG_URL);
-        $url = (is_scalar($updateUrl) ? (string) $updateUrl : PHPWG_URL) . '/ws.php';
+        $updateUrl = $this->configService->confGetParam('send_piwigo_infos_update_url', AppInfo::PROJECT_URL);
+        $url = (is_scalar($updateUrl) ? (string) $updateUrl : AppInfo::PROJECT_URL) . '/ws.php';
 
         $getData  = ['method' => 'porg.installs.update', 'origin_hash' => $piwigoInfos['origin_hash']];
         $postData = ['data' => json_encode($piwigoInfos)];

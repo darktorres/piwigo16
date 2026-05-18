@@ -33,7 +33,7 @@ final class PageTailRenderer
 
         $template->assign([
             'VERSION'    => Config::showVersion() ? AppInfo::VERSION : '',
-            'PHPWG_URL'  => defined('PHPWG_URL') ? str_replace('http:', 'https:', PHPWG_URL) : '',
+            'PHPWG_URL'  => AppInfo::PROJECT_URL,
         ]);
 
         if (!Kernel::service(PermissionService::class)->isAGuest()) {

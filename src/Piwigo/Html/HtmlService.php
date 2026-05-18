@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Html;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Cache\RequestCache;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\SqlExpr;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\GetThumbnailTitle;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
@@ -36,7 +34,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class HtmlService
 {
     public function __construct(
-        private Connection $conn,
+        private CategoryRepository $categoryRepository,
         private EventDispatcherInterface $dispatcher,
     ) {
     }
@@ -90,13 +88,11 @@ final readonly class HtmlService
             $addUrlParamsArr['auth'] = $authKey;
         }
 
-        $catNamesRaw = RequestCache::remember('cat_names', 'all', function (): array {
-            $query = '
-SELECT id, name, permalink
-  FROM ' . Tables::categories() . '
-;';
-            return array_column($this->conn->executeQuery($query)->fetchAllAssociative(), null, 'id');
-        });
+        $catNamesRaw = RequestCache::remember(
+            'cat_names',
+            'all',
+            fn (): array => $this->categoryRepository->findIdNamePermalinkAll(),
+        );
         /** @var array<int|string, array<string,mixed>> $catNames */
         $catNames = is_array($catNamesRaw) ? $catNamesRaw : [];
 
@@ -560,10 +556,7 @@ $btraceMsg
         $sqlRecentDate = RequestCache::remember(
             'get_icon',
             'sql_recent_date',
-            function () use ($recentPeriod): string {
-                $v = $this->conn->executeQuery('SELECT ' . SqlExpr::recentPeriodExpr((string) $recentPeriod))->fetchOne();
-                return is_scalar($v) ? (string) $v : '';
-            }
+            fn (): string => $this->categoryRepository->findRecentDateThreshold($recentPeriod),
         );
         $isRecent = $date > $sqlRecentDate;
         RequestCache::set('get_icon', $date, $isRecent);

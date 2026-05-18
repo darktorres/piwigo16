@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
-use Piwigo\Db\SqlExpr;
-use Piwigo\Db\Tables;
 use Piwigo\Filter\FilterContext;
 use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Filter\FilterService;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
@@ -31,8 +29,8 @@ use Psr\Http\Server\RequestHandlerInterface;
 final readonly class FilterMiddleware implements MiddlewareInterface
 {
     public function __construct(
-        private Connection $conn,
         private CategoryService $categoryService,
+        private ImageRepository $imageRepository,
         private SessionService $sessionService,
         private FilterService $filterService,
     ) {
@@ -128,24 +126,7 @@ final readonly class FilterMiddleware implements MiddlewareInterface
                 array_keys($computedCategories)
             );
 
-            $catParams = [];
-            $catTypes  = [];
-            $catClause = '';
-            if ($visibleCategories !== []) {
-                $catClause = "\n  category_id IN (?) and";
-                $catParams = [$visibleCategories];
-                $catTypes  = [\Doctrine\DBAL\ArrayParameterType::INTEGER];
-            }
-            $query = '
-SELECT distinct image_id
-FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::images() . ' ON image_id = id
-WHERE ' . $catClause . '
-    date_available >= ' . SqlExpr::recentPeriodExpr($recentPeriod);
-
-            $visibleImages = array_map(
-                static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-                array_column($this->conn->executeQuery($query, $catParams, $catTypes)->fetchAllAssociative(), 'image_id')
-            );
+            $visibleImages = $this->imageRepository->findRecentImageIdsByCategories($visibleCategories, $recentPeriod);
             // Empty result while filter is on: -1 sentinel so `IN (?)` matches nothing.
             if ($visibleCategories === []) {
                 $visibleCategories = [-1];

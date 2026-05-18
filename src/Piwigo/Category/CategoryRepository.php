@@ -244,6 +244,35 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
+     * Return (id, name, permalink) for every category, keyed by id. Used by
+     * HtmlService::getCatDisplayNameCache to build a per-request lookup.
+     *
+     * @return array<int|string, array<string, mixed>>
+     */
+    public function findIdNamePermalinkAll(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id', 'name', 'permalink')
+            ->from($this->table('categories'))
+            ->executeQuery()
+            ->fetchAllAssociative();
+        return array_column($rows, null, 'id');
+    }
+
+    /**
+     * Return the server-side threshold date (YYYY-MM-DD) for "recent" images,
+     * i.e. CURRENT_DATE − $days. Used by HtmlService::getIconHelper to flag
+     * images uploaded within the recent_period window.
+     */
+    public function findRecentDateThreshold(int $days): string
+    {
+        $value = $this->conn->executeQuery(
+            'SELECT ' . \Piwigo\Db\SqlExpr::recentPeriodExpr((string) $days),
+        )->fetchOne();
+        return is_scalar($value) ? (string) $value : '';
+    }
+
+    /**
      * Return (id, name, permalink, uppercats) for the given ids, keyed by id.
      * Used by the admin comments page and the recent-cats listing.
      *

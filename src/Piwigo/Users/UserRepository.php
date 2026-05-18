@@ -1317,6 +1317,102 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
+     * Return the admin/webmaster recipient rows used by MailService.
+     * $statuses must already be whitelisted by the caller; $groupId restricts
+     * to that group via user_group join; $excludeUserId skips one user.
+     * Column names come from Config — admin-configured.
+     *
+     * @param  list<string> $statuses
+     * @return list<array<string, mixed>>
+     */
+    public function findAdminsForMail(
+        string $usersTable,
+        string $idField,
+        string $usernameField,
+        string $emailField,
+        array $statuses,
+        ?int $excludeUserId,
+        ?int $groupId,
+    ): array {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('i.user_id', "u.{$usernameField} AS name", "u.{$emailField} AS email")
+            ->from($usersTable, 'u')
+            ->innerJoin('u', $this->table('user_infos'), 'i', 'i.user_id = u.' . $idField)
+            ->orderBy('name');
+        if ($groupId !== null) {
+            $qb->innerJoin('i', $this->table('user_group'), 'ug', 'ug.user_id = i.user_id')
+               ->andWhere('ug.group_id = :groupId')
+               ->setParameter('groupId', $groupId);
+        }
+        $qb->where($qb->expr()->in('i.status', ':statuses'))
+           ->setParameter('statuses', $statuses, ArrayParameterType::STRING)
+           ->andWhere("u.{$emailField} IS NOT NULL");
+        if ($excludeUserId !== null) {
+            $qb->andWhere('i.user_id <> :excludeUid')
+               ->setParameter('excludeUid', $excludeUserId);
+        }
+        return $qb->executeQuery()->fetchAllAssociative();
+    }
+
+    /**
+     * Distinct languages spoken by users in $groupId who have an email
+     * address, optionally restricted to a single $languageFilter.
+     *
+     * @return list<string>
+     */
+    public function findDistinctLanguagesInGroup(
+        string $usersTable,
+        string $idField,
+        string $emailField,
+        int $groupId,
+        ?string $languageFilter,
+    ): array {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('DISTINCT language')
+            ->from($this->table('user_group'), 'ug')
+            ->innerJoin('ug', $usersTable, 'u', "u.{$idField} = ug.user_id")
+            ->innerJoin('ug', $this->table('user_infos'), 'ui', 'ui.user_id = ug.user_id')
+            ->where('ug.group_id = :groupId')
+            ->andWhere("u.{$emailField} <> ''")
+            ->setParameter('groupId', $groupId);
+        if ($languageFilter !== null && $languageFilter !== '') {
+            $qb->andWhere('language = :language')
+               ->setParameter('language', $languageFilter);
+        }
+        $rows = $qb->executeQuery()->fetchFirstColumn();
+        return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $rows);
+    }
+
+    /**
+     * (user_id, status, name, email) tuples for users in $groupId speaking
+     * $language. Used by MailService::pwgMailGroup to send a single language
+     * shard.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findGroupRecipientsForLanguage(
+        string $usersTable,
+        string $idField,
+        string $usernameField,
+        string $emailField,
+        int $groupId,
+        string $language,
+    ): array {
+        return $this->conn->executeQuery(
+            'SELECT ui.user_id, ui.status,'
+            . " u.{$usernameField} AS name, u.{$emailField} AS email"
+            . ' FROM ' . $this->table('user_group') . ' AS ug'
+            . " INNER JOIN $usersTable AS u ON u.{$idField} = ug.user_id"
+            . ' INNER JOIN ' . $this->table('user_infos') . ' AS ui ON ui.user_id = ug.user_id'
+            . ' WHERE ug.group_id = ?'
+            . " AND u.{$emailField} <> ''"
+            . ' AND language = ?',
+            [$groupId, $language],
+            [\Doctrine\DBAL\ParameterType::INTEGER, \Doctrine\DBAL\ParameterType::STRING],
+        )->fetchAllAssociative();
+    }
+
+    /**
      * Return id → status for the given user ids, joining the configurable
      * users table with user_infos. Missing user_infos rows return null
      * status. Used by the integrity check to verify required users still

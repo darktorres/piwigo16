@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Mail;
 
-use Doctrine\DBAL\Connection;
 use Pelago\Emogrifier\CssInliner;
 use PHPMailer\PHPMailer\PHPMailer;
 use Piwigo\Cache\RequestCache;
@@ -38,7 +37,6 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class MailService
 {
     public function __construct(
-        private Connection $conn,
         private UrlGenerator $urlGenerator,
         private UserRepository $userRepository,
         private LangService $langService,
@@ -307,39 +305,16 @@ final readonly class MailService
             $userStatuses[] = 'admin';
         }
 
-        $query = '
-SELECT
-    i.user_id,
-    u.' . Config::userFields()['username'] . ' AS name,
-    u.' . Config::userFields()['email'] . ' AS email
-  FROM ' . Tables::users() . ' AS u
-    JOIN ' . Tables::userInfos() . ' AS i
-    ON i.user_id =  u.' . Config::userFields()['id'];
-
-        if (!is_null($groupId)) {
-            $query .= '
-    JOIN ' . Tables::userGroup() . ' AS ug
-      ON ug.user_id = i.user_id';
-        }
-
-        $query .= '
-  WHERE i.status in (\'' . implode("','", $userStatuses) . '\')
-    AND u.' . Config::userFields()['email'] . ' IS NOT NULL';
-
-        if (!is_null($groupId)) {
-            $query .= '
-    AND group_id = ' . intval($groupId);
-        }
-
-        if ($excludeCurrentUser) {
-            $query .= '
-    AND i.user_id <> ' . CurrentUser::get()->id;
-        }
-
-        $query .= '
-  ORDER BY name
-;';
-        $admins = $this->conn->executeQuery($query)->fetchAllAssociative();
+        $userFields = Config::userFields();
+        $admins     = $this->userRepository->findAdminsForMail(
+            Tables::users(),
+            $userFields['id'],
+            $userFields['username'],
+            $userFields['email'],
+            $userStatuses,
+            $excludeCurrentUser ? CurrentUser::get()->id : null,
+            $groupId,
+        );
 
         if (empty($admins)) {
             return true;
@@ -364,45 +339,28 @@ SELECT
 
         $return = true;
 
-        $query = '
-SELECT DISTINCT language
-  FROM ' . Tables::userGroup() . ' AS ug
-    INNER JOIN ' . Tables::users() . ' AS u
-    ON ' . Config::userFields()['id'] . ' = ug.user_id
-    INNER JOIN ' . Tables::userInfos() . ' AS ui
-    ON ui.user_id = ug.user_id
-  WHERE group_id = ' . $groupId . '
-    AND ' . Config::userFields()['email'] . ' <> ""';
-        if (!empty($args['language_selected'])) {
-            $query .= '
-    AND language = \'' . (is_string($args['language_selected']) ? $args['language_selected'] : '') . '\'';
-        }
-        $query .= '
-;';
-        $languages = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'language');
+        $userFields = Config::userFields();
+        $languages  = $this->userRepository->findDistinctLanguagesInGroup(
+            Tables::users(),
+            $userFields['id'],
+            $userFields['email'],
+            $groupId,
+            is_string($args['language_selected'] ?? null) ? $args['language_selected'] : null,
+        );
 
         if (empty($languages)) {
             return $return;
         }
 
         foreach ($languages as $language) {
-            $language = is_scalar($language) ? (string) $language : '';
-            $query    = '
-SELECT
-    ui.user_id,
-    ui.status,
-    u.' . Config::userFields()['username'] . ' AS name,
-    u.' . Config::userFields()['email'] . ' AS email
-  FROM ' . Tables::userGroup() . ' AS ug
-    INNER JOIN ' . Tables::users() . ' AS u
-    ON ' . Config::userFields()['id'] . ' = ug.user_id
-    INNER JOIN ' . Tables::userInfos() . ' AS ui
-    ON ui.user_id = ug.user_id
-  WHERE group_id = ' . $groupId . '
-    AND ' . Config::userFields()['email'] . ' <> ""
-    AND language = \'' . $language . '\'
-;';
-            $users = $this->conn->executeQuery($query)->fetchAllAssociative();
+            $users = $this->userRepository->findGroupRecipientsForLanguage(
+                Tables::users(),
+                $userFields['id'],
+                $userFields['username'],
+                $userFields['email'],
+                $groupId,
+                $language,
+            );
 
             if (empty($users)) {
                 continue;

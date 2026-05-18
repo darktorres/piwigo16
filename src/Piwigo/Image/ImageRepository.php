@@ -584,6 +584,33 @@ final class ImageRepository extends AbstractRepository
         return array_column($qb->executeQuery()->fetchAllAssociative(), null, 'id');
     }
 
+    /**
+     * Return distinct image ids for "recent photos" — images whose
+     * date_available is within $recentPeriod days, optionally restricted to
+     * a category id allow-list. Used by the recent-photos filter middleware.
+     *
+     * @param  list<int> $visibleCategories  empty = no category filter
+     * @return list<int>
+     */
+    public function findRecentImageIdsByCategories(array $visibleCategories, int $recentPeriod): array
+    {
+        $params = [];
+        $types  = [];
+        $catClause = '';
+        if ($visibleCategories !== []) {
+            $catClause = ' category_id IN (?) AND';
+            $params[]  = $visibleCategories;
+            $types[]   = ArrayParameterType::INTEGER;
+        }
+        $sql = 'SELECT DISTINCT image_id'
+            . ' FROM ' . $this->table('image_category')
+            . ' INNER JOIN ' . $this->table('images') . ' ON image_id = id'
+            . ' WHERE' . $catClause
+            . ' date_available >= ' . \Piwigo\Db\SqlExpr::recentPeriodExpr((string) $recentPeriod);
+        $rows = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'image_id'));
+    }
+
     /** Count images whose storage_category_id is NOT NULL (filesystem-synced). */
     public function countWithStorageCategorySet(): int
     {

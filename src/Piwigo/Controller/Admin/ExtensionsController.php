@@ -683,7 +683,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
             if ($mime_type === false || !in_array($mime_type, array_keys($allowed_mimes))) {
                 $tpl->assign(['save_error' => 'Invalid image file.']);
             } else {
-                $upload_dir = $this->paths->root . PWG_LOCAL_DIR . 'logo';
+                $upload_dir = $this->paths->local . 'logo';
                 if (Filesystem::mkgetdir($upload_dir, Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR)) {
                     $stdPgsLogoNameRaw = $std_pgs_logo_file['name'] ?? null;
                     $std_pgs_logo_name = is_string($stdPgsLogoNameRaw) ? $stdPgsLogoNameRaw : '';

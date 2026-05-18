@@ -15,8 +15,8 @@ use Piwigo\Core\Paths;
  * matching Composer package — no call-site changes are needed.
  *
  * Disk roots use runtime Config values so they honour site-level overrides
- * (e.g. Config::uploadDir(), Config::dataLocation()).  PWG_LOCAL_DIR is the
- * 'local/' directory; the constant is defined by CommonBootstrap.
+ * (e.g. Config::uploadDir(), Config::dataLocation()).  `$paths->local`
+ * resolves to `{install_root}/local/`.
  *
  * --- Switching `derivatives` to AWS S3 ---
  *
@@ -64,7 +64,7 @@ return static fn (Paths $paths): array => [
 
     // Watermark PNG files: local/watermarks/
     'watermarks' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter($paths->root . PWG_LOCAL_DIR . 'watermarks')
+        new LocalFilesystemAdapter($paths->local . 'watermarks')
     ),
 
     // Theme files
@@ -84,7 +84,7 @@ return static fn (Paths $paths): array => [
 
     // Site-local overrides: local/watermarks/, local/logo/, local/config/, …
     'local' => static fn (): Filesystem => new Filesystem(
-        new LocalFilesystemAdapter($paths->root . PWG_LOCAL_DIR)
+        new LocalFilesystemAdapter($paths->local)
     ),
 
     // Temporary scratch space (chunk assembly, image processing)

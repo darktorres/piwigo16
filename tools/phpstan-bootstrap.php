@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 // PHPWG_ROOT_PATH eliminated in Phase 6; production callers receive Paths
-// via DI. PHPWG_VERSION migrated to AppInfo::VERSION.
-define('PWG_LOCAL_DIR', 'local/');
+// via DI. PHPWG_VERSION migrated to AppInfo::VERSION. PWG_LOCAL_DIR
+// retired (Phase C of define()-retirement) — use $paths->local.
 
 // PREFIX_TABLE is defined at runtime by UpgradeController / UpgradeFeedController (upgrade path only).
 // Declared here as a PHPStan placeholder so migration-step analysis resolves it.

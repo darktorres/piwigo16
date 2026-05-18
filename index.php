@@ -32,7 +32,6 @@ $_qs = ltrim(is_string($_SERVER['QUERY_STRING'] ?? null) ? $_SERVER['QUERY_STRIN
 if (str_starts_with($_qs, 'i/')) {
     // Image derivative fast-path — same minimal bootstrap as the former i.php.
     // Skips CommonBootstrap (no session, no user, no plugins) for performance.
-    defined('PWG_LOCAL_DIR')      or define('PWG_LOCAL_DIR', 'local/');
     ConfigLoader::applyDefaults();
     ConfigLoader::loadEnv($paths->root);
     ConfigLoader::applyEnvOverrides();
@@ -49,7 +48,6 @@ if (str_starts_with($_qs, 'i/')) {
 
 if (str_starts_with($_qs, 'install')) {
     // Install wizard — no DB yet; bypass the full boot pipeline.
-    defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
     ConfigLoader::applyDefaults();
     (new InstallController($paths))(RequestFactory::fromGlobals());
     exit;
@@ -57,7 +55,6 @@ if (str_starts_with($_qs, 'install')) {
 
 if (str_starts_with($_qs, 'upgrade_feed')) {
     // Upgrade feed — DB schema may be mid-migration; bypass the full boot pipeline.
-    defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
     ConfigLoader::applyDefaults();
     ConfigLoader::loadEnv($paths->root);
     ConfigLoader::applyEnvOverrides();
@@ -71,7 +68,6 @@ if (str_starts_with($_qs, 'upgrade')) {
     if (function_exists('ini_set')) {
         ini_set('opcache.enable', '0');
     }
-    defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
     ConfigLoader::applyDefaults();
     ConfigLoader::loadEnv($paths->root);
     ConfigLoader::applyEnvOverrides();

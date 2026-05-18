@@ -76,8 +76,6 @@ final class CommonBootstrap
 
         ConfigLoader::applyDefaults();
 
-        defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
-
         ConfigLoader::loadEnv($paths->root);
         ConfigLoader::applyEnvOverrides();
 
@@ -186,7 +184,7 @@ final class CommonBootstrap
             Kernel::service(LangService::class)->loadLanguage('whats_new_' . AppInfo::branchFromVersion(AppInfo::VERSION) . '.lang');
         }
         Kernel::service(EventDispatcherInterface::class)->dispatch(new LoadingLang());
-        Kernel::service(LangService::class)->loadLanguage('lang', $paths->root . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
+        Kernel::service(LangService::class)->loadLanguage('lang', $paths->local, ['no_fallback' => true, 'local' => true]);
 
         if (Kernel::service(PermissionService::class)->isAGuest()) {
             $guestName = Lang::t('guest');

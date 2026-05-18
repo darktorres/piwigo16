@@ -68,7 +68,7 @@ final readonly class RedirectResponder
             CurrentUser::setRawAttributes(Kernel::service(UserService::class)->buildUser(Config::guestId(), true));
             $this->langService->loadLanguage('common.lang');
             $this->dispatcher->dispatch(new LoadingLang());
-            $this->langService->loadLanguage('lang', $this->paths->root . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
+            $this->langService->loadLanguage('lang', $this->paths->local, ['no_fallback' => true, 'local' => true]);
             $tpl = new Template($this->paths->root . 'themes', Kernel::service(UserService::class)->getDefaultTheme());
             TemplateRegistry::set($tpl);
         } elseif (RequestContextRegistry::current() === RequestContext::Admin) {

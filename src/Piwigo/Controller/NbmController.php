@@ -44,7 +44,7 @@ final readonly class NbmController implements ControllerInterface
         MailNotificationContext::init();
         $this->langService->loadLanguage('admin.lang');
         $this->dispatcher->dispatch(new LoadingLang());
-        $this->langService->loadLanguage('lang', $this->paths->root . PWG_LOCAL_DIR, ['no_fallback' => true, 'local' => true]);
+        $this->langService->loadLanguage('lang', $this->paths->local, ['no_fallback' => true, 'local' => true]);
 
         $rawSubscribe   = $_GET['subscribe']   ?? null;
         $rawUnsubscribe = $_GET['unsubscribe'] ?? null;

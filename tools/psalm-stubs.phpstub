@@ -11,7 +11,6 @@ namespace {
     // PHPWG_ROOT_PATH eliminated in Phase 6; the URL constants below remain
     // as Psalm stubs for the few remaining define()-driven URLs.
     const PHPWG_URL = '';
-    const PWG_LOCAL_DIR = '';
     const UPGRADES_PATH = '';
 
     // Table-prefix constants (table-name constants retired in Phase 2b — use Piwigo\Db\Tables::*)

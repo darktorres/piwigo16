@@ -49,17 +49,17 @@ final readonly class WatermarkProcessor
             if (IMAGETYPE_PNG != $type) {
                 $errors['watermarkImage'] = sprintf(Lang::t('Allowed file types: %s.'), 'PNG');
             } else {
-                $upload_dir = $this->paths->root . PWG_LOCAL_DIR . 'watermarks';
+                $upload_dir = $this->paths->local . 'watermarks';
                 if (Filesystem::mkgetdir($upload_dir, Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR)) {
                     $rawWmName    = $watermarkImage['name'] ?? null;
                     $wm_file_name = is_string($rawWmName) ? $rawWmName : '';
                     $new_name = StringUtil::str2url(StringUtil::getFilenameWoExtension($wm_file_name));
 
                     $watermark_files = [];
-                    if (($glob = glob($this->paths->root . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
+                    if (($glob = glob($this->paths->local . 'watermarks/*.png')) !== false) {
                         foreach ($glob as $file) {
                             $watermark_files[] = StringUtil::getFilenameWoExtension(
-                                substr($file, strlen($this->paths->root . PWG_LOCAL_DIR . 'watermarks/'))
+                                substr($file, strlen($this->paths->local . 'watermarks/'))
                             );
                         }
                     }

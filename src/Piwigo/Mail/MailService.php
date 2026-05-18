@@ -223,7 +223,7 @@ final readonly class MailService
             }
 
             $this->dispatcher->dispatch(new LoadingLang());
-            $this->langService->loadLanguage('lang', $this->paths->root . PWG_LOCAL_DIR, ['language' => $language, 'no_fallback' => true, 'local' => true]);
+            $this->langService->loadLanguage('lang', $this->paths->local, ['language' => $language, 'no_fallback' => true, 'local' => true]);
 
             LanguageStack::saveState($language);
             Translator::saveForLanguage($language);

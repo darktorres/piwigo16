@@ -502,7 +502,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                 foreach ($watermarkGlob !== false ? $watermarkGlob : [] as $file) {
                     $watermark_files[] = substr($file, strlen($this->paths->root));
                 }
-                if (($glob = glob($this->paths->root . PWG_LOCAL_DIR . 'watermarks/*.png')) !== false) {
+                if (($glob = glob($this->paths->local . 'watermarks/*.png')) !== false) {
                     foreach ($glob as $file) {
                         $watermark_files[] = substr($file, strlen($this->paths->root));
                     }
@@ -570,7 +570,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
     {
         $candidates = [
             $this->paths->root . 'local/config/config.inc.php',
-            $this->paths->root . PWG_LOCAL_DIR . 'config/config.inc.php',
+            $this->paths->local . 'config/config.inc.php',
         ];
         foreach ($candidates as $path) {
             $real = realpath($path);

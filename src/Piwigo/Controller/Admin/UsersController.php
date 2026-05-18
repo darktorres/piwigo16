@@ -536,7 +536,7 @@ final readonly class UsersController implements AdminSubControllerInterface
     {
         $candidates = [
             $this->paths->root . 'local/config/config.inc.php',
-            $this->paths->root . PWG_LOCAL_DIR . 'config/config.inc.php',
+            $this->paths->local . 'config/config.inc.php',
         ];
         foreach ($candidates as $path) {
             $real = realpath($path);

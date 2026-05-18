@@ -14,7 +14,6 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\Paths;
 use Piwigo\Core\ZipExtractor;
 use Piwigo\Event\Lifecycle\ThemeActivateErrors;
 use Piwigo\Html\HtmlService;
@@ -54,7 +53,6 @@ final class Themes
         private readonly UserService $userService,
         private readonly ActivityLogger $activityLogger,
         private readonly EventDispatcherInterface $dispatcher,
-        private readonly Paths $paths,
     ) {
         $this->getFsThemes();
 

@@ -9,6 +9,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\User\UserInit;
+use Piwigo\Http\ApiKeyAuthRegistry;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
@@ -113,7 +114,7 @@ final class UserBootstrap
                 $resolvedId = CurrentUser::get()->rawAttributes['id'] ?? $userId;
                 $userId = is_numeric($resolvedId) ? (int) $resolvedId : $userId;
             }
-            define('PWG_API_KEY_REQUEST', true);
+            ApiKeyAuthRegistry::markApiKeyAuth();
             $_POST['pwg_token'] = $_GET['pwg_token'] = Kernel::service(CsrfService::class)->getToken();
             $requestMethodRaw = $_REQUEST['method'];
             LoggerRegistry::current()->info(

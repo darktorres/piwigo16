@@ -12,9 +12,6 @@ namespace {
     // as Psalm stubs for the few remaining define()-driven URLs.
     const PHPWG_URL = '';
 
-    // Context flag (request-context now lives in Piwigo\Http\RequestContext / Registry — Phase 4c)
-    const PWG_API_KEY_REQUEST = '';
-
     // Misc
     const PEM_URL = '';
 

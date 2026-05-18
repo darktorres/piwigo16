@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Session;
 
 use Piwigo\Config\Config;
+use Piwigo\Http\ApiKeyAuthRegistry;
 
 final readonly class SessionService implements \SessionHandlerInterface
 {
@@ -58,7 +59,7 @@ final readonly class SessionService implements \SessionHandlerInterface
     #[\Override]
     public function write(string $id, string $data): bool
     {
-        if (defined('PWG_API_KEY_REQUEST')) {
+        if (ApiKeyAuthRegistry::isApiKeyAuth()) {
             return true;
         }
         $this->repo->write($this->getRemoteAddrSessionHash() . $id, $data);

@@ -26,6 +26,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\ApiKeyAuthRegistry;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
@@ -299,7 +300,7 @@ final readonly class GeneralEndpoints
     #[ApiMethod(summary: 'Tries to login the user.', tags: ['session'])]
     public function sessionLogin(array $params, PwgServer &$service): PwgError|true
     {
-        if (defined('PWG_API_KEY_REQUEST')) {
+        if (ApiKeyAuthRegistry::isApiKeyAuth()) {
             return new PwgError(401, 'Cannot use this method with an api key');
         }
         $username = is_string($params['username'] ?? null) ? $params['username'] : '';
@@ -319,7 +320,7 @@ final readonly class GeneralEndpoints
     #[ApiMethod(summary: 'Ends the current session.', tags: ['session'])]
     public function sessionLogout(mixed $params, PwgServer &$service): PwgError|true
     {
-        if (defined('PWG_API_KEY_REQUEST')) {
+        if (ApiKeyAuthRegistry::isApiKeyAuth()) {
             return new PwgError(401, 'Cannot use this method with an api key');
         }
         if (!$this->permissionService->isAGuest()) {

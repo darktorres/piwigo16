@@ -11,6 +11,7 @@ use Piwigo\Event\Ws\WsInvokeAllowed;
 use Piwigo\Event\Ws\WsMethodsRegistering;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\ApiKeyAuthRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
@@ -526,7 +527,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         // list of prohibited methods (\Piwigo\Config\Config::apiKeyForbiddenMethods()) for API keys
         // if it is, access is refused (false)
         if (
-            defined('PWG_API_KEY_REQUEST')
+            ApiKeyAuthRegistry::isApiKeyAuth()
             or (isset($_SESSION['connected_with']) and 'ws_session_login_api_key' === $_SESSION['connected_with'])
         ) {
             if (in_array($_REQUEST['method'], Config::apiKeyForbiddenMethods())) {

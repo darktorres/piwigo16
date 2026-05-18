@@ -50,14 +50,9 @@ final readonly class UpgradeController implements ControllerInterface
     {
         RequestContextRegistry::set(RequestContext::Upgrade);
 
-        $prefixeTable = Config::dbPrefix();
-
         if (!InstallSentinel::isInstalled($this->paths)) {
             die('Piwigo is not installed yet — navigate to index.php?/install first.');
         }
-
-        define('PREFIX_TABLE', $prefixeTable);
-        define('UPGRADES_PATH', $this->paths->root . 'install/db');
 
         Kernel::boot($this->paths);
 

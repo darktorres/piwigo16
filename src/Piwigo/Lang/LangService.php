@@ -12,6 +12,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LanguageStack;
 use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RequestContext;
+use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 
@@ -130,7 +132,7 @@ final class LangService
         }
         $langDir = $dirname . 'language/';
 
-        $defaultLanguage = (InstallSentinel::isInstalled($this->paths) && !defined('UPGRADES_PATH'))
+        $defaultLanguage = (InstallSentinel::isInstalled($this->paths) && RequestContextRegistry::current() !== RequestContext::Upgrade)
             ? Kernel::service(UserService::class)->getDefaultLanguage()
             : AppInfo::DEFAULT_LANGUAGE;
 

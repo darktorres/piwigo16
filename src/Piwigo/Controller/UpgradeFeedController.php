@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Admin\UpgradeService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Paths;
+use Piwigo\Db\Tables;
 use Piwigo\Http\ResponseFactory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -34,10 +35,9 @@ final readonly class UpgradeFeedController implements ControllerInterface
             die('upgrade feed is not active');
         }
 
-        define('PREFIX_TABLE', Config::dbPrefix());
-        define('UPGRADES_PATH', $this->paths->root . 'install/db');
+        $upgradesDir = $this->paths->root . 'install/db/';
 
-        $applied  = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT id FROM ' . PREFIX_TABLE . 'upgrade')->fetchAllAssociative(), 'id'));
+        $applied  = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::upgrade())->fetchAllAssociative(), 'id'));
         $existing = UpgradeService::getAvailableUpgradeIds();
         $to_apply = array_diff($existing, $applied);
 
@@ -52,10 +52,10 @@ final readonly class UpgradeFeedController implements ControllerInterface
             // Upgrade script path computed from runtime $upgrade_id —
             // Psalm cannot follow the include statically.
             /** @psalm-suppress UnresolvableInclude */
-            require(UPGRADES_PATH . '/' . $upgrade_id . '-database.php');
+            require($upgradesDir . $upgrade_id . '-database.php');
             /** @var string|null $upgrade_description -- may be set by the required migration file */
 
-            $this->conn->insert(PREFIX_TABLE . 'upgrade', [
+            $this->conn->insert(Tables::upgrade(), [
                 'id'          => $upgrade_id,
                 'applied'     => new \DateTimeImmutable()->format('Y-m-d H:i:s'),
                 'description' => is_string($upgrade_description) ? $upgrade_description : '',

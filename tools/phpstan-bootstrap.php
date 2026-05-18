@@ -6,10 +6,6 @@ declare(strict_types=1);
 // via DI. PHPWG_VERSION migrated to AppInfo::VERSION. PWG_LOCAL_DIR
 // retired (Phase C of define()-retirement) — use $paths->local.
 
-// PREFIX_TABLE is defined at runtime by UpgradeController / UpgradeFeedController (upgrade path only).
-// Declared here as a PHPStan placeholder so migration-step analysis resolves it.
-define('PREFIX_TABLE', 'piwigo_');
-
 // Runtime constants from CommonBootstrap::run() — placeholder values for static analysis.
 if (!defined('PHPWG_URL')) {
     define('PHPWG_URL', 'https://piwigo.org');

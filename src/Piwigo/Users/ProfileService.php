@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
-use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
@@ -31,7 +30,6 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class ProfileService
 {
     public function __construct(
-        private Connection $conn,
         private AuthService $authService,
         private DateService $dateService,
         private LangService $langService,
@@ -159,7 +157,8 @@ final readonly class ProfileService
                 foreach ($fields as $field) {
                     $set[$field] = $data[$field] ?? null;
                 }
-                $this->conn->update(Tables::users(), $set, [$idField => $data[$idField]]);
+                $userIdInt = is_numeric($data[$idField] ?? null) ? (int) $data[$idField] : 0;
+                $this->userRepository->updateUserById(Tables::users(), $idField, $userIdInt, $set);
 
                 if ($_POST['mail_address'] != $userdata['email']) {
                     $this->authService->deactivatePasswordResetKey(is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0);
@@ -186,7 +185,8 @@ final readonly class ProfileService
                     }
                 }
                 if ($set !== []) {
-                    $this->conn->update(Tables::userInfos(), $set, ['user_id' => $data['user_id']]);
+                    $userIdInt = is_numeric($data['user_id'] ?? null) ? (int) $data['user_id'] : 0;
+                    $this->userRepository->updateUserInfosById($userIdInt, $set);
                 }
                 $activity_details_tables[] = 'user_infos';
             }
@@ -247,7 +247,7 @@ final readonly class ProfileService
         $dbnow    = new \DateTimeImmutable('+1 day')->format('Y-m-d H:i:s');
         $tpl->assign('API_CURRENT_DATE', explode(' ', $dbnow)[0]);
 
-        $duration         = [];
+        $durationDays     = [];
         $display_duration = [];
         $has_custom       = false;
         foreach (Config::apiKeyDuration() as $day) {
@@ -255,14 +255,12 @@ final readonly class ProfileService
                 $has_custom = true;
                 continue;
             }
-            $dayStr       = is_scalar($day) ? (string) $day : '0';
-            $duration[]   = 'ADDDATE(NOW(), INTERVAL ' . $dayStr . ' DAY) as `' . $dayStr . '`';
+            $durationDays[] = is_numeric($day) ? (int) $day : 0;
         }
 
-        $query  = 'SELECT ' . implode(', ', $duration) . ';';
-        $result = $this->conn->executeQuery($query)->fetchAllAssociative()[0];
+        $result = $this->userRepository->findApiKeyExpirationDatesFor($durationDays);
         foreach ($result as $day => $date) {
-            $display_duration[$day] = Lang::t('%d days', $day) . ' (' . $this->dateService->formatDate(is_scalar($date) ? (string) $date : null, ['day', 'month', 'year']) . ')';
+            $display_duration[$day] = Lang::t('%d days', $day) . ' (' . $this->dateService->formatDate($date, ['day', 'month', 'year']) . ')';
         }
         if ($has_custom) {
             $display_duration['custom'] = Lang::t('Custom date');

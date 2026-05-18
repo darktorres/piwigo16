@@ -741,6 +741,48 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
+     * Update arbitrary columns on user_infos for one user.
+     *
+     * @param array<string, mixed> $fields
+     */
+    public function updateUserInfosById(int $userId, array $fields): void
+    {
+        if ($fields === []) {
+            return;
+        }
+        $this->conn->update($this->table('user_infos'), $fields, ['user_id' => $userId]);
+    }
+
+    /**
+     * For each integer day count in $days, return the corresponding
+     * server-side ADDDATE(NOW(), INTERVAL $day DAY) value as a yyyy-mm-dd
+     * string. Used by the profile API-key expiration picker.
+     *
+     * @param  list<int> $days
+     * @return array<string, string>
+     */
+    public function findApiKeyExpirationDatesFor(array $days): array
+    {
+        if ($days === []) {
+            return [];
+        }
+        $exprs = [];
+        foreach ($days as $day) {
+            $dayInt   = (int) $day;
+            $exprs[]  = 'ADDDATE(NOW(), INTERVAL ' . $dayInt . ' DAY) AS `' . $dayInt . '`';
+        }
+        $row = $this->conn->executeQuery('SELECT ' . implode(', ', $exprs))->fetchAssociative();
+        if ($row === false) {
+            return [];
+        }
+        $out = [];
+        foreach ($row as $key => $value) {
+            $out[(string) $key] = is_scalar($value) ? (string) $value : '';
+        }
+        return $out;
+    }
+
+    /**
      * Return all ids from the configurable users table.
      *
      * @return list<int>

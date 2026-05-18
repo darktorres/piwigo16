@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocBeginProfile;
 use Piwigo\Event\Location\LocEndProfile;
 use Piwigo\Html\HtmlService;
@@ -39,7 +37,6 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class ProfileController implements ControllerInterface
 {
     public function __construct(
-        private Connection $conn,
         private HtmlService $htmlService,
         private MenubarRenderer $menubarRenderer,
         private ProfileService $profileService,
@@ -149,7 +146,8 @@ final readonly class ProfileController implements ControllerInterface
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
             $user['language'] = $cookie_lang;
-            $this->conn->update(Tables::userInfos(), ['language' => $cookie_lang], ['user_id' => $user['id']]);
+            $userIdInt        = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+            $this->userRepository->updateLanguage($userIdInt, $cookie_lang);
             $this->langService->loadLanguage('common.lang', '', ['language' => $cookie_lang]);
         }
 

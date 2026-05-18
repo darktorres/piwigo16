@@ -94,6 +94,43 @@ final class AuthKeyRepository extends AbstractRepository
     }
 
     /**
+     * Mark a (user_id, auth_key) row as revoked (sets revoked_on = $now).
+     */
+    public function revokeKey(int $userId, string $authKey, string $now): void
+    {
+        $this->conn->update(
+            $this->table('user_auth_keys'),
+            ['revoked_on' => $now],
+            ['auth_key' => $authKey, 'user_id' => $userId],
+        );
+    }
+
+    /** Update apikey_name for a (user_id, auth_key) row. */
+    public function updateApiKeyName(int $userId, string $authKey, string $apiName): void
+    {
+        $this->conn->update(
+            $this->table('user_auth_keys'),
+            ['apikey_name' => $apiName],
+            ['auth_key' => $authKey, 'user_id' => $userId],
+        );
+    }
+
+    /**
+     * Return all api_key rows for the given user.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findApiKeysByUserId(int $userId): array
+    {
+        return $this->conn->executeQuery(
+            'SELECT * FROM ' . $this->table('user_auth_keys')
+            . " WHERE user_id = ? AND key_type = 'api_key'",
+            [$userId],
+            [ParameterType::INTEGER],
+        )->fetchAllAssociative();
+    }
+
+    /**
      * Insert a new user_auth_keys row and return its lastInsertId.
      *
      * @param array<string, mixed> $row

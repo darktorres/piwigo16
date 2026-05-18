@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the user domain. */
@@ -737,6 +738,293 @@ final class UserRepository extends AbstractRepository
             ->andWhere('activation_key_expire > NOW()')
             ->executeQuery()
             ->fetchAllAssociative();
+    }
+
+    /**
+     * Return user's authorized favorite image ids — favorites whose image is
+     * still in a permission-visible category.
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<int>
+     */
+    public function findAuthorizedFavoriteImageIds(
+        int $userId,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): array {
+        $query  = 'SELECT DISTINCT f.image_id FROM ' . $this->table('favorites') . ' AS f'
+            . ' INNER JOIN ' . $this->table('image_category') . ' AS ic ON f.image_id = ic.image_id'
+            . ' WHERE f.user_id = ? ' . $permWhere;
+        $params = [$userId, ...$permParams];
+        $types  = [ParameterType::INTEGER, ...$permTypes];
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery($query, $params, $types)->fetchFirstColumn());
+    }
+
+    /**
+     * Return image_ids in the given user's favorites (no permission filter).
+     *
+     * @return list<int>
+     */
+    public function findFavoriteImageIdsByUserPlain(int $userId): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('image_id')
+            ->from($this->table('favorites'))
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return user record selected via the Config::userFields() column map
+     * (each value is `<dbfield> AS <pwgfield>`), keyed by pwgfield.
+     *
+     * @param  array<string, string>     $userFields  pwgfield → dbfield
+     * @return array<string, mixed>|null
+     */
+    public function findByConfigFields(array $userFields, string $usersTable, int $userId): ?array
+    {
+        if ($userFields === []) {
+            return null;
+        }
+        $cols = [];
+        foreach ($userFields as $pwgfield => $dbfield) {
+            $cols[] = $dbfield . ' AS ' . $pwgfield;
+        }
+        $idField = $userFields['id'] ?? 'id';
+        $query   = 'SELECT ' . implode(', ', $cols) . ' FROM ' . $usersTable . ' WHERE ' . $idField . ' = ?';
+        $row     = $this->conn->executeQuery($query, [$userId], [ParameterType::INTEGER])->fetchAssociative();
+        return $row !== false ? $row : null;
+    }
+
+    /**
+     * Return the merged user_infos + user_cache + theme.name row for the
+     * given user, or null if no user_infos row exists.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findInfoCacheThemeByUserId(int $userId): ?array
+    {
+        $query = 'SELECT ui.*, uc.*, t.name AS theme_name FROM ' . $this->table('user_infos') . ' AS ui'
+            . ' LEFT JOIN ' . $this->table('user_cache') . ' AS uc ON ui.user_id = uc.user_id'
+            . ' LEFT JOIN ' . $this->table('themes') . ' AS t ON t.id = ui.theme'
+            . ' WHERE ui.user_id = ?';
+        $row = $this->conn->executeQuery($query, [$userId], [ParameterType::INTEGER])->fetchAssociative();
+        return $row !== false ? $row : null;
+    }
+
+    /**
+     * Count whether external-auth user-info rows are wired up — used by
+     * the externalAuth bootstrap to detect a need-to-init situation.
+     */
+    public function countExternalAuthInfoByUserId(int $userId): int
+    {
+        $value = $this->conn->executeQuery(
+            'SELECT COUNT(1) AS counter FROM ' . $this->table('user_infos') . ' AS ui'
+            . ' LEFT JOIN ' . $this->table('user_cache') . ' AS uc ON ui.user_id = uc.user_id'
+            . ' LEFT JOIN ' . $this->table('themes') . ' AS t ON t.id = ui.theme'
+            . ' WHERE ui.user_id = ? GROUP BY ui.user_id',
+            [$userId],
+            [ParameterType::INTEGER],
+        )->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /** Count user_cache rows for the given user (0 or 1). */
+    public function countCacheByUserId(int $userId): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('user_cache'))
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /** Delete user_cache_categories rows for the given user. */
+    public function deleteUserCacheCategoriesByUserId(int $userId): void
+    {
+        $this->conn->executeStatement(
+            'DELETE FROM ' . $this->table('user_cache_categories') . ' WHERE user_id = ?',
+            [$userId],
+            [ParameterType::INTEGER],
+        );
+    }
+
+    /**
+     * Replace user_cache_categories rows for the user atomically. Each row
+     * carries (cat_id, date_last, max_date_last, nb_images, count_images,
+     * nb_categories, count_categories) for one category.
+     *
+     * @param list<array<string, mixed>> $rows
+     */
+    public function insertUserCacheCategoriesBatch(int $userId, array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $this->conn->executeStatement(
+                    'INSERT IGNORE INTO ' . $this->table('user_cache_categories')
+                    . ' (user_id, cat_id, date_last, max_date_last, nb_images, count_images, nb_categories, count_categories)'
+                    . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                    [$row['user_id'] ?? null, $row['cat_id'] ?? null, $row['date_last'] ?? null, $row['max_date_last'] ?? null, $row['nb_images'] ?? null, $row['count_images'] ?? null, $row['nb_categories'] ?? null, $row['count_categories'] ?? null],
+                );
+            }
+        });
+    }
+
+    /** Delete user_cache row for the given user. */
+    public function deleteUserCacheByUserId(int $userId): void
+    {
+        $this->conn->executeStatement(
+            'DELETE FROM ' . $this->table('user_cache') . ' WHERE user_id = ?',
+            [$userId],
+            [ParameterType::INTEGER],
+        );
+    }
+
+    /**
+     * Insert (with IGNORE on PK conflict) a single user_cache row.
+     * forbidden_categories / image_access_list are JSON strings (encoded by
+     * the caller). last_photo_date may be null.
+     */
+    public function insertUserCacheRow(
+        int $userId,
+        bool $needUpdate,
+        int $cacheUpdateTime,
+        string $forbiddenCatsJson,
+        int $nbTotalImages,
+        ?string $lastPhotoDate,
+        string $imageAccessType,
+        string $imageAccessListJson,
+    ): void {
+        $cols   = ['user_id', 'need_update', 'cache_update_time', 'forbidden_categories', 'nb_total_images'];
+        $params = [$userId, $needUpdate ? 1 : 0, $cacheUpdateTime, $forbiddenCatsJson, $nbTotalImages];
+        $types  = [ParameterType::INTEGER, ParameterType::INTEGER, ParameterType::INTEGER, ParameterType::STRING, ParameterType::INTEGER];
+        if ($lastPhotoDate !== null && $lastPhotoDate !== '') {
+            $cols[]   = 'last_photo_date';
+            $params[] = $lastPhotoDate;
+            $types[]  = ParameterType::STRING;
+        }
+        $cols   = [...$cols, 'image_access_type', 'image_access_list'];
+        $params = [...$params, $imageAccessType, $imageAccessListJson];
+        $types  = [...$types, ParameterType::STRING, ParameterType::STRING];
+        $placeholders = implode(', ', array_fill(0, count($cols), '?'));
+        $this->conn->executeStatement(
+            'INSERT IGNORE INTO ' . $this->table('user_cache') . ' (' . implode(', ', $cols) . ') VALUES (' . $placeholders . ')',
+            $params,
+            $types,
+        );
+    }
+
+    /**
+     * Return user_ids whose status is 'webmaster' or 'admin'.
+     *
+     * @return list<int>
+     */
+    public function findAdminUserIds(): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('user_id')
+            ->from($this->table('user_infos'));
+        $qb->where($qb->expr()->in('status', ':statuses'))
+           ->setParameter('statuses', ['webmaster', 'admin'], ArrayParameterType::STRING);
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Insert a new user row and return its id. $usersTable comes from Config.
+     *
+     * @param array<string, mixed> $fields
+     */
+    public function insertNew(string $usersTable, array $fields): int
+    {
+        $this->conn->insert($usersTable, $fields);
+        return (int) $this->conn->lastInsertId();
+    }
+
+    /**
+     * Insert user_group rows atomically (each row {user_id, group_id}).
+     *
+     * @param list<array{user_id: int, group_id: int}> $rows
+     */
+    public function insertUserGroupRows(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $this->conn->insert($this->table('user_group'), $row);
+            }
+        });
+    }
+
+    /** Update arbitrary columns on a single users row. */
+    /** @param array<string, mixed> $fields */
+    public function updateUserById(string $usersTable, string $idField, int $userId, array $fields): void
+    {
+        if ($fields === []) {
+            return;
+        }
+        $this->conn->update($usersTable, $fields, [$idField => $userId]);
+    }
+
+    /**
+     * Insert user_infos rows atomically.
+     *
+     * @param list<array<string, mixed>> $rows
+     */
+    public function insertUserInfosBatch(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $this->conn->insert($this->table('user_infos'), $row);
+            }
+        });
+    }
+
+    /**
+     * Return ids among $groupIds that exist in the groups table.
+     *
+     * @param  int[] $groupIds
+     * @return list<int>
+     */
+    public function findExistingGroupIdsAmong(array $groupIds): array
+    {
+        if ($groupIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('groups'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $groupIds, ArrayParameterType::INTEGER);
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Run an arbitrary parameterized statement (DELETE/UPDATE) — transitional
+     * passthrough used by UserService::getuserdata's user-cache rebuild path
+     * that composes statements out of the caller's own state.
+     *
+     * @param  list<mixed>                                                    $params
+     * @param  list<ArrayParameterType|\Doctrine\DBAL\ParameterType>          $types
+     */
+    public function executeRawStatement(string $sql, array $params = [], array $types = []): void
+    {
+        $this->conn->executeStatement($sql, $params, $types);
     }
 
     /** Update `language` for the given user (used after Accept-Language detection). */

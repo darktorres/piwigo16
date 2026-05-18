@@ -673,6 +673,54 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Return image ids whose category_id is NOT in $forbiddenCatIds AND
+     * whose level > $maxLevel. Used by the user-cache rebuild to compute
+     * the per-user forbidden-images list.
+     *
+     * @param  list<int> $forbiddenCatIds
+     * @return list<int>
+     */
+    public function findForbiddenImageIdsForUser(array $forbiddenCatIds, int $maxLevel): array
+    {
+        if ($forbiddenCatIds === []) {
+            $forbiddenCatIds = [0];
+        }
+        $rows = $this->conn->executeQuery(
+            'SELECT DISTINCT(id) FROM ' . $this->table('images')
+            . ' INNER JOIN ' . $this->table('image_category')
+            . ' ON id = image_id WHERE category_id NOT IN (?) AND level > ?',
+            [$forbiddenCatIds, $maxLevel],
+            [ArrayParameterType::INTEGER, ParameterType::INTEGER],
+        )->fetchAllAssociative();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'id'));
+    }
+
+    /**
+     * Count distinct image_ids whose category_id NOT IN $forbiddenCatIds
+     * and whose image_id NOT IN $forbiddenImageIds. Used for nb_total_images
+     * in the user_cache rebuild.
+     *
+     * @param list<int> $forbiddenCatIds
+     * @param list<int> $forbiddenImageIds
+     */
+    public function countVisibleDistinctImageIds(array $forbiddenCatIds, array $forbiddenImageIds): int
+    {
+        if ($forbiddenCatIds === []) {
+            $forbiddenCatIds = [0];
+        }
+        if ($forbiddenImageIds === []) {
+            $forbiddenImageIds = [0];
+        }
+        $value = $this->conn->executeQuery(
+            'SELECT COUNT(DISTINCT(image_id)) AS total FROM ' . $this->table('image_category')
+            . ' WHERE category_id NOT IN (?) AND image_id NOT IN (?)',
+            [$forbiddenCatIds, $forbiddenImageIds],
+            [ArrayParameterType::INTEGER, ArrayParameterType::INTEGER],
+        )->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
      * Among the given image ids, return those that exist in the images table.
      *
      * @param int[] $ids

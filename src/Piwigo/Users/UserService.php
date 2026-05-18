@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
@@ -49,7 +48,6 @@ final class UserService
 
     public function __construct(
         private readonly UserRepository $userRepo,
-        private readonly Connection $conn,
         private readonly HistoryRepository $histRepo,
         private readonly ActivityRepository $actRepo,
         private readonly GroupRepository $groupRepo,
@@ -63,6 +61,7 @@ final class UserService
         private readonly HtmlService $htmlService,
         private readonly DateService $dateService,
         private readonly CategoryService $categoryService,
+        private readonly \Piwigo\Image\ImageRepository $imageRepository,
         private readonly UserAdminService $userAdminService,
         private readonly SessionService $sessionService,
         private readonly AuthService $authService,
@@ -115,20 +114,13 @@ final class UserService
                 Config::userFields()['email']    => $mailAddress,
             ];
 
-            $this->conn->insert(Tables::users(), $insert);
-            $userId = (int) $this->conn->lastInsertId();
+            $userId = $this->userRepo->insertNew(Tables::users(), $insert);
 
             $inserts = [];
             foreach ($this->userRepo->findDefaultGroupIds() as $groupId) {
                 $inserts[] = ['user_id' => $userId, 'group_id' => $groupId];
             }
-            if (count($inserts) != 0) {
-                $this->conn->transactional(function () use ($inserts): void {
-                    foreach ($inserts as $row) {
-                        $this->conn->insert(Tables::userGroup(), $row);
-                    }
-                });
-            }
+            $this->userRepo->insertUserGroupRows($inserts);
 
             $override = [];
             if (Config::browserLanguage() and ($language = $this->preferencesService->getBrowserLanguage()) !== false && $language !== '') {
@@ -215,46 +207,15 @@ final class UserService
     {
         $logger = LoggerRegistry::current();
 
-        $query    = 'SELECT ';
-        $isFirst  = true;
-        foreach (Config::userFields() as $pwgfield => $dbfield) {
-            if ($isFirst) {
-                $isFirst = false;
-            } else {
-                $query .= '
-     , ';
-            }
-            $query .= $dbfield . ' AS ' . $pwgfield;
-        }
-        $query .= '
-  FROM ' . Tables::users() . '
-  WHERE ' . Config::userFields()['id'] . ' = \'' . $userId . '\'';
-
-        $rowResult = $this->conn->executeQuery($query)->fetchAssociative();
-        $row = $rowResult !== false ? $rowResult : null;
+        $row = $this->userRepo->findByConfigFields(Config::userFields(), Tables::users(), $userId);
 
         if (Config::externalAuthentification()) {
-            $counter = $this->conn->executeQuery(
-                'SELECT COUNT(1) AS counter FROM ' . Tables::userInfos() . ' AS ui
-                 LEFT JOIN ' . Tables::userCache() . ' AS uc ON ui.user_id = uc.user_id
-                 LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
-                 WHERE ui.user_id = ? GROUP BY ui.user_id',
-                [$userId]
-            )->fetchOne();
-            if ((is_numeric($counter) ? (int) $counter : 0) !== 1) {
+            if ($this->userRepo->countExternalAuthInfoByUserId($userId) !== 1) {
                 $this->createUserInfos($userId);
             }
         }
 
-        $userInfosRow = $this->conn->executeQuery(
-            'SELECT ui.*, uc.*, t.name AS theme_name
-             FROM ' . Tables::userInfos() . ' AS ui
-             LEFT JOIN ' . Tables::userCache() . ' AS uc ON ui.user_id = uc.user_id
-             LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
-             WHERE ui.user_id = ?',
-            [$userId]
-        )->fetchAssociative();
-        $userInfosRow = $userInfosRow !== false ? $userInfosRow : null;
+        $userInfosRow = $this->userRepo->findInfoCacheThemeByUserId($userId);
 
         $userdata = array_merge($row ?? [], $userInfosRow ?? []);
 
@@ -307,7 +268,7 @@ final class UserService
                     $waitStart = StringUtil::getMoment();
                     for ($k = 0; $k < 20; $k++) {
                         sleep(1);
-                        $nbCacheLines = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::userCache() . ' WHERE user_id=' . $udId . ';')->fetchOne();
+                        $nbCacheLines = $this->userRepo->countCacheByUserId($udId);
                         $waitingTime  = StringUtil::getElapsedTime($waitStart, StringUtil::getMoment());
 
                         if ($nbCacheLines > 0) {
@@ -347,30 +308,14 @@ final class UserService
                 $forbiddenCatIds = $this->permissionService->calculatePermissions($udId, $udStatus);
                 $userdata['forbidden_categories'] = $forbiddenCatIds;
 
-                $forbiddenImageIds = array_map(
-                    static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-                    array_column(
-                        $this->conn->executeQuery(
-                            'SELECT DISTINCT(id) FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory()
-                            . ' ON id=image_id WHERE category_id NOT IN (?) AND level > ?',
-                            [$forbiddenCatIds, $udLevel],
-                            [ArrayParameterType::INTEGER, ParameterType::INTEGER]
-                        )->fetchAllAssociative(),
-                        'id'
-                    )
-                );
+                $forbiddenImageIds = $this->imageRepository->findForbiddenImageIdsForUser($forbiddenCatIds, $udLevel);
                 if ($forbiddenImageIds === []) {
                     $forbiddenImageIds = [0];
                 }
                 $userdata['image_access_type'] = 'NOT IN';
                 $userdata['image_access_list'] = $forbiddenImageIds;
 
-                $userdata['nb_total_images'] = $this->conn->executeQuery(
-                    'SELECT COUNT(DISTINCT(image_id)) AS total FROM ' . Tables::imageCategory()
-                    . ' WHERE category_id NOT IN (?) AND image_id NOT IN (?)',
-                    [$forbiddenCatIds, $forbiddenImageIds],
-                    [ArrayParameterType::INTEGER, ArrayParameterType::INTEGER]
-                )->fetchOne();
+                $userdata['nb_total_images'] = $this->imageRepository->countVisibleDistinctImageIds($forbiddenCatIds, $forbiddenImageIds);
 
                 $userCacheCats = $this->categoryService->getComputedCategories($userdata, null);
                 if (!$this->permissionService->isAdmin($udStatus)) {
@@ -387,17 +332,14 @@ final class UserService
                     }
                 }
 
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userCacheCategories() . ' WHERE user_id = ?', [$udId]);
-                $this->conn->transactional(function () use ($userCacheCats): void {
-                    foreach ($userCacheCats as $row) {
-                        $this->conn->executeStatement(
-                            'INSERT IGNORE INTO ' . Tables::userCacheCategories() . ' (user_id, cat_id, date_last, max_date_last, nb_images, count_images, nb_categories, count_categories) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                            [$row['user_id'] ?? null, $row['cat_id'] ?? null, $row['date_last'] ?? null, $row['max_date_last'] ?? null, $row['nb_images'] ?? null, $row['count_images'] ?? null, $row['nb_categories'] ?? null, $row['count_categories'] ?? null]
-                        );
-                    }
-                });
+                $this->userRepo->deleteUserCacheCategoriesByUserId($udId);
+                $cacheCatRows = [];
+                foreach ($userCacheCats as $row) {
+                    $cacheCatRows[] = $row;
+                }
+                $this->userRepo->insertUserCacheCategoriesBatch($udId, $cacheCatRows);
 
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userCache() . ' WHERE user_id = ?', [$udId]);
+                $this->userRepo->deleteUserCacheByUserId($udId);
                 $udNeedUpdate      = BoolUtil::fromMixed($userdata['need_update'] ?? null);
                 $udCacheUpdateTime = is_numeric($userdata['cache_update_time']) ? (int) $userdata['cache_update_time'] : 0;
                 $udNbTotalImages   = is_numeric($userdata['nb_total_images']) ? (int) $userdata['nb_total_images'] : 0;
@@ -405,17 +347,15 @@ final class UserService
                 $udLastPhotoDate   = is_string($lastPhotoDateRaw) ? $lastPhotoDateRaw : '';
                 $forbiddenCatsJson = json_encode($forbiddenCatIds, JSON_THROW_ON_ERROR);
                 $imageAccessJson   = json_encode($forbiddenImageIds, JSON_THROW_ON_ERROR);
-                $lastPhotoPlaceholder = $udLastPhotoDate === '' ? 'NULL' : '?';
-                $cacheParams = [$udId, $udNeedUpdate ? 1 : 0, $udCacheUpdateTime, $forbiddenCatsJson, $udNbTotalImages, 'NOT IN', $imageAccessJson];
-                if ($udLastPhotoDate !== '') {
-                    array_splice($cacheParams, 5, 0, [$udLastPhotoDate]);
-                }
-                $this->conn->executeStatement(
-                    'INSERT IGNORE INTO ' . Tables::userCache() .
-                    ' (user_id, need_update, cache_update_time, forbidden_categories, nb_total_images,' .
-                    '  last_photo_date, image_access_type, image_access_list)' .
-                    ' VALUES (?, ?, ?, ?, ?, ' . $lastPhotoPlaceholder . ', ?, ?)',
-                    $cacheParams
+                $this->userRepo->insertUserCacheRow(
+                    $udId,
+                    $udNeedUpdate,
+                    $udCacheUpdateTime,
+                    $forbiddenCatsJson,
+                    $udNbTotalImages,
+                    $udLastPhotoDate === '' ? null : $udLastPhotoDate,
+                    'NOT IN',
+                    $imageAccessJson,
                 );
 
                 $this->mutex->release($cacheTokenName);
@@ -436,19 +376,12 @@ final class UserService
         }
 
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'ic.category_id'], 'AND');
-        $query = '
-SELECT DISTINCT f.image_id
-  FROM ' . Tables::favorites() . ' AS f INNER JOIN ' . Tables::imageCategory() . ' AS ic
-    ON f.image_id = ic.image_id
-  WHERE f.user_id = ' . $currentUser->id . '
-  ' . $permSql . '
-;';
-        $authorizeds = array_column($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative(), 'image_id');
-        $favorites   = array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::favorites() . ' WHERE user_id = ' . $currentUser->id . ';')->fetchAllAssociative(), 'image_id');
+        $authorizeds = $this->userRepo->findAuthorizedFavoriteImageIds((int) $currentUser->id, $permSql, $permParams, $permTypes);
+        $favorites   = $this->userRepo->findFavoriteImageIdsByUserPlain((int) $currentUser->id);
 
-        $toDeletes = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $favorites), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $authorizeds));
+        $toDeletes = array_values(array_diff($favorites, $authorizeds));
         if (count($toDeletes) > 0) {
-            $this->userRepo->deleteFavoritesByImageIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_values($toDeletes)));
+            $this->userRepo->deleteFavoritesByImageIds($toDeletes);
         }
     }
 
@@ -552,11 +485,7 @@ SELECT DISTINCT f.image_id
                 $inserts[] = $insert;
             }
 
-            $this->conn->transactional(function () use ($inserts): void {
-                foreach ($inserts as $row) {
-                    $this->conn->insert(Tables::userInfos(), $row);
-                }
-            });
+            $this->userRepo->insertUserInfosBatch($inserts);
         }
     }
 
@@ -621,8 +550,8 @@ SELECT DISTINCT f.image_id
             if (!empty($params['password'])) {
                 if (!$this->permissionService->isWebmaster()) {
                     $passwordProtectedUsers = [Config::guestId()];
-                    $adminIds = array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userInfos() . ' WHERE status IN (\'webmaster\', \'admin\');')->fetchAllAssociative(), 'user_id');
-                    $passwordProtectedUsers = array_merge($passwordProtectedUsers, array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $adminIds), [(string) $currentUser->id]));
+                    $adminIds = $this->userRepo->findAdminUserIds();
+                    $passwordProtectedUsers = array_merge($passwordProtectedUsers, array_diff(array_map(static fn (int $v): string => (string) $v, $adminIds), [(string) $currentUser->id]));
                     if (in_array($paramUserId[0], $passwordProtectedUsers)) {
                         return ['error' => ['code' => 403, 'message' => 'Only webmasters can change password of other "webmaster/admin" users']];
                     }
@@ -641,7 +570,7 @@ SELECT DISTINCT f.image_id
 
             $protectedUsers = [$currentUser->id, Config::guestId(), Config::webmasterId()];
             if ('admin' == $currentUser->status) {
-                $protectedUsers = array_merge($protectedUsers, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery('SELECT user_id FROM ' . Tables::userInfos() . ' WHERE status IN (\'webmaster\', \'admin\');')->fetchAllAssociative(), 'user_id')));
+                $protectedUsers = array_merge($protectedUsers, $this->userRepo->findAdminUserIds());
             }
             $params['user_id_for_status'] = array_values(array_diff(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId), $protectedUsers));
             $updateStatus = $params['status'];
@@ -673,7 +602,7 @@ SELECT DISTINCT f.image_id
         $paramUid0   = is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : 0;
         $paramGroupId = is_array($params['group_id'] ?? null) ? $params['group_id'] : [];
 
-        $this->conn->update(Tables::users(), $updates, [Config::userFields()['id'] => $paramUid0]);
+        $this->userRepo->updateUserById(Tables::users(), Config::userFields()['id'], (int) $paramUid0, $updates);
 
         if (isset($updates[Config::userFields()['password']])) {
             $this->authService->deactivateUserAuthKeys($paramUid0);
@@ -694,35 +623,33 @@ SELECT DISTINCT f.image_id
         }
 
         if (count($updatesInfos) > 0) {
-            $query  = 'UPDATE ' . Tables::userInfos() . ' SET ';
-            $first  = true;
+            $sets   = [];
+            $vals   = [];
+            $types  = [];
             foreach ($updatesInfos as $field => $value) {
-                if (!$first) {
-                    $query .= ', ';
-                } else {
-                    $first = false;
-                }
-                $query .= $field . ' = "' . (is_scalar($value) ? (string) $value : '') . '"';
+                $sets[]  = $field . ' = ?';
+                $vals[]  = is_scalar($value) ? (string) $value : '';
+                $types[] = ParameterType::STRING;
             }
-            $query .= ' WHERE user_id IN(' . implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $paramUserId)) . ')';
-            $this->conn->executeStatement($query);
+            $userIds = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId));
+            $sql     = 'UPDATE ' . Tables::userInfos() . ' SET ' . implode(', ', $sets) . ' WHERE user_id IN (?)';
+            $vals[]  = $userIds;
+            $types[] = ArrayParameterType::INTEGER;
+            $this->userRepo->executeRawStatement($sql, $vals, $types);
         }
 
         if (count($paramGroupId) > 0) {
             $this->groupRepo->deleteUserGroupByUserIds(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId));
-            $groupIds = array_column($this->conn->executeQuery('SELECT id FROM `' . Tables::groups() . '` WHERE id IN (' . implode(',', array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $paramGroupId)) . ');')->fetchAllAssociative(), 'id');
+            $groupIdsInput = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramGroupId);
+            $groupIds      = $this->userRepo->findExistingGroupIdsAmong($groupIdsInput);
             if (count($groupIds) > 0) {
                 $inserts = [];
                 foreach ($groupIds as $gid) {
                     foreach ($paramUserId as $uid) {
-                        $inserts[] = ['user_id' => $uid, 'group_id' => $gid];
+                        $inserts[] = ['user_id' => is_numeric($uid) ? (int) $uid : 0, 'group_id' => $gid];
                     }
                 }
-                $this->conn->transactional(function () use ($inserts): void {
-                    foreach ($inserts as $row) {
-                        $this->conn->insert(Tables::userGroup(), $row);
-                    }
-                });
+                $this->userRepo->insertUserGroupRows($inserts);
             }
         }
 
@@ -755,18 +682,17 @@ SELECT DISTINCT f.image_id
         }
         $key['expired_on'] = $expiration;
 
-        $this->conn->insert(Tables::userAuthKeys(), $key);
+        $this->authKeyRepo->insertKey($key);
         $key['apikey_secret'] = $keySecret;
         return $key;
     }
 
     public function revokeApiKey(int $userId, string $pkid): string|bool
     {
-        $uid = $userId;
-        if (!$this->authKeyRepo->existsByKeyAndUser($pkid, $uid)) {
+        if (!$this->authKeyRepo->existsByKeyAndUser($pkid, $userId)) {
             return Lang::t('API Key not found');
         }
-        $this->conn->update(Tables::userAuthKeys(), ['revoked_on' => new \DateTimeImmutable()->format('Y-m-d H:i:s')], ['auth_key' => $pkid, 'user_id' => $uid]);
+        $this->authKeyRepo->revokeKey($userId, $pkid, new \DateTimeImmutable()->format('Y-m-d H:i:s'));
         return true;
     }
 
@@ -775,14 +701,14 @@ SELECT DISTINCT f.image_id
         if (!$this->authKeyRepo->existsByKeyAndUser($pkid, $userId)) {
             return Lang::t('API Key not found');
         }
-        $this->conn->update(Tables::userAuthKeys(), ['apikey_name' => $apiName], ['auth_key' => $pkid, 'user_id' => $userId]);
+        $this->authKeyRepo->updateApiKeyName($userId, $pkid, $apiName);
         return true;
     }
 
     /** @return list<array<mixed>>|false */
     public function getApiKey(string $userId): false|array
     {
-        $apiKeys = $this->conn->executeQuery('SELECT * FROM `' . Tables::userAuthKeys() . '` WHERE user_id = ' . $userId . ' AND key_type = "api_key";')->fetchAllAssociative();
+        $apiKeys = $this->authKeyRepo->findApiKeysByUserId((int) $userId);
         if (count($apiKeys) === 0) {
             return false;
         }

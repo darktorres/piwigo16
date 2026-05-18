@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -37,7 +36,6 @@ final readonly class AuthService
     public function __construct(
         private UserRepository $userRepo,
         private AuthKeyRepository $authKeyRepo,
-        private Connection $conn,
         private ActivityLogger $activityLogger,
         private SessionService $sessionService,
         private UrlGenerator $urlGenerator,
@@ -133,7 +131,7 @@ final readonly class AuthService
             if (!array_key_exists($cookieLang, $this->languageService->getActiveLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookieLang . '" is not valid');
             }
-            $this->conn->update(Tables::userInfos(), ['language' => $cookieLang], ['user_id' => $userId]);
+            $this->userRepo->updateLanguage($userId, $cookieLang);
             setcookie('lang', '', ['expires' => time() - 3600, 'samesite' => 'Strict']);
         }
 
@@ -315,26 +313,16 @@ final readonly class AuthService
             return false;
         }
 
-        $query = '
-SELECT
-    *,
-    ' . Config::userFields()['username'] . ' AS username,
-    ' . Config::userFields()['email'] . ' AS email,
-    NOW() AS dbnow,
-    DATEDIFF(uak.expired_on, NOW()) AS days_left,
-    SUBDATE(NOW(), INTERVAL 48 HOUR) AS 48h_ago
-  FROM ' . Tables::userAuthKeys() . ' AS uak
-    JOIN ' . Tables::userInfos() . ' AS ui ON uak.user_id = ui.user_id
-    JOIN ' . Tables::users() . ' AS u ON u.' . Config::userFields()['id'] . ' = ui.user_id
-  WHERE auth_key = ' . $this->conn->quote($authKey) . '
-;';
-        $keys = $this->conn->executeQuery($query)->fetchAllAssociative();
-
-        if (count($keys) == 0) {
+        $key = $this->authKeyRepo->findAuthKeyDetails(
+            $authKey,
+            Config::userFields()['id'],
+            Config::userFields()['username'],
+            Config::userFields()['email'],
+            Tables::users(),
+        );
+        if ($key === null) {
             return false;
         }
-
-        $key = $keys[0];
 
         if (strtotime(is_string($key['expired_on'] ?? null) ? $key['expired_on'] : '') < strtotime(is_string($key['dbnow'] ?? null) ? $key['dbnow'] : '')) {
             PageState::current()->authKeyInvalid = true;
@@ -370,7 +358,10 @@ SELECT
         $user['id'] = $key['user_id'];
         CurrentUser::setRawAttributes($user);
 
-        $this->conn->update(Tables::userAuthKeys(), ['last_used_on' => $key['dbnow']], ['user_id' => $user['id'], 'auth_key' => $key['auth_key']]);
+        $authUserId = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
+        $keyAuth    = is_string($key['auth_key'] ?? null) ? $key['auth_key'] : '';
+        $keyDbnow   = is_string($key['dbnow'] ?? null) ? $key['dbnow'] : '';
+        $this->authKeyRepo->updateLastUsedOn($authUserId, $keyAuth, $keyDbnow);
 
         $_SESSION['connected_with'] = $validKey;
 
@@ -393,11 +384,10 @@ SELECT
         }
 
         if (!isset($userStatus)) {
-            $userInfos = $this->conn->executeQuery('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = ' . $userId . ';')->fetchAllAssociative();
-            if (count($userInfos) == 0) {
+            $userStatus = $this->userRepo->findStatusByUserId($userId);
+            if ($userStatus === null) {
                 return false;
             }
-            $userStatus = is_scalar($userInfos[0]['status']) ? (string) $userInfos[0]['status'] : null;
         }
 
         if (!in_array($userStatus, ['normal', 'generic'])) {
@@ -417,9 +407,7 @@ SELECT
                 'expired_on' => $expiry,
                 'key_type'   => 'auth_key',
             ];
-            $this->conn->insert(Tables::userAuthKeys(), $key);
-            $lastId = $this->conn->lastInsertId();
-            $key['auth_key_id'] = is_numeric($lastId) ? (int) $lastId : 0;
+            $key['auth_key_id'] = $this->authKeyRepo->insertKey($key);
             return $key;
         } else {
             return $this->createUserAuthKey($userId, $userStatus);
@@ -433,7 +421,7 @@ SELECT
 
     public function deactivatePasswordResetKey(int $userId): void
     {
-        $this->conn->update(Tables::userInfos(), ['activation_key' => null, 'activation_key_expire' => null], ['user_id' => $userId]);
+        $this->userRepo->clearActivationKey($userId);
     }
 
     /** @return array<string,mixed> */
@@ -443,10 +431,7 @@ SELECT
         $duration      = $firstLogin ? Config::passwordActivationDuration() : Config::passwordResetDuration();
         $expire        = new \DateTimeImmutable()->modify('+' . $duration . ' seconds')->format('Y-m-d H:i:s');
 
-        $this->conn->update(Tables::userInfos(), [
-            'activation_key'        => password_hash($activationKey, PASSWORD_BCRYPT),
-            'activation_key_expire' => $expire,
-        ], ['user_id' => $userId]);
+        $this->userRepo->setActivationKey($userId, password_hash($activationKey, PASSWORD_BCRYPT), $expire);
 
         $this->urlService->setMakeFullUrl();
         $passwordLink = $this->urlService->addUrlParams($this->urlGenerator->password(), ['key' => $activationKey]);

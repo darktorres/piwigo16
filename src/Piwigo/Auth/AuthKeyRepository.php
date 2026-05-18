@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth;
 
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the user_auth_keys domain. */
@@ -49,5 +50,57 @@ final class AuthKeyRepository extends AbstractRepository
             " SET expired_on = NOW() WHERE user_id = ? AND expired_on > NOW() AND key_type = 'auth_key'",
             [$userId]
         );
+    }
+
+    /**
+     * Resolve an auth_key string to its row joined with the owning user's
+     * id/email/username plus server-computed dbnow / days_left / 48h_ago.
+     * Used by AuthService::validateKey for auth/api authentication.
+     *
+     * $idField/$usernameField/$emailField/$usersTable come from Config —
+     * admin-configured, not user-supplied, safe to embed in SQL.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findAuthKeyDetails(
+        string $authKey,
+        string $idField,
+        string $usernameField,
+        string $emailField,
+        string $usersTable,
+    ): ?array {
+        $query = 'SELECT *,'
+            . " u.$usernameField AS username,"
+            . " u.$emailField AS email,"
+            . ' NOW() AS dbnow,'
+            . ' DATEDIFF(uak.expired_on, NOW()) AS days_left,'
+            . ' SUBDATE(NOW(), INTERVAL 48 HOUR) AS 48h_ago'
+            . ' FROM ' . $this->table('user_auth_keys') . ' AS uak'
+            . ' JOIN ' . $this->table('user_infos') . ' AS ui ON uak.user_id = ui.user_id'
+            . " JOIN $usersTable AS u ON u.$idField = ui.user_id"
+            . ' WHERE auth_key = ?';
+        $row = $this->conn->executeQuery($query, [$authKey], [ParameterType::STRING])->fetchAssociative();
+        return $row !== false ? $row : null;
+    }
+
+    /** Update last_used_on for the given (user_id, auth_key) row. */
+    public function updateLastUsedOn(int $userId, string $authKey, string $dbnow): void
+    {
+        $this->conn->update(
+            $this->table('user_auth_keys'),
+            ['last_used_on' => $dbnow],
+            ['user_id' => $userId, 'auth_key' => $authKey],
+        );
+    }
+
+    /**
+     * Insert a new user_auth_keys row and return its lastInsertId.
+     *
+     * @param array<string, mixed> $row
+     */
+    public function insertKey(array $row): int
+    {
+        $this->conn->insert($this->table('user_auth_keys'), $row);
+        return (int) $this->conn->lastInsertId();
     }
 }

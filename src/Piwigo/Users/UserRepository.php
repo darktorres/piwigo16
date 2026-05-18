@@ -739,6 +739,36 @@ final class UserRepository extends AbstractRepository
             ->fetchAllAssociative();
     }
 
+    /** Update `language` for the given user (used after Accept-Language detection). */
+    public function updateLanguage(int $userId, string $language): void
+    {
+        $this->conn->update(
+            $this->table('user_infos'),
+            ['language' => $language],
+            ['user_id' => $userId],
+        );
+    }
+
+    /** Clear password-reset (activation_key + activation_key_expire) for the user. */
+    public function clearActivationKey(int $userId): void
+    {
+        $this->conn->update(
+            $this->table('user_infos'),
+            ['activation_key' => null, 'activation_key_expire' => null],
+            ['user_id' => $userId],
+        );
+    }
+
+    /** Set the activation_key + expire pair for a password reset. */
+    public function setActivationKey(int $userId, string $keyHash, string $expire): void
+    {
+        $this->conn->update(
+            $this->table('user_infos'),
+            ['activation_key' => $keyHash, 'activation_key_expire' => $expire],
+            ['user_id' => $userId],
+        );
+    }
+
     /**
      * Return user_ids from user_infos whose status is anything other than
      * 'guest'. Used by admin-notification dialogs that exclude the anonymous

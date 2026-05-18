@@ -12,9 +12,6 @@ namespace {
     // as Psalm stubs for the few remaining define()-driven URLs.
     const PHPWG_URL = '';
 
-    // Misc
-    const PEM_URL = '';
-
     // mkgetdir flags
     const MKGETDIR_NONE = 0;
     const MKGETDIR_DEFAULT = 0;

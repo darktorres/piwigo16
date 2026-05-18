@@ -58,6 +58,7 @@ final class Updates
         private readonly RedirectResponder $redirectResponder,
         private readonly IgnoredUpdatesRepository $ignoredUpdates,
         private readonly Paths $paths,
+        private readonly PemUrlResolver $pemUrlResolver,
     ) {
         $this->types = [ExtensionType::Plugin, ExtensionType::Theme, ExtensionType::Language];
         $this->default_themes = ['modus', 'elegant', 'smartpocket'];
@@ -318,7 +319,7 @@ final class Updates
 
         // Retrieve PEM versions
         $versions_to_check = [];
-        $url = PEM_URL . '/api/get_version_list.php';
+        $url = $this->pemUrlResolver->url() . '/api/get_version_list.php';
         $result = '';
         if ($this->adminService->fetchRemote($url, $result, $get_data) and is_string($result) and ($pem_versions = json_decode($result, associative: true)) !== null and is_array($pem_versions)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
@@ -353,7 +354,7 @@ final class Updates
         }
 
         // Retrieve PEM plugins infos
-        $url = PEM_URL . '/api/get_revision_list.php';
+        $url = $this->pemUrlResolver->url() . '/api/get_revision_list.php';
         $get_data = array_merge(
             $get_data,
             [

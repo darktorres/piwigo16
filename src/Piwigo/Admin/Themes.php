@@ -46,6 +46,7 @@ final class Themes
         private readonly ConfigService $configService,
         private readonly HtmlService $htmlService,
         private readonly LangService $langService,
+        private readonly PemUrlResolver $pemUrlResolver,
         private readonly PreferencesService $preferencesService,
         private readonly ThemeRegistry $themeRegistry,
         private readonly ThemeRepository $themeRepository,
@@ -383,7 +384,7 @@ final class Themes
         // Retrieve PEM versions
         $version = AppInfo::VERSION;
         $versions_to_check = [];
-        $url = PEM_URL . '/api/get_version_list.php';
+        $url = $this->pemUrlResolver->url() . '/api/get_version_list.php';
         $result = '';
         if ($this->adminService->fetchRemote($url, $result, $get_data) and is_string($result) and ($pem_versions = json_decode($result, associative: true)) !== null and is_array($pem_versions)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
@@ -416,7 +417,7 @@ final class Themes
         }
 
         // Retrieve PEM themes infos
-        $url = PEM_URL . '/api/get_revision_list-next.php';
+        $url = $this->pemUrlResolver->url() . '/api/get_revision_list-next.php';
         $get_data = array_merge(
             $get_data,
             [
@@ -483,7 +484,7 @@ final class Themes
         $logger = LoggerRegistry::current();
 
         if (($archive = tempnam(Config::themesPath(), 'zip')) !== false) {
-            $url = PEM_URL . '/download.php';
+            $url = $this->pemUrlResolver->url() . '/download.php';
             $get_data = [
               'rid' => $revision,
               'origin' => 'piwigo_'.$action,

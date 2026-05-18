@@ -35,6 +35,7 @@ final class Languages
         private readonly LanguageRepository $languageRepository,
         private readonly UserService $userService,
         private readonly Paths $paths,
+        private readonly PemUrlResolver $pemUrlResolver,
     ) {
         $this->getFsLanguages();
     }
@@ -179,7 +180,7 @@ final class Languages
         // Retrieve PEM versions
         $version = AppInfo::VERSION;
         $versions_to_check = [];
-        $url = PEM_URL . '/api/get_version_list.php';
+        $url = $this->pemUrlResolver->url() . '/api/get_version_list.php';
         $result = '';
         if ($this->adminService->fetchRemote($url, $result, $get_data) and is_string($result) and ($pem_versions = json_decode($result, associative: true)) !== null and is_array($pem_versions)) {
             if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
@@ -212,7 +213,7 @@ final class Languages
         }
 
         // Retrieve PEM languages infos
-        $url = PEM_URL . '/api/get_revision_list.php';
+        $url = $this->pemUrlResolver->url() . '/api/get_revision_list.php';
         $get_data = array_merge(
             $get_data,
             [
@@ -261,7 +262,7 @@ final class Languages
         $logger = LoggerRegistry::current();
 
         if (($archive = tempnam($this->paths->root . 'language', 'zip')) !== false) {
-            $url = PEM_URL . '/download.php';
+            $url = $this->pemUrlResolver->url() . '/download.php';
             $get_data = [
               'rid' => $revision,
               'origin' => 'piwigo_'.$action,

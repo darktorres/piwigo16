@@ -168,16 +168,6 @@ final class CommonBootstrap
         // never pulls version/news/download metadata from there either.
         define('PHPWG_URL', '');
 
-        if (Config::has('alternative_pem_url') and Config::alternativePemUrl() != '') {
-            define('PEM_URL', Config::alternativePemUrl());
-        } else {
-            $pem_scheme   = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== '' && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-            /** @var mixed $pem_host_raw */
-            $pem_host_raw = $_SERVER['HTTP_HOST'] ?? 'localhost';
-            $pem_host     = is_string($pem_host_raw) ? $pem_host_raw : 'localhost';
-            define('PEM_URL', $pem_scheme . '://' . $pem_host . '/piwigo16-ext');
-        }
-
         Kernel::service(LangService::class)->loadLanguage('common.lang');
         if (Kernel::service(PermissionService::class)->isAdmin() || RequestContextRegistry::current() === RequestContext::Admin) {
             Kernel::service(LangService::class)->loadLanguage('admin.lang');

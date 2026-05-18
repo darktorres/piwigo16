@@ -11,6 +11,7 @@ use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Extensions\IgnoredUpdatesRepository;
 use Piwigo\Admin\Languages;
+use Piwigo\Admin\PemUrlResolver;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Themes;
@@ -82,6 +83,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         private RedirectResponder $redirectResponder,
         private EventDispatcherInterface $dispatcher,
         private Paths $paths,
+        private PemUrlResolver $pemUrlResolver,
     ) {
     }
 
@@ -220,7 +222,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
             }
 
             $fsPluginUri = $fs_plugin['uri'] ?? null;
-            $visit_url = str_replace(['http://piwigo.org/ext', 'https://piwigo.org/ext'], PEM_URL, is_scalar($fsPluginUri) ? (string) $fsPluginUri : '');
+            $visit_url = str_replace(['http://piwigo.org/ext', 'https://piwigo.org/ext'], $this->pemUrlResolver->url(), is_scalar($fsPluginUri) ? (string) $fsPluginUri : '');
 
             $tpl_plugin = [
                 'ID'          => $plugin_id,
@@ -394,7 +396,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                 $tpl->append('plugins', [
                     'ID'                       => $extensionId,
                     'EXT_NAME'                 => is_scalar($plugin['extension_name'] ?? null) ? $plugin['extension_name'] : '',
-                    'EXT_URL'                  => PEM_URL . '/extension_view.php?eid=' . $extensionId,
+                    'EXT_URL'                  => $this->pemUrlResolver->url() . '/extension_view.php?eid=' . $extensionId,
                     'SMALL_DESC'               => trim($small_desc, " \r\n"),
                     'BIG_DESC'                 => $ext_desc,
                     'VERSION'                  => is_scalar($plugin['revision_name'] ?? null) ? $plugin['revision_name'] : '',
@@ -901,7 +903,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                 $extId    = is_scalar($language['extension_id'] ?? null) ? (string) $language['extension_id'] : '';
                 $dlUrl    = is_scalar($language['download_url'] ?? null) ? (string) $language['download_url'] : '';
                 $url_auto_install = htmlentities($base_url) . '&revision=' . $revId . '&pwg_token=' . $this->csrfService->getToken();
-                $tpl->append('languages', ['EXT_NAME' => is_scalar($language['extension_name'] ?? null) ? (string) $language['extension_name'] : '', 'EXT_DESC' => is_scalar($language['extension_description'] ?? null) ? (string) $language['extension_description'] : '', 'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . $extId, 'VERSION' => is_scalar($language['revision_name'] ?? null) ? (string) $language['revision_name'] : '', 'VER_DESC' => is_scalar($language['revision_description'] ?? null) ? (string) $language['revision_description'] : '', 'DATE' => $date, 'AUTHOR' => is_scalar($language['author_name'] ?? null) ? (string) $language['author_name'] : '', 'URL_INSTALL' => $url_auto_install, 'URL_DOWNLOAD' => $dlUrl . '&origin=piwigo_download']);
+                $tpl->append('languages', ['EXT_NAME' => is_scalar($language['extension_name'] ?? null) ? (string) $language['extension_name'] : '', 'EXT_DESC' => is_scalar($language['extension_description'] ?? null) ? (string) $language['extension_description'] : '', 'EXT_URL' => $this->pemUrlResolver->url() . '/extension_view.php?eid=' . $extId, 'VERSION' => is_scalar($language['revision_name'] ?? null) ? (string) $language['revision_name'] : '', 'VER_DESC' => is_scalar($language['revision_description'] ?? null) ? (string) $language['revision_description'] : '', 'DATE' => $date, 'AUTHOR' => is_scalar($language['author_name'] ?? null) ? (string) $language['author_name'] : '', 'URL_INSTALL' => $url_auto_install, 'URL_DOWNLOAD' => $dlUrl . '&origin=piwigo_download']);
             }
         } else {
             PageState::current()->addError(Lang::t('Can\'t connect to server.'));
@@ -993,7 +995,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                     $dlUrl = is_scalar($ext_info['download_url'] ?? null) ? (string) $ext_info['download_url'] : '';
                     $updates_extension[$type->value][] = [
                         'ID' => $extId, 'REVISION_ID' => $revId, 'EXT_ID' => $ext_id, 'EXT_NAME' => is_scalar($fs_ext_item['name'] ?? null) ? $fs_ext_item['name'] : '',
-                        'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . (string) $extId . '#changelog',
+                        'EXT_URL' => $this->pemUrlResolver->url() . '/extension_view.php?eid=' . (string) $extId . '#changelog',
                         'REV_DESC' => trim($revDesc, " \n\r"),
                         'CURRENT_VERSION' => $extVersion, 'NEW_VERSION' => $revName,
                         'URL_DOWNLOAD' => $dlUrl . '&origin=piwigo_download',

@@ -45,6 +45,7 @@ final class Plugins
         private readonly ActivityLogger $activityLogger,
         private readonly EventDispatcherInterface $dispatcher,
         private readonly PluginRegistry $pluginRegistry,
+        private readonly PemUrlResolver $pemUrlResolver,
         private readonly Paths $paths,
     ) {
         $this->getFsPlugins();
@@ -306,7 +307,7 @@ final class Plugins
     public function getVersionsToCheck(): array
     {
         $versions_to_check = [];
-        $url = PEM_URL . '/api/get_version_list.php?category_id='. Config::pemPluginsCategory();
+        $url = $this->pemUrlResolver->url() . '/api/get_version_list.php?category_id='. Config::pemPluginsCategory();
         $result = '';
         if ($this->adminService->fetchRemote($url, $result) and is_string($result) and ($pem_versions = json_decode($result, associative: true)) !== null and is_array($pem_versions)) {
             foreach ($pem_versions as $entry) {
@@ -341,7 +342,7 @@ final class Plugins
         }
 
         // Retrieve PEM plugins infos
-        $url = PEM_URL . '/api/get_revision_list-next.php';
+        $url = $this->pemUrlResolver->url() . '/api/get_revision_list-next.php';
         $get_data = [
           'category_id' => Config::pemPluginsCategory(),
           'last_revision_only' => 'true',
@@ -400,7 +401,7 @@ final class Plugins
         }
 
         // Retrieve PEM plugins infos
-        $url = PEM_URL . '/api/get_revision_list.php';
+        $url = $this->pemUrlResolver->url() . '/api/get_revision_list.php';
         $get_data = [
           'category_id' => Config::pemPluginsCategory(),
           'version' => implode(',', $versions_to_check),
@@ -481,7 +482,7 @@ final class Plugins
         $logger = LoggerRegistry::current();
 
         if (($archive = tempnam(Config::pluginsPath(), 'zip')) !== false) {
-            $url = PEM_URL . '/download.php';
+            $url = $this->pemUrlResolver->url() . '/download.php';
             $get_data = [
               'rid' => $revision,
               'origin' => 'piwigo_'.$action,

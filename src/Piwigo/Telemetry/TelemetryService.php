@@ -6,6 +6,7 @@ namespace Piwigo\Telemetry;
 
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Admin\AdminService;
+use Piwigo\Admin\PemUrlResolver;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
 use Piwigo\Config\Config;
@@ -38,6 +39,7 @@ final readonly class TelemetryService
         private AdminService $adminService,
         private ExecutionMutex $mutex,
         private UserRepository $userRepository,
+        private PemUrlResolver $pemUrlResolver,
     ) {
     }
 
@@ -142,7 +144,7 @@ final readonly class TelemetryService
             $piwigoInfos['file_extensions'] = $this->imageRepository->findFileExtensionUsage();
         }
 
-        $url    = PEM_URL . '/api/get_extension_list.php';
+        $url    = $this->pemUrlResolver->url() . '/api/get_extension_list.php';
         $result = '';
         $pemExtensions = [];
         if ($this->adminService->fetchRemote($url, $result) && is_string($result)) {

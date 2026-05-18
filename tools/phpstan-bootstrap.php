@@ -6,8 +6,8 @@ declare(strict_types=1);
 // via DI. PHPWG_VERSION migrated to AppInfo::VERSION. PWG_LOCAL_DIR
 // retired (Phase C of define()-retirement) — use $paths->local.
 
-// Runtime constants from CommonBootstrap::run() — placeholder values for static analysis.
+// PHPWG_URL is still defined at runtime by CommonBootstrap/Install/Upgrade —
+// retained as a static-analysis placeholder.
 if (!defined('PHPWG_URL')) {
     define('PHPWG_URL', 'https://piwigo.org');
-    define('PEM_URL', 'https://piwigo.org/ext');
 }

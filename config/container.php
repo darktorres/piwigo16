@@ -284,7 +284,6 @@ return [
     UserAdminService::class          => factory(static function (ContainerInterface $c): UserAdminService {
         return (new \ReflectionClass(UserAdminService::class))->newLazyProxy(
             static fn (): UserAdminService => new UserAdminService(
-                $c->get(Connection::class),
                 $c->get(ConfigService::class),
                 $c->get(GroupRepository::class),
                 $c->get(SessionService::class),

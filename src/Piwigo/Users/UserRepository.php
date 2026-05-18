@@ -741,6 +741,67 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
+     * Return all ids from the configurable users table.
+     *
+     * @return list<int>
+     */
+    public function findAllUserIdsFromUsers(string $idField, string $usersTable): array
+    {
+        $rows = $this->conn->executeQuery(
+            "SELECT $idField AS id FROM $usersTable"
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return user_ids present in user_infos.
+     *
+     * @return list<int>
+     */
+    public function findUserIdsFromUserInfos(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('user_id')
+            ->from($this->table('user_infos'))
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return DISTINCT user_ids from the given table. Table name comes from
+     * Tables::* — admin-config-derived, not user input.
+     *
+     * @return list<int>
+     */
+    public function findDistinctUserIdsFromTable(string $table): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT DISTINCT user_id FROM ' . $table
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return user_ids whose user_infos.status is in the given list.
+     *
+     * @param  list<string> $statuses
+     * @return list<int>
+     */
+    public function findUserIdsByStatuses(array $statuses): array
+    {
+        if ($statuses === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('user_id')
+            ->from($this->table('user_infos'));
+        $qb->where($qb->expr()->in('status', ':statuses'))
+           ->setParameter('statuses', $statuses, ArrayParameterType::STRING);
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
      * Return user's authorized favorite image ids — favorites whose image is
      * still in a permission-visible category.
      *

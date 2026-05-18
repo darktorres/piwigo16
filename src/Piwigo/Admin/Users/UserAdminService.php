@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Users;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -28,7 +27,6 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class UserAdminService
 {
     public function __construct(
-        private Connection $conn,
         private ConfigService $configService,
         private GroupRepository $groupRepository,
         private SessionService $sessionService,
@@ -42,38 +40,23 @@ final readonly class UserAdminService
 
     public function deleteUser(int $userId): void
     {
-        $this->conn->transactional(function () use ($userId): void {
-            // piwigo_sessions has no FK on user_id (session-id keyed); the
-            // sessions table holds serialized session payloads, not a
-            // user-row pointer the FK can hang off of. Manual cleanup stays.
-            $this->sessionService->deleteUserSessions($userId);
-            $this->userRepository->deleteByUserId($userId, Tables::users(), Config::userFields()['id']);
-            // FK CASCADE on the user_id of: user_access, user_mail_notification,
-            // user_feed, user_cache, user_cache_categories, user_group,
-            // favorites, caddie, user_infos, user_auth_keys.
-            // FK SET NULL on: comments.author_id, images.added_by.
-            $this->dispatcher->dispatch(new DeleteUser($userId));
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'delete'));
-        });
+        // piwigo_sessions has no FK on user_id (session-id keyed); manual
+        // cleanup stays before the user row delete. FK CASCADE handles
+        // user_access, user_mail_notification, user_feed, user_cache,
+        // user_cache_categories, user_group, favorites, caddie, user_infos,
+        // user_auth_keys; FK SET NULL: comments.author_id, images.added_by.
+        $this->sessionService->deleteUserSessions($userId);
+        $this->userRepository->deleteByUserId($userId, Tables::users(), Config::userFields()['id']);
+        $this->dispatcher->dispatch(new DeleteUser($userId));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'delete'));
     }
 
     public function syncUsers(): void
     {
-        $baseUsers = array_map(
-            fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_column($this->conn->executeQuery(
-                'SELECT ' . Config::userFields()['id'] . ' AS id FROM ' . Tables::users()
-            )->fetchAllAssociative(), 'id')
-        );
+        $baseUsers  = $this->userRepository->findAllUserIdsFromUsers(Config::userFields()['id'], Tables::users());
+        $infosUsers = $this->userRepository->findUserIdsFromUserInfos();
 
-        $infosUsers = array_map(
-            fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_column($this->conn->executeQuery(
-                'SELECT user_id FROM ' . Tables::userInfos()
-            )->fetchAllAssociative(), 'user_id')
-        );
-
-        $toCreate = array_diff($baseUsers, $infosUsers);
+        $toCreate = array_values(array_diff($baseUsers, $infosUsers));
         if (count($toCreate) > 0) {
             $this->userService->createUserInfos($toCreate);
         }
@@ -84,15 +67,9 @@ final readonly class UserAdminService
         ];
 
         foreach ($tables as $table) {
-            $toDelete = array_diff(
-                array_map(
-                    fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-                    array_column($this->conn->executeQuery('SELECT DISTINCT user_id FROM ' . $table)->fetchAllAssociative(), 'user_id')
-                ),
-                $baseUsers
-            );
+            $toDelete = array_values(array_diff($this->userRepository->findDistinctUserIdsFromTable($table), $baseUsers));
             if (count($toDelete) > 0) {
-                $this->userRepository->deleteOrphanedFromTable($table, array_values($toDelete));
+                $this->userRepository->deleteOrphanedFromTable($table, $toDelete);
             }
         }
     }
@@ -114,10 +91,7 @@ final readonly class UserAdminService
         if ($includeWebmaster) {
             $statusList[] = 'webmaster';
         }
-        $raw = array_column($this->conn->executeQuery(
-            'SELECT user_id FROM ' . Tables::userInfos() . " WHERE status IN ('" . implode("','", $statusList) . "')"
-        )->fetchAllAssociative(), 'user_id');
-        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $raw);
+        return $this->userRepository->findUserIdsByStatuses($statusList);
     }
 
     public function getGroupname(int $groupId): string|false
@@ -138,24 +112,20 @@ final readonly class UserAdminService
         if (count($groupIds) === 0) {
             throw new \InvalidArgumentException('There is no group to delete');
         }
-        $groupIdString = implode(',', $groupIds);
-        $groupList = array_column($this->conn->executeQuery(
-            'SELECT id, name FROM `' . Tables::groups() . '` WHERE id IN (' . $groupIdString . ')'
-        )->fetchAllAssociative(), 'name', 'id');
-        $groupids = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($groupList));
-        $this->conn->transactional(function () use ($groupIds, $groupids): void {
-            if (preg_match('/^group:(\d+)$/', Config::emailAdminOnNewUser(), $matches)) {
-                foreach ($groupIds as $groupId) {
-                    if ($groupId == $matches[1]) {
-                        $this->configService->confUpdateParam('email_admin_on_new_user', 'all', true);
-                    }
+        $groupIdsInt = array_values($groupIds);
+        $groupList   = $this->groupRepository->findIdNameMapByIds($groupIdsInt);
+        $groupids    = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($groupList));
+        if (preg_match('/^group:(\d+)$/', Config::emailAdminOnNewUser(), $matches)) {
+            foreach ($groupIds as $groupId) {
+                if ($groupId == $matches[1]) {
+                    $this->configService->confUpdateParam('email_admin_on_new_user', 'all', true);
                 }
             }
-            $this->groupRepository->deleteByIds($groupIds);
-            // FK CASCADE clears group_access.group_id + user_group.group_id.
-            $this->dispatcher->dispatch(new DeleteGroup($groupids));
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $groupids, 'delete'));
-        });
+        }
+        $this->groupRepository->deleteByIds($groupIdsInt);
+        // FK CASCADE clears group_access.group_id + user_group.group_id.
+        $this->dispatcher->dispatch(new DeleteGroup($groupids));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $groupids, 'delete'));
         return $groupList;
     }
 

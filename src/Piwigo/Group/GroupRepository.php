@@ -241,6 +241,30 @@ final class GroupRepository extends AbstractRepository
     }
 
     /**
+     * Return id → name map for the given group ids (no order).
+     *
+     * @param  int[] $ids
+     * @return array<int|string, string>
+     */
+    public function findIdNameMapByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'name')
+            ->from($this->table('groups'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $key       = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $out[$key] = is_scalar($row['name']) ? (string) $row['name'] : '';
+        }
+        return $out;
+    }
+
+    /**
      * Return ids of every group.
      *
      * @return list<int>

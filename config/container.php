@@ -50,6 +50,9 @@ use Piwigo\Core\ExecutionMutex;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+
+use function Piwigo\Core\resolve;
+
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbMaintenanceRepository;
@@ -179,7 +182,7 @@ return [
                     $dispatcher->addListener(
                         $eventClass,
                         static function (object $event) use ($c, $subscriberClass, $method): void {
-                            $c->get($subscriberClass)->{$method}($event);
+                            resolve($c, $subscriberClass)->{$method}($event);
                         },
                         $priority,
                     );
@@ -258,30 +261,30 @@ return [
     CategoryAdminService::class      => factory(static function (ContainerInterface $c): CategoryAdminService {
         return (new \ReflectionClass(CategoryAdminService::class))->newLazyProxy(
             static fn (): CategoryAdminService => new CategoryAdminService(
-                $c->get(CategoryRepository::class),
-                $c->get(CategoryService::class),
-                $c->get(ImageAdminService::class),
-                $c->get(ImageRepository::class),
-                $c->get(PermissionRepository::class),
-                $c->get(SiteRepository::class),
-                $c->get(UserAdminService::class),
-                $c->get(ActivityLogger::class),
-                $c->get(ExecutionMutex::class),
-                $c->get(EventDispatcherInterface::class),
+                resolve($c, CategoryRepository::class),
+                resolve($c, CategoryService::class),
+                resolve($c, ImageAdminService::class),
+                resolve($c, ImageRepository::class),
+                resolve($c, PermissionRepository::class),
+                resolve($c, SiteRepository::class),
+                resolve($c, UserAdminService::class),
+                resolve($c, ActivityLogger::class),
+                resolve($c, ExecutionMutex::class),
+                resolve($c, EventDispatcherInterface::class),
             )
         );
     }),
     ImageAdminService::class         => factory(static function (ContainerInterface $c): ImageAdminService {
         return (new \ReflectionClass(ImageAdminService::class))->newLazyProxy(
             static fn (): ImageAdminService => new ImageAdminService(
-                $c->get(CategoryAdminService::class),
-                $c->get(CategoryRepository::class),
-                $c->get(ConfigService::class),
-                $c->get(ImageRepository::class),
-                $c->get(UrlGenerator::class),
-                $c->get(ActivityLogger::class),
-                $c->get(EventDispatcherInterface::class),
-                $c->get(Paths::class),
+                resolve($c, CategoryAdminService::class),
+                resolve($c, CategoryRepository::class),
+                resolve($c, ConfigService::class),
+                resolve($c, ImageRepository::class),
+                resolve($c, UrlGenerator::class),
+                resolve($c, ActivityLogger::class),
+                resolve($c, EventDispatcherInterface::class),
+                resolve($c, Paths::class),
             )
         );
     }),
@@ -289,14 +292,14 @@ return [
     UserAdminService::class          => factory(static function (ContainerInterface $c): UserAdminService {
         return (new \ReflectionClass(UserAdminService::class))->newLazyProxy(
             static fn (): UserAdminService => new UserAdminService(
-                $c->get(ConfigService::class),
-                $c->get(GroupRepository::class),
-                $c->get(SessionService::class),
-                $c->get(UserRepository::class),
-                $c->get(UserService::class),
-                $c->get(ActivityLogger::class),
-                $c->get(CacheItemPoolInterface::class),
-                $c->get(EventDispatcherInterface::class),
+                resolve($c, ConfigService::class),
+                resolve($c, GroupRepository::class),
+                resolve($c, SessionService::class),
+                resolve($c, UserRepository::class),
+                resolve($c, UserService::class),
+                resolve($c, ActivityLogger::class),
+                resolve($c, CacheItemPoolInterface::class),
+                resolve($c, EventDispatcherInterface::class),
             )
         );
     }),

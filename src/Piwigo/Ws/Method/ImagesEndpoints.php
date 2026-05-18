@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Method;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -17,6 +17,7 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
@@ -27,7 +28,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Picture\WsImagesUploadCompleted;
@@ -58,10 +58,10 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class ImagesEndpoints
 {
     public function __construct(
-        private Connection $conn,
         private CategoryAdminService $categoryAdminService,
         private CategoryRepository $categoryRepository,
         private CategoryService $categoryService,
+        private CommentRepository $commentRepository,
         private CommentService $commentService,
         private HtmlService $htmlService,
         private ImageAdminService $imageAdminService,
@@ -121,44 +121,44 @@ final readonly class ImagesEndpoints
             }
             return true;
         }
-        $dbCatIds    = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $catIds) . ');')->fetchAllAssociative(), 'id');
-        $unknownCatIds = array_diff($catIds, array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $dbCatIds));
+        $catIdsInt   = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $catIds);
+        $dbCatIds    = $this->categoryRepository->findExistingIdsAmong($catIdsInt);
+        $unknownCatIds = array_diff($catIdsInt, $dbCatIds);
         if (count($unknownCatIds) !== 0) {
             return new PwgError(500, '[addImageCategoryRelations] the following categories are unknown: ' . implode(', ', $unknownCatIds));
         }
-        $existingCatIds = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $imageId . ';')->fetchAllAssociative(), 'category_id'));
+        $existingCatIds = $this->categoryRepository->findCategoryIdsByImageId($imageId);
         if ($replaceMode) {
-            $toRemoveCatIds = array_diff($existingCatIds, $catIds);
+            $toRemoveCatIds = array_values(array_diff($existingCatIds, $catIdsInt));
             if (count($toRemoveCatIds) > 0) {
-                $this->categoryRepository->removeImageFromCategories($imageId, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $toRemoveCatIds));
-                $this->categoryAdminService->updateCategory(array_map(fn (mixed $v): int => (int) $v, $toRemoveCatIds));
+                $this->categoryRepository->removeImageFromCategories($imageId, $toRemoveCatIds);
+                $this->categoryAdminService->updateCategory($toRemoveCatIds);
             }
         }
-        $newCatIds = array_diff($catIds, $existingCatIds);
+        $newCatIds = array_values(array_diff($catIdsInt, $existingCatIds));
         if (count($newCatIds) === 0) {
             return true;
         }
         if ($searchCurrentRanks) {
-            $currentRankOf = array_column($this->conn->executeQuery('SELECT category_id, MAX(`rank`) AS max_rank FROM ' . Tables::imageCategory() . ' WHERE `rank` IS NOT NULL AND category_id IN (' . implode(',', $newCatIds) . ') GROUP BY category_id;')->fetchAllAssociative(), 'max_rank', 'category_id');
+            $currentRankOf = $this->categoryRepository->findMaxImageRankPerCategoryIn($newCatIds);
             foreach ($newCatIds as $catId) {
                 if (!isset($currentRankOf[$catId])) {
                     $currentRankOf[$catId] = 0;
                 }
                 if ($rankOnCategory[$catId] === 'auto') {
-                    $rankOnCategory[$catId] = (is_numeric($currentRankOf[$catId]) ? (int) $currentRankOf[$catId] : 0) + 1;
+                    $rankOnCategory[$catId] = $currentRankOf[$catId] + 1;
                 }
             }
         }
         $inserts = [];
         foreach ($newCatIds as $catId) {
-            // `rank` is a MySQL 8.0 reserved word — backtick the array key.
-            $inserts[] = ['image_id' => $imageId, 'category_id' => $catId, '`rank`' => $rankOnCategory[$catId]];
+            $inserts[] = [
+                'image_id'    => $imageId,
+                'category_id' => $catId,
+                'rank'        => is_numeric($rankOnCategory[$catId]) ? (int) $rankOnCategory[$catId] : 0,
+            ];
         }
-        $this->conn->transactional(function () use ($inserts): void {
-            foreach ($inserts as $row) {
-                $this->conn->insert(Tables::imageCategory(), $row);
-            }
-        });
+        $this->categoryRepository->insertImageCategoryLinks($inserts);
         $this->categoryAdminService->updateCategory($newCatIds);
         return true;
     }
@@ -229,8 +229,7 @@ final readonly class ImagesEndpoints
         // `commentable` is TINYINT(1) post-E2; the legacy 'true' coerces to 0,
         // which would return NOT-commentable rows — fixed to 1.
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id', 'visible_images' => 'image_id'], ' AND');
-        $query    = 'SELECT DISTINCT image_id FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id=id WHERE commentable=1 AND image_id=' . $pImageId . $permSql . ';';
-        if ($this->conn->executeQuery($query, $permParams, $permTypes)->fetchOne() === false) {
+        if (!$this->categoryRepository->isImageInVisibleCommentableCategory($pImageId, $permSql, $permParams, $permTypes)) {
             return new PwgError(WsError::InvalidParam->value, 'Invalid image_id');
         }
         $comm = ['author' => trim(is_string($params['author'] ?? null) ? $params['author'] : ''), 'content' => trim(is_string($params['content'] ?? null) ? $params['content'] : ''), 'image_id' => $pImageId];
@@ -257,9 +256,8 @@ final readonly class ImagesEndpoints
     {
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], ' AND');
-        $query    = 'SELECT * FROM ' . Tables::images() . ' WHERE id=' . $pImageId . $permSql . ' LIMIT 1;';
-        $imageRow = $this->conn->executeQuery($query, $permParams, $permTypes)->fetchAssociative();
-        if ($imageRow === false) {
+        $imageRow = $this->imageRepository->findByIdWithPermissions($pImageId, $permSql, $permParams, $permTypes);
+        if ($imageRow === null) {
             return new PwgError(404, 'image_id not found');
         }
         /** @var array<string, mixed> $imageRow */
@@ -278,7 +276,7 @@ final readonly class ImagesEndpoints
         $isCommentable    = false;
         $relatedCategories = [];
         [$relPermSql, $relPermParams, $relPermTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND');
-        foreach ($this->conn->executeQuery('SELECT id, name, permalink, uppercats, global_rank, commentable FROM ' . Tables::imageCategory() . ' INNER JOIN ' . Tables::categories() . ' ON category_id = id WHERE image_id = ' . $imageRowId . $relPermSql . ';', $relPermParams, $relPermTypes)->fetchAllAssociative() as $row) {
+        foreach ($this->categoryRepository->findRelatedCategoriesForImage($imageRowId, $relPermSql, $relPermParams, $relPermTypes) as $row) {
             if (BoolUtil::fromMixed($row['commentable'])) {
                 $isCommentable = true;
             }
@@ -311,17 +309,18 @@ final readonly class ImagesEndpoints
             $rating['score'] = is_numeric($rating['score']) ? (float) $rating['score'] : 0.0;
         }
         $relatedComments = [];
-        $whereComments   = 'image_id = ' . $imageRowId;
+        $whereComments   = 'image_id = ?';
+        $commentParams   = [$imageRowId];
+        $commentTypes    = [ParameterType::INTEGER];
         if (!$this->permissionService->isAdmin()) {
-            $whereComments .= ' AND validated="true"';
+            // post-E2, validated is TINYINT(1); `validated = 1` for approved comments.
+            $whereComments .= ' AND validated = 1';
         }
-        $nbCommentsCol = array_column($this->conn->executeQuery('SELECT COUNT(id) AS nb_comments FROM ' . Tables::comments() . ' WHERE ' . $whereComments . ';')->fetchAllAssociative(), 'nb_comments');
-        $nbCommentsRaw = $nbCommentsCol[0] ?? null;
-        $nbComments          = is_numeric($nbCommentsRaw) ? (int) $nbCommentsRaw : 0;
-        $pCommentsPerPage    = is_numeric($params['comments_per_page']) ? (int) $params['comments_per_page'] : 0;
-        $pCommentsPage       = is_numeric($params['comments_page']) ? (int) $params['comments_page'] : 0;
+        $nbComments       = $this->commentRepository->countByWhereFragment($whereComments, $commentParams, $commentTypes);
+        $pCommentsPerPage = is_numeric($params['comments_per_page']) ? (int) $params['comments_per_page'] : 0;
+        $pCommentsPage    = is_numeric($params['comments_page']) ? (int) $params['comments_page'] : 0;
         if ($nbComments > 0 && $pCommentsPerPage > 0) {
-            foreach ($this->conn->executeQuery('SELECT id, date, author, content FROM ' . Tables::comments() . ' WHERE ' . $whereComments . ' ORDER BY date LIMIT ' . $pCommentsPerPage . ' OFFSET ' . ($pCommentsPerPage * $pCommentsPage) . ';')->fetchAllAssociative() as $row) {
+            foreach ($this->commentRepository->findByWhereFragmentOrderedByDate($whereComments, $pCommentsPerPage, $pCommentsPerPage * $pCommentsPage, $commentParams, $commentTypes) as $row) {
                 $row['id']         = is_numeric($row['id']) ? (int) $row['id'] : 0;
                 $relatedComments[] = $row;
             }
@@ -359,8 +358,7 @@ final readonly class ImagesEndpoints
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
         $pRate    = is_numeric($params['rate']) ? (int) $params['rate'] : 0;
         [$ratePermSql, $ratePermParams, $ratePermTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'id'], '    AND');
-        $query    = 'SELECT DISTINCT id FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id WHERE id=' . $pImageId . $ratePermSql . ' LIMIT 1;';
-        if ($this->conn->executeQuery($query, $ratePermParams, $ratePermTypes)->fetchOne() === false) {
+        if (!$this->categoryRepository->isImageInVisibleCategory($pImageId, $ratePermSql, $ratePermParams, $ratePermTypes)) {
             return new PwgError(404, 'Invalid image_id or access denied');
         }
         $res = $this->rateService->ratePicture($pImageId, $pRate);
@@ -616,7 +614,7 @@ final readonly class ImagesEndpoints
         $pCategoryId   = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
         if (count($pImageIdArr) > 1) {
             $this->categoryAdminService->saveImagesOrder($pCategoryId, $pImageIdArr);
-            $imageIds = array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::imageCategory() . ' WHERE category_id = ' . $pCategoryId . ' ORDER BY `rank` ASC;')->fetchAllAssociative(), 'image_id');
+            $imageIds = $this->imageRepository->findIdsByCategoryIdOrderedByRank($pCategoryId);
             return ['image_id' => $imageIds, 'category_id' => $pCategoryId];
         }
         $pImageId = $pImageIdArr[0] ?? 0;
@@ -712,15 +710,13 @@ final readonly class ImagesEndpoints
             return new PwgError(404, 'image_id not found');
         }
         if ($params['check_uniqueness']) {
-            $whereClause = '1=1';
+            $counter = 0;
             if (Config::uniquenessMode() === 'md5sum') {
-                $whereClause = "md5sum = '" . $pOriginalSum . "'";
+                $counter = $this->imageRepository->countByWhereFragment('md5sum = ?', [$pOriginalSum], [ParameterType::STRING]);
+            } elseif (Config::uniquenessMode() === 'filename') {
+                $counter = $this->imageRepository->countByWhereFragment('file = ?', [is_string($params['original_filename'] ?? null) ? $params['original_filename'] : ''], [ParameterType::STRING]);
             }
-            if (Config::uniquenessMode() === 'filename') {
-                $whereClause = "file = '" . (is_string($params['original_filename'] ?? null) ? $params['original_filename'] : '') . "'";
-            }
-            $counter = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE ' . $whereClause)->fetchOne();
-            if ((is_numeric($counter) ? (int) $counter : 0) !== 0) {
+            if ($counter !== 0) {
                 return new PwgError(500, 'file already exists');
             }
         }
@@ -735,7 +731,7 @@ final readonly class ImagesEndpoints
             }
         }
         if (count($update) > 0) {
-            $this->conn->update(Tables::images(), $update, ['id' => $imageId]);
+            $this->imageRepository->updateById($imageId, $update);
         }
         $urlParams = ['image_id' => $imageId];
         if (isset($params['categories'])) {
@@ -797,7 +793,9 @@ final readonly class ImagesEndpoints
                 $update[$key] = $params[$key];
             }
         }
-        $this->conn->update(Tables::images(), $update, ['id' => $imageId]);
+        if (count($update) > 0) {
+            $this->imageRepository->updateById($imageId, $update);
+        }
         if (isset($params['tags']) && !empty($params['tags'])) {
             $tagIds = [];
             if (is_array($params['tags'])) {
@@ -900,11 +898,10 @@ final readonly class ImagesEndpoints
             rename("{$filePath}.part", $filePath);
             if (isset($params['format_of'])) {
                 $formatOfId = is_numeric($params['format_of']) ? (int) $params['format_of'] : 0;
-                $images     = $this->conn->executeQuery('SELECT * FROM ' . Tables::images() . ' WHERE id = ' . $formatOfId . ';')->fetchAllAssociative();
-                if (count($images) === 0) {
+                $image      = $this->imageRepository->findById($formatOfId);
+                if ($image === null) {
                     return new PwgError(404, __FUNCTION__ . ' : image_id not found');
                 }
-                $image      = $images[0];
                 $imageIdStr = isset($image['id']) ? (is_scalar($image['id']) ? (string) $image['id'] : '') : '';
                 $addStatus  = $this->uploadService->addFormat($filePath, $formatExt ?? '', $imageIdStr);
                 return ['image_id' => $image['id'] ?? null, 'src' => DerivativeImage::thumbUrl($image), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $image), 'name' => $image['name'] ?? null, 'add_status' => $addStatus];
@@ -915,23 +912,21 @@ final readonly class ImagesEndpoints
             $pCategoryInt  = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $pCategory);
             $pCategoryFirst = $pCategoryInt[0] ?? 0;
             if ($params['update_mode']) {
-                $images = $this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' as ic ON ic.image_id = i.id WHERE i.file = ' . $this->conn->quote($name) . ' AND ic.category_id = ' . $pCategoryFirst . ';')->fetchAllAssociative();
-                if ($images != null) {
-                    $img0      = $images[0];
-                    $idImage   = isset($img0['id']) && is_numeric($img0['id']) ? (int) $img0['id'] : null;
+                $idImage = $this->imageRepository->findIdInCategoryByFile($pCategoryFirst, $name);
+                if ($idImage !== null) {
                     $addStatus = 'update';
                 }
             }
-            $imageId = $this->uploadService->addUploadedFile($filePath, $name, $pCategoryInt, is_numeric($params['level']) ? (int) $params['level'] : null, $idImage);
-            $catRepo2   = $this->categoryRepository;
-            $imageInfos = $this->imageRepository->findById($imageId);
-            $categoryInfos = ['nb_photos' => $catRepo2->countImagesByCategoryId($pCategoryFirst)];
-            $nbPhotosLounge = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::lounge() . ' WHERE category_id = ? AND image_id NOT IN (SELECT image_id FROM ' . Tables::imageCategory() . ')', [$pCategoryFirst])->fetchOne();
+            $imageId        = $this->uploadService->addUploadedFile($filePath, $name, $pCategoryInt, is_numeric($params['level']) ? (int) $params['level'] : null, $idImage);
+            $catRepo2       = $this->categoryRepository;
+            $imageInfos     = $this->imageRepository->findById($imageId);
+            $categoryInfos  = ['nb_photos' => $catRepo2->countImagesByCategoryId($pCategoryFirst)];
+            $nbPhotosLounge = $this->imageRepository->countLoungeInCategoryNotAssociated($pCategoryFirst);
             $categoryName   = $this->htmlService->getCatDisplayNameFromId($pCategoryFirst, null);
             if ($imageInfos === null) {
                 return null;
             }
-            return ['image_id' => $imageId, 'src' => DerivativeImage::thumbUrl($imageInfos), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $imageInfos), 'name' => $imageInfos['name'], 'category' => ['id' => $pCategoryFirst, 'nb_photos' => $categoryInfos['nb_photos'] + (is_numeric($nbPhotosLounge) ? (int) $nbPhotosLounge : 0), 'label' => $categoryName], 'add_status' => $addStatus];
+            return ['image_id' => $imageId, 'src' => DerivativeImage::thumbUrl($imageInfos), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $imageInfos), 'name' => $imageInfos['name'], 'category' => ['id' => $pCategoryFirst, 'nb_photos' => $categoryInfos['nb_photos'] + $nbPhotosLounge, 'label' => $categoryName], 'add_status' => $addStatus];
         }
         return null;
     }
@@ -1055,7 +1050,7 @@ final readonly class ImagesEndpoints
             }
         }
         if (count($update) > 0) {
-            $this->conn->update(Tables::images(), $update, ['id' => $imageId]);
+            $this->imageRepository->updateById($imageId, $update);
         }
         $this->userAdminService->invalidateUserCache();
         if (CurrentUser::isInitialized() && !empty($params['level']) && $params['level'] > (CurrentUser::get()->rawAttributes['level'] ?? 0)) {
@@ -1090,14 +1085,14 @@ final readonly class ImagesEndpoints
         if (Config::uniquenessMode() === 'md5sum') {
             $md5sumsResult = preg_split($splitPattern, is_string($params['md5sum_list'] ?? null) ? $params['md5sum_list'] : '', -1, PREG_SPLIT_NO_EMPTY);
             $md5sums  = $md5sumsResult !== false ? $md5sumsResult : [];
-            $idOfMd5  = array_column($this->conn->executeQuery('SELECT id, md5sum FROM ' . Tables::images() . " WHERE md5sum IN ('" . implode("','", $md5sums) . "');")-> fetchAllAssociative(), 'id', 'md5sum');
+            $idOfMd5  = $this->imageRepository->findIdByMd5sumMap($md5sums);
             foreach ($md5sums as $md5sum) {
                 $result[$md5sum] = $idOfMd5[$md5sum] ?? null;
             }
         } elseif (Config::uniquenessMode() === 'filename') {
             $filenamesResult = preg_split($splitPattern, is_string($params['filename_list'] ?? null) ? $params['filename_list'] : '', -1, PREG_SPLIT_NO_EMPTY);
             $filenames = $filenamesResult !== false ? $filenamesResult : [];
-            $idOfFile  = array_column($this->conn->executeQuery('SELECT id, file FROM ' . Tables::images() . " WHERE file IN ('" . implode("','", $filenames) . "');")-> fetchAllAssociative(), 'id', 'file');
+            $idOfFile  = $this->imageRepository->findIdByFilenameMap($filenames);
             foreach ($filenames as $filename) {
                 $result[$filename] = $idOfFile[$filename] ?? null;
             }
@@ -1273,8 +1268,7 @@ final readonly class ImagesEndpoints
             }
         }
         if (count($update) > 0) {
-            $update['id'] = $setImageId;
-            $this->conn->update(Tables::images(), $update, ['id' => $update['id']]);
+            $this->imageRepository->updateById($setImageId, $update);
             $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $setImageId, 'edit'));
         }
         if (isset($params['categories'])) {
@@ -1417,7 +1411,8 @@ final readonly class ImagesEndpoints
         if (empty($imageIds)) {
             return new PwgError(WsError::InvalidParam->value, 'Invalid image_id (no value after filters)');
         }
-        $imageIds = array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE id IN (' . implode(', ', $imageIds) . ');')->fetchAllAssociative(), 'id'));
+        $imageIdsInt = array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, $imageIds);
+        $imageIds    = $this->imageRepository->findExistingIdsAmong($imageIdsInt);
         if (empty($imageIds)) {
             return new PwgError(403, 'No image found');
         }
@@ -1450,8 +1445,7 @@ final readonly class ImagesEndpoints
         }
         $scCategoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
         $scImageIds   = is_array($params['image_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
-        $categories   = $this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE id = ' . $scCategoryId . ';')->fetchAllAssociative();
-        if (count($categories) === 0) {
+        if (!$this->categoryRepository->existsById($scCategoryId)) {
             return new PwgError(404, 'category_id not found');
         }
         $scAction = is_string($params['action'] ?? null) ? $params['action'] : '';

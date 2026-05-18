@@ -233,6 +233,47 @@ final class CommentRepository extends AbstractRepository
     }
 
     /**
+     * Count comments matching a caller-built WHERE fragment with bound
+     * params. Used by the WS getInfo endpoint which composes WHERE based on
+     * visibility/admin-vs-public branching.
+     *
+     * @param  list<mixed>  $params
+     * @param  list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
+     */
+    public function countByWhereFragment(string $whereFragment, array $params = [], array $types = []): int
+    {
+        $value = $this->conn->executeQuery(
+            'SELECT COUNT(id) AS nb_comments FROM ' . $this->table('comments') . ' WHERE ' . $whereFragment,
+            $params,
+            $types,
+        )->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Return (id, date, author, content) for comments matching the caller's
+     * WHERE fragment, ordered by date with the given LIMIT/OFFSET.
+     *
+     * @param  list<mixed>  $params
+     * @param  list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
+     * @return list<array<string, mixed>>
+     */
+    public function findByWhereFragmentOrderedByDate(
+        string $whereFragment,
+        int $limit,
+        int $offset,
+        array $params = [],
+        array $types = [],
+    ): array {
+        return $this->conn->executeQuery(
+            'SELECT id, date, author, content FROM ' . $this->table('comments')
+            . ' WHERE ' . $whereFragment . ' ORDER BY date LIMIT ' . $limit . ' OFFSET ' . $offset,
+            $params,
+            $types,
+        )->fetchAllAssociative();
+    }
+
+    /**
      * For each given image id, return its count of validated comments. Result
      * is keyed by image_id; images with no validated comments are omitted.
      *

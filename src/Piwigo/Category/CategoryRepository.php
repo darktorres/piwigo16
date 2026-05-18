@@ -1575,6 +1575,70 @@ SELECT
     }
 
     /**
+     * Check whether the given image_id is in any category visible to the
+     * caller. Used by rate / view permission gates.
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     */
+    public function isImageInVisibleCategory(
+        int $imageId,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): bool {
+        $query  = 'SELECT DISTINCT id FROM ' . $this->table('images')
+            . ' INNER JOIN ' . $this->table('image_category') . ' ON id = image_id'
+            . ' WHERE id = ? ' . $permWhere . ' LIMIT 1';
+        $params = [$imageId, ...$permParams];
+        $types  = [ParameterType::INTEGER, ...$permTypes];
+        return $this->conn->executeQuery($query, $params, $types)->fetchOne() !== false;
+    }
+
+    /**
+     * Check whether the given image_id is in any commentable category visible
+     * to the caller. Used by addComment validation.
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     */
+    public function isImageInVisibleCommentableCategory(
+        int $imageId,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): bool {
+        $query  = 'SELECT DISTINCT image_id FROM ' . $this->table('image_category')
+            . ' INNER JOIN ' . $this->table('categories') . ' ON category_id = id'
+            . ' WHERE commentable = 1 AND image_id = ? ' . $permWhere;
+        $params = [$imageId, ...$permParams];
+        $types  = [ParameterType::INTEGER, ...$permTypes];
+        return $this->conn->executeQuery($query, $params, $types)->fetchOne() !== false;
+    }
+
+    /**
+     * Return related category info for the given image — id, name, permalink,
+     * uppercats, global_rank, commentable. Subject to permission filter.
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<array<string, mixed>>
+     */
+    public function findRelatedCategoriesForImage(
+        int $imageId,
+        string $permWhere,
+        array $permParams,
+        array $permTypes,
+    ): array {
+        $query  = 'SELECT id, name, permalink, uppercats, global_rank, commentable'
+            . ' FROM ' . $this->table('image_category') . ' INNER JOIN ' . $this->table('categories')
+            . ' ON category_id = id WHERE image_id = ? ' . $permWhere;
+        $params = [$imageId, ...$permParams];
+        $types  = [ParameterType::INTEGER, ...$permTypes];
+        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
      * Return distinct virtual-association category ids for the given images
      * (links where category_id is NOT the image's storage category). Used by
      * the batch-manager filter pane to show "associated to" options that are

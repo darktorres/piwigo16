@@ -673,6 +673,168 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Among the given image ids, return those that exist in the images table.
+     *
+     * @param int[] $ids
+     * @return list<int>
+     */
+    public function findExistingIdsAmong(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('images'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Check whether an image with the given id exists subject to the caller's
+     * permission filter.
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     */
+    public function existsByIdWithPermissions(int $id, string $permWhere, array $permParams, array $permTypes): bool
+    {
+        $query  = 'SELECT id FROM ' . $this->table('images') . ' WHERE id = ? ' . $permWhere . ' LIMIT 1';
+        $params = [$id, ...$permParams];
+        $types  = [ParameterType::INTEGER, ...$permTypes];
+        return $this->conn->executeQuery($query, $params, $types)->fetchOne() !== false;
+    }
+
+    /**
+     * Find a single image row by id subject to the caller's permission filter.
+     *
+     * @param list<mixed>                            $permParams
+     * @param list<ArrayParameterType|ParameterType> $permTypes
+     * @return array<string, mixed>|null
+     */
+    public function findByIdWithPermissions(int $id, string $permWhere, array $permParams, array $permTypes): ?array
+    {
+        $query  = 'SELECT * FROM ' . $this->table('images') . ' WHERE id = ? ' . $permWhere . ' LIMIT 1';
+        $params = [$id, ...$permParams];
+        $types  = [ParameterType::INTEGER, ...$permTypes];
+        $row = $this->conn->executeQuery($query, $params, $types)->fetchAssociative();
+        return $row !== false ? $row : null;
+    }
+
+    /**
+     * Return image ids in the given category ordered by `rank` ASC.
+     *
+     * @return list<int>
+     */
+    public function findIdsByCategoryIdOrderedByRank(int $categoryId): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('image_id')
+            ->from($this->table('image_category'))
+            ->where('category_id = :catId')
+            ->setParameter('catId', $categoryId)
+            ->orderBy('`rank`', 'ASC')
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Count images matching the caller-built WHERE fragment.
+     *
+     * @param list<mixed>                            $params
+     * @param list<ArrayParameterType|ParameterType> $types
+     */
+    public function countByWhereFragment(string $whereFragment, array $params = [], array $types = []): int
+    {
+        $value = $this->conn->executeQuery(
+            'SELECT COUNT(*) FROM ' . $this->table('images') . ' WHERE ' . $whereFragment,
+            $params,
+            $types,
+        )->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Find an image id by its (file, category_id) pair.
+     */
+    public function findIdInCategoryByFile(int $categoryId, string $file): ?int
+    {
+        $value = $this->conn->executeQuery(
+            'SELECT id FROM ' . $this->table('images') . ' AS i'
+            . ' INNER JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
+            . ' WHERE i.file = ? AND ic.category_id = ?',
+            [$file, $categoryId],
+            [ParameterType::STRING, ParameterType::INTEGER],
+        )->fetchOne();
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
+     * Count lounge entries in the given category that are not yet associated
+     * to any category (i.e. truly pending).
+     */
+    public function countLoungeInCategoryNotAssociated(int $categoryId): int
+    {
+        $value = $this->conn->executeQuery(
+            'SELECT COUNT(*) FROM ' . $this->table('lounge') . ' WHERE category_id = ?'
+            . ' AND image_id NOT IN (SELECT image_id FROM ' . $this->table('image_category') . ')',
+            [$categoryId],
+            [ParameterType::INTEGER],
+        )->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Return md5sum → id map for each existing image among $md5sums.
+     *
+     * @param  list<string> $md5sums
+     * @return array<string, int>
+     */
+    public function findIdByMd5sumMap(array $md5sums): array
+    {
+        if ($md5sums === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'md5sum')
+            ->from($this->table('images'));
+        $qb->where($qb->expr()->in('md5sum', ':md5s'))
+           ->setParameter('md5s', $md5sums, ArrayParameterType::STRING);
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $key       = is_string($row['md5sum']) ? $row['md5sum'] : '';
+            $out[$key] = is_numeric($row['id']) ? (int) $row['id'] : 0;
+        }
+        return $out;
+    }
+
+    /**
+     * Return file → id map for each existing image among $filenames.
+     *
+     * @param  list<string> $filenames
+     * @return array<string, int>
+     */
+    public function findIdByFilenameMap(array $filenames): array
+    {
+        if ($filenames === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'file')
+            ->from($this->table('images'));
+        $qb->where($qb->expr()->in('file', ':files'))
+           ->setParameter('files', $filenames, ArrayParameterType::STRING);
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $key       = is_string($row['file']) ? $row['file'] : '';
+            $out[$key] = is_numeric($row['id']) ? (int) $row['id'] : 0;
+        }
+        return $out;
+    }
+
+    /**
      * Return the id of the image whose md5sum matches, or null if none.
      * Used by the upload pipeline's duplicate-detection.
      */

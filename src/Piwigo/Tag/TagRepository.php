@@ -434,6 +434,83 @@ final class TagRepository extends AbstractRepository
     }
 
     /**
+     * Return tag ids whose name matches "%$word%". Used by SearchService
+     * allwords decomposition (a free-form user term is wrapped in % wildcards).
+     *
+     * @return list<int>
+     */
+    public function findIdsByNameLike(string $word): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT id FROM ' . $this->table('tags') . ' WHERE name LIKE ?',
+            ['%' . $word . '%'],
+            [\Doctrine\DBAL\ParameterType::STRING],
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return distinct image ids associated with any of the given tag ids,
+     * GROUP BY image_id (deduped). Used by SearchService qsearch.
+     *
+     * @param  list<int> $tagIds
+     * @return list<int>
+     */
+    public function findDistinctImageIdsGroupedByTagIds(array $tagIds): array
+    {
+        if ($tagIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('image_id')
+            ->from($this->table('image_tag'))
+            ->groupBy('image_id');
+        $qb->where($qb->expr()->in('tag_id', ':tagIds'))
+           ->setParameter('tagIds', $tagIds, ArrayParameterType::INTEGER);
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($qb->executeQuery()->fetchAllAssociative(), 'image_id'));
+    }
+
+    /** Return every distinct image_id present in image_tag. */
+    /** @return list<int> */
+    public function findAllDistinctImageIds(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT DISTINCT image_id FROM ' . $this->table('image_tag'),
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /** Return image ids that have no image_tag association at all (untagged). */
+    /** @return list<int> */
+    public function findUntaggedImageIds(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT id FROM ' . $this->table('images')
+            . ' LEFT JOIN ' . $this->table('image_tag') . ' ON id = image_id'
+            . ' WHERE image_id IS NULL',
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Search-text token query: SELECT * FROM tags WHERE (clause1 OR clause2 …).
+     * Clauses are caller-built (qsearchGetTextTokenSearchSql wraps user words
+     * with LIKE patterns).
+     *
+     * @param  list<string> $clauses
+     * @return list<array<string, mixed>>
+     */
+    public function findTagsByTextClauses(array $clauses): array
+    {
+        if ($clauses === []) {
+            return [];
+        }
+        return $this->conn->executeQuery(
+            'SELECT * FROM ' . $this->table('tags') . ' WHERE (' . implode("\n OR ", $clauses) . ')',
+        )->fetchAllAssociative();
+    }
+
+    /**
      * Return the id of the tag whose name exactly matches $name, or null.
      */
     public function findIdByExactName(string $name): ?int

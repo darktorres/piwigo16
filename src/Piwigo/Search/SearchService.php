@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
-use Doctrine\DBAL\Connection;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbInfo;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Search\QsearchBeforeEval;
 use Piwigo\Event\Search\QsearchExpressionParsed;
 use Piwigo\Event\Search\QsearchGetImagesSqlScopes;
@@ -24,6 +23,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Search\Inflector\InflectorEn;
 use Piwigo\Search\Inflector\InflectorFr;
 use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -45,12 +45,13 @@ final class SearchService
     public function __construct(
         private readonly SearchRepository $searchRepo,
         private readonly SearchFilterViewRepository $filterViewRepo,
-        private readonly Connection $conn,
+        private readonly CategoryRepository $categoryRepository,
         private readonly LoggerInterface $logger,
         private readonly CategoryService $categoryService,
         private readonly HtmlService $htmlService,
         private readonly PermissionService $permissionService,
         private readonly PreferencesService $preferencesService,
+        private readonly TagRepository $tagRepository,
         private readonly TagService $tagService,
         private readonly UrlService $urlService,
         private readonly UserService $userService,
@@ -104,23 +105,21 @@ final class SearchService
     public function getSearchInfo(string $candidate): ?array
     {
         $clausePattern = $this->getSearchIdPattern($candidate);
-
         if ($clausePattern === null || $clausePattern === '') {
             throw new ValidationException('Invalid search identifier');
         }
+        $idColumn = $clausePattern === 'id = %u' ? 'id' : 'search_uuid';
 
-        $query   = 'SELECT * FROM ' . Tables::search() . ' WHERE ' . sprintf($clausePattern, $candidate) . ';';
-        $searches = $this->conn->executeQuery($query)->fetchAllAssociative();
-
-        if (count($searches) > 0) {
-            if (StringUtil::scriptBasename() != 'ws' and 'id = %u' == $clausePattern and isset($searches[0]['search_uuid'])) {
+        $row = $this->searchRepo->findSearchRow($idColumn, $candidate);
+        if ($row !== null) {
+            if (StringUtil::scriptBasename() != 'ws' and 'id = %u' == $clausePattern and isset($row['search_uuid'])) {
                 HtmlService::fatalError('this search is not reachable with its id, need the search_uuid instead');
             }
             if ('search' == SectionContextRegistry::current()->section) {
-                $rawId = $searches[0]['id'] ?? null;
+                $rawId = $row['id'] ?? null;
                 $this->searchId = is_scalar($rawId) ? (string) $rawId : null;
             }
-            return $searches[0];
+            return $row;
         }
 
         return null;
@@ -160,19 +159,13 @@ final class SearchService
         // per-filter "SELECT DISTINCT(id) FROM images JOIN image_category
         // WHERE <filter> $forbiddenSql" shape used by every filter below.
         $filterImageIds =
-            /** @return list<int|string> */
-            function (string $whereClause) use ($forbiddenSql, $forbiddenParams, $forbiddenTypes): array {
-                return array_column(
-                    $this->conn->executeQuery(
-                        'SELECT DISTINCT(id) FROM ' . Tables::images() . ' AS i'
-                        . ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id'
-                        . ' WHERE ' . $whereClause . ' ' . $forbiddenSql . ';',
-                        $forbiddenParams,
-                        $forbiddenTypes
-                    )->fetchAllAssociative(),
-                    'id'
-                );
-            };
+            /** @return list<int> */
+            fn (string $whereClause): array => $this->searchRepo->findDistinctImageIdsByWhereWithPermissions(
+                $whereClause,
+                $forbiddenSql,
+                $forbiddenParams,
+                $forbiddenTypes,
+            );
 
         $imageIdsForFilter = [];
 
@@ -242,28 +235,26 @@ final class SearchService
                     $fieldClauses[] = $field . " LIKE '%" . $word . "%'";
                 }
                 if (count($catFields) > 0) {
-                    $catWordClauses = [];
                     $catFieldClauses = [];
                     foreach ($catFields as $catField) {
                         $catFieldClauses[] = $catFieldsDictionary[$catField] . " LIKE '%" . $word . "%'";
                     }
-                    $catWordClauses[] = implode(' OR ', $catFieldClauses);
-                    $catIds = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE ' . implode(' OR ', $catWordClauses) . ';')->fetchAllAssociative(), 'id'));
+                    $catIds = $this->categoryRepository->findIdsByOrClauses($catFieldClauses);
                     $catIdsByWord[$word] = $catIds;
-                    if (count($catIds) > 0) {
-                        $catImageIds = array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $catIds) . ');')->fetchAllAssociative(), 'image_id');
-                        if (count($catImageIds) > 0) {
-                            $fieldClauses[] = 'id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $catImageIds)) . ')';
+                    if ($catIds !== []) {
+                        $catImageIds = $this->categoryRepository->findDistinctImageIdsGroupedByCategoryIds($catIds);
+                        if ($catImageIds !== []) {
+                            $fieldClauses[] = 'id IN (' . implode(',', $catImageIds) . ')';
                         }
                     }
                 }
                 if (in_array('tags', $allwordsFieldList)) {
-                    $tagIds = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::tags() . ' WHERE name LIKE \'%' . $word . '%\';')->fetchAllAssociative(), 'id'));
+                    $tagIds = $this->tagRepository->findIdsByNameLike($word);
                     $tagIdsByWord[$word] = $tagIds;
-                    if (count($tagIds) > 0) {
-                        $tagImageIds = array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::imageTag() . ' WHERE tag_id IN (' . implode(',', $tagIds) . ');')->fetchAllAssociative(), 'image_id');
-                        if (count($tagImageIds) > 0) {
-                            $fieldClauses[] = 'id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $tagImageIds)) . ')';
+                    if ($tagIds !== []) {
+                        $tagImageIds = $this->tagRepository->findDistinctImageIdsGroupedByTagIds($tagIds);
+                        if ($tagImageIds !== []) {
+                            $fieldClauses[] = 'id IN (' . implode(',', $tagImageIds) . ')';
                         }
                     }
                 }
@@ -501,7 +492,10 @@ final class SearchService
         $this->logger->debug('getRegularSearchResults ' . count($items) . ' items in $unsorted_items');
 
         if (count($items) > 1) {
-            $items = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' i WHERE id IN (' . implode(',', $items) . ') ' . Config::orderBy())->fetchAllAssociative(), 'id');
+            $items = $this->searchRepo->orderImageIds(
+                array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $items)),
+                Config::orderBy(),
+            );
         }
 
         $details = [
@@ -592,7 +586,7 @@ final class SearchService
 
     /**
      * @param string[] $fields
-     * @return non-falsy-string[]
+     * @return list<non-falsy-string>
      */
     public function qsearchGetTextTokenSearchSql(QSingleToken $token, array $fields): array
     {
@@ -647,7 +641,7 @@ final class SearchService
     public function qsearchGetImages(QExpression $expr, QResults $qsr): void
     {
         $qsr->images_iids = array_fill(0, count($expr->stokens), []);
-        $queryBase        = 'SELECT id from ' . Tables::images() . ' i WHERE' . "\n";
+        $queryBaseWhere   = "WHERE\n";
         for ($i = 0; $i < count($expr->stokens); $i++) {
             $token      = $expr->stokens[$i];
             $scopeId    = isset($token->scope) ? $token->scope->id : 'photo';
@@ -727,8 +721,8 @@ final class SearchService
                     break;
             }
             if (!empty($clauses)) {
-                $query = $queryBase . '(' . implode("\n OR ", array_filter($clauses, is_string(...))) . ')';
-                $qsr->images_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'));
+                $whereFragment = $queryBaseWhere . '(' . implode("\n OR ", array_filter($clauses, is_string(...))) . ')';
+                $qsr->images_iids[$i] = $this->searchRepo->findQsearchImageIdsByWhere($whereFragment);
             }
         }
     }
@@ -747,8 +741,7 @@ final class SearchService
                 continue;
             }
             $clauses = $this->qsearchGetTextTokenSearchSql($token, ['name']);
-            $query   = 'SELECT * FROM ' . Tables::tags() . ' WHERE (' . implode("\n OR ", $clauses) . ')';
-            foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $tag) {
+            foreach ($this->tagRepository->findTagsByTextClauses($clauses) as $tag) {
                 $tagId               = is_numeric($tag['id']) ? (int) $tag['id'] : 0;
                 $tokenTagIds[$i][]   = $tagId;
                 $allTags[$tagId]     = $tag;
@@ -772,7 +765,7 @@ final class SearchService
             $token  = $expr->stokens[$i];
 
             if (!empty($tagIds)) {
-                $qsr->tag_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::imageTag() . ' WHERE tag_id IN (' . implode(',', $tagIds) . ') GROUP BY image_id')->fetchAllAssociative(), 'image_id'));
+                $qsr->tag_iids[$i] = $this->tagRepository->findDistinctImageIdsGroupedByTagIds(array_map(intval(...), $tagIds));
                 if ($expr->stoken_modifiers[$i] & QST_NOT) {
                     $notIds = array_merge($notIds, $tagIds);
                 } else {
@@ -782,9 +775,9 @@ final class SearchService
                 }
             } elseif (isset($token->scope) && 'tag' == $token->scope->id && strlen($token->term) == 0) {
                 if ($token->modifier & QST_WILDCARD) {
-                    $qsr->tag_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery('SELECT DISTINCT image_id FROM ' . Tables::imageTag())->fetchAllAssociative(), 'image_id'));
+                    $qsr->tag_iids[$i] = $this->tagRepository->findAllDistinctImageIds();
                 } else {
-                    $qsr->tag_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::imageTag() . ' ON id=image_id WHERE image_id IS NULL')->fetchAllAssociative(), 'id'));
+                    $qsr->tag_iids[$i] = $this->tagRepository->findUntaggedImageIds();
                 }
             }
         }
@@ -815,8 +808,7 @@ final class SearchService
                 continue;
             }
             $clauses = $this->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
-            $query   = 'SELECT * FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id AND user_id = ' . $userId . ' WHERE (' . implode("\n OR ", $clauses) . ')';
-            foreach ($this->conn->executeQuery($query)->fetchAllAssociative() as $cat) {
+            foreach ($this->categoryRepository->findCategoriesByTextClausesForUser($userId, $clauses) as $cat) {
                 $catId             = is_numeric($cat['id']) ? (int) $cat['id'] : 0;
                 $tokenCatIds[$i][] = $catId;
                 $allCats[$catId]   = $cat;
@@ -841,9 +833,12 @@ final class SearchService
 
             if (!empty($catIds)) {
                 if (Config::quickSearchIncludeSubAlbums()) {
-                    $catIds = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userCacheCategories() . ' ON id = cat_id and user_id = ' . $userId . ' WHERE id IN (' . implode(',', $this->categoryService->getSubcatIds($catIds)) . ');')->fetchAllAssociative(), 'id'));
+                    $catIds = $this->categoryRepository->filterVisibleCategoryIdsForUser(
+                        $userId,
+                        array_values($this->categoryService->getSubcatIds($catIds)),
+                    );
                 }
-                $qsr->cat_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $catIds) . ') GROUP BY image_id')->fetchAllAssociative(), 'image_id'));
+                $qsr->cat_iids[$i] = $this->categoryRepository->findDistinctImageIdsGroupedByCategoryIds(array_map(intval(...), $catIds));
                 if ($expr->stoken_modifiers[$i] & QST_NOT) {
                     $notIds = array_merge($notIds, $catIds);
                 } else {
@@ -853,9 +848,9 @@ final class SearchService
                 }
             } elseif (isset($token->scope) && 'category' == $token->scope->id && strlen($token->term) == 0) {
                 if ($token->modifier & QST_WILDCARD) {
-                    $qsr->cat_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery('SELECT DISTINCT image_id FROM ' . Tables::imageCategory())->fetchAllAssociative(), 'image_id'));
+                    $qsr->cat_iids[$i] = $this->categoryRepository->findAllDistinctImageIds();
                 } else {
-                    $qsr->cat_iids[$i] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::imageCategory() . ' ON id=image_id WHERE image_id IS NULL')->fetchAllAssociative(), 'id'));
+                    $qsr->cat_iids[$i] = $this->categoryRepository->findUncategorizedImageIds();
                 }
             }
         }
@@ -1077,12 +1072,13 @@ final class SearchService
             $whereClauses[] = $permSql;
         }
 
-        $query = 'SELECT DISTINCT(id) FROM ' . Tables::images() . ' i';
-        if ($permissions) {
-            $query .= ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id';
-        }
-        $query .= ' WHERE ' . implode("\n AND ", $whereClauses) . "\n" . Config::orderBy();
-        $ids   = array_column($this->conn->executeQuery($query, $permParams, $permTypes)->fetchAllAssociative(), 'id');
+        $ids = $this->searchRepo->findOrderedImageIdsForQsearch(
+            $whereClauses,
+            $permissions,
+            $permParams,
+            $permTypes,
+            Config::orderBy(),
+        );
 
         $debug[] = count($ids) . ' final photo count -->';
         TemplateRegistry::current()->append('footer_elements', implode("\n", $debug));
@@ -1138,7 +1134,7 @@ final class SearchService
         $dbnow      = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         $searchUuid = $this->getAvailableSearchUuid();
 
-        $this->conn->insert(Tables::search(), [
+        $this->searchRepo->insertSearchRow([
             'rules'       => json_encode($rules, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
             'created_on'  => $dbnow,
             'created_by'  => $createdBy,

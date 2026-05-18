@@ -678,6 +678,71 @@ final class CategoryRepository extends AbstractRepository
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 
+    /**
+     * Return category ids matching a caller-built OR of field-LIKE clauses
+     * (each clause references a controlled column from $catFieldsDictionary
+     * and a free-form $word wrapped in % wildcards). Used by SearchService
+     * allwords decomposition.
+     *
+     * @param  list<string> $orClauses
+     * @return list<int>
+     */
+    public function findIdsByOrClauses(array $orClauses): array
+    {
+        if ($orClauses === []) {
+            return [];
+        }
+        $rows = $this->conn->executeQuery(
+            'SELECT id FROM ' . $this->table('categories') . ' WHERE ' . implode(' OR ', $orClauses),
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Search-text token query for categories: SELECT * FROM categories INNER
+     * JOIN user_cache_categories ON id = cat_id AND user_id = ? WHERE
+     * (clause1 OR clause2 …). Categories not visible to $userId are excluded.
+     *
+     * @param  list<string> $clauses
+     * @return list<array<string, mixed>>
+     */
+    public function findCategoriesByTextClausesForUser(int $userId, array $clauses): array
+    {
+        if ($clauses === []) {
+            return [];
+        }
+        return $this->conn->executeQuery(
+            'SELECT * FROM ' . $this->table('categories')
+            . ' INNER JOIN ' . $this->table('user_cache_categories')
+            . ' ON id = cat_id AND user_id = ?'
+            . ' WHERE (' . implode("\n OR ", $clauses) . ')',
+            [$userId],
+            [\Doctrine\DBAL\ParameterType::INTEGER],
+        )->fetchAllAssociative();
+    }
+
+    /**
+     * Filter the given category ids down to those visible to $userId
+     * (i.e. present in user_cache_categories). Used by SearchService qsearch.
+     *
+     * @param list<int> $catIds
+     * @return list<int>
+     */
+    public function filterVisibleCategoryIdsForUser(int $userId, array $catIds): array
+    {
+        if ($catIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('categories'))
+            ->innerJoin($this->table('categories'), $this->table('user_cache_categories'), 'ucc', 'id = ucc.cat_id AND ucc.user_id = :userId')
+            ->setParameter('userId', $userId);
+        $qb->where($qb->expr()->in('id', ':catIds'))
+           ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
     /** Return category ids whose site_id matches the given value. */
     /** @return int[] */
     public function findIdsBySiteId(int $siteId): array
@@ -690,6 +755,49 @@ final class CategoryRepository extends AbstractRepository
             ->executeQuery()
             ->fetchFirstColumn();
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return image_ids linked to the given category ids, GROUPed BY image_id
+     * (deduped). Used by SearchService qsearch.
+     *
+     * @param  list<int> $catIds
+     * @return list<int>
+     */
+    public function findDistinctImageIdsGroupedByCategoryIds(array $catIds): array
+    {
+        if ($catIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('image_id')
+            ->from($this->table('image_category'))
+            ->groupBy('image_id');
+        $qb->where($qb->expr()->in('category_id', ':catIds'))
+           ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($qb->executeQuery()->fetchAllAssociative(), 'image_id'));
+    }
+
+    /** Return every distinct image_id present in image_category. */
+    /** @return list<int> */
+    public function findAllDistinctImageIds(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT DISTINCT image_id FROM ' . $this->table('image_category'),
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /** Return image ids that have no image_category association (uncategorized). */
+    /** @return list<int> */
+    public function findUncategorizedImageIds(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT id FROM ' . $this->table('images')
+            . ' LEFT JOIN ' . $this->table('image_category') . ' ON id = image_id'
+            . ' WHERE image_id IS NULL',
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }
 
     /**

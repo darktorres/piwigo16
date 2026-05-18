@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -17,7 +16,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\BeginDeleteElements;
 use Piwigo\Event\Picture\DeleteElements;
 use Piwigo\Html\HtmlService;
@@ -35,7 +33,6 @@ final class ImageAdminService
     private bool $fsQuickCheckCalled = false;
 
     public function __construct(
-        private readonly Connection $conn,
         private readonly CategoryAdminService $categoryAdminService,
         private readonly CategoryRepository $categoryRepository,
         private readonly ConfigService $configService,
@@ -110,24 +107,19 @@ final class ImageAdminService
                 return 0;
             }
         }
-        return $this->conn->transactional(function () use ($ids): int {
-            // Find categories whose representative picture is in $ids BEFORE
-            // deleting — after the parent delete fires the FK SET NULL,
-            // categories.representative_picture_id is already NULL for those
-            // rows and the query would return nothing. updateCategory then
-            // picks a fresh representative for each affected category.
-            $catRepo     = $this->categoryRepository;
-            $categoryIds = $catRepo->findIdsByRepresentativePicture($ids);
-            $this->imageRepository->deleteByIds($ids);
-            // FK CASCADE has cleared child rows in comments, image_category,
-            // image_format, image_tag, favorites, rate, caddie, lounge.
-            if (count($categoryIds) > 0) {
-                $this->categoryAdminService->updateCategory($categoryIds);
-            }
-            $this->dispatcher->dispatch(new DeleteElements($ids));
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $ids, 'delete'));
-            return count($ids);
-        });
+        // Capture categories whose representative picture is in $ids BEFORE
+        // deleting — after the parent delete fires the FK SET NULL,
+        // categories.representative_picture_id is already NULL for those
+        // rows and the lookup would return nothing. updateCategory then
+        // picks a fresh representative for each affected category.
+        $categoryIds = $this->categoryRepository->findIdsByRepresentativePicture($ids);
+        $this->imageRepository->deleteAtomicallyByIds($ids);
+        if (count($categoryIds) > 0) {
+            $this->categoryAdminService->updateCategory($categoryIds);
+        }
+        $this->dispatcher->dispatch(new DeleteElements($ids));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $ids, 'delete'));
+        return count($ids);
     }
 
     /** @return array<mixed> */
@@ -303,42 +295,31 @@ final class ImageAdminService
         if (!is_numeric($imageId)) {
             HtmlService::fatalError('[getImageInfos] invalid image identifier ' . htmlentities($imageId));
         }
-        $images = $this->conn->executeQuery(
-            'SELECT * FROM ' . Tables::images() . ' WHERE id = ' . $imageId
-        )->fetchAllAssociative();
-        if (count($images) === 0) {
+        $image = $this->imageRepository->findById((int) $imageId);
+        if ($image === null) {
             if ($dieOnMissing) {
                 HtmlService::fatalError('photo ' . $imageId . ' does not exist');
             }
             return null;
         }
-        return $images[0];
+        return $image;
     }
 
     /** @return int[] */
     public function getPhotosNoMd5sum(): array
     {
-        $raw = array_column($this->conn->executeQuery(
-            'SELECT id FROM ' . Tables::images() . ' WHERE md5sum is null'
-        )->fetchAllAssociative(), 'id');
-        return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $raw);
+        return $this->imageRepository->findIdsWithoutMd5sum();
     }
 
     /** @param int[] $ids */
     public function addMd5sum(array $ids): int
     {
-        $pathForId = array_column($this->conn->executeQuery(
-            'SELECT id, path FROM ' . Tables::images() . ' WHERE id IN (' . implode(', ', array_map(strval(...), $ids)) . ')'
-        )->fetchAllAssociative(), 'path', 'id');
+        $pathForId = $this->imageRepository->findIdToPathMapByIds($ids);
         $updates = [];
         foreach ($pathForId as $id => $path) {
-            $updates[] = ['id' => $id, 'md5sum' => md5_file($this->paths->root . (is_string($path) ? $path : ''))];
+            $updates[] = ['id' => $id, 'md5sum' => md5_file($this->paths->root . $path)];
         }
-        $this->conn->transactional(function () use ($updates): void {
-            foreach ($updates as $row) {
-                $this->conn->update(Tables::images(), ['md5sum' => $row['md5sum']], ['id' => $row['id']]);
-            }
-        });
+        $this->imageRepository->setMd5sumBatch($updates);
         return count($pathForId);
     }
 
@@ -357,13 +338,8 @@ final class ImageAdminService
     /** @return int[] */
     public function getOrphans(): array
     {
-        $loungedIds = array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::lounge())->fetchAllAssociative(), 'image_id');
-        $query = 'SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::imageCategory() . ' ON id = image_id WHERE category_id IS NULL';
-        if (count($loungedIds) > 0) {
-            $query .= ' AND id NOT IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $loungedIds)) . ')';
-        }
-        $query .= ' ORDER BY id ASC';
-        return array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id'));
+        $loungedIds = $this->imageRepository->findLoungeImageIds();
+        return $this->imageRepository->findOrphanIdsExcluding($loungedIds);
     }
 
     public function fsQuickCheck(): void
@@ -377,36 +353,29 @@ final class ImageAdminService
         $this->fsQuickCheckCalled = true;
         $this->configService->confUpdateParam('fs_quick_check_last_check', date('c'));
 
-        $issue1827Ids = array_column($this->conn->executeQuery(
-            'SELECT id FROM ' . Tables::images() . " WHERE date_available < '2022-12-08 00:00:00' AND path LIKE './upload/%' LIMIT 5000"
-        )->fetchAllAssociative(), 'id');
+        $issue1827Ids = $this->imageRepository->findUploadIdsBefore('2022-12-08 00:00:00', 5000);
         shuffle($issue1827Ids);
         $issue1827Ids = array_slice($issue1827Ids, 0, 50);
 
-        $randomImageIds = array_map(
-            fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
-            array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' LIMIT 5000')->fetchAllAssociative(), 'id')
-        );
+        $randomImageIds = $this->imageRepository->findIdsCapped(5000);
         shuffle($randomImageIds);
         $randomImageIds = array_slice($randomImageIds, 0, 50);
 
-        $checkIds = array_unique(array_merge(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $issue1827Ids), $randomImageIds));
+        $checkIds = array_values(array_unique(array_merge($issue1827Ids, $randomImageIds)));
         if (count($checkIds) < 1) {
             return;
         }
 
-        $paths = array_column($this->conn->executeQuery(
-            'SELECT id, path FROM ' . Tables::images() . ' WHERE id IN (' . implode(',', $checkIds) . ')'
-        )->fetchAllAssociative(), 'path', 'id');
+        $paths = $this->imageRepository->findIdToPathMapByIds($checkIds);
 
         foreach ($paths as $path) {
-            if (!file_exists(is_scalar($path) ? (string) $path : '')) {
+            if (!file_exists($path)) {
                 PageState::current()->headerMessages[] = Lang::t('Some photos are missing from your file system. Details provided by plugin Check Uploads');
                 return;
             }
         }
 
-        $duplicatePaths = $this->conn->executeQuery('SELECT path FROM ' . Tables::images() . ' GROUP BY path HAVING COUNT(*) > 1')->fetchAllAssociative();
+        $duplicatePaths = $this->imageRepository->findDuplicatePaths();
         if (count($duplicatePaths) > 0) {
             PageState::current()->headerMessages[] = Lang::t('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicatePaths));
         }

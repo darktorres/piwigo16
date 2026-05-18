@@ -690,6 +690,175 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Delete images by id inside a transaction. FK CASCADE clears child rows
+     * in comments, image_category, image_format, image_tag, favorites, rate,
+     * caddie, lounge.
+     *
+     * @param int[] $ids
+     */
+    public function deleteAtomicallyByIds(array $ids): void
+    {
+        if ($ids === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($ids): void {
+            $this->deleteByIds($ids);
+        });
+    }
+
+    /**
+     * Return image ids that do not have md5sum populated (NULL).
+     *
+     * @return list<int>
+     */
+    public function findIdsWithoutMd5sum(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('images'))
+            ->where('md5sum IS NULL')
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return id → path map for the given image ids.
+     *
+     * @param int[] $ids
+     * @return array<int|string, string>
+     */
+    public function findIdToPathMapByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id', 'path')
+            ->from($this->table('images'));
+        $qb->where($qb->expr()->in('id', ':ids'))
+           ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $key       = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $out[$key] = is_string($row['path']) ? $row['path'] : '';
+        }
+        return $out;
+    }
+
+    /**
+     * Update md5sum for many images atomically.
+     *
+     * @param list<array{id: int|string, md5sum: string|false|null}> $rows
+     */
+    public function setMd5sumBatch(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $idInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
+                $md5   = ($row['md5sum'] === false) ? null : $row['md5sum'];
+                $this->conn->update($this->table('images'), ['md5sum' => $md5], ['id' => $idInt]);
+            }
+        });
+    }
+
+    /**
+     * Return image_ids currently sitting in the lounge.
+     *
+     * @return list<int>
+     */
+    public function findLoungeImageIds(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('image_id')
+            ->from($this->table('lounge'))
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return ids of images that are not linked to any category (orphans),
+     * excluding any image_ids in $excludeIds (typically lounge entries).
+     *
+     * @param int[] $excludeIds
+     * @return list<int>
+     */
+    public function findOrphanIdsExcluding(array $excludeIds): array
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('images'))
+            ->leftJoin($this->table('images'), $this->table('image_category'), 'ic', 'id = ic.image_id')
+            ->where('ic.category_id IS NULL')
+            ->orderBy('id', 'ASC');
+        if ($excludeIds !== []) {
+            $qb->andWhere($qb->expr()->notIn('id', ':excludeIds'))
+               ->setParameter('excludeIds', $excludeIds, ArrayParameterType::INTEGER);
+        }
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+    }
+
+    /**
+     * Return up to 5000 image ids where date_available is older than the
+     * given cutoff date and path starts with './upload/' — sample pool for
+     * the fs-quick-check (issue #1827) integrity routine.
+     *
+     * @return list<int>
+     */
+    public function findUploadIdsBefore(string $cutoffDate, int $limit): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('images'))
+            ->where('date_available < :cutoff')
+            ->andWhere("path LIKE './upload/%'")
+            ->setParameter('cutoff', $cutoffDate)
+            ->setMaxResults($limit)
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return up to $limit image ids (no filter). Used by fs-quick-check for
+     * a random sampling pool.
+     *
+     * @return list<int>
+     */
+    public function findIdsCapped(int $limit): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('images'))
+            ->setMaxResults($limit)
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return image `path` values that occur more than once (i.e. duplicate
+     * filesystem paths from a bad sync state).
+     *
+     * @return list<string>
+     */
+    public function findDuplicatePaths(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('path')
+            ->from($this->table('images'))
+            ->groupBy('path')
+            ->having('COUNT(*) > 1')
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $rows);
+    }
+
+    /**
      * Run the categories-getImages paginated query (the SQL_CALC_FOUND_ROWS
      * pattern used by the REST endpoint), returning the image rows and the
      * total FOUND_ROWS() count.

@@ -269,7 +269,6 @@ return [
     ImageAdminService::class         => factory(static function (ContainerInterface $c): ImageAdminService {
         return (new \ReflectionClass(ImageAdminService::class))->newLazyProxy(
             static fn (): ImageAdminService => new ImageAdminService(
-                $c->get(Connection::class),
                 $c->get(CategoryAdminService::class),
                 $c->get(CategoryRepository::class),
                 $c->get(ConfigService::class),

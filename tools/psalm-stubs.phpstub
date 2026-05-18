@@ -16,14 +16,12 @@ namespace {
 
     // Table-prefix constants (table-name constants retired in Phase 2b — use Piwigo\Db\Tables::*)
     const PREFIX_TABLE = '';
-    const DEFAULT_PREFIX_TABLE = '';
 
     // Context flag (request-context now lives in Piwigo\Http\RequestContext / Registry — Phase 4c)
     const PWG_API_KEY_REQUEST = '';
 
     // Misc
     const PEM_URL = '';
-    const PHOTOS_ADD_BASE_URL = '';
 
     // mkgetdir flags
     const MKGETDIR_NONE = 0;
@@ -31,9 +29,6 @@ namespace {
     const MKGETDIR_RECURSIVE = 0;
     const MKGETDIR_PROTECT_INDEX = 0;
     const MKGETDIR_DIE_ON_ERROR = 0;
-
-    // UI
-    const BUTTONS_RANK_NEUTRAL = 0;
 
 
     // -------------------------------------------------------------------------

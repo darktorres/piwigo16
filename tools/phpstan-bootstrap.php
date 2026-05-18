@@ -15,8 +15,3 @@ if (!defined('PHPWG_URL')) {
     define('PHPWG_URL', 'https://piwigo.org');
     define('PEM_URL', 'https://piwigo.org/ext');
 }
-
-// Admin URL constants — defined at runtime by PhotoController; declared here for static analysis.
-if (!defined('PHOTOS_ADD_BASE_URL')) {
-    define('PHOTOS_ADD_BASE_URL', 'index.php?/admin&page=photos_add');
-}

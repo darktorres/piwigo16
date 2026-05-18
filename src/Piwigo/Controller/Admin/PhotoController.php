@@ -581,8 +581,6 @@ final class PhotoController implements AdminSubControllerInterface
     {
         $tpl = TemplateRegistry::current();
 
-        defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', $this->urlGenerator->admin('photos_add'));
-
         $upload_form_config = $this->uploadService->getUploadFormConfig();
 
         $rawSection = $_GET['section'] ?? null;
@@ -611,8 +609,6 @@ final class PhotoController implements AdminSubControllerInterface
         $tpl = TemplateRegistry::current();
         /** @var array<string, mixed> $user */
         $user = CurrentUser::get()->rawAttributes;
-
-        defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', $this->urlGenerator->admin('photos_add'));
 
         if (isset($_GET['batch'])) {
             $this->inputValidator->check('batch', $_GET, false, '/^\d+(,\d+)*$/');
@@ -674,7 +670,7 @@ final class PhotoController implements AdminSubControllerInterface
 
         $nb_albums        = 0;
         $selected_category = [];
-        $this->directPreparer->prepare(PHOTOS_ADD_BASE_URL);
+        $this->directPreparer->prepare($this->urlGenerator->admin('photos_add'));
 
         $this->dispatcher->dispatch(new LocEndPhotoAddDirect());
 
@@ -730,8 +726,6 @@ final class PhotoController implements AdminSubControllerInterface
     {
         $tpl = TemplateRegistry::current();
 
-        defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', $this->urlGenerator->admin('photos_add'));
-
         $ftpHelp = $this->langService->loadLanguage('help/photos_add_ftp.html', '', ['return' => true]);
         $tpl->assign('FTP_HELP_CONTENT', new Html(is_string($ftpHelp) ? $ftpHelp : ''));
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Upload Photos'));
@@ -743,8 +737,6 @@ final class PhotoController implements AdminSubControllerInterface
     private function photosAddApplications(): void
     {
         $tpl = TemplateRegistry::current();
-
-        defined('PHOTOS_ADD_BASE_URL') or define('PHOTOS_ADD_BASE_URL', $this->urlGenerator->admin('photos_add'));
 
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Upload Photos'));
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'photos_add_applications.latte');

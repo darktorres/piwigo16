@@ -49,7 +49,6 @@ if (str_starts_with($_qs, 'i/')) {
 
 if (str_starts_with($_qs, 'install')) {
     // Install wizard — no DB yet; bypass the full boot pipeline.
-    defined('DEFAULT_PREFIX_TABLE') or define('DEFAULT_PREFIX_TABLE', 'piwigo_');
     defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
     ConfigLoader::applyDefaults();
     (new InstallController($paths))(RequestFactory::fromGlobals());

@@ -21,9 +21,6 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-/** default rank for buttons */
-define('BUTTONS_RANK_NEUTRAL', 50);
-
 /**
  * Page-rendering coordinator: holds the per-request output buffer, the
  * JS/CSS asset registries, the registered template-variable bag, and
@@ -38,6 +35,9 @@ define('BUTTONS_RANK_NEUTRAL', 50);
  */
 final class Template
 {
+    /** Default rank for plugin-registered picture / index buttons. */
+    public const int BUTTONS_RANK_NEUTRAL = 50;
+
     /** @var string */
     public $output = '';
 
@@ -605,7 +605,7 @@ final class Template
     /**
      * Registers a button to be displayed on picture page.
      */
-    public function addPictureButton(mixed $content, int $rank = BUTTONS_RANK_NEUTRAL): void
+    public function addPictureButton(mixed $content, int $rank = self::BUTTONS_RANK_NEUTRAL): void
     {
         $this->picture_buttons[$rank][] = $content;
     }
@@ -613,7 +613,7 @@ final class Template
     /**
      * Registers a button to be displayed on index pages.
      */
-    public function addIndexButton(mixed $content, int $rank = BUTTONS_RANK_NEUTRAL): void
+    public function addIndexButton(mixed $content, int $rank = self::BUTTONS_RANK_NEUTRAL): void
     {
         $this->index_buttons[$rank][] = $content;
     }

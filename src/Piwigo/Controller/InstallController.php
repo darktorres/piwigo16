@@ -49,6 +49,9 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final readonly class InstallController implements ControllerInterface
 {
+    /** Default DB table prefix used when the install form leaves the field blank. */
+    public const string DEFAULT_DB_PREFIX = 'piwigo_';
+
     public function __construct(private Paths $paths)
     {
     }
@@ -59,7 +62,7 @@ final readonly class InstallController implements ControllerInterface
         $prefixRaw = $_POST['prefix'] ?? null;
         $prefixeTable = isset($_POST['install']) && is_string($prefixRaw)
             ? $prefixRaw
-            : DEFAULT_PREFIX_TABLE;
+            : self::DEFAULT_DB_PREFIX;
 
         $rawDbhost    = $_POST['dbhost']     ?? null;
         $rawDbuser    = $_POST['dbuser']     ?? null;
@@ -196,8 +199,8 @@ final readonly class InstallController implements ControllerInterface
 
                 $configService = Kernel::service(ConfigService::class);
 
-                InstallService::executeSqlFile($this->paths->root . 'install/piwigo_structure-mysql.sql', DEFAULT_PREFIX_TABLE, $prefixeTable);
-                InstallService::executeSqlFile($this->paths->root . 'install/config.sql', DEFAULT_PREFIX_TABLE, $prefixeTable);
+                InstallService::executeSqlFile($this->paths->root . 'install/piwigo_structure-mysql.sql', self::DEFAULT_DB_PREFIX, $prefixeTable);
+                InstallService::executeSqlFile($this->paths->root . 'install/config.sql', self::DEFAULT_DB_PREFIX, $prefixeTable);
 
                 Kernel::service(Connection::class)->insert($prefixeTable . 'config', [
                     'param'   => 'secret_key',

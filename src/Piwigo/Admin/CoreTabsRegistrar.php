@@ -122,10 +122,11 @@ final class CoreTabsRegistrar
                 break;
 
             case 'photos_add':
-                $sheets['direct'] = ['caption' => '<span class="icon-upload"></span>'.Lang::t('Web Form'), 'url' => PHOTOS_ADD_BASE_URL.'&section=direct'];
-                $sheets['applications'] = ['caption' => '<span class="icon-network"></span>'.Lang::t('Applications'), 'url' => PHOTOS_ADD_BASE_URL.'&section=applications'];
+                $photosAddUrl = $ug->admin('photos_add');
+                $sheets['direct'] = ['caption' => '<span class="icon-upload"></span>'.Lang::t('Web Form'), 'url' => $photosAddUrl.'&section=direct'];
+                $sheets['applications'] = ['caption' => '<span class="icon-network"></span>'.Lang::t('Applications'), 'url' => $photosAddUrl.'&section=applications'];
                 if (Config::enableSynchronization()) {
-                    $sheets['ftp'] = ['caption' => '<span class="icon-exchange"></span>'.Lang::t('FTP + Synchronization'), 'url' => PHOTOS_ADD_BASE_URL.'&section=ftp'];
+                    $sheets['ftp'] = ['caption' => '<span class="icon-exchange"></span>'.Lang::t('FTP + Synchronization'), 'url' => $photosAddUrl.'&section=ftp'];
                 }
                 break;
 

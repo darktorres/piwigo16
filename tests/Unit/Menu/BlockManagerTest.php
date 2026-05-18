@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Unit\Menu;
 use Doctrine\DBAL\Connection;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\DisplayBlock;
@@ -23,7 +24,8 @@ final class BlockManagerTest extends TestCase
     {
         Config::reset();
         $conn = $this->createStub(Connection::class);
-        $cfg  = new ConfigService($conn);
+        $repo = new ConfigRepository($conn, '');
+        $cfg  = new ConfigService($repo);
         $this->mgr = new BlockManager(new EventDispatcher(), new MenubarLayoutRepository($cfg));
     }
 

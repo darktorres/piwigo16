@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Unit\Menu;
 use Doctrine\DBAL\Connection;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Menu\MenubarLayoutRepository;
 
@@ -19,7 +20,8 @@ final class MenubarLayoutRepositoryTest extends TestCase
     {
         Config::reset();
         $conn = $this->createStub(Connection::class);
-        $this->repo = new MenubarLayoutRepository(new ConfigService($conn));
+        $repo = new ConfigRepository($conn, '');
+        $this->repo = new MenubarLayoutRepository(new ConfigService($repo));
     }
 
     #[\Override]

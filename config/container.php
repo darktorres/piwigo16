@@ -40,6 +40,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\DateService;
 use Piwigo\Core\DebugCollector;
@@ -319,14 +320,15 @@ return [
     WsHelper::class                  => factory(static fn (PermissionService $perm, UrlService $us): WsHelper => new WsHelper($perm, $us)),
     DateService::class         => factory(static fn (): DateService => new DateService()),
     LangService::class         => factory(static fn (Paths $paths): LangService => new LangService($paths)),
-    ConfigService::class       => factory(static fn (Connection $conn): ConfigService => new ConfigService($conn)),
+    ConfigRepository::class    => factory(static fn (Connection $conn): ConfigRepository => new ConfigRepository($conn, Config::dbPrefix())),
+    ConfigService::class       => factory(static fn (ConfigRepository $repo): ConfigService => new ConfigService($repo)),
     QueryHelper::class         => factory(static fn (Connection $conn): QueryHelper => new QueryHelper($conn)),
     ActivityLogger::class      => factory(static fn (ActivityRepository $aR, HistoryRepository $hist, HistoryAdminService $histA, PermissionService $perm, UserRepository $u, EventDispatcherInterface $d): ActivityLogger => new ActivityLogger($aR, $hist, $histA, $perm, $u, $d)),
     CsrfService::class         => factory(static fn (HtmlService $h): CsrfService => new CsrfService($h)),
     DebugCollector::class      => factory(static fn (): DebugCollector => new DebugCollector()),
     DeviceDetectionService::class => factory(static fn (SessionService $sess): DeviceDetectionService => new DeviceDetectionService($sess)),
     EphemeralKeyService::class => factory(static fn (): EphemeralKeyService => new EphemeralKeyService()),
-    ExecutionMutex::class      => factory(static fn (Connection $conn, ConfigService $cfg, LoggerInterface $log): ExecutionMutex => new ExecutionMutex($conn, $cfg, $log)),
+    ExecutionMutex::class      => factory(static fn (ConfigRepository $repo, ConfigService $cfg, LoggerInterface $log): ExecutionMutex => new ExecutionMutex($repo, $cfg, $log)),
     InputValidator::class      => factory(static fn (): InputValidator => new InputValidator()),
     LanguageService::class     => factory(static fn (LanguageRepository $r, Paths $paths): LanguageService => new LanguageService($r, $paths)),
     PaginationService::class   => factory(static fn (): PaginationService => new PaginationService()),

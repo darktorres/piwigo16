@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
-use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Lifecycle\LoadConf;
 use Piwigo\Html\HtmlService;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -18,19 +15,18 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class ConfigService
 {
     public function __construct(
-        private Connection $conn,
+        private ConfigRepository $repo,
     ) {
     }
 
     /** @pre-boot Safe to call before Kernel::boot() — no DI container required. */
     public static function loadConfFromDb(?string $condition = '', bool $dieOnConditionWithNoResult = true): void
     {
-        $sql  = 'SELECT param, value FROM ' . Tables::config() .
-            (($condition !== null && $condition !== '') ? ' WHERE ' . $condition : '');
+        $repo = Kernel::isBooted()
+            ? Kernel::service(ConfigRepository::class)
+            : new ConfigRepository(DbConnection::build(), Config::dbPrefix());
 
-        $conn = Kernel::isBooted() ? Kernel::service(Connection::class) : DbConnection::build();
-
-        $rows = $conn->executeQuery($sql)->fetchAllAssociative();
+        $rows = $repo->findAllRows($condition);
 
         if (count($rows) === 0 && ($condition !== null && $condition !== '') && $dieOnConditionWithNoResult) {
             HtmlService::fatalError('No configuration data');
@@ -44,7 +40,7 @@ final readonly class ConfigService
                 $val = false;
             }
             /** @var array<mixed>|bool|float|int|string|null $val */
-            Config::override(is_string($row['param'] ?? null) ? $row['param'] : '', $val);
+            Config::override($row['param'], $val);
         }
 
         if (Kernel::isBooted()) {
@@ -56,11 +52,7 @@ final readonly class ConfigService
     {
         [$param, $value] = ['pwg_is_dbconf_writeable_' . StringUtil::generateKey(12), date('c') . ' ' . StringUtil::generateKey(20)];
         $this->confUpdateParam($param, $value);
-        $dbvalue = $this->conn->executeQuery(
-            'SELECT value FROM ' . Tables::config() . ' WHERE param = ?',
-            [$param]
-        )->fetchOne();
-        if ($dbvalue !== $value) {
+        if ($this->repo->findValueByParam($param) !== $value) {
             return false;
         }
         $this->confDeleteParam($param);
@@ -80,11 +72,7 @@ final readonly class ConfigService
     public function confUpdateParam(string $param, string|int|float|bool|null $value, bool $updateGlobal = false): void
     {
         $dbValue = is_bool($value) ? BoolUtil::toString($value) : (string) ($value ?? '');
-
-        $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::config() . ' (param, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?',
-            [$param, $dbValue, $dbValue]
-        );
+        $this->repo->upsertParamValue($param, $dbValue);
 
         if ($updateGlobal) {
             Config::override($param, $value);
@@ -97,14 +85,10 @@ final readonly class ConfigService
         if (!is_array($params)) {
             $params = [$params];
         }
-        if (empty($params)) {
+        if ($params === []) {
             return;
         }
-
-        $qb = $this->conn->createQueryBuilder()->delete(Tables::config());
-        $qb->where($qb->expr()->in('param', ':params'))
-           ->setParameter('params', $params, ArrayParameterType::STRING);
-        $qb->executeStatement();
+        $this->repo->deleteParams(array_values($params));
 
         foreach ($params as $p) {
             Config::delete($p);

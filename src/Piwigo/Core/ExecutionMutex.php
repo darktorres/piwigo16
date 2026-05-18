@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-use Doctrine\DBAL\Connection;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
-use Piwigo\Db\Tables;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -25,7 +24,7 @@ use Psr\Log\LoggerInterface;
 final readonly class ExecutionMutex
 {
     public function __construct(
-        private Connection $conn,
+        private ConfigRepository $configRepository,
         private ConfigService $configService,
         private LoggerInterface $log,
     ) {
@@ -37,14 +36,12 @@ final readonly class ExecutionMutex
      */
     public function acquire(string $tokenName, int $timeout = 60): false|string
     {
-        $execId = substr(sha1(random_bytes(1000)), 0, 8);
+        $execId    = substr(sha1(random_bytes(1000)), 0, 8);
+        $tokenParam = $tokenName . '_running';
         $this->log->info('[' . $tokenName . '][exec=' . $execId . '] starts now');
 
-        $existing = $this->conn->executeQuery(
-            'SELECT value FROM ' . Tables::config() . ' WHERE param = ?',
-            [$tokenName . '_running']
-        )->fetchOne();
-        if (is_string($existing) && $existing !== '') {
+        $existing = $this->configRepository->findValueByParam($tokenParam);
+        if ($existing !== null && $existing !== '') {
             [$runningExecId, $runningExecStartTime] = explode('-', $existing);
             if (time() - (int) $runningExecStartTime > $timeout) {
                 $this->log->info('[' . $tokenName . '][exec=' . $execId . '] exec=' . $runningExecId . ', timeout stopped by another call');
@@ -52,9 +49,9 @@ final readonly class ExecutionMutex
             }
         }
 
-        $this->conn->executeStatement('INSERT IGNORE INTO ' . Tables::config() . ' SET param=?, value=?', [$tokenName . '_running', $execId . '-' . time()]);
-        $runningExec = $this->conn->executeQuery('SELECT value FROM ' . Tables::config() . ' WHERE param = ?', [$tokenName . '_running'])->fetchOne();
-        [$runningExecId] = explode('-', is_scalar($runningExec) ? (string) $runningExec : '');
+        $this->configRepository->insertIgnoreParamValue($tokenParam, $execId . '-' . time());
+        $runningExec = $this->configRepository->findValueByParam($tokenParam) ?? '';
+        [$runningExecId] = explode('-', $runningExec);
 
         if ($runningExecId !== $execId) {
             $this->log->info('[' . $tokenName . '][exec=' . $execId . '] skip');
@@ -66,8 +63,7 @@ final readonly class ExecutionMutex
 
     public function isHeld(string $tokenName): bool
     {
-        $counter = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::config() . ' WHERE param = ?', [$tokenName . '_running'])->fetchOne();
-        return is_numeric($counter) && (int) $counter > 0;
+        return $this->configRepository->paramExists($tokenName . '_running');
     }
 
     public function release(string $tokenName): void

@@ -174,14 +174,10 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                 echo json_encode([]);
                 exit;
             }
-            $incompatible_plugins = [];
-            foreach ($incompatible_plugins_raw as $plugin => $version) {
-                if ($plugin == '~~expire~~') {
-                    continue;
-                }
-                $incompatible_plugins[] = $plugin;
-            }
-            echo json_encode($incompatible_plugins);
+            // The new cache-backed return is a clean array<string, string>
+            // (plugin_id → required_version) — no `~~expire~~` artifact, so
+            // we just take the keys.
+            echo json_encode(array_keys($incompatible_plugins_raw));
             exit;
         }
 
@@ -207,10 +203,15 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         $tpl_plugins          = [];
         $count_types_plugins  = ['active' => 0, 'inactive' => 0, 'missing' => 0, 'merged' => 0];
 
+        // Snapshot the cached map once; if any installed plugin's version no
+        // longer matches the cached entry, the cache is stale — invalidate
+        // it so the next page load refetches from PEM. The snapshot keeps
+        // the loop O(n) instead of refetching per iteration.
+        $incompatRaw = $plugins->getIncompatiblePlugins();
+        $incompatMap = is_array($incompatRaw) ? $incompatRaw : [];
         foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
-            $incompatPlugins = is_array($_SESSION['incompatible_plugins'] ?? null) ? $_SESSION['incompatible_plugins'] : [];
-            if (isset($incompatPlugins[$plugin_id]) && $fs_plugin['version'] != $incompatPlugins[$plugin_id]) {
-                unset($_SESSION['incompatible_plugins']);
+            if (isset($incompatMap[$plugin_id]) && $fs_plugin['version'] != $incompatMap[$plugin_id]) {
+                $plugins->invalidateIncompatibleCache();
             }
 
             $setting_url = '';

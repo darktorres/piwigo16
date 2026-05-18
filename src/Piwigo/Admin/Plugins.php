@@ -22,6 +22,7 @@ use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Plugin\PluginValidationException;
 use Piwigo\Users\CurrentUser;
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class Plugins
@@ -47,6 +48,7 @@ final class Plugins
         private readonly PluginRegistry $pluginRegistry,
         private readonly PemUrlResolver $pemUrlResolver,
         private readonly Paths $paths,
+        private readonly CacheItemPoolInterface $pool,
     ) {
         $this->getFsPlugins();
 
@@ -375,17 +377,28 @@ final class Plugins
         return false;
     }
 
-    /** @return array<mixed>|false */
+    private const INCOMPAT_CACHE_KEY = 'plugins.incompatible';
+
+    /**
+     * Map of installed plugin id → required version for plugins whose
+     * currently-installed version is not in the PEM compatibility list
+     * for the running Piwigo. Cached in the shared pool (5-minute TTL).
+     *
+     * Returns false when the remote PEM call fails — callers must treat
+     * that as "unknown", not "empty".
+     *
+     * @return array<string, string>|false
+     */
     public function getIncompatiblePlugins(bool $actualize = false): array|false
     {
-        if (isset($_SESSION['incompatible_plugins']) and !$actualize
-          and is_array($_SESSION['incompatible_plugins'])
-          and isset($_SESSION['incompatible_plugins']['~~expire~~'])
-          and $_SESSION['incompatible_plugins']['~~expire~~'] > time()) {
-            return $_SESSION['incompatible_plugins'];
+        $item = $this->pool->getItem(self::INCOMPAT_CACHE_KEY);
+        if ($item->isHit() && !$actualize) {
+            $cached = $item->get();
+            if (is_array($cached)) {
+                /** @var array<string, string> $cached */
+                return $cached;
+            }
         }
-
-        $_SESSION['incompatible_plugins'] = ['~~expire~~' => time() + 300];
 
         $versions_to_check = $this->getVersionsToCheck();
         if (empty($versions_to_check)) {
@@ -409,42 +422,59 @@ final class Plugins
         ];
 
         $result = '';
-        if ($this->adminService->fetchRemote($url, $result, $get_data) && is_string($result)) {
-            $decoded     = json_decode($result, associative: true);
-            $pem_plugins = is_array($decoded) ? $decoded : [];
-            if ($pem_plugins === []) {
-                return false;
-            }
-
-            $server_plugins = [];
-            foreach ($pem_plugins as $plugin) {
-                if (!is_array($plugin) || !isset($plugin['extension_id'], $plugin['revision_name'])) {
-                    continue;
-                }
-                $eid = $plugin['extension_id'];
-                if (!(is_string($eid) || is_int($eid))) {
-                    continue;
-                }
-                if (!isset($server_plugins[$eid])) {
-                    $server_plugins[$eid] = [];
-                }
-                $server_plugins[$eid][] = is_string($plugin['revision_name']) ? $plugin['revision_name'] : '';
-            }
-
-            foreach ($this->fs_plugins as $plugin_id => $fs_plugin) {
-                $extIdPlug = $fs_plugin['extension'] ?? null;
-                if (!is_string($extIdPlug) && !is_int($extIdPlug)) {
-                    continue;
-                }
-                if (!in_array($plugin_id, $this->default_plugins)
-                  and $fs_plugin['version'] != 'auto'
-                  and (!isset($server_plugins[$extIdPlug]) or !in_array($fs_plugin['version'], $server_plugins[$extIdPlug]))) {
-                    $_SESSION['incompatible_plugins'][$plugin_id] = $fs_plugin['version'];
-                }
-            }
-            return $_SESSION['incompatible_plugins'];
+        if (!$this->adminService->fetchRemote($url, $result, $get_data) || !is_string($result)) {
+            return false;
         }
-        return false;
+        $decoded     = json_decode($result, associative: true);
+        $pem_plugins = is_array($decoded) ? $decoded : [];
+        if ($pem_plugins === []) {
+            return false;
+        }
+
+        $server_plugins = [];
+        foreach ($pem_plugins as $plugin) {
+            if (!is_array($plugin) || !isset($plugin['extension_id'], $plugin['revision_name'])) {
+                continue;
+            }
+            $eid = $plugin['extension_id'];
+            if (!(is_string($eid) || is_int($eid))) {
+                continue;
+            }
+            if (!isset($server_plugins[$eid])) {
+                $server_plugins[$eid] = [];
+            }
+            $server_plugins[$eid][] = is_string($plugin['revision_name']) ? $plugin['revision_name'] : '';
+        }
+
+        $incompatible = [];
+        foreach ($this->fs_plugins as $plugin_id => $fs_plugin) {
+            $extIdPlug = $fs_plugin['extension'] ?? null;
+            if (!is_string($extIdPlug) && !is_int($extIdPlug)) {
+                continue;
+            }
+            $version = is_string($fs_plugin['version'] ?? null) ? $fs_plugin['version'] : '';
+            if (!in_array($plugin_id, $this->default_plugins)
+              and $version !== 'auto'
+              and (!isset($server_plugins[$extIdPlug]) or !in_array($version, $server_plugins[$extIdPlug]))) {
+                $incompatible[$plugin_id] = $version;
+            }
+        }
+
+        $item->set($incompatible);
+        $item->expiresAfter(300);
+        $this->pool->save($item);
+        return $incompatible;
+    }
+
+    /**
+     * Drop the cached incompatible-plugins map so the next
+     * `getIncompatiblePlugins()` call refetches from PEM. Used by callers
+     * that detect the cache is stale (e.g. a plugin version changed
+     * on disk since the last fetch).
+     */
+    public function invalidateIncompatibleCache(): void
+    {
+        $this->pool->deleteItem(self::INCOMPAT_CACHE_KEY);
     }
 
     /**

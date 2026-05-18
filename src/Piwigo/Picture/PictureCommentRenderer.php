@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Picture;
 
-use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
@@ -32,7 +32,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class PictureCommentRenderer
 {
     public function __construct(
-        private Connection $conn,
+        private CommentRepository $commentRepository,
         private CommentService $commentService,
         private DateService $dateService,
         private HtmlService $htmlService,
@@ -103,23 +103,9 @@ final readonly class PictureCommentRenderer
         }
 
         if ($showComments) {
-            if (!$this->permissionService->isAdmin()) {
-                $validated_clause = '  AND validated = \'true\'';
-            } else {
-                $validated_clause = '';
-            }
-
-            $rowFetch = $this->conn
-                ->executeQuery(
-                    'SELECT COUNT(*) AS nb_comments FROM ' . Tables::comments() .
-                    ' WHERE image_id = ?' . ($validated_clause !== '' ? ' AND validated = 1' : ''),
-                    [$imageId]
-                )
-                ->fetchAssociative();
-            $row = $rowFetch !== false ? $rowFetch : [];
-
-            $startOffset = SectionContextRegistry::current()->start;
-            $nb_comments = is_numeric($row['nb_comments'] ?? null) ? (int) $row['nb_comments'] : 0;
+            $validatedOnly = !$this->permissionService->isAdmin();
+            $nb_comments   = $this->commentRepository->countByImageId($imageId, $validatedOnly);
+            $startOffset   = SectionContextRegistry::current()->start;
 
             $navigation_bar = $this->paginationService->createNavigationBar(
                 $this->urlService->duplicatePictureUrl([], ['start']),
@@ -148,29 +134,16 @@ final readonly class PictureCommentRenderer
                     'COMMENTS_ORDER_TITLE' => $comments_order == 'ASC' ? Lang::t('Show latest comments first') : Lang::t('Show oldest comments first'),
                 ]);
 
-                $query = '
-SELECT
-    com.id,
-    com.author,
-    com.author_id,
-    u.' . Config::userFields()['email'] . ' AS user_email,
-    com.date,
-    com.image_id,
-    com.website_url,
-    com.email,
-    com.content,
-    com.validated
-  FROM ' . Tables::comments() . ' AS com
-  LEFT JOIN ' . Tables::users() . ' AS u
-    ON u.' . Config::userFields()['id'] . ' = author_id
-  WHERE com.image_id = ' . $imageId . '
-    ' . $validated_clause . '
-  ORDER BY com.date ' . $comments_order . '
-  LIMIT ' . Config::nbCommentPage() . ' OFFSET ' . $startOffset . '
-;';
-                $commentRows = $this->conn
-                    ->executeQuery($query)
-                    ->fetchAllAssociative();
+                $commentRows = $this->commentRepository->findForImagePage(
+                    $imageId,
+                    $validatedOnly,
+                    $comments_order,
+                    Config::nbCommentPage(),
+                    $startOffset,
+                    Tables::users(),
+                    Config::userFields()['id'],
+                    Config::userFields()['email'],
+                );
 
                 foreach ($commentRows as $row) {
                     if ($row['author'] == 'guest') {

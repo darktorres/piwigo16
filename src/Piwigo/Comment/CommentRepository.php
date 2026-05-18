@@ -326,4 +326,60 @@ final class CommentRepository extends AbstractRepository
         }
         return $out;
     }
+
+    /**
+     * COUNT(*) of comments on a single image, optionally filtered to only the
+     * validated ones (validated = 1).
+     */
+    public function countByImageId(int $imageId, bool $validatedOnly): int
+    {
+        $qb = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($this->table('comments'))
+            ->where('image_id = :imageId')
+            ->setParameter('imageId', $imageId);
+        if ($validatedOnly) {
+            $qb->andWhere('validated = 1');
+        }
+        $value = $qb->executeQuery()->fetchOne();
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Paginated list of comment rows for one image, LEFT JOINed with the
+     * configurable users table so callers can pick up the commenter's email.
+     *
+     * $usersTable, $userIdField and $userEmailField are admin-configured (not
+     * user-supplied) — safe to interpolate. $order is 'ASC' | 'DESC' (caller
+     * must validate; this method enforces the whitelist via fail-closed).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findForImagePage(
+        int $imageId,
+        bool $validatedOnly,
+        string $order,
+        int $limit,
+        int $offset,
+        string $usersTable,
+        string $userIdField,
+        string $userEmailField,
+    ): array {
+        $orderSafe = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
+        $sql = '
+SELECT com.id, com.author, com.author_id, u.' . $userEmailField . ' AS user_email,
+       com.date, com.image_id, com.website_url, com.email, com.content, com.validated
+  FROM ' . $this->table('comments') . ' AS com
+  LEFT JOIN ' . $usersTable . ' AS u ON u.' . $userIdField . ' = author_id
+  WHERE com.image_id = ?';
+        if ($validatedOnly) {
+            $sql .= ' AND com.validated = 1';
+        }
+        $sql .= ' ORDER BY com.date ' . $orderSafe . ' LIMIT ' . $limit . ' OFFSET ' . $offset;
+        return $this->conn->executeQuery(
+            $sql,
+            [$imageId],
+            [\Doctrine\DBAL\ParameterType::INTEGER],
+        )->fetchAllAssociative();
+    }
 }

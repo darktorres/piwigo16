@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
@@ -44,6 +44,7 @@ use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Job\MessengerRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Page\PaginationService;
 use Piwigo\Plugin\PluginRegistry;
@@ -56,6 +57,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserRepository;
 use Piwigo\Validation\InputValidator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
@@ -76,7 +78,6 @@ final class BatchManagerController implements AdminSubControllerInterface
     private string $prefilter = 'none';
 
     public function __construct(
-        private readonly Connection $conn,
         private readonly AdminService $adminService,
         private readonly CategoryAdminService $categoryAdminService,
         private readonly CategoryRepository $categoryRepository,
@@ -86,6 +87,7 @@ final class BatchManagerController implements AdminSubControllerInterface
         private readonly HtmlService $htmlService,
         private readonly ImageAdminService $imageAdminService,
         private readonly ImageRepository $imageRepository,
+        private readonly MessengerRepository $messengerRepository,
         private readonly PermissionService $permissionService,
         private readonly PluginRegistry $pluginRegistry,
         private readonly SearchService $searchService,
@@ -95,6 +97,7 @@ final class BatchManagerController implements AdminSubControllerInterface
         private readonly UrlGenerator $urlGenerator,
         private readonly UrlService $urlService,
         private readonly UserAdminService $userAdminService,
+        private readonly UserRepository $userRepository,
         private readonly ActivityLogger $activityLogger,
         private readonly CsrfService $csrfService,
         private readonly InputValidator $inputValidator,
@@ -369,26 +372,23 @@ final class BatchManagerController implements AdminSubControllerInterface
             switch ($bmf_prefilter) {
                 case 'caddie':
                     $userId        = is_numeric($user['id']) ? (int) $user['id'] : 0;
-                    $filter_sets[] = array_column($this->conn->executeQuery('SELECT element_id FROM ' . Tables::caddie() . ' WHERE user_id = ' . $userId . ';')->fetchAllAssociative(), 'element_id');
+                    $filter_sets[] = $this->imageRepository->findCaddieElementIdsByUser($userId);
                     break;
                 case 'favorites':
                     $userId2       = is_numeric($user['id']) ? (int) $user['id'] : 0;
-                    $filter_sets[] = array_column($this->conn->executeQuery('SELECT image_id FROM ' . Tables::favorites() . ' WHERE user_id = ' . $userId2 . ';')->fetchAllAssociative(), 'image_id');
+                    $filter_sets[] = $this->imageRepository->findFavoriteImageIdsByUserPlain($userId2);
                     break;
                 case 'last_import':
                     $last_import_date = $this->imageRepository->findMaxDateAvailable();
                     if ($last_import_date !== null && $last_import_date !== '') {
-                        $filter_sets[] = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE date_available BETWEEN ' . SqlExpr::recentPeriodExpr(1, $last_import_date) . ' AND \'' . $last_import_date . '\';')->fetchAllAssociative(), 'id');
+                        $filter_sets[] = $this->imageRepository->findIdsByDateAvailableBetween(SqlExpr::recentPeriodExpr(1, $last_import_date), $last_import_date);
                     }
                     break;
                 case 'no_virtual_album':
-                    $all_elements    = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ';')->fetchAllAssociative(), 'id');
-                    $linked_to_virtual = [];
-                    $virtual_categories = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::categories() . ' WHERE dir IS NULL;')->fetchAllAssociative(), 'id');
-                    if (!empty($virtual_categories)) {
-                        $linked_to_virtual = array_column($this->conn->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $virtual_categories)) . ');')->fetchAllAssociative(), 'image_id');
-                    }
-                    $filter_sets[] = array_diff(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $all_elements), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $linked_to_virtual));
+                    $all_elements        = $this->imageRepository->findAllIds();
+                    $virtual_categories  = $this->categoryRepository->findVirtualCategoryIds();
+                    $linked_to_virtual   = $virtual_categories === [] ? [] : $this->categoryRepository->findImageIdsLinkedToCategories($virtual_categories);
+                    $filter_sets[] = array_values(array_diff($all_elements, $linked_to_virtual));
                     break;
                 case 'no_album':
                     $filter_sets[] = $this->imageAdminService->getOrphans();
@@ -397,7 +397,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                     $filter_sets[] = $this->imageAdminService->getPhotosNoMd5sum();
                     break;
                 case 'no_tag':
-                    $filter_sets[] = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' LEFT JOIN ' . Tables::imageTag() . ' ON id = image_id WHERE tag_id is null;')->fetchAllAssociative(), 'id');
+                    $filter_sets[] = $this->imageRepository->findUntaggedIds();
                     break;
                 case 'duplicates':
                     $duplicates_on_fields = [];
@@ -414,21 +414,14 @@ final class BatchManagerController implements AdminSubControllerInterface
                         $duplicates_on_fields[] = 'width';
                         $duplicates_on_fields[] = 'height';
                     }
-                    $query = 'SELECT GROUP_CONCAT(id) AS ids FROM ' . Tables::images();
-                    if (in_array('md5sum', $duplicates_on_fields)) {
-                        $query .= ' WHERE md5sum IS NOT NULL';
-                    }
-                    $query .= ' GROUP BY ' . implode(',', $duplicates_on_fields) . ' HAVING COUNT(*) > 1;';
-                    $ids = [];
-                    foreach (array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'ids') as $ids_string) {
-                        $ids_string = rtrim(is_scalar($ids_string) ? (string) $ids_string : '', ',');
-                        $ids = array_merge($ids, explode(',', $ids_string));
-                    }
-                    $filter_sets[] = $ids;
+                    $filter_sets[] = $this->imageRepository->findIdsInDuplicateGroups(
+                        $duplicates_on_fields,
+                        in_array('md5sum', $duplicates_on_fields),
+                    );
                     break;
                 case 'all_photos':
                     if (count($bmf) == 1) {
-                        $filter_sets[] = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
+                        $filter_sets[] = $this->imageRepository->findAllIdsWithOrderSuffix(Config::orderBy());
                     }
                     break;
                 default:
@@ -446,13 +439,13 @@ final class BatchManagerController implements AdminSubControllerInterface
                 $this->redirectResponder->redirect($this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : ''));
             }
             $categories   = isset($bmf['category_recursive']) ? $this->categoryService->getSubcatIds([$bmf_category]) : [$bmf_category];
-            $filter_sets[] = array_column($this->conn->executeQuery('SELECT DISTINCT(image_id) FROM ' . Tables::imageCategory() . ' WHERE category_id IN (' . implode(',', $categories) . ');')->fetchAllAssociative(), 'image_id');
+            $filter_sets[] = $this->categoryRepository->findImageIdsLinkedToCategories(array_values($categories));
         }
 
         if (isset($bmf['level'])) {
             $operator  = isset($bmf['level_include_lower']) ? '<=' : '=';
             $bmf_level = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
-            $filter_sets[] = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE level ' . $operator . ' ' . $bmf_level . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
+            $filter_sets[] = $this->imageRepository->findIdsByLevelComparison($operator, $bmf_level, Config::orderBy());
         }
 
         if (!empty($bmf['tags'])) {
@@ -464,44 +457,63 @@ final class BatchManagerController implements AdminSubControllerInterface
 
         if (isset($bmf['dimension'])) {
             $bmf_dimension = is_array($bmf['dimension']) ? $bmf['dimension'] : [];
-            $where_clause  = [];
-            if (isset($bmf_dimension['min_width'])) {
-                $where_clause[] = 'width >= '  . (is_string($bmf_dimension['min_width']) ? $bmf_dimension['min_width'] : '0');
-            }
-            if (isset($bmf_dimension['max_width'])) {
-                $where_clause[] = 'width <= '  . (is_string($bmf_dimension['max_width']) ? $bmf_dimension['max_width'] : '0');
-            }
-            if (isset($bmf_dimension['min_height'])) {
-                $where_clause[] = 'height >= ' . (is_string($bmf_dimension['min_height']) ? $bmf_dimension['min_height'] : '0');
-            }
-            if (isset($bmf_dimension['max_height'])) {
-                $where_clause[] = 'height <= ' . (is_string($bmf_dimension['max_height']) ? $bmf_dimension['max_height'] : '0');
-            }
-            if (isset($bmf_dimension['min_ratio'])) {
-                $where_clause[] = 'width/height >= ' . (is_string($bmf_dimension['min_ratio']) ? $bmf_dimension['min_ratio'] : '0');
+            $where_clauses = [];
+            $where_params  = [];
+            $where_types   = [];
+            $dimensionFields = [
+                'min_width'  => ['width >= ?',  ParameterType::INTEGER],
+                'max_width'  => ['width <= ?',  ParameterType::INTEGER],
+                'min_height' => ['height >= ?', ParameterType::INTEGER],
+                'max_height' => ['height <= ?', ParameterType::INTEGER],
+                'min_ratio'  => ['width/height >= ?', ParameterType::STRING],
+            ];
+            foreach ($dimensionFields as $fieldKey => [$clause, $type]) {
+                if (isset($bmf_dimension[$fieldKey])) {
+                    $where_clauses[] = $clause;
+                    $where_params[]  = is_scalar($bmf_dimension[$fieldKey]) ? (string) $bmf_dimension[$fieldKey] : '0';
+                    $where_types[]   = $type;
+                }
             }
             if (isset($bmf_dimension['max_ratio'])) {
-                $max_ratio    = is_numeric($bmf_dimension['max_ratio']) ? (float) $bmf_dimension['max_ratio'] : 0.0;
-                $where_clause[] = 'width/height < ' . number_format($max_ratio + 0.01, 4, '.', '');
+                $max_ratio       = is_numeric($bmf_dimension['max_ratio']) ? (float) $bmf_dimension['max_ratio'] : 0.0;
+                $where_clauses[] = 'width/height < ?';
+                $where_params[]  = number_format($max_ratio + 0.01, 4, '.', '');
+                $where_types[]   = ParameterType::STRING;
             }
-            if (!empty($where_clause)) {
-                $filter_sets[] = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE ' . implode(' AND ', $where_clause) . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
+            if (!empty($where_clauses)) {
+                $filter_sets[] = $this->imageRepository->findIdsByWhereFragment(
+                    implode(' AND ', $where_clauses),
+                    Config::orderBy(),
+                    $where_params,
+                    $where_types,
+                );
             }
         }
 
         if (isset($bmf['filesize'])) {
             $bmf_filesize = is_array($bmf['filesize']) ? $bmf['filesize'] : [];
-            $where_clause = [];
+            $where_clauses = [];
+            $where_params  = [];
+            $where_types   = [];
             if (isset($bmf_filesize['min'])) {
                 $fs_min = is_numeric($bmf_filesize['min']) ? (float) $bmf_filesize['min'] : 0.0;
-                $where_clause[] = 'filesize >= ' . number_format(($fs_min - 0.1) * 1024.0, 4, '.', '');
+                $where_clauses[] = 'filesize >= ?';
+                $where_params[]  = number_format(($fs_min - 0.1) * 1024.0, 4, '.', '');
+                $where_types[]   = ParameterType::STRING;
             }
             if (isset($bmf_filesize['max'])) {
                 $fs_max = is_numeric($bmf_filesize['max']) ? (float) $bmf_filesize['max'] : 0.0;
-                $where_clause[] = 'filesize <= ' . number_format(($fs_max + 0.1) * 1024.0, 4, '.', '');
+                $where_clauses[] = 'filesize <= ?';
+                $where_params[]  = number_format(($fs_max + 0.1) * 1024.0, 4, '.', '');
+                $where_types[]   = ParameterType::STRING;
             }
-            if (!empty($where_clause)) {
-                $filter_sets[] = array_column($this->conn->executeQuery('SELECT id FROM ' . Tables::images() . ' WHERE ' . implode(' AND ', $where_clause) . ' ' . Config::orderBy())->fetchAllAssociative(), 'id');
+            if (!empty($where_clauses)) {
+                $filter_sets[] = $this->imageRepository->findIdsByWhereFragment(
+                    implode(' AND ', $where_clauses),
+                    Config::orderBy(),
+                    $where_params,
+                    $where_types,
+                );
             }
         }
 
@@ -791,52 +803,40 @@ final class BatchManagerController implements AdminSubControllerInterface
                     $redirect = true;
                 }
             } elseif ('author' == $action) {
-                $authorValue = isset($_POST['remove_author']) ? null : ($_POST['author'] ?? null);
+                $rawAuthor   = isset($_POST['remove_author']) ? null : ($_POST['author'] ?? null);
+                $authorValue = is_string($rawAuthor) ? $rawAuthor : null;
                 $datas = [];
                 foreach ($collection_int as $image_id) {
                     $datas[] = ['id' => $image_id, 'author' => $authorValue];
                 }
-                $this->conn->transactional(function () use ($datas): void {
-                    foreach ($datas as $row) {
-                        $this->conn->update(Tables::images(), ['author' => $row['author']], ['id' => $row['id']]);
-                    }
-                });
+                $this->imageRepository->setAuthorBatch($datas);
                 $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'author']));
             } elseif ('title' == $action) {
-                $titleValue = isset($_POST['remove_title']) ? null : ($_POST['title'] ?? null);
+                $rawTitle   = isset($_POST['remove_title']) ? null : ($_POST['title'] ?? null);
+                $titleValue = is_string($rawTitle) ? $rawTitle : null;
                 $datas = [];
                 foreach ($collection_int as $image_id) {
                     $datas[] = ['id' => $image_id, 'name' => $titleValue];
                 }
-                $this->conn->transactional(function () use ($datas): void {
-                    foreach ($datas as $row) {
-                        $this->conn->update(Tables::images(), ['name' => $row['name']], ['id' => $row['id']]);
-                    }
-                });
+                $this->imageRepository->setNameBatch($datas);
                 $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'title']));
             } elseif ('date_creation' == $action) {
-                $date_creation = (isset($_POST['remove_date_creation']) || !isset($_POST['date_creation']) || $_POST['date_creation'] === '') ? null : $_POST['date_creation'];
+                $rawDateCreation = (isset($_POST['remove_date_creation']) || !isset($_POST['date_creation']) || $_POST['date_creation'] === '') ? null : $_POST['date_creation'];
+                $date_creation   = is_string($rawDateCreation) ? $rawDateCreation : null;
                 $datas = [];
                 foreach ($collection_int as $image_id) {
                     $datas[] = ['id' => $image_id, 'date_creation' => $date_creation];
                 }
-                $this->conn->transactional(function () use ($datas): void {
-                    foreach ($datas as $row) {
-                        $this->conn->update(Tables::images(), ['date_creation' => $row['date_creation']], ['id' => $row['id']]);
-                    }
-                });
+                $this->imageRepository->setDateCreationBatch($datas);
                 $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'date_creation']));
             } elseif ('level' == $action) {
-                $levelValue = $_POST['level'] ?? null;
+                $rawLevel   = $_POST['level'] ?? null;
+                $levelValue = is_numeric($rawLevel) ? (int) $rawLevel : 0;
                 $datas = [];
                 foreach ($collection_int as $image_id) {
                     $datas[] = ['id' => $image_id, 'level' => $levelValue];
                 }
-                $this->conn->transactional(function () use ($datas): void {
-                    foreach ($datas as $row) {
-                        $this->conn->update(Tables::images(), ['level' => $row['level']], ['id' => $row['id']]);
-                    }
-                });
+                $this->imageRepository->setLevelBatch($datas);
                 $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'privacy_level']));
                 if (isset($bmf['level'])) {
                     $bmf_level_val  = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
@@ -944,23 +944,26 @@ final class BatchManagerController implements AdminSubControllerInterface
             $is_category      = isset($bmf['category']) && !isset($bmf['category_recursive']);
             $bmf_category_val = is_numeric($bmf['category'] ?? null) ? (int) $bmf['category'] : 0;
 
-            $query = 'SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation FROM ' . Tables::images();
+            $batchClauses = ['id IN (?)'];
+            $batchParams  = [array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $catElementsId)];
+            $batchTypes   = [\Doctrine\DBAL\ArrayParameterType::INTEGER];
+            $batchJoin    = '';
             if ($is_category) {
                 $category_info = $this->categoryService->getCatInfo($bmf_category_val);
                 Config::override('order_by', Config::orderByInsideCategory());
                 if (isset($category_info['image_order']) && $category_info['image_order'] !== '') {
                     Config::override('order_by', ' ORDER BY ' . (is_string($category_info['image_order']) ? $category_info['image_order'] : ''));
                 }
-                $query .= ' JOIN ' . Tables::imageCategory() . ' ON id = image_id';
+                $batchJoin       = ' JOIN ' . Tables::imageCategory() . ' ON id = image_id';
+                $batchClauses[]  = 'category_id = ?';
+                $batchParams[]   = $bmf_category_val;
+                $batchTypes[]    = ParameterType::INTEGER;
             }
-
-            $query .= ' WHERE id IN (' . implode(',', $catElementsId) . ')';
-            if ($is_category) {
-                $query .= ' AND category_id = ' . $bmf_category_val;
-            }
-            $query .= ' ' . Config::orderBy() . ' LIMIT ' . $nbImages . ' OFFSET ' . $pageStart . ';';
-
-            $batchRows   = $this->conn->executeQuery($query)->fetchAllAssociative();
+            $batchQuery = 'SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation FROM '
+                . Tables::images() . $batchJoin
+                . ' WHERE ' . implode(' AND ', $batchClauses)
+                . ' ' . Config::orderBy() . ' LIMIT ' . $nbImages . ' OFFSET ' . $pageStart;
+            $batchRows  = $this->imageRepository->findRowsByRawQuery($batchQuery, $batchParams, $batchTypes);
             $thumb_params = ImageStdParams::getByType(DerivativeSize::Square->value);
 
             foreach ($batchRows as $row) {
@@ -1059,15 +1062,14 @@ final class BatchManagerController implements AdminSubControllerInterface
                 $this->tagAdminService->setTags($tag_ids, is_numeric($row['id']) ? (int) $row['id'] : 0);
             }
 
-            $this->conn->transactional(function () use ($datas): void {
-                foreach ($datas as $row) {
-                    $this->conn->update(
-                        Tables::images(),
-                        ['name' => $row['name'] ?? null, 'author' => $row['author'] ?? null, 'level' => $row['level'] ?? null, 'comment' => $row['comment'] ?? null, 'date_creation' => $row['date_creation'] ?? null],
-                        ['id' => $row['id']]
-                    );
-                }
-            });
+            $updateRows = [];
+            foreach ($datas as $row) {
+                $updateRows[] = [
+                    'id'     => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+                    'fields' => ['name' => $row['name'] ?? null, 'author' => $row['author'] ?? null, 'level' => $row['level'] ?? null, 'comment' => $row['comment'] ?? null, 'date_creation' => $row['date_creation'] ?? null],
+                ];
+            }
+            $this->imageRepository->updateBatchByIds($updateRows);
             PageState::current()->addInfo(Lang::t('Photo informations updated'));
             $this->userAdminService->invalidateUserCache();
         }
@@ -1136,27 +1138,35 @@ final class BatchManagerController implements AdminSubControllerInterface
                 Config::override('order_by', ' ORDER BY file, id');
             }
 
-            $query = 'SELECT * FROM ' . Tables::images();
+            $unitClauses = ['id IN (?)'];
+            $unitParams  = [array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $catElementsIdU)];
+            $unitTypes   = [\Doctrine\DBAL\ArrayParameterType::INTEGER];
+            $unitJoin    = '';
             if ($is_category) {
                 $category_info = $this->categoryService->getCatInfo($bmf_category_val);
                 Config::override('order_by', Config::orderByInsideCategory());
                 if (isset($category_info['image_order']) && $category_info['image_order'] !== '') {
                     Config::override('order_by', ' ORDER BY ' . (is_string($category_info['image_order']) ? $category_info['image_order'] : ''));
                 }
-                $query .= ' JOIN ' . Tables::imageCategory() . ' ON id = image_id';
+                $unitJoin       = ' JOIN ' . Tables::imageCategory() . ' ON id = image_id';
+                $unitClauses[]  = 'category_id = ?';
+                $unitParams[]   = $bmf_category_val;
+                $unitTypes[]    = ParameterType::INTEGER;
             }
+            $unitQuery = 'SELECT * FROM ' . Tables::images() . $unitJoin
+                . ' WHERE ' . implode(' AND ', $unitClauses)
+                . ' ' . Config::orderBy() . ' LIMIT ' . $nbImagesU . ' OFFSET ' . $pageStartU;
+            $images    = $this->imageRepository->findRowsByRawQuery($unitQuery, $unitParams, $unitTypes);
 
-            $query .= ' WHERE id IN (' . implode(',', $catElementsIdU) . ')';
-            if ($is_category) {
-                $query .= ' AND category_id = ' . $bmf_category_val;
-            }
-            $query .= ' ' . Config::orderBy() . ' LIMIT ' . $nbImagesU . ' OFFSET ' . $pageStartU . ';';
-
-            $images         = $this->conn->executeQuery($query)->fetchAllAssociative();
-            $added_by_ids   = array_unique(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($images, 'added_by')));
+            $added_by_ids   = array_values(array_unique(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($images, 'added_by'))));
             $added_by_username_of = [];
             if (count($added_by_ids) > 0) {
-                $added_by_username_of = array_column($this->conn->executeQuery('SELECT ' . Config::userFields()['username'] . ' AS username, ' . Config::userFields()['id'] . ' AS id FROM ' . Tables::users() . ' WHERE ' . Config::userFields()['id'] . ' IN (' . implode(',', $added_by_ids) . ');')->fetchAllAssociative(), 'username', 'id');
+                $added_by_username_of = $this->userRepository->findIdToUsernameMapByIds(
+                    Config::userFields()['id'],
+                    Config::userFields()['username'],
+                    Tables::users(),
+                    $added_by_ids,
+                );
             }
 
             $storage_category_id = null;
@@ -1189,19 +1199,23 @@ final class BatchManagerController implements AdminSubControllerInterface
                     $related_category_ids[] = $item_cat_id;
                 }
 
-                $row_id_str = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
-                $authorizeds = array_diff(
-                    array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($this->conn->executeQuery('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $row_id_str . ';')->fetchAllAssociative(), 'category_id')),
-                    array_map(static fn (int $v): string => (string) $v, $this->permissionService->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : ''))
-                );
+                $row_id_str  = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
+                $row_id_int  = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
+                $forbidden   = $this->permissionService->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : '');
+                $authorizeds = array_values(array_diff(
+                    $this->categoryRepository->findCategoryIdsByImageId($row_id_int),
+                    $forbidden,
+                ));
 
-                $catNames = RequestCache::remember('cat_names', 'all', fn (): array => array_column($this->conn->executeQuery('SELECT id, name, permalink FROM ' . Tables::categories() . ';')->fetchAllAssociative(), null, 'id') ?: []);
-                $url_img  = null;
-                if (isset($row['cat_id']) && in_array($row['cat_id'], $authorizeds)) {
-                    $url_img = $this->urlService->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => (is_array($catNames) && (is_int($row['cat_id']) || is_string($row['cat_id']))) ? ($catNames[$row['cat_id']] ?? null) : null]);
+                $catNamesRaw = RequestCache::remember('cat_names', 'all', fn (): array => $this->categoryRepository->findAllIdNamePermalinkMap());
+                $catNames    = is_array($catNamesRaw) ? $catNamesRaw : [];
+                $url_img     = null;
+                if (isset($row['cat_id']) && is_numeric($row['cat_id']) && in_array((int) $row['cat_id'], $authorizeds, true)) {
+                    $catIdStr = (string) (int) $row['cat_id'];
+                    $url_img  = $this->urlService->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => $catNames[$catIdStr] ?? null]);
                 } else {
                     foreach ($authorizeds as $category) {
-                        $url_img = $this->urlService->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => is_array($catNames) ? ($catNames[$category] ?? null) : null]);
+                        $url_img = $this->urlService->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => $catNames[(string) $category] ?? null]);
                         break;
                     }
                 }
@@ -1280,17 +1294,14 @@ final class BatchManagerController implements AdminSubControllerInterface
 
         $this->imageAdminService->fsQuickCheck();
 
-        $tableName = Config::dbPrefix() . 'messenger_messages';
-        $conn      = $this->conn;
-
         $action = is_string($_GET['action'] ?? null) ? $_GET['action'] : '';
 
         $getIdRaw = $_GET['id'] ?? null;
         if ($action === 'retry' && is_numeric($getIdRaw)) {
             $failedId = (int) $getIdRaw;
-            $row      = $conn->executeQuery('SELECT body, headers FROM ' . $tableName . ' WHERE id = ? AND queue_name = ?', [$failedId, 'piwigo_failed'])->fetchAssociative();
-            if ($row !== false) {
-                $conn->executeStatement('UPDATE ' . $tableName . ' SET queue_name = ?, available_at = NOW(), delivered_at = NULL WHERE id = ?', ['piwigo_async', $failedId]);
+            $row      = $this->messengerRepository->findFailedJobById($failedId);
+            if ($row !== null) {
+                $this->messengerRepository->requeueFailed($failedId);
                 PageState::current()->addInfo('Job moved back to async queue.');
             }
             $this->redirectResponder->redirect($this->urlGenerator->admin('queue'));
@@ -1298,7 +1309,7 @@ final class BatchManagerController implements AdminSubControllerInterface
 
         if ($action === 'purge_failed') {
             $this->csrfService->check();
-            $conn->executeStatement('DELETE FROM ' . $tableName . ' WHERE queue_name = ?', ['piwigo_failed']);
+            $this->messengerRepository->purgeFailed();
             PageState::current()->addInfo('Failed queue purged.');
             $this->redirectResponder->redirect($this->urlGenerator->admin('queue'));
         }
@@ -1308,13 +1319,9 @@ final class BatchManagerController implements AdminSubControllerInterface
         $tableExists = false;
 
         try {
-            $rows = $conn->executeQuery('SELECT queue_name, COUNT(*) AS cnt FROM ' . $tableName . ' WHERE delivered_at IS NULL GROUP BY queue_name')->fetchAllAssociative();
+            $stats       = $this->messengerRepository->countPendingByQueueName();
             $tableExists = true;
-            foreach ($rows as $row) {
-                $queueName         = is_string($row['queue_name']) ? $row['queue_name'] : '';
-                $stats[$queueName] = is_numeric($row['cnt']) ? (int) $row['cnt'] : 0;
-            }
-            $failedJobs = $conn->executeQuery('SELECT id, body, created_at, available_at FROM ' . $tableName . ' WHERE queue_name = ? ORDER BY id DESC LIMIT 50', ['piwigo_failed'])->fetchAllAssociative();
+            $failedJobs  = $this->messengerRepository->findFailedJobs();
         } catch (\Throwable) {
             $tableExists = false;
         }

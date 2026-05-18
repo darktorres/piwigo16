@@ -690,6 +690,277 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
+     * Return element ids in the given user's caddie.
+     *
+     * @return list<int>
+     */
+    public function findCaddieElementIdsByUser(int $userId): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('element_id')
+            ->from($this->table('caddie'))
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return image_ids that are in the given user's favorites.
+     *
+     * @return list<int>
+     */
+    public function findFavoriteImageIdsByUserPlain(int $userId): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('image_id')
+            ->from($this->table('favorites'))
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return image ids whose date_available falls inside the given SQL date
+     * range fragment (built by SqlExpr::recentPeriodExpr — a server-built
+     * fragment, not user data).
+     *
+     * @return list<int>
+     */
+    public function findIdsByDateAvailableBetween(string $sqlStart, string $endLiteral): array
+    {
+        $query = 'SELECT id FROM ' . $this->table('images')
+            . ' WHERE date_available BETWEEN ' . $sqlStart . ' AND ?';
+        $rows  = $this->conn->executeQuery($query, [$endLiteral], [ParameterType::STRING])->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return every image id (no filter).
+     *
+     * @return list<int>
+     */
+    public function findAllIds(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('images'))
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return every image id in the given ORDER BY clause.
+     *
+     * @return list<int>
+     */
+    public function findAllIdsWithOrderSuffix(string $orderBySuffix): array
+    {
+        $rows = $this->conn->executeQuery('SELECT id FROM ' . $this->table('images') . ' ' . $orderBySuffix)
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return image ids that have no row in image_tag (no tags assigned).
+     *
+     * @return list<int>
+     */
+    public function findUntaggedIds(): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT id FROM ' . $this->table('images')
+            . ' LEFT JOIN ' . $this->table('image_tag') . ' ON id = image_id'
+            . ' WHERE tag_id IS NULL'
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return image ids grouped by the given duplicate-detection fields.
+     * For each group with >1 row, all member ids are returned. Optionally
+     * filter to rows with non-null md5sum.
+     *
+     * @param list<string> $duplicateOnFields
+     * @return list<int>
+     */
+    public function findIdsInDuplicateGroups(array $duplicateOnFields, bool $requireMd5sum): array
+    {
+        if ($duplicateOnFields === []) {
+            return [];
+        }
+        // Field names are caller-controlled but limited to a closed set by the
+        // BatchManager UI (file, md5sum, date_creation, width, height).
+        $allowed = ['file', 'md5sum', 'date_creation', 'width', 'height'];
+        $safeFields = array_values(array_intersect($duplicateOnFields, $allowed));
+        if ($safeFields === []) {
+            return [];
+        }
+        $query = 'SELECT GROUP_CONCAT(id) AS ids FROM ' . $this->table('images');
+        if ($requireMd5sum) {
+            $query .= ' WHERE md5sum IS NOT NULL';
+        }
+        $query .= ' GROUP BY ' . implode(',', $safeFields) . ' HAVING COUNT(*) > 1';
+        $out = [];
+        foreach ($this->conn->executeQuery($query)->fetchFirstColumn() as $groupStr) {
+            $s = is_string($groupStr) ? rtrim($groupStr, ',') : '';
+            if ($s === '') {
+                continue;
+            }
+            foreach (explode(',', $s) as $idStr) {
+                $out[] = (int) $idStr;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Return image ids matching `level` and the caller's operator
+     * (= or <=) with the given level, ordered by the caller's suffix.
+     *
+     * @return list<int>
+     */
+    public function findIdsByLevelComparison(string $operator, int $level, string $orderBySuffix): array
+    {
+        $op = $operator === '<=' ? '<=' : '=';
+        $rows = $this->conn->executeQuery(
+            'SELECT id FROM ' . $this->table('images') . ' WHERE level ' . $op . ' ? ' . $orderBySuffix,
+            [$level],
+            [ParameterType::INTEGER],
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return image ids matching the caller-built WHERE fragment with the
+     * given ORDER BY suffix. The WHERE fragment is composed by the
+     * BatchManager from numeric/string inputs validated by InputValidator;
+     * the caller pre-binds them into the fragment via parameterized clauses.
+     *
+     * @param list<mixed>                            $params
+     * @param list<ArrayParameterType|ParameterType> $types
+     * @return list<int>
+     */
+    public function findIdsByWhereFragment(string $whereFragment, string $orderBySuffix, array $params, array $types): array
+    {
+        $rows = $this->conn->executeQuery(
+            'SELECT id FROM ' . $this->table('images') . ' WHERE ' . $whereFragment . ' ' . $orderBySuffix,
+            $params,
+            $types,
+        )->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Update `author` for many images atomically.
+     *
+     * @param list<array{id: int|string, author: string|null}> $rows
+     */
+    public function setAuthorBatch(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $idInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
+                $this->conn->update($this->table('images'), ['author' => $row['author']], ['id' => $idInt]);
+            }
+        });
+    }
+
+    /**
+     * Update `name` for many images atomically.
+     *
+     * @param list<array{id: int|string, name: string|null}> $rows
+     */
+    public function setNameBatch(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $idInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
+                $this->conn->update($this->table('images'), ['name' => $row['name']], ['id' => $idInt]);
+            }
+        });
+    }
+
+    /**
+     * Update `date_creation` for many images atomically.
+     *
+     * @param list<array{id: int|string, date_creation: string|null}> $rows
+     */
+    public function setDateCreationBatch(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $idInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
+                $this->conn->update($this->table('images'), ['date_creation' => $row['date_creation']], ['id' => $idInt]);
+            }
+        });
+    }
+
+    /**
+     * Update `level` for many images atomically.
+     *
+     * @param list<array{id: int|string, level: int}> $rows
+     */
+    public function setLevelBatch(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $idInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
+                $this->conn->update($this->table('images'), ['level' => $row['level']], ['id' => $idInt]);
+            }
+        });
+    }
+
+    /**
+     * Update arbitrary same-shaped column-set on many images atomically.
+     *
+     * @param list<array{id: int|string, fields: array<string, mixed>}> $rows
+     */
+    public function updateBatchByIds(array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $this->conn->transactional(function () use ($rows): void {
+            foreach ($rows as $row) {
+                $idInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
+                $this->conn->update($this->table('images'), $row['fields'], ['id' => $idInt]);
+            }
+        });
+    }
+
+    /**
+     * Run a caller-built images query (typically from BatchManager's free-form
+     * filter composition) and return the rows. Caller composes the FROM/JOIN/
+     * WHERE/ORDER BY fragments; this method just executes with the bound
+     * params.
+     *
+     * @param list<mixed>                            $params
+     * @param list<ArrayParameterType|ParameterType> $types
+     * @return list<array<string, mixed>>
+     */
+    public function findRowsByRawQuery(string $query, array $params, array $types): array
+    {
+        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+    }
+
+    /**
      * Delete images by id inside a transaction. FK CASCADE clears child rows
      * in comments, image_category, image_format, image_tag, favorites, rate,
      * caddie, lounge.

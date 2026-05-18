@@ -1575,6 +1575,62 @@ SELECT
     }
 
     /**
+     * Return ids of virtual categories (dir IS NULL — categories without
+     * a filesystem directory).
+     *
+     * @return list<int>
+     */
+    public function findVirtualCategoryIds(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from($this->table('categories'))
+            ->where('dir IS NULL')
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return category ids that the given image is linked to via image_category.
+     *
+     * @return list<int>
+     */
+    public function findCategoryIdsByImageId(int $imageId): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('category_id')
+            ->from($this->table('image_category'))
+            ->where('image_id = :imageId')
+            ->setParameter('imageId', $imageId)
+            ->executeQuery()
+            ->fetchFirstColumn();
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
+    }
+
+    /**
+     * Return (id, name, permalink) rows for every category keyed by id —
+     * the catalog used by admin URLs that need every category's metadata
+     * at once.
+     *
+     * @return array<int|string, array<string, mixed>>
+     */
+    public function findAllIdNamePermalinkMap(): array
+    {
+        $rows = $this->conn->createQueryBuilder()
+            ->select('id', 'name', 'permalink')
+            ->from($this->table('categories'))
+            ->executeQuery()
+            ->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $key       = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $out[$key] = $row;
+        }
+        return $out;
+    }
+
+    /**
      * Return ids of categories whose `id_uppercat` matches the given parent
      * (null = root-level categories).
      *

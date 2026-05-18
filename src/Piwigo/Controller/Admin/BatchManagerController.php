@@ -50,6 +50,7 @@ use Piwigo\Lang\Translator;
 use Piwigo\Page\PaginationService;
 use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Search\SearchService;
+use Piwigo\Session\Session;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
@@ -92,6 +93,7 @@ final class BatchManagerController implements AdminSubControllerInterface
         private readonly PermissionService $permissionService,
         private readonly PluginRegistry $pluginRegistry,
         private readonly SearchService $searchService,
+        private readonly Session $session,
         private readonly TagAdminService $tagAdminService,
         private readonly TagRepository $tagRepository,
         private readonly TagService $tagService,
@@ -138,7 +140,7 @@ final class BatchManagerController implements AdminSubControllerInterface
         if (isset($_GET['action'])) {
             if ('empty_caddie' == $_GET['action']) {
                 $this->imageRepository->deleteUserCaddie(is_numeric($user['id']) ? (int) $user['id'] : 0);
-                $_SESSION['page_infos'] = [Lang::t('Information data registered in database')];
+                $this->session->flash->add('info', Lang::t('Information data registered in database'));
                 $this->redirectResponder->redirect($this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : ''));
             }
 
@@ -146,12 +148,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                 $this->inputValidator->check('nb_orphans_deleted', $_GET, false, '/^\d+$/');
                 $nb_orphans_deleted = is_numeric($_GET['nb_orphans_deleted']) ? (int) $_GET['nb_orphans_deleted'] : 0;
                 if ($nb_orphans_deleted > 0) {
-                    if (!is_array($_SESSION['page_infos'] ?? null)) {
-                        $_SESSION['page_infos'] = [];
-                    }
-                    /** @var array<mixed> $page_infos_ref */
-                    $page_infos_ref   = &$_SESSION['page_infos'];
-                    $page_infos_ref[] = Translator::get()->plural('%d photo was deleted', '%d photos were deleted', $nb_orphans_deleted);
+                    $this->session->flash->add('info', Translator::get()->plural('%d photo was deleted', '%d photos were deleted', $nb_orphans_deleted));
                     $getPage = $_GET['page'] ?? null;
                     $this->redirectResponder->redirect($this->urlGenerator->admin() . '&page=' . (is_string($getPage) ? $getPage : ''));
                 }
@@ -161,12 +158,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                 $this->inputValidator->check('nb_md5sum_added', $_GET, false, '/^\d+$/');
                 $nb_md5sum_added = is_numeric($_GET['nb_md5sum_added']) ? (int) $_GET['nb_md5sum_added'] : 0;
                 if ($nb_md5sum_added > 0) {
-                    if (!is_array($_SESSION['page_infos'] ?? null)) {
-                        $_SESSION['page_infos'] = [];
-                    }
-                    /** @var array<mixed> $page_infos_ref */
-                    $page_infos_ref   = &$_SESSION['page_infos'];
-                    $page_infos_ref[] = Translator::get()->plural('%d checksums were added', '%d checksums were added', $nb_md5sum_added);
+                    $this->session->flash->add('info', Translator::get()->plural('%d checksums were added', '%d checksums were added', $nb_md5sum_added));
                     $getPage2 = $_GET['page'] ?? null;
                     $this->redirectResponder->redirect($this->urlGenerator->admin() . '&page=' . (is_string($getPage2) ? $getPage2 : ''));
                 }
@@ -266,7 +258,7 @@ final class BatchManagerController implements AdminSubControllerInterface
 
             $registerEvent = new BatchManagerRegisterFilters($bmf);
             $this->dispatcher->dispatch($registerEvent);
-            $_SESSION['bulk_manager_filter'] = $registerEvent->bulkManagerFilter;
+            $this->session->bulkManagerFilter = $registerEvent->bulkManagerFilter;
         } elseif (isset($_GET['filter'])) {
             if (!is_array($_GET['filter'])) {
                 /** @var string $rawFilter */
@@ -356,15 +348,15 @@ final class BatchManagerController implements AdminSubControllerInterface
                 }
             }
 
-            $_SESSION['bulk_manager_filter'] = $bmf;
+            $this->session->bulkManagerFilter = $bmf;
         }
 
-        if (empty($_SESSION['bulk_manager_filter'])) {
-            $_SESSION['bulk_manager_filter'] = ['prefilter' => 'caddie'];
+        if (empty($this->session->bulkManagerFilter)) {
+            $this->session->bulkManagerFilter = ['prefilter' => 'caddie'];
         }
 
         /** @var array<string, mixed> $bmf */
-        $bmf = is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
+        $bmf = $this->session->bulkManagerFilter;
 
         // ── Build photo set from filters ──────────────────────────────────────
 
@@ -437,7 +429,7 @@ final class BatchManagerController implements AdminSubControllerInterface
         if (isset($bmf['category'])) {
             $bmf_category = is_numeric($bmf['category']) ? (int) $bmf['category'] : 0;
             if (!$this->categoryRepository->existsById($bmf_category)) {
-                unset($_SESSION['bulk_manager_filter']);
+                $this->session->bulkManagerFilter = null;
                 $this->redirectResponder->redirect($this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : ''));
             }
             $categories   = isset($bmf['category_recursive']) ? $this->categoryService->getSubcatIds([$bmf_category]) : [$bmf_category];
@@ -704,7 +696,7 @@ final class BatchManagerController implements AdminSubControllerInterface
 
         $this->prefilter = 'none';
         /** @var array<string, mixed> $bmf */
-        $bmf = is_array($_SESSION['bulk_manager_filter'] ?? null) ? $_SESSION['bulk_manager_filter'] : [];
+        $bmf = $this->session->bulkManagerFilter ?? [];
         if (is_string($bmf['prefilter'] ?? null)) {
             $this->prefilter = $bmf['prefilter'];
         }
@@ -768,7 +760,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                 } else {
                     $associate_raw = is_array($_POST['associate']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : [];
                     $this->categoryAdminService->associateImagesToCategories($collection_int, $associate_raw);
-                    $_SESSION['page_infos'] = [Lang::t('Information data registered in database')];
+                    $this->session->flash->add('info', Lang::t('Information data registered in database'));
                     if ('no_album' == $this->prefilter) {
                         $redirect = true;
                     } elseif ('no_virtual_album' == $this->prefilter) {
@@ -785,7 +777,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                 $move_id     = is_string($moveRaw) ? $moveRaw : '';
                 $move_id_int = is_numeric($move_id) ? (int) $move_id : 0;
                 $this->categoryAdminService->moveImagesToCategories($collection_int, [$move_id_int]);
-                $_SESSION['page_infos'] = [Lang::t('Information data registered in database')];
+                $this->session->flash->add('info', Lang::t('Information data registered in database'));
                 if ('no_album' == $this->prefilter) {
                     $redirect = true;
                 } elseif ('no_virtual_album' == $this->prefilter) {
@@ -801,7 +793,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                 $dissociate_raw = is_string($dissociate_key) ? $dissociate_key : '';
                 $nb_dissociated = $this->categoryAdminService->dissociateImagesFromCategory($collection_int, $dissociate_raw);
                 if ($nb_dissociated > 0) {
-                    $_SESSION['page_infos'] = [Lang::t('Information data registered in database')];
+                    $this->session->flash->add('info', Lang::t('Information data registered in database'));
                     $redirect = true;
                 }
             } elseif ('author' == $action) {
@@ -853,14 +845,9 @@ final class BatchManagerController implements AdminSubControllerInterface
             } elseif ('delete' == $action) {
                 if (isset($_POST['confirm_deletion']) && 1 == $_POST['confirm_deletion']) {
                     if (count($collection_int) > 0) {
-                        if (!is_array($_SESSION['page_infos'] ?? null)) {
-                            $_SESSION['page_infos'] = [];
-                        }
-                        /** @var array<mixed> $page_infos_ref */
-                        $page_infos_ref   = &$_SESSION['page_infos'];
-                        $page_infos_ref[] = Translator::get()->plural('%d photo was deleted', '%d photos were deleted', count($collection_int));
-                        $redirect_url     = $this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : '');
-                        $redirect         = true;
+                        $this->session->flash->add('info', Translator::get()->plural('%d photo was deleted', '%d photos were deleted', count($collection_int)));
+                        $redirect_url = $this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : '');
+                        $redirect     = true;
                     } else {
                         PageState::current()->addError(Lang::t('No photo can be deleted'));
                     }
@@ -1132,7 +1119,7 @@ final class BatchManagerController implements AdminSubControllerInterface
 
             $element_ids      = [];
             /** @var array<string, mixed> $bmf */
-            $bmf              = is_array($_SESSION['bulk_manager_filter'] ?? null) ? $_SESSION['bulk_manager_filter'] : [];
+            $bmf              = $this->session->bulkManagerFilter ?? [];
             $is_category      = isset($bmf['category']) && !isset($bmf['category_recursive']);
             $bmf_category_val = is_numeric($bmf['category'] ?? null) ? (int) $bmf['category'] : 0;
 

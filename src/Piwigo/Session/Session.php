@@ -84,10 +84,17 @@ final class Session
     public bool $noPhotoYet = false;                // no_photo_yet
 
     // -- Password reset ----------------------------------------------------
-    public ?string $resetPasswordCode = null;       // reset_password_code
     /**
-     * Active valid-reset-code payload (array shape is owned by PasswordService:
-     * `['code' => string, 'mail_address' => string, 'pwg_uid' => int, …]`).
+     * Pending password-reset code payload owned by PasswordService:
+     * `['secret' => string, 'attempts' => int, 'user_id' => ?int, 'created_at' => int, 'ttl' => int]`.
+     * Null means "no reset code in flight".
+     *
+     * @var array<mixed>|null
+     */
+    public ?array $resetPasswordCode = null;        // reset_password_code
+    /**
+     * Validated reset-code payload owned by PasswordService:
+     * `['user_id' => int, 'username' => string, 'email' => string, 'language' => string]`.
      * Null means "no valid code currently issued"; legacy callers detect this
      * with `isset($_SESSION['valid_reset_password_code'])`.
      *
@@ -156,7 +163,7 @@ final class Session
         $s->dismissedUpgradeVersion  = is_string($raw['dismissed_upgrade_version'] ?? null) ? $raw['dismissed_upgrade_version'] : null;
         $s->noPhotoYet               = (bool) ($raw['no_photo_yet'] ?? false);
 
-        $s->resetPasswordCode      = is_string($raw['reset_password_code'] ?? null) ? $raw['reset_password_code'] : null;
+        $s->resetPasswordCode      = is_array($raw['reset_password_code'] ?? null) ? $raw['reset_password_code'] : null;
         $s->validResetPasswordCode = is_array($raw['valid_reset_password_code'] ?? null) ? $raw['valid_reset_password_code'] : null;
 
         $s->uploadsError       = is_array($raw['uploads_error'] ?? null) ? $raw['uploads_error'] : null;

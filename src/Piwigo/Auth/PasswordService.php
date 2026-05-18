@@ -15,6 +15,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\Tables;
 use Piwigo\Mail\MailService;
+use Piwigo\Session\Session;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
@@ -30,6 +31,7 @@ final readonly class PasswordService
         private MailService $mailService,
         private PermissionService $permissionService,
         private PreferencesService $preferencesService,
+        private Session $session,
         private UrlGenerator $urlGenerator,
         private UserRepository $userRepository,
         private UserService $userService,
@@ -40,7 +42,7 @@ final readonly class PasswordService
     public function processVerificationCode(): bool
     {
         $logger = LoggerRegistry::current();
-        if (isset($_SESSION['reset_password_code'])) {
+        if ($this->session->resetPasswordCode !== null) {
             return true;
         }
 
@@ -93,7 +95,7 @@ final readonly class PasswordService
         }
         $this->mailService->switchLangBack();
 
-        $_SESSION['reset_password_code'] = [
+        $this->session->resetPasswordCode = [
             'secret'     => $user_code['secret'],
             'attempts'   => 0,
             'user_id'    => $is_user_found ? $user_id : null,
@@ -107,30 +109,29 @@ final readonly class PasswordService
     public function processPasswordRequest(): bool
     {
         /** @var array{secret: string, attempts: int, user_id: int|null, created_at: int, ttl: int}|null $state */
-        $state = is_array($_SESSION['reset_password_code'] ?? null) ? $_SESSION['reset_password_code'] : null;
+        $state = $this->session->resetPasswordCode;
         if (!$state) {
             return true;
         }
 
         if (time() > $state['created_at'] + $state['ttl']) {
-            unset($_SESSION['reset_password_code']);
+            $this->session->resetPasswordCode = null;
             PageState::current()->addKeyedError('password_form_error', Lang::t('Code expired'));
             return false;
         }
 
-        /** @var array<string, mixed> $session_code */
-        $session_code     = is_array($_SESSION['reset_password_code'] ?? null) ? $_SESSION['reset_password_code'] : [];
+        $session_code     = $this->session->resetPasswordCode ?? [];
         $current_attempts = is_numeric($session_code['attempts'] ?? 0) ? (int) ($session_code['attempts'] ?? 0) : 0;
         $current_attempts++;
         $session_code['attempts']         = $current_attempts;
-        $_SESSION['reset_password_code']  = $session_code;
+        $this->session->resetPasswordCode = $session_code;
 
         $user_code = StringUtil::inputString('user_code', '', $_POST);
         $is_valid  = ($user_code !== null && $user_code !== '') && preg_match('/^\d{6}$/', $user_code) && $this->userService->verifyUserCode($state['secret'], $user_code);
 
         if (!$is_valid) {
             if ($current_attempts >= 3) {
-                unset($_SESSION['reset_password_code']);
+                $this->session->resetPasswordCode = null;
                 if (isset($state['user_id']) && $state['user_id'] !== 0) {
                     $state_user_id = $state['user_id'];
                     $save_user     = CurrentUser::get()->rawAttributes;
@@ -150,7 +151,7 @@ final readonly class PasswordService
         }
 
         $user_id = $state['user_id'];
-        unset($_SESSION['reset_password_code']);
+        $this->session->resetPasswordCode = null;
 
         if ($user_id === null || $user_id === 0) {
             PageState::current()->addKeyedError('password_form_error', Lang::t('Invalid verification code'));
@@ -168,7 +169,7 @@ final readonly class PasswordService
         $status        = is_string($temp_user['status'] ?? null) ? $temp_user['status'] : '';
         $has_no_email  = $temp_email === '';
 
-        $_SESSION['valid_reset_password_code'] = [
+        $this->session->validResetPasswordCode = [
             'user_id'  => $user_id,
             'username' => $temp_username,
             'email'    => $temp_email,
@@ -236,7 +237,7 @@ final readonly class PasswordService
         );
 
         /** @var array{user_id: int|null, username: string, email: string, language: string}|null $valid_reset_code */
-        $valid_reset_code = is_array($_SESSION['valid_reset_password_code'] ?? null) ? $_SESSION['valid_reset_password_code'] : null;
+        $valid_reset_code = $this->session->validResetPasswordCode;
         if ($valid_reset_code !== null && $valid_reset_code['email'] !== '') {
             $this->mailService->switchLangTo($valid_reset_code['language']);
             $reset_user_id   = $valid_reset_code['user_id'] !== null ? (string) $valid_reset_code['user_id'] : '';
@@ -246,7 +247,7 @@ final readonly class PasswordService
             $this->mailService->pwgMail($valid_reset_code['email'], $template_mail);
             $this->mailService->switchLangBack();
         }
-        unset($_SESSION['valid_reset_password_code']);
+        $this->session->validResetPasswordCode = null;
 
         $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $user_id, 'reset_password_success'));
         PageState::current()->addInfo(Lang::t('Your password has been reset'));
@@ -272,11 +273,10 @@ final readonly class PasswordService
 
     public function resetPasswordCode(): int|false
     {
-        if (!isset($_SESSION['valid_reset_password_code'])) {
+        $code = $this->session->validResetPasswordCode;
+        if ($code === null) {
             return false;
         }
-        /** @var array<string, mixed> $code */
-        $code    = is_array($_SESSION['valid_reset_password_code']) ? $_SESSION['valid_reset_password_code'] : [];
         $user_id = $code['user_id'] ?? false;
         if ($user_id === false || !is_numeric($user_id)) {
             return false;

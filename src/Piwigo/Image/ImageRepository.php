@@ -672,6 +672,18 @@ final class ImageRepository extends AbstractRepository
             ->executeStatement();
     }
 
+    /** Update the `rotation` code (0..7) for a single image. */
+    public function updateRotation(int $id, int $rotationCode): void
+    {
+        $this->conn->createQueryBuilder()
+            ->update($this->table('images'))
+            ->set('rotation', ':rot')
+            ->where('id = :id')
+            ->setParameter('rot', $rotationCode)
+            ->setParameter('id', $id)
+            ->executeStatement();
+    }
+
     /**
      * Find a single image by its path column (exact match), or null if not found.
      *

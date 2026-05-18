@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\BatchManager;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Tag\TagAdminService;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
@@ -20,7 +20,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 final readonly class FilterResolver
 {
     public function __construct(
-        private Connection $conn,
+        private CategoryRepository $categoryRepository,
         private HtmlService $htmlService,
         private TagAdminService $tagAdminService,
         private CsrfService $csrfService,
@@ -112,18 +112,8 @@ SELECT
 
         $associated_categories = [];
         if (count($catElementsId) > 0) {
-            $query = '
-SELECT
-    DISTINCT(category_id) AS id
-  FROM ' . Tables::imageCategory() . ' AS ic
-    JOIN ' . Tables::images() . ' AS i ON i.id = ic.image_id
-  WHERE ic.image_id IN (' . implode(',', $catElementsId) . ')
-    AND (
-      ic.category_id != i.storage_category_id
-      OR i.storage_category_id IS NULL
-    )
-;';
-            $associated_categories = array_column($this->conn->executeQuery($query)->fetchAllAssociative(), 'id', 'id');
+            $imageIdsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $catElementsId);
+            $associated_categories = $this->categoryRepository->findDistinctVirtualAssociatedCategoryIds($imageIdsInt);
         }
         $tpl->assign('associated_categories', $associated_categories);
 

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
@@ -18,6 +17,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativePipeline;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageDerivativeContext;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -37,7 +37,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class ImageDerivativeController implements ControllerInterface
 {
     public function __construct(
-        private Connection $conn,
+        private ImageRepository $imageRepository,
         private EventDispatcherInterface $dispatcher,
         private DerivativePipeline $pipeline,
         private Paths $paths,
@@ -57,8 +57,6 @@ final readonly class ImageDerivativeController implements ControllerInterface
         foreach (explode(',', 'load,rotate,crop,scale,sharpen,watermark,save,send') as $k) {
             $timing[$k] = '';
         }
-
-        $prefixeTable = Config::dbPrefix();
 
         ImageStdParams::loadFromDb();
 
@@ -110,13 +108,7 @@ final readonly class ImageDerivativeController implements ControllerInterface
             && !str_contains($ctx->srcLocation, 'plugins/')
         ) {
             try {
-                $query = '
-SELECT *
-  FROM ' . $prefixeTable . 'images
-  WHERE path=\'' . addslashes($ctx->srcLocation) . '\'
-;';
-                $rowResult = $this->conn->executeQuery($query)->fetchAssociative();
-                $row = $rowResult !== false ? $rowResult : null;
+                $row = $this->imageRepository->findByPath($ctx->srcLocation);
                 if ($row !== null) {
                     if (isset($row['width'])) {
                         $ctx->originalSize = [
@@ -127,11 +119,8 @@ SELECT *
                     $ctx->coi = is_string($row['coi'] ?? null) ? $row['coi'] : null;
                     if (!isset($row['rotation'])) {
                         $ctx->rotationAngle = PwgImage::getRotationAngle($ctx->srcPath);
-                        $this->conn->update(
-                            $prefixeTable . 'images',
-                            ['rotation' => PwgImage::getRotationCodeFromAngle($ctx->rotationAngle ?? 0)],
-                            ['id' => $row['id']]
-                        );
+                        $rowIdInt = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
+                        $this->imageRepository->updateRotation($rowIdInt, PwgImage::getRotationCodeFromAngle($ctx->rotationAngle ?? 0));
                     } else {
                         $ctx->rotationAngle = PwgImage::getRotationAngleFromCode(
                             is_numeric($row['rotation']) ? (int) $row['rotation'] : 0
@@ -147,7 +136,6 @@ SELECT *
         } else {
             $ctx->rotationAngle = 0;
         }
-        $this->conn->close();
 
         if (!$this->pipeline->trySwitchSource($params, $src_mtime, $ctx) && $params->type == DerivativeSize::Custom->value) {
             $sharpen = 0.0;

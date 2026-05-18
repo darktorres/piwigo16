@@ -1575,6 +1575,35 @@ SELECT
     }
 
     /**
+     * Return distinct virtual-association category ids for the given images
+     * (links where category_id is NOT the image's storage category). Used by
+     * the batch-manager filter pane to show "associated to" options that are
+     * actually dissociable.
+     *
+     * @param  list<int> $imageIds
+     * @return array<int|string, int>
+     */
+    public function findDistinctVirtualAssociatedCategoryIds(array $imageIds): array
+    {
+        if ($imageIds === []) {
+            return [];
+        }
+        $qb = $this->conn->createQueryBuilder()
+            ->select('DISTINCT(ic.category_id) AS id')
+            ->from($this->table('image_category'), 'ic')
+            ->innerJoin('ic', $this->table('images'), 'i', 'i.id = ic.image_id')
+            ->where('ic.category_id != i.storage_category_id OR i.storage_category_id IS NULL');
+        $qb->andWhere($qb->expr()->in('ic.image_id', ':imageIds'))
+           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
+        $out = [];
+        foreach ($qb->executeQuery()->fetchFirstColumn() as $id) {
+            $idInt = is_numeric($id) ? (int) $id : 0;
+            $out[$idInt] = $idInt;
+        }
+        return $out;
+    }
+
+    /**
      * Return ids of virtual categories (dir IS NULL — categories without
      * a filesystem directory).
      *

@@ -89,7 +89,7 @@ final readonly class DerivativePipeline
             $req = substr($req, 0, $pos);
         }
         $req           = rawurldecode($req);
-        $ctx->rootPath = $this->paths->root;
+        $ctx->rootPath = '';
 
         $req = ltrim($req, '/');
         if (str_starts_with($req, 'i/')) {
@@ -239,7 +239,8 @@ final readonly class DerivativePipeline
     public function sendDerivative(int|false $expires, ImageDerivativeContext $ctx): void
     {
         if (isset($_GET['ajaxload']) && $_GET['ajaxload'] == 'true') {
-            echo json_encode(['url' => UrlService::embellishUrl(UrlService::getAbsoluteRootUrl() . $ctx->derivativePath)]);
+            $relativeUrl = substr($ctx->derivativePath, strlen($this->paths->root));
+            echo json_encode(['url' => UrlService::embellishUrl(UrlService::getAbsoluteRootUrl() . $relativeUrl)]);
             return;
         }
         $fp = fopen($ctx->derivativePath, 'rb');

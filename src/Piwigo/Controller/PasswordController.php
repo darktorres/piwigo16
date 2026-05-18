@@ -20,6 +20,7 @@ use Piwigo\Language\LanguageService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -42,6 +43,7 @@ final readonly class PasswordController implements ControllerInterface
         private MenubarRenderer $menubarRenderer,
         private PasswordService $passwordService,
         private PermissionService $permissionService,
+        private Session $session,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserService $userService,
@@ -122,17 +124,17 @@ final readonly class PasswordController implements ControllerInterface
         }
 
         if ('reset' == $action) {
-            if (($get_key === null && ($this->permissionService->isAGuest() || $this->permissionService->isGeneric())) && !isset($_SESSION['valid_reset_password_code'])) {
+            if (($get_key === null && ($this->permissionService->isAGuest() || $this->permissionService->isGeneric())) && $this->session->validResetPasswordCode === null) {
                 $this->redirectResponder->redirect($this->urlService->getGalleryHomeUrl());
             }
         }
         if ('lost' == $action && !$this->permissionService->isAGuest()) {
             $this->redirectResponder->redirect($this->urlService->getGalleryHomeUrl());
         }
-        if ('lost_code' == $action && !isset($_SESSION['reset_password_code'])) {
+        if ('lost_code' == $action && $this->session->resetPasswordCode === null) {
             $this->redirectResponder->redirect($this->urlGenerator->identification());
         }
-        if ('lost' == $action && isset($_SESSION['reset_password_code'])) {
+        if ('lost' == $action && $this->session->resetPasswordCode !== null) {
             $action = 'lost_code';
         }
 

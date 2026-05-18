@@ -20,6 +20,7 @@ use Piwigo\Language\LanguageService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -43,6 +44,7 @@ final readonly class RegisterController implements ControllerInterface
         private LangService $langService,
         private MenubarRenderer $menubarRenderer,
         private PermissionService $permissionService,
+        private Session $session,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserService $userService,
@@ -96,10 +98,7 @@ final readonly class RegisterController implements ControllerInterface
 
             if (count($pgErrors) == 0) {
                 if ($post_send_mail && StringUtil::emailCheckFormat($post_mail ?? '')) {
-                    if (!is_array($_SESSION['page_infos'] ?? null)) {
-                        $_SESSION['page_infos'] = [];
-                    }
-                    $_SESSION['page_infos'][] = Lang::t('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
+                    $this->session->flash->add('info', Lang::t('Successfully registered, you will soon receive an email with your connection settings. Welcome!'));
                 }
                 $user_id = $this->userService->getUserid($post_login ?? '');
                 if ($user_id !== false) {

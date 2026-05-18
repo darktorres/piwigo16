@@ -20,6 +20,7 @@ use Piwigo\Language\LanguageService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -46,6 +47,7 @@ final readonly class IdentificationController implements ControllerInterface
         private PermissionService $permissionService,
         private LangService $langService,
         private AuthService $authService,
+        private Session $session,
         private UrlService $urlService,
         private LanguageService $languageService,
         private EventDispatcherInterface $dispatcher,
@@ -63,7 +65,7 @@ final readonly class IdentificationController implements ControllerInterface
 
         $this->dispatcher->dispatch(new LocBeginIdentification());
 
-        unset($_SESSION['reset_password_code']);
+        $this->session->resetPasswordCode = null;
 
         $post_redirect = StringUtil::inputString('redirect', null, $_POST);
         if ($post_redirect !== null) {
@@ -93,7 +95,7 @@ final readonly class IdentificationController implements ControllerInterface
                 $post_password = is_string($rawPassword = $_POST['password'] ?? null) ? $rawPassword : '';
                 if ($this->authService->tryLogUser($username, $post_password, $remember_me)) {
                     $root_url = UrlService::getAbsoluteRootUrl();
-                    $_SESSION['connected_with'] = 'pwg_ui';
+                    $this->session->connectedWith = 'pwg_ui';
                     $this->redirectResponder->redirect(
                         empty($redirect_to)
                         ? $this->urlService->getGalleryHomeUrl()

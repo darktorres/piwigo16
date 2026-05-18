@@ -23,6 +23,7 @@ use Piwigo\Lang\Translator;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\RegisteredBlock;
 use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlGenerator;
@@ -35,6 +36,7 @@ final readonly class HtmlService
 {
     public function __construct(
         private CategoryRepository $categoryRepository,
+        private Session $session,
         private EventDispatcherInterface $dispatcher,
     ) {
     }
@@ -484,14 +486,19 @@ $btraceMsg
             return;
         }
         $page = PageState::current();
+        // Drain Session flash bag (write-once N, read-and-clear N+1) into the
+        // per-render PageState. Each `mode` maps to one flash kind: errors
+        // and infos are the only kinds in use today; warnings/messages are
+        // legacy slots that no writer currently sets, kept for parity with
+        // the old per-mode loop.
+        $flashByKind = [
+            'errors' => 'error',
+            'infos'  => 'info',
+        ];
         foreach (['errors', 'infos', 'warnings', 'messages'] as $mode) {
-            $sessionKey = 'page_' . $mode;
-            $sessionArr = (isset($_SESSION[$sessionKey]) && is_array($_SESSION[$sessionKey]))
-                ? array_values(array_filter($_SESSION[$sessionKey], is_string(...)))
+            $sessionArr = isset($flashByKind[$mode])
+                ? $this->session->flash->consume($flashByKind[$mode])
                 : [];
-            if ($sessionArr !== []) {
-                unset($_SESSION[$sessionKey]);
-            }
             $current = match ($mode) {
                 'errors'   => $page->errors   = array_merge($page->errors, $sessionArr),
                 'infos'    => $page->infos    = array_merge($page->infos, $sessionArr),

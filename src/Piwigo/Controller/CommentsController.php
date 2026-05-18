@@ -37,6 +37,7 @@ use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
 use Piwigo\Page\PaginationService;
+use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -62,6 +63,7 @@ final readonly class CommentsController implements ControllerInterface
         private HtmlService $htmlService,
         private MenubarRenderer $menubarRenderer,
         private PermissionService $permissionService,
+        private Session $session,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private CsrfService $csrfService,
@@ -227,23 +229,14 @@ final readonly class CommentsController implements ControllerInterface
                         );
                         switch ($comment_action) {
                             case 'moderate':
-                                if (!is_array($_SESSION['page_infos'] ?? null)) {
-                                    $_SESSION['page_infos'] = [];
-                                }
-                                $_SESSION['page_infos'][] = Lang::t('An administrator must authorize your comment before it is visible.');
+                                $this->session->flash->add('info', Lang::t('An administrator must authorize your comment before it is visible.'));
                                 // no break
                             case 'validate':
-                                if (!is_array($_SESSION['page_infos'] ?? null)) {
-                                    $_SESSION['page_infos'] = [];
-                                }
-                                $_SESSION['page_infos'][] = Lang::t('Your comment has been registered');
+                                $this->session->flash->add('info', Lang::t('Your comment has been registered'));
                                 $perform_redirect = true;
                                 break;
                             case 'reject':
-                                if (!is_array($_SESSION['page_errors'] ?? null)) {
-                                    $_SESSION['page_errors'] = [];
-                                }
-                                $_SESSION['page_errors'][] = Lang::t('Your comment has NOT been registered because it did not pass the validation rules');
+                                $this->session->flash->add('error', Lang::t('Your comment has NOT been registered because it did not pass the validation rules'));
                                 break;
                             default:
                                 throw new \LogicException('Invalid comment action: ' . $comment_action);

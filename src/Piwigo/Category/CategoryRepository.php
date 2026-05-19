@@ -3024,11 +3024,21 @@ SELECT
     /**
      * Run the admin-list query (no join, just the core category columns,
      * configurable WHERE composed by the caller, SQL_CALC_FOUND_ROWS).
+     * SELECT shape is fixed (no caller-controlled column list).
      *
      * @param list<string>                           $whereClauses
      * @param list<mixed>                            $params
      * @param list<ArrayParameterType|ParameterType> $types
-     * @return array{rows: list<array<string, mixed>>, total: int}
+     * @return array{rows: list<array{
+     *     id: int,
+     *     name: string,
+     *     comment: string|null,
+     *     uppercats: string,
+     *     global_rank: string|null,
+     *     dir: string|null,
+     *     status: string,
+     *     image_order: string|null,
+     * }>, total: int}
      */
     public function findAdminListPage(
         array $whereClauses,
@@ -3040,7 +3050,24 @@ SELECT
             . ' FROM ' . $this->table('categories')
             . ' WHERE ' . implode("\n    AND ", $whereClauses)
             . ' ' . $tailFragment;
-        $rows     = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        $rawRows = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        $rows = [];
+        foreach ($rawRows as $row) {
+            $idRaw = $row['id'] ?? null;
+            if (!is_numeric($idRaw)) {
+                continue;
+            }
+            $rows[] = [
+                'id'          => (int) $idRaw,
+                'name'        => is_string($row['name'] ?? null) ? $row['name'] : '',
+                'comment'     => is_string($row['comment'] ?? null) ? $row['comment'] : null,
+                'uppercats'   => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+                'dir'         => is_string($row['dir'] ?? null) ? $row['dir'] : null,
+                'status'      => is_string($row['status'] ?? null) ? $row['status'] : 'public',
+                'image_order' => is_string($row['image_order'] ?? null) ? $row['image_order'] : null,
+            ];
+        }
         $totalRaw = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
         return ['rows' => $rows, 'total' => is_numeric($totalRaw) ? (int) $totalRaw : 0];
     }

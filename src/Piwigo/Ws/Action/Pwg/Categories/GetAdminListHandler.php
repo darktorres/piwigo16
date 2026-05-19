@@ -68,23 +68,18 @@ final readonly class GetAdminListHandler implements WsAction
         $counter    = $adminPage['total'];
         $cats       = [];
         foreach ($searchRows as $row) {
-            $rowIdRaw          = $row['id'] ?? null;
-            $id                = is_string($rowIdRaw) ? $rowIdRaw : '';
-            $row['nb_images']  = $nbImagesOf[$id] ?? 0;
-            $rowUppercatsRaw   = $row['uppercats'] ?? null;
-            $catDisplayName    = $this->htmlService->getCatDisplayNameCache(is_string($rowUppercatsRaw) ? $rowUppercatsRaw : '', $this->urlGenerator->admin() . '&page=album-');
+            $row['nb_images']  = $nbImagesOf[$row['id']] ?? 0;
+            $catDisplayName    = $this->htmlService->getCatDisplayNameCache($row['uppercats'], $this->urlGenerator->admin() . '&page=album-');
             $row['name_raw']   = $row['name'];
-            $rawAdminName      = $row['name'] ?? null;
-            $adminRenderEvent  = new RenderCategoryName(is_string($rawAdminName) ? $rawAdminName : '', 'ws_categories_getAdminList');
+            $adminRenderEvent  = new RenderCategoryName($row['name'], 'ws_categories_getAdminList');
             $this->dispatcher->dispatch($adminRenderEvent);
             $row['name']        = strip_tags($adminRenderEvent->categoryName);
             $row['fullname']    = strip_tags($catDisplayName);
             $row['comment_raw'] = $row['comment'];
-            $adminCommentRaw    = $row['comment'] ?? '';
-            $adminCatDescEvent  = new RenderCategoryDescription(is_string($adminCommentRaw) ? $adminCommentRaw : '', 'ws_categories_getAdminList');
+            $adminCatDescEvent  = new RenderCategoryDescription($row['comment'] ?? '', 'ws_categories_getAdminList');
             $this->dispatcher->dispatch($adminCatDescEvent);
             $row['comment']     = $adminCatDescEvent->categoryDescription;
-            if (empty($row['image_order'])) {
+            if ($row['image_order'] === null || $row['image_order'] === '') {
                 $row['image_order'] = $this->orderByService->buildBareOrderByClause(Config::orderBy());
             }
             if (in_array('full_name_with_admin_links', $params['additional_output'])) {
@@ -94,12 +89,9 @@ final readonly class GetAdminListHandler implements WsAction
         }
         if (!$params['recursive']) {
             $catsIds     = array_column($cats, 'id');
-            $catsIdsInt  = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $catsIds);
-            $nbSubcatsOf = $this->categoryRepository->countSubcatsByParentIdsKeyedByParent($catsIdsInt);
+            $nbSubcatsOf = $this->categoryRepository->countSubcatsByParentIdsKeyedByParent($catsIds);
             foreach ($cats as $idx => $cat) {
-                $catIdRaw2                   = $cat['id'] ?? null;
-                $catIdKey                    = is_string($catIdRaw2) ? $catIdRaw2 : '';
-                $cats[$idx]['nb_categories'] = $nbSubcatsOf[$catIdKey] ?? 0;
+                $cats[$idx]['nb_categories'] = $nbSubcatsOf[$cat['id']] ?? 0;
             }
         }
         $limitReached = ($counter > Config::linkedAlbumSearchLimit());

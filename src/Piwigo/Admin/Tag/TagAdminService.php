@@ -17,6 +17,7 @@ use Piwigo\Event\Tag\GetTagNameLikeWhere;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Tag\RenderTagUrl;
 use Piwigo\Html\HtmlService;
+use Piwigo\Tag\Entity\Tag;
 use Piwigo\Tag\TagRepository;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
@@ -237,7 +238,10 @@ final class TagAdminService
         if ($tagIds === []) {
             return [];
         }
-        return $this->getTaglistFromRows($this->tagRepository->findByIds($tagIds), $onlyUserLanguage);
+        return $this->getTaglistFromRows(
+            array_map(static fn (Tag $t): array => $t->toRow(), $this->tagRepository->findByIds($tagIds)),
+            $onlyUserLanguage,
+        );
     }
 
     /**

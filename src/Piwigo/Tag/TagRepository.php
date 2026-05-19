@@ -6,6 +6,7 @@ namespace Piwigo\Tag;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
+use Piwigo\Tag\Entity\Tag;
 
 /**
  * Persistence layer for the tag domain.
@@ -19,24 +20,25 @@ use Piwigo\Db\AbstractRepository;
 final class TagRepository extends AbstractRepository
 {
     /**
-     * Return every tag row (id, name, url_name, …).
+     * Return every tag (id, name, url_name, lastmodified).
      *
-     * @return list<array<string, mixed>>
+     * @return list<Tag>
      */
     public function findAll(): array
     {
-        return $this->conn->createQueryBuilder()
+        $rows = $this->conn->createQueryBuilder()
             ->select('*')
             ->from($this->table('tags'))
             ->executeQuery()
             ->fetchAllAssociative();
+        return array_map(Tag::fromRow(...), $rows);
     }
 
     /**
-     * Return tag rows for the given ids.
+     * Return tag entities for the given ids.
      *
-     * @param int[] $ids
-     * @return list<array<string, mixed>>
+     * @param  int[] $ids
+     * @return list<Tag>
      */
     public function findByIds(array $ids): array
     {
@@ -50,7 +52,8 @@ final class TagRepository extends AbstractRepository
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
 
-        return $qb->executeQuery()->fetchAllAssociative();
+        $rows = $qb->executeQuery()->fetchAllAssociative();
+        return array_map(Tag::fromRow(...), $rows);
     }
 
     /**
@@ -247,11 +250,9 @@ final class TagRepository extends AbstractRepository
     }
 
     /**
-     * Return the full tag row for the given id, or null if not found.
-     *
-     * @return array<string, mixed>|null
+     * Return the tag entity for the given id, or null if not found.
      */
-    public function findById(int $id): ?array
+    public function findById(int $id): ?Tag
     {
         $row = $this->conn->createQueryBuilder()
             ->select('*')
@@ -260,7 +261,7 @@ final class TagRepository extends AbstractRepository
             ->setParameter('id', $id)
             ->executeQuery()
             ->fetchAssociative();
-        return $row !== false ? $row : null;
+        return $row !== false ? Tag::fromRow($row) : null;
     }
 
     /**
@@ -325,10 +326,10 @@ final class TagRepository extends AbstractRepository
     }
 
     /**
-     * @param int[]    $ids
-     * @param string[] $urlNames
-     * @param string[] $names
-     * @return list<array<string, mixed>>
+     * @param  int[]    $ids
+     * @param  string[] $urlNames
+     * @param  string[] $names
+     * @return list<Tag>
      */
     public function findByIdUrlOrName(array $ids = [], array $urlNames = [], array $names = []): array
     {
@@ -353,7 +354,8 @@ final class TagRepository extends AbstractRepository
                ->setParameter('names', $names, ArrayParameterType::STRING);
         }
 
-        return $qb->executeQuery()->fetchAllAssociative();
+        $rows = $qb->executeQuery()->fetchAllAssociative();
+        return array_map(Tag::fromRow(...), $rows);
     }
 
     // -------------------------------------------------------------------------
@@ -517,16 +519,17 @@ final class TagRepository extends AbstractRepository
      * with LIKE patterns).
      *
      * @param  list<string> $clauses
-     * @return list<array<string, mixed>>
+     * @return list<Tag>
      */
     public function findTagsByTextClauses(array $clauses): array
     {
         if ($clauses === []) {
             return [];
         }
-        return $this->conn->executeQuery(
+        $rows = $this->conn->executeQuery(
             'SELECT * FROM ' . $this->table('tags') . ' WHERE (' . implode("\n OR ", $clauses) . ')',
         )->fetchAllAssociative();
+        return array_map(Tag::fromRow(...), $rows);
     }
 
     /**

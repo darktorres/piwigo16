@@ -93,18 +93,18 @@ final readonly class TagService
             return [];
         }
 
-        $rows = count($tagCounters) < 1000
+        $entities = count($tagCounters) < 1000
             ? $this->repo->findByIds(array_map(intval(...), array_keys($tagCounters)))
             : $this->repo->findAll();
 
         $tags = [];
-        foreach ($rows as $row) {
-            $rowIdRaw = $row['id'];
-            $rowId = is_numeric($rowIdRaw) ? (int) $rowIdRaw : (is_string($rowIdRaw) ? $rowIdRaw : '');
+        foreach ($entities as $entity) {
+            $rowId = $entity->id->value;
             if (isset($tagCounters[$rowId])) {
+                $row             = $entity->toRow();
                 $row['counter']  = is_scalar($tagCounters[$rowId]) ? intval($tagCounters[$rowId]) : 0;
-                $row['name_raw'] = $row['name'];
-                $renderEvent     = new RenderTagName(is_string($row['name']) ? $row['name'] : '', $row);
+                $row['name_raw'] = $entity->name;
+                $renderEvent     = new RenderTagName($entity->name, $row);
                 $this->dispatcher->dispatch($renderEvent);
                 $row['name']     = $renderEvent->tagName;
                 $tags[]          = $row;
@@ -113,13 +113,14 @@ final readonly class TagService
         return $tags;
     }
 
-    /** @return array<mixed> */
+    /** @return list<array<string, mixed>> */
     public function getAllTags(): array
     {
         $tags = [];
-        foreach ($this->repo->findAll() as $row) {
-            $row['name_raw'] = $row['name'];
-            $renderEvent     = new RenderTagName(is_string($row['name']) ? $row['name'] : '', $row);
+        foreach ($this->repo->findAll() as $entity) {
+            $row             = $entity->toRow();
+            $row['name_raw'] = $entity->name;
+            $renderEvent     = new RenderTagName($entity->name, $row);
             $this->dispatcher->dispatch($renderEvent);
             $row['name']     = $renderEvent->tagName;
             $tags[]          = $row;
@@ -249,14 +250,17 @@ SELECT id
      * @param int[]|string[] $ids
      * @param string[]       $urlNames
      * @param string[]       $names
-     * @return array<mixed>
+     * @return list<array<string, mixed>>
      */
     public function findTags(array $ids = [], array $urlNames = [], array $names = []): array
     {
-        return $this->repo->findByIdUrlOrName(
-            array_map(intval(...), $ids),
-            array_map(strval(...), $urlNames),
-            array_map(strval(...), $names)
+        return array_map(
+            static fn (\Piwigo\Tag\Entity\Tag $t): array => $t->toRow(),
+            $this->repo->findByIdUrlOrName(
+                array_map(intval(...), $ids),
+                array_map(strval(...), $urlNames),
+                array_map(strval(...), $names),
+            ),
         );
     }
 

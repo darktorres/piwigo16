@@ -37,7 +37,7 @@ final readonly class AddHandler implements WsAction
         }
         $tagAddId = is_numeric($creationOutput['id'] ?? null) ? (int) $creationOutput['id'] : 0;
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagAddId, 'add'));
-        $newTagRow = $this->tagRepository->findById($tagAddId);
-        return ['info' => $creationOutput['info'], 'id' => $creationOutput['id'], 'name' => $newTagRow['name'] ?? '', 'url_name' => $newTagRow['url_name'] ?? ''];
+        $newTag = $this->tagRepository->findById($tagAddId);
+        return ['info' => $creationOutput['info'], 'id' => $creationOutput['id'], 'name' => $newTag !== null ? $newTag->name : '', 'url_name' => $newTag !== null ? $newTag->urlName : ''];
     }
 }

@@ -188,13 +188,10 @@ final readonly class SearchHandler implements WsAction
         }
         $nameOfTag = [];
         if ($hasTags) {
-            foreach ($this->tagRepository->findAll() as $row) {
-                $tagIdKey = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
-                if ($tagIdKey !== '') {
-                    $tagRenderEvent = new RenderTagName(is_string($row['name'] ?? null) ? $row['name'] : '', $row);
-                    $this->dispatcher->dispatch($tagRenderEvent);
-                    $nameOfTag[$tagIdKey] = $tagRenderEvent->tagName;
-                }
+            foreach ($this->tagRepository->findAll() as $tag) {
+                $tagRenderEvent = new RenderTagName($tag->name, $tag->toRow());
+                $this->dispatcher->dispatch($tagRenderEvent);
+                $nameOfTag[(string) $tag->id->value] = $tagRenderEvent->tagName;
             }
         }
         $result = [];

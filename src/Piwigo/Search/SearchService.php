@@ -744,9 +744,9 @@ final class SearchService
             }
             $clauses = $this->qsearchGetTextTokenSearchSql($token, ['name']);
             foreach ($this->tagRepository->findTagsByTextClauses($clauses) as $tag) {
-                $tagId               = is_numeric($tag['id']) ? (int) $tag['id'] : 0;
+                $tagId               = $tag->id->value;
                 $tokenTagIds[$i][]   = $tagId;
-                $allTags[$tagId]     = $tag;
+                $allTags[$tagId]     = $tag->toRow();
             }
         }
 

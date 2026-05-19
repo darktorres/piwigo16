@@ -438,16 +438,15 @@ final class MiscController implements AdminSubControllerInterface
         $_tagRepo   = $this->tagRepository;
         $tag_counters = $_tagRepo->getTagCounters();
         $all_tags   = [];
-        foreach ($_tagRepo->findAll() as $tag) {
-            $raw_name       = $tag['name'];
-            $tag['raw_name'] = $raw_name;
-            $rawNameStr     = is_string($raw_name) ? $raw_name : '';
-            $renderEvent    = new RenderTagName($rawNameStr, $tag);
+        foreach ($_tagRepo->findAll() as $tagEntity) {
+            $tag             = $tagEntity->toRow();
+            $rawNameStr      = $tagEntity->name;
+            $tag['raw_name'] = $rawNameStr;
+            $renderEvent     = new RenderTagName($rawNameStr, $tag);
             $this->dispatcher->dispatch($renderEvent);
-            $tag['name']    = $renderEvent->tagName;
-            $tagIdRaw       = $tag['id'] ?? null;
-            $tag_id_key     = is_string($tagIdRaw) ? $tagIdRaw : '';
-            $counter        = is_numeric($tag_counters[$tag_id_key] ?? null) ? (int) $tag_counters[$tag_id_key] : 0;
+            $tag['name']     = $renderEvent->tagName;
+            $tag_id_key      = (string) $tagEntity->id->value;
+            $counter         = is_numeric($tag_counters[$tag_id_key] ?? null) ? (int) $tag_counters[$tag_id_key] : 0;
             if ($counter > 0) {
                 $tag['counter'] = $counter;
             }

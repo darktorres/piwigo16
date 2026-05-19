@@ -52,9 +52,10 @@ final readonly class RenameHandler implements WsAction
         }
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagId, 'edit'));
         $this->tagRepository->updateById($tagId, $update);
-        $tag             = $this->tagRepository->findById($tagId) ?? [];
-        $tag['raw_name'] = $tag['name'] ?? '';
-        $rawTagNameStr   = is_string($tag['raw_name']) ? $tag['raw_name'] : '';
+        $entity          = $this->tagRepository->findById($tagId);
+        $tag             = $entity !== null ? $entity->toRow() : [];
+        $rawTagNameStr   = $entity !== null ? $entity->name : '';
+        $tag['raw_name'] = $rawTagNameStr;
         $tagRenderEvent  = new RenderTagName($rawTagNameStr, $tag);
         $this->dispatcher->dispatch($tagRenderEvent);
         $tag['name']      = $tagRenderEvent->tagName;

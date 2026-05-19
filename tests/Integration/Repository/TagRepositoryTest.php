@@ -37,11 +37,11 @@ final class TagRepositoryTest extends IntegrationTestCase
 
     public function test_findById_returns_existing_tag(): void
     {
-        $row = $this->repo->findById(1);
+        $tag = $this->repo->findById(1);
 
-        self::assertIsArray($row);
-        self::assertSame('nature', $row['name']);
-        self::assertSame('nature', $row['url_name']);
+        self::assertNotNull($tag);
+        self::assertSame('nature', $tag->name);
+        self::assertSame('nature', $tag->urlName);
     }
 
     public function test_findById_returns_null_for_missing(): void
@@ -60,9 +60,9 @@ final class TagRepositoryTest extends IntegrationTestCase
         $newId = $this->repo->insertNewTag(['name' => 'fresh', 'url_name' => 'fresh']);
 
         self::assertGreaterThan(3, $newId, 'auto-increment must start past the 3 seeded tags');
-        $row = $this->repo->findById($newId);
-        self::assertIsArray($row);
-        self::assertSame('fresh', $row['name']);
+        $tag = $this->repo->findById($newId);
+        self::assertNotNull($tag);
+        self::assertSame('fresh', $tag->name);
     }
 
     public function test_deleteByIds_cascades_through_image_tag(): void

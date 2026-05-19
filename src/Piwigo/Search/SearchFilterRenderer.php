@@ -83,6 +83,13 @@ final readonly class SearchFilterRenderer
             /** @var array<string, mixed> $my_search_fields_tmp */
             $my_search_fields_tmp = is_array($my_search['fields'] ?? null) ? $my_search['fields'] : [];
             $my_search['fields'] = $my_search_fields_tmp;
+            // Typed view of the same data — used for read-side narrowing.
+            // The mutation paths below (intersecting selected words against
+            // the available set, dropping filter blocks the user can't
+            // access) still update $my_search so the template's hidden
+            // form re-emits the same JSON shape the gallery search form
+            // accepts.
+            $rules = \Piwigo\Search\Rules\SearchRules::fromArray($my_search);
 
             $forbidden = $this->permissionService->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
@@ -109,7 +116,7 @@ final readonly class SearchFilterRenderer
                 unset($my_search['fields']['allwords']);
             }
 
-            if (isset($my_search['fields']['tags'])) {
+            if ($rules->tags !== null) {
                 if ($display_filters['tags']['access']) {
                     $filter_tags = [];
                     $other_filters_items = $this->searchService->getItemsForFilter('tags');
@@ -118,15 +125,9 @@ final readonly class SearchFilterRenderer
                         usort($filter_tags, fn (mixed $a, mixed $b): int => $this->htmlService->tagAlphaCompare(is_array($a) ? $a : [], is_array($b) ? $b : []));
                     } else {
                         $filter_tags = $this->tagService->getCommonTags($other_filters_items, 0);
-
-                        /** @var array{words?: list<int|string>, mode?: string} $tags_field */
-                        $tags_field = is_array($my_search['fields']['tags']) ? $my_search['fields']['tags'] : [];
-                        /** @var list<int|string> $tags_words_raw */
-                        $tags_words_raw = is_array($tags_field['words'] ?? null) ? $tags_field['words'] : [];
-                        $missing_tag_ids = array_diff(
-                            array_map(static fn (int|string $v): string => (string) $v, $tags_words_raw),
-                            array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($filter_tags, 'id'))
-                        );
+                        $selected_tag_ids_str = array_map(static fn (int $v): string => (string) $v, $rules->tags->tagIds);
+                        $available_ids_str    = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($filter_tags, 'id'));
+                        $missing_tag_ids      = array_diff($selected_tag_ids_str, $available_ids_str);
 
                         if (count($missing_tag_ids) > 0) {
                             $filter_tags = array_merge($this->tagService->getAvailableTags(array_map(intval(...), $missing_tag_ids)), $filter_tags);
@@ -135,15 +136,13 @@ final readonly class SearchFilterRenderer
 
                     $template->assign('TAGS', $filter_tags);
 
-                    $filter_tag_ids = count($filter_tags) > 0 ? array_column($filter_tags, 'id') : [];
-                    /** @var array{words?: list<int|string>, mode?: string} $tags_field2 */
-                    $tags_field2 = is_array($my_search['fields']['tags']) ? $my_search['fields']['tags'] : [];
-                    /** @var list<int|string> $tags_words2_raw */
-                    $tags_words2_raw = is_array($tags_field2['words'] ?? null) ? $tags_field2['words'] : [];
-                    $tags_words2 = array_map(static fn (int|string $v): string => (string) $v, $tags_words2_raw);
+                    $filter_tag_ids     = count($filter_tags) > 0 ? array_column($filter_tags, 'id') : [];
                     $filter_tag_ids_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $filter_tag_ids);
-                    $tags_field2['words'] = array_values(array_intersect($tags_words2, $filter_tag_ids_str));
-                    $my_search['fields']['tags'] = $tags_field2;
+                    $selected_str       = array_map(static fn (int $v): string => (string) $v, $rules->tags->tagIds);
+                    $my_search['fields']['tags'] = [
+                        'words' => array_values(array_intersect($selected_str, $filter_tag_ids_str)),
+                        'mode'  => $rules->tags->mode->value,
+                    ];
                 } else {
                     unset($my_search['fields']['tags']);
                 }
@@ -183,13 +182,11 @@ final readonly class SearchFilterRenderer
                 }
                 $template->assign('AUTHORS', $filter_rows);
 
-                /** @var array{words?: list<string>} $author_field */
-                $author_field = is_array($my_search['fields']['author']) ? $my_search['fields']['author'] : [];
-                /** @var list<string> $author_words_raw */
-                $author_words_raw = is_array($author_field['words'] ?? null) ? $author_field['words'] : [];
+                $author_words_raw = $rules->author === null ? [] : $rules->author->words;
                 $author_names_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $author_names);
-                $author_field['words'] = array_values(array_intersect($author_words_raw, $author_names_str));
-                $my_search['fields']['author'] = $author_field;
+                $my_search['fields']['author'] = [
+                    'words' => array_values(array_intersect($author_words_raw, $author_names_str)),
+                ];
             } elseif (isset($my_search['fields']['author'])) {
                 unset($my_search['fields']['author']);
             }

@@ -12,7 +12,6 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Ws\Method\CategoriesEndpoints;
 use Piwigo\Ws\Method\GeneralEndpoints;
-use Piwigo\Ws\Method\GroupsEndpoints;
 use Piwigo\Ws\Method\ImagesEndpoints;
 use Piwigo\Ws\Method\TagsEndpoints;
 use Piwigo\Ws\Method\UsersEndpoints;
@@ -35,7 +34,6 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
     public function __construct(
         private CategoriesEndpoints $categoriesEndpoints,
         private GeneralEndpoints $generalEndpoints,
-        private GroupsEndpoints $groupsEndpoints,
         private ImagesEndpoints $imagesEndpoints,
         private TagsEndpoints $tagsEndpoints,
         private UsersEndpoints $usersEndpoints,
@@ -911,7 +909,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.getList',
-            callback:     $this->groupsEndpoints->getList(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Groups\GetListHandler::class,
             description:  'Retrieves a list of all groups. The list can be filtered.',
             params:       [
                 ParamDefinition::optionalFlag(name: 'group_id', type: WsType::Id->value, flags: WsParam::ForceArray->value),
@@ -926,7 +924,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.add',
-            callback:     $this->groupsEndpoints->add(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Groups\AddHandler::class,
             description:  'Creates a group and returns the new group record.',
             params:       [
                 ParamDefinition::required('name'),
@@ -939,7 +937,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.delete',
-            callback:     $this->groupsEndpoints->delete(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Groups\DeleteHandler::class,
             description:  'Deletes a or more groups. Users and photos are not deleted.',
             params:       [
                 ParamDefinition::required(name: 'group_id', type: WsType::Id->value, flags: WsParam::ForceArray->value),
@@ -952,7 +950,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.setInfo',
-            callback:     $this->groupsEndpoints->setInfo(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Groups\SetInfoHandler::class,
             description:  'Updates a group. Leave a field blank to keep the current value.',
             params:       [
                 ParamDefinition::required(name: 'group_id', type: WsType::Id->value),
@@ -967,7 +965,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.addUser',
-            callback:     $this->groupsEndpoints->addUser(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Groups\AddUserHandler::class,
             description:  'Adds one or more users to a group.',
             params:       [
                 ParamDefinition::required(name: 'group_id', type: WsType::Id->value),
@@ -981,7 +979,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.deleteUser',
-            callback:     $this->groupsEndpoints->deleteUser(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Groups\DeleteUserHandler::class,
             description:  'Removes one or more users from a group.',
             params:       [
                 ParamDefinition::required(name: 'group_id', type: WsType::Id->value),
@@ -995,7 +993,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.merge',
-            callback:     $this->groupsEndpoints->merge(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Groups\MergeHandler::class,
             description:  'Merge groups in one other group',
             params:       [
                 ParamDefinition::required(name: 'destination_group_id', type: WsType::Id->value, info: 'Is not necessarily part of groups to merge'),
@@ -1009,7 +1007,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.groups.duplicate',
-            callback:     $this->groupsEndpoints->duplicate(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Groups\DuplicateHandler::class,
             description:  'Create a copy of a group',
             params:       [
                 ParamDefinition::required(name: 'group_id', type: WsType::Id->value),

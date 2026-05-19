@@ -17,7 +17,6 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Users\User;
 use Piwigo\Ws\Method\CategoriesEndpoints;
 use Piwigo\Ws\Method\GeneralEndpoints;
-use Piwigo\Ws\Method\GroupsEndpoints;
 use Piwigo\Ws\Method\ImagesEndpoints;
 use Piwigo\Ws\Method\TagsEndpoints;
 use Piwigo\Ws\Method\UsersEndpoints;
@@ -184,7 +183,6 @@ final class SpecValidityTest extends TestCase
         return new WsMethodRegistrar(
             self::stub(CategoriesEndpoints::class),
             self::stub(GeneralEndpoints::class),
-            self::stub(GroupsEndpoints::class),
             self::stub(ImagesEndpoints::class),
             self::stub(TagsEndpoints::class),
             self::stub(UsersEndpoints::class),

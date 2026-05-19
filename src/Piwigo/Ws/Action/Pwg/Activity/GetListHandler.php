@@ -149,6 +149,10 @@ final readonly class GetListHandler implements WsAction
         }
         foreach ($outputLines as $idx => $outputLine) {
             if ('user' === ($outputLine['object'] ?? '')) {
+                // PHPStan sees `object_id` as always defined; the
+                // defensive ?? [] handles legacy output lines built
+                // before B11 normalized the shape. Kept until the
+                // output-line shape is fully typed.
                 /** @phpstan-ignore-next-line nullCoalesce.offset */
                 $objIds = $outputLine['object_id'] ?? [];
                 foreach ($objIds as $uid) {
@@ -163,6 +167,7 @@ final readonly class GetListHandler implements WsAction
                     $detArr['users']              = $detUsers;
                     $outputLines[$idx]['details'] = $detArr;
                 }
+                // Same row-shape disagreement as the `object_id` access above.
                 $detRaw2 = $outputLines[$idx]['details'] ?? null; // @phpstan-ignore nullCoalesce.offset
                 /** @var array<string, mixed> $detArr2 */
                 $detArr2 = is_array($detRaw2) ? $detRaw2 : [];

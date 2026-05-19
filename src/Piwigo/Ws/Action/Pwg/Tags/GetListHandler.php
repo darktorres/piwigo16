@@ -30,9 +30,10 @@ final readonly class GetListHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): array
     {
+        $input = GetListParams::fromArray($params);
         /** @var array<int, array<string, mixed>> $tags */
         $tags = $this->tagService->getAvailableTags();
-        if ($params['sort_by_counter']) {
+        if ($input->sortByCounter) {
             usort($tags, fn (array $a, array $b): int => (is_numeric($b['counter'] ?? null) ? (int) $b['counter'] : 0) - (is_numeric($a['counter'] ?? null) ? (int) $a['counter'] : 0));
         } else {
             usort($tags, $this->htmlService->tagAlphaCompare(...));

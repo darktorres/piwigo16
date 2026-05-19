@@ -14,6 +14,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
+use Piwigo\Ws\WsParamException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 /** `pwg.tags.duplicate` — clone a tag (incl. image associations) under a new name. */
@@ -27,36 +28,41 @@ final readonly class DuplicateHandler implements WsAction
     ) {
     }
 
-    /**
-     * @param  array<mixed> $params
-     * @return array<string, mixed>|PwgError
-     */
+    /** @param array<mixed> $params */
     #[\Override]
-    public function __invoke(array $params, PwgServer $server): PwgError|array
+    public function __invoke(array $params, PwgServer $server): DuplicateResult|PwgError
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = DuplicateParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $tagId    = is_numeric($params['tag_id']) ? (int) $params['tag_id'] : 0;
-        $copyName = is_string($params['copy_name'] ?? null) ? $params['copy_name'] : '';
-        if ($this->tagRepository->countById($tagId) === 0) {
+        if ($this->tagRepository->countById($input->tagId) === 0) {
             return new PwgError(WsError::InvalidParam->value, 'This tag does not exist.');
         }
-        if ($this->tagRepository->countByExactName($copyName) !== 0) {
+        if ($this->tagRepository->countByExactName($input->copyName) !== 0) {
             return new PwgError(WsError::InvalidParam->value, 'This name is already taken.');
         }
-        $urlEvent = new RenderTagUrl($copyName);
+        $urlEvent = new RenderTagUrl($input->copyName);
         $this->dispatcher->dispatch($urlEvent);
         $urlName          = $urlEvent->tagName;
-        $destinationTagId = $this->tagRepository->insertNewTag(['name' => $copyName, 'url_name' => $urlName]);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $destinationTagId, 'add', ['action' => 'duplicate', 'source_tag' => $tagId]));
-        $destinationTagImageIds = $this->tagRepository->findImageIdsByTagId($tagId);
+        $destinationTagId = $this->tagRepository->insertNewTag(['name' => $input->copyName, 'url_name' => $urlName]);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $destinationTagId, 'add', ['action' => 'duplicate', 'source_tag' => $input->tagId]));
+        $destinationTagImageIds = $this->tagRepository->findImageIdsByTagId($input->tagId);
         $inserts                = [];
         foreach ($destinationTagImageIds as $imageId) {
             $inserts[] = ['tag_id' => $destinationTagId, 'image_id' => $imageId];
             $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, 'edit', ['add-tag' => $destinationTagId]));
         }
         $this->tagRepository->insertImageTagsBatch($inserts, false);
-        return ['id' => $destinationTagId, 'name' => $copyName, 'url_name' => $urlName, 'count' => count($inserts)];
+        return new DuplicateResult(
+            id:      $destinationTagId,
+            name:    $input->copyName,
+            urlName: $urlName,
+            count:   count($inserts),
+        );
     }
 }

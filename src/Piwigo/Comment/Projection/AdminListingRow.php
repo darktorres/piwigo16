@@ -37,30 +37,38 @@ final readonly class AdminListingRow
     /** @param array<string, mixed> $row */
     public static function fromRow(array $row): self
     {
-        $idRaw = $row['id'] ?? null;
+        $idRaw          = $row['id'] ?? null;
+        $imageIdRaw     = $row['image_id'] ?? null;
+        $authorRaw      = $row['author'] ?? null;
+        $usernameRaw    = $row['username'] ?? null;
+        $statusRaw      = $row['status'] ?? null;
+        $contentRaw     = $row['content'] ?? null;
+        $pathRaw        = $row['path'] ?? null;
+        $reprExtRaw     = $row['representative_ext'] ?? null;
+        $fileRaw        = $row['file'] ?? null;
+        $anonymousIdRaw = $row['anonymous_id'] ?? null;
+        $validatedRaw   = $row['validated'] ?? false;
         if (!is_numeric($idRaw)) {
             throw new \InvalidArgumentException('AdminListingRow is missing required `id` field');
         }
-        $imageIdRaw = $row['image_id'] ?? null;
         if (!is_numeric($imageIdRaw)) {
             throw new \InvalidArgumentException('AdminListingRow is missing required `image_id` field');
         }
-        $validatedRaw = $row['validated'] ?? false;
         return new self(
             id:                CommentId::from((int) $idRaw),
             imageId:           ImageId::from((int) $imageIdRaw),
             date:              MysqlDateTime::tryFrom($row['date'] ?? null),
-            author:            is_string($row['author'] ?? null) ? $row['author'] : null,
+            author:            is_string($authorRaw) ? $authorRaw : null,
             authorId:          UserId::tryFrom($row['author_id'] ?? null),
-            username:          is_string($row['username'] ?? null) ? $row['username'] : null,
-            status:            is_string($row['status'] ?? null) ? $row['status'] : null,
-            content:           is_string($row['content'] ?? null) ? $row['content'] : null,
-            path:              is_string($row['path'] ?? null) ? $row['path'] : null,
-            representativeExt: is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
-            file:              is_string($row['file'] ?? null) ? $row['file'] : null,
+            username:          is_string($usernameRaw) ? $usernameRaw : null,
+            status:            is_string($statusRaw) ? $statusRaw : null,
+            content:           is_string($contentRaw) ? $contentRaw : null,
+            path:              is_string($pathRaw) ? $pathRaw : null,
+            representativeExt: is_string($reprExtRaw) ? $reprExtRaw : null,
+            file:              is_string($fileRaw) ? $fileRaw : null,
             dateAvailable:     MysqlDateTime::tryFrom($row['date_available'] ?? null),
             validated:         is_bool($validatedRaw) ? $validatedRaw : (is_numeric($validatedRaw) ? (int) $validatedRaw !== 0 : false),
-            anonymousId:       is_string($row['anonymous_id'] ?? null) ? $row['anonymous_id'] : '',
+            anonymousId:       is_string($anonymousIdRaw) ? $anonymousIdRaw : '',
         );
     }
 }

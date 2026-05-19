@@ -23,9 +23,10 @@ final readonly class AuthorCount
     /** @param array<string, mixed> $row */
     public static function fromRow(array $row): self
     {
-        $nbRaw = $row['nb_authors'] ?? null;
+        $authorRaw = $row['author'] ?? null;
+        $nbRaw     = $row['nb_authors'] ?? null;
         return new self(
-            author:    is_string($row['author'] ?? null) ? $row['author'] : null,
+            author:    is_string($authorRaw) ? $authorRaw : null,
             authorId:  UserId::tryFrom($row['author_id'] ?? null),
             nbAuthors: is_numeric($nbRaw) ? (int) $nbRaw : 0,
         );

@@ -25,15 +25,17 @@ final readonly class CommentSummary
     /** @param array<string, mixed> $row */
     public static function fromRow(array $row): self
     {
-        $idRaw = $row['id'] ?? null;
+        $idRaw      = $row['id'] ?? null;
+        $authorRaw  = $row['author'] ?? null;
+        $contentRaw = $row['content'] ?? null;
         if (!is_numeric($idRaw)) {
             throw new \InvalidArgumentException('Comment row is missing required `id` field');
         }
         return new self(
             id:      CommentId::from((int) $idRaw),
             date:    MysqlDateTime::tryFrom($row['date'] ?? null),
-            author:  is_string($row['author'] ?? null) ? $row['author'] : null,
-            content: is_string($row['content'] ?? null) ? $row['content'] : null,
+            author:  is_string($authorRaw) ? $authorRaw : null,
+            content: is_string($contentRaw) ? $contentRaw : null,
         );
     }
 }

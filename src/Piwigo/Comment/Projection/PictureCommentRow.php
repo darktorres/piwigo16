@@ -33,25 +33,30 @@ final readonly class PictureCommentRow
     /** @param array<string, mixed> $row */
     public static function fromRow(array $row): self
     {
-        $idRaw = $row['id'] ?? null;
+        $idRaw         = $row['id'] ?? null;
+        $imageIdRaw    = $row['image_id'] ?? null;
+        $authorRaw     = $row['author'] ?? null;
+        $userEmailRaw  = $row['user_email'] ?? null;
+        $emailRaw      = $row['email'] ?? null;
+        $websiteUrlRaw = $row['website_url'] ?? null;
+        $contentRaw    = $row['content'] ?? null;
+        $validatedRaw  = $row['validated'] ?? false;
         if (!is_numeric($idRaw)) {
             throw new \InvalidArgumentException('Comment row is missing required `id` field');
         }
-        $imageIdRaw = $row['image_id'] ?? null;
         if (!is_numeric($imageIdRaw)) {
             throw new \InvalidArgumentException('Comment row is missing required `image_id` field');
         }
-        $validatedRaw = $row['validated'] ?? false;
         return new self(
             id:         CommentId::from((int) $idRaw),
-            author:     is_string($row['author'] ?? null) ? $row['author'] : null,
+            author:     is_string($authorRaw) ? $authorRaw : null,
             authorId:   UserId::tryFrom($row['author_id'] ?? null),
-            userEmail:  is_string($row['user_email'] ?? null) ? $row['user_email'] : null,
+            userEmail:  is_string($userEmailRaw) ? $userEmailRaw : null,
             date:       MysqlDateTime::tryFrom($row['date'] ?? null),
             imageId:    ImageId::from((int) $imageIdRaw),
-            websiteUrl: is_string($row['website_url'] ?? null) ? $row['website_url'] : null,
-            email:      is_string($row['email'] ?? null) ? $row['email'] : null,
-            content:    is_string($row['content'] ?? null) ? $row['content'] : null,
+            websiteUrl: is_string($websiteUrlRaw) ? $websiteUrlRaw : null,
+            email:      is_string($emailRaw) ? $emailRaw : null,
+            content:    is_string($contentRaw) ? $contentRaw : null,
             validated:  is_bool($validatedRaw) ? $validatedRaw : (is_numeric($validatedRaw) ? (int) $validatedRaw !== 0 : false),
         );
     }

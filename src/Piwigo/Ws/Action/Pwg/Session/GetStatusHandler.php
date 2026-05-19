@@ -34,38 +34,34 @@ final readonly class GetStatusHandler implements WsAction
     ) {
     }
 
-    /**
-     * @param  array<mixed> $params
-     * @return array<string, mixed>
-     */
+    /** @param array<mixed> $params */
     #[\Override]
-    public function __invoke(array $params, PwgServer $server): array
+    public function __invoke(array $params, PwgServer $server): GetStatusResult
     {
         $currentUser = CurrentUser::get();
-        $res = [];
-        $res['username']         = $this->permissionService->isAGuest() ? 'guest' : stripslashes($currentUser->username);
-        $res['status']           = $currentUser->status;
-        $res['theme']            = $currentUser->theme;
-        $res['language']         = $currentUser->language;
-        $res['pwg_token']        = $this->csrfService->getToken();
-        $res['charset']          = StringUtil::getPwgCharset();
-        $res['current_datetime'] = new \DateTimeImmutable()->format('Y-m-d H:i:s');
-        $res['version']          = AppInfo::VERSION;
-        $res['save_visits']      = $this->activityLogger->isLoggingEnabled();
-        $res['connected_with']   = $this->session->connectedWith;
         /** @var mixed $httpUserAgentRaw */
         $httpUserAgentRaw = $_SERVER['HTTP_USER_AGENT'] ?? '';
         $httpUserAgent    = is_string($httpUserAgentRaw) ? $httpUserAgentRaw : '';
-        if ($httpUserAgent !== '' && preg_match('/^PiwigoRemoteSync/', $httpUserAgent)) {
-            unset($res['save_visits'], $res['connected_with']);
-        }
-        if ($httpUserAgent === '' || !str_starts_with($httpUserAgent, 'Apache-HttpClient/')) {
-            $res['available_sizes'] = array_keys(ImageStdParams::getDefinedTypeMap());
-        }
-        if ($this->permissionService->isAdmin()) {
-            $res['upload_file_types']      = implode(',', array_unique(array_map(strtolower(...), Config::uploadFormAllTypes() ? Config::fileExtensions() : Config::pictureExtensions())));
-            $res['upload_form_chunk_size'] = Config::uploadFormChunkSize();
-        }
-        return $res;
+
+        $hidePiwigoRemoteFields = $httpUserAgent !== '' && preg_match('/^PiwigoRemoteSync/', $httpUserAgent);
+        $hideAvailableSizes     = $httpUserAgent !== '' && str_starts_with($httpUserAgent, 'Apache-HttpClient/');
+
+        return new GetStatusResult(
+            username:            $this->permissionService->isAGuest() ? 'guest' : stripslashes($currentUser->username),
+            status:              $currentUser->status,
+            theme:               $currentUser->theme,
+            language:            $currentUser->language,
+            pwgToken:            $this->csrfService->getToken(),
+            charset:             StringUtil::getPwgCharset(),
+            currentDatetime:     new \DateTimeImmutable()->format('Y-m-d H:i:s'),
+            version:             AppInfo::VERSION,
+            saveVisits:          $hidePiwigoRemoteFields ? null : $this->activityLogger->isLoggingEnabled(),
+            connectedWith:       $hidePiwigoRemoteFields ? null : $this->session->connectedWith,
+            availableSizes:      $hideAvailableSizes ? null : array_keys(ImageStdParams::getDefinedTypeMap()),
+            uploadFileTypes:     $this->permissionService->isAdmin()
+                ? implode(',', array_unique(array_map(strtolower(...), Config::uploadFormAllTypes() ? Config::fileExtensions() : Config::pictureExtensions())))
+                : null,
+            uploadFormChunkSize: $this->permissionService->isAdmin() ? Config::uploadFormChunkSize() : null,
+        );
     }
 }

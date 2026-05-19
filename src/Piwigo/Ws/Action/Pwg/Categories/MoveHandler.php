@@ -15,6 +15,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 /** `pwg.categories.move` — move virtual albums under a new parent (or root). */
@@ -32,29 +33,21 @@ final readonly class MoveHandler implements WsAction
     ) {
     }
 
-    /**
-     * @param  array<mixed> $params
-     * @return array<string, mixed>|PwgError
-     */
+    /** @param array<mixed> $params */
     #[\Override]
-    public function __invoke(array $params, PwgServer $server): PwgError|array
+    public function __invoke(array $params, PwgServer $server): MoveResult|PwgError
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = MoveParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
-        }
-        if (!is_array($params['category_id'])) {
-            $splitResult           = preg_split('/[\s,;\|]/', is_string($params['category_id']) ? $params['category_id'] : '', -1, PREG_SPLIT_NO_EMPTY);
-            $params['category_id'] = $splitResult !== false ? $splitResult : [];
-        }
-        $params['category_id'] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['category_id']);
-        $categoryIds           = array_filter($params['category_id'], fn (int $v): bool => $v > 0);
-        if (count($categoryIds) === 0) {
-            return new PwgError(403, 'Invalid category_id input parameter, no category to move');
         }
         $categoriesInDb = [];
         $updateCatIds   = [];
-        $parentId       = is_numeric($params['parent']) ? (int) $params['parent'] : 0;
-        foreach ($this->categoryRepository->findByIds(array_map(intval(...), $categoryIds)) as $category) {
+        foreach ($this->categoryRepository->findByIds($input->categoryIds) as $category) {
             $rowId                  = (string) $category->id->value;
             $categoriesInDb[$rowId] = $category;
             $updateCatIds           = array_merge($updateCatIds, array_slice(explode(',', $category->uppercats), 0, -1));
@@ -65,20 +58,20 @@ final readonly class MoveHandler implements WsAction
                 return new PwgError(403, sprintf('Category %s (%u) is not a virtual category, you cannot move it', $renderedName, $category->id->value));
             }
         }
-        if (count($categoriesInDb) !== count($categoryIds)) {
-            $unknownCategoryIds = array_diff($categoryIds, array_keys($categoriesInDb));
+        if (count($categoriesInDb) !== count($input->categoryIds)) {
+            $unknownCategoryIds = array_values(array_diff($input->categoryIds, array_map(intval(...), array_keys($categoriesInDb))));
             return new PwgError(403, sprintf('Category %u does not exist', $unknownCategoryIds[0]));
         }
-        if ($parentId !== 0) {
-            $subcatIds = $this->categoryService->getSubcatIds([$parentId]);
+        if ($input->parentId !== 0) {
+            $subcatIds = $this->categoryService->getSubcatIds([$input->parentId]);
             if (count($subcatIds) === 0) {
                 return new PwgError(403, 'Unknown parent category id');
             }
         }
-        $this->categoryAdminService->moveCategories($categoryIds, $parentId);
+        $this->categoryAdminService->moveCategories($input->categoryIds, $input->parentId);
         $this->userAdminService->invalidateUserCache();
         $catDisplayName = '';
-        foreach ($this->categoryRepository->findUppercatsByIds(array_map(intval(...), $categoryIds)) as $uppercatsStr) {
+        foreach ($this->categoryRepository->findUppercatsByIds($input->categoryIds) as $uppercatsStr) {
             $catDisplayName = $this->htmlService->getCatDisplayNameCache($uppercatsStr, $this->urlGenerator->admin() . '&page=album-');
             $updateCatIds   = array_merge($updateCatIds, array_slice(explode(',', $uppercatsStr), 0, -1));
         }
@@ -90,8 +83,11 @@ final readonly class MoveHandler implements WsAction
             foreach ($subCatWithoutParent as $idSubCat) {
                 $nbSubPhotos += $nbPhotosIn[(string) $idSubCat] ?? 0;
             }
-            $updateCats[] = ['cat_id' => $updateCat, 'nb_sub_photos' => $nbSubPhotos];
+            $updateCats[] = ['cat_id' => (int) $updateCat, 'nb_sub_photos' => $nbSubPhotos];
         }
-        return ['new_ariane_string' => $catDisplayName, 'updated_cats' => $updateCats];
+        return new MoveResult(
+            newArianeString: $catDisplayName,
+            updatedCats:     $updateCats,
+        );
     }
 }

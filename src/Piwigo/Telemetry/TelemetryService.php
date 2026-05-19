@@ -93,124 +93,223 @@ final readonly class TelemetryService
             return;
         }
 
-        $dbCurrentDate = new \DateTimeImmutable()->format('Y-m-d H:i:s');
-
         if (!Config::has('send_piwigo_infos_origin_hash')) {
             $this->configService->confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
         }
 
-        [$containerType, $containerVersion] = StringUtil::getContainerInfo();
+        $pemExtensions = $this->fetchPemExtensions();
+        if ($pemExtensions === null) {
+            $this->retryLater(1 * 60 * 60);
+            $this->mutex->release('send_piwigo_infos');
+            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::getElapsedTime($startTime, StringUtil::getMoment()));
+            return;
+        }
+        $officialExts = $this->indexOfficialExtensions($pemExtensions);
 
-        $piwigoInfos = [
-            'origin_hash' => Config::sendPiwigoInfosOriginHash(),
-            'technical'   => [
-                'php_version'       => PHP_VERSION,
-                'piwigo_version'    => AppInfo::VERSION,
-                'os_version'        => PHP_OS,
-                'container_type'    => $containerType,
-                'container_version' => $containerVersion,
-                'db_version'        => DbInfo::version(),
-                'php_datetime'      => date('Y-m-d H:i:s'),
-                'db_datetime'       => $dbCurrentDate,
-                'graphics_library'  => $this->adminService->getGraphicsLibrary(),
-            ],
-            'general_stats' => $this->adminService->getPwgGeneralStatitics(),
+        $generalStats = $this->buildGeneralStats();
+        [$plugins, $nbPrivatePlugins]               = $this->buildPluginsSnapshot($pemExtensions, $officialExts, $execId);
+        [$themes, $privateThemes]                   = $this->buildThemesSnapshot($pemExtensions, $officialExts, $execId);
+        $themesUsage                                = $this->buildThemesUsage($privateThemes);
+        $generalStats['nb_private_plugins']         = $nbPrivatePlugins;
+        $generalStats['nb_plugins']                 = $nbPrivatePlugins + count($plugins);
+        $generalStats['nb_private_themes']          = count($privateThemes);
+        $generalStats['nb_themes']                  = $generalStats['nb_private_themes'] + count($themes);
+        $defaultTheme                               = Kernel::service(UserService::class)->getDefaultTheme();
+        if (isset($privateThemes[$defaultTheme])) {
+            $defaultTheme = 'private theme';
+        }
+        $generalStats['default_theme']    = $defaultTheme;
+        $generalStats['default_language'] = Kernel::service(UserService::class)->getDefaultLanguage();
+
+        [$activities, $nbActivities]   = $this->buildUserActivities();
+        $activities['system']          = $this->buildSystemActivities();
+        $generalStats['nb_activities'] = $nbActivities;
+
+        $payload = new TelemetryPayload(
+            originHash:     Config::sendPiwigoInfosOriginHash() ?? '',
+            technical:      $this->buildTechnical(),
+            generalStats:   $generalStats,
+            fileExtensions: ($generalStats['nb_photos'] ?? 0) > 0 ? $this->imageRepository->findFileExtensionUsage() : [],
+            plugins:        $plugins,
+            themes:         $themes,
+            themesUsage:    $themesUsage,
+            languagesUsage: $this->userRepository->findLanguageUsage(),
+            activities:     $activities,
+            updates:        $this->buildUpdates(),
+            features:       $this->buildFeatures(),
+            apps:           $this->buildAppsStats(),
+        );
+
+        $updateUrl = $this->configService->confGetParam('send_piwigo_infos_update_url', AppInfo::PROJECT_URL);
+        $url       = (is_scalar($updateUrl) ? (string) $updateUrl : AppInfo::PROJECT_URL) . '/ws.php';
+
+        $getData  = ['method' => 'porg.installs.update', 'origin_hash' => $payload->originHash];
+        $postData = ['data' => json_encode($payload->toArray())];
+
+        $result = '';
+        if (!$this->adminService->fetchRemote($url, $result, $getData, $postData)) {
+            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote on ' . $url . ' method=porg.installs.update has failed');
+            $this->retryLater(24 * 60 * 60);
+        } else {
+            $lastNotice = date('c');
+            $this->configService->confUpdateParam('send_piwigo_infos_last_notice', $lastNotice, true);
+            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote success, new last_notice=' . (Config::sendPiwigoInfosLastNotice() ?? ''));
+        }
+
+        $this->mutex->release('send_piwigo_infos');
+        $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::getElapsedTime($startTime, StringUtil::getMoment()));
+    }
+
+    /** @return array<string, mixed> */
+    private function buildTechnical(): array
+    {
+        $dbCurrentDate                       = new \DateTimeImmutable()->format('Y-m-d H:i:s');
+        [$containerType, $containerVersion]  = StringUtil::getContainerInfo();
+        return [
+            'php_version'       => PHP_VERSION,
+            'piwigo_version'    => AppInfo::VERSION,
+            'os_version'        => PHP_OS,
+            'container_type'    => $containerType,
+            'container_version' => $containerVersion,
+            'db_version'        => DbInfo::version(),
+            'php_datetime'      => date('Y-m-d H:i:s'),
+            'db_datetime'       => $dbCurrentDate,
+            'graphics_library'  => $this->adminService->getGraphicsLibrary(),
         ];
+    }
 
-        $du = $piwigoInfos['general_stats']['disk_usage'] ?? 0;
-        $piwigoInfos['general_stats']['disk_usage']        = intval((is_numeric($du) ? (float) $du : 0.0) / 1024.0);
-        $piwigoInfos['general_stats']['installed_on']      = $this->adminService->getInstallationDate();
-        $piwigoInfos['general_stats']['nb_photos_synced']  = 0;
-        $piwigoInfos['general_stats']['last_photo_synced'] = null;
-        $piwigoInfos['general_stats']['last_photo']        = null;
+    /** @return array<string, mixed> */
+    private function buildGeneralStats(): array
+    {
+        $generalStats = $this->adminService->getPwgGeneralStatitics();
+        $du = $generalStats['disk_usage'] ?? 0;
+        $generalStats['disk_usage']        = intval((is_numeric($du) ? (float) $du : 0.0) / 1024.0);
+        $generalStats['installed_on']      = $this->adminService->getInstallationDate();
+        $generalStats['nb_photos_synced']  = 0;
+        $generalStats['last_photo_synced'] = null;
+        $generalStats['last_photo']        = null;
 
-        if ($piwigoInfos['general_stats']['nb_photos'] > 0) {
+        if (($generalStats['nb_photos'] ?? 0) > 0) {
             if ($this->imageRepository->countWithStorageCategorySet() > 0) {
                 $filesByMethod = $this->imageRepository->findFilesAddedByMethod();
                 $syncFiles = $filesByMethod['sync'] ?? null;
-                $piwigoInfos['general_stats']['nb_photos_synced']  = $syncFiles['nb_files'] ?? 0;
-                $piwigoInfos['general_stats']['last_photo_synced'] = $syncFiles['last_added_on'] ?? null;
+                $generalStats['nb_photos_synced']  = $syncFiles['nb_files'] ?? 0;
+                $generalStats['last_photo_synced'] = $syncFiles['last_added_on'] ?? null;
                 $methodOfLastPhoto = 'sync';
                 if (isset($filesByMethod['api'])
                     && strtotime($filesByMethod['api']['last_added_on']) > strtotime($syncFiles['last_added_on'] ?? '')
                 ) {
                     $methodOfLastPhoto = 'api';
                 }
-                $piwigoInfos['general_stats']['last_photo'] = $filesByMethod[$methodOfLastPhoto]['last_added_on'] ?? null;
+                $generalStats['last_photo'] = $filesByMethod[$methodOfLastPhoto]['last_added_on'] ?? null;
             } else {
-                $piwigoInfos['general_stats']['last_photo'] = $this->imageRepository->findLatestDateAvailable();
+                $generalStats['last_photo'] = $this->imageRepository->findLatestDateAvailable();
             }
-
-            $piwigoInfos['file_extensions'] = $this->imageRepository->findFileExtensionUsage();
         }
+        return $generalStats;
+    }
 
+    /**
+     * Fetch the PEM extensions catalog (eid → metadata). Returns null when the
+     * remote call fails so the caller can defer the upload.
+     *
+     * @return array<int|string, mixed>|null
+     */
+    private function fetchPemExtensions(): ?array
+    {
         $url    = $this->pemUrlResolver->url() . '/api/get_extension_list.php';
         $result = '';
-        $pemExtensions = [];
-        if ($this->adminService->fetchRemote($url, $result) && is_string($result)) {
-            $decoded       = json_decode($result, associative: true);
-            $pemExtensions = is_array($decoded) ? $decoded : [];
+        if (!$this->adminService->fetchRemote($url, $result) || !is_string($result)) {
+            $this->log->info('[sendPiwigoInfos] fetchRemote on ' . $url . ' has failed');
+            return null;
         }
+        $decoded = json_decode($result, associative: true);
+        if (!is_array($decoded) || $decoded === []) {
+            $this->log->info('[sendPiwigoInfos] fetchRemote on ' . $url . ' returned empty catalog');
+            return null;
+        }
+        return $decoded;
+    }
 
-        if ($pemExtensions !== []) {
-            $officialExts = [];
-            foreach ($pemExtensions as $eid => $ext) {
-                if (is_array($ext) && !empty($ext['archive_root_dir'])) {
-                    $idxCat     = $ext['idx_category'] ?? null;
-                    $archiveDir = $ext['archive_root_dir'];
-                    if (is_string($idxCat) || is_int($idxCat)) {
-                        $officialExts[$idxCat][is_string($archiveDir) ? $archiveDir : ''] = $eid;
-                    }
+    /**
+     * Index PEM extensions by (idx_category, archive_root_dir) for the
+     * plugin/theme codename → eid resolution path.
+     *
+     * @param  array<int|string, mixed>            $pemExtensions
+     * @return array<int|string, array<string, int|string>>
+     */
+    private function indexOfficialExtensions(array $pemExtensions): array
+    {
+        $officialExts = [];
+        foreach ($pemExtensions as $eid => $ext) {
+            if (is_array($ext) && !empty($ext['archive_root_dir'])) {
+                $idxCat     = $ext['idx_category'] ?? null;
+                $archiveDir = $ext['archive_root_dir'];
+                if ((is_string($idxCat) || is_int($idxCat)) && (is_string($archiveDir) || is_int($archiveDir))) {
+                    $officialExts[$idxCat][(string) $archiveDir] = $eid;
                 }
             }
-        } else {
-            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote on ' . $url . ' has failed');
-            $this->retryLater(1 * 60 * 60);
-            $this->mutex->release('send_piwigo_infos');
-            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::getElapsedTime($startTime, StringUtil::getMoment()));
-            return;
         }
+        return $officialExts;
+    }
 
-        $plugins = Kernel::service(Plugins::class);
-        $piwigoInfos['general_stats']['nb_private_plugins'] = 0;
-        $piwigoInfos['plugins'] = [];
+    /**
+     * @param  array<int|string, mixed>            $pemExtensions
+     * @param  array<int|string, array<string, int|string>> $officialExts
+     * @return array{0: list<string>, 1: int}
+     */
+    private function buildPluginsSnapshot(array $pemExtensions, array $officialExts, string|false $execId): array
+    {
+        $plugins        = Kernel::service(Plugins::class);
+        $entries        = [];
+        $nbPrivate      = 0;
+        $pluginsCat     = Config::pemPluginsCategory();
         foreach ($plugins->db_plugins_by_id as $plugin) {
             $pluginId      = is_string($plugin['id'] ?? null) ? $plugin['id'] : '';
             $pluginState   = is_string($plugin['state'] ?? null) ? $plugin['state'] : '';
             $pluginVersion = is_string($plugin['version'] ?? null) ? $plugin['version'] : '';
-            if ($pluginState === 'active') {
-                $eid      = null;
-                $fsPlugin = $plugins->fs_plugins[$pluginId] ?? null;
-                if (is_array($fsPlugin)) {
-                    $uri = is_string($fsPlugin['uri'] ?? null) ? $fsPlugin['uri'] : '';
-                    if (preg_match('/eid=(\d+)/', $uri, $matches) && isset($pemExtensions[$matches[1]])) {
-                        $eid = $matches[1];
-                    }
-                }
-                if ($eid === null) {
-                    $eid = $officialExts[Config::pemPluginsCategory()][$pluginId] ?? null;
-                }
-                if ($eid === null || $eid === '') {
-                    $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] ' . $pluginId . ' is a private plugin');
-                    $piwigoInfos['general_stats']['nb_private_plugins']++;
-                    continue;
-                }
-                $pemExt   = is_array($pemExtensions[$eid] ?? null) ? $pemExtensions[$eid] : [];
-                $codename = is_string($pemExt['archive_root_dir'] ?? null) ? $pemExt['archive_root_dir'] : $pluginId;
-                $piwigoInfos['plugins'][] = '#' . (string) $eid . '/' . $codename . '/' . $pluginVersion;
+            if ($pluginState !== 'active') {
+                continue;
             }
+            $eid      = null;
+            $fsPlugin = $plugins->fs_plugins[$pluginId] ?? null;
+            if (is_array($fsPlugin)) {
+                $uri = is_string($fsPlugin['uri'] ?? null) ? $fsPlugin['uri'] : '';
+                if (preg_match('/eid=(\d+)/', $uri, $matches) && isset($pemExtensions[$matches[1]])) {
+                    $eid = $matches[1];
+                }
+            }
+            if ($eid === null) {
+                $eid = $officialExts[$pluginsCat][$pluginId] ?? null;
+            }
+            if ($eid === null || $eid === '') {
+                $this->log->info('[sendPiwigoInfos][exec=' . (string) $execId . '] ' . $pluginId . ' is a private plugin');
+                $nbPrivate++;
+                continue;
+            }
+            $pemExt    = is_array($pemExtensions[$eid] ?? null) ? $pemExtensions[$eid] : [];
+            $codename  = is_string($pemExt['archive_root_dir'] ?? null) ? $pemExt['archive_root_dir'] : $pluginId;
+            $entries[] = '#' . (string) $eid . '/' . $codename . '/' . $pluginVersion;
         }
-        $piwigoInfos['general_stats']['nb_plugins'] = $piwigoInfos['general_stats']['nb_private_plugins'] + count($piwigoInfos['plugins']);
+        return [$entries, $nbPrivate];
+    }
 
-        $themes  = Kernel::service(Themes::class);
-        $piwigoInfos['general_stats']['nb_private_themes'] = 0;
-        $piwigoInfos['themes'] = [];
+    /**
+     * @param  array<int|string, mixed>            $pemExtensions
+     * @param  array<int|string, array<string, int|string>> $officialExts
+     * @return array{0: list<string>, 1: array<string, int>}
+     */
+    private function buildThemesSnapshot(array $pemExtensions, array $officialExts, string|false $execId): array
+    {
+        $themesSvc     = Kernel::service(Themes::class);
+        $entries       = [];
         $privateThemes = [];
-        foreach ($themes->db_themes_by_id as $theme) {
+        $themesCat     = Config::pemThemesCategory();
+        foreach ($themesSvc->db_themes_by_id as $theme) {
             $themeId      = is_string($theme['id'] ?? null) ? $theme['id'] : '';
             $themeVersion = is_string($theme['version'] ?? null) ? $theme['version'] : '';
             $eid          = null;
-            $fsTheme = $themes->fs_themes[$themeId] ?? null;
+            $fsTheme = $themesSvc->fs_themes[$themeId] ?? null;
             if (is_array($fsTheme)) {
                 $uri = is_string($fsTheme['uri'] ?? null) ? $fsTheme['uri'] : '';
                 if (preg_match('/eid=(\d+)/', $uri, $matches) && isset($pemExtensions[$matches[1]])) {
@@ -218,50 +317,56 @@ final readonly class TelemetryService
                 }
             }
             if ($eid === null) {
-                $eid = $officialExts[Config::pemThemesCategory()][$themeId] ?? null;
+                $eid = $officialExts[$themesCat][$themeId] ?? null;
             }
             if ($eid === null || $eid === '') {
-                $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] ' . $themeId . ' is a private theme');
+                $this->log->info('[sendPiwigoInfos][exec=' . (string) $execId . '] ' . $themeId . ' is a private theme');
                 $privateThemes[$themeId] = 1;
                 continue;
             }
-            $pemExt   = is_array($pemExtensions[$eid] ?? null) ? $pemExtensions[$eid] : [];
-            $codename = is_string($pemExt['archive_root_dir'] ?? null) ? $pemExt['archive_root_dir'] : $themeId;
-            $piwigoInfos['themes'][] = '#' . (string) $eid . '/' . $codename . '/' . $themeVersion;
+            $pemExt    = is_array($pemExtensions[$eid] ?? null) ? $pemExtensions[$eid] : [];
+            $codename  = is_string($pemExt['archive_root_dir'] ?? null) ? $pemExt['archive_root_dir'] : $themeId;
+            $entries[] = '#' . (string) $eid . '/' . $codename . '/' . $themeVersion;
         }
-        $piwigoInfos['general_stats']['nb_private_themes'] = count(array_keys($privateThemes));
-        $piwigoInfos['general_stats']['nb_themes']         = $piwigoInfos['general_stats']['nb_private_themes'] + count($piwigoInfos['themes']);
+        return [$entries, $privateThemes];
+    }
 
-        $defaultTheme = Kernel::service(UserService::class)->getDefaultTheme();
-        if (isset($privateThemes[$defaultTheme])) {
-            $defaultTheme = 'private theme';
-        }
-        $piwigoInfos['general_stats']['default_theme'] = $defaultTheme;
-
-        $piwigoInfos['themes_usage'] = [];
+    /**
+     * @param  array<string, int> $privateThemes
+     * @return array<string, int>
+     */
+    private function buildThemesUsage(array $privateThemes): array
+    {
+        $usage = [];
         foreach ($this->userRepository->findThemeUsage() as $themeUsed => $counter) {
             if (isset($privateThemes[$themeUsed])) {
                 $themeUsed = 'private theme';
             }
-            $piwigoInfos['themes_usage'][$themeUsed] = ($piwigoInfos['themes_usage'][$themeUsed] ?? 0) + $counter;
+            $usage[$themeUsed] = ($usage[$themeUsed] ?? 0) + $counter;
         }
+        return $usage;
+    }
 
-        $piwigoInfos['general_stats']['default_language'] = Kernel::service(UserService::class)->getDefaultLanguage();
-        $piwigoInfos['languages_usage'] = $this->userRepository->findLanguageUsage();
-
-        $piwigoInfos['activities']                      = [];
-        $piwigoInfos['general_stats']['nb_activities']  = 0;
-
+    /** @return array{0: array<string, array<string, mixed>>, 1: int} */
+    private function buildUserActivities(): array
+    {
+        $activities    = [];
+        $nbActivities  = 0;
         foreach ($this->activityRepository->findUserActivityGroupCounts() as $activity) {
-            $piwigoInfos['general_stats']['nb_activities'] += is_numeric($activity['counter']) ? (int) $activity['counter'] : 0;
+            $nbActivities += is_numeric($activity['counter']) ? (int) $activity['counter'] : 0;
             $objectKey = is_string($activity['object'] ?? null) ? $activity['object'] : '';
             $actionKey = is_string($activity['action'] ?? null) ? $activity['action'] : '';
-            if (!isset($piwigoInfos['activities'][$objectKey])) {
-                $piwigoInfos['activities'][$objectKey] = [];
+            if (!isset($activities[$objectKey])) {
+                $activities[$objectKey] = [];
             }
-            $piwigoInfos['activities'][$objectKey][$actionKey] = $activity['counter'];
+            $activities[$objectKey][$actionKey] = $activity['counter'];
         }
+        return [$activities, $nbActivities];
+    }
 
+    /** @return array<string, array<string, mixed>> */
+    private function buildSystemActivities(): array
+    {
         $labelForSystemObjectId = [1 => 'core', 2 => 'plugin', 3 => 'theme'];
         $systemActivities = [];
         foreach ($this->activityRepository->findSystemActivityGroupCounts() as $activity) {
@@ -273,14 +378,18 @@ final readonly class TelemetryService
             }
             $systemActivities[$labelKey][$actionKey] = $activity['counter'];
         }
-        $piwigoInfos['activities']['system'] = $systemActivities;
+        return $systemActivities;
+    }
 
-        $updates = $this->activityRepository->findCoreUpdateActivities(ActivitySystem::Core);
-        foreach ($updates as $update) {
+    /** @return list<array<string, mixed>> */
+    private function buildUpdates(): array
+    {
+        $out = [];
+        foreach ($this->activityRepository->findCoreUpdateActivities(ActivitySystem::Core) as $update) {
             $detailsDecoded = json_decode(is_string($update['details']) ? $update['details'] : '', associative: true);
             $details        = is_array($detailsDecoded) ? $detailsDecoded : [];
             if (isset($details['from_version']) && isset($details['to_version'])) {
-                $piwigoInfos['updates'][] = [
+                $out[] = [
                     'action'       => $update['action'],
                     'occured_on'   => $update['occured_on'],
                     'from_version' => $details['from_version'],
@@ -288,12 +397,26 @@ final readonly class TelemetryService
                 ];
             }
         }
+        return $out;
+    }
 
+    /** @return array<string, string> */
+    private function buildFeatures(): array
+    {
         $watermark = ImageStdParams::getWatermark();
-        $piwigoInfos['features'] = ['use_watermark' => !empty($watermark->file) ? 'yes' : 'no'];
+        return [
+            'use_watermark'     => !empty($watermark->file) ? 'yes' : 'no',
+            'activate_comments' => Config::activateComments() ? 'yes' : 'no',
+            'rate'              => Config::rateEnabled() ? 'yes' : 'no',
+            'log'               => Config::logConf() ? 'yes' : 'no',
+            'history_guest'     => Config::historyGuest() ? 'yes' : 'no',
+            'history_admin'     => Config::historyAdmin() ? 'yes' : 'no',
+        ];
+    }
 
-        $activities = $this->activityRepository->findAppUserAgentStats();
-        $apps       = [];
+    /** @return array<string, array<string, mixed>> */
+    private function buildAppsStats(): array
+    {
         $appsPattern = [
             'Piwigo iOS'          => '/^Piwigo\/\d+ CFNetwork/',
             'Piwigo NG'           => '/^Dart\/[\d\.]+ \(dart:io\)$/',
@@ -307,50 +430,28 @@ final readonly class TelemetryService
             'WordPress'           => '/WordPress/',
             'pLoader'             => '/pLoader/',
         ];
-        foreach ($activities as $activity) {
+        $apps = [];
+        foreach ($this->activityRepository->findAppUserAgentStats() as $activity) {
+            $userAgent      = is_string($activity['user_agent'] ?? null) ? $activity['user_agent'] : '';
+            $activityCounter = is_numeric($activity['counter'] ?? null) ? (int) $activity['counter'] : 0;
+            $firstEncounter  = is_string($activity['first_encounter'] ?? null) ? $activity['first_encounter'] : '';
+            $lastEncounter   = is_string($activity['last_encounter'] ?? null) ? $activity['last_encounter'] : '';
             foreach ($appsPattern as $appName => $pattern) {
-                if (preg_match($pattern, is_string($activity['user_agent'] ?? null) ? $activity['user_agent'] : '')) {
-                    $existingApp = $apps[$appName] ?? [];
-                    /** @psalm-var mixed $existingCounter */
-                    $existingCounter = $existingApp['counter'] ?? null;
-                    $existingCounterInt = is_numeric($existingCounter) ? (int) $existingCounter : 0;
-                    /** @psalm-var mixed $activityCounterRaw */
-                    $activityCounterRaw = $activity['counter'] ?? null;
-                    $activityCounter    = is_numeric($activityCounterRaw) ? (int) $activityCounterRaw : 0;
-                    $apps[$appName]['counter'] = $existingCounterInt + $activityCounter;
-                    if (!isset($apps[$appName]['first_encounter']) || strtotime(is_scalar($apps[$appName]['first_encounter']) ? (string) $apps[$appName]['first_encounter'] : '') > strtotime(is_string($activity['first_encounter'] ?? null) ? $activity['first_encounter'] : '')) {
-                        $apps[$appName]['first_encounter'] = $activity['first_encounter'];
-                    }
-                    if (!isset($apps[$appName]['last_encounter']) || strtotime(is_scalar($apps[$appName]['last_encounter']) ? (string) $apps[$appName]['last_encounter'] : '') < strtotime(is_string($activity['last_encounter'] ?? null) ? $activity['last_encounter'] : '')) {
-                        $apps[$appName]['last_encounter'] = $activity['last_encounter'];
-                    }
+                if (preg_match($pattern, $userAgent) !== 1) {
+                    continue;
+                }
+                $existingCounter = is_numeric($apps[$appName]['counter'] ?? null) ? (int) $apps[$appName]['counter'] : 0;
+                $apps[$appName]['counter'] = $existingCounter + $activityCounter;
+                $existingFirst = is_string($apps[$appName]['first_encounter'] ?? null) ? $apps[$appName]['first_encounter'] : '';
+                if ($existingFirst === '' || strtotime($existingFirst) > strtotime($firstEncounter)) {
+                    $apps[$appName]['first_encounter'] = $firstEncounter;
+                }
+                $existingLast = is_string($apps[$appName]['last_encounter'] ?? null) ? $apps[$appName]['last_encounter'] : '';
+                if ($existingLast === '' || strtotime($existingLast) < strtotime($lastEncounter)) {
+                    $apps[$appName]['last_encounter'] = $lastEncounter;
                 }
             }
         }
-        $piwigoInfos['apps'] = $apps;
-
-        $piwigoInfos['features']['activate_comments'] = Config::activateComments() ? 'yes' : 'no';
-        $piwigoInfos['features']['rate']              = Config::rateEnabled() ? 'yes' : 'no';
-        $piwigoInfos['features']['log']               = Config::logConf() ? 'yes' : 'no';
-        $piwigoInfos['features']['history_guest']     = Config::historyGuest() ? 'yes' : 'no';
-        $piwigoInfos['features']['history_admin']     = Config::historyAdmin() ? 'yes' : 'no';
-
-        $updateUrl = $this->configService->confGetParam('send_piwigo_infos_update_url', AppInfo::PROJECT_URL);
-        $url = (is_scalar($updateUrl) ? (string) $updateUrl : AppInfo::PROJECT_URL) . '/ws.php';
-
-        $getData  = ['method' => 'porg.installs.update', 'origin_hash' => $piwigoInfos['origin_hash']];
-        $postData = ['data' => json_encode($piwigoInfos)];
-
-        if (!$this->adminService->fetchRemote($url, $result, $getData, $postData)) {
-            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote on ' . $url . ' method=porg.installs.update has failed');
-            $this->retryLater(24 * 60 * 60);
-        } else {
-            $lastNotice = date('c');
-            $this->configService->confUpdateParam('send_piwigo_infos_last_notice', $lastNotice, true);
-            $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] fetchRemote success, new last_notice=' . (Config::sendPiwigoInfosLastNotice() ?? ''));
-        }
-
-        $this->mutex->release('send_piwigo_infos');
-        $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::getElapsedTime($startTime, StringUtil::getMoment()));
+        return $apps;
     }
 }

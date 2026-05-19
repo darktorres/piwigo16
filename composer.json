@@ -39,6 +39,7 @@
     "vlucas/phpdotenv": "^5.6"
   },
   "require-dev": {
+    "brianium/paratest": "^7.22",
     "devizzent/cebe-php-openapi": "^1.0",
     "efabrica/phpstan-latte": "0.99.*",
     "laravel/pint": "^1.18",
@@ -95,7 +96,8 @@
     "precompile:templates": "@php tools/precompile_templates.php",
     "piwigo:lint": "@php tools/plugin-lint.php",
     "openapi:dump": "@php tools/openapi-dump.php",
-    "test": "@php vendor/bin/phpunit"
+    "test": "@php vendor/bin/phpunit",
+    "test:parallel": "tools/test-parallel.sh"
   },
   "scripts-descriptions": {
     "lint": "Run all PHP/Latte lints (pint --test + latte-lint)",
@@ -107,7 +109,8 @@
     "precompile:templates": "Warm Latte compile cache for every bundled .latte (deploy/CI)",
     "piwigo:lint": "Scan plugin source for forbidden legacy patterns (pwg_query, $GLOBALS, *_TABLE, trigger_change …)",
     "openapi:dump": "Build the live OpenAPI 3.1 spec and emit it on stdout — paired with `npm run lint:openapi` for redocly CI gate",
-    "test": "Run PHPUnit"
+    "test": "Run PHPUnit",
+    "test:parallel": "Run every test suite concurrently (IntegrationParallelDb + IntegrationParallelHttp via paratest, IntegrationSerial via phpunit, Unit via paratest) and exit non-zero if any fails"
   },
   "repositories": [
     {

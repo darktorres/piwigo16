@@ -6,9 +6,6 @@ namespace Piwigo\Tests\Integration;
 
 final class InstallChainTest extends IntegrationTestCase
 {
-    /** Absolute path to the test sentinel file (matches TestMode logic). */
-    private const string INSTALLED_STAMP = __DIR__ . '/../../local/.installed.test';
-
     #[\Override]
     protected function setUp(): void
     {
@@ -18,8 +15,9 @@ final class InstallChainTest extends IntegrationTestCase
         // install.php builds its own schema; ours diverges from the
         // template once it runs. Force a full reload on the next setUp.
         $this->markSchemaDirty();
-        if (file_exists(self::INSTALLED_STAMP)) {
-            unlink(self::INSTALLED_STAMP);
+        $stamp = $this->installedStampPath();
+        if (file_exists($stamp)) {
+            unlink($stamp);
         }
     }
 
@@ -56,7 +54,7 @@ final class InstallChainTest extends IntegrationTestCase
             ]),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTPHEADER     => self::TEST_HEADER,
+            CURLOPT_HTTPHEADER     => $this->testHeader(),
         ]);
         $execResult = curl_exec($ch);
         $body       = is_string($execResult) ? $execResult : '';
@@ -78,6 +76,15 @@ final class InstallChainTest extends IntegrationTestCase
         );
         self::assertSame('17', $version, 'install must write piwigo_db_version = 17');
 
-        self::assertFileExists(self::INSTALLED_STAMP, 'index.php?/install must create the .installed.test sentinel');
+        self::assertFileExists(
+            $this->installedStampPath(),
+            'index.php?/install must create the .installed.test sentinel'
+        );
+    }
+
+    /** Resolve the sentinel path through TestMode so paratest workers find their own file. */
+    private function installedStampPath(): string
+    {
+        return __DIR__ . '/../../local/' . \Piwigo\Config\TestMode::installedStamp();
     }
 }

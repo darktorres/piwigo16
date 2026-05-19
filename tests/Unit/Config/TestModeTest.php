@@ -59,6 +59,19 @@ final class TestModeTest extends TestCase
         self::assertFalse(TestMode::isActive());
     }
 
+    public function test_isActive_true_for_paratest_worker_header(): void
+    {
+        $_SERVER['HTTP_X_PIWIGO_ENV'] = 'test-w3';
+        unset($_SERVER['REMOTE_ADDR']);
+        self::assertTrue(TestMode::isActive());
+    }
+
+    public function test_isActive_rejects_malformed_worker_header(): void
+    {
+        $_SERVER['HTTP_X_PIWIGO_ENV'] = 'test-w../../etc/passwd';
+        self::assertFalse(TestMode::isActive());
+    }
+
     public function test_envFile_reflects_active_state(): void
     {
         $_SERVER['HTTP_X_PIWIGO_ENV'] = 'test';
@@ -68,6 +81,12 @@ final class TestModeTest extends TestCase
         self::assertSame('.env', TestMode::envFile());
     }
 
+    public function test_envFile_uses_per_worker_suffix(): void
+    {
+        $_SERVER['HTTP_X_PIWIGO_ENV'] = 'test-w2';
+        self::assertSame('.env.test-w2', TestMode::envFile());
+    }
+
     public function test_installedStamp_reflects_active_state(): void
     {
         $_SERVER['HTTP_X_PIWIGO_ENV'] = 'test';
@@ -75,5 +94,11 @@ final class TestModeTest extends TestCase
 
         unset($_SERVER['HTTP_X_PIWIGO_ENV']);
         self::assertSame('.installed', TestMode::installedStamp());
+    }
+
+    public function test_installedStamp_uses_per_worker_suffix(): void
+    {
+        $_SERVER['HTTP_X_PIWIGO_ENV'] = 'test-w5';
+        self::assertSame('.installed.test-w5', TestMode::installedStamp());
     }
 }

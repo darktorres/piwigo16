@@ -17,8 +17,30 @@ final class WsApiTest extends IntegrationTestCase
 {
     private const string FIXTURE = __DIR__ . '/../../dev/fixtures/piwigo-17.0.sql';
 
+    /**
+     * Shared curl handle reused across every test in this class so
+     * libcurl keeps the underlying TCP connection to Apache alive
+     * (HTTP keep-alive) instead of reconnecting per request. The
+     * handle is reset (not recreated) between calls.
+     */
+    private static ?\CurlHandle $ch = null;
+
     /** @var non-empty-string */
     private string $cookieJar = '/tmp/piwigo_ws_test_default.txt';
+
+    #[\Override]
+    public static function setUpBeforeClass(): void
+    {
+        $ch = curl_init();
+        self::assertNotFalse($ch, 'curl_init failed');
+        self::$ch = $ch;
+    }
+
+    #[\Override]
+    public static function tearDownAfterClass(): void
+    {
+        self::$ch = null;
+    }
 
     #[\Override]
     protected function setUp(): void
@@ -26,6 +48,11 @@ final class WsApiTest extends IntegrationTestCase
         $this->setUpConnectionFromEnv();
         $this->requireBaseUrl();
         $this->cookieJar = sys_get_temp_dir() . '/piwigo_ws_test_' . (int) getmypid() . '.txt';
+        // Start each test with a clean cookie file so logged-in sessions
+        // do not leak across tests reusing the same curl handle.
+        if (file_exists($this->cookieJar)) {
+            unlink($this->cookieJar);
+        }
         $this->resetDatabaseFast(self::FIXTURE);
         $this->markTestInstalled();
     }
@@ -104,18 +131,18 @@ final class WsApiTest extends IntegrationTestCase
     {
         // Piwigo may return HTTP 401 or JSON stat='fail' for unauthenticated admin calls.
         $url = $this->baseUrl . '/index.php?/ws&method=pwg.users.getList&format=json';
-        $chRaw = curl_init($url);
-        self::assertNotFalse($chRaw, 'curl_init failed');
-        $ch = $chRaw;
+        $ch = self::$ch;
+        self::assertNotNull($ch);
+        curl_reset($ch);
         curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTPHEADER     => self::TEST_HEADER,
+            CURLOPT_HTTPHEADER     => $this->testHeader(),
         ]);
         $execResult = curl_exec($ch);
         $body   = is_string($execResult) ? $execResult : '';
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        unset($ch);
         $decoded = json_decode($body, true);
         $stat = is_array($decoded) ? (is_string($decoded['stat'] ?? null) ? $decoded['stat'] : null) : null;
         self::assertTrue(
@@ -203,20 +230,22 @@ final class WsApiTest extends IntegrationTestCase
     }
 
     /**
+     * @param non-empty-string $url
      * @param array<string,mixed> $postFields
      * @return array<mixed>
      */
     private function curlRequest(string $url, bool $post, array $postFields): array
     {
-        $chRaw = curl_init($url);
-        self::assertNotFalse($chRaw, 'curl_init failed');
-        $ch = $chRaw;
+        $ch = self::$ch;
+        self::assertNotNull($ch);
+        curl_reset($ch);
         $opts = [
+            CURLOPT_URL            => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_COOKIEFILE     => $this->cookieJar,
             CURLOPT_COOKIEJAR      => $this->cookieJar,
-            CURLOPT_HTTPHEADER     => self::TEST_HEADER,
+            CURLOPT_HTTPHEADER     => $this->testHeader(),
         ];
         if ($post) {
             $opts[CURLOPT_POST] = true;
@@ -226,7 +255,6 @@ final class WsApiTest extends IntegrationTestCase
         $execResult = curl_exec($ch);
         $body = is_string($execResult) ? $execResult : '';
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        unset($ch);
 
         self::assertSame(200, $status, "Expected HTTP 200 from $url");
         $decoded = json_decode($body, true);

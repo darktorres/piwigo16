@@ -16,11 +16,20 @@ final class ConfigLoaderTest extends TestCase
     /** @var array<string, string|false> */
     private array $envBackup = [];
 
+    private mixed $headerBackup = null;
+
     private const array TOUCHED_VARS = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE'];
 
     #[\Override]
     protected function setUp(): void
     {
+        // Under paratest, bootstrap rewrites the header to "test-w<N>"
+        // so ConfigLoader::loadEnv() would default to .env.test-w<N>.
+        // Pin the header to plain "test" so the assertions about .env.test
+        // hold, then restore in tearDown.
+        $this->headerBackup = $_SERVER['HTTP_X_PIWIGO_ENV'] ?? null;
+        $_SERVER['HTTP_X_PIWIGO_ENV'] = 'test';
+
         $this->tmpDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'piwigo-config-loader-test-' . uniqid();
         mkdir($this->tmpDir, 0o755, true);
 
@@ -56,6 +65,12 @@ final class ConfigLoaderTest extends TestCase
                 $_ENV[$k]    = $original;
                 $_SERVER[$k] = $original;
             }
+        }
+
+        if ($this->headerBackup === null) {
+            unset($_SERVER['HTTP_X_PIWIGO_ENV']);
+        } else {
+            $_SERVER['HTTP_X_PIWIGO_ENV'] = $this->headerBackup;
         }
     }
 

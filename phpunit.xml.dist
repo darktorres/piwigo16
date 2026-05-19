@@ -10,8 +10,25 @@
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>
-        <testsuite name="Integration">
-            <directory>tests/Integration</directory>
+        <!-- Integration tests parallelisable under paratest. Each worker
+             gets a per-worker database + .env.test-w<N> + .installed.test-w<N>
+             (TEST_TOKEN-driven, see tests/bootstrap.php + TestMode regex).
+             Pure-DB tests address the worker DB directly; HTTP-driven
+             tests forward the worker's X-Piwigo-Env header so Apache reads
+             the same per-worker .env when serving the request. -->
+        <testsuite name="IntegrationParallel">
+            <directory>tests/Integration/Repository</directory>
+            <directory>tests/Integration/Job</directory>
+            <file>tests/Integration/ContainerSmokeTest.php</file>
+            <file>tests/Integration/HistorySearchTest.php</file>
+            <file>tests/Integration/WsApiTest.php</file>
+        </testsuite>
+        <!-- Install/upgrade lifecycle: each test starts from no
+             installation and writes .env credentials. Must run serially
+             with the default .env.test. -->
+        <testsuite name="IntegrationSerial">
+            <file>tests/Integration/InstallChainTest.php</file>
+            <file>tests/Integration/UpgradeChainTest.php</file>
         </testsuite>
     </testsuites>
 </phpunit>

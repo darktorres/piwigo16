@@ -50,4 +50,5 @@ dist/
 # Local env (DB credentials, never commit). .env.example is the committed template.
 .env
 .env.test
+.env.test-w*
 .env.*.local

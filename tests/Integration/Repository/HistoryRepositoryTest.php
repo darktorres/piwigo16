@@ -57,11 +57,28 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         self::assertSame($start + 2, $this->repo->countAll());
     }
 
+    /**
+     * F8-b regression guard: fk_history_user_id ON DELETE CASCADE — the
+     * user's history rows must disappear when the user is deleted.
+     */
+    public function test_user_delete_cascades_to_history(): void
+    {
+        $this->repo->insertLog(3, '127.0.0.1', null, null, null, null, null, null, null, null);
+        $this->repo->insertLog(3, '127.0.0.1', null, null, null, null, null, null, null, null);
+        self::assertSame(2, $this->countByUserId(3), 'precondition');
+
+        $this->conn->executeStatement('DELETE FROM piwigo_users WHERE id = 3');
+
+        self::assertSame(0, $this->countByUserId(3));
+    }
+
+    /**
+     * Placed last in source order so the post-DDL `markSchemaDirty()` lands
+     * at a class boundary — the next class's setUp re-clones from the
+     * template anyway, so the dirty flag costs nothing extra.
+     */
     public function test_extendSectionEnum_alters_enum_values(): void
     {
-        // ALTER TABLE … CHANGE rewrites the column DDL — the fast template
-        // reset only refreshes data, so flag the schema dirty so the next
-        // test reloads the fixture from scratch.
         $this->markSchemaDirty();
 
         $newEnumValues = ['categories', 'tags', 'search', 'list', 'favorites',
@@ -76,21 +93,6 @@ final class HistoryRepositoryTest extends IntegrationTestCase
             'SELECT section FROM piwigo_history WHERE user_id = 3 ORDER BY id DESC LIMIT 1'
         )->fetchOne();
         self::assertSame('custom_section', $section);
-    }
-
-    /**
-     * F8-b regression guard: fk_history_user_id ON DELETE CASCADE — the
-     * user's history rows must disappear when the user is deleted.
-     */
-    public function test_user_delete_cascades_to_history(): void
-    {
-        $this->repo->insertLog(3, '127.0.0.1', null, null, null, null, null, null, null, null);
-        $this->repo->insertLog(3, '127.0.0.1', null, null, null, null, null, null, null, null);
-        self::assertSame(2, $this->countByUserId(3), 'precondition');
-
-        $this->conn->executeStatement('DELETE FROM piwigo_users WHERE id = 3');
-
-        self::assertSame(0, $this->countByUserId(3));
     }
 
     private function countByUserId(int $userId): int

@@ -12,10 +12,18 @@ final class InstallSentinelTest extends TestCase
 {
     private string $stampPath = '';
     private Paths $paths;
+    private mixed $headerBackup = null;
 
     #[\Override]
     protected function setUp(): void
     {
+        // Under paratest, bootstrap rewrites the header to "test-w<N>"
+        // and InstallSentinel would read `.installed.test-w<N>`. Pin the
+        // header to plain "test" for this test's assertions about
+        // `.installed.test`, then restore in tearDown.
+        $this->headerBackup = $_SERVER['HTTP_X_PIWIGO_ENV'] ?? null;
+        $_SERVER['HTTP_X_PIWIGO_ENV'] = 'test';
+
         // tests/bootstrap.php sets test mode → InstallSentinel uses
         // local/.installed.test instead of local/.installed. Construct
         // a Paths rooted at a per-process tmp sandbox so the stamp file
@@ -35,6 +43,11 @@ final class InstallSentinelTest extends TestCase
     protected function tearDown(): void
     {
         InstallSentinel::markUninstalled($this->paths);
+        if ($this->headerBackup === null) {
+            unset($_SERVER['HTTP_X_PIWIGO_ENV']);
+        } else {
+            $_SERVER['HTTP_X_PIWIGO_ENV'] = $this->headerBackup;
+        }
     }
 
     public function test_isInstalled_false_when_stamp_missing(): void

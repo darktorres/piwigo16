@@ -34,7 +34,7 @@ final class UpgradeChainTest extends IntegrationTestCase
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => false,
-            CURLOPT_HTTPHEADER     => self::TEST_HEADER,
+            CURLOPT_HTTPHEADER     => $this->testHeader(),
         ]);
         $execResult = curl_exec($ch);
         $body       = is_string($execResult) ? $execResult : '';
@@ -58,7 +58,7 @@ final class UpgradeChainTest extends IntegrationTestCase
             ]),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTPHEADER     => self::TEST_HEADER,
+            CURLOPT_HTTPHEADER     => $this->testHeader(),
         ]);
         curl_exec($ch);
         $statusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);

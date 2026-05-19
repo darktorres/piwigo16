@@ -45,7 +45,7 @@ final readonly class SetInfoHandler implements WsAction
             if (!in_array($params['status'], ['private', 'public'])) {
                 return new PwgError(WsError::InvalidParam->value, 'Invalid status, only public/private');
             }
-            if ($params['status'] !== $category['status']) {
+            if ($params['status'] !== $category->status->value) {
                 $this->categoryAdminService->setCatStatus([$categoryId], is_string($params['status']) ? $params['status'] : '');
             }
         }
@@ -56,7 +56,9 @@ final readonly class SetInfoHandler implements WsAction
                 return new PwgError(WsError::InvalidParam->value, 'Invalid param ' . $paramName . ' : ' . $paramValStr);
             }
         }
-        if (!empty($params['visible']) && ($params['visible'] !== $category['visible'])) {
+        $paramVisible = $params['visible'] ?? null;
+        $paramVisibleBool = is_bool($paramVisible) ? $paramVisible : (is_string($paramVisible) ? strtolower($paramVisible) === 'true' : null);
+        if (!empty($params['visible']) && $paramVisibleBool !== null && $paramVisibleBool !== $category->visible) {
             $this->categoryAdminService->setCatVisible([$categoryId], is_string($params['visible']) ? $params['visible'] : (is_bool($params['visible']) ? $params['visible'] : false));
         }
         $infoColumns   = ['name', 'comment', 'commentable'];

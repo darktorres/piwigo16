@@ -513,22 +513,22 @@ final readonly class CategoryAdminService
         if (($parentId !== null && $parentId !== '' && $parentId !== 0) && is_numeric($parentId)) {
             $parent = $this->categoryRepository->findCategoryById((int) $parentId);
             if ($parent !== null) {
-                $insert['id_uppercat'] = $parent['id'];
-                $insert['global_rank'] = (is_string($parent['global_rank'] ?? null) ? $parent['global_rank'] : '') . '.' . (string) $rank;
-                if (isset($parent['visible']) && !BoolUtil::fromMixed($parent['visible'])) {
+                $insert['id_uppercat'] = $parent->id->value;
+                $insert['global_rank'] = ($parent->globalRank ?? '') . '.' . (string) $rank;
+                if (!$parent->visible) {
                     $insert['visible'] = 0;
                 }
-                if ($parent['status'] === 'private') {
+                if ($parent->status === \Piwigo\Common\Enum\Privacy::Private) {
                     $insert['status'] = 'private';
                 }
-                $uppercatsPrefix = (is_string($parent['uppercats'] ?? null) ? $parent['uppercats'] : '') . ',';
+                $uppercatsPrefix = $parent->uppercats . ',';
             }
         }
         $insertedId = $this->categoryRepository->insertVirtualAndFixUppercats($insert, $uppercatsPrefix);
         $this->updateGlobalRank();
         $idUppercatRaw = $insert['id_uppercat'] ?? null;
         $idUppercatInt = is_numeric($idUppercatRaw) ? (int) $idUppercatRaw : 0;
-        if ($insert['status'] === 'private' && isset($insert['id_uppercat']) && $insert['id_uppercat'] !== '' && $insert['id_uppercat'] !== 0 && ((isset($options['inherit']) && $options['inherit']) || Config::inheritanceByDefault())) {
+        if ($insert['status'] === 'private' && isset($insert['id_uppercat']) && $insert['id_uppercat'] !== 0 && ((isset($options['inherit']) && $options['inherit']) || Config::inheritanceByDefault())) {
             $grantedGrps = $this->permissionRepository->findGroupAccessGroupIdsByCategoryId($idUppercatInt);
             $groupInserts = [];
             foreach ($grantedGrps as $grp) {

@@ -94,7 +94,7 @@ final readonly class AddSimpleHandler implements WsAction
             $firstCatId            = $pCategoryAs[0] ?? 0;
             $category              = $this->categoryRepository->findCategoryById($firstCatId);
             $urlParams['section']  = 'categories';
-            $urlParams['category'] = $category;
+            $urlParams['category'] = $category?->toRow();
         }
         $this->metadataAdminService->syncMetadata([$imageId]);
         return ['image_id' => $imageId, 'url' => $this->urlService->makePictureUrl($urlParams)];

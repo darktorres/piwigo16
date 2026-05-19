@@ -95,7 +95,7 @@ final readonly class DirectPreparer
             if ($cat !== null) {
                 $selected_category = [$_GET['album']];
                 $tpl->assign('ADD_TO_ALBUM', new Html($this->htmlService->getCatDisplayNameCache(
-                    is_string($cat['uppercats'] ?? null) ? $cat['uppercats'] : '',
+                    $cat->uppercats,
                     null
                 )));
             } else {

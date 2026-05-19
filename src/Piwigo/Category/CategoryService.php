@@ -125,10 +125,11 @@ final readonly class CategoryService
     /** @return array<mixed>|null */
     public function getCatInfo(int|string $id): ?array
     {
-        $cat = $this->catRepo->findCategoryById((int) $id);
-        if ($cat === null || count($cat) === 0) {
+        $entity = $this->catRepo->findCategoryById((int) $id);
+        if ($entity === null) {
             return null;
         }
+        $cat = $entity->toRow();
 
         foreach ($cat as $k => $v) {
             if ($cat[$k] == 'true' or $cat[$k] == 'false') {
@@ -139,12 +140,12 @@ final readonly class CategoryService
             }
         }
 
-        $upperIds = explode(',', is_string($cat['uppercats'] ?? null) ? $cat['uppercats'] : '');
+        $upperIds = explode(',', $entity->uppercats);
         if (count($upperIds) == 1) {
             $cat['upper_names'] = [[
-                'id'        => $cat['id'],
-                'name'      => $cat['name'],
-                'permalink' => $cat['permalink'],
+                'id'        => $entity->id->value,
+                'name'      => $entity->name,
+                'permalink' => $entity->permalink?->value,
             ]];
         } else {
             $upperIdsInt = array_map(static fn (string $v): int => (int) $v, $upperIds);

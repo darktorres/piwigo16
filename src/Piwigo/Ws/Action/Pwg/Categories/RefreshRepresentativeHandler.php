@@ -43,7 +43,7 @@ final readonly class RefreshRepresentativeHandler implements WsAction
         $this->categoryAdminService->setRandomRepresentant([$categoryId]);
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, 'edit'));
         $category = $this->categoryRepository->findCategoryById($categoryId);
-        $repId    = isset($category['representative_picture_id']) ? (is_scalar($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '') : '';
+        $repId    = $category !== null && $category->representativePictureId !== null ? (string) $category->representativePictureId : '';
         return $this->imageAdminService->getCategoryRepresentantProperties($repId, DerivativeSize::Small->value);
     }
 }

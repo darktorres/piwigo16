@@ -79,7 +79,7 @@ final readonly class AddHandler implements WsAction
             if (preg_match('/^\d+/', $pCategoriesStr, $matches)) {
                 $category              = $this->categoryRepository->findCategoryById((int) $matches[0]);
                 $urlParams['section']  = 'categories';
-                $urlParams['category'] = $category;
+                $urlParams['category'] = $category?->toRow();
             }
         }
         if (isset($params['tag_ids']) && $params['tag_ids'] !== '') {

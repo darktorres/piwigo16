@@ -6,6 +6,7 @@ namespace Piwigo\Category;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Piwigo\Category\Entity\Category;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the category domain. */
@@ -665,9 +666,8 @@ final class CategoryRepository extends AbstractRepository
         return is_numeric($value) ? (int) $value : 0;
     }
 
-    /** Return a single category row by id, or null if not found. */
-    /** @return array<string, mixed>|null */
-    public function findCategoryById(int $id): ?array
+    /** Return a single category by id, or null if not found. */
+    public function findCategoryById(int $id): ?Category
     {
         $row = $this->conn->createQueryBuilder()
             ->select('*')
@@ -676,7 +676,7 @@ final class CategoryRepository extends AbstractRepository
             ->setParameter('id', $id)
             ->executeQuery()
             ->fetchAssociative();
-        return $row !== false ? $row : null;
+        return $row !== false ? Category::fromRow($row) : null;
     }
 
     /**

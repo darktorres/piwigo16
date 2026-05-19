@@ -128,7 +128,7 @@ final class AlbumController implements AdminSubControllerInterface
         $cat_id_str = is_string($rawCatId) ? $rawCatId : '';
         $this->adminAlbumBaseUrl = $this->urlGenerator->admin('album-' . $cat_id_str);
         $this->albumCategory = $this->categoryRepository
-            ->findCategoryById(is_numeric($cat_id_str) ? (int) $cat_id_str : 0);
+            ->findCategoryById(is_numeric($cat_id_str) ? (int) $cat_id_str : 0)?->toRow();
 
         if (!isset($this->albumCategory['id'])) {
             throw new NotFoundException('unknown album');
@@ -338,11 +338,12 @@ final class AlbumController implements AdminSubControllerInterface
             $rawCatId2 = $_GET['cat_id'] ?? null;
             $cat_id_str = is_string($rawCatId2) ? $rawCatId2 : '';
             $admin_album_base_url = $this->urlGenerator->admin('album-' . $cat_id_str);
-            $category = $this->categoryRepository
+            $entity = $this->categoryRepository
                 ->findCategoryById(is_numeric($cat_id_str) ? (int) $cat_id_str : 0);
-            if ($category === null) {
+            if ($entity === null) {
                 throw new ValidationException('Invalid category');
             }
+            $category = $entity->toRow();
         }
 
         $pageCat = $category['id'];
@@ -652,10 +653,11 @@ final class AlbumController implements AdminSubControllerInterface
 
         if ($category === null) {
             $cat_id_str = $_GET['cat_id'];
-            $category   = $this->categoryRepository->findCategoryById((int) $cat_id_str);
-            if ($category === null) {
+            $entity     = $this->categoryRepository->findCategoryById((int) $cat_id_str);
+            if ($entity === null) {
                 throw new ValidationException('Invalid category');
             }
+            $category = $entity->toRow();
         }
 
         foreach (['comment', 'dir', 'site_id', 'id_uppercat'] as $nullable) {
@@ -1103,14 +1105,13 @@ final class AlbumController implements AdminSubControllerInterface
         $base_url = $this->urlGenerator->admin();
         $category = $this->categoryRepository->findCategoryById((int) $categoryId);
 
-        if ($category !== null && ($category['image_order'] == 'rank ASC' || $category['image_order'] == '`rank` ASC')) {
+        if ($category !== null && ($category->imageOrder === 'rank ASC' || $category->imageOrder === '`rank` ASC')) {
             $image_order_choice = 'rank';
-        } elseif ($category !== null && $category['image_order'] != '') {
+        } elseif ($category !== null && $category->imageOrder !== null && $category->imageOrder !== '') {
             $image_order_choice = 'user_define';
         }
 
-        $categoryUppercats = $category !== null ? ($category['uppercats'] ?? null) : null;
-        $navigation = $this->htmlService->getCatDisplayNameCache(is_scalar($categoryUppercats) ? (string) $categoryUppercats : '', $this->urlGenerator->admin() . '&page=album-');
+        $navigation = $this->htmlService->getCatDisplayNameCache($category !== null ? $category->uppercats : '', $this->urlGenerator->admin() . '&page=album-');
         $tpl->assign(['CATEGORIES_NAV' => new Html((string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation))), 'F_ACTION' => $base_url . $this->urlService->getQueryStringDiff([])]);
 
         $images = $this->imageRepository->findByCategoryIdOrdered((int) $categoryId);
@@ -1128,8 +1129,7 @@ final class AlbumController implements AdminSubControllerInterface
         }
 
         $tpl->assign('image_order_options', $sort_fields);
-        $categoryImageOrder = $category !== null ? ($category['image_order'] ?? null) : null;
-        $image_order = explode(',', is_scalar($categoryImageOrder) ? (string) $categoryImageOrder : '');
+        $image_order = explode(',', $category !== null && $category->imageOrder !== null ? $category->imageOrder : '');
         for ($i = 0; $i < 3; $i++) {
             $tpl->append('image_order', $image_order[$i] ?? '');
         }

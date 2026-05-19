@@ -578,9 +578,10 @@ final class ImageRepository extends AbstractRepository
      * Return (id, path, representative_ext) for images stored in the given
      * category ids, optionally restricted to rows that have never been
      * metadata-synced. Result keyed by id, used by the metadata sync filelist.
-     *
-     * @param int[] $categoryIds
-     * @return array<int|string, array<string, mixed>>
+     */
+    /**
+     * @param  list<int> $categoryIds
+     * @return array<int, ImageIdPathRepresentative>
      */
     public function findFilelistByStorageCategoryIds(array $categoryIds, bool $onlyNew): array
     {
@@ -595,7 +596,12 @@ final class ImageRepository extends AbstractRepository
         if ($onlyNew) {
             $qb->andWhere('date_metadata_update IS NULL');
         }
-        return array_column($qb->executeQuery()->fetchAllAssociative(), null, 'id');
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $proj           = ImageIdPathRepresentative::fromRow($row);
+            $out[$proj->id->value] = $proj;
+        }
+        return $out;
     }
 
     /**
@@ -633,6 +639,10 @@ final class ImageRepository extends AbstractRepository
      * @param  list<int> $ids
      * @return array<int|string, array<string, mixed>>
      */
+    /**
+     * @param  int[] $ids
+     * @return array<int, array{id: int, label: string, filesize: ?int, file: string, path: string, representative_ext: ?string}>
+     */
     public function findActivityFeedSummaryByIds(array $ids): array
     {
         if ($ids === []) {
@@ -643,7 +653,19 @@ final class ImageRepository extends AbstractRepository
             ->from($this->table('images'));
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
-        return array_column($qb->executeQuery()->fetchAllAssociative(), null, 'id');
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $rowId = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
+            $out[$rowId] = [
+                'id'                 => $rowId,
+                'label'              => is_string($row['label'] ?? null) ? $row['label'] : '',
+                'filesize'           => is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : null,
+                'file'               => is_string($row['file'] ?? null) ? $row['file'] : '',
+                'path'               => is_string($row['path'] ?? null) ? $row['path'] : '',
+                'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
+            ];
+        }
+        return $out;
     }
 
     /**
@@ -694,6 +716,10 @@ final class ImageRepository extends AbstractRepository
      * @param  list<string> $extraWhereClauses
      * @return list<array<string, mixed>>
      */
+    /**
+     * @param  list<string> $extraWhereClauses
+     * @return list<array{id: int, path: string, representative_ext: ?string, width: ?int, height: ?int, rotation: ?int}>
+     */
     public function findDerivativeCandidatesBeforeId(int $startId, array $extraWhereClauses, int $limit): array
     {
         $clauses = $extraWhereClauses;
@@ -702,18 +728,30 @@ final class ImageRepository extends AbstractRepository
             . ' FROM ' . $this->table('images')
             . ' WHERE ' . implode(' AND ', $clauses)
             . ' ORDER BY id DESC LIMIT ' . $limit;
-        return $this->conn->executeQuery(
+        $rows = $this->conn->executeQuery(
             $sql,
             [$startId],
             [\Doctrine\DBAL\ParameterType::INTEGER],
         )->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $out[] = [
+                'id'                 => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+                'path'               => is_string($row['path'] ?? null) ? $row['path'] : '',
+                'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
+                'width'              => is_numeric($row['width'] ?? null) ? (int) $row['width'] : null,
+                'height'             => is_numeric($row['height'] ?? null) ? (int) $row['height'] : null,
+                'rotation'           => is_numeric($row['rotation'] ?? null) ? (int) $row['rotation'] : null,
+            ];
+        }
+        return $out;
     }
 
     /**
-     * Return (ext, ext_counter, filesize) totals across all images, keyed by ext.
+     * Return (ext_counter, filesize) totals across all images, keyed by ext.
      * Used by the admin maintenance page's storage breakdown.
      *
-     * @return array<string, array<string, mixed>>
+     * @return array<string, array{ext_counter: int, filesize: int}>
      */
     public function findFileExtensionTotals(): array
     {
@@ -724,7 +762,10 @@ final class ImageRepository extends AbstractRepository
         $out = [];
         foreach ($rows as $row) {
             $ext = is_string($row['ext'] ?? null) ? $row['ext'] : '';
-            $out[$ext] = $row;
+            $out[$ext] = [
+                'ext_counter' => is_numeric($row['ext_counter'] ?? null) ? (int) $row['ext_counter'] : 0,
+                'filesize'    => is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0,
+            ];
         }
         return $out;
     }
@@ -733,7 +774,7 @@ final class ImageRepository extends AbstractRepository
      * Same shape as findFileExtensionTotals but over the image_format table —
      * image-format rows store ext explicitly rather than via SUBSTRING_INDEX.
      *
-     * @return array<string, array<string, mixed>>
+     * @return array<string, array{ext_counter: int, filesize: int}>
      */
     public function findImageFormatExtensionTotals(): array
     {
@@ -744,7 +785,10 @@ final class ImageRepository extends AbstractRepository
         $out = [];
         foreach ($rows as $row) {
             $ext = is_string($row['ext'] ?? null) ? $row['ext'] : '';
-            $out[$ext] = $row;
+            $out[$ext] = [
+                'ext_counter' => is_numeric($row['ext_counter'] ?? null) ? (int) $row['ext_counter'] : 0,
+                'filesize'    => is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0,
+            ];
         }
         return $out;
     }
@@ -1835,8 +1879,8 @@ final class ImageRepository extends AbstractRepository
      *
      * @param list<string>                           $whereClauses
      * @param list<mixed>                            $params
-     * @param list<ArrayParameterType|ParameterType> $types
-     * @return array{rows: list<array<string, mixed>>, total: int}
+     * @param  list<ArrayParameterType|ParameterType> $types
+     * @return array{rows: list<Image>, total: int}
      */
     public function findCategoryImagesPaginated(
         array $whereClauses,
@@ -1852,7 +1896,7 @@ final class ImageRepository extends AbstractRepository
             . ' GROUP BY i.id '
             . $orderBySuffix
             . ' LIMIT ' . $perPage . ' OFFSET ' . $offset;
-        $rows     = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        $rows     = array_map(Image::fromRow(...), $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative());
         $totalRaw = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
         return ['rows' => $rows, 'total' => is_numeric($totalRaw) ? (int) $totalRaw : 0];
     }

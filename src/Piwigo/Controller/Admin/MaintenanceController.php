@@ -1488,10 +1488,9 @@ final class MaintenanceController implements AdminSubControllerInterface
                 $start = StringUtil::getMoment();
                 $datas = [];
                 foreach ($files as $id => $file) {
-                    $file_path = is_array($file) && is_scalar($file['path'] ?? null) ? (string) $file['path'] : '';
-                    $data      = $site_reader->getElementUpdateAttributes($file_path);
+                    $data       = $site_reader->getElementUpdateAttributes($file->path->value);
                     $data['id'] = $id;
-                    $datas[]   = $data;
+                    $datas[]    = $data;
                 }
                 $counts['upd_elements'] = count($datas);
                 if (!$simulate && count($datas) > 0) {
@@ -1503,7 +1502,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                             $set[$field] = $row[$field] ?? null;
                         }
                         $updates[] = [
-                            'id'     => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                            'id'     => $row['id'],
                             'fields' => $set,
                         ];
                     }
@@ -1533,9 +1532,13 @@ final class MaintenanceController implements AdminSubControllerInterface
             $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
             $start = StringUtil::getMoment();
             $datas = $tags_of = [];
-            foreach ($files as $id => $element_infos) {
-                $element_infos_arr = is_array($element_infos) ? $element_infos : [];
-                $data = $site_reader->getElementMetadata($element_infos_arr);
+            foreach ($files as $id => $proj) {
+                $rowShim = [
+                    'id'                 => $proj->id->value,
+                    'path'               => $proj->path->value,
+                    'representative_ext' => $proj->representativeExt,
+                ];
+                $data = $site_reader->getElementMetadata($rowShim);
                 if (is_array($data)) {
                     $data['date_metadata_update'] = $today;
                     $data['id'] = $id;
@@ -1551,7 +1554,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                         }
                     }
                 } else {
-                    $errors[] = ['path' => $element_infos_arr['path'] ?? '', 'type' => 'PWG-ERROR-NO-FS'];
+                    $errors[] = ['path' => $proj->path->value, 'type' => 'PWG-ERROR-NO-FS'];
                 }
             }
             if (!$simulate) {
@@ -1579,7 +1582,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                         }
                         if ($set !== []) {
                             $updates[] = [
-                                'id'     => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                                'id'     => $row['id'],
                                 'fields' => $set,
                             ];
                         }

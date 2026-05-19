@@ -113,29 +113,28 @@ final readonly class CategoriesEndpoints
                 $permParams2,
                 $permTypes2,
             );
-            $catImgRows  = $paginated['rows'];
-            foreach ($catImgRows as $row) {
-                $imageIds[]  = $row['id'];
-                $image       = [];
-                $rowIdInt = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-                $image['is_favorite'] = isset($favoriteIds[$rowIdInt]);
-                foreach (['id', 'width', 'height', 'hit'] as $k) {
-                    if (isset($row[$k])) {
-                        $image[$k] = is_numeric($row[$k]) ? (int) $row[$k] : 0;
-                    }
-                }
-                foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
-                    $image[$k] = $row[$k] ?? null;
-                }
-                $imageName   = is_scalar($image['name'] ?? null) ? (string) $image['name'] : '';
-                $renderEvent = new RenderElementName($imageName, $image);
+            foreach ($paginated['rows'] as $img) {
+                $imgIdInt    = $img->id->value;
+                $imageIds[]  = $imgIdInt;
+                $image       = [
+                    'is_favorite'    => isset($favoriteIds[$imgIdInt]),
+                    'id'             => $imgIdInt,
+                    'width'          => $img->width ?? 0,
+                    'height'         => $img->height ?? 0,
+                    'hit'            => $img->hit,
+                    'file'           => $img->file->value,
+                    'name'           => $img->name,
+                    'comment'        => $img->comment,
+                    'date_creation'  => $img->dateCreation?->value,
+                    'date_available' => $img->dateAvailable?->value,
+                ];
+                $renderEvent = new RenderElementName($img->name ?? '', $image);
                 $this->dispatcher->dispatch($renderEvent);
                 $image['name']    = strip_tags($renderEvent->elementName);
-                $imgCommentRaw    = $image['comment'] ?? null;
-                $descEvent        = new RenderElementDescription(is_string($imgCommentRaw) ? $imgCommentRaw : '', __FUNCTION__);
+                $descEvent        = new RenderElementDescription($img->comment ?? '', __FUNCTION__);
                 $this->dispatcher->dispatch($descEvent);
                 $image['comment'] = $descEvent->elementDescription;
-                $image = array_merge($image, $this->wsHelper->getUrls($row));
+                $image = array_merge($image, $this->wsHelper->getUrls($img->toRow()));
                 $images[] = $image;
             }
             $totalImages = $paginated['total'];
@@ -143,8 +142,7 @@ final readonly class CategoriesEndpoints
                 $categoryIds = [];
                 $categoriesOfImage = [];
                 [$permSql3, $permParams3, $permTypes3] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], null, true);
-                $imageIdsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $imageIds);
-                foreach ($this->categoryRepository->findImageCategoryPairsWithPermissions($imageIdsInt, 'AND ' . $permSql3, $permParams3, $permTypes3) as $row) {
+                foreach ($this->categoryRepository->findImageCategoryPairsWithPermissions($imageIds, 'AND ' . $permSql3, $permParams3, $permTypes3) as $row) {
                     $categoryIds[]     = $row['category_id'];
                     $rowImgId          = (string) $row['image_id'];
                     $categoriesOfImage[$rowImgId][] = $row['category_id'];

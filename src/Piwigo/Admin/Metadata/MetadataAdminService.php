@@ -266,7 +266,7 @@ final readonly class MetadataAdminService
         $this->tagAdminService->setTagsOf($tags_of);
     }
 
-    /** @return array<mixed> */
+    /** @return array<int, \Piwigo\Image\Entity\ImageIdPathRepresentative> */
     public function getFilelist(
         string $category_id = '',
         int $site_id = 1,
@@ -278,7 +278,7 @@ final readonly class MetadataAdminService
         if ($cat_ids === []) {
             return [];
         }
-        return $this->imageRepository->findFilelistByStorageCategoryIds($cat_ids, $only_new);
+        return $this->imageRepository->findFilelistByStorageCategoryIds(array_values($cat_ids), $only_new);
     }
 
     public function normalizeKeywordsString(string $keywordsString): string

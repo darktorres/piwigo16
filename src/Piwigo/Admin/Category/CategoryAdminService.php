@@ -522,9 +522,8 @@ final readonly class CategoryAdminService
         }
         $insertedId = $this->categoryRepository->insertVirtualAndFixUppercats($insert, $uppercatsPrefix);
         $this->updateGlobalRank();
-        $idUppercatRaw = $insert['id_uppercat'] ?? null;
-        $idUppercatInt = is_numeric($idUppercatRaw) ? (int) $idUppercatRaw : 0;
-        if ($insert['status'] === 'private' && isset($insert['id_uppercat']) && $insert['id_uppercat'] !== 0 && ((isset($options['inherit']) && $options['inherit']) || Config::inheritanceByDefault())) {
+        $idUppercatInt = $insert['id_uppercat'] ?? 0;
+        if ($insert['status'] === 'private' && $idUppercatInt !== 0 && ((isset($options['inherit']) && $options['inherit']) || Config::inheritanceByDefault())) {
             $grantedGrps = $this->permissionRepository->findGroupAccessGroupIdsByCategoryId($idUppercatInt);
             $groupInserts = [];
             foreach ($grantedGrps as $grp) {

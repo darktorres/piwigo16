@@ -929,12 +929,12 @@ final class CategoryRepository extends AbstractRepository
      * not null. Optional $catFilter restricts to a single id (subcats included
      * via uppercats REGEXP when $subcatsIncluded is true). Result keyed by id.
      *
-     * @return array<int, array{id: int, uppercats: string, global_rank: string|null, status: string, visible: bool}>
+     * @return array<int, array{id: int, id_uppercat: int|null, uppercats: string, global_rank: string|null, status: string, visible: bool}>
      */
     public function findPhysicalSyncableForSite(int $siteId, ?int $catFilter, bool $subcatsIncluded): array
     {
         $qb = $this->conn->createQueryBuilder()
-            ->select('id', 'uppercats', 'global_rank', 'status', 'visible')
+            ->select('id', 'id_uppercat', 'uppercats', 'global_rank', 'status', 'visible')
             ->from($this->table('categories'))
             ->where('dir IS NOT NULL')
             ->andWhere('site_id = :siteId')
@@ -951,12 +951,14 @@ final class CategoryRepository extends AbstractRepository
         $out = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
             $idRaw      = $row['id'] ?? null;
+            $idUpRaw    = $row['id_uppercat'] ?? null;
             $visibleRaw = $row['visible'] ?? null;
             if (!is_numeric($idRaw)) {
                 continue;
             }
             $out[(int) $idRaw] = [
                 'id'          => (int) $idRaw,
+                'id_uppercat' => is_numeric($idUpRaw) ? (int) $idUpRaw : null,
                 'uppercats'   => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
                 'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
                 'status'      => is_string($row['status'] ?? null) ? $row['status'] : 'public',

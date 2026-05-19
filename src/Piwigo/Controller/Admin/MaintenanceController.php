@@ -1223,20 +1223,22 @@ final class MaintenanceController implements AdminSubControllerInterface
                 $dir = basename($fulldir);
                 if (preg_match(Config::syncCharsRegex(), $dir)) {
                     $insert = ['id' => $next_id++, 'dir' => $dir, 'name' => str_replace('_', ' ', $dir), 'site_id' => $site_id, 'commentable' => BoolUtil::toInt(Config::newcatDefaultCommentable()), 'status' => Config::newcatDefaultStatus(), 'visible' => BoolUtil::toInt(Config::newcatDefaultVisible())];
+                    $parentId = null;
                     if (isset($db_fulldirs[dirname($fulldir)])) {
                         $parent    = $db_fulldirs[dirname($fulldir)];
                         $parentKey = $parent;
-                        $parentRow = is_array($db_categories[$parent] ?? null) ? $db_categories[$parent] : [];
+                        $parentRow = $db_categories[$parent] ?? null;
+                        $parentId  = $parent;
                         $insert['id_uppercat'] = $parent;
-                        $insert['uppercats']   = (is_string($parentRow['uppercats'] ?? null) ? $parentRow['uppercats'] : '') . ',' . $insert['id'];
+                        $insert['uppercats']   = ($parentRow['uppercats'] ?? '') . ',' . $insert['id'];
                         $nextRankParent        = is_int($next_rank[$parentKey] ?? null) ? $next_rank[$parentKey] : 0;
                         $insert['rank']        = $nextRankParent;
                         $next_rank[$parentKey] = $nextRankParent + 1;
-                        $insert['global_rank'] = (is_scalar($parentRow['global_rank'] ?? null) ? (string) $parentRow['global_rank'] : '') . '.' . $insert['rank'];
-                        if ('private' == ($parentRow['status'] ?? '')) {
+                        $insert['global_rank'] = ($parentRow['global_rank'] ?? '') . '.' . $insert['rank'];
+                        if (($parentRow['status'] ?? '') === 'private') {
                             $insert['status'] = 'private';
                         }
-                        if (isset($parentRow['visible']) && !BoolUtil::fromMixed($parentRow['visible'])) {
+                        if ($parentRow !== null && !$parentRow['visible']) {
                             $insert['visible'] = 0;
                         }
                     } else {
@@ -1248,7 +1250,14 @@ final class MaintenanceController implements AdminSubControllerInterface
                     }
                     $inserts[] = $insert;
                     $infos[]   = ['path' => $fulldir, 'info' => Lang::t('added')];
-                    $db_categories[$insert['id']] = ['id' => $insert['id'], 'parent' => $parent ?? null, 'status' => $insert['status'], 'visible' => $insert['visible'], 'uppercats' => $insert['uppercats'], 'global_rank' => $insert['global_rank']];
+                    $db_categories[$insert['id']] = [
+                        'id'          => $insert['id'],
+                        'id_uppercat' => $parentId,
+                        'uppercats'   => (string) $insert['uppercats'],
+                        'global_rank' => (string) $insert['global_rank'],
+                        'status'      => $insert['status'],
+                        'visible'     => $insert['visible'] !== 0,
+                    ];
                     $db_fulldirs[$fulldir] = $insert['id'];
                     $next_rank[$insert['id']] = 1;
                 } else {
@@ -1294,13 +1303,13 @@ final class MaintenanceController implements AdminSubControllerInterface
                     }
                     $insert_granted_users = $insert_granted_grps = [];
                     foreach ($category_ids as $ids) {
-                        $idsRow    = is_array($db_categories[$ids] ?? null) ? $db_categories[$ids] : [];
-                        $parent_id = is_numeric($idsRow['parent'] ?? null) ? (int) $idsRow['parent'] : null;
+                        $idsRow    = $db_categories[$ids] ?? null;
+                        $parent_id = $idsRow['id_uppercat'] ?? null;
                         while ($parent_id !== null && in_array($parent_id, $category_ids)) {
-                            $pidRow    = is_array($db_categories[$parent_id] ?? null) ? $db_categories[$parent_id] : [];
-                            $parent_id = is_numeric($pidRow['parent'] ?? null) ? (int) $pidRow['parent'] : null;
+                            $pidRow    = $db_categories[$parent_id] ?? null;
+                            $parent_id = $pidRow['id_uppercat'] ?? null;
                         }
-                        if (($idsRow['status'] ?? '') == 'private' && $parent_id !== null) {
+                        if ($idsRow !== null && $idsRow['status'] === 'private' && $parent_id !== null) {
                             $idsInt = (int) $ids;
                             if (isset($granted_grps[$parent_id])) {
                                 foreach ($granted_grps[$parent_id] as $granted_grp) {

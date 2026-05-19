@@ -348,16 +348,10 @@ final readonly class CategoryService
             $parent['nb_categories']++;
 
             do {
-                // PHPStan narrows the category-row docblock shape to
-                // "nb_images always present"; runtime rows assembled
-                // from heterogeneous fetches may lack the column. The
-                // defensive ?? null is kept until row shapes converge
-                // (likely §1.7 typed-entity-repositories pass).
-                /** @phpstan-ignore-next-line nullCoalesce.offset */
-                $parent['count_images']     += is_numeric($cat['nb_images'] ?? null) ? (int) ($cat['nb_images'] ?? 0) : 0;
+                $parent['count_images']     += $cat['nb_images'];
                 $parent['count_categories']++;
 
-                if ((empty($parent['max_date_last'])) or ($parent['max_date_last'] < $cat['date_last'])) {
+                if ($parent['max_date_last'] === null || $parent['max_date_last'] < $cat['date_last']) {
                     $parent['max_date_last'] = $cat['date_last'];
                 }
 
@@ -372,7 +366,7 @@ final readonly class CategoryService
 
         if (isset($filterDays)) {
             foreach ($cats as $category) {
-                if (empty($category['max_date_last'])) {
+                if ($category['max_date_last'] === null || $category['max_date_last'] === '') {
                     $this->removeComputedCategory($cats, $category);
                 }
             }
@@ -524,11 +518,11 @@ final readonly class CategoryService
                 $cats[$idx]['url'] = Kernel::service(UrlService::class)->makeIndexUrl($urlParams);
             }
 
-            if (!empty($cat['id_uppercat']) and ($cats[$idx]['count_images'] ?? 0) > 0) {
+            if ($cat['id_uppercat'] !== null && $cat['id_uppercat'] !== 0 && ($cats[$idx]['count_images'] ?? 0) > 0) {
                 foreach (array_slice(explode(',', $cat['uppercats']), 0, -1) as $uppercatId) {
                     $upperIdx = $indexOfCat[$uppercatId] ?? null;
                     if ($upperIdx !== null) {
-                        $cats[$upperIdx]['count_categories'] = (is_numeric($cats[$upperIdx]['count_categories'] ?? null) ? (int) $cats[$upperIdx]['count_categories'] : 0) + 1;
+                        $cats[$upperIdx]['count_categories'] = ($cats[$upperIdx]['count_categories'] ?? 0) + 1;
                     }
                 }
             }

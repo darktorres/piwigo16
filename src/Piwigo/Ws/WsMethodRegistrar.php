@@ -11,7 +11,6 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Ws\Method\GeneralEndpoints;
-use Piwigo\Ws\Method\UsersEndpoints;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -30,7 +29,6 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 {
     public function __construct(
         private GeneralEndpoints $generalEndpoints,
-        private UsersEndpoints $usersEndpoints,
         private PermissionService $permissionService,
     ) {
     }
@@ -1015,7 +1013,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.users.getList',
-            callback:     $this->usersEndpoints->getList(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\GetListHandler::class,
             description:  'Retrieves a list of all the users.<br>
 <br>
 <b>display</b> controls which data are returned, possible values are:<br>
@@ -1046,7 +1044,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.users.add',
-            callback:     $this->usersEndpoints->add(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\AddHandler::class,
             description:  'Registers a new user.',
             params:       [
                 ParamDefinition::required('username'),
@@ -1064,7 +1062,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.users.delete',
-            callback:     $this->usersEndpoints->delete(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\DeleteHandler::class,
             description:  'Deletes on or more users. Photos owned by this user are not deleted.',
             params:       [
                 ParamDefinition::required(name: 'user_id', type: WsType::Id->value, flags: WsParam::ForceArray->value),
@@ -1077,7 +1075,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.users.getAuthKey',
-            callback:     $this->usersEndpoints->getAuthKey(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\GetAuthKeyHandler::class,
             description:  'Get a new authentication key for a user. Only works for normal/generic users (not admins)',
             params:       [
                 ParamDefinition::required(name: 'user_id', type: WsType::Id->value),
@@ -1090,7 +1088,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.users.setInfo',
-            callback:     $this->usersEndpoints->setInfo(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\SetInfoHandler::class,
             description:  'Updates a user. Leave a field blank to keep the current value.
 <br>"username", "password" and "email" are ignored if "user_id" is an array.
 <br>set "group_id" to -1 if you want to dissociate users from all groups',
@@ -1119,7 +1117,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.setMyInfo',
-            callback:    $this->usersEndpoints->setMyInfo(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\SetMyInfoHandler::class,
             params:      [
                 ParamDefinition::optionalFlag('email'),
                 ParamDefinition::optionalFlag(name: 'nb_image_page', type: WsType::Int->value | WsType::Positive->value | WsType::NotNull->value),
@@ -1185,7 +1183,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.preferences.set',
-            callback:    $this->usersEndpoints->preferencesSet(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\PreferencesSetHandler::class,
             description: 'Set a user preferences parameter. JSON encode the value (and set is_json to true) if you need a complex data structure.',
             params:      [
                 ParamDefinition::required('param'),
@@ -1197,7 +1195,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.favorites.add',
-            callback:    $this->usersEndpoints->favoritesAdd(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\FavoritesAddHandler::class,
             description: 'Adds the indicated image to the current user\'s favorite images.',
             params:      [
                 ParamDefinition::required(name: 'image_id', type: WsType::Id->value),
@@ -1207,7 +1205,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.favorites.remove',
-            callback:    $this->usersEndpoints->favoritesRemove(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\FavoritesRemoveHandler::class,
             description: 'Removes the indicated image from the current user\'s favorite images.',
             params:      [
                 ParamDefinition::required(name: 'image_id', type: WsType::Id->value),
@@ -1217,7 +1215,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.favorites.getList',
-            callback:    $this->usersEndpoints->favoritesGetList(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\FavoritesGetListHandler::class,
             description: 'Returns the favorite images of the current user.',
             params:      [
                 ParamDefinition::optional(name: 'per_page', default: 100, type: WsType::Int->value | WsType::Positive->value, maxValue: Config::wsMaxImagesPerPage()),
@@ -1296,7 +1294,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.users.generatePasswordLink',
-            callback:     $this->usersEndpoints->generatePasswordLink(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\GeneratePasswordLinkHandler::class,
             description:  'Return the reset password link <br />
        (Only webmaster can perform this action for another webmaster)',
             params:       [
@@ -1311,7 +1309,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.users.setMainUser',
-            callback:     $this->usersEndpoints->setMainUser(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\SetMainUserHandler::class,
             description:  'Update the main user (owner) <br />
         - To be the main user, the user must have the status "webmaster".<br />
         - Only a webmaster can perform this action',
@@ -1326,7 +1324,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.api_key.create',
-            callback:    $this->usersEndpoints->createApiKey(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\CreateApiKeyHandler::class,
             description: 'Create a new api key for the user in the current session',
             params:      [
                 ParamDefinition::required('key_name'),
@@ -1339,7 +1337,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.api_key.revoke',
-            callback:    $this->usersEndpoints->revokeApiKey(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\RevokeApiKeyHandler::class,
             description: 'Revoke a api key for the user in the current session',
             params:      [
                 ParamDefinition::required('pkid'),
@@ -1351,7 +1349,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.api_key.edit',
-            callback:    $this->usersEndpoints->editApiKey(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\EditApiKeyHandler::class,
             description: 'Edit a api key for the user in the current session',
             params:      [
                 ParamDefinition::required('key_name'),
@@ -1364,7 +1362,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.users.api_key.get',
-            callback:    $this->usersEndpoints->getApiKey(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Users\GetApiKeyHandler::class,
             description: 'Get all api key for the user in the current session',
             params:      [
                 ParamDefinition::required('pwg_token'),

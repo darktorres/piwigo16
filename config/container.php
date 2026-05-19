@@ -135,7 +135,6 @@ use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 use Piwigo\Ws\Method\GeneralEndpoints;
-use Piwigo\Ws\Method\UsersEndpoints;
 use Piwigo\Ws\WsHelper;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
@@ -252,7 +251,6 @@ return [
     UrlGenerator::class          => factory(static fn (Router $r, UrlService $u): UrlGenerator => new UrlGenerator($r, $u)),
     SectionInitializer::class    => factory(static fn (CalendarService $cal, CategoryRepository $catR, CategoryService $cat, HtmlService $h, ImageRepository $i, PermissionService $perm, SearchService $sr, Session $session, TagService $tag, UrlService $u, UserFavoriteRepository $ufR, UserService $us, RedirectResponder $redirect, CacheItemPoolInterface $pool, EventDispatcherInterface $dispatcher, OrderByService $orderBy): SectionInitializer => new SectionInitializer($cal, $catR, $cat, $h, $i, $perm, $sr, $session, $tag, $u, $ufR, $us, $redirect, $pool, $dispatcher, $orderBy)),
     GeneralEndpoints::class          => factory(static fn (ActivityRepository $aR, AuthService $auth, CaddieRepository $cadR, CategoryRepository $catR, CommentRepository $com, CookieService $cookie, DateService $d, HistoryAdminService $hA, HtmlService $h, ImageAdminService $iA, ImageRepository $i, PermissionService $perm, PictureService $pic, RateRepository $rR, RateService $rate, SearchRepository $sR, Session $session, TagRepository $tR, UrlGenerator $ug, UrlService $us, UserAdminService $uA, UserRepository $u, WsHelper $ws, CacheItemPoolInterface $pool, ActivityLogger $al, CsrfService $csrf, InputValidator $iv, EventDispatcherInterface $dispatcher): GeneralEndpoints => new GeneralEndpoints($aR, $auth, $cadR, $catR, $com, $cookie, $d, $hA, $h, $iA, $i, $perm, $pic, $rR, $rate, $sR, $session, $tR, $ug, $us, $uA, $u, $ws, $pool, $al, $csrf, $iv, $dispatcher)),
-    UsersEndpoints::class            => factory(static fn (AuthService $auth, ConfigService $cfg, DateService $d, GroupRepository $g, ImageRepository $i, MailService $m, PermissionService $perm, PreferencesService $pref, UserAdminService $uA, UserFavoriteRepository $uF, UserRepository $u, UserService $us, CsrfService $csrf, WsHelper $ws, EventDispatcherInterface $dispatcher, OrderByService $orderBy): UsersEndpoints => new UsersEndpoints($auth, $cfg, $d, $g, $i, $m, $perm, $pref, $uA, $uF, $u, $us, $csrf, $ws, $dispatcher, $orderBy)),
     AdminPageRegistry::class         => factory(static fn (): AdminPageRegistry => new AdminPageRegistry()),
     AssetService::class              => factory(static fn (LoggerInterface $log, Paths $paths): AssetService => new AssetService($paths->root . 'plugins', $log)),
     AdminService::class              => factory(static fn (CategoryRepository $catR, DateService $d, DbMaintenanceRepository $dbM, HistoryRepository $hR, ImageRepository $i, ImageFormatRepository $iF, TagRepository $tR, UserRepository $u, CacheItemPoolInterface $pool): AdminService => new AdminService($catR, $d, $dbM, $hR, $i, $iF, $tR, $u, $pool)),

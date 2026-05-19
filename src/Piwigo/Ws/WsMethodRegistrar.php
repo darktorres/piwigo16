@@ -82,7 +82,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.getInfos',
-            callback:     $this->generalEndpoints->getInfos(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\GetInfosHandler::class,
             description:  'Returns general informations.',
             tags:         ['pwg'],
             requiresAuth: true,

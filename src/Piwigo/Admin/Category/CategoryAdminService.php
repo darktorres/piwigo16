@@ -238,29 +238,28 @@ final readonly class CategoryAdminService
 
     public function updateGlobalRank(): int
     {
-        $catMap         = [];
-        $currentRank    = 0;
-        $currentUppercat = '';
+        $catMap          = [];
+        $currentRank     = 0;
+        $currentUppercat = null;
         foreach ($this->categoryRepository->getAllForRankUpdate() as $row) {
-            if ($row['id_uppercat'] != $currentUppercat) {
-                $currentRank    = 0;
-                $currentUppercat = is_scalar($row['id_uppercat'] ?? null) ? (string) $row['id_uppercat'] : '';
+            $rowUppercatId = $row->idUppercat?->value;
+            if ($rowUppercatId !== $currentUppercat) {
+                $currentRank     = 0;
+                $currentUppercat = $rowUppercatId;
             }
             ++$currentRank;
-            $rowIdKey          = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
-            $catMap[$rowIdKey] = [
+            $catMap[$row->id->value] = [
                 'rank'         => $currentRank,
-                'rank_changed' => $currentRank != $row['rank'],
-                'global_rank'  => $row['global_rank'],
-                'uppercats'    => $row['uppercats'],
+                'rank_changed' => $currentRank !== $row->rank,
+                'global_rank'  => $row->globalRank,
+                'uppercats'    => $row->uppercats,
             ];
         }
         $datas    = [];
-        $callback = (fn (array $m): string => is_string($m[1]) ? (string) ($catMap[$m[1]]['rank'] ?? 0) : '0');
+        $callback = (fn (array $m): string => is_string($m[1]) ? (string) ($catMap[(int) $m[1]]['rank'] ?? 0) : '0');
         foreach ($catMap as $id => $cat) {
-            $uppercatsStr   = is_string($cat['uppercats'] ?? null) ? $cat['uppercats'] : '';
-            $replaceResult  = preg_replace_callback('/(\d+)/', $callback, str_replace(',', '.', $uppercatsStr));
-            $newGlobalRank  = is_string($replaceResult) ? $replaceResult : '';
+            $replaceResult = preg_replace_callback('/(\d+)/', $callback, str_replace(',', '.', $cat['uppercats']));
+            $newGlobalRank = is_string($replaceResult) ? $replaceResult : '';
             if ($cat['rank_changed'] || $newGlobalRank !== $cat['global_rank']) {
                 $datas[] = ['id' => $id, 'rank' => $cat['rank'], 'global_rank' => $newGlobalRank];
             }
@@ -312,24 +311,22 @@ final readonly class CategoryAdminService
             $topCategories = [];
             $parentIds     = [];
             $allCategories = $catRepo->findDetailsByIds($categories);
-            usort($allCategories, $this->categoryService->globalRankCompare(...));
+            usort($allCategories, static fn (\Piwigo\Category\Projection\CategoryDetail $a, \Piwigo\Category\Projection\CategoryDetail $b): int => strnatcasecmp((string) $a->globalRank, (string) $b->globalRank));
 
             foreach ($allCategories as $cat) {
                 $isTop = true;
-                if (!empty($cat['id_uppercat'])) {
-                    $catUppercatsRaw3 = $cat['uppercats'] ?? null;
-                    foreach (explode(',', is_string($catUppercatsRaw3) ? $catUppercatsRaw3 : '') as $idUppercat) {
-                        if (isset($topCategories[$idUppercat])) {
+                if ($cat->idUppercat !== null) {
+                    foreach (explode(',', $cat->uppercats) as $idUppercat) {
+                        if (isset($topCategories[(int) $idUppercat])) {
                             $isTop = false;
                             break;
                         }
                     }
                 }
                 if ($isTop) {
-                    $catIdKey = is_scalar($cat['id'] ?? null) ? (string) $cat['id'] : '0';
-                    $topCategories[$catIdKey] = $cat;
-                    if (!empty($cat['id_uppercat'])) {
-                        $parentIds[] = is_scalar($cat['id_uppercat']) ? (string) $cat['id_uppercat'] : '';
+                    $topCategories[$cat->id->value] = $cat;
+                    if ($cat->idUppercat !== null) {
+                        $parentIds[] = $cat->idUppercat->value;
                     }
                 }
             }
@@ -337,12 +334,12 @@ final readonly class CategoryAdminService
             $parentCats = count($parentIds) > 0 ? $catRepo->findStatusByIds($parentIds) : [];
 
             foreach ($topCategories as $topCategory) {
-                $refCatId         = is_numeric($topCategory['id'] ?? null) ? (int) $topCategory['id'] : 0;
-                $topCatUppercatId = is_numeric($topCategory['id_uppercat'] ?? null) ? (int) $topCategory['id_uppercat'] : 0;
-                if (!empty($topCategory['id_uppercat']) && isset($parentCats[$topCatUppercatId]) && $parentCats[$topCatUppercatId] === \Piwigo\Common\Enum\Privacy::Private) {
+                $refCatId         = $topCategory->id->value;
+                $topCatUppercatId = $topCategory->idUppercat?->value;
+                if ($topCatUppercatId !== null && isset($parentCats[$topCatUppercatId]) && $parentCats[$topCatUppercatId] === \Piwigo\Common\Enum\Privacy::Private) {
                     $refCatId = $topCatUppercatId;
                 }
-                $subCatsForRef = array_values($this->categoryService->getSubcatIds([(string) (is_numeric($topCategory['id'] ?? null) ? (int) $topCategory['id'] : 0)]));
+                $subCatsForRef = array_values($this->categoryService->getSubcatIds([(string) $topCategory->id->value]));
 
                 $refUserIds = $this->permissionRepository->findUserAccessUserIdsByCategoryId($refCatId);
                 $this->permissionRepository->deleteUserAccessNotInForCategoryIds($refUserIds, $subCatsForRef);
@@ -403,12 +400,9 @@ final readonly class CategoryAdminService
         $callback     = (fn (array $m): string => is_string($m[1]) && isset($catDirs[(int) $m[1]]) ? $catDirs[(int) $m[1]] : '');
         $catFulldirs  = [];
         foreach ($categories as $category) {
-            $catUppercatsRaw4 = $category['uppercats'] ?? null;
-            $catIdRaw4        = $category['id']        ?? null;
-            $catSiteIdRaw     = $category['site_id']   ?? null;
-            $uppercats = str_replace(',', '/', is_scalar($catUppercatsRaw4) ? (string) $catUppercatsRaw4 : '');
-            $catIdKey  = is_scalar($catIdRaw4) ? (string) $catIdRaw4 : '0';
-            $siteIdInt = is_numeric($catSiteIdRaw) ? (int) $catSiteIdRaw : 0;
+            $uppercats               = str_replace(',', '/', $category->uppercats);
+            $catIdKey                = (string) $category->id->value;
+            $siteIdInt               = $category->siteId ?? 0;
             $catFulldirs[$catIdKey]  = $galleriesUrl[$siteIdInt] ?? '';
             $catFulldirs[$catIdKey] .= (string) preg_replace_callback('/(\d+)/', $callback, $uppercats);
         }
@@ -420,15 +414,15 @@ final readonly class CategoryAdminService
         $catMap = $this->categoryRepository->findAllIdUppercatRowsKeyedById();
         $datas  = [];
         foreach ($catMap as $id => $cat) {
-            $upperList = [];
-            $uppercat  = (string) $id;
-            while ($uppercat) {
-                $upperList[] = $uppercat;
-                $nextRaw     = $catMap[$uppercat]['id_uppercat'] ?? null;
-                $uppercat    = is_numeric($nextRaw) ? (string) $nextRaw : '';
+            $upperList   = [];
+            $uppercatId  = $id;
+            while ($uppercatId !== null) {
+                $upperList[] = (string) $uppercatId;
+                $next        = $catMap[$uppercatId] ?? null;
+                $uppercatId  = $next?->idUppercat?->value;
             }
             $newUppercats = implode(',', array_reverse($upperList));
-            if ($newUppercats !== $cat['uppercats']) {
+            if ($newUppercats !== $cat->uppercats) {
                 $datas[] = ['id' => $id, 'uppercats' => $newUppercats];
             }
         }
@@ -558,9 +552,8 @@ final readonly class CategoryAdminService
             return;
         }
         $existing = [];
-        foreach ($this->categoryRepository->findExistingImageCategoryLinks($images, $categories) as $row) {
-            $catKey            = is_numeric($row['category_id']) ? (int) $row['category_id'] : 0;
-            $existing[$catKey][] = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
+        foreach ($this->categoryRepository->findExistingImageCategoryLinks($images, $categories) as $link) {
+            $existing[$link->categoryId->value][] = $link->imageId->value;
         }
         $currentRankOf = $this->categoryRepository->findMaxImageRankPerCategoryIn(array_values($categories));
 

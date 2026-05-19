@@ -7,8 +7,13 @@ namespace Piwigo\Category;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\Entity\Category;
+use Piwigo\Category\Projection\CategoryDetail;
 use Piwigo\Category\Projection\CategoryNamePermalink;
+use Piwigo\Category\Projection\CategoryParentInfo;
 use Piwigo\Category\Projection\CategoryRankInfo;
+use Piwigo\Category\Projection\CategoryUppercatsSite;
+use Piwigo\Category\Projection\ImageCategoryLink;
+use Piwigo\Category\Projection\RankUpdateRow;
 use Piwigo\Category\Projection\RelatedCategoryRow;
 use Piwigo\Db\AbstractRepository;
 
@@ -110,9 +115,9 @@ final class CategoryRepository extends AbstractRepository
      * Return existing (image_id, category_id) pairs for the given images and categories.
      * Used by associate_images_to_categories to skip already-linked pairs.
      *
-     * @param int[] $imageIds
-     * @param int[] $categoryIds
-     * @return list<array<string, mixed>>
+     * @param  int[] $imageIds
+     * @param  int[] $categoryIds
+     * @return list<ImageCategoryLink>
      */
     public function findExistingImageCategoryLinks(array $imageIds, array $categoryIds): array
     {
@@ -126,7 +131,7 @@ final class CategoryRepository extends AbstractRepository
            ->andWhere($qb->expr()->in('category_id', ':categoryIds'))
            ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
            ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(ImageCategoryLink::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**
@@ -1152,11 +1157,11 @@ final class CategoryRepository extends AbstractRepository
     /**
      * Return all categories ordered for global-rank recomputation.
      *
-     * @return list<array<string, mixed>>
+     * @return list<RankUpdateRow>
      */
     public function getAllForRankUpdate(): array
     {
-        return $this->conn->createQueryBuilder()
+        $rows = $this->conn->createQueryBuilder()
             ->select('id', 'id_uppercat', 'uppercats', '`rank`', 'global_rank')
             ->from($this->table('categories'))
             ->orderBy('id_uppercat')
@@ -1164,6 +1169,7 @@ final class CategoryRepository extends AbstractRepository
             ->addOrderBy('name')
             ->executeQuery()
             ->fetchAllAssociative();
+        return array_map(RankUpdateRow::fromRow(...), $rows);
     }
 
     /**
@@ -1207,8 +1213,8 @@ final class CategoryRepository extends AbstractRepository
     /**
      * Return (id, name, id_uppercat, uppercats, global_rank) for the given ids.
      *
-     * @param array<int|string> $ids
-     * @return list<array<string, mixed>>
+     * @param  array<int|string> $ids
+     * @return list<CategoryDetail>
      */
     public function findDetailsByIds(array $ids): array
     {
@@ -1221,7 +1227,7 @@ final class CategoryRepository extends AbstractRepository
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(CategoryDetail::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**
@@ -1477,8 +1483,8 @@ final class CategoryRepository extends AbstractRepository
     /**
      * Return (id, uppercats, site_id) for physical categories in the given list.
      *
-     * @param list<int> $ids
-     * @return list<array<string, mixed>>
+     * @param  list<int> $ids
+     * @return list<CategoryUppercatsSite>
      */
     public function findUppercatsAndSiteByIds(array $ids): array
     {
@@ -1491,13 +1497,14 @@ final class CategoryRepository extends AbstractRepository
             ->where('dir IS NOT NULL');
         $qb->andWhere($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(CategoryUppercatsSite::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**
-     * Return (id, id_uppercat, uppercats) rows for every category, keyed by id.
+     * Return every category's (id, id_uppercat, uppercats) projection, keyed
+     * by id. Used by the uppercats-rebuild walk.
      *
-     * @return array<int|string, array<string, mixed>>
+     * @return array<int, CategoryParentInfo>
      */
     public function findAllIdUppercatRowsKeyedById(): array
     {
@@ -1508,8 +1515,8 @@ final class CategoryRepository extends AbstractRepository
             ->fetchAllAssociative();
         $keyed = [];
         foreach ($rows as $row) {
-            $idKey = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
-            $keyed[$idKey] = $row;
+            $entity                  = CategoryParentInfo::fromRow($row);
+            $keyed[$entity->id->value] = $entity;
         }
         return $keyed;
     }

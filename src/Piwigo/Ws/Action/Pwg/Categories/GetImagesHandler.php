@@ -69,8 +69,8 @@ final readonly class GetImagesHandler implements WsAction
             [$permSql2, $permParams2, $permTypes2] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'i.id'], null, true);
             $whereClauses2[] = $permSql2;
             $orderBy         = $this->wsHelper->imageSqlOrder($params, 'i.');
-            if (empty($orderBy) && count($catIds) === 1 && isset($cats[$catIds[0]]['image_order'])) {
-                $orderBy = is_scalar($cats[$catIds[0]]['image_order']) ? (string) $cats[$catIds[0]]['image_order'] : '';
+            if (empty($orderBy) && count($catIds) === 1 && isset($cats[$catIds[0]]) && $cats[$catIds[0]]['image_order'] !== null) {
+                $orderBy = $cats[$catIds[0]]['image_order'];
             }
             $orderBy     = empty($orderBy) ? $this->orderByService->buildOrderByClause(Config::orderBy()) : 'ORDER BY ' . $orderBy;
             $favoriteIds = $this->urlService->getUserFavorites();

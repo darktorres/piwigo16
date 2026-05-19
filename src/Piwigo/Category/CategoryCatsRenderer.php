@@ -254,15 +254,12 @@ final readonly class CategoryCatsRenderer
 
                 if (Config::displayFromto()) {
                     $catIdRaw = $category['id'] ?? null;
-                    $catId = (is_string($catIdRaw) || is_int($catIdRaw)) ? $catIdRaw : null;
+                    $catId    = is_numeric($catIdRaw) ? (int) $catIdRaw : null;
                     if ($catId !== null && isset($dates_of_category[$catId])) {
-                        $from = $dates_of_category[$catId]['from'] ?? null;
-                        $to = $dates_of_category[$catId]['to'] ?? null;
+                        $from = $dates_of_category[$catId]['from'];
+                        $to   = $dates_of_category[$catId]['to'];
                         if ($from !== null && $from !== '') {
-                            $tpl_var['INFO_DATES'] = $this->dateService->formatFromto(
-                                (is_string($from) || is_int($from)) ? $from : null,
-                                (is_string($to) || is_int($to)) ? $to : null
-                            );
+                            $tpl_var['INFO_DATES'] = $this->dateService->formatFromto($from, $to);
                         }
                     }
                 }

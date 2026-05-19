@@ -239,12 +239,11 @@ final class AlbumController implements AdminSubControllerInterface
 
         $associatedTree = [];
         foreach ($allAlbum as $album) {
-            $albumRenderEvent = new RenderCategoryName(is_string($album['name'] ?? null) ? $album['name'] : '', 'admin_cat_list');
+            $albumRenderEvent = new RenderCategoryName($album['name'], 'admin_cat_list');
             $this->dispatcher->dispatch($albumRenderEvent);
-            $album['name'] = $albumRenderEvent->categoryName;
-            $album['lastmodified'] = $this->dateService->timeSince(is_string($album['lastmodified']) || is_int($album['lastmodified']) ? $album['lastmodified'] : null, 'year');
-            $albumUppercats = $album['uppercats'] ?? null;
-            $parents = array_map(strval(...), explode(',', is_string($albumUppercats) ? $albumUppercats : ''));
+            $album['name']         = $albumRenderEvent->categoryName;
+            $album['lastmodified'] = $this->dateService->timeSince($album['lastmodified'], 'year');
+            $parents               = array_map(strval(...), explode(',', $album['uppercats']));
             self::placeAlbumInTree($associatedTree, $parents, $album);
         }
 
@@ -561,8 +560,7 @@ final class AlbumController implements AdminSubControllerInterface
         $listingRows = $this->categoryRepository->findCategoryListing($parentIdArg);
         $categories  = [];
         foreach ($listingRows as $row) {
-            $idKey = is_scalar($row['id']) ? (string) $row['id'] : '';
-            $categories[$idKey] = $row;
+            $categories[(string) $row['id']] = $row;
         }
 
         $nb_photos_in  = [];
@@ -603,30 +601,31 @@ final class AlbumController implements AdminSubControllerInterface
                 $self_url .= '&parent_id=' . $parentIdStr;
             }
 
-            $catIdStr = (string) (is_numeric($category['id']) ? (int) $category['id'] : 0);
-            $tplCatRenderEvent = new RenderCategoryName(is_string($category['name'] ?? null) ? $category['name'] : '', 'admin_cat_list');
+            $catId             = $category['id'];
+            $catIdStr          = (string) $catId;
+            $tplCatRenderEvent = new RenderCategoryName($category['name'], 'admin_cat_list');
             $this->dispatcher->dispatch($tplCatRenderEvent);
             $tpl_cat  = [
                 'NAME'             => $tplCatRenderEvent->categoryName,
                 'NB_PHOTOS'        => $nb_photos_in[$catIdStr] ?? 0,
                 'NB_SUB_PHOTOS'    => $nb_sub_photos[$catIdStr] ?? 0,
                 'NB_SUB_ALBUMS'    => isset($subcats_of[$catIdStr]) ? count($subcats_of[$catIdStr]) : 0,
-                'ID'               => $category['id'],
-                'RANK'             => (is_numeric($category['rank'] ?? null) ? (int) $category['rank'] : 0) * 10,
+                'ID'               => $catId,
+                'RANK'             => ($category['rank'] ?? 0) * 10,
                 'U_JUMPTO'         => $this->urlService->makeIndexUrl(['category' => $category]),
-                'U_CHILDREN'       => $cat_list_url . '&parent_id=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
-                'U_EDIT'           => $base_url . 'album-' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
-                'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&album=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
-                'U_MOVE'           => $base_url . 'albums#cat-' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''),
-                'IS_VIRTUAL'       => empty($category['dir']),
-                'CAT_ADMIN_ACCESS' => $this->userAdminService->catAdminAccess(is_numeric($category['id'] ?? null) ? (int) $category['id'] : 0),
+                'U_CHILDREN'       => $cat_list_url . '&parent_id=' . $catIdStr,
+                'U_EDIT'           => $base_url . 'album-' . $catIdStr,
+                'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&album=' . $catIdStr,
+                'U_MOVE'           => $base_url . 'albums#cat-' . $catIdStr,
+                'IS_VIRTUAL'       => $category['dir'] === null || $category['dir'] === '',
+                'CAT_ADMIN_ACCESS' => $this->userAdminService->catAdminAccess($catId),
             ];
 
-            if (empty($category['dir'])) {
-                $tpl_cat['U_DELETE']  = $self_url . '&delete=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : '');
+            if ($category['dir'] === null || $category['dir'] === '') {
+                $tpl_cat['U_DELETE']  = $self_url . '&delete=' . $catIdStr;
                 $tpl_cat['U_DELETE'] .= '&pwg_token=' . $this->csrfService->getToken();
             } elseif (Config::enableSynchronization()) {
-                $tpl_cat['U_SYNC'] = $base_url . 'site_update&site=1&cat_id=' . (is_scalar($category['id'] ?? null) ? (string) $category['id'] : '');
+                $tpl_cat['U_SYNC'] = $base_url . 'site_update&site=1&cat_id=' . $catIdStr;
             }
 
             $tpl->append('categories', $tpl_cat);

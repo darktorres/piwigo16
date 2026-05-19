@@ -2348,15 +2348,34 @@ SELECT
      * Return (id, name, rank, status, visible, uppercats, lastmodified) for
      * every category — used by the admin album-tree overview.
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, name: string, rank: int|null, status: string, visible: bool, uppercats: string, lastmodified: string}>
      */
     public function findAllForAdminTreeOverview(): array
     {
-        return $this->conn->createQueryBuilder()
+        $rows = $this->conn->createQueryBuilder()
             ->select('id', 'name', '`rank`', 'status', 'visible', 'uppercats', 'lastmodified')
             ->from($this->table('categories'))
             ->executeQuery()
             ->fetchAllAssociative();
+        $out = [];
+        foreach ($rows as $row) {
+            $idRaw      = $row['id'] ?? null;
+            $rankRaw    = $row['rank'] ?? null;
+            $visibleRaw = $row['visible'] ?? null;
+            if (!is_numeric($idRaw)) {
+                continue;
+            }
+            $out[] = [
+                'id'           => (int) $idRaw,
+                'name'         => is_string($row['name'] ?? null) ? $row['name'] : '',
+                'rank'         => is_numeric($rankRaw) ? (int) $rankRaw : null,
+                'status'       => is_string($row['status'] ?? null) ? $row['status'] : 'public',
+                'visible'      => is_bool($visibleRaw) ? $visibleRaw : (is_numeric($visibleRaw) ? (int) $visibleRaw !== 0 : true),
+                'uppercats'    => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                'lastmodified' => is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
+            ];
+        }
+        return $out;
     }
 
     /**
@@ -2470,7 +2489,7 @@ SELECT
      * Return (id, name, permalink, dir, rank, status) rows for the listing
      * pane, optionally restricted to direct children of $parentId (null = root).
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, name: string, permalink: string|null, dir: string|null, rank: int|null, status: string}>
      */
     public function findCategoryListing(?int $parentId): array
     {
@@ -2483,7 +2502,23 @@ SELECT
         } else {
             $qb->where('id_uppercat = :parent')->setParameter('parent', $parentId);
         }
-        return $qb->executeQuery()->fetchAllAssociative();
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $idRaw   = $row['id'] ?? null;
+            $rankRaw = $row['rank'] ?? null;
+            if (!is_numeric($idRaw)) {
+                continue;
+            }
+            $out[] = [
+                'id'        => (int) $idRaw,
+                'name'      => is_string($row['name'] ?? null) ? $row['name'] : '',
+                'permalink' => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
+                'dir'       => is_string($row['dir'] ?? null) ? $row['dir'] : null,
+                'rank'      => is_numeric($rankRaw) ? (int) $rankRaw : null,
+                'status'    => is_string($row['status'] ?? null) ? $row['status'] : 'public',
+            ];
+        }
+        return $out;
     }
 
     /**
@@ -2571,10 +2606,10 @@ SELECT representative_picture_id
      * for the images it contains, subject to permissions. Result keyed by
      * category_id.
      *
-     * @param list<int>                              $catIds
-     * @param list<mixed>                            $permParams
-     * @param list<ArrayParameterType|ParameterType> $permTypes
-     * @return array<int|string, array<string, mixed>>
+     * @param  list<int>                              $catIds
+     * @param  list<mixed>                            $permParams
+     * @param  list<ArrayParameterType|ParameterType> $permTypes
+     * @return array<int, array{from: string|null, to: string|null}>
      */
     public function findDateRangesForCategoriesKeyedById(
         array $catIds,
@@ -2597,10 +2632,16 @@ SELECT
   GROUP BY category_id';
         $params = [$catIds, ...$permParams];
         $types  = [ArrayParameterType::INTEGER, ...$permTypes];
-        $out = [];
+        $out    = [];
         foreach ($this->conn->executeQuery($query, $params, $types)->fetchAllAssociative() as $row) {
-            $key = is_scalar($row['category_id']) ? (string) $row['category_id'] : '';
-            $out[$key] = $row;
+            $idRaw = $row['category_id'] ?? null;
+            if (!is_numeric($idRaw)) {
+                continue;
+            }
+            $out[(int) $idRaw] = [
+                'from' => is_string($row['from'] ?? null) ? $row['from'] : null,
+                'to'   => is_string($row['to'] ?? null) ? $row['to'] : null,
+            ];
         }
         return $out;
     }
@@ -2800,10 +2841,10 @@ SELECT
      * fragment composed by getImages — REGEXP'd uppercats OR id-equality —
      * plus the caller's permission filter. Result keyed by id.
      *
-     * @param int[]                                  $catIds  Ids the WHERE was built from (defines the REGEXP/id-eq alternation)
-     * @param list<mixed>                            $permParams
-     * @param list<ArrayParameterType|ParameterType> $permTypes
-     * @return array<int|string, array<string, mixed>>
+     * @param  int[]                                  $catIds  Ids the WHERE was built from (defines the REGEXP/id-eq alternation)
+     * @param  list<mixed>                            $permParams
+     * @param  list<ArrayParameterType|ParameterType> $permTypes
+     * @return array<int, array{id: int, image_order: string|null}>
      */
     public function findIdAndImageOrderForGetImages(
         array $catIds,
@@ -2829,15 +2870,21 @@ SELECT
                 $types[]   = ParameterType::INTEGER;
             }
         }
-        $where = '(' . implode("\n    OR ", $clauses) . ') ' . $permWhere;
+        $where  = '(' . implode("\n    OR ", $clauses) . ') ' . $permWhere;
         $params = [...$params, ...$permParams];
         $types  = [...$types, ...$permTypes];
         $sql    = 'SELECT id, image_order FROM ' . $this->table('categories') . ' WHERE ' . $where;
         $rows   = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
         $out    = [];
         foreach ($rows as $row) {
-            $idInt       = is_numeric($row['id']) ? (int) $row['id'] : 0;
-            $out[$idInt] = $row;
+            $idRaw = $row['id'] ?? null;
+            if (!is_numeric($idRaw)) {
+                continue;
+            }
+            $out[(int) $idRaw] = [
+                'id'          => (int) $idRaw,
+                'image_order' => is_string($row['image_order'] ?? null) ? $row['image_order'] : null,
+            ];
         }
         return $out;
     }

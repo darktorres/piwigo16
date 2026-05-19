@@ -10,28 +10,34 @@ use Piwigo\Search\MalformedSearchRulesException;
  * Versioned typed wrapper around the JSON `rules` blob stored in the
  * `search` table.
  *
- * Foundation step (F5-i): exposes the canonical `fromJson` / `fromArray`
- * entry points plus a {@see toJson()} serializer that always emits the
- * current version. The 15 nested filter VOs from the plan
- * (ExpertFilter, AllwordsFilter, CatFilter, …) and their typed
- * adoption inside `SearchService::getRegularSearchResults()` follow in
- * incremental F5-i sub-steps once the entity foundations exist.
- *
- * For now the `filters` slot stays as an untyped `array<string, mixed>`
- * so existing callers keep working while the typed aggregate grows.
+ * The legacy storage shape is `{version: int, mode: string, fields: {...}}`.
+ * Each top-level filter under `fields` is parsed into its own VO; absent
+ * or empty filter blocks become null. Unknown keys at the top level (or
+ * under `fields`) are dropped — historical plugin extension keys are not
+ * accepted under this contract; the WS layer adds new fields through
+ * dedicated WS handlers and DTOs, not via this blob.
  */
 final readonly class SearchRules
 {
     public const int CURRENT_VERSION = 1;
 
-    /**
-     * @param array<string, mixed> $filters Raw filter map keyed by the legacy filter name
-     *                                      (`expert`, `allwords`, `cat`, `date_posted`, …). Will
-     *                                      be replaced by typed VOs in follow-up F5-i sub-steps.
-     */
     public function __construct(
         public int $version,
-        public array $filters,
+        public string $mode,
+        public ?ExpertFilter $expert,
+        public ?AllwordsFilter $allwords,
+        public ?AuthorFilter $author,
+        public ?CatFilter $cat,
+        public ?DatePostedFilter $datePosted,
+        public ?DateCreatedFilter $dateCreated,
+        public ?TagsFilter $tags,
+        public ?FiletypesFilter $filetypes,
+        public ?AddedByFilter $addedBy,
+        public ?RatioFilter $ratio,
+        public ?RatingFilter $rating,
+        public ?FileSizeFilter $fileSize,
+        public ?HeightFilter $height,
+        public ?WidthFilter $width,
     ) {
     }
 
@@ -41,7 +47,6 @@ final readonly class SearchRules
         if (!is_array($raw)) {
             throw new MalformedSearchRulesException('rules JSON is not an object');
         }
-        // Filter keys are strings; a JSON array (numeric keys) is malformed.
         if ($raw !== [] && array_is_list($raw)) {
             throw new MalformedSearchRulesException('rules JSON is a list, expected an object');
         }
@@ -59,25 +64,64 @@ final readonly class SearchRules
         };
     }
 
-    /** Encode back to JSON, always emitting the current schema version. */
-    public function toJson(): string
-    {
-        $payload = array_merge($this->filters, ['version' => self::CURRENT_VERSION]);
-        $encoded = json_encode($payload, JSON_THROW_ON_ERROR);
-        return $encoded;
-    }
-
     /**
-     * Parse a v1 payload. v1 is the historical shape: a flat map keyed by
-     * filter name, plus an optional `version` key. Unknown keys flow through
-     * to {@see $filters} so plugins / legacy storage keep working.
+     * Parse a v1 payload.
      *
      * @param array<string, mixed> $raw
      */
     private static function fromV1(array $raw): self
     {
-        $filters = $raw;
-        unset($filters['version']);
-        return new self(version: 1, filters: $filters);
+        $mode      = is_string($raw['mode'] ?? null) ? $raw['mode'] : 'AND';
+        /** @var array<string, mixed> $fields */
+        $fields    = is_array($raw['fields'] ?? null) ? $raw['fields'] : [];
+
+        return new self(
+            version:     1,
+            mode:        $mode,
+            expert:      self::parseAssoc($fields, 'expert', ExpertFilter::fromArray(...)),
+            allwords:    self::parseAssoc($fields, 'allwords', AllwordsFilter::fromArray(...)),
+            author:      self::parseAssoc($fields, 'author', AuthorFilter::fromArray(...)),
+            cat:         self::parseAssoc($fields, 'cat', CatFilter::fromArray(...)),
+            datePosted:  self::parseAssoc($fields, 'date_posted', DatePostedFilter::fromArray(...)),
+            dateCreated: self::parseAssoc($fields, 'date_created', DateCreatedFilter::fromArray(...)),
+            tags:        self::parseAssoc($fields, 'tags', TagsFilter::fromArray(...)),
+            filetypes:   self::parseList($fields, 'filetypes', FiletypesFilter::fromArray(...)),
+            addedBy:     self::parseList($fields, 'added_by', AddedByFilter::fromArray(...)),
+            ratio:       self::parseList($fields, 'ratios', RatioFilter::fromArray(...)),
+            rating:      self::parseList($fields, 'ratings', RatingFilter::fromArray(...)),
+            fileSize:    FileSizeFilter::fromValues($fields['filesize_min'] ?? null, $fields['filesize_max'] ?? null),
+            height:      HeightFilter::fromValues($fields['height_min']   ?? null, $fields['height_max']   ?? null),
+            width:       WidthFilter::fromValues($fields['width_min']    ?? null, $fields['width_max']    ?? null),
+        );
+    }
+
+    /**
+     * @template T of object
+     * @param  array<string, mixed>                 $fields
+     * @param  callable(array<int|string, mixed>): ?T $parser
+     * @return T|null
+     */
+    private static function parseAssoc(array $fields, string $key, callable $parser): ?object
+    {
+        $value = $fields[$key] ?? null;
+        if (!is_array($value)) {
+            return null;
+        }
+        return $parser($value);
+    }
+
+    /**
+     * @template T of object
+     * @param  array<string, mixed>                 $fields
+     * @param  callable(array<int|string, mixed>): ?T $parser
+     * @return T|null
+     */
+    private static function parseList(array $fields, string $key, callable $parser): ?object
+    {
+        $value = $fields[$key] ?? null;
+        if (!is_array($value)) {
+            return null;
+        }
+        return $parser($value);
     }
 }

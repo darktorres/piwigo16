@@ -1154,7 +1154,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.permissions.getList',
-            callback:     $this->permissionsEndpoints->getList(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Permissions\GetListHandler::class,
             description:  'Returns permissions: user ids and group ids having access to each album ; this list can be filtered.
 <br>Provide only one parameter!',
             params:       [
@@ -1168,7 +1168,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.permissions.add',
-            callback:     $this->permissionsEndpoints->add(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Permissions\AddHandler::class,
             description:  'Adds permissions to an album.',
             params:       [
                 ParamDefinition::required(name: 'cat_id', type: WsType::Id->value, flags: WsParam::ForceArray->value),
@@ -1184,7 +1184,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.permissions.remove',
-            callback:     $this->permissionsEndpoints->remove(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Permissions\RemoveHandler::class,
             description:  'Removes permissions from an album.',
             params:       [
                 ParamDefinition::required(name: 'cat_id', type: WsType::Id->value, flags: WsParam::ForceArray->value),

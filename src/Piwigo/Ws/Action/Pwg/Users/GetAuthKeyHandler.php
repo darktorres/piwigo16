@@ -10,6 +10,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.users.getAuthKey` — issue a one-shot auth key for a non-admin user. */
 final readonly class GetAuthKeyHandler implements WsAction
@@ -24,10 +25,15 @@ final readonly class GetAuthKeyHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = GetAuthKeyParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $authkey = $this->authService->createUserAuthKey(is_numeric($params['user_id']) ? (int) $params['user_id'] : 0);
+        $authkey = $this->authService->createUserAuthKey($input->userId);
         if ($authkey === false) {
             return new PwgError(WsError::InvalidParam->value, 'invalid user_id');
         }

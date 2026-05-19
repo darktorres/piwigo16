@@ -10,6 +10,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.users.preferencesSet` — set a JSON-encodable preference param for the current user. */
 final readonly class PreferencesSetHandler implements WsAction
@@ -23,15 +24,16 @@ final readonly class PreferencesSetHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        $prefParam = is_string($params['param'] ?? null) ? $params['param'] : '';
-        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $prefParam)) {
-            return new PwgError(WsError::InvalidParam->value, 'Invalid param name #' . $prefParam . '#');
+        try {
+            $input = PreferencesSetParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(WsError::InvalidParam->value, $e->getMessage());
         }
-        $value = stripslashes(is_string($params['value'] ?? null) ? $params['value'] : '');
-        if ($params['is_json']) {
-            $value = json_decode($value, true);
-        }
-        $this->preferencesService->userprefsUpdateParam($prefParam, $value);
+        $value = stripslashes($input->value);
+        $this->preferencesService->userprefsUpdateParam(
+            $input->param,
+            $input->isJson ? json_decode($value, true) : $value,
+        );
         return CurrentUser::get()->rawAttributes['preferences'] ?? null;
     }
 }

@@ -857,10 +857,11 @@ final class BatchManagerController implements AdminSubControllerInterface
             } elseif ('metadata' == $action) {
                 PageState::current()->addInfo(new Html(Lang::t('Metadata synchronized from file') . ' <span class="badge">' . count($collection_int) . '</span>'));
             } elseif ('delete_derivatives' == $action && isset($_POST['del_derivatives_type']) && $_POST['del_derivatives_type'] !== '') {
-                foreach ($this->imageRepository->findPathsAndRepresentativesByIds($collection_int) as $info) {
+                foreach ($this->imageRepository->findPathsAndRepresentativesByIds($collection_int) as $proj) {
                     $del_types = is_array($_POST['del_derivatives_type']) ? $_POST['del_derivatives_type'] : [];
+                    $infoShim  = ['path' => $proj->path->value, 'representative_ext' => $proj->representativeExt];
                     foreach ($del_types as $dtype) {
-                        $this->imageAdminService->deleteElementDerivatives($info, is_string($dtype) ? $dtype : '');
+                        $this->imageAdminService->deleteElementDerivatives($infoShim, is_string($dtype) ? $dtype : '');
                     }
                 }
             } elseif ('generate_derivatives' == $action) {

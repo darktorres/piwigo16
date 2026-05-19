@@ -9,6 +9,8 @@ use Doctrine\DBAL\ParameterType;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Image\Entity\Image;
 use Piwigo\Image\Entity\ImageIdFilename;
+use Piwigo\Image\Entity\ImageIdPathRepresentative;
+use Piwigo\Image\Entity\PathRepresentative;
 
 /** Persistence layer for the image domain. */
 final class ImageRepository extends AbstractRepository
@@ -256,6 +258,10 @@ final class ImageRepository extends AbstractRepository
      * @param int[] $ids
      * @return list<array<string, mixed>>
      */
+    /**
+     * @param  int[] $ids
+     * @return list<PathRepresentative>
+     */
     public function findPathsAndRepresentativesByIds(array $ids): array
     {
         if ($ids === []) {
@@ -266,7 +272,7 @@ final class ImageRepository extends AbstractRepository
             ->from($this->table('images'));
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(PathRepresentative::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**
@@ -469,6 +475,10 @@ final class ImageRepository extends AbstractRepository
      * @param int[] $ids
      * @return list<array<string, mixed>>
      */
+    /**
+     * @param  int[] $ids
+     * @return list<ImageIdPathRepresentative>
+     */
     public function findPathsByIds(array $ids): array
     {
         if ($ids === []) {
@@ -479,7 +489,7 @@ final class ImageRepository extends AbstractRepository
             ->from($this->table('images'));
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(ImageIdPathRepresentative::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
 
@@ -766,8 +776,8 @@ final class ImageRepository extends AbstractRepository
      * Return id → path map for images stored in the given category ids.
      * Used by site_update to find existing images in the synced category tree.
      *
-     * @param list<int> $catIds
-     * @return array<int|string, string>
+     * @param  list<int> $catIds
+     * @return array<int, string>
      */
     public function findIdPathByStorageCategoryIds(array $catIds): array
     {
@@ -779,11 +789,11 @@ final class ImageRepository extends AbstractRepository
             ->from($this->table('images'));
         $qb->where($qb->expr()->in('storage_category_id', ':ids'))
            ->setParameter('ids', $catIds, ArrayParameterType::INTEGER);
-        $rows = $qb->executeQuery()->fetchAllAssociative();
-        $out  = [];
-        foreach ($rows as $row) {
-            $idKey       = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
-            $out[$idKey] = is_scalar($row['path'] ?? null) ? (string) $row['path'] : '';
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            if (is_numeric($row['id'] ?? null) && is_string($row['path'] ?? null)) {
+                $out[(int) $row['id']] = $row['path'];
+            }
         }
         return $out;
     }
@@ -1684,8 +1694,8 @@ final class ImageRepository extends AbstractRepository
     /**
      * Return id → path map for the given image ids.
      *
-     * @param int[] $ids
-     * @return array<int|string, string>
+     * @param  int[] $ids
+     * @return array<int, string>
      */
     public function findIdToPathMapByIds(array $ids): array
     {
@@ -1699,8 +1709,9 @@ final class ImageRepository extends AbstractRepository
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $out = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
-            $key       = is_scalar($row['id']) ? (string) $row['id'] : '';
-            $out[$key] = is_string($row['path']) ? $row['path'] : '';
+            if (is_numeric($row['id'] ?? null) && is_string($row['path'] ?? null)) {
+                $out[(int) $row['id']] = $row['path'];
+            }
         }
         return $out;
     }

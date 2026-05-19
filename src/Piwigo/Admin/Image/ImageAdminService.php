@@ -64,19 +64,17 @@ final class ImageAdminService
             }
             $formatsOf[$fmtImageId][] = is_string($row['ext'] ?? null) ? $row['ext'] : '';
         }
-        foreach ($repo->findPathsByIds($ids) as $row) {
-            $rowPath = is_string($row['path'] ?? null) ? $row['path'] : '';
-            if (UrlService::urlIsRemote($rowPath)) {
+        foreach ($repo->findPathsByIds($ids) as $proj) {
+            if (UrlService::urlIsRemote($proj->path->value)) {
                 continue;
             }
             $files   = [];
-            $files[] = StringUtil::getElementPath($row);
-            if (!empty($row['representative_ext'])) {
-                $files[] = StringUtil::originalToRepresentative($files[0], is_string($row['representative_ext']) ? $row['representative_ext'] : '');
+            $files[] = StringUtil::getElementPath(['path' => $proj->path->value]);
+            if ($proj->representativeExt !== null && $proj->representativeExt !== '') {
+                $files[] = StringUtil::originalToRepresentative($files[0], $proj->representativeExt);
             }
-            $rowIdInt = is_numeric($row['id']) ? (int) $row['id'] : 0;
-            if (isset($formatsOf[$rowIdInt])) {
-                foreach ($formatsOf[$rowIdInt] as $fmtExt) {
+            if (isset($formatsOf[$proj->id->value])) {
+                foreach ($formatsOf[$proj->id->value] as $fmtExt) {
                     $files[] = StringUtil::originalToFormat($files[0], $fmtExt);
                 }
             }
@@ -87,8 +85,11 @@ final class ImageAdminService
                     }
                 }
             }
-            $this->deleteElementDerivatives($row);
-            $newIds[] = is_numeric($row['id']) ? (int) $row['id'] : 0;
+            $this->deleteElementDerivatives([
+                'path'               => $proj->path->value,
+                'representative_ext' => $proj->representativeExt,
+            ]);
+            $newIds[] = $proj->id->value;
         }
         return $newIds;
     }

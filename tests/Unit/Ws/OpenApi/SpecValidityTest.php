@@ -16,7 +16,6 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\User;
 use Piwigo\Ws\Method\CategoriesEndpoints;
-use Piwigo\Ws\Method\CommentsEndpoints;
 use Piwigo\Ws\Method\ExtensionsEndpoints;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\Method\GroupsEndpoints;
@@ -185,7 +184,6 @@ final class SpecValidityTest extends TestCase
         // $htmlService properties.
         return new WsMethodRegistrar(
             self::stub(CategoriesEndpoints::class),
-            self::stub(CommentsEndpoints::class),
             self::stub(ExtensionsEndpoints::class),
             self::stub(GeneralEndpoints::class),
             self::stub(GroupsEndpoints::class),

@@ -2,45 +2,41 @@
 
 declare(strict_types=1);
 
-namespace Piwigo\Ws\Method;
+namespace Piwigo\Ws\Action\Pwg\Comments;
 
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Comment\CommentRepository;
-use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
-use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\Tables;
-use Piwigo\Event\Template\RenderCommentAuthor;
-use Piwigo\Event\Template\RenderCommentContent;
+use Piwigo\Event\Picture\RenderCommentAuthor;
+use Piwigo\Event\Picture\RenderCommentContent;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Url\UrlGenerator;
-use Piwigo\Ws\OpenApi\ApiMethod;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
+use Piwigo\Ws\WsAction;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-final readonly class CommentsEndpoints
+/** `pwg.userComments.getList` — admin paginated comment moderation view. */
+final readonly class GetListHandler implements WsAction
 {
     public function __construct(
         private CommentRepository $commentRepository,
-        private CommentService $commentService,
         private DateService $dateService,
         private UrlGenerator $urlGenerator,
-        private CsrfService $csrfService,
         private EventDispatcherInterface $dispatcher,
     ) {
     }
 
     /**
-     * @param array<mixed> $params
-     * @return array<mixed>|PwgError
+     * @param  array<mixed> $params
+     * @return array<string, mixed>|PwgError
      */
-    #[ApiMethod(summary: 'Get comments', tags: ['comments'])]
-    public function getList(array $params, PwgServer &$service): PwgError|array
+    public function __invoke(array $params, PwgServer $server): PwgError|array
     {
         if (!Config::activateComments()) {
             return new PwgError(403, 'Comments are disabled');
@@ -74,7 +70,6 @@ final readonly class CommentsEndpoints
             }
         }
         if (!empty($params['search'])) {
-            // 'search' is exclusive — overrides the other field filters above.
             $filters = [['sql' => 'content LIKE ?', 'param' => '%' . (is_string($params['search']) ? $params['search'] : '') . '%', 'type' => ParameterType::STRING, 'kind' => 'search']];
         }
 
@@ -135,9 +130,6 @@ final readonly class CommentsEndpoints
         }
         $dates = $this->commentRepository->findCommentDateRange($whereClauses, $qParams, $qTypes);
 
-        // "Authors" filter histogram intentionally excludes the author_id
-        // filter clause itself, so the picker shows every author present in
-        // the remaining filter set rather than just the currently-picked one.
         [$authorsWhere, $authorsParams, $authorsTypes] = $build(array_values(array_filter(
             $filters,
             static fn (array $f): bool => $f['kind'] !== 'author',
@@ -145,33 +137,5 @@ final readonly class CommentsEndpoints
         $nbAuthorsIn = $this->commentRepository->findCommentAuthorCounts($authorsWhere, $authorsParams, $authorsTypes);
 
         return ['summary' => $summary, 'comments' => $list, 'filters' => ['nb_authors' => $nbAuthorsIn, 'started_at' => $dates['started_at'], 'ended_at' => $dates['ended_at']], 'paging' => ['page' => $params['page'], 'per_page' => $params['per_page'], 'total_pages' => max(0, (int) ceil((float) $totalComments / (float) max(1, $perPage)) - 1)]];
-    }
-
-    /** @param array<mixed> $params */
-    #[ApiMethod(summary: 'Delete comments', tags: ['comments'])]
-    public function delete(array $params, PwgServer &$service): PwgError|string
-    {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, Lang::t('Invalid security token'));
-        }
-        $rawIds    = is_array($params['comment_id']) ? $params['comment_id'] : [];
-        $strIds    = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $rawIds);
-        $commentIds = array_map(fn (string $v): int => (int) $v, array_unique($strIds));
-        $this->commentService->deleteUserComment($commentIds);
-        return 'Comment successfully deleted';
-    }
-
-    /** @param array<mixed> $params */
-    #[ApiMethod(summary: 'Validate comments', tags: ['comments'])]
-    public function validate(array $params, PwgServer &$service): PwgError|string
-    {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, Lang::t('Invalid security token'));
-        }
-        $rawIds     = is_array($params['comment_id']) ? $params['comment_id'] : [];
-        $strIds     = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $rawIds);
-        $commentIds = array_map(fn (string $v): int => (int) $v, array_unique($strIds));
-        $this->commentService->validateUserComment($commentIds);
-        return 'Comment successfully validated';
     }
 }

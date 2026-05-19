@@ -11,7 +11,6 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Ws\Method\CategoriesEndpoints;
-use Piwigo\Ws\Method\CommentsEndpoints;
 use Piwigo\Ws\Method\ExtensionsEndpoints;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\Method\GroupsEndpoints;
@@ -36,7 +35,6 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 {
     public function __construct(
         private CategoriesEndpoints $categoriesEndpoints,
-        private CommentsEndpoints $commentsEndpoints,
         private ExtensionsEndpoints $extensionsEndpoints,
         private GeneralEndpoints $generalEndpoints,
         private GroupsEndpoints $groupsEndpoints,
@@ -1387,7 +1385,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.userComments.getList',
-            callback:     $this->commentsEndpoints->getList(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Comments\GetListHandler::class,
             description:  'Get comments',
             params:       [
                 ParamDefinition::optional(name: 'status', default: 'all', info: 'must be: all, validated or pending'),

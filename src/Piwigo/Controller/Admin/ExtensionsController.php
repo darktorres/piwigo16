@@ -247,9 +247,8 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                 $merged_plugins      = true;
             }
 
-            $pluginState = is_string($tpl_plugin['STATE'] ?? null) ? $tpl_plugin['STATE'] : 'inactive';
-            if (isset($count_types_plugins[$pluginState])) {
-                $count_types_plugins[$pluginState]++;
+            if (isset($count_types_plugins[$tpl_plugin['STATE']])) {
+                $count_types_plugins[$tpl_plugin['STATE']]++;
             }
             $tpl_plugins[] = $tpl_plugin;
         }

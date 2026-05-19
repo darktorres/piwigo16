@@ -163,7 +163,7 @@ final class PluginRegistryTest extends TestCase
     {
         /** @psalm-suppress PropertyNotSetInConstructor — parent's $conn/$tablePrefix intentionally skipped; stub has no DB */
         return new class () extends PluginRepository {
-            /** @var array<string, array<string, mixed>> */
+            /** @var array<string, array{id: string, state: string, version: string}> */
             private array $rows = [];
 
             public function __construct()
@@ -179,7 +179,7 @@ final class PluginRegistryTest extends TestCase
                 }
                 $out = array_values($this->rows);
                 if ($state !== null && $state !== '') {
-                    $out = array_values(array_filter($out, static fn (array $r): bool => ($r['state'] ?? '') === $state));
+                    $out = array_values(array_filter($out, static fn (array $r): bool => $r['state'] === $state));
                 }
                 return $out;
             }

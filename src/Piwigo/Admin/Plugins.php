@@ -29,7 +29,7 @@ final class Plugins
 {
     /** @var array<string, array<string,mixed>> */
     public array $fs_plugins = [];
-    /** @var array<string, array<string,mixed>> */
+    /** @var array<string, array{id: string, state: string, version: string}> */
     public array $db_plugins_by_id = [];
     /** @var array<int|string, array<mixed>> */
     public array $server_plugins = [];
@@ -53,9 +53,7 @@ final class Plugins
         $this->getFsPlugins();
 
         foreach ($this->pluginRepository->findAll() as $db_plugin) {
-            if (isset($db_plugin['id']) && is_string($db_plugin['id'])) {
-                $this->db_plugins_by_id[$db_plugin['id']] = $db_plugin;
-            }
+            $this->db_plugins_by_id[$db_plugin['id']] = $db_plugin;
         }
     }
 
@@ -156,9 +154,7 @@ final class Plugins
                 }
 
                 if (count($errors) === 0) {
-                    $vRaw = is_array($crt_db_plugin) ? ($crt_db_plugin['version'] ?? null) : null;
-                    $version = is_scalar($vRaw) ? (string) $vRaw : '';
-                    $activity_details['version'] = $version;
+                    $activity_details['version'] = $crt_db_plugin['version'] ?? '';
 
                     try {
                         $this->pluginRegistry->activate($plugin_id);
@@ -178,9 +174,7 @@ final class Plugins
                     break;
                 }
 
-                if (isset($crt_db_plugin['version'])) {
-                    $activity_details['version'] = $crt_db_plugin['version'];
-                }
+                $activity_details['version'] = $crt_db_plugin['version'];
 
                 $this->pluginRegistry->deactivate($plugin_id);
                 break;
@@ -192,9 +186,7 @@ final class Plugins
                     break;
                 }
 
-                if (isset($crt_db_plugin['version'])) {
-                    $activity_details['version'] = $crt_db_plugin['version'];
-                }
+                $activity_details['version'] = $crt_db_plugin['version'];
 
                 if ($crt_db_plugin['state'] == 'active') {
                     $this->performAction('deactivate', $plugin_id);
@@ -211,10 +203,7 @@ final class Plugins
 
             case 'delete':
                 if (!empty($crt_db_plugin)) {
-                    if (isset($crt_db_plugin['version'])) {
-                        $activity_details['db_version'] = $crt_db_plugin['version'];
-                    }
-
+                    $activity_details['db_version'] = $crt_db_plugin['version'];
                     $this->performAction('uninstall', $plugin_id);
                 }
                 if (!isset($this->fs_plugins[$plugin_id])) {

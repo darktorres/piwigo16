@@ -41,9 +41,8 @@ final class UpgradeService
         $allActive  = $pluginRepo->findAll('active');
         $plugins    = [];
         foreach ($allActive as $row) {
-            $pluginId = is_string($row['id'] ?? null) ? $row['id'] : '';
-            if ($pluginId !== '' && !in_array($pluginId, $standard_plugins)) {
-                $plugins[] = $pluginId;
+            if ($row['id'] !== '' && !in_array($row['id'], $standard_plugins)) {
+                $plugins[] = $row['id'];
             }
         }
 

@@ -82,7 +82,7 @@ final class PluginRegistryLanguagesTest extends TestCase
     {
         /** @psalm-suppress PropertyNotSetInConstructor — parent's $conn/$tablePrefix intentionally skipped; stub has no DB */
         return new class ($states) extends PluginRepository {
-            /** @var array<string, array<string, mixed>> */
+            /** @var array<string, array{id: string, state: string, version: string}> */
             private array $rows = [];
 
             /** @param array<string, string> $states */
@@ -98,10 +98,10 @@ final class PluginRegistryLanguagesTest extends TestCase
             {
                 $out = array_values($this->rows);
                 if ($state !== null && $state !== '') {
-                    $out = array_values(array_filter($out, static fn (array $r): bool => ($r['state'] ?? '') === $state));
+                    $out = array_values(array_filter($out, static fn (array $r): bool => $r['state'] === $state));
                 }
                 if ($id !== null && $id !== '') {
-                    $out = array_values(array_filter($out, static fn (array $r): bool => ($r['id'] ?? '') === $id));
+                    $out = array_values(array_filter($out, static fn (array $r): bool => $r['id'] === $id));
                 }
                 return $out;
             }

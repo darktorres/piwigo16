@@ -93,7 +93,7 @@ final class PluginRegistryMigrationsTest extends TestCase
     {
         /** @psalm-suppress PropertyNotSetInConstructor — parent's $conn/$tablePrefix intentionally skipped; stub has no DB */
         return new class () extends PluginRepository {
-            /** @var array<string, array<string, mixed>> */
+            /** @var array<string, array{id: string, state: string, version: string}> */
             private array $rows = [];
 
             public function __construct()

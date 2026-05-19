@@ -265,9 +265,9 @@ final readonly class TelemetryService
         $nbPrivate      = 0;
         $pluginsCat     = Config::pemPluginsCategory();
         foreach ($plugins->db_plugins_by_id as $plugin) {
-            $pluginId      = is_string($plugin['id'] ?? null) ? $plugin['id'] : '';
-            $pluginState   = is_string($plugin['state'] ?? null) ? $plugin['state'] : '';
-            $pluginVersion = is_string($plugin['version'] ?? null) ? $plugin['version'] : '';
+            $pluginId      = $plugin['id'];
+            $pluginState   = $plugin['state'];
+            $pluginVersion = $plugin['version'];
             if ($pluginState !== 'active') {
                 continue;
             }

@@ -16,8 +16,10 @@ class PluginRepository extends AbstractRepository
 {
     /**
      * Return all rows from the plugins table, optionally filtered by state and/or id.
+     * Schema is fixed: id (string), state (enum 'inactive' / 'active'),
+     * version (string).
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{id: string, state: string, version: string}>
      */
     public function findAll(?string $state = '', ?string $id = ''): array
     {
@@ -34,7 +36,21 @@ class PluginRepository extends AbstractRepository
                ->setParameter('id', $id);
         }
 
-        return $qb->executeQuery()->fetchAllAssociative();
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $idRaw      = $row['id'] ?? null;
+            $stateRaw   = $row['state'] ?? null;
+            $versionRaw = $row['version'] ?? null;
+            if (!is_string($idRaw)) {
+                continue;
+            }
+            $out[] = [
+                'id'      => $idRaw,
+                'state'   => is_string($stateRaw) ? $stateRaw : 'inactive',
+                'version' => is_string($versionRaw) ? $versionRaw : '0',
+            ];
+        }
+        return $out;
     }
 
     /** Insert a new plugin record with the given id and version. */

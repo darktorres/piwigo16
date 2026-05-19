@@ -60,7 +60,7 @@ final readonly class CategoryDefaultRenderer
             $rank_of = array_flip($selection);
 
             foreach ($this->imageRepository
-                ->findByIds(array_map(intval(...), $selection)) as $row) {
+                ->findRowsByIds(array_map(intval(...), $selection)) as $row) {
                 $row['rank'] = $rank_of[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''];
                 $pictures[] = $row;
             }

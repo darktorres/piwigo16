@@ -331,7 +331,10 @@ SELECT id, name, uppercats, global_rank
         if (count($comments) > 0) {
             $elementIdsInt  = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $element_ids);
             $categoryIdsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $category_ids);
-            $elements   = array_column($this->imageRepository->findByIds($elementIdsInt), null, 'id');
+            $elements = [];
+            foreach ($this->imageRepository->findByIds($elementIdsInt) as $img) {
+                $elements[$img->id->value] = $img;
+            }
             $categories = $this->categoryRepository->findNamePermalinkUppercatsByIds($categoryIdsInt);
 
             foreach ($comments as $comment) {
@@ -341,14 +344,16 @@ SELECT id, name, uppercats, global_rank
                 $cId          = is_numeric($comment['comment_id']) ? (int) $comment['comment_id'] : 0;
                 $cAuthorId    = is_numeric($comment['author_id']) ? (int) $comment['author_id'] : 0;
 
-                /** @var array<string, float|int|string|null> $element_row */
-                $element_row  = $elements[(string) $cImageId] ?? [];
-                $name         = (isset($element_row['name']) && $element_row['name'] !== '') ? (string) $element_row['name'] : StringUtil::getNameFromFile((string) ($element_row['file'] ?? ''));
-                $src_image    = new SrcImage($element_row);
+                $element      = $elements[$cImageId] ?? null;
+                $elementFile  = $element !== null ? $element->file->value : '';
+                $name         = ($element !== null && $element->name !== null && $element->name !== '')
+                    ? $element->name
+                    : StringUtil::getNameFromFile($elementFile);
+                $src_image    = $element !== null ? SrcImage::fromImage($element) : new SrcImage([]);
                 $url          = $this->urlService->makePictureUrl([
                     'category'   => $categories[(string) $cCategoryId] ?? [],
                     'image_id'   => $cImageId,
-                    'image_file' => (string) ($element_row['file'] ?? ''),
+                    'image_file' => $elementFile,
                 ]);
 
                 $email = null;

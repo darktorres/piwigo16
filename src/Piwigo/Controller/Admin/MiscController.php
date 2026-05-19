@@ -46,6 +46,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SrcImage;
 use Piwigo\Lang\LangService;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
@@ -1032,9 +1033,12 @@ final class MiscController implements AdminSubControllerInterface
         $image_urls = [];
         if (count($image_ids) > 0) {
             $params = ImageStdParams::getByType(DerivativeSize::Square->value);
-            foreach ($this->imageRepository->findByIds(array_map(intval(...), array_keys($image_ids))) as $row) {
-                $id = is_numeric($row['id']) ? (int) $row['id'] : 0;
-                $image_urls[$id] = ['tn' => DerivativeImage::url($params, $row), 'page' => $this->urlService->makePictureUrl(['image_id' => $row['id'], 'image_file' => $row['file']])];
+            foreach ($this->imageRepository->findByIds(array_map(intval(...), array_keys($image_ids))) as $img) {
+                $id = $img->id->value;
+                $image_urls[$id] = [
+                    'tn'   => DerivativeImage::url($params, SrcImage::fromImage($img)),
+                    'page' => $this->urlService->makePictureUrl(['image_id' => $id, 'image_file' => $img->file->value]),
+                ];
             }
         }
 

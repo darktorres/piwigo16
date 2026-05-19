@@ -151,7 +151,7 @@ final readonly class CategoryCatsRenderer
             $new_image_ids = [];
 
             $imageIdsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $image_ids);
-            foreach ($this->imageRepository->findByIds($imageIdsInt) as $row) {
+            foreach ($this->imageRepository->findRowsByIds($imageIdsInt) as $row) {
                 if ($row['level'] <= $user['level']) {
                     $infos_of_image[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $row;
                 } else {
@@ -173,7 +173,7 @@ final readonly class CategoryCatsRenderer
             }
 
             if (count($new_image_ids) > 0) {
-                foreach ($this->imageRepository->findByIds($new_image_ids) as $row) {
+                foreach ($this->imageRepository->findRowsByIds($new_image_ids) as $row) {
                     $infos_of_image[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $row;
                 }
             }

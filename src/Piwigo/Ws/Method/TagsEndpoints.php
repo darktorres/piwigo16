@@ -123,32 +123,38 @@ final readonly class TagsEndpoints
         if (!empty($imageIds)) {
             $rankOf      = array_flip($imageIds);
             $favoriteIds = $this->urlService->getUserFavorites();
-            $imageRows   = $this->imageRepository->findByIds($imageIds);
-            foreach ($imageRows as $row) {
-                $image       = [];
-                $rowIdInt = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-                $image['rank']        = $rankOf[$rowIdInt] ?? 0;
-                $image['is_favorite'] = isset($favoriteIds[$rowIdInt]);
-                foreach (['id', 'width', 'height', 'hit'] as $k) {
-                    if (isset($row[$k])) {
-                        $image[$k] = is_numeric($row[$k]) ? (int) $row[$k] : 0;
-                    }
-                }
-                foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
-                    $image[$k] = $row[$k] ?? null;
-                }
-                $imgNameStr    = is_scalar($image['name'] ?? null) ? (string) $image['name'] : '';
-                $renderEvent   = new RenderElementName($imgNameStr, $image);
+            foreach ($this->imageRepository->findByIds($imageIds) as $img) {
+                $imgId       = $img->id->value;
+                $imgFile     = $img->file->value;
+                $image       = [
+                    'rank'           => $rankOf[$imgId] ?? 0,
+                    'is_favorite'    => isset($favoriteIds[$imgId]),
+                    'id'             => $imgId,
+                    'width'          => $img->width ?? 0,
+                    'height'         => $img->height ?? 0,
+                    'hit'            => $img->hit,
+                    'file'           => $imgFile,
+                    'name'           => $img->name,
+                    'comment'        => $img->comment,
+                    'date_creation'  => $img->dateCreation?->value,
+                    'date_available' => $img->dateAvailable?->value,
+                ];
+                $renderEvent   = new RenderElementName($img->name ?? '', $image);
                 $this->dispatcher->dispatch($renderEvent);
                 $image['name']    = strip_tags($renderEvent->elementName);
-                $imgCommentRaw    = $image['comment'] ?? null;
-                $imgDescEvent     = new RenderElementDescription(is_string($imgCommentRaw) ? $imgCommentRaw : '', __FUNCTION__);
+                $imgDescEvent     = new RenderElementDescription($img->comment ?? '', __FUNCTION__);
                 $this->dispatcher->dispatch($imgDescEvent);
                 $image['comment'] = $imgDescEvent->elementDescription;
-                $image = array_merge($image, $this->wsHelper->getUrls($row));
-                $imgIdRaw   = $image['id'] ?? null;
-                $imgIdKey   = is_numeric($imgIdRaw) ? (int) $imgIdRaw : 0;
-                $imageTagIds = $params['tag_mode_and'] ? $tagIds : ($imageTagMap[$imgIdKey] ?? []);
+                $image = array_merge($image, $this->wsHelper->getUrls([
+                    'id'                 => $imgId,
+                    'file'               => $imgFile,
+                    'path'               => $img->path->value,
+                    'representative_ext' => $img->representativeExt,
+                    'width'              => $img->width,
+                    'height'             => $img->height,
+                    'rotation'           => $img->rotation ?? 0,
+                ]));
+                $imageTagIds = $params['tag_mode_and'] ? $tagIds : ($imageTagMap[$imgId] ?? []);
                 $imageTags   = [];
                 foreach ($imageTagIds as $tagId) {
                     $tagIdInt = (int) $tagId;
@@ -156,7 +162,7 @@ final readonly class TagsEndpoints
                         continue;
                     }
                     $url    = $this->urlService->makeIndexUrl(['section' => 'tags', 'tags' => [$tagsById[$tagIdInt]]]);
-                    $pageUrl = $this->urlService->makePictureUrl(['section' => 'tags', 'tags' => [$tagsById[$tagIdInt]], 'image_id' => $row['id'], 'image_file' => $row['file']]);
+                    $pageUrl = $this->urlService->makePictureUrl(['section' => 'tags', 'tags' => [$tagsById[$tagIdInt]], 'image_id' => $imgId, 'image_file' => $imgFile]);
                     $imageTags[] = ['id' => $tagIdInt, 'url' => $url, 'page_url' => $pageUrl];
                 }
                 $image['tags'] = new PwgNamedArray($imageTags, 'tag', $this->wsHelper->getTagXmlAttributes());

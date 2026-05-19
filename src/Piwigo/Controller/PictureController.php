@@ -325,7 +325,7 @@ final readonly class PictureController implements ControllerInterface
             $ids[] = $lastItem;
         }
 
-        foreach ($this->imageRepository->findByIds(array_map(intval(...), $ids)) as $row) {
+        foreach ($this->imageRepository->findRowsByIds(array_map(intval(...), $ids)) as $row) {
             if ($previousItem !== null && $row['id'] == $previousItem) {
                 $i = 'previous';
             } elseif ($nextItem !== null && $row['id'] == $nextItem) {

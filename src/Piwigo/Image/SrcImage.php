@@ -10,6 +10,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Event\Picture\GetMimetypeLocation;
 use Piwigo\Event\Picture\GetSrcImageUrl;
+use Piwigo\Image\Entity\Image;
 use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlService;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -99,6 +100,20 @@ final class SrcImage
                 $this->flags |= self::DIM_NOT_GIVEN;
             }
         }
+    }
+
+    /** Build a SrcImage from an Image entity. */
+    public static function fromImage(Image $img): self
+    {
+        return new self([
+            'id'                 => $img->id->value,
+            'path'               => $img->path->value,
+            'file'               => $img->file->value,
+            'representative_ext' => $img->representativeExt,
+            'width'              => $img->width,
+            'height'             => $img->height,
+            'rotation'           => $img->rotation ?? 0,
+        ]);
     }
 
     public function isOriginal(): int

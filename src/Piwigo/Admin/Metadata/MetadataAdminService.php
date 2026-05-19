@@ -214,13 +214,17 @@ final readonly class MetadataAdminService
         $datas = [];
         $tags_of = [];
 
-        foreach ($this->imageRepository->findByIds(array_map(intval(...), $ids)) as $data) {
-            $data = $this->getSyncMetadata($data);
+        foreach ($this->imageRepository->findByIds(array_map(intval(...), $ids)) as $img) {
+            $data = $this->getSyncMetadata([
+                'id'                 => $img->id->value,
+                'path'               => $img->path->value,
+                'representative_ext' => $img->representativeExt,
+            ]);
             if ($data === false) {
                 continue;
             }
 
-            $id = is_numeric($data['id'] ?? null) ? (int) $data['id'] : 0;
+            $id = $img->id->value;
             foreach (['keywords', 'tags'] as $key) {
                 if (isset($data[$key])) {
                     if (!isset($tags_of[$id])) {
@@ -232,6 +236,7 @@ final readonly class MetadataAdminService
                 }
             }
 
+            $data['id'] = $id;
             $data['date_metadata_update'] = $today;
             $datas[] = $data;
         }
@@ -252,8 +257,7 @@ final readonly class MetadataAdminService
                     }
                 }
                 if ($set !== []) {
-                    $rowId = is_numeric($row['id']) ? (int) $row['id'] : 0;
-                    $updates[] = ['id' => $rowId, 'fields' => $set];
+                    $updates[] = ['id' => $row['id'], 'fields' => $set];
                 }
             }
             $this->imageRepository->updateBatchByIds($updates);

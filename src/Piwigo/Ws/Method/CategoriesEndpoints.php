@@ -26,6 +26,7 @@ use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\OrderByService;
+use Piwigo\Image\SrcImage;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -322,12 +323,14 @@ final readonly class CategoriesEndpoints
             $thumbSizeRaw  = $params['thumbnail_size'] ?? null;
             $thumbnailSize = is_string($thumbSizeRaw) ? $thumbSizeRaw : '';
             $imgRepoWsCats = $this->imageRepository;
-            foreach ($imgRepoWsCats->findByIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $imageIds)) as $row) {
-                if ($row['level'] <= $user['level']) {
-                    $thumbnailSrcOf[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = DerivativeImage::url($thumbnailSize, $row);
+            $userLevel = is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0;
+            foreach ($imgRepoWsCats->findByIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $imageIds)) as $img) {
+                $imgIdStr = (string) $img->id->value;
+                if ($img->level <= $userLevel) {
+                    $thumbnailSrcOf[$imgIdStr] = DerivativeImage::url($thumbnailSize, SrcImage::fromImage($img));
                 } else {
                     foreach ($categories as &$category) {
-                        if ($row['id'] == $category['representative_picture_id']) {
+                        if ($img->id->value == $category['representative_picture_id']) {
                             $newImgId = $this->categoryService->getRandomImageInCategory($category);
                             if (isset($newImgId) && !in_array($newImgId, $imageIds)) {
                                 $newImageIds[] = $newImgId;
@@ -343,8 +346,8 @@ final readonly class CategoriesEndpoints
                 }
             }
             if (count($newImageIds) > 0) {
-                foreach ($imgRepoWsCats->findByIds(array_map(intval(...), $newImageIds)) as $row) {
-                    $thumbnailSrcOf[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = DerivativeImage::url($thumbnailSize, $row);
+                foreach ($imgRepoWsCats->findByIds(array_map(intval(...), $newImageIds)) as $img) {
+                    $thumbnailSrcOf[(string) $img->id->value] = DerivativeImage::url($thumbnailSize, SrcImage::fromImage($img));
                 }
             }
         }

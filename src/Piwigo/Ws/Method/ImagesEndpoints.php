@@ -395,29 +395,35 @@ final readonly class ImagesEndpoints
             $imageIdsInt  = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $imageIds);
             $imageIdsFlip = array_flip($imageIdsInt);
             $favoriteIds  = $this->urlService->getUserFavorites();
-            foreach ($this->imageRepository->findByIds($imageIdsInt) as $row) {
-                $image       = [];
-                $rowIdInt = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-                $image['is_favorite'] = $rowIdInt !== 0 && isset($favoriteIds[$rowIdInt]);
-                foreach (['id', 'width', 'height', 'hit'] as $k) {
-                    if (isset($row[$k])) {
-                        $image[$k] = is_numeric($row[$k]) ? (int) $row[$k] : 0;
-                    }
-                }
-                foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
-                    $image[$k] = $row[$k] ?? null;
-                }
-                $rawImage2Name    = $image['name'] ?? null;
-                $renderEvent2     = new RenderElementName(is_string($rawImage2Name) ? $rawImage2Name : '', $image);
+            foreach ($this->imageRepository->findByIds($imageIdsInt) as $img) {
+                $imgIdInt = $img->id->value;
+                $image    = [
+                    'is_favorite'    => isset($favoriteIds[$imgIdInt]),
+                    'id'             => $imgIdInt,
+                    'width'          => $img->width ?? 0,
+                    'height'         => $img->height ?? 0,
+                    'hit'            => $img->hit,
+                    'file'           => $img->file->value,
+                    'name'           => $img->name,
+                    'comment'        => $img->comment,
+                    'date_creation'  => $img->dateCreation?->value,
+                    'date_available' => $img->dateAvailable?->value,
+                ];
+                $renderEvent2     = new RenderElementName($img->name ?? '', $image);
                 $this->dispatcher->dispatch($renderEvent2);
                 $image['name']    = strip_tags($renderEvent2->elementName);
-                $imgCommentRaw    = $image['comment'] ?? null;
-                $imgDescEvent     = new RenderElementDescription(is_string($imgCommentRaw) ? $imgCommentRaw : '', __FUNCTION__);
+                $imgDescEvent     = new RenderElementDescription($img->comment ?? '', __FUNCTION__);
                 $this->dispatcher->dispatch($imgDescEvent);
                 $image['comment'] = $imgDescEvent->elementDescription;
-                $image = array_merge($image, $this->wsHelper->getUrls($row));
-                $imgIdRaw = $image['id'] ?? null;
-                $imgIdInt = is_numeric($imgIdRaw) ? (int) $imgIdRaw : 0;
+                $image = array_merge($image, $this->wsHelper->getUrls([
+                    'id'                 => $imgIdInt,
+                    'file'               => $img->file->value,
+                    'path'               => $img->path->value,
+                    'representative_ext' => $img->representativeExt,
+                    'width'              => $img->width,
+                    'height'             => $img->height,
+                    'rotation'           => $img->rotation ?? 0,
+                ]));
                 if (isset($imageIdsFlip[$imgIdInt])) {
                     $images[$imageIdsFlip[$imgIdInt]] = $image;
                 }
@@ -1183,13 +1189,13 @@ final readonly class ImagesEndpoints
         if (count($imageIds) === 0) {
             return new PwgError(404, 'No format found for the id(s) given');
         }
-        foreach ($imgRepo->findByIds(array_map(intval(...), $imageIds)) as $row) {
-            $rowPath = is_string($row['path'] ?? null) ? $row['path'] : '';
-            $rowId   = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
+        foreach ($imgRepo->findByIds(array_map(intval(...), $imageIds)) as $img) {
+            $rowPath = $img->path->value;
+            $rowId   = (string) $img->id->value;
             if (UrlService::urlIsRemote($rowPath)) {
                 continue;
             }
-            $imagePath = StringUtil::getElementPath($row);
+            $imagePath = StringUtil::getElementPath(['path' => $rowPath]);
             $files     = [];
             if (isset($formatsOf[$rowId])) {
                 foreach ($formatsOf[$rowId] as $formatExt) {

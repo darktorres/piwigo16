@@ -1020,42 +1020,41 @@ final class BatchManagerController implements AdminSubControllerInterface
             $collection = explode(',', is_string($rawElementIds = $_POST['element_ids'] ?? null) ? $rawElementIds : '');
 
             $datas = [];
-            foreach ($this->imageRepository->findByIds(array_map(intval(...), $collection)) as $row) {
-                $data         = [];
-                $row_id_raw   = $row['id'] ?? null;
-                $row_id_str   = is_string($row_id_raw) ? $row_id_raw : '';
-                $data['id']   = $row_id_raw;
-                $data['name'] = $_POST['name-' . $row_id_str] ?? null;
-                $data['author'] = $_POST['author-' . $row_id_str] ?? null;
-                $data['level'] = $_POST['level-' . $row_id_str] ?? null;
+            foreach ($this->imageRepository->findByIds(array_map(intval(...), $collection)) as $img) {
+                $imgId      = $img->id->value;
+                $imgIdStr   = (string) $imgId;
+                $data       = [
+                    'id'     => $imgId,
+                    'name'   => $_POST['name-' . $imgIdStr] ?? null,
+                    'author' => $_POST['author-' . $imgIdStr] ?? null,
+                    'level'  => $_POST['level-' . $imgIdStr] ?? null,
+                ];
 
-                $desc_key = 'description-' . $row_id_str;
-                $desc_val = $_POST[$desc_key] ?? null;
+                $desc_val = $_POST['description-' . $imgIdStr] ?? null;
                 $data['comment'] = Config::allowHtmlDescriptions() ? $desc_val : strip_tags(is_string($desc_val) ? $desc_val : '');
 
-                $rawDateCreation = $_POST['date_creation-' . $row_id_str] ?? null;
+                $rawDateCreation = $_POST['date_creation-' . $imgIdStr] ?? null;
                 $data['date_creation'] = (is_string($rawDateCreation) && $rawDateCreation !== '') ? $rawDateCreation : null;
 
                 $datas[] = $data;
 
                 $tag_ids  = [];
-                $tags_key = 'tags-' . $row_id_str;
                 /** @var array<mixed>|string|null $tags_val */
-                $tags_val = $_POST[$tags_key] ?? null;
+                $tags_val = $_POST['tags-' . $imgIdStr] ?? null;
                 if ($tags_val !== null && $tags_val !== '') {
                     if (is_array($tags_val)) {
                         $tags_val = array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $tags_val);
                     }
                     $tag_ids  = $this->tagAdminService->getTagIds($tags_val);
                 }
-                $this->tagAdminService->setTags($tag_ids, is_numeric($row['id']) ? (int) $row['id'] : 0);
+                $this->tagAdminService->setTags($tag_ids, $imgId);
             }
 
             $updateRows = [];
             foreach ($datas as $row) {
                 $updateRows[] = [
-                    'id'     => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
-                    'fields' => ['name' => $row['name'] ?? null, 'author' => $row['author'] ?? null, 'level' => $row['level'] ?? null, 'comment' => $row['comment'] ?? null, 'date_creation' => $row['date_creation'] ?? null],
+                    'id'     => $row['id'],
+                    'fields' => ['name' => $row['name'], 'author' => $row['author'], 'level' => $row['level'], 'comment' => $row['comment'], 'date_creation' => $row['date_creation']],
                 ];
             }
             $this->imageRepository->updateBatchByIds($updateRows);

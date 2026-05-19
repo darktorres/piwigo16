@@ -7,6 +7,7 @@ namespace Piwigo\Image;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Db\AbstractRepository;
+use Piwigo\Image\Entity\Image;
 use Piwigo\Image\Entity\ImageIdFilename;
 
 /** Persistence layer for the image domain. */
@@ -400,12 +401,35 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
-     * Return image rows for the given ids.
+     * Return image entities for the given ids.
      *
-     * @param int[] $ids
-     * @return list<array<string, mixed>>
+     * @param  int[] $ids
+     * @return list<Image>
      */
     public function findByIds(array $ids): array
+    {
+        return array_map(Image::fromRow(...), $this->fetchRowsByIds($ids));
+    }
+
+    /**
+     * Return raw image rows for the given ids. Used by the view-model
+     * accumulation pattern in `PictureController` and the Category
+     * renderers; to be retired in F5-d/4 once those callers migrate to
+     * the typed `PictureViewModel`.
+     *
+     * @param  int[] $ids
+     * @return list<array<string, mixed>>
+     */
+    public function findRowsByIds(array $ids): array
+    {
+        return $this->fetchRowsByIds($ids);
+    }
+
+    /**
+     * @param  int[] $ids
+     * @return list<array<string, mixed>>
+     */
+    private function fetchRowsByIds(array $ids): array
     {
         if ($ids === []) {
             return [];

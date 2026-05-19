@@ -54,10 +54,10 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_findByIds_returns_subset(): void
     {
-        $rows = $this->repo->findByIds([1, 3, 5]);
+        $images = $this->repo->findByIds([1, 3, 5]);
 
-        self::assertCount(3, $rows);
-        $ids = array_column($rows, 'id');
+        self::assertCount(3, $images);
+        $ids = array_map(static fn ($img) => $img->id->value, $images);
         sort($ids);
         self::assertSame([1, 3, 5], $ids);
     }

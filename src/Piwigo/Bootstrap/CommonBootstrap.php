@@ -44,6 +44,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
+use Piwigo\Users\User;
 use Piwigo\Users\UserBootstrap;
 use Piwigo\Users\UserService;
 use Psr\Container\ContainerInterface;
@@ -173,8 +174,7 @@ final class CommonBootstrap
 
         if (Kernel::service(PermissionService::class)->isAGuest()) {
             $guestName = Lang::t('guest');
-            CurrentUser::get()->username = $guestName;
-            CurrentUser::get()->rawAttributes['username'] = $guestName;
+            CurrentUser::update(static fn (User $u): User => $u->withUsername($guestName));
         }
 
         if (PageState::current()->authKeyInvalid) {

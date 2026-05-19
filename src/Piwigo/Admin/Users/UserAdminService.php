@@ -19,6 +19,7 @@ use Piwigo\Event\User\InvalidateUserCache;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Cache\CacheItemPoolInterface;
@@ -161,7 +162,7 @@ final readonly class UserAdminService
     public function invalidateUserCacheNbTags(): void
     {
         if (CurrentUser::isInitialized()) {
-            unset(CurrentUser::get()->rawAttributes['nb_available_tags']);
+            CurrentUser::update(static fn (User $u): User => $u->withoutRawAttribute('nb_available_tags'));
         }
         $this->userRepository->clearNbAvailableTags();
     }

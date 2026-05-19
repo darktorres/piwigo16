@@ -21,6 +21,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Users\User;
 use Piwigo\Validation\InputValidator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -81,8 +82,7 @@ final readonly class ActionController implements ControllerInterface
         if ($this->permissionService->isAdmin() && $get_pwg_token !== null && $this->csrfService->getToken() == $get_pwg_token) {
             $is_admin_download = true;
             if (CurrentUser::isInitialized()) {
-                CurrentUser::get()->enabledHigh = true;
-                CurrentUser::get()->rawAttributes['enabled_high'] = true;
+                CurrentUser::update(static fn (User $u): User => $u->withEnabledHigh(true));
             }
         }
 

@@ -15,6 +15,7 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
@@ -155,7 +156,8 @@ final readonly class UploadAsyncHandler implements WsAction
         }
         $this->userAdminService->invalidateUserCache();
         if (CurrentUser::isInitialized() && !empty($params['level']) && $params['level'] > (CurrentUser::get()->rawAttributes['level'] ?? 0)) {
-            CurrentUser::get()->rawAttributes['level'] = $params['level'];
+            $newLevel = $params['level'];
+            CurrentUser::update(static fn (User $u): User => $u->withRawAttribute('level', $newLevel));
         }
         $now              = time();
         $globBufferResult = glob(Config::uploadDir() . '/buffer/' . '*.chunk');

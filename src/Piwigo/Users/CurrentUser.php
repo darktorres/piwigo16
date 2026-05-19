@@ -59,8 +59,18 @@ final class CurrentUser
      */
     public static function setLanguage(string $language): void
     {
-        self::get()->language = $language;
-        self::get()->rawAttributes['language'] = $language;
+        self::$instance = self::get()->withLanguage($language);
+    }
+
+    /**
+     * Replaces the singleton with the result of `$fn(currentUser)`.
+     * Use for any mutation now that User is readonly.
+     *
+     * @param \Closure(User): User $fn
+     */
+    public static function update(\Closure $fn): void
+    {
+        self::$instance = $fn(self::get());
     }
 
     /**

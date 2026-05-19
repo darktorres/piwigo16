@@ -131,10 +131,11 @@ final readonly class PreferencesService
         }
 
         if (CurrentUser::isInitialized()) {
-            if (!isset(CurrentUser::get()->rawAttributes['preferences']) || !is_array(CurrentUser::get()->rawAttributes['preferences'])) {
-                CurrentUser::get()->rawAttributes['preferences'] = [];
-            }
-            CurrentUser::get()->rawAttributes['preferences'][$param] = $value;
+            CurrentUser::update(static function (User $u) use ($param, $value): User {
+                $prefs = is_array($u->rawAttributes['preferences'] ?? null) ? $u->rawAttributes['preferences'] : [];
+                $prefs[$param] = $value;
+                return $u->withRawAttribute('preferences', $prefs);
+            });
         }
         $this->userprefsSave();
     }
@@ -151,14 +152,15 @@ final readonly class PreferencesService
         }
 
         if (CurrentUser::isInitialized()) {
-            if (!isset(CurrentUser::get()->rawAttributes['preferences']) || !is_array(CurrentUser::get()->rawAttributes['preferences'])) {
-                CurrentUser::get()->rawAttributes['preferences'] = [];
-            }
-            foreach ($params as $param) {
-                if ($param !== '' && isset(CurrentUser::get()->rawAttributes['preferences'][$param])) {
-                    unset(CurrentUser::get()->rawAttributes['preferences'][$param]);
+            CurrentUser::update(static function (User $u) use ($params): User {
+                $prefs = is_array($u->rawAttributes['preferences'] ?? null) ? $u->rawAttributes['preferences'] : [];
+                foreach ($params as $param) {
+                    if ($param !== '' && isset($prefs[$param])) {
+                        unset($prefs[$param]);
+                    }
                 }
-            }
+                return $u->withRawAttribute('preferences', $prefs);
+            });
         }
 
         $this->userprefsSave();

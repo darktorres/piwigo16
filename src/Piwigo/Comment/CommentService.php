@@ -20,6 +20,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Users\User;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class CommentService
@@ -436,7 +437,7 @@ final readonly class CommentService
     public function invalidateUserCacheNbComments(): void
     {
         if (CurrentUser::isInitialized()) {
-            unset(CurrentUser::get()->rawAttributes['nb_available_comments']);
+            CurrentUser::update(static fn (User $u): User => $u->withoutRawAttribute('nb_available_comments'));
         }
 
         $this->repo->clearNbAvailableCommentsCache();

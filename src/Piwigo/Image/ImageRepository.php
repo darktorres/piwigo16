@@ -18,12 +18,11 @@ final class ImageRepository extends AbstractRepository
     /** Return the maximum date_available among all images, or null if none. */
     public function findMaxDateAvailable(): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('MAX(date_available)')
-            ->from($this->table('images'))
-            ->executeQuery()
-            ->fetchOne();
-        return is_string($value) ? $value : null;
+        return $this->fetchOneString(
+            $this->conn->createQueryBuilder()
+                ->select('MAX(date_available)')
+                ->from($this->table('images'))
+        );
     }
 
     /**
@@ -169,14 +168,13 @@ final class ImageRepository extends AbstractRepository
     /** Return true if an image with the given id exists. */
     public function existsById(int $id): bool
     {
-        $count = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('images'))
-            ->where('id = :id')
-            ->setParameter('id', $id)
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($count) ? (int) $count > 0 : false;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($this->table('images'))
+                ->where('id = :id')
+                ->setParameter('id', $id)
+        ) > 0;
     }
 
     /**
@@ -185,14 +183,13 @@ final class ImageRepository extends AbstractRepository
      */
     public function findPathById(int $id): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('path')
-            ->from($this->table('images'))
-            ->where('id = :id')
-            ->setParameter('id', $id)
-            ->executeQuery()
-            ->fetchOne();
-        return is_string($value) ? $value : null;
+        return $this->fetchOneString(
+            $this->conn->createQueryBuilder()
+                ->select('path')
+                ->from($this->table('images'))
+                ->where('id = :id')
+                ->setParameter('id', $id)
+        );
     }
 
     /**
@@ -265,12 +262,11 @@ final class ImageRepository extends AbstractRepository
      */
     public function findEarliestDate(): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('MIN(date_available)')
-            ->from($this->table('images'))
-            ->executeQuery()
-            ->fetchOne();
-        return is_string($value) ? $value : null;
+        return $this->fetchOneString(
+            $this->conn->createQueryBuilder()
+                ->select('MIN(date_available)')
+                ->from($this->table('images'))
+        );
     }
 
     /**
@@ -307,12 +303,11 @@ final class ImageRepository extends AbstractRepository
     /** Total number of images. */
     public function countAll(): int
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('images'))
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($this->table('images'))
+        );
     }
 
     /**
@@ -360,23 +355,21 @@ final class ImageRepository extends AbstractRepository
     /** Total filesize (KB) of all original images. */
     public function sumFilesizeKb(): int
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('SUM(filesize)')
-            ->from($this->table('images'))
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('SUM(filesize)')
+                ->from($this->table('images'))
+        );
     }
 
     /** Count photo ratings. */
     public function countRatings(): int
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('rate'))
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($this->table('rate'))
+        );
     }
 
     /**
@@ -651,13 +644,12 @@ final class ImageRepository extends AbstractRepository
     /** Count images whose storage_category_id is NOT NULL (filesystem-synced). */
     public function countWithStorageCategorySet(): int
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('images'))
-            ->where('storage_category_id IS NOT NULL')
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($this->table('images'))
+                ->where('storage_category_id IS NOT NULL')
+        );
     }
 
     /**
@@ -689,27 +681,25 @@ final class ImageRepository extends AbstractRepository
     /** Return the date_available of the earliest-inserted image, or null. */
     public function findEarliestDateAvailable(): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('date_available')
-            ->from($this->table('images'))
-            ->orderBy('id', 'ASC')
-            ->setMaxResults(1)
-            ->executeQuery()
-            ->fetchOne();
-        return is_scalar($value) ? (string) $value : null;
+        return $this->fetchOneString(
+            $this->conn->createQueryBuilder()
+                ->select('date_available')
+                ->from($this->table('images'))
+                ->orderBy('id', 'ASC')
+                ->setMaxResults(1)
+        );
     }
 
     /** Return the date_available of the most recently inserted image, or null. */
     public function findLatestDateAvailable(): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('date_available')
-            ->from($this->table('images'))
-            ->orderBy('id', 'DESC')
-            ->setMaxResults(1)
-            ->executeQuery()
-            ->fetchOne();
-        return is_scalar($value) ? (string) $value : null;
+        return $this->fetchOneString(
+            $this->conn->createQueryBuilder()
+                ->select('date_available')
+                ->from($this->table('images'))
+                ->orderBy('id', 'DESC')
+                ->setMaxResults(1)
+        );
     }
 
     /**

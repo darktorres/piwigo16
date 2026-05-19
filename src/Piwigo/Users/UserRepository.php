@@ -84,12 +84,11 @@ final class UserRepository extends AbstractRepository
     /** Total number of registered users. */
     public function countAll(string $usersTable): int
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($usersTable)
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($usersTable)
+        );
     }
 
     /**
@@ -107,19 +106,17 @@ final class UserRepository extends AbstractRepository
             ->from($this->table('user_infos'));
         $qb->where($qb->expr()->in('status', ':statuses'))
            ->setParameter('statuses', $statuses, ArrayParameterType::STRING);
-        $value = $qb->executeQuery()->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
+        return $this->fetchOneInt($qb);
     }
 
     /** Total number of groups. */
     public function countGroups(): int
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('groups'))
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($this->table('groups'))
+        );
     }
 
     /**
@@ -192,15 +189,14 @@ final class UserRepository extends AbstractRepository
      */
     public function findEarliestRegistrationDate(): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('registration_date')
-            ->from($this->table('user_infos'))
-            ->where('registration_date IS NOT NULL')
-            ->orderBy('user_id', 'ASC')
-            ->setMaxResults(1)
-            ->executeQuery()
-            ->fetchOne();
-        return is_string($value) ? $value : null;
+        return $this->fetchOneString(
+            $this->conn->createQueryBuilder()
+                ->select('registration_date')
+                ->from($this->table('user_infos'))
+                ->where('registration_date IS NOT NULL')
+                ->orderBy('user_id', 'ASC')
+                ->setMaxResults(1)
+        );
     }
 
     /**
@@ -267,14 +263,13 @@ final class UserRepository extends AbstractRepository
      */
     public function findStatusByUserId(int $userId): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('status')
-            ->from($this->table('user_infos'))
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId)
-            ->executeQuery()
-            ->fetchOne();
-        return is_string($value) ? $value : null;
+        return $this->fetchOneString(
+            $this->conn->createQueryBuilder()
+                ->select('status')
+                ->from($this->table('user_infos'))
+                ->where('user_id = :userId')
+                ->setParameter('userId', $userId)
+        );
     }
 
     /** Truncate user_cache_categories (full cache invalidation). */

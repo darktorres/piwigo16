@@ -536,26 +536,24 @@ final class CategoryRepository extends AbstractRepository
     /** Count hidden (locked) albums (visible = 0). */
     public function countHidden(): int
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('categories'))
-            ->where('visible = 0')
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($this->table('categories'))
+                ->where('visible = 0')
+        );
     }
 
     /** Return true if a category with the given id exists. */
     public function existsById(int $id): bool
     {
-        $count = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('categories'))
-            ->where('id = :id')
-            ->setParameter('id', $id)
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($count) ? (int) $count > 0 : false;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($this->table('categories'))
+                ->where('id = :id')
+                ->setParameter('id', $id)
+        ) > 0;
     }
 
     /**
@@ -563,14 +561,13 @@ final class CategoryRepository extends AbstractRepository
      */
     public function findUppercatsStringById(int $id): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('uppercats')
-            ->from($this->table('categories'))
-            ->where('id = :id')
-            ->setParameter('id', $id)
-            ->executeQuery()
-            ->fetchOne();
-        return is_string($value) ? $value : null;
+        return $this->fetchOneString(
+            $this->conn->createQueryBuilder()
+                ->select('uppercats')
+                ->from($this->table('categories'))
+                ->where('id = :id')
+                ->setParameter('id', $id)
+        );
     }
 
     /**
@@ -655,36 +652,33 @@ final class CategoryRepository extends AbstractRepository
     /** Count virtual albums (dir IS NULL). */
     public function countVirtual(): int
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('categories'))
-            ->where('dir IS NULL')
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($this->table('categories'))
+                ->where('dir IS NULL')
+        );
     }
 
     /** Count physical albums (dir IS NOT NULL). */
     public function countPhysical(): int
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('categories'))
-            ->where('dir IS NOT NULL')
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($this->table('categories'))
+                ->where('dir IS NOT NULL')
+        );
     }
 
     /** Total number of image–category association rows. */
     public function countImageCategoryLinks(): int
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('image_category'))
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($this->table('image_category'))
+        );
     }
 
     /** Return a single category by id, or null if not found. */

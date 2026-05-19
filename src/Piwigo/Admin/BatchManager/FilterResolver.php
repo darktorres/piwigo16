@@ -12,6 +12,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Admin\GetBatchManagerPrefilters;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
+use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -24,6 +25,7 @@ final readonly class FilterResolver
         private TagAdminService $tagAdminService,
         private CsrfService $csrfService,
         private LangService $langService,
+        private Session $session,
         private UrlService $urlService,
         private EventDispatcherInterface $dispatcher,
     ) {
@@ -58,7 +60,7 @@ final readonly class FilterResolver
 
         usort($prefilters, fn (array $a, array $b): int => strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME'])));
 
-        $bulk_manager_filter = is_array($_SESSION['bulk_manager_filter'] ?? null) ? $_SESSION['bulk_manager_filter'] : [];
+        $bulk_manager_filter = $this->session->bulkManagerFilter ?? [];
 
         $tpl->assign([
             'conf_checksum_compute_blocksize' => Config::checksumComputeBlocksize(),

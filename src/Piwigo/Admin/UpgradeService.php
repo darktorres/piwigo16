@@ -14,6 +14,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 use Piwigo\Plugin\PluginRepository;
+use Piwigo\Session\Session;
 use Piwigo\Theme\ThemeRepository;
 use Piwigo\Users\UserRepository;
 
@@ -107,10 +108,10 @@ final class UpgradeService
         $current_release = Config::piwigoInstalledVersion() ?? '';
         if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
             session_start();
-            $pwgUid = is_scalar($_SESSION['pwg_uid'] ?? null) ? (string) $_SESSION['pwg_uid'] : '';
-            if ($pwgUid !== '') {
+            $userId = Kernel::service(Session::class)->userId;
+            if ($userId !== null) {
                 $statusValue = Kernel::service(UserRepository::class)
-                    ->findStatusByUserId((int) $pwgUid);
+                    ->findStatusByUserId($userId->value);
                 if ($statusValue === 'webmaster') {
                     self::$upgradeAuthorized = true;
                     return;

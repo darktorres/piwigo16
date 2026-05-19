@@ -12,6 +12,7 @@ use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Filter\FilterService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Lang\Translator;
+use Piwigo\Session\Session;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ResponseInterface;
@@ -31,6 +32,7 @@ final readonly class FilterMiddleware implements MiddlewareInterface
     public function __construct(
         private CategoryService $categoryService,
         private ImageRepository $imageRepository,
+        private Session $session,
         private SessionService $sessionService,
         private FilterService $filterService,
     ) {
@@ -76,7 +78,7 @@ final readonly class FilterMiddleware implements MiddlewareInterface
         }
 
         if (!$enabled) {
-            if (!empty($_SESSION['pwg_filter_enabled'])) {
+            if ($this->session->filterEnabled) {
                 $this->sessionService->unsetSessionVar('filter_enabled');
                 $this->sessionService->unsetSessionVar('filter_check_key');
                 $this->sessionService->unsetSessionVar('filter_categories');

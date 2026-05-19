@@ -19,6 +19,7 @@ use Piwigo\Language\LanguageService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -45,6 +46,7 @@ final readonly class ProfileController implements ControllerInterface
         private CsrfService $csrfService,
         private PermissionService $permissionService,
         private LangService $langService,
+        private Session $session,
         private UrlService $urlService,
         private LanguageService $languageService,
         private EventDispatcherInterface $dispatcher,
@@ -93,7 +95,7 @@ final readonly class ProfileController implements ControllerInterface
         $tpl->assign('page_data_json', json_encode([
             'canUpdatePreferences' => Config::allowUserCustomization(),
             'canUpdatePassword'    => !$special_user,
-            'can_manage_api'       => 'pwg_ui' === ($_SESSION['connected_with'] ?? null),
+            'can_manage_api'       => 'pwg_ui' === $this->session->connectedWith,
             'user' => [
                 'username'      => stripslashes(is_scalar($userdata['username'] ?? null) ? (string) $userdata['username'] : ''),
                 'email'         => is_scalar($userdata['email'] ?? null) ? (string) $userdata['email'] : '',

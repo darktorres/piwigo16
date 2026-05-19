@@ -29,6 +29,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
+use Piwigo\Session\Session;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -267,7 +268,7 @@ final readonly class InstallController implements ControllerInterface
                 $user = Kernel::service(UserService::class)->buildUser(1, false);
                 CurrentUser::setRawAttributes($user);
                 Kernel::service(AuthService::class)->logUser(is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0, false);
-                $_SESSION['connected_with'] = 'pwg_ui';
+                Kernel::service(Session::class)->connectedWith = 'pwg_ui';
 
                 if (!is_array($user['preferences'] ?? null)) {
                     $user['preferences'] = [];

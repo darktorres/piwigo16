@@ -40,6 +40,7 @@ use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Session\Session;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -76,6 +77,7 @@ final readonly class GeneralEndpoints
         private RateRepository $rateRepository,
         private RateService $rateService,
         private SearchRepository $searchRepository,
+        private Session $session,
         private TagRepository $tagRepository,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
@@ -307,11 +309,11 @@ final readonly class GeneralEndpoints
         $password = is_string($params['password'] ?? null) ? $params['password'] : '';
         if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $username)) {
             if ($this->authService->authKeyLogin($username . ':' . $password)) {
-                $_SESSION['connected_with'] = 'ws_session_login_api_key';
+                $this->session->connectedWith = 'ws_session_login_api_key';
                 return true;
             }
         } elseif ($this->authService->tryLogUser($username, $password, false)) {
-            $_SESSION['connected_with'] = 'ws_session_login';
+            $this->session->connectedWith = 'ws_session_login';
             return true;
         }
         return new PwgError(999, 'Invalid username/password');
@@ -343,7 +345,7 @@ final readonly class GeneralEndpoints
         $res['current_datetime'] = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         $res['version']   = AppInfo::VERSION;
         $res['save_visits'] = $this->activityLogger->isLoggingEnabled();
-        $res['connected_with'] = $_SESSION['connected_with'] ?? null;
+        $res['connected_with'] = $this->session->connectedWith;
         /** @var mixed $httpUserAgentRaw */
         $httpUserAgentRaw = $_SERVER['HTTP_USER_AGENT'] ?? '';
         $httpUserAgent    = is_string($httpUserAgentRaw) ? $httpUserAgentRaw : '';

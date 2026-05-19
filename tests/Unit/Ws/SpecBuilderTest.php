@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Ws;
 
 use PHPUnit\Framework\TestCase;
+use Piwigo\Session\Session;
 use Piwigo\Ws\MethodDefinition;
 use Piwigo\Ws\OpenApi\ApiMethod;
 use Piwigo\Ws\OpenApi\OpenApiDocument;
@@ -33,6 +34,11 @@ final class SpecBuilderTest extends TestCase
         // WsInvokeAllowedSubscriber isn't wired here so the event no-ops.
         $dispatcherRef = new \ReflectionProperty($this->server, 'dispatcher');
         $dispatcherRef->setValue($this->server, new SymfonyEventDispatcher());
+
+        // PwgServer::isAuthorizedMethodForAPIKEY() reads $session->connectedWith;
+        // initialize an empty Session so the typed-property check succeeds.
+        $sessionRef = new \ReflectionProperty($this->server, 'session');
+        $sessionRef->setValue($this->server, Session::fromSuperglobal([]));
 
         // Stub globals that addMethod / getMethods touch (none — it's pure array work).
     }

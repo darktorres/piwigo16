@@ -14,6 +14,7 @@ use Piwigo\Event\Picture\PwgLogAllowed;
 use Piwigo\Event\Picture\PwgLogUpdateLastVisit;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Session\Session;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\UserRepository;
@@ -36,6 +37,7 @@ final readonly class ActivityLogger
         private HistoryRepository $historyRepository,
         private HistoryAdminService $historyAdminService,
         private PermissionService $permissionService,
+        private Session $session,
         private UserRepository $userRepository,
         private EventDispatcherInterface $dispatcher,
     ) {
@@ -84,7 +86,7 @@ final readonly class ActivityLogger
             $uaRaw     = $_SERVER['HTTP_USER_AGENT'];
             $userAgent = strip_tags(is_string($uaRaw) ? $uaRaw : '');
         }
-        if (isset($_SESSION['connected_with']) && $_SESSION['connected_with'] === 'api_key' && isset($_SERVER['HTTP_USER_AGENT'])) {
+        if ($this->session->connectedWith === 'api_key' && isset($_SERVER['HTTP_USER_AGENT'])) {
             $details['connected_with'] = 'api_key';
             /** @var mixed $uaRaw */
             $uaRaw     = $_SERVER['HTTP_USER_AGENT'];

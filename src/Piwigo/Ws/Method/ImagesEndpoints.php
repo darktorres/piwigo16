@@ -38,6 +38,7 @@ use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\LoungeRepository;
 use Piwigo\Image\SrcImage;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
@@ -69,6 +70,7 @@ final readonly class ImagesEndpoints
         private ImageAdminService $imageAdminService,
         private ImageFormatRepository $imageFormatRepository,
         private ImageRepository $imageRepository,
+        private LoungeRepository $loungeRepository,
         private MetadataAdminService $metadataAdminService,
         private PermissionService $permissionService,
         private RateRepository $rateRepository,
@@ -925,7 +927,7 @@ final readonly class ImagesEndpoints
             $catRepo2       = $this->categoryRepository;
             $imageInfos     = $this->imageRepository->findById($imageId);
             $categoryInfos  = ['nb_photos' => $catRepo2->countImagesByCategoryId($pCategoryFirst)];
-            $nbPhotosLounge = $this->imageRepository->countLoungeInCategoryNotAssociated($pCategoryFirst);
+            $nbPhotosLounge = $this->loungeRepository->countInCategoryNotAssociated($pCategoryFirst);
             $categoryName   = $this->htmlService->getCatDisplayNameFromId($pCategoryFirst, null);
             if ($imageInfos === null) {
                 return null;

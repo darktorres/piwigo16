@@ -74,6 +74,7 @@ use Piwigo\Image\DerivativePipeline;
 use Piwigo\Image\DerivativeService;
 use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\LoungeRepository;
 use Piwigo\Image\OrderByService;
 use Piwigo\Job\MessengerFactory;
 use Piwigo\Job\MessengerRepository;
@@ -263,7 +264,7 @@ return [
     GroupsEndpoints::class           => factory(static fn (GroupRepository $g, UserAdminService $uA, ActivityLogger $al, CsrfService $csrf): GroupsEndpoints => new GroupsEndpoints($g, $uA, $al, $csrf)),
     UsersEndpoints::class            => factory(static fn (AuthService $auth, ConfigService $cfg, DateService $d, GroupRepository $g, ImageRepository $i, MailService $m, PermissionService $perm, PreferencesService $pref, UserAdminService $uA, UserRepository $u, UserService $us, CsrfService $csrf, WsHelper $ws, EventDispatcherInterface $dispatcher, OrderByService $orderBy): UsersEndpoints => new UsersEndpoints($auth, $cfg, $d, $g, $i, $m, $perm, $pref, $uA, $u, $us, $csrf, $ws, $dispatcher, $orderBy)),
     CategoriesEndpoints::class       => factory(static fn (CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, HtmlService $h, ImageAdminService $iA, ImageRepository $i, PermissionService $perm, UrlGenerator $ug, UrlService $us, UserAdminService $uA, UserRepository $u, ActivityLogger $al, CsrfService $csrf, WsHelper $ws, EventDispatcherInterface $d, OrderByService $orderBy): CategoriesEndpoints => new CategoriesEndpoints($catA, $catR, $cat, $h, $iA, $i, $perm, $ug, $us, $uA, $u, $al, $csrf, $ws, $d, $orderBy)),
-    ImagesEndpoints::class           => factory(static fn (CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, CommentRepository $comR, CommentService $com, HtmlService $h, ImageAdminService $iA, ImageFormatRepository $iF, ImageRepository $i, MetadataAdminService $mA, PermissionService $perm, RateRepository $rR, RateService $rate, SearchService $sr, TagAdminService $tA, TagService $tag, UploadService $up, UrlService $u, UserAdminService $uA, ActivityLogger $al, CsrfService $csrf, WsHelper $ws, EphemeralKeyService $eks, EventDispatcherInterface $d, Paths $paths): ImagesEndpoints => new ImagesEndpoints($catA, $catR, $cat, $comR, $com, $h, $iA, $iF, $i, $mA, $perm, $rR, $rate, $sr, $tA, $tag, $up, $u, $uA, $al, $csrf, $ws, $eks, $d, $paths)),
+    ImagesEndpoints::class           => factory(static fn (CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, CommentRepository $comR, CommentService $com, HtmlService $h, ImageAdminService $iA, ImageFormatRepository $iF, ImageRepository $i, LoungeRepository $loungeR, MetadataAdminService $mA, PermissionService $perm, RateRepository $rR, RateService $rate, SearchService $sr, TagAdminService $tA, TagService $tag, UploadService $up, UrlService $u, UserAdminService $uA, ActivityLogger $al, CsrfService $csrf, WsHelper $ws, EphemeralKeyService $eks, EventDispatcherInterface $d, Paths $paths): ImagesEndpoints => new ImagesEndpoints($catA, $catR, $cat, $comR, $com, $h, $iA, $iF, $i, $loungeR, $mA, $perm, $rR, $rate, $sr, $tA, $tag, $up, $u, $uA, $al, $csrf, $ws, $eks, $d, $paths)),
     AdminPageRegistry::class         => factory(static fn (): AdminPageRegistry => new AdminPageRegistry()),
     AssetService::class              => factory(static fn (LoggerInterface $log, Paths $paths): AssetService => new AssetService($paths->root . 'plugins', $log)),
     AdminService::class              => factory(static fn (CategoryRepository $catR, DateService $d, DbMaintenanceRepository $dbM, HistoryRepository $hR, ImageRepository $i, ImageFormatRepository $iF, TagRepository $tR, UserRepository $u, CacheItemPoolInterface $pool): AdminService => new AdminService($catR, $d, $dbM, $hR, $i, $iF, $tR, $u, $pool)),
@@ -274,6 +275,7 @@ return [
                 resolve($c, CategoryService::class),
                 resolve($c, ImageAdminService::class),
                 resolve($c, ImageRepository::class),
+                resolve($c, LoungeRepository::class),
                 resolve($c, PermissionRepository::class),
                 resolve($c, SiteRepository::class),
                 resolve($c, UserAdminService::class),
@@ -291,6 +293,7 @@ return [
                 resolve($c, ConfigService::class),
                 resolve($c, ImageRepository::class),
                 resolve($c, ImageFormatRepository::class),
+                resolve($c, LoungeRepository::class),
                 resolve($c, UrlGenerator::class),
                 resolve($c, ActivityLogger::class),
                 resolve($c, EventDispatcherInterface::class),
@@ -363,6 +366,7 @@ return [
     CategoryRepository::class     => factory(static fn (Connection $conn): CategoryRepository => new CategoryRepository($conn, Config::dbPrefix())),
     ImageRepository::class        => factory(static fn (Connection $conn): ImageRepository => new ImageRepository($conn, Config::dbPrefix())),
     ImageFormatRepository::class  => factory(static fn (Connection $conn): ImageFormatRepository => new ImageFormatRepository($conn, Config::dbPrefix())),
+    LoungeRepository::class       => factory(static fn (Connection $conn): LoungeRepository => new LoungeRepository($conn, Config::dbPrefix())),
     OrderByService::class         => factory(static fn (): OrderByService => new OrderByService()),
     UserRepository::class         => factory(static fn (Connection $conn): UserRepository => new UserRepository($conn, Config::dbPrefix())),
     PluginRepository::class       => factory(static fn (Connection $conn): PluginRepository => new PluginRepository($conn, Config::dbPrefix())),

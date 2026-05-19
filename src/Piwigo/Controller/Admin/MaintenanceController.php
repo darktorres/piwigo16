@@ -52,6 +52,7 @@ use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\LoungeRepository;
 use Piwigo\Job\RegenerateAllDerivativesJob;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Rate\RateService;
@@ -97,6 +98,7 @@ final class MaintenanceController implements AdminSubControllerInterface
         private readonly ImageAdminService $imageAdminService,
         private readonly ImageFormatRepository $imageFormatRepository,
         private readonly ImageRepository $imageRepository,
+        private readonly LoungeRepository $loungeRepository,
         private readonly MessageBusInterface $messageBus,
         private readonly MetadataAdminService $metadataAdminService,
         private readonly PermissionRepository $permissionRepository,
@@ -438,7 +440,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             $tpl->assign(['U_MAINT_LOCK_GALLERY' => sprintf($url_format, 'lock_gallery')]);
         }
 
-        $nb_lounge = $this->imageRepository->countLoungeImages();
+        $nb_lounge = $this->loungeRepository->countAll();
         if ($nb_lounge > 0) {
             $tpl->assign(['U_EMPTY_LOUNGE' => sprintf($url_format, 'empty_lounge'), 'LOUNGE_COUNTER' => $nb_lounge]);
         }

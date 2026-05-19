@@ -25,6 +25,7 @@ use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\LoungeRepository;
 use Piwigo\Image\SrcImage;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -40,6 +41,7 @@ final class ImageAdminService
         private readonly ConfigService $configService,
         private readonly ImageRepository $imageRepository,
         private readonly ImageFormatRepository $imageFormatRepository,
+        private readonly LoungeRepository $loungeRepository,
         private readonly UrlGenerator $urlGenerator,
         private readonly ActivityLogger $activityLogger,
         private readonly EventDispatcherInterface $dispatcher,
@@ -352,7 +354,7 @@ final class ImageAdminService
     /** @return int[] */
     public function getOrphans(): array
     {
-        $loungedIds = $this->imageRepository->findLoungeImageIds();
+        $loungedIds = $this->loungeRepository->findImageIds();
         return $this->imageRepository->findOrphanIdsExcluding($loungedIds);
     }
 

@@ -20,6 +20,7 @@ use Piwigo\Event\Album\CreateVirtualCategory;
 use Piwigo\Event\Album\DeleteCategories;
 use Piwigo\Event\Album\EmptyLounge;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\LoungeRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Site\SiteRepository;
@@ -33,6 +34,7 @@ final readonly class CategoryAdminService
         private CategoryService $categoryService,
         private ImageAdminService $imageAdminService,
         private ImageRepository $imageRepository,
+        private LoungeRepository $loungeRepository,
         private PermissionRepository $permissionRepository,
         private SiteRepository $siteRepository,
         private UserAdminService $userAdminService,
@@ -603,7 +605,7 @@ final readonly class CategoryAdminService
                 $inserts[] = ['image_id' => $imageId, 'category_id' => $categoryId];
             }
         }
-        $this->imageRepository->insertLoungeIgnoreDuplicates($inserts);
+        $this->loungeRepository->insertIgnoreDuplicates($inserts);
     }
 
     /**
@@ -621,7 +623,7 @@ final readonly class CategoryAdminService
         if (isset($_REQUEST['method']) && in_array($_REQUEST['method'], ['pwg.images.upload', 'pwg.images.uploadAsync'])) {
             return;
         }
-        $voyager = $this->imageRepository->findOldestLoungeEntry();
+        $voyager = $this->loungeRepository->findOldestEntry();
         if ($voyager === null) {
             return;
         }
@@ -641,7 +643,7 @@ final readonly class CategoryAdminService
             return null;
         }
         $maxImageId = 0;
-        $rows       = $this->imageRepository->findAllLoungeEntries();
+        $rows       = $this->loungeRepository->findAllEntries();
         $images     = [];
         foreach ($rows as $idx => $row) {
             if ($row['image_id'] > $maxImageId) {
@@ -653,7 +655,7 @@ final readonly class CategoryAdminService
                 $images = [];
             }
         }
-        $this->imageRepository->deleteLoungeBeforeId($maxImageId);
+        $this->loungeRepository->deleteBeforeId($maxImageId);
         if ($invalidateUserCache) {
             $this->userAdminService->invalidateUserCache();
         }

@@ -42,7 +42,6 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
         private GeneralEndpoints $generalEndpoints,
         private GroupsEndpoints $groupsEndpoints,
         private ImagesEndpoints $imagesEndpoints,
-        private PermissionsEndpoints $permissionsEndpoints,
         private TagsEndpoints $tagsEndpoints,
         private UsersEndpoints $usersEndpoints,
         private PermissionService $permissionService,

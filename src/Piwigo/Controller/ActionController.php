@@ -15,6 +15,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
+use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
 use Piwigo\Url\UrlService;
@@ -34,6 +35,7 @@ final readonly class ActionController implements ControllerInterface
 {
     public function __construct(
         private HtmlService $htmlService,
+        private ImageFormatRepository $imageFormatRepository,
         private ImageRepository $imageRepository,
         private PermissionService $permissionService,
         private ActivityLogger $activityLogger,
@@ -55,7 +57,7 @@ final readonly class ActionController implements ControllerInterface
             $this->inputValidator->check('format', $_GET, false, ValidationPattern::ID);
             $get_format = StringUtil::inputInt('format', null, $_GET);
 
-            $format = $this->imageRepository->findImageFormatById($get_format ?? 0);
+            $format = $this->imageFormatRepository->findById($get_format ?? 0);
             if ($format === null) {
                 $this->error(400, 'Invalid request - format');
             }

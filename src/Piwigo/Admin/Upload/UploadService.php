@@ -30,6 +30,7 @@ use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeService;
 use Piwigo\Image\DerivativeSize;
+use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Session\Session;
@@ -46,6 +47,7 @@ final readonly class UploadService
         private ConfigService $configService,
         private DerivativeService $derivativeService,
         private ImageAdminService $imageAdminService,
+        private ImageFormatRepository $imageFormatRepository,
         private ImageRepository $imageRepository,
         private MetadataAdminService $metadataAdminService,
         private UserAdminService $userAdminService,
@@ -320,14 +322,14 @@ final readonly class UploadService
         Filesystem::tryChmod($formatPath, Config::chmodValue() & 0o666);
         $fileInfos      = $this->pwgImageInfos($formatPath);
         $insert         = ['image_id' => $formatOf, 'ext' => $formatExt, 'filesize' => $fileInfos['filesize']];
-        $existingFormat = $this->imageRepository->findImageFormatByImageAndExt((int) $formatOf, $formatExt);
+        $existingFormat = $this->imageFormatRepository->findByImageAndExt((int) $formatOf, $formatExt);
         if ($existingFormat !== null) {
             $existingFormatId = is_numeric($existingFormat['format_id'] ?? null) ? (int) $existingFormat['format_id'] : 0;
-            $this->imageRepository->updateImageFormat($existingFormatId, (int) $formatOf, $formatExt, ['filesize' => $fileInfos['filesize']]);
+            $this->imageFormatRepository->update($existingFormatId, (int) $formatOf, $formatExt, ['filesize' => $fileInfos['filesize']]);
             $formatId  = $existingFormatId;
             $addStatus = 'update';
         } else {
-            $formatId  = $this->imageRepository->insertImageFormat($insert);
+            $formatId  = $this->imageFormatRepository->insert($insert);
             $addStatus = 'add';
         }
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, (int) $formatOf, 'edit', ['action' => 'add format', 'format_ext' => $formatExt, 'format_id' => $formatId]));

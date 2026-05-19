@@ -132,42 +132,6 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
-     * Return (image_id, ext) rows for specific format ids.
-     *
-     * @param int[] $formatIds
-     * @return list<array<string, mixed>>
-     */
-    public function findFormatsByFormatIds(array $formatIds): array
-    {
-        if ($formatIds === []) {
-            return [];
-        }
-        $qb = $this->conn->createQueryBuilder()
-            ->select('image_id', 'ext')
-            ->from($this->table('image_format'));
-        $qb->where($qb->expr()->in('format_id', ':formatIds'))
-           ->setParameter('formatIds', $formatIds, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
-    }
-
-    /**
-     * Delete format rows by their format_id values.
-     *
-     * @param int[] $formatIds
-     */
-    public function deleteFormatsByFormatIds(array $formatIds): void
-    {
-        if ($formatIds === []) {
-            return;
-        }
-        $qb = $this->conn->createQueryBuilder()
-            ->delete($this->table('image_format'));
-        $qb->where($qb->expr()->in('format_id', ':formatIds'))
-           ->setParameter('formatIds', $formatIds, ArrayParameterType::INTEGER);
-        $qb->executeStatement();
-    }
-
-    /**
      * Update lastmodified to NOW() for the given image ids.
      *
      * @param int[] $ids
@@ -196,21 +160,6 @@ final class ImageRepository extends AbstractRepository
             ->where('image_id <= :maxId')
             ->setParameter('maxId', $maxId)
             ->executeStatement();
-    }
-
-    /**
-     * Return all (image_id, ext) rows from image_format.
-     * Used to build a map of alternate format extensions per image.
-     *
-     * @return list<array<string, mixed>>
-     */
-    public function findAllFormats(): array
-    {
-        return $this->conn->createQueryBuilder()
-            ->select('image_id', 'ext')
-            ->from($this->table('image_format'))
-            ->executeQuery()
-            ->fetchAllAssociative();
     }
 
     /**
@@ -449,26 +398,6 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
-     * Return (image_id, ext) rows for formats attached to the given images.
-     * Used by delete_element_files to locate physical format files on disk.
-     *
-     * @param int[] $imageIds
-     * @return list<array<string, mixed>>
-     */
-    public function findFormatsByImageIds(array $imageIds): array
-    {
-        if ($imageIds === []) {
-            return [];
-        }
-        $qb = $this->conn->createQueryBuilder()
-            ->select('image_id', 'ext')
-            ->from($this->table('image_format'));
-        $qb->where($qb->expr()->in('image_id', ':imageIds'))
-           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
-    }
-
-    /**
      * Return (id, path, representative_ext) rows for the given ids.
      * Used by delete_element_files to find physical files before deletion.
      *
@@ -516,28 +445,6 @@ final class ImageRepository extends AbstractRepository
         $value = $this->conn->createQueryBuilder()
             ->select('SUM(filesize)')
             ->from($this->table('images'))
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
-    }
-
-    /** Total number of alternate formats. */
-    public function countFormats(): int
-    {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('image_format'))
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
-    }
-
-    /** Total filesize (KB) of all alternate format files. */
-    public function sumFormatFilesizeKb(): int
-    {
-        $value = $this->conn->createQueryBuilder()
-            ->select('SUM(filesize)')
-            ->from($this->table('image_format'))
             ->executeQuery()
             ->fetchOne();
         return is_numeric($value) ? (int) $value : 0;
@@ -669,23 +576,6 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
-     * Return an image_format row by format_id, or null when not found.
-     *
-     * @return array<string, mixed>|null
-     */
-    public function findImageFormatById(int $formatId): ?array
-    {
-        $row = $this->conn->createQueryBuilder()
-            ->select('*')
-            ->from($this->table('image_format'))
-            ->where('format_id = :id')
-            ->setParameter('id', $formatId)
-            ->executeQuery()
-            ->fetchAssociative();
-        return $row !== false ? $row : null;
-    }
-
-    /**
      * True when at least one image_category row for $imageId lives in a
      * category that passes the supplied permission filter — i.e. the image
      * is visible to the current user.
@@ -771,29 +661,6 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
-     * Same shape as findFileExtensionTotals but over the image_format table —
-     * image-format rows store ext explicitly rather than via SUBSTRING_INDEX.
-     *
-     * @return array<string, array{ext_counter: int, filesize: int}>
-     */
-    public function findImageFormatExtensionTotals(): array
-    {
-        $rows = $this->conn->executeQuery(
-            'SELECT COUNT(*) AS ext_counter, ext, SUM(filesize) AS filesize'
-            . ' FROM ' . $this->table('image_format') . ' GROUP BY ext',
-        )->fetchAllAssociative();
-        $out = [];
-        foreach ($rows as $row) {
-            $ext = is_string($row['ext'] ?? null) ? $row['ext'] : '';
-            $out[$ext] = [
-                'ext_counter' => is_numeric($row['ext_counter'] ?? null) ? (int) $row['ext_counter'] : 0,
-                'filesize'    => is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0,
-            ];
-        }
-        return $out;
-    }
-
-    /**
      * Return the image ids with the top $limit rating_score (DESC). Used by
      * the admin "consensus deviation" tool.
      *
@@ -859,23 +726,6 @@ final class ImageRepository extends AbstractRepository
             }
             foreach ($linkRows as $row) {
                 $this->conn->insert($this->table('image_category'), $row);
-            }
-        });
-    }
-
-    /**
-     * Insert a batch of image_format rows atomically.
-     *
-     * @param list<array<string, mixed>> $rows
-     */
-    public function insertImageFormatRowsBatch(array $rows): void
-    {
-        if ($rows === []) {
-            return;
-        }
-        $this->conn->transactional(function () use ($rows): void {
-            foreach ($rows as $row) {
-                $this->conn->insert($this->table('image_format'), $row);
             }
         });
     }
@@ -1359,50 +1209,6 @@ final class ImageRepository extends AbstractRepository
     public function insertNew(array $fields): int
     {
         $this->conn->insert($this->table('images'), $fields);
-        return (int) $this->conn->lastInsertId();
-    }
-
-    /**
-     * Find the existing image_format row for the given image/ext pair, or null.
-     *
-     * @return array<string, mixed>|null
-     */
-    public function findImageFormatByImageAndExt(int $imageId, string $ext): ?array
-    {
-        $row = $this->conn->createQueryBuilder()
-            ->select('*')
-            ->from($this->table('image_format'))
-            ->where('image_id = :imageId')
-            ->andWhere('ext = :ext')
-            ->setParameter('imageId', $imageId)
-            ->setParameter('ext', $ext)
-            ->executeQuery()
-            ->fetchAssociative();
-        return $row !== false ? $row : null;
-    }
-
-    /**
-     * Update an image_format row.
-     *
-     * @param array<string, mixed> $fields
-     */
-    public function updateImageFormat(int $formatId, int $imageId, string $ext, array $fields): void
-    {
-        $this->conn->update(
-            $this->table('image_format'),
-            $fields,
-            ['format_id' => $formatId, 'image_id' => $imageId, 'ext' => $ext],
-        );
-    }
-
-    /**
-     * Insert an image_format row and return the new id.
-     *
-     * @param array<string, mixed> $fields
-     */
-    public function insertImageFormat(array $fields): int
-    {
-        $this->conn->insert($this->table('image_format'), $fields);
         return (int) $this->conn->lastInsertId();
     }
 

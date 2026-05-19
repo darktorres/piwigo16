@@ -37,6 +37,7 @@ use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
+use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -80,6 +81,7 @@ final class PhotoController implements AdminSubControllerInterface
         private readonly DirectPreparer $directPreparer,
         private readonly HtmlService $htmlService,
         private readonly ImageAdminService $imageAdminService,
+        private readonly ImageFormatRepository $imageFormatRepository,
         private readonly ImageRepository $imageRepository,
         private readonly LangService $langService,
         private readonly MetadataAdminService $metadataAdminService,
@@ -364,7 +366,7 @@ final class PhotoController implements AdminSubControllerInterface
         }
 
         $rowImageId = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-        $formats    = $this->imageRepository->findFormatsByImageIds([$rowImageId]);
+        $formats    = $this->imageFormatRepository->findByImageIds([$rowImageId]);
         if (!empty($formats)) {
             $format_strings = [];
             foreach ($formats as $format) {
@@ -542,7 +544,7 @@ final class PhotoController implements AdminSubControllerInterface
 
         $picFmtIdInt = (int) $picFmtId;
         $image       = $this->imageRepository->findById($picFmtIdInt);
-        $formats     = $this->imageRepository->findFormatsByImageIds([$picFmtIdInt]);
+        $formats     = $this->imageFormatRepository->findByImageIds([$picFmtIdInt]);
 
         foreach ($formats as &$format) {
             $format['download_url'] = $this->urlGenerator->actionFormat((int) (is_scalar($format['format_id']) ? $format['format_id'] : 0));
@@ -645,7 +647,7 @@ final class PhotoController implements AdminSubControllerInterface
                 $formats_original_info['src'] = DerivativeImage::url(DerivativeSize::Square->value, $src_image);
                 $fmtIdRaw = $formats_original_info['id'] ?? null;
                 $fmtIdInt = is_numeric($fmtIdRaw) ? (int) $fmtIdRaw : 0;
-                $fmtRow   = $this->imageRepository->findFormatsByImageIds([$fmtIdInt]);
+                $fmtRow   = $this->imageFormatRepository->findByImageIds([$fmtIdInt]);
                 if (!empty($fmtRow)) {
                     $format_strings = [];
                     $formats_exts   = [];

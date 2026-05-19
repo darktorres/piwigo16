@@ -15,6 +15,7 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbMaintenanceRepository;
 use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
+use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Url\UrlService;
@@ -29,6 +30,7 @@ final readonly class AdminService
         private DbMaintenanceRepository $dbMaintenanceRepository,
         private HistoryRepository $historyRepository,
         private ImageRepository $imageRepository,
+        private ImageFormatRepository $imageFormatRepository,
         private TagRepository $tagRepository,
         private UserRepository $userRepository,
         private CacheItemPoolInterface $cachePool,
@@ -483,8 +485,8 @@ final readonly class AdminService
         $stats['nb_rates']      = $imgRepo->countRatings();
         $stats['nb_views']      = $histRepo->sumPageViews();
         $stats['disk_usage']    = $imgRepo->sumFilesizeKb();
-        $stats['nb_formats']          = $imgRepo->countFormats();
-        $stats['formats_disk_usage']  = $imgRepo->sumFormatFilesizeKb();
+        $stats['nb_formats']          = $this->imageFormatRepository->countAll();
+        $stats['formats_disk_usage']  = $this->imageFormatRepository->sumFilesizeKb();
         $stats['disk_usage']         += $stats['formats_disk_usage'];
         return $stats;
     }

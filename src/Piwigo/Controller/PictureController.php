@@ -34,6 +34,7 @@ use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\View\PictureViewModel;
 use Piwigo\Menu\MenubarRenderer;
@@ -74,6 +75,7 @@ final readonly class PictureController implements ControllerInterface
         private CommentService $commentService,
         private DateService $dateService,
         private HtmlService $htmlService,
+        private ImageFormatRepository $imageFormatRepository,
         private ImageRepository $imageRepository,
         private MenubarRenderer $menubarRenderer,
         private PermissionService $permissionService,
@@ -452,7 +454,7 @@ final readonly class PictureController implements ControllerInterface
             $tpl->append('current', ['U_DOWNLOAD' => $currentVm->downloadUrl], true);
 
             if (Config::isFormatsEnabled()) {
-                $formats = $this->imageRepository->findFormatsByImageIds([$currentVm->image->id->value]);
+                $formats = $this->imageFormatRepository->findByImageIds([$currentVm->image->id->value]);
                 array_unshift($formats, [
                     'download_url' => $currentVm->downloadUrl,
                     'ext'          => StringUtil::getExtension($currentVm->image->file->value),

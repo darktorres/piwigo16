@@ -72,6 +72,7 @@ use Piwigo\Http\Middleware\SessionMiddleware;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\DerivativePipeline;
 use Piwigo\Image\DerivativeService;
+use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\OrderByService;
 use Piwigo\Job\MessengerFactory;
@@ -262,10 +263,10 @@ return [
     GroupsEndpoints::class           => factory(static fn (GroupRepository $g, UserAdminService $uA, ActivityLogger $al, CsrfService $csrf): GroupsEndpoints => new GroupsEndpoints($g, $uA, $al, $csrf)),
     UsersEndpoints::class            => factory(static fn (AuthService $auth, ConfigService $cfg, DateService $d, GroupRepository $g, ImageRepository $i, MailService $m, PermissionService $perm, PreferencesService $pref, UserAdminService $uA, UserRepository $u, UserService $us, CsrfService $csrf, WsHelper $ws, EventDispatcherInterface $dispatcher, OrderByService $orderBy): UsersEndpoints => new UsersEndpoints($auth, $cfg, $d, $g, $i, $m, $perm, $pref, $uA, $u, $us, $csrf, $ws, $dispatcher, $orderBy)),
     CategoriesEndpoints::class       => factory(static fn (CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, HtmlService $h, ImageAdminService $iA, ImageRepository $i, PermissionService $perm, UrlGenerator $ug, UrlService $us, UserAdminService $uA, UserRepository $u, ActivityLogger $al, CsrfService $csrf, WsHelper $ws, EventDispatcherInterface $d, OrderByService $orderBy): CategoriesEndpoints => new CategoriesEndpoints($catA, $catR, $cat, $h, $iA, $i, $perm, $ug, $us, $uA, $u, $al, $csrf, $ws, $d, $orderBy)),
-    ImagesEndpoints::class           => factory(static fn (CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, CommentRepository $comR, CommentService $com, HtmlService $h, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, PermissionService $perm, RateRepository $rR, RateService $rate, SearchService $sr, TagAdminService $tA, TagService $tag, UploadService $up, UrlService $u, UserAdminService $uA, ActivityLogger $al, CsrfService $csrf, WsHelper $ws, EphemeralKeyService $eks, EventDispatcherInterface $d, Paths $paths): ImagesEndpoints => new ImagesEndpoints($catA, $catR, $cat, $comR, $com, $h, $iA, $i, $mA, $perm, $rR, $rate, $sr, $tA, $tag, $up, $u, $uA, $al, $csrf, $ws, $eks, $d, $paths)),
+    ImagesEndpoints::class           => factory(static fn (CategoryAdminService $catA, CategoryRepository $catR, CategoryService $cat, CommentRepository $comR, CommentService $com, HtmlService $h, ImageAdminService $iA, ImageFormatRepository $iF, ImageRepository $i, MetadataAdminService $mA, PermissionService $perm, RateRepository $rR, RateService $rate, SearchService $sr, TagAdminService $tA, TagService $tag, UploadService $up, UrlService $u, UserAdminService $uA, ActivityLogger $al, CsrfService $csrf, WsHelper $ws, EphemeralKeyService $eks, EventDispatcherInterface $d, Paths $paths): ImagesEndpoints => new ImagesEndpoints($catA, $catR, $cat, $comR, $com, $h, $iA, $iF, $i, $mA, $perm, $rR, $rate, $sr, $tA, $tag, $up, $u, $uA, $al, $csrf, $ws, $eks, $d, $paths)),
     AdminPageRegistry::class         => factory(static fn (): AdminPageRegistry => new AdminPageRegistry()),
     AssetService::class              => factory(static fn (LoggerInterface $log, Paths $paths): AssetService => new AssetService($paths->root . 'plugins', $log)),
-    AdminService::class              => factory(static fn (CategoryRepository $catR, DateService $d, DbMaintenanceRepository $dbM, HistoryRepository $hR, ImageRepository $i, TagRepository $tR, UserRepository $u, CacheItemPoolInterface $pool): AdminService => new AdminService($catR, $d, $dbM, $hR, $i, $tR, $u, $pool)),
+    AdminService::class              => factory(static fn (CategoryRepository $catR, DateService $d, DbMaintenanceRepository $dbM, HistoryRepository $hR, ImageRepository $i, ImageFormatRepository $iF, TagRepository $tR, UserRepository $u, CacheItemPoolInterface $pool): AdminService => new AdminService($catR, $d, $dbM, $hR, $i, $iF, $tR, $u, $pool)),
     CategoryAdminService::class      => factory(static function (ContainerInterface $c): CategoryAdminService {
         return (new \ReflectionClass(CategoryAdminService::class))->newLazyProxy(
             static fn (): CategoryAdminService => new CategoryAdminService(
@@ -289,6 +290,7 @@ return [
                 resolve($c, CategoryRepository::class),
                 resolve($c, ConfigService::class),
                 resolve($c, ImageRepository::class),
+                resolve($c, ImageFormatRepository::class),
                 resolve($c, UrlGenerator::class),
                 resolve($c, ActivityLogger::class),
                 resolve($c, EventDispatcherInterface::class),
@@ -312,7 +314,7 @@ return [
         );
     }),
     NotificationAdminService::class  => factory(static fn (MailService $mail, NotificationRepository $nR, UrlGenerator $ug, UrlService $u, UserService $us): NotificationAdminService => new NotificationAdminService($mail, $nR, $ug, $u, $us)),
-    UploadService::class             => factory(static fn (CategoryAdminService $catA, ConfigService $cfg, DerivativeService $der, ImageAdminService $iA, ImageRepository $i, MetadataAdminService $mA, UserAdminService $uA, ActivityLogger $al, EventDispatcherInterface $dispatcher, Paths $paths, Session $session): UploadService => new UploadService($catA, $cfg, $der, $iA, $i, $mA, $uA, $al, $dispatcher, $paths, $session)),
+    UploadService::class             => factory(static fn (CategoryAdminService $catA, ConfigService $cfg, DerivativeService $der, ImageAdminService $iA, ImageFormatRepository $iF, ImageRepository $i, MetadataAdminService $mA, UserAdminService $uA, ActivityLogger $al, EventDispatcherInterface $dispatcher, Paths $paths, Session $session): UploadService => new UploadService($catA, $cfg, $der, $iA, $iF, $i, $mA, $uA, $al, $dispatcher, $paths, $session)),
     AlbumsTabRenderer::class         => factory(static fn (CategoryRepository $catR): AlbumsTabRenderer => new AlbumsTabRenderer($catR)),
     UserTabRenderer::class           => factory(static fn (): UserTabRenderer => new UserTabRenderer()),
     DirectPreparer::class            => factory(static fn (AdminService $a, CategoryRepository $catR, HtmlService $h, ImageRepository $i, UploadService $up, CsrfService $csrf, InputValidator $iv, Session $session): DirectPreparer => new DirectPreparer($a, $catR, $h, $i, $up, $csrf, $iv, $session)),
@@ -360,6 +362,7 @@ return [
     CaddieRepository::class       => factory(static fn (Connection $conn): CaddieRepository => new CaddieRepository($conn, Config::dbPrefix())),
     CategoryRepository::class     => factory(static fn (Connection $conn): CategoryRepository => new CategoryRepository($conn, Config::dbPrefix())),
     ImageRepository::class        => factory(static fn (Connection $conn): ImageRepository => new ImageRepository($conn, Config::dbPrefix())),
+    ImageFormatRepository::class  => factory(static fn (Connection $conn): ImageFormatRepository => new ImageFormatRepository($conn, Config::dbPrefix())),
     OrderByService::class         => factory(static fn (): OrderByService => new OrderByService()),
     UserRepository::class         => factory(static fn (Connection $conn): UserRepository => new UserRepository($conn, Config::dbPrefix())),
     PluginRepository::class       => factory(static fn (Connection $conn): PluginRepository => new PluginRepository($conn, Config::dbPrefix())),

@@ -49,6 +49,7 @@ use Piwigo\History\HistoryRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\DerivativeSize;
+use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Job\RegenerateAllDerivativesJob;
@@ -94,6 +95,7 @@ final class MaintenanceController implements AdminSubControllerInterface
         private readonly HistoryAdminService $historyAdminService,
         private readonly HistoryRepository $historyRepository,
         private readonly ImageAdminService $imageAdminService,
+        private readonly ImageFormatRepository $imageFormatRepository,
         private readonly ImageRepository $imageRepository,
         private readonly MessageBusInterface $messageBus,
         private readonly MetadataAdminService $metadataAdminService,
@@ -1393,7 +1395,7 @@ final class MaintenanceController implements AdminSubControllerInterface
 
                 if (count($existing_ids) > 0) {
                     $db_formats = [];
-                    foreach ($this->imageRepository->findFormatsByImageIds(array_map(intval(...), $existing_ids)) as $row) {
+                    foreach ($this->imageFormatRepository->findByImageIds(array_map(intval(...), $existing_ids)) as $row) {
                         $row_image_id = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
                         $row_ext      = is_scalar($row['ext'] ?? null) ? (string) $row['ext'] : '';
                         if (!isset($db_formats[$row_image_id])) {
@@ -1437,10 +1439,10 @@ final class MaintenanceController implements AdminSubControllerInterface
                     }
                 }
                 if (count($insert_formats) > 0) {
-                    $this->imageRepository->insertImageFormatRowsBatch($insert_formats);
+                    $this->imageFormatRepository->insertRowsBatch($insert_formats);
                 }
                 if (count($formats_to_delete) > 0) {
-                    $this->imageRepository->deleteFormatsByFormatIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));
+                    $this->imageFormatRepository->deleteByFormatIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));
                 }
             }
             $counts['new_elements'] = count($inserts);

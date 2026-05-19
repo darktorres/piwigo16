@@ -35,6 +35,7 @@ use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
+use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -66,6 +67,7 @@ final readonly class ImagesEndpoints
         private CommentService $commentService,
         private HtmlService $htmlService,
         private ImageAdminService $imageAdminService,
+        private ImageFormatRepository $imageFormatRepository,
         private ImageRepository $imageRepository,
         private MetadataAdminService $metadataAdminService,
         private PermissionService $permissionService,
@@ -1117,7 +1119,7 @@ final readonly class ImagesEndpoints
         usort($formatExtensions, fn (mixed $a, mixed $b): int => strlen((string) $b) - strlen((string) $a));
         /** @var array<string, list<string>> $formatDb */
         $formatDb = [];
-        foreach ($this->imageRepository->findAllFormats() as $row) {
+        foreach ($this->imageFormatRepository->findAll() as $row) {
             $fmtImageId = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
             $fmtExtVal  = is_string($row['ext'] ?? null) ? $row['ext'] : '';
             $formatDb[$fmtImageId][] = $fmtExtVal;
@@ -1174,7 +1176,7 @@ final readonly class ImagesEndpoints
         $formatsOf = [];
         /** @var list<string> $imageIds */
         $imageIds  = [];
-        foreach ($imgRepo->findFormatsByFormatIds(array_map(intval(...), $formatIds)) as $row) {
+        foreach ($this->imageFormatRepository->findByFormatIds(array_map(intval(...), $formatIds)) as $row) {
             $rowImageId = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
             $rowExt     = is_string($row['ext'] ?? null) ? $row['ext'] : '';
             if (!isset($formatsOf[$rowImageId])) {
@@ -1205,7 +1207,7 @@ final readonly class ImagesEndpoints
                 }
             }
         }
-        $imgRepo->deleteFormatsByFormatIds(array_map(intval(...), $formatIds));
+        $this->imageFormatRepository->deleteByFormatIds(array_map(intval(...), $formatIds));
         $this->userAdminService->invalidateUserCache();
         return $ok;
     }

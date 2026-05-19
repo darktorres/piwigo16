@@ -22,6 +22,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeEncoding;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
+use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -38,6 +39,7 @@ final class ImageAdminService
         private readonly CategoryRepository $categoryRepository,
         private readonly ConfigService $configService,
         private readonly ImageRepository $imageRepository,
+        private readonly ImageFormatRepository $imageFormatRepository,
         private readonly UrlGenerator $urlGenerator,
         private readonly ActivityLogger $activityLogger,
         private readonly EventDispatcherInterface $dispatcher,
@@ -57,7 +59,7 @@ final class ImageAdminService
         $newIds    = [];
         $formatsOf = [];
         $repo      = $this->imageRepository;
-        foreach ($repo->findFormatsByImageIds($ids) as $row) {
+        foreach ($this->imageFormatRepository->findByImageIds($ids) as $row) {
             $fmtImageId = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
             if (!isset($formatsOf[$fmtImageId])) {
                 $formatsOf[$fmtImageId] = [];

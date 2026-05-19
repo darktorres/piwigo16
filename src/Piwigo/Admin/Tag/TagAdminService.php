@@ -197,9 +197,9 @@ final class TagAdminService
         $tagsOf    = array_fill_keys($imageIds, []);
         $imageTags = $this->tagRepository->findImageTagPairs($imageIds);
         foreach ($imageTags as $imageTag) {
-            $imgIdKey = is_numeric($imageTag['image_id']) ? (int) $imageTag['image_id'] : 0;
+            $imgIdKey = $imageTag->imageId->value;
             if (isset($tagsOf[$imgIdKey])) {
-                $tagsOf[$imgIdKey][] = $imageTag['tag_id'];
+                $tagsOf[$imgIdKey][] = $imageTag->tagId->value;
             }
         }
         return $tagsOf;

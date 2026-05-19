@@ -224,9 +224,9 @@ SELECT id
     }
 
     /**
-     * @param array<mixed>  $items
-     * @param int[]         $excludedTagIds
-     * @return array<mixed>
+     * @param  array<mixed>  $items
+     * @param  int[]         $excludedTagIds
+     * @return list<array<string, mixed>>
      */
     public function getCommonTags(array $items, int $maxTags, array $excludedTagIds = []): array
     {
@@ -234,10 +234,11 @@ SELECT id
             return [];
         }
         $imageIds = array_map(static fn (mixed $v): int => is_scalar($v) ? (int) $v : 0, $items);
-        $rows     = $this->repo->findCommonTags($imageIds, $maxTags, $excludedTagIds);
+        $entities = $this->repo->findCommonTags($imageIds, $maxTags, $excludedTagIds);
         $tags     = [];
-        foreach ($rows as $row) {
-            $renderEvent = new RenderTagName(is_string($row['name']) ? $row['name'] : '', $row);
+        foreach ($entities as $entity) {
+            $row         = $entity->toRow();
+            $renderEvent = new RenderTagName($entity->name, $row);
             $this->dispatcher->dispatch($renderEvent);
             $row['name'] = $renderEvent->tagName;
             $tags[]      = $row;

@@ -7,6 +7,10 @@ namespace Piwigo\Tag;
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Tag\Entity\Tag;
+use Piwigo\Tag\Projection\ImageTagGroup;
+use Piwigo\Tag\Projection\ImageTagPair;
+use Piwigo\Tag\Projection\TagBrief;
+use Piwigo\Tag\Projection\TagWithCounter;
 
 /**
  * Persistence layer for the tag domain.
@@ -142,10 +146,10 @@ final class TagRepository extends AbstractRepository
     /**
      * Return tags shared by all given images (common-tags query).
      *
-     * @param int[]  $imageIds     Image ids to intersect tags for.
-     * @param int    $maxTags      0 = no limit.
-     * @param int[]  $excludedIds  Tag ids to exclude from results.
-     * @return list<array<string, mixed>>
+     * @param  int[]  $imageIds     Image ids to intersect tags for.
+     * @param  int    $maxTags      0 = no limit.
+     * @param  int[]  $excludedIds  Tag ids to exclude from results.
+     * @return list<TagWithCounter>
      */
     public function findCommonTags(array $imageIds, int $maxTags, array $excludedIds = []): array
     {
@@ -172,7 +176,7 @@ final class TagRepository extends AbstractRepository
             $qb->orderBy('NULL');
         }
 
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(TagWithCounter::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**
@@ -305,9 +309,9 @@ final class TagRepository extends AbstractRepository
      * Return a map of image_id → comma-separated tag_ids string for images
      * that have any of the given tags.  Used by ws_tags_getImages OR mode.
      *
-     * @param int[] $tagIds
-     * @param int[] $imageIds
-     * @return list<array<string, mixed>>
+     * @param  int[] $tagIds
+     * @param  int[] $imageIds
+     * @return list<ImageTagGroup>
      */
     public function findImageTagMap(array $tagIds, array $imageIds): array
     {
@@ -322,7 +326,7 @@ final class TagRepository extends AbstractRepository
             ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
         $qb->where($qb->expr()->in('tag_id', ':tagIds'))
            ->andWhere($qb->expr()->in('image_id', ':imageIds'));
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(ImageTagGroup::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**
@@ -616,8 +620,8 @@ final class TagRepository extends AbstractRepository
      * Return (image_id, tag_id) pairs for the given image ids.
      * Used to track which tag assignments changed (before/after comparison).
      *
-     * @param int[] $imageIds
-     * @return list<array<string, mixed>>
+     * @param  int[] $imageIds
+     * @return list<ImageTagPair>
      */
     public function findImageTagPairs(array $imageIds): array
     {
@@ -629,19 +633,19 @@ final class TagRepository extends AbstractRepository
             ->from($this->table('image_tag'));
         $qb->where($qb->expr()->in('image_id', ':imageIds'))
            ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(ImageTagPair::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**
      * Return tags (id, name) that have no associated images and whose
      * last-modified date is older than 24 hours.
      *
-     * @return list<array<string, mixed>>
+     * @return list<TagBrief>
      */
     public function findOrphanTags(): array
     {
         $yesterday = new \DateTimeImmutable()->modify('-1 day')->format('Y-m-d H:i:s');
-        return $this->conn->createQueryBuilder()
+        $rows = $this->conn->createQueryBuilder()
             ->select('t.id', 't.name')
             ->from($this->table('tags'), 't')
             ->leftJoin('t', $this->table('image_tag'), 'it', 't.id = it.tag_id')
@@ -650,17 +654,18 @@ final class TagRepository extends AbstractRepository
             ->setParameter('yesterday', $yesterday)
             ->executeQuery()
             ->fetchAllAssociative();
+        return array_map(TagBrief::fromRow(...), $rows);
     }
 
     /**
      * Return id+name rows for tags assigned to a single image.
      * Used by the batch-manager and picture-modify admin pages.
      *
-     * @return list<array<string, mixed>>
+     * @return list<TagBrief>
      */
     public function findTagsByImageId(int $imageId): array
     {
-        return $this->conn->createQueryBuilder()
+        $rows = $this->conn->createQueryBuilder()
             ->select('t.id', 't.name')
             ->from($this->table('image_tag'), 'it')
             ->innerJoin('it', $this->table('tags'), 't', 't.id = it.tag_id')
@@ -668,6 +673,7 @@ final class TagRepository extends AbstractRepository
             ->setParameter('imageId', $imageId)
             ->executeQuery()
             ->fetchAllAssociative();
+        return array_map(TagBrief::fromRow(...), $rows);
     }
 
     /** Total number of tags. */

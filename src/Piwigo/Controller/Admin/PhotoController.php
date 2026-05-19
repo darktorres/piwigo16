@@ -288,10 +288,10 @@ final class PhotoController implements AdminSubControllerInterface
             $this->imageInfo = $this->imageAdminService->getImageInfos(is_string($rawImageId3) ? $rawImageId3 : '', true);
         }
 
-        $tag_selection = $this->tagAdminService->getTaglistFromRows(
-            $this->tagRepository
-                ->findTagsByImageId($getImageIdInt)
-        );
+        $tag_selection = $this->tagAdminService->getTaglistFromRows(array_map(
+            static fn (\Piwigo\Tag\Projection\TagBrief $t): array => $t->toRow(),
+            $this->tagRepository->findTagsByImageId($getImageIdInt),
+        ));
 
         /** @var array<string, mixed> $row */
         $row = is_array($this->imageInfo) ? $this->imageInfo : [];

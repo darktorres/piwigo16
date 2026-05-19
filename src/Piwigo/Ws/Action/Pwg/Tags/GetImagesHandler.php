@@ -64,10 +64,8 @@ final readonly class GetImagesHandler implements WsAction
         $imageIds    = array_slice($imageIds, $perPage * $page, $perPage);
         $imageTagMap = [];
         if (!empty($imageIds) && !$params['tag_mode_and']) {
-            $tagMapRows = $this->tagRepository->findImageTagMap($tagIds, $imageIds);
-            foreach ($tagMapRows as $row) {
-                $imgId               = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
-                $imageTagMap[$imgId] = explode(',', is_string($row['tag_ids'] ?? null) ? $row['tag_ids'] : '');
+            foreach ($this->tagRepository->findImageTagMap($tagIds, $imageIds) as $group) {
+                $imageTagMap[$group->imageId->value] = explode(',', $group->tagIdsCsv);
             }
         }
         $images = [];

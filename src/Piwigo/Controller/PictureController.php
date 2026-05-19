@@ -587,10 +587,8 @@ final readonly class PictureController implements ControllerInterface
         $tpl->assign('display_info', Config::pictureInformations());
 
         // Related tags
-        $tags = $this->tagService->getCommonTags([$imageId], -1);
-        foreach ($tags as $tag) {
-            $tagArr = is_array($tag) ? $tag : [];
-            $tpl->append('related_tags', array_merge($tagArr, ['URL' => $this->urlService->makeIndexUrl(['tags' => [$tag]]), 'U_TAG_IMAGE' => $this->urlService->duplicatePictureUrl(['section' => 'tags', 'tags' => [$tag]])]));
+        foreach ($this->tagService->getCommonTags([$imageId], -1) as $tag) {
+            $tpl->append('related_tags', array_merge($tag, ['URL' => $this->urlService->makeIndexUrl(['tags' => [$tag]]), 'U_TAG_IMAGE' => $this->urlService->duplicatePictureUrl(['section' => 'tags', 'tags' => [$tag]])]));
         }
 
         // Related categories

@@ -1160,7 +1160,10 @@ final class BatchManagerController implements AdminSubControllerInterface
                 $element_ids[] = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
                 $src_image     = new SrcImage($row);
                 $image_file    = $row['file'];
-                $tag_selection = $this->tagAdminService->getTaglistFromRows($this->tagRepository->findTagsByImageId(is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0));
+                $tag_selection = $this->tagAdminService->getTaglistFromRows(array_map(
+                    static fn (\Piwigo\Tag\Projection\TagBrief $t): array => $t->toRow(),
+                    $this->tagRepository->findTagsByImageId(is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0),
+                ));
                 $legend        = $this->htmlService->renderElementName($row);
                 $row_file_str  = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
                 if ($legend != StringUtil::getNameFromFile($row_file_str)) {

@@ -50,7 +50,7 @@ final class ImageStdParams
     /**
      * @return array<string, DerivativeParams>
      */
-    public static function getDefinedTypeMap()
+    public static function getDefinedTypeMap(): array
     {
         return self::$type_map;
     }

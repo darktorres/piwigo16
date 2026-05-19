@@ -408,29 +408,6 @@ final class ImageRepository extends AbstractRepository
      */
     public function findByIds(array $ids): array
     {
-        return array_map(Image::fromRow(...), $this->fetchRowsByIds($ids));
-    }
-
-    /**
-     * Return raw image rows for the given ids. Used by the view-model
-     * accumulation pattern in `PictureController` and the Category
-     * renderers; to be retired in F5-d/4 once those callers migrate to
-     * the typed `PictureViewModel`.
-     *
-     * @param  int[] $ids
-     * @return list<array<string, mixed>>
-     */
-    public function findRowsByIds(array $ids): array
-    {
-        return $this->fetchRowsByIds($ids);
-    }
-
-    /**
-     * @param  int[] $ids
-     * @return list<array<string, mixed>>
-     */
-    private function fetchRowsByIds(array $ids): array
-    {
         if ($ids === []) {
             return [];
         }
@@ -439,7 +416,7 @@ final class ImageRepository extends AbstractRepository
             ->from($this->table('images'));
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(Image::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**

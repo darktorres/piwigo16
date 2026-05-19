@@ -7,7 +7,6 @@ namespace Piwigo\Category;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\DebugCollector;
-use Piwigo\Core\StringUtil;
 use Piwigo\Event\Location\LocBeginIndexThumbnails;
 use Piwigo\Event\Location\LocEndIndexThumbnails;
 use Piwigo\Event\Location\LocIndexThumbnailsSelection;
@@ -16,7 +15,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Image\SrcImage;
+use Piwigo\Image\View\PictureViewModel;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
@@ -60,8 +59,9 @@ final readonly class CategoryDefaultRenderer
             $rank_of = array_flip($selection);
 
             foreach ($this->imageRepository
-                ->findRowsByIds(array_map(intval(...), $selection)) as $row) {
-                $row['rank'] = $rank_of[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''];
+                ->findByIds(array_map(intval(...), $selection)) as $img) {
+                $row = PictureViewModel::fromImage($img)->toArray();
+                $row['rank'] = $rank_of[$img->id->value] ?? 0;
                 $pictures[] = $row;
             }
 
@@ -104,16 +104,13 @@ final readonly class CategoryDefaultRenderer
             $name = $this->htmlService->renderElementName($row);
             $desc = $this->htmlService->renderElementDescription($row, 'main_page_element_description');
 
-            $rowPath = $row['path'] ?? null;
-            $rowFile = $row['file'] ?? null;
+            // `src_image`, `path_ext`, `file_ext` already populated upstream
+            // by PictureViewModel::fromImage() — no need to rebuild them here.
             $tpl_var = array_merge($row, [
                 'TN_ALT' => htmlspecialchars(strip_tags($name)),
                 'TN_TITLE' => $this->htmlService->getThumbnailTitle($row, $name, $desc),
                 'URL' => $url,
                 'DESCRIPTION' => $desc,
-                'src_image' => new SrcImage($row),
-                'path_ext' => strtolower(StringUtil::getExtension(is_string($rowPath) ? $rowPath : '')),
-                'file_ext' => strtolower(StringUtil::getExtension(is_string($rowFile) ? $rowFile : '')),
             ]);
 
             if (Config::indexNewIcon()) {

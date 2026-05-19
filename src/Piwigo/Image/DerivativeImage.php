@@ -89,12 +89,8 @@ final class DerivativeImage
      * This is useful for any plugin/theme to just use $deriv[DerivativeSize::XLarge->value] even if
      * the XLARGE is disabled.
      *
-     * @param array|SrcImage $src_image array of info from db or SrcImage
-     * @return DerivativeImage[]
-     */
-    /**
-     * @param array<mixed>|SrcImage $src_image
-     * @return array<mixed>
+     * @param  array<string, mixed>|SrcImage $src_image array of info from db or SrcImage
+     * @return array<self>
      */
     public static function getAll(array|SrcImage $src_image): array
     {
@@ -105,8 +101,7 @@ final class DerivativeImage
         $ret = [];
         // build enabled types
         foreach (ImageStdParams::getDefinedTypeMap() as $type => $params) {
-            $derivative = new DerivativeImage($params, $src_image);
-            $ret[$type] = $derivative;
+            $ret[$type] = new self($params, $src_image);
         }
         // disabled types, fallback to enabled types
         foreach (ImageStdParams::getUndefinedTypeMap() as $type => $type2) {

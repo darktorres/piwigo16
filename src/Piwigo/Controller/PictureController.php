@@ -34,9 +34,8 @@ use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
-use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
-use Piwigo\Image\SrcImage;
+use Piwigo\Image\View\PictureViewModel;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
@@ -315,6 +314,8 @@ final readonly class PictureController implements ControllerInterface
 
         // Load prev/current/next picture data
         $picture = [];
+        /** @var array<string, PictureViewModel> $pictureVms */
+        $pictureVms = [];
         $ids     = [$imageId];
         if ($previousItem !== null && $firstItem !== null) {
             $ids[] = $previousItem;
@@ -325,51 +326,62 @@ final readonly class PictureController implements ControllerInterface
             $ids[] = $lastItem;
         }
 
-        foreach ($this->imageRepository->findRowsByIds(array_map(intval(...), $ids)) as $row) {
-            if ($previousItem !== null && $row['id'] == $previousItem) {
+        foreach ($this->imageRepository->findByIds(array_map(intval(...), $ids)) as $img) {
+            $imgId = $img->id->value;
+            if ($previousItem !== null && $imgId === $previousItem) {
                 $i = 'previous';
-            } elseif ($nextItem !== null && $row['id'] == $nextItem) {
+            } elseif ($nextItem !== null && $imgId === $nextItem) {
                 $i = 'next';
-            } elseif ($firstItem !== null && $row['id'] == $firstItem) {
+            } elseif ($firstItem !== null && $imgId === $firstItem) {
                 $i = 'first';
-            } elseif ($lastItem !== null && $row['id'] == $lastItem) {
+            } elseif ($lastItem !== null && $imgId === $lastItem) {
                 $i = 'last';
             } else {
                 $i = 'current';
             }
 
-            $src_id   = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-            $src_path = is_scalar($row['path'] ?? null) ? (string) $row['path'] : '';
-            $src_file = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
+            $vm = PictureViewModel::fromImage($img);
 
-            $row['src_image']  = new SrcImage($row);
-            $row['derivatives'] = DerivativeImage::getAll($row['src_image']);
-            $row['path_ext']   = strtolower(StringUtil::getExtension($src_path));
-            $row['file_ext']   = strtolower(StringUtil::getExtension($src_file));
-
-            if ($i == 'current') {
-                $row['element_path'] = StringUtil::getElementPath($row);
-                if ($row['src_image']->isOriginal()) {
+            if ($i === 'current') {
+                $elementPath = StringUtil::getElementPath(['path' => $img->path->value]);
+                $elementUrl  = null;
+                $downloadUrl = null;
+                if ($vm->srcImage->isOriginal()) {
                     if (BoolUtil::fromMixed($user['enabled_high'])) {
-                        $row['element_url']  = $row['src_image']->getUrl();
-                        $row['download_url'] = $this->urlService->getActionUrl($src_id, 'e', true);
+                        $url = $vm->srcImage->getUrl();
+                        $elementUrl  = is_string($url) ? $url : '';
+                        $downloadUrl = $this->urlService->getActionUrl($imgId, 'e', true);
                     }
                 } else {
-                    $row['element_url']  = $this->urlService->getElementUrl($row);
-                    $row['download_url'] = $this->urlService->getActionUrl($src_id, 'e', true);
+                    $elementUrl  = $this->urlService->getElementUrl([
+                        'id'                 => $imgId,
+                        'path'               => $img->path->value,
+                        'file'               => $img->file->value,
+                        'representative_ext' => $img->representativeExt,
+                    ]);
+                    $downloadUrl = $this->urlService->getActionUrl($imgId, 'e', true);
                 }
+                $vm = $vm->withCurrentExtras($elementPath, $elementUrl, $downloadUrl);
             }
 
-            $row['url'] = $this->urlService->duplicatePictureUrl(['image_id' => $row['id'], 'image_file' => $row['file']], ['start']);
-            $row['TITLE']     = $this->htmlService->renderElementName($row);
-            $row['TITLE_ESC'] = str_replace('"', '&quot;', $row['TITLE']);
-            $picture[$i]      = $row;
+            $url   = $this->urlService->duplicatePictureUrl(['image_id' => $imgId, 'image_file' => $img->file->value], ['start']);
+            $title = $this->htmlService->renderElementName([
+                'name' => $img->name,
+                'file' => $img->file->value,
+            ]);
+            $vm = $vm->withUrl($url)->withTitle($title, str_replace('"', '&quot;', $title));
 
-            if ('previous' == $i && $previousItem === $firstItem) {
-                $picture['first'] = $row;
+            $row = $vm->toArray();
+            $picture[$i] = $row;
+            $pictureVms[$i] = $vm;
+
+            if ($i === 'previous' && $previousItem === $firstItem) {
+                $picture['first']    = $row;
+                $pictureVms['first'] = $vm;
             }
-            if ('next' == $i && $nextItem === $lastItem) {
-                $picture['last'] = $row;
+            if ($i === 'next' && $nextItem === $lastItem) {
+                $picture['last']    = $row;
+                $pictureVms['last'] = $vm;
             }
         }
 
@@ -394,21 +406,21 @@ final readonly class PictureController implements ControllerInterface
                 } elseif ($slideshow_params['repeat'] && $firstItem !== null) {
                     $id_pict_redirect = 'first';
                 }
-                if (!empty($id_pict_redirect) && isset($picture[$id_pict_redirect])) {
+                if (!empty($id_pict_redirect) && isset($pictureVms[$id_pict_redirect])) {
                     $refresh  = $slideshow_params['period'];
-                    $url_link = $this->urlService->addUrlParams($picture[$id_pict_redirect]['url'], $slideshow_url_params);
+                    $url_link = $this->urlService->addUrlParams($pictureVms[$id_pict_redirect]->url, $slideshow_url_params);
                 }
             }
         } else {
             $slideshowActive = false;
         }
 
-        $title    = $picture['current']['TITLE'];
+        $title    = $pictureVms['current']->title;
         $title_nb = ($currentRank + 1) . '/' . count($items);
 
         $url_metadata     = $this->urlService->duplicatePictureUrl();
         $url_metadata     = $this->urlService->addUrlParams($url_metadata, ['metadata' => null]);
-        $curSrcImg = $picture['current']['src_image'];
+        $curSrcImg = $pictureVms['current']->srcImage;
         $metadataEvent = new GetElementMetadataAvailable(
             (Config::showExif() || Config::showIptc()) && !$curSrcImg->isMimetype(),
             $picture['current']
@@ -427,8 +439,7 @@ final readonly class PictureController implements ControllerInterface
         $this->dispatcher->dispatch($pictureDataEvent);
         /** @var array<string, array<string, mixed>> $picture */
         $picture = $pictureDataEvent->picture;
-        $currentPic = is_array($picture['current'] ?? null) ? $picture['current'] : [];
-        $currentSrcImage = ($currentPic['src_image'] ?? null) instanceof SrcImage ? $currentPic['src_image'] : null;
+        $currentVm = $pictureVms['current'];
 
         foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
             if (isset($picture[$which_image])) {
@@ -437,16 +448,15 @@ final readonly class PictureController implements ControllerInterface
             }
         }
 
-        if (Config::pictureDownloadIcon() && isset($picture['current']['download_url']) && $picture['current']['download_url'] !== '' && BoolUtil::fromMixed($user['enabled_high'])) {
-            $tpl->append('current', ['U_DOWNLOAD' => $picture['current']['download_url']], true);
+        if (Config::pictureDownloadIcon() && $currentVm->downloadUrl !== null && $currentVm->downloadUrl !== '' && BoolUtil::fromMixed($user['enabled_high'])) {
+            $tpl->append('current', ['U_DOWNLOAD' => $currentVm->downloadUrl], true);
 
             if (Config::isFormatsEnabled()) {
-                $currentPicId = is_scalar($currentPic['id'] ?? null) ? (int) $currentPic['id'] : 0;
-                $formats      = $this->imageRepository->findFormatsByImageIds([$currentPicId]);
+                $formats = $this->imageRepository->findFormatsByImageIds([$currentVm->image->id->value]);
                 array_unshift($formats, [
-                    'download_url' => is_scalar($currentPic['download_url'] ?? null) ? $currentPic['download_url'] : '',
-                    'ext'          => StringUtil::getExtension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : ''),
-                    'filesize'     => $currentPic['filesize'] ?? null,
+                    'download_url' => $currentVm->downloadUrl,
+                    'ext'          => StringUtil::getExtension($currentVm->image->file->value),
+                    'filesize'     => $currentVm->image->filesize,
                 ]);
                 foreach ($formats as &$format) {
                     if (!isset($format['download_url'])) {
@@ -476,15 +486,15 @@ final readonly class PictureController implements ControllerInterface
             lastRank:          $lastRank,
             rankOf:            $rankOf,
             slideshow:         $slideshowActive,
-            ratingScore:       is_numeric($currentPic['rating_score'] ?? null) ? (float) $currentPic['rating_score'] : null,
-            srcImage:          ($currentPic['src_image'] ?? null) instanceof SrcImage ? $currentPic['src_image'] : null,
+            ratingScore:       $currentVm->image->ratingScore,
+            srcImage:          $currentVm->srcImage,
             relatedCategories: $related_categories,
         ));
 
         // Slideshow controls
         if ($slideshowActive) {
             $tpl_slideshow = [];
-            $currentUrl    = is_string($picture['current']['url'] ?? null) ? $picture['current']['url'] : '';
+            $currentUrl    = $currentVm->url;
             $tpl->assign(['U_SLIDESHOW_STOP' => $currentUrl]);
             foreach (['repeat', 'play'] as $p) {
                 $pVal = $slideshow_params[$p] ?? false;
@@ -502,8 +512,7 @@ final readonly class PictureController implements ControllerInterface
             }
             $tpl->assign('slideshow', $tpl_slideshow);
         } elseif (Config::pictureSlideShowIcon()) {
-            $currentUrl = is_string($picture['current']['url'] ?? null) ? $picture['current']['url'] : '';
-            $tpl->assign(['U_SLIDESHOW_START' => $this->urlService->addUrlParams($currentUrl, ['slideshow' => ''])]);
+            $tpl->assign(['U_SLIDESHOW_START' => $this->urlService->addUrlParams($currentVm->url, ['slideshow' => ''])]);
         }
 
         $tpl->assign([
@@ -542,38 +551,33 @@ final readonly class PictureController implements ControllerInterface
 
         // Picture info
         $infos = [];
-        if (isset($picture['current']['comment']) && $picture['current']['comment'] !== '') {
-            $commentValue = $picture['current']['comment'];
-            $descEvent = new RenderElementDescription(is_string($commentValue) ? $commentValue : '', 'picture_page_element_description');
+        if ($currentVm->image->comment !== null && $currentVm->image->comment !== '') {
+            $descEvent = new RenderElementDescription($currentVm->image->comment, 'picture_page_element_description');
             $this->dispatcher->dispatch($descEvent);
             $tpl->assign('COMMENT_IMG', new Html($descEvent->elementDescription));
         }
-        if (isset($currentPic['author']) && $currentPic['author'] !== '') {
-            /** @var mixed $authorValue */
-            $authorValue = $currentPic['author'];
-            $infos['INFO_AUTHOR'] = $authorValue;
+        if ($currentVm->image->author !== null && $currentVm->image->author !== '') {
+            $infos['INFO_AUTHOR'] = $currentVm->image->author;
         }
-        if (isset($currentPic['date_creation']) && $currentPic['date_creation'] !== '') {
-            $dc   = (is_string($currentPic['date_creation']) || is_int($currentPic['date_creation'])) ? $currentPic['date_creation'] : null;
+        if ($currentVm->image->dateCreation !== null) {
+            $dc   = $currentVm->image->dateCreation->value;
             $val  = $this->dateService->formatDate($dc);
-            $url  = $this->urlService->makeIndexUrl(['chronology_field' => 'created', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr(is_scalar($dc) ? (string) $dc : '', 0, 10))]);
+            $url  = $this->urlService->makeIndexUrl(['chronology_field' => 'created', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr($dc, 0, 10))]);
             $infos['INFO_CREATION_DATE'] = new Html('<a href="' . $url . '" rel="nofollow">' . $val . '</a>');
         }
-        $da  = (isset($currentPic['date_available']) && (is_string($currentPic['date_available']) || is_int($currentPic['date_available']))) ? $currentPic['date_available'] : null;
+        $da  = $currentVm->image->dateAvailable?->value;
         $val = $this->dateService->formatDate($da);
-        $url = $this->urlService->makeIndexUrl(['chronology_field' => 'posted', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr(is_scalar($da) ? (string) $da : '', 0, 10))]);
+        $url = $this->urlService->makeIndexUrl(['chronology_field' => 'posted', 'chronology_style' => 'monthly', 'chronology_view' => 'list', 'chronology_date' => explode('-', substr($da ?? '', 0, 10))]);
         $infos['INFO_POSTED_DATE'] = new Html('<a href="' . $url . '" rel="nofollow">' . $val . '</a>');
 
-        if ($currentSrcImage !== null && $currentSrcImage->isOriginal() && isset($currentPic['width'])) {
-            $picHeightRaw = $currentPic['height'] ?? null;
-            $infos['INFO_DIMENSIONS'] = (is_string($currentPic['width']) ? $currentPic['width'] : '') . '*' . (is_scalar($picHeightRaw) ? (string) $picHeightRaw : '');
+        if ($currentVm->srcImage->isOriginal() && $currentVm->image->width !== null) {
+            $infos['INFO_DIMENSIONS'] = $currentVm->image->width . '*' . ($currentVm->image->height ?? '');
         }
-        if (isset($currentPic['filesize']) && $currentPic['filesize'] !== '') {
-            $filesize = $currentPic['filesize'];
-            $infos['INFO_FILESIZE'] = Lang::t('%d Kb', is_numeric($filesize) ? (int) $filesize : 0);
+        if ($currentVm->image->filesize !== null) {
+            $infos['INFO_FILESIZE'] = Lang::t('%d Kb', $currentVm->image->filesize);
         }
-        $infos['INFO_VISITS'] = $currentPic['hit'] ?? null;
-        $infos['INFO_FILE']   = $currentPic['file'] ?? null;
+        $infos['INFO_VISITS'] = $currentVm->image->hit;
+        $infos['INFO_FILE']   = $currentVm->image->file->value;
 
         $tpl->assign($infos);
         $tpl->assign('display_info', Config::pictureInformations());
@@ -605,38 +609,35 @@ final readonly class PictureController implements ControllerInterface
             }
         }
 
-        if (in_array(strtolower(StringUtil::getExtension(is_string($currentPic['file'] ?? null) ? $currentPic['file'] : '')), ['pdf'])) {
-            $tpl->assign(['PDF_VIEWER_FILESIZE_THRESHOLD' => Config::pdfViewerFilesizeThreshold() * 1024, 'PDF_NB_PAGES' => $this->pictureService->countPdfPages(is_string($currentPic['path'] ?? null) ? $currentPic['path'] : '')]);
+        if ($currentVm->pathExt === 'pdf') {
+            $tpl->assign(['PDF_VIEWER_FILESIZE_THRESHOLD' => Config::pdfViewerFilesizeThreshold() * 1024, 'PDF_NB_PAGES' => $this->pictureService->countPdfPages($currentVm->image->path->value)]);
         }
 
-        // Local narrow: `is_array($picture['current'] ?? null) ? $picture['current'] : []`
-        // confuses Psalm because the left branch keeps the mixed type of
-        // $picture['current']. Pull through a local so the type-narrow
-        // sticks across the ternary.
+        // RenderElementContent listeners (plugins/themes) may inspect the
+        // full picture row; the maybe-plugin-mutated `$picture['current']`
+        // is what flows in, not the typed VM.
         $rawCurrent = $picture['current'] ?? null;
         $currentPic = is_array($rawCurrent) ? $rawCurrent : [];
         $contentEvent      = new RenderElementContent('', $currentPic);
         $this->dispatcher->dispatch($contentEvent);
         $tpl->assign('ELEMENT_CONTENT', new Html($contentEvent->content));
 
-        $nextPic      = is_array($picture['next'] ?? null) ? $picture['next'] : null;
-        $nextSrcImage = ($nextPic !== null && ($nextPic['src_image'] ?? null) instanceof SrcImage) ? $nextPic['src_image'] : null;
+        $nextVm       = $pictureVms['next'] ?? null;
+        $nextSrcImage = $nextVm?->srcImage;
         /** @var mixed $httpUserAgentRaw */
         $httpUserAgentRaw = $_SERVER['HTTP_USER_AGENT'] ?? '';
         $httpUserAgent    = is_string($httpUserAgentRaw) ? $httpUserAgentRaw : '';
-        if ($nextPic !== null && $nextSrcImage !== null && $nextSrcImage->isOriginal() && $tpl->getTemplateVars('U_PREFETCH') == null
+        if ($nextVm !== null && $nextSrcImage !== null && $nextSrcImage->isOriginal() && $tpl->getTemplateVars('U_PREFETCH') == null
             && !str_contains($httpUserAgent, 'Chrome/')
         ) {
-            $derivType  = $this->session->pictureDeriv !== null ? $this->session->pictureDeriv->value : Config::derivativeDefaultSize();
-            $nextDerivsRaw = $nextPic['derivatives'] ?? null;
-            $nextDerivs = is_array($nextDerivsRaw) ? $nextDerivsRaw : [];
-            $nextDeriv  = ($nextDerivs[$derivType] ?? null) instanceof DerivativeImage ? $nextDerivs[$derivType] : null;
+            $derivType = $this->session->pictureDeriv !== null ? $this->session->pictureDeriv->value : Config::derivativeDefaultSize();
+            $nextDeriv = $nextVm->derivatives[$derivType] ?? null;
             if ($nextDeriv !== null) {
                 $tpl->assign('U_PREFETCH', $nextDeriv->getUrl());
             }
         }
 
-        $tpl->assign('U_CANONICAL', $this->urlService->makePictureUrl(['image_id' => $currentPic['id'] ?? null, 'image_file' => $currentPic['file'] ?? null]));
+        $tpl->assign('U_CANONICAL', $this->urlService->makePictureUrl(['image_id' => $currentVm->image->id->value, 'image_file' => $currentVm->image->file->value]));
 
         $this->pictureRateRenderer->render();
         if (Config::activateComments()) {
@@ -663,8 +664,7 @@ final readonly class PictureController implements ControllerInterface
             $tpl->pparse('picture.latte');
         }
 
-        $picIdRaw = $currentPic['id'] ?? null;
-        $this->activityLogger->pageView((is_int($picIdRaw) || is_string($picIdRaw)) ? $picIdRaw : null, 'picture');
+        $this->activityLogger->pageView($currentVm->image->id->value, 'picture');
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

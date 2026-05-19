@@ -21,7 +21,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Image\SrcImage;
+use Piwigo\Image\View\PictureViewModel;
 use Piwigo\Page\PaginationService;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Template\TemplateRegistry;
@@ -151,12 +151,13 @@ final readonly class CategoryCatsRenderer
             $new_image_ids = [];
 
             $imageIdsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $image_ids);
-            foreach ($this->imageRepository->findRowsByIds($imageIdsInt) as $row) {
-                if ($row['level'] <= $user['level']) {
-                    $infos_of_image[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $row;
+            $userLevel   = is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0;
+            foreach ($this->imageRepository->findByIds($imageIdsInt) as $img) {
+                if ($img->level <= $userLevel) {
+                    $infos_of_image[(string) $img->id->value] = PictureViewModel::fromImage($img)->toArray();
                 } else {
                     foreach ($categories as &$category) {
-                        if ($row['id'] == $category['representative_picture_id']) {
+                        if ($img->id->value == $category['representative_picture_id']) {
                             $image_id = $this->categoryService->getRandomImageInCategory($category);
                             if (isset($image_id) and !in_array($image_id, $image_ids)) {
                                 $new_image_ids[] = $image_id;
@@ -173,15 +174,10 @@ final readonly class CategoryCatsRenderer
             }
 
             if (count($new_image_ids) > 0) {
-                foreach ($this->imageRepository->findRowsByIds($new_image_ids) as $row) {
-                    $infos_of_image[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $row;
+                foreach ($this->imageRepository->findByIds($new_image_ids) as $img) {
+                    $infos_of_image[(string) $img->id->value] = PictureViewModel::fromImage($img)->toArray();
                 }
             }
-
-            foreach ($infos_of_image as &$info) {
-                $info['src_image'] = new SrcImage($info);
-            }
-            unset($info);
         }
 
         if (count($user_representative_updates_for)) {

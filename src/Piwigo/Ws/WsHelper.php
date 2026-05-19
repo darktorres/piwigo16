@@ -158,9 +158,6 @@ final readonly class WsHelper
         $derivatives = DerivativeImage::getAll($src_image);
         $derivatives_arr = [];
         foreach ($derivatives as $type => $derivative) {
-            if (!($derivative instanceof DerivativeImage)) {
-                continue;
-            }
             $size = $derivative->getSize();
             if ($size === null) {
                 $size = [null, null];

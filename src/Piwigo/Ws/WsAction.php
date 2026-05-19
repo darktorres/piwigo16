@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 /**
- * Marker interface for per-endpoint action classes.
+ * Per-endpoint action contract — replaces the legacy *Endpoints god-classes.
  *
  * Concrete actions look like:
  *
@@ -13,18 +13,19 @@ namespace Piwigo\Ws;
  *   {
  *       public function __construct(private AuthService $auth) {}
  *
- *       public function handle(SessionLoginParams $p): SessionLoginResult|PwgError
+ *       #[\Override]
+ *       public function __invoke(array $params, PwgServer $server): mixed
  *       {
  *           // …
  *       }
  *   }
  *
- * Dispatch lives in {@see PwgServer::invoke()} — it resolves the action
- * from the container, calls Params::fromArray() (throws WsParamException
- * on bad input → returns PwgError), invokes handle(), then toArray()s the
- * Result before JSON-encoding. The historical *Endpoints god-classes are
- * being replaced one method at a time per F5-h.
+ * Dispatch lives in {@see PwgServer::invoke()} — it resolves the action from
+ * the container and calls it. The historical *Endpoints god-classes are being
+ * replaced one method at a time per F5-h.
  */
 interface WsAction
 {
+    /** @param array<mixed> $params */
+    public function __invoke(array $params, PwgServer $server): mixed;
 }

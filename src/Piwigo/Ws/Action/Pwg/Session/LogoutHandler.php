@@ -25,6 +25,7 @@ final readonly class LogoutHandler implements WsAction
     }
 
     /** @param array<mixed> $params */
+    #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|true
     {
         if (ApiKeyAuthRegistry::isApiKeyAuth()) {

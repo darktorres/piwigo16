@@ -26,6 +26,7 @@ final readonly class FormatsDeleteHandler implements WsAction
     }
 
     /** @param array<mixed> $params */
+    #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|bool
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {

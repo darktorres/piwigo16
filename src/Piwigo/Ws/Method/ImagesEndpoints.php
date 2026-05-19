@@ -1261,7 +1261,8 @@ final readonly class ImagesEndpoints
                     $params[$key] = strip_tags(is_scalar($params[$key]) ? (string) $params[$key] : '', '<b><strong><em><i>');
                 }
                 if ($singleValueMode === 'fill_if_empty') {
-                    if (empty($existingValues[$key])) {
+                    $existing = $existingValues[$key] ?? null;
+                    if ($existing === null || $existing === '' || $existing === 0) {
                         $update[$key] = $params[$key];
                     }
                 } elseif ($singleValueMode === 'replace') {

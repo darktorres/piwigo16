@@ -26,6 +26,7 @@ final readonly class SetPrivacyLevelHandler implements WsAction
     }
 
     /** @param array<mixed> $params */
+    #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
         if (!in_array($params['level'], Config::availablePermissionLevels())) {

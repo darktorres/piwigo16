@@ -400,9 +400,6 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         if ($handlerClass !== null) {
             /** @var class-string<WsAction> $handlerClass */
             $handler = Kernel::service($handlerClass);
-            if (!is_callable($handler)) {
-                return new PwgError(WsError::InvalidMethod->value, 'Handler is not invokable');
-            }
             return $handler($params, $this);
         }
         $callback = $method['callback'];

@@ -38,6 +38,7 @@ final readonly class GetStatusHandler implements WsAction
      * @param  array<mixed> $params
      * @return array<string, mixed>
      */
+    #[\Override]
     public function __invoke(array $params, PwgServer $server): array
     {
         $currentUser = CurrentUser::get();

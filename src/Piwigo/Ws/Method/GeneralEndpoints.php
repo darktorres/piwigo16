@@ -712,6 +712,7 @@ final readonly class GeneralEndpoints
         foreach ($pageRows as $line) {
             $lineImageType  = is_string($line['image_type'] ?? null) ? $line['image_type'] : '';
             $lineImageId    = $line['image_id'] ?? null;
+            $lineImageIdInt = is_numeric($lineImageId) ? (int) $lineImageId : 0;
             $lineImageIdStr = is_scalar($lineImageId) ? (string) $lineImageId : '';
             $lineUserId     = $line['user_id'] ?? null;
             $lineUserIdStr  = is_scalar($lineUserId) ? (string) $lineUserId : '';
@@ -748,12 +749,12 @@ final readonly class GeneralEndpoints
                 $imageEditString = $this->urlGenerator->admin('photo-' . $lineImageIdStr);
                 $pictureUrl      = $this->urlService->makePictureUrl(['image_id' => $lineImageId]);
                 $element         = [];
-                if (isset($imageInfos[$lineImageIdStr])) {
-                    $element = ['id' => $lineImageId, 'file' => $imageInfos[$lineImageIdStr]['file'], 'path' => $imageInfos[$lineImageIdStr]['path'], 'representative_ext' => $imageInfos[$lineImageIdStr]['representative_ext']];
+                if (isset($imageInfos[$lineImageIdInt])) {
+                    $element = ['id' => $lineImageId, 'file' => $imageInfos[$lineImageIdInt]['file'], 'path' => $imageInfos[$lineImageIdInt]['path'], 'representative_ext' => $imageInfos[$lineImageIdInt]['representative_ext']];
                 }
                 $imageTitle = '';
-                if (isset($imageInfos[$lineImageIdStr]['label'])) {
-                    $descEvent   = new RenderElementDescription($imageInfos[$lineImageIdStr]['label'], __FUNCTION__);
+                if (isset($imageInfos[$lineImageIdInt]['label'])) {
+                    $descEvent   = new RenderElementDescription($imageInfos[$lineImageIdInt]['label'], __FUNCTION__);
                     $this->dispatcher->dispatch($descEvent);
                     $imageTitle .= ' ' . $descEvent->elementDescription;
                 } else {

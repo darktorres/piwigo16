@@ -24,6 +24,7 @@ final readonly class SetCategoryHandler implements WsAction
     }
 
     /** @param array<mixed> $params */
+    #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
         if ($this->csrfService->getToken() !== $params['pwg_token']) {

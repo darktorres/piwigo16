@@ -26,6 +26,7 @@ final readonly class SetRankHandler implements WsAction
      * @param  array<mixed> $params
      * @return array<string, mixed>|PwgError
      */
+    #[\Override]
     public function __invoke(array $params, PwgServer $server): array|PwgError
     {
         $pImageIdArr   = is_array($params['image_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];

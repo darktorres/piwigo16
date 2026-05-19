@@ -16,6 +16,7 @@ final readonly class PluginsGetListHandler implements WsAction
      * @param  array<mixed> $params
      * @return list<array<string, mixed>>
      */
+    #[\Override]
     public function __invoke(array $params, PwgServer $server): array
     {
         $plugins = Kernel::service(Plugins::class);

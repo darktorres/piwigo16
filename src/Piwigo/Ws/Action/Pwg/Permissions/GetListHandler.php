@@ -23,6 +23,7 @@ final readonly class GetListHandler implements WsAction
      * @param  array<mixed> $params
      * @return array<string, mixed>|PwgError
      */
+    #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
         $myParams = array_intersect(array_keys($params), ['cat_id', 'group_id', 'user_id']);

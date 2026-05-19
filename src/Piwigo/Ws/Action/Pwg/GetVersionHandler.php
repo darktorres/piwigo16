@@ -20,6 +20,7 @@ use Piwigo\Ws\WsAction;
 final readonly class GetVersionHandler implements WsAction
 {
     /** @param array<mixed> $params */
+    #[\Override]
     public function __invoke(array $params, PwgServer $server): string
     {
         return AppInfo::VERSION;

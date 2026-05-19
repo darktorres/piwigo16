@@ -21,6 +21,7 @@ final readonly class CaddieAddHandler implements WsAction
     }
 
     /** @param array<mixed> $params */
+    #[\Override]
     public function __invoke(array $params, PwgServer $server): int
     {
         $userId   = CurrentUser::get()->id;

@@ -23,6 +23,7 @@ final readonly class DeleteHandler implements WsAction
     }
 
     /** @param array<mixed> $params */
+    #[\Override]
     public function __invoke(array $params, PwgServer $server): int
     {
         $userId  = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;

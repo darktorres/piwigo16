@@ -440,13 +440,17 @@ final readonly class TelemetryService
                 if (preg_match($pattern, $userAgent) !== 1) {
                     continue;
                 }
-                $existingCounter = is_numeric($apps[$appName]['counter'] ?? null) ? (int) $apps[$appName]['counter'] : 0;
+                $existing         = $apps[$appName] ?? [];
+                $existingCounterRaw = $existing['counter'] ?? null;
+                $existingFirstRaw   = $existing['first_encounter'] ?? null;
+                $existingLastRaw    = $existing['last_encounter'] ?? null;
+                $existingCounter = is_int($existingCounterRaw) ? $existingCounterRaw : 0;
                 $apps[$appName]['counter'] = $existingCounter + $activityCounter;
-                $existingFirst = is_string($apps[$appName]['first_encounter'] ?? null) ? $apps[$appName]['first_encounter'] : '';
+                $existingFirst = is_string($existingFirstRaw) ? $existingFirstRaw : '';
                 if ($existingFirst === '' || strtotime($existingFirst) > strtotime($firstEncounter)) {
                     $apps[$appName]['first_encounter'] = $firstEncounter;
                 }
-                $existingLast = is_string($apps[$appName]['last_encounter'] ?? null) ? $apps[$appName]['last_encounter'] : '';
+                $existingLast = is_string($existingLastRaw) ? $existingLastRaw : '';
                 if ($existingLast === '' || strtotime($existingLast) < strtotime($lastEncounter)) {
                     $apps[$appName]['last_encounter'] = $lastEncounter;
                 }

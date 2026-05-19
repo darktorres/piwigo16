@@ -29,6 +29,7 @@ final readonly class AddCommentHandler implements WsAction
      * @param  array<mixed> $params
      * @return array<string, mixed>|PwgError
      */
+    #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
         if (!Config::activateComments()) {

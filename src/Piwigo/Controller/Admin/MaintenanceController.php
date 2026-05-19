@@ -1400,7 +1400,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 if (count($existing_ids) > 0) {
                     $db_formats = [];
                     foreach ($this->imageFormatRepository->findByImageIds(array_map(intval(...), $existing_ids)) as $row) {
-                        $row_image_id = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
+                        $row_image_id = is_numeric($row['image_id'] ?? null) ? (int) $row['image_id'] : 0;
                         $row_ext      = is_scalar($row['ext'] ?? null) ? (string) $row['ext'] : '';
                         if (!isset($db_formats[$row_image_id])) {
                             $db_formats[$row_image_id] = [];
@@ -1419,9 +1419,8 @@ final class MaintenanceController implements AdminSubControllerInterface
                         }
                     }
                     foreach ($existing_ids as $image_id) {
-                        $image_id_str  = (string) $image_id;
-                        $path          = $db_elements[$image_id_str] ?? '';
-                        $formats       = $db_formats[$image_id_str] ?? [];
+                        $path          = $db_elements[$image_id] ?? '';
+                        $formats       = $db_formats[$image_id] ?? [];
                         $fs_path_data  = is_array($fs[$path] ?? null) ? $fs[$path] : [];
                         $fs_path_formats = is_array($fs_path_data['formats'] ?? null) ? $fs_path_data['formats'] : [];
                         $image_formats_to_insert = array_diff_key($fs_path_formats, $formats);
@@ -1455,7 +1454,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             foreach (array_diff(array_values($db_elements), array_keys($fs)) as $path) {
                 $found = array_search($path, $db_elements);
                 if ($found !== false) {
-                    $to_delete_elements[] = (int) $found;
+                    $to_delete_elements[] = $found;
                 }
                 $infos[] = ['path' => $path, 'info' => Lang::t('deleted')];
             }

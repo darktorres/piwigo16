@@ -31,6 +31,7 @@ final readonly class GetCacheSizeHandler implements WsAction
      * @param  array<mixed> $params
      * @return array<string, mixed>
      */
+    #[\Override]
     public function __invoke(array $params, PwgServer $server): array
     {
         $infos = [];

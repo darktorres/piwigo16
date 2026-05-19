@@ -23,6 +23,7 @@ final readonly class RateHandler implements WsAction
     }
 
     /** @param array<mixed> $params */
+    #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;

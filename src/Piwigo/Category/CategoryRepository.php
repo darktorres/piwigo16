@@ -13,6 +13,7 @@ use Piwigo\Category\Projection\CategoryParentInfo;
 use Piwigo\Category\Projection\CategoryRankInfo;
 use Piwigo\Category\Projection\CategoryUppercatsSite;
 use Piwigo\Category\Projection\ImageCategoryLink;
+use Piwigo\Category\Projection\MenuCategoryRow;
 use Piwigo\Category\Projection\RankUpdateRow;
 use Piwigo\Category\Projection\RelatedCategoryRow;
 use Piwigo\Db\AbstractRepository;
@@ -1684,9 +1685,9 @@ final class CategoryRepository extends AbstractRepository
      * user_cache_categories denormalized counts, subject to the caller's
      * permission filter (or a custom WHERE built by the caller).
      *
-     * @param list<mixed>                            $permParams
-     * @param list<ArrayParameterType|ParameterType> $permTypes
-     * @return list<array<string, mixed>>
+     * @param  list<mixed>                            $permParams
+     * @param  list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<MenuCategoryRow>
      */
     public function findCategoriesMenuRows(int $userId, string $whereClause, array $permParams, array $permTypes): array
     {
@@ -1699,7 +1700,7 @@ FROM ' . $this->table('categories') . ' INNER JOIN ' . $this->table('user_cache_
 WHERE ' . $whereClause;
         $params = [$userId, ...$permParams];
         $types  = [ParameterType::INTEGER, ...$permTypes];
-        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        return array_map(MenuCategoryRow::fromRow(...), $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative());
     }
 
     /**
@@ -1773,7 +1774,7 @@ WHERE ' . $whereClause;
      * Each result row carries an `is_old` flag (1 if from old_permalinks).
      *
      * @param  list<string> $permalinks
-     * @return array<string, array<string, mixed>>  Keyed by `permalink`
+     * @return array<string, array{id: int, permalink: string, is_old: bool}>  Keyed by `permalink`
      */
     public function findCategoryIdsByPermalinksKeyedByPermalink(array $permalinks): array
     {
@@ -1795,7 +1796,14 @@ SELECT id, permalink, 0 AS is_old
         $out  = [];
         foreach ($rows as $row) {
             $pk = is_string($row['permalink']) ? $row['permalink'] : '';
-            $out[$pk] = $row;
+            if ($pk === '') {
+                continue;
+            }
+            $out[$pk] = [
+                'id'        => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'permalink' => $pk,
+                'is_old'    => is_numeric($row['is_old']) ? (int) $row['is_old'] !== 0 : false,
+            ];
         }
         return $out;
     }
@@ -1844,8 +1852,8 @@ SELECT image_id
      * level and optional date_available cutoff; optionally excludes forbidden
      * category ids.
      *
-     * @param list<int> $forbiddenCategoryIds
-     * @return list<array<string, mixed>>
+     * @param  list<int> $forbiddenCategoryIds
+     * @return list<array{cat_id: int, id_uppercat: int|null, global_rank: string|null, date_last: string|null, nb_images: int}>
      */
     public function findComputedCategoryAggregates(
         int $userLevel,
@@ -1880,7 +1888,22 @@ FROM ' . $this->table('categories') . ' as c
         $query .= '
   GROUP BY c.id';
 
-        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        $rows = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        $out  = [];
+        foreach ($rows as $row) {
+            $catIdRaw = $row['cat_id'] ?? null;
+            if (!is_numeric($catIdRaw)) {
+                continue;
+            }
+            $out[] = [
+                'cat_id'      => (int) $catIdRaw,
+                'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
+                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+                'date_last'   => is_string($row['date_last'] ?? null) ? $row['date_last'] : null,
+                'nb_images'   => is_numeric($row['nb_images'] ?? null) ? (int) $row['nb_images'] : 0,
+            ];
+        }
+        return $out;
     }
 
     /**
@@ -1935,11 +1958,11 @@ SELECT id
      * with their count of matching images, subject to permission filter.
      * Optional cap on result rows and category-id exclusion.
      *
-     * @param list<int>                              $imageIds
-     * @param list<int>                              $excludedCatIds
-     * @param list<mixed>                            $permParams
-     * @param list<ArrayParameterType|ParameterType> $permTypes
-     * @return list<array<string, mixed>>
+     * @param  list<int>                              $imageIds
+     * @param  list<int>                              $excludedCatIds
+     * @param  list<mixed>                            $permParams
+     * @param  list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<array{id: int, uppercats: string, counter: int}>
      */
     public function findCommonCategoriesWithPermissions(
         array $imageIds,
@@ -1977,7 +2000,20 @@ SELECT
         } else {
             $query .= 'NULL';
         }
-        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        $rows = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        $out  = [];
+        foreach ($rows as $row) {
+            $idRaw = $row['id'] ?? null;
+            if (!is_numeric($idRaw)) {
+                continue;
+            }
+            $out[] = [
+                'id'        => (int) $idRaw,
+                'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                'counter'   => is_numeric($row['counter'] ?? null) ? (int) $row['counter'] : 0,
+            ];
+        }
+        return $out;
     }
 
     /**
@@ -1985,8 +2021,8 @@ SELECT
      * the given category ids. Used by getRelatedCategoriesMenu to render the
      * "related albums" navigation strip.
      *
-     * @param list<int> $ids
-     * @return list<array<string, mixed>>
+     * @param  list<int> $ids
+     * @return list<array{id: int, name: string, permalink: string|null, id_uppercat: int|null, uppercats: string, global_rank: string|null}>
      */
     public function findRelatedNavRowsByIds(array $ids): array
     {
@@ -1998,7 +2034,23 @@ SELECT
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
+        $rows = $qb->executeQuery()->fetchAllAssociative();
+        $out  = [];
+        foreach ($rows as $row) {
+            $idRaw = $row['id'] ?? null;
+            if (!is_numeric($idRaw)) {
+                continue;
+            }
+            $out[] = [
+                'id'          => (int) $idRaw,
+                'name'        => is_string($row['name'] ?? null) ? $row['name'] : '',
+                'permalink'   => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
+                'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
+                'uppercats'   => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+            ];
+        }
+        return $out;
     }
 
     /**

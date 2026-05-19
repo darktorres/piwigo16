@@ -92,26 +92,27 @@ final readonly class CategoryService
 
         $cats             = [];
         $selectedCategory = $ctx->category;
-        foreach ($this->catRepo->findCategoriesMenuRows($currentUser->id, $where, $permParams, $permTypes) as $row) {
-            $childDateLast = ($row['max_date_last'] ?? null) > ($row['date_last'] ?? null);
-            $menuRenderEvent = new RenderCategoryName(is_string($row['name'] ?? null) ? $row['name'] : '', 'get_categories_menu');
+        foreach ($this->catRepo->findCategoriesMenuRows($currentUser->id, $where, $permParams, $permTypes) as $entity) {
+            $row             = $entity->toRow();
+            $childDateLast   = (string) $entity->maxDateLast > (string) $entity->dateLast;
+            $menuRenderEvent = new RenderCategoryName($entity->name, 'get_categories_menu');
             $this->dispatcher->dispatch($menuRenderEvent);
-            $row             = array_merge($row, [
+            $row = array_merge($row, [
                 'NAME'        => $menuRenderEvent->categoryName,
                 'TITLE'       => $this->getDisplayImagesCount(
-                    is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0,
-                    is_numeric($row['count_images']) ? (int) $row['count_images'] : 0,
-                    is_numeric($row['count_categories']) ? (int) $row['count_categories'] : 0,
+                    $entity->nbImages,
+                    $entity->countImages,
+                    $entity->countCategories,
                     false,
-                    ' / '
+                    ' / ',
                 ),
                 'URL'         => Kernel::service(UrlService::class)->makeIndexUrl(['category' => $row]),
-                'LEVEL'       => substr_count(is_string($row['global_rank'] ?? null) ? $row['global_rank'] : '', '.') + 1,
-                'SELECTED'    => ($selectedCategory !== null && $selectedCategory['id'] == $row['id']) ? true : false,
-                'IS_UPPERCAT' => ($selectedCategory !== null && $selectedCategory['id_uppercat'] == $row['id']) ? true : false,
+                'LEVEL'       => substr_count($entity->globalRank ?? '', '.') + 1,
+                'SELECTED'    => $selectedCategory !== null && $selectedCategory['id'] == $entity->id->value,
+                'IS_UPPERCAT' => $selectedCategory !== null && $selectedCategory['id_uppercat'] == $entity->id->value,
             ]);
             if (Config::indexNewIcon()) {
-                $row['icon_ts'] = Kernel::service(HtmlService::class)->getIcon(is_string($row['max_date_last']) || is_null($row['max_date_last']) ? $row['max_date_last'] : (is_scalar($row['max_date_last']) ? (string) $row['max_date_last'] : null), $childDateLast);
+                $row['icon_ts'] = Kernel::service(HtmlService::class)->getIcon($entity->maxDateLast, $childDateLast);
             }
             $cats[] = $row;
         }
@@ -250,12 +251,12 @@ final readonly class CategoryService
         }
         for ($i = count($permalinks) - 1; $i >= 0; $i--) {
             if (isset($permaHash[$permalinks[$i]])) {
-                $idx    = $i;
-                $catId  = is_numeric($permaHash[$permalinks[$i]]['id']) ? (int) $permaHash[$permalinks[$i]]['id'] : 0;
-                if ($permaHash[$permalinks[$i]]['is_old']) {
-                    $this->catRepo->updatePermalinkHit($catId, $permalinks[$i]);
+                $idx   = $i;
+                $entry = $permaHash[$permalinks[$i]];
+                if ($entry['is_old']) {
+                    $this->catRepo->updatePermalinkHit($entry['id'], $permalinks[$i]);
                 }
-                return $catId;
+                return $entry['id'];
             }
         }
         return null;
@@ -306,8 +307,8 @@ final readonly class CategoryService
     }
 
     /**
-     * @param array<string, mixed>               $userdata
-     * @return array<string, array<string, mixed>>
+     * @param  array<string, mixed>                  $userdata
+     * @return array<int|string, array<string, mixed>>
      */
     public function getComputedCategories(array &$userdata, ?int $filterDays = null): array
     {
@@ -320,17 +321,16 @@ final readonly class CategoryService
         $userdata['last_photo_date'] = null;
         $cats                        = [];
         foreach ($this->catRepo->findComputedCategoryAggregates($userLevel, $recentSql, $forbidden) as $row) {
-            $udIdRaw = $userdata['id'] ?? null;
+            $udIdRaw                 = $userdata['id'] ?? null;
             $row['user_id']          = is_scalar($udIdRaw) ? $udIdRaw : 0;
             $row['nb_categories']    = 0;
             $row['count_categories'] = 0;
-            $row['count_images']     = is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0;
+            $row['count_images']     = $row['nb_images'];
             $row['max_date_last']    = $row['date_last'];
-            if ($row['date_last'] > $userdata['last_photo_date']) {
+            if ($row['date_last'] !== null && $row['date_last'] > (string) $userdata['last_photo_date']) {
                 $userdata['last_photo_date'] = $row['date_last'];
             }
-            $rowCatIdRaw = $row['cat_id'] ?? null;
-            $cats[is_scalar($rowCatIdRaw) ? (string) $rowCatIdRaw : ''] = $row;
+            $cats[(string) $row['cat_id']] = $row;
         }
 
         uasort($cats, $this->globalRankCompare(...));
@@ -339,8 +339,7 @@ final readonly class CategoryService
             if (!isset($cat['id_uppercat'])) {
                 continue;
             }
-            $catIdUppercatRaw = $cat['id_uppercat'];
-            $catUppercatKey = is_scalar($catIdUppercatRaw) ? (string) $catIdUppercatRaw : '';
+            $catUppercatKey = (string) $cat['id_uppercat'];
             if (!isset($cats[$catUppercatKey])) {
                 continue;
             }
@@ -365,9 +364,8 @@ final readonly class CategoryService
                 if (!isset($parent['id_uppercat'])) {
                     break;
                 }
-                $parentUppercatRaw = $parent['id_uppercat'];
-                $parentKey = is_scalar($parentUppercatRaw) ? (string) $parentUppercatRaw : '';
-                $parent = &$cats[$parentKey];
+                $parentKey = (string) $parent['id_uppercat'];
+                $parent    = &$cats[$parentKey];
             } while (true);
             unset($parent);
         }
@@ -384,8 +382,8 @@ final readonly class CategoryService
     }
 
     /**
-     * @param array<string, array<string, mixed>> $cats
-     * @param array<string, mixed>                $cat
+     * @param array<int|string, array<string, mixed>> $cats
+     * @param array<string, mixed>                    $cat
      */
     public function removeComputedCategory(array &$cats, array $cat): void
     {
@@ -452,9 +450,9 @@ final readonly class CategoryService
     }
 
     /**
-     * @param array<mixed>  $items
-     * @param int[]         $excludedCatIds
-     * @return array<string, array<string, mixed>>
+     * @param  array<mixed>  $items
+     * @param  int[]         $excludedCatIds
+     * @return array<int|string, array{id: int, uppercats: string, counter: int}>
      */
     public function getCommonCategories(array $items, ?int $max = null, array $excludedCatIds = []): array
     {
@@ -468,7 +466,7 @@ final readonly class CategoryService
 
         $cats = [];
         foreach ($this->catRepo->findCommonCategoriesWithPermissions($imageIds, $max, $excluded, $permSql, $permParams, $permTypes) as $row) {
-            $cats[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $row;
+            $cats[(string) $row['id']] = $row;
         }
 
         return $cats;
@@ -490,7 +488,7 @@ final readonly class CategoryService
 
         $catIds = [];
         foreach ($commonCats as $cat) {
-            foreach (explode(',', is_string($cat['uppercats'] ?? null) ? $cat['uppercats'] : '') as $uppercat) {
+            foreach (explode(',', $cat['uppercats']) as $uppercat) {
                 $catIds[$uppercat] = ($catIds[$uppercat] ?? 0) + 1;
             }
         }
@@ -502,19 +500,19 @@ final readonly class CategoryService
         $indexOfCat = [];
 
         foreach ($cats as $idx => $cat) {
-            $catIdKey             = is_scalar($cat['id'] ?? null) ? (string) $cat['id'] : '';
+            $catIdKey              = (string) $cat['id'];
             $indexOfCat[$catIdKey] = $idx;
-            $cats[$idx]['LEVEL']  = substr_count(is_string($cat['global_rank'] ?? null) ? $cat['global_rank'] : '', '.') + 1;
-            $catRenderEvent = new RenderCategoryName(is_string($cat['name'] ?? null) ? $cat['name'] : '', $cat);
+            $cats[$idx]['LEVEL']   = substr_count($cat['global_rank'] ?? '', '.') + 1;
+            $catRenderEvent        = new RenderCategoryName($cat['name'], $cat);
             $this->dispatcher->dispatch($catRenderEvent);
-            $cats[$idx]['name']   = $catRenderEvent->categoryName;
+            $cats[$idx]['name'] = $catRenderEvent->categoryName;
 
             if (isset($commonCats[$catIdKey])) {
                 $cats[$idx]['count_images'] = $commonCats[$catIdKey]['counter'];
 
                 $urlParams = [];
                 if ($ctx->category !== null) {
-                    $urlParams['category'] = $ctx->category;
+                    $urlParams['category']            = $ctx->category;
                     $urlParams['combined_categories'] = [$cat];
                     if ($ctx->combinedCategories !== null) {
                         $urlParams['combined_categories'] = array_merge($ctx->combinedCategories, [$cat]);
@@ -527,8 +525,7 @@ final readonly class CategoryService
             }
 
             if (!empty($cat['id_uppercat']) and ($cats[$idx]['count_images'] ?? 0) > 0) {
-                $catUppercatsRaw = $cat['uppercats'] ?? null;
-                foreach (array_slice(explode(',', is_string($catUppercatsRaw) ? $catUppercatsRaw : ''), 0, -1) as $uppercatId) {
+                foreach (array_slice(explode(',', $cat['uppercats']), 0, -1) as $uppercatId) {
                     $upperIdx = $indexOfCat[$uppercatId] ?? null;
                     if ($upperIdx !== null) {
                         $cats[$upperIdx]['count_categories'] = (is_numeric($cats[$upperIdx]['count_categories'] ?? null) ? (int) $cats[$upperIdx]['count_categories'] : 0) + 1;

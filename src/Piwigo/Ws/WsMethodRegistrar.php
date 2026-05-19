@@ -10,7 +10,6 @@ use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
-use Piwigo\Ws\Method\GeneralEndpoints;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -28,7 +27,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 final readonly class WsMethodRegistrar implements EventSubscriberInterface
 {
     public function __construct(
-        private GeneralEndpoints $generalEndpoints,
         private PermissionService $permissionService,
     ) {
     }
@@ -82,7 +80,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.activity.getList',
-            callback:     $this->generalEndpoints->getActivityList(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Activity\GetListHandler::class,
             description:  'Returns general informations.',
             params:       [
                 ParamDefinition::optional(name: 'page', type: WsType::Int->value | WsType::Positive->value),
@@ -1227,7 +1225,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.history.log',
-            callback:    $this->generalEndpoints->historyLog(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\History\LogHandler::class,
             description: 'Log visit in history',
             params:      [
                 ParamDefinition::required(name: 'image_id', type: WsType::Id->value),
@@ -1241,7 +1239,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.history.search',
-            callback:     $this->generalEndpoints->historySearch(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\History\SearchHandler::class,
             description:  'Gives an history of who has visited the galery and the actions done in it. Receives parameter.
       <br> <strong>Types </strong> can be : \'none\', \'picture\', \'high\', \'other\'
       <br> <strong>Date format</strong> is yyyy-mm-dd

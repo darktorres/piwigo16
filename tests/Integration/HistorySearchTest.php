@@ -6,7 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 /**
  * Snapshot tests for `pwg.history.search` — locks down summary numbers
- * and pagination behavior of `Piwigo\Ws\Method\GeneralEndpoints::historySearch`
+ * and pagination behavior of `Piwigo\Ws\Action\Pwg\History\SearchHandler`
  * before the §1.1 LIMIT/OFFSET refactor (ROADMAP.md §1.1). The refactor
  * splits the in-PHP aggregate loop into 6 dedicated SQL queries; these
  * tests assert the externally observable summary block stays identical.

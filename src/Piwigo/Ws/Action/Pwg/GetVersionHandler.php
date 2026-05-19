@@ -8,15 +8,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 
-/**
- * `pwg.getVersion` — returns the running Piwigo version string.
- *
- * First WS endpoint migrated to the F5-h per-endpoint action-class
- * pattern. The historical `GeneralEndpoints::getVersion()` callback
- * also still exists for plugin compatibility; PwgServer dispatches
- * here through the `handlerClass` route registered in
- * `WsMethodRegistrar`.
- */
+/** `pwg.getVersion` — returns the running Piwigo version string. */
 final readonly class GetVersionHandler implements WsAction
 {
     /** @param array<mixed> $params */

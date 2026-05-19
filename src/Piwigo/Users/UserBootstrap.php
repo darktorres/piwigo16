@@ -15,7 +15,7 @@ use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Session\Session;
 use Piwigo\Url\UrlService;
-use Piwigo\Ws\Method\GeneralEndpoints;
+use Piwigo\Ws\Action\Pwg\Session\LoginHandler;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\PwgServerRegistry;
@@ -138,7 +138,7 @@ final class UserBootstrap
             ];
             if (PwgServerRegistry::isInitialized()) {
                 $srv   = PwgServerRegistry::current();
-                $login = Kernel::service(GeneralEndpoints::class)->sessionLogin($credentials, $srv);
+                $login = Kernel::service(LoginHandler::class)($credentials, $srv);
                 if (true !== $login) {
                     $srv->sendResponse($login);
                     exit();

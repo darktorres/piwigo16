@@ -15,7 +15,6 @@ use Piwigo\Event\Ws\WsMethodsRegistering;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\User;
-use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\OpenApi\SpecBuilder;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsMethodRegistrar;
@@ -177,7 +176,6 @@ final class SpecValidityTest extends TestCase
         // CurrentUser carries an empty status, never touching unset $conn /
         // $htmlService properties.
         return new WsMethodRegistrar(
-            self::stub(GeneralEndpoints::class),
             self::stub(PermissionService::class),
         );
     }

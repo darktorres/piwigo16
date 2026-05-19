@@ -10,7 +10,6 @@ use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
-use Piwigo\Ws\Method\CategoriesEndpoints;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\Method\ImagesEndpoints;
 use Piwigo\Ws\Method\UsersEndpoints;
@@ -31,7 +30,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 final readonly class WsMethodRegistrar implements EventSubscriberInterface
 {
     public function __construct(
-        private CategoriesEndpoints $categoriesEndpoints,
         private GeneralEndpoints $generalEndpoints,
         private ImagesEndpoints $imagesEndpoints,
         private UsersEndpoints $usersEndpoints,
@@ -125,7 +123,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:        'pwg.categories.getImages',
-            callback:    $this->categoriesEndpoints->getImages(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Categories\GetImagesHandler::class,
             description: 'Returns elements for the corresponding categories.
 <br><b>cat_id</b> can be empty if <b>recursive</b> is true.
 <br><b>order</b> comma separated fields for sorting',
@@ -142,7 +140,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:        'pwg.categories.getList',
-            callback:    $this->categoriesEndpoints->getList(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Categories\GetListHandler::class,
             description: 'Returns a list of categories.',
             params:      [
                 ParamDefinition::optional(name: 'cat_id', default: null, type: WsType::Int->value | WsType::Positive->value, info: 'Parent category. "0" or empty for root.'),
@@ -536,7 +534,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.calculateOrphans',
-            callback:     $this->categoriesEndpoints->calculateOrphans(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Categories\CalculateOrphansHandler::class,
             description:  'Return the number of orphan photos if an album is deleted.',
             params:       [
                 ParamDefinition::required(name: 'category_id', type: WsType::Id->value, flags: WsParam::ForceArray->value),
@@ -547,7 +545,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.getAdminList',
-            callback:     $this->categoriesEndpoints->getAdminList(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Categories\GetAdminListHandler::class,
             description:  'Get albums list as displayed on admin page. <br>
       <b>additional_output</b> controls which data are returned, possible values are:<br>
       null, full_name_with_admin_links<br>',
@@ -563,7 +561,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.add',
-            callback:     $this->categoriesEndpoints->add(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Categories\AddHandler::class,
             description:  'Adds an album.<br><br><b>pwg_token</b> required if you want to use HTML in name/comment.',
             params:       [
                 ParamDefinition::required('name'),
@@ -581,7 +579,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.delete',
-            callback:     $this->categoriesEndpoints->delete(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Categories\DeleteHandler::class,
             description:  'Deletes album(s).
 <br><b>photo_deletion_mode</b> can be "no_delete" (may create orphan photos), "delete_orphans"
 (default mode, only deletes photos linked to no other album) or "force_delete" (delete all photos, even those linked to other albums)',
@@ -597,7 +595,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.move',
-            callback:     $this->categoriesEndpoints->move(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Categories\MoveHandler::class,
             description:  'Move album(s).
 <br>Set parent as 0 to move to gallery root. Only virtual categories can be moved.',
             params:       [
@@ -612,7 +610,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.setRepresentative',
-            callback:     $this->categoriesEndpoints->setRepresentative(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Categories\SetRepresentativeHandler::class,
             description:  'Sets the representative photo for an album. The photo doesn\'t have to belong to the album.',
             params:       [
                 ParamDefinition::required(name: 'category_id', type: WsType::Id->value),
@@ -625,7 +623,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.deleteRepresentative',
-            callback:     $this->categoriesEndpoints->deleteRepresentative(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Categories\DeleteRepresentativeHandler::class,
             description:  'Deletes the album thumbnail. Only possible if $conf[\'allow_random_representative\']',
             params:       [
                 ParamDefinition::required(name: 'category_id', type: WsType::Id->value),
@@ -637,7 +635,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.refreshRepresentative',
-            callback:     $this->categoriesEndpoints->refreshRepresentative(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Categories\RefreshRepresentativeHandler::class,
             description:  'Find a new album thumbnail.',
             params:       [
                 ParamDefinition::required(name: 'category_id', type: WsType::Id->value),
@@ -802,7 +800,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.setInfo',
-            callback:     $this->categoriesEndpoints->setInfo(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Categories\SetInfoHandler::class,
             description:  'Changes properties of an album.<br><br><b>pwg_token</b> required if you want to use HTML in name/comment.',
             params:       [
                 ParamDefinition::required(name: 'category_id', type: WsType::Id->value),
@@ -821,7 +819,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.categories.setRank',
-            callback:     $this->categoriesEndpoints->setRank(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Categories\SetRankHandler::class,
             description:  'Changes the rank of an album
         <br><br>If you provide a list for category_id:
         <ul>

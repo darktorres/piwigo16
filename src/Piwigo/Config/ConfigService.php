@@ -105,4 +105,157 @@ final readonly class ConfigService
     {
         return Config::all()[$param] ?? $defaultValue;
     }
+
+    /**
+     * Toggle: render the mobile-app banner on public gallery pages.
+     * Persisted via the Configuration → General admin form.
+     */
+    public function showMobileAppBannerInGallery(): bool
+    {
+        $value = Config::all()['show_mobile_app_banner_in_gallery'] ?? null;
+        return self::boolish($value, false);
+    }
+
+    /**
+     * Toggle: render the mobile-app banner on admin pages.
+     * Persisted via the Configuration → General admin form.
+     */
+    public function showMobileAppBannerInAdmin(): bool
+    {
+        $value = Config::all()['show_mobile_app_banner_in_admin'] ?? null;
+        return self::boolish($value, true);
+    }
+
+    /**
+     * Toggle: use the bundled `standard_pages` theme for identification,
+     * register, password and profile screens regardless of the active
+     * theme. Persisted via the admin extensions theme form.
+     */
+    public function useStandardPages(): bool
+    {
+        $value = Config::all()['use_standard_pages'] ?? null;
+        return self::boolish($value, false);
+    }
+
+    /**
+     * Selected logo asset id for the standard_pages theme (one of the
+     * keys exposed by the admin extensions theme form). Default
+     * `piwigo_logo`.
+     */
+    public function standardPagesSelectedLogo(): string
+    {
+        $value = Config::all()['standard_pages_selected_logo'] ?? null;
+        return is_scalar($value) ? (string) $value : 'piwigo_logo';
+    }
+
+    /**
+     * Selected color skin for the standard_pages theme. Default
+     * `default`.
+     */
+    public function standardPagesSelectedSkin(): string
+    {
+        $value = Config::all()['standard_pages_selected_skin'] ?? null;
+        return is_scalar($value) ? (string) $value : 'default';
+    }
+
+    /**
+     * Filesystem path of the uploaded custom logo when
+     * `standard_pages_selected_logo === 'custom_logo'`. Empty when no
+     * custom logo is configured.
+     */
+    public function standardPagesSelectedLogoPath(): string
+    {
+        $value = Config::all()['standard_pages_selected_logo_path'] ?? null;
+        return is_scalar($value) ? (string) $value : '';
+    }
+
+    /**
+     * Toggle: enable secondary-format ("format") uploads (alternative
+     * encodings of the same image, e.g. RAW + JPEG). Persisted via the
+     * Configuration → Default admin form.
+     */
+    public function enableFormats(): bool
+    {
+        $value = Config::all()['enable_formats'] ?? null;
+        return self::boolish($value, false);
+    }
+
+    /**
+     * Imagick output extension when rendering the JPG preview of a
+     * PDF original. Default `jpg`.
+     */
+    public function pdfRepresentativeExt(): string
+    {
+        $value = Config::all()['pdf_representative_ext'] ?? null;
+        return is_scalar($value) ? (string) $value : 'jpg';
+    }
+
+    /**
+     * JPEG quality level used by the PDF-to-JPG preview converter.
+     * Default 90.
+     */
+    public function pdfJpgQuality(): int
+    {
+        $value = Config::all()['pdf_jpg_quality'] ?? null;
+        return is_numeric($value) ? (int) $value : 90;
+    }
+
+    /**
+     * Cached count of orphan images (images with no album). Seeded by
+     * ImageAdminService::countOrphans on first access. 0 if unset.
+     */
+    public function countOrphans(): int
+    {
+        $value = Config::all()['count_orphans'] ?? null;
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Endpoint URL the install pings with telemetry (origin hash +
+     * extension activity). Default {@see AppInfo::PROJECT_URL}.
+     */
+    public function sendPiwigoInfosUpdateUrl(string $default): string
+    {
+        $value = Config::all()['send_piwigo_infos_update_url'] ?? null;
+        return is_scalar($value) ? (string) $value : $default;
+    }
+
+    /**
+     * Telemetry interval in seconds — how often
+     * TelemetryService::sendPiwigoInfos may fire. Default 604800
+     * (one week).
+     */
+    public function sendPiwigoInfosPeriodSeconds(): int
+    {
+        $value = Config::all()['send_piwigo_infos_period'] ?? null;
+        return is_numeric($value) ? (int) $value : 604800;
+    }
+
+    /**
+     * JSON blob holding the current admin menubar layout (per-section
+     * ordering). Empty string when no override has been persisted.
+     */
+    public function menubarLayoutJson(): string
+    {
+        $value = Config::all()['blk_menubar'] ?? null;
+        return is_string($value) ? $value : '';
+    }
+
+    /**
+     * Common bool-coercion for plugin-persisted toggles, which may be
+     * stored as bool, '1' / '0' / 'true' / 'false', or absent.
+     */
+    private static function boolish(mixed $value, bool $default): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if ($value === null) {
+            return $default;
+        }
+        if (is_scalar($value)) {
+            return in_array((string) $value, ['1', 'true', 'on'], true);
+        }
+        return $default;
+    }
 }

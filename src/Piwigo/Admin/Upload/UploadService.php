@@ -328,7 +328,7 @@ final readonly class UploadService
 
     public function addFormat(string $sourceFilepath, string $formatExt, string $formatOf): string
     {
-        if (!$this->configService->confGetParam('enable_formats', false)) {
+        if (!$this->configService->enableFormats()) {
             throw new ConfigException('[addFormat] formats are disabled');
         }
         $formatExtList = $this->configService->confGetParam('format_ext', ['cr2']);
@@ -388,8 +388,8 @@ final readonly class UploadService
         if (!in_array(strtolower(StringUtil::getExtension($filePath)), ['pdf'])) {
             return $representativeExt;
         }
-        $ext        = is_string($this->configService->confGetParam('pdf_representative_ext', 'jpg')) ? $this->configService->confGetParam('pdf_representative_ext', 'jpg') : 'jpg';
-        $jpgQuality = is_int($this->configService->confGetParam('pdf_jpg_quality', 90)) ? $this->configService->confGetParam('pdf_jpg_quality', 90) : 90;
+        $ext        = $this->configService->pdfRepresentativeExt();
+        $jpgQuality = $this->configService->pdfJpgQuality();
         $repFilePath = StringUtil::originalToRepresentative($filePath, $ext);
         $this->prepareDirectory(dirname($repFilePath));
         $rpFilePath0 = realpath($filePath);

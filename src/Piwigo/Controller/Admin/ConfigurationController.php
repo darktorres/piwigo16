@@ -372,8 +372,8 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                     'log'                               => Config::logConf(),
                     'history_admin'                     => Config::historyAdmin(),
                     'history_guest'                     => Config::historyGuest(),
-                    'show_mobile_app_banner_in_gallery' => (bool) $this->configService->confGetParam('show_mobile_app_banner_in_gallery', false),
-                    'show_mobile_app_banner_in_admin'   => (bool) $this->configService->confGetParam('show_mobile_app_banner_in_admin', true),
+                    'show_mobile_app_banner_in_gallery' => $this->configService->showMobileAppBannerInGallery(),
+                    'show_mobile_app_banner_in_admin'   => $this->configService->showMobileAppBannerInAdmin(),
                     'upload_detect_duplicate'           => Config::uploadDetectDuplicate(),
                 ], true);
 

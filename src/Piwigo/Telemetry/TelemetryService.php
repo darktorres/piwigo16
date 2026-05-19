@@ -68,8 +68,8 @@ final readonly class TelemetryService
 
         $doSend = false;
         if (Config::has('send_piwigo_infos_last_notice')) {
-            $period = $this->configService->confGetParam('send_piwigo_infos_period', 7 * 24 * 60 * 60);
-            if (strtotime(Config::sendPiwigoInfosLastNotice() ?? '') < strtotime((is_scalar($period) ? (string) $period : '604800') . ' second ago')) {
+            $periodSeconds = $this->configService->sendPiwigoInfosPeriodSeconds();
+            if (strtotime(Config::sendPiwigoInfosLastNotice() ?? '') < strtotime($periodSeconds . ' second ago')) {
                 $doSend = true;
             }
         } else {
@@ -140,8 +140,8 @@ final readonly class TelemetryService
             apps:           $this->buildAppsStats(),
         );
 
-        $updateUrl = $this->configService->confGetParam('send_piwigo_infos_update_url', AppInfo::PROJECT_URL);
-        $url       = (is_scalar($updateUrl) ? (string) $updateUrl : AppInfo::PROJECT_URL) . '/ws.php';
+        $updateUrl = $this->configService->sendPiwigoInfosUpdateUrl(AppInfo::PROJECT_URL);
+        $url       = $updateUrl . '/ws.php';
 
         $getData  = ['method' => 'porg.installs.update', 'origin_hash' => $payload->originHash];
         $postData = ['data' => json_encode($payload->toArray())];

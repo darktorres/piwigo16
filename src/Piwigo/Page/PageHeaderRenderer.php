@@ -33,9 +33,9 @@ final class PageHeaderRenderer
         $dispatcher = Kernel::service(EventDispatcherInterface::class);
         $dispatcher->dispatch(new LocBeginPageHeader());
 
-        $show_mobile_app_banner = Kernel::service(ConfigService::class)->confGetParam('show_mobile_app_banner_in_gallery', false);
+        $show_mobile_app_banner = Kernel::service(ConfigService::class)->showMobileAppBannerInGallery();
         if (RequestContextRegistry::current() === RequestContext::Admin) {
-            $show_mobile_app_banner = Kernel::service(ConfigService::class)->confGetParam('show_mobile_app_banner_in_admin', true);
+            $show_mobile_app_banner = Kernel::service(ConfigService::class)->showMobileAppBannerInAdmin();
         }
 
         $pageBannerRaw = $pageState->pageBanner ?? Config::pageBanner();

@@ -341,14 +341,13 @@ final class ImageAdminService
 
     public function countOrphans(): int
     {
-        if (is_null($this->configService->confGetParam('count_orphans'))) {
+        if ($this->configService->confGetParam('count_orphans') === null) {
             $allCount = $this->imageRepository->countAll();
             $catCount = $this->categoryRepository->countLinkedImages();
             $counter  = $allCount - $catCount;
             $this->configService->confUpdateParam('count_orphans', $counter, true);
         }
-        $count = $this->configService->confGetParam('count_orphans');
-        return is_numeric($count) ? (int) $count : 0;
+        return $this->configService->countOrphans();
     }
 
     /** @return int[] */

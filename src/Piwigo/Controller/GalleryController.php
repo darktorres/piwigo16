@@ -154,8 +154,7 @@ final readonly class GalleryController implements ControllerInterface
             $canonicalUrl = $this->urlService->duplicateIndexUrl(['start' => $safeStart]);
         }
         $tpl->assign('U_CANONICAL', $canonicalUrl);
-        $useStandardPagesRaw = $this->configService->confGetParam('use_standard_pages', false);
-        $tpl->assign('use_standard_pages', is_array($useStandardPagesRaw) || is_scalar($useStandardPagesRaw) || $useStandardPagesRaw === null ? $useStandardPagesRaw : null);
+        $tpl->assign('use_standard_pages', $this->configService->useStandardPages());
 
         // Page title
         $tpl->assign('TITLE', new Html($ctx->sectionTitle));

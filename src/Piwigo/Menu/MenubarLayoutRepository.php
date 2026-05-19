@@ -24,8 +24,8 @@ final readonly class MenubarLayoutRepository
     /** @return array<string, int> */
     public function load(): array
     {
-        $raw = $this->configService->confGetParam(self::CONF_KEY, '');
-        if (!is_string($raw) || $raw === '') {
+        $raw = $this->configService->menubarLayoutJson();
+        if ($raw === '') {
             return [];
         }
         $decoded = json_decode($raw, associative: true);

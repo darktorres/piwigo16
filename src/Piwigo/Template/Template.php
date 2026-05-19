@@ -122,7 +122,7 @@ final class Template
         if (
             '_base' != $theme
             and in_array(StringUtil::scriptBasename(), ['identification', 'register', 'password', 'profile'])
-            and (((bool) ($themeconf['use_standard_pages'] ?? false)) or Kernel::service(ConfigService::class)->confGetParam('use_standard_pages', false))
+            and (((bool) ($themeconf['use_standard_pages'] ?? false)) or Kernel::service(ConfigService::class)->useStandardPages())
         ) {
             $theme = 'standard_pages';
             $themeconf = $this->loadThemeconf($root.'/'.$theme);
@@ -580,14 +580,12 @@ final class Template
      */
     private function applyStandardPagesContext(): void
     {
-        // ConfigService::confGetParam is the dynamic-key reader for
-        // plugin-persisted conf rows that legitimately lack a SCHEMA
-        // entry. ExtensionsController writes these via the same service.
+        // ConfigService exposes typed accessors for the standard_pages
+        // plugin-persisted keys (ExtensionsController writes them via
+        // the same service).
         $configService = Kernel::service(ConfigService::class);
-        $logoRaw = $configService->confGetParam('standard_pages_selected_logo', 'piwigo_logo');
-        $skinRaw = $configService->confGetParam('standard_pages_selected_skin', 'default');
-        $logo = is_string($logoRaw) ? $logoRaw : 'piwigo_logo';
-        $skin = is_string($skinRaw) ? $skinRaw : 'default';
+        $logo = $configService->standardPagesSelectedLogo();
+        $skin = $configService->standardPagesSelectedSkin();
 
         $this->assign([
             'STD_PGS_SELECTED_SKIN' => $skin,
@@ -595,9 +593,8 @@ final class Template
             'GALLERY_TITLE'         => Config::galleryTitle(),
         ]);
         if ($logo === 'custom_logo') {
-            $customPath = $configService->confGetParam('standard_pages_selected_logo_path', '');
             $this->assign([
-                'STD_PGS_SELECTED_LOGO_PATH' => is_string($customPath) ? $customPath : '',
+                'STD_PGS_SELECTED_LOGO_PATH' => $configService->standardPagesSelectedLogoPath(),
             ]);
         }
     }

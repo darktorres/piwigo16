@@ -718,14 +718,14 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         }
 
         $tpl->assign([
-            'use_standard_pages'            => $this->configService->confGetParam('use_standard_pages', true),
-            'std_pgs_selected_logo'         => $this->configService->confGetParam('standard_pages_selected_logo', 'piwigo_logo'),
+            'use_standard_pages'            => $this->configService->useStandardPages(),
+            'std_pgs_selected_logo'         => $this->configService->standardPagesSelectedLogo(),
             'std_pgs_logo_options'          => $std_pgs_logo_options,
-            'std_pgs_selected_skin'         => $this->configService->confGetParam('standard_pages_selected_skin', 'default'),
+            'std_pgs_selected_skin'         => $this->configService->standardPagesSelectedSkin(),
             'std_pgs_skin_options'          => $std_pgs_skin_options,
             'is_standard_pages_used'        => $is_standard_pages_used,
             'standard_pages_used_by'        => $standard_pages_used_by,
-            'std_pgs_selected_logo_path'    => $this->configService->confGetParam('standard_pages_selected_logo_path', null),
+            'std_pgs_selected_logo_path'    => $this->configService->standardPagesSelectedLogoPath(),
             'PWG_TOKEN'                     => $this->csrfService->getToken(),
         ]);
         $tpl->assign('isWebmaster', $this->permissionService->isWebmaster() ? 1 : 0);

@@ -145,7 +145,7 @@ final readonly class GetListHandler implements WsAction
             } elseif ($row['representative_picture_id'] !== null && $row['representative_picture_id'] !== 0) {
                 $imageId = $row['representative_picture_id'];
             } elseif (Config::allowRandomRepresentative()) {
-                $imageId = $this->categoryService->getRandomImageInCategory($row);
+                $imageId = $this->categoryService->getRandomImageInCategory($row['id'], $row['uppercats'], $row['count_images'], true);
             } else {
                 if ($row['count_categories'] > 0 && $row['count_images'] > 0) {
                     [$permSubSql, $permSubParams, $permSubTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND");
@@ -186,7 +186,7 @@ final readonly class GetListHandler implements WsAction
                 } else {
                     foreach ($categories as &$category) {
                         if ($img->id->value === $category['representative_picture_id']) {
-                            $newImgId = $this->categoryService->getRandomImageInCategory($category);
+                            $newImgId = $this->categoryService->getRandomImageInCategory($category['id'], $category['uppercats'], $category['count_images'], true);
                             if (isset($newImgId) && !in_array($newImgId, $imageIds)) {
                                 $newImageIds[] = $newImgId;
                             }

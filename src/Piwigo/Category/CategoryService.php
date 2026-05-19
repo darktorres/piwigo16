@@ -287,14 +287,11 @@ final readonly class CategoryService
         return $displayText;
     }
 
-    /** @param array<string, mixed> $category */
-    public function getRandomImageInCategory(array $category, bool $recursive = true): ?int
+    public function getRandomImageInCategory(int $catId, string $uppercats, int $countImages, bool $recursive): ?int
     {
-        if (!($category['count_images'] > 0)) {
+        if ($countImages <= 0) {
             return null;
         }
-        $catId       = is_numeric($category['id']) ? (int) $category['id'] : 0;
-        $uppercats   = is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '';
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'c.id', 'visible_categories' => 'c.id', 'visible_images' => 'image_id'], "\n  AND");
         return $this->catRepo->findRandomImageIdInCategoryWithPermissions(
             $catId,

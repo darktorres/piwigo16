@@ -2546,7 +2546,23 @@ SELECT
      *
      * @param list<mixed>                            $permParams
      * @param list<ArrayParameterType|ParameterType> $permTypes
-     * @return array{rows: list<array<string, mixed>>, total: int}
+     * @return array{rows: list<array{
+     *     id: int,
+     *     name: string,
+     *     comment: string|null,
+     *     uppercats: string,
+     *     permalink: string|null,
+     *     status: string,
+     *     global_rank: string|null,
+     *     representative_picture_id: int|null,
+     *     user_representative_picture_id: int|null,
+     *     nb_images: int,
+     *     date_last: string|null,
+     *     max_date_last: string|null,
+     *     count_images: int,
+     *     nb_categories: int,
+     *     count_categories: int,
+     * }>, total: int}
      */
     public function findCatsForThumbnailsWithFoundRows(
         int $userId,
@@ -2560,7 +2576,8 @@ SELECT
     ): array {
         $query = '
 SELECT SQL_CALC_FOUND_ROWS
-    c.*,
+    c.id, c.name, c.comment, c.uppercats, c.permalink, c.status,
+    c.global_rank, c.representative_picture_id,
     user_representative_picture_id,
     nb_images,
     date_last,
@@ -2579,7 +2596,33 @@ SELECT SQL_CALC_FOUND_ROWS
   LIMIT ' . $limit . ' OFFSET ' . $offset;
         $params = [$userId, ...$permParams];
         $types  = [ParameterType::INTEGER, ...$permTypes];
-        $rows   = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        $rawRows = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        $rows = [];
+        foreach ($rawRows as $row) {
+            $idRaw = $row['id'] ?? null;
+            if (!is_numeric($idRaw)) {
+                continue;
+            }
+            $repPicIdRaw   = $row['representative_picture_id'] ?? null;
+            $userRepPicRaw = $row['user_representative_picture_id'] ?? null;
+            $rows[] = [
+                'id'                              => (int) $idRaw,
+                'name'                            => is_string($row['name'] ?? null) ? $row['name'] : '',
+                'comment'                         => is_string($row['comment'] ?? null) ? $row['comment'] : null,
+                'uppercats'                       => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                'permalink'                       => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
+                'status'                          => is_string($row['status'] ?? null) ? $row['status'] : 'public',
+                'global_rank'                     => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+                'representative_picture_id'       => is_numeric($repPicIdRaw) ? (int) $repPicIdRaw : null,
+                'user_representative_picture_id'  => is_numeric($userRepPicRaw) ? (int) $userRepPicRaw : null,
+                'nb_images'                       => is_numeric($row['nb_images'] ?? null) ? (int) $row['nb_images'] : 0,
+                'date_last'                       => is_string($row['date_last'] ?? null) ? $row['date_last'] : null,
+                'max_date_last'                   => is_string($row['max_date_last'] ?? null) ? $row['max_date_last'] : null,
+                'count_images'                    => is_numeric($row['count_images'] ?? null) ? (int) $row['count_images'] : 0,
+                'nb_categories'                   => is_numeric($row['nb_categories'] ?? null) ? (int) $row['nb_categories'] : 0,
+                'count_categories'                => is_numeric($row['count_categories'] ?? null) ? (int) $row['count_categories'] : 0,
+            ];
+        }
         $totalRaw = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
         return [
             'rows'  => $rows,

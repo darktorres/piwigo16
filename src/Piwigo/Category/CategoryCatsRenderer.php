@@ -90,21 +90,17 @@ final readonly class CategoryCatsRenderer
         $user_representative_updates_for = [];
 
         foreach ($catCatsRows as $row) {
-            $row['is_child_date_last'] = ($row['max_date_last'] ?? null) > ($row['date_last'] ?? null);
-
-            if (!empty($row['user_representative_picture_id'])) {
+            if ($row['user_representative_picture_id'] !== null && $row['user_representative_picture_id'] !== 0) {
                 $image_id = $row['user_representative_picture_id'];
-            } elseif (!empty($row['representative_picture_id'])) {
+            } elseif ($row['representative_picture_id'] !== null && $row['representative_picture_id'] !== 0) {
                 $image_id = $row['representative_picture_id'];
             } elseif (Config::allowRandomRepresentative()) {
-                $image_id = $this->categoryService->getRandomImageInCategory($row);
+                $image_id = $this->categoryService->getRandomImageInCategory($row['id'], $row['uppercats'], $row['count_images'], true);
             } elseif ($row['count_categories'] > 0 and $row['count_images'] > 0) {
-                $rowUppercatsRaw      = $row['uppercats'] ?? null;
-                $rowUppercatsForQuery = is_string($rowUppercatsRaw) ? $rowUppercatsRaw : '';
                 [$subPermSql, $subPermParams, $subPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND");
                 $image_id = $this->categoryRepository->findRandomSubcatRepresentativeForUser(
                     $currentUser->id,
-                    $rowUppercatsForQuery,
+                    $row['uppercats'],
                     $subPermSql,
                     $subPermParams,
                     $subPermTypes,
@@ -112,18 +108,17 @@ final readonly class CategoryCatsRenderer
             }
 
             if (isset($image_id)) {
-                if (Config::representativeCacheOnSubcats() and ($row['user_representative_picture_id'] ?? null) != $image_id) {
-                    $rowIdRaw5 = $row['id'] ?? null;
-                    $user_representative_updates_for[is_scalar($rowIdRaw5) ? (string) $rowIdRaw5 : ''] = $image_id;
+                if (Config::representativeCacheOnSubcats() and $row['user_representative_picture_id'] !== $image_id) {
+                    $user_representative_updates_for[(string) $row['id']] = $image_id;
                 }
                 $row['representative_picture_id'] = $image_id;
                 $image_ids[] = $image_id;
                 $categories[] = $row;
-                $category_ids[] = $row['id'] ?? null;
+                $category_ids[] = $row['id'];
             } else {
                 $logger->info(sprintf(
                     '[CategoryCatsRenderer] category #%u was listed in SQL but no image_id found, so it was skipped',
-                    is_numeric($row['id']) ? (int) $row['id'] : 0
+                    $row['id']
                 ));
             }
             unset($image_id);
@@ -132,9 +127,8 @@ final readonly class CategoryCatsRenderer
         if (Config::displayFromto()) {
             if (count($category_ids) > 0) {
                 [$datesPermSql, $datesPermParams, $datesPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'category_id', 'visible_images' => 'id'], 'AND');
-                $catIdsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $category_ids);
                 $dates_of_category = $this->categoryRepository->findDateRangesForCategoriesKeyedById(
-                    $catIdsInt,
+                    $category_ids,
                     $datesPermSql,
                     $datesPermParams,
                     $datesPermTypes,
@@ -143,33 +137,30 @@ final readonly class CategoryCatsRenderer
         }
 
         if ('recent_cats' == $ctx->section) {
-            usort($categories, $this->categoryService->globalRankCompare(...));
+            usort($categories, static fn (array $a, array $b): int => strnatcasecmp($a['global_rank'] ?? '', $b['global_rank'] ?? ''));
         }
 
         $infos_of_image = [];
         if (count($categories) > 0) {
             $new_image_ids = [];
 
-            $imageIdsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $image_ids);
             $userLevel   = is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0;
-            foreach ($this->imageRepository->findByIds($imageIdsInt) as $img) {
+            foreach ($this->imageRepository->findByIds($image_ids) as $img) {
                 if ($img->level <= $userLevel) {
                     $infos_of_image[(string) $img->id->value] = PictureViewModel::fromImage($img)->toArray();
                 } else {
-                    foreach ($categories as &$category) {
-                        if ($img->id->value == $category['representative_picture_id']) {
-                            $image_id = $this->categoryService->getRandomImageInCategory($category);
+                    foreach ($categories as $idx => $category) {
+                        if ($img->id->value === $category['representative_picture_id']) {
+                            $image_id = $this->categoryService->getRandomImageInCategory($category['id'], $category['uppercats'], $category['count_images'], true);
                             if (isset($image_id) and !in_array($image_id, $image_ids)) {
                                 $new_image_ids[] = $image_id;
                             }
                             if (Config::representativeCacheOnLevel()) {
-                                $catIdRaw = $category['id'] ?? null;
-                                $user_representative_updates_for[is_scalar($catIdRaw) ? (string) $catIdRaw : ''] = $image_id;
+                                $user_representative_updates_for[(string) $category['id']] = $image_id;
                             }
-                            $category['representative_picture_id'] = $image_id;
+                            $categories[$idx]['representative_picture_id'] = $image_id;
                         }
                     }
-                    unset($category);
                 }
             }
 
@@ -199,45 +190,53 @@ final readonly class CategoryCatsRenderer
             $tpl_thumbnails_var = [];
 
             foreach ($categories as $category) {
-                if (0 == $category['count_images']) {
+                // FilterService::updateCategoriesWithFilteredData() above
+                // takes the typed shape by-ref through an `array<string, mixed>`
+                // signature, so phpstan loses the typed-shape narrowing here.
+                // Narrow back to the keys the template-build path consumes.
+                $catIdInt           = is_numeric($category['id'] ?? null) ? (int) $category['id'] : 0;
+                $catName            = is_string($category['name'] ?? null) ? $category['name'] : '';
+                $catUppercats       = is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '';
+                $catComment         = is_string($category['comment'] ?? null) ? $category['comment'] : '';
+                $catNbImages        = is_numeric($category['nb_images'] ?? null) ? (int) $category['nb_images'] : 0;
+                $catCountImages     = is_numeric($category['count_images'] ?? null) ? (int) $category['count_images'] : 0;
+                $catCountCategories = is_numeric($category['count_categories'] ?? null) ? (int) $category['count_categories'] : 0;
+                $catMaxDateLast     = is_string($category['max_date_last'] ?? null) ? $category['max_date_last'] : null;
+                $catDateLast        = is_string($category['date_last'] ?? null) ? $category['date_last'] : null;
+                $catRepPicId        = is_numeric($category['representative_picture_id'] ?? null) ? (int) $category['representative_picture_id'] : null;
+
+                if (0 === $catCountImages) {
                     continue;
                 }
 
-                $subcatRenderEvent = new RenderCategoryName(
-                    is_scalar($category['name'] ?? null) ? (string) $category['name'] : '',
-                    'subcatify_category_name'
-                );
+                $subcatRenderEvent = new RenderCategoryName($catName, 'subcatify_category_name');
                 $this->dispatcher->dispatch($subcatRenderEvent);
                 $category['name'] = $subcatRenderEvent->categoryName;
 
                 if ($ctx->section == 'recent_cats') {
-                    $uppercatsRaw = $category['uppercats'] ?? null;
-                    $name = $this->htmlService->getCatDisplayNameCache(is_scalar($uppercatsRaw) ? (string) $uppercatsRaw : '', null);
+                    $name = $this->htmlService->getCatDisplayNameCache($catUppercats, null);
                 } else {
-                    $name = $category['name'];
+                    $name = $subcatRenderEvent->categoryName;
                 }
 
-                $repPicIdRaw = $category['representative_picture_id'] ?? null;
-                $repPicId = (is_string($repPicIdRaw) || is_int($repPicIdRaw)) ? $repPicIdRaw : null;
-                $infosRaw = ($repPicId !== null) ? ($infos_of_image[$repPicId] ?? null) : null;
+                $infosRaw = ($catRepPicId !== null) ? ($infos_of_image[$catRepPicId] ?? null) : null;
                 $representative_infos = is_array($infosRaw) ? $infosRaw : [];
 
-                $commentRaw = $category['comment'] ?? null;
-                $descEvent = new RenderCategoryDescription(is_string($commentRaw) ? $commentRaw : '', 'subcatify_category_description');
+                $descEvent = new RenderCategoryDescription($catComment, 'subcatify_category_description');
                 $this->dispatcher->dispatch($descEvent);
                 $literalEvent = new RenderCategoryLiteralDescription($descEvent->categoryDescription);
                 $this->dispatcher->dispatch($literalEvent);
                 $description = $literalEvent->description;
 
                 $tpl_var = array_merge($category, [
-                    'ID' => $category['id'],
+                    'ID' => $catIdInt,
                     'representative' => $representative_infos,
-                    'TN_ALT' => strip_tags($category['name']),
+                    'TN_ALT' => strip_tags($subcatRenderEvent->categoryName),
                     'URL' => $this->urlService->makeIndexUrl(['category' => $category]),
                     'CAPTION_NB_IMAGES' => new Html($this->categoryService->getDisplayImagesCount(
-                        is_numeric($category['nb_images']) ? (int) $category['nb_images'] : 0,
-                        is_numeric($category['count_images']) ? (int) $category['count_images'] : 0,
-                        is_numeric($category['count_categories']) ? (int) $category['count_categories'] : 0,
+                        $catNbImages,
+                        $catCountImages,
+                        $catCountCategories,
                         true,
                         '<br>'
                     )),
@@ -245,22 +244,17 @@ final readonly class CategoryCatsRenderer
                     'NAME' => $name,
                 ]);
                 if (Config::indexNewIcon()) {
-                    $maxDateLastRaw = $category['max_date_last'] ?? null;
                     $tpl_var['icon_ts'] = $this->htmlService->getIcon(
-                        is_scalar($maxDateLastRaw) ? (string) $maxDateLastRaw : null,
-                        (bool) ($category['is_child_date_last'] ?? false)
+                        $catMaxDateLast,
+                        ($catMaxDateLast ?? '') > ($catDateLast ?? '')
                     );
                 }
 
-                if (Config::displayFromto()) {
-                    $catIdRaw = $category['id'] ?? null;
-                    $catId    = is_numeric($catIdRaw) ? (int) $catIdRaw : null;
-                    if ($catId !== null && isset($dates_of_category[$catId])) {
-                        $from = $dates_of_category[$catId]['from'];
-                        $to   = $dates_of_category[$catId]['to'];
-                        if ($from !== null && $from !== '') {
-                            $tpl_var['INFO_DATES'] = $this->dateService->formatFromto($from, $to);
-                        }
+                if (Config::displayFromto() && isset($dates_of_category[$catIdInt])) {
+                    $from = $dates_of_category[$catIdInt]['from'];
+                    $to   = $dates_of_category[$catIdInt]['to'];
+                    if ($from !== null && $from !== '') {
+                        $tpl_var['INFO_DATES'] = $this->dateService->formatFromto($from, $to);
                     }
                 }
 

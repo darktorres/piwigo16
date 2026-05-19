@@ -183,8 +183,8 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
         ));
 
         $server->register(new MethodDefinition(
-            name:        'pwg.images.addComment',
-            callback:    $this->imagesEndpoints->addComment(...),
+            name:         'pwg.images.addComment',
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\AddCommentHandler::class,
             description: 'Adds a comment to an image.',
             params:      [
                 ParamDefinition::required(name: 'image_id', type: WsType::Id->value),
@@ -273,7 +273,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.setRank',
-            callback:     $this->imagesEndpoints->setRank(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\SetRankHandler::class,
             description:  'Sets the rank of a photo for a given album.
 <br><br>If you provide a list for image_id:
 <ul>

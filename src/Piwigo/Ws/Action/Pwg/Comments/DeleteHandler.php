@@ -10,6 +10,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.comments.delete` — admin bulk-delete user comments. */
 final readonly class DeleteHandler implements WsAction
@@ -24,13 +25,15 @@ final readonly class DeleteHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|string
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = DeleteParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
-        $rawIds     = is_array($params['comment_id']) ? $params['comment_id'] : [];
-        $strIds     = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $rawIds);
-        $commentIds = array_map(fn (string $v): int => (int) $v, array_unique($strIds));
-        $this->commentService->deleteUserComment($commentIds);
+        $this->commentService->deleteUserComment($input->commentIds);
         return 'Comment successfully deleted';
     }
 }

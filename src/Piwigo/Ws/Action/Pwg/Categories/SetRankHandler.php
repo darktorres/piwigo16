@@ -24,16 +24,14 @@ final readonly class SetRankHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        $rawIds = is_array($params['category_id']) ? $params['category_id'] : [];
-        /** @var int[] $categoryIds */
-        $categoryIds = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawIds);
-        $categories  = $this->categoryRepository->findIdIdUppercatRankByIds($categoryIds);
+        $input      = SetRankParams::fromArray($params);
+        $categories = $this->categoryRepository->findIdIdUppercatRankByIds($input->categoryIds);
         if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
         }
         $category = $categories[0];
-        if (count($categoryIds) > 1) {
-            $orderNew     = $categoryIds;
+        if (count($input->categoryIds) > 1) {
+            $orderNew     = $input->categoryIds;
             $orderNewById = $orderNew;
             sort($orderNewById, SORT_NUMERIC);
             $parentForAsc = $category->idUppercat?->value;
@@ -41,17 +39,15 @@ final readonly class SetRankHandler implements WsAction
             if ($catAsc !== $orderNewById) {
                 return new PwgError(WsError::InvalidParam->value, 'you need to provide all sub-category ids for a given category');
             }
-            $orderNew = $categoryIds;
         } else {
-            $singleCatId   = $categoryIds[0];
-            $parentForOld  = $category->idUppercat?->value;
-            $orderOld      = $this->categoryRepository->findOtherIdsByParentOrderedByRank($parentForOld, $singleCatId);
-            $rankTarget    = is_numeric($params['rank']) ? (int) $params['rank'] : 0;
-            $orderNew      = [];
-            $wasInserted   = false;
-            $i             = 1;
+            $singleCatId  = $input->categoryIds[0];
+            $parentForOld = $category->idUppercat?->value;
+            $orderOld     = $this->categoryRepository->findOtherIdsByParentOrderedByRank($parentForOld, $singleCatId);
+            $orderNew     = [];
+            $wasInserted  = false;
+            $i            = 1;
             foreach ($orderOld as $categoryId) {
-                if ($i === $rankTarget) {
+                if ($i === $input->rank) {
                     $orderNew[]  = $singleCatId;
                     $wasInserted = true;
                 }

@@ -1078,8 +1078,8 @@ final class MaintenanceController implements AdminSubControllerInterface
             $tpl_var = [
                 'NAME'       => $row['galleries_url'],
                 'TYPE'       => Lang::t($is_remote ? 'Remote' : 'Local'),
-                'CATEGORIES' => is_numeric($sites_detail[(string) $site_id]['nb_categories'] ?? null) ? (int) $sites_detail[(string) $site_id]['nb_categories'] : 0,
-                'IMAGES'     => is_numeric($sites_detail[(string) $site_id]['nb_images'] ?? null) ? (int) $sites_detail[(string) $site_id]['nb_images'] : 0,
+                'CATEGORIES' => $sites_detail[$site_id]['nb_categories'] ?? 0,
+                'IMAGES'     => $sites_detail[$site_id]['nb_images'] ?? 0,
                 'U_SYNCHRONIZE' => $update_url,
             ];
 
@@ -1353,8 +1353,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             $fs = $site_reader->getElements($basedir);
             $tpl->append('footer_elements', '<!-- get_elements: ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
 
-            $cat_ids     = array_diff(array_keys($db_categories), $to_delete);
-            $cat_ids_int = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $cat_ids));
+            $cat_ids_int = array_values(array_diff(array_keys($db_categories), $to_delete));
             $db_elements = $this->imageRepository->findIdPathByStorageCategoryIds($cat_ids_int);
 
             $next_element_id = $this->imageRepository->findNextAvailableId();

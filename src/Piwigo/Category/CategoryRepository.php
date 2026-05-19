@@ -779,7 +779,7 @@ final class CategoryRepository extends AbstractRepository
      * has a permalink set. $orderBy is restricted to 'id' / 'permalink' by
      * the caller (admin permalinks page sort).
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, permalink: string, uppercats: string, global_rank: string|null}>
      */
     public function findCategoriesWithPermalink(string $orderBy): array
     {
@@ -790,14 +790,27 @@ final class CategoryRepository extends AbstractRepository
         if ($orderBy === 'id' || $orderBy === 'permalink') {
             $qb->orderBy($orderBy);
         }
-        return $qb->executeQuery()->fetchAllAssociative();
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $idRaw = $row['id'] ?? null;
+            if (!is_numeric($idRaw)) {
+                continue;
+            }
+            $out[] = [
+                'id'          => (int) $idRaw,
+                'permalink'   => is_string($row['permalink'] ?? null) ? $row['permalink'] : '',
+                'uppercats'   => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+            ];
+        }
+        return $out;
     }
 
     /**
      * Return every row from old_permalinks, ordered by a caller-validated column.
      * $orderBy whitelist: cat_id / permalink / date_deleted / last_hit / hit.
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{cat_id: int, permalink: string, date_deleted: string, last_hit: string|null, hit: int}>
      */
     public function findOldPermalinks(string $orderBy): array
     {
@@ -808,7 +821,21 @@ final class CategoryRepository extends AbstractRepository
         if (in_array($orderBy, $whitelist, true)) {
             $qb->orderBy($orderBy);
         }
-        return $qb->executeQuery()->fetchAllAssociative();
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $catIdRaw = $row['cat_id'] ?? null;
+            if (!is_numeric($catIdRaw)) {
+                continue;
+            }
+            $out[] = [
+                'cat_id'       => (int) $catIdRaw,
+                'permalink'    => is_string($row['permalink'] ?? null) ? $row['permalink'] : '',
+                'date_deleted' => is_string($row['date_deleted'] ?? null) ? $row['date_deleted'] : '',
+                'last_hit'     => is_string($row['last_hit'] ?? null) ? $row['last_hit'] : null,
+                'hit'          => is_numeric($row['hit'] ?? null) ? (int) $row['hit'] : 0,
+            ];
+        }
+        return $out;
     }
 
     /**
@@ -829,7 +856,7 @@ final class CategoryRepository extends AbstractRepository
      * Per-site (categories, images) counts: result keyed by site_id with
      * {nb_categories, nb_images}. Used by the admin sites listing.
      *
-     * @return array<int|string, array<string, mixed>>
+     * @return array<int, array{nb_categories: int, nb_images: int}>
      */
     public function findSiteStorageStats(): array
     {
@@ -840,7 +867,18 @@ final class CategoryRepository extends AbstractRepository
             . ' WHERE c.site_id IS NOT NULL'
             . ' GROUP BY c.site_id',
         )->fetchAllAssociative();
-        return array_column($rows, null, 'site_id');
+        $out = [];
+        foreach ($rows as $row) {
+            $siteIdRaw = $row['site_id'] ?? null;
+            if (!is_numeric($siteIdRaw)) {
+                continue;
+            }
+            $out[(int) $siteIdRaw] = [
+                'nb_categories' => is_numeric($row['nb_categories'] ?? null) ? (int) $row['nb_categories'] : 0,
+                'nb_images'     => is_numeric($row['nb_images'] ?? null) ? (int) $row['nb_images'] : 0,
+            ];
+        }
+        return $out;
     }
 
     /**
@@ -889,7 +927,7 @@ final class CategoryRepository extends AbstractRepository
      * not null. Optional $catFilter restricts to a single id (subcats included
      * via uppercats REGEXP when $subcatsIncluded is true). Result keyed by id.
      *
-     * @return array<int|string, array<string, mixed>>
+     * @return array<int, array{id: int, uppercats: string, global_rank: string|null, status: string, visible: bool}>
      */
     public function findPhysicalSyncableForSite(int $siteId, ?int $catFilter, bool $subcatsIncluded): array
     {
@@ -908,7 +946,22 @@ final class CategoryRepository extends AbstractRepository
                    ->setParameter('catId', $catFilter);
             }
         }
-        return array_column($qb->executeQuery()->fetchAllAssociative(), null, 'id');
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $idRaw      = $row['id'] ?? null;
+            $visibleRaw = $row['visible'] ?? null;
+            if (!is_numeric($idRaw)) {
+                continue;
+            }
+            $out[(int) $idRaw] = [
+                'id'          => (int) $idRaw,
+                'uppercats'   => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+                'status'      => is_string($row['status'] ?? null) ? $row['status'] : 'public',
+                'visible'     => is_bool($visibleRaw) ? $visibleRaw : (is_numeric($visibleRaw) ? (int) $visibleRaw !== 0 : true),
+            ];
+        }
+        return $out;
     }
 
     /**

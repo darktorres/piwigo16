@@ -368,7 +368,7 @@ final class MiscController implements AdminSubControllerInterface
         $sortBy0  = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
         $categories = [];
         foreach ($this->categoryRepository->findCategoriesWithPermalink($sortBy0) as $row) {
-            $row['name'] = $this->htmlService->getCatDisplayNameCache(is_scalar($row['uppercats'] ?? null) ? (string) $row['uppercats'] : '');
+            $row['name']  = $this->htmlService->getCatDisplayNameCache($row['uppercats']);
             $categories[] = $row;
         }
         if ($sort_by[0] == 'name') {
@@ -376,13 +376,13 @@ final class MiscController implements AdminSubControllerInterface
         }
         $tpl->assign('permalinks', $categories);
 
-        $sort_by = $this->parseSortVariables(['cat_id', 'permalink', 'date_deleted', 'last_hit', 'hit'], null, 'dpsf', ['delete_permanent'], 'SORT_OLD_', '#old_permalinks');
-        $url_del_base    = $this->urlGenerator->admin('permalinks');
+        $sort_by            = $this->parseSortVariables(['cat_id', 'permalink', 'date_deleted', 'last_hit', 'hit'], null, 'dpsf', ['delete_permanent'], 'SORT_OLD_', '#old_permalinks');
+        $url_del_base       = $this->urlGenerator->admin('permalinks');
         $sortByOld0         = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
         $deleted_permalinks = [];
         foreach ($this->categoryRepository->findOldPermalinks($sortByOld0) as $row) {
-            $row['name']     = $this->htmlService->getCatDisplayNameCache((string) (is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0));
-            $row['U_DELETE'] = $this->urlService->addUrlParams($url_del_base, ['delete_permanent' => $row['permalink'], 'pwg_token' => $pwg_token]);
+            $row['name']          = $this->htmlService->getCatDisplayNameCache((string) $row['cat_id']);
+            $row['U_DELETE']      = $this->urlService->addUrlParams($url_del_base, ['delete_permanent' => $row['permalink'], 'pwg_token' => $pwg_token]);
             $deleted_permalinks[] = $row;
         }
 

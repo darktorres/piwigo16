@@ -10,6 +10,7 @@ use Piwigo\Permission\PermissionRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.permissions.remove` — revoke per-album access from users/groups. */
 final readonly class RemoveHandler implements WsAction
@@ -25,22 +26,22 @@ final readonly class RemoveHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = RemoveParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $catIdParam3Int = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['cat_id']) ? $params['cat_id'] : []);
-        $catIds         = $this->categoryService->getSubcatIds($catIdParam3Int);
-        $catIdsStr      = array_map(fn (mixed $v): string => (string) $v, $catIds);
-        $permRepo2      = $this->permissionRepository;
-        $catIdsInt      = array_map(fn (string $v): int => (int) $v, $catIdsStr);
-        if (!empty($params['group_id'])) {
-            $groupIdRem = is_array($params['group_id']) ? $params['group_id'] : [];
-            $permRepo2->deleteGroupAccess(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $groupIdRem), $catIdsInt);
+        $catIds    = $this->categoryService->getSubcatIds($input->categoryIds);
+        $catIdsInt = array_map(static fn (int|string $v): int => (int) $v, $catIds);
+        if ($input->groupIds !== []) {
+            $this->permissionRepository->deleteGroupAccess($input->groupIds, $catIdsInt);
         }
-        if (!empty($params['user_id'])) {
-            $userIdRem = is_array($params['user_id']) ? $params['user_id'] : [];
-            $permRepo2->deleteUserAccess(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIdRem), $catIdsInt);
+        if ($input->userIds !== []) {
+            $this->permissionRepository->deleteUserAccess($input->userIds, $catIdsInt);
         }
-        return $server->invoke('pwg.permissions.getList', ['cat_id' => $params['cat_id']]);
+        return $server->invoke('pwg.permissions.getList', ['cat_id' => $input->categoryIds]);
     }
 }

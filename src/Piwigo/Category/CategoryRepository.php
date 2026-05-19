@@ -171,12 +171,11 @@ final class CategoryRepository extends AbstractRepository
     /** Total number of albums (categories). */
     public function countAll(): int
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('categories'))
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($this->table('categories'))
+        );
     }
 
     /**
@@ -349,14 +348,13 @@ final class CategoryRepository extends AbstractRepository
     /** Count images linked to the given category. */
     public function countImagesByCategoryId(int $catId): int
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('image_category'))
-            ->where('category_id = :catId')
-            ->setParameter('catId', $catId)
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($this->table('image_category'))
+                ->where('category_id = :catId')
+                ->setParameter('catId', $catId)
+        );
     }
 
     /**
@@ -364,16 +362,15 @@ final class CategoryRepository extends AbstractRepository
      */
     public function hasImageInCategory(int $imageId, int $catId): bool
     {
-        $count = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('image_category'))
-            ->where('image_id = :imageId')
-            ->andWhere('category_id = :catId')
-            ->setParameter('imageId', $imageId)
-            ->setParameter('catId', $catId)
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($count) ? (int) $count > 0 : false;
+        return $this->fetchOneInt(
+            $this->conn->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($this->table('image_category'))
+                ->where('image_id = :imageId')
+                ->andWhere('category_id = :catId')
+                ->setParameter('imageId', $imageId)
+                ->setParameter('catId', $catId)
+        ) > 0;
     }
 
     /**
@@ -404,14 +401,13 @@ final class CategoryRepository extends AbstractRepository
     /** Return the status of a single category, or null if not found. */
     public function findStatusById(int $id): ?string
     {
-        $value = $this->conn->createQueryBuilder()
-            ->select('status')
-            ->from($this->table('categories'))
-            ->where('id = :id')
-            ->setParameter('id', $id)
-            ->executeQuery()
-            ->fetchOne();
-        return is_string($value) ? $value : null;
+        return $this->fetchOneString(
+            $this->conn->createQueryBuilder()
+                ->select('status')
+                ->from($this->table('categories'))
+                ->where('id = :id')
+                ->setParameter('id', $id)
+        );
     }
 
     /**

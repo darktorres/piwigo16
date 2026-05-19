@@ -320,29 +320,29 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
         ));
 
         $server->register(new MethodDefinition(
-            name:        'pwg.session.getStatus',
-            callback:    $this->generalEndpoints->sessionGetStatus(...),
-            description: 'Gets information about the current session. Also provides a token useable with admin methods.',
-            tags:        ['session'],
+            name:         'pwg.session.getStatus',
+            handlerClass: \Piwigo\Ws\Action\Pwg\Session\GetStatusHandler::class,
+            description:  'Gets information about the current session. Also provides a token useable with admin methods.',
+            tags:         ['session'],
         ));
 
         $server->register(new MethodDefinition(
-            name:        'pwg.session.login',
-            callback:    $this->generalEndpoints->sessionLogin(...),
-            description: 'Tries to login the user.',
-            params:      [
+            name:         'pwg.session.login',
+            handlerClass: \Piwigo\Ws\Action\Pwg\Session\LoginHandler::class,
+            description:  'Tries to login the user.',
+            params:       [
                 ParamDefinition::required('username'),
                 ParamDefinition::optional('password'),
             ],
-            tags:        ['session'],
-            postOnly:    true,
+            tags:         ['session'],
+            postOnly:     true,
         ));
 
         $server->register(new MethodDefinition(
-            name:        'pwg.session.logout',
-            callback:    $this->generalEndpoints->sessionLogout(...),
-            description: 'Ends the current session.',
-            tags:        ['session'],
+            name:         'pwg.session.logout',
+            handlerClass: \Piwigo\Ws\Action\Pwg\Session\LogoutHandler::class,
+            description:  'Ends the current session.',
+            tags:         ['session'],
         ));
 
         $server->register(new MethodDefinition(

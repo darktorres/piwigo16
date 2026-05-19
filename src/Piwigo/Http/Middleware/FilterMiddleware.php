@@ -13,7 +13,6 @@ use Piwigo\Filter\FilterService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Lang\Translator;
 use Piwigo\Session\Session;
-use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -33,7 +32,6 @@ final readonly class FilterMiddleware implements MiddlewareInterface
         private CategoryService $categoryService,
         private ImageRepository $imageRepository,
         private Session $session,
-        private SessionService $sessionService,
         private FilterService $filterService,
     ) {
     }
@@ -73,17 +71,17 @@ final readonly class FilterMiddleware implements MiddlewareInterface
                     $recentPeriodFromUrl = (int) $urlMatches[1];
                 }
             } else {
-                $enabled = (bool) $this->sessionService->getSessionVar('filter_enabled', false);
+                $enabled = $this->session->filterEnabled;
             }
         }
 
         if (!$enabled) {
             if ($this->session->filterEnabled) {
-                $this->sessionService->unsetSessionVar('filter_enabled');
-                $this->sessionService->unsetSessionVar('filter_check_key');
-                $this->sessionService->unsetSessionVar('filter_categories');
-                $this->sessionService->unsetSessionVar('filter_visible_categories');
-                $this->sessionService->unsetSessionVar('filter_visible_images');
+                $this->session->filterEnabled           = false;
+                $this->session->filterCheckKey          = null;
+                $this->session->filterCategories        = null;
+                $this->session->filterVisibleCategories = [];
+                $this->session->filterVisibleImages     = [];
             }
             FilterContextRegistry::set(new FilterContext(enabled: false));
             return;
@@ -92,9 +90,9 @@ final readonly class FilterMiddleware implements MiddlewareInterface
         // ── Load or recompute filter data ─────────────────────────────────────
 
         /** @var array{user: int, recent_period: int, time: int, date: string} $filterKey */
-        $filterKey = $this->sessionService->getSessionVar('filter_check_key', [
+        $filterKey = $this->session->filterCheckKey ?? [
             'user' => 0, 'recent_period' => -1, 'time' => 0, 'date' => '',
-        ]);
+        ];
 
         if ($recentPeriodFromUrl !== null) {
             $recentPeriod = $recentPeriodFromUrl;
@@ -137,13 +135,13 @@ final readonly class FilterMiddleware implements MiddlewareInterface
                 $visibleImages = [-1];
             }
 
-            $this->sessionService->setSessionVar('filter_enabled', true);
-            $this->sessionService->setSessionVar('filter_check_key', $filterKey);
-            $this->sessionService->setSessionVar('filter_categories', $computedCategories);
-            $this->sessionService->setSessionVar('filter_visible_categories', $visibleCategories);
-            $this->sessionService->setSessionVar('filter_visible_images', $visibleImages);
+            $this->session->filterEnabled           = true;
+            $this->session->filterCheckKey          = $filterKey;
+            $this->session->filterCategories        = $computedCategories;
+            $this->session->filterVisibleCategories = $visibleCategories;
+            $this->session->filterVisibleImages     = $visibleImages;
         } else {
-            $rawCategories      = $this->sessionService->getSessionVar('filter_categories');
+            $rawCategories      = $this->session->filterCategories;
             $computedCategories = [];
             if (is_array($rawCategories)) {
                 foreach ($rawCategories as $catKey => $catRow) {
@@ -157,14 +155,8 @@ final readonly class FilterMiddleware implements MiddlewareInterface
                     $computedCategories[$catKey] = $row;
                 }
             }
-            $visibleCategoriesRaw = $this->sessionService->getSessionVar('filter_visible_categories');
-            $visibleCategories    = is_array($visibleCategoriesRaw)
-                ? array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $visibleCategoriesRaw))
-                : [];
-            $visibleImagesRaw     = $this->sessionService->getSessionVar('filter_visible_images');
-            $visibleImages        = is_array($visibleImagesRaw)
-                ? array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $visibleImagesRaw))
-                : [];
+            $visibleCategories = $this->session->filterVisibleCategories;
+            $visibleImages     = $this->session->filterVisibleImages;
         }
 
         if ($this->filterService->getFilterPageValue('add_notes')) {

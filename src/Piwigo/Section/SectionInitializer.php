@@ -21,7 +21,7 @@ use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\OrderByService;
 use Piwigo\Search\SearchService;
-use Piwigo\Session\SessionService;
+use Piwigo\Session\Session;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
@@ -55,7 +55,7 @@ final readonly class SectionInitializer
         private ImageRepository $imageRepository,
         private PermissionService $permissionService,
         private SearchService $searchService,
-        private SessionService $sessionService,
+        private Session $session,
         private TagService $tagService,
         private UrlService $urlService,
         private UserRepository $userRepository,
@@ -172,23 +172,22 @@ final readonly class SectionInitializer
             Config::override('order_by', Config::orderByInsideCategory());
         }
 
-        $imageOrderRaw = $this->sessionService->getSessionVar('image_order', 0);
-        if (is_numeric($imageOrderRaw) && (int) $imageOrderRaw > 0) {
-            $orders          = $this->categoryService->getCategoryPreferredImageOrders();
-            $imageOrderIdInt = (int) $imageOrderRaw;
-            $ordersEntry = $orders[$imageOrderIdInt] ?? null;
+        $imageOrderId = $this->session->imageOrder;
+        if ($imageOrderId !== null && $imageOrderId > 0) {
+            $orders      = $this->categoryService->getCategoryPreferredImageOrders();
+            $ordersEntry = $orders[$imageOrderId] ?? null;
             $orderEntry  = is_array($ordersEntry) ? $ordersEntry : [];
             $orderEntry2 = $orderEntry[2] ?? null;
             if ($orderEntry2 !== null && $orderEntry2 !== false && $orderEntry2 !== '' && $orderEntry2 !== 0) {
-                $orderCol      = is_scalar($orderEntry[1] ?? null) ? (string) $orderEntry[1] : '';
-                $prependEntry  = $this->orderByService->parseFormToken($orderCol);
+                $orderCol     = is_scalar($orderEntry[1] ?? null) ? (string) $orderEntry[1] : '';
+                $prependEntry = $this->orderByService->parseFormToken($orderCol);
                 if ($prependEntry !== null) {
                     Config::override('order_by', [$prependEntry, ...Config::orderBy()]);
                 }
                 $page['super_order_by'] = true;
             } else {
-                $this->sessionService->unsetSessionVar('image_order');
-                $page['super_order_by'] = false;
+                $this->session->imageOrder = null;
+                $page['super_order_by']    = false;
             }
         }
 

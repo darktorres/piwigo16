@@ -12,6 +12,7 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\BoolUtil;
@@ -49,7 +50,6 @@ use Piwigo\Rate\RateService;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionInitializer;
 use Piwigo\Session\Session;
-use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -85,7 +85,6 @@ final readonly class PictureController implements ControllerInterface
         private RateService $rateService,
         private SectionInitializer $sectionInitializer,
         private Session $session,
-        private SessionService $sessionService,
         private TagService $tagService,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
@@ -175,11 +174,8 @@ final readonly class PictureController implements ControllerInterface
         }
 
         if (StringUtil::inputString('metadata', null, $_GET) !== null) {
-            if ($this->sessionService->getSessionVar('show_metadata') == null) {
-                $this->sessionService->setSessionVar('show_metadata', 1);
-            } else {
-                $this->sessionService->unsetSessionVar('show_metadata');
-            }
+            // Toggle: ?metadata flips showMetadata on if off and vice versa.
+            $this->session->showMetadata = !$this->session->showMetadata;
         }
 
         // render_element_content / render_element_description listeners now
@@ -301,10 +297,10 @@ final readonly class PictureController implements ControllerInterface
         if (isset($_SERVER['HTTP_X_MOZ']) && $_SERVER['HTTP_X_MOZ'] == 'prefetch') {
             $inc_hit_count = false;
         } else {
-            if ($this->sessionService->getSessionVar('referer_image_id', 0) == $imageId) {
+            if ($this->session->refererImageId !== null && $this->session->refererImageId->value === $imageId) {
                 $inc_hit_count = false;
             }
-            $this->sessionService->setSessionVar('referer_image_id', $imageId);
+            $this->session->refererImageId = ImageId::from($imageId);
         }
         $allowEvent = new AllowIncrementElementHitCount($inc_hit_count);
         $this->dispatcher->dispatch($allowEvent);
@@ -631,8 +627,7 @@ final readonly class PictureController implements ControllerInterface
         if ($nextPic !== null && $nextSrcImage !== null && $nextSrcImage->isOriginal() && $tpl->getTemplateVars('U_PREFETCH') == null
             && !str_contains($httpUserAgent, 'Chrome/')
         ) {
-            $derivRaw   = $this->sessionService->getSessionVar('picture_deriv', Config::derivativeDefaultSize());
-            $derivType  = is_string($derivRaw) ? $derivRaw : Config::derivativeDefaultSize();
+            $derivType  = $this->session->pictureDeriv !== null ? $this->session->pictureDeriv->value : Config::derivativeDefaultSize();
             $nextDerivsRaw = $nextPic['derivatives'] ?? null;
             $nextDerivs = is_array($nextDerivsRaw) ? $nextDerivsRaw : [];
             $nextDeriv  = ($nextDerivs[$derivType] ?? null) instanceof DerivativeImage ? $nextDerivs[$derivType] : null;

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Session;
 
 use Piwigo\Common\ValueObject\ImageId;
-use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\DerivativeSize;
 
@@ -45,26 +44,52 @@ final class Session
     public ?array $fakeUserCache      = null;   // fake_user_cache
 
     // -- UI preferences ----------------------------------------------------
-    public ?DerivativeSize $indexDeriv   = null;   // pwg_index_deriv
-    public ?DerivativeSize $pictureDeriv = null;   // pwg_picture_deriv
-    public ?ThemeId        $mobileTheme  = null;   // pwg_mobile_theme
-    public ?string         $device       = null;   // pwg_device (detected device type)
-    public ?string         $commentsOrder = null;  // pwg_comments_order
-    public ?string         $imageOrder    = null;  // pwg_image_order
+    public ?DerivativeSize $indexDeriv         = null;   // pwg_index_deriv
+    public ?DerivativeSize $pictureDeriv       = null;   // pwg_picture_deriv
+    /**
+     * "Use mobile theme variant?" — bool flag, NOT a theme id. The legacy
+     * key name `mobile_theme` is misleading; the stored value is a bool
+     * set by `DeviceDetectionService::isMobileTheme()` to remember whether
+     * the user opted into / out of the mobile theme this session.
+     */
+    public ?bool           $mobileThemeActive  = null;   // pwg_mobile_theme
+    public ?string         $device             = null;   // pwg_device (detected device type)
+    public ?string         $commentsOrder      = null;   // pwg_comments_order
+    /**
+     * Preferred image-order option ID for the current category. Indexes into
+     * `CategoryService::getCategoryPreferredImageOrders()`. Null means no
+     * override (use the category's `image_order` column).
+     */
+    public ?int            $imageOrder         = null;   // pwg_image_order
     public bool            $showMetadata  = false; // pwg_show_metadata
     public bool            $filterEnabled = false; // pwg_filter_enabled
     public ?ImageId        $refererImageId = null; // pwg_referer_image_id
-    public ?string         $pluginsShowDetails = null; // pwg_plugins_show_details
+    public ?bool           $pluginsShowDetails = null; // pwg_plugins_show_details
     public ?string         $pluginsNewOrder    = null; // pwg_plugins_new_order
 
     // -- Filter state ------------------------------------------------------
-    public ?string $filterCheckKey = null;          // pwg_filter_check_key
-    /** @var list<int> */
-    public array $filterCategories = [];            // pwg_filter_categories
+    /**
+     * Cache-key envelope for the "recent photos" filter computation:
+     * `['user' => int, 'recent_period' => int, 'time' => int, 'date' => string]`.
+     * Null when the filter has not been computed yet this session.
+     *
+     * @var array<mixed>|null
+     */
+    public ?array $filterCheckKey         = null;   // pwg_filter_check_key
+    /**
+     * Computed-categories map keyed by category id, value is the per-category
+     * row (`['name' => string, 'comment' => string, ...]`). Slot type is
+     * loose (`array<mixed>|null`) to match what `is_array()` returns out of
+     * `$_SESSION`; the rich shape contract is owned by
+     * `CategoryService::getComputedCategories`.
+     *
+     * @var array<mixed>|null
+     */
+    public ?array $filterCategories       = null;   // pwg_filter_categories
     /** @var list<int> */
     public array $filterVisibleCategories = [];     // pwg_filter_visible_categories
     /** @var list<int> */
-    public array $filterVisibleImages = [];         // pwg_filter_visible_images
+    public array $filterVisibleImages     = [];     // pwg_filter_visible_images
 
     // -- Admin / batch -----------------------------------------------------
     /** @var array<mixed>|null */
@@ -164,20 +189,20 @@ final class Session
         $s->connectedWith = is_string($raw['connected_with'] ?? null) ? $raw['connected_with'] : null;
         $s->fakeUserCache = is_array($raw['fake_user_cache'] ?? null) ? $raw['fake_user_cache'] : null;
 
-        $s->indexDeriv   = self::tryDerivativeSize($raw['pwg_index_deriv'] ?? null);
-        $s->pictureDeriv = self::tryDerivativeSize($raw['pwg_picture_deriv'] ?? null);
-        $s->mobileTheme  = ThemeId::tryFrom($raw['pwg_mobile_theme'] ?? null);
-        $s->device       = is_string($raw['pwg_device'] ?? null) ? $raw['pwg_device'] : null;
-        $s->commentsOrder = is_string($raw['pwg_comments_order'] ?? null) ? $raw['pwg_comments_order'] : null;
-        $s->imageOrder    = is_string($raw['pwg_image_order'] ?? null) ? $raw['pwg_image_order'] : null;
+        $s->indexDeriv         = self::tryDerivativeSize($raw['pwg_index_deriv'] ?? null);
+        $s->pictureDeriv       = self::tryDerivativeSize($raw['pwg_picture_deriv'] ?? null);
+        $s->mobileThemeActive  = is_bool($raw['pwg_mobile_theme'] ?? null) ? $raw['pwg_mobile_theme'] : null;
+        $s->device             = is_string($raw['pwg_device'] ?? null) ? $raw['pwg_device'] : null;
+        $s->commentsOrder      = is_string($raw['pwg_comments_order'] ?? null) ? $raw['pwg_comments_order'] : null;
+        $s->imageOrder         = is_numeric($raw['pwg_image_order'] ?? null) ? (int) $raw['pwg_image_order'] : null;
         $s->showMetadata  = (bool) ($raw['pwg_show_metadata'] ?? false);
         $s->filterEnabled = (bool) ($raw['pwg_filter_enabled'] ?? false);
         $s->refererImageId = ImageId::tryFrom($raw['pwg_referer_image_id'] ?? null);
-        $s->pluginsShowDetails = is_string($raw['pwg_plugins_show_details'] ?? null) ? $raw['pwg_plugins_show_details'] : null;
+        $s->pluginsShowDetails = is_bool($raw['pwg_plugins_show_details'] ?? null) ? $raw['pwg_plugins_show_details'] : null;
         $s->pluginsNewOrder    = is_string($raw['pwg_plugins_new_order'] ?? null) ? $raw['pwg_plugins_new_order'] : null;
 
-        $s->filterCheckKey            = is_string($raw['pwg_filter_check_key'] ?? null) ? $raw['pwg_filter_check_key'] : null;
-        $s->filterCategories          = self::intList($raw['pwg_filter_categories'] ?? null);
+        $s->filterCheckKey            = is_array($raw['pwg_filter_check_key'] ?? null) ? $raw['pwg_filter_check_key'] : null;
+        $s->filterCategories          = is_array($raw['pwg_filter_categories'] ?? null) ? $raw['pwg_filter_categories'] : null;
         $s->filterVisibleCategories   = self::intList($raw['pwg_filter_visible_categories'] ?? null);
         $s->filterVisibleImages       = self::intList($raw['pwg_filter_visible_images'] ?? null);
 
@@ -275,8 +300,8 @@ final class Session
         if ($this->pictureDeriv !== null) {
             $state['pwg_picture_deriv'] = $this->pictureDeriv->value;
         }
-        if ($this->mobileTheme !== null) {
-            $state['pwg_mobile_theme'] = $this->mobileTheme->value;
+        if ($this->mobileThemeActive !== null) {
+            $state['pwg_mobile_theme'] = $this->mobileThemeActive;
         }
         if ($this->device !== null) {
             $state['pwg_device'] = $this->device;
@@ -305,7 +330,7 @@ final class Session
         if ($this->filterCheckKey !== null) {
             $state['pwg_filter_check_key'] = $this->filterCheckKey;
         }
-        if ($this->filterCategories !== []) {
+        if ($this->filterCategories !== null) {
             $state['pwg_filter_categories'] = $this->filterCategories;
         }
         if ($this->filterVisibleCategories !== []) {
@@ -364,7 +389,7 @@ final class Session
         $this->fakeUserCache        = null;
         $this->indexDeriv           = null;
         $this->pictureDeriv         = null;
-        $this->mobileTheme          = null;
+        $this->mobileThemeActive    = null;
         $this->device               = null;
         $this->commentsOrder        = null;
         $this->imageOrder           = null;
@@ -374,7 +399,7 @@ final class Session
         $this->pluginsShowDetails   = null;
         $this->pluginsNewOrder      = null;
         $this->filterCheckKey       = null;
-        $this->filterCategories     = [];
+        $this->filterCategories     = null;
         $this->filterVisibleCategories = [];
         $this->filterVisibleImages  = [];
         $this->bulkManagerFilter    = null;

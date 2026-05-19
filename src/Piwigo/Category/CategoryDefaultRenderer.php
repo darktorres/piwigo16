@@ -18,7 +18,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Section\SectionContextRegistry;
-use Piwigo\Session\SessionService;
+use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -31,7 +31,7 @@ final readonly class CategoryDefaultRenderer
         private CommentRepository $commentRepository,
         private HtmlService $htmlService,
         private ImageRepository $imageRepository,
-        private SessionService $sessionService,
+        private Session $session,
         private UrlService $urlService,
         private DebugCollector $debugCollector,
         private EventDispatcherInterface $dispatcher,
@@ -141,8 +141,7 @@ final readonly class CategoryDefaultRenderer
             $tpl_thumbnails_var[] = $tpl_var;
         }
 
-        $derivRaw = $this->sessionService->getSessionVar('index_deriv', DerivativeSize::Thumb->value);
-        $derivType = is_string($derivRaw) ? $derivRaw : DerivativeSize::Thumb->value;
+        $derivType = $this->session->indexDeriv !== null ? $this->session->indexDeriv->value : DerivativeSize::Thumb->value;
         $derivEvent = new GetIndexDerivativeParams(ImageStdParams::getByType($derivType));
         $this->dispatcher->dispatch($derivEvent);
         $template->assign([

@@ -31,7 +31,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
-use Piwigo\Session\SessionService;
+use Piwigo\Session\Session;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -68,7 +68,7 @@ final readonly class AdminController implements ControllerInterface
         private ImageRepository $imageRepository,
         private PermissionService $permissionService,
         private PreferencesService $preferencesService,
-        private SessionService $sessionService,
+        private Session $session,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserAdminService $userAdminService,
@@ -134,7 +134,7 @@ final readonly class AdminController implements ControllerInterface
 
         $plugins_new_order = StringUtil::inputString('plugins_new_order', null, $_GET);
         if ($plugins_new_order !== null) {
-            $this->sessionService->setSessionVar('plugins_new_order', $plugins_new_order);
+            $this->session->pluginsNewOrder = $plugins_new_order;
             exit;
         }
 

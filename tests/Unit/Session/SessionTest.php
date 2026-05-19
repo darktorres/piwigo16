@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Unit\Session;
 
 use PHPUnit\Framework\TestCase;
 use Piwigo\Common\ValueObject\ImageId;
-use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Session\FlashBag;
@@ -21,7 +20,8 @@ final class SessionTest extends TestCase
         self::assertNull($s->connectedWith);
         self::assertFalse($s->showMetadata);
         self::assertFalse($s->filterEnabled);
-        self::assertSame([], $s->filterCategories);
+        self::assertNull($s->filterCategories);
+        self::assertSame([], $s->filterVisibleCategories);
         self::assertFalse($s->flash->hasAny());
     }
 
@@ -32,11 +32,11 @@ final class SessionTest extends TestCase
             'connected_with'       => 'pwg_ui',
             'pwg_index_deriv'      => 'medium',
             'pwg_picture_deriv'    => 'large',
-            'pwg_mobile_theme'     => 'elegant',
+            'pwg_mobile_theme'     => true,
             'pwg_show_metadata'    => true,
             'pwg_filter_enabled'   => true,
             'pwg_referer_image_id' => '42',
-            'pwg_filter_categories' => [1, '2', 3, 'bad'],
+            'pwg_filter_visible_categories' => [1, '2', 3, 'bad'],
             'page_infos'           => ['hello', 'world'],
             'page_errors'          => ['oops'],
             'piwigo_needs_update'  => true,
@@ -47,12 +47,12 @@ final class SessionTest extends TestCase
         self::assertSame('pwg_ui', $s->connectedWith);
         self::assertSame(DerivativeSize::Medium, $s->indexDeriv);
         self::assertSame(DerivativeSize::Large, $s->pictureDeriv);
-        self::assertEquals(ThemeId::from('elegant'), $s->mobileTheme);
+        self::assertTrue($s->mobileThemeActive);
         self::assertTrue($s->showMetadata);
         self::assertTrue($s->filterEnabled);
         self::assertEquals(ImageId::from(42), $s->refererImageId);
         // intList drops the non-numeric 'bad'.
-        self::assertSame([1, 2, 3], $s->filterCategories);
+        self::assertSame([1, 2, 3], $s->filterVisibleCategories);
         self::assertSame(['hello', 'world'], $s->flash->peek('info'));
         self::assertSame(['oops'], $s->flash->peek('error'));
         self::assertTrue($s->piwigoNeedsUpdate);
@@ -63,7 +63,7 @@ final class SessionTest extends TestCase
         $raw = [
             'pwg_uid'             => 'not-a-uid',
             'pwg_index_deriv'     => 'not-a-size',
-            'pwg_mobile_theme'    => 'bad theme id with space',
+            'pwg_mobile_theme'    => 'not-a-bool',     // legacy stores bool, garbage rejected
             'pwg_referer_image_id' => -5,
             'pwg_filter_categories' => 'not-an-array',
         ];
@@ -71,9 +71,9 @@ final class SessionTest extends TestCase
         $s = Session::fromSuperglobal($raw);
         self::assertNull($s->userId);
         self::assertNull($s->indexDeriv);
-        self::assertNull($s->mobileTheme);
+        self::assertNull($s->mobileThemeActive);
         self::assertNull($s->refererImageId);
-        self::assertSame([], $s->filterCategories);
+        self::assertNull($s->filterCategories);
     }
 
     public function testPersistRoundTripPreservesUnmutatedState(): void
@@ -86,7 +86,7 @@ final class SessionTest extends TestCase
             'pwg_uid'            => 11,
             'connected_with'     => 'pwg_ui',
             'pwg_show_metadata'  => true,
-            'pwg_filter_categories' => [1, 2, 3],
+            'pwg_filter_visible_categories' => [1, 2, 3],
             'page_infos'         => ['a', 'b'],
         ];
 
@@ -188,14 +188,14 @@ final class SessionTest extends TestCase
             'pwg_uid'           => 9,
             'connected_with'    => 'pwg_ui',
             'pwg_show_metadata' => true,
-            'pwg_filter_categories' => [1, 2],
+            'pwg_filter_visible_categories' => [1, 2],
         ]);
 
         $s->logout();
         self::assertNull($s->userId);
         self::assertNull($s->connectedWith);
         self::assertFalse($s->showMetadata);
-        self::assertSame([], $s->filterCategories);
+        self::assertSame([], $s->filterVisibleCategories);
     }
 
     public function testMutationsPersist(): void

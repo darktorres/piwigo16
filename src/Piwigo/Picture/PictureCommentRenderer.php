@@ -22,7 +22,7 @@ use Piwigo\Exception\AuthException;
 use Piwigo\Html\HtmlService;
 use Piwigo\Page\PaginationService;
 use Piwigo\Section\SectionContextRegistry;
-use Piwigo\Session\SessionService;
+use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -37,7 +37,7 @@ final readonly class PictureCommentRenderer
         private DateService $dateService,
         private HtmlService $htmlService,
         private PermissionService $permissionService,
-        private SessionService $sessionService,
+        private Session $session,
         private UrlService $urlService,
         private CsrfService $csrfService,
         private EphemeralKeyService $ephemeralKeyService,
@@ -124,10 +124,9 @@ final readonly class PictureCommentRenderer
             if ($nb_comments > 0) {
                 $get_comments_order = $_GET['comments_order'] ?? null;
                 if (($get_comments_order !== null && $get_comments_order !== '') && in_array(strtoupper(is_string($get_comments_order) ? $get_comments_order : ''), ['ASC', 'DESC'])) {
-                    $this->sessionService->setSessionVar('comments_order', is_string($get_comments_order) ? $get_comments_order : '');
+                    $this->session->commentsOrder = is_string($get_comments_order) ? $get_comments_order : '';
                 }
-                $rawOrder       = $this->sessionService->getSessionVar('comments_order', Config::commentsOrder());
-                $comments_order = is_string($rawOrder) ? $rawOrder : Config::commentsOrder();
+                $comments_order = $this->session->commentsOrder ?? Config::commentsOrder();
 
                 $template->assign([
                     'COMMENTS_ORDER_URL' => $this->urlService->addUrlParams($this->urlService->duplicatePictureUrl(), ['comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC')]),

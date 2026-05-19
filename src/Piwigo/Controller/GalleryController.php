@@ -31,7 +31,7 @@ use Piwigo\Page\PaginationService;
 use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionInitializer;
-use Piwigo\Session\SessionService;
+use Piwigo\Session\Session;
 use Piwigo\Tag\SelectedTagsRenderer;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\TemplateRegistry;
@@ -64,7 +64,7 @@ final readonly class GalleryController implements ControllerInterface
         private SearchFilterRenderer $searchFilterRenderer,
         private SectionInitializer $sectionInitializer,
         private SelectedTagsRenderer $selectedTagsRenderer,
-        private SessionService $sessionService,
+        private Session $session,
         private TagService $tagService,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
@@ -107,11 +107,7 @@ final readonly class GalleryController implements ControllerInterface
         // Image display-order change
         $imageOrder = StringUtil::inputInt('image_order', null, $_GET);
         if ($imageOrder !== null) {
-            if ($imageOrder > 0) {
-                $this->sessionService->setSessionVar('image_order', $imageOrder);
-            } else {
-                $this->sessionService->unsetSessionVar('image_order');
-            }
+            $this->session->imageOrder = $imageOrder > 0 ? $imageOrder : null;
             $this->redirectResponder->redirect($this->urlService->duplicateIndexUrl([], ['start']));
         }
 
@@ -119,8 +115,9 @@ final readonly class GalleryController implements ControllerInterface
         if ($display !== null) {
             $ps = PageState::current();
             $ps->metaRobots = array_merge($ps->metaRobots, ['noindex' => 1]);
-            if (array_key_exists($display, ImageStdParams::getDefinedTypeMap())) {
-                $this->sessionService->setSessionVar('index_deriv', $display);
+            $deriv = DerivativeSize::tryFrom($display);
+            if ($deriv !== null && array_key_exists($display, ImageStdParams::getDefinedTypeMap())) {
+                $this->session->indexDeriv = $deriv;
             }
         }
 
@@ -298,8 +295,7 @@ final readonly class GalleryController implements ControllerInterface
             // Image-order selector
             if (Config::indexSortOrderInput() && count($items) > 0 && $section !== 'most_visited' && $section !== 'best_rated') {
                 $preferredOrders = $this->categoryService->getCategoryPreferredImageOrders();
-                $rawOrder        = $this->sessionService->getSessionVar('image_order', 0);
-                $orderIdx        = is_numeric($rawOrder) ? (int) $rawOrder : 0;
+                $orderIdx        = $this->session->imageOrder ?? 0;
                 $orderEntries  = Config::orderBy();
                 $firstOrder    = $orderEntries === [] ? '' : $this->orderByService->toFormToken($orderEntries[0]);
                 $url           = $this->urlService->addUrlParams($this->urlService->duplicateIndexUrl(), ['image_order' => '']);

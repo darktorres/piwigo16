@@ -39,7 +39,7 @@ use Piwigo\Http\RedirectResponder;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Plugin\PluginRepository;
-use Piwigo\Session\SessionService;
+use Piwigo\Session\Session;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -73,7 +73,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         private IgnoredUpdatesRepository $ignoredUpdates,
         private PluginRepository $pluginRepository,
         private PreferencesService $preferencesService,
-        private SessionService $sessionService,
+        private Session $session,
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserService $userService,
@@ -155,9 +155,9 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
 
         if (isset($_GET['show_details'])) {
             $show_details = (1 == $_GET['show_details']);
-            $this->sessionService->setSessionVar('plugins_show_details', $show_details);
+            $this->session->pluginsShowDetails = $show_details;
         } else {
-            $show_details = $this->sessionService->getSessionVar('plugins_show_details', false);
+            $show_details = $this->session->pluginsShowDetails ?? false;
         }
 
         $pageRaw  = $_GET['page'] ?? null;
@@ -363,10 +363,10 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         $tpl->assign('order_options', ['date' => Lang::t('Post date'), 'revision' => Lang::t('Last revisions'), 'name' => Lang::t('Name'), 'author' => Lang::t('Author'), 'downloads' => Lang::t('Number of downloads')]);
 
         if ($plugins->getServerPlugins(true)) {
-            if ($this->sessionService->getSessionVar('plugins_new_order') != null) {
-                $order_selected = $this->sessionService->getSessionVar('plugins_new_order');
-                $plugins->sortServerPlugins(is_string($order_selected) ? $order_selected : 'date');
-                $tpl->assign('order_selected', is_scalar($order_selected) ? (string) $order_selected : '');
+            $order_selected = $this->session->pluginsNewOrder;
+            if ($order_selected !== null) {
+                $plugins->sortServerPlugins($order_selected);
+                $tpl->assign('order_selected', $order_selected);
             } else {
                 $plugins->sortServerPlugins('date');
                 $tpl->assign('order_selected', 'date');

@@ -7,7 +7,7 @@ namespace Piwigo\Http;
 use Detection\MobileDetect;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
-use Piwigo\Session\SessionService;
+use Piwigo\Session\Session;
 
 /**
  * User-agent based device classification (desktop / mobile / tablet) and
@@ -17,14 +17,13 @@ use Piwigo\Session\SessionService;
 final readonly class DeviceDetectionService
 {
     public function __construct(
-        private SessionService $sessionService,
+        private Session $session,
     ) {
     }
 
     public function getDevice(): string
     {
-        $rawDevice = $this->sessionService->getSessionVar('device', '');
-        $device    = is_string($rawDevice) ? $rawDevice : '';
+        $device = $this->session->device ?? '';
         if ($device === '') {
             // MobileDetect::isMobile() returns true for tablets too, so check tablet first.
             $detect = new MobileDetect();
@@ -35,7 +34,7 @@ final readonly class DeviceDetectionService
             } else {
                 $device = 'desktop';
             }
-            $this->sessionService->setSessionVar('device', $device);
+            $this->session->device = $device;
         }
         return $device;
     }
@@ -51,14 +50,14 @@ final readonly class DeviceDetectionService
             $isMobileTheme = (is_string($mobileRaw) || is_int($mobileRaw) || is_float($mobileRaw))
                 ? BoolUtil::fromMixed($mobileRaw)
                 : false;
-            $this->sessionService->setSessionVar('mobile_theme', $isMobileTheme);
+            $this->session->mobileThemeActive = $isMobileTheme;
         } else {
-            $isMobileTheme = $this->sessionService->getSessionVar('mobile_theme');
+            $isMobileTheme = $this->session->mobileThemeActive;
         }
-        if (is_null($isMobileTheme)) {
+        if ($isMobileTheme === null) {
             $isMobileTheme = ($this->getDevice() === 'mobile');
-            $this->sessionService->setSessionVar('mobile_theme', $isMobileTheme);
+            $this->session->mobileThemeActive = $isMobileTheme;
         }
-        return (bool) $isMobileTheme;
+        return $isMobileTheme;
     }
 }

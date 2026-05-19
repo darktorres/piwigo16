@@ -11,7 +11,7 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Session\SessionService;
+use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 
 final class PictureContentRenderer
@@ -27,16 +27,17 @@ final class PictureContentRenderer
             return $content;
         }
 
+        $session = Kernel::service(Session::class);
         $cookiePictureDeriv = StringUtil::inputString('picture_deriv', null, $_COOKIE);
         if ($cookiePictureDeriv !== null) {
-            if (array_key_exists($cookiePictureDeriv, ImageStdParams::getDefinedTypeMap())) {
-                Kernel::service(SessionService::class)->setSessionVar('picture_deriv', $cookiePictureDeriv);
+            $deriv = DerivativeSize::tryFrom($cookiePictureDeriv);
+            if ($deriv !== null && array_key_exists($cookiePictureDeriv, ImageStdParams::getDefinedTypeMap())) {
+                $session->pictureDeriv = $deriv;
             }
             setcookie('picture_deriv', '', ['expires' => 0, 'path' => CookieService::cookiePath()]);
         }
 
-        $derivRaw            = Kernel::service(SessionService::class)->getSessionVar('picture_deriv', Config::derivativeDefaultSize());
-        $derivType           = is_string($derivRaw) ? $derivRaw : Config::derivativeDefaultSize();
+        $derivType = $session->pictureDeriv !== null ? $session->pictureDeriv->value : Config::derivativeDefaultSize();
         $derivativesRaw      = is_array($elementInfo['derivatives'] ?? null) ? $elementInfo['derivatives'] : [];
         $selectedDerivative  = $derivativesRaw[$derivType] ?? null;
 

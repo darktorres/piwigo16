@@ -80,34 +80,6 @@ final readonly class SessionService implements \SessionHandlerInterface
         return 1;
     }
 
-    public function setSessionVar(string $var, mixed $value): bool
-    {
-        if (!isset($_SESSION)) {
-            return false;
-        }
-        $_SESSION['pwg_' . $var] = $value;
-        return true;
-    }
-
-    /**
-     * @param (int|string)[]|false|int|null|string $default
-     *
-     * @psalm-param 0|array{user: 0, recent_period: -1, time: 0, date: ''}|false|null|string $default
-     */
-    public function getSessionVar(string $var, array|int|string|false|null $default = null): mixed
-    {
-        return $_SESSION['pwg_' . $var] ?? $default;
-    }
-
-    public function unsetSessionVar(string $var): bool
-    {
-        if (!isset($_SESSION)) {
-            return false;
-        }
-        unset($_SESSION['pwg_' . $var]);
-        return true;
-    }
-
     public function deleteUserSessions(int $userId): void
     {
         $this->repo->deleteByUserId($userId);

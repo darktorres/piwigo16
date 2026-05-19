@@ -9,9 +9,11 @@ use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\Entity\Category;
 use Piwigo\Category\Projection\CategoryDetail;
 use Piwigo\Category\Projection\CategoryNamePermalink;
+use Piwigo\Category\Projection\CategoryNamePermalinkUppercats;
 use Piwigo\Category\Projection\CategoryParentInfo;
 use Piwigo\Category\Projection\CategoryRankInfo;
 use Piwigo\Category\Projection\CategoryUppercatsSite;
+use Piwigo\Category\Projection\ImageCategoryInfo;
 use Piwigo\Category\Projection\ImageCategoryLink;
 use Piwigo\Category\Projection\MenuCategoryRow;
 use Piwigo\Category\Projection\RankUpdateRow;
@@ -238,26 +240,29 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
-     * Return (category_id, uppercats, dir) for all categories linked to the given image.
+     * Return the album-association info for all categories the image is in
+     * (category_id, uppercats, dir).
      *
-     * @return list<array<string, mixed>>
+     * @return list<ImageCategoryInfo>
      */
     public function findCategoryInfosByImageId(int $imageId): array
     {
-        return $this->conn->executeQuery(
+        $rows = $this->conn->executeQuery(
             'SELECT ic.category_id, c.uppercats, c.dir
              FROM ' . $this->table('image_category') . ' ic
              INNER JOIN ' . $this->table('categories') . ' c ON c.id = ic.category_id
              WHERE ic.image_id = ?',
             [$imageId]
         )->fetchAllAssociative();
+        return array_map(ImageCategoryInfo::fromRow(...), $rows);
     }
 
     /**
-     * Return (id, name, permalink) for every category, keyed by id. Used by
-     * HtmlService::getCatDisplayNameCache to build a per-request lookup.
+     * Return every category as a (id, name, permalink) projection, keyed by
+     * id. Used by HtmlService::getCatDisplayNameCache to build a per-request
+     * lookup.
      *
-     * @return array<int|string, array<string, mixed>>
+     * @return array<int, CategoryNamePermalink>
      */
     public function findIdNamePermalinkAll(): array
     {
@@ -266,7 +271,12 @@ final class CategoryRepository extends AbstractRepository
             ->from($this->table('categories'))
             ->executeQuery()
             ->fetchAllAssociative();
-        return array_column($rows, null, 'id');
+        $out = [];
+        foreach ($rows as $row) {
+            $entity                  = CategoryNamePermalink::fromRow($row);
+            $out[$entity->id->value] = $entity;
+        }
+        return $out;
     }
 
     /**
@@ -286,8 +296,8 @@ final class CategoryRepository extends AbstractRepository
      * Return (id, name, permalink, uppercats) for the given ids, keyed by id.
      * Used by the admin comments page and the recent-cats listing.
      *
-     * @param int[] $ids
-     * @return array<int|string, array<string, mixed>>
+     * @param  int[] $ids
+     * @return array<int, CategoryNamePermalinkUppercats>
      */
     public function findNamePermalinkUppercatsByIds(array $ids): array
     {
@@ -299,7 +309,12 @@ final class CategoryRepository extends AbstractRepository
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
-        return array_column($qb->executeQuery()->fetchAllAssociative(), null, 'id');
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $entity                  = CategoryNamePermalinkUppercats::fromRow($row);
+            $out[$entity->id->value] = $entity;
+        }
+        return $out;
     }
 
     /**

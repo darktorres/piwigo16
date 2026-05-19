@@ -95,13 +95,13 @@ final readonly class HtmlService
             'all',
             fn (): array => $this->categoryRepository->findIdNamePermalinkAll(),
         );
-        /** @var array<int|string, array<string,mixed>> $catNames */
+        /** @var array<int, \Piwigo\Category\Projection\CategoryNamePermalink> $catNames */
         $catNames = is_array($catNamesRaw) ? $catNamesRaw : [];
 
         $output = '';
         if ($singleLink) {
             $uppercatsArray = explode(',', $uppercats);
-            $lastCat = array_pop($uppercatsArray);
+            $lastCat        = array_pop($uppercatsArray);
             $singleUrl      = Kernel::service(UrlService::class)->addUrlParams(UrlService::getRootUrl() . ($url ?? '') . $lastCat, $addUrlParamsArr);
             $output .= '<a href="' . $singleUrl . '"';
             if (isset($linkClass)) {
@@ -111,17 +111,17 @@ final readonly class HtmlService
         }
         $isFirst = true;
         foreach (explode(',', $uppercats) as $categoryId) {
-            $cat = $catNames[$categoryId] ?? null;
-            if (!is_array($cat)) {
+            $entity = $catNames[(int) $categoryId] ?? null;
+            if ($entity === null) {
                 continue;
             }
 
             $catCacheRenderEvent = new RenderCategoryName(
-                is_string($cat['name'] ?? null) ? $cat['name'] : '',
-                'get_cat_display_name_cache'
+                $entity->name,
+                'get_cat_display_name_cache',
             );
             $this->dispatcher->dispatch($catCacheRenderEvent);
-            $cat['name'] = $catCacheRenderEvent->categoryName;
+            $catName = $catCacheRenderEvent->categoryName;
 
             if ($isFirst) {
                 $isFirst = false;
@@ -129,12 +129,13 @@ final readonly class HtmlService
                 $output .= '<span>' . Config::levelSeparator() . '</span>';
             }
 
-            $catName = $cat['name'];
             if (!isset($url) or $singleLink) {
                 $output .= $catName;
             } elseif ($url == '') {
+                $catRow         = $entity->toRow();
+                $catRow['name'] = $catName;
                 $output .= '
-<a href="' . Kernel::service(UrlService::class)->addUrlParams(Kernel::service(UrlService::class)->makeIndexUrl(['category' => $cat]), $addUrlParamsArr) . '">' . $catName . '</a>';
+<a href="' . Kernel::service(UrlService::class)->addUrlParams(Kernel::service(UrlService::class)->makeIndexUrl(['category' => $catRow]), $addUrlParamsArr) . '">' . $catName . '</a>';
             } else {
                 $output .= '
 <a href="' . $url . $categoryId . '">' . $catName . '</a>';

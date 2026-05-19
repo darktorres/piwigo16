@@ -389,14 +389,15 @@ final class PhotoController implements AdminSubControllerInterface
         $related_categories     = [];
         $related_categories_ids = [];
         foreach ($this->categoryRepository
-            ->findCategoryInfosByImageId($getImageIdInt) as $catRow) {
-            $name = $this->htmlService->getCatDisplayNameCache(is_scalar($catRow['uppercats'] ?? null) ? (string) $catRow['uppercats'] : '', $this->urlGenerator->admin() . '&page=album-');
+            ->findCategoryInfosByImageId($getImageIdInt) as $catInfo) {
+            $name     = $this->htmlService->getCatDisplayNameCache($catInfo->uppercats, $this->urlGenerator->admin() . '&page=album-');
             $nameHtml = new Html($name);
-            if ($catRow['category_id'] == $storage_category_id) {
+            $catId    = $catInfo->categoryId->value;
+            if ($catId == $storage_category_id) {
                 $tpl->assign('STORAGE_CATEGORY', $nameHtml);
             }
-            $related_categories[is_scalar($catRow['category_id'] ?? null) ? (string) $catRow['category_id'] : ''] = ['name' => $nameHtml, 'unlinkable' => $catRow['category_id'] != $storage_category_id];
-            $related_categories_ids[] = $catRow['category_id'];
+            $related_categories[(string) $catId] = ['name' => $nameHtml, 'unlinkable' => $catId != $storage_category_id];
+            $related_categories_ids[]             = $catId;
         }
         $tpl->assign('related_categories', $related_categories);
         $tpl->assign('related_categories_ids', $related_categories_ids);

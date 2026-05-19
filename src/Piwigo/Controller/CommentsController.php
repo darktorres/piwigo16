@@ -347,7 +347,7 @@ SELECT id, name, uppercats, global_rank
                     : StringUtil::getNameFromFile($elementFile);
                 $src_image    = $element !== null ? SrcImage::fromImage($element) : new SrcImage([]);
                 $url          = $this->urlService->makePictureUrl([
-                    'category'   => $categories[(string) $cCategoryId] ?? [],
+                    'category'   => isset($categories[$cCategoryId]) ? $categories[$cCategoryId]->toRow() : [],
                     'image_id'   => $cImageId,
                     'image_file' => $elementFile,
                 ]);

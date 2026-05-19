@@ -1177,14 +1177,13 @@ final class BatchManagerController implements AdminSubControllerInterface
                 $media_image          = $this->imageAdminService->getImageInfos($row_id_int, true);
 
                 foreach ($this->categoryRepository->findCategoryInfosByImageId($row_id_int) as $item) {
-                    $item_uppercats = is_scalar($item['uppercats'] ?? null) ? (string) $item['uppercats'] : '';
-                    $name = $this->htmlService->getCatDisplayNameCache($item_uppercats, $this->urlGenerator->admin() . '&page=album-');
-                    if ($item['category_id'] == $storage_category_id) {
+                    $name        = $this->htmlService->getCatDisplayNameCache($item->uppercats, $this->urlGenerator->admin() . '&page=album-');
+                    $item_cat_id = $item->categoryId->value;
+                    if ($item_cat_id == $storage_category_id) {
                         $tpl->assign('STORAGE_CATEGORY', $name);
                     }
-                    $item_cat_id = is_numeric($item['category_id'] ?? null) ? (int) $item['category_id'] : 0;
                     $related_categories[$item_cat_id] = ['name' => $name, 'unlinkable' => $item_cat_id != $storage_category_id];
-                    $related_category_ids[] = $item_cat_id;
+                    $related_category_ids[]           = $item_cat_id;
                 }
 
                 $row_id_str  = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';

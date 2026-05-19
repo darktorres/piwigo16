@@ -59,6 +59,8 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserCaddieRepository;
+use Piwigo\Users\UserFavoriteRepository;
 use Piwigo\Users\UserRepository;
 use Piwigo\Validation\InputValidator;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -100,6 +102,8 @@ final class BatchManagerController implements AdminSubControllerInterface
         private readonly UrlGenerator $urlGenerator,
         private readonly UrlService $urlService,
         private readonly UserAdminService $userAdminService,
+        private readonly UserCaddieRepository $userCaddieRepository,
+        private readonly UserFavoriteRepository $userFavoriteRepository,
         private readonly UserRepository $userRepository,
         private readonly ActivityLogger $activityLogger,
         private readonly CsrfService $csrfService,
@@ -139,7 +143,7 @@ final class BatchManagerController implements AdminSubControllerInterface
 
         if (isset($_GET['action'])) {
             if ('empty_caddie' == $_GET['action']) {
-                $this->imageRepository->deleteUserCaddie(is_numeric($user['id']) ? (int) $user['id'] : 0);
+                $this->userCaddieRepository->deleteAllByUserId(is_numeric($user['id']) ? (int) $user['id'] : 0);
                 $this->session->flash->add('info', Lang::t('Information data registered in database'));
                 $this->redirectResponder->redirect($this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : ''));
             }
@@ -366,11 +370,11 @@ final class BatchManagerController implements AdminSubControllerInterface
             switch ($bmf_prefilter) {
                 case 'caddie':
                     $userId        = is_numeric($user['id']) ? (int) $user['id'] : 0;
-                    $filter_sets[] = $this->imageRepository->findCaddieElementIdsByUser($userId);
+                    $filter_sets[] = $this->userCaddieRepository->findElementIdsByUserId($userId);
                     break;
                 case 'favorites':
                     $userId2       = is_numeric($user['id']) ? (int) $user['id'] : 0;
-                    $filter_sets[] = $this->imageRepository->findFavoriteImageIdsByUserPlain($userId2);
+                    $filter_sets[] = $this->userFavoriteRepository->findImageIdsByUserId($userId2);
                     break;
                 case 'last_import':
                     $last_import_date = $this->imageRepository->findMaxDateAvailable();
@@ -716,7 +720,7 @@ final class BatchManagerController implements AdminSubControllerInterface
             $redirect = false;
 
             if ('remove_from_caddie' == $action) {
-                $this->imageRepository->deleteUserCaddieByImageIds(is_numeric($user['id']) ? (int) $user['id'] : 0, $collection_int);
+                $this->userCaddieRepository->deleteByImageIds(is_numeric($user['id']) ? (int) $user['id'] : 0, $collection_int);
                 $redirect = true;
             } elseif ('add_tags' == $action) {
                 if (!isset($_POST['add_tags']) || $_POST['add_tags'] === '') {
@@ -841,7 +845,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                     }
                 }
             } elseif ('add_to_caddie' == $action) {
-                $this->imageRepository->addToUserCaddie(CurrentUser::get()->id, array_values($collection_int));
+                $this->userCaddieRepository->addElements(CurrentUser::get()->id, array_values($collection_int));
             } elseif ('delete' == $action) {
                 if (isset($_POST['confirm_deletion']) && 1 == $_POST['confirm_deletion']) {
                     if (count($collection_int) > 0) {

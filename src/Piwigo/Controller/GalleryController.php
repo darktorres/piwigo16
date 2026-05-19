@@ -21,7 +21,6 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeSize;
-use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\OrderByService;
 use Piwigo\Menu\MenubarRenderer;
@@ -38,6 +37,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserCaddieRepository;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -58,7 +58,6 @@ final readonly class GalleryController implements ControllerInterface
         private CategoryService $categoryService,
         private ConfigService $configService,
         private HtmlService $htmlService,
-        private ImageRepository $imageRepository,
         private MenubarRenderer $menubarRenderer,
         private PermissionService $permissionService,
         private SearchFilterRenderer $searchFilterRenderer,
@@ -67,6 +66,7 @@ final readonly class GalleryController implements ControllerInterface
         private Session $session,
         private TagService $tagService,
         private UrlGenerator $urlGenerator,
+        private UserCaddieRepository $userCaddieRepository,
         private UrlService $urlService,
         private ActivityLogger $activityLogger,
         private RedirectResponder $redirectResponder,
@@ -139,7 +139,7 @@ final readonly class GalleryController implements ControllerInterface
 
         // Caddie filling
         if (StringUtil::inputString('caddie', null, $_GET) !== null) {
-            $this->imageRepository->addToUserCaddie(\Piwigo\Users\CurrentUser::get()->id, array_map(static fn (string $i): int => (int) $i, $items));
+            $this->userCaddieRepository->addElements(\Piwigo\Users\CurrentUser::get()->id, array_map(static fn (string $i): int => (int) $i, $items));
             $this->redirectResponder->redirect($this->urlService->duplicateIndexUrl());
         }
 

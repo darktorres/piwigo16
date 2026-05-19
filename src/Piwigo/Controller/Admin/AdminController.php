@@ -39,7 +39,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
-use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserCaddieRepository;
 use Piwigo\Validation\InputValidator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -72,7 +72,7 @@ final readonly class AdminController implements ControllerInterface
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserAdminService $userAdminService,
-        private UserRepository $userRepository,
+        private UserCaddieRepository $userCaddieRepository,
         private InputValidator $inputValidator,
         private RedirectResponder $redirectResponder,
         private EventDispatcherInterface $dispatcher,
@@ -292,8 +292,8 @@ final readonly class AdminController implements ControllerInterface
             }
         }
 
-        $nb_photos_in_caddie = $this->userRepository
-            ->countCaddieByUserId(is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0);
+        $nb_photos_in_caddie = $this->userCaddieRepository
+            ->countByUserId(is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0);
 
         if ($nb_photos_in_caddie > 0) {
             $tpl->assign([

@@ -67,6 +67,7 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
+use Piwigo\Users\UserCaddieRepository;
 use Piwigo\Users\UserRepository;
 use Piwigo\Validation\InputValidator;
 use Psr\Cache\CacheItemPoolInterface;
@@ -99,6 +100,7 @@ final class MaintenanceController implements AdminSubControllerInterface
         private readonly ImageFormatRepository $imageFormatRepository,
         private readonly ImageRepository $imageRepository,
         private readonly LoungeRepository $loungeRepository,
+        private readonly UserCaddieRepository $userCaddieRepository,
         private readonly MessageBusInterface $messageBus,
         private readonly MetadataAdminService $metadataAdminService,
         private readonly PermissionRepository $permissionRepository,
@@ -1437,7 +1439,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                     $this->imageRepository->insertImageRowsBatch($inserts, $insert_links);
                     $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $caddiables, 'add', ['sync' => true]));
                     if (isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1) {
-                        $this->imageRepository->addToUserCaddie(CurrentUser::get()->id, $caddiables);
+                        $this->userCaddieRepository->addElements(CurrentUser::get()->id, $caddiables);
                     }
                 }
                 if (count($insert_formats) > 0) {

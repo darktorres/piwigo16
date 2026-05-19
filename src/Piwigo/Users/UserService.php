@@ -49,6 +49,7 @@ final class UserService
 
     public function __construct(
         private readonly UserRepository $userRepo,
+        private readonly UserFavoriteRepository $favoriteRepo,
         private readonly HistoryRepository $histRepo,
         private readonly ActivityRepository $actRepo,
         private readonly GroupRepository $groupRepo,
@@ -378,12 +379,12 @@ final class UserService
         }
 
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'ic.category_id'], 'AND');
-        $authorizeds = $this->userRepo->findAuthorizedFavoriteImageIds($currentUser->id, $permSql, $permParams, $permTypes);
-        $favorites   = $this->userRepo->findFavoriteImageIdsByUserPlain($currentUser->id);
+        $authorizeds = $this->favoriteRepo->findAuthorizedImageIds($currentUser->id, $permSql, $permParams, $permTypes);
+        $favorites   = $this->favoriteRepo->findImageIdsByUserId($currentUser->id);
 
         $toDeletes = array_values(array_diff($favorites, $authorizeds));
         if (count($toDeletes) > 0) {
-            $this->userRepo->deleteFavoritesByImageIds($toDeletes);
+            $this->favoriteRepo->deleteByImageIds($toDeletes);
         }
     }
 

@@ -12,35 +12,6 @@ use Piwigo\Db\AbstractRepository;
 final class UserRepository extends AbstractRepository
 {
     /**
-     * Delete all favorites for the given user (when removing all at once from the favorites page).
-     */
-    public function deleteAllFavoritesByUserId(int $userId): void
-    {
-        $this->conn->createQueryBuilder()
-            ->delete($this->table('favorites'))
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId)
-            ->executeStatement();
-    }
-
-    /**
-     * Delete favorites entries for the given image ids.
-     *
-     * @param int[] $imageIds
-     */
-    public function deleteFavoritesByImageIds(array $imageIds): void
-    {
-        if ($imageIds === []) {
-            return;
-        }
-        $qb = $this->conn->createQueryBuilder()
-            ->delete($this->table('favorites'));
-        $qb->where($qb->expr()->in('image_id', ':imageIds'))
-           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
-        $qb->executeStatement();
-    }
-
-    /**
      * Delete the user row from the users table.
      *
      * $usersTable and $idField come from admin config (Config::usersTable,
@@ -445,21 +416,6 @@ final class UserRepository extends AbstractRepository
     }
 
     /**
-     * Delete a single favorite entry for the given user+image combination.
-     * Used by pwg.users.favorites_remove.
-     */
-    public function deleteFavorite(int $userId, int $imageId): void
-    {
-        $this->conn->createQueryBuilder()
-            ->delete($this->table('favorites'))
-            ->where('user_id = :userId')
-            ->andWhere('image_id = :imageId')
-            ->setParameter('userId', $userId)
-            ->setParameter('imageId', $imageId)
-            ->executeStatement();
-    }
-
-    /**
      * Return the username for a single user id, or null if not found.
      * $usernameField, $idField, $usersTable are admin-configured — not user-supplied.
      */
@@ -693,42 +649,6 @@ final class UserRepository extends AbstractRepository
         return $row !== false ? $row : null;
     }
 
-    /** Add an image to a user's favorites. */
-    public function addFavorite(int $userId, int $imageId): void
-    {
-        $this->conn->executeStatement(
-            'INSERT INTO ' . $this->table('favorites') . ' (image_id, user_id) VALUES (?, ?)',
-            [$imageId, $userId]
-        );
-    }
-
-    /** Return true when the given image is in the user's favorites. */
-    public function isFavorite(int $userId, int $imageId): bool
-    {
-        $count = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('favorites'))
-            ->where('image_id = :imageId')
-            ->andWhere('user_id = :userId')
-            ->setParameter('imageId', $imageId)
-            ->setParameter('userId', $userId)
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($count) ? (int) $count > 0 : false;
-    }
-
-    /** Count how many images the given user has in their caddie. */
-    public function countCaddieByUserId(int $userId): int
-    {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('caddie'))
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId)
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
-    }
 
     /**
      * Return all user_infos rows that have a non-null, non-expired activation key.
@@ -898,37 +818,6 @@ final class UserRepository extends AbstractRepository
      * @param list<ArrayParameterType|ParameterType> $permTypes
      * @return list<int>
      */
-    public function findAuthorizedFavoriteImageIds(
-        int $userId,
-        string $permWhere,
-        array $permParams,
-        array $permTypes,
-    ): array {
-        $query  = 'SELECT DISTINCT f.image_id FROM ' . $this->table('favorites') . ' AS f'
-            . ' INNER JOIN ' . $this->table('image_category') . ' AS ic ON f.image_id = ic.image_id'
-            . ' WHERE f.user_id = ? ' . $permWhere;
-        $params = [$userId, ...$permParams];
-        $types  = [ParameterType::INTEGER, ...$permTypes];
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->conn->executeQuery($query, $params, $types)->fetchFirstColumn());
-    }
-
-    /**
-     * Return image_ids in the given user's favorites (no permission filter).
-     *
-     * @return list<int>
-     */
-    public function findFavoriteImageIdsByUserPlain(int $userId): array
-    {
-        $rows = $this->conn->createQueryBuilder()
-            ->select('image_id')
-            ->from($this->table('favorites'))
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId)
-            ->executeQuery()
-            ->fetchFirstColumn();
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
-    }
-
     /**
      * Return user record selected via the Config::userFields() column map
      * (each value is `<dbfield> AS <pwgfield>`), keyed by pwgfield.
@@ -1175,40 +1064,6 @@ final class UserRepository extends AbstractRepository
     public function executeRawStatement(string $sql, array $params = [], array $types = []): void
     {
         $this->conn->executeStatement($sql, $params, $types);
-    }
-
-    /**
-     * Insert a single favorite row, ignoring (image_id, user_id) PK conflicts.
-     */
-    public function insertFavoriteIgnore(int $userId, int $imageId): void
-    {
-        $this->conn->executeStatement(
-            'INSERT IGNORE INTO ' . $this->table('favorites') . ' (image_id, user_id) VALUES (?, ?)',
-            [$imageId, $userId],
-            [ParameterType::INTEGER, ParameterType::INTEGER],
-        );
-    }
-
-    /**
-     * Return full image rows for the user's favorites, subject to the
-     * caller's permission filter and ORDER BY suffix.
-     *
-     * @param list<mixed>                            $permParams
-     * @param list<ArrayParameterType|ParameterType> $permTypes
-     * @return list<array<string, mixed>>
-     */
-    public function findFavoriteImagesWithDetails(
-        int $userId,
-        string $permWhere,
-        array $permParams,
-        array $permTypes,
-        string $orderBySuffix,
-    ): array {
-        $query  = 'SELECT i.* FROM ' . $this->table('favorites') . ' INNER JOIN ' . $this->table('images') . ' i'
-            . ' ON image_id = i.id WHERE user_id = ? ' . $permWhere . ' ' . $orderBySuffix;
-        $params = [$userId, ...$permParams];
-        $types  = [ParameterType::INTEGER, ...$permTypes];
-        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
     }
 
     /** Update `language` for the given user (used after Accept-Language detection). */

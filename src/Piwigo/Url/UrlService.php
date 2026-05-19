@@ -16,7 +16,7 @@ use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
-use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserFavoriteRepository;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class UrlService
@@ -31,7 +31,7 @@ final class UrlService
         private readonly HtmlService $htmlService,
         private readonly TagService $tagService,
         private readonly PermissionService $permissionService,
-        private readonly UserRepository $userRepository,
+        private readonly UserFavoriteRepository $userFavoriteRepository,
         private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
@@ -699,7 +699,7 @@ final class UrlService
             return [];
         }
         $result = [];
-        foreach ($this->userRepository->findFavoriteImageIdsByUserPlain(CurrentUser::get()->id) as $imageId) {
+        foreach ($this->userFavoriteRepository->findImageIdsByUserId(CurrentUser::get()->id) as $imageId) {
             $result[$imageId] = true;
         }
         return $result;

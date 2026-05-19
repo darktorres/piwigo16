@@ -50,6 +50,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserCaddieRepository;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
@@ -83,6 +84,7 @@ final class PhotoController implements AdminSubControllerInterface
         private readonly ImageAdminService $imageAdminService,
         private readonly ImageFormatRepository $imageFormatRepository,
         private readonly ImageRepository $imageRepository,
+        private readonly UserCaddieRepository $userCaddieRepository,
         private readonly LangService $langService,
         private readonly MetadataAdminService $metadataAdminService,
         private readonly PermissionService $permissionService,
@@ -614,9 +616,9 @@ final class PhotoController implements AdminSubControllerInterface
         if (isset($_GET['batch'])) {
             $this->inputValidator->check('batch', $_GET, false, '/^\d+(,\d+)*$/');
             $userIdInt = is_numeric($user['id']) ? (int) $user['id'] : 0;
-            $this->imageRepository->deleteUserCaddie($userIdInt);
+            $this->userCaddieRepository->deleteAllByUserId($userIdInt);
             $elementIds = array_values(array_unique(array_map(static fn (string $v): int => (int) $v, explode(',', is_string($rawGetBatch = $_GET['batch']) ? $rawGetBatch : ''))));
-            $this->imageRepository->addToUserCaddie($userIdInt, $elementIds);
+            $this->userCaddieRepository->addElements($userIdInt, $elementIds);
             $this->redirectResponder->redirect($this->urlGenerator->admin('batch_manager') . '&filter=prefilter-caddie');
         }
 

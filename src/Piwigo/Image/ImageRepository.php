@@ -15,54 +15,6 @@ use Piwigo\Image\Entity\PathRepresentative;
 /** Persistence layer for the image domain. */
 final class ImageRepository extends AbstractRepository
 {
-    /**
-     * Append the given element ids to a user's caddie, skipping any that are
-     * already present. Used by Add-to-caddie buttons in the gallery / picture
-     * pages and the Batch Manager. Replaces `Util::fillCaddie()` (Phase 5).
-     *
-     * @param list<int|string> $elementIds
-     */
-    public function addToUserCaddie(int $userId, array $elementIds): void
-    {
-        if ($elementIds === []) {
-            return;
-        }
-        $existing = $this->conn->createQueryBuilder()
-            ->select('element_id')
-            ->from($this->table('caddie'))
-            ->where('user_id = :uid')
-            ->setParameter('uid', $userId)
-            ->executeQuery()
-            ->fetchFirstColumn();
-        $alreadyIn = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $existing);
-        $toInsert  = array_values(array_diff($elementIds, $alreadyIn));
-        if ($toInsert === []) {
-            return;
-        }
-        $rows = array_map(
-            static fn (int|string $id): array => ['element_id' => $id, 'user_id' => $userId],
-            $toInsert
-        );
-        $this->conn->transactional(function () use ($rows): void {
-            foreach ($rows as $row) {
-                $this->conn->insert($this->table('caddie'), $row);
-            }
-        });
-    }
-
-    /**
-     * Delete all caddie entries for the given user.
-     * The caddie is a temporary selection basket in the admin batch manager.
-     */
-    public function deleteUserCaddie(int $userId): void
-    {
-        $this->conn->createQueryBuilder()
-            ->delete($this->table('caddie'))
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId)
-            ->executeStatement();
-    }
-
     /** Return the maximum date_available among all images, or null if none. */
     public function findMaxDateAvailable(): ?string
     {
@@ -177,20 +129,6 @@ final class ImageRepository extends AbstractRepository
      *
      * @param int[] $imageIds
      */
-    public function deleteUserCaddieByImageIds(int $userId, array $imageIds): void
-    {
-        if ($imageIds === []) {
-            return;
-        }
-        $qb = $this->conn->createQueryBuilder()
-            ->delete($this->table('caddie'))
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId);
-        $qb->andWhere($qb->expr()->in('element_id', ':imageIds'))
-           ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
-        $qb->executeStatement();
-    }
-
     /**
      * Return (path, representative_ext) for the given image ids.
      * Used by batch_manager_global to delete specific derivatives.
@@ -885,19 +823,6 @@ final class ImageRepository extends AbstractRepository
         return is_numeric($value) ? (int) $value : null;
     }
 
-    /** Count how many caddie entries the given user has. */
-    public function countCaddieByUserId(int $userId): int
-    {
-        $value = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from($this->table('caddie'))
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId)
-            ->executeQuery()
-            ->fetchOne();
-        return is_numeric($value) ? (int) $value : 0;
-    }
-
     /**
      * Return image ids matching `file LIKE $pattern` (no ESCAPE). Used by
      * the history admin filter form, where the user types a free-form pattern
@@ -1207,35 +1132,6 @@ final class ImageRepository extends AbstractRepository
      *
      * @return list<int>
      */
-    public function findCaddieElementIdsByUser(int $userId): array
-    {
-        $rows = $this->conn->createQueryBuilder()
-            ->select('element_id')
-            ->from($this->table('caddie'))
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId)
-            ->executeQuery()
-            ->fetchFirstColumn();
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
-    }
-
-    /**
-     * Return image_ids that are in the given user's favorites.
-     *
-     * @return list<int>
-     */
-    public function findFavoriteImageIdsByUserPlain(int $userId): array
-    {
-        $rows = $this->conn->createQueryBuilder()
-            ->select('image_id')
-            ->from($this->table('favorites'))
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId)
-            ->executeQuery()
-            ->fetchFirstColumn();
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
-    }
-
     /**
      * Return image ids whose date_available falls inside the given SQL date
      * range fragment (built by SqlExpr::recentPeriodExpr — a server-built
@@ -1724,29 +1620,5 @@ final class ImageRepository extends AbstractRepository
             ->executeQuery()
             ->fetchFirstColumn();
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
-    }
-
-    /**
-     * Find image ids in the given user's favorites, subject to the caller's
-     * permission filter and ORDER BY suffix.
-     *
-     * @param list<mixed>                            $permParams
-     * @param list<ArrayParameterType|ParameterType> $permTypes
-     * @return list<int>
-     */
-    public function findFavoriteImageIdsByUserId(
-        int $userId,
-        string $permWhere,
-        array $permParams,
-        array $permTypes,
-        string $orderBySuffix,
-    ): array {
-        $query = 'SELECT image_id FROM ' . $this->table('favorites')
-            . ' INNER JOIN ' . $this->table('images') . ' ON image_id = id'
-            . ' WHERE user_id = ? ' . $permWhere . ' ' . $orderBySuffix;
-        $params = [$userId, ...$permParams];
-        $types  = [ParameterType::INTEGER, ...$permTypes];
-        $rows = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'image_id'));
     }
 }

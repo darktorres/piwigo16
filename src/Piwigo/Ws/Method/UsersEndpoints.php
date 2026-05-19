@@ -26,6 +26,7 @@ use Piwigo\Users\AuthService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserFavoriteRepository;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Ws\OpenApi\ApiMethod;
@@ -49,6 +50,7 @@ final readonly class UsersEndpoints
         private PermissionService $permissionService,
         private PreferencesService $preferencesService,
         private UserAdminService $userAdminService,
+        private UserFavoriteRepository $userFavoriteRepository,
         private UserRepository $userRepository,
         private UserService $userService,
         private CsrfService $csrfService,
@@ -416,7 +418,7 @@ final readonly class UsersEndpoints
         if (!$this->imageRepository->existsById($favImageId)) {
             return new PwgError(404, 'image_id not found');
         }
-        $this->userRepository->insertFavoriteIgnore($userId, $favImageId);
+        $this->userFavoriteRepository->addIgnore($userId, $favImageId);
         return true;
     }
 
@@ -432,7 +434,7 @@ final readonly class UsersEndpoints
         if (!$this->imageRepository->existsById($remImageId)) {
             return new PwgError(404, 'image_id not found');
         }
-        $this->userRepository->deleteFavorite($userId, $remImageId);
+        $this->userFavoriteRepository->delete($userId, $remImageId);
         return true;
     }
 
@@ -452,17 +454,19 @@ final readonly class UsersEndpoints
         $orderBy = empty($orderBy) ? $this->orderByService->buildOrderByClause(Config::orderBy()) : 'ORDER BY ' . $orderBy;
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
         $images  = [];
-        foreach ($this->userRepository->findFavoriteImagesWithDetails($userId, $permSql, $permParams, $permTypes, $orderBy) as $row) {
-            $image = [];
-            foreach (['id', 'width', 'height', 'hit'] as $k) {
-                if (isset($row[$k])) {
-                    $image[$k] = is_numeric($row[$k]) ? (int) $row[$k] : 0;
-                }
-            }
-            foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
-                $image[$k] = $row[$k] ?? null;
-            }
-            $images[] = array_merge($image, $this->wsHelper->getUrls($row));
+        foreach ($this->userFavoriteRepository->findImagesWithDetails($userId, $permSql, $permParams, $permTypes, $orderBy) as $img) {
+            $image = [
+                'id'             => $img->id->value,
+                'width'          => $img->width ?? 0,
+                'height'         => $img->height ?? 0,
+                'hit'            => $img->hit,
+                'file'           => $img->file->value,
+                'name'           => $img->name,
+                'comment'        => $img->comment,
+                'date_creation'  => $img->dateCreation?->value,
+                'date_available' => $img->dateAvailable?->value,
+            ];
+            $images[] = array_merge($image, $this->wsHelper->getUrls($img->toRow()));
         }
         $favPerPage = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
         $favPage    = is_numeric($params['page']) ? (int) $params['page'] : 0;

@@ -27,7 +27,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
-use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserFavoriteRepository;
 use Piwigo\Users\UserService;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -58,7 +58,7 @@ final readonly class SectionInitializer
         private Session $session,
         private TagService $tagService,
         private UrlService $urlService,
-        private UserRepository $userRepository,
+        private UserFavoriteRepository $userFavoriteRepository,
         private UserService $userService,
         private RedirectResponder $redirectResponder,
         private CacheItemPoolInterface $pool,
@@ -361,13 +361,13 @@ final readonly class SectionInitializer
             $action = $_GET['action'] ?? '';
             if ($action === 'remove_all_from_favorites') {
                 $userId = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
-                $this->userRepository->deleteAllFavoritesByUserId($userId);
+                $this->userFavoriteRepository->deleteAllByUserId($userId);
                 $this->redirectResponder->redirect($this->urlService->makeIndexUrl(['section' => 'favorites']));
             } else {
                 $userIdInt = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
                 [$favPermSql, $favPermParams, $favPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
                 $page = array_merge($page, [
-                    'items' => $this->imageRepository->findFavoriteImageIdsByUserId(
+                    'items' => $this->userFavoriteRepository->findImageIdsForUserAuth(
                         $userIdInt,
                         $favPermSql,
                         $favPermParams,

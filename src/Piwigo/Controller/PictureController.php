@@ -56,7 +56,8 @@ use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
-use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserCaddieRepository;
+use Piwigo\Users\UserFavoriteRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -90,7 +91,8 @@ final readonly class PictureController implements ControllerInterface
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserAdminService $userAdminService,
-        private UserRepository $userRepository,
+        private UserCaddieRepository $userCaddieRepository,
+        private UserFavoriteRepository $userFavoriteRepository,
         private UserService $userService,
         private ActivityLogger $activityLogger,
         private CsrfService $csrfService,
@@ -208,14 +210,14 @@ final readonly class PictureController implements ControllerInterface
         if ($get_action !== null) {
             switch ($get_action) {
                 case 'add_to_favorites':
-                    $this->userRepository->addFavorite(
+                    $this->userFavoriteRepository->add(
                         is_numeric($user['id']) ? (int) $user['id'] : 0,
                         $imageId
                     );
                     $this->redirectResponder->redirect($url_self);
                     break;
                 case 'remove_from_favorites':
-                    $this->userRepository->deleteFavorite(
+                    $this->userFavoriteRepository->delete(
                         is_numeric($user['id']) ? (int) $user['id'] : 0,
                         $imageId
                     );
@@ -230,7 +232,7 @@ final readonly class PictureController implements ControllerInterface
                     $this->redirectResponder->redirect($url_self);
                     break;
                 case 'add_to_caddie':
-                    $this->imageRepository->addToUserCaddie(CurrentUser::get()->id, [$imageId]);
+                    $this->userCaddieRepository->addElements(CurrentUser::get()->id, [$imageId]);
                     $this->redirectResponder->redirect($url_self);
                     break;
                 case 'rate':
@@ -544,7 +546,7 @@ final readonly class PictureController implements ControllerInterface
         }
 
         if (!$this->permissionService->isAGuest() && Config::pictureFavoriteIcon()) {
-            $is_favorite = $this->userRepository->isFavorite(
+            $is_favorite = $this->userFavoriteRepository->exists(
                 is_numeric($user['id']) ? (int) $user['id'] : 0,
                 $imageId
             );

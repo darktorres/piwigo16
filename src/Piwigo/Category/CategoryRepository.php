@@ -7,6 +7,7 @@ namespace Piwigo\Category;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\Entity\Category;
+use Piwigo\Category\Projection\RelatedCategoryRow;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the category domain. */
@@ -2053,8 +2054,8 @@ SELECT
      * uppercats, global_rank, commentable. Subject to permission filter.
      *
      * @param list<mixed>                            $permParams
-     * @param list<ArrayParameterType|ParameterType> $permTypes
-     * @return list<array<string, mixed>>
+     * @param  list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<RelatedCategoryRow>
      */
     public function findRelatedCategoriesForImage(
         int $imageId,
@@ -2067,7 +2068,7 @@ SELECT
             . ' ON category_id = id WHERE image_id = ? ' . $permWhere;
         $params = [$imageId, ...$permParams];
         $types  = [ParameterType::INTEGER, ...$permTypes];
-        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        return array_map(RelatedCategoryRow::fromRow(...), $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative());
     }
 
     /**

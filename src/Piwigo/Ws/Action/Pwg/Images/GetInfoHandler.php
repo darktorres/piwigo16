@@ -10,7 +10,6 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
-use Piwigo\Core\BoolUtil;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryName;
@@ -74,16 +73,14 @@ final readonly class GetInfoHandler implements WsAction
         $isCommentable       = false;
         $relatedCategories   = [];
         [$relPermSql, $relPermParams, $relPermTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND');
-        foreach ($this->categoryRepository->findRelatedCategoriesForImage($imageRowId, $relPermSql, $relPermParams, $relPermTypes) as $row) {
-            if (BoolUtil::fromMixed($row['commentable'])) {
+        foreach ($this->categoryRepository->findRelatedCategoriesForImage($imageRowId, $relPermSql, $relPermParams, $relPermTypes) as $related) {
+            if ($related->commentable) {
                 $isCommentable = true;
             }
-            unset($row['commentable']);
+            $row             = $related->toUrlRow();
             $row['url']      = $this->urlService->makeIndexUrl(['category' => $row]);
             $row['page_url'] = $this->urlService->makePictureUrl(['image_id' => $imageRowId, 'image_file' => $imageRowFile, 'category' => $row]);
-            $row['id']       = is_numeric($row['id']) ? (int) $row['id'] : 0;
-            $rawCatName      = $row['name'] ?? null;
-            $catRenderEvent  = new RenderCategoryName(is_string($rawCatName) ? $rawCatName : '', __FUNCTION__);
+            $catRenderEvent  = new RenderCategoryName($related->name, __FUNCTION__);
             $this->dispatcher->dispatch($catRenderEvent);
             $row['name']         = strip_tags($catRenderEvent->categoryName);
             $relatedCategories[] = $row;

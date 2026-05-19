@@ -126,41 +126,32 @@ final readonly class GetListHandler implements WsAction
         $cats                         = [];
         foreach ($getListRows as $row) {
             $row['url'] = $this->urlService->makeIndexUrl(['category' => $row]);
-            foreach (['id', 'nb_images', 'total_nb_images', 'nb_categories'] as $key) {
-                $rowKeyVal = $row[$key] ?? null;
-                $row[$key] = is_numeric($rowKeyVal) ? (int) $rowKeyVal : 0;
-            }
             $fullnameParam = $params['fullname'] ?? false;
             if ($fullnameParam !== false && $fullnameParam !== '' && $fullnameParam !== 0) {
-                $uppercatsRaw = $row['uppercats'] ?? null;
-                $row['name']  = strip_tags($this->htmlService->getCatDisplayNameCache(is_string($uppercatsRaw) ? $uppercatsRaw : '', null));
+                $row['name']  = strip_tags($this->htmlService->getCatDisplayNameCache($row['uppercats'], null));
             } else {
                 $row['name_raw'] = $row['name'];
-                $rawName         = $row['name'] ?? null;
-                $listRenderEvent = new RenderCategoryName(is_string($rawName) ? $rawName : '', 'ws_categories_getList');
+                $listRenderEvent = new RenderCategoryName($row['name'], 'ws_categories_getList');
                 $this->dispatcher->dispatch($listRenderEvent);
                 $row['name'] = strip_tags($listRenderEvent->categoryName);
             }
             $row['comment_raw'] = $row['comment'];
-            $rawComment         = $row['comment'] ?? null;
-            $catDescEvent       = new RenderCategoryDescription(is_string($rawComment) ? $rawComment : '', 'ws_categories_getList');
+            $catDescEvent       = new RenderCategoryDescription($row['comment'] ?? '', 'ws_categories_getList');
             $this->dispatcher->dispatch($catDescEvent);
             $row['comment'] = $catDescEvent->categoryDescription;
             $imageId        = null;
-            if (!empty($row['user_representative_picture_id'])) {
+            if ($row['user_representative_picture_id'] !== null && $row['user_representative_picture_id'] !== 0) {
                 $imageId = $row['user_representative_picture_id'];
-            } elseif (!empty($row['representative_picture_id'])) {
+            } elseif ($row['representative_picture_id'] !== null && $row['representative_picture_id'] !== 0) {
                 $imageId = $row['representative_picture_id'];
             } elseif (Config::allowRandomRepresentative()) {
                 $imageId = $this->categoryService->getRandomImageInCategory($row);
             } else {
                 if ($row['count_categories'] > 0 && $row['count_images'] > 0) {
-                    $rowUppercatsAny = $row['uppercats'] ?? null;
-                    $rowUppercatsRaw = is_string($rowUppercatsAny) ? $rowUppercatsAny : '';
                     [$permSubSql, $permSubParams, $permSubTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND");
                     $imageId = $this->categoryRepository->findRandomSubcatRepresentativeForUser(
                         $currentUser->id,
-                        $rowUppercatsRaw,
+                        $row['uppercats'],
                         $permSubSql,
                         $permSubParams,
                         $permSubTypes,
@@ -168,7 +159,7 @@ final readonly class GetListHandler implements WsAction
                 }
             }
             if (isset($imageId)) {
-                if (Config::representativeCacheOnSubcats() && ($row['user_representative_picture_id'] ?? null) != $imageId) {
+                if (Config::representativeCacheOnSubcats() && $row['user_representative_picture_id'] !== $imageId) {
                     $userRepresentativeUpdatesFor[$row['id']] = $imageId;
                 }
                 $row['representative_picture_id'] = $imageId;
@@ -176,7 +167,7 @@ final readonly class GetListHandler implements WsAction
                 $categories[]                     = $row;
             }
             unset($imageId);
-            if (empty($row['image_order'])) {
+            if ($row['image_order'] === null || $row['image_order'] === '') {
                 $row['image_order'] = $this->orderByService->buildBareOrderByClause(Config::orderBy());
             }
             $cats[] = $row;
@@ -188,20 +179,19 @@ final readonly class GetListHandler implements WsAction
             $thumbSizeRaw  = $params['thumbnail_size'] ?? null;
             $thumbnailSize = is_string($thumbSizeRaw) ? $thumbSizeRaw : '';
             $userLevel     = is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0;
-            foreach ($this->imageRepository->findByIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $imageIds)) as $img) {
+            foreach ($this->imageRepository->findByIds($imageIds) as $img) {
                 $imgIdStr = (string) $img->id->value;
                 if ($img->level <= $userLevel) {
                     $thumbnailSrcOf[$imgIdStr] = DerivativeImage::url($thumbnailSize, SrcImage::fromImage($img));
                 } else {
                     foreach ($categories as &$category) {
-                        if ($img->id->value == $category['representative_picture_id']) {
+                        if ($img->id->value === $category['representative_picture_id']) {
                             $newImgId = $this->categoryService->getRandomImageInCategory($category);
                             if (isset($newImgId) && !in_array($newImgId, $imageIds)) {
                                 $newImageIds[] = $newImgId;
                             }
                             if (Config::representativeCacheOnLevel()) {
-                                $catIdKey                                = is_scalar($category['id'] ?? null) ? (string) $category['id'] : '';
-                                $userRepresentativeUpdatesFor[$catIdKey] = $newImgId;
+                                $userRepresentativeUpdatesFor[(string) $category['id']] = $newImgId;
                             }
                             $category['representative_picture_id'] = $newImgId;
                         }
@@ -225,9 +215,8 @@ final readonly class GetListHandler implements WsAction
         }
         foreach ($cats as &$cat) {
             foreach ($categories as $category) {
-                if ($category['id'] == $cat['id'] && $category['representative_picture_id'] !== null) {
-                    $repKey        = is_scalar($category['representative_picture_id']) ? (string) $category['representative_picture_id'] : '';
-                    $cat['tn_url'] = $thumbnailSrcOf[$repKey] ?? null;
+                if ($category['id'] === $cat['id'] && $category['representative_picture_id'] !== null) {
+                    $cat['tn_url'] = $thumbnailSrcOf[(string) $category['representative_picture_id']] ?? null;
                 }
             }
             unset($cat['user_representative_picture_id'], $cat['count_images'], $cat['count_categories']);

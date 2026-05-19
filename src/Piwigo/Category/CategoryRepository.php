@@ -2939,11 +2939,31 @@ SELECT
      * Run the categories-getList query (configurable INNER/LEFT join with
      * user_cache_categories, configurable WHERE composed by the caller),
      * returning the rows and the FOUND_ROWS() total when LIMIT was applied.
+     * The SELECT shape is fixed (no caller-controlled column list).
      *
      * @param list<string>                           $whereClauses
      * @param list<mixed>                            $params
      * @param list<ArrayParameterType|ParameterType> $types
-     * @return array{rows: list<array<string, mixed>>, total: int|null}
+     * @return array{rows: list<array{
+     *     id: int,
+     *     name: string,
+     *     comment: string|null,
+     *     permalink: string|null,
+     *     status: string,
+     *     uppercats: string,
+     *     global_rank: string|null,
+     *     id_uppercat: int|null,
+     *     nb_images: int,
+     *     total_nb_images: int,
+     *     representative_picture_id: int|null,
+     *     user_representative_picture_id: int|null,
+     *     count_images: int,
+     *     count_categories: int,
+     *     date_last: string|null,
+     *     max_date_last: string|null,
+     *     nb_categories: int,
+     *     image_order: string|null,
+     * }>, total: int|null}
      */
     public function findGetListPage(
         string $joinType,
@@ -2962,7 +2982,37 @@ SELECT
             . ' ON id = cat_id AND user_id = ' . $joinUserId
             . ' WHERE ' . implode("\n    AND ", $whereClauses)
             . ' ' . $orderLimit;
-        $rows = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        $rawRows = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        $rows = [];
+        foreach ($rawRows as $row) {
+            $idRaw = $row['id'] ?? null;
+            if (!is_numeric($idRaw)) {
+                continue;
+            }
+            $idUppercatRaw  = $row['id_uppercat'] ?? null;
+            $repPicIdRaw    = $row['representative_picture_id'] ?? null;
+            $userRepPicRaw  = $row['user_representative_picture_id'] ?? null;
+            $rows[] = [
+                'id'                              => (int) $idRaw,
+                'name'                            => is_string($row['name'] ?? null) ? $row['name'] : '',
+                'comment'                         => is_string($row['comment'] ?? null) ? $row['comment'] : null,
+                'permalink'                       => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
+                'status'                          => is_string($row['status'] ?? null) ? $row['status'] : 'public',
+                'uppercats'                       => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                'global_rank'                     => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+                'id_uppercat'                     => is_numeric($idUppercatRaw) ? (int) $idUppercatRaw : null,
+                'nb_images'                       => is_numeric($row['nb_images'] ?? null) ? (int) $row['nb_images'] : 0,
+                'total_nb_images'                 => is_numeric($row['total_nb_images'] ?? null) ? (int) $row['total_nb_images'] : 0,
+                'representative_picture_id'       => is_numeric($repPicIdRaw) ? (int) $repPicIdRaw : null,
+                'user_representative_picture_id'  => is_numeric($userRepPicRaw) ? (int) $userRepPicRaw : null,
+                'count_images'                    => is_numeric($row['count_images'] ?? null) ? (int) $row['count_images'] : 0,
+                'count_categories'                => is_numeric($row['count_categories'] ?? null) ? (int) $row['count_categories'] : 0,
+                'date_last'                       => is_string($row['date_last'] ?? null) ? $row['date_last'] : null,
+                'max_date_last'                   => is_string($row['max_date_last'] ?? null) ? $row['max_date_last'] : null,
+                'nb_categories'                   => is_numeric($row['nb_categories'] ?? null) ? (int) $row['nb_categories'] : 0,
+                'image_order'                     => is_string($row['image_order'] ?? null) ? $row['image_order'] : null,
+            ];
+        }
         $total = null;
         if ($useSqlCalcFoundRows) {
             $totalRaw = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();

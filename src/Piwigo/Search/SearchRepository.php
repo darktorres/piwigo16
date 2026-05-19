@@ -18,7 +18,7 @@ final class SearchRepository extends AbstractRepository
      * Used by the activity-feed endpoint to enrich saved-search references.
      *
      * @param  list<int> $ids
-     * @return array<int|string, mixed>  id → rules JSON string
+     * @return array<int, string>  id → rules JSON string
      */
     public function findRulesByIds(array $ids): array
     {
@@ -30,7 +30,16 @@ final class SearchRepository extends AbstractRepository
             ->from($this->table('search'));
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
-        return array_column($qb->executeQuery()->fetchAllAssociative(), 'rules', 'id');
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $idRaw    = $row['id'] ?? null;
+            $rulesRaw = $row['rules'] ?? null;
+            if (!is_numeric($idRaw) || !is_string($rulesRaw)) {
+                continue;
+            }
+            $out[(int) $idRaw] = $rulesRaw;
+        }
+        return $out;
     }
 
     /**

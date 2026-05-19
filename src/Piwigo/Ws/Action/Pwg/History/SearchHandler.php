@@ -137,8 +137,8 @@ final readonly class SearchHandler implements WsAction
         $searchDetails = [];
         if (count($searchIds) > 0) {
             $searchDetails = $this->searchRepository->findRulesByIds(array_map(intval(...), $searchIds));
-            foreach ($searchDetails as $idSearch => $rulesSearch) {
-                $rulesArrRaw = json_decode(is_scalar($rulesSearch) ? (string) $rulesSearch : '', associative: true);
+            foreach ($searchDetails as $rulesSearch) {
+                $rulesArrRaw = json_decode($rulesSearch, associative: true);
                 /** @var array<string, mixed> $rulesArr */
                 $rulesArr    = is_array($rulesArrRaw) ? $rulesArrRaw : [];
                 /** @var array<string, mixed> $rulesFields */
@@ -163,7 +163,6 @@ final readonly class SearchHandler implements WsAction
                         }
                     }
                 }
-                $searchDetails[$idSearch] = $rulesFields;
             }
         }
         if (count($userIds) > 0) {
@@ -261,18 +260,44 @@ final readonly class SearchHandler implements WsAction
                 $imageString = '<span><img src="' . (is_string($imgUrl) ? $imgUrl : '') . '" alt="' . $imageTitle . '" title="' . $imageTitle . '">';
             }
             $searchDetail = null;
-            if ($lineSearchIdStr !== '' && isset($searchDetails[$lineSearchIdStr])) {
-                $sd              = $searchDetails[$lineSearchIdStr];
-                $sdTags          = is_array($sd['tags'] ?? null) ? $sd['tags'] : [];
-                $sdCat           = is_array($sd['cat'] ?? null) ? $sd['cat'] : [];
-                $sdAllwords      = is_array($sd['allwords'] ?? null) ? $sd['allwords'] : [];
-                $sdAuthor        = is_array($sd['author'] ?? null) ? $sd['author'] : [];
+            $lineSearchIdInt = is_numeric($lineSearchIdStr) ? (int) $lineSearchIdStr : 0;
+            if ($lineSearchIdInt !== 0 && isset($searchDetails[$lineSearchIdInt])) {
+                // findRulesByIds returns id → JSON-string-rules, not a
+                // pre-decoded map. Decode here to read the saved-search
+                // filter fields.
+                $sdDecoded = json_decode($searchDetails[$lineSearchIdInt], associative: true);
+                /** @var array<string, mixed> $sd */
+                $sd              = is_array($sdDecoded) ? $sdDecoded : [];
+                /** @var array<string, mixed> $sdFields */
+                $sdFields        = is_array($sd['fields'] ?? null) ? $sd['fields'] : [];
+                /** @var array{words?: list<int|string>} $sdTags */
+                $sdTags          = is_array($sdFields['tags'] ?? null) ? $sdFields['tags'] : [];
+                /** @var array{words?: list<int|string>} $sdCat */
+                $sdCat           = is_array($sdFields['cat'] ?? null) ? $sdFields['cat'] : [];
+                /** @var array{words?: list<string>|string} $sdAllwords */
+                $sdAllwords      = is_array($sdFields['allwords'] ?? null) ? $sdFields['allwords'] : [];
+                /** @var array{words?: list<string>} $sdAuthor */
+                $sdAuthor        = is_array($sdFields['author'] ?? null) ? $sdFields['author'] : [];
+                /** @var list<int|string> $sdTagsWords */
                 $sdTagsWords     = is_array($sdTags['words'] ?? null) ? $sdTags['words'] : [];
+                /** @var list<int|string> $sdCatWords */
                 $sdCatWords      = is_array($sdCat['words'] ?? null) ? $sdCat['words'] : [];
-                $sdAllwordsWords = is_array($sdAllwords['words'] ?? null) ? $sdAllwords['words'] : [];
+                /** @var list<string>|string $sdAllwordsRaw */
+                $sdAllwordsRaw   = $sdAllwords['words'] ?? [];
+                $sdAllwordsWords = is_array($sdAllwordsRaw) ? $sdAllwordsRaw : [];
+                /** @var list<string> $sdAuthorWords */
                 $sdAuthorWords   = is_array($sdAuthor['words'] ?? null) ? $sdAuthor['words'] : [];
-                $sdAddedBy       = is_array($sd['added_by'] ?? null) ? $sd['added_by'] : [];
-                $searchDetail    = ['allwords' => (count($sdAllwordsWords) > 0) ? $sdAllwordsWords : null, 'tags' => (count($sdTagsWords) > 0) ? array_intersect_key($nameOfTag, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $sdTagsWords))) : null, 'date_posted' => (isset($sd['date_posted']) && $sd['date_posted'] !== '') ? $sd['date_posted'] : null, 'cat' => (count($sdCatWords) > 0) ? array_intersect_key($nameOfCategory, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $sdCatWords))) : null, 'author' => (count($sdAuthorWords) > 0) ? $sdAuthorWords : null, 'added_by' => (count($sdAddedBy) > 0) ? array_intersect_key($usernameOf, array_flip(array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $sdAddedBy))) : null, 'filetypes' => (isset($sd['filetypes']) && $sd['filetypes'] !== '') ? $sd['filetypes'] : null];
+                /** @var list<int|string> $sdAddedBy */
+                $sdAddedBy       = is_array($sdFields['added_by'] ?? null) ? $sdFields['added_by'] : [];
+                $searchDetail    = [
+                    'allwords'    => (count($sdAllwordsWords) > 0) ? $sdAllwordsWords : null,
+                    'tags'        => (count($sdTagsWords) > 0) ? array_intersect_key($nameOfTag, array_flip(array_map(static fn (int|string $v): string => (string) $v, $sdTagsWords))) : null,
+                    'date_posted' => (isset($sdFields['date_posted']) && $sdFields['date_posted'] !== '') ? $sdFields['date_posted'] : null,
+                    'cat'         => (count($sdCatWords) > 0) ? array_intersect_key($nameOfCategory, array_flip(array_map(static fn (int|string $v): string => (string) $v, $sdCatWords))) : null,
+                    'author'      => (count($sdAuthorWords) > 0) ? $sdAuthorWords : null,
+                    'added_by'    => (count($sdAddedBy) > 0) ? array_intersect_key($usernameOf, array_flip(array_map(static fn (int|string $v): string => (string) $v, $sdAddedBy))) : null,
+                    'filetypes'   => (isset($sdFields['filetypes']) && $sdFields['filetypes'] !== '') ? $sdFields['filetypes'] : null,
+                ];
             }
             $lineDate = is_scalar($line['date'] ?? null) ? $line['date'] : null;
             array_push($result, ['DATE' => $this->dateService->formatDate(is_string($lineDate) || is_int($lineDate) ? $lineDate : null), 'TIME' => $line['time'] ?? null, 'USER' => $userString, 'USERNAME' => $userName, 'USERID' => $lineUserId, 'IP' => $lineIP, 'IMAGE' => $imageString, 'IMAGENAME' => $imageTitle, 'IMAGEID' => $imageId, 'EDIT_IMAGE' => $imageEditString, 'TYPE' => $lineImageType, 'SECTION' => $lineSection, 'FULL_CATEGORY_PATH' => ($lineCatIdStr !== '' && isset($fullCatPath[$lineCatIdStr])) ? strip_tags($fullCatPath[$lineCatIdStr]) : Lang::t('Root') . $lineCatIdStr, 'CATEGORY' => ($lineCatIdStr !== '' && isset($nameOfCategory[$lineCatIdStr])) ? $nameOfCategory[$lineCatIdStr] : Lang::t('Root') . $lineCatIdStr, 'SEARCH_ID' => $lineSearchId ?? null, 'TAGS' => explode(',', $tagNames), 'TAGIDS' => explode(',', $tagIds), 'SEARCH_DETAILS' => $searchDetail]);

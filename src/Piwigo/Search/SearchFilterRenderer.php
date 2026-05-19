@@ -79,7 +79,6 @@ final readonly class SearchFilterRenderer
 
             $searchKey = $ctx->search ?? '';
             $searchRaw = $ctx->search;
-            /** @var array<string, mixed> $my_search */
             $my_search = $this->searchService->getSearchArray($searchKey);
             /** @var array<string, mixed> $my_search_fields_tmp */
             $my_search_fields_tmp = is_array($my_search['fields'] ?? null) ? $my_search['fields'] : [];
@@ -120,26 +119,30 @@ final readonly class SearchFilterRenderer
                     } else {
                         $filter_tags = $this->tagService->getCommonTags($other_filters_items, 0);
 
+                        /** @var array{words?: list<int|string>, mode?: string} $tags_field */
                         $tags_field = is_array($my_search['fields']['tags']) ? $my_search['fields']['tags'] : [];
+                        /** @var list<int|string> $tags_words_raw */
                         $tags_words_raw = is_array($tags_field['words'] ?? null) ? $tags_field['words'] : [];
                         $missing_tag_ids = array_diff(
-                            array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $tags_words_raw),
+                            array_map(static fn (int|string $v): string => (string) $v, $tags_words_raw),
                             array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', array_column($filter_tags, 'id'))
                         );
 
                         if (count($missing_tag_ids) > 0) {
-                            $filter_tags = array_merge($this->tagService->getAvailableTags(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $missing_tag_ids)), $filter_tags);
+                            $filter_tags = array_merge($this->tagService->getAvailableTags(array_map(intval(...), $missing_tag_ids)), $filter_tags);
                         }
                     }
 
                     $template->assign('TAGS', $filter_tags);
 
                     $filter_tag_ids = count($filter_tags) > 0 ? array_column($filter_tags, 'id') : [];
+                    /** @var array{words?: list<int|string>, mode?: string} $tags_field2 */
                     $tags_field2 = is_array($my_search['fields']['tags']) ? $my_search['fields']['tags'] : [];
+                    /** @var list<int|string> $tags_words2_raw */
                     $tags_words2_raw = is_array($tags_field2['words'] ?? null) ? $tags_field2['words'] : [];
-                    $tags_words2 = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $tags_words2_raw);
+                    $tags_words2 = array_map(static fn (int|string $v): string => (string) $v, $tags_words2_raw);
                     $filter_tag_ids_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $filter_tag_ids);
-                    $tags_field2['words'] = array_intersect($tags_words2, $filter_tag_ids_str);
+                    $tags_field2['words'] = array_values(array_intersect($tags_words2, $filter_tag_ids_str));
                     $my_search['fields']['tags'] = $tags_field2;
                 } else {
                     unset($my_search['fields']['tags']);
@@ -180,11 +183,12 @@ final readonly class SearchFilterRenderer
                 }
                 $template->assign('AUTHORS', $filter_rows);
 
+                /** @var array{words?: list<string>} $author_field */
                 $author_field = is_array($my_search['fields']['author']) ? $my_search['fields']['author'] : [];
+                /** @var list<string> $author_words_raw */
                 $author_words_raw = is_array($author_field['words'] ?? null) ? $author_field['words'] : [];
-                $author_words_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $author_words_raw);
                 $author_names_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $author_names);
-                $author_field['words'] = array_intersect($author_words_str, $author_names_str);
+                $author_field['words'] = array_values(array_intersect($author_words_raw, $author_names_str));
                 $my_search['fields']['author'] = $author_field;
             } elseif (isset($my_search['fields']['author'])) {
                 unset($my_search['fields']['author']);
@@ -627,24 +631,25 @@ final readonly class SearchFilterRenderer
                     $item_h    = $this->pool->getItem($cache_key);
                     if ($item_h->isHit()) {
                         $filter_rows_raw = $item_h->get();
-                        $filter_rows     = is_array($filter_rows_raw) ? $filter_rows_raw : [];
+                        $heights         = is_array($filter_rows_raw)
+                            ? array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $filter_rows_raw))
+                            : [];
                     } else {
-                        $filter_rows = $this->searchRepository->findDistinctHeightsForFilter($filter_clause, $filterParams, $filterTypes);
-                        $item_h->set($filter_rows);
+                        $heights = $this->searchRepository->findDistinctHeightsForFilter($filter_clause, $filterParams, $filterTypes);
+                        $item_h->set($heights);
                         $item_h->expiresAfter(86400);
                         $this->pool->save($item_h);
                     }
                 } else {
-                    $filter_rows = $this->searchRepository->findDistinctHeightsForFilter($filter_clause, $filterParams, $filterTypes);
+                    $heights = $this->searchRepository->findDistinctHeightsForFilter($filter_clause, $filterParams, $filterTypes);
                 }
 
-                $heights = $filter_rows;
                 $height = [
-                    'list' => implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $heights)),
-                    'bounds' => ['min' => $heights[0], 'max' => end($heights)],
+                    'list' => implode(',', array_map(static fn (int $v): string => (string) $v, $heights)),
+                    'bounds' => ['min' => $heights[0] ?? 0, 'max' => (int) end($heights)],
                     'selected' => [
-                        'min' => !empty($my_search['fields']['height_min']) ? $my_search['fields']['height_min'] : $heights[0],
-                        'max' => !empty($my_search['fields']['height_max']) ? $my_search['fields']['height_max'] : end($heights),
+                        'min' => !empty($my_search['fields']['height_min']) ? $my_search['fields']['height_min'] : ($heights[0] ?? 0),
+                        'max' => !empty($my_search['fields']['height_max']) ? $my_search['fields']['height_max'] : (int) end($heights),
                     ],
                 ];
                 $template->assign('HEIGHT', $height);
@@ -661,24 +666,25 @@ final readonly class SearchFilterRenderer
                     $item_w    = $this->pool->getItem($cache_key);
                     if ($item_w->isHit()) {
                         $filter_rows_raw = $item_w->get();
-                        $filter_rows     = is_array($filter_rows_raw) ? $filter_rows_raw : [];
+                        $widths          = is_array($filter_rows_raw)
+                            ? array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $filter_rows_raw))
+                            : [];
                     } else {
-                        $filter_rows = $this->searchRepository->findDistinctWidthsForFilter($filter_clause, $filterParams, $filterTypes);
-                        $item_w->set($filter_rows);
+                        $widths = $this->searchRepository->findDistinctWidthsForFilter($filter_clause, $filterParams, $filterTypes);
+                        $item_w->set($widths);
                         $item_w->expiresAfter(86400);
                         $this->pool->save($item_w);
                     }
                 } else {
-                    $filter_rows = $this->searchRepository->findDistinctWidthsForFilter($filter_clause, $filterParams, $filterTypes);
+                    $widths = $this->searchRepository->findDistinctWidthsForFilter($filter_clause, $filterParams, $filterTypes);
                 }
 
-                $widths = $filter_rows;
                 $width = [
-                    'list' => implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $widths)),
-                    'bounds' => ['min' => $widths[0], 'max' => end($widths)],
+                    'list' => implode(',', array_map(static fn (int $v): string => (string) $v, $widths)),
+                    'bounds' => ['min' => $widths[0] ?? 0, 'max' => (int) end($widths)],
                     'selected' => [
-                        'min' => !empty($my_search['fields']['width_min']) ? $my_search['fields']['width_min'] : $widths[0],
-                        'max' => !empty($my_search['fields']['width_max']) ? $my_search['fields']['width_max'] : end($widths),
+                        'min' => !empty($my_search['fields']['width_min']) ? $my_search['fields']['width_min'] : ($widths[0] ?? 0),
+                        'max' => !empty($my_search['fields']['width_max']) ? $my_search['fields']['width_max'] : (int) end($widths),
                     ],
                 ];
                 $template->assign('WIDTH', $width);

@@ -307,7 +307,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.rates.delete',
-            callback:     $this->generalEndpoints->ratesDelete(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Rates\DeleteHandler::class,
             description:  'Deletes all rates for a user.',
             params:       [
                 ParamDefinition::required(name: 'user_id', type: WsType::Id->value),

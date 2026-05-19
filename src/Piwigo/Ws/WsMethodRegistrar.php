@@ -292,7 +292,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.setCategory',
-            callback:     $this->imagesEndpoints->setCategory(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\SetCategoryHandler::class,
             description:  'Manage associations of images with an album. <b>action</b> can be:<ul><li><i>associate</i> : add photos to this album</li><li><i>dissociate</i> : remove photos from this album</li><li><i>move</i> : dissociate photos from any other album and adds photos to this album</li></ul>',
             params:       [
                 ParamDefinition::required(name: 'image_id', type: WsType::Id->value, flags: WsParam::ForceArray->value),

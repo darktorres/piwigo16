@@ -13,6 +13,7 @@ use Piwigo\Http\ApiKeyAuthRegistry;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\RequestContext;
 use Piwigo\Http\RequestContextRegistry;
+use Piwigo\Session\Session;
 use Piwigo\Url\UrlService;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\PwgError;
@@ -39,23 +40,22 @@ final class UserBootstrap
         self::$bootstrapped = true;
 
         // Accumulate the user ID through auth methods
-        $userId = Config::guestId();
+        $session = Kernel::service(Session::class);
+        $userId  = Config::guestId();
 
         if (isset($_COOKIE[session_name()])) {
             if (isset($_GET['act']) && is_string($_GET['act']) && $_GET['act'] === 'logout') {
                 Kernel::service(AuthService::class)->logoutUser();
                 Kernel::service(RedirectResponder::class)->redirect(Kernel::service(UrlService::class)->getGalleryHomeUrl());
-            } elseif (!empty($_SESSION['pwg_uid']) && is_numeric($_SESSION['pwg_uid'])) {
-                $userId = (int) $_SESSION['pwg_uid'];
+            } elseif ($session->userId !== null) {
+                $userId = $session->userId->value;
             }
         }
 
         // Auto-login via remember-me cookie
         if ($userId == Config::guestId()) {
             if (Kernel::service(AuthService::class)->autoLogin()) {
-                $userId = isset($_SESSION['pwg_uid']) && is_numeric($_SESSION['pwg_uid'])
-                    ? (int) $_SESSION['pwg_uid']
-                    : $userId;
+                $userId = $session->userId !== null ? $session->userId->value : $userId;
             }
         }
 
@@ -144,7 +144,7 @@ final class UserBootstrap
                     exit();
                 }
             }
-            $_SESSION['connected_with'] = 'pwg.images.uploadAsync';
+            $session->connectedWith = 'pwg.images.uploadAsync';
         }
 
         // Cache invalidation flag

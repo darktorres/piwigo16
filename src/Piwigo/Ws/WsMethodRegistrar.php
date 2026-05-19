@@ -1407,7 +1407,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.userComments.delete',
-            callback:     $this->commentsEndpoints->delete(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Comments\DeleteHandler::class,
             description:  'Delete comments',
             params:       [
                 ParamDefinition::required(name: 'comment_id', type: WsType::Int->value | WsType::Positive->value, flags: WsParam::ForceArray->value),
@@ -1420,7 +1420,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:         'pwg.userComments.validate',
-            callback:     $this->commentsEndpoints->validate(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Comments\ValidateHandler::class,
             description:  'Validate comments',
             params:       [
                 ParamDefinition::required(name: 'comment_id', type: WsType::Int->value | WsType::Positive->value, flags: WsParam::ForceArray->value),

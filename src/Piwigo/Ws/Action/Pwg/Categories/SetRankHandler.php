@@ -36,7 +36,7 @@ final readonly class SetRankHandler implements WsAction
             $orderNew     = $categoryIds;
             $orderNewById = $orderNew;
             sort($orderNewById, SORT_NUMERIC);
-            $parentForAsc = empty($category['id_uppercat']) ? null : (is_numeric($category['id_uppercat']) ? (int) $category['id_uppercat'] : 0);
+            $parentForAsc = $category->idUppercat?->value;
             $catAsc       = $this->categoryRepository->findIdsByParentOrderedById($parentForAsc);
             if ($catAsc !== $orderNewById) {
                 return new PwgError(WsError::InvalidParam->value, 'you need to provide all sub-category ids for a given category');
@@ -44,8 +44,7 @@ final readonly class SetRankHandler implements WsAction
             $orderNew = $categoryIds;
         } else {
             $singleCatId   = $categoryIds[0];
-            $idUppercatRaw = $category['id_uppercat'] ?? null;
-            $parentForOld  = is_numeric($idUppercatRaw) ? (int) $idUppercatRaw : null;
+            $parentForOld  = $category->idUppercat?->value;
             $orderOld      = $this->categoryRepository->findOtherIdsByParentOrderedByRank($parentForOld, $singleCatId);
             $rankTarget    = is_numeric($params['rank']) ? (int) $params['rank'] : 0;
             $orderNew      = [];

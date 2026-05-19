@@ -8,6 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\Entity\Category;
 use Piwigo\Category\Projection\CategoryNamePermalink;
+use Piwigo\Category\Projection\CategoryRankInfo;
 use Piwigo\Category\Projection\RelatedCategoryRow;
 use Piwigo\Db\AbstractRepository;
 
@@ -2542,7 +2543,7 @@ SELECT
      * Return (id, id_uppercat, rank) rows for the given category ids.
      *
      * @param int[] $ids
-     * @return list<array<string, mixed>>
+     * @return list<CategoryRankInfo>
      */
     public function findIdIdUppercatRankByIds(array $ids): array
     {
@@ -2554,7 +2555,7 @@ SELECT
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(CategoryRankInfo::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**

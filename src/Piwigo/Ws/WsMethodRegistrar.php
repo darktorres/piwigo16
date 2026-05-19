@@ -11,7 +11,6 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Ws\Method\GeneralEndpoints;
-use Piwigo\Ws\Method\ImagesEndpoints;
 use Piwigo\Ws\Method\UsersEndpoints;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -31,7 +30,6 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 {
     public function __construct(
         private GeneralEndpoints $generalEndpoints,
-        private ImagesEndpoints $imagesEndpoints,
         private UsersEndpoints $usersEndpoints,
         private PermissionService $permissionService,
     ) {
@@ -186,7 +184,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:        'pwg.images.getInfo',
-            callback:    $this->imagesEndpoints->getInfo(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\GetInfoHandler::class,
             description: 'Returns information about an image.',
             params:      [
                 ParamDefinition::required(name: 'image_id', type: WsType::Id->value),
@@ -209,7 +207,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:        'pwg.images.search',
-            callback:    $this->imagesEndpoints->search(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\SearchHandler::class,
             description: 'Returns elements for the corresponding query search.',
             params:      [
                 ParamDefinition::required('query'),
@@ -236,7 +234,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.formats.searchImage',
-            callback:     $this->imagesEndpoints->formatsSearchImage(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\FormatsSearchImageHandler::class,
             description:  'Search for image ids matching the provided filenames. <b>filename_list</b> must be a JSON encoded associative array of unique_id:filename.<br><br>The method returns a list of unique_id:image_id.',
             params:       [
                 ParamDefinition::required('filename_list'),
@@ -362,7 +360,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.addChunk',
-            callback:     $this->imagesEndpoints->addChunk(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\AddChunkHandler::class,
             description:  'Add a chunk of a file.',
             params:       [
                 ParamDefinition::required('data'),
@@ -376,7 +374,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.addFile',
-            callback:     $this->imagesEndpoints->addFile(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\AddFileHandler::class,
             description:  'Add or update a file for an existing photo.
 <br>pwg.images.addChunk must have been called before (maybe several times).',
             params:       [
@@ -389,7 +387,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.add',
-            callback:     $this->imagesEndpoints->add(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\AddHandler::class,
             description:  'Add an image.
 <br>pwg.images.addChunk must have been called before (maybe several times).',
             params:       [
@@ -411,7 +409,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.addSimple',
-            callback:     $this->imagesEndpoints->addSimple(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\AddSimpleHandler::class,
             description:  'Add an image.
 <br>Use the <b>$_FILES[image]</b> field for uploading file.
 <br>Set the form encoding to "form-data".
@@ -432,7 +430,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.upload',
-            callback:     $this->imagesEndpoints->upload(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\UploadHandler::class,
             description:  'Add an image.
 <br>Use the <b>$_FILES[image]</b> field for uploading file.
 <br>Set the form encoding to "form-data".',
@@ -451,7 +449,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.uploadAsync',
-            callback:     $this->imagesEndpoints->uploadAsync(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\UploadAsyncHandler::class,
             description:  'Upload photo by chunks in a random order.
 <br>Use the <b>$_FILES[file]</b> field for uploading file.
 <br>Start with chunk 0 (zero).
@@ -495,7 +493,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.setMd5sum',
-            callback:     $this->imagesEndpoints->setMd5sum(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\SetMd5sumHandler::class,
             description:  'Set md5sum column, by blocks. Returns how many md5sums were added and how many are remaining.',
             params:       [
                 ParamDefinition::optional(name: 'block_size', default: Config::checksumComputeBlocksize(), type: WsType::Int->value | WsType::Positive->value),
@@ -508,7 +506,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.syncMetadata',
-            callback:     $this->imagesEndpoints->syncMetadata(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\SyncMetadataHandler::class,
             description:  'Sync metadatas, by blocks. Returns how many images were synchronized',
             params:       [
                 ParamDefinition::required(name: 'image_id', flags: WsParam::AcceptArray->value, info: 'Comma separated ids or array of id'),
@@ -521,7 +519,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.deleteOrphans',
-            callback:     $this->imagesEndpoints->deleteOrphans(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\DeleteOrphansHandler::class,
             description:  'Deletes orphans, by blocks. Returns how many orphans were deleted and how many are remaining.',
             params:       [
                 ParamDefinition::optional(name: 'block_size', default: 1000, type: WsType::Int->value | WsType::Positive->value),
@@ -719,7 +717,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.exist',
-            callback:     $this->imagesEndpoints->exist(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\ExistHandler::class,
             description:  'Checks existence of images.
 <br>Give <b>md5sum_list</b> if $conf[uniqueness_mode]==md5sum. Give <b>filename_list</b> if $conf[uniqueness_mode]==filename.',
             params:       [
@@ -732,7 +730,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.checkFiles',
-            callback:     $this->imagesEndpoints->checkFiles(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\CheckFilesHandler::class,
             description:  'Checks if you have updated version of your files for a given photo, the answer can be "missing", "equals" or "differs".',
             params:       [
                 ParamDefinition::required(name: 'image_id', type: WsType::Id->value),
@@ -760,7 +758,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.uploadCompleted',
-            callback:     $this->imagesEndpoints->uploadCompleted(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\UploadCompletedHandler::class,
             description:  'Notify Piwigo you have finished uploading a set of photos. It will empty the lounge, if any.',
             params:       [
                 ParamDefinition::optional(name: 'image_id', default: null, flags: WsParam::AcceptArray->value),
@@ -773,7 +771,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.setInfo',
-            callback:     $this->imagesEndpoints->setInfo(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\SetInfoHandler::class,
             description:  'Changes properties of an image.
 <br><b>single_value_mode</b> can be "fill_if_empty" (only use the input value if the corresponding values is currently empty) or "replace"
 (overwrite any existing value) and applies to single values properties like name/author/date_creation/comment.
@@ -1267,7 +1265,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
 
         $server->register(new MethodDefinition(
             name:        'pwg.images.filteredSearch.create',
-            callback:    $this->imagesEndpoints->filteredSearchCreate(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\FilteredSearchCreateHandler::class,
             params:      [
                 ParamDefinition::optionalFlag(name: 'search_id', info: 'prior search_id (or search_key), if any'),
                 ParamDefinition::optionalFlag(name: 'allwords', info: 'query to search by words'),

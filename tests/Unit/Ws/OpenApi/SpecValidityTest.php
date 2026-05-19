@@ -16,7 +16,6 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\User;
 use Piwigo\Ws\Method\GeneralEndpoints;
-use Piwigo\Ws\Method\ImagesEndpoints;
 use Piwigo\Ws\Method\UsersEndpoints;
 use Piwigo\Ws\OpenApi\SpecBuilder;
 use Piwigo\Ws\PwgServer;
@@ -180,7 +179,6 @@ final class SpecValidityTest extends TestCase
         // $htmlService properties.
         return new WsMethodRegistrar(
             self::stub(GeneralEndpoints::class),
-            self::stub(ImagesEndpoints::class),
             self::stub(UsersEndpoints::class),
             self::stub(PermissionService::class),
         );

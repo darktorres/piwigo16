@@ -70,6 +70,43 @@ final readonly class UploadService
     }
 
     /**
+     * Concatenates the chunked upload pieces for `<originalSum>-<type>` into one
+     * file and removes the chunks. Returns null on success; PwgError if the
+     * pre-existing output couldn't be cleared or a write failed mid-merge.
+     */
+    public function mergeChunks(string $outputFilepath, string $originalSum, string $type): ?PwgError
+    {
+        $logger = LoggerRegistry::current();
+        $logger->debug('[mergeChunks] input $outputFilepath : ' . $outputFilepath);
+        if (is_file($outputFilepath)) {
+            unlink($outputFilepath);
+            if (is_file($outputFilepath)) {
+                return new PwgError(500, '[mergeChunks] error while trying to remove existing ' . $outputFilepath);
+            }
+        }
+        $uploadDir = Config::uploadDir() . '/buffer';
+        $pattern   = '/' . $originalSum . '-' . $type . '/';
+        $chunks    = [];
+        if ($handle = opendir($uploadDir)) {
+            while (false !== ($file = readdir($handle))) {
+                if (preg_match($pattern, $file)) {
+                    $chunks[] = $uploadDir . '/' . $file;
+                }
+            }
+            closedir($handle);
+        }
+        sort($chunks);
+        foreach ($chunks as $chunk) {
+            $string = file_get_contents($chunk);
+            if ($string === false || file_put_contents($outputFilepath, $string, FILE_APPEND) === false) {
+                return new PwgError(500, '[mergeChunks] error while writting chunks for ' . $outputFilepath);
+            }
+            unlink($chunk);
+        }
+        return null;
+    }
+
+    /**
      * @param array<mixed> $data
      * @param string[] $errors
      * @param array<array-key, mixed> $formErrors

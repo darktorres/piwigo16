@@ -126,6 +126,87 @@ final readonly class CategoryAdminService
         $this->categoryRepository->pruneOrphanRelations();
     }
 
+    /**
+     * Wires an image into the given category list (with optional rank-per-category
+     * encoded as `catId,rank;catId2,rank2`). `replaceMode` removes existing
+     * associations not present in the new set.
+     */
+    public function addImageCategoryRelations(int $imageId, string $categoriesString, bool $replaceMode = false): \Piwigo\Ws\PwgError|true
+    {
+        $catIds             = [];
+        $rankOnCategory     = [];
+        $searchCurrentRanks = false;
+        if ($categoriesString === '') {
+            if ($replaceMode) {
+                $this->categoryRepository->deleteImageCategoryByImageIds([$imageId]);
+                $this->updateCategory([]);
+            }
+            return true;
+        }
+        $tokens = explode(';', $categoriesString);
+        foreach ($tokens as $token) {
+            $parts = explode(',', $token);
+            $catId = $parts[0];
+            $rank  = $parts[1] ?? null;
+            if (!preg_match('/^\d+$/', $catId)) {
+                continue;
+            }
+            $catIds[]               = $catId;
+            $rankOnCategory[$catId] = ($rank === null || $rank === '') ? 'auto' : $rank;
+            if ($rankOnCategory[$catId] === 'auto') {
+                $searchCurrentRanks = true;
+            }
+        }
+        $catIds = array_unique($catIds);
+        if (count($catIds) === 0) {
+            if ($replaceMode) {
+                $this->categoryRepository->deleteImageCategoryByImageIds([$imageId]);
+                $this->updateCategory([]);
+            }
+            return true;
+        }
+        $catIdsInt     = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $catIds);
+        $dbCatIds      = $this->categoryRepository->findExistingIdsAmong($catIdsInt);
+        $unknownCatIds = array_diff($catIdsInt, $dbCatIds);
+        if (count($unknownCatIds) !== 0) {
+            return new \Piwigo\Ws\PwgError(500, '[addImageCategoryRelations] the following categories are unknown: ' . implode(', ', $unknownCatIds));
+        }
+        $existingCatIds = $this->categoryRepository->findCategoryIdsByImageId($imageId);
+        if ($replaceMode) {
+            $toRemoveCatIds = array_values(array_diff($existingCatIds, $catIdsInt));
+            if (count($toRemoveCatIds) > 0) {
+                $this->categoryRepository->removeImageFromCategories($imageId, $toRemoveCatIds);
+                $this->updateCategory($toRemoveCatIds);
+            }
+        }
+        $newCatIds = array_values(array_diff($catIdsInt, $existingCatIds));
+        if (count($newCatIds) === 0) {
+            return true;
+        }
+        if ($searchCurrentRanks) {
+            $currentRankOf = $this->categoryRepository->findMaxImageRankPerCategoryIn($newCatIds);
+            foreach ($newCatIds as $catId) {
+                if (!isset($currentRankOf[$catId])) {
+                    $currentRankOf[$catId] = 0;
+                }
+                if ($rankOnCategory[$catId] === 'auto') {
+                    $rankOnCategory[$catId] = $currentRankOf[$catId] + 1;
+                }
+            }
+        }
+        $inserts = [];
+        foreach ($newCatIds as $catId) {
+            $inserts[] = [
+                'image_id'    => $imageId,
+                'category_id' => $catId,
+                'rank'        => is_numeric($rankOnCategory[$catId]) ? (int) $rankOnCategory[$catId] : 0,
+            ];
+        }
+        $this->categoryRepository->insertImageCategoryLinks($inserts);
+        $this->updateCategory($newCatIds);
+        return true;
+    }
+
     /** @param array<mixed> $categories */
     public function saveCategoriesOrder(array $categories): void
     {

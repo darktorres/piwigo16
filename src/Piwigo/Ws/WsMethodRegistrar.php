@@ -16,7 +16,6 @@ use Piwigo\Ws\Method\ExtensionsEndpoints;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\Method\GroupsEndpoints;
 use Piwigo\Ws\Method\ImagesEndpoints;
-use Piwigo\Ws\Method\PermissionsEndpoints;
 use Piwigo\Ws\Method\TagsEndpoints;
 use Piwigo\Ws\Method\UsersEndpoints;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;

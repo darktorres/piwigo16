@@ -357,8 +357,8 @@ final class AlbumController implements AdminSubControllerInterface
                     ->findById(is_numeric($category['representative_picture_id']) ? (int) $category['representative_picture_id'] : 0);
                 if ($element !== null) {
                     $img = [
-                        'link' => $this->urlService->makePictureUrl(['image_id' => $element['id'], 'image_file' => $element['file'], 'category' => $category]),
-                        'src'  => DerivativeImage::url(DerivativeSize::Thumb->value, $element),
+                        'link' => $this->urlService->makePictureUrl(['image_id' => $element->id->value, 'image_file' => $element->file->value, 'category' => $category]),
+                        'src'  => DerivativeImage::url(DerivativeSize::Thumb->value, SrcImage::fromImage($element)),
                     ];
                 }
             }

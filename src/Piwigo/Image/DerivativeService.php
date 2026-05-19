@@ -8,6 +8,7 @@ use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Paths;
+use Piwigo\Image\Entity\Image;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class DerivativeService
@@ -18,14 +19,14 @@ final readonly class DerivativeService
     ) {
     }
     /**
-     * Generate (or skip if already current) one derivative file for a given image row and size type.
+     * Generate (or skip if already current) one derivative file for a given
+     * image and size type.
      *
-     * @param array<string, mixed> $imageRow  Full row from the images table (path, rotation, coi, …)
-     * @param string               $type      One of the IMG_* constants (e.g. DerivativeSize::Thumb->value, DerivativeSize::Medium->value)
+     * @param string $type One of the IMG_* constants (e.g. DerivativeSize::Thumb->value, DerivativeSize::Medium->value)
      */
-    public function generate(array $imageRow, string $type): void
+    public function generate(Image $img, string $type): void
     {
-        $srcImage = new SrcImage($imageRow);
+        $srcImage = SrcImage::fromImage($img);
         if ($srcImage->rel_path === '') {
             return;
         }
@@ -63,9 +64,8 @@ final readonly class DerivativeService
             Filesystem::mkgetdir($derivDir, Filesystem::FLAG_RECURSIVE | Filesystem::FLAG_PROTECT_INDEX);
         }
 
-        $rotationCode  = is_numeric($imageRow['rotation'] ?? null) ? (int) $imageRow['rotation'] : 0;
-        $rotationAngle = PwgImage::getRotationAngleFromCode($rotationCode);
-        $coi           = is_string($imageRow['coi'] ?? null) ? $imageRow['coi'] : null;
+        $rotationAngle = PwgImage::getRotationAngleFromCode($img->rotation ?? 0);
+        $coi           = $img->coi;
 
         $image = new PwgImage($srcPath, $this->dispatcher);
 

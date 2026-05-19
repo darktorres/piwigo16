@@ -954,12 +954,8 @@ final class ImageRepository extends AbstractRepository
         $qb->executeStatement();
     }
 
-    /**
-     * Return all columns for a single image, or null if not found.
-     *
-     * @return array<string, mixed>|null
-     */
-    public function findById(int $id): ?array
+    /** Return the image entity for the given id, or null if not found. */
+    public function findById(int $id): ?Image
     {
         $row = $this->conn->createQueryBuilder()
             ->select('*')
@@ -968,7 +964,7 @@ final class ImageRepository extends AbstractRepository
             ->setParameter('id', $id)
             ->executeQuery()
             ->fetchAssociative();
-        return $row !== false ? $row : null;
+        return $row !== false ? Image::fromRow($row) : null;
     }
 
     /**

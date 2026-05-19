@@ -251,15 +251,15 @@ final readonly class UploadService
         }
         $this->metadataAdminService->syncMetadata([$imageId]);
 
-        $imageInfos = $this->imageRepository->findById($imageId);
-        if ($imageInfos === null) {
+        $image = $this->imageRepository->findById($imageId);
+        if ($image === null) {
             return $imageId;
         }
 
-        $this->derivativeService->generate($imageInfos, DerivativeSize::Medium->value);
+        $this->derivativeService->generate($image, DerivativeSize::Medium->value);
         $logger->info('[addUploadedFile] medium derivative generated', ['id' => $imageId]);
 
-        $this->dispatcher->dispatch(new LocEndAddUploadedFile($imageInfos));
+        $this->dispatcher->dispatch(new LocEndAddUploadedFile($image));
         return $imageId;
     }
 

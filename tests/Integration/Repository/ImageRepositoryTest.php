@@ -40,11 +40,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_findById_returns_existing_image(): void
     {
-        $row = $this->repo->findById(1);
+        $image = $this->repo->findById(1);
 
-        self::assertIsArray($row);
-        self::assertSame('fixture-photo-1.jpg', $row['file']);
-        self::assertSame('Photo 1', $row['name']);
+        self::assertNotNull($image);
+        self::assertSame(1, $image->id->value);
+        self::assertSame('fixture-photo-1.jpg', $image->file->value);
+        self::assertSame('Photo 1', $image->name);
     }
 
     public function test_findById_returns_null_for_missing(): void

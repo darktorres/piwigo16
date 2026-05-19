@@ -37,6 +37,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SrcImage;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchService;
@@ -680,18 +681,15 @@ final readonly class ImagesEndpoints
         if ($image === null) {
             return new PwgError(404, 'image_id not found');
         }
-        $imageMd5sum = is_string($image['md5sum'] ?? null) ? $image['md5sum'] : '';
-        $imageFile   = is_string($image['file'] ?? null) ? $image['file'] : '';
+        $imageMd5sum = $image->md5sum !== null ? $image->md5sum->value : '';
+        $imageFile   = $image->file->value;
         $filePath    = Config::uploadDir() . '/buffer/' . $imageMd5sum . '-original';
         $this->mergeChunks($filePath, $imageMd5sum, 'file');
         chmod($filePath, Config::chmodValue() & 0o666);
         $infos    = $this->uploadService->pwgImageInfos($filePath);
-        $doUpdate = false;
-        foreach (['width', 'height', 'filesize'] as $imageInfo) {
-            if ($infos[$imageInfo] > $image[$imageInfo]) {
-                $doUpdate = true;
-            }
-        }
+        $doUpdate = ($infos['width'] > ($image->width ?? 0))
+                 || ($infos['height'] > ($image->height ?? 0))
+                 || ($infos['filesize'] > ($image->filesize ?? 0));
         if (!$doUpdate) {
             unlink($filePath);
             return true;
@@ -908,9 +906,9 @@ final readonly class ImagesEndpoints
                 if ($image === null) {
                     return new PwgError(404, __FUNCTION__ . ' : image_id not found');
                 }
-                $imageIdStr = isset($image['id']) ? (is_scalar($image['id']) ? (string) $image['id'] : '') : '';
-                $addStatus  = $this->uploadService->addFormat($filePath, $formatExt ?? '', $imageIdStr);
-                return ['image_id' => $image['id'] ?? null, 'src' => DerivativeImage::thumbUrl($image), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $image), 'name' => $image['name'] ?? null, 'add_status' => $addStatus];
+                $srcImage  = SrcImage::fromImage($image);
+                $addStatus = $this->uploadService->addFormat($filePath, $formatExt ?? '', (string) $image->id->value);
+                return ['image_id' => $image->id->value, 'src' => DerivativeImage::thumbUrl($srcImage), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $srcImage), 'name' => $image->name, 'add_status' => $addStatus];
             }
             $name          = stripslashes(is_string($params['name'] ?? null) ? $params['name'] : '');
             $idImage       = null;
@@ -932,7 +930,8 @@ final readonly class ImagesEndpoints
             if ($imageInfos === null) {
                 return null;
             }
-            return ['image_id' => $imageId, 'src' => DerivativeImage::thumbUrl($imageInfos), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $imageInfos), 'name' => $imageInfos['name'], 'category' => ['id' => $pCategoryFirst, 'nb_photos' => $categoryInfos['nb_photos'] + $nbPhotosLounge, 'label' => $categoryName], 'add_status' => $addStatus];
+            $srcImage = SrcImage::fromImage($imageInfos);
+            return ['image_id' => $imageId, 'src' => DerivativeImage::thumbUrl($srcImage), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $srcImage), 'name' => $imageInfos->name, 'category' => ['id' => $pCategoryFirst, 'nb_photos' => $categoryInfos['nb_photos'] + $nbPhotosLounge, 'label' => $categoryName], 'add_status' => $addStatus];
         }
         return null;
     }
@@ -1240,10 +1239,17 @@ final readonly class ImagesEndpoints
             return new PwgError(403, 'Invalid security token');
         }
         $setImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $imageRow   = $this->imageRepository->findById($setImageId);
-        if ($imageRow === null) {
+        $image      = $this->imageRepository->findById($setImageId);
+        if ($image === null) {
             return new PwgError(404, 'image_id not found');
         }
+        $existingValues = [
+            'name'          => $image->name,
+            'author'        => $image->author,
+            'comment'       => $image->comment,
+            'level'         => $image->level,
+            'date_creation' => $image->dateCreation?->value,
+        ];
         $update              = [];
         $singleValueMode     = is_string($params['single_value_mode'] ?? null) ? $params['single_value_mode'] : '';
         $multipleValueMode   = is_string($params['multiple_value_mode'] ?? null) ? $params['multiple_value_mode'] : '';
@@ -1253,7 +1259,7 @@ final readonly class ImagesEndpoints
                     $params[$key] = strip_tags(is_scalar($params[$key]) ? (string) $params[$key] : '', '<b><strong><em><i>');
                 }
                 if ($singleValueMode === 'fill_if_empty') {
-                    if (empty($imageRow[$key])) {
+                    if (empty($existingValues[$key])) {
                         $update[$key] = $params[$key];
                     }
                 } elseif ($singleValueMode === 'replace') {
@@ -1264,7 +1270,7 @@ final readonly class ImagesEndpoints
             }
         }
         if (isset($params['file'])) {
-            if (!empty($imageRow['storage_category_id'])) {
+            if ($image->storageCategoryId !== null) {
                 return new PwgError(500, '[ws_images_setInfo] updating "file" is forbidden on photos added by synchronization');
             }
             $update['file'] = strip_tags(is_string($params['file']) ? $params['file'] : '');

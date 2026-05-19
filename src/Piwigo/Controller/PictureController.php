@@ -129,22 +129,30 @@ final readonly class PictureController implements ControllerInterface
         if (!isset($rankOf[$imageId])) {
             $imageRepo = $this->imageRepository;
             if ($imageId > 0) {
-                $row = $imageRepo->findById($imageId);
+                $image = $imageRepo->findById($imageId);
+                if ($image === null) {
+                    $this->htmlService->pageNotFound('The requested image does not exist', $this->urlService->duplicateIndexUrl());
+                    return ResponseFactory::create(404);
+                }
+                $rowLevel          = $image->level;
+                $resolvedImageFile = $image->file->value;
+                $imageId           = $image->id->value;
             } else {
                 $imageFileStr = $ctx->imageFile;
-                $replaced = str_replace(['_', '%'], ['/_', '/%'], $imageFileStr);
-                $pattern = $replaced . '.%';
-                $row     = $imageRepo->findByFilePattern($pattern);
+                $replaced     = str_replace(['_', '%'], ['/_', '/%'], $imageFileStr);
+                $pattern      = $replaced . '.%';
+                $row          = $imageRepo->findByFilePattern($pattern);
+                if ($row === null) {
+                    $this->htmlService->pageNotFound('The requested image does not exist', $this->urlService->duplicateIndexUrl());
+                    return ResponseFactory::create(404);
+                }
+                $rowLevel          = is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0;
+                $resolvedImageFile = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
+                $imageId           = is_scalar($row['id'] ?? null) ? (int) $row['id'] : 0;
             }
-            if ($row === null) {
-                $this->htmlService->pageNotFound('The requested image does not exist', $this->urlService->duplicateIndexUrl());
-                return ResponseFactory::create(404);
-            }
-            if (is_numeric($row['level'] ?? null) && is_numeric($user['level'] ?? null) && $row['level'] > $user['level']) {
+            if (is_numeric($user['level'] ?? null) && $rowLevel > $user['level']) {
                 $this->htmlService->accessDenied();
             }
-            $resolvedImageFile = is_scalar($row['file'] ?? null) ? (string) $row['file'] : '';
-            $imageId = is_scalar($row['id'] ?? null) ? (int) $row['id'] : 0;
 
             if (!isset($rankOf[$imageId])) {
                 $visibleImages = FilterContextRegistry::current()->visibleImages;

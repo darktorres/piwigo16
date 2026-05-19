@@ -69,8 +69,8 @@ final readonly class ActionController implements ControllerInterface
             $this->error(400, 'Invalid request - id/part');
         }
 
-        $element_info = $this->imageRepository->findById($get_id);
-        if ($element_info === null || count($element_info) === 0) {
+        $element = $this->imageRepository->findById($get_id);
+        if ($element === null) {
             $this->error(404, 'Requested id not found');
         }
 
@@ -84,7 +84,9 @@ final readonly class ActionController implements ControllerInterface
             }
         }
 
-        $src_image = new SrcImage($element_info);
+        $src_image    = SrcImage::fromImage($element);
+        $elementPath  = StringUtil::getElementPath(['path' => $element->path->value]);
+        $downloadName = $element->file->value;
 
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'image_id'], '    AND');
         if (!$is_admin_download && !$this->imageRepository->existsImageInVisibleCategory($get_id, $permSql, $permParams, $permTypes)) {
@@ -101,16 +103,15 @@ final readonly class ActionController implements ControllerInterface
                         $this->error(401, 'Access denied e');
                     }
                 }
-                $file = StringUtil::getElementPath($element_info);
+                $file = $elementPath;
                 break;
             case 'r':
-                $reprExt = $element_info['representative_ext'] ?? null;
-                $file = StringUtil::originalToRepresentative(StringUtil::getElementPath($element_info), is_string($reprExt) ? $reprExt : '');
+                $file = StringUtil::originalToRepresentative($elementPath, $element->representativeExt ?? '');
                 break;
             case 'f':
-                $formatExt = $format['ext'] ?? null;
-                $file = StringUtil::originalToFormat(StringUtil::getElementPath($element_info), is_string($formatExt) ? $formatExt : '');
-                $element_info['file'] = StringUtil::getFilenameWoExtension(is_string($element_info['file'] ?? null) ? $element_info['file'] : '') . '.' . (is_string($format['ext'] ?? null) ? $format['ext'] : '');
+                $formatExt    = is_string($format['ext'] ?? null) ? $format['ext'] : '';
+                $file         = StringUtil::originalToFormat($elementPath, $formatExt);
+                $downloadName = StringUtil::getFilenameWoExtension($element->file->value) . '.' . $formatExt;
                 break;
         }
 
@@ -157,9 +158,8 @@ final readonly class ActionController implements ControllerInterface
         $http_headers[] = 'Content-Type: ' . $ctype;
         $http_headers[] = 'Cache-Control: public';
 
-        $elementFile = is_scalar($element_info['file'] ?? null) ? (string) $element_info['file'] : basename($file);
         if (StringUtil::inputString('download', null, $_GET) !== null) {
-            $http_headers[] = 'Content-Disposition: attachment; filename="' . htmlspecialchars_decode($elementFile) . '";';
+            $http_headers[] = 'Content-Disposition: attachment; filename="' . htmlspecialchars_decode($downloadName) . '";';
             $http_headers[] = 'Content-Transfer-Encoding: binary';
         } else {
             $http_headers[] = 'Content-Disposition: inline; filename="' . basename($file) . '";';

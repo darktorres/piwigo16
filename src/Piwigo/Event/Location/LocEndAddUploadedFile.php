@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Event\Location;
 
+use Piwigo\Image\Entity\Image;
+
 /**
  * Typed event for legacy `loc_end_add_uploaded_file` (notify).
  *
@@ -13,11 +15,8 @@ namespace Piwigo\Event\Location;
  */
 final readonly class LocEndAddUploadedFile
 {
-    /**
-     * @param array<mixed> $imageInfos
-     */
     public function __construct(
-        public array $imageInfos,
+        public Image $image,
     ) {
     }
 }

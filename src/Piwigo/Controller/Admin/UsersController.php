@@ -447,7 +447,7 @@ final readonly class UsersController implements AdminSubControllerInterface
             if (isset($_GET[$filter_key])) {
                 $filterId = is_string($_GET[$filter_key]) ? (int) $_GET[$filter_key] : 0;
                 $name = match ($filter_key) {
-                    'photo' => $this->imageRepository->findById($filterId)['name'] ?? null,
+                    'photo' => $this->imageRepository->findById($filterId)?->name,
                     'album' => $this->categoryRepository->findCategoryById($filterId)['name'] ?? null,
                     default => $this->groupRepository->findNameById($filterId),
                 };

@@ -476,21 +476,21 @@ final class PhotoController implements AdminSubControllerInterface
             }
         }
 
-        $image_infos = $imgRepo->findById((int) $imageIdCoi);
-        if ($image_infos === null) {
+        $image = $imgRepo->findById((int) $imageIdCoi);
+        if ($image === null) {
             $this->htmlService->pageNotFound('The requested image does not exist');
             return;
         }
 
-        $row = $image_infos;
+        $deletionInfo = ['path' => $image->path->value, 'representative_ext' => $image->representativeExt];
 
         if (isset($_POST['submit'])) {
             foreach (ImageStdParams::getDefinedTypeMap() as $params) {
                 if ($params->sizing->max_crop != 0) {
-                    $this->imageAdminService->deleteElementDerivatives($row, $params->type);
+                    $this->imageAdminService->deleteElementDerivatives($deletionInfo, $params->type);
                 }
             }
-            $this->imageAdminService->deleteElementDerivatives($row, DerivativeSize::Custom->value);
+            $this->imageAdminService->deleteElementDerivatives($deletionInfo, DerivativeSize::Custom->value);
             $uid = '&b=' . time();
             if (Config::derivativeUrlStyle() == 1) {
                 Config::override('derivative_url_style', 0);
@@ -499,28 +499,26 @@ final class PhotoController implements AdminSubControllerInterface
             $uid = '';
         }
 
-        $tpl_var = [
-            'TITLE' => $this->htmlService->renderElementName($row),
-            'ALT'   => $row['file'],
-            'U_IMG' => DerivativeImage::url(DerivativeSize::Large->value, $row),
+        $srcImage = SrcImage::fromImage($image);
+        $tpl_var  = [
+            'TITLE' => $this->htmlService->renderElementName(['name' => $image->name, 'file' => $image->file->value]),
+            'ALT'   => $image->file->value,
+            'U_IMG' => DerivativeImage::url(DerivativeSize::Large->value, $srcImage),
         ];
 
-        if (!empty($row['coi'])) {
-            $coiRaw = $row['coi'];
-            $coi = is_string($coiRaw) ? $coiRaw : '';
-            if (strlen($coi) >= 4) {
-                $tpl_var['coi'] = [
-                    'l' => DerivativeEncoding::charToFraction(substr($coi, 0, 1)),
-                    't' => DerivativeEncoding::charToFraction(substr($coi, 1, 1)),
-                    'r' => DerivativeEncoding::charToFraction(substr($coi, 2, 1)),
-                    'b' => DerivativeEncoding::charToFraction(substr($coi, 3, 1)),
-                ];
-            }
+        if ($image->coi !== null && strlen($image->coi) >= 4) {
+            $coi = $image->coi;
+            $tpl_var['coi'] = [
+                'l' => DerivativeEncoding::charToFraction(substr($coi, 0, 1)),
+                't' => DerivativeEncoding::charToFraction(substr($coi, 1, 1)),
+                'r' => DerivativeEncoding::charToFraction(substr($coi, 2, 1)),
+                'b' => DerivativeEncoding::charToFraction(substr($coi, 3, 1)),
+            ];
         }
 
         foreach (ImageStdParams::getDefinedTypeMap() as $params) {
             if ($params->sizing->max_crop != 0) {
-                $derivative = new DerivativeImage($params, new SrcImage($row));
+                $derivative = new DerivativeImage($params, $srcImage);
                 $tpl->append('cropped_derivatives', [
                     'U_IMG'    => (is_string($u = $derivative->getUrl()) ? $u : '') . $uid,
                     'HTM_SIZE' => $derivative->getSizeHtm(),
@@ -543,7 +541,7 @@ final class PhotoController implements AdminSubControllerInterface
         $picFmtId = is_string($rawPicFmtId) ? $rawPicFmtId : '0';
 
         $picFmtIdInt = (int) $picFmtId;
-        $image       = $this->imageRepository->findById($picFmtIdInt) ?? [];
+        $image       = $this->imageRepository->findById($picFmtIdInt);
         $formats     = $this->imageRepository->findFormatsByImageIds([$picFmtIdInt]);
 
         foreach ($formats as &$format) {
@@ -561,7 +559,7 @@ final class PhotoController implements AdminSubControllerInterface
 
         $tpl->assign([
             'ADD_FORMATS_URL' => $this->urlGenerator->admin('photos_add') . '&formats=' . $picFmtId,
-            'IMG_SQUARE_SRC'  => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $image),
+            'IMG_SQUARE_SRC'  => $image !== null ? DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), SrcImage::fromImage($image)) : '',
             'FORMATS'         => $formats,
             'PWG_TOKEN'       => $this->csrfService->getToken(),
             'page_data_json'  => json_encode([

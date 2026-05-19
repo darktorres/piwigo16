@@ -7,6 +7,7 @@ namespace Piwigo\Category;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\Entity\Category;
+use Piwigo\Category\Projection\CategoryNamePermalink;
 use Piwigo\Category\Projection\RelatedCategoryRow;
 use Piwigo\Db\AbstractRepository;
 
@@ -1688,8 +1689,8 @@ WHERE ' . $whereClause;
     /**
      * Return id-keyed (id, name, permalink) rows for the given category ids.
      *
-     * @param list<int> $ids
-     * @return array<int|string, array<string, mixed>>
+     * @param  list<int> $ids
+     * @return array<int, CategoryNamePermalink>
      */
     public function findNamePermalinkByIdsKeyedById(array $ids): array
     {
@@ -1703,8 +1704,8 @@ WHERE ' . $whereClause;
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $out = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
-            $idKey = is_scalar($row['id']) ? (string) $row['id'] : '';
-            $out[$idKey] = $row;
+            $entity            = CategoryNamePermalink::fromRow($row);
+            $out[$entity->id->value] = $entity;
         }
         return $out;
     }

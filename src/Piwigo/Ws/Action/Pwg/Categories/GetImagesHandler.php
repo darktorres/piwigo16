@@ -130,12 +130,12 @@ final readonly class GetImagesHandler implements WsAction
                         continue;
                     }
                     foreach ($categoriesOfImage[$imageIdKey] as $catId) {
-                        $catIdKey = (string) $catId;
-                        if (!isset($detailsForCategory[$catIdKey])) {
+                        if (!isset($detailsForCategory[$catId])) {
                             continue;
                         }
-                        $url         = $this->urlService->makeIndexUrl(['category' => $detailsForCategory[$catIdKey]]);
-                        $pageUrl     = $this->urlService->makePictureUrl(['category' => $detailsForCategory[$catIdKey], 'image_id' => $image['id'] ?? null, 'image_file' => $image['file']]);
+                        $categoryRow = $detailsForCategory[$catId]->toRow();
+                        $url         = $this->urlService->makeIndexUrl(['category' => $categoryRow]);
+                        $pageUrl     = $this->urlService->makePictureUrl(['category' => $categoryRow, 'image_id' => $image['id'] ?? null, 'image_file' => $image['file']]);
                         $imageCats[] = ['id' => $catId, 'url' => $url, 'page_url' => $pageUrl];
                     }
                     $images[$idx]['categories'] = new PwgNamedArray($imageCats, 'category', ['id', 'url', 'page_url']);

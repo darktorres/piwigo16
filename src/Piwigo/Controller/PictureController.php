@@ -605,7 +605,10 @@ final readonly class PictureController implements ControllerInterface
             foreach ($related_categories as $category) {
                 $cats = [];
                 foreach (explode(',', is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '') as $id) {
-                    $cats[] = $catMap[$id];
+                    $idInt = (int) $id;
+                    if (isset($catMap[$idInt])) {
+                        $cats[] = $catMap[$idInt]->toRow();
+                    }
                 }
                 $tpl->append('related_categories', new Html($this->htmlService->getCatDisplayName($cats)));
             }

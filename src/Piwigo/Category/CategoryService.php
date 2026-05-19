@@ -152,8 +152,10 @@ final readonly class CategoryService
             $names = $this->catRepo->findNamePermalinkByIdsKeyedById($upperIdsInt);
 
             $cat['upper_names'] = [];
-            foreach ($upperIds as $catId) {
-                $cat['upper_names'][] = $names[$catId];
+            foreach ($upperIdsInt as $catIdInt) {
+                if (isset($names[$catIdInt])) {
+                    $cat['upper_names'][] = $names[$catIdInt]->toRow();
+                }
             }
         }
         return $cat;

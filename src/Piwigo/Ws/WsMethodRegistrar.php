@@ -90,7 +90,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.getCacheSize',
-            callback:     $this->generalEndpoints->getCacheSize(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\GetCacheSizeHandler::class,
             description:  'Returns general informations.',
             tags:         ['pwg'],
             requiresAuth: true,
@@ -124,7 +124,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.caddie.add',
-            callback:     $this->generalEndpoints->caddieAdd(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\CaddieAddHandler::class,
             description:  'Adds elements to the caddie. Returns the number of elements added.',
             params:       [
                 ParamDefinition::required(name: 'image_id', type: WsType::Id->value, flags: WsParam::ForceArray->value),

@@ -8,6 +8,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Filesystem;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Tag\TagRepository;
@@ -77,28 +78,10 @@ final readonly class GetInfosHandler implements WsAction
         if ($item->isHit() && is_int($item->get())) {
             return (int) $item->get();
         }
-        $bytes = self::directorySizeBytes(Config::dataLocation() . 'cache') ?? 0;
+        $bytes = Filesystem::directorySizeBytes(Config::dataLocation() . 'cache') ?? 0;
         $item->set($bytes);
         $item->expiresAfter(300);
         $this->pool->save($item);
-        return $bytes;
-    }
-
-    private static function directorySizeBytes(string $path): ?int
-    {
-        if (!is_dir($path)) {
-            return null;
-        }
-        $bytes = 0;
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST,
-        );
-        foreach ($iterator as $file) {
-            if ($file instanceof \SplFileInfo && $file->isFile()) {
-                $bytes += $file->getSize();
-            }
-        }
         return $bytes;
     }
 }

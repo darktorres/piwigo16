@@ -103,6 +103,28 @@ final class Filesystem
     }
 
     /**
+     * Recursive directory size in bytes, or null when the path is not a
+     * directory. Used by the WS infos endpoints to report cache sizes.
+     */
+    public static function directorySizeBytes(string $path): ?int
+    {
+        if (!is_dir($path)) {
+            return null;
+        }
+        $bytes    = 0;
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST,
+        );
+        foreach ($iterator as $file) {
+            if ($file instanceof \SplFileInfo && $file->isFile()) {
+                $bytes += $file->getSize();
+            }
+        }
+        return $bytes;
+    }
+
+    /**
      * `rename($from, $to)` only if `$from` exists. Returns the rename's
      * boolean result, or false when the source is missing.
      */

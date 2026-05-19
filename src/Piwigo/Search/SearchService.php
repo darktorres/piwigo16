@@ -128,7 +128,7 @@ final class SearchService
         return null;
     }
 
-    /** @return array<mixed> */
+    /** @return array<string, mixed> */
     public function getSearchArray(string $searchId): array
     {
         $search = $this->getSearchInfo($searchId);
@@ -139,13 +139,33 @@ final class SearchService
         if (!is_string($rules) || $rules === '') {
             return [];
         }
-        $result = json_decode($rules, associative: true);
-        return is_array($result) ? $result : [];
+        $decoded = json_decode($rules, associative: true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+        $out = [];
+        foreach ($decoded as $key => $val) {
+            if (is_string($key)) {
+                $out[$key] = $val;
+            }
+        }
+        return $out;
     }
 
     /**
-     * @param array<mixed> $search
-     * @return array<mixed>
+     * Run the persisted "regular" search (i.e. not quick-search) against
+     * each enabled filter and intersect the matching image-id sets. The
+     * `$search` shape mirrors the JSON stored in `search.rules` and is
+     * loose by necessity: every key is optional, the user may submit
+     * scalar values where the filter wants a list, etc. Each block below
+     * narrows just-in-time at the field it consumes; mixed reads here are
+     * boundary-edge, not domain code.
+     *
+     * @param array{
+     *     fields?: array<string, mixed>,
+     *     mode?: string,
+     * }|array<string, mixed> $search
+     * @return array<string, mixed>
      */
     public function getRegularSearchResults(array $search, string $imagesWhere = ''): array
     {
@@ -207,16 +227,19 @@ final class SearchService
         $widthFilter        = $displayFilters['width']         ?? $defaultFilt;
         $tagsFilter         = $displayFilters['tags']          ?? $defaultFilt;
 
+        /** @var array<string, mixed> $searchFields */
         $searchFields = is_array($search['fields'] ?? null) ? $search['fields'] : [];
 
+        /** @var array{string?: string} $expertFields */
         $expertFields = is_array($searchFields['expert'] ?? null) ? $searchFields['expert'] : [];
         if (isset($searchFields['expert']) and !empty($expertFields['string']) and $expertFilter['access']) {
             $hasFilersFilled = true;
-            $expertString = is_string($expertFields['string']) ? $expertFields['string'] : '';
+            $expertString = $expertFields['string'];
             $expertQsr    = $this->getQuickSearchResults($expertString, []) ?? [];
             $imageIdsForFilter['expert'] = is_array($expertQsr['items'] ?? null) ? $expertQsr['items'] : [];
         }
 
+        /** @var array{words?: list<string>|string, fields?: list<string>, mode?: string} $allwordsFields */
         $allwordsFields = is_array($searchFields['allwords'] ?? null) ? $searchFields['allwords'] : [];
         $allwordsFieldsFields = $allwordsFields['fields'] ?? null;
         $allwordsWordsRaw = $allwordsFields['words'] ?? null;
@@ -225,7 +248,7 @@ final class SearchService
         if (isset($searchFields['allwords']) and $allwordsHasWords and count(is_array($allwordsFieldsFields) ? $allwordsFieldsFields : []) > 0 and $allwordsFilter['access']) {
             $hasFilersFilled = true;
             $fields = ['file', 'name', 'comment', 'author'];
-            $allwordsFieldList = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($allwordsFieldsFields) ? $allwordsFieldsFields : []);
+            $allwordsFieldList = is_array($allwordsFieldsFields) ? $allwordsFieldsFields : [];
             if (isset($allwordsFields['fields'])) {
                 $fields = array_intersect($fields, $allwordsFieldList);
             }
@@ -235,7 +258,6 @@ final class SearchService
             $catIdsByWord = $tagIdsByWord = [];
             $allwordsWords = is_array($allwordsFields['words']) ? $allwordsFields['words'] : [];
             foreach ($allwordsWords as $word) {
-                $word         = is_scalar($word) ? (string) $word : '';
                 $fieldClauses = [];
                 foreach ($fields as $field) {
                     $fieldClauses[] = $field . " LIKE '%" . $word . "%'";
@@ -297,35 +319,42 @@ final class SearchService
             }
         }
 
+        /** @var array{words?: list<string>} $authorFields */
         $authorFields = is_array($searchFields['author'] ?? null) ? $searchFields['author'] : [];
         $authorWords  = is_array($authorFields['words'] ?? null) ? $authorFields['words'] : [];
         if (isset($searchFields['author']) and count($authorWords) > 0 and $authorFilter['access']) {
             $hasFilersFilled  = true;
             $authorClauses = [];
             foreach ($authorWords as $word) {
-                $authorClauses[] = "author = '" . (is_scalar($word) ? (string) $word : '') . "'";
+                $authorClauses[] = "author = '" . $word . "'";
             }
             $imageIdsForFilter['author'] = $filterImageIds('(' . implode(' OR ', $authorClauses) . ')');
         }
 
+        /** @var list<string> $filetypesList */
         $filetypesList = is_array($searchFields['filetypes'] ?? null) ? $searchFields['filetypes'] : [];
         if (!empty($searchFields['filetypes']) and $filetypeFilter['access']) {
             $hasFilersFilled = true;
             $filetypesClauses = [];
             foreach ($filetypesList as $ext) {
-                $filetypesClauses[] = 'path LIKE \'%.' . (is_scalar($ext) ? (string) $ext : '') . '\'';
+                $filetypesClauses[] = 'path LIKE \'%.' . $ext . '\'';
             }
             $imageIdsForFilter['filetypes'] = $filterImageIds('(' . implode(' OR ', $filetypesClauses) . ')');
         }
 
-        $addedByList = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($searchFields['added_by'] ?? null) ? $searchFields['added_by'] : []);
+        /** @var list<int|string> $addedByRaw */
+        $addedByRaw = is_array($searchFields['added_by'] ?? null) ? $searchFields['added_by'] : [];
+        $addedByList = array_map(static fn (int|string $v): string => (string) $v, $addedByRaw);
         if (!empty($searchFields['added_by']) and $addedByFilter['access']) {
             $hasFilersFilled = true;
             $imageIdsForFilter['added_by'] = $filterImageIds('added_by IN (' . implode(',', $addedByList) . ')');
         }
 
+        /** @var array{words?: list<int|string>, sub_inc?: bool|int|string} $catFieldsData */
         $catFieldsData = is_array($searchFields['cat'] ?? null) ? $searchFields['cat'] : [];
-        $catWords      = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($catFieldsData['words'] ?? null) ? $catFieldsData['words'] : []);
+        /** @var list<int|string> $catWordsRaw */
+        $catWordsRaw = is_array($catFieldsData['words'] ?? null) ? $catFieldsData['words'] : [];
+        $catWords    = array_map(static fn (int|string $v): string => (string) $v, $catWordsRaw);
         if (isset($searchFields['cat']) and !empty($catWords) and $albumFilter['access']) {
             $hasFilersFilled = true;
             $catSubInc = !empty($catFieldsData['sub_inc']);
@@ -336,8 +365,9 @@ final class SearchService
         }
 
         // date_posted
+        /** @var array{preset?: string, custom?: list<string>} $datePostedFields */
         $datePostedFields = is_array($searchFields['date_posted'] ?? null) ? $searchFields['date_posted'] : [];
-        $datePostedPreset = is_scalar($datePostedFields['preset'] ?? null) ? (string) $datePostedFields['preset'] : '';
+        $datePostedPreset = is_string($datePostedFields['preset'] ?? null) ? $datePostedFields['preset'] : '';
         if (!empty($datePostedPreset) and $postDateFilter['access']) {
             $hasFilersFilled = true;
             $options = ['24h' => '24 HOUR', '7d' => '7 DAY', '30d' => '30 DAY', '3m' => '3 MONTH', '6m' => '6 MONTH'];
@@ -346,7 +376,7 @@ final class SearchService
                 $datePostedClause = 'date_available > SUBDATE(NOW(), INTERVAL ' . $options[$datePostedPreset] . ')';
             } elseif ('custom' == $datePostedPreset and isset($datePostedFields['custom'])) {
                 $datePostedSubclauses = [];
-                $datePostedCustom = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($datePostedFields['custom']) ? $datePostedFields['custom'] : []);
+                $datePostedCustom = $datePostedFields['custom'];
                 $customDates = array_flip($datePostedCustom);
                 foreach (array_keys($customDates) as $customDate) {
                     $begin = $end = null;
@@ -378,8 +408,9 @@ final class SearchService
         }
 
         // date_created
+        /** @var array{preset?: string, custom?: list<string>} $dateCreatedFields */
         $dateCreatedFields = is_array($searchFields['date_created'] ?? null) ? $searchFields['date_created'] : [];
-        $dateCreatedPreset = is_scalar($dateCreatedFields['preset'] ?? null) ? (string) $dateCreatedFields['preset'] : '';
+        $dateCreatedPreset = is_string($dateCreatedFields['preset'] ?? null) ? $dateCreatedFields['preset'] : '';
         if (!empty($dateCreatedPreset) and $creationDateFilter['access']) {
             $hasFilersFilled = true;
             $options = ['7d' => '7 DAY', '30d' => '30 DAY', '3m' => '3 MONTH', '6m' => '6 MONTH', '12m' => '12 MONTH'];
@@ -388,7 +419,7 @@ final class SearchService
                 $dateCreatedClause = 'date_creation > SUBDATE(NOW(), INTERVAL ' . $options[$dateCreatedPreset] . ')';
             } elseif ('custom' == $dateCreatedPreset and isset($dateCreatedFields['custom'])) {
                 $dateCreatedSubclauses = [];
-                $dateCreatedCustom = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($dateCreatedFields['custom']) ? $dateCreatedFields['custom'] : []);
+                $dateCreatedCustom = $dateCreatedFields['custom'];
                 $customDates = array_flip($dateCreatedCustom);
                 foreach (array_keys($customDates) as $customDate) {
                     $begin = $end = null;
@@ -420,25 +451,27 @@ final class SearchService
         }
 
         // ratios
+        /** @var list<string> $ratiosList */
         $ratiosList = is_array($searchFields['ratios'] ?? null) ? $searchFields['ratios'] : [];
         if (!empty($searchFields['ratios']) and $ratioFilter['access']) {
             $hasFilersFilled = true;
             $clauseForRatio  = ['Portrait' => 'width/height < 0.95', 'square' => 'width/height BETWEEN 0.95 AND 1.05', 'Landscape' => '(width/height > 1.05 AND width/height < 2)', 'Panorama' => 'width/height >= 2'];
             $ratiosClauses   = [];
             foreach ($ratiosList as $r) {
-                $ratiosClauses[] = $clauseForRatio[is_scalar($r) ? (string) $r : ''] ?? '1=1';
+                $ratiosClauses[] = $clauseForRatio[$r] ?? '1=1';
             }
             $imageIdsForFilter['ratios'] = $filterImageIds('(' . implode(' OR ', $ratiosClauses) . ')');
         }
 
         // ratings
+        /** @var list<int|string> $ratingsList */
         $ratingsList = is_array($searchFields['ratings'] ?? null) ? $searchFields['ratings'] : [];
         if (Config::rateEnabled() and !empty($searchFields['ratings']) and $ratingFilter['access']) {
             $hasFilersFilled = true;
             $filterClauses   = [];
             foreach ($ratingsList as $r) {
-                $r = is_scalar($r) ? (int) $r : 0;
-                $filterClauses[] = 0 == $r ? 'rating_score IS NULL' : '(rating_score >= ' . ($r - 1) . ' AND rating_score < ' . $r . ')';
+                $rInt = (int) $r;
+                $filterClauses[] = 0 === $rInt ? 'rating_score IS NULL' : '(rating_score >= ' . ($rInt - 1) . ' AND rating_score < ' . $rInt . ')';
             }
             $imageIdsForFilter['ratings'] = $filterImageIds('(' . implode(' OR ', $filterClauses) . ')');
         }
@@ -468,9 +501,12 @@ final class SearchService
         }
 
         // tags
+        /** @var array{words?: list<int|string>, mode?: string} $tagsFields */
         $tagsFields = is_array($searchFields['tags'] ?? null) ? $searchFields['tags'] : [];
-        $tagsWords  = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($tagsFields['words'] ?? null) ? $tagsFields['words'] : []);
-        $tagsMode   = is_scalar($tagsFields['mode'] ?? null) ? (string) $tagsFields['mode'] : 'AND';
+        /** @var list<int|string> $tagsWordsRaw */
+        $tagsWordsRaw = is_array($tagsFields['words'] ?? null) ? $tagsFields['words'] : [];
+        $tagsWords  = array_map(static fn (int|string $v): int => (int) $v, $tagsWordsRaw);
+        $tagsMode   = is_string($tagsFields['mode'] ?? null) ? $tagsFields['mode'] : 'AND';
         if (isset($searchFields['tags']) and !empty($tagsWords) and $tagsFilter['access']) {
             $hasFilersFilled = true;
             $imageIdsForFilter['tags'] = $this->tagService->getImageIdsForTags($tagsWords, $tagsMode);

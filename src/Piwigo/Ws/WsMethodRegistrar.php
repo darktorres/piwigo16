@@ -13,7 +13,6 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Ws\Method\CategoriesEndpoints;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\Method\ImagesEndpoints;
-use Piwigo\Ws\Method\TagsEndpoints;
 use Piwigo\Ws\Method\UsersEndpoints;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -35,7 +34,6 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
         private CategoriesEndpoints $categoriesEndpoints,
         private GeneralEndpoints $generalEndpoints,
         private ImagesEndpoints $imagesEndpoints,
-        private TagsEndpoints $tagsEndpoints,
         private UsersEndpoints $usersEndpoints,
         private PermissionService $permissionService,
     ) {
@@ -339,7 +337,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:        'pwg.tags.getList',
-            callback:    $this->tagsEndpoints->getList(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Tags\GetListHandler::class,
             description: 'Retrieves a list of available tags.',
             params:      [
                 ParamDefinition::optional(name: 'sort_by_counter', default: false, type: WsType::Bool->value),
@@ -349,7 +347,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:        'pwg.tags.getImages',
-            callback:    $this->tagsEndpoints->getImages(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Tags\GetImagesHandler::class,
             description: 'Returns elements for the corresponding tags. Fill at least tag_id, tag_url_name or tag_name.',
             params:      [
                 ParamDefinition::optional(name: 'tag_id', default: null, type: WsType::Id->value, flags: WsParam::ForceArray->value),
@@ -651,7 +649,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.tags.getAdminList',
-            callback:     $this->tagsEndpoints->getAdminList(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Tags\GetAdminListHandler::class,
             description:  '<b>Admin only.</b>',
             tags:         ['tags'],
             requiresAuth: true,
@@ -659,7 +657,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.tags.add',
-            callback:     $this->tagsEndpoints->add(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Tags\AddHandler::class,
             description:  'Adds a new tag.',
             params:       [
                 ParamDefinition::required('name'),
@@ -670,7 +668,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.tags.delete',
-            callback:     $this->tagsEndpoints->delete(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Tags\DeleteHandler::class,
             description:  'Delete tag(s) by ID.',
             params:       [
                 ParamDefinition::required(name: 'tag_id', type: WsType::Id->value, flags: WsParam::ForceArray->value),
@@ -682,7 +680,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.tags.rename',
-            callback:     $this->tagsEndpoints->rename(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Tags\RenameHandler::class,
             description:  'Rename tag',
             params:       [
                 ParamDefinition::required(name: 'tag_id', type: WsType::Id->value),
@@ -695,7 +693,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.tags.duplicate',
-            callback:     $this->tagsEndpoints->duplicate(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Tags\DuplicateHandler::class,
             description:  'Create a copy of a tag',
             params:       [
                 ParamDefinition::required(name: 'tag_id', type: WsType::Id->value),
@@ -709,7 +707,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.tags.merge',
-            callback:     $this->tagsEndpoints->merge(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Tags\MergeHandler::class,
             description:  'Merge tags in one other group',
             params:       [
                 ParamDefinition::required(name: 'destination_tag_id', type: WsType::Id->value, info: 'Is not necessarily part of groups to merge'),

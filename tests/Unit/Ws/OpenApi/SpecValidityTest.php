@@ -18,7 +18,6 @@ use Piwigo\Users\User;
 use Piwigo\Ws\Method\CategoriesEndpoints;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\Method\ImagesEndpoints;
-use Piwigo\Ws\Method\TagsEndpoints;
 use Piwigo\Ws\Method\UsersEndpoints;
 use Piwigo\Ws\OpenApi\SpecBuilder;
 use Piwigo\Ws\PwgServer;
@@ -184,7 +183,6 @@ final class SpecValidityTest extends TestCase
             self::stub(CategoriesEndpoints::class),
             self::stub(GeneralEndpoints::class),
             self::stub(ImagesEndpoints::class),
-            self::stub(TagsEndpoints::class),
             self::stub(UsersEndpoints::class),
             self::stub(PermissionService::class),
         );

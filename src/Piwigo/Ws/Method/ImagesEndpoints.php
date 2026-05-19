@@ -1107,8 +1107,8 @@ final readonly class ImagesEndpoints
         $candidates = json_decode(stripslashes(is_string($params['filename_list'] ?? null) ? $params['filename_list'] : ''), true);
         $uniqueFilenamesDb = [];
         foreach ($this->imageRepository->findAllIdFilename() as $row) {
-            $filenameWoExt = StringUtil::getFilenameWoExtension(is_string($row['file'] ?? null) ? $row['file'] : '');
-            $uniqueFilenamesDb[$filenameWoExt][] = $row['id'];
+            $filenameWoExt = StringUtil::getFilenameWoExtension((string) $row->file);
+            $uniqueFilenamesDb[$filenameWoExt][] = $row->id->value;
         }
         $formatExtensions = Config::formatExtensions();
         usort($formatExtensions, fn (mixed $a, mixed $b): int => strlen((string) $b) - strlen((string) $a));
@@ -1137,8 +1137,7 @@ final readonly class ImagesEndpoints
                     $result[$fmtExternalIdStr] = ['status' => 'multiple'];
                     continue;
                 }
-                $imgIdRaw  = $uniqueFilenamesDb[$candidateFilenameWoExt][0];
-                $imgIdStr  = is_scalar($imgIdRaw) ? (string) $imgIdRaw : '';
+                $imgIdStr  = (string) $uniqueFilenamesDb[$candidateFilenameWoExt][0];
                 $multForm  = false;
                 if (isset($formatDb[$imgIdStr])) {
                     $fmtExt = pathinfo($fmtFilenameStr, PATHINFO_EXTENSION);
@@ -1146,7 +1145,7 @@ final readonly class ImagesEndpoints
                         $multForm = true;
                     }
                 }
-                $result[$fmtExternalIdStr] = ['status' => 'found', 'image_id' => $imgIdRaw, 'format_exist' => $multForm];
+                $result[$fmtExternalIdStr] = ['status' => 'found', 'image_id' => $uniqueFilenamesDb[$candidateFilenameWoExt][0], 'format_exist' => $multForm];
                 continue;
             }
             $result[$fmtExternalIdStr] = ['status' => 'not found'];

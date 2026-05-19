@@ -26,12 +26,8 @@ final class RegenerateAllDerivativesHandler
 
         $dispatched = 0;
         foreach ($rows as $row) {
-            $id = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-            if ($id === 0) {
-                continue;
-            }
             foreach ($types as $type) {
-                $bus->dispatch(new GenerateDerivativeJob($id, $type));
+                $bus->dispatch(new GenerateDerivativeJob($row->id->value, $type));
                 $dispatched++;
             }
         }

@@ -7,6 +7,7 @@ namespace Piwigo\Image;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Db\AbstractRepository;
+use Piwigo\Image\Entity\ImageIdFilename;
 
 /** Persistence layer for the image domain. */
 final class ImageRepository extends AbstractRepository
@@ -111,18 +112,20 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
-     * Return (id, file) rows for all images.
-     * Used by ws_images_addFormat() to build a unique-filenames map.
+     * Return (id, file) projection for every image. Used by
+     * `pwg.images.searchFormat` to build a unique-filenames map and by
+     * the regenerate-all-derivatives job to enumerate every image.
      *
-     * @return list<array<string, mixed>>
+     * @return list<ImageIdFilename>
      */
     public function findAllIdFilename(): array
     {
-        return $this->conn->createQueryBuilder()
+        $rows = $this->conn->createQueryBuilder()
             ->select('id', 'file')
             ->from($this->table('images'))
             ->executeQuery()
             ->fetchAllAssociative();
+        return array_map(ImageIdFilename::fromRow(...), $rows);
     }
 
     /**

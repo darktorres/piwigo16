@@ -11,6 +11,7 @@ use Piwigo\Users\UserFavoriteRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.users.favorites.remove` — unfavorite an image. */
 final readonly class FavoritesRemoveHandler implements WsAction
@@ -29,12 +30,15 @@ final readonly class FavoritesRemoveHandler implements WsAction
         if ($this->permissionService->isAGuest()) {
             return new PwgError(403, 'User must be logged in.');
         }
-        $userId     = CurrentUser::get()->id;
-        $remImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        if (!$this->imageRepository->existsById($remImageId)) {
+        try {
+            $input = FavoritesRemoveParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(400, $e->getMessage());
+        }
+        if (!$this->imageRepository->existsById($input->imageId)) {
             return new PwgError(404, 'image_id not found');
         }
-        $this->userFavoriteRepository->delete($userId, $remImageId);
+        $this->userFavoriteRepository->delete(CurrentUser::get()->id, $input->imageId);
         return true;
     }
 }

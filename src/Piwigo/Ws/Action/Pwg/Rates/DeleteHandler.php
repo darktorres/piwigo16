@@ -26,10 +26,8 @@ final readonly class DeleteHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): int
     {
-        $userId  = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
-        $anonId  = !empty($params['anonymous_id']) && is_string($params['anonymous_id']) ? $params['anonymous_id'] : null;
-        $imageId = !empty($params['image_id']) && is_numeric($params['image_id']) ? (int) $params['image_id'] : null;
-        $changes = $this->rateRepository->deleteByUserOptionalAnonAndElement($userId, $anonId, $imageId);
+        $input   = DeleteParams::fromArray($params);
+        $changes = $this->rateRepository->deleteByUserOptionalAnonAndElement($input->userId, $input->anonymousId, $input->imageId);
         if ($changes > 0) {
             $this->rateService->updateRatingScore();
         }

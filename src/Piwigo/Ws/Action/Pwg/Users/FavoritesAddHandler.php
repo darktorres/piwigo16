@@ -11,6 +11,7 @@ use Piwigo\Users\UserFavoriteRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.users.favorites.add` — favorite an image (idempotent). */
 final readonly class FavoritesAddHandler implements WsAction
@@ -29,12 +30,15 @@ final readonly class FavoritesAddHandler implements WsAction
         if ($this->permissionService->isAGuest()) {
             return new PwgError(403, 'User must be logged in.');
         }
-        $userId     = CurrentUser::get()->id;
-        $favImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        if (!$this->imageRepository->existsById($favImageId)) {
+        try {
+            $input = FavoritesAddParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(400, $e->getMessage());
+        }
+        if (!$this->imageRepository->existsById($input->imageId)) {
             return new PwgError(404, 'image_id not found');
         }
-        $this->userFavoriteRepository->addIgnore($userId, $favImageId);
+        $this->userFavoriteRepository->addIgnore(CurrentUser::get()->id, $input->imageId);
         return true;
     }
 }

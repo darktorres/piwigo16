@@ -260,7 +260,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.formats.delete',
-            callback:     $this->imagesEndpoints->formatsDelete(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\FormatsDeleteHandler::class,
             description:  'Remove a format',
             params:       [
                 ParamDefinition::optional(name: 'format_id', default: null, type: WsType::Id->value, flags: WsParam::AcceptArray->value),

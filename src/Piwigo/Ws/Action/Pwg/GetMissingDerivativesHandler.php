@@ -8,13 +8,13 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
-use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
 use Piwigo\Ws\WsHelper;
+use Piwigo\Ws\WsParamException;
 
 /**
  * `pwg.getMissingDerivatives` — paginate through images and emit
@@ -31,37 +31,31 @@ final readonly class GetMissingDerivativesHandler implements WsAction
 
     /**
      * @param  array<mixed> $params
-     * @return array<string, mixed>|PwgError
+     * @return array<string, mixed>|GetMissingDerivativesResult|PwgError
      */
     #[\Override]
-    public function __invoke(array $params, PwgServer $server): PwgError|array
+    public function __invoke(array $params, PwgServer $server): PwgError|array|GetMissingDerivativesResult
     {
-        if (empty($params['types'])) {
-            $types = array_keys(ImageStdParams::getDefinedTypeMap());
-        } else {
-            $typesRaw = is_array($params['types']) ? $params['types'] : [];
-            $types = array_intersect(array_keys(ImageStdParams::getDefinedTypeMap()), array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $typesRaw));
-            if (count($types) === 0) {
-                return new PwgError(WsError::InvalidParam->value, 'Invalid types');
-            }
+        try {
+            $input = GetMissingDerivativesParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(WsError::InvalidParam->value, $e->getMessage());
         }
-        $maxUrls = is_numeric($params['max_urls']) ? (int) $params['max_urls'] : 0;
         [$maxId, $imageCount] = $this->imageRepository->findMaxIdAndCount();
         if ($imageCount === 0) {
             return [];
         }
-        $startId = is_numeric($params['prev_page']) ? (int) $params['prev_page'] : 0;
+        $startId = $input->prevPageCursor;
         if ($startId <= 0) {
             $startId = $maxId;
         }
         $uid = '&b=' . time();
         Config::override('derivative_url_style', 2);
-        $qlimit = min(5000, (int) ceil(max($imageCount / 500, $maxUrls / count($types))));
+        $qlimit = min(5000, (int) ceil(max($imageCount / 500, $input->maxUrls / count($input->types))));
         /** @var array<string> $whereClauses */
         $whereClauses = $this->wsHelper->imageSqlFilter($params, '');
-        if (!empty($params['ids'])) {
-            $idsArr         = is_array($params['ids']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['ids']) : [];
-            $whereClauses[] = 'id IN (' . implode(',', $idsArr) . ')';
+        if ($input->imageIds !== []) {
+            $whereClauses[] = 'id IN (' . implode(',', $input->imageIds) . ')';
         }
         $urls = [];
         do {
@@ -73,7 +67,7 @@ final readonly class GetMissingDerivativesHandler implements WsAction
                 if ($srcImage->isMimetype()) {
                     continue;
                 }
-                foreach ($types as $type) {
+                foreach ($input->types as $type) {
                     $derivative = new DerivativeImage($type, $srcImage);
                     if ($type !== $derivative->getType()) {
                         continue;
@@ -83,19 +77,17 @@ final readonly class GetMissingDerivativesHandler implements WsAction
                         $urls[] = (is_string($url) ? $url : '') . $uid;
                     }
                 }
-                if (count($urls) >= $maxUrls && !$isLast) {
+                if (count($urls) >= $input->maxUrls && !$isLast) {
                     break;
                 }
             }
             if ($isLast) {
                 $startId = 0;
             }
-        } while (count($urls) < $maxUrls && $startId);
-        $ret = [];
-        if ($startId) {
-            $ret['next_page'] = $startId;
-        }
-        $ret['urls'] = $urls;
-        return $ret;
+        } while (count($urls) < $input->maxUrls && $startId);
+        return new GetMissingDerivativesResult(
+            urls:           $urls,
+            nextPageCursor: $startId > 0 ? $startId : null,
+        );
     }
 }

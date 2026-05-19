@@ -400,7 +400,14 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         if ($handlerClass !== null) {
             /** @var class-string<WsAction> $handlerClass */
             $handler = Kernel::service($handlerClass);
-            return $handler($params, $this);
+            $result  = $handler($params, $this);
+            // Per-endpoint Result DTOs (WsResult) are unwrapped here so
+            // handlers can return either a typed Result object or a raw
+            // array/scalar/PwgError — the wire envelope stays the same.
+            if ($result instanceof WsResult) {
+                return $result->toArray();
+            }
+            return $result;
         }
         $callback = $method['callback'];
         if (!is_callable($callback)) {

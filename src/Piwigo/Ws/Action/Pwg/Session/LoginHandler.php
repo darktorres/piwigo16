@@ -10,6 +10,7 @@ use Piwigo\Users\AuthService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /**
  * `pwg.session.login` — log the current request's user in by
@@ -32,14 +33,17 @@ final readonly class LoginHandler implements WsAction
         if (ApiKeyAuthRegistry::isApiKeyAuth()) {
             return new PwgError(401, 'Cannot use this method with an api key');
         }
-        $username = is_string($params['username'] ?? null) ? $params['username'] : '';
-        $password = is_string($params['password'] ?? null) ? $params['password'] : '';
-        if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $username)) {
-            if ($this->authService->authKeyLogin($username . ':' . $password)) {
+        try {
+            $input = LoginParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(999, $e->getMessage());
+        }
+        if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $input->username)) {
+            if ($this->authService->authKeyLogin($input->username . ':' . $input->password)) {
                 $this->session->connectedWith = 'ws_session_login_api_key';
                 return true;
             }
-        } elseif ($this->authService->tryLogUser($username, $password, false)) {
+        } elseif ($this->authService->tryLogUser($input->username, $input->password, false)) {
             $this->session->connectedWith = 'ws_session_login';
             return true;
         }

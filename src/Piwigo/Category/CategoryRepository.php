@@ -296,8 +296,8 @@ final class CategoryRepository extends AbstractRepository
     /**
      * Return all columns for the given category ids.
      *
-     * @param int[] $ids
-     * @return list<array<string, mixed>>
+     * @param  int[] $ids
+     * @return list<Category>
      */
     public function findByIds(array $ids): array
     {
@@ -309,7 +309,7 @@ final class CategoryRepository extends AbstractRepository
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(Category::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /** Count distinct image_ids linked to any category (i.e. non-orphan images). */

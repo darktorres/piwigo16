@@ -458,15 +458,17 @@ final readonly class CategoryAdminService
         $categories = [];
         $catRepo    = $this->categoryRepository;
         $catIdsInt = $categoryIds;
-        foreach ($catRepo->findByIds($catIdsInt) as $row) {
-            $rowIdKey           = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
-            $categories[$rowIdKey] = ['parent' => empty($row['id_uppercat']) ? 'NULL' : $row['id_uppercat'], 'status' => $row['status'], 'uppercats' => $row['uppercats']];
+        foreach ($catRepo->findByIds($catIdsInt) as $category) {
+            $categories[(string) $category->id->value] = [
+                'parent'    => $category->idUppercat !== null ? $category->idUppercat->value : 'NULL',
+                'status'    => $category->status->value,
+                'uppercats' => $category->uppercats,
+            ];
         }
         if ($newParent !== 'NULL') {
             $newParentUppercatsStr = $catRepo->findUppercatsStringById($newParent) ?? '';
             foreach ($categories as $category) {
-                $catUppercats = is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '';
-                if (preg_match('/^' . $catUppercats . '(,|$)/', $newParentUppercatsStr)) {
+                if (preg_match('/^' . $category['uppercats'] . '(,|$)/', $newParentUppercatsStr)) {
                     PageState::current()->addError(Lang::t('You cannot move an album in its own sub album'));
                     return;
                 }
@@ -477,7 +479,7 @@ final readonly class CategoryAdminService
         $this->updateGlobalRank();
         $parentStatus = ($newParent === 'NULL') ? 'public' : ($catRepo->findStatusById($newParent) ?? 'public');
         if ($parentStatus === 'private') {
-            $this->setCatStatus(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($categories)), 'private');
+            $this->setCatStatus(array_map(static fn (int|string $v): int => (int) $v, array_keys($categories)), 'private');
         }
         PageState::current()->addInfo(Translator::get()->plural('%d album moved', '%d albums moved', count($categories)));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catIdsInt, 'move', ['parent' => $newParent]));

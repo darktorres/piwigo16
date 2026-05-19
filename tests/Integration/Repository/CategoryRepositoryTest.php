@@ -45,10 +45,13 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findByIds([1, 2]);
 
         self::assertCount(2, $rows);
-        $byId = array_column($rows, null, 'id');
-        self::assertSame('Sample Album', $byId[1]['name']);
-        self::assertSame('Nested Sub Album', $byId[2]['name']);
-        self::assertSame(1, $byId[2]['id_uppercat'], 'sub album references root');
+        $byId = [];
+        foreach ($rows as $cat) {
+            $byId[$cat->id->value] = $cat;
+        }
+        self::assertSame('Sample Album', $byId[1]->name);
+        self::assertSame('Nested Sub Album', $byId[2]->name);
+        self::assertSame(1, $byId[2]->idUppercat?->value, 'sub album references root');
     }
 
     public function test_findByIds_returns_empty_for_unknown_ids(): void
@@ -77,6 +80,6 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // with id_uppercat blanked out.
         $sub = $this->repo->findByIds([2]);
         self::assertCount(1, $sub, 'sub-album survives root deletion (FK SET NULL)');
-        self::assertNull($sub[0]['id_uppercat'], 'id_uppercat must be SET NULL after parent delete');
+        self::assertNull($sub[0]->idUppercat, 'id_uppercat must be SET NULL after parent delete');
     }
 }

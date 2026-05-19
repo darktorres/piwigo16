@@ -212,18 +212,16 @@ final class AlbumController implements AdminSubControllerInterface
                 );
             }
 
-            foreach ($this->categoryRepository->findByIds(array_map(intval(...), $category_ids)) as $row) {
-                $rowRenderEvent = new RenderCategoryName(is_string($row['name'] ?? null) ? $row['name'] : '', 'admin_cat_list');
+            foreach ($this->categoryRepository->findByIds(array_map(intval(...), $category_ids)) as $category) {
+                $rowRenderEvent = new RenderCategoryName($category->name, 'admin_cat_list');
                 $this->dispatcher->dispatch($rowRenderEvent);
-                $row['name'] = $rowRenderEvent->categoryName;
+                $renderedName = $rowRenderEvent->categoryName;
                 if ($order_by_date) {
-                    $rowIdRaw = $row['id'] ?? null;
-                    $rowId    = is_string($rowIdRaw) ? $rowIdRaw : '';
-                    $sort[] = $ref_dates[$rowId] ?? null;
+                    $sort[] = $ref_dates[(string) $category->id->value] ?? null;
                 } else {
-                    $sort[] = StringUtil::removeAccents($row['name']);
+                    $sort[] = StringUtil::removeAccents($renderedName);
                 }
-                $categories[] = ['id' => $row['id'] ?? null, 'id_uppercat' => $row['id_uppercat']];
+                $categories[] = ['id' => $category->id->value, 'id_uppercat' => $category->idUppercat?->value];
             }
 
             array_multisort($sort, $order_by_field === 'natural_order' ? SORT_NATURAL : SORT_REGULAR, 'ASC' == $order_by_asc ? SORT_ASC : SORT_DESC, $categories);

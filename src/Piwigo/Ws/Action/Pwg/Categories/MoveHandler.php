@@ -54,17 +54,15 @@ final readonly class MoveHandler implements WsAction
         $categoriesInDb = [];
         $updateCatIds   = [];
         $parentId       = is_numeric($params['parent']) ? (int) $params['parent'] : 0;
-        foreach ($this->categoryRepository->findByIds(array_map(intval(...), $categoryIds)) as $row) {
-            $rowIdRaw               = $row['id'] ?? null;
-            $rowId                  = is_string($rowIdRaw) ? $rowIdRaw : '';
-            $categoriesInDb[$rowId] = $row;
-            $rowUppercatsRaw        = $row['uppercats'] ?? null;
-            $updateCatIds           = array_merge($updateCatIds, array_slice(explode(',', is_string($rowUppercatsRaw) ? $rowUppercatsRaw : ''), 0, -1));
-            if (!empty($row['dir'])) {
-                $moveRenderEvent = new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', 'ws_categories_move');
+        foreach ($this->categoryRepository->findByIds(array_map(intval(...), $categoryIds)) as $category) {
+            $rowId                  = (string) $category->id->value;
+            $categoriesInDb[$rowId] = $category;
+            $updateCatIds           = array_merge($updateCatIds, array_slice(explode(',', $category->uppercats), 0, -1));
+            if ($category->dir !== null && $category->dir !== '') {
+                $moveRenderEvent = new RenderCategoryName($category->name, 'ws_categories_move');
                 $this->dispatcher->dispatch($moveRenderEvent);
-                $row['name'] = strip_tags($moveRenderEvent->categoryName);
-                return new PwgError(403, sprintf('Category %s (%u) is not a virtual category, you cannot move it', $row['name'], is_numeric($row['id']) ? (int) $row['id'] : 0));
+                $renderedName = strip_tags($moveRenderEvent->categoryName);
+                return new PwgError(403, sprintf('Category %s (%u) is not a virtual category, you cannot move it', $renderedName, $category->id->value));
             }
         }
         if (count($categoriesInDb) !== count($categoryIds)) {

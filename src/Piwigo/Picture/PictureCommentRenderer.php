@@ -145,47 +145,44 @@ final readonly class PictureCommentRenderer
                 );
 
                 foreach ($commentRows as $row) {
-                    if ($row['author'] == 'guest') {
-                        $row['author'] = Lang::t('guest');
+                    $author = $row->author === 'guest' ? Lang::t('guest') : ($row->author ?? '');
+
+                    $email = $row->userEmail ?? $row->email;
+                    if ($email === '' || $email === null) {
+                        $email = null;
                     }
 
-                    $email = null;
-                    if (!empty($row['user_email'])) {
-                        $email = $row['user_email'];
-                    } elseif (!empty($row['email'])) {
-                        $email = $row['email'];
-                    }
-
-                    $contentEvent = new RenderCommentContent(is_string($row['content']) ? $row['content'] : '');
+                    $contentEvent = new RenderCommentContent($row->content ?? '');
                     $this->dispatcher->dispatch($contentEvent);
-                    $authorEvent = new RenderCommentAuthor(is_string($row['author']) ? $row['author'] : '');
+                    $authorEvent = new RenderCommentAuthor($author);
                     $this->dispatcher->dispatch($authorEvent);
-                    $rawDate = $row['date'] ?? null;
+                    $rowId       = $row->id->value;
+                    $authorId    = $row->authorId !== null ? $row->authorId->value : 0;
                     $tpl_comment = [
-                        'ID' => $row['id'],
+                        'ID' => $rowId,
                         'AUTHOR' => $authorEvent->commentAuthor,
-                        'DATE' => $this->dateService->formatDate(is_string($rawDate) ? $rawDate : '', ['day_name', 'day', 'month', 'year', 'time']),
+                        'DATE' => $this->dateService->formatDate($row->date !== null ? $row->date->value : '', ['day_name', 'day', 'month', 'year', 'time']),
                         'CONTENT' => new Html($contentEvent->commentContent),
-                        'WEBSITE_URL' => $row['website_url'],
+                        'WEBSITE_URL' => $row->websiteUrl,
                     ];
 
-                    if ($this->permissionService->canManageComment('delete', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
+                    if ($this->permissionService->canManageComment('delete', $authorId)) {
                         $tpl_comment['U_DELETE'] = $this->urlService->addUrlParams($url_self, [
                             'action' => 'delete_comment',
-                            'comment_to_delete' => $row['id'],
+                            'comment_to_delete' => $rowId,
                             'pwg_token' => $this->csrfService->getToken(),
                         ]);
                     }
-                    if ($this->permissionService->canManageComment('edit', is_numeric($row['author_id']) ? (int) $row['author_id'] : 0)) {
+                    if ($this->permissionService->canManageComment('edit', $authorId)) {
                         $tpl_comment['U_EDIT'] = $this->urlService->addUrlParams($url_self, [
                             'action' => 'edit_comment',
-                            'comment_to_edit' => $row['id'],
+                            'comment_to_edit' => $rowId,
                         ]);
-                        if ($editComment !== null && $row['id'] == $editComment) {
+                        if ($editComment !== null && $rowId === $editComment) {
                             $tpl_comment['IN_EDIT'] = true;
                             $key = $this->ephemeralKeyService->generate(2, (string) $imageId);
                             $tpl_comment['KEY'] = $key;
-                            $tpl_comment['CONTENT'] = $row['content'];
+                            $tpl_comment['CONTENT'] = $row->content;
                             $tpl_comment['PWG_TOKEN'] = $this->csrfService->getToken();
                             $tpl_comment['U_CANCEL'] = $url_self;
                         }
@@ -193,10 +190,10 @@ final readonly class PictureCommentRenderer
                     if ($this->permissionService->isAdmin()) {
                         $tpl_comment['EMAIL'] = $email;
 
-                        if (!BoolUtil::fromMixed($row['validated'])) {
+                        if (!$row->validated) {
                             $tpl_comment['U_VALIDATE'] = $this->urlService->addUrlParams($url_self, [
                                 'action' => 'validate_comment',
-                                'comment_to_validate' => $row['id'],
+                                'comment_to_validate' => $rowId,
                                 'pwg_token' => $this->csrfService->getToken(),
                             ]);
                         }

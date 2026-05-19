@@ -12,7 +12,6 @@ use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
-use Piwigo\Core\BoolUtil;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -314,8 +313,8 @@ SELECT id, name, uppercats, global_rank
             $rowOffset,
         ) as $row) {
             $comments[]     = $row;
-            $element_ids[]  = $row['image_id'];
-            $category_ids[] = $row['category_id'];
+            $element_ids[]  = $row->imageId->value;
+            $category_ids[] = $row->categoryId->value;
         }
 
         $url     = $this->urlGenerator->comments() . $this->urlService->getQueryStringDiff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
@@ -329,20 +328,17 @@ SELECT id, name, uppercats, global_rank
         $tpl->assign('navbar', $navbar);
 
         if (count($comments) > 0) {
-            $elementIdsInt  = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $element_ids);
-            $categoryIdsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $category_ids);
             $elements = [];
-            foreach ($this->imageRepository->findByIds($elementIdsInt) as $img) {
+            foreach ($this->imageRepository->findByIds($element_ids) as $img) {
                 $elements[$img->id->value] = $img;
             }
-            $categories = $this->categoryRepository->findNamePermalinkUppercatsByIds($categoryIdsInt);
+            $categories = $this->categoryRepository->findNamePermalinkUppercatsByIds($category_ids);
 
             foreach ($comments as $comment) {
-                /** @var array<string, float|int|string|null> $comment */
-                $cImageId     = is_numeric($comment['image_id']) ? (int) $comment['image_id'] : 0;
-                $cCategoryId  = is_numeric($comment['category_id']) ? (int) $comment['category_id'] : 0;
-                $cId          = is_numeric($comment['comment_id']) ? (int) $comment['comment_id'] : 0;
-                $cAuthorId    = is_numeric($comment['author_id']) ? (int) $comment['author_id'] : 0;
+                $cImageId    = $comment->imageId->value;
+                $cCategoryId = $comment->categoryId->value;
+                $cId         = $comment->commentId->value;
+                $cAuthorId   = $comment->authorId !== null ? $comment->authorId->value : 0;
 
                 $element      = $elements[$cImageId] ?? null;
                 $elementFile  = $element !== null ? $element->file->value : '';
@@ -356,26 +352,22 @@ SELECT id, name, uppercats, global_rank
                     'image_file' => $elementFile,
                 ]);
 
-                $email = null;
-                if (isset($comment['user_email']) && $comment['user_email'] !== '') {
-                    $email = (string) $comment['user_email'];
-                } elseif (isset($comment['email']) && $comment['email'] !== '') {
-                    $email = (string) $comment['email'];
-                }
+                $email = ($comment->userEmail !== null && $comment->userEmail !== '') ? $comment->userEmail
+                       : (($comment->email !== null && $comment->email !== '') ? $comment->email : null);
 
-                $cDate = $comment['date'] !== null ? (string) $comment['date'] : null;
+                $cDate = $comment->date?->value;
                 $tpl_comment = [
                     'ID'          => $cId,
                     'U_PICTURE'   => $url,
                     'src_image'   => $src_image,
                     'ALT'         => $name,
-                    'WEBSITE_URL' => $comment['website_url'],
+                    'WEBSITE_URL' => $comment->websiteUrl,
                     'DATE'        => $this->dateService->formatDate($cDate, ['day_name', 'day', 'month', 'year', 'time']),
                 ];
-                $authorEvent = new RenderCommentAuthor((string) ($comment['author'] ?? ''));
+                $authorEvent = new RenderCommentAuthor($comment->author ?? '');
                 $this->dispatcher->dispatch($authorEvent);
                 $tpl_comment['AUTHOR'] = $authorEvent->commentAuthor;
-                $contentEvent = new RenderCommentContent((string) ($comment['content'] ?? ''));
+                $contentEvent = new RenderCommentContent($comment->content ?? '');
                 $this->dispatcher->dispatch($contentEvent);
                 $tpl_comment['CONTENT'] = new Html($contentEvent->commentContent);
 
@@ -387,17 +379,17 @@ SELECT id, name, uppercats, global_rank
                 }
                 if ($this->permissionService->canManageComment('edit', $cAuthorId)) {
                     $tpl_comment['U_EDIT'] = $this->urlService->addUrlParams($url_self, ['edit' => $cId]);
-                    if ($edit_comment !== null && $cId == $edit_comment) {
+                    if ($edit_comment !== null && $cId === $edit_comment) {
                         $key = $this->ephemeralKeyService->generate(2, (string) $cImageId);
                         $tpl_comment['IN_EDIT']   = true;
                         $tpl_comment['KEY']       = $key;
                         $tpl_comment['IMAGE_ID']  = $cImageId;
-                        $tpl_comment['CONTENT']   = (string) ($comment['content'] ?? '');
+                        $tpl_comment['CONTENT']   = $comment->content ?? '';
                         $tpl_comment['PWG_TOKEN'] = $this->csrfService->getToken();
                         $tpl_comment['U_CANCEL']  = $url_self;
                     }
                 }
-                if ($this->permissionService->canManageComment('validate', $cAuthorId) && !BoolUtil::fromMixed($comment['validated'])) {
+                if ($this->permissionService->canManageComment('validate', $cAuthorId) && !$comment->validated) {
                     $tpl_comment['U_VALIDATE'] = $this->urlService->addUrlParams($url_self, ['validate' => $cId, 'pwg_token' => $this->csrfService->getToken()]);
                 }
                 $tpl->append('comments', $tpl_comment);

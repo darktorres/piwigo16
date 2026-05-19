@@ -7,7 +7,6 @@ namespace Piwigo\Ws\Action\Pwg\Comments;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\Config;
-use Piwigo\Core\BoolUtil;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
 use Piwigo\Db\Tables;
@@ -115,19 +114,32 @@ final readonly class GetListHandler implements WsAction
         );
         $list = [];
         foreach ($rows as $row) {
-            $mediumDerivative = DerivativeImage::getOne(DerivativeSize::Medium->value, ['id' => $row['image_id'], 'path' => $row['path'], 'representative_ext' => $row['representative_ext']]);
-            $medium = $mediumDerivative !== null ? $mediumDerivative->getUrl() : null;
-            if (empty($row['author_id']) || $row['author_id'] == Config::guestId()) {
-                $authorName = $row['author'];
+            $imageIdValue       = $row->imageId->value;
+            $authorIdValue      = $row->authorId?->value;
+            $mediumDerivative   = DerivativeImage::getOne(DerivativeSize::Medium->value, ['id' => $imageIdValue, 'path' => $row->path, 'representative_ext' => $row->representativeExt]);
+            $medium             = $mediumDerivative !== null ? $mediumDerivative->getUrl() : null;
+            if ($authorIdValue === null || $authorIdValue === Config::guestId()) {
+                $authorName = $row->author ?? '';
             } else {
-                $coalesced  = $row['username'] ?? $row['author'] ?? Lang::t('guest');
-                $authorName = stripslashes(is_scalar($coalesced) ? (string) $coalesced : Lang::t('guest'));
+                $authorName = stripslashes($row->username ?? $row->author ?? Lang::t('guest'));
             }
-            $authorEvent = new RenderCommentAuthor(is_string($authorName) ? $authorName : '');
+            $authorEvent = new RenderCommentAuthor($authorName);
             $this->dispatcher->dispatch($authorEvent);
-            $contentEvent = new RenderCommentContent(is_string($row['content']) ? $row['content'] : '');
+            $contentEvent = new RenderCommentContent($row->content ?? '');
             $this->dispatcher->dispatch($contentEvent);
-            $list[] = ['id' => $row['id'], 'admin_link' => $this->urlGenerator->admin('photo-' . (is_string($row['image_id'] ?? null) ? $row['image_id'] : '')), 'medium_url' => $medium, 'file' => $row['file'], 'image_date_available' => $this->dateService->formatDate(is_string($row['date_available'] ?? null) ? $row['date_available'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'author' => $authorEvent->commentAuthor, 'author_status' => Config::webmasterId() == $row['author_id'] ? 'main_user' : $row['status'], 'date' => $this->dateService->formatDate(is_string($row['date'] ?? null) ? $row['date'] : '', ['day_name', 'day', 'month', 'year', 'time']), 'content' => $contentEvent->commentContent, 'raw_content' => $row['content'], 'is_pending' => !BoolUtil::fromMixed($row['validated'])];
+            $list[] = [
+                'id'                   => $row->id->value,
+                'admin_link'           => $this->urlGenerator->admin('photo-' . $imageIdValue),
+                'medium_url'           => $medium,
+                'file'                 => $row->file,
+                'image_date_available' => $this->dateService->formatDate($row->dateAvailable !== null ? $row->dateAvailable->value : '', ['day_name', 'day', 'month', 'year', 'time']),
+                'author'               => $authorEvent->commentAuthor,
+                'author_status'        => Config::webmasterId() === $authorIdValue ? 'main_user' : $row->status,
+                'date'                 => $this->dateService->formatDate($row->date !== null ? $row->date->value : '', ['day_name', 'day', 'month', 'year', 'time']),
+                'content'              => $contentEvent->commentContent,
+                'raw_content'          => $row->content,
+                'is_pending'           => !$row->validated,
+            ];
         }
         $dates = $this->commentRepository->findCommentDateRange($whereClauses, $qParams, $qTypes);
 
@@ -135,7 +147,10 @@ final readonly class GetListHandler implements WsAction
             $filters,
             static fn (array $f): bool => $f['kind'] !== 'author',
         )));
-        $nbAuthorsIn = $this->commentRepository->findCommentAuthorCounts($authorsWhere, $authorsParams, $authorsTypes);
+        $nbAuthorsIn = array_map(
+            static fn (\Piwigo\Comment\Projection\AuthorCount $ac): array => $ac->toArray(),
+            $this->commentRepository->findCommentAuthorCounts($authorsWhere, $authorsParams, $authorsTypes),
+        );
 
         return ['summary' => $summary, 'comments' => $list, 'filters' => ['nb_authors' => $nbAuthorsIn, 'started_at' => $dates['started_at'], 'ended_at' => $dates['ended_at']], 'paging' => ['page' => $params['page'], 'per_page' => $params['per_page'], 'total_pages' => max(0, (int) ceil((float) $totalComments / (float) max(1, $perPage)) - 1)]];
     }

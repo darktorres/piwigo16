@@ -118,8 +118,12 @@ final readonly class GetInfoHandler implements WsAction
         $pCommentsPage    = is_numeric($params['comments_page']) ? (int) $params['comments_page'] : 0;
         if ($nbComments > 0 && $pCommentsPerPage > 0) {
             foreach ($this->commentRepository->findByWhereFragmentOrderedByDate($whereComments, $pCommentsPerPage, $pCommentsPerPage * $pCommentsPage, $commentParams, $commentTypes) as $row) {
-                $row['id']         = is_numeric($row['id']) ? (int) $row['id'] : 0;
-                $relatedComments[] = $row;
+                $relatedComments[] = [
+                    'id'      => $row->id->value,
+                    'date'    => $row->date?->value,
+                    'author'  => $row->author,
+                    'content' => $row->content,
+                ];
             }
         }
         $commentPostData = null;

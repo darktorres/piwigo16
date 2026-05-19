@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Comment;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Comment\Projection\AdminListingRow;
+use Piwigo\Comment\Projection\AuthorCount;
+use Piwigo\Comment\Projection\CommentSummary;
+use Piwigo\Comment\Projection\PictureCommentRow;
+use Piwigo\Comment\Projection\RecentCommentRow;
 use Piwigo\Db\AbstractRepository;
 
 /**
@@ -283,7 +288,7 @@ final class CommentRepository extends AbstractRepository
      *
      * @param  list<mixed>  $params
      * @param  list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
-     * @return list<array<string, mixed>>
+     * @return list<CommentSummary>
      */
     public function findByWhereFragmentOrderedByDate(
         string $whereFragment,
@@ -292,12 +297,13 @@ final class CommentRepository extends AbstractRepository
         array $params = [],
         array $types = [],
     ): array {
-        return $this->conn->executeQuery(
+        $rows = $this->conn->executeQuery(
             'SELECT id, date, author, content FROM ' . $this->table('comments')
             . ' WHERE ' . $whereFragment . ' ORDER BY date LIMIT ' . $limit . ' OFFSET ' . $offset,
             $params,
             $types,
         )->fetchAllAssociative();
+        return array_map(CommentSummary::fromRow(...), $rows);
     }
 
     /**
@@ -364,7 +370,7 @@ final class CommentRepository extends AbstractRepository
      * @param list<string>                                $whereClauses
      * @param list<mixed>                                 $params
      * @param list<ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
-     * @return list<array<string, mixed>>
+     * @return list<AdminListingRow>
      */
     public function findCommentsAdminList(
         array $whereClauses,
@@ -388,7 +394,8 @@ final class CommentRepository extends AbstractRepository
             . ' WHERE ' . implode(' AND ', $whereClauses)
             . ' ORDER BY c.date DESC'
             . ' LIMIT ' . $limit . ' OFFSET ' . $offset;
-        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        $rows = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(AdminListingRow::fromRow(...), $rows);
     }
 
     /**
@@ -425,20 +432,21 @@ final class CommentRepository extends AbstractRepository
      * @param list<string>                                $whereClauses
      * @param list<mixed>                                 $params
      * @param list<ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
-     * @return list<array<string, mixed>>
+     * @return list<AuthorCount>
      */
     public function findCommentAuthorCounts(array $whereClauses, array $params, array $types): array
     {
         if ($whereClauses === []) {
             $whereClauses = ['1=1'];
         }
-        return $this->conn->executeQuery(
+        $rows = $this->conn->executeQuery(
             'SELECT author, author_id, COUNT(*) AS nb_authors FROM ' . $this->table('comments')
             . ' WHERE ' . implode(' AND ', $whereClauses)
             . ' GROUP BY author_id',
             $params,
             $types,
         )->fetchAllAssociative();
+        return array_map(AuthorCount::fromRow(...), $rows);
     }
 
     /**
@@ -477,7 +485,7 @@ final class CommentRepository extends AbstractRepository
      * @param list<string>                                $whereClauses
      * @param list<mixed>                                 $params
      * @param list<ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
-     * @return list<array<string, mixed>>
+     * @return list<RecentCommentRow>
      */
     public function findFilteredComments(
         array $whereClauses,
@@ -502,7 +510,8 @@ final class CommentRepository extends AbstractRepository
         if ($limit >= 0) {
             $sql .= ' LIMIT ' . $limit . ' OFFSET ' . $offset;
         }
-        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        $rows = $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(RecentCommentRow::fromRow(...), $rows);
     }
 
     /**
@@ -531,7 +540,7 @@ final class CommentRepository extends AbstractRepository
      * user-supplied) — safe to interpolate. $order is 'ASC' | 'DESC' (caller
      * must validate; this method enforces the whitelist via fail-closed).
      *
-     * @return list<array<string, mixed>>
+     * @return list<PictureCommentRow>
      */
     public function findForImagePage(
         int $imageId,
@@ -554,10 +563,11 @@ SELECT com.id, com.author, com.author_id, u.' . $userEmailField . ' AS user_emai
             $sql .= ' AND com.validated = 1';
         }
         $sql .= ' ORDER BY com.date ' . $orderSafe . ' LIMIT ' . $limit . ' OFFSET ' . $offset;
-        return $this->conn->executeQuery(
+        $rows = $this->conn->executeQuery(
             $sql,
             [$imageId],
             [\Doctrine\DBAL\ParameterType::INTEGER],
         )->fetchAllAssociative();
+        return array_map(PictureCommentRow::fromRow(...), $rows);
     }
 }

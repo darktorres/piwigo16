@@ -494,7 +494,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.delete',
-            callback:     $this->imagesEndpoints->delete(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\DeleteHandler::class,
             description:  'Deletes image(s).',
             params:       [
                 ParamDefinition::required(name: 'image_id', flags: WsParam::AcceptArray->value),
@@ -756,7 +756,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.checkUpload',
-            callback:     $this->imagesEndpoints->checkUpload(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\CheckUploadHandler::class,
             description:  'Checks if Piwigo is ready for upload.',
             tags:         ['images'],
             requiresAuth: true,
@@ -764,7 +764,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.emptyLounge',
-            callback:     $this->imagesEndpoints->emptyLounge(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\EmptyLoungeHandler::class,
             description:  'Empty lounge, where images may be waiting before taking off.',
             tags:         ['images'],
             requiresAuth: true,

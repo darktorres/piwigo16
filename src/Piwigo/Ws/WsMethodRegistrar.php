@@ -11,7 +11,6 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Piwigo\Ws\Method\CategoriesEndpoints;
-use Piwigo\Ws\Method\ExtensionsEndpoints;
 use Piwigo\Ws\Method\GeneralEndpoints;
 use Piwigo\Ws\Method\GroupsEndpoints;
 use Piwigo\Ws\Method\ImagesEndpoints;
@@ -35,7 +34,6 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 {
     public function __construct(
         private CategoriesEndpoints $categoriesEndpoints,
-        private ExtensionsEndpoints $extensionsEndpoints,
         private GeneralEndpoints $generalEndpoints,
         private GroupsEndpoints $groupsEndpoints,
         private ImagesEndpoints $imagesEndpoints,
@@ -845,7 +843,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.plugins.getList',
-            callback:     $this->extensionsEndpoints->pluginsGetList(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Extensions\PluginsGetListHandler::class,
             description:  'Gets the list of plugins with id, name, version, state and description.',
             tags:         ['extensions'],
             requiresAuth: true,
@@ -853,7 +851,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.plugins.performAction',
-            callback:     $this->extensionsEndpoints->pluginsPerformAction(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Extensions\PluginsPerformActionHandler::class,
             params:       [
                 ParamDefinition::required(name: 'action', info: 'install, activate, deactivate, uninstall, delete'),
                 ParamDefinition::required('plugin'),
@@ -865,7 +863,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.themes.performAction',
-            callback:     $this->extensionsEndpoints->themesPerformAction(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Extensions\ThemesPerformActionHandler::class,
             params:       [
                 ParamDefinition::required(name: 'action', info: 'activate, deactivate, delete, set_default'),
                 ParamDefinition::required('theme'),
@@ -877,7 +875,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.extensions.update',
-            callback:     $this->extensionsEndpoints->update(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Extensions\UpdateHandler::class,
             description:  '<b>Webmaster only.</b>',
             params:       [
                 ParamDefinition::required(name: 'type', info: 'plugins, languages, themes'),
@@ -891,7 +889,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.extensions.ignoreUpdate',
-            callback:     $this->extensionsEndpoints->ignoreUpdate(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Extensions\IgnoreUpdateHandler::class,
             description:  '<b>Webmaster only.</b> Ignores an extension if it needs update.',
             params:       [
                 ParamDefinition::optional(name: 'type', default: null, info: 'plugins, languages, themes'),
@@ -905,7 +903,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.extensions.checkUpdates',
-            callback:     $this->extensionsEndpoints->checkUpdates(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Extensions\CheckUpdatesHandler::class,
             description:  'Checks if piwigo or extensions are up to date.',
             tags:         ['extensions'],
             requiresAuth: true,

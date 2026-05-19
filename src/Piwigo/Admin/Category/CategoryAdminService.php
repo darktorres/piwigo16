@@ -337,10 +337,10 @@ final readonly class CategoryAdminService
             $parentCats = count($parentIds) > 0 ? $catRepo->findStatusByIds($parentIds) : [];
 
             foreach ($topCategories as $topCategory) {
-                $refCatId       = is_numeric($topCategory['id'] ?? null) ? (int) $topCategory['id'] : 0;
-                $topCatUppercat = is_scalar($topCategory['id_uppercat'] ?? null) ? (string) $topCategory['id_uppercat'] : '';
-                if (!empty($topCategory['id_uppercat']) && isset($parentCats[$topCatUppercat]) && $parentCats[$topCatUppercat]['status'] === 'private') {
-                    $refCatId = is_numeric($topCategory['id_uppercat']) ? (int) $topCategory['id_uppercat'] : 0;
+                $refCatId         = is_numeric($topCategory['id'] ?? null) ? (int) $topCategory['id'] : 0;
+                $topCatUppercatId = is_numeric($topCategory['id_uppercat'] ?? null) ? (int) $topCategory['id_uppercat'] : 0;
+                if (!empty($topCategory['id_uppercat']) && isset($parentCats[$topCatUppercatId]) && $parentCats[$topCatUppercatId] === \Piwigo\Common\Enum\Privacy::Private) {
+                    $refCatId = $topCatUppercatId;
                 }
                 $subCatsForRef = array_values($this->categoryService->getSubcatIds([(string) (is_numeric($topCategory['id'] ?? null) ? (int) $topCategory['id'] : 0)]));
 

@@ -1225,10 +1225,11 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
-     * Return (id, status) rows for the given category ids, indexed by id.
+     * Return the status (`public` | `private`) for each given category id,
+     * keyed by id. Missing ids are omitted (no DB row → no key in the result).
      *
-     * @param array<int|string> $ids
-     * @return array<string, array<string, mixed>>
+     * @param  array<int|string> $ids
+     * @return array<int, \Piwigo\Common\Enum\Privacy>
      */
     public function findStatusByIds(array $ids): array
     {
@@ -1243,7 +1244,14 @@ final class CategoryRepository extends AbstractRepository
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $result = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
-            $result[is_scalar($row['id'] ?? null) ? (string) $row['id'] : ''] = $row;
+            $idRaw = $row['id'] ?? null;
+            if (!is_numeric($idRaw)) {
+                continue;
+            }
+            $statusRaw           = $row['status'] ?? null;
+            $result[(int) $idRaw] = is_string($statusRaw)
+                ? \Piwigo\Common\Enum\Privacy::from($statusRaw)
+                : \Piwigo\Common\Enum\Privacy::Public;
         }
         return $result;
     }

@@ -11,6 +11,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.tags.delete` — remove one or more tags by ID. */
 final readonly class DeleteHandler implements WsAction
@@ -22,26 +23,24 @@ final readonly class DeleteHandler implements WsAction
     ) {
     }
 
-    /**
-     * @param  array<mixed> $params
-     * @return array<string, mixed>|PwgError
-     */
+    /** @param array<mixed> $params */
     #[\Override]
-    public function __invoke(array $params, PwgServer $server): PwgError|array
+    public function __invoke(array $params, PwgServer $server): DeleteResult|PwgError
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = DeleteParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $tagIdsRaw = is_array($params['tag_id']) ? $params['tag_id'] : [];
-        /** @var int[] $tagIdsDel */
-        $tagIdsDel = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $tagIdsRaw);
-        if ($this->tagRepository->countByIds($tagIdsDel) !== count($tagIdsDel)) {
+        if ($this->tagRepository->countByIds($input->tagIds) !== count($input->tagIds)) {
             return new PwgError(WsError::InvalidParam->value, 'All tags does not exist.');
         }
-        if (count($tagIdsDel) > 0) {
-            $this->tagAdminService->deleteTags($tagIdsDel);
-            return ['id' => $tagIdsDel];
+        if (count($input->tagIds) > 0) {
+            $this->tagAdminService->deleteTags($input->tagIds);
         }
-        return ['id' => []];
+        return new DeleteResult(deletedIds: $input->tagIds);
     }
 }

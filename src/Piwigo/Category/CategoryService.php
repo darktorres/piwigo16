@@ -184,8 +184,8 @@ final readonly class CategoryService
     }
 
     /**
-     * @param list<array<string, mixed>> $categories
-     * @param int[]|string               $selecteds
+     * @param list<array{id: int, name: string, uppercats: string, global_rank: string|null}> $categories
+     * @param int[]|string                                                                    $selecteds
      */
     public function displaySelectCategories(array $categories, array|string $selecteds, string $blockname, bool|string $fullname = true): void
     {
@@ -193,15 +193,15 @@ final readonly class CategoryService
         $tplCats  = [];
         foreach ($categories as $category) {
             if ($fullname !== false && $fullname !== '') {
-                $option = strip_tags(Kernel::service(HtmlService::class)->getCatDisplayNameCache(is_string($category['uppercats'] ?? null) ? $category['uppercats'] : '', null));
+                $option = strip_tags(Kernel::service(HtmlService::class)->getCatDisplayNameCache($category['uppercats'], null));
             } else {
-                $option  = str_repeat('&nbsp;', (3 * substr_count(is_string($category['global_rank'] ?? null) ? $category['global_rank'] : '', '.')));
+                $option  = str_repeat('&nbsp;', (3 * substr_count($category['global_rank'] ?? '', '.')));
                 $option .= '- ';
-                $selectRenderEvent = new RenderCategoryName(is_string($category['name'] ?? null) ? $category['name'] : '', 'display_select_categories');
+                $selectRenderEvent = new RenderCategoryName($category['name'], 'display_select_categories');
                 $this->dispatcher->dispatch($selectRenderEvent);
                 $option .= strip_tags($selectRenderEvent->categoryName);
             }
-            $tplCats[is_scalar($category['id'] ?? null) ? (string) $category['id'] : ''] = $option;
+            $tplCats[(string) $category['id']] = $option;
         }
         $template->assign($blockname, $tplCats);
         $template->assign($blockname . '_selected', $selecteds);

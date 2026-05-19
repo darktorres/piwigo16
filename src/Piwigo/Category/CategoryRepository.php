@@ -753,26 +753,27 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
-     * Search-text token query for categories: SELECT * FROM categories INNER
-     * JOIN user_cache_categories ON id = cat_id AND user_id = ? WHERE
-     * (clause1 OR clause2 …). Categories not visible to $userId are excluded.
+     * Search-text token query for categories: id/name/permalink projection
+     * joined with user_cache_categories so categories not visible to $userId
+     * are excluded. Used by qsearch to surface "matching categories" hints.
      *
      * @param  list<string> $clauses
-     * @return list<array<string, mixed>>
+     * @return list<CategoryNamePermalink>
      */
     public function findCategoriesByTextClausesForUser(int $userId, array $clauses): array
     {
         if ($clauses === []) {
             return [];
         }
-        return $this->conn->executeQuery(
-            'SELECT * FROM ' . $this->table('categories')
+        $rows = $this->conn->executeQuery(
+            'SELECT id, name, permalink FROM ' . $this->table('categories')
             . ' INNER JOIN ' . $this->table('user_cache_categories')
             . ' ON id = cat_id AND user_id = ?'
             . ' WHERE (' . implode("\n OR ", $clauses) . ')',
             [$userId],
-            [\Doctrine\DBAL\ParameterType::INTEGER],
+            [ParameterType::INTEGER],
         )->fetchAllAssociative();
+        return array_map(CategoryNamePermalink::fromRow(...), $rows);
     }
 
     /**
@@ -1798,17 +1799,30 @@ WHERE ' . $whereClause;
 
     /**
      * Execute the caller-built category-listing query and return its rows.
-     * Transitional shim until F4-e refactors the controllers that pre-compose
-     * dropdown SQL into their own Repository methods; see CategoryService's
-     * displaySelectCatWrapper.
+     * Transitional shim feeding CategoryService::displaySelectCatWrapper —
+     * every in-tree caller composes a `SELECT id, name, uppercats, global_rank`
+     * statement, so we coerce that shape here at the boundary.
      *
      * @param list<mixed>                            $params
      * @param list<ArrayParameterType|ParameterType> $types
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, name: string, uppercats: string, global_rank: string|null}>
      */
     public function executeListingQuery(string $query, array $params, array $types): array
     {
-        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        $out = [];
+        foreach ($this->conn->executeQuery($query, $params, $types)->fetchAllAssociative() as $row) {
+            $idRaw = $row['id'] ?? null;
+            if (!is_numeric($idRaw)) {
+                continue;
+            }
+            $out[] = [
+                'id'          => (int) $idRaw,
+                'name'        => is_string($row['name'] ?? null) ? $row['name'] : '',
+                'uppercats'   => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+            ];
+        }
+        return $out;
     }
 
     /**

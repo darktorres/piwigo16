@@ -6,6 +6,7 @@ namespace Piwigo\Search;
 
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\CategoryNamePermalink;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\StringUtil;
@@ -811,7 +812,7 @@ final class SearchService
             }
             $clauses = $this->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
             foreach ($this->categoryRepository->findCategoriesByTextClausesForUser($userId, $clauses) as $cat) {
-                $catId             = is_numeric($cat['id']) ? (int) $cat['id'] : 0;
+                $catId             = $cat->id->value;
                 $tokenCatIds[$i][] = $catId;
                 $allCats[$catId]   = $cat;
             }
@@ -858,13 +859,16 @@ final class SearchService
         }
 
         $allCats = array_intersect_key($allCats, array_flip(array_diff($positiveIds, $notIds)));
-        usort($allCats, $this->htmlService->tagAlphaCompare(...));
-        foreach ($allCats as &$cat) {
-            $catRenderEvent = new RenderCategoryName(is_string($cat['name'] ?? null) ? $cat['name'] : '', $cat);
+        usort($allCats, static fn (CategoryNamePermalink $a, CategoryNamePermalink $b): int => strcmp(strtolower($a->name), strtolower($b->name)));
+        $rendered = [];
+        foreach ($allCats as $cat) {
+            $row            = $cat->toRow();
+            $catRenderEvent = new RenderCategoryName($cat->name, $row);
             $this->dispatcher->dispatch($catRenderEvent);
-            $cat['name']    = $catRenderEvent->categoryName;
+            $row['name']    = $catRenderEvent->categoryName;
+            $rendered[]     = $row;
         }
-        $qsr->all_cats = $allCats;
+        $qsr->all_cats = $rendered;
         $qsr->cat_ids  = $tokenCatIds;
     }
 

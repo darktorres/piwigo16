@@ -74,10 +74,10 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
         ];
 
         $server->register(new MethodDefinition(
-            name:        'pwg.getVersion',
-            callback:    $this->generalEndpoints->getVersion(...),
-            description: 'Returns the Piwigo version.',
-            tags:        ['pwg'],
+            name:         'pwg.getVersion',
+            handlerClass: \Piwigo\Ws\Action\Pwg\GetVersionHandler::class,
+            description:  'Returns the Piwigo version.',
+            tags:         ['pwg'],
         ));
 
         $server->register(new MethodDefinition(

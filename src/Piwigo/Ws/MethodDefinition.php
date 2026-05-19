@@ -27,12 +27,26 @@ namespace Piwigo\Ws;
 final readonly class MethodDefinition
 {
     /**
-     * @param list<ParamDefinition> $params
-     * @param list<string>          $tags
+     * Methods register through either of two paths:
+     *
+     * - **Legacy `$callback`** — closure or `Endpoints::method(...)` slot,
+     *   captured at registration time. The historical pre-F5 pattern; the
+     *   *Endpoints god-classes are migrating off this path through F5-h.
+     * - **`$handlerClass`** (F5-h) — class-string of a {@see WsAction}
+     *   that PwgServer resolves from the container at invocation time.
+     *   Each handler lives in its own file and gets only the dependencies
+     *   the endpoint needs.
+     *
+     * Exactly one of `$callback` / `$handlerClass` must be set; the second
+     * registration path replaces the first one endpoint at a time.
+     *
+     * @param  list<ParamDefinition>      $params
+     * @param  list<string>               $tags
+     * @param  class-string<WsAction>|null $handlerClass
      */
     public function __construct(
         public string $name,
-        public mixed $callback,
+        public mixed $callback = null,
         public string $description = '',
         public array $params = [],
         public string $returns = '',
@@ -40,6 +54,17 @@ final readonly class MethodDefinition
         public bool $requiresAuth = false,
         public bool $postOnly = false,
         public bool $hidden = false,
+        public ?string $handlerClass = null,
     ) {
+        if ($callback === null && $handlerClass === null) {
+            throw new \InvalidArgumentException(
+                "MethodDefinition {$name} must declare either a callback or a handlerClass"
+            );
+        }
+        if ($callback !== null && $handlerClass !== null) {
+            throw new \InvalidArgumentException(
+                "MethodDefinition {$name} must not declare both callback and handlerClass"
+            );
+        }
     }
 }

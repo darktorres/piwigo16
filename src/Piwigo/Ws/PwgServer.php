@@ -23,7 +23,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @phpstan-type WsParamDef array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string, chooseList?: list<mixed>}
- * @phpstan-type WsMethod array{callback: mixed, description: string, signature: array<string, WsParamDef>, options: array<string, mixed>}
+ * @phpstan-type WsMethod array{callback: mixed, handlerClass: ?string, description: string, signature: array<string, WsParamDef>, options: array<string, mixed>}
  */
 final class PwgServer
 {
@@ -83,10 +83,11 @@ final class PwgServer
         }
 
         $this->_methods[$def->name] = [
-            'callback'    => $def->callback,
-            'description' => $def->description,
-            'signature'   => $signature,
-            'options'     => $options,
+            'callback'     => $def->callback,
+            'handlerClass' => $def->handlerClass,
+            'description'  => $def->description,
+            'signature'    => $signature,
+            'options'      => $options,
         ];
     }
 
@@ -395,6 +396,15 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
             return new PwgError(WsError::InvalidMethod->value, 'Method invocation not allowed');
         }
 
+        $handlerClass = $method['handlerClass'];
+        if ($handlerClass !== null) {
+            /** @var class-string<WsAction> $handlerClass */
+            $handler = Kernel::service($handlerClass);
+            if (!is_callable($handler)) {
+                return new PwgError(WsError::InvalidMethod->value, 'Handler is not invokable');
+            }
+            return $handler($params, $this);
+        }
         $callback = $method['callback'];
         if (!is_callable($callback)) {
             return new PwgError(WsError::InvalidMethod->value, 'Invalid method callback');

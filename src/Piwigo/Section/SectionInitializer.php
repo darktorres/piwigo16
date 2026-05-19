@@ -79,7 +79,8 @@ final readonly class SectionInitializer
 
         // ── URL path → $rewritten + $page['root_path'] ───────────────────────
 
-        $routePath = is_string($request->getAttribute('_route_path')) ? $request->getAttribute('_route_path') : '/';
+        $routePathRaw = $request->getAttribute('_route_path');
+        $routePath    = is_string($routePathRaw) ? $routePathRaw : '/';
 
         $rewritten           = $routePath;
         // Empty by default — Piwigo URLs resolve relative to the install's
@@ -87,7 +88,7 @@ final readonly class SectionInitializer
         // literal prefix; an empty value yields correct relative links.
         $page['root_path']   = '';
         $page['section_url'] = $rewritten;
-        $tokens    = explode('/', ltrim((string) $rewritten, '/'));
+        $tokens    = explode('/', ltrim($rewritten, '/'));
         $nextToken = 0;
 
         // ── Picture page: first token is the image identifier ─────────────────

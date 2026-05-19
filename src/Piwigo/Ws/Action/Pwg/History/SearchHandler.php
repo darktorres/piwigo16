@@ -138,16 +138,20 @@ final readonly class SearchHandler implements WsAction
         if (count($searchIds) > 0) {
             $searchDetails = $this->searchRepository->findRulesByIds(array_map(intval(...), $searchIds));
             foreach ($searchDetails as $idSearch => $rulesSearch) {
-                $rulesArr    = json_decode(is_scalar($rulesSearch) ? (string) $rulesSearch : '', associative: true);
-                $rulesArr    = is_array($rulesArr) ? $rulesArr : [];
+                $rulesArrRaw = json_decode(is_scalar($rulesSearch) ? (string) $rulesSearch : '', associative: true);
+                /** @var array<string, mixed> $rulesArr */
+                $rulesArr    = is_array($rulesArrRaw) ? $rulesArrRaw : [];
+                /** @var array<string, mixed> $rulesFields */
                 $rulesFields = is_array($rulesArr['fields'] ?? null) ? $rulesArr['fields'] : [];
+                /** @var array{words?: list<int|string>} $rfTags */
                 $rfTags      = is_array($rulesFields['tags'] ?? null) ? $rulesFields['tags'] : [];
+                /** @var array{words?: list<int|string>} $rfCat */
                 $rfCat       = is_array($rulesFields['cat'] ?? null) ? $rulesFields['cat'] : [];
                 if (!empty($rfTags['words'])) {
                     $hasTags = true;
                 }
                 if (!empty($rfCat['words'])) {
-                    $catWords    = is_array($rfCat['words']) ? $rfCat['words'] : [];
+                    $catWords    = $rfCat['words'];
                     $categoryIds = array_merge($categoryIds, $catWords);
                 }
                 if (!empty($rulesFields['added_by'])) {
@@ -173,7 +177,7 @@ final readonly class SearchHandler implements WsAction
         $imageInfos     = [];
         $fullCatPath    = [];
         if (count($categoryIds) > 0) {
-            $categoryIdsInt = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $categoryIds));
+            $categoryIdsInt = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $categoryIds);
             $uppercatsOf    = $this->categoryRepository->findUppercatsMapByIds($categoryIdsInt);
             foreach ($uppercatsOf as $categoryId => $uppercats) {
                 $uppercatsS                  = is_scalar($uppercats) ? (string) $uppercats : '';

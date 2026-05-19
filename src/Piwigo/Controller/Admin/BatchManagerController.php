@@ -351,7 +351,7 @@ final class BatchManagerController implements AdminSubControllerInterface
             $this->session->bulkManagerFilter = $bmf;
         }
 
-        if (empty($this->session->bulkManagerFilter)) {
+        if ($this->session->bulkManagerFilter === null || $this->session->bulkManagerFilter === []) {
             $this->session->bulkManagerFilter = ['prefilter' => 'caddie'];
         }
 

@@ -38,6 +38,7 @@ final readonly class SessionMiddleware implements MiddlewareInterface
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+        $_SESSION ??= [];
 
         try {
             return $handler->handle($request);

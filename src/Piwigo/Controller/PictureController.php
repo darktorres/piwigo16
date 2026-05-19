@@ -313,7 +313,10 @@ final readonly class PictureController implements ControllerInterface
 
         // Related categories
         [$relPermSql, $relPermParams, $relPermTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'AND');
-        $related_categories = $this->categoryRepository->findPictureNavCategoriesForImage($imageId, $relPermSql, $relPermParams, $relPermTypes);
+        $related_categories = array_map(
+            static fn (\Piwigo\Category\Projection\PictureNavCategoryRow $r): array => $r->toRow(),
+            $this->categoryRepository->findPictureNavCategoriesForImage($imageId, $relPermSql, $relPermParams, $relPermTypes),
+        );
         usort($related_categories, $this->categoryService->globalRankCompare(...));
 
         // Load prev/current/next picture data

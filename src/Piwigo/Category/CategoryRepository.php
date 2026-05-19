@@ -16,6 +16,7 @@ use Piwigo\Category\Projection\CategoryUppercatsSite;
 use Piwigo\Category\Projection\ImageCategoryInfo;
 use Piwigo\Category\Projection\ImageCategoryLink;
 use Piwigo\Category\Projection\MenuCategoryRow;
+use Piwigo\Category\Projection\PictureNavCategoryRow;
 use Piwigo\Category\Projection\RankUpdateRow;
 use Piwigo\Category\Projection\RelatedCategoryRow;
 use Piwigo\Db\AbstractRepository;
@@ -2168,9 +2169,9 @@ SELECT
      * categories linked to the given image, subject to permission filter.
      * Used by the picture page to compute navigation/commentable state.
      *
-     * @param list<mixed>                            $permParams
-     * @param list<ArrayParameterType|ParameterType> $permTypes
-     * @return list<array<string, mixed>>
+     * @param  list<mixed>                            $permParams
+     * @param  list<ArrayParameterType|ParameterType> $permTypes
+     * @return list<PictureNavCategoryRow>
      */
     public function findPictureNavCategoriesForImage(
         int $imageId,
@@ -2183,7 +2184,7 @@ SELECT
             . ' ON category_id = id WHERE image_id = ? ' . $permWhere;
         $params = [$imageId, ...$permParams];
         $types  = [ParameterType::INTEGER, ...$permTypes];
-        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+        return array_map(PictureNavCategoryRow::fromRow(...), $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative());
     }
 
     /**

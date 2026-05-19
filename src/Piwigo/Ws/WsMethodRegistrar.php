@@ -209,8 +209,8 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
         ));
 
         $server->register(new MethodDefinition(
-            name:        'pwg.images.rate',
-            callback:    $this->imagesEndpoints->rate(...),
+            name:         'pwg.images.rate',
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\RateHandler::class,
             description: 'Rates an image.',
             params:      [
                 ParamDefinition::required(name: 'image_id', type: WsType::Id->value),
@@ -235,7 +235,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.images.setPrivacyLevel',
-            callback:     $this->imagesEndpoints->setPrivacyLevel(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\Images\SetPrivacyLevelHandler::class,
             description:  'Sets the privacy levels for the images.',
             params:       [
                 ParamDefinition::required(name: 'image_id', type: WsType::Id->value, flags: WsParam::ForceArray->value),

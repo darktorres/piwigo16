@@ -41,6 +41,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
+use Piwigo\Image\Entity\Image;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\OrderByService;
@@ -938,29 +939,24 @@ final class BatchManagerController implements AdminSubControllerInterface
             $is_category      = isset($bmf['category']) && !isset($bmf['category_recursive']);
             $bmf_category_val = is_numeric($bmf['category'] ?? null) ? (int) $bmf['category'] : 0;
 
-            $batchClauses = ['id IN (?)'];
-            $batchParams  = [array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $catElementsId)];
-            $batchTypes   = [\Doctrine\DBAL\ArrayParameterType::INTEGER];
-            $batchJoin    = '';
             if ($is_category) {
                 $category_info = $this->categoryService->getCatInfo($bmf_category_val);
                 Config::override('order_by', Config::orderByInsideCategory());
                 if (isset($category_info['image_order']) && $category_info['image_order'] !== '') {
                     Config::override('order_by', ' ORDER BY ' . (is_string($category_info['image_order']) ? $category_info['image_order'] : ''));
                 }
-                $batchJoin       = ' JOIN ' . Tables::imageCategory() . ' ON id = image_id';
-                $batchClauses[]  = 'category_id = ?';
-                $batchParams[]   = $bmf_category_val;
-                $batchTypes[]    = ParameterType::INTEGER;
             }
-            $batchQuery = 'SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation FROM '
-                . Tables::images() . $batchJoin
-                . ' WHERE ' . implode(' AND ', $batchClauses)
-                . ' ' . $this->orderByService->buildOrderByClause(Config::orderBy()) . ' LIMIT ' . $nbImages . ' OFFSET ' . $pageStart;
-            $batchRows  = $this->imageRepository->findRowsByRawQuery($batchQuery, $batchParams, $batchTypes);
+            $batchImages = $this->imageRepository->findForBatchManager(
+                array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $catElementsId),
+                $is_category ? $bmf_category_val : null,
+                $this->orderByService->buildOrderByClause(Config::orderBy()),
+                $nbImages,
+                $pageStart,
+            );
             $thumb_params = ImageStdParams::getByType(DerivativeSize::Square->value);
 
-            foreach ($batchRows as $row) {
+            foreach ($batchImages as $img) {
+                $row = $img->toRow();
                 $nb_thumbs_page++;
                 $src_image   = new SrcImage($row);
                 $ttitle      = $this->htmlService->renderElementName($row);
@@ -1131,27 +1127,22 @@ final class BatchManagerController implements AdminSubControllerInterface
                 Config::override('order_by', ' ORDER BY file, id');
             }
 
-            $unitClauses = ['id IN (?)'];
-            $unitParams  = [array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $catElementsIdU)];
-            $unitTypes   = [\Doctrine\DBAL\ArrayParameterType::INTEGER];
-            $unitJoin    = '';
             if ($is_category) {
                 $category_info = $this->categoryService->getCatInfo($bmf_category_val);
                 Config::override('order_by', Config::orderByInsideCategory());
                 if (isset($category_info['image_order']) && $category_info['image_order'] !== '') {
                     Config::override('order_by', ' ORDER BY ' . (is_string($category_info['image_order']) ? $category_info['image_order'] : ''));
                 }
-                $unitJoin       = ' JOIN ' . Tables::imageCategory() . ' ON id = image_id';
-                $unitClauses[]  = 'category_id = ?';
-                $unitParams[]   = $bmf_category_val;
-                $unitTypes[]    = ParameterType::INTEGER;
             }
-            $unitQuery = 'SELECT * FROM ' . Tables::images() . $unitJoin
-                . ' WHERE ' . implode(' AND ', $unitClauses)
-                . ' ' . $this->orderByService->buildOrderByClause(Config::orderBy()) . ' LIMIT ' . $nbImagesU . ' OFFSET ' . $pageStartU;
-            $images    = $this->imageRepository->findRowsByRawQuery($unitQuery, $unitParams, $unitTypes);
+            $unitImages = $this->imageRepository->findForBatchManager(
+                array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $catElementsIdU),
+                $is_category ? $bmf_category_val : null,
+                $this->orderByService->buildOrderByClause(Config::orderBy()),
+                $nbImagesU,
+                $pageStartU,
+            );
 
-            $added_by_ids   = array_values(array_unique(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($images, 'added_by'))));
+            $added_by_ids   = array_values(array_unique(array_map(static fn (Image $img): int => $img->addedBy !== null ? $img->addedBy->value : 0, $unitImages)));
             $added_by_username_of = [];
             if (count($added_by_ids) > 0) {
                 $added_by_username_of = $this->userRepository->findIdToUsernameMapByIds(
@@ -1164,7 +1155,8 @@ final class BatchManagerController implements AdminSubControllerInterface
 
             $storage_category_id = null;
 
-            foreach ($images as $row) {
+            foreach ($unitImages as $img) {
+                $row = $img->toRow();
                 $element_ids[] = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
                 $src_image     = new SrcImage($row);
                 $image_file    = $row['file'];

@@ -1355,18 +1355,38 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
-     * Run a caller-built images query (typically from BatchManager's free-form
-     * filter composition) and return the rows. Caller composes the FROM/JOIN/
-     * WHERE/ORDER BY fragments; this method just executes with the bound
-     * params.
+     * Find images for the Batch Manager — `id IN (...)` plus an optional
+     * `category_id = ?` filter joined via `image_category`, with the
+     * caller's ORDER BY suffix and LIMIT/OFFSET. Replaces the historical
+     * free-form `findRowsByRawQuery` escape hatch (F5-d/14).
      *
-     * @param list<mixed>                            $params
-     * @param list<ArrayParameterType|ParameterType> $types
-     * @return list<array<string, mixed>>
+     * @param  list<int> $imageIds
+     * @return list<Image>
      */
-    public function findRowsByRawQuery(string $query, array $params, array $types): array
-    {
-        return $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
+    public function findForBatchManager(
+        array $imageIds,
+        ?int $categoryId,
+        string $orderBySuffix,
+        int $limit,
+        int $offset,
+    ): array {
+        if ($imageIds === []) {
+            return [];
+        }
+        $clauses = ['id IN (?)'];
+        $params  = [$imageIds];
+        $types   = [ArrayParameterType::INTEGER];
+        $join    = '';
+        if ($categoryId !== null) {
+            $join      = ' JOIN ' . $this->table('image_category') . ' ON id = image_id';
+            $clauses[] = 'category_id = ?';
+            $params[]  = $categoryId;
+            $types[]   = ParameterType::INTEGER;
+        }
+        $query = 'SELECT ' . $this->table('images') . '.* FROM ' . $this->table('images') . $join
+            . ' WHERE ' . implode(' AND ', $clauses)
+            . ' ' . $orderBySuffix . ' LIMIT ' . $limit . ' OFFSET ' . $offset;
+        return array_map(Image::fromRow(...), $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative());
     }
 
     /**

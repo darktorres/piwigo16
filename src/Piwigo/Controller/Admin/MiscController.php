@@ -473,8 +473,6 @@ final class MiscController implements AdminSubControllerInterface
     private function help(): void
     {
         $tpl = TemplateRegistry::current();
-        /** @var array<string, mixed> $user */
-        $user = CurrentUser::get()->rawAttributes;
 
         $selected = isset($_GET['section']) && is_string($_GET['section']) ? $_GET['section'] : 'add_photos';
 
@@ -491,7 +489,7 @@ final class MiscController implements AdminSubControllerInterface
             'HELP_SECTION_TITLE' => $tabsheet->sheets[$tabsheet->selected]['caption'] ?? '',
         ]);
 
-        $language_prefix = substr(is_scalar($user['language'] ?? null) ? (string) $user['language'] : '', 0, 3);
+        $language_prefix = substr(CurrentUser::get()->language, 0, 3);
         if ('en_' == $language_prefix) {
             PageState::current()->addMessage(new Html(sprintf('Need help to use Piwigo? <a href="%s" target="_blank">Check the online documentation</a> !', 'https://doc.piwigo.org/')));
         } elseif ('fr_' == $language_prefix) {
@@ -596,8 +594,8 @@ final class MiscController implements AdminSubControllerInterface
             $nb_images     = $this->imageRepository->countAll();
             $detect = new MobileDetect();
             if (!$detect->is('iOS') && strtotime((string) $register_date) < strtotime('2 weeks ago') && $nb_cats >= 3 && $nb_images >= 30) {
-                $userLang  = is_string($user['language'] ?? null) ? $user['language'] : '';
-                $userEmail = is_string($user['email'] ?? null) ? $user['email'] : '';
+                $userLang  = CurrentUser::get()->language;
+                $userEmail = CurrentUser::get()->email;
                 $intro_newsletter_data = ['email' => $userEmail, 'subscribe_base_url' => $this->adminService->getNewsletterSubscribeBaseUrl($userLang), 'old_newsletters_url' => $this->adminService->getOldNewslettersBaseUrl($userLang), 'str_subscribe_title' => Lang::t('Subscribe to our newsletter and stay updated!'), 'str_subscribe_button' => Lang::t('Sign up to the newsletter'), 'str_see_previous' => Lang::t('See previous newsletters'), 'str_dismiss' => Lang::t('Understood, do not show again')];
             }
         }

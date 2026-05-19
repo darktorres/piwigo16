@@ -66,8 +66,7 @@ final readonly class RegisterController implements ControllerInterface
 
         $this->dispatcher->dispatch(new LocBeginRegister());
 
-        /** @var array<string, mixed> $user */
-        $user = CurrentUser::get()->rawAttributes;
+        $userLang = CurrentUser::get()->language;
 
         $post_login    = StringUtil::inputString('login', null, $_POST);
         $post_mail     = StringUtil::inputString('mail_address', null, $_POST);
@@ -133,11 +132,11 @@ final readonly class RegisterController implements ControllerInterface
         }
 
         $cookie_lang = StringUtil::inputString('lang', null, $_COOKIE);
-        if ($cookie_lang !== null && $user['language'] != $cookie_lang) {
+        if ($cookie_lang !== null && $userLang != $cookie_lang) {
             if (!array_key_exists($cookie_lang, $this->languageService->getActiveLanguages())) {
                 HtmlService::fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
-            $user['language'] = $cookie_lang;
+            $userLang = $cookie_lang;
             $this->langService->loadLanguage('common.lang', '', ['language' => $cookie_lang]);
         }
 
@@ -145,7 +144,6 @@ final readonly class RegisterController implements ControllerInterface
         foreach ($this->languageService->getActiveLanguages() as $language_code => $language_name) {
             $language_options[$language_code] = $language_name;
         }
-        $userLang = is_string($user['language'] ?? null) ? $user['language'] : '';
         $tpl->assign(['language_options' => $language_options, 'current_language' => $userLang]);
         $tpl->assign('page_data_json', json_encode([
             'selected_language' => $language_options[$userLang] ?? '',

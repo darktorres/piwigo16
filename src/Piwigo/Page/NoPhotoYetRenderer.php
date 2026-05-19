@@ -40,7 +40,7 @@ final readonly class NoPhotoYetRenderer
     }
     public function render(): void
     {
-        $user = CurrentUser::get()->rawAttributes;
+        $currentUser = CurrentUser::get();
         $_no_photo_yet_route = PathExtractor::fromServer($_SERVER);
 
         if (
@@ -55,8 +55,7 @@ final readonly class NoPhotoYetRenderer
         ) {
             $nb_photos = $this->imageRepository->countAll();
             if (0 == $nb_photos) {
-                $theme = is_string($user['theme'] ?? null) ? $user['theme'] : '_base';
-                $template = new Template($this->paths->root . 'themes', $theme);
+                $template = new Template($this->paths->root . 'themes', $currentUser->theme);
                 TemplateRegistry::set($template);
 
                 if (isset($_GET['no_photo_yet'])) {
@@ -87,7 +86,7 @@ final readonly class NoPhotoYetRenderer
 
                     $template->assign([
                         'step' => 2,
-                        'intro' => Lang::t('Hello %s, your Piwigo photo gallery is empty!', is_string($user['username'] ?? null) ? $user['username'] : ''),
+                        'intro' => Lang::t('Hello %s, your Piwigo photo gallery is empty!', $currentUser->username),
                         'next_step_url' => $url,
                         'deactivate_url' => UrlService::getRootUrl() . '?no_photo_yet=deactivate',
                     ]);

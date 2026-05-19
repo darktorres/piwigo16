@@ -169,7 +169,7 @@ final readonly class WsMethodRegistrar implements EventSubscriberInterface
 
         $server->register(new MethodDefinition(
             name:         'pwg.getMissingDerivatives',
-            callback:     $this->generalEndpoints->getMissingDerivatives(...),
+            handlerClass: \Piwigo\Ws\Action\Pwg\GetMissingDerivativesHandler::class,
             description:  'Returns a list of derivatives to build.',
             params:       [
                 ParamDefinition::optional(name: 'types', default: null, flags: WsParam::ForceArray->value, info: 'square, thumb, 2small, xsmall, small, medium, large, xlarge, xxlarge, 3xlarge, 4xlarge'),

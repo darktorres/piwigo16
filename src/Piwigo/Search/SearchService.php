@@ -172,36 +172,40 @@ final class SearchService
 
         $imageIdsForFilter = [];
 
-        $displayFilters = $this->filterViewRepo->listAll();
+        $rawFilters = $this->filterViewRepo->listAll();
 
-        foreach ($displayFilters as $filtName => $filtConf) {
-            $filtConf = is_array($filtConf) ? $filtConf : [];
-            if (isset($filtConf['access'])) {
-                $access    = is_string($filtConf['access']) ? $filtConf['access'] : '';
-                $filtEntry = is_array($displayFilters[$filtName] ?? null) ? (array) $displayFilters[$filtName] : [];
-                if ($access == 'everybody' or ($access == 'admins-only' and $this->permissionService->isAdmin()) or ($access == 'registered-users' and $this->permissionService->isClassicUser())) {
-                    $filtEntry['access'] = true;
-                } else {
-                    $filtEntry['access'] = false;
-                }
-                $displayFilters[$filtName] = $filtEntry;
+        // Resolve each filter's `access` from the persisted role string
+        // ('everybody' / 'admins-only' / 'registered-users') to a per-user
+        // bool. The `last_filters_conf` entry (bool, not array) is left
+        // alone since it doesn't drive a per-filter access gate.
+        /** @var array<string, array{access: bool, default: bool}> $displayFilters */
+        $displayFilters = [];
+        foreach ($rawFilters as $filtName => $filtConf) {
+            if (!is_array($filtConf)) {
+                continue;
             }
+            $access = $filtConf['access'];
+            $resolvedAccess = $access === 'everybody'
+                || ($access === 'admins-only' && $this->permissionService->isAdmin())
+                || ($access === 'registered-users' && $this->permissionService->isClassicUser());
+            $displayFilters[$filtName] = ['access' => $resolvedAccess, 'default' => $filtConf['default']];
         }
 
-        $expertFilter       = is_array($displayFilters['expert'] ?? null) ? (array) $displayFilters['expert'] : [];
-        $allwordsFilter     = is_array($displayFilters['words'] ?? null) ? (array) $displayFilters['words'] : [];
-        $authorFilter       = is_array($displayFilters['author'] ?? null) ? (array) $displayFilters['author'] : [];
-        $filetypeFilter     = is_array($displayFilters['file_type'] ?? null) ? (array) $displayFilters['file_type'] : [];
-        $addedByFilter      = is_array($displayFilters['added_by'] ?? null) ? (array) $displayFilters['added_by'] : [];
-        $albumFilter        = is_array($displayFilters['album'] ?? null) ? (array) $displayFilters['album'] : [];
-        $postDateFilter     = is_array($displayFilters['post_date'] ?? null) ? (array) $displayFilters['post_date'] : [];
-        $creationDateFilter = is_array($displayFilters['creation_date'] ?? null) ? (array) $displayFilters['creation_date'] : [];
-        $ratioFilter        = is_array($displayFilters['ratio'] ?? null) ? (array) $displayFilters['ratio'] : [];
-        $ratingFilter       = is_array($displayFilters['rating'] ?? null) ? (array) $displayFilters['rating'] : [];
-        $fileSizeFilter     = is_array($displayFilters['file_size'] ?? null) ? (array) $displayFilters['file_size'] : [];
-        $heightFilter       = is_array($displayFilters['height'] ?? null) ? (array) $displayFilters['height'] : [];
-        $widthFilter        = is_array($displayFilters['width'] ?? null) ? (array) $displayFilters['width'] : [];
-        $tagsFilter         = is_array($displayFilters['tags'] ?? null) ? (array) $displayFilters['tags'] : [];
+        $defaultFilt        = ['access' => false, 'default' => false];
+        $expertFilter       = $displayFilters['expert']        ?? $defaultFilt;
+        $allwordsFilter     = $displayFilters['words']         ?? $defaultFilt;
+        $authorFilter       = $displayFilters['author']        ?? $defaultFilt;
+        $filetypeFilter     = $displayFilters['file_type']     ?? $defaultFilt;
+        $addedByFilter      = $displayFilters['added_by']      ?? $defaultFilt;
+        $albumFilter        = $displayFilters['album']         ?? $defaultFilt;
+        $postDateFilter     = $displayFilters['post_date']     ?? $defaultFilt;
+        $creationDateFilter = $displayFilters['creation_date'] ?? $defaultFilt;
+        $ratioFilter        = $displayFilters['ratio']         ?? $defaultFilt;
+        $ratingFilter       = $displayFilters['rating']        ?? $defaultFilt;
+        $fileSizeFilter     = $displayFilters['file_size']     ?? $defaultFilt;
+        $heightFilter       = $displayFilters['height']        ?? $defaultFilt;
+        $widthFilter        = $displayFilters['width']         ?? $defaultFilt;
+        $tagsFilter         = $displayFilters['tags']          ?? $defaultFilt;
 
         $searchFields = is_array($search['fields'] ?? null) ? $search['fields'] : [];
 
@@ -215,11 +219,10 @@ final class SearchService
 
         $allwordsFields = is_array($searchFields['allwords'] ?? null) ? $searchFields['allwords'] : [];
         $allwordsFieldsFields = $allwordsFields['fields'] ?? null;
-        $allwordsFilterAccess = $allwordsFilter['access'] ?? false;
         $allwordsWordsRaw = $allwordsFields['words'] ?? null;
         $allwordsHasWords = (is_array($allwordsWordsRaw) && count($allwordsWordsRaw) > 0)
             || (is_string($allwordsWordsRaw) && $allwordsWordsRaw !== '');
-        if (isset($searchFields['allwords']) and $allwordsHasWords and count(is_array($allwordsFieldsFields) ? $allwordsFieldsFields : []) > 0 and ($allwordsFilterAccess === true || $allwordsFilterAccess === 1 || $allwordsFilterAccess === '1')) {
+        if (isset($searchFields['allwords']) and $allwordsHasWords and count(is_array($allwordsFieldsFields) ? $allwordsFieldsFields : []) > 0 and $allwordsFilter['access']) {
             $hasFilersFilled = true;
             $fields = ['file', 'name', 'comment', 'author'];
             $allwordsFieldList = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($allwordsFieldsFields) ? $allwordsFieldsFields : []);

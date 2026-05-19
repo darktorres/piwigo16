@@ -30,9 +30,12 @@ final readonly class SearchFilterViewRepository
 
     /**
      * Load every filter view as a flat map name → config. Matches the
-     * shape the legacy serialized blob returned.
+     * shape the legacy serialized blob returned: most entries describe
+     * a single filter (`access` enum + `default` flag); the special
+     * `last_filters_conf` entry is a plain bool. Entries with malformed
+     * JSON are dropped silently.
      *
-     * @return array<string, mixed>
+     * @return array<string, array{access: string, default: bool}|bool>
      */
     public function listAll(): array
     {
@@ -48,7 +51,16 @@ final readonly class SearchFilterViewRepository
                 continue;
             }
             $decoded = json_decode($raw, associative: true);
-            $out[$name] = is_array($decoded) || is_bool($decoded) ? $decoded : null;
+            if (is_bool($decoded)) {
+                $out[$name] = $decoded;
+                continue;
+            }
+            if (!is_array($decoded)) {
+                continue;
+            }
+            $access  = is_string($decoded['access'] ?? null) ? $decoded['access'] : '';
+            $default = is_bool($decoded['default'] ?? null) ? $decoded['default'] : false;
+            $out[$name] = ['access' => $access, 'default' => $default];
         }
         return $out;
     }

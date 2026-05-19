@@ -50,7 +50,6 @@ final readonly class SearchFilterRenderer
         if ($filters_views === []) {
             $filters_views = Config::defaultFiltersViews();
         }
-        /** @var array<string, array<string,mixed>> $filters_views */
 
         $template->assign('display_filter', $filters_views);
 
@@ -61,16 +60,21 @@ final readonly class SearchFilterRenderer
                 $search_details = $ctx->searchDetails;
                 $this->searchService->setSearchDetails($search_details);
             }
-            /** @var array<string, array<string, bool>> $display_filters */
-            $display_filters = $filters_views;
 
+            // Resolve each persisted filter's `access` role string to a
+            // per-user bool. The `last_filters_conf` entry is a bool, not
+            // an access-gated filter, so it's skipped.
+            /** @var array<string, array{access: bool, default: bool}> $display_filters */
+            $display_filters = [];
             foreach ($filters_views as $filt_name => $filt_conf) {
-                if (isset($filt_conf['access'])) {
-                    $hasAccess = $filt_conf['access'] == 'everybody'
-                        || ($filt_conf['access'] == 'admins-only' && $this->permissionService->isAdmin())
-                        || ($filt_conf['access'] == 'registered-users' && $this->permissionService->isClassicUser());
-                    $display_filters[$filt_name]['access'] = $hasAccess;
+                if (!is_array($filt_conf)) {
+                    continue;
                 }
+                $access = $filt_conf['access'];
+                $hasAccess = $access === 'everybody'
+                    || ($access === 'admins-only' && $this->permissionService->isAdmin())
+                    || ($access === 'registered-users' && $this->permissionService->isClassicUser());
+                $display_filters[$filt_name] = ['access' => $hasAccess, 'default' => $filt_conf['default']];
             }
 
             $searchKey = $ctx->search ?? '';

@@ -1442,7 +1442,7 @@ final class Config
      * stored in conf — kept here as the canonical seed list for
      * `SearchFilterViewRepository`.
      *
-     * @return array<string, mixed>
+     * @return array<string, array{access: string, default: bool}|bool>
      */
     public static function defaultFiltersViews(): array
     {

@@ -83,7 +83,7 @@ final readonly class SearchController implements ControllerInterface
 
         $default_fields = [];
         foreach ($filters_conf as $filt_name => $filt_conf) {
-            if (is_array($filt_conf) && isset($filt_conf['default']) && $filt_conf['default'] == true) {
+            if (is_array($filt_conf) && $filt_conf['default']) {
                 $default_fields[] = $filt_name;
             }
         }

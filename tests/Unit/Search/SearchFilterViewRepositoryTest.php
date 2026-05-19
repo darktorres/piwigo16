@@ -41,11 +41,12 @@ final class SearchFilterViewRepositoryTest extends TestCase
             ->willReturn($result);
 
         $repo = new SearchFilterViewRepository($conn);
+        // Malformed entries (non-bool, non-array) are dropped silently
+        // — the typed listAll() contract is array{access:string,default:bool}|bool only.
         self::assertSame(
             [
                 'words'             => ['access' => 'everybody', 'default' => true],
                 'last_filters_conf' => true,
-                'malformed'         => null,
             ],
             $repo->listAll()
         );

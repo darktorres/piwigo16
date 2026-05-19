@@ -113,6 +113,60 @@ final class ImageTest extends TestCase
         self::assertSame(2.294444, $img->longitude);
     }
 
+    public function testToRowRoundTripsFromFullyPopulated(): void
+    {
+        $row = array_merge(self::minimalRow(42), [
+            'date_available'        => '2026-05-18 09:00:00',
+            'date_creation'         => '2026-05-17 18:30:00',
+            'name'                  => 'sunset',
+            'comment'               => 'over the ocean',
+            'author'                => 'jane',
+            'hit'                   => 123,
+            'filesize'              => 2_048_000,
+            'width'                 => 4000,
+            'height'                => 3000,
+            'coi'                   => '5050',
+            'representative_ext'    => 'jpg',
+            'date_metadata_update'  => '2026-05-18',
+            'rating_score'          => 4.25,
+            'storage_category_id'   => 9,
+            'level'                 => 4,
+            'md5sum'                => str_repeat('a', 32),
+            'added_by'              => 11,
+            'rotation'              => 6,
+            'latitude'              => 48.858333,
+            'longitude'             => 2.294444,
+        ]);
+
+        $round = Image::fromRow($row)->toRow();
+
+        // Every key in the original row appears in the round-trip with the
+        // same canonical value. (Numeric strings normalize to int/float.)
+        foreach ($row as $k => $v) {
+            self::assertSame($v, $round[$k], "key {$k} preserved");
+        }
+    }
+
+    public function testToRowEmitsNullsForMissingOptionalFields(): void
+    {
+        $row = Image::fromRow(self::minimalRow(7))->toRow();
+
+        self::assertSame(7, $row['id']);
+        self::assertSame('galleries/foo.jpg', $row['file']);
+        self::assertSame('galleries/foo.jpg', $row['path']);
+        self::assertSame(0, $row['hit']);
+        self::assertSame(0, $row['level']);
+        self::assertSame('2026-05-18 12:34:56', $row['lastmodified']);
+        self::assertNull($row['name']);
+        self::assertNull($row['author']);
+        self::assertNull($row['comment']);
+        self::assertNull($row['date_available']);
+        self::assertNull($row['date_creation']);
+        self::assertNull($row['md5sum']);
+        self::assertNull($row['added_by']);
+        self::assertNull($row['storage_category_id']);
+    }
+
     public function testFromRowRejectsMissingId(): void
     {
         $row = self::minimalRow();

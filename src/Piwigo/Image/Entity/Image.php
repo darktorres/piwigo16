@@ -100,6 +100,44 @@ final readonly class Image
         );
     }
 
+    /**
+     * Inverse of {@see fromRow()} — emits the canonical `images`-table row
+     * shape. Used by service wrappers and WS response builders that still
+     * consume `array<string, mixed>` downstream. Pure data conversion; no
+     * derived fields (those belong on `PictureViewModel`).
+     *
+     * @return array<string, mixed>
+     */
+    public function toRow(): array
+    {
+        return [
+            'id'                   => $this->id->value,
+            'file'                 => $this->file->value,
+            'path'                 => $this->path->value,
+            'name'                 => $this->name,
+            'comment'              => $this->comment,
+            'author'               => $this->author,
+            'hit'                  => $this->hit,
+            'filesize'             => $this->filesize,
+            'width'                => $this->width,
+            'height'               => $this->height,
+            'representative_ext'   => $this->representativeExt,
+            'date_available'       => $this->dateAvailable?->value,
+            'date_creation'        => $this->dateCreation?->value,
+            'date_metadata_update' => $this->dateMetadataUpdate?->value,
+            'rating_score'         => $this->ratingScore,
+            'storage_category_id'  => $this->storageCategoryId?->value,
+            'level'                => $this->level,
+            'md5sum'               => $this->md5sum?->value,
+            'added_by'             => $this->addedBy?->value,
+            'rotation'             => $this->rotation,
+            'latitude'             => $this->latitude,
+            'longitude'            => $this->longitude,
+            'coi'                  => $this->coi,
+            'lastmodified'         => $this->lastModified->value,
+        ];
+    }
+
     /** Aspect ratio (width / height), or null when either dimension is missing. */
     public function aspectRatio(): ?float
     {

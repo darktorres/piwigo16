@@ -295,9 +295,9 @@ final class ImageAdminService
      * Return the image entity for the given id, or null/fatal if missing.
      *
      * Callers (`PhotoController`, `BatchManagerController`) still consume
-     * the legacy row-shaped array; this wrapper builds that shape from the
-     * typed entity. The deeper migration to `Image` properties throughout
-     * those controllers is parked under [[F5-d/10]] (mutation refactor).
+     * the legacy row-shaped array; this wrapper produces that shape via
+     * {@see Image::toRow()}. The deeper migration of those controllers
+     * onto typed `Image` properties is parked under F5-d/10.
      *
      * @return array<string, mixed>|null
      */
@@ -313,31 +313,7 @@ final class ImageAdminService
             }
             return null;
         }
-        return [
-            'id'                   => $image->id->value,
-            'file'                 => $image->file->value,
-            'path'                 => $image->path->value,
-            'name'                 => $image->name,
-            'comment'              => $image->comment,
-            'author'               => $image->author,
-            'hit'                  => $image->hit,
-            'filesize'             => $image->filesize,
-            'width'                => $image->width,
-            'height'               => $image->height,
-            'representative_ext'   => $image->representativeExt,
-            'date_available'       => $image->dateAvailable?->value,
-            'date_creation'        => $image->dateCreation?->value,
-            'date_metadata_update' => $image->dateMetadataUpdate?->value,
-            'rating_score'         => $image->ratingScore,
-            'storage_category_id'  => $image->storageCategoryId?->value,
-            'level'                => $image->level,
-            'md5sum'               => $image->md5sum?->value,
-            'added_by'             => $image->addedBy?->value,
-            'rotation'             => $image->rotation,
-            'latitude'             => $image->latitude,
-            'longitude'            => $image->longitude,
-            'coi'                  => $image->coi,
-        ];
+        return $image->toRow();
     }
 
     /** @return int[] */

@@ -257,21 +257,19 @@ final readonly class ImagesEndpoints
     {
         $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], ' AND');
-        $imageRow = $this->imageRepository->findByIdWithPermissions($pImageId, $permSql, $permParams, $permTypes);
-        if ($imageRow === null) {
+        $image = $this->imageRepository->findByIdWithPermissions($pImageId, $permSql, $permParams, $permTypes);
+        if ($image === null) {
             return new PwgError(404, 'image_id not found');
         }
-        /** @var array<string, mixed> $imageRow */
-        $imageRow      = array_merge($imageRow, $this->wsHelper->getUrls($imageRow));
-        $imageRowId    = is_numeric($imageRow['id']) ? (int) $imageRow['id'] : 0;
-        $imageRowFile  = is_string($imageRow['file'] ?? null) ? $imageRow['file'] : '';
-        $imageRow['name_raw']    = $imageRow['name'];
-        $rawImageName            = $imageRow['name'] ?? null;
-        $renderEvent             = new RenderElementName(is_string($rawImageName) ? $rawImageName : '', $imageRow);
+        $imageRowId   = $image->id->value;
+        $imageRowFile = $image->file->value;
+        $imageRow     = array_merge($image->toRow(), $this->wsHelper->getUrls($image->toRow()));
+        $imageRow['name_raw']    = $image->name;
+        $renderEvent             = new RenderElementName($image->name ?? '', $imageRow);
         $this->dispatcher->dispatch($renderEvent);
         $imageRow['name']        = strip_tags($renderEvent->elementName);
-        $imageRow['comment_raw'] = $imageRow['comment'];
-        $rowDescEvent            = new RenderElementDescription(is_string($imageRow['comment']) ? $imageRow['comment'] : '', __FUNCTION__);
+        $imageRow['comment_raw'] = $image->comment;
+        $rowDescEvent            = new RenderElementDescription($image->comment ?? '', __FUNCTION__);
         $this->dispatcher->dispatch($rowDescEvent);
         $imageRow['comment']     = $rowDescEvent->elementDescription;
         $isCommentable    = false;

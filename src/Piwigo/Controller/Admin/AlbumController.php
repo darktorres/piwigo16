@@ -1113,15 +1113,17 @@ final class AlbumController implements AdminSubControllerInterface
         $navigation = $this->htmlService->getCatDisplayNameCache(is_scalar($categoryUppercats) ? (string) $categoryUppercats : '', $this->urlGenerator->admin() . '&page=album-');
         $tpl->assign(['CATEGORIES_NAV' => new Html((string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation))), 'F_ACTION' => $base_url . $this->urlService->getQueryStringDiff([])]);
 
-        $imgRows = $this->imageRepository->findByCategoryIdOrdered((int) $categoryId);
-        if (count($imgRows) > 0) {
+        $images = $this->imageRepository->findByCategoryIdOrdered((int) $categoryId);
+        if (count($images) > 0) {
             $current_rank     = 1;
             $derivativeParams = ImageStdParams::getByType(DerivativeSize::Square->value);
-            foreach ($imgRows as $row) {
-                $derivative     = new DerivativeImage($derivativeParams, new SrcImage($row));
-                $thumbnail_name = !empty($row['name']) ? $row['name'] : str_replace('_', ' ', StringUtil::getFilenameWoExtension(is_string($row['file'] ?? null) ? $row['file'] : ''));
+            foreach ($images as $img) {
+                $derivative     = new DerivativeImage($derivativeParams, SrcImage::fromImage($img));
+                $thumbnail_name = $img->name !== null && $img->name !== ''
+                    ? $img->name
+                    : str_replace('_', ' ', StringUtil::getFilenameWoExtension($img->file->value));
                 $current_rank++;
-                $tpl->append('thumbnails', ['ID' => $row['id'], 'NAME' => $thumbnail_name, 'TN_SRC' => $derivative->getUrl(), 'RANK' => $current_rank * 10, 'SIZE' => $derivative->getSize()]);
+                $tpl->append('thumbnails', ['ID' => $img->id->value, 'NAME' => $thumbnail_name, 'TN_SRC' => $derivative->getUrl(), 'RANK' => $current_rank * 10, 'SIZE' => $derivative->getSize()]);
             }
         }
 

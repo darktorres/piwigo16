@@ -108,26 +108,19 @@ final readonly class ImageDerivativeController implements ControllerInterface
             && !str_contains($ctx->srcLocation, 'plugins/')
         ) {
             try {
-                $row = $this->imageRepository->findByPath($ctx->srcLocation);
-                if ($row !== null) {
-                    if (isset($row['width'])) {
-                        $ctx->originalSize = [
-                            is_numeric($row['width']) ? (int) $row['width'] : 0,
-                            is_numeric($row['height']) ? (int) $row['height'] : 0,
-                        ];
+                $image = $this->imageRepository->findByPath($ctx->srcLocation);
+                if ($image !== null) {
+                    if ($image->width !== null) {
+                        $ctx->originalSize = [$image->width, $image->height ?? 0];
                     }
-                    $ctx->coi = is_string($row['coi'] ?? null) ? $row['coi'] : null;
-                    if (!isset($row['rotation'])) {
+                    $ctx->coi = $image->coi;
+                    if ($image->rotation === null) {
                         $ctx->rotationAngle = PwgImage::getRotationAngle($ctx->srcPath);
-                        $rowIdInt = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-                        $this->imageRepository->updateRotation($rowIdInt, PwgImage::getRotationCodeFromAngle($ctx->rotationAngle ?? 0));
+                        $this->imageRepository->updateRotation($image->id->value, PwgImage::getRotationCodeFromAngle($ctx->rotationAngle ?? 0));
                     } else {
-                        $ctx->rotationAngle = PwgImage::getRotationAngleFromCode(
-                            is_numeric($row['rotation']) ? (int) $row['rotation'] : 0
-                        );
+                        $ctx->rotationAngle = PwgImage::getRotationAngleFromCode($image->rotation);
                     }
-                }
-                if ($row === null) {
+                } else {
                     $this->pipeline->ierror('Db file path not found', 404);
                 }
             } catch (\Exception $e) {

@@ -340,19 +340,19 @@ final class ImageRepository extends AbstractRepository
      * Return images for the given category, ordered by rank.
      * Used by element_set_ranks.php for the reorder UI.
      *
-     * @return list<array<string, mixed>>
+     * @return list<Image>
      */
     public function findByCategoryIdOrdered(int $categoryId): array
     {
-        return $this->conn->executeQuery(
-            'SELECT i.id, i.file, i.path, i.representative_ext,
-                    i.width, i.height, i.rotation, i.name, ic.`rank`
+        $rows = $this->conn->executeQuery(
+            'SELECT i.*
              FROM ' . $this->table('images') . ' i
              JOIN ' . $this->table('image_category') . ' ic ON ic.image_id = i.id
              WHERE ic.category_id = ?
              ORDER BY ic.`rank`',
             [$categoryId]
         )->fetchAllAssociative();
+        return array_map(Image::fromRow(...), $rows);
     }
 
     /** Count images currently sitting in the upload lounge. */
@@ -1032,18 +1032,16 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
-     * Find a single image row where file LIKE $pattern ESCAPE '/'.
+     * Find a single image where file LIKE $pattern ESCAPE '/'.
      * Caller must pre-escape '_' and '%' in the base name, then append '.%'.
-     *
-     * @return array<string, mixed>|null
      */
-    public function findByFilePattern(string $pattern): ?array
+    public function findByFilePattern(string $pattern): ?Image
     {
         $row = $this->conn->executeQuery(
             "SELECT * FROM {$this->table('images')} WHERE file LIKE ? ESCAPE '/' LIMIT 1",
             [$pattern]
         )->fetchAssociative();
-        return $row !== false ? $row : null;
+        return $row !== false ? Image::fromRow($row) : null;
     }
 
     /** Update width and height for a single image. */
@@ -1143,19 +1141,18 @@ final class ImageRepository extends AbstractRepository
     }
 
     /**
-     * Find a single image row by id subject to the caller's permission filter.
+     * Find a single image by id subject to the caller's permission filter.
      *
      * @param list<mixed>                            $permParams
      * @param list<ArrayParameterType|ParameterType> $permTypes
-     * @return array<string, mixed>|null
      */
-    public function findByIdWithPermissions(int $id, string $permWhere, array $permParams, array $permTypes): ?array
+    public function findByIdWithPermissions(int $id, string $permWhere, array $permParams, array $permTypes): ?Image
     {
         $query  = 'SELECT * FROM ' . $this->table('images') . ' WHERE id = ? ' . $permWhere . ' LIMIT 1';
         $params = [$id, ...$permParams];
         $types  = [ParameterType::INTEGER, ...$permTypes];
         $row = $this->conn->executeQuery($query, $params, $types)->fetchAssociative();
-        return $row !== false ? $row : null;
+        return $row !== false ? Image::fromRow($row) : null;
     }
 
     /**
@@ -1367,12 +1364,8 @@ final class ImageRepository extends AbstractRepository
             ->executeStatement();
     }
 
-    /**
-     * Find a single image by its path column (exact match), or null if not found.
-     *
-     * @return array<string, mixed>|null
-     */
-    public function findByPath(string $path): ?array
+    /** Find a single image by its path column (exact match), or null if not found. */
+    public function findByPath(string $path): ?Image
     {
         $row = $this->conn->createQueryBuilder()
             ->select('*')
@@ -1381,7 +1374,7 @@ final class ImageRepository extends AbstractRepository
             ->setParameter('path', $path)
             ->executeQuery()
             ->fetchAssociative();
-        return $row !== false ? $row : null;
+        return $row !== false ? Image::fromRow($row) : null;
     }
 
     /**

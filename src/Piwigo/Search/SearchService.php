@@ -24,6 +24,8 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\OrderByService;
 use Piwigo\Search\Inflector\InflectorEn;
 use Piwigo\Search\Inflector\InflectorFr;
+use Piwigo\Search\Rules\DatePresetCode;
+use Piwigo\Search\Rules\SearchRules;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
@@ -227,37 +229,28 @@ final class SearchService
         $widthFilter        = $displayFilters['width']         ?? $defaultFilt;
         $tagsFilter         = $displayFilters['tags']          ?? $defaultFilt;
 
-        /** @var array<string, mixed> $searchFields */
-        $searchFields = is_array($search['fields'] ?? null) ? $search['fields'] : [];
+        // Parse the loose $search blob into the typed SearchRules aggregate
+        // once; the filter blocks below all read typed VO properties from
+        // it, leaving $search untouched as the loose-array entrypoint for
+        // legacy callers / saved-search round-tripping.
+        $rules = SearchRules::fromArray($search);
 
-        /** @var array{string?: string} $expertFields */
-        $expertFields = is_array($searchFields['expert'] ?? null) ? $searchFields['expert'] : [];
-        if (isset($searchFields['expert']) and !empty($expertFields['string']) and $expertFilter['access']) {
+        if ($rules->expert !== null && $expertFilter['access']) {
             $hasFilersFilled = true;
-            $expertString = $expertFields['string'];
-            $expertQsr    = $this->getQuickSearchResults($expertString, []) ?? [];
+            $expertQsr       = $this->getQuickSearchResults($rules->expert->query, []) ?? [];
             $imageIdsForFilter['expert'] = is_array($expertQsr['items'] ?? null) ? $expertQsr['items'] : [];
         }
 
-        /** @var array{words?: list<string>|string, fields?: list<string>, mode?: string} $allwordsFields */
-        $allwordsFields = is_array($searchFields['allwords'] ?? null) ? $searchFields['allwords'] : [];
-        $allwordsFieldsFields = $allwordsFields['fields'] ?? null;
-        $allwordsWordsRaw = $allwordsFields['words'] ?? null;
-        $allwordsHasWords = (is_array($allwordsWordsRaw) && count($allwordsWordsRaw) > 0)
-            || (is_string($allwordsWordsRaw) && $allwordsWordsRaw !== '');
-        if (isset($searchFields['allwords']) and $allwordsHasWords and count(is_array($allwordsFieldsFields) ? $allwordsFieldsFields : []) > 0 and $allwordsFilter['access']) {
+        if ($rules->allwords !== null && count($rules->allwords->fields) > 0 && $allwordsFilter['access']) {
             $hasFilersFilled = true;
             $fields = ['file', 'name', 'comment', 'author'];
-            $allwordsFieldList = is_array($allwordsFieldsFields) ? $allwordsFieldsFields : [];
-            if (isset($allwordsFields['fields'])) {
-                $fields = array_intersect($fields, $allwordsFieldList);
-            }
+            $allwordsFieldList = $rules->allwords->fields;
+            $fields = array_intersect($fields, $allwordsFieldList);
             $catFieldsDictionary = ['cat-title' => 'name', 'cat-desc' => 'comment'];
             $catFields           = array_intersect(array_keys($catFieldsDictionary), $allwordsFieldList);
             $wordClauses         = [];
             $catIdsByWord = $tagIdsByWord = [];
-            $allwordsWords = is_array($allwordsFields['words']) ? $allwordsFields['words'] : [];
-            foreach ($allwordsWords as $word) {
+            foreach ($rules->allwords->words as $word) {
                 $fieldClauses = [];
                 foreach ($fields as $field) {
                     $fieldClauses[] = $field . " LIKE '%" . $word . "%'";
@@ -295,11 +288,7 @@ final class SearchService
                     $s = '(' . $s . ')';
                 });
             }
-            $allwordsModeRaw = $allwordsFields['mode'] ?? null;
-            $allwordsMode = is_scalar($allwordsModeRaw) ? (string) $allwordsModeRaw : 'AND';
-            if (!in_array($allwordsMode, ['OR', 'AND'])) {
-                $allwordsMode = 'AND';
-            }
+            $allwordsMode = $rules->allwords->mode->value;
             $filterClause = "\n         " . implode("\n         " . $allwordsMode . "\n         ", $wordClauses);
             $imageIdsForFilter['allwords'] = $filterImageIds($filterClause);
 
@@ -319,197 +308,107 @@ final class SearchService
             }
         }
 
-        /** @var array{words?: list<string>} $authorFields */
-        $authorFields = is_array($searchFields['author'] ?? null) ? $searchFields['author'] : [];
-        $authorWords  = is_array($authorFields['words'] ?? null) ? $authorFields['words'] : [];
-        if (isset($searchFields['author']) and count($authorWords) > 0 and $authorFilter['access']) {
+        if ($rules->author !== null && $authorFilter['access']) {
             $hasFilersFilled  = true;
             $authorClauses = [];
-            foreach ($authorWords as $word) {
+            foreach ($rules->author->words as $word) {
                 $authorClauses[] = "author = '" . $word . "'";
             }
             $imageIdsForFilter['author'] = $filterImageIds('(' . implode(' OR ', $authorClauses) . ')');
         }
 
-        /** @var list<string> $filetypesList */
-        $filetypesList = is_array($searchFields['filetypes'] ?? null) ? $searchFields['filetypes'] : [];
-        if (!empty($searchFields['filetypes']) and $filetypeFilter['access']) {
+        if ($rules->filetypes !== null && $filetypeFilter['access']) {
             $hasFilersFilled = true;
             $filetypesClauses = [];
-            foreach ($filetypesList as $ext) {
+            foreach ($rules->filetypes->extensions as $ext) {
                 $filetypesClauses[] = 'path LIKE \'%.' . $ext . '\'';
             }
             $imageIdsForFilter['filetypes'] = $filterImageIds('(' . implode(' OR ', $filetypesClauses) . ')');
         }
 
-        /** @var list<int|string> $addedByRaw */
-        $addedByRaw = is_array($searchFields['added_by'] ?? null) ? $searchFields['added_by'] : [];
-        $addedByList = array_map(static fn (int|string $v): string => (string) $v, $addedByRaw);
-        if (!empty($searchFields['added_by']) and $addedByFilter['access']) {
+        if ($rules->addedBy !== null && $addedByFilter['access']) {
             $hasFilersFilled = true;
-            $imageIdsForFilter['added_by'] = $filterImageIds('added_by IN (' . implode(',', $addedByList) . ')');
+            $imageIdsForFilter['added_by'] = $filterImageIds('added_by IN (' . implode(',', $rules->addedBy->userIds) . ')');
         }
 
-        /** @var array{words?: list<int|string>, sub_inc?: bool|int|string} $catFieldsData */
-        $catFieldsData = is_array($searchFields['cat'] ?? null) ? $searchFields['cat'] : [];
-        /** @var list<int|string> $catWordsRaw */
-        $catWordsRaw = is_array($catFieldsData['words'] ?? null) ? $catFieldsData['words'] : [];
-        $catWords    = array_map(static fn (int|string $v): string => (string) $v, $catWordsRaw);
-        if (isset($searchFields['cat']) and !empty($catWords) and $albumFilter['access']) {
+        if ($rules->cat !== null && $albumFilter['access']) {
             $hasFilersFilled = true;
-            $catSubInc = !empty($catFieldsData['sub_inc']);
-            $catIds    = $catSubInc ? $this->categoryService->getSubcatIds($catWords) : $catWords;
+            $catWordsStr = array_map(static fn (int $v): string => (string) $v, $rules->cat->categoryIds);
+            $catIds      = $rules->cat->subIncluded ? $this->categoryService->getSubcatIds($catWordsStr) : $catWordsStr;
             if (!empty($catIds)) {
                 $imageIdsForFilter['cat'] = $filterImageIds('category_id IN (' . implode(',', $catIds) . ')');
             }
         }
 
         // date_posted
-        /** @var array{preset?: string, custom?: list<string>} $datePostedFields */
-        $datePostedFields = is_array($searchFields['date_posted'] ?? null) ? $searchFields['date_posted'] : [];
-        $datePostedPreset = is_string($datePostedFields['preset'] ?? null) ? $datePostedFields['preset'] : '';
-        if (!empty($datePostedPreset) and $postDateFilter['access']) {
+        if ($rules->datePosted !== null && $postDateFilter['access']) {
             $hasFilersFilled = true;
             $options = ['24h' => '24 HOUR', '7d' => '7 DAY', '30d' => '30 DAY', '3m' => '3 MONTH', '6m' => '6 MONTH'];
             $datePostedClause = '';
-            if (isset($options[$datePostedPreset])) {
-                $datePostedClause = 'date_available > SUBDATE(NOW(), INTERVAL ' . $options[$datePostedPreset] . ')';
-            } elseif ('custom' == $datePostedPreset and isset($datePostedFields['custom'])) {
-                $datePostedSubclauses = [];
-                $datePostedCustom = $datePostedFields['custom'];
-                $customDates = array_flip($datePostedCustom);
-                foreach (array_keys($customDates) as $customDate) {
-                    $begin = $end = null;
-                    $ymd   = substr($customDate, 0, 1);
-                    if ('y' == $ymd) {
-                        $year = substr($customDate, 1);
-                        $begin = $year . '-01-01 00:00:00';
-                        $end   = $year . '-12-31 23:59:59';
-                    } elseif ('m' == $ymd) {
-                        [$year, $month] = explode('-', substr($customDate, 1));
-                        if (!isset($customDates['y' . $year])) {
-                            $begin = $year . '-' . $month . '-01 00:00:00';
-                            $end   = $year . '-' . $month . '-' . cal_days_in_month(CAL_GREGORIAN, (int) $month, (int) $year) . ' 23:59:59';
-                        }
-                    } elseif ('d' == $ymd) {
-                        [$year, $month, $day] = explode('-', substr($customDate, 1));
-                        if (!isset($customDates['y' . $year]) and !isset($customDates['m' . $year . '-' . $month])) {
-                            $begin = $year . '-' . $month . '-' . $day . ' 00:00:00';
-                            $end   = $year . '-' . $month . '-' . $day . ' 23:59:59';
-                        }
-                    }
-                    if (!empty($begin) && $end !== null) {
-                        $datePostedSubclauses[] = 'date_available BETWEEN "' . $begin . '" AND "' . $end . '"';
-                    }
-                }
-                $datePostedClause = '(' . implode(' OR ', StringUtil::prependAppendArrayItems($datePostedSubclauses, '(', ')')) . ')';
+            if (isset($options[$rules->datePosted->preset->value])) {
+                $datePostedClause = 'date_available > SUBDATE(NOW(), INTERVAL ' . $options[$rules->datePosted->preset->value] . ')';
+            } elseif ($rules->datePosted->preset === DatePresetCode::Custom && $rules->datePosted->customCodes !== []) {
+                $datePostedClause = '(' . implode(' OR ', StringUtil::prependAppendArrayItems(self::buildCustomDateClauses('date_available', $rules->datePosted->customCodes), '(', ')')) . ')';
             }
             $imageIdsForFilter['date_posted'] = $filterImageIds($datePostedClause);
         }
 
         // date_created
-        /** @var array{preset?: string, custom?: list<string>} $dateCreatedFields */
-        $dateCreatedFields = is_array($searchFields['date_created'] ?? null) ? $searchFields['date_created'] : [];
-        $dateCreatedPreset = is_string($dateCreatedFields['preset'] ?? null) ? $dateCreatedFields['preset'] : '';
-        if (!empty($dateCreatedPreset) and $creationDateFilter['access']) {
+        if ($rules->dateCreated !== null && $creationDateFilter['access']) {
             $hasFilersFilled = true;
             $options = ['7d' => '7 DAY', '30d' => '30 DAY', '3m' => '3 MONTH', '6m' => '6 MONTH', '12m' => '12 MONTH'];
             $dateCreatedClause = '';
-            if (isset($options[$dateCreatedPreset])) {
-                $dateCreatedClause = 'date_creation > SUBDATE(NOW(), INTERVAL ' . $options[$dateCreatedPreset] . ')';
-            } elseif ('custom' == $dateCreatedPreset and isset($dateCreatedFields['custom'])) {
-                $dateCreatedSubclauses = [];
-                $dateCreatedCustom = $dateCreatedFields['custom'];
-                $customDates = array_flip($dateCreatedCustom);
-                foreach (array_keys($customDates) as $customDate) {
-                    $begin = $end = null;
-                    $ymd   = substr($customDate, 0, 1);
-                    if ('y' == $ymd) {
-                        $year = substr($customDate, 1);
-                        $begin = $year . '-01-01 00:00:00';
-                        $end   = $year . '-12-31 23:59:59';
-                    } elseif ('m' == $ymd) {
-                        [$year, $month] = explode('-', substr($customDate, 1));
-                        if (!isset($customDates['y' . $year])) {
-                            $begin = $year . '-' . $month . '-01 00:00:00';
-                            $end   = $year . '-' . $month . '-' . cal_days_in_month(CAL_GREGORIAN, (int) $month, (int) $year) . ' 23:59:59';
-                        }
-                    } elseif ('d' == $ymd) {
-                        [$year, $month, $day] = explode('-', substr($customDate, 1));
-                        if (!isset($customDates['y' . $year]) and !isset($customDates['m' . $year . '-' . $month])) {
-                            $begin = $year . '-' . $month . '-' . $day . ' 00:00:00';
-                            $end   = $year . '-' . $month . '-' . $day . ' 23:59:59';
-                        }
-                    }
-                    if (!empty($begin) && $end !== null) {
-                        $dateCreatedSubclauses[] = 'date_creation BETWEEN "' . $begin . '" AND "' . $end . '"';
-                    }
-                }
-                $dateCreatedClause = '(' . implode(' OR ', StringUtil::prependAppendArrayItems($dateCreatedSubclauses, '(', ')')) . ')';
+            if (isset($options[$rules->dateCreated->preset->value])) {
+                $dateCreatedClause = 'date_creation > SUBDATE(NOW(), INTERVAL ' . $options[$rules->dateCreated->preset->value] . ')';
+            } elseif ($rules->dateCreated->preset === DatePresetCode::Custom && $rules->dateCreated->customCodes !== []) {
+                $dateCreatedClause = '(' . implode(' OR ', StringUtil::prependAppendArrayItems(self::buildCustomDateClauses('date_creation', $rules->dateCreated->customCodes), '(', ')')) . ')';
             }
             $imageIdsForFilter['date_created'] = $filterImageIds($dateCreatedClause);
         }
 
         // ratios
-        /** @var list<string> $ratiosList */
-        $ratiosList = is_array($searchFields['ratios'] ?? null) ? $searchFields['ratios'] : [];
-        if (!empty($searchFields['ratios']) and $ratioFilter['access']) {
+        if ($rules->ratio !== null && $ratioFilter['access']) {
             $hasFilersFilled = true;
             $clauseForRatio  = ['Portrait' => 'width/height < 0.95', 'square' => 'width/height BETWEEN 0.95 AND 1.05', 'Landscape' => '(width/height > 1.05 AND width/height < 2)', 'Panorama' => 'width/height >= 2'];
             $ratiosClauses   = [];
-            foreach ($ratiosList as $r) {
+            foreach ($rules->ratio->codes as $r) {
                 $ratiosClauses[] = $clauseForRatio[$r] ?? '1=1';
             }
             $imageIdsForFilter['ratios'] = $filterImageIds('(' . implode(' OR ', $ratiosClauses) . ')');
         }
 
         // ratings
-        /** @var list<int|string> $ratingsList */
-        $ratingsList = is_array($searchFields['ratings'] ?? null) ? $searchFields['ratings'] : [];
-        if (Config::rateEnabled() and !empty($searchFields['ratings']) and $ratingFilter['access']) {
+        if (Config::rateEnabled() && $rules->rating !== null && $ratingFilter['access']) {
             $hasFilersFilled = true;
             $filterClauses   = [];
-            foreach ($ratingsList as $r) {
-                $rInt = (int) $r;
-                $filterClauses[] = 0 === $rInt ? 'rating_score IS NULL' : '(rating_score >= ' . ($rInt - 1) . ' AND rating_score < ' . $rInt . ')';
+            foreach ($rules->rating->buckets as $r) {
+                $filterClauses[] = 0 === $r ? 'rating_score IS NULL' : '(rating_score >= ' . ($r - 1) . ' AND rating_score < ' . $r . ')';
             }
             $imageIdsForFilter['ratings'] = $filterImageIds('(' . implode(' OR ', $filterClauses) . ')');
         }
 
         // filesize
-        $filesizeMin = is_numeric($searchFields['filesize_min'] ?? null) ? (int) $searchFields['filesize_min'] : 0;
-        $filesizeMax = is_numeric($searchFields['filesize_max'] ?? null) ? (int) $searchFields['filesize_max'] : 0;
-        if (!empty($searchFields['filesize_min']) and !empty($searchFields['filesize_max']) and $fileSizeFilter['access']) {
+        if ($rules->fileSize !== null && $fileSizeFilter['access']) {
             $hasFilersFilled = true;
-            $imageIdsForFilter['filesize'] = $filterImageIds('filesize BETWEEN ' . ($filesizeMin - 100) . ' AND ' . ($filesizeMax + 100));
+            $imageIdsForFilter['filesize'] = $filterImageIds('filesize BETWEEN ' . ($rules->fileSize->minKb - 100) . ' AND ' . ($rules->fileSize->maxKb + 100));
         }
 
         // height
-        $heightMin = is_numeric($searchFields['height_min'] ?? null) ? (int) $searchFields['height_min'] : 0;
-        $heightMax = is_numeric($searchFields['height_max'] ?? null) ? (int) $searchFields['height_max'] : 0;
-        if (!empty($searchFields['height_min']) and !empty($searchFields['height_max']) and $heightFilter['access']) {
+        if ($rules->height !== null && $heightFilter['access']) {
             $hasFilersFilled = true;
-            $imageIdsForFilter['height'] = $filterImageIds('height BETWEEN ' . $heightMin . ' AND ' . $heightMax);
+            $imageIdsForFilter['height'] = $filterImageIds('height BETWEEN ' . $rules->height->min . ' AND ' . $rules->height->max);
         }
 
         // width
-        $widthMin = is_numeric($searchFields['width_min'] ?? null) ? (int) $searchFields['width_min'] : 0;
-        $widthMax = is_numeric($searchFields['width_max'] ?? null) ? (int) $searchFields['width_max'] : 0;
-        if (!empty($searchFields['width_min']) and !empty($searchFields['width_max']) and $widthFilter['access']) {
+        if ($rules->width !== null && $widthFilter['access']) {
             $hasFilersFilled = true;
-            $imageIdsForFilter['width'] = $filterImageIds('width BETWEEN ' . $widthMin . ' AND ' . $widthMax);
+            $imageIdsForFilter['width'] = $filterImageIds('width BETWEEN ' . $rules->width->min . ' AND ' . $rules->width->max);
         }
 
         // tags
-        /** @var array{words?: list<int|string>, mode?: string} $tagsFields */
-        $tagsFields = is_array($searchFields['tags'] ?? null) ? $searchFields['tags'] : [];
-        /** @var list<int|string> $tagsWordsRaw */
-        $tagsWordsRaw = is_array($tagsFields['words'] ?? null) ? $tagsFields['words'] : [];
-        $tagsWords  = array_map(static fn (int|string $v): int => (int) $v, $tagsWordsRaw);
-        $tagsMode   = is_string($tagsFields['mode'] ?? null) ? $tagsFields['mode'] : 'AND';
-        if (isset($searchFields['tags']) and !empty($tagsWords) and $tagsFilter['access']) {
+        if ($rules->tags !== null && $tagsFilter['access']) {
             $hasFilersFilled = true;
-            $imageIdsForFilter['tags'] = $this->tagService->getImageIdsForTags($tagsWords, $tagsMode);
+            $imageIdsForFilter['tags'] = $this->tagService->getImageIdsForTags($rules->tags->tagIds, $rules->tags->mode->value);
         }
 
         if (!empty($imagesWhere)) {
@@ -552,6 +451,48 @@ final class SearchService
             'items'          => $items,
             'search_details' => $details,
         ];
+    }
+
+    /**
+     * Convert the saved-search custom-date code list (e.g. ['y2024',
+     * 'm2023-08', 'd2024-03-15']) into a flat list of SQL BETWEEN
+     * clauses against $dateColumn. The y/m/d coalescing matches the
+     * legacy gallery search semantics: a month code is dropped when
+     * its year is already in the set, and a day code is dropped when
+     * its year *or* its month is already in the set.
+     *
+     * @param  list<string> $codes
+     * @return list<string>
+     */
+    private static function buildCustomDateClauses(string $dateColumn, array $codes): array
+    {
+        $clauses     = [];
+        $customDates = array_flip($codes);
+        foreach (array_keys($customDates) as $customDate) {
+            $begin = $end = null;
+            $ymd   = substr($customDate, 0, 1);
+            if ('y' === $ymd) {
+                $year  = substr($customDate, 1);
+                $begin = $year . '-01-01 00:00:00';
+                $end   = $year . '-12-31 23:59:59';
+            } elseif ('m' === $ymd) {
+                [$year, $month] = explode('-', substr($customDate, 1));
+                if (!isset($customDates['y' . $year])) {
+                    $begin = $year . '-' . $month . '-01 00:00:00';
+                    $end   = $year . '-' . $month . '-' . cal_days_in_month(CAL_GREGORIAN, (int) $month, (int) $year) . ' 23:59:59';
+                }
+            } elseif ('d' === $ymd) {
+                [$year, $month, $day] = explode('-', substr($customDate, 1));
+                if (!isset($customDates['y' . $year]) && !isset($customDates['m' . $year . '-' . $month])) {
+                    $begin = $year . '-' . $month . '-' . $day . ' 00:00:00';
+                    $end   = $year . '-' . $month . '-' . $day . ' 23:59:59';
+                }
+            }
+            if (!empty($begin) && $end !== null) {
+                $clauses[] = $dateColumn . ' BETWEEN "' . $begin . '" AND "' . $end . '"';
+            }
+        }
+        return $clauses;
     }
 
     /**

@@ -23,6 +23,7 @@ use Piwigo\Http\RequestContextRegistry;
 use Piwigo\Lang\LangService;
 use Piwigo\Language\LanguageService;
 use Piwigo\Mail\MailService;
+use Piwigo\Session\ConnectionType;
 use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Theme\ThemeService;
@@ -271,7 +272,7 @@ final readonly class ProfileService
         }
         $tpl->assign('API_EXPIRATION', $display_duration);
         $tpl->assign('API_SELECTED_EXPIRATION', array_key_first($display_duration));
-        $tpl->assign('API_CAN_MANAGE', 'pwg_ui' === $this->session->connectedWith);
+        $tpl->assign('API_CAN_MANAGE', ConnectionType::PwgUi->value === $this->session->connectedWith);
 
         $userEmail = is_scalar($user['email'] ?? null) ? (string) $user['email'] : '';
         $email_notifications_infos = $userEmail

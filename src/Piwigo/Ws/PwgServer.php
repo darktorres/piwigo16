@@ -12,6 +12,7 @@ use Piwigo\Event\Ws\WsMethodsRegistering;
 use Piwigo\Exception\ConfigException;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ApiKeyAuthRegistry;
+use Piwigo\Session\ConnectionType;
 use Piwigo\Session\Session;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
@@ -544,7 +545,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         // if it is, access is refused (false)
         if (
             ApiKeyAuthRegistry::isApiKeyAuth()
-            or 'ws_session_login_api_key' === $this->session->connectedWith
+            or ConnectionType::WsSessionLoginApiKey->value === $this->session->connectedWith
         ) {
             if (in_array($_REQUEST['method'], Config::apiKeyForbiddenMethods())) {
                 return false;

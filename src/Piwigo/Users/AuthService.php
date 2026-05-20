@@ -28,6 +28,7 @@ use Piwigo\Event\User\UserLogin;
 use Piwigo\Event\User\UserLogout;
 use Piwigo\Html\HtmlService;
 use Piwigo\Language\LanguageService;
+use Piwigo\Session\ConnectionType;
 use Piwigo\Session\Session;
 use Piwigo\Session\SessionService;
 use Piwigo\Url\UrlGenerator;
@@ -181,7 +182,7 @@ final readonly class AuthService
                 $key = $this->calculateAutoLoginKey((int) $cookie[0], (int) $cookie[1], $username);
                 if ($key !== false and $key === $cookie[2]) {
                     if (StringUtil::scriptBasename() != 'ws') {
-                        $this->session->connectedWith = 'pwg_ui';
+                        $this->session->connectedWith = ConnectionType::PwgUi->value;
                     }
                     $this->logUser((int) $cookie[0], true);
                     $this->dispatcher->dispatch(new LoginSuccess(is_scalar($username) ? stripslashes((string) $username) : ''));
@@ -306,18 +307,18 @@ final readonly class AuthService
     public function authKeyLogin(string $authKey, bool $connectionByHeader = false): bool
     {
         $user = CurrentUser::isInitialized() ? CurrentUser::get()->rawAttributes : [];
-        $validKey  = false;
+        $validKey  = null;
         $secretKey = null;
         if (preg_match('/^[a-z0-9]{30}$/i', $authKey)) {
-            $validKey = 'auth_key';
+            $validKey = ConnectionType::AuthKey;
         } elseif (preg_match('/^pkid-\d{8}-[a-z0-9]{20}:[a-z0-9]{40}$/i', $authKey)) {
-            $validKey = 'api_key';
-            $tmp      = explode(':', $authKey);
-            $authKey  = $tmp[0];
+            $validKey  = ConnectionType::ApiKey;
+            $tmp       = explode(':', $authKey);
+            $authKey   = $tmp[0];
             $secretKey = $tmp[1];
         }
 
-        if (!$validKey) {
+        if ($validKey === null) {
             return false;
         }
 
@@ -337,11 +338,11 @@ final readonly class AuthService
             return false;
         }
 
-        if ('auth_key' === $validKey and !in_array($key['status'], ['normal', 'generic'])) {
+        if (ConnectionType::AuthKey === $validKey and !in_array($key['status'], ['normal', 'generic'])) {
             return false;
         }
 
-        if ('api_key' === $validKey) {
+        if (ConnectionType::ApiKey === $validKey) {
             $apikeySecret = is_string($key['apikey_secret'] ?? null) ? $key['apikey_secret'] : '';
             if (!password_verify((string) $secretKey, $apikeySecret)) {
                 return false;
@@ -371,7 +372,7 @@ final readonly class AuthService
         $keyDbnow   = is_string($key['dbnow'] ?? null) ? $key['dbnow'] : '';
         $this->authKeyRepo->updateLastUsedOn($authUserId, $keyAuth, $keyDbnow);
 
-        $this->session->connectedWith = $validKey;
+        $this->session->connectedWith = $validKey->value;
 
         if ($connectionByHeader) {
             return true;
@@ -453,6 +454,6 @@ final readonly class AuthService
 
     public function connectedWithPwgUi(): bool
     {
-        return $this->session->connectedWith === 'pwg_ui';
+        return $this->session->connectedWith === ConnectionType::PwgUi->value;
     }
 }

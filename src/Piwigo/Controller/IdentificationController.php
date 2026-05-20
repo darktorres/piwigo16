@@ -20,6 +20,7 @@ use Piwigo\Language\LanguageService;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Session\ConnectionType;
 use Piwigo\Session\Session;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -95,7 +96,7 @@ final readonly class IdentificationController implements ControllerInterface
                 $post_password = is_string($rawPassword = $_POST['password'] ?? null) ? $rawPassword : '';
                 if ($this->authService->tryLogUser($username, $post_password, $remember_me)) {
                     $root_url = UrlService::getAbsoluteRootUrl();
-                    $this->session->connectedWith = 'pwg_ui';
+                    $this->session->connectedWith = ConnectionType::PwgUi->value;
                     $this->redirectResponder->redirect(
                         empty($redirect_to)
                         ? $this->urlService->getGalleryHomeUrl()

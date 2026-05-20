@@ -25,8 +25,8 @@ final readonly class CalculateOrphansHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): array
     {
-        $paramCatId    = is_array($params['category_id']) ? $params['category_id'] : [];
-        $categoryId    = is_numeric($paramCatId[0] ?? null) ? (int) $paramCatId[0] : 0;
+        $input         = CalculateOrphansParams::fromArray($params);
+        $categoryId    = $input->categoryId;
         $category      = [];
         $category['has_images'] = $this->categoryRepository->hasCategoryImages($categoryId);
         $subcatIds     = $this->categoryService->getSubcatIds([$categoryId]);

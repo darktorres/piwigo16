@@ -41,36 +41,35 @@ final readonly class GetListHandler implements WsAction
         if (!Config::activateComments()) {
             return new PwgError(403, 'Comments are disabled');
         }
-        $acceptedStatus = ['all', 'pending', 'validated'];
-        if (!in_array($params['status'], $acceptedStatus)) {
+        $input = GetListParams::fromArray($params);
+        if (!in_array($input->status, ['all', 'pending', 'validated'])) {
             return new PwgError(401, 'Status must be: all, pending or validated');
         }
-        $itemsNumber = [5, 10, 25, 50];
-        if (!in_array($params['per_page'], $itemsNumber)) {
+        if (!in_array($input->perPage, [5, 10, 25, 50])) {
             return new PwgError(401, 'Per page must be: 5, 10, 25 or 50');
         }
         /** @var list<array{sql: string, param: mixed, type: ParameterType, kind: string}> $filters */
         $filters = [];
-        if (!empty($params['author_id'])) {
-            $filters[] = ['sql' => 'author_id = ?', 'param' => is_numeric($params['author_id']) ? (int) $params['author_id'] : 0, 'type' => ParameterType::INTEGER, 'kind' => 'author'];
+        if ($input->authorId !== null) {
+            $filters[] = ['sql' => 'author_id = ?', 'param' => $input->authorId, 'type' => ParameterType::INTEGER, 'kind' => 'author'];
         }
-        if (!empty($params['image_id'])) {
-            $filters[] = ['sql' => 'image_id = ?', 'param' => is_numeric($params['image_id']) ? (int) $params['image_id'] : 0, 'type' => ParameterType::INTEGER, 'kind' => 'image'];
+        if ($input->imageId !== null) {
+            $filters[] = ['sql' => 'image_id = ?', 'param' => $input->imageId, 'type' => ParameterType::INTEGER, 'kind' => 'image'];
         }
-        if (!empty($params['f_min_date'])) {
-            $dmin = date_create(is_string($params['f_min_date']) ? $params['f_min_date'] : '');
+        if ($input->fMinDate !== null) {
+            $dmin = date_create($input->fMinDate);
             if ($dmin !== false) {
                 $filters[] = ['sql' => 'date >= ?', 'param' => date_format($dmin, 'Y-m-d 00:00:00'), 'type' => ParameterType::STRING, 'kind' => 'min_date'];
             }
         }
-        if (!empty($params['f_max_date'])) {
-            $dmax = date_create(is_string($params['f_max_date']) ? $params['f_max_date'] : '');
+        if ($input->fMaxDate !== null) {
+            $dmax = date_create($input->fMaxDate);
             if ($dmax !== false) {
                 $filters[] = ['sql' => 'date <= ?', 'param' => date_format($dmax, 'Y-m-d 23:59:59'), 'type' => ParameterType::STRING, 'kind' => 'max_date'];
             }
         }
-        if (!empty($params['search'])) {
-            $filters = [['sql' => 'content LIKE ?', 'param' => '%' . (is_string($params['search']) ? $params['search'] : '') . '%', 'type' => ParameterType::STRING, 'kind' => 'search']];
+        if ($input->search !== null) {
+            $filters = [['sql' => 'content LIKE ?', 'param' => '%' . $input->search . '%', 'type' => ParameterType::STRING, 'kind' => 'search']];
         }
 
         $build = static function (array $rows): array {
@@ -89,7 +88,7 @@ final readonly class GetListHandler implements WsAction
 
         $summary = $this->commentRepository->findCommentsSummary($whereClauses, $qParams, $qTypes);
         $totalComments = $summary['all_comments'];
-        switch ($params['status']) {
+        switch ($input->status) {
             case 'pending':
                 $whereClauses[] = 'validated = 0';
                 $totalComments  = $summary['pending'];
@@ -99,8 +98,8 @@ final readonly class GetListHandler implements WsAction
                 $totalComments  = $summary['validated'];
                 break;
         }
-        $perPage = is_numeric($params['per_page']) ? (int) $params['per_page'] : 10;
-        $pageNum = is_numeric($params['page']) ? (int) $params['page'] : 0;
+        $perPage = $input->perPage;
+        $pageNum = $input->page;
         $userFields = Config::userFields();
         $rows = $this->commentRepository->findCommentsAdminList(
             $whereClauses,
@@ -152,6 +151,6 @@ final readonly class GetListHandler implements WsAction
             $this->commentRepository->findCommentAuthorCounts($authorsWhere, $authorsParams, $authorsTypes),
         );
 
-        return ['summary' => $summary, 'comments' => $list, 'filters' => ['nb_authors' => $nbAuthorsIn, 'started_at' => $dates['started_at'], 'ended_at' => $dates['ended_at']], 'paging' => ['page' => $params['page'], 'per_page' => $params['per_page'], 'total_pages' => max(0, (int) ceil((float) $totalComments / (float) max(1, $perPage)) - 1)]];
+        return ['summary' => $summary, 'comments' => $list, 'filters' => ['nb_authors' => $nbAuthorsIn, 'started_at' => $dates['started_at'], 'ended_at' => $dates['ended_at']], 'paging' => ['page' => $input->page, 'per_page' => $input->perPage, 'total_pages' => max(0, (int) ceil((float) $totalComments / (float) max(1, $perPage)) - 1)]];
     }
 }

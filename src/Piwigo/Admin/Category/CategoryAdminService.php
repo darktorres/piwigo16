@@ -268,21 +268,15 @@ final readonly class CategoryAdminService
         return count($datas);
     }
 
-    /** @param int[]|int|string $categories */
-    public function setCatVisible(array|int|string $categories, bool|string $value, bool $unlockChild = false): void
+    /** @param int[] $categories */
+    public function setCatVisible(array $categories, string $value): void
     {
-        if (!is_array($categories)) {
-            $categories = [$categories];
-        }
         if (($value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
             throw new \InvalidArgumentException('set_cat_visible invalid param');
         }
         $catRepo = $this->categoryRepository;
         if ($value) {
             $cats = $this->getUppercatIds($categories);
-            if ($unlockChild) {
-                $cats = array_merge($cats, $this->categoryService->getSubcatIds($categories));
-            }
             $catRepo->setVisible(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $cats), true);
         } else {
             $subcats = $this->categoryService->getSubcatIds($categories);

@@ -33,48 +33,45 @@ final readonly class SetInfoHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        if (isset($params['pwg_token']) && $this->csrfService->getToken() !== $params['pwg_token']) {
+        $input = SetInfoParams::fromArray($params);
+        if ($input->pwgToken !== null && $this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
+        $categoryId = $input->categoryId;
         $category   = $this->categoryRepository->findCategoryById($categoryId);
         if ($category === null) {
             return new PwgError(404, 'category_id not found');
         }
-        if (!empty($params['status'])) {
-            if (!in_array($params['status'], ['private', 'public'])) {
+        if ($input->status !== null) {
+            if (!in_array($input->status, ['private', 'public'])) {
                 return new PwgError(WsError::InvalidParam->value, 'Invalid status, only public/private');
             }
-            if ($params['status'] !== $category->status->value) {
-                $this->categoryAdminService->setCatStatus([$categoryId], is_string($params['status']) ? $params['status'] : '');
+            if ($input->status !== $category->status->value) {
+                $this->categoryAdminService->setCatStatus([$categoryId], $input->status);
             }
         }
         $update = ['id' => $categoryId];
-        foreach (['visible', 'commentable'] as $paramName) {
-            $paramValStr = is_scalar($params[$paramName] ?? null) ? (string) $params[$paramName] : '';
-            if (isset($params[$paramName]) && !preg_match('/^(true|false)$/i', $paramValStr)) {
-                return new PwgError(WsError::InvalidParam->value, 'Invalid param ' . $paramName . ' : ' . $paramValStr);
+        foreach (['visible' => $input->visibleRaw, 'commentable' => $input->commentableRaw] as $paramName => $paramVal) {
+            if ($paramVal !== null && !preg_match('/^(true|false)$/i', $paramVal)) {
+                return new PwgError(WsError::InvalidParam->value, 'Invalid param ' . $paramName . ' : ' . $paramVal);
             }
         }
-        $paramVisible = $params['visible'] ?? null;
-        $paramVisibleBool = is_bool($paramVisible) ? $paramVisible : (is_string($paramVisible) ? strtolower($paramVisible) === 'true' : null);
-        if (!empty($params['visible']) && $paramVisibleBool !== null && $paramVisibleBool !== $category->visible) {
-            $this->categoryAdminService->setCatVisible([$categoryId], is_string($params['visible']) ? $params['visible'] : (is_bool($params['visible']) ? $params['visible'] : false));
+        $paramVisibleBool = $input->visibleRaw !== null ? strtolower($input->visibleRaw) === 'true' : null;
+        if ($input->visibleRaw !== null && $paramVisibleBool !== null && $paramVisibleBool !== $category->visible) {
+            $this->categoryAdminService->setCatVisible([$categoryId], $input->visibleRaw);
         }
-        $infoColumns   = ['name', 'comment', 'commentable'];
         $performUpdate = false;
-        foreach ($infoColumns as $key) {
-            if (isset($params[$key])) {
+        $allowHtml     = Config::allowHtmlDescriptions() && $input->pwgToken !== null;
+        foreach (['name' => $input->name, 'comment' => $input->comment, 'commentable' => $input->commentableRaw] as $key => $val) {
+            if ($val !== null) {
                 $performUpdate = true;
-                $keyValStr     = is_scalar($params[$key]) ? (string) $params[$key] : '';
-                $update[$key]  = (!Config::allowHtmlDescriptions() || !isset($params['pwg_token'])) ? strip_tags($keyValStr) : $keyValStr;
+                $update[$key]  = $allowHtml ? $val : strip_tags($val);
             }
         }
-        if (isset($params['commentable']) && isset($params['apply_commentable_to_subalbums']) && $params['apply_commentable_to_subalbums']) {
+        if ($input->commentableRaw !== null && $input->applyCommentableToSubalbums) {
             $subcats = $this->categoryService->getSubcatIds([$categoryId]);
             if (count($subcats) > 0) {
-                $commentableVal = is_string($params['commentable']) ? $params['commentable'] : 'false';
-                $this->categoryRepository->setCommentable(array_map(intval(...), $subcats), $commentableVal === 'true');
+                $this->categoryRepository->setCommentable(array_map(intval(...), $subcats), $input->commentableRaw === 'true');
             }
         }
         if ($performUpdate) {

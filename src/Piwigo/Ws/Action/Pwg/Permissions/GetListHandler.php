@@ -30,9 +30,10 @@ final readonly class GetListHandler implements WsAction
         if (count($myParams) > 1) {
             return new PwgError(WsError::InvalidParam->value, 'Too many parameters, provide cat_id OR user_id OR group_id');
         }
-        $permRepo    = $this->permissionRepository;
-        $catIdsFilter = !empty($params['cat_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['cat_id']) ? $params['cat_id'] : []) : null;
-        $perms       = [];
+        $input        = GetListParams::fromArray($params);
+        $permRepo     = $this->permissionRepository;
+        $catIdsFilter = $input->catIds;
+        $perms        = [];
         foreach ($permRepo->findUserCategoryAccess($catIdsFilter) as $row) {
             $catId = is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0;
             if (!isset($perms[$catId])) {
@@ -55,21 +56,17 @@ final readonly class GetListHandler implements WsAction
             $perms[$catId]['groups'][] = is_numeric($row['group_id']) ? (int) $row['group_id'] : 0;
         }
         foreach ($perms as $catId => &$cat) {
-            if (isset($params['group_id'])) {
-                $groupIdArr    = is_array($params['group_id']) ? $params['group_id'] : [];
-                $groupIdArrStr = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $groupIdArr);
-                $catGroupsStr  = array_map(fn (mixed $v): string => (string) $v, $cat['groups'] ?? []);
-                if (empty($cat['groups']) || count(array_intersect($catGroupsStr, $groupIdArrStr)) === 0) {
+            if ($input->groupIdsSet) {
+                $catGroupsStr = array_map(fn (mixed $v): string => (string) $v, $cat['groups'] ?? []);
+                if (empty($cat['groups']) || count(array_intersect($catGroupsStr, $input->groupIds)) === 0) {
                     unset($perms[$catId]);
                     continue;
                 }
             }
-            if (isset($params['user_id'])) {
-                $userIdArr             = is_array($params['user_id']) ? $params['user_id'] : [];
-                $userIdArrStr          = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $userIdArr);
-                $catUsersIndirectStr   = array_map(fn (mixed $v): string => (string) $v, $cat['users_indirect'] ?? []);
-                $catUsersStr           = array_map(fn (mixed $v): string => (string) $v, $cat['users'] ?? []);
-                if ((empty($cat['users_indirect']) || count(array_intersect($catUsersIndirectStr, $userIdArrStr)) === 0) && (empty($cat['users']) || count(array_intersect($catUsersStr, $userIdArrStr)) === 0)) {
+            if ($input->userIdsSet) {
+                $catUsersIndirectStr = array_map(fn (mixed $v): string => (string) $v, $cat['users_indirect'] ?? []);
+                $catUsersStr         = array_map(fn (mixed $v): string => (string) $v, $cat['users'] ?? []);
+                if ((empty($cat['users_indirect']) || count(array_intersect($catUsersIndirectStr, $input->userIds)) === 0) && (empty($cat['users']) || count(array_intersect($catUsersStr, $input->userIds)) === 0)) {
                     unset($perms[$catId]);
                     continue;
                 }

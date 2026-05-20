@@ -26,7 +26,8 @@ final readonly class DeleteRepresentativeHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
+        $input      = DeleteRepresentativeParams::fromArray($params);
+        $categoryId = $input->categoryId;
         if (!$this->categoryRepository->existsById($categoryId)) {
             return new PwgError(404, 'category_id not found');
         }

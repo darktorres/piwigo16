@@ -21,6 +21,7 @@ use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DateService;
@@ -408,7 +409,8 @@ final class PhotoController implements AdminSubControllerInterface
         if (($custom_context = $this->userService->getEditContext($getImageIdInt)) !== false && $custom_context !== null && $custom_context !== '') {
             $tpl->assign('U_JUMPTO', $this->urlService->makePictureUrl(['image_id' => $_GET['image_id'] ?? '']) . '/' . $custom_context);
         } elseif ($userLevel >= $imageLevel) {
-            $forbidden   = $this->permissionService->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : '');
+            $userStatusForPerm = is_string($user['status']) ? (UserStatus::tryFrom($user['status']) ?? UserStatus::Guest) : UserStatus::Guest;
+            $forbidden   = $this->permissionService->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, $userStatusForPerm);
             $authorizeds = array_values(array_diff(
                 $this->categoryRepository->findCategoryIdsByImageId($getImageIdInt),
                 $forbidden,

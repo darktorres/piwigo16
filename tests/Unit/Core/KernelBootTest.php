@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Core;
 
 use PHPUnit\Framework\TestCase;
 use Piwigo\Common\Enum\SortOrder;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -91,7 +92,7 @@ final class KernelBootTest extends TestCase
         Kernel::boot();
 
         $user = CurrentUser::get();
-        self::assertSame('guest', $user->status);
+        self::assertSame(UserStatus::Guest, $user->status);
     }
 
     public function test_CurrentUser_set_allows_overriding_user_after_boot(): void

@@ -11,6 +11,7 @@ use cebe\openapi\spec\PathItem;
 use cebe\openapi\spec\Paths;
 use cebe\openapi\spec\Schema;
 use PHPUnit\Framework\TestCase;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Event\Ws\WsMethodsRegistering;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -55,7 +56,7 @@ final class SpecValidityTest extends TestCase
             email: '',
             language: 'en_US',
             theme: 'elegant',
-            status: 'guest',
+            status: UserStatus::Guest,
             enabledHigh: false,
             rawAttributes: ['username' => 'spec_validity_test'],
         ));

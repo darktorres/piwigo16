@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Session;
 
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Ws\WsResult;
 
 /**
@@ -24,7 +25,7 @@ final readonly class GetStatusResult implements WsResult
      */
     public function __construct(
         public string $username,
-        public string $status,
+        public UserStatus $status,
         public string $theme,
         public string $language,
         public string $pwgToken,
@@ -45,7 +46,7 @@ final readonly class GetStatusResult implements WsResult
     {
         $res = [
             'username'         => $this->username,
-            'status'           => $this->status,
+            'status'           => $this->status->value,
             'theme'            => $this->theme,
             'language'         => $this->language,
             'pwg_token'        => $this->pwgToken,

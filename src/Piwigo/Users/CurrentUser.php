@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 
 /**
@@ -30,7 +31,7 @@ final class CurrentUser
             email: '',
             language: 'en_US',
             theme: 'elegant',
-            status: 'guest',
+            status: UserStatus::Guest,
             enabledHigh: false,
         );
     }

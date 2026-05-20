@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Action\Pwg\Users;
 
 use Piwigo\Admin\Users\UserAdminService;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Lang\Translator;
@@ -39,7 +40,7 @@ final readonly class DeleteHandler implements WsAction
         }
         $currentUser    = CurrentUser::get();
         $protectedUsers = [$currentUser->id, Config::guestId(), Config::defaultUserId(), Config::webmasterId()];
-        if ($currentUser->status === 'admin') {
+        if ($currentUser->status === UserStatus::Admin) {
             $protectedUsers = array_merge($protectedUsers, $this->userRepository->findAdminUserIds());
         }
         $userIds = array_values(array_diff($input->userIds, $protectedUsers));

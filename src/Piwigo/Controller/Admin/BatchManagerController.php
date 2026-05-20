@@ -20,6 +20,7 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
@@ -1189,7 +1190,8 @@ final class BatchManagerController implements AdminSubControllerInterface
 
                 $row_id_str  = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '0';
                 $row_id_int  = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-                $forbidden   = $this->permissionService->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, is_string($user['status']) ? $user['status'] : '');
+                $userStatusForPerm = is_string($user['status']) ? (UserStatus::tryFrom($user['status']) ?? UserStatus::Guest) : UserStatus::Guest;
+                $forbidden   = $this->permissionService->calculatePermissions(is_numeric($user['id']) ? (int) $user['id'] : 0, $userStatusForPerm);
                 $authorizeds = array_values(array_diff(
                     $this->categoryRepository->findCategoryIdsByImageId($row_id_int),
                     $forbidden,

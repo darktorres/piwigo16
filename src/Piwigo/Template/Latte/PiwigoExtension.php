@@ -6,6 +6,7 @@ namespace Piwigo\Template\Latte;
 
 use Latte\Extension;
 use Latte\Runtime\Html;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -219,12 +220,14 @@ final class PiwigoExtension extends Extension
 
     public static function isAdmin(string $userStatus = ''): bool
     {
-        return Kernel::service(PermissionService::class)->isAdmin($userStatus);
+        $status = $userStatus !== '' ? UserStatus::tryFrom($userStatus) : null;
+        return Kernel::service(PermissionService::class)->isAdmin($status);
     }
 
     public static function isClassicUser(string $userStatus = ''): bool
     {
-        return Kernel::service(PermissionService::class)->isClassicUser($userStatus);
+        $status = $userStatus !== '' ? UserStatus::tryFrom($userStatus) : null;
+        return Kernel::service(PermissionService::class)->isClassicUser($status);
     }
 
     public static function getDevice(): string

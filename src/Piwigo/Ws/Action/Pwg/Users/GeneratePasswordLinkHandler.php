@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Action\Pwg\Users;
 
 use Piwigo\Admin\Users\UserAdminService;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Mail\MailService;
@@ -54,11 +55,12 @@ final readonly class GeneratePasswordLinkHandler implements WsAction
         if ($userLost === false) {
             return new PwgError(404, 'User not found');
         }
-        $userLostStatus = is_string($userLost['status'] ?? null) ? $userLost['status'] : '';
+        $userLostStatusRaw = $userLost['status'] ?? null;
+        $userLostStatus    = is_string($userLostStatusRaw) ? UserStatus::tryFrom($userLostStatusRaw) : null;
         if ($this->permissionService->isAGuest($userLostStatus) || $this->permissionService->isGeneric($userLostStatus)) {
             return new PwgError(403, 'Password reset is not allowed for this user');
         }
-        if (CurrentUser::get()->status === 'admin' && $userLostStatus === 'webmaster') {
+        if (CurrentUser::get()->status === UserStatus::Admin && $userLostStatus === UserStatus::Webmaster) {
             return new PwgError(403, 'You cannot perform this action');
         }
         $firstLogin       = $this->userService->hasAlreadyLoggedIn($targetUserId);

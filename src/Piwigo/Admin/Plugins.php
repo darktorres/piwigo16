@@ -9,6 +9,7 @@ use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Extensions\ExtensionAction;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
@@ -71,7 +72,7 @@ final class Plugins
             return $hasSettings;
         }
         if ($hasSettings === 'webmaster') {
-            return CurrentUser::isInitialized() && CurrentUser::get()->status === 'webmaster';
+            return CurrentUser::isInitialized() && CurrentUser::get()->status === UserStatus::Webmaster;
         }
         return false;
     }

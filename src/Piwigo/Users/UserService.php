@@ -15,6 +15,7 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\PwgTOTP;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\BoolUtil;
@@ -305,7 +306,7 @@ final class UserService
                 $userdata['need_update']       = false;
 
                 $udStatusRaw     = $userdata['status'] ?? null;
-                $udStatus        = is_string($udStatusRaw) ? $udStatusRaw : '';
+                $udStatus        = is_string($udStatusRaw) ? (UserStatus::tryFrom($udStatusRaw) ?? UserStatus::Guest) : UserStatus::Guest;
                 $udLevel         = is_numeric($userdata['level']) ? (int) $userdata['level'] : 0;
                 // forbidden_categories carried as int[] both in $userdata and
                 // on the DB (JSON column post-F5-a).
@@ -565,19 +566,20 @@ final class UserService
         }
 
         if (!empty($params['status'])) {
-            if (in_array($params['status'], ['webmaster', 'admin']) and !$this->permissionService->isWebmaster()) {
-                return ['error' => ['code ' => 403, 'message' => 'Only webmasters can grant "webmaster/admin" status']];
-            }
-            if (!in_array($params['status'], ['guest', 'generic', 'normal', 'admin', 'webmaster'])) {
+            $paramStatus = is_string($params['status']) ? UserStatus::tryFrom($params['status']) : null;
+            if ($paramStatus === null) {
                 return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'Invalid status']];
+            }
+            if (in_array($paramStatus, [UserStatus::Webmaster, UserStatus::Admin], true) and !$this->permissionService->isWebmaster()) {
+                return ['error' => ['code ' => 403, 'message' => 'Only webmasters can grant "webmaster/admin" status']];
             }
 
             $protectedUsers = [$currentUser->id, Config::guestId(), Config::webmasterId()];
-            if ('admin' == $currentUser->status) {
+            if (UserStatus::Admin === $currentUser->status) {
                 $protectedUsers = array_merge($protectedUsers, $this->userRepo->findAdminUserIds());
             }
             $params['user_id_for_status'] = array_values(array_diff(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId), $protectedUsers));
-            $updateStatus = $params['status'];
+            $updateStatus = $paramStatus;
         }
 
         foreach (['level', 'language', 'theme', 'nb_image_page', 'recent_period', 'expand', 'show_nb_comments', 'show_nb_hits', 'enabled_high'] as $field) {
@@ -617,9 +619,8 @@ final class UserService
 
         $paramUserIdForStatus = is_array($params['user_id_for_status'] ?? null) ? $params['user_id_for_status'] : [];
         if (isset($updateStatus) and count($paramUserIdForStatus) > 0) {
-            $updateStatusStr = is_scalar($updateStatus) ? (string) $updateStatus : '';
-            $this->userRepo->updateStatusForUsers($updateStatusStr, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserIdForStatus));
-            if ('guest' == $updateStatus) {
+            $this->userRepo->updateStatusForUsers($updateStatus->value, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserIdForStatus));
+            if (UserStatus::Guest === $updateStatus) {
                 foreach ($paramUserIdForStatus as $uidForStatus) {
                     $this->sessionService->deleteUserSessions(is_numeric($uidForStatus) ? (int) $uidForStatus : 0);
                 }

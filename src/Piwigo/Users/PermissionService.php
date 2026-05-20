@@ -7,6 +7,7 @@ namespace Piwigo\Users;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\SqlExpr;
@@ -24,31 +25,27 @@ final readonly class PermissionService
     ) {
     }
 
-    public function getUserStatus(string $userStatus = ''): string
+    public function getUserStatus(?UserStatus $userStatus = null): ?UserStatus
     {
-        if (empty($userStatus)) {
-            if (CurrentUser::isInitialized()) {
-                $userStatus = CurrentUser::get()->status;
-            } else {
-                $userStatus = '';
-            }
+        if ($userStatus !== null) {
+            return $userStatus;
         }
-        return $userStatus;
+        return CurrentUser::isInitialized() ? CurrentUser::get()->status : null;
     }
 
-    public function getAccessTypeStatus(string $userStatus = ''): int
+    public function getAccessTypeStatus(?UserStatus $userStatus = null): int
     {
         return match ($this->getUserStatus($userStatus)) {
-            'guest'     => Config::guestAccess() ? AccessLevel::Guest : AccessLevel::Free,
-            'generic'   => AccessLevel::Guest,
-            'normal'    => AccessLevel::Classic,
-            'admin'     => AccessLevel::Administrator,
-            'webmaster' => AccessLevel::Webmaster,
-            default     => AccessLevel::Free,
+            UserStatus::Guest     => Config::guestAccess() ? AccessLevel::Guest : AccessLevel::Free,
+            UserStatus::Generic   => AccessLevel::Guest,
+            UserStatus::Normal    => AccessLevel::Classic,
+            UserStatus::Admin     => AccessLevel::Administrator,
+            UserStatus::Webmaster => AccessLevel::Webmaster,
+            default               => AccessLevel::Free,
         };
     }
 
-    public function isAutorizeStatus(int $accessType, string $userStatus = ''): bool
+    public function isAutorizeStatus(int $accessType, ?UserStatus $userStatus = null): bool
     {
         return ($this->getAccessTypeStatus($userStatus) >= $accessType);
     }
@@ -60,27 +57,27 @@ final readonly class PermissionService
         }
     }
 
-    public function isGeneric(string $userStatus = ''): bool
+    public function isGeneric(?UserStatus $userStatus = null): bool
     {
-        return $this->getUserStatus($userStatus) == 'generic';
+        return $this->getUserStatus($userStatus) === UserStatus::Generic;
     }
 
-    public function isAGuest(string $userStatus = ''): bool
+    public function isAGuest(?UserStatus $userStatus = null): bool
     {
-        return $this->getUserStatus($userStatus) == 'guest';
+        return $this->getUserStatus($userStatus) === UserStatus::Guest;
     }
 
-    public function isClassicUser(string $userStatus = ''): bool
+    public function isClassicUser(?UserStatus $userStatus = null): bool
     {
         return $this->isAutorizeStatus(AccessLevel::Classic, $userStatus);
     }
 
-    public function isAdmin(string $userStatus = ''): bool
+    public function isAdmin(?UserStatus $userStatus = null): bool
     {
         return $this->isAutorizeStatus(AccessLevel::Administrator, $userStatus);
     }
 
-    public function isWebmaster(string $userStatus = ''): bool
+    public function isWebmaster(?UserStatus $userStatus = null): bool
     {
         return $this->isAutorizeStatus(AccessLevel::Webmaster, $userStatus);
     }
@@ -117,7 +114,7 @@ final readonly class PermissionService
     }
 
     /** @return list<int> category ids the user is not allowed to see (always non-empty; placeholder 0 if user has full access) */
-    public function calculatePermissions(int $userId, string $userStatus): array
+    public function calculatePermissions(int $userId, UserStatus $userStatus): array
     {
         $privateIds    = $this->categoryRepository->findPrivateIds();
         $authorizedIds = array_merge(

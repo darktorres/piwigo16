@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Users;
 
 use PHPUnit\Framework\TestCase;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Users\User;
 
 final class UserTest extends TestCase
@@ -31,7 +32,7 @@ final class UserTest extends TestCase
         self::assertSame('alice@example.com', $user->email);
         self::assertSame('fr_FR', $user->language);
         self::assertSame('elegant', $user->theme);
-        self::assertSame('admin', $user->status);
+        self::assertSame(UserStatus::Admin, $user->status);
         self::assertTrue($user->enabledHigh);
     }
 
@@ -51,7 +52,7 @@ final class UserTest extends TestCase
         self::assertSame('', $user->email);
         self::assertSame('en_US', $user->language);
         self::assertSame('elegant', $user->theme);
-        self::assertSame('guest', $user->status);
+        self::assertSame(UserStatus::Guest, $user->status);
         self::assertFalse($user->enabledHigh);
     }
 

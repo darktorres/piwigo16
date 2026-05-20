@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Users;
 
 use PHPUnit\Framework\TestCase;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 
@@ -36,7 +37,7 @@ final class CurrentUserTest extends TestCase
 
     public function testSetAndGet(): void
     {
-        $user = new User(1, 'admin', 'admin@example.com', 'en_US', 'elegant', 'webmaster', true);
+        $user = new User(1, 'admin', 'admin@example.com', 'en_US', 'elegant', UserStatus::Webmaster, true);
         CurrentUser::set($user);
         self::assertTrue(CurrentUser::isInitialized());
         self::assertSame($user, CurrentUser::get());
@@ -44,7 +45,7 @@ final class CurrentUserTest extends TestCase
 
     public function testResetClearsInstance(): void
     {
-        $user = new User(1, 'admin', 'admin@example.com', 'en_US', 'elegant', 'webmaster', true);
+        $user = new User(1, 'admin', 'admin@example.com', 'en_US', 'elegant', UserStatus::Webmaster, true);
         CurrentUser::set($user);
         CurrentUser::reset();
         self::assertFalse(CurrentUser::isInitialized());
@@ -56,7 +57,7 @@ final class CurrentUserTest extends TestCase
         // The real user is set by UserBootstrap via CurrentUser::set().
         CurrentUser::attachGlobals();
         self::assertTrue(CurrentUser::isInitialized());
-        self::assertSame('guest', CurrentUser::get()->status);
+        self::assertSame(UserStatus::Guest, CurrentUser::get()->status);
     }
 
     public function testAttachGlobalsIsIdempotent(): void

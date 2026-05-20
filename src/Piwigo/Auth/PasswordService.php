@@ -9,6 +9,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
@@ -68,7 +69,8 @@ final readonly class PasswordService
             $userdata = ['status' => 'guest', 'language' => $this->userService->getDefaultLanguage(), 'email' => ''];
         }
 
-        $status            = isset($userdata['status'])   && is_string($userdata['status']) ? $userdata['status'] : 'guest';
+        $statusRaw         = $userdata['status'] ?? null;
+        $status            = is_string($statusRaw) ? (UserStatus::tryFrom($statusRaw) ?? UserStatus::Guest) : UserStatus::Guest;
         $userdata_language = isset($userdata['language']) && is_string($userdata['language']) ? $userdata['language'] : $this->userService->getDefaultLanguage();
         $userdata_email    = isset($userdata['email'])    && is_string($userdata['email']) ? $userdata['email'] : '';
 
@@ -167,7 +169,8 @@ final readonly class PasswordService
         $temp_username = is_string($temp_user['username'] ?? null) ? $temp_user['username'] : '';
         $temp_email    = is_string($temp_user['email'] ?? null) ? $temp_user['email'] : '';
         $temp_language = is_string($temp_user['language'] ?? null) ? $temp_user['language'] : '';
-        $status        = is_string($temp_user['status'] ?? null) ? $temp_user['status'] : '';
+        $statusRaw     = $temp_user['status'] ?? null;
+        $status        = is_string($statusRaw) ? UserStatus::tryFrom($statusRaw) : null;
         $has_no_email  = $temp_email === '';
 
         $this->session->validResetPasswordCode = [
@@ -195,8 +198,9 @@ final readonly class PasswordService
 
         $user_id = null;
         foreach ($this->userRepository->findByActiveActivationKey() as $row) {
-            $activation_key = is_string($row['activation_key'] ?? null) ? $row['activation_key'] : '';
-            $row_status     = is_string($row['status'] ?? null) ? $row['status'] : '';
+            $activation_key  = is_string($row['activation_key'] ?? null) ? $row['activation_key'] : '';
+            $row_statusRaw   = $row['status'] ?? null;
+            $row_status      = is_string($row_statusRaw) ? UserStatus::tryFrom($row_statusRaw) : null;
             if (password_verify($reset_key, $activation_key)) {
                 if ($this->permissionService->isAGuest($row_status) || $this->permissionService->isGeneric($row_status)) {
                     PageState::current()->addKeyedError('password_page_error', Lang::t('Password reset is not allowed for this user'));

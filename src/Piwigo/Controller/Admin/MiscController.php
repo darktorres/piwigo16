@@ -18,6 +18,7 @@ use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentRepository;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
@@ -997,7 +998,8 @@ final class MiscController implements AdminSubControllerInterface
         $userFields  = Config::userFields();
         $users_by_id = [];
         foreach ($this->userRepository->findAllWithStatus($userFields['id'], $userFields['username'], Tables::users()) as $row) {
-            $users_by_id[is_numeric($row['id']) ? (int) $row['id'] : 0] = ['name' => is_string($row['username'] ?? null) ? $row['username'] : '', 'anon' => !$this->permissionService->isAutorizeStatus(AccessLevel::Classic, is_string($row['status'] ?? null) ? $row['status'] : '')];
+            $rowStatusForPerm = is_string($row['status'] ?? null) ? UserStatus::tryFrom($row['status']) : null;
+            $users_by_id[is_numeric($row['id']) ? (int) $row['id'] : 0] = ['name' => is_string($row['username'] ?? null) ? $row['username'] : '', 'anon' => !$this->permissionService->isAutorizeStatus(AccessLevel::Classic, $rowStatusForPerm)];
         }
 
         $by_user_rating_model = ['rates' => []];

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Piwigo\Common\Enum\UserStatus;
+
 /**
  * Typed entity wrapping a Piwigo user record.
  *
@@ -26,7 +28,7 @@ final readonly class User
         public string $email,
         public string $language,
         public string $theme,
-        public string $status,
+        public UserStatus $status,
         public bool $enabledHigh,
         public array $internalStatus = [],
         public array $rawAttributes = [],
@@ -41,14 +43,15 @@ final readonly class User
         $email    = $row['email'] ?? '';
         $language = $row['language'] ?? 'en_US';
         $theme    = $row['theme'] ?? 'elegant';
-        $status   = $row['status'] ?? 'guest';
+        $statusRaw = $row['status'] ?? null;
+        $status    = is_string($statusRaw) ? (UserStatus::tryFrom($statusRaw) ?? UserStatus::Guest) : UserStatus::Guest;
         return new self(
             id: is_scalar($id) ? (int) $id : 0,
             username: is_scalar($username) ? (string) $username : '',
             email: is_scalar($email) ? (string) $email : '',
             language: is_scalar($language) ? (string) $language : 'en_US',
             theme: is_scalar($theme) ? (string) $theme : 'elegant',
-            status: is_scalar($status) ? (string) $status : 'guest',
+            status: $status,
             enabledHigh: (bool) ($row['enabled_high'] ?? false),
             internalStatus: is_array($row['internal_status'] ?? null) ? $row['internal_status'] : [],
             rawAttributes: $row,

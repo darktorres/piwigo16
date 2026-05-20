@@ -642,208 +642,206 @@ final class MaintenanceController implements AdminSubControllerInterface
 
         $maint_actions = $this->maintActions;
 
-        if ($this->permissionService->isWebmaster()) {
-            if (isset($_GET['method']) && 'pwg.activity_sys.getList' == $_GET['method']) {
-                $response = [];
-                $data     = [];
-                $usernameField = Config::userFields()->username;
-                $idField       = Config::userFields()->id;
-                $activityRows  = $this->activityRepository->findSystemActivityRows(Tables::users(), $idField, $usernameField);
+        if (!$this->permissionService->isWebmaster()) {
+            PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+        } elseif (isset($_GET['method']) && 'pwg.activity_sys.getList' == $_GET['method']) {
+            $response = [];
+            $data     = [];
+            $usernameField = Config::userFields()->username;
+            $idField       = Config::userFields()->id;
+            $activityRows  = $this->activityRepository->findSystemActivityRows(Tables::users(), $idField, $usernameField);
 
-                foreach ($activityRows as $row) {
-                    $major_infos = false;
-                    $object = $object_icon = $action_icon = $action_color = '';
-                    $action = $row->action;
-                    $date = $hour = '';
-                    $detailsRaw = json_decode($row->details ?? '', associative: true);
-                    $details    = is_array($detailsRaw) ? $detailsRaw : [];
-                    $detail     = ['type' => 'empty'];
+            foreach ($activityRows as $row) {
+                $major_infos = false;
+                $object = $object_icon = $action_icon = $action_color = '';
+                $action = $row->action;
+                $date = $hour = '';
+                $detailsRaw = json_decode($row->details ?? '', associative: true);
+                $details    = is_array($detailsRaw) ? $detailsRaw : [];
+                $detail     = ['type' => 'empty'];
 
-                    switch ((int) $row->objectId) {
-                        case ActivitySystem::Core:
-                            $object_icon = 'icon-piwigo';
-                            $object = Lang::t('Core');
-                            switch ($row->action) {
-                                case 'install':   $action_icon = 'icon-download';
-                                    $action_color = 'icon-green';
-                                    $action = Lang::t('Install');
-                                    break;
-                                case 'config':
-                                    $action_icon = 'icon-cog-alt';
-                                    $action_color = 'icon-yellow';
-                                    $action = Lang::t('Configuration');
-                                    if (isset($details['config_section'])) {
-                                        $c_icon = $c_text = '';
-                                        switch ($details['config_section']) {
-                                            case 'main':      $c_icon = 'icon-cog';
-                                                $c_text = Lang::t('General');
-                                                break;
-                                            case 'watermark': $c_icon = 'icon-file-image';
-                                                $c_text = Lang::t('Watermark');
-                                                break;
-                                            case 'sizes':
-                                                $c_icon = 'icon-zoom-square';
-                                                $c_text = Lang::t('Photo sizes');
-                                                if (isset($details['config_action']) && 'restore_settings' == $details['config_action']) {
-                                                    $detail[] = ['icon' => 'icon-back-in-time', 'text' => Lang::t('Set as default')];
-                                                }
-                                                break;
-                                            case 'comments':  $c_icon = 'icon-chat';
-                                                $c_text = Lang::t('Comments');
-                                                break;
-                                            case 'display':   $c_icon = 'icon-television';
-                                                $c_text = Lang::t('Display');
-                                                break;
-                                            default:          $c_icon = 'icon-cog-alt';
-                                                $c_text = is_string($details['config_section']) ? $details['config_section'] : '';
-                                                break;
-                                        }
-                                        $detail['type'] = 'config_section';
-                                        $detail[]       = ['icon' => $c_icon, 'text' => $c_text];
+                switch ((int) $row->objectId) {
+                    case ActivitySystem::Core:
+                        $object_icon = 'icon-piwigo';
+                        $object = Lang::t('Core');
+                        switch ($row->action) {
+                            case 'install':   $action_icon = 'icon-download';
+                                $action_color = 'icon-green';
+                                $action = Lang::t('Install');
+                                break;
+                            case 'config':
+                                $action_icon = 'icon-cog-alt';
+                                $action_color = 'icon-yellow';
+                                $action = Lang::t('Configuration');
+                                if (isset($details['config_section'])) {
+                                    $c_icon = $c_text = '';
+                                    switch ($details['config_section']) {
+                                        case 'main':      $c_icon = 'icon-cog';
+                                            $c_text = Lang::t('General');
+                                            break;
+                                        case 'watermark': $c_icon = 'icon-file-image';
+                                            $c_text = Lang::t('Watermark');
+                                            break;
+                                        case 'sizes':
+                                            $c_icon = 'icon-zoom-square';
+                                            $c_text = Lang::t('Photo sizes');
+                                            if (isset($details['config_action']) && 'restore_settings' == $details['config_action']) {
+                                                $detail[] = ['icon' => 'icon-back-in-time', 'text' => Lang::t('Set as default')];
+                                            }
+                                            break;
+                                        case 'comments':  $c_icon = 'icon-chat';
+                                            $c_text = Lang::t('Comments');
+                                            break;
+                                        case 'display':   $c_icon = 'icon-television';
+                                            $c_text = Lang::t('Display');
+                                            break;
+                                        default:          $c_icon = 'icon-cog-alt';
+                                            $c_text = is_string($details['config_section']) ? $details['config_section'] : '';
+                                            break;
                                     }
-                                    break;
-                                case 'maintenance':
-                                    $action_icon = 'icon-cone';
-                                    $action_color = 'icon-yellow';
-                                    $action = Lang::t('Maintenance');
-                                    if (isset($details['maintenance_action'])) {
-                                        $maintActionRaw = $details['maintenance_action'];
-                                        $action_detail = is_string($maintActionRaw) ? $maintActionRaw : '';
-                                        $maint_action_entry = is_array($maint_actions[$action_detail] ?? null) ? $maint_actions[$action_detail] : [];
-                                        $detail = ['type' => 'maintenance_action', 'icon' => $maint_action_entry['icon'] ?? 'icon-cone', 'text' => $maint_action_entry['label'] ?? $action_detail];
-                                    }
-                                    break;
-                                case 'update':     $action_icon = 'icon-arrows-cw';
-                                    $action_color = 'icon-blue';
-                                    $action = Lang::t('Update');
-                                    $major_infos = true;
-                                    break;
-                                case 'autoupdate': $action_icon = 'icon-arrows-cw';
-                                    $action_color = 'icon-blue';
-                                    $action = Lang::t('Auto-update');
-                                    $major_infos = true;
-                                    break;
-                                default:           $action_icon = 'icon-download';
-                                    $action_color = 'icon-yellow';
-                                    break;
-                            }
-                            break;
+                                    $detail['type'] = 'config_section';
+                                    $detail[]       = ['icon' => $c_icon, 'text' => $c_text];
+                                }
+                                break;
+                            case 'maintenance':
+                                $action_icon = 'icon-cone';
+                                $action_color = 'icon-yellow';
+                                $action = Lang::t('Maintenance');
+                                if (isset($details['maintenance_action'])) {
+                                    $maintActionRaw = $details['maintenance_action'];
+                                    $action_detail = is_string($maintActionRaw) ? $maintActionRaw : '';
+                                    $maint_action_entry = is_array($maint_actions[$action_detail] ?? null) ? $maint_actions[$action_detail] : [];
+                                    $detail = ['type' => 'maintenance_action', 'icon' => $maint_action_entry['icon'] ?? 'icon-cone', 'text' => $maint_action_entry['label'] ?? $action_detail];
+                                }
+                                break;
+                            case 'update':     $action_icon = 'icon-arrows-cw';
+                                $action_color = 'icon-blue';
+                                $action = Lang::t('Update');
+                                $major_infos = true;
+                                break;
+                            case 'autoupdate': $action_icon = 'icon-arrows-cw';
+                                $action_color = 'icon-blue';
+                                $action = Lang::t('Auto-update');
+                                $major_infos = true;
+                                break;
+                            default:           $action_icon = 'icon-download';
+                                $action_color = 'icon-yellow';
+                                break;
+                        }
+                        break;
 
-                        case ActivitySystem::Plugin:
-                            $object_icon = 'icon-puzzle';
-                            $object = 'plugin';
-                            if (isset($details['plugin_id'])) {
-                                $object = str_replace(['_', '-'], ' ', is_string($details['plugin_id']) ? $details['plugin_id'] : '');
-                            }
-                            switch ($row->action) {
-                                case 'install':    $action_icon = 'icon-download';
-                                    $action_color = 'icon-green';
-                                    $action = Lang::t('Install');
-                                    break;
-                                case 'update':     $action_icon = 'icon-arrows-cw';
-                                    $action_color = 'icon-blue';
-                                    $action = Lang::t('Update');
-                                    break;
-                                case 'activate':   $action_icon = 'icon-check';
-                                    $action_color = 'icon-green';
-                                    $action = Lang::t('Activate');
-                                    break;
-                                case 'deactivate': $action_icon = 'icon-block';
-                                    $action_color = 'icon-purple';
-                                    $action = Lang::t('Deactivate');
-                                    break;
-                                case 'uninstall':  $action_icon = 'icon-trash-1';
-                                    $action_color = 'icon-red';
-                                    $action = Lang::t('Uninstall');
-                                    break;
-                                case 'restore':    $action_icon = 'icon-back-in-time';
-                                    $action_color = 'icon-blue';
-                                    $action = Lang::t('Restore');
-                                    break;
-                                case 'delete':
-                                    $action_icon = 'icon-trash-1';
-                                    $action_color = 'icon-red';
-                                    $action = Lang::t('Delete');
-                                    if (isset($details['db_version'])) {
-                                        $detail['type'] = 'db_fs_version';
-                                        $detail[] = ['icon' => 'icon-flow-branch', 'text' => 'database : ' . (is_string($details['db_version']) ? $details['db_version'] : '')];
-                                    }
-                                    if (isset($details['fs_version'])) {
-                                        $detail['type'] = 'db_fs_version';
-                                        $detail[] = ['icon' => 'icon-flow-branch', 'text' => 'filesystem : ' . (is_string($details['fs_version']) ? $details['fs_version'] : '')];
-                                    }
-                                    break;
-                                case 'autoupdate': $action_icon = 'icon-arrows-cw';
-                                    $action_color = 'icon-blue';
-                                    $action = Lang::t('Auto-update');
-                                    break;
-                                default:           $action_icon = 'icon-puzzle';
-                                    $action_color = 'icon-yellow';
-                                    break;
-                            }
-                            break;
+                    case ActivitySystem::Plugin:
+                        $object_icon = 'icon-puzzle';
+                        $object = 'plugin';
+                        if (isset($details['plugin_id'])) {
+                            $object = str_replace(['_', '-'], ' ', is_string($details['plugin_id']) ? $details['plugin_id'] : '');
+                        }
+                        switch ($row->action) {
+                            case 'install':    $action_icon = 'icon-download';
+                                $action_color = 'icon-green';
+                                $action = Lang::t('Install');
+                                break;
+                            case 'update':     $action_icon = 'icon-arrows-cw';
+                                $action_color = 'icon-blue';
+                                $action = Lang::t('Update');
+                                break;
+                            case 'activate':   $action_icon = 'icon-check';
+                                $action_color = 'icon-green';
+                                $action = Lang::t('Activate');
+                                break;
+                            case 'deactivate': $action_icon = 'icon-block';
+                                $action_color = 'icon-purple';
+                                $action = Lang::t('Deactivate');
+                                break;
+                            case 'uninstall':  $action_icon = 'icon-trash-1';
+                                $action_color = 'icon-red';
+                                $action = Lang::t('Uninstall');
+                                break;
+                            case 'restore':    $action_icon = 'icon-back-in-time';
+                                $action_color = 'icon-blue';
+                                $action = Lang::t('Restore');
+                                break;
+                            case 'delete':
+                                $action_icon = 'icon-trash-1';
+                                $action_color = 'icon-red';
+                                $action = Lang::t('Delete');
+                                if (isset($details['db_version'])) {
+                                    $detail['type'] = 'db_fs_version';
+                                    $detail[] = ['icon' => 'icon-flow-branch', 'text' => 'database : ' . (is_string($details['db_version']) ? $details['db_version'] : '')];
+                                }
+                                if (isset($details['fs_version'])) {
+                                    $detail['type'] = 'db_fs_version';
+                                    $detail[] = ['icon' => 'icon-flow-branch', 'text' => 'filesystem : ' . (is_string($details['fs_version']) ? $details['fs_version'] : '')];
+                                }
+                                break;
+                            case 'autoupdate': $action_icon = 'icon-arrows-cw';
+                                $action_color = 'icon-blue';
+                                $action = Lang::t('Auto-update');
+                                break;
+                            default:           $action_icon = 'icon-puzzle';
+                                $action_color = 'icon-yellow';
+                                break;
+                        }
+                        break;
 
-                        case ActivitySystem::Theme:
-                            $object_icon = 'icon-brush';
-                            $object = 'theme';
-                            if (isset($details['theme_id'])) {
-                                $object = str_replace(['_', '-'], ' ', is_string($details['theme_id']) ? $details['theme_id'] : '');
-                            }
-                            switch ($row->action) {
-                                case 'install':    $action_icon = 'icon-download';
-                                    $action_color = 'icon-green';
-                                    $action = Lang::t('Install');
-                                    break;
-                                case 'activate':   $action_icon = 'icon-check';
-                                    $action_color = 'icon-green';
-                                    $action = Lang::t('Activate');
-                                    break;
-                                case 'deactivate': $action_icon = 'icon-block';
-                                    $action_color = 'icon-purple';
-                                    $action = Lang::t('Deactivate');
-                                    break;
-                                case 'delete':     $action_icon = 'icon-trash-1';
-                                    $action_color = 'icon-red';
-                                    $action = Lang::t('Delete');
-                                    break;
-                                case 'set_default': $action_icon = 'icon-star';
-                                    $action_color = 'icon-yellow';
-                                    $action = Lang::t('Set as default');
-                                    break;
-                                case 'update':     $action_icon = 'icon-arrows-cw';
-                                    $action_color = 'icon-blue';
-                                    $action = Lang::t('Update');
-                                    break;
-                                default:           $action_icon = 'icon-brush';
-                                    $action_color = 'icon-yellow';
-                                    break;
-                            }
-                            break;
-                    }
-
-                    if (isset($details['from_version'])) {
-                        $toVersionRaw = $details['to_version'] ?? null;
-                        $resultRaw = $details['result'] ?? null;
-                        $detail = ['type' => 'from_to', ['icon' => 'icon-flow-branch', 'text' => is_string($details['from_version']) ? $details['from_version'] : ''], ['icon' => $toVersionRaw !== null ? 'icon-flow-branch' : 'icon-block', 'text' => is_scalar($toVersionRaw) ? (string) $toVersionRaw : (is_scalar($resultRaw) ? (string) $resultRaw : '')]];
-                    } elseif (isset($details['version'])) {
-                        $detail = ['type' => 'version', 'icon' => 'icon-flow-branch', 'text' => is_string($details['version']) ? $details['version'] : ''];
-                    } elseif (isset($details['result'])) {
-                        $detail = ['type' => 'error', 'icon' => 'icon-block', 'text' => is_string($details['result']) ? $details['result'] : ''];
-                    }
-
-                    [$date, $hour] = explode(' ', $row->occuredOn);
-                    // performed_by IS NULL = system event (cron, install,
-                    // core update). Render the 'System' label client-side
-                    // when username is null.
-                    $data[] = ['major_infos' => $major_infos, 'id' => $row->activityId, 'object_icon' => $object_icon, 'object' => ucwords($object), 'action_icon' => $action_icon, 'action_color' => $action_color, 'action' => $action, 'user_id' => $row->performedBy, 'username' => $row->username ?? 'System', 'date' => $this->dateService->formatDate($date), 'hour' => $hour, 'detail' => $detail];
+                    case ActivitySystem::Theme:
+                        $object_icon = 'icon-brush';
+                        $object = 'theme';
+                        if (isset($details['theme_id'])) {
+                            $object = str_replace(['_', '-'], ' ', is_string($details['theme_id']) ? $details['theme_id'] : '');
+                        }
+                        switch ($row->action) {
+                            case 'install':    $action_icon = 'icon-download';
+                                $action_color = 'icon-green';
+                                $action = Lang::t('Install');
+                                break;
+                            case 'activate':   $action_icon = 'icon-check';
+                                $action_color = 'icon-green';
+                                $action = Lang::t('Activate');
+                                break;
+                            case 'deactivate': $action_icon = 'icon-block';
+                                $action_color = 'icon-purple';
+                                $action = Lang::t('Deactivate');
+                                break;
+                            case 'delete':     $action_icon = 'icon-trash-1';
+                                $action_color = 'icon-red';
+                                $action = Lang::t('Delete');
+                                break;
+                            case 'set_default': $action_icon = 'icon-star';
+                                $action_color = 'icon-yellow';
+                                $action = Lang::t('Set as default');
+                                break;
+                            case 'update':     $action_icon = 'icon-arrows-cw';
+                                $action_color = 'icon-blue';
+                                $action = Lang::t('Update');
+                                break;
+                            default:           $action_icon = 'icon-brush';
+                                $action_color = 'icon-yellow';
+                                break;
+                        }
+                        break;
                 }
 
-                $response = ['data' => $data];
-                echo json_encode($response);
-                exit;
+                if (isset($details['from_version'])) {
+                    $toVersionRaw = $details['to_version'] ?? null;
+                    $resultRaw = $details['result'] ?? null;
+                    $detail = ['type' => 'from_to', ['icon' => 'icon-flow-branch', 'text' => is_string($details['from_version']) ? $details['from_version'] : ''], ['icon' => $toVersionRaw !== null ? 'icon-flow-branch' : 'icon-block', 'text' => is_scalar($toVersionRaw) ? (string) $toVersionRaw : (is_scalar($resultRaw) ? (string) $resultRaw : '')]];
+                } elseif (isset($details['version'])) {
+                    $detail = ['type' => 'version', 'icon' => 'icon-flow-branch', 'text' => is_string($details['version']) ? $details['version'] : ''];
+                } elseif (isset($details['result'])) {
+                    $detail = ['type' => 'error', 'icon' => 'icon-block', 'text' => is_string($details['result']) ? $details['result'] : ''];
+                }
+
+                [$date, $hour] = explode(' ', $row->occuredOn);
+                // performed_by IS NULL = system event (cron, install,
+                // core update). Render the 'System' label client-side
+                // when username is null.
+                $data[] = ['major_infos' => $major_infos, 'id' => $row->activityId, 'object_icon' => $object_icon, 'object' => ucwords($object), 'action_icon' => $action_icon, 'action_color' => $action_color, 'action' => $action, 'user_id' => $row->performedBy, 'username' => $row->username ?? 'System', 'date' => $this->dateService->formatDate($date), 'hour' => $hour, 'detail' => $detail];
             }
-        } else {
-            PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+
+            $response = ['data' => $data];
+            echo json_encode($response);
+            exit;
         }
 
         $tpl->assign('isWebmaster', $this->permissionService->isWebmaster() ? 1 : 0);
@@ -1141,9 +1139,8 @@ final class MaintenanceController implements AdminSubControllerInterface
 
         if ($site_is_remote) {
             HtmlService::fatalError('remote sites not supported');
-        } else {
-            $site_reader = new LocalSiteReader($site_url_str);
         }
+        $site_reader = new LocalSiteReader($site_url_str);
 
         if (count($this->imageAdminService->getPhotosNoMd5sum()) > 0) {
             $tpl->assign(['save_error' => new Html('<a href="' . $this->urlGenerator->admin('batch_manager') . '&amp;filter=prefilter-no_sync_md5sum">' . Lang::t('Some checksums are missing.') . '<i class="icon-right"></i></a>')]);

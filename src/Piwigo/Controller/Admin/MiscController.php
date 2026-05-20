@@ -1210,123 +1210,125 @@ final class MiscController implements AdminSubControllerInterface
         $ctx         = MailNotificationContext::current();
         $return_list = [];
 
-        if (in_array($action, ['list_to_send', 'send'])) {
-            $dbnow         = new \DateTimeImmutable()->format('Y-m-d H:i:s');
-            $is_action_send = ($action == 'send');
-            $data_users    = $this->notificationAdminService->getUserNotifications('send', $check_key_list);
-            $is_list_all_without_test = ($ctx->isSendmailTimeout || Config::nbmListAllEnabledUsersToSend());
+        if (!in_array($action, ['list_to_send', 'send'])) {
+            return $return_list;
+        }
 
-            if (!$is_list_all_without_test || $is_action_send) {
-                if (count($data_users) > 0) {
-                    $datas = [];
-                    if (empty($customize_mail_content)) {
-                        $customize_mail_content = Config::nbmComplementaryMailContent();
-                    }
-                    $cmcEvent  = new NbmRenderGlobalCustomizeMailContent($customize_mail_content);
-                    $this->dispatcher->dispatch($cmcEvent);
-                    $customize_mail_content = $cmcEvent->customizeMailContent;
-                    $msg_break_timeout = $is_action_send ? Lang::t('Time to send mail is limited. Others mails are skipped.') : Lang::t('Prepared time for list of users to send mail is limited. Others users are not listed.');
+        $dbnow         = new \DateTimeImmutable()->format('Y-m-d H:i:s');
+        $is_action_send = ($action == 'send');
+        $data_users    = $this->notificationAdminService->getUserNotifications('send', $check_key_list);
+        $is_list_all_without_test = ($ctx->isSendmailTimeout || Config::nbmListAllEnabledUsersToSend());
 
-                    $this->notificationAdminService->beginUsersEnvNbm($is_action_send);
-                    foreach ($data_users as $nbm_user) {
-                        if (!$is_action_send && $this->notificationAdminService->checkSendmailTimeout()) {
-                            PageState::current()->addInfo($msg_break_timeout);
-                            break;
-                        }
-                        if ($is_action_send && $this->notificationAdminService->checkSendmailTimeout()) {
-                            PageState::current()->addError($msg_break_timeout);
-                            break;
-                        }
+        if ($is_list_all_without_test && !$is_action_send) {
+            return $data_users;
+        }
 
-                        $this->notificationAdminService->setUserOnEnvNbm($nbm_user, $is_action_send);
+        if ($data_users === []) {
+            if ($is_action_send) {
+                PageState::current()->addError(Lang::t('No user to send notifications by mail.'));
+            }
+            return $return_list;
+        }
+        $datas = [];
+        if (empty($customize_mail_content)) {
+            $customize_mail_content = Config::nbmComplementaryMailContent();
+        }
+        $cmcEvent  = new NbmRenderGlobalCustomizeMailContent($customize_mail_content);
+        $this->dispatcher->dispatch($cmcEvent);
+        $customize_mail_content = $cmcEvent->customizeMailContent;
+        $msg_break_timeout = $is_action_send ? Lang::t('Time to send mail is limited. Others mails are skipped.') : Lang::t('Prepared time for list of users to send mail is limited. Others users are not listed.');
 
-                        if ($is_action_send) {
-                            $auth = null;
-                            $url_params = [];
-                            $auth_key = $this->authService->createUserAuthKey(is_numeric($nbm_user['user_id']) ? (int) $nbm_user['user_id'] : 0, is_string($nbm_user['status']) ? $nbm_user['status'] : null);
-                            if (is_array($auth_key) && is_string($auth_key['auth_key'] ?? null)) {
-                                $auth = $auth_key['auth_key'];
-                                $url_params['auth'] = $auth;
-                            }
+        $this->notificationAdminService->beginUsersEnvNbm($is_action_send);
+        foreach ($data_users as $nbm_user) {
+            if (!$is_action_send && $this->notificationAdminService->checkSendmailTimeout()) {
+                PageState::current()->addInfo($msg_break_timeout);
+                break;
+            }
+            if ($is_action_send && $this->notificationAdminService->checkSendmailTimeout()) {
+                PageState::current()->addError($msg_break_timeout);
+                break;
+            }
 
-                            $this->urlService->setMakeFullUrl();
-                            $return_list[] = (string) $nbm_user['check_key'];
-                            $last_send     = is_string($nbm_user['last_send']) || is_null($nbm_user['last_send']) ? $nbm_user['last_send'] : (string) $nbm_user['last_send'];
+            $this->notificationAdminService->setUserOnEnvNbm($nbm_user, $is_action_send);
 
-                            $news = [];
-                            if (Config::nbmSendDetailedContent()) {
-                                $news = $this->notificationService->news($last_send, $dbnow, false, Config::nbmSendHtmlMail(), $auth);
-                                $exist_data = count($news) > 0;
-                            } else {
-                                $exist_data = $this->notificationService->newsExists($last_send, $dbnow);
-                            }
+            if ($is_action_send) {
+                $auth = null;
+                $url_params = [];
+                $auth_key = $this->authService->createUserAuthKey(is_numeric($nbm_user['user_id']) ? (int) $nbm_user['user_id'] : 0, is_string($nbm_user['status']) ? $nbm_user['status'] : null);
+                if (is_array($auth_key) && is_string($auth_key['auth_key'] ?? null)) {
+                    $auth = $auth_key['auth_key'];
+                    $url_params['auth'] = $auth;
+                }
 
-                            if ($exist_data) {
-                                $subject = '[' . Config::galleryTitle() . '] ' . Lang::t('New photos added');
-                                $this->notificationAdminService->assignVarsNbmMailContent($nbm_user);
-                                $nbmTpl = $ctx->mailTemplate ?? throw new \LogicException('mail_template not set');
+                $this->urlService->setMakeFullUrl();
+                $return_list[] = (string) $nbm_user['check_key'];
+                $last_send     = is_string($nbm_user['last_send']) || is_null($nbm_user['last_send']) ? $nbm_user['last_send'] : (string) $nbm_user['last_send'];
 
-                                if (!is_null($nbm_user['last_send'])) {
-                                    $nbmTpl->assign('content_new_elements_between', ['DATE_BETWEEN_1' => $nbm_user['last_send'], 'DATE_BETWEEN_2' => $dbnow]);
-                                } else {
-                                    $nbmTpl->assign('content_new_elements_single', ['DATE_SINGLE' => $dbnow]);
-                                }
-
-                                if (Config::nbmSendDetailedContent()) {
-                                    $nbmTpl->assign('global_new_lines', $news);
-                                }
-
-                                $nbmEvent = new NbmRenderUserCustomizeMailContent($customize_mail_content, $nbm_user);
-                                $this->dispatcher->dispatch($nbmEvent);
-                                $nbm_user_customize_mail_content = $nbmEvent->customizeMailContent;
-                                if (!empty($nbm_user_customize_mail_content)) {
-                                    $nbmTpl->assign('custom_mail_content', $nbm_user_customize_mail_content);
-                                }
-
-                                if (Config::nbmSendHtmlMail() && Config::nbmSendRecentPostDates()) {
-                                    $recent_post_dates = $this->notificationService->getRecentPostDatesArray(Config::recentPostDates()['NBM']);
-                                    foreach ($recent_post_dates as $date_detail) {
-                                        $date_detail_arr = is_array($date_detail) ? $date_detail : [];
-                                        $nbmTpl->append('recent_posts', ['TITLE' => $this->notificationService->getTitleRecentPostDate($date_detail_arr), 'HTML_DATA' => $this->notificationService->getHtmlDescriptionRecentPostDate($date_detail_arr, is_string($auth) ? $auth : null)]);
-                                    }
-                                }
-
-                                $nbmTpl->assign(['GOTO_GALLERY_TITLE' => Config::galleryTitle(), 'GOTO_GALLERY_URL' => $this->urlService->addUrlParams($this->urlService->getGalleryHomeUrl(), $url_params), 'SEND_AS_NAME' => $ctx->sendAsName]);
-
-                                $nbmUsernameRaw    = $nbm_user['username']     ?? null;
-                                $nbmMailAddressRaw = $nbm_user['mail_address'] ?? null;
-                                $ret = $this->mailService->pwgMail(['name' => stripslashes(is_string($nbmUsernameRaw) ? $nbmUsernameRaw : ''), 'email' => is_string($nbmMailAddressRaw) ? $nbmMailAddressRaw : ''], ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $nbmTpl->parse('notification_by_mail.latte', true), 'content_format' => $ctx->emailFormat, 'auth_key' => $auth]);
-
-                                if ($ret) {
-                                    $this->notificationAdminService->incMailSentSuccess($nbm_user);
-                                    $datas[] = ['user_id' => is_numeric($nbm_user['user_id']) ? (int) $nbm_user['user_id'] : 0, 'last_send' => $dbnow];
-                                } else {
-                                    $this->notificationAdminService->incMailSentFailed($nbm_user);
-                                }
-                                $this->urlService->unsetMakeFullUrl();
-                            }
-                        } else {
-                            $last_send = isset($nbm_user['last_send']) ? (string) $nbm_user['last_send'] : null;
-                            if ($this->notificationService->newsExists($last_send, $dbnow)) {
-                                $return_list[] = $nbm_user;
-                            }
-                        }
-                        $this->notificationAdminService->unsetUserOnEnvNbm();
-                    }
-                    $this->notificationAdminService->endUsersEnvNbm();
-
-                    if ($is_action_send) {
-                        $this->notificationRepository->setLastSendBatch($datas);
-                        $this->notificationAdminService->displayCounterInfo();
-                    }
+                $news = [];
+                if (Config::nbmSendDetailedContent()) {
+                    $news = $this->notificationService->news($last_send, $dbnow, false, Config::nbmSendHtmlMail(), $auth);
+                    $exist_data = count($news) > 0;
                 } else {
-                    if ($is_action_send) {
-                        PageState::current()->addError(Lang::t('No user to send notifications by mail.'));
+                    $exist_data = $this->notificationService->newsExists($last_send, $dbnow);
+                }
+
+                if ($exist_data) {
+                    $subject = '[' . Config::galleryTitle() . '] ' . Lang::t('New photos added');
+                    $this->notificationAdminService->assignVarsNbmMailContent($nbm_user);
+                    $nbmTpl = $ctx->mailTemplate ?? throw new \LogicException('mail_template not set');
+
+                    if (!is_null($nbm_user['last_send'])) {
+                        $nbmTpl->assign('content_new_elements_between', ['DATE_BETWEEN_1' => $nbm_user['last_send'], 'DATE_BETWEEN_2' => $dbnow]);
+                    } else {
+                        $nbmTpl->assign('content_new_elements_single', ['DATE_SINGLE' => $dbnow]);
                     }
+
+                    if (Config::nbmSendDetailedContent()) {
+                        $nbmTpl->assign('global_new_lines', $news);
+                    }
+
+                    $nbmEvent = new NbmRenderUserCustomizeMailContent($customize_mail_content, $nbm_user);
+                    $this->dispatcher->dispatch($nbmEvent);
+                    $nbm_user_customize_mail_content = $nbmEvent->customizeMailContent;
+                    if (!empty($nbm_user_customize_mail_content)) {
+                        $nbmTpl->assign('custom_mail_content', $nbm_user_customize_mail_content);
+                    }
+
+                    if (Config::nbmSendHtmlMail() && Config::nbmSendRecentPostDates()) {
+                        $recent_post_dates = $this->notificationService->getRecentPostDatesArray(Config::recentPostDates()['NBM']);
+                        foreach ($recent_post_dates as $date_detail) {
+                            $date_detail_arr = is_array($date_detail) ? $date_detail : [];
+                            $nbmTpl->append('recent_posts', ['TITLE' => $this->notificationService->getTitleRecentPostDate($date_detail_arr), 'HTML_DATA' => $this->notificationService->getHtmlDescriptionRecentPostDate($date_detail_arr, is_string($auth) ? $auth : null)]);
+                        }
+                    }
+
+                    $nbmTpl->assign(['GOTO_GALLERY_TITLE' => Config::galleryTitle(), 'GOTO_GALLERY_URL' => $this->urlService->addUrlParams($this->urlService->getGalleryHomeUrl(), $url_params), 'SEND_AS_NAME' => $ctx->sendAsName]);
+
+                    $nbmUsernameRaw    = $nbm_user['username']     ?? null;
+                    $nbmMailAddressRaw = $nbm_user['mail_address'] ?? null;
+                    $ret = $this->mailService->pwgMail(['name' => stripslashes(is_string($nbmUsernameRaw) ? $nbmUsernameRaw : ''), 'email' => is_string($nbmMailAddressRaw) ? $nbmMailAddressRaw : ''], ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $nbmTpl->parse('notification_by_mail.latte', true), 'content_format' => $ctx->emailFormat, 'auth_key' => $auth]);
+
+                    if ($ret) {
+                        $this->notificationAdminService->incMailSentSuccess($nbm_user);
+                        $datas[] = ['user_id' => is_numeric($nbm_user['user_id']) ? (int) $nbm_user['user_id'] : 0, 'last_send' => $dbnow];
+                    } else {
+                        $this->notificationAdminService->incMailSentFailed($nbm_user);
+                    }
+                    $this->urlService->unsetMakeFullUrl();
                 }
             } else {
-                $return_list = $data_users;
+                $last_send = isset($nbm_user['last_send']) ? (string) $nbm_user['last_send'] : null;
+                if ($this->notificationService->newsExists($last_send, $dbnow)) {
+                    $return_list[] = $nbm_user;
+                }
             }
+            $this->notificationAdminService->unsetUserOnEnvNbm();
+        }
+        $this->notificationAdminService->endUsersEnvNbm();
+
+        if ($is_action_send) {
+            $this->notificationRepository->setLastSendBatch($datas);
+            $this->notificationAdminService->displayCounterInfo();
         }
         return $return_list;
     }

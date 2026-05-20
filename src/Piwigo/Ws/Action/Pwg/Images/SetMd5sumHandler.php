@@ -9,6 +9,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.images.setMd5sum` — backfill md5sum column in `block_size` chunks. */
 final readonly class SetMd5sumHandler implements WsAction
@@ -26,13 +27,18 @@ final readonly class SetMd5sumHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = SetMd5sumParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
         $noMd5sumIds = $this->imageAdminService->getPhotosNoMd5sum();
         $addedCount  = 0;
         if (count($noMd5sumIds) > 0) {
-            $md5sumIdsToAdd = array_slice($noMd5sumIds, 0, is_numeric($params['block_size']) ? (int) $params['block_size'] : null);
+            $md5sumIdsToAdd = array_slice($noMd5sumIds, 0, $input->blockSize);
             $addedCount     = $this->imageAdminService->addMd5sum($md5sumIdsToAdd);
         }
         return ['nb_added' => $addedCount, 'nb_no_md5sum' => count($this->imageAdminService->getPhotosNoMd5sum())];

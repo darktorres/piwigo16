@@ -24,20 +24,16 @@ final readonly class ExistHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): array
     {
-        $splitPattern = '/[\s,;\|]/';
-        $result       = [];
+        $input  = ExistParams::fromArray($params);
+        $result = [];
         if (Config::uniquenessMode() === 'md5sum') {
-            $md5sumsResult = preg_split($splitPattern, is_string($params['md5sum_list'] ?? null) ? $params['md5sum_list'] : '', -1, PREG_SPLIT_NO_EMPTY);
-            $md5sums       = $md5sumsResult !== false ? $md5sumsResult : [];
-            $idOfMd5       = $this->imageRepository->findIdByMd5sumMap($md5sums);
-            foreach ($md5sums as $md5sum) {
+            $idOfMd5 = $this->imageRepository->findIdByMd5sumMap($input->md5sums);
+            foreach ($input->md5sums as $md5sum) {
                 $result[$md5sum] = $idOfMd5[$md5sum] ?? null;
             }
         } elseif (Config::uniquenessMode() === 'filename') {
-            $filenamesResult = preg_split($splitPattern, is_string($params['filename_list'] ?? null) ? $params['filename_list'] : '', -1, PREG_SPLIT_NO_EMPTY);
-            $filenames       = $filenamesResult !== false ? $filenamesResult : [];
-            $idOfFile        = $this->imageRepository->findIdByFilenameMap($filenames);
-            foreach ($filenames as $filename) {
+            $idOfFile = $this->imageRepository->findIdByFilenameMap($input->filenames);
+            foreach ($input->filenames as $filename) {
                 $result[$filename] = $idOfFile[$filename] ?? null;
             }
         }

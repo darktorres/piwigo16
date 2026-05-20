@@ -10,6 +10,7 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
+use Piwigo\Db\SqlFragment;
 use Piwigo\History\HistoryRepository;
 use Piwigo\Image\ImageRepository;
 
@@ -64,9 +65,8 @@ final readonly class HistoryAdminService
      *
      * @param array<mixed> $search must already be passed through prepareSearch()
      * @param string[]|string $types image_type enum values to keep
-     * @return array{0: string, 1: list<mixed>, 2: list<ArrayParameterType|ParameterType>}
      */
-    private function buildHistoryWhereSql(array $search, array|string $types, string $alias = ''): array
+    private function buildHistoryWhereSql(array $search, array|string $types, string $alias = ''): SqlFragment
     {
         if (!is_array($types)) {
             $types = [$types];
@@ -143,7 +143,7 @@ final readonly class HistoryAdminService
         }
 
         $clauses = StringUtil::prependAppendArrayItems($clauses, '(', ')');
-        return [implode("\n    AND ", $clauses), $params, $paramTypes];
+        return new SqlFragment(implode("\n    AND ", $clauses), $params, $paramTypes);
     }
 
     /**
@@ -152,8 +152,8 @@ final readonly class HistoryAdminService
      */
     public function getHistoryCount(array $search, array|string $types): int
     {
-        [$where, $params, $ptypes] = $this->buildHistoryWhereSql($search, $types);
-        return $this->historyRepository->countByWhere($where, $params, $ptypes);
+        $f = $this->buildHistoryWhereSql($search, $types);
+        return $this->historyRepository->countByWhere($f->where, $f->params, $f->types);
     }
 
     /**
@@ -167,8 +167,8 @@ final readonly class HistoryAdminService
      */
     public function getHistoryTotalFilesizeForHigh(array $search, array|string $types): int
     {
-        [$where, $params, $ptypes] = $this->buildHistoryWhereSql($search, $types, 'h');
-        return $this->historyRepository->sumHighFilesizeByWhere($where, $params, $ptypes);
+        $f = $this->buildHistoryWhereSql($search, $types, 'h');
+        return $this->historyRepository->sumHighFilesizeByWhere($f->where, $f->params, $f->types);
     }
 
     /**
@@ -180,8 +180,8 @@ final readonly class HistoryAdminService
      */
     public function getHistoryGuestIpHistogram(array $search, array|string $types, int $guestId): array
     {
-        [$where, $params, $ptypes] = $this->buildHistoryWhereSql($search, $types);
-        return $this->historyRepository->findIpHitCountsForUser($guestId, $where, $params, $ptypes);
+        $f = $this->buildHistoryWhereSql($search, $types);
+        return $this->historyRepository->findIpHitCountsForUser($guestId, $f->where, $f->params, $f->types);
     }
 
     /**
@@ -194,8 +194,8 @@ final readonly class HistoryAdminService
      */
     public function getHistoryUserHitCounts(array $search, array|string $types): array
     {
-        [$where, $params, $ptypes] = $this->buildHistoryWhereSql($search, $types);
-        return $this->historyRepository->findUserHitCountsByWhere($where, $params, $ptypes);
+        $f = $this->buildHistoryWhereSql($search, $types);
+        return $this->historyRepository->findUserHitCountsByWhere($f->where, $f->params, $f->types);
     }
 
     /**
@@ -205,8 +205,8 @@ final readonly class HistoryAdminService
      */
     public function getHistoryDistinctSearchIds(array $search, array|string $types): array
     {
-        [$where, $params, $ptypes] = $this->buildHistoryWhereSql($search, $types);
-        return $this->historyRepository->findDistinctSearchIdsByWhere($where, $params, $ptypes);
+        $f = $this->buildHistoryWhereSql($search, $types);
+        return $this->historyRepository->findDistinctSearchIdsByWhere($f->where, $f->params, $f->types);
     }
 
     /**
@@ -218,8 +218,8 @@ final readonly class HistoryAdminService
      */
     public function getHistoryPage(array $search, array|string $types, int $offset, int $limit): array
     {
-        [$where, $params, $ptypes] = $this->buildHistoryWhereSql($search, $types);
-        return $this->historyRepository->findPageByWhere($where, $params, $ptypes, $offset, $limit);
+        $f = $this->buildHistoryWhereSql($search, $types);
+        return $this->historyRepository->findPageByWhere($f->where, $f->params, $f->types, $offset, $limit);
     }
 
     public function historySummarize(?int $max_lines = null): void

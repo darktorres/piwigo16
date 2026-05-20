@@ -8,6 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Config\Config;
 use Piwigo\Db\AbstractRepository;
+use Piwigo\Db\SqlFragment;
 
 /** Persistence layer for the notification domain. */
 final class NotificationRepository extends AbstractRepository
@@ -198,12 +199,10 @@ final class NotificationRepository extends AbstractRepository
     }
 
     /**
-     * Build (params, types) for a date-range filter on a single column.
+     * Build the WHERE-fragment for a date-range filter on a single column.
      * Empty start/end means "no bound on that side".
-     *
-     * @return array{0: list<mixed>, 1: list<ArrayParameterType|ParameterType>, 2: string}
      */
-    private function dateRangeFragment(string $column, ?string $start, ?string $end): array
+    private function dateRangeFragment(string $column, ?string $start, ?string $end): SqlFragment
     {
         $sql    = '';
         $params = [];
@@ -218,7 +217,7 @@ final class NotificationRepository extends AbstractRepository
             $params[]  = $end;
             $types[]   = ParameterType::STRING;
         }
-        return [$params, $types, $sql];
+        return new SqlFragment($sql, $params, $types);
     }
 
     /**
@@ -230,12 +229,12 @@ final class NotificationRepository extends AbstractRepository
      */
     public function countNewComments(?string $start, ?string $end, string $permWhere, array $permParams, array $permTypes): int
     {
-        [$dParams, $dTypes, $dSql] = $this->dateRangeFragment('c.validation_date', $start, $end);
+        $d = $this->dateRangeFragment('c.validation_date', $start, $end);
         $sql = 'SELECT COUNT(DISTINCT c.id)'
             . ' FROM ' . $this->table('comments') . ' AS c'
             . ' INNER JOIN ' . $this->table('image_category') . ' AS ic ON c.image_id = ic.image_id'
-            . ' WHERE 1=1' . $dSql . $permWhere;
-        $value = $this->conn->executeQuery($sql, [...$dParams, ...$permParams], [...$dTypes, ...$permTypes])->fetchOne();
+            . ' WHERE 1=1' . $d->where . $permWhere;
+        $value = $this->conn->executeQuery($sql, [...$d->params, ...$permParams], [...$d->types, ...$permTypes])->fetchOne();
         return is_numeric($value) ? (int) $value : 0;
     }
 
@@ -248,22 +247,22 @@ final class NotificationRepository extends AbstractRepository
      */
     public function findNewCommentIds(?string $start, ?string $end, string $permWhere, array $permParams, array $permTypes): array
     {
-        [$dParams, $dTypes, $dSql] = $this->dateRangeFragment('c.validation_date', $start, $end);
+        $d = $this->dateRangeFragment('c.validation_date', $start, $end);
         $sql = 'SELECT DISTINCT c.id'
             . ' FROM ' . $this->table('comments') . ' AS c'
             . ' INNER JOIN ' . $this->table('image_category') . ' AS ic ON c.image_id = ic.image_id'
-            . ' WHERE 1=1' . $dSql . $permWhere;
-        $rows = $this->conn->executeQuery($sql, [...$dParams, ...$permParams], [...$dTypes, ...$permTypes])->fetchAllAssociative();
+            . ' WHERE 1=1' . $d->where . $permWhere;
+        $rows = $this->conn->executeQuery($sql, [...$d->params, ...$permParams], [...$d->types, ...$permTypes])->fetchAllAssociative();
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'id'));
     }
 
     /** COUNT(DISTINCT id) of unvalidated comments in the date window. */
     public function countUnvalidatedComments(?string $start, ?string $end): int
     {
-        [$dParams, $dTypes, $dSql] = $this->dateRangeFragment('date', $start, $end);
+        $d = $this->dateRangeFragment('date', $start, $end);
         $sql = 'SELECT COUNT(DISTINCT id) FROM ' . $this->table('comments')
-            . ' WHERE validated = 0' . $dSql;
-        $value = $this->conn->executeQuery($sql, $dParams, $dTypes)->fetchOne();
+            . ' WHERE validated = 0' . $d->where;
+        $value = $this->conn->executeQuery($sql, $d->params, $d->types)->fetchOne();
         return is_numeric($value) ? (int) $value : 0;
     }
 
@@ -272,10 +271,10 @@ final class NotificationRepository extends AbstractRepository
      */
     public function findUnvalidatedCommentIds(?string $start, ?string $end): array
     {
-        [$dParams, $dTypes, $dSql] = $this->dateRangeFragment('date', $start, $end);
+        $d = $this->dateRangeFragment('date', $start, $end);
         $sql = 'SELECT DISTINCT id FROM ' . $this->table('comments')
-            . ' WHERE validated = 0' . $dSql;
-        $rows = $this->conn->executeQuery($sql, $dParams, $dTypes)->fetchAllAssociative();
+            . ' WHERE validated = 0' . $d->where;
+        $rows = $this->conn->executeQuery($sql, $d->params, $d->types)->fetchAllAssociative();
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'id'));
     }
 
@@ -288,12 +287,12 @@ final class NotificationRepository extends AbstractRepository
      */
     public function countNewElements(?string $start, ?string $end, string $permWhere, array $permParams, array $permTypes): int
     {
-        [$dParams, $dTypes, $dSql] = $this->dateRangeFragment('date_available', $start, $end);
+        $d = $this->dateRangeFragment('date_available', $start, $end);
         $sql = 'SELECT COUNT(DISTINCT image_id)'
             . ' FROM ' . $this->table('images')
             . ' INNER JOIN ' . $this->table('image_category') . ' AS ic ON image_id = id'
-            . ' WHERE 1=1' . $dSql . $permWhere;
-        $value = $this->conn->executeQuery($sql, [...$dParams, ...$permParams], [...$dTypes, ...$permTypes])->fetchOne();
+            . ' WHERE 1=1' . $d->where . $permWhere;
+        $value = $this->conn->executeQuery($sql, [...$d->params, ...$permParams], [...$d->types, ...$permTypes])->fetchOne();
         return is_numeric($value) ? (int) $value : 0;
     }
 
@@ -304,12 +303,12 @@ final class NotificationRepository extends AbstractRepository
      */
     public function findNewElementIds(?string $start, ?string $end, string $permWhere, array $permParams, array $permTypes): array
     {
-        [$dParams, $dTypes, $dSql] = $this->dateRangeFragment('date_available', $start, $end);
+        $d = $this->dateRangeFragment('date_available', $start, $end);
         $sql = 'SELECT DISTINCT image_id'
             . ' FROM ' . $this->table('images')
             . ' INNER JOIN ' . $this->table('image_category') . ' AS ic ON image_id = id'
-            . ' WHERE 1=1' . $dSql . $permWhere;
-        $rows = $this->conn->executeQuery($sql, [...$dParams, ...$permParams], [...$dTypes, ...$permTypes])->fetchAllAssociative();
+            . ' WHERE 1=1' . $d->where . $permWhere;
+        $rows = $this->conn->executeQuery($sql, [...$d->params, ...$permParams], [...$d->types, ...$permTypes])->fetchAllAssociative();
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'image_id'));
     }
 
@@ -322,12 +321,12 @@ final class NotificationRepository extends AbstractRepository
      */
     public function countUpdatedCategories(?string $start, ?string $end, string $permWhere, array $permParams, array $permTypes): int
     {
-        [$dParams, $dTypes, $dSql] = $this->dateRangeFragment('date_available', $start, $end);
+        $d = $this->dateRangeFragment('date_available', $start, $end);
         $sql = 'SELECT COUNT(DISTINCT category_id)'
             . ' FROM ' . $this->table('images')
             . ' INNER JOIN ' . $this->table('image_category') . ' AS ic ON image_id = id'
-            . ' WHERE 1=1' . $dSql . $permWhere;
-        $value = $this->conn->executeQuery($sql, [...$dParams, ...$permParams], [...$dTypes, ...$permTypes])->fetchOne();
+            . ' WHERE 1=1' . $d->where . $permWhere;
+        $value = $this->conn->executeQuery($sql, [...$d->params, ...$permParams], [...$d->types, ...$permTypes])->fetchOne();
         return is_numeric($value) ? (int) $value : 0;
     }
 
@@ -338,22 +337,22 @@ final class NotificationRepository extends AbstractRepository
      */
     public function findUpdatedCategoryIds(?string $start, ?string $end, string $permWhere, array $permParams, array $permTypes): array
     {
-        [$dParams, $dTypes, $dSql] = $this->dateRangeFragment('date_available', $start, $end);
+        $d = $this->dateRangeFragment('date_available', $start, $end);
         $sql = 'SELECT DISTINCT category_id'
             . ' FROM ' . $this->table('images')
             . ' INNER JOIN ' . $this->table('image_category') . ' AS ic ON image_id = id'
-            . ' WHERE 1=1' . $dSql . $permWhere;
-        $rows = $this->conn->executeQuery($sql, [...$dParams, ...$permParams], [...$dTypes, ...$permTypes])->fetchAllAssociative();
+            . ' WHERE 1=1' . $d->where . $permWhere;
+        $rows = $this->conn->executeQuery($sql, [...$d->params, ...$permParams], [...$d->types, ...$permTypes])->fetchAllAssociative();
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'category_id'));
     }
 
     /** COUNT(DISTINCT user_id) of new users in the date window. */
     public function countNewUsers(?string $start, ?string $end): int
     {
-        [$dParams, $dTypes, $dSql] = $this->dateRangeFragment('registration_date', $start, $end);
+        $d = $this->dateRangeFragment('registration_date', $start, $end);
         $sql = 'SELECT COUNT(DISTINCT user_id) FROM ' . $this->table('user_infos')
-            . ' WHERE 1=1' . $dSql;
-        $value = $this->conn->executeQuery($sql, $dParams, $dTypes)->fetchOne();
+            . ' WHERE 1=1' . $d->where;
+        $value = $this->conn->executeQuery($sql, $d->params, $d->types)->fetchOne();
         return is_numeric($value) ? (int) $value : 0;
     }
 
@@ -362,10 +361,10 @@ final class NotificationRepository extends AbstractRepository
      */
     public function findNewUserIds(?string $start, ?string $end): array
     {
-        [$dParams, $dTypes, $dSql] = $this->dateRangeFragment('registration_date', $start, $end);
+        $d = $this->dateRangeFragment('registration_date', $start, $end);
         $sql = 'SELECT DISTINCT user_id FROM ' . $this->table('user_infos')
-            . ' WHERE 1=1' . $dSql;
-        $rows = $this->conn->executeQuery($sql, $dParams, $dTypes)->fetchAllAssociative();
+            . ' WHERE 1=1' . $d->where;
+        $rows = $this->conn->executeQuery($sql, $d->params, $d->types)->fetchAllAssociative();
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_column($rows, 'user_id'));
     }
 

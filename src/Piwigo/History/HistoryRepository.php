@@ -67,10 +67,8 @@ final class HistoryRepository extends AbstractRepository
     /**
      * Return the most recent (date, time) pair from history for a given user, or null.
      * Used to compute last_visit from the history table.
-     *
-     * @return array{date: string, time: string}|null
      */
-    public function findLastVisitByUserId(int $userId): ?array
+    public function findLastVisitByUserId(int $userId): ?LastVisit
     {
         $row = $this->conn->createQueryBuilder()
             ->select('date', 'time')
@@ -84,10 +82,10 @@ final class HistoryRepository extends AbstractRepository
         if ($row === false) {
             return null;
         }
-        return [
-            'date' => is_string($row['date']) ? $row['date'] : '',
-            'time' => is_string($row['time']) ? $row['time'] : '',
-        ];
+        return new LastVisit(
+            is_string($row['date']) ? $row['date'] : '',
+            is_string($row['time']) ? $row['time'] : '',
+        );
     }
 
     /** Total number of history rows (used to decide if autopurge is needed). */

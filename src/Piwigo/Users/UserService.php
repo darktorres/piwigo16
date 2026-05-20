@@ -500,7 +500,7 @@ final class UserService
         $lastVisit = null;
         $histRow   = $this->histRepo->findLastVisitByUserId($uid);
         if ($histRow !== null) {
-            $lastVisit = $histRow['date'] . ' ' . $histRow['time'];
+            $lastVisit = $histRow->toDateTimeString();
         }
         if ($saveInUserInfos) {
             $this->userRepo->updateLastVisitFromHistory($uid, $lastVisit ?? null);

@@ -594,7 +594,6 @@ final class UserRepository extends AbstractRepository
      * Return username + password for a user, used to compute the auto-login key.
      * Column names are admin-configured — not user-supplied.
      *
-     * @return array{username: string, password: string}|null
      */
     public function findAuthFieldsById(
         string $usernameField,
@@ -602,7 +601,7 @@ final class UserRepository extends AbstractRepository
         string $idField,
         string $usersTable,
         int $userId
-    ): ?array {
+    ): ?StoredCredentials {
         $row = $this->conn->executeQuery(
             "SELECT $usernameField AS username, $passwordField AS password FROM $usersTable WHERE $idField = ?",
             [$userId]
@@ -610,10 +609,10 @@ final class UserRepository extends AbstractRepository
         if ($row === false) {
             return null;
         }
-        return [
-            'username' => is_string($row['username']) ? $row['username'] : '',
-            'password' => is_string($row['password']) ? $row['password'] : '',
-        ];
+        return new StoredCredentials(
+            is_string($row['username']) ? $row['username'] : '',
+            is_string($row['password']) ? $row['password'] : '',
+        );
     }
 
     /**

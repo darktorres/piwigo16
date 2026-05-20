@@ -120,11 +120,11 @@ final readonly class AuthService
             $userId
         );
         if ($row !== null) {
-            $username  = stripslashes($row['username']);
+            $username  = stripslashes($row->username);
             $timeStr   = (string) $time;
             $userIdStr = (string) $userId;
             $data      = $timeStr . $userIdStr . $username;
-            return base64_encode(hash_hmac('sha1', $data, Config::secretKey() . $row['password'], true));
+            return base64_encode(hash_hmac('sha1', $data, Config::secretKey() . $row->password, true));
         }
         return false;
     }

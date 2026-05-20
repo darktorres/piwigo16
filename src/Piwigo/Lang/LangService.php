@@ -63,8 +63,12 @@ final class LangService
 
     /**
      * @return array<mixed>
+     *
+     * @param (array|string)[]|null|string $args
+     *
+     * @psalm-param array<int|string, array<int|string, mixed>|string>|null|string $args
      */
-    public function getL10nArgs(string $key, mixed $args = ''): array
+    public function getL10nArgs(string $key, array|string|null $args = ''): array
     {
         if (is_array($args)) {
             $keyArg = array_merge([$key], $args);

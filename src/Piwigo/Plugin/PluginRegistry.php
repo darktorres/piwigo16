@@ -303,13 +303,10 @@ final class PluginRegistry
      *
      * @return list<array{0: string, 1: int}>
      */
-    private function normalizeSubscribedHandlers(mixed $handlers): array
+    private function normalizeSubscribedHandlers(array|string $handlers): array
     {
         if (is_string($handlers)) {
             return [[$handlers, 0]];
-        }
-        if (!is_array($handlers)) {
-            return [];
         }
         // Single-handler shape: [method:string, priority?:int]
         $first = $handlers[0] ?? null;

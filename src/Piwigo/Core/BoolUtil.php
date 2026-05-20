@@ -14,8 +14,10 @@ final class BoolUtil
     /**
      * Convert any value to bool, treating the string 'false' as false.
      * Every other truthy value returns true, every falsy value returns false.
+     *
+     * @param bool|float|int|null|string $input
      */
-    public static function fromMixed(mixed $input): bool
+    public static function fromMixed(bool|float|int|string|null $input): bool
     {
         if (is_scalar($input) && 'false' === strtolower((string) $input)) {
             return false;
@@ -26,8 +28,10 @@ final class BoolUtil
     /**
      * Return 1 or 0 using the same boolean semantics as {@see self::fromMixed()}.
      * Used when writing to TINYINT(1) boolean schema columns.
+     *
+     * @param bool|null|string $input
      */
-    public static function toInt(mixed $input): int
+    public static function toInt(bool|string|null $input): int
     {
         return self::fromMixed($input) ? 1 : 0;
     }

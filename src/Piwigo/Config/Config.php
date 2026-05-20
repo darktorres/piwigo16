@@ -1182,11 +1182,8 @@ final class Config
      *
      * @return list<OrderSpec>
      */
-    private static function filterOrderEntries(mixed $value): array
+    private static function filterOrderEntries(array $value): array
     {
-        if (!is_array($value)) {
-            return [];
-        }
         $out = [];
         foreach ($value as $entry) {
             if (!is_array($entry)) {
@@ -1493,6 +1490,10 @@ final class Config
     // ---- Writers ---------------------------------------------------------
     /**
      * Transient runtime override (per-album, etc). Does not persist to DB.
+     *
+     * @param (OrderSpec|int|mixed|string[])[]|null|scalar $value
+     *
+     * @psalm-param array<OrderSpec|array{field: 'date_creation', dir: 'DESC'}|int<0, max>|mixed>|null|scalar $value
      */
     public static function override(string $key, mixed $value): void
     {

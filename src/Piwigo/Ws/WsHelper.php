@@ -19,8 +19,11 @@ final readonly class WsHelper
         private UrlService $urlService,
     ) {
     }
-    /** @param array<mixed> $params */
-    public function isInvokeAllowed(mixed $res, string $methodName, array $params): mixed
+    /**
+     * @param array<mixed> $params
+     * @param PwgError|bool $res
+     */
+    public function isInvokeAllowed(bool|PwgError $res, string $methodName, array $params): mixed
     {
         if (str_starts_with($methodName, 'reflection.')) {
             return $res;

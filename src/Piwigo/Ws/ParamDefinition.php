@@ -34,9 +34,14 @@ final readonly class ParamDefinition
         return new self($name, $type, $flags, null, false, $maxValue, $info);
     }
 
+    /**
+     * @param bool|int|null|string|string[] $default
+     *
+     * @psalm-param bool|int|list<string>|null|string $default
+     */
     public static function optional(
         string $name,
-        mixed $default = null,
+        array|string|int|bool|null $default = null,
         int $type = 0,
         int $flags = 0,
         string $info = '',

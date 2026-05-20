@@ -92,7 +92,11 @@ final class ConfigRepository extends AbstractRepository
         return self::decode($value);
     }
 
-    /** Upsert (INSERT … ON DUPLICATE KEY UPDATE) a single param/value pair. */
+    /**
+     * Upsert (INSERT … ON DUPLICATE KEY UPDATE) a single param/value pair.
+     *
+     * @param array|null|scalar $value
+     */
     public function upsertParamValue(string $param, mixed $value): void
     {
         $encoded = self::encode($value);
@@ -103,7 +107,7 @@ final class ConfigRepository extends AbstractRepository
     }
 
     /** INSERT IGNORE — used by the mutex pattern to claim a token row atomically. */
-    public function insertIgnoreParamValue(string $param, mixed $value): void
+    public function insertIgnoreParamValue(string $param, string $value): void
     {
         $this->conn->executeStatement(
             'INSERT IGNORE INTO ' . $this->table('config') . ' (param, value) VALUES (?, ?)',
@@ -152,6 +156,8 @@ final class ConfigRepository extends AbstractRepository
     /**
      * JSON-encode a value for the DB. PHP null maps to SQL NULL (DBAL handles
      * that automatically when the column type is nullable JSON).
+     *
+     * @param array|null|scalar $value
      */
     private static function encode(mixed $value): ?string
     {

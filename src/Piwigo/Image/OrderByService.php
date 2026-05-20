@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Piwigo\Common\Enum\SortOrder;
+use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Build SQL ORDER BY clauses from structured {@see OrderSpec} entries
@@ -20,6 +23,11 @@ use Piwigo\Common\Enum\SortOrder;
  */
 final class OrderByService
 {
+    public function __construct(
+        private readonly InputValidator $inputValidator,
+    ) {
+    }
+
     /**
      * Image columns admins may order on. Anything outside this list is
      * rejected by parseFormToken().
@@ -114,5 +122,72 @@ final class OrderByService
     public function toCacheKey(array $orders): string
     {
         return $this->buildBareOrderByClause($orders);
+    }
+
+    /**
+     * Parse the Configuration > General order_by form into the
+     * structured shape persisted back into config (`order_by` and
+     * `order_by_inside_category` — the latter retains the `rank`
+     * field for in-album ordering, the former strips it).
+     *
+     * Reads and mutates `$_POST['order_by']` directly (the downstream
+     * `findAllParams()` loop in ConfigurationController iterates `$_POST`
+     * to update config rows; preserving the array-literal shape there
+     * keeps the persisted JSON layout stable).
+     *
+     * @param array<string, string> $sortFields The admin-form sort-field
+     *     <option> map (key = `'field DIR'` token, value = label).
+     */
+    public function normalizeFromPost(array $sortFields): void
+    {
+        if (!isset($_POST['order_by']) || $_POST['order_by'] === '') {
+            PageState::current()->addError(Lang::t('No order field selected'));
+            return;
+        }
+
+        $this->inputValidator->check('order_by', $_POST, true, '/^(' . implode('|', array_keys($sortFields)) . ')$/');
+        $postOrderBy = is_array($_POST['order_by']) ? $_POST['order_by'] : [];
+
+        /** @var list<OrderSpec> $parsed */
+        $parsed = [];
+        $seen   = [];
+        foreach ($postOrderBy as $val) {
+            if (!is_string($val) || $val === '') {
+                continue;
+            }
+            $entry = $this->parseFormToken($val);
+            if ($entry === null) {
+                continue;
+            }
+            $key = $entry->field . ' ' . $entry->dir->value;
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $parsed[]   = $entry;
+        }
+
+        if ($parsed === []) {
+            PageState::current()->addError(Lang::t('No order field selected'));
+            return;
+        }
+
+        $sliced = array_slice($parsed, 0, (int) ceil(count($sortFields) / 2));
+        // `order_by` is the gallery-wide (non-category) ordering — strip `rank`
+        // since manual rank only applies inside a category context.
+        $orderBy = array_values(array_filter($sliced, static fn (OrderSpec $e): bool => $e->field !== 'rank'));
+        if ($orderBy === []) {
+            $orderBy = [new OrderSpec('id', SortOrder::Asc)];
+        }
+        // Persist as legacy array shape so JSON round-trips and other
+        // consumers reading raw config still see the dictionary form.
+        $_POST['order_by'] = array_map(
+            static fn (OrderSpec $e): array => ['field' => $e->field, 'dir' => $e->dir->value],
+            $orderBy
+        );
+        $_POST['order_by_inside_category'] = array_map(
+            static fn (OrderSpec $e): array => ['field' => $e->field, 'dir' => $e->dir->value],
+            $sliced
+        );
     }
 }

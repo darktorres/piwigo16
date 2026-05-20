@@ -353,7 +353,7 @@ return [
     LoungeRepository::class       => factory(static fn (Connection $conn): LoungeRepository => new LoungeRepository($conn, Config::dbPrefix())),
     UserCaddieRepository::class   => factory(static fn (Connection $conn): UserCaddieRepository => new UserCaddieRepository($conn, Config::dbPrefix())),
     UserFavoriteRepository::class => factory(static fn (Connection $conn): UserFavoriteRepository => new UserFavoriteRepository($conn, Config::dbPrefix())),
-    OrderByService::class         => factory(static fn (): OrderByService => new OrderByService()),
+    OrderByService::class         => factory(static fn (InputValidator $iv): OrderByService => new OrderByService($iv)),
     UserRepository::class         => factory(static fn (Connection $conn): UserRepository => new UserRepository($conn, Config::dbPrefix())),
     PluginRepository::class       => factory(static fn (Connection $conn): PluginRepository => new PluginRepository($conn, Config::dbPrefix())),
     HistoryRepository::class      => factory(static fn (Connection $conn): HistoryRepository => new HistoryRepository($conn, Config::dbPrefix())),

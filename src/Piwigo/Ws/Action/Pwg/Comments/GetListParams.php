@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Comments;
 
+use Piwigo\Ws\WsParamException;
 use Piwigo\Ws\WsParams;
 
 /** `pwg.userComments.getList` input DTO — admin moderation filter form. */
 final readonly class GetListParams implements WsParams
 {
     public function __construct(
-        public string $status,
+        public CommentListFilter $status,
         public int $perPage,
         public int $page,
         public ?int $authorId,
@@ -29,8 +30,12 @@ final readonly class GetListParams implements WsParams
         $minDateIn = $raw['f_min_date'] ?? null;
         $maxDateIn = $raw['f_max_date'] ?? null;
         $searchIn  = $raw['search']   ?? null;
+        $status    = is_string($statusIn) ? CommentListFilter::tryFrom($statusIn) : null;
+        if ($status === null) {
+            throw new WsParamException('Invalid status (only "all" / "pending" / "validated")');
+        }
         return new self(
-            status:   is_string($statusIn) ? $statusIn : '',
+            status:   $status,
             perPage:  is_numeric($raw['per_page'] ?? null) ? (int) $raw['per_page'] : 0,
             page:     is_numeric($raw['page']     ?? null) ? (int) $raw['page'] : 0,
             authorId: is_numeric($raw['author_id'] ?? null) ? (int) $raw['author_id'] : null,

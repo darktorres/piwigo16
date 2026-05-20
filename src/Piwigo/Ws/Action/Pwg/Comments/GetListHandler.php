@@ -42,9 +42,6 @@ final readonly class GetListHandler implements WsAction
             return new PwgError(403, 'Comments are disabled');
         }
         $input = GetListParams::fromArray($params);
-        if (!in_array($input->status, ['all', 'pending', 'validated'])) {
-            return new PwgError(401, 'Status must be: all, pending or validated');
-        }
         if (!in_array($input->perPage, [5, 10, 25, 50])) {
             return new PwgError(401, 'Per page must be: 5, 10, 25 or 50');
         }
@@ -89,13 +86,15 @@ final readonly class GetListHandler implements WsAction
         $summary = $this->commentRepository->findCommentsSummary($whereClauses, $qParams, $qTypes);
         $totalComments = $summary['all_comments'];
         switch ($input->status) {
-            case 'pending':
+            case CommentListFilter::Pending:
                 $whereClauses[] = 'validated = 0';
                 $totalComments  = $summary['pending'];
                 break;
-            case 'validated':
+            case CommentListFilter::Validated:
                 $whereClauses[] = 'validated = 1';
                 $totalComments  = $summary['validated'];
+                break;
+            case CommentListFilter::All:
                 break;
         }
         $perPage = $input->perPage;

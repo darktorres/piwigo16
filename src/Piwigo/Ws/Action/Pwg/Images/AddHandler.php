@@ -38,19 +38,20 @@ final readonly class AddHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
-        $pImageId          = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $pOriginalSum      = is_string($params['original_sum'] ?? null) ? $params['original_sum'] : '';
-        $pOriginalFilename = is_scalar($params['original_filename']) ? (string) $params['original_filename'] : null;
-        $pLevel            = isset($params['level']) && is_numeric($params['level']) ? (int) $params['level'] : null;
+        $input             = AddParams::fromArray($params);
+        $pImageId          = $input->imageId;
+        $pOriginalSum      = $input->originalSum;
+        $pOriginalFilename = $input->originalFilename;
+        $pLevel            = $input->level;
         if ($pImageId > 0 && !$this->imageRepository->existsById($pImageId)) {
             return new PwgError(404, 'image_id not found');
         }
-        if ($params['check_uniqueness']) {
+        if ($input->checkUniqueness) {
             $counter = 0;
             if (Config::uniquenessMode() === 'md5sum') {
                 $counter = $this->imageRepository->countByWhereFragment('md5sum = ?', [$pOriginalSum], [ParameterType::STRING]);
             } elseif (Config::uniquenessMode() === 'filename') {
-                $counter = $this->imageRepository->countByWhereFragment('file = ?', [is_string($params['original_filename'] ?? null) ? $params['original_filename'] : ''], [ParameterType::STRING]);
+                $counter = $this->imageRepository->countByWhereFragment('file = ?', [$pOriginalFilename ?? ''], [ParameterType::STRING]);
             }
             if ($counter !== 0) {
                 return new PwgError(500, 'file already exists');
@@ -64,26 +65,25 @@ final readonly class AddHandler implements WsAction
         chmod($filePath, Config::chmodValue() & 0o666);
         $imageId = $this->uploadService->addUploadedFile($filePath, $pOriginalFilename, null, $pLevel, $pImageId > 0 ? $pImageId : null, $pOriginalSum);
         $update  = [];
-        foreach (['name', 'author', 'comment', 'date_creation'] as $key) {
-            if (isset($params[$key])) {
-                $update[$key] = $params[$key];
+        foreach (['name' => $input->name, 'author' => $input->author, 'comment' => $input->comment, 'date_creation' => $input->dateCreation] as $key => $val) {
+            if ($val !== null) {
+                $update[$key] = $val;
             }
         }
         if (count($update) > 0) {
             $this->imageRepository->updateById($imageId, $update);
         }
         $urlParams = ['image_id' => $imageId];
-        if (isset($params['categories'])) {
-            $pCategoriesStr = is_string($params['categories']) ? $params['categories'] : '';
-            $this->categoryAdminService->addImageCategoryRelations($imageId, $pCategoriesStr);
-            if (preg_match('/^\d+/', $pCategoriesStr, $matches)) {
+        if ($input->categories !== null) {
+            $this->categoryAdminService->addImageCategoryRelations($imageId, $input->categories);
+            if (preg_match('/^\d+/', $input->categories, $matches)) {
                 $category              = $this->categoryRepository->findCategoryById((int) $matches[0]);
                 $urlParams['section']  = 'categories';
                 $urlParams['category'] = $category?->toRow();
             }
         }
-        if (isset($params['tag_ids']) && $params['tag_ids'] !== '') {
-            $this->tagAdminService->setTags(explode(',', is_string($params['tag_ids']) ? $params['tag_ids'] : ''), $imageId);
+        if ($input->tagIds !== null && $input->tagIds !== '') {
+            $this->tagAdminService->setTags(explode(',', $input->tagIds), $imageId);
         }
         $this->userAdminService->invalidateUserCache();
         return ['image_id' => $imageId, 'url' => $this->urlService->makePictureUrl($urlParams)];

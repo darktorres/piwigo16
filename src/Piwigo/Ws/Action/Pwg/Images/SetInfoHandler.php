@@ -36,10 +36,11 @@ final readonly class SetInfoHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        if (isset($params['pwg_token']) && $this->csrfService->getToken() !== $params['pwg_token']) {
+        $input = SetInfoParams::fromArray($params);
+        if ($input->pwgToken !== null && $this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $setImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
+        $setImageId = $input->imageId;
         $image      = $this->imageRepository->findById($setImageId);
         if ($image === null) {
             return new PwgError(404, 'image_id not found');
@@ -52,30 +53,40 @@ final readonly class SetInfoHandler implements WsAction
             'date_creation' => $image->dateCreation?->value,
         ];
         $update            = [];
-        $singleValueMode   = is_string($params['single_value_mode'] ?? null) ? $params['single_value_mode'] : '';
-        $multipleValueMode = is_string($params['multiple_value_mode'] ?? null) ? $params['multiple_value_mode'] : '';
-        foreach (['name', 'author', 'comment', 'level', 'date_creation'] as $key) {
-            if (isset($params[$key])) {
-                if (!Config::allowHtmlDescriptions() || !isset($params['pwg_token'])) {
-                    $params[$key] = strip_tags(is_scalar($params[$key]) ? (string) $params[$key] : '', '<b><strong><em><i>');
+        $singleValueMode   = $input->singleValueMode;
+        $multipleValueMode = $input->multipleValueMode;
+        $allowHtml         = Config::allowHtmlDescriptions() && $input->pwgToken !== null;
+        $incoming = [
+            'name'          => $input->name,
+            'author'        => $input->author,
+            'comment'       => $input->comment,
+            'level'         => $input->level,
+            'date_creation' => $input->dateCreation,
+        ];
+        foreach ($incoming as $key => $val) {
+            if ($val === null) {
+                continue;
+            }
+            $sanitized = $val;
+            if (!$allowHtml) {
+                $sanitized = strip_tags(is_scalar($val) ? (string) $val : '', '<b><strong><em><i>');
+            }
+            if ($singleValueMode === 'fill_if_empty') {
+                $existing = $existingValues[$key] ?? null;
+                if ($existing === null || $existing === '' || $existing === 0) {
+                    $update[$key] = $sanitized;
                 }
-                if ($singleValueMode === 'fill_if_empty') {
-                    $existing = $existingValues[$key] ?? null;
-                    if ($existing === null || $existing === '' || $existing === 0) {
-                        $update[$key] = $params[$key];
-                    }
-                } elseif ($singleValueMode === 'replace') {
-                    $update[$key] = $params[$key];
-                } else {
-                    return new PwgError(500, '[ws_images_setInfo] invalid parameter single_value_mode "' . $singleValueMode . '", possible values are {fill_if_empty, replace}.');
-                }
+            } elseif ($singleValueMode === 'replace') {
+                $update[$key] = $sanitized;
+            } else {
+                return new PwgError(500, '[ws_images_setInfo] invalid parameter single_value_mode "' . $singleValueMode . '", possible values are {fill_if_empty, replace}.');
             }
         }
-        if (isset($params['file'])) {
+        if ($input->file !== null) {
             if ($image->storageCategoryId !== null) {
                 return new PwgError(500, '[ws_images_setInfo] updating "file" is forbidden on photos added by synchronization');
             }
-            $update['file'] = strip_tags(is_string($params['file']) ? $params['file'] : '');
+            $update['file'] = strip_tags($input->file);
             if (empty($update['file'])) {
                 unset($update['file']);
             }
@@ -84,12 +95,12 @@ final readonly class SetInfoHandler implements WsAction
             $this->imageRepository->updateById($setImageId, $update);
             $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $setImageId, 'edit'));
         }
-        if (isset($params['categories'])) {
-            $this->categoryAdminService->addImageCategoryRelations($setImageId, is_string($params['categories']) ? $params['categories'] : '', $multipleValueMode === 'replace');
+        if ($input->categories !== null) {
+            $this->categoryAdminService->addImageCategoryRelations($setImageId, $input->categories, $multipleValueMode === 'replace');
         }
-        if (isset($params['tag_ids'])) {
+        if ($input->tagIds !== null) {
             $tagIds = [];
-            foreach (explode(',', is_string($params['tag_ids']) ? $params['tag_ids'] : '') as $candidate) {
+            foreach (explode(',', $input->tagIds) as $candidate) {
                 $candidate = trim($candidate);
                 if (preg_match(ValidationPattern::ID, $candidate)) {
                     $tagIds[] = $candidate;
@@ -104,7 +115,7 @@ final readonly class SetInfoHandler implements WsAction
             }
         }
         if (isset($_REQUEST['tag_list'])) {
-            if (isset($params['tag_ids'])) {
+            if ($input->tagIds !== null) {
                 return new PwgError(WsError::InvalidParam->value, 'Do not use tag_list and tag_ids at the same time.');
             }
             $requestTagList = is_array($_REQUEST['tag_list']) ? $_REQUEST['tag_list'] : [];

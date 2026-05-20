@@ -104,29 +104,21 @@ final readonly class MailService
         }
     }
 
-    /**
-     * @param string|array<mixed> $input
-     * @return array{email: string, name: string}
-     */
-    public function unformatEmail(string|array $input): array
+    /** @param string|array<mixed> $input */
+    public function unformatEmail(string|array $input): MailAddress
     {
         if (is_array($input)) {
-            return [
-                'email' => is_scalar($input['email'] ?? null) ? (string) $input['email'] : '',
-                'name'  => is_scalar($input['name']  ?? null) ? (string) $input['name'] : '',
-            ];
+            return new MailAddress(
+                is_scalar($input['email'] ?? null) ? (string) $input['email'] : '',
+                is_scalar($input['name']  ?? null) ? (string) $input['name'] : '',
+            );
         }
-
-        if (preg_match('/(.*)<(.*)>.*/', $input, $matches)) {
-            return ['email' => trim($matches[2]), 'name' => trim($matches[1])];
-        } else {
-            return ['email' => trim($input), 'name' => ''];
-        }
+        return MailAddress::fromRfc822($input);
     }
 
     /**
      * @param array<mixed>|string $data
-     * @return string[][]
+     * @return list<MailAddress>
      */
     public function getCleanRecipientsList(array|string $data): array
     {
@@ -137,15 +129,16 @@ final readonly class MailService
             if (!is_array($values[0])) {
                 $keys = array_keys($data);
                 if (is_int($keys[0])) {
-                    foreach ($data as &$item) {
-                        $item = ['email' => trim(is_scalar($item) ? (string) $item : ''), 'name' => ''];
+                    $addresses = [];
+                    foreach ($data as $item) {
+                        $addresses[] = new MailAddress(trim(is_scalar($item) ? (string) $item : ''), '');
                     }
-                    unset($item);
+                    $data = $addresses;
                 } else {
                     $data = [$this->unformatEmail($data)];
                 }
             } else {
-                $data = array_map(fn (mixed $item): array => $this->unformatEmail(is_array($item) || is_string($item) ? $item : ''), $data);
+                $data = array_map(fn (mixed $item): MailAddress => $this->unformatEmail(is_array($item) || is_string($item) ? $item : ''), $data);
             }
         } else {
             $data = explode(',', $data);
@@ -154,18 +147,14 @@ final readonly class MailService
 
         $existing = [];
         foreach ($data as $i => $entry) {
-            $entry = is_array($entry) ? $entry : [];
-            $email = is_scalar($entry['email'] ?? null) ? (string) $entry['email'] : '';
-            if (isset($existing[$email])) {
+            if (isset($existing[$entry->email])) {
                 unset($data[$i]);
             } else {
-                $existing[$email] = true;
+                $existing[$entry->email] = true;
             }
         }
 
-        /** @var array<array<string>> $result */
-        $result = array_values($data);
-        return $result;
+        return array_values($data);
     }
 
     public function getStrictEmailList(string $emailList): string
@@ -439,7 +428,7 @@ final readonly class MailService
         $mail = new PHPMailer();
 
         foreach ($this->getCleanRecipientsList($to) as $recipient) {
-            $mail->addAddress($recipient['email'], $recipient['name']);
+            $mail->addAddress($recipient->email, $recipient->name);
         }
 
         $mail->WordWrap = 76;
@@ -448,14 +437,14 @@ final readonly class MailService
         $this->urlService->setMakeFullUrl();
 
         if (empty($args['from'])) {
-            $from = ['email' => $this->getMailSenderEmail(), 'name' => $this->getMailSenderName()];
+            $from = new MailAddress($this->getMailSenderEmail(), $this->getMailSenderName());
         } else {
             $fromRaw = $args['from'];
             $from    = $this->unformatEmail(is_array($fromRaw) || is_string($fromRaw) ? $fromRaw : '');
         }
-        $mail->setFrom($from['email'], $from['name']);
-        $replyEmail = is_string($args['reply_to_mail_address'] ?? null) ? $args['reply_to_mail_address'] : $from['email'];
-        $replyName  = is_string($args['reply_to_name']         ?? null) ? $args['reply_to_name'] : $from['name'];
+        $mail->setFrom($from->email, $from->name);
+        $replyEmail = is_string($args['reply_to_mail_address'] ?? null) ? $args['reply_to_mail_address'] : $from->email;
+        $replyName  = is_string($args['reply_to_name']         ?? null) ? $args['reply_to_name'] : $from->name;
         $mail->addReplyTo($replyEmail, $replyName);
 
         if (empty($args['subject'])) {
@@ -468,18 +457,18 @@ final readonly class MailService
         if (!empty($args['Cc'])) {
             $ccData = is_array($args['Cc']) || is_string($args['Cc']) ? $args['Cc'] : '';
             foreach ($this->getCleanRecipientsList($ccData) as $recipient) {
-                $mail->addCC($recipient['email'], $recipient['name']);
+                $mail->addCC($recipient->email, $recipient->name);
             }
         }
 
         $bccRaw = $args['Bcc'] ?? '';
         $Bcc = $this->getCleanRecipientsList(is_array($bccRaw) || is_string($bccRaw) ? $bccRaw : '');
         if (Config::sendBccMailWebmaster()) {
-            $Bcc[] = ['email' => $this->getWebmasterMailAddress(), 'name' => ''];
+            $Bcc[] = new MailAddress($this->getWebmasterMailAddress(), '');
         }
         if (!empty($Bcc)) {
             foreach ($Bcc as $recipient) {
-                $mail->addBCC($recipient['email'], $recipient['name']);
+                $mail->addBCC($recipient->email, $recipient->name);
             }
         }
 

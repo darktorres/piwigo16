@@ -15,7 +15,7 @@ final class PermissionRepository extends AbstractRepository
      * Return (user_id, cat_id) rows from user_access, optionally filtered by cat_ids.
      *
      * @param  int[]|null $catIds  null = no filter; empty array = return nothing
-     * @return list<array<string, mixed>>
+     * @return list<UserCatAccess>
      */
     public function findUserCategoryAccess(?array $catIds = null): array
     {
@@ -29,7 +29,13 @@ final class PermissionRepository extends AbstractRepository
             $qb->where($qb->expr()->in('cat_id', ':catIds'))
                ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
         }
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): UserCatAccess => new UserCatAccess(
+                userId: is_numeric($r['user_id']) ? (int) $r['user_id'] : 0,
+                catId:  is_numeric($r['cat_id']) ? (int) $r['cat_id'] : 0,
+            ),
+            $qb->executeQuery()->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -37,7 +43,7 @@ final class PermissionRepository extends AbstractRepository
      * optionally filtered by cat_ids from group_access.
      *
      * @param  int[]|null $catIds
-     * @return list<array<string, mixed>>
+     * @return list<UserCatAccess>
      */
     public function findGroupUserCategoryAccess(?array $catIds = null): array
     {
@@ -52,14 +58,20 @@ final class PermissionRepository extends AbstractRepository
             $qb->where($qb->expr()->in('ga.cat_id', ':catIds'))
                ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
         }
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): UserCatAccess => new UserCatAccess(
+                userId: is_numeric($r['user_id']) ? (int) $r['user_id'] : 0,
+                catId:  is_numeric($r['cat_id']) ? (int) $r['cat_id'] : 0,
+            ),
+            $qb->executeQuery()->fetchAllAssociative(),
+        );
     }
 
     /**
      * Return (group_id, cat_id) rows from group_access, optionally filtered by cat_ids.
      *
      * @param  int[]|null $catIds
-     * @return list<array<string, mixed>>
+     * @return list<GroupCatAccess>
      */
     public function findGroupCategoryAccess(?array $catIds = null): array
     {
@@ -73,7 +85,13 @@ final class PermissionRepository extends AbstractRepository
             $qb->where($qb->expr()->in('cat_id', ':catIds'))
                ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
         }
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): GroupCatAccess => new GroupCatAccess(
+                groupId: is_numeric($r['group_id']) ? (int) $r['group_id'] : 0,
+                catId:   is_numeric($r['cat_id']) ? (int) $r['cat_id'] : 0,
+            ),
+            $qb->executeQuery()->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -154,18 +172,25 @@ final class PermissionRepository extends AbstractRepository
      * accessible to the given user via their group memberships.
      * Used by user_perm.php to show inherited permissions.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CatUppercatRank>
      */
     public function findGroupAuthorizedCategoriesForUser(int $userId): array
     {
-        return $this->conn->executeQuery(
-            'SELECT DISTINCT ga.cat_id, c.uppercats, c.global_rank
-             FROM ' . $this->table('user_group') . ' ug
-             INNER JOIN ' . $this->table('group_access') . ' ga ON ug.group_id = ga.group_id
-             INNER JOIN ' . $this->table('categories') . ' c ON c.id = ga.cat_id
-             WHERE ug.user_id = ?',
-            [$userId]
-        )->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): CatUppercatRank => new CatUppercatRank(
+                catId:      is_numeric($r['cat_id']) ? (int) $r['cat_id'] : 0,
+                uppercats:  is_string($r['uppercats'] ?? null) ? $r['uppercats'] : '',
+                globalRank: is_string($r['global_rank'] ?? null) ? $r['global_rank'] : null,
+            ),
+            $this->conn->executeQuery(
+                'SELECT DISTINCT ga.cat_id, c.uppercats, c.global_rank
+                 FROM ' . $this->table('user_group') . ' ug
+                 INNER JOIN ' . $this->table('group_access') . ' ga ON ug.group_id = ga.group_id
+                 INNER JOIN ' . $this->table('categories') . ' c ON c.id = ga.cat_id
+                 WHERE ug.user_id = ?',
+                [$userId]
+            )->fetchAllAssociative(),
+        );
     }
 
     /**

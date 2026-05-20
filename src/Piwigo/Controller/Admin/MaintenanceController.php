@@ -1534,20 +1534,20 @@ final class MaintenanceController implements AdminSubControllerInterface
         $groupAccessRows = $this->permissionRepository->findGroupCategoryAccess($category_up_ids);
         $granted_grps    = [];
         foreach ($groupAccessRows as $row) {
-            $cik = is_scalar($row['cat_id'] ?? null) ? (string) $row['cat_id'] : '';
+            $cik = (string) $row->catId;
             if (!isset($granted_grps[$cik])) {
                 $granted_grps[$cik] = [];
             }
-            array_push($granted_grps, [$cik => array_push($granted_grps[$cik], $row['group_id'])]);
+            array_push($granted_grps, [$cik => array_push($granted_grps[$cik], $row->groupId)]);
         }
         $userAccessRows = $this->permissionRepository->findUserCategoryAccess($category_up_ids);
         $granted_users  = [];
         foreach ($userAccessRows as $row) {
-            $cik = is_scalar($row['cat_id'] ?? null) ? (string) $row['cat_id'] : '';
+            $cik = (string) $row->catId;
             if (!isset($granted_users[$cik])) {
                 $granted_users[$cik] = [];
             }
-            array_push($granted_users, [$cik => array_push($granted_users[$cik], $row['user_id'])]);
+            array_push($granted_users, [$cik => array_push($granted_users[$cik], $row->userId)]);
         }
 
         $insert_granted_users = $insert_granted_grps = [];

@@ -35,25 +35,22 @@ final readonly class GetListHandler implements WsAction
         $catIdsFilter = $input->catIds;
         $perms        = [];
         foreach ($permRepo->findUserCategoryAccess($catIdsFilter) as $row) {
-            $catId = is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0;
-            if (!isset($perms[$catId])) {
-                $perms[$catId]['id'] = $catId;
+            if (!isset($perms[$row->catId])) {
+                $perms[$row->catId]['id'] = $row->catId;
             }
-            $perms[$catId]['users'][] = is_numeric($row['user_id']) ? (int) $row['user_id'] : 0;
+            $perms[$row->catId]['users'][] = $row->userId;
         }
         foreach ($permRepo->findGroupUserCategoryAccess($catIdsFilter) as $row) {
-            $catId = is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0;
-            if (!isset($perms[$catId])) {
-                $perms[$catId]['id'] = $catId;
+            if (!isset($perms[$row->catId])) {
+                $perms[$row->catId]['id'] = $row->catId;
             }
-            $perms[$catId]['users_indirect'][] = is_numeric($row['user_id']) ? (int) $row['user_id'] : 0;
+            $perms[$row->catId]['users_indirect'][] = $row->userId;
         }
         foreach ($permRepo->findGroupCategoryAccess($catIdsFilter) as $row) {
-            $catId = is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0;
-            if (!isset($perms[$catId])) {
-                $perms[$catId]['id'] = $catId;
+            if (!isset($perms[$row->catId])) {
+                $perms[$row->catId]['id'] = $row->catId;
             }
-            $perms[$catId]['groups'][] = is_numeric($row['group_id']) ? (int) $row['group_id'] : 0;
+            $perms[$row->catId]['groups'][] = $row->groupId;
         }
         foreach ($perms as $catId => &$cat) {
             if ($input->groupIdsSet) {

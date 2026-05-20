@@ -25,6 +25,7 @@ use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Language\LanguageService;
+use Piwigo\Permission\CatUppercatRank;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Theme\ThemeService;
@@ -328,14 +329,13 @@ final readonly class UsersController implements AdminSubControllerInterface
         $groupAuthorizedRows = $this->permissionRepository->findGroupAuthorizedCategoriesForUser($pageUser);
 
         if (count($groupAuthorizedRows) > 0) {
-            $cats = [];
+            $cats = $groupAuthorizedRows;
             foreach ($groupAuthorizedRows as $row) {
-                $cats[]           = $row;
-                $group_authorized[] = is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0;
+                $group_authorized[] = $row->catId;
             }
-            usort($cats, $this->categoryService->globalRankCompare(...));
+            usort($cats, static fn (CatUppercatRank $a, CatUppercatRank $b): int => strnatcasecmp($a->globalRank ?? '', $b->globalRank ?? ''));
             foreach ($cats as $category) {
-                $tpl->append('categories_because_of_groups', new Html($this->htmlService->getCatDisplayNameCache(is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '', null)));
+                $tpl->append('categories_because_of_groups', new Html($this->htmlService->getCatDisplayNameCache($category->uppercats, null)));
             }
         }
 

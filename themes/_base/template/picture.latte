@@ -207,8 +207,8 @@
 	<div id="Average" class="imageInfo">
 		<dt>{='Rating score'|translate}</dt>
 		<dd>
-		{if $rate_summary['count']}
-			<span id="ratingScore">{$rate_summary['score']}</span> <span id="ratingCount">({$rate_summary['count']|translate_dec:'%d rate','%d rates'})</span>
+		{if $rate_summary->count}
+			<span id="ratingScore">{$rate_summary->score}</span> <span id="ratingCount">({$rate_summary->count|translate_dec:'%d rate','%d rates'})</span>
 		{else}
 			<span id="ratingScore">{='no rate'|translate}</span> <span id="ratingCount"></span>
 		{/if}

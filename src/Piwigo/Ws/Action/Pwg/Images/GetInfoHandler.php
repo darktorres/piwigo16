@@ -15,6 +15,7 @@ use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Rate\RateRepository;
+use Piwigo\Rate\RatingScore;
 use Piwigo\Tag\TagService;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -99,10 +100,16 @@ final readonly class GetInfoHandler implements WsAction
             $tag['id']       = is_numeric($tag['id']) ? (int) $tag['id'] : 0;
             $relatedTags[$i] = $tag;
         }
-        $rating = ['score' => $imageRow['rating_score'], 'count' => 0, 'average' => null];
-        if (isset($rating['score'])) {
-            [$rating['count'], $rating['average']] = $this->rateRepository->findCountAndAvgByElementId($imageRowId);
-            $rating['score'] = is_numeric($rating['score']) ? (float) $rating['score'] : 0.0;
+        $imageRatingScore = $imageRow['rating_score'] ?? null;
+        if (isset($imageRatingScore)) {
+            $rateData = $this->rateRepository->findCountAndAvgByElementId($imageRowId);
+            $rating   = new RatingScore(
+                is_numeric($imageRatingScore) ? (float) $imageRatingScore : 0.0,
+                $rateData['count'],
+                $rateData['average'],
+            );
+        } else {
+            $rating = new RatingScore(0.0, 0, null);
         }
         $relatedComments = [];
         $whereComments   = 'image_id = ?';
@@ -136,7 +143,7 @@ final readonly class GetInfoHandler implements WsAction
             }
         }
         unset($ret['path'], $ret['storage_category_id']);
-        $ret['rates']      = [PwgResponseEncoder::ATTRIBUTES_KEY => $rating];
+        $ret['rates']      = [PwgResponseEncoder::ATTRIBUTES_KEY => ['score' => $rating->score, 'count' => $rating->count, 'average' => $rating->average]];
         $ret['categories'] = new PwgNamedArray($relatedCategories, 'category', ['id', 'url', 'page_url']);
         $ret['tags']       = new PwgNamedArray($relatedTags, 'tag', $this->wsHelper->getTagXmlAttributes());
         if (isset($commentPostData)) {

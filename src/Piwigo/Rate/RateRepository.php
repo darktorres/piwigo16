@@ -197,7 +197,7 @@ final class RateRepository extends AbstractRepository
      * Return (count, average) for a given element's rates.
      * Used by picture_rate.inc.php to display rating summary.
      *
-     * @return array{0: int, 1: float|null}
+     * @return array{count: int, average: float|null}
      */
     public function findCountAndAvgByElementId(int $elementId): array
     {
@@ -208,8 +208,8 @@ final class RateRepository extends AbstractRepository
         $row0 = ($row !== false) ? ($row[0] ?? null) : null;
         $row1 = ($row !== false) ? ($row[1] ?? null) : null;
         return [
-            is_numeric($row0) ? (int) $row0 : 0,
-            is_numeric($row1) ? (float) $row1 : null,
+            'count'   => is_numeric($row0) ? (int) $row0 : 0,
+            'average' => is_numeric($row1) ? (float) $row1 : null,
         ];
     }
 

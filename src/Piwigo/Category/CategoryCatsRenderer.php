@@ -149,19 +149,20 @@ final readonly class CategoryCatsRenderer
             foreach ($this->imageRepository->findByIds($image_ids) as $img) {
                 if ($img->level <= $userLevel) {
                     $infos_of_image[(string) $img->id->value] = PictureViewModel::fromImage($img)->toArray();
-                } else {
-                    foreach ($categories as $idx => $category) {
-                        if ($img->id->value === $category['representative_picture_id']) {
-                            $image_id = $this->categoryService->getRandomImageInCategory($category['id'], $category['uppercats'], $category['count_images'], true);
-                            if (isset($image_id) and !in_array($image_id, $image_ids)) {
-                                $new_image_ids[] = $image_id;
-                            }
-                            if (Config::representativeCacheOnLevel()) {
-                                $user_representative_updates_for[(string) $category['id']] = $image_id;
-                            }
-                            $categories[$idx]['representative_picture_id'] = $image_id;
-                        }
+                    continue;
+                }
+                foreach ($categories as $idx => $category) {
+                    if ($img->id->value !== $category['representative_picture_id']) {
+                        continue;
                     }
+                    $image_id = $this->categoryService->getRandomImageInCategory($category['id'], $category['uppercats'], $category['count_images'], true);
+                    if (isset($image_id) and !in_array($image_id, $image_ids)) {
+                        $new_image_ids[] = $image_id;
+                    }
+                    if (Config::representativeCacheOnLevel()) {
+                        $user_representative_updates_for[(string) $category['id']] = $image_id;
+                    }
+                    $categories[$idx]['representative_picture_id'] = $image_id;
                 }
             }
 

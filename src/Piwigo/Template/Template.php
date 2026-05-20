@@ -252,9 +252,6 @@ final class Template
      *
      * @param string|array<string,mixed> $tpl_var can be a var name or a hashmap of variables
      *    (in this case, do not use the _$value_ parameter)
-     * @param ((((array|int)[]|float|int|mixed|null|string)[]|Html|mixed|null|scalar)[]|Html|\Piwigo\Menu\DisplayBlock|mixed|null|scalar)[]|Html|\Piwigo\Image\DerivativeParams|\Piwigo\Rate\RatingScore|null|scalar $value
-     *
-     * @psalm-param Html|\Piwigo\Image\DerivativeParams|\Piwigo\Rate\RatingScore|array<Html|\Piwigo\Menu\DisplayBlock|array<Html|array<int|string, array<string, array<string, mixed>|int>|float|int|mixed|null|string>|mixed|null|scalar>|mixed|null|scalar>|null|scalar $value
      */
     public function assign(string|array $tpl_var, mixed $value = null): void
     {

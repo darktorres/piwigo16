@@ -99,12 +99,8 @@ final readonly class PreferencesService
      * dependencies — keeps the unit test trivial to construct.
      *
      * @return array<string, mixed>
-     *
-     * @param false|int|null|string|string[] $raw
-     *
-     * @psalm-param 42|array{already: 'array'}|false|null|string $raw
      */
-    public static function decodePreferences(array|int|string|false|null $raw): array
+    public static function decodePreferences(mixed $raw): array
     {
         if (!is_string($raw) || $raw === '') {
             return [];
@@ -126,12 +122,7 @@ final readonly class PreferencesService
         return $out;
     }
 
-    /**
-     * @param (int|string)[]|false|int|null|string $value
-     *
-     * @psalm-param 'dark'|'false'|'light'|false|int<3601, max>|list<array-key>|null $value
-     */
-    public function userprefsUpdateParam(string $param, array|string|int|false|null $value): void
+    public function userprefsUpdateParam(string $param, mixed $value): void
     {
         if ('true' == $value) {
             $value = true;

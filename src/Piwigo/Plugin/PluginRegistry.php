@@ -302,6 +302,8 @@ final class PluginRegistry
      * fall through to an empty list rather than fatal.
      *
      * @return list<array{0: string, 1: int}>
+     *
+     * @param array<mixed>|string $handlers
      */
     private function normalizeSubscribedHandlers(array|string $handlers): array
     {

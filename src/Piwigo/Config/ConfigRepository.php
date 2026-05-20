@@ -95,7 +95,7 @@ final class ConfigRepository extends AbstractRepository
     /**
      * Upsert (INSERT … ON DUPLICATE KEY UPDATE) a single param/value pair.
      *
-     * @param array|null|scalar $value
+     * @param array<mixed>|null|scalar $value
      */
     public function upsertParamValue(string $param, mixed $value): void
     {
@@ -157,7 +157,7 @@ final class ConfigRepository extends AbstractRepository
      * JSON-encode a value for the DB. PHP null maps to SQL NULL (DBAL handles
      * that automatically when the column type is nullable JSON).
      *
-     * @param array|null|scalar $value
+     * @param array<mixed>|null|scalar $value
      */
     private static function encode(mixed $value): ?string
     {

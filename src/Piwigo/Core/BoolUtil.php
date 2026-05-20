@@ -14,10 +14,8 @@ final class BoolUtil
     /**
      * Convert any value to bool, treating the string 'false' as false.
      * Every other truthy value returns true, every falsy value returns false.
-     *
-     * @param bool|float|int|null|string $input
      */
-    public static function fromMixed(bool|float|int|string|null $input): bool
+    public static function fromMixed(mixed $input): bool
     {
         if (is_scalar($input) && 'false' === strtolower((string) $input)) {
             return false;

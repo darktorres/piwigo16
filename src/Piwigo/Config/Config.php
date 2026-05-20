@@ -1152,7 +1152,8 @@ final class Config
     /** @return list<OrderSpec> */
     public static function orderBy(): array
     {
-        return self::filterOrderEntries(self::src()['order_by'] ?? []);
+        $v = self::src()['order_by'] ?? null;
+        return self::filterOrderEntries(is_array($v) ? $v : []);
     }
 
     /** @return list<OrderSpec>|null */
@@ -1165,7 +1166,8 @@ final class Config
     /** @return list<OrderSpec> */
     public static function orderByInsideCategory(): array
     {
-        return self::filterOrderEntries(self::src()['order_by_inside_category'] ?? []);
+        $v = self::src()['order_by_inside_category'] ?? null;
+        return self::filterOrderEntries(is_array($v) ? $v : []);
     }
 
     /** @return list<OrderSpec>|null */
@@ -1180,6 +1182,7 @@ final class Config
      * OrderSpec entries; drop anything that doesn't fit the shape or has
      * a non-ASC/DESC direction.
      *
+     * @param array<mixed> $value
      * @return list<OrderSpec>
      */
     private static function filterOrderEntries(array $value): array
@@ -1488,13 +1491,7 @@ final class Config
         unset(self::$data[$key]);
     }
     // ---- Writers ---------------------------------------------------------
-    /**
-     * Transient runtime override (per-album, etc). Does not persist to DB.
-     *
-     * @param (OrderSpec|int|mixed|string[])[]|null|scalar $value
-     *
-     * @psalm-param array<OrderSpec|array{field: 'date_creation', dir: 'DESC'}|int<0, max>|mixed>|null|scalar $value
-     */
+    /** Transient runtime override (per-album, etc). Does not persist to DB. */
     public static function override(string $key, mixed $value): void
     {
         self::$data[$key] = $value;

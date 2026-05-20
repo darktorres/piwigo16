@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\ExtensionAction;
+use Piwigo\Admin\Extensions\UpgradeStatus;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
@@ -265,7 +266,7 @@ final class Languages
      * Extract language files from archive
      *
      */
-    public function extractLanguageFiles(string $action, string $revision, string $dest = ''): string
+    public function extractLanguageFiles(string $action, string $revision, string $dest = ''): UpgradeStatus
     {
         $logger = LoggerRegistry::current();
 
@@ -284,7 +285,7 @@ final class Languages
                 $names = ZipExtractor::listNames($archive);
                 if ($names !== []) {
                     $main_filepath = null;
-                    $status = 'ok';
+                    $status = UpgradeStatus::Ok;
                     foreach ($names as $filename) {
                         // we search common.lang.php in archive
                         if (basename($filename) == 'common.lang.php'
@@ -310,11 +311,13 @@ final class Languages
                             if ($result !== []) {
                                 foreach ($result as $file) {
                                     if ($file['stored_filename'] === $main_filepath) {
-                                        $status = $file['status'];
+                                        if ($file['status'] !== ZipExtractor::STATUS_OK) {
+                                            $status = UpgradeStatus::ExtractError;
+                                        }
                                         break;
                                     }
                                 }
-                                if ($status == 'ok') {
+                                if ($status === UpgradeStatus::Ok) {
                                     $this->getFsLanguages();
                                     if ($action == 'install') {
                                         $this->performAction(ExtensionAction::Activate, $dest);
@@ -353,22 +356,22 @@ final class Languages
                                     }
                                 }
                             } else {
-                                $status = 'extract_error';
+                                $status = UpgradeStatus::ExtractError;
                             }
                         } else {
-                            $status = 'archive_error';
+                            $status = UpgradeStatus::ArchiveError;
                         }
                     } else {
-                        $status = 'archive_error';
+                        $status = UpgradeStatus::ArchiveError;
                     }
                 } else {
-                    $status = 'archive_error';
+                    $status = UpgradeStatus::ArchiveError;
                 }
             } else {
-                $status = 'dl_archive_error';
+                $status = UpgradeStatus::DlArchiveError;
             }
         } else {
-            $status = 'temp_path_error';
+            $status = UpgradeStatus::TempPathError;
         }
 
         if (is_string($archive)) {

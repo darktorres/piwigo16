@@ -9,6 +9,7 @@ use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Extensions\ExtensionAction;
+use Piwigo\Admin\Extensions\UpgradeStatus;
 use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
@@ -128,7 +129,7 @@ final class Plugins
                 $activity_details['from_version'] = $previous_version;
                 $errors[0] = $this->extractPluginFiles('upgrade', $revision ?? '', $plugin_id);
 
-                if ($errors[0] === 'ok') {
+                if ($errors[0] === UpgradeStatus::Ok) {
                     $this->getFsPlugin($plugin_id); // refresh plugins list
                     $newVersionRaw = $this->fs_plugins[$plugin_id]['version'] ?? '';
                     $new_version = is_string($newVersionRaw) ? $newVersionRaw : '';
@@ -503,7 +504,7 @@ final class Plugins
      * @param string $revision remote revision identifier
      * @param string $dest plugin id or extension id
      */
-    public function extractPluginFiles(string $action, string $revision, string $dest, ?string &$plugin_id = null): string
+    public function extractPluginFiles(string $action, string $revision, string $dest, ?string &$plugin_id = null): UpgradeStatus
     {
         $logger = LoggerRegistry::current();
 
@@ -522,7 +523,7 @@ final class Plugins
                     $names = ZipExtractor::listNames($archive);
                     if ($names !== []) {
                         $manifest_filepath = null;
-                        $status = 'ok';
+                        $status = UpgradeStatus::Ok;
                         foreach ($names as $filename) {
                             // plugin.json — track the shallowest path so a stray
                             // plugin.json deeper in vendor/ doesn't win.
@@ -549,11 +550,13 @@ final class Plugins
                             if ($result !== []) {
                                 foreach ($result as $file) {
                                     if ($file['stored_filename'] === $manifest_filepath) {
-                                        $status = $file['status'];
+                                        if ($file['status'] !== ZipExtractor::STATUS_OK) {
+                                            $status = UpgradeStatus::ExtractError;
+                                        }
                                         break;
                                     }
                                 }
-                                if ($status === 'ok') {
+                                if ($status === UpgradeStatus::Ok) {
                                     // Refresh the registry so the freshly-extracted
                                     // plugin.json is validated immediately. A
                                     // PluginValidationException here means the ZIP
@@ -561,7 +564,7 @@ final class Plugins
                                     // as the extraction status.
                                     $this->pluginRegistry->reload();
                                     if ($this->pluginRegistry->getManifest($plugin_id) === null) {
-                                        $status = 'manifest_invalid';
+                                        $status = UpgradeStatus::ManifestInvalid;
                                     }
                                 }
                                 if (file_exists($extract_path.'/obsolete.list')
@@ -597,22 +600,22 @@ final class Plugins
                                     }
                                 }
                             } else {
-                                $status = 'extract_error';
+                                $status = UpgradeStatus::ExtractError;
                             }
                         } else {
-                            $status = 'archive_error';
+                            $status = UpgradeStatus::ArchiveError;
                         }
                     } else {
-                        $status = 'archive_error';
+                        $status = UpgradeStatus::ArchiveError;
                     }
                 } else {
-                    $status = 'dl_archive_error';
+                    $status = UpgradeStatus::DlArchiveError;
                 }
             } else {
-                $status = 'dl_archive_error';
+                $status = UpgradeStatus::DlArchiveError;
             }
         } else {
-            $status = 'temp_path_error';
+            $status = UpgradeStatus::TempPathError;
         }
 
         if (is_string($archive)) {

@@ -9,6 +9,7 @@ use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Extensions\ExtensionAction;
+use Piwigo\Admin\Extensions\UpgradeStatus;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
@@ -489,7 +490,7 @@ final class Themes
      * Extract theme files from archive
      *
      */
-    public function extractThemeFiles(string $action, string $revision, string $dest, ?string &$theme_id = null): string
+    public function extractThemeFiles(string $action, string $revision, string $dest, ?string &$theme_id = null): UpgradeStatus
     {
         $logger = LoggerRegistry::current();
 
@@ -508,7 +509,7 @@ final class Themes
                     $names = ZipExtractor::listNames($archive);
                     if ($names !== []) {
                         $manifest_filepath = null;
-                        $status = 'ok';
+                        $status = UpgradeStatus::Ok;
                         foreach ($names as $filename) {
                             // theme.json — track the shallowest path so a stray
                             // theme.json deeper in the archive doesn't win.
@@ -535,18 +536,20 @@ final class Themes
                             if ($result !== []) {
                                 foreach ($result as $file) {
                                     if ($file['stored_filename'] === $manifest_filepath) {
-                                        $status = $file['status'];
+                                        if ($file['status'] !== ZipExtractor::STATUS_OK) {
+                                            $status = UpgradeStatus::ExtractError;
+                                        }
                                         break;
                                     }
                                 }
-                                if ($status === 'ok') {
+                                if ($status === UpgradeStatus::Ok) {
                                     // Refresh ThemeRegistry so the freshly-extracted
                                     // theme.json is validated immediately. A missing
                                     // manifest after reload means the ZIP shipped a
                                     // malformed file — surface that as a status.
                                     $this->themeRegistry->reload();
                                     if ($this->themeRegistry->getManifest($theme_id) === null) {
-                                        $status = 'manifest_invalid';
+                                        $status = UpgradeStatus::ManifestInvalid;
                                     }
                                 }
                                 if (file_exists($extract_path.'/obsolete.list')
@@ -583,22 +586,22 @@ final class Themes
                                     }
                                 }
                             } else {
-                                $status = 'extract_error';
+                                $status = UpgradeStatus::ExtractError;
                             }
                         } else {
-                            $status = 'archive_error';
+                            $status = UpgradeStatus::ArchiveError;
                         }
                     } else {
-                        $status = 'archive_error';
+                        $status = UpgradeStatus::ArchiveError;
                     }
                 } else {
-                    $status = 'dl_archive_error';
+                    $status = UpgradeStatus::DlArchiveError;
                 }
             } else {
-                $status = 'dl_archive_error';
+                $status = UpgradeStatus::DlArchiveError;
             }
         } else {
-            $status = 'temp_path_error';
+            $status = UpgradeStatus::TempPathError;
         }
 
         if (is_string($archive)) {

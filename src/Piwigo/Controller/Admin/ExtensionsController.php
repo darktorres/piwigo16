@@ -335,7 +335,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
             } else {
                 $this->csrfService->check();
                 $install_status = $plugins->extractPluginFiles('install', is_string($_GET['revision']) ? $_GET['revision'] : '', is_string($_GET['extension']) ? $_GET['extension'] : '', $plugin_id);
-                $this->redirectResponder->redirect($base_url . '&installstatus=' . $install_status . '&plugin_id=' . ($plugin_id ?? ''));
+                $this->redirectResponder->redirect($base_url . '&installstatus=' . $install_status->value . '&plugin_id=' . ($plugin_id ?? ''));
             }
         }
 
@@ -611,7 +611,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
             } else {
                 $this->csrfService->check();
                 $install_status = $themes->extractThemeFiles('install', is_string($_GET['revision']) ? $_GET['revision'] : '', is_string($_GET['extension']) ? $_GET['extension'] : '', $theme_id);
-                $this->redirectResponder->redirect($base_url . '&installstatus=' . $install_status . '&theme_id=' . ($theme_id ?? ''));
+                $this->redirectResponder->redirect($base_url . '&installstatus=' . $install_status->value . '&theme_id=' . ($theme_id ?? ''));
             }
         }
 
@@ -889,7 +889,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
             } else {
                 $this->csrfService->check();
                 $install_status = $languages->extractLanguageFiles('install', is_string($_GET['revision']) ? $_GET['revision'] : '');
-                $this->redirectResponder->redirect($base_url . '&installstatus=' . $install_status);
+                $this->redirectResponder->redirect($base_url . '&installstatus=' . $install_status->value);
             }
         }
 

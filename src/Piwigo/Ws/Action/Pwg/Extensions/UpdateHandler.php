@@ -10,6 +10,7 @@ use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Extensions\ExtensionAction;
 use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Extensions\UpgradeStatus;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
@@ -61,7 +62,7 @@ final readonly class UpdateHandler implements WsAction
         $type          = $input->type;
         $extensionId   = $input->id;
         $revision      = $input->revision;
-        $upgradeStatus = 'ok';
+        $upgradeStatus = UpgradeStatus::Ok;
         $extensionName = '';
         if ($type === ExtensionType::Plugin) {
             $extension = Kernel::service(Plugins::class);
@@ -69,10 +70,10 @@ final readonly class UpdateHandler implements WsAction
                 $extension->performAction(ExtensionAction::Deactivate, $extensionId);
                 $this->redirectResponder->redirect($this->urlGenerator->ws(['method' => 'pwg.extensions.update', 'type' => 'plugins', 'id' => $extensionId, 'revision' => $revision, 'reactivate' => 'true', 'pwg_token' => $this->csrfService->getToken(), 'format' => 'json']));
             }
-            $performResult = $extension->performAction(ExtensionAction::Update, $extensionId, $revision);
-            $upgradeStatus = is_array($performResult) ? ($performResult[0] ?? 'ok') : 'ok';
-            $upgradeStatus = is_string($upgradeStatus) ? $upgradeStatus : 'ok';
-            $extensionName = is_string($extension->fs_plugins[$extensionId]['name'] ?? null) ? $extension->fs_plugins[$extensionId]['name'] : '';
+            $performResult   = $extension->performAction(ExtensionAction::Update, $extensionId, $revision);
+            $performResult0  = is_array($performResult) ? ($performResult[0] ?? null) : null;
+            $upgradeStatus   = $performResult0 instanceof UpgradeStatus ? $performResult0 : UpgradeStatus::Ok;
+            $extensionName   = is_string($extension->fs_plugins[$extensionId]['name'] ?? null) ? $extension->fs_plugins[$extensionId]['name'] : '';
             if ($input->reactivate) {
                 $extension->performAction(ExtensionAction::Activate, $extensionId);
             }
@@ -82,7 +83,7 @@ final readonly class UpdateHandler implements WsAction
             $extensionName  = is_string($extension->fs_themes[$extensionId]['name'] ?? null) ? $extension->fs_themes[$extensionId]['name'] : '';
             $fromVersion    = is_string($extension->fs_themes[$extensionId]['version'] ?? null) ? $extension->fs_themes[$extensionId]['version'] : '';
             $activityDetails = ['theme_id' => $extensionId, 'from_version' => $fromVersion];
-            if ($upgradeStatus === 'ok') {
+            if ($upgradeStatus === UpgradeStatus::Ok) {
                 $extension->getFsThemes();
                 $activityDetails['to_version'] = is_string($extension->fs_themes[$extensionId]['version'] ?? null) ? $extension->fs_themes[$extensionId]['version'] : '';
             } else {
@@ -97,11 +98,12 @@ final readonly class UpdateHandler implements WsAction
         }
         TemplateRegistry::current()->deleteCompiledTemplates();
         return match ($upgradeStatus) {
-            'ok'               => Lang::t('%s has been successfully updated.', $extensionName),
-            'temp_path_error'  => new PwgError(null, Lang::t('Can\'t create temporary file.')),
-            'dl_archive_error' => new PwgError(null, Lang::t('Can\'t download archive.')),
-            'archive_error'    => new PwgError(null, Lang::t('Can\'t read or extract archive.')),
-            default            => new PwgError(null, Lang::t('An error occured during extraction (%s).', $upgradeStatus)),
+            UpgradeStatus::Ok              => Lang::t('%s has been successfully updated.', $extensionName),
+            UpgradeStatus::TempPathError   => new PwgError(null, Lang::t('Can\'t create temporary file.')),
+            UpgradeStatus::DlArchiveError  => new PwgError(null, Lang::t('Can\'t download archive.')),
+            UpgradeStatus::ArchiveError    => new PwgError(null, Lang::t('Can\'t read or extract archive.')),
+            UpgradeStatus::ExtractError,
+            UpgradeStatus::ManifestInvalid => new PwgError(null, Lang::t('An error occured during extraction (%s).', $upgradeStatus->value)),
         };
     }
 }

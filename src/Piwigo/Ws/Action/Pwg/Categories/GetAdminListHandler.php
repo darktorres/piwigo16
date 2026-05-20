@@ -38,14 +38,11 @@ final readonly class GetAdminListHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): array
     {
-        if (!isset($params['additional_output'])) {
-            $params['additional_output'] = '';
-        }
-        $params['additional_output'] = array_map(trim(...), explode(',', is_string($params['additional_output']) ? $params['additional_output'] : ''));
+        $input      = GetAdminListParams::fromArray($params);
         $nbImagesOf = $this->categoryRepository->findNbPhotosPerCategoryKeyedById();
         $where      = ['1=1'];
-        $adminCatId = is_numeric($params['cat_id']) ? (int) $params['cat_id'] : 0;
-        if (!$params['recursive']) {
+        $adminCatId = $input->catId;
+        if (!$input->recursive) {
             if ($adminCatId > 0) {
                 $where[] = '(id_uppercat = ' . $adminCatId . ' OR id=' . $adminCatId . ')';
             } else {
@@ -57,9 +54,9 @@ final readonly class GetAdminListHandler implements WsAction
         $listParams = [];
         $listTypes  = [];
         $tail       = '';
-        if (isset($params['search']) && $params['search'] !== '') {
+        if ($input->search !== null) {
             $where[]      = 'name LIKE ?';
-            $listParams[] = '%' . (is_string($params['search']) ? $params['search'] : '') . '%';
+            $listParams[] = '%' . $input->search . '%';
             $listTypes[]  = ParameterType::STRING;
             $tail         = 'LIMIT ' . Config::linkedAlbumSearchLimit();
         }
@@ -82,12 +79,12 @@ final readonly class GetAdminListHandler implements WsAction
             if ($row['image_order'] === null || $row['image_order'] === '') {
                 $row['image_order'] = $this->orderByService->buildBareOrderByClause(Config::orderBy());
             }
-            if (in_array('full_name_with_admin_links', $params['additional_output'])) {
+            if (in_array('full_name_with_admin_links', $input->additionalOutput)) {
                 $row['full_name_with_admin_links'] = $catDisplayName;
             }
             $cats[] = $row;
         }
-        if (!$params['recursive']) {
+        if (!$input->recursive) {
             $catsIds     = array_column($cats, 'id');
             $nbSubcatsOf = $this->categoryRepository->countSubcatsByParentIdsKeyedByParent($catsIds);
             foreach ($cats as $idx => $cat) {

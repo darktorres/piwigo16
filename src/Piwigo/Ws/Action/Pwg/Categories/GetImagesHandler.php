@@ -41,9 +41,8 @@ final readonly class GetImagesHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
-        $rawCatId = is_array($params['cat_id']) ? $params['cat_id'] : [];
-        /** @var int[] $catIds */
-        $catIds = array_values(array_unique(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawCatId)));
+        $input  = GetImagesParams::fromArray($params);
+        $catIds = $input->catIds;
         if (count($catIds) > 0) {
             $dbCatIds      = $this->categoryRepository->findExistingIdsAmong($catIds);
             $missingCatIds = array_values(array_diff($catIds, $dbCatIds));
@@ -57,7 +56,7 @@ final readonly class GetImagesHandler implements WsAction
         [$permSql1, $permParams1, $permTypes1] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id'], null, true);
         $cats = $this->categoryRepository->findIdAndImageOrderForGetImages(
             $catIds,
-            (bool) $params['recursive'],
+            $input->recursive,
             'AND ' . $permSql1,
             $permParams1,
             $permTypes1,
@@ -76,8 +75,8 @@ final readonly class GetImagesHandler implements WsAction
                 ? $this->orderByService->buildOrderByClause(Config::orderBy())
                 : 'ORDER BY ' . $orderBy;
             $favoriteIds = $this->urlService->getUserFavorites();
-            $perPage     = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
-            $page        = is_numeric($params['page']) ? (int) $params['page'] : 0;
+            $perPage     = $input->perPage;
+            $page        = $input->page;
             $paginated   = $this->imageRepository->findCategoryImagesPaginated(
                 $whereClauses2,
                 $orderBy,
@@ -144,6 +143,6 @@ final readonly class GetImagesHandler implements WsAction
                 }
             }
         }
-        return ['paging' => new PwgNamedStruct(['page' => $params['page'], 'per_page' => $params['per_page'], 'count' => count($images), 'total_count' => $totalImages]), 'images' => new PwgNamedArray($images, 'image', $this->wsHelper->getImageXmlAttributes())];
+        return ['paging' => new PwgNamedStruct(['page' => $input->page, 'per_page' => $input->perPage, 'count' => count($images), 'total_count' => $totalImages]), 'images' => new PwgNamedArray($images, 'image', $this->wsHelper->getImageXmlAttributes())];
     }
 }

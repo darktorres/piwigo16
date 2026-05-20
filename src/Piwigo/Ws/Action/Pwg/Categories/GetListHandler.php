@@ -53,18 +53,19 @@ final readonly class GetListHandler implements WsAction
     {
         $currentUser = CurrentUser::get();
         $user        = $currentUser->rawAttributes;
-        if (!in_array($params['thumbnail_size'], array_keys(ImageStdParams::getDefinedTypeMap()))) {
+        $input       = GetListParams::fromArray($params);
+        if (!in_array($input->thumbnailSize, array_keys(ImageStdParams::getDefinedTypeMap()))) {
             return new PwgError(WsError::InvalidParam->value, 'Invalid thumbnail_size');
         }
-        if (!empty($params['limit']) && $params['recursive']) {
+        if ($input->limit !== null && $input->limit !== 0 && $input->recursive) {
             return new PwgError(WsError::InvalidParam->value, 'Cannot use both recursive and limit parameters at the same time');
         }
         $output       = [];
         $where        = ['1=1'];
         $joinType     = 'INNER';
         $joinUser     = $currentUser->id;
-        $getlistCatId = is_numeric($params['cat_id']) ? (int) $params['cat_id'] : 0;
-        if (!$params['recursive']) {
+        $getlistCatId = $input->catId;
+        if (!$input->recursive) {
             if ($getlistCatId > 0) {
                 $where[] = '(id_uppercat = ' . $getlistCatId . ' OR id=' . $getlistCatId . ')';
             } else {
@@ -75,7 +76,7 @@ final readonly class GetListHandler implements WsAction
         }
         $listPermParams = [];
         $listPermTypes  = [];
-        if ($params['public']) {
+        if ($input->public) {
             $where[]  = 'status = "public"';
             $where[]  = 'visible = 1';
             $joinUser = Config::guestId();
@@ -86,21 +87,19 @@ final readonly class GetListHandler implements WsAction
             $listPermTypes       = [ArrayParameterType::INTEGER];
             $joinType            = 'LEFT';
         }
-        if (isset($params['search']) && $params['search'] !== '') {
+        if ($input->search !== null) {
             $where[]          = 'name LIKE ?';
-            $listPermParams[] = '%' . (is_string($params['search']) ? $params['search'] : '') . '%';
+            $listPermParams[] = '%' . $input->search . '%';
             $listPermTypes[]  = ParameterType::STRING;
         }
-        $limitRaw     = $params['limit'] ?? null;
-        $limitParam   = is_numeric($limitRaw) ? (int) $limitRaw : 0;
-        $catIdRaw     = $params['cat_id'] ?? null;
-        $catIdParam   = is_numeric($catIdRaw) ? (int) $catIdRaw : 0;
+        $limitParam   = $input->limit ?? 0;
+        $catIdParam   = $input->catId;
         $orderLimit   = '';
         $useFoundRows = false;
-        if (isset($params['limit'])) {
+        if ($input->limit !== null) {
             $orderLimit   = 'ORDER BY `rank` ASC LIMIT ' . ($limitParam + ($catIdParam > 0 ? 1 : 0));
             $useFoundRows = true;
-        } elseif (isset($params['search']) && $params['search'] !== '') {
+        } elseif ($input->search !== null) {
             $orderLimit = 'LIMIT ' . Config::linkedAlbumSearchLimit();
         }
         $page = $this->categoryRepository->findGetListPage(
@@ -126,8 +125,7 @@ final readonly class GetListHandler implements WsAction
         $cats                         = [];
         foreach ($getListRows as $row) {
             $row['url'] = $this->urlService->makeIndexUrl(['category' => $row]);
-            $fullnameParam = $params['fullname'] ?? false;
-            if ($fullnameParam !== false && $fullnameParam !== '' && $fullnameParam !== 0) {
+            if ($input->fullname) {
                 $row['name']  = strip_tags($this->htmlService->getCatDisplayNameCache($row['uppercats'], null));
             } else {
                 $row['name_raw'] = $row['name'];
@@ -176,8 +174,7 @@ final readonly class GetListHandler implements WsAction
         $thumbnailSrcOf = [];
         if (count($categories) > 0) {
             $newImageIds   = [];
-            $thumbSizeRaw  = $params['thumbnail_size'] ?? null;
-            $thumbnailSize = is_string($thumbSizeRaw) ? $thumbSizeRaw : '';
+            $thumbnailSize = $input->thumbnailSize;
             $userLevel     = is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0;
             foreach ($this->imageRepository->findByIds($imageIds) as $img) {
                 $imgIdStr = (string) $img->id->value;
@@ -205,7 +202,7 @@ final readonly class GetListHandler implements WsAction
                 }
             }
         }
-        if (!$params['public'] && count($userRepresentativeUpdatesFor)) {
+        if (!$input->public && count($userRepresentativeUpdatesFor)) {
             $updates = [];
             foreach ($userRepresentativeUpdatesFor as $catId => $imageId) {
                 $updates[] = ['cat_id' => $catId, 'image_id' => is_numeric($imageId) ? (int) $imageId : null];
@@ -222,7 +219,7 @@ final readonly class GetListHandler implements WsAction
             unset($cat['user_representative_picture_id'], $cat['count_images'], $cat['count_categories']);
         }
         unset($cat);
-        if ($params['tree_output']) {
+        if ($input->treeOutput) {
             return $this->wsHelper->categoriesFlatlistToTree($cats);
         }
         $output['categories'] = new PwgNamedArray($cats, 'category', $this->wsHelper->getCategoryXmlAttributes());

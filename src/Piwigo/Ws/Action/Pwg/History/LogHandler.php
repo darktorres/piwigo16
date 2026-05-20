@@ -26,22 +26,22 @@ final readonly class LogHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
+        $input      = LogParams::fromArray($params);
         $currentCtx = SectionContextRegistry::current();
 
         $section = $currentCtx->section;
-        if (!empty($params['section']) && in_array($params['section'], SchemaHelper::getEnums(Tables::history(), 'section'))) {
-            $section = is_string($params['section']) ? $params['section'] : $section;
+        if ($input->section !== null && in_array($input->section, SchemaHelper::getEnums(Tables::history(), 'section'))) {
+            $section = $input->section;
         }
 
         $category = $currentCtx->category;
-        if (!empty($params['cat_id'])) {
-            $category = ['id' => $params['cat_id']];
+        if (!empty($input->catId)) {
+            $category = ['id' => $input->catId];
         }
 
-        $tagIds     = $currentCtx->tagIds;
-        $tagsString = is_string($params['tags_string'] ?? null) ? $params['tags_string'] : '';
-        if ($tagsString !== '' && preg_match('/^\d+(,\d+)*$/', $tagsString)) {
-            $tagIds = array_map(intval(...), explode(',', $tagsString));
+        $tagIds = $currentCtx->tagIds;
+        if ($input->tagsString !== '' && preg_match('/^\d+(,\d+)*$/', $input->tagsString)) {
+            $tagIds = array_map(intval(...), explode(',', $input->tagsString));
         }
 
         SectionContextRegistry::set(new SectionContext(
@@ -50,12 +50,11 @@ final readonly class LogHandler implements WsAction
             tagIds: $tagIds,
         ));
 
-        $logImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : null;
-        if (!empty($params['image_id']) && $logImageId !== null) {
-            $this->pictureService->increaseImageVisitCounter($logImageId);
+        if ($input->imageId !== null) {
+            $this->pictureService->increaseImageVisitCounter($input->imageId);
         }
-        $imageType = $params['is_download'] ? 'high' : 'picture';
-        $this->activityLogger->pageView($logImageId, $imageType);
+        $imageType = $input->isDownload ? 'high' : 'picture';
+        $this->activityLogger->pageView($input->imageId, $imageType);
         return null;
     }
 }

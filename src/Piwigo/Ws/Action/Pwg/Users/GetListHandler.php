@@ -41,27 +41,27 @@ final readonly class GetListHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
-        $orderStr = is_string($params['order'] ?? null) ? $params['order'] : '';
+        $input    = GetListParams::fromArray($params);
+        $orderStr = $input->order;
         if (!preg_match(ValidationPattern::ORDER, $orderStr)) {
             return new PwgError(WsError::InvalidParam->value, 'Invalid input parameter order');
         }
-        if (isset($params['order']) && str_contains($orderStr, 'username')) {
+        if ($orderStr !== '' && str_contains($orderStr, 'username')) {
             $orderStr = str_ireplace('username', 'LOWER(username)', $orderStr);
         }
         $whereClauses = ['1=1'];
-        if (!empty($params['user_id'])) {
-            $userIdArr      = is_array($params['user_id']) ? $params['user_id'] : [];
-            $whereClauses[] = 'u.' . Config::userFields()['id'] . ' IN(' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIdArr)) . ')';
+        if (count($input->userIds) > 0) {
+            $whereClauses[] = 'u.' . Config::userFields()['id'] . ' IN(' . implode(',', $input->userIds) . ')';
         }
         $listParams = [];
         $listTypes  = [];
-        if (!empty($params['username'])) {
+        if ($input->username !== null) {
             $whereClauses[] = 'u.' . Config::userFields()['username'] . ' LIKE ?';
-            $listParams[]   = is_string($params['username']) ? $params['username'] : '';
+            $listParams[]   = $input->username;
             $listTypes[]    = \Doctrine\DBAL\ParameterType::STRING;
         }
-        if (!empty($params['filter'])) {
-            $filterStr      = is_string($params['filter']) ? $params['filter'] : '';
+        if ($input->filter !== null) {
+            $filterStr      = $input->filter;
             $filteredGroups = $this->groupRepository->findIdsByNameLike($filterStr);
             $filterLike     = '%' . $filterStr . '%';
             $filterWhere    = '(u.' . Config::userFields()['username'] . ' LIKE ? OR u.' . Config::userFields()['email'] . ' LIKE ?';
@@ -74,89 +74,81 @@ final readonly class GetListHandler implements WsAction
             }
             $whereClauses[] = $filterWhere . ')';
         }
-        if (!empty($params['min_register'])) {
-            $minRegisterStr = is_string($params['min_register']) ? $params['min_register'] : '';
-            if (!preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $minRegisterStr)) {
+        if ($input->minRegister !== null) {
+            if (!preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $input->minRegister)) {
                 return new PwgError(WsError::InvalidParam->value, 'Invalid input parameter min_register');
             }
-            $dateTokens     = explode('-', $minRegisterStr);
+            $dateTokens     = explode('-', $input->minRegister);
             $minDate        = sprintf('%u-%02u-%02u', $dateTokens[0], $dateTokens[1] ?? 1, $dateTokens[2] ?? 1);
             $whereClauses[] = "ui.registration_date >= '$minDate 00:00:00'";
         }
-        if (!empty($params['max_register'])) {
-            $maxRegisterStr = is_string($params['max_register']) ? $params['max_register'] : '';
-            if (!preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $maxRegisterStr)) {
+        if ($input->maxRegister !== null) {
+            if (!preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $input->maxRegister)) {
                 return new PwgError(WsError::InvalidParam->value, 'Invalid input parameter max_register');
             }
-            $maxDateTokens  = explode('-', $maxRegisterStr);
+            $maxDateTokens  = explode('-', $input->maxRegister);
             $strResult      = strtotime($maxDateTokens[0] . '-' . ($maxDateTokens[1] ?? '12') . '-1');
             $maxDay         = $maxDateTokens[2] ?? date('t', $strResult !== false ? $strResult : null);
             $maxDate        = sprintf('%u-%02u-%02u', $maxDateTokens[0], $maxDateTokens[1] ?? '12', $maxDay);
             $whereClauses[] = "ui.registration_date <= '$maxDate 23:59:59'";
         }
-        if (!empty($params['status'])) {
-            $statusArr = is_array($params['status']) ? $params['status'] : [];
-            $statusArr = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $statusArr);
-            $statusArr = array_intersect($statusArr, SchemaHelper::getEnums(Tables::userInfos(), 'status'));
+        if (count($input->statuses) > 0) {
+            $statusArr = array_intersect($input->statuses, SchemaHelper::getEnums(Tables::userInfos(), 'status'));
             if (count($statusArr) > 0) {
                 $whereClauses[] = 'ui.status IN("' . implode('","', $statusArr) . '")';
             }
         }
-        if (!empty($params['min_level'])) {
-            if (!in_array($params['min_level'], Config::availablePermissionLevels())) {
+        if (!empty($input->minLevel)) {
+            if (!in_array($input->minLevel, Config::availablePermissionLevels())) {
                 return new PwgError(WsError::InvalidParam->value, 'Invalid level');
             }
-            $whereClauses[] = 'ui.level >= ' . (is_numeric($params['min_level']) ? (int) $params['min_level'] : 0);
+            $whereClauses[] = 'ui.level >= ' . (is_numeric($input->minLevel) ? (int) $input->minLevel : 0);
         }
-        if (!empty($params['max_level'])) {
-            if (!in_array($params['max_level'], Config::availablePermissionLevels())) {
+        if (!empty($input->maxLevel)) {
+            if (!in_array($input->maxLevel, Config::availablePermissionLevels())) {
                 return new PwgError(WsError::InvalidParam->value, 'Invalid level');
             }
-            $whereClauses[] = 'ui.level <= ' . (is_numeric($params['max_level']) ? (int) $params['max_level'] : 0);
+            $whereClauses[] = 'ui.level <= ' . (is_numeric($input->maxLevel) ? (int) $input->maxLevel : 0);
         }
-        if (!empty($params['group_id'])) {
-            $groupIdArr     = is_array($params['group_id']) ? $params['group_id'] : [];
-            $whereClauses[] = 'ug.group_id IN(' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $groupIdArr)) . ')';
+        if (count($input->groupIds) > 0) {
+            $whereClauses[] = 'ug.group_id IN(' . implode(',', $input->groupIds) . ')';
         }
-        if (!empty($params['exclude'])) {
-            $excludeArr     = is_array($params['exclude']) ? $params['exclude'] : [];
-            $whereClauses[] = 'u.' . Config::userFields()['id'] . ' NOT IN(' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $excludeArr)) . ')';
+        if (count($input->excludeIds) > 0) {
+            $whereClauses[] = 'u.' . Config::userFields()['id'] . ' NOT IN(' . implode(',', $input->excludeIds) . ')';
         }
         $display      = ['u.' . Config::userFields()['id'] => 'id'];
-        $displayParam = is_string($params['display'] ?? null) ? $params['display'] : 'none';
-        if ($displayParam !== 'none') {
-            $params['display'] = array_map(trim(...), explode(',', $displayParam));
-            if (in_array('all', $params['display'])) {
-                $params['display'] = ['username','email','status','level','groups','language','theme','nb_image_page','recent_period','expand','show_nb_comments','show_nb_hits','enabled_high','registration_date','registration_date_string','registration_date_since','last_visit','last_visit_string','last_visit_since','total_count'];
-            } elseif (in_array('basics', $params['display'])) {
-                $params['display'] = array_merge($params['display'], ['username','email','status','level','groups']);
-            } elseif (in_array('only_id', $params['display'])) {
-                $params['display'] = [];
+        $displayMap   = [];
+        if ($input->display !== 'none') {
+            $displayTokens = array_map(trim(...), explode(',', $input->display));
+            if (in_array('all', $displayTokens)) {
+                $displayTokens = ['username','email','status','level','groups','language','theme','nb_image_page','recent_period','expand','show_nb_comments','show_nb_hits','enabled_high','registration_date','registration_date_string','registration_date_since','last_visit','last_visit_string','last_visit_since','total_count'];
+            } elseif (in_array('basics', $displayTokens)) {
+                $displayTokens = array_merge($displayTokens, ['username','email','status','level','groups']);
+            } elseif (in_array('only_id', $displayTokens)) {
+                $displayTokens = [];
             }
-            $params['display'] = array_flip($params['display']);
-            if (isset($params['display']['registration_date_string']) || isset($params['display']['registration_date_since'])) {
-                $params['display']['registration_date'] = true;
+            $displayMap = array_flip($displayTokens);
+            if (isset($displayMap['registration_date_string']) || isset($displayMap['registration_date_since'])) {
+                $displayMap['registration_date'] = true;
             }
-            if (isset($params['display']['last_visit_string']) || isset($params['display']['last_visit_since'])) {
-                $params['display']['last_visit'] = true;
+            if (isset($displayMap['last_visit_string']) || isset($displayMap['last_visit_since'])) {
+                $displayMap['last_visit'] = true;
             }
-            if (isset($params['display']['username'])) {
+            if (isset($displayMap['username'])) {
                 $display['u.' . Config::userFields()['username']] = 'username';
             }
-            if (isset($params['display']['email'])) {
+            if (isset($displayMap['email'])) {
                 $display['u.' . Config::userFields()['email']] = 'email';
             }
             $uiFields = ['status','level','language','theme','nb_image_page','recent_period','expand','show_nb_comments','show_nb_hits','enabled_high','registration_date','last_visit'];
             foreach ($uiFields as $field) {
-                if (isset($params['display'][$field])) {
+                if (isset($displayMap[$field])) {
                     $display['ui.' . $field] = $field;
                 }
             }
-        } else {
-            $params['display'] = [];
         }
         $query = 'SELECT DISTINCT ';
-        if (isset($params['display']['total_count'])) {
+        if (isset($displayMap['total_count'])) {
             $query .= 'SQL_CALC_FOUND_ROWS ';
         }
         $first = true;
@@ -172,25 +164,25 @@ final readonly class GetListHandler implements WsAction
             $query .= ', ui.last_visit_from_history AS last_visit_from_history';
         }
         $query  .= ' FROM ' . Tables::users() . ' AS u INNER JOIN ' . Tables::userInfos() . ' AS ui ON u.' . Config::userFields()['id'] . ' = ui.user_id LEFT JOIN ' . Tables::userGroup() . ' AS ug ON u.' . Config::userFields()['id'] . ' = ug.user_id WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY ' . $orderStr;
-        $perPage = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
-        $page    = is_numeric($params['page']) ? (int) $params['page'] : 0;
-        if ($perPage !== 0 || $params['display'] !== []) {
+        $perPage = $input->perPage;
+        $page    = $input->page;
+        if ($perPage !== 0 || $displayMap !== []) {
             $query .= ' LIMIT ' . $perPage . ' OFFSET ' . ($perPage * $page) . ';';
         }
         $users            = [];
-        $captureFoundRows = isset($params['display']['total_count']);
+        $captureFoundRows = isset($displayMap['total_count']);
         $listResult       = $this->userRepository->findUsersListPage($query, $captureFoundRows, $listParams, $listTypes);
         $usersRows        = $listResult['rows'];
         $totalCount       = $listResult['total'] ?? 0;
         foreach ($usersRows as $row) {
             $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
-            if (isset($params['display']['groups'])) {
+            if (isset($displayMap['groups'])) {
                 $row['groups'] = [];
             }
             $users[$row['id']] = $row;
         }
         if (count($users) > 0) {
-            if (array_key_exists('groups', $params['display'])) {
+            if (array_key_exists('groups', $displayMap)) {
                 $userIds = array_keys($users);
                 foreach ($this->userRepository->findUserGroupPairsByUserIds($userIds) as $row) {
                     $grpUid = $row['user_id'];
@@ -203,26 +195,26 @@ final readonly class GetListHandler implements WsAction
             foreach ($users as $curUser) {
                 /** @var array<string, mixed> $curUser */
                 $curUid = is_numeric($curUser['id'] ?? null) ? (int) $curUser['id'] : 0;
-                if (isset($params['display']['registration_date_string'])) {
+                if (isset($displayMap['registration_date_string'])) {
                     $regDate                                    = is_scalar($curUser['registration_date'] ?? null) ? (string) $curUser['registration_date'] : null;
                     $users[$curUid]['registration_date_string'] = $this->dateService->formatDate($regDate, ['day', 'month', 'year']);
                 }
-                if (isset($params['display']['registration_date_since'])) {
+                if (isset($displayMap['registration_date_since'])) {
                     $regDate2                                  = is_scalar($curUser['registration_date'] ?? null) ? (string) $curUser['registration_date'] : null;
                     $users[$curUid]['registration_date_since'] = $this->dateService->timeSince($regDate2, 'month');
                 }
-                if (isset($params['display']['last_visit'])) {
+                if (isset($displayMap['last_visit'])) {
                     $lastVisit                    = $curUser['last_visit'] ?? null;
                     $users[$curUid]['last_visit'] = $lastVisit;
                     if (!BoolUtil::fromMixed($curUser['last_visit_from_history'] ?? null) && ($lastVisit === null || $lastVisit === '')) {
                         $lastVisit                    = $this->userService->getUserLastVisitFromHistory($curUid, true);
                         $users[$curUid]['last_visit'] = $lastVisit;
                     }
-                    if (isset($params['display']['last_visit_string'])) {
+                    if (isset($displayMap['last_visit_string'])) {
                         $lvStr                               = is_scalar($lastVisit) ? (string) $lastVisit : null;
                         $users[$curUid]['last_visit_string'] = $this->dateService->formatDate($lvStr, ['day', 'month', 'year']);
                     }
-                    if (isset($params['display']['last_visit_since'])) {
+                    if (isset($displayMap['last_visit_since'])) {
                         $lvSince                            = is_scalar($lastVisit) ? (string) $lastVisit : null;
                         $users[$curUid]['last_visit_since'] = $this->dateService->timeSince($lvSince, 'day');
                     }
@@ -233,12 +225,12 @@ final readonly class GetListHandler implements WsAction
         $this->dispatcher->dispatch($usersEvent);
         /** @var array<int|string, array<string, mixed>> $users */
         $users = $usersEvent->users;
-        if ($perPage === 0 && $params['display'] === []) {
+        if ($perPage === 0 && $displayMap === []) {
             $methodResult = array_column(array_values($users), 'id');
         } else {
             $methodResult = ['paging' => new PwgNamedStruct(['page' => $page, 'per_page' => $perPage, 'count' => count($users), 'total_count' => $totalCount]), 'users' => new PwgNamedArray(array_values($users), 'user')];
         }
-        if (isset($params['display']['total_count'])) {
+        if (isset($displayMap['total_count'])) {
             $methodResult['total_count'] = $totalCount;
         }
         return $methodResult;

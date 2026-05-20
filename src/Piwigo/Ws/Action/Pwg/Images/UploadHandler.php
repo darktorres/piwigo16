@@ -43,7 +43,7 @@ final readonly class UploadHandler implements WsAction
         } catch (WsParamException $e) {
             return new PwgError(403, $e->getMessage());
         }
-        $formatExt = null;
+        $formatExt = '';
         if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -55,7 +55,7 @@ final readonly class UploadHandler implements WsAction
             if (preg_match('/\.(' . implode('|', Config::formatExtensions()) . ')$/', $pName, $matches)) {
                 $formatExt = $matches[1];
             }
-            if ($formatExt === null || $formatExt === '') {
+            if ($formatExt === '') {
                 return new PwgError(401, 'unexpected format extension of file "' . $pName . '"');
             }
         }

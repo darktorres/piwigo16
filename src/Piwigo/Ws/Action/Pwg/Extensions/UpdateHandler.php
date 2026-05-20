@@ -19,6 +19,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Http\RedirectResponder;
+use Piwigo\Plugin\PluginState;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Users\PermissionService;
@@ -64,7 +65,7 @@ final readonly class UpdateHandler implements WsAction
         $extensionName = '';
         if ($type === ExtensionType::Plugin) {
             $extension = Kernel::service(Plugins::class);
-            if (isset($extension->db_plugins_by_id[$extensionId]) && $extension->db_plugins_by_id[$extensionId]->state === 'active') {
+            if (isset($extension->db_plugins_by_id[$extensionId]) && $extension->db_plugins_by_id[$extensionId]->state === PluginState::Active) {
                 $extension->performAction(ExtensionAction::Deactivate, $extensionId);
                 $this->redirectResponder->redirect($this->urlGenerator->ws(['method' => 'pwg.extensions.update', 'type' => 'plugins', 'id' => $extensionId, 'revision' => $revision, 'reactivate' => 'true', 'pwg_token' => $this->csrfService->getToken(), 'format' => 'json']));
             }

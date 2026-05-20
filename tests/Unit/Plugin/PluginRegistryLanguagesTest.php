@@ -12,6 +12,7 @@ use Piwigo\Lang\Translator;
 use Piwigo\Plugin\PluginRecord;
 use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Plugin\PluginRepository;
+use Piwigo\Plugin\PluginState;
 use Psr\Log\NullLogger;
 
 /**
@@ -90,7 +91,7 @@ final class PluginRegistryLanguagesTest extends TestCase
             public function __construct(array $states)
             {
                 foreach ($states as $id => $state) {
-                    $this->rows[$id] = new PluginRecord($id, $state, '1.0.0');
+                    $this->rows[$id] = new PluginRecord($id, PluginState::tryFrom($state) ?? PluginState::Inactive, '1.0.0');
                 }
             }
 
@@ -99,7 +100,7 @@ final class PluginRegistryLanguagesTest extends TestCase
             {
                 $out = array_values($this->rows);
                 if ($state !== null && $state !== '') {
-                    $out = array_values(array_filter($out, static fn (PluginRecord $r): bool => $r->state === $state));
+                    $out = array_values(array_filter($out, static fn (PluginRecord $r): bool => $r->state->value === $state));
                 }
                 if ($id !== null && $id !== '') {
                     $out = array_values(array_filter($out, static fn (PluginRecord $r): bool => $r->id === $id));

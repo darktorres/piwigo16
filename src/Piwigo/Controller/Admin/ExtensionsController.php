@@ -41,6 +41,7 @@ use Piwigo\Http\RedirectResponder;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Plugin\PluginRepository;
+use Piwigo\Plugin\PluginState;
 use Piwigo\Session\Session;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
@@ -239,7 +240,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                 'SETTINGS_URL' => $setting_url,
             ];
 
-            $tpl_plugin['STATE'] = isset($plugins->db_plugins_by_id[$plugin_id]) ? $plugins->db_plugins_by_id[$plugin_id]->state : 'inactive';
+            $tpl_plugin['STATE'] = isset($plugins->db_plugins_by_id[$plugin_id]) ? $plugins->db_plugins_by_id[$plugin_id]->state->value : PluginState::Inactive->value;
 
             $fsExtId = $fs_plugin['extension'] ?? null;
             if (isset($fsExtId) && (is_string($fsExtId) || is_int($fsExtId)) && isset($merged_extensions[$fsExtId])) {

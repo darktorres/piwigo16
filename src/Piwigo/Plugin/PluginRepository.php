@@ -44,9 +44,10 @@ class PluginRepository extends AbstractRepository
             if (!is_string($idRaw)) {
                 continue;
             }
+            $state = is_string($stateRaw) ? (PluginState::tryFrom($stateRaw) ?? PluginState::Inactive) : PluginState::Inactive;
             $out[] = new PluginRecord(
                 id:      $idRaw,
-                state:   is_string($stateRaw) ? $stateRaw : 'inactive',
+                state:   $state,
                 version: is_string($versionRaw) ? $versionRaw : '0',
             );
         }

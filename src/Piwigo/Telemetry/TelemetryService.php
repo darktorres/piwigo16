@@ -19,6 +19,7 @@ use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbInfo;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Plugin\PluginState;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Psr\Log\LoggerInterface;
@@ -267,7 +268,7 @@ final readonly class TelemetryService
             $pluginId      = $plugin->id;
             $pluginState   = $plugin->state;
             $pluginVersion = $plugin->version;
-            if ($pluginState !== 'active') {
+            if ($pluginState !== PluginState::Active) {
                 continue;
             }
             $eid      = null;

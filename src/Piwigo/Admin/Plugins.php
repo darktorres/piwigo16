@@ -24,6 +24,7 @@ use Piwigo\Plugin\PluginDependencyException;
 use Piwigo\Plugin\PluginRecord;
 use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Plugin\PluginRepository;
+use Piwigo\Plugin\PluginState;
 use Piwigo\Plugin\PluginValidationException;
 use Piwigo\Users\CurrentUser;
 use Psr\Cache\CacheItemPoolInterface;
@@ -151,7 +152,7 @@ final class Plugins
                     $errors = is_array($installResult) ? $installResult : [];
                     $crt_db_plugin = $this->pluginRepository->findAll(null, $plugin_id)[0] ?? null;
                     ConfigService::loadConfFromDb();
-                } elseif ($crt_db_plugin->state === 'active') {
+                } elseif ($crt_db_plugin->state === PluginState::Active) {
                     break;
                 }
 
@@ -171,7 +172,7 @@ final class Plugins
                 break;
 
             case ExtensionAction::Deactivate:
-                if ($crt_db_plugin === null or $crt_db_plugin->state !== 'active') {
+                if ($crt_db_plugin === null or $crt_db_plugin->state !== PluginState::Active) {
                     $activity_details['result'] = 'error';
                     break;
                 }
@@ -190,7 +191,7 @@ final class Plugins
 
                 $activity_details['version'] = $crt_db_plugin->version;
 
-                if ($crt_db_plugin->state === 'active') {
+                if ($crt_db_plugin->state === PluginState::Active) {
                     $this->performAction(ExtensionAction::Deactivate, $plugin_id);
                 }
 
@@ -721,7 +722,7 @@ final class Plugins
 
         foreach ($this->fs_plugins as $plugin_id => $plugin) {
             if (isset($this->db_plugins_by_id[$plugin_id])) {
-                $this->db_plugins_by_id[$plugin_id]->state === 'active' ?
+                $this->db_plugins_by_id[$plugin_id]->state === PluginState::Active ?
                   $active_plugins[$plugin_id] = $plugin : $inactive_plugins[$plugin_id] = $plugin;
             } else {
                 $not_installed[$plugin_id] = $plugin;

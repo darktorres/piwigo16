@@ -9,6 +9,7 @@ use Piwigo\Plugin\PluginDependencyException;
 use Piwigo\Plugin\PluginRecord;
 use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Plugin\PluginRepository;
+use Piwigo\Plugin\PluginState;
 use Piwigo\Plugin\PluginValidationException;
 use Piwigo\Tests\Fixtures\Plugins\ValidPlugin\Plugin as ValidPlugin;
 use Psr\Log\NullLogger;
@@ -180,7 +181,7 @@ final class PluginRegistryTest extends TestCase
                 }
                 $out = array_values($this->rows);
                 if ($state !== null && $state !== '') {
-                    $out = array_values(array_filter($out, static fn (PluginRecord $r): bool => $r->state === $state));
+                    $out = array_values(array_filter($out, static fn (PluginRecord $r): bool => $r->state->value === $state));
                 }
                 return $out;
             }
@@ -188,7 +189,7 @@ final class PluginRegistryTest extends TestCase
             #[\Override]
             public function insert(string $pluginId, string $version): void
             {
-                $this->rows[$pluginId] = new PluginRecord($pluginId, 'inactive', $version);
+                $this->rows[$pluginId] = new PluginRecord($pluginId, PluginState::Inactive, $version);
             }
 
             #[\Override]
@@ -205,7 +206,7 @@ final class PluginRegistryTest extends TestCase
             {
                 if (isset($this->rows[$pluginId])) {
                     $existing = $this->rows[$pluginId];
-                    $this->rows[$pluginId] = new PluginRecord($existing->id, $state, $existing->version);
+                    $this->rows[$pluginId] = new PluginRecord($existing->id, PluginState::tryFrom($state) ?? PluginState::Inactive, $existing->version);
                 }
             }
 

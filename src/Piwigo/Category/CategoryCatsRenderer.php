@@ -82,8 +82,8 @@ final readonly class CategoryCatsRenderer
             $perm->params,
             $perm->types,
         );
-        $catCatsRows     = $result['rows'];
-        $totalCategories = $result['total'];
+        $catCatsRows     = $result->rows;
+        $totalCategories = $result->total;
 
         $categories = [];
         $category_ids = [];

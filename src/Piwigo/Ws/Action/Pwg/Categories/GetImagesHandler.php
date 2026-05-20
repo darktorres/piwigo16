@@ -85,7 +85,7 @@ final readonly class GetImagesHandler implements WsAction
                 $perm2->params,
                 $perm2->types,
             );
-            foreach ($paginated['rows'] as $img) {
+            foreach ($paginated->rows as $img) {
                 $imgIdInt   = $img->id->value;
                 $imageIds[] = $imgIdInt;
                 $image      = [
@@ -109,7 +109,7 @@ final readonly class GetImagesHandler implements WsAction
                 $image            = array_merge($image, $this->wsHelper->getUrls($img->toRow()));
                 $images[]         = $image;
             }
-            $totalImages = $paginated['total'];
+            $totalImages = $paginated->total;
             if (count($imageIds) > 0) {
                 $categoryIds       = [];
                 $categoriesOfImage = [];

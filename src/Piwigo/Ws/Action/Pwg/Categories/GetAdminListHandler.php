@@ -61,8 +61,8 @@ final readonly class GetAdminListHandler implements WsAction
             $tail         = 'LIMIT ' . Config::linkedAlbumSearchLimit();
         }
         $adminPage  = $this->categoryRepository->findAdminListPage($where, $tail, $listParams, $listTypes);
-        $searchRows = $adminPage['rows'];
-        $counter    = $adminPage['total'];
+        $searchRows = $adminPage->rows;
+        $counter    = $adminPage->total;
         $cats       = [];
         foreach ($searchRows as $row) {
             $row['nb_images']  = $nbImagesOf[$row['id']] ?? 0;

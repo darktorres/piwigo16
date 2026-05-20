@@ -6,6 +6,7 @@ namespace Piwigo\Users;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the user domain. */
@@ -668,9 +669,9 @@ final class UserRepository extends AbstractRepository
      *
      * @param  list<mixed>                                $params
      * @param  list<ArrayParameterType|ParameterType>     $types
-     * @return array{rows: list<array<string, mixed>>, total: int|null}
+     * @return PaginatedResult<array<string, mixed>>
      */
-    public function findUsersListPage(string $query, bool $captureFoundRows, array $params = [], array $types = []): array
+    public function findUsersListPage(string $query, bool $captureFoundRows, array $params = [], array $types = []): PaginatedResult
     {
         $rows  = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
         $total = null;
@@ -678,7 +679,7 @@ final class UserRepository extends AbstractRepository
             $value = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
             $total = is_numeric($value) ? (int) $value : 0;
         }
-        return ['rows' => $rows, 'total' => $total];
+        return new PaginatedResult($rows, $total);
     }
 
     /**

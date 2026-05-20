@@ -172,8 +172,8 @@ final readonly class GetListHandler implements WsAction
         $users            = [];
         $captureFoundRows = isset($displayMap['total_count']);
         $listResult       = $this->userRepository->findUsersListPage($query, $captureFoundRows, $listParams, $listTypes);
-        $usersRows        = $listResult['rows'];
-        $totalCount       = $listResult['total'] ?? 0;
+        $usersRows        = $listResult->rows;
+        $totalCount       = $listResult->total ?? 0;
         foreach ($usersRows as $row) {
             $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
             if (isset($displayMap['groups'])) {

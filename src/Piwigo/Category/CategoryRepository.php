@@ -19,6 +19,7 @@ use Piwigo\Category\Projection\MenuCategoryRow;
 use Piwigo\Category\Projection\PictureNavCategoryRow;
 use Piwigo\Category\Projection\RankUpdateRow;
 use Piwigo\Category\Projection\RelatedCategoryRow;
+use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\Enum\Privacy;
 use Piwigo\Db\AbstractRepository;
 
@@ -2538,23 +2539,13 @@ SELECT
      *
      * @param list<mixed>                            $permParams
      * @param list<ArrayParameterType|ParameterType> $permTypes
-     * @return array{rows: list<array{
-     *     id: int,
-     *     name: string,
-     *     comment: string|null,
-     *     uppercats: string,
-     *     permalink: string|null,
-     *     status: string,
-     *     global_rank: string|null,
-     *     representative_picture_id: int|null,
-     *     user_representative_picture_id: int|null,
-     *     nb_images: int,
-     *     date_last: string|null,
-     *     max_date_last: string|null,
-     *     count_images: int,
-     *     nb_categories: int,
-     *     count_categories: int,
-     * }>, total: int}
+     * @return PaginatedResult<array{
+     *     id: int, name: string, comment: string|null, uppercats: string,
+     *     permalink: string|null, status: string, global_rank: string|null,
+     *     representative_picture_id: int|null, user_representative_picture_id: int|null,
+     *     nb_images: int, date_last: string|null, max_date_last: string|null,
+     *     count_images: int, nb_categories: int, count_categories: int,
+     * }>
      */
     public function findCatsForThumbnailsWithFoundRows(
         int $userId,
@@ -2565,7 +2556,7 @@ SELECT
         string $permWhere,
         array $permParams,
         array $permTypes,
-    ): array {
+    ): PaginatedResult {
         $query = '
 SELECT SQL_CALC_FOUND_ROWS
     c.id, c.name, c.comment, c.uppercats, c.permalink, c.status,
@@ -2616,10 +2607,7 @@ SELECT SQL_CALC_FOUND_ROWS
             ];
         }
         $totalRaw = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
-        return [
-            'rows'  => $rows,
-            'total' => is_numeric($totalRaw) ? (int) $totalRaw : 0,
-        ];
+        return new PaginatedResult($rows, is_numeric($totalRaw) ? (int) $totalRaw : 0);
     }
 
     /**
@@ -2979,26 +2967,14 @@ SELECT
      * @param list<string>                           $whereClauses
      * @param list<mixed>                            $params
      * @param list<ArrayParameterType|ParameterType> $types
-     * @return array{rows: list<array{
-     *     id: int,
-     *     name: string,
-     *     comment: string|null,
-     *     permalink: string|null,
-     *     status: string,
-     *     uppercats: string,
-     *     global_rank: string|null,
-     *     id_uppercat: int|null,
-     *     nb_images: int,
-     *     total_nb_images: int,
-     *     representative_picture_id: int|null,
-     *     user_representative_picture_id: int|null,
-     *     count_images: int,
-     *     count_categories: int,
-     *     date_last: string|null,
-     *     max_date_last: string|null,
-     *     nb_categories: int,
-     *     image_order: string|null,
-     * }>, total: int|null}
+     * @return PaginatedResult<array{
+     *     id: int, name: string, comment: string|null, permalink: string|null,
+     *     status: string, uppercats: string, global_rank: string|null,
+     *     id_uppercat: int|null, nb_images: int, total_nb_images: int,
+     *     representative_picture_id: int|null, user_representative_picture_id: int|null,
+     *     count_images: int, count_categories: int, date_last: string|null,
+     *     max_date_last: string|null, nb_categories: int, image_order: string|null,
+     * }>
      */
     public function findGetListPage(
         string $joinType,
@@ -3008,7 +2984,7 @@ SELECT
         bool $useSqlCalcFoundRows,
         array $params,
         array $types,
-    ): array {
+    ): PaginatedResult {
         $select = ($useSqlCalcFoundRows ? 'SQL_CALC_FOUND_ROWS ' : '')
             . 'id, name, comment, permalink, status, uppercats, global_rank, id_uppercat, nb_images, count_images AS total_nb_images, representative_picture_id, user_representative_picture_id, count_images, count_categories, date_last, max_date_last, count_categories AS nb_categories, image_order';
         $sql = 'SELECT ' . $select
@@ -3053,7 +3029,7 @@ SELECT
             $totalRaw = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
             $total = is_numeric($totalRaw) ? (int) $totalRaw : 0;
         }
-        return ['rows' => $rows, 'total' => $total];
+        return new PaginatedResult($rows, $total);
     }
 
     /**
@@ -3064,23 +3040,17 @@ SELECT
      * @param list<string>                           $whereClauses
      * @param list<mixed>                            $params
      * @param list<ArrayParameterType|ParameterType> $types
-     * @return array{rows: list<array{
-     *     id: int,
-     *     name: string,
-     *     comment: string|null,
-     *     uppercats: string,
-     *     global_rank: string|null,
-     *     dir: string|null,
-     *     status: string,
-     *     image_order: string|null,
-     * }>, total: int}
+     * @return PaginatedResult<array{
+     *     id: int, name: string, comment: string|null, uppercats: string,
+     *     global_rank: string|null, dir: string|null, status: string, image_order: string|null,
+     * }>
      */
     public function findAdminListPage(
         array $whereClauses,
         string $tailFragment,
         array $params,
         array $types,
-    ): array {
+    ): PaginatedResult {
         $sql = 'SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, status, image_order'
             . ' FROM ' . $this->table('categories')
             . ' WHERE ' . implode("\n    AND ", $whereClauses)
@@ -3104,7 +3074,7 @@ SELECT
             ];
         }
         $totalRaw = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
-        return ['rows' => $rows, 'total' => is_numeric($totalRaw) ? (int) $totalRaw : 0];
+        return new PaginatedResult($rows, is_numeric($totalRaw) ? (int) $totalRaw : 0);
     }
 
     /**

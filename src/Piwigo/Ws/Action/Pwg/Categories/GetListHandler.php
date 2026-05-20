@@ -111,9 +111,9 @@ final readonly class GetListHandler implements WsAction
             $listPermParams,
             $listPermTypes,
         );
-        $getListRows = $page['rows'];
-        if ($useFoundRows && $page['total'] !== null) {
-            $resultCountInt = $page['total'];
+        $getListRows = $page->rows;
+        if ($useFoundRows && $page->total !== null) {
+            $resultCountInt = $page->total;
             if ($catIdParam > 0) {
                 $resultCountInt--;
             }

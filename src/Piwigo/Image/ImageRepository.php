@@ -6,6 +6,7 @@ namespace Piwigo\Image;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Image\Entity\Image;
 use Piwigo\Image\Entity\ImageIdFilename;
@@ -1542,7 +1543,7 @@ final class ImageRepository extends AbstractRepository
      * @param list<string>                           $whereClauses
      * @param list<mixed>                            $params
      * @param  list<ArrayParameterType|ParameterType> $types
-     * @return array{rows: list<Image>, total: int}
+     * @return PaginatedResult<Image>
      */
     public function findCategoryImagesPaginated(
         array $whereClauses,
@@ -1551,7 +1552,7 @@ final class ImageRepository extends AbstractRepository
         int $offset,
         array $params,
         array $types,
-    ): array {
+    ): PaginatedResult {
         $query = 'SELECT SQL_CALC_FOUND_ROWS i.* FROM ' . $this->table('images') . ' i'
             . ' INNER JOIN ' . $this->table('image_category') . ' ON i.id = image_id'
             . ' WHERE ' . implode("\n    AND ", $whereClauses)
@@ -1560,7 +1561,7 @@ final class ImageRepository extends AbstractRepository
             . ' LIMIT ' . $perPage . ' OFFSET ' . $offset;
         $rows     = array_map(Image::fromRow(...), $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative());
         $totalRaw = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
-        return ['rows' => $rows, 'total' => is_numeric($totalRaw) ? (int) $totalRaw : 0];
+        return new PaginatedResult($rows, is_numeric($totalRaw) ? (int) $totalRaw : 0);
     }
 
     /**

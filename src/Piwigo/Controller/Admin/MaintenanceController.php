@@ -19,6 +19,7 @@ use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomaliesRepository;
 use Piwigo\Admin\MaintenanceService;
 use Piwigo\Admin\Metadata\MetadataAdminService;
+use Piwigo\Admin\Sync\SiteSyncContext;
 use Piwigo\Admin\SyncMode;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Tag\TagAdminService;
@@ -963,10 +964,7 @@ final class MaintenanceController implements AdminSubControllerInterface
 
     private function siteUpdate(): void
     {
-        $tpl    = TemplateRegistry::current();
-        $logger = LoggerRegistry::current();
-        /** @var array<string, mixed> $user */
-        $user = CurrentUser::get()->rawAttributes;
+        $tpl = TemplateRegistry::current();
 
         if (!Config::enableSynchronization()) {
             throw new ConfigException('synchronization is disabled');
@@ -992,8 +990,6 @@ final class MaintenanceController implements AdminSubControllerInterface
             'PWG-UPDATE-1'    => [Lang::t('wrong filename'), Lang::t('The name of directories and files must be composed of letters, numbers, "-", "_" or "."')],
             'PWG-ERROR-NO-FS' => [Lang::t('File/directory read error'), Lang::t('The file or directory cannot be accessed (either it does not exist or the access is denied)')],
         ];
-        $errors = [];
-        $infos  = [];
 
         if ($site_is_remote) {
             HtmlService::fatalError('remote sites not supported');
@@ -1021,15 +1017,9 @@ final class MaintenanceController implements AdminSubControllerInterface
             $_POST['submit'] = 'Quick Local Synchronization';
         }
 
+        $syncMode        = isset($_POST['sync']) && is_string($_POST['sync']) ? SyncMode::tryFrom($_POST['sync']) : null;
         $general_failure = true;
         $simulate        = false;
-        $counts          = [];
-        $db_categories   = [];
-        $basedir         = '';
-        $to_delete       = [];
-        $caddiables      = [];
-        $syncMode        = isset($_POST['sync']) && is_string($_POST['sync']) ? SyncMode::tryFrom($_POST['sync']) : null;
-
         if (isset($_POST['submit'])) {
             if ($site_reader->open()) {
                 $general_failure = false;
@@ -1037,391 +1027,430 @@ final class MaintenanceController implements AdminSubControllerInterface
             $simulate = (isset($_POST['simulate']) && $_POST['simulate'] == 1);
         }
 
-        // ── directories / categories ──────────────────────────────────────────
-
+        $ctx = new SiteSyncContext(
+            siteId: $site_id,
+            siteUrl: $site_url_str,
+            siteReader: $site_reader,
+            simulate: $simulate,
+            generalFailure: $general_failure,
+            syncMode: $syncMode,
+            nowDateTime: $nowDateTime,
+            today: $today,
+        );
         if (isset($_POST['submit']) && $syncMode !== null) {
-            $counts['new_categories'] = $counts['del_categories'] = $counts['del_elements'] = $counts['new_elements'] = $counts['upd_elements'] = 0;
+            $ctx->counts = ['new_categories' => 0, 'del_categories' => 0, 'del_elements' => 0, 'new_elements' => 0, 'upd_elements' => 0];
         }
 
-        if (isset($_POST['submit']) && $syncMode !== null && !$general_failure) {
-            $start = StringUtil::getMoment();
-            $catFilter = isset($_POST['cat']) && is_numeric($_POST['cat']) ? (int) $_POST['cat'] : null;
-            $subcatsIncluded = isset($_POST['subcats-included']) && $_POST['subcats-included'] == 1;
-            $db_categories = $this->categoryRepository->findPhysicalSyncableForSite($site_id, $catFilter, $subcatsIncluded);
-            $db_fulldirs   = $this->categoryAdminService->getFulldirs(array_map(intval(...), array_keys($db_categories)));
+        $this->runCategorySync($ctx);
+        $this->runFileSync($ctx);
+        $this->finaliseSyncCategoryRanks($ctx);
+        $this->runMetadataSync($ctx);
+        $this->renderSyncReport($ctx, $error_labels);
+    }
 
-            if (isset($_POST['cat']) && is_numeric($_POST['cat'])) {
-                $basedir = $db_fulldirs[(int) $_POST['cat']] ?? '';
-            } else {
-                $basedir = (string) preg_replace('#/*$#', '', $site_url_str);
-            }
+    private function runCategorySync(SiteSyncContext $ctx): void
+    {
+        if (!isset($_POST['submit']) || $ctx->syncMode === null || $ctx->generalFailure) {
+            return;
+        }
 
-            $db_fulldirs = array_flip($db_fulldirs);
-            $next_rank   = ['NULL' => 1];
-            foreach ($this->categoryRepository->findAllIds() as $catId) {
-                $next_rank[(string) $catId] = 1;
-            }
-            foreach ($this->categoryRepository->findNextRankByParent() as $parentKey => $nextRank) {
-                $next_rank[$parentKey] = $nextRank;
-            }
+        $tpl = TemplateRegistry::current();
+        $start = StringUtil::getMoment();
+        $catFilter = isset($_POST['cat']) && is_numeric($_POST['cat']) ? (int) $_POST['cat'] : null;
+        $subcatsIncluded = isset($_POST['subcats-included']) && $_POST['subcats-included'] == 1;
+        $ctx->dbCategories = $this->categoryRepository->findPhysicalSyncableForSite($ctx->siteId, $catFilter, $subcatsIncluded);
+        $db_fulldirs   = $this->categoryAdminService->getFulldirs(array_map(intval(...), array_keys($ctx->dbCategories)));
 
-            $next_id = $this->categoryRepository->findNextAvailableId();
+        if (isset($_POST['cat']) && is_numeric($_POST['cat'])) {
+            $ctx->basedir = $db_fulldirs[(int) $_POST['cat']] ?? '';
+        } else {
+            $ctx->basedir = (string) preg_replace('#/*$#', '', $ctx->siteUrl);
+        }
 
-            $fs_fulldirs = $site_reader->getFullDirectories($basedir);
-            if (isset($_POST['cat'])) {
-                $fs_fulldirs[] = $basedir;
-            }
-            if (!isset($_POST['subcats-included']) || $_POST['subcats-included'] != 1) {
-                $fs_fulldirs = array_intersect($fs_fulldirs, array_keys($db_fulldirs));
-            }
+        $ctx->dbFulldirs = array_flip($db_fulldirs);
+        $next_rank       = ['NULL' => 1];
+        foreach ($this->categoryRepository->findAllIds() as $catId) {
+            $next_rank[(string) $catId] = 1;
+        }
+        foreach ($this->categoryRepository->findNextRankByParent() as $parentKey => $nextRank) {
+            $next_rank[$parentKey] = $nextRank;
+        }
 
-            $inserts = [];
-            foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
-                $dir = basename($fulldir);
-                if (preg_match(Config::syncCharsRegex(), $dir)) {
-                    $insert = ['id' => $next_id++, 'dir' => $dir, 'name' => str_replace('_', ' ', $dir), 'site_id' => $site_id, 'commentable' => BoolUtil::toInt(Config::newcatDefaultCommentable()), 'status' => Config::newcatDefaultStatus(), 'visible' => BoolUtil::toInt(Config::newcatDefaultVisible())];
-                    $parentId = null;
-                    if (isset($db_fulldirs[dirname($fulldir)])) {
-                        $parent    = $db_fulldirs[dirname($fulldir)];
-                        $parentKey = $parent;
-                        $parentRow = $db_categories[$parent] ?? null;
-                        $parentId  = $parent;
-                        $insert['id_uppercat'] = $parent;
-                        $insert['uppercats']   = ($parentRow['uppercats'] ?? '') . ',' . $insert['id'];
-                        $nextRankParent        = is_int($next_rank[$parentKey] ?? null) ? $next_rank[$parentKey] : 0;
-                        $insert['rank']        = $nextRankParent;
-                        $next_rank[$parentKey] = $nextRankParent + 1;
-                        $insert['global_rank'] = ($parentRow['global_rank'] ?? '') . '.' . $insert['rank'];
-                        if (($parentRow['status'] ?? '') === 'private') {
-                            $insert['status'] = 'private';
-                        }
-                        if ($parentRow !== null && !$parentRow['visible']) {
-                            $insert['visible'] = 0;
-                        }
-                    } else {
-                        $insert['uppercats']   = $insert['id'];
-                        $nextRankNull          = is_int($next_rank['NULL'] ?? null) ? $next_rank['NULL'] : 0;
-                        $insert['rank']        = $nextRankNull;
-                        $next_rank['NULL']     = $nextRankNull + 1;
-                        $insert['global_rank'] = $insert['rank'];
+        $next_id = $this->categoryRepository->findNextAvailableId();
+
+        $fs_fulldirs = $ctx->siteReader->getFullDirectories($ctx->basedir);
+        if (isset($_POST['cat'])) {
+            $fs_fulldirs[] = $ctx->basedir;
+        }
+        if (!isset($_POST['subcats-included']) || $_POST['subcats-included'] != 1) {
+            $fs_fulldirs = array_intersect($fs_fulldirs, array_keys($ctx->dbFulldirs));
+        }
+
+        $inserts = [];
+        foreach (array_diff($fs_fulldirs, array_keys($ctx->dbFulldirs)) as $fulldir) {
+            $dir = basename($fulldir);
+            if (preg_match(Config::syncCharsRegex(), $dir)) {
+                $insert = ['id' => $next_id++, 'dir' => $dir, 'name' => str_replace('_', ' ', $dir), 'site_id' => $ctx->siteId, 'commentable' => BoolUtil::toInt(Config::newcatDefaultCommentable()), 'status' => Config::newcatDefaultStatus(), 'visible' => BoolUtil::toInt(Config::newcatDefaultVisible())];
+                $parentId = null;
+                if (isset($ctx->dbFulldirs[dirname($fulldir)])) {
+                    $parent    = $ctx->dbFulldirs[dirname($fulldir)];
+                    $parentKey = $parent;
+                    $parentRow = $ctx->dbCategories[$parent] ?? null;
+                    $parentId  = $parent;
+                    $insert['id_uppercat'] = $parent;
+                    $insert['uppercats']   = ($parentRow['uppercats'] ?? '') . ',' . $insert['id'];
+                    $nextRankParent        = is_int($next_rank[$parentKey] ?? null) ? $next_rank[$parentKey] : 0;
+                    $insert['rank']        = $nextRankParent;
+                    $next_rank[$parentKey] = $nextRankParent + 1;
+                    $insert['global_rank'] = ($parentRow['global_rank'] ?? '') . '.' . $insert['rank'];
+                    if (($parentRow['status'] ?? '') === 'private') {
+                        $insert['status'] = 'private';
                     }
-                    $inserts[] = $insert;
-                    $infos[]   = ['path' => $fulldir, 'info' => Lang::t('added')];
-                    $db_categories[$insert['id']] = [
-                        'id'          => $insert['id'],
-                        'id_uppercat' => $parentId,
-                        'uppercats'   => (string) $insert['uppercats'],
-                        'global_rank' => (string) $insert['global_rank'],
-                        'status'      => $insert['status'],
-                        'visible'     => $insert['visible'] !== 0,
-                    ];
-                    $db_fulldirs[$fulldir] = $insert['id'];
-                    $next_rank[$insert['id']] = 1;
+                    if ($parentRow !== null && !$parentRow['visible']) {
+                        $insert['visible'] = 0;
+                    }
                 } else {
-                    $errors[] = ['path' => $fulldir, 'type' => 'PWG-UPDATE-1'];
+                    $insert['uppercats']   = $insert['id'];
+                    $nextRankNull          = is_int($next_rank['NULL'] ?? null) ? $next_rank['NULL'] : 0;
+                    $insert['rank']        = $nextRankNull;
+                    $next_rank['NULL']     = $nextRankNull + 1;
+                    $insert['global_rank'] = $insert['rank'];
                 }
+                $inserts[] = $insert;
+                $ctx->infos[] = ['path' => $fulldir, 'info' => Lang::t('added')];
+                $ctx->dbCategories[$insert['id']] = [
+                    'id'          => $insert['id'],
+                    'id_uppercat' => $parentId,
+                    'uppercats'   => (string) $insert['uppercats'],
+                    'global_rank' => (string) $insert['global_rank'],
+                    'status'      => $insert['status'],
+                    'visible'     => $insert['visible'] !== 0,
+                ];
+                $ctx->dbFulldirs[$fulldir] = $insert['id'];
+                $next_rank[$insert['id']] = 1;
+            } else {
+                $ctx->errors[] = ['path' => $fulldir, 'type' => 'PWG-UPDATE-1'];
             }
-
-            if (count($inserts) > 0 && !$simulate) {
-                $this->categoryRepository->insertCategoryRowsBatch($inserts);
-                $category_ids = $category_up = [];
-                foreach ($inserts as $category) {
-                    $category_ids[] = $category['id'];
-                    if (isset($category['id_uppercat']) && $category['id_uppercat'] !== '' && $category['id_uppercat'] !== 0) {
-                        $category_up[] = $category['id_uppercat'];
-                    }
-                }
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $category_ids, ActivityAction::Add, ['sync' => true]));
-                $category_up_str = implode(',', array_unique($category_up));
-                $this->inheritCategoryPermissionsForBatch($category_up_str, $category_ids, $db_categories);
-            }
-            $counts['new_categories'] = count($inserts);
-
-            $to_delete = $to_delete_derivative_dirs = [];
-            foreach (array_diff(array_keys($db_fulldirs), $fs_fulldirs) as $fulldir) {
-                $to_delete[] = $db_fulldirs[$fulldir];
-                unset($db_fulldirs[$fulldir]);
-                $infos[] = ['path' => $fulldir, 'info' => Lang::t('deleted')];
-                if (substr_compare($fulldir, '../', 0, 3) == 0) {
-                    $fulldir = substr($fulldir, 3);
-                }
-                $to_delete_derivative_dirs[] = $this->paths->root . Config::derivativeDir() . $fulldir;
-            }
-            if (count($to_delete) > 0) {
-                if (!$simulate) {
-                    $this->categoryAdminService->deleteCategories($to_delete);
-                    foreach ($to_delete_derivative_dirs as $to_delete_dir) {
-                        if (is_dir($to_delete_dir)) {
-                            $this->imageAdminService->clearDerivativeCacheRec($to_delete_dir, '#.+#');
-                        }
-                    }
-                }
-                $counts['del_categories'] = count($to_delete);
-            }
-            $tpl->append('footer_elements', '<!-- scanning dirs : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
         }
 
-        // ── files / elements ──────────────────────────────────────────────────
-
-        if (isset($_POST['submit']) && $syncMode === SyncMode::Files && !$general_failure) {
-            $start_files = $start = StringUtil::getMoment();
-            $fs = $site_reader->getElements($basedir);
-            $tpl->append('footer_elements', '<!-- get_elements: ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
-
-            $cat_ids_int = array_values(array_diff(array_keys($db_categories), $to_delete));
-            $db_elements = $this->imageRepository->findIdPathByStorageCategoryIds($cat_ids_int);
-
-            $next_element_id = $this->imageRepository->findNextAvailableId();
-
-            $start             = StringUtil::getMoment();
-            $inserts           = $insert_links = $insert_formats = $formats_to_delete = [];
-
-            foreach (array_diff(array_keys($fs), array_values($db_elements)) as $path) {
-                $dirname  = dirname((string) $path);
-                if (!isset($db_fulldirs[$dirname])) {
-                    continue;
+        if (count($inserts) > 0 && !$ctx->simulate) {
+            $this->categoryRepository->insertCategoryRowsBatch($inserts);
+            $category_ids = $category_up = [];
+            foreach ($inserts as $category) {
+                $category_ids[] = $category['id'];
+                if (isset($category['id_uppercat']) && $category['id_uppercat'] !== '' && $category['id_uppercat'] !== 0) {
+                    $category_up[] = $category['id_uppercat'];
                 }
-                $filename = basename((string) $path);
-                if (!preg_match(Config::syncCharsRegex(), $filename)) {
-                    $errors[] = ['path' => $path, 'type' => 'PWG-UPDATE-1'];
-                    continue;
-                }
-                $insert = ['id' => $next_element_id++, 'file' => $filename, 'name' => StringUtil::getNameFromFile($filename), 'date_available' => $nowDateTime, 'path' => $path, 'representative_ext' => is_array($fs[$path]) ? ($fs[$path]['representative_ext'] ?? null) : null, 'storage_category_id' => $db_fulldirs[$dirname], 'added_by' => $user['id']];
-                if ($_POST['privacy_level'] != 0) {
-                    $insert['level'] = $_POST['privacy_level'];
-                }
-                $inserts[]      = $insert;
-                $insert_links[] = ['image_id' => $insert['id'], 'category_id' => $insert['storage_category_id']];
-                $infos[]        = ['path' => $insert['path'], 'info' => Lang::t('added')];
-                if (Config::isFormatsEnabled()) {
-                    $fs_path_formats = is_array($fs[$path]) && is_array($fs[$path]['formats'] ?? null) ? $fs[$path]['formats'] : [];
-                    foreach ($fs_path_formats as $ext => $filesize) {
-                        $insert_formats[] = ['image_id' => $insert['id'], 'ext' => $ext, 'filesize' => $filesize];
-                        $infos[] = ['path' => $insert['path'], 'info' => Lang::t('format %s added', $ext)];
+            }
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $category_ids, ActivityAction::Add, ['sync' => true]));
+            $category_up_str = implode(',', array_unique($category_up));
+            $this->inheritCategoryPermissionsForBatch($category_up_str, $category_ids, $ctx->dbCategories);
+        }
+        $ctx->counts['new_categories'] = count($inserts);
+
+        $to_delete_derivative_dirs = [];
+        foreach (array_diff(array_keys($ctx->dbFulldirs), $fs_fulldirs) as $fulldir) {
+            $ctx->toDelete[] = $ctx->dbFulldirs[$fulldir];
+            unset($ctx->dbFulldirs[$fulldir]);
+            $ctx->infos[] = ['path' => $fulldir, 'info' => Lang::t('deleted')];
+            if (substr_compare($fulldir, '../', 0, 3) == 0) {
+                $fulldir = substr($fulldir, 3);
+            }
+            $to_delete_derivative_dirs[] = $this->paths->root . Config::derivativeDir() . $fulldir;
+        }
+        if (count($ctx->toDelete) > 0) {
+            if (!$ctx->simulate) {
+                $this->categoryAdminService->deleteCategories($ctx->toDelete);
+                foreach ($to_delete_derivative_dirs as $to_delete_dir) {
+                    if (is_dir($to_delete_dir)) {
+                        $this->imageAdminService->clearDerivativeCacheRec($to_delete_dir, '#.+#');
                     }
                 }
-                $caddiables[] = $insert['id'];
             }
+            $ctx->counts['del_categories'] = count($ctx->toDelete);
+        }
+        $tpl->append('footer_elements', '<!-- scanning dirs : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
+    }
 
+    private function runFileSync(SiteSyncContext $ctx): void
+    {
+        if (!isset($_POST['submit']) || $ctx->syncMode !== SyncMode::Files || $ctx->generalFailure) {
+            return;
+        }
+
+        $tpl    = TemplateRegistry::current();
+        $logger = LoggerRegistry::current();
+        /** @var array<string, mixed> $user */
+        $user = CurrentUser::get()->rawAttributes;
+
+        $start_files = $start = StringUtil::getMoment();
+        $fs = $ctx->siteReader->getElements($ctx->basedir);
+        $tpl->append('footer_elements', '<!-- get_elements: ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
+
+        $cat_ids_int = array_values(array_diff(array_keys($ctx->dbCategories), $ctx->toDelete));
+        $db_elements = $this->imageRepository->findIdPathByStorageCategoryIds($cat_ids_int);
+
+        $next_element_id = $this->imageRepository->findNextAvailableId();
+
+        $start             = StringUtil::getMoment();
+        $inserts           = $insert_links = $insert_formats = $formats_to_delete = [];
+
+        foreach (array_diff(array_keys($fs), array_values($db_elements)) as $path) {
+            $dirname  = dirname((string) $path);
+            if (!isset($ctx->dbFulldirs[$dirname])) {
+                continue;
+            }
+            $filename = basename((string) $path);
+            if (!preg_match(Config::syncCharsRegex(), $filename)) {
+                $ctx->errors[] = ['path' => $path, 'type' => 'PWG-UPDATE-1'];
+                continue;
+            }
+            $insert = ['id' => $next_element_id++, 'file' => $filename, 'name' => StringUtil::getNameFromFile($filename), 'date_available' => $ctx->nowDateTime, 'path' => $path, 'representative_ext' => is_array($fs[$path]) ? ($fs[$path]['representative_ext'] ?? null) : null, 'storage_category_id' => $ctx->dbFulldirs[$dirname], 'added_by' => $user['id']];
+            if ($_POST['privacy_level'] != 0) {
+                $insert['level'] = $_POST['privacy_level'];
+            }
+            $inserts[]      = $insert;
+            $insert_links[] = ['image_id' => $insert['id'], 'category_id' => $insert['storage_category_id']];
+            $ctx->infos[]   = ['path' => $insert['path'], 'info' => Lang::t('added')];
             if (Config::isFormatsEnabled()) {
-                $db_elements_flip = array_flip($db_elements);
-                $existing_ids     = [];
-                foreach (array_intersect_key($fs, $db_elements_flip) as $path => $existing) {
-                    $existing_ids[] = $db_elements_flip[$path];
-                }
-                $logger->debug('existing_ids', $existing_ids);
-
-                if (count($existing_ids) > 0) {
-                    $db_formats = [];
-                    foreach ($this->imageFormatRepository->findByImageIds(array_map(intval(...), $existing_ids)) as $row) {
-                        $row_image_id = is_numeric($row['image_id'] ?? null) ? (int) $row['image_id'] : 0;
-                        $row_ext      = is_scalar($row['ext'] ?? null) ? (string) $row['ext'] : '';
-                        if (!isset($db_formats[$row_image_id])) {
-                            $db_formats[$row_image_id] = [];
-                        }
-                        $db_formats[$row_image_id][$row_ext] = $row['format_id'];
-                    }
-                    foreach ($db_formats as $image_id => $formats) {
-                        $db_elem_path  = $db_elements[$image_id] ?? '';
-                        $fs_elem       = is_array($fs[$db_elem_path] ?? null) ? $fs[$db_elem_path] : [];
-                        $fs_formats    = is_array($fs_elem['formats'] ?? null) ? $fs_elem['formats'] : [];
-                        $image_formats_to_delete = array_diff_key($formats, $fs_formats);
-                        $logger->debug('image_formats_to_delete', $image_formats_to_delete);
-                        foreach ($image_formats_to_delete as $ext => $format_id) {
-                            $formats_to_delete[] = $format_id;
-                            $infos[] = ['path' => $db_elem_path, 'info' => Lang::t('format %s removed', $ext)];
-                        }
-                    }
-                    foreach ($existing_ids as $image_id) {
-                        $path          = $db_elements[$image_id] ?? '';
-                        $formats       = $db_formats[$image_id] ?? [];
-                        $fs_path_data  = is_array($fs[$path] ?? null) ? $fs[$path] : [];
-                        $fs_path_formats = is_array($fs_path_data['formats'] ?? null) ? $fs_path_data['formats'] : [];
-                        $image_formats_to_insert = array_diff_key($fs_path_formats, $formats);
-                        $logger->debug('image_formats_to_insert', $image_formats_to_insert);
-                        foreach ($image_formats_to_insert as $ext => $filesize) {
-                            $insert_formats[] = ['image_id' => $image_id, 'ext' => $ext, 'filesize' => $filesize];
-                            $infos[] = ['path' => $path, 'info' => Lang::t('format %s added', $ext)];
-                        }
-                    }
+                $fs_path_formats = is_array($fs[$path]) && is_array($fs[$path]['formats'] ?? null) ? $fs[$path]['formats'] : [];
+                foreach ($fs_path_formats as $ext => $filesize) {
+                    $insert_formats[] = ['image_id' => $insert['id'], 'ext' => $ext, 'filesize' => $filesize];
+                    $ctx->infos[] = ['path' => $insert['path'], 'info' => Lang::t('format %s added', $ext)];
                 }
             }
-
-            if (!$simulate) {
-                if (count($inserts) > 0) {
-                    $this->imageRepository->insertImageRowsBatch($inserts, $insert_links);
-                    $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $caddiables, ActivityAction::Add, ['sync' => true]));
-                    if (isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1) {
-                        $this->userCaddieRepository->addElements(CurrentUser::get()->id, $caddiables);
-                    }
-                }
-                if (count($insert_formats) > 0) {
-                    $this->imageFormatRepository->insertRowsBatch($insert_formats);
-                }
-                if (count($formats_to_delete) > 0) {
-                    $this->imageFormatRepository->deleteByFormatIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));
-                }
-            }
-            $counts['new_elements'] = count($inserts);
-
-            $to_delete_elements = [];
-            foreach (array_diff(array_values($db_elements), array_keys($fs)) as $path) {
-                $found = array_search($path, $db_elements);
-                if ($found !== false) {
-                    $to_delete_elements[] = $found;
-                }
-                $infos[] = ['path' => $path, 'info' => Lang::t('deleted')];
-            }
-            if (count($to_delete_elements) > 0) {
-                if (!$simulate) {
-                    $this->imageAdminService->deleteElements($to_delete_elements);
-                } $counts['del_elements'] = count($to_delete_elements);
-            }
-
-            $tpl->append('footer_elements', '<!-- scanning files : ' . StringUtil::getElapsedTime($start_files, StringUtil::getMoment()) . ' -->');
+            $ctx->caddiables[] = $insert['id'];
         }
 
-        // ── sync categories & files ───────────────────────────────────────────
-
-        if (isset($_POST['submit']) && $syncMode !== null && !$general_failure) {
-            if (!$simulate) {
-                $start = StringUtil::getMoment();
-                $this->categoryAdminService->updateCategory('all');
-                $tpl->append('footer_elements', '<!-- $this->categoryAdminService->updateCategory(all) : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
-                $start = StringUtil::getMoment();
-                $this->categoryAdminService->updateGlobalRank();
-                $tpl->append('footer_elements', '<!-- ordering categories : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
+        if (Config::isFormatsEnabled()) {
+            $db_elements_flip = array_flip($db_elements);
+            $existing_ids     = [];
+            foreach (array_intersect_key($fs, $db_elements_flip) as $path => $existing) {
+                $existing_ids[] = $db_elements_flip[$path];
             }
-            if ($syncMode === SyncMode::Files) {
-                $start = StringUtil::getMoment();
-                $opts  = ['category_id' => '', 'recursive' => true];
-                if (isset($_POST['cat'])) {
-                    $opts['category_id'] = $_POST['cat'];
-                    if (!isset($_POST['subcats-included']) || $_POST['subcats-included'] != 1) {
-                        $opts['recursive'] = false;
+            $logger->debug('existing_ids', $existing_ids);
+
+            if (count($existing_ids) > 0) {
+                $db_formats = [];
+                foreach ($this->imageFormatRepository->findByImageIds(array_map(intval(...), $existing_ids)) as $row) {
+                    $row_image_id = is_numeric($row['image_id'] ?? null) ? (int) $row['image_id'] : 0;
+                    $row_ext      = is_scalar($row['ext'] ?? null) ? (string) $row['ext'] : '';
+                    if (!isset($db_formats[$row_image_id])) {
+                        $db_formats[$row_image_id] = [];
+                    }
+                    $db_formats[$row_image_id][$row_ext] = $row['format_id'];
+                }
+                foreach ($db_formats as $image_id => $formats) {
+                    $db_elem_path  = $db_elements[$image_id] ?? '';
+                    $fs_elem       = is_array($fs[$db_elem_path] ?? null) ? $fs[$db_elem_path] : [];
+                    $fs_formats    = is_array($fs_elem['formats'] ?? null) ? $fs_elem['formats'] : [];
+                    $image_formats_to_delete = array_diff_key($formats, $fs_formats);
+                    $logger->debug('image_formats_to_delete', $image_formats_to_delete);
+                    foreach ($image_formats_to_delete as $ext => $format_id) {
+                        $formats_to_delete[] = $format_id;
+                        $ctx->infos[] = ['path' => $db_elem_path, 'info' => Lang::t('format %s removed', $ext)];
                     }
                 }
-                $catIdOpt = is_string($opts['category_id']) ? $opts['category_id'] : '';
-                $files = $this->metadataAdminService->getFilelist($catIdOpt, $site_id, $opts['recursive'], false);
-                $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
-                $start = StringUtil::getMoment();
-                $datas = [];
-                foreach ($files as $id => $file) {
-                    $data       = $site_reader->getElementUpdateAttributes($file->path->value);
-                    $data['id'] = $id;
-                    $datas[]    = $data;
-                }
-                $counts['upd_elements'] = count($datas);
-                if (!$simulate && count($datas) > 0) {
-                    $updFields = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getUpdateAttributes());
-                    $updates = [];
-                    foreach ($datas as $row) {
-                        $set = [];
-                        foreach ($updFields as $field) {
-                            $set[$field] = $row[$field] ?? null;
-                        }
-                        $updates[] = [
-                            'id'     => $row['id'],
-                            'fields' => $set,
-                        ];
+                foreach ($existing_ids as $image_id) {
+                    $path          = $db_elements[$image_id] ?? '';
+                    $formats       = $db_formats[$image_id] ?? [];
+                    $fs_path_data  = is_array($fs[$path] ?? null) ? $fs[$path] : [];
+                    $fs_path_formats = is_array($fs_path_data['formats'] ?? null) ? $fs_path_data['formats'] : [];
+                    $image_formats_to_insert = array_diff_key($fs_path_formats, $formats);
+                    $logger->debug('image_formats_to_insert', $image_formats_to_insert);
+                    foreach ($image_formats_to_insert as $ext => $filesize) {
+                        $insert_formats[] = ['image_id' => $image_id, 'ext' => $ext, 'filesize' => $filesize];
+                        $ctx->infos[] = ['path' => $path, 'info' => Lang::t('format %s added', $ext)];
                     }
-                    $this->imageRepository->updateBatchByIds($updates);
                 }
-                $tpl->append('footer_elements', '<!-- update files : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
             }
         }
 
-        if (isset($_POST['submit']) && $syncMode !== null) {
-            $tpl->assign('update_result', ['NB_NEW_CATEGORIES' => $counts['new_categories'] ?? 0, 'NB_DEL_CATEGORIES' => $counts['del_categories'] ?? 0, 'NB_NEW_ELEMENTS' => $counts['new_elements'] ?? 0, 'NB_DEL_ELEMENTS' => $counts['del_elements'] ?? 0, 'NB_UPD_ELEMENTS' => $counts['upd_elements'] ?? 0, 'NB_ERRORS' => count($errors)]);
+        if (!$ctx->simulate) {
+            if (count($inserts) > 0) {
+                $this->imageRepository->insertImageRowsBatch($inserts, $insert_links);
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $ctx->caddiables, ActivityAction::Add, ['sync' => true]));
+                if (isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1) {
+                    $this->userCaddieRepository->addElements(CurrentUser::get()->id, $ctx->caddiables);
+                }
+            }
+            if (count($insert_formats) > 0) {
+                $this->imageFormatRepository->insertRowsBatch($insert_formats);
+            }
+            if (count($formats_to_delete) > 0) {
+                $this->imageFormatRepository->deleteByFormatIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));
+            }
+        }
+        $ctx->counts['new_elements'] = count($inserts);
+
+        $to_delete_elements = [];
+        foreach (array_diff(array_values($db_elements), array_keys($fs)) as $path) {
+            $found = array_search($path, $db_elements);
+            if ($found !== false) {
+                $to_delete_elements[] = $found;
+            }
+            $ctx->infos[] = ['path' => $path, 'info' => Lang::t('deleted')];
+        }
+        if (count($to_delete_elements) > 0) {
+            if (!$ctx->simulate) {
+                $this->imageAdminService->deleteElements($to_delete_elements);
+            } $ctx->counts['del_elements'] = count($to_delete_elements);
         }
 
-        // ── metadata sync ─────────────────────────────────────────────────────
+        $tpl->append('footer_elements', '<!-- scanning files : ' . StringUtil::getElapsedTime($start_files, StringUtil::getMoment()) . ' -->');
+    }
 
-        if (isset($_POST['submit']) && isset($_POST['sync_meta']) && !$general_failure) {
-            $opts = ['only_new' => !isset($_POST['meta_all']), 'category_id' => '', 'recursive' => true];
+    private function finaliseSyncCategoryRanks(SiteSyncContext $ctx): void
+    {
+        if (!isset($_POST['submit']) || $ctx->syncMode === null || $ctx->generalFailure) {
+            return;
+        }
+
+        $tpl = TemplateRegistry::current();
+        if (!$ctx->simulate) {
+            $start = StringUtil::getMoment();
+            $this->categoryAdminService->updateCategory('all');
+            $tpl->append('footer_elements', '<!-- $this->categoryAdminService->updateCategory(all) : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
+            $start = StringUtil::getMoment();
+            $this->categoryAdminService->updateGlobalRank();
+            $tpl->append('footer_elements', '<!-- ordering categories : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
+        }
+        if ($ctx->syncMode === SyncMode::Files) {
+            $start = StringUtil::getMoment();
+            $opts  = ['category_id' => '', 'recursive' => true];
             if (isset($_POST['cat'])) {
                 $opts['category_id'] = $_POST['cat'];
                 if (!isset($_POST['subcats-included']) || $_POST['subcats-included'] != 1) {
                     $opts['recursive'] = false;
                 }
             }
-            $start       = StringUtil::getMoment();
-            $catIdMeta   = is_string($opts['category_id']) ? $opts['category_id'] : '';
-            $files = $this->metadataAdminService->getFilelist($catIdMeta, $site_id, $opts['recursive'], $opts['only_new']);
+            $catIdOpt = is_string($opts['category_id']) ? $opts['category_id'] : '';
+            $files = $this->metadataAdminService->getFilelist($catIdOpt, $ctx->siteId, $opts['recursive'], false);
             $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
             $start = StringUtil::getMoment();
-            $datas = $tags_of = [];
-            foreach ($files as $id => $proj) {
-                $rowShim = [
-                    'id'                 => $proj->id->value,
-                    'path'               => $proj->path->value,
-                    'representative_ext' => $proj->representativeExt,
-                ];
-                $data = $site_reader->getElementMetadata($rowShim);
-                if (is_array($data)) {
-                    $data['date_metadata_update'] = $today;
-                    $data['id'] = $id;
-                    $datas[]    = $data;
-                    foreach (['keywords', 'tags'] as $key) {
-                        if (!isset($data[$key])) {
-                            continue;
-                        }
-                        if (!isset($tags_of[$id])) {
-                            $tags_of[$id] = [];
-                        }
-                        foreach (explode(',', is_scalar($data[$key]) ? (string) $data[$key] : '') as $tag_name) {
-                            $tags_of[$id][] = $this->tagAdminService->tagIdFromTagName($tag_name);
-                        }
-                    }
-                } else {
-                    $errors[] = ['path' => $proj->path->value, 'type' => 'PWG-ERROR-NO-FS'];
-                }
+            $datas = [];
+            foreach ($files as $id => $file) {
+                $data       = $ctx->siteReader->getElementUpdateAttributes($file->path->value);
+                $data['id'] = $id;
+                $datas[]    = $data;
             }
-            if (!$simulate) {
-                if (count($datas) > 0) {
-                    $updFields = array_unique(array_merge(
-                        array_values(array_diff(
-                            array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getMetadataAttributes()),
-                            ['keywords', 'tags']
-                        )),
-                        ['date_metadata_update']
-                    ));
-                    // 'meta_empty_overrides' toggles SKIP_EMPTY semantics:
-                    //   set → empty values overwrite as NULL
-                    //   unset → empty values are skipped (not written)
-                    $skipEmpty = !isset($_POST['meta_empty_overrides']);
-                    $updates = [];
-                    foreach ($datas as $row) {
-                        $set = [];
-                        foreach ($updFields as $field) {
-                            $val = $row[$field] ?? null;
-                            if ($skipEmpty && ($val === null || $val === '')) {
-                                continue;
-                            }
-                            $set[$field] = ($val === '' ? null : $val);
-                        }
-                        if ($set !== []) {
-                            $updates[] = [
-                                'id'     => $row['id'],
-                                'fields' => $set,
-                            ];
-                        }
+            $ctx->counts['upd_elements'] = count($datas);
+            if (!$ctx->simulate && count($datas) > 0) {
+                $updFields = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $ctx->siteReader->getUpdateAttributes());
+                $updates = [];
+                foreach ($datas as $row) {
+                    $set = [];
+                    foreach ($updFields as $field) {
+                        $set[$field] = $row[$field] ?? null;
                     }
-                    $this->imageRepository->updateBatchByIds($updates);
+                    $updates[] = [
+                        'id'     => $row['id'],
+                        'fields' => $set,
+                    ];
                 }
-                $this->tagAdminService->setTagsOf($tags_of);
+                $this->imageRepository->updateBatchByIds($updates);
             }
-            $tpl->append('footer_elements', '<!-- metadata update : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
-            $tpl->assign('metadata_result', ['NB_ELEMENTS_DONE' => count($datas), 'NB_ELEMENTS_CANDIDATES' => count($files), 'NB_ERRORS' => count($errors)]);
+            $tpl->append('footer_elements', '<!-- update files : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
         }
 
-        // ── template ─────────────────────────────────────────────────────────
+        $tpl->assign('update_result', ['NB_NEW_CATEGORIES' => $ctx->counts['new_categories'] ?? 0, 'NB_DEL_CATEGORIES' => $ctx->counts['del_categories'] ?? 0, 'NB_NEW_ELEMENTS' => $ctx->counts['new_elements'] ?? 0, 'NB_DEL_ELEMENTS' => $ctx->counts['del_elements'] ?? 0, 'NB_UPD_ELEMENTS' => $ctx->counts['upd_elements'] ?? 0, 'NB_ERRORS' => count($ctx->errors)]);
+    }
 
-        $result_title  = $simulate ? '[' . Lang::t('Simulation') . '] ' : '';
-        $used_metadata = implode(', ', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $site_reader->getMetadataAttributes()));
+    private function runMetadataSync(SiteSyncContext $ctx): void
+    {
+        if (!isset($_POST['submit']) || !isset($_POST['sync_meta']) || $ctx->generalFailure) {
+            return;
+        }
+
+        $tpl = TemplateRegistry::current();
+        $opts = ['only_new' => !isset($_POST['meta_all']), 'category_id' => '', 'recursive' => true];
+        if (isset($_POST['cat'])) {
+            $opts['category_id'] = $_POST['cat'];
+            if (!isset($_POST['subcats-included']) || $_POST['subcats-included'] != 1) {
+                $opts['recursive'] = false;
+            }
+        }
+        $start       = StringUtil::getMoment();
+        $catIdMeta   = is_string($opts['category_id']) ? $opts['category_id'] : '';
+        $files = $this->metadataAdminService->getFilelist($catIdMeta, $ctx->siteId, $opts['recursive'], $opts['only_new']);
+        $tpl->append('footer_elements', '<!-- get_filelist : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
+        $start = StringUtil::getMoment();
+        $datas = $tags_of = [];
+        foreach ($files as $id => $proj) {
+            $rowShim = [
+                'id'                 => $proj->id->value,
+                'path'               => $proj->path->value,
+                'representative_ext' => $proj->representativeExt,
+            ];
+            $data = $ctx->siteReader->getElementMetadata($rowShim);
+            if (is_array($data)) {
+                $data['date_metadata_update'] = $ctx->today;
+                $data['id'] = $id;
+                $datas[]    = $data;
+                foreach (['keywords', 'tags'] as $key) {
+                    if (!isset($data[$key])) {
+                        continue;
+                    }
+                    if (!isset($tags_of[$id])) {
+                        $tags_of[$id] = [];
+                    }
+                    foreach (explode(',', is_scalar($data[$key]) ? (string) $data[$key] : '') as $tag_name) {
+                        $tags_of[$id][] = $this->tagAdminService->tagIdFromTagName($tag_name);
+                    }
+                }
+            } else {
+                $ctx->errors[] = ['path' => $proj->path->value, 'type' => 'PWG-ERROR-NO-FS'];
+            }
+        }
+        if (!$ctx->simulate) {
+            if (count($datas) > 0) {
+                $updFields = array_unique(array_merge(
+                    array_values(array_diff(
+                        array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $ctx->siteReader->getMetadataAttributes()),
+                        ['keywords', 'tags']
+                    )),
+                    ['date_metadata_update']
+                ));
+                // 'meta_empty_overrides' toggles SKIP_EMPTY semantics:
+                //   set → empty values overwrite as NULL
+                //   unset → empty values are skipped (not written)
+                $skipEmpty = !isset($_POST['meta_empty_overrides']);
+                $updates = [];
+                foreach ($datas as $row) {
+                    $set = [];
+                    foreach ($updFields as $field) {
+                        $val = $row[$field] ?? null;
+                        if ($skipEmpty && ($val === null || $val === '')) {
+                            continue;
+                        }
+                        $set[$field] = ($val === '' ? null : $val);
+                    }
+                    if ($set !== []) {
+                        $updates[] = [
+                            'id'     => $row['id'],
+                            'fields' => $set,
+                        ];
+                    }
+                }
+                $this->imageRepository->updateBatchByIds($updates);
+            }
+            $this->tagAdminService->setTagsOf($tags_of);
+        }
+        $tpl->append('footer_elements', '<!-- metadata update : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
+        $tpl->assign('metadata_result', ['NB_ELEMENTS_DONE' => count($datas), 'NB_ELEMENTS_CANDIDATES' => count($files), 'NB_ERRORS' => count($ctx->errors)]);
+    }
+
+    /**
+     * @param array<string, array{0: string, 1: string}> $errorLabels
+     */
+    private function renderSyncReport(SiteSyncContext $ctx, array $errorLabels): void
+    {
+        $tpl = TemplateRegistry::current();
+        $result_title  = $ctx->simulate ? '[' . Lang::t('Simulation') . '] ' : '';
+        $used_metadata = implode(', ', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $ctx->siteReader->getMetadataAttributes()));
 
         $tpl->assign([
-            'SITE_URL'       => $site_url_str,
+            'SITE_URL'       => $ctx->siteUrl,
             'U_SITE_MANAGER' => $this->urlGenerator->admin('site_manager'),
             'L_RESULT_UPDATE' => $result_title . Lang::t('Search for new images in the directories'),
             'L_RESULT_METADATA' => $result_title . Lang::t('Metadata synchronization results'),
@@ -1459,19 +1488,19 @@ final class MaintenanceController implements AdminSubControllerInterface
         $tpl_introduction['privacy_level_options'] = $this->htmlService->getPrivacyLevelOptions();
         $tpl->assign('introduction', $tpl_introduction);
 
-        $this->categoryService->displaySelectCatWrapper('SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' WHERE site_id = ' . $site_id, $cat_selected, 'category_options', false);
+        $this->categoryService->displaySelectCatWrapper('SELECT id,name,uppercats,global_rank FROM ' . Tables::categories() . ' WHERE site_id = ' . $ctx->siteId, $cat_selected, 'category_options', false);
 
-        if (count($errors) > 0) {
-            foreach ($errors as $error) {
-                $tpl->append('sync_errors', ['ELEMENT' => $error['path'], 'LABEL' => $error['type'] . ' (' . $error_labels[$error['type']][0] . ')']);
+        if (count($ctx->errors) > 0) {
+            foreach ($ctx->errors as $error) {
+                $tpl->append('sync_errors', ['ELEMENT' => $error['path'], 'LABEL' => $error['type'] . ' (' . $errorLabels[$error['type']][0] . ')']);
             }
-            foreach ($error_labels as $error_type => $error_description) {
+            foreach ($errorLabels as $error_type => $error_description) {
                 $tpl->append('sync_error_captions', ['TYPE' => $error_type, 'LABEL' => $error_description[1]]);
             }
         }
 
-        if (count($infos) > 0 && isset($_POST['display_info']) && $_POST['display_info'] == 1) {
-            foreach ($infos as $info) {
+        if (count($ctx->infos) > 0 && isset($_POST['display_info']) && $_POST['display_info'] == 1) {
+            foreach ($ctx->infos as $info) {
                 $tpl->append('sync_infos', ['ELEMENT' => $info['path'], 'LABEL' => $info['info']]);
             }
         }

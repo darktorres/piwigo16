@@ -89,20 +89,16 @@ final readonly class GetListHandler implements WsAction
             foreach ($rows as $row) {
                 if (count($outputLines) < $pageSize) {
                     $pageOffset++;
-                    $rowSessionIdx = is_string($row['session_idx'] ?? null) ? $row['session_idx'] : '';
-                    $rowObject     = is_string($row['object'] ?? null) ? $row['object'] : '';
-                    $rowAction     = is_string($row['action'] ?? null) ? $row['action'] : '';
-                    $lineKey       = $rowSessionIdx . '~' . $rowObject . '~' . $rowAction . '~';
+                    $lineKey = ($row->sessionIdx ?? '') . '~' . $row->object . '~' . $row->action . '~';
                     if ($lineKey === $currentKey) {
                         $outputLines[count($outputLines) - 1]['counter']++;
-                        $outputLines[count($outputLines) - 1]['object_id'][] = $row['object_id'];
+                        $outputLines[count($outputLines) - 1]['object_id'][] = $row->objectId;
                     } else {
-                        $rowDetailsStr  = is_string($row['details'] ?? null) ? $row['details'] : '';
-                        $sanitized      = strtr($rowDetailsStr, ['`groups`' => 'groups', '`rank`' => 'rank']);
+                        $sanitized      = strtr($row->details ?? '', ['`groups`' => 'groups', '`rank`' => 'rank']);
                         $detailsDecoded = json_decode($sanitized, associative: true);
                         $details        = is_array($detailsDecoded) ? $detailsDecoded : [];
-                        if (isset($row['user_agent'])) {
-                            $details['agent'] = $row['user_agent'];
+                        if ($row->userAgent !== null) {
+                            $details['agent'] = $row->userAgent;
                         }
                         $detailsType = '';
                         if (isset($details['method'])) {
@@ -111,19 +107,13 @@ final readonly class GetListHandler implements WsAction
                         if (isset($details['script'])) {
                             $detailsType = 'script';
                         }
-                        [$date, $hour]  = explode(' ', is_string($row['occured_on'] ?? null) ? $row['occured_on'] : '');
-                        $rowPerformedBy = $row['performed_by'];
-                        $outputLines[]  = ['id' => $lineId, 'object' => $rowObject, 'object_id' => [$row['object_id']], 'action' => $rowAction, 'ip_address' => $row['ip_address'], 'date' => $this->dateService->formatDate($date), 'hour' => $hour, 'user_id' => $rowPerformedBy, 'detailsType' => $detailsType, 'details' => $details, 'counter' => 1];
-                        $userIdKey      = is_scalar($rowPerformedBy) ? (string) $rowPerformedBy : '';
-                        if ($userIdKey !== '') {
-                            $userIds[$userIdKey] = 1;
+                        [$date, $hour] = explode(' ', $row->occuredOn);
+                        $outputLines[] = ['id' => $lineId, 'object' => $row->object, 'object_id' => [$row->objectId], 'action' => $row->action, 'ip_address' => $row->ipAddress, 'date' => $this->dateService->formatDate($date), 'hour' => $hour, 'user_id' => $row->performedBy, 'detailsType' => $detailsType, 'details' => $details, 'counter' => 1];
+                        if ($row->performedBy !== null) {
+                            $userIds[(string) $row->performedBy] = 1;
                         }
-                        if ('user' === $rowObject) {
-                            $objId    = $row['object_id'];
-                            $objIdKey = is_scalar($objId) ? (string) $objId : '';
-                            if ($objIdKey !== '') {
-                                $userIds[$objIdKey] = 1;
-                            }
+                        if ('user' === $row->object && $row->objectId !== null) {
+                            $userIds[$row->objectId] = 1;
                         }
                         $currentKey = $lineKey;
                         $lineId++;

@@ -222,7 +222,7 @@ final class ActivityRepository extends AbstractRepository
      * performed_by IS NULL are returned (system events without a user actor).
      *
      * @param  list<int> $adminIds  required when $connectionsMode = 'admins_only'
-     * @return list<array<string, mixed>>
+     * @return list<ActivityRow>
      */
     public function findActivityPage(
         ?int $performedBy,
@@ -281,7 +281,7 @@ final class ActivityRepository extends AbstractRepository
                    ->setParameter('adminIds', $adminIds, \Doctrine\DBAL\ArrayParameterType::INTEGER);
             }
         }
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(ActivityRow::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**
@@ -291,11 +291,11 @@ final class ActivityRepository extends AbstractRepository
      * `performed_by IS NULL` (system events without an actor) and the
      * caller renders the 'System' label.
      *
-     * @return list<array<string, mixed>>
+     * @return list<ActivityRow>
      */
     public function findSystemActivityRows(string $usersTable, string $idField, string $usernameField): array
     {
-        return $this->conn->executeQuery(
+        $rows = $this->conn->executeQuery(
             'SELECT activity_id, object, object_id, action, performed_by, occured_on, details,'
             . " {$usernameField} AS username"
             . ' FROM ' . $this->table('activity')
@@ -303,6 +303,7 @@ final class ActivityRepository extends AbstractRepository
             . " WHERE object = 'system'"
             . ' ORDER BY activity_id DESC',
         )->fetchAllAssociative();
+        return array_map(ActivityRow::fromRow(...), $rows);
     }
 
     /**

@@ -648,20 +648,20 @@ final class MaintenanceController implements AdminSubControllerInterface
                 $idField       = Config::userFields()['id'];
                 $activityRows  = $this->activityRepository->findSystemActivityRows(Tables::users(), $idField, $usernameField);
 
-                foreach ($activityRows as $rows) {
+                foreach ($activityRows as $row) {
                     $major_infos = false;
                     $object = $object_icon = $action_icon = $action_color = '';
-                    $action = $rows['action'];
+                    $action = $row->action;
                     $date = $hour = '';
-                    $detailsRaw = json_decode(is_string($rows['details'] ?? null) ? $rows['details'] : '', associative: true);
+                    $detailsRaw = json_decode($row->details ?? '', associative: true);
                     $details    = is_array($detailsRaw) ? $detailsRaw : [];
                     $detail     = ['type' => 'empty'];
 
-                    switch ($rows['object_id']) {
+                    switch ((int) $row->objectId) {
                         case ActivitySystem::Core:
                             $object_icon = 'icon-piwigo';
                             $object = Lang::t('Core');
-                            switch ($rows['action']) {
+                            switch ($row->action) {
                                 case 'install':   $action_icon = 'icon-download';
                                     $action_color = 'icon-green';
                                     $action = Lang::t('Install');
@@ -733,7 +733,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                             if (isset($details['plugin_id'])) {
                                 $object = str_replace(['_', '-'], ' ', is_string($details['plugin_id']) ? $details['plugin_id'] : '');
                             }
-                            switch ($rows['action']) {
+                            switch ($row->action) {
                                 case 'install':    $action_icon = 'icon-download';
                                     $action_color = 'icon-green';
                                     $action = Lang::t('Install');
@@ -787,7 +787,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                             if (isset($details['theme_id'])) {
                                 $object = str_replace(['_', '-'], ' ', is_string($details['theme_id']) ? $details['theme_id'] : '');
                             }
-                            switch ($rows['action']) {
+                            switch ($row->action) {
                                 case 'install':    $action_icon = 'icon-download';
                                     $action_color = 'icon-green';
                                     $action = Lang::t('Install');
@@ -829,12 +829,11 @@ final class MaintenanceController implements AdminSubControllerInterface
                         $detail = ['type' => 'error', 'icon' => 'icon-block', 'text' => is_string($details['result']) ? $details['result'] : ''];
                     }
 
-                    [$date, $hour] = explode(' ', is_string($rows['occured_on'] ?? null) ? $rows['occured_on'] : '');
+                    [$date, $hour] = explode(' ', $row->occuredOn);
                     // performed_by IS NULL = system event (cron, install,
                     // core update). Render the 'System' label client-side
                     // when username is null.
-                    $usernameRaw = $rows['username'] ?? null;
-                    $data[] = ['major_infos' => $major_infos, 'id' => $rows['activity_id'], 'object_icon' => $object_icon, 'object' => ucwords($object), 'action_icon' => $action_icon, 'action_color' => $action_color, 'action' => $action, 'user_id' => $rows['performed_by'], 'username' => is_string($usernameRaw) ? $usernameRaw : 'System', 'date' => $this->dateService->formatDate($date), 'hour' => $hour, 'detail' => $detail];
+                    $data[] = ['major_infos' => $major_infos, 'id' => $row->activityId, 'object_icon' => $object_icon, 'object' => ucwords($object), 'action_icon' => $action_icon, 'action_color' => $action_color, 'action' => $action, 'user_id' => $row->performedBy, 'username' => $row->username ?? 'System', 'date' => $this->dateService->formatDate($date), 'hour' => $hour, 'detail' => $detail];
                 }
 
                 $response = ['data' => $data];

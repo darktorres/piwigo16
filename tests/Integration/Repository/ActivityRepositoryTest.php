@@ -84,8 +84,8 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findSystemActivityRows('piwigo_users', 'id', 'username');
 
         self::assertCount(1, $rows);
-        self::assertNull($rows[0]['performed_by']);
-        self::assertNull($rows[0]['username'], 'LEFT JOIN returns NULL when performed_by IS NULL');
+        self::assertNull($rows[0]->performedBy);
+        self::assertNull($rows[0]->username, 'LEFT JOIN returns NULL when performed_by IS NULL');
     }
 
     public function test_findActivityPage_systemOnly_filters_to_null_performed_by(): void
@@ -110,7 +110,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         );
 
         self::assertCount(1, $systemRows);
-        self::assertNull($systemRows[0]['performed_by']);
+        self::assertNull($systemRows[0]->performedBy);
     }
 
     public function test_findActivityCountByPerformer_buckets_null_under_system_key(): void

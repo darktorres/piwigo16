@@ -14,6 +14,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.groups.addUser` — associate one or more users with a group. */
 final readonly class AddUserHandler implements WsAction
@@ -30,22 +31,25 @@ final readonly class AddUserHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = AddUserParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $groupId = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
-        if (!$this->groupRepository->existsById($groupId)) {
+        if (!$this->groupRepository->existsById($input->groupId)) {
             return new PwgError(WsError::InvalidParam->value, 'This group does not exist.');
         }
-        $userIds = is_array($params['user_id']) ? $params['user_id'] : [];
         $inserts = [];
-        foreach ($userIds as $userId) {
-            $inserts[] = ['group_id' => $groupId, 'user_id' => is_numeric($userId) ? (int) $userId : 0];
+        foreach ($input->userIds as $userId) {
+            $inserts[] = ['group_id' => $input->groupId, 'user_id' => $userId];
         }
         $this->groupRepository->insertUserGroupIgnoreDuplicates($inserts);
         $this->userAdminService->invalidateUserCache();
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $groupId, 'edit'));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIds), 'edit'));
-        return $server->invoke('pwg.groups.getList', ['group_id' => $groupId]);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $input->groupId, 'edit'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $input->userIds, 'edit'));
+        return $server->invoke('pwg.groups.getList', ['group_id' => $input->groupId]);
     }
 }

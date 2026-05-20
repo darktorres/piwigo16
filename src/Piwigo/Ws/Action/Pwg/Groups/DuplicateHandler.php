@@ -15,6 +15,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.groups.duplicate` — clone a group (incl. memberships) under a new name. */
 final readonly class DuplicateHandler implements WsAction
@@ -31,21 +32,24 @@ final readonly class DuplicateHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = DuplicateParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $groupId  = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
-        $copyName = is_string($params['copy_name'] ?? null) ? $params['copy_name'] : '';
-        if ($this->groupRepository->countByName($copyName) !== 0) {
+        if ($this->groupRepository->countByName($input->copyName) !== 0) {
             return new PwgError(WsError::InvalidParam->value, 'This name is already used by another group.');
         }
-        if (!$this->groupRepository->existsById($groupId)) {
+        if (!$this->groupRepository->existsById($input->groupId)) {
             return new PwgError(WsError::InvalidParam->value, 'This group does not exist.');
         }
-        $isDefault  = $this->groupRepository->findIsDefault($groupId);
-        $insertedId = $this->groupRepository->insertNew($copyName, BoolUtil::toInt($isDefault));
+        $isDefault  = $this->groupRepository->findIsDefault($input->groupId);
+        $insertedId = $this->groupRepository->insertNew($input->copyName, BoolUtil::toInt($isDefault));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $insertedId, 'add'));
-        $users   = $this->groupRepository->findUserIdsByGroupId($groupId);
+        $users   = $this->groupRepository->findUserIdsByGroupId($input->groupId);
         $inserts = [];
         foreach ($users as $user) {
             $inserts[] = ['group_id' => $insertedId, 'user_id' => $user];
@@ -53,7 +57,7 @@ final readonly class DuplicateHandler implements WsAction
         $this->groupRepository->insertUserGroupIgnoreDuplicates($inserts);
         $this->userAdminService->invalidateUserCache();
         foreach ($users as $userId) {
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'edit', ['associated' => $groupId]));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'edit', ['associated' => $input->groupId]));
         }
         return $server->invoke('pwg.groups.getList', ['group_id' => $insertedId]);
     }

@@ -14,6 +14,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.groups.setInfo` — update a group's name / is_default flag. */
 final readonly class SetInfoHandler implements WsAction
@@ -29,28 +30,31 @@ final readonly class SetInfoHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = SetInfoParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $name = is_string($params['name']) ? $params['name'] : '';
-        if (isset($params['name']) && strlen(str_replace(' ', '', $name)) === 0) {
+        if ($input->name !== null && strlen(str_replace(' ', '', $input->name)) === 0) {
             return new PwgError(WsError::InvalidParam->value, 'Name field must not be empty');
         }
         $updates = [];
-        $groupId = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
+        $groupId = $input->groupId;
         if (!$this->groupRepository->existsById($groupId)) {
             return new PwgError(WsError::InvalidParam->value, 'This group does not exist.');
         }
-        if (!empty($params['name'])) {
-            $sanitized = strip_tags(stripslashes(is_string($params['name']) ? $params['name'] : ''));
+        if ($input->name !== null && $input->name !== '') {
+            $sanitized = strip_tags(stripslashes($input->name));
             if ($this->groupRepository->countByNameExcludingId($sanitized, $groupId) !== 0) {
                 return new PwgError(WsError::InvalidParam->value, 'This name is already used by another group.');
             }
             $updates['name'] = $sanitized;
         }
-        if (!empty($params['is_default']) || ($params['is_default'] ?? null) === false) {
-            $isDefaultUpd          = $params['is_default'];
-            $updates['is_default'] = BoolUtil::toInt(is_bool($isDefaultUpd) ? $isDefaultUpd : (is_string($isDefaultUpd) ? $isDefaultUpd : ''));
+        if ($input->isDefaultSet) {
+            $updates['is_default'] = BoolUtil::toInt($input->isDefault ?? '');
         }
         $this->groupRepository->updateById($groupId, $updates);
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $groupId, 'edit'));

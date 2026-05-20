@@ -10,6 +10,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgNamedArray;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.groups.delete` — remove groups (users/photos untouched). */
 final readonly class DeleteHandler implements WsAction
@@ -24,11 +25,15 @@ final readonly class DeleteHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|PwgNamedArray
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = DeleteParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $groupIdInt   = is_numeric($params['group_id']) ? (int) $params['group_id'] : (is_array($params['group_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['group_id']) : 0);
-        $deleteResult = $this->userAdminService->deleteGroups($groupIdInt);
+        $deleteResult = $this->userAdminService->deleteGroups($input->groupIds);
         $groupnames   = array_values($deleteResult);
         $this->userAdminService->invalidateUserCache();
         return new PwgNamedArray($groupnames, 'group_deleted');

@@ -27,16 +27,14 @@ final readonly class AddHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        $name = strip_tags(stripslashes(is_string($params['name'] ?? null) ? $params['name'] : ''));
-        if ($this->groupRepository->countByName($name) !== 0) {
+        $input = AddParams::fromArray($params);
+        if ($this->groupRepository->countByName($input->name) !== 0) {
             return new PwgError(WsError::InvalidParam->value, 'This name is already used by another group.');
         }
-        if (strlen(str_replace(' ', '', $name)) === 0) {
+        if (strlen(str_replace(' ', '', $input->name)) === 0) {
             return new PwgError(WsError::InvalidParam->value, 'Name field must not be empty');
         }
-        $isDefaultRaw = $params['is_default'];
-        $isDefaultVal = is_bool($isDefaultRaw) ? $isDefaultRaw : (is_string($isDefaultRaw) ? $isDefaultRaw : '');
-        $insertedId   = $this->groupRepository->insertNew($name, BoolUtil::toInt($isDefaultVal));
+        $insertedId = $this->groupRepository->insertNew($input->name, BoolUtil::toInt($input->isDefault));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $insertedId, 'add'));
         return $server->invoke('pwg.groups.getList', ['group_id' => $insertedId]);
     }

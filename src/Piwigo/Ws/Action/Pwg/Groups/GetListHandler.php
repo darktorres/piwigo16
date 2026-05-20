@@ -28,25 +28,24 @@ final readonly class GetListHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
-        $orderStr = is_string($params['order'] ?? null) ? $params['order'] : '';
-        if (!preg_match(ValidationPattern::ORDER, $orderStr)) {
+        $input = GetListParams::fromArray($params);
+        if (!preg_match(ValidationPattern::ORDER, $input->order)) {
             return new PwgError(WsError::InvalidParam->value, 'Invalid input parameter order');
         }
         $whereClauses = [];
         $listParams   = [];
         $listTypes    = [];
-        if (!empty($params['name'])) {
+        if ($input->name !== null) {
             $whereClauses[] = 'LOWER(name) LIKE ?';
-            $listParams[]   = is_string($params['name']) ? $params['name'] : '';
+            $listParams[]   = $input->name;
             $listTypes[]    = \Doctrine\DBAL\ParameterType::STRING;
         }
-        if (!empty($params['group_id'])) {
-            $groupIdArr     = is_array($params['group_id']) ? $params['group_id'] : [];
-            $whereClauses[] = 'id IN(' . implode(',', array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $groupIdArr)) . ')';
+        if (count($input->groupIds) > 0) {
+            $whereClauses[] = 'id IN(' . implode(',', $input->groupIds) . ')';
         }
-        $perPage = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
-        $page    = is_numeric($params['page']) ? (int) $params['page'] : 0;
-        $groups  = $this->groupRepository->findListPage($whereClauses, $orderStr, $perPage, $perPage * $page, $listParams, $listTypes);
-        return ['paging' => new PwgNamedStruct(['page' => $params['page'], 'per_page' => $params['per_page'], 'count' => count($groups)]), 'groups' => new PwgNamedArray($groups, 'group')];
+        $perPage = $input->perPage;
+        $page    = $input->page;
+        $groups  = $this->groupRepository->findListPage($whereClauses, $input->order, $perPage, $perPage * $page, $listParams, $listTypes);
+        return ['paging' => new PwgNamedStruct(['page' => $input->page, 'per_page' => $input->perPage, 'count' => count($groups)]), 'groups' => new PwgNamedArray($groups, 'group')];
     }
 }

@@ -14,6 +14,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.groups.deleteUser` — remove one or more users from a group. */
 final readonly class DeleteUserHandler implements WsAction
@@ -30,18 +31,21 @@ final readonly class DeleteUserHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = DeleteUserParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $groupId = is_numeric($params['group_id']) ? (int) $params['group_id'] : 0;
-        $userIds = is_array($params['user_id']) ? $params['user_id'] : [];
-        if (!$this->groupRepository->existsById($groupId)) {
+        if (!$this->groupRepository->existsById($input->groupId)) {
             return new PwgError(WsError::InvalidParam->value, 'This group does not exist.');
         }
-        $this->groupRepository->deleteUserGroupMembers($groupId, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIds));
+        $this->groupRepository->deleteUserGroupMembers($input->groupId, $input->userIds);
         $this->userAdminService->invalidateUserCache();
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $groupId, 'edit'));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $userIds), 'edit'));
-        return $server->invoke('pwg.groups.getList', ['group_id' => $groupId]);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $input->groupId, 'edit'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $input->userIds, 'edit'));
+        return $server->invoke('pwg.groups.getList', ['group_id' => $input->groupId]);
     }
 }

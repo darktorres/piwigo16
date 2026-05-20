@@ -14,6 +14,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.groups.merge` — merge several groups into a destination group. */
 final readonly class MergeHandler implements WsAction
@@ -33,11 +34,16 @@ final readonly class MergeHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = MergeParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $destGroupId   = is_numeric($params['destination_group_id']) ? (int) $params['destination_group_id'] : 0;
-        $mergeGroupIds = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['merge_group_id']) ? $params['merge_group_id'] : []);
+        $destGroupId   = $input->destinationGroupId;
+        $mergeGroupIds = $input->mergeGroupIds;
         $allGroups     = array_unique(array_merge($mergeGroupIds, [$destGroupId]));
         $mergeGroup    = array_diff($mergeGroupIds, [$destGroupId]);
         $mergeGroupObj = $server->invoke('pwg.groups.getList', ['group_id' => $mergeGroupIds]);

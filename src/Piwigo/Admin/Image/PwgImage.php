@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Image;
 use Piwigo\Config\Config;
 use Piwigo\Core\StringUtil;
 use Piwigo\Event\Lifecycle\LoadImageLibrary;
+use Piwigo\Image\ExifOrientation;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -291,13 +292,9 @@ final class PwgImage
         $exif = StringUtil::pwgSafeExifReadData($source_filepath);
 
         if (isset($exif['Orientation']) and is_scalar($exif['Orientation']) and preg_match('/^\s*(\d)/', (string) $exif['Orientation'], $matches)) {
-            $orientation = $matches[1];
-            if (in_array($orientation, [3, 4])) {
-                $rotation = 180;
-            } elseif (in_array($orientation, [5, 6])) {
-                $rotation = 270;
-            } elseif (in_array($orientation, [7, 8])) {
-                $rotation = 90;
+            $orientation = ExifOrientation::tryFrom((int) $matches[1]);
+            if ($orientation !== null) {
+                $rotation = $orientation->rotation();
             }
         }
 

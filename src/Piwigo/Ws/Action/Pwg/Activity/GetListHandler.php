@@ -34,41 +34,38 @@ final readonly class GetListHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
-        foreach (['date_min', 'date_max'] as $datefield) {
-            if (!empty($params[$datefield]) && !StringUtil::isValidMysqlDatetime(is_scalar($params[$datefield]) ? (string) $params[$datefield] : '')) {
-                return new PwgError(WsError::InvalidParam->value, 'Invalid ' . $datefield);
-            }
+        $input = GetListParams::fromArray($params);
+        if ($input->dateMin !== null && !StringUtil::isValidMysqlDatetime($input->dateMin)) {
+            return new PwgError(WsError::InvalidParam->value, 'Invalid date_min');
+        }
+        if ($input->dateMax !== null && !StringUtil::isValidMysqlDatetime($input->dateMax)) {
+            return new PwgError(WsError::InvalidParam->value, 'Invalid date_max');
         }
         $outputLines   = [];
         $currentKey    = '';
         $pageSize      = 100;
-        $pageOffset    = is_numeric($params['offset']) ? (int) $params['offset'] : 0;
+        $pageOffset    = $input->offset;
         $nbRowsToFetch = 10000;
         $userIds       = [];
         $lineId        = 0;
         $min           = '';
         $max           = '';
-        if (!empty($params['date_min'])) {
-            $dateMinStr = is_string($params['date_min']) ? $params['date_min'] : '';
-            $dateMaxStr = isset($params['date_max']) && is_string($params['date_max']) ? $params['date_max'] : '';
-            $dmin       = date_create($dateMinStr);
-            $dmax       = $dateMaxStr !== '' ? date_create($dateMaxStr) : false;
-            $min        = $dmin !== false ? date_format($dmin, 'Y-m-d H:i:s') : '';
-            $max        = $dmax !== false ? date_format($dmax, 'Y-m-d 23:59:59') : '';
+        if ($input->dateMin !== null) {
+            $dmin = date_create($input->dateMin);
+            $dmax = $input->dateMax !== null ? date_create($input->dateMax) : false;
+            $min  = $dmin !== false ? date_format($dmin, 'Y-m-d H:i:s') : '';
+            $max  = $dmax !== false ? date_format($dmax, 'Y-m-d 23:59:59') : '';
         }
-        if (!empty($params['date_max'])) {
-            $dateMaxStr2 = is_string($params['date_max']) ? $params['date_max'] : '';
-            $dmax2       = date_create($dateMaxStr2);
-            $max         = $dmax2 !== false ? date_format($dmax2, 'Y-m-d 23:59:59') : '';
+        if ($input->dateMax !== null) {
+            $dmax2 = date_create($input->dateMax);
+            $max   = $dmax2 !== false ? date_format($dmax2, 'Y-m-d 23:59:59') : '';
         }
-        $performedBy = isset($params['uid']) && is_numeric($params['uid']) ? (int) $params['uid'] : null;
-        $actionVal   = isset($params['action']) && is_string($params['action']) ? $params['action'] : null;
-        $objectVal   = isset($params['object']) && is_string($params['object']) ? $params['object'] : null;
-        $dateMinVal  = $params['date_min'] ?? null;
-        $dateMinSet  = $dateMinVal !== null && $dateMinVal !== '' && $dateMinVal !== false && $dateMinVal !== 0;
-        $dateMaxVal  = $params['date_max'] ?? null;
-        $dateMaxSet  = $dateMaxVal !== null && $dateMaxVal !== '' && $dateMaxVal !== false && $dateMaxVal !== 0;
-        $objectId    = !empty($params['id']) && is_numeric($params['id']) ? (int) $params['id'] : null;
+        $performedBy = $input->uid;
+        $actionVal   = $input->action;
+        $objectVal   = $input->object;
+        $dateMinSet  = $input->dateMin !== null;
+        $dateMaxSet  = $input->dateMax !== null;
+        $objectId    = $input->id;
         $connections = Config::activityDisplayConnections();
         $adminIds    = $connections === 'admins_only' ? array_values($this->userAdminService->getAdmins()) : [];
 

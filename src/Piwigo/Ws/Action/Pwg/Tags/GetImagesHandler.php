@@ -39,11 +39,9 @@ final readonly class GetImagesHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): array
     {
-        $tagIdArr      = is_array($params['tag_id']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $params['tag_id']) : [];
-        $tagUrlNameArr = is_array($params['tag_url_name']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $params['tag_url_name']) : [];
-        $tagNameArr    = is_array($params['tag_name']) ? array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $params['tag_name']) : [];
+        $input = GetImagesParams::fromArray($params);
         /** @var array<int, array<string, mixed>> $tagsResult */
-        $tagsResult = $this->tagService->findTags($tagIdArr, $tagUrlNameArr, $tagNameArr);
+        $tagsResult = $this->tagService->findTags($input->tagIds, $input->tagUrlNames, $input->tagNames);
         $tagsById   = [];
         foreach ($tagsResult as $tag) {
             $tagIdVal            = is_numeric($tag['id'] ?? null) ? (int) $tag['id'] : 0;
@@ -57,13 +55,13 @@ final readonly class GetImagesHandler implements WsAction
         if (!empty($orderBy)) {
             $orderBy = 'ORDER BY ' . $orderBy;
         }
-        $imageIds    = $this->tagService->getImageIdsForTags($tagIds, $params['tag_mode_and'] ? 'AND' : 'OR', $whereClauses, $orderBy);
+        $imageIds    = $this->tagService->getImageIdsForTags($tagIds, $input->tagModeAnd ? 'AND' : 'OR', $whereClauses, $orderBy);
         $countSet    = count($imageIds);
-        $perPage     = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
-        $page        = is_numeric($params['page']) ? (int) $params['page'] : 0;
+        $perPage     = $input->perPage;
+        $page        = $input->page;
         $imageIds    = array_slice($imageIds, $perPage * $page, $perPage);
         $imageTagMap = [];
-        if (!empty($imageIds) && !$params['tag_mode_and']) {
+        if (!empty($imageIds) && !$input->tagModeAnd) {
             foreach ($this->tagRepository->findImageTagMap($tagIds, $imageIds) as $group) {
                 $imageTagMap[$group->imageId->value] = explode(',', $group->tagIdsCsv);
             }
@@ -103,7 +101,7 @@ final readonly class GetImagesHandler implements WsAction
                     'height'             => $img->height,
                     'rotation'           => $img->rotation ?? 0,
                 ]));
-                $imageTagIds = $params['tag_mode_and'] ? $tagIds : ($imageTagMap[$imgId] ?? []);
+                $imageTagIds = $input->tagModeAnd ? $tagIds : ($imageTagMap[$imgId] ?? []);
                 $imageTags   = [];
                 foreach ($imageTagIds as $tagId) {
                     $tagIdInt = (int) $tagId;
@@ -119,6 +117,6 @@ final readonly class GetImagesHandler implements WsAction
             }
             usort($images, $this->categoryService->rankCompare(...));
         }
-        return ['paging' => new PwgNamedStruct(['page' => $params['page'], 'per_page' => $params['per_page'], 'count' => count($images), 'total_count' => $countSet]), 'images' => new PwgNamedArray($images, 'image', $this->wsHelper->getImageXmlAttributes())];
+        return ['paging' => new PwgNamedStruct(['page' => $input->page, 'per_page' => $input->perPage, 'count' => count($images), 'total_count' => $countSet]), 'images' => new PwgNamedArray($images, 'image', $this->wsHelper->getImageXmlAttributes())];
     }
 }

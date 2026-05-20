@@ -378,8 +378,8 @@ final class UserService
             return;
         }
 
-        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'ic.category_id'], 'AND');
-        $authorizeds = $this->favoriteRepo->findAuthorizedImageIds($currentUser->id, $permSql, $permParams, $permTypes);
+        $perm        = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'ic.category_id'], 'AND');
+        $authorizeds = $this->favoriteRepo->findAuthorizedImageIds($currentUser->id, $perm->where, $perm->params, $perm->types);
         $favorites   = $this->favoriteRepo->findImageIdsByUserId($currentUser->id);
 
         $toDeletes = array_values(array_diff($favorites, $authorizeds));

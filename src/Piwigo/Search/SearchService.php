@@ -12,6 +12,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\DbInfo;
+use Piwigo\Db\SqlFragment;
 use Piwigo\Event\Search\QsearchBeforeEval;
 use Piwigo\Event\Search\QsearchExpressionParsed;
 use Piwigo\Event\Search\QsearchGetImagesSqlScopes;
@@ -83,10 +84,7 @@ final class SearchService
         $this->searchDetails = $normalized;
     }
 
-    /**
-     * @param array{0: string, 1: list<mixed>, 2: list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType>} $forbidden
-     */
-    public function setForbidden(array $forbidden): void
+    public function setForbidden(SqlFragment $forbidden): void
     {
         $this->searchDetails['forbidden'] = $forbidden;
     }
@@ -176,21 +174,21 @@ final class SearchService
 
         $hasFilersFilled = false;
 
-        [$forbiddenSql, $forbiddenParams, $forbiddenTypes] = $this->permissionService->getSqlConditionFandF(
+        $forbidden = $this->permissionService->getSqlConditionFandF(
             ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
             "\n  AND"
         );
 
         // Closure binds the parameterized permission filter once and runs the
         // per-filter "SELECT DISTINCT(id) FROM images JOIN image_category
-        // WHERE <filter> $forbiddenSql" shape used by every filter below.
+        // WHERE <filter> $forbidden->where" shape used by every filter below.
         $filterImageIds =
             /** @return list<int> */
             fn (string $whereClause): array => $this->searchRepo->findDistinctImageIdsByWhereWithPermissions(
                 $whereClause,
-                $forbiddenSql,
-                $forbiddenParams,
-                $forbiddenTypes,
+                $forbidden->where,
+                $forbidden->params,
+                $forbidden->types,
             );
 
         $imageIdsForFilter = [];
@@ -496,27 +494,17 @@ final class SearchService
         return $clauses;
     }
 
-    /**
-     * @return array{0: string, 1: list<mixed>, 2: list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType>}
-     */
-    public function getClauseForFilter(string $filterName): array
+    public function getClauseForFilter(string $filterName): SqlFragment
     {
         $otherFiltersItems = $this->getItemsForFilter($filterName);
         if (false === $otherFiltersItems) {
             $forbidden = $this->searchDetails['forbidden'] ?? null;
-            if (is_array($forbidden) && isset($forbidden[0], $forbidden[1], $forbidden[2]) && is_string($forbidden[0]) && is_array($forbidden[1]) && is_array($forbidden[2])) {
-                $sql = '1=1' . $forbidden[0];
-                /**
-                 * Psalm/MoreSpecificReturnType: cannot prove list-shape after array-element narrowing.
-                 * @psalm-suppress LessSpecificReturnStatement
-                 * @var array{0: string, 1: list<mixed>, 2: list<\Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType>} $tuple
-                 */
-                $tuple = [$sql, $forbidden[1], $forbidden[2]];
-                return $tuple;
+            if ($forbidden instanceof SqlFragment) {
+                return new SqlFragment('1=1' . $forbidden->where, $forbidden->params, $forbidden->types);
             }
-            return ['1=1', [], []];
+            return new SqlFragment('1=1');
         }
-        return ['image_id IN (' . implode(',', $otherFiltersItems) . ')', [], []];
+        return new SqlFragment('image_id IN (' . implode(',', $otherFiltersItems) . ')');
     }
 
     /** @return array<int>|false */
@@ -1052,18 +1040,17 @@ final class SearchService
         if (isset($options['images_where']) && $options['images_where'] !== '') {
             $whereClauses[] = '(' . (is_string($options['images_where']) ? $options['images_where'] : '') . ')';
         }
-        $permParams = [];
-        $permTypes  = [];
+        $perm = new SqlFragment('');
         if ($permissions) {
-            [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'i.id'], null, true);
-            $whereClauses[] = $permSql;
+            $perm = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'i.id'], null, true);
+            $whereClauses[] = $perm->where;
         }
 
         $ids = $this->searchRepo->findOrderedImageIdsForQsearch(
             $whereClauses,
             $permissions,
-            $permParams,
-            $permTypes,
+            $perm->params,
+            $perm->types,
             $this->orderByService->buildOrderByClause(Config::orderBy()),
         );
 

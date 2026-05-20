@@ -180,14 +180,12 @@ final readonly class CommentsController implements ControllerInterface
             $whereClauses[] = 'validated=1';
         }
 
-        $permParams1 = [];
-        $permTypes1  = [];
-        [$permSql1, $permParams1, $permTypes1] = $this->permissionService->getSqlConditionFandF(
+        $perm1 = $this->permissionService->getSqlConditionFandF(
             ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'ic.image_id'],
             '',
             true
         );
-        $whereClauses[] = $permSql1;
+        $whereClauses[] = $perm1->where;
 
         // Comment actions
         $comment_id = 0;
@@ -260,13 +258,13 @@ final readonly class CommentsController implements ControllerInterface
         ]);
 
         $blockname = 'categories';
-        [$catPermSql, $catPermParams, $catPermTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'WHERE');
+        $catPerm = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'WHERE');
         $query = '
 SELECT id, name, uppercats, global_rank
   FROM ' . Tables::categories() . '
-' . $catPermSql . '
+' . $catPerm->where . '
 ;';
-        $this->categoryService->displaySelectCatWrapper($query, array_filter([$get_cat], fn (mixed $v): bool => $v !== null), $blockname, true, $catPermParams, $catPermTypes);
+        $this->categoryService->displaySelectCatWrapper($query, array_filter([$get_cat], fn (mixed $v): bool => $v !== null), $blockname, true, $catPerm->params, $catPerm->types);
 
         $tpl_var = [];
         foreach ($since_options as $id => $option) {
@@ -295,15 +293,15 @@ SELECT id, name, uppercats, global_rank
         $userIdField    = Config::userFields()['id'];
         $usersTable     = Tables::users();
 
-        $counter = $this->commentRepository->countFilteredComments($whereClauses, $permParams1, $permTypes1, $usersTable, $userIdField);
+        $counter = $this->commentRepository->countFilteredComments($whereClauses, $perm1->params, $perm1->types, $usersTable, $userIdField);
 
         $pageItemsNumber = $itemsNumber;
         $rowLimit  = 'all' == $pageItemsNumber ? -1 : (int) $pageItemsNumber;
         $rowOffset = $start ?? 0;
         foreach ($this->commentRepository->findFilteredComments(
             $whereClauses,
-            $permParams1,
-            $permTypes1,
+            $perm1->params,
+            $perm1->types,
             $usersTable,
             $userIdField,
             $userEmailField,

@@ -37,8 +37,8 @@ final readonly class AddCommentHandler implements WsAction
         }
         $input    = AddCommentParams::fromArray($params);
         $pImageId = $input->imageId;
-        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id', 'visible_images' => 'image_id'], ' AND');
-        if (!$this->categoryRepository->isImageInVisibleCommentableCategory($pImageId, $permSql, $permParams, $permTypes)) {
+        $perm = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id', 'visible_images' => 'image_id'], ' AND');
+        if (!$this->categoryRepository->isImageInVisibleCommentableCategory($pImageId, $perm->where, $perm->params, $perm->types)) {
             return new PwgError(WsError::InvalidParam->value, 'Invalid image_id');
         }
         $comm = ['author' => $input->author, 'content' => $input->content, 'image_id' => $pImageId];

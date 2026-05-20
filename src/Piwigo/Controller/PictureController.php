@@ -160,8 +160,8 @@ final readonly class PictureController implements ControllerInterface
                 if ($ctx->section === Section::Categories && $ctx->category === null) {
                     $this->htmlService->accessDenied();
                 } else {
-                    [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND');
-                    if (!$this->categoryRepository->isImageInVisibleCategory($imageId, $permSql, $permParams, $permTypes)) {
+                    $perm = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND');
+                    if (!$this->categoryRepository->isImageInVisibleCategory($imageId, $perm->where, $perm->params, $perm->types)) {
                         $this->htmlService->accessDenied();
                     } else {
                         if ($ctx->section === Section::BestRated) {
@@ -313,10 +313,10 @@ final readonly class PictureController implements ControllerInterface
         }
 
         // Related categories
-        [$relPermSql, $relPermParams, $relPermTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'AND');
+        $relPerm = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id'], 'AND');
         $related_categories = array_map(
             static fn (\Piwigo\Category\Projection\PictureNavCategoryRow $r): array => $r->toRow(),
-            $this->categoryRepository->findPictureNavCategoriesForImage($imageId, $relPermSql, $relPermParams, $relPermTypes),
+            $this->categoryRepository->findPictureNavCategoriesForImage($imageId, $relPerm->where, $relPerm->params, $relPerm->types),
         );
         usort($related_categories, $this->categoryService->globalRankCompare(...));
 

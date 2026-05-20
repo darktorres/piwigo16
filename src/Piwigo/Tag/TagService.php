@@ -7,6 +7,7 @@ namespace Piwigo\Tag;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
+use Piwigo\Db\SqlFragment;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Html\HtmlService;
@@ -62,7 +63,7 @@ final readonly class TagService
 
         $useCache = count($tagIds) === 0;
 
-        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(
+        $perm = $this->permissionService->getSqlConditionFandF(
             [
                 'forbidden_categories' => 'category_id',
                 'visible_categories'   => 'category_id',
@@ -80,13 +81,13 @@ final readonly class TagService
                 /** @var array<mixed> $tagCounters */
                 $tagCounters = $item->get();
             } else {
-                $tagCounters = $this->repo->findTagCountersWithPermissions([], $permSql, $permParams, $permTypes);
+                $tagCounters = $this->repo->findTagCountersWithPermissions([], $perm->where, $perm->params, $perm->types);
                 $item->set($tagCounters);
                 $item->expiresAfter(86400);
                 $this->pool->save($item);
             }
         } else {
-            $tagCounters = $this->repo->findTagCountersWithPermissions(array_values($tagIds), $permSql, $permParams, $permTypes);
+            $tagCounters = $this->repo->findTagCountersWithPermissions(array_values($tagIds), $perm->where, $perm->params, $perm->types);
         }
 
         if (empty($tagCounters)) {
@@ -197,11 +198,9 @@ SELECT id
     INNER JOIN ' . Tables::imageTag() . ' it ON id=it.image_id
     WHERE tag_id IN (' . implode(',', $intTagIds) . ')';
 
-        $permSql    = '';
-        $permParams = [];
-        $permTypes  = [];
+        $perm = new SqlFragment('');
         if ($usePermissions) {
-            [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(
+            $perm = $this->permissionService->getSqlConditionFandF(
                 [
                     'forbidden_categories' => 'category_id',
                     'visible_categories'   => 'category_id',
@@ -213,13 +212,13 @@ SELECT id
 
         return $this->repo->findImageIdsForTagsWithPermissions(
             $baseQuery,
-            $permSql,
+            $perm->where,
             $mode === 'AND' && count($intTagIds) > 1,
             count($intTagIds),
             $extraImagesWhereSql,
             ($orderBy === null || $orderBy === '') ? $this->orderByService->buildOrderByClause(Config::orderBy()) : $orderBy,
-            $permParams,
-            $permTypes,
+            $perm->params,
+            $perm->types,
         );
     }
 

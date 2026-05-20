@@ -42,9 +42,9 @@ final readonly class FavoritesGetListHandler implements WsAction
         $this->userService->checkUserFavorites();
         $orderBy = $this->wsHelper->imageSqlOrder($params, 'i.');
         $orderBy = empty($orderBy) ? $this->orderByService->buildOrderByClause(Config::orderBy()) : 'ORDER BY ' . $orderBy;
-        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
+        $perm = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
         $images = [];
-        foreach ($this->userFavoriteRepository->findImagesWithDetails($userId, $permSql, $permParams, $permTypes, $orderBy) as $img) {
+        foreach ($this->userFavoriteRepository->findImagesWithDetails($userId, $perm->where, $perm->params, $perm->types, $orderBy) as $img) {
             $image = [
                 'id'             => $img->id->value,
                 'width'          => $img->width ?? 0,

@@ -14,6 +14,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
+use Piwigo\Db\SqlFragment;
 use Piwigo\Event\Location\LocEndSectionInit;
 use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Filter\FilterContextRegistry;
@@ -193,7 +194,7 @@ final readonly class SectionInitializer
             }
         }
 
-        [$forbiddenSql, $forbiddenParams, $forbiddenTypes] = $this->permissionService->getSqlConditionFandF(
+        $forbidden = $this->permissionService->getSqlConditionFandF(
             [
                 'forbidden_categories' => 'category_id',
                 'visible_categories'   => 'category_id',
@@ -210,9 +211,9 @@ final readonly class SectionInitializer
             fn (string $whereClause, ?int $limit = null): array =>
                 $this->imageRepository->findSectionImageIdsByPredicate(
                     $whereClause,
-                    $forbiddenSql,
-                    $forbiddenParams,
-                    $forbiddenTypes,
+                    $forbidden->where,
+                    $forbidden->params,
+                    $forbidden->types,
                     $this->orderByService->buildOrderByClause(Config::orderBy()),
                     $limit,
                 );
@@ -240,7 +241,8 @@ final readonly class SectionInitializer
                 $page['title'] = '';
             }
 
-            $combinedCategories = is_array($page['combined_categories'] ?? null) ? $page['combined_categories'] : null;
+            $combinedCategoriesRaw = $page['combined_categories'] ?? null;
+            $combinedCategories    = is_array($combinedCategoriesRaw) ? $combinedCategoriesRaw : null;
 
             if ($combinedCategories !== null) {
                 $catIds = [];
@@ -265,26 +267,24 @@ final readonly class SectionInitializer
                     Config::override('order_by', ' ORDER BY ' . $catImageOrder);
                 }
 
-                $flatPermSql    = '';
-                $flatPermParams = [];
-                $flatPermTypes  = [];
+                $flatPerm = new SqlFragment('');
                 if (isset($page['flat'])) {
                     if ($category !== null) {
                         $catUppercats = is_scalar($category['uppercats'] ?? null) ? (string) $category['uppercats'] : '';
                         $catId        = is_numeric($category['id'] ?? null) ? (int) $category['id'] : 0;
-                        [$subcatPermSql, $subcatPermParams, $subcatPermTypes] = $this->permissionService->getSqlConditionFandF(
+                        $subcatPerm   = $this->permissionService->getSqlConditionFandF(
                             ['forbidden_categories' => 'id', 'visible_categories' => 'id'],
                             "\n  AND"
                         );
                         $subcatIds = $this->categoryRepository->findSubcategoryIdsByUppercatsPrefix(
                             $catUppercats,
-                            $subcatPermSql,
-                            $subcatPermParams,
-                            $subcatPermTypes,
+                            $subcatPerm->where,
+                            $subcatPerm->params,
+                            $subcatPerm->types,
                         );
                         $subcatIds[] = $catId;
                         $whereSql    = 'category_id IN (' . implode(',', array_map(static fn (int $v): string => (string) $v, $subcatIds)) . ')';
-                        [$flatPermSql, $flatPermParams, $flatPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
+                        $flatPerm    = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
                     } else {
                         $userId    = is_scalar($user['id'] ?? null) ? (string) $user['id'] : '0';
                         $cacheTime = is_scalar($user['cache_update_time'] ?? null) ? (string) $user['cache_update_time'] : '';
@@ -304,9 +304,9 @@ final readonly class SectionInitializer
                 } else {
                     $page['items'] = $this->imageRepository->findImageIdsInCategoriesByWhere(
                         $whereSql,
-                        $flatPermSql,
-                        $flatPermParams,
-                        $flatPermTypes,
+                        $flatPerm->where,
+                        $flatPerm->params,
+                        $flatPerm->types,
                         $this->orderByService->buildOrderByClause(Config::orderBy()),
                     );
                     if ($cacheItem !== null) {
@@ -372,13 +372,13 @@ final readonly class SectionInitializer
                 $this->redirectResponder->redirect($this->urlService->makeIndexUrl(['section' => 'favorites']));
             } else {
                 $userIdInt = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
-                [$favPermSql, $favPermParams, $favPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
+                $favPerm = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND');
                 $page = array_merge($page, [
                     'items' => $this->userFavoriteRepository->findImageIdsForUserAuth(
                         $userIdInt,
-                        $favPermSql,
-                        $favPermParams,
-                        $favPermTypes,
+                        $favPerm->where,
+                        $favPerm->params,
+                        $favPerm->types,
                         $this->orderByService->buildOrderByClause(Config::orderBy()),
                     ),
                 ]);

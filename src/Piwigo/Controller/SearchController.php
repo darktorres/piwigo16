@@ -137,11 +137,11 @@ final readonly class SearchController implements ControllerInterface
         }
 
         if (in_array('author', $fields)) {
-            [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(
+            $perm = $this->permissionService->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
                 ' WHERE '
             );
-            if ($this->imageRepository->existsAuthorUnderPermissions($permSql, $permParams, $permTypes)) {
+            if ($this->imageRepository->existsAuthorUnderPermissions($perm->where, $perm->params, $perm->types)) {
                 $search['fields']['author'] = ['words' => [], 'mode' => 'OR'];
             }
         }

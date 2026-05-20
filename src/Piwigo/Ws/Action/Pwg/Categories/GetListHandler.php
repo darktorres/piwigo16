@@ -146,13 +146,13 @@ final readonly class GetListHandler implements WsAction
                 $imageId = $this->categoryService->getRandomImageInCategory($row['id'], $row['uppercats'], $row['count_images'], true);
             } else {
                 if ($row['count_categories'] > 0 && $row['count_images'] > 0) {
-                    [$permSubSql, $permSubParams, $permSubTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND");
+                    $permSub = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND");
                     $imageId = $this->categoryRepository->findRandomSubcatRepresentativeForUser(
                         $currentUser->id,
                         $row['uppercats'],
-                        $permSubSql,
-                        $permSubParams,
-                        $permSubTypes,
+                        $permSub->where,
+                        $permSub->params,
+                        $permSub->types,
                     );
                 }
             }

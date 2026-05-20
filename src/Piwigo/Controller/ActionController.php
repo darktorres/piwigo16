@@ -90,8 +90,8 @@ final readonly class ActionController implements ControllerInterface
         $elementPath  = StringUtil::getElementPath(['path' => $element->path->value]);
         $downloadName = $element->file->value;
 
-        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'image_id'], '    AND');
-        if (!$is_admin_download && !$this->imageRepository->existsImageInVisibleCategory($get_id, $permSql, $permParams, $permTypes)) {
+        $perm = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'image_id'], '    AND');
+        if (!$is_admin_download && !$this->imageRepository->existsImageInVisibleCategory($get_id, $perm->where, $perm->params, $perm->types)) {
             $this->error(401, 'Access denied');
         }
 

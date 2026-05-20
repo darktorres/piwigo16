@@ -53,20 +53,20 @@ final readonly class GetImagesHandler implements WsAction
         $images      = [];
         $imageIds    = [];
         $totalImages = 0;
-        [$permSql1, $permParams1, $permTypes1] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id'], null, true);
-        $cats = $this->categoryRepository->findIdAndImageOrderForGetImages(
+        $perm1 = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id'], null, true);
+        $cats  = $this->categoryRepository->findIdAndImageOrderForGetImages(
             $catIds,
             $input->recursive,
-            'AND ' . $permSql1,
-            $permParams1,
-            $permTypes1,
+            'AND ' . $perm1->where,
+            $perm1->params,
+            $perm1->types,
         );
         if (!empty($cats)) {
             /** @var list<string> $whereClauses2 */
             $whereClauses2   = $this->wsHelper->imageSqlFilter($params, 'i.');
             $whereClauses2[] = 'category_id IN (' . implode(',', array_keys($cats)) . ')';
-            [$permSql2, $permParams2, $permTypes2] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'i.id'], null, true);
-            $whereClauses2[] = $permSql2;
+            $perm2 = $this->permissionService->getSqlConditionFandF(['visible_images' => 'i.id'], null, true);
+            $whereClauses2[] = $perm2->where;
             $orderBy         = $this->wsHelper->imageSqlOrder($params, 'i.');
             if ($orderBy === '' && count($catIds) === 1 && isset($cats[$catIds[0]]) && $cats[$catIds[0]]['image_order'] !== null) {
                 $orderBy = $cats[$catIds[0]]['image_order'];
@@ -82,8 +82,8 @@ final readonly class GetImagesHandler implements WsAction
                 $orderBy,
                 $perPage,
                 $perPage * $page,
-                $permParams2,
-                $permTypes2,
+                $perm2->params,
+                $perm2->types,
             );
             foreach ($paginated['rows'] as $img) {
                 $imgIdInt   = $img->id->value;
@@ -113,8 +113,8 @@ final readonly class GetImagesHandler implements WsAction
             if (count($imageIds) > 0) {
                 $categoryIds       = [];
                 $categoriesOfImage = [];
-                [$permSql3, $permParams3, $permTypes3] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], null, true);
-                foreach ($this->categoryRepository->findImageCategoryPairsWithPermissions($imageIds, 'AND ' . $permSql3, $permParams3, $permTypes3) as $row) {
+                $perm3 = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], null, true);
+                foreach ($this->categoryRepository->findImageCategoryPairsWithPermissions($imageIds, 'AND ' . $perm3->where, $perm3->params, $perm3->types) as $row) {
                     $categoryIds[]                  = $row['category_id'];
                     $rowImgId                       = (string) $row['image_id'];
                     $categoriesOfImage[$rowImgId][] = $row['category_id'];

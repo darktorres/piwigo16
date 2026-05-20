@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Notification;
 
-use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\ParameterType;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
+use Piwigo\Db\SqlFragment;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Lang\Translator;
@@ -29,10 +28,7 @@ final readonly class NotificationService
     ) {
     }
 
-    /**
-     * @return array{0: string, 1: list<mixed>, 2: list<ArrayParameterType|ParameterType>}
-     */
-    public function getStdSqlWhereRestrictFilter(string $prefixCondition, string $imgField = 'ic.image_id', bool $forceOneCondition = false): array
+    public function getStdSqlWhereRestrictFilter(string $prefixCondition, string $imgField = 'ic.image_id', bool $forceOneCondition = false): SqlFragment
     {
         return $this->permissionService->getSqlConditionFandF(
             [
@@ -47,15 +43,15 @@ final readonly class NotificationService
 
     public function nbNewComments(?string $start = null, ?string $end = null): int
     {
-        [$permSql, $permParams, $permTypes] = $this->getStdSqlWhereRestrictFilter('AND');
-        return $this->repo->countNewComments($start, $end, $permSql, $permParams, $permTypes);
+        $perm = $this->getStdSqlWhereRestrictFilter('AND');
+        return $this->repo->countNewComments($start, $end, $perm->where, $perm->params, $perm->types);
     }
 
     /** @return list<int> */
     public function newComments(?string $start = null, ?string $end = null): array
     {
-        [$permSql, $permParams, $permTypes] = $this->getStdSqlWhereRestrictFilter('AND');
-        return $this->repo->findNewCommentIds($start, $end, $permSql, $permParams, $permTypes);
+        $perm = $this->getStdSqlWhereRestrictFilter('AND');
+        return $this->repo->findNewCommentIds($start, $end, $perm->where, $perm->params, $perm->types);
     }
 
     public function nbUnvalidatedComments(?string $start = null, ?string $end = null): int
@@ -65,28 +61,28 @@ final readonly class NotificationService
 
     public function nbNewElements(?string $start = null, ?string $end = null): int
     {
-        [$permSql, $permParams, $permTypes] = $this->getStdSqlWhereRestrictFilter('AND', 'id');
-        return $this->repo->countNewElements($start, $end, $permSql, $permParams, $permTypes);
+        $perm = $this->getStdSqlWhereRestrictFilter('AND', 'id');
+        return $this->repo->countNewElements($start, $end, $perm->where, $perm->params, $perm->types);
     }
 
     /** @return list<int> */
     public function newElements(?string $start = null, ?string $end = null): array
     {
-        [$permSql, $permParams, $permTypes] = $this->getStdSqlWhereRestrictFilter('AND', 'id');
-        return $this->repo->findNewElementIds($start, $end, $permSql, $permParams, $permTypes);
+        $perm = $this->getStdSqlWhereRestrictFilter('AND', 'id');
+        return $this->repo->findNewElementIds($start, $end, $perm->where, $perm->params, $perm->types);
     }
 
     public function nbUpdatedCategories(?string $start = null, ?string $end = null): int
     {
-        [$permSql, $permParams, $permTypes] = $this->getStdSqlWhereRestrictFilter('AND', 'id');
-        return $this->repo->countUpdatedCategories($start, $end, $permSql, $permParams, $permTypes);
+        $perm = $this->getStdSqlWhereRestrictFilter('AND', 'id');
+        return $this->repo->countUpdatedCategories($start, $end, $perm->where, $perm->params, $perm->types);
     }
 
     /** @return list<int> */
     public function updatedCategories(?string $start = null, ?string $end = null): array
     {
-        [$permSql, $permParams, $permTypes] = $this->getStdSqlWhereRestrictFilter('AND', 'id');
-        return $this->repo->findUpdatedCategoryIds($start, $end, $permSql, $permParams, $permTypes);
+        $perm = $this->getStdSqlWhereRestrictFilter('AND', 'id');
+        return $this->repo->findUpdatedCategoryIds($start, $end, $perm->where, $perm->params, $perm->types);
     }
 
     public function nbNewUsers(?string $start = null, ?string $end = null): int
@@ -163,17 +159,17 @@ final readonly class NotificationService
             $cached = $item->get();
             return is_array($cached) ? $cached : null;
         }
-        [$whereSql, $whereParams, $whereTypes] = $this->getStdSqlWhereRestrictFilter('WHERE', 'i.id', true);
+        $where = $this->getStdSqlWhereRestrictFilter('WHERE', 'i.id', true);
 
-        $dates = $this->repo->findRecentPostDates($maxDates, $whereSql, $whereParams, $whereTypes);
+        $dates = $this->repo->findRecentPostDates($maxDates, $where->where, $where->params, $where->types);
 
         for ($i = 0; $i < count($dates); $i++) {
             $dateAvailable = is_scalar($dates[$i]['date_available']) ? (string) $dates[$i]['date_available'] : '';
             if ($maxElements > 0) {
-                $dates[$i]['elements'] = $this->repo->findRecentImagesForDate($dateAvailable, $maxElements, $whereSql, $whereParams, $whereTypes);
+                $dates[$i]['elements'] = $this->repo->findRecentImagesForDate($dateAvailable, $maxElements, $where->where, $where->params, $where->types);
             }
             if ($maxCats > 0) {
-                $dates[$i]['categories'] = $this->repo->findRecentCategoriesForDate($dateAvailable, $maxCats, $whereSql, $whereParams, $whereTypes);
+                $dates[$i]['categories'] = $this->repo->findRecentCategoriesForDate($dateAvailable, $maxCats, $where->where, $where->params, $where->types);
             }
         }
 

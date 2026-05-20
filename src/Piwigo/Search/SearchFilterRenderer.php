@@ -99,7 +99,7 @@ final readonly class SearchFilterRenderer
             // Search details carry only the SQL-fragment portion for the
             // hash-as-cache-key path; the params/types travel via setForbidden
             // for reuse by getClauseForFilter below.
-            $search_details['forbidden'] = $forbidden[0];
+            $search_details['forbidden'] = $forbidden->where;
             $this->searchService->setForbidden($forbidden);
 
             if ($search_details['has_filters_filled']) {
@@ -158,23 +158,23 @@ final readonly class SearchFilterRenderer
             }
 
             if (isset($my_search['fields']['author']) and $display_filters['author']['access']) {
-                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('author');
+                $filter = $this->searchService->getClauseForFilter('author');
 
-                if (!preg_match('/^image_id IN/', $filter_clause)) {
+                if (!preg_match('/^image_id IN/', $filter->where)) {
                     $cache_key = md5('filter_author_rows' . $userId . $userCacheTime . AppInfo::VERSION);
                     $item      = $this->pool->getItem($cache_key);
                     if ($item->isHit()) {
                         $filter_rows_raw = $item->get();
                         $filter_rows     = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
                     } else {
-                        $db_rows = $this->searchRepository->findAuthorsForFilter($filter_clause, $filterParams, $filterTypes);
+                        $db_rows = $this->searchRepository->findAuthorsForFilter($filter->where, $filter->params, $filter->types);
                         $item->set($db_rows);
                         $item->expiresAfter(86400);
                         $this->pool->save($item);
                         $filter_rows = $this->normalizeRows($db_rows);
                     }
                 } else {
-                    $filter_rows = $this->searchRepository->findAuthorsForFilter($filter_clause, $filterParams, $filterTypes);
+                    $filter_rows = $this->searchRepository->findAuthorsForFilter($filter->where, $filter->params, $filter->types);
                 }
 
                 $author_names = [];
@@ -193,17 +193,17 @@ final readonly class SearchFilterRenderer
             }
 
             if (isset($my_search['fields']['date_posted']) and $display_filters['post_date']['access']) {
-                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('date_posted');
+                $filter = $this->searchService->getClauseForFilter('date_posted');
                 $cache_key     = md5('filter_date_posted' . $userId . $userCacheTime . AppInfo::VERSION);
                 $item_dp       = $this->pool->getItem($cache_key);
-                $cache_hit_date_posted = !preg_match('/^image_id IN/', $filter_clause) && $item_dp->isHit();
+                $cache_hit_date_posted = !preg_match('/^image_id IN/', $filter->where) && $item_dp->isHit();
                 if ($cache_hit_date_posted) {
                     $date_posted_raw = $item_dp->get();
                 } else {
                     $date_posted_raw = ['pre_counters' => [], 'list_of_dates' => []];
                 }
                 $date_posted  = $this->normalizeDateData(is_array($date_posted_raw) ? $date_posted_raw : null);
-                $set_cache_dp = !preg_match('/^image_id IN/', $filter_clause) && !$cache_hit_date_posted;
+                $set_cache_dp = !preg_match('/^image_id IN/', $filter->where) && !$cache_hit_date_posted;
 
                 if (!$cache_hit_date_posted) {
                     $thresholds = $this->searchRepository->findDatePostedThresholds();
@@ -211,7 +211,7 @@ final readonly class SearchFilterRenderer
                     $list_of_dates = [];
                     $pre_counters = [];
 
-                    foreach ($this->searchRepository->findImageDatePostedRows($filter_clause, $filterParams, $filterTypes) as $row) {
+                    foreach ($this->searchRepository->findImageDatePostedRows($filter->where, $filter->params, $filter->types) as $row) {
                         foreach ($thresholds as $threshold => $date_limit) {
                             if ($row['date'] > $date_limit) {
                                 $pre_counters[$threshold] = ($pre_counters[$threshold] ?? 0) + 1;
@@ -286,17 +286,17 @@ final readonly class SearchFilterRenderer
             }
 
             if (isset($my_search['fields']['date_created']) and $display_filters['creation_date']['access']) {
-                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('date_created');
+                $filter = $this->searchService->getClauseForFilter('date_created');
                 $cache_key     = md5('filter_date_created' . $userId . $userCacheTime . AppInfo::VERSION);
                 $item_dc       = $this->pool->getItem($cache_key);
-                $cache_hit_date_created = !preg_match('/^image_id IN/', $filter_clause) && $item_dc->isHit();
+                $cache_hit_date_created = !preg_match('/^image_id IN/', $filter->where) && $item_dc->isHit();
                 if ($cache_hit_date_created) {
                     $date_created_raw = $item_dc->get();
                 } else {
                     $date_created_raw = ['pre_counters' => [], 'list_of_dates' => []];
                 }
                 $date_created  = $this->normalizeDateData(is_array($date_created_raw) ? $date_created_raw : null);
-                $set_cache_dc  = !preg_match('/^image_id IN/', $filter_clause) && !$cache_hit_date_created;
+                $set_cache_dc  = !preg_match('/^image_id IN/', $filter->where) && !$cache_hit_date_created;
 
                 if (!$cache_hit_date_created) {
                     $thresholds = $this->searchRepository->findDateCreatedThresholds();
@@ -304,7 +304,7 @@ final readonly class SearchFilterRenderer
                     $list_of_dates = [];
                     $pre_counters = [];
 
-                    foreach ($this->searchRepository->findImageDateCreatedRows($filter_clause, $filterParams, $filterTypes) as $row) {
+                    foreach ($this->searchRepository->findImageDateCreatedRows($filter->where, $filter->params, $filter->types) as $row) {
                         if (!empty($row['date'])) {
                             foreach ($thresholds as $threshold => $date_limit) {
                                 if ($row['date'] > $date_limit) {
@@ -381,23 +381,23 @@ final readonly class SearchFilterRenderer
             }
 
             if (isset($my_search['fields']['added_by']) and $display_filters['added_by']['access']) {
-                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('added_by');
+                $filter = $this->searchService->getClauseForFilter('added_by');
 
-                if (!preg_match('/^image_id IN/', $filter_clause)) {
+                if (!preg_match('/^image_id IN/', $filter->where)) {
                     $cache_key = md5('filter_added_by_rows' . $userId . $userCacheTime . AppInfo::VERSION);
                     $item_ab   = $this->pool->getItem($cache_key);
                     if ($item_ab->isHit()) {
                         $filter_rows_raw = $item_ab->get();
                         $filter_rows     = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
                     } else {
-                        $db_rows = $this->searchRepository->findAddedByForFilter($filter_clause, $filterParams, $filterTypes);
+                        $db_rows = $this->searchRepository->findAddedByForFilter($filter->where, $filter->params, $filter->types);
                         $item_ab->set($db_rows);
                         $item_ab->expiresAfter(86400);
                         $this->pool->save($item_ab);
                         $filter_rows = $this->normalizeRows($db_rows);
                     }
                 } else {
-                    $filter_rows = $this->searchRepository->findAddedByForFilter($filter_clause, $filterParams, $filterTypes);
+                    $filter_rows = $this->searchRepository->findAddedByForFilter($filter->where, $filter->params, $filter->types);
                 }
 
                 $added_by = $filter_rows;
@@ -460,7 +460,7 @@ final readonly class SearchFilterRenderer
             }
 
             if (isset($my_search['fields']['filetypes']) and $display_filters['file_type']['access']) {
-                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('filetypes');
+                $filter = $this->searchService->getClauseForFilter('filetypes');
 
                 $cache_key    = md5('file_exts' . $userId . $userCacheTime . AppInfo::VERSION);
                 $item_fe      = $this->pool->getItem($cache_key);
@@ -468,14 +468,14 @@ final readonly class SearchFilterRenderer
                     $all_exts_raw = $item_fe->get();
                     $all_exts     = is_array($all_exts_raw) ? $all_exts_raw : [];
                 } else {
-                    $all_exts = $this->searchRepository->findAllFileExtensions($forbidden[0], $forbidden[1], $forbidden[2]);
+                    $all_exts = $this->searchRepository->findAllFileExtensions($forbidden->where, $forbidden->params, $forbidden->types);
                     $item_fe->set($all_exts);
                     $item_fe->expiresAfter(86400);
                     $this->pool->save($item_fe);
                 }
 
-                if (preg_match('/^image_id IN/', $filter_clause)) {
-                    $filtered_exts = $this->searchRepository->findFilteredFileExtensions($filter_clause, $filterParams, $filterTypes);
+                if (preg_match('/^image_id IN/', $filter->where)) {
+                    $filtered_exts = $this->searchRepository->findFilteredFileExtensions($filter->where, $filter->params, $filter->types);
 
                     $exts = [];
                     foreach ($all_exts as $ext => $counter) {
@@ -493,20 +493,20 @@ final readonly class SearchFilterRenderer
                 $template->assign('SHOW_FILTER_RATINGS', true);
 
                 if (isset($my_search['fields']['ratings']) and $display_filters['rating']['access']) {
-                    [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('ratings');
+                    $filter = $this->searchService->getClauseForFilter('ratings');
                     $cache_key         = md5('filter_ratings' . $userId . $userCacheTime . AppInfo::VERSION);
                     $item_rat          = $this->pool->getItem($cache_key);
-                    $cache_hit_ratings = !preg_match('/^image_id IN/', $filter_clause) && $item_rat->isHit();
+                    $cache_hit_ratings = !preg_match('/^image_id IN/', $filter->where) && $item_rat->isHit();
                     if ($cache_hit_ratings) {
                         $ratings_raw = $item_rat->get();
                     } else {
                         $ratings_raw = null;
                     }
                     $ratings      = is_array($ratings_raw) ? $ratings_raw : null;
-                    $set_cache_rat = !preg_match('/^image_id IN/', $filter_clause) && !$cache_hit_ratings;
+                    $set_cache_rat = !preg_match('/^image_id IN/', $filter->where) && !$cache_hit_ratings;
 
                     if (!$cache_hit_ratings) {
-                        $filter_rows = $this->searchRepository->findRatingsForFilter($filter_clause, $filterParams, $filterTypes);
+                        $filter_rows = $this->searchRepository->findRatingsForFilter($filter->where, $filter->params, $filter->types);
                         $ratings = array_fill(0, 6, 0);
 
                         foreach ($filter_rows as $row) {
@@ -542,11 +542,11 @@ final readonly class SearchFilterRenderer
             }
 
             if (isset($my_search['fields']['filesize_min']) && isset($my_search['fields']['filesize_max']) and $display_filters['file_size']['access']) {
-                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('filesize');
+                $filter = $this->searchService->getClauseForFilter('filesize');
                 $filesizes = [];
                 $filesize = [];
 
-                foreach ($this->searchRepository->findFilesizesForFilter($filter_clause, $filterParams, $filterTypes) as $row) {
+                foreach ($this->searchRepository->findFilesizesForFilter($filter->where, $filter->params, $filter->types) as $row) {
                     $fs_val = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
                     $key_fs = sprintf('%.1f', $fs_val / 1024.0);
                     $filesizes[$key_fs] = ($filesizes[$key_fs] ?? 0) + 1;
@@ -576,20 +576,20 @@ final readonly class SearchFilterRenderer
             }
 
             if (isset($my_search['fields']['ratios']) and $display_filters['ratio']['access']) {
-                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('ratios');
+                $filter = $this->searchService->getClauseForFilter('ratios');
                 $cache_key         = md5('filter_ratios' . $userId . $userCacheTime . AppInfo::VERSION);
                 $item_ratio        = $this->pool->getItem($cache_key);
-                $cache_hit_ratios  = !preg_match('/^image_id IN/', $filter_clause) && $item_ratio->isHit();
+                $cache_hit_ratios  = !preg_match('/^image_id IN/', $filter->where) && $item_ratio->isHit();
                 if ($cache_hit_ratios) {
                     $ratios_raw = $item_ratio->get();
                 } else {
                     $ratios_raw = null;
                 }
                 $ratios         = is_array($ratios_raw) ? $ratios_raw : null;
-                $set_cache_ratio = !preg_match('/^image_id IN/', $filter_clause) && !$cache_hit_ratios;
+                $set_cache_ratio = !preg_match('/^image_id IN/', $filter->where) && !$cache_hit_ratios;
 
                 if (!$cache_hit_ratios) {
-                    $filter_rows = $this->searchRepository->findRatiosForFilter($filter_clause, $filterParams, $filterTypes);
+                    $filter_rows = $this->searchRepository->findRatiosForFilter($filter->where, $filter->params, $filter->types);
                     $ratios = ['Portrait' => 0, 'square' => 0, 'Landscape' => 0, 'Panorama' => 0];
 
                     foreach ($filter_rows as $row) {
@@ -622,9 +622,9 @@ final readonly class SearchFilterRenderer
             }
 
             if (isset($my_search['fields']['height_min']) and isset($my_search['fields']['height_max']) and $display_filters['height']['access']) {
-                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('height');
+                $filter = $this->searchService->getClauseForFilter('height');
 
-                if (!preg_match('/^image_id IN/', $filter_clause)) {
+                if (!preg_match('/^image_id IN/', $filter->where)) {
                     $cache_key = md5('filter_height_rows' . $userId . $userCacheTime . AppInfo::VERSION);
                     $item_h    = $this->pool->getItem($cache_key);
                     if ($item_h->isHit()) {
@@ -633,13 +633,13 @@ final readonly class SearchFilterRenderer
                             ? array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $filter_rows_raw))
                             : [];
                     } else {
-                        $heights = $this->searchRepository->findDistinctHeightsForFilter($filter_clause, $filterParams, $filterTypes);
+                        $heights = $this->searchRepository->findDistinctHeightsForFilter($filter->where, $filter->params, $filter->types);
                         $item_h->set($heights);
                         $item_h->expiresAfter(86400);
                         $this->pool->save($item_h);
                     }
                 } else {
-                    $heights = $this->searchRepository->findDistinctHeightsForFilter($filter_clause, $filterParams, $filterTypes);
+                    $heights = $this->searchRepository->findDistinctHeightsForFilter($filter->where, $filter->params, $filter->types);
                 }
 
                 $height = [
@@ -657,9 +657,9 @@ final readonly class SearchFilterRenderer
             }
 
             if (isset($my_search['fields']['width_min']) and isset($my_search['fields']['width_max']) and $display_filters['width']['access']) {
-                [$filter_clause, $filterParams, $filterTypes] = $this->searchService->getClauseForFilter('width');
+                $filter = $this->searchService->getClauseForFilter('width');
 
-                if (!preg_match('/^image_id IN/', $filter_clause)) {
+                if (!preg_match('/^image_id IN/', $filter->where)) {
                     $cache_key = md5('filter_width_rows' . $userId . $userCacheTime . AppInfo::VERSION);
                     $item_w    = $this->pool->getItem($cache_key);
                     if ($item_w->isHit()) {
@@ -668,13 +668,13 @@ final readonly class SearchFilterRenderer
                             ? array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $filter_rows_raw))
                             : [];
                     } else {
-                        $widths = $this->searchRepository->findDistinctWidthsForFilter($filter_clause, $filterParams, $filterTypes);
+                        $widths = $this->searchRepository->findDistinctWidthsForFilter($filter->where, $filter->params, $filter->types);
                         $item_w->set($widths);
                         $item_w->expiresAfter(86400);
                         $this->pool->save($item_w);
                     }
                 } else {
-                    $widths = $this->searchRepository->findDistinctWidthsForFilter($filter_clause, $filterParams, $filterTypes);
+                    $widths = $this->searchRepository->findDistinctWidthsForFilter($filter->where, $filter->params, $filter->types);
                 }
 
                 $width = [

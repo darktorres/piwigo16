@@ -62,7 +62,7 @@ final readonly class CategoryCatsRenderer
             $whereExtra = 'id_uppercat ' . ($ctx->category === null ? 'IS NULL' : '= ' . (is_numeric($ctx->category['id'] ?? null) ? (int) $ctx->category['id'] : 0));
         }
 
-        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], 'AND');
+        $perm = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], 'AND');
 
         $orderBy = (Section::RecentCats === $ctx->section) ? '' : 'ORDER BY `rank`';
 
@@ -78,9 +78,9 @@ final readonly class CategoryCatsRenderer
             $orderBy,
             Config::nbCategoriesPage(),
             $ctx->startcat,
-            $permSql,
-            $permParams,
-            $permTypes,
+            $perm->where,
+            $perm->params,
+            $perm->types,
         );
         $catCatsRows     = $result['rows'];
         $totalCategories = $result['total'];
@@ -98,13 +98,13 @@ final readonly class CategoryCatsRenderer
             } elseif (Config::allowRandomRepresentative()) {
                 $image_id = $this->categoryService->getRandomImageInCategory($row['id'], $row['uppercats'], $row['count_images'], true);
             } elseif ($row['count_categories'] > 0 and $row['count_images'] > 0) {
-                [$subPermSql, $subPermParams, $subPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND");
+                $subPerm  = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], "\n  AND");
                 $image_id = $this->categoryRepository->findRandomSubcatRepresentativeForUser(
                     $currentUser->id,
                     $row['uppercats'],
-                    $subPermSql,
-                    $subPermParams,
-                    $subPermTypes,
+                    $subPerm->where,
+                    $subPerm->params,
+                    $subPerm->types,
                 );
             }
 
@@ -127,12 +127,12 @@ final readonly class CategoryCatsRenderer
 
         if (Config::displayFromto()) {
             if (count($category_ids) > 0) {
-                [$datesPermSql, $datesPermParams, $datesPermTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'category_id', 'visible_images' => 'id'], 'AND');
+                $datesPerm = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'category_id', 'visible_images' => 'id'], 'AND');
                 $dates_of_category = $this->categoryRepository->findDateRangesForCategoriesKeyedById(
                     $category_ids,
-                    $datesPermSql,
-                    $datesPermParams,
-                    $datesPermTypes,
+                    $datesPerm->where,
+                    $datesPerm->params,
+                    $datesPerm->types,
                 );
             }
         }

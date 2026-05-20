@@ -49,13 +49,13 @@ final readonly class CommentService
             if (!$this->permissionService->isAdmin()) {
                 $where[] = 'validated=1';
             }
-            [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(
+            $perm = $this->permissionService->getSqlConditionFandF(
                 ['forbidden_categories' => 'category_id', 'forbidden_images' => 'ic.image_id'],
                 '',
                 true
             );
-            $where[] = $permSql;
-            $nb = $this->repo->countAvailableCommentsForUser($where, $permParams, $permTypes);
+            $where[] = $perm->where;
+            $nb = $this->repo->countAvailableCommentsForUser($where, $perm->params, $perm->types);
             $this->repo->setNbAvailableCommentsCache(CurrentUser::get()->id, $nb);
             return $nb;
         });

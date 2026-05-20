@@ -119,18 +119,20 @@ INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id';
                 }
                 $innerSql .= '
 WHERE category_id IN (' . implode(',', $subIds) . ')';
-                [$innerPermSql, $innerParams, $innerTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND', false);
+                $innerPerm = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], 'AND', false);
                 $innerSql .= '
-    ' . $innerPermSql;
+    ' . $innerPerm->where;
             } else {
-                [$innerPermSql, $innerParams, $innerTypes] = $this->permissionService->getSqlConditionFandF(
+                $innerPerm = $this->permissionService->getSqlConditionFandF(
                     ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
                     'WHERE',
                     true
                 );
                 $innerSql .= '
-    ' . $innerPermSql;
+    ' . $innerPerm->where;
             }
+            $innerParams = $innerPerm->params;
+            $innerTypes  = $innerPerm->types;
         } else {
             if (empty($sectionItems)) {
                 return;

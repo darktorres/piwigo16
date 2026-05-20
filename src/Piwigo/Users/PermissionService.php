@@ -10,6 +10,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Db\SqlExpr;
+use Piwigo\Db\SqlFragment;
 use Piwigo\Filter\FilterContextRegistry;
 use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
@@ -136,15 +137,14 @@ final readonly class PermissionService
     /**
      * Build a parameterized WHERE-fragment from the current user's permission state.
      *
-     * The returned `$sql` uses positional `?` placeholders; `$params` and `$types`
-     * align by index. Each caller appends `$sql` to its query string and
-     * `$params`/`$types` to the executeQuery bound-parameter arrays.
+     * The returned fragment uses positional `?` placeholders; its `params`
+     * and `types` align by index. Each caller appends the fragment's
+     * `where` to its query string and `params`/`types` to the
+     * executeQuery bound-parameter arrays.
      *
      * @param array<string,string> $conditionFields condition-name → DB column expression
-     *
-     * @return array{0: string, 1: list<mixed>, 2: list<ArrayParameterType|ParameterType>}
      */
-    public function getSqlConditionFandF(array $conditionFields, ?string $prefixCondition = null, bool $forceOneCondition = false): array
+    public function getSqlConditionFandF(array $conditionFields, ?string $prefixCondition = null, bool $forceOneCondition = false): SqlFragment
     {
         $filter = FilterContextRegistry::current();
         $user   = CurrentUser::get()->rawAttributes;
@@ -232,7 +232,7 @@ final readonly class PermissionService
             $sql = $prefixCondition . ' ' . $sql;
         }
 
-        return [$sql, $params, $types];
+        return new SqlFragment($sql, $params, $types);
     }
 
     public function getRecentPhotosSql(string $dbField): string

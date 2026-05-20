@@ -11,6 +11,7 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Db\SqlExpr;
+use Piwigo\Db\SqlFragment;
 use Piwigo\Event\Album\GetCategoriesMenuSqlWhere;
 use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
 use Piwigo\Event\Template\RenderCategoryName;
@@ -71,8 +72,7 @@ final readonly class CategoryService
         $currentUser = CurrentUser::get();
         $userExpand  = $currentUser->rawAttributes['expand'] ?? false;
 
-        $permParams = [];
-        $permTypes  = [];
+        $perm = new SqlFragment('');
         if (($userExpand === false || $userExpand === 0 || $userExpand === '') and !$filter->enabled) {
             $where = '(id_uppercat IS NULL';
             $category = $ctx->category;
@@ -82,8 +82,8 @@ final readonly class CategoryService
             }
             $where .= ')';
         } else {
-            [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], null, true);
-            $where = $permSql;
+            $perm  = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], null, true);
+            $where = $perm->where;
         }
 
         $whereEvent = new GetCategoriesMenuSqlWhere($where, (bool) $userExpand, $filter->enabled);
@@ -92,7 +92,7 @@ final readonly class CategoryService
 
         $cats             = [];
         $selectedCategory = $ctx->category;
-        foreach ($this->catRepo->findCategoriesMenuRows($currentUser->id, $where, $permParams, $permTypes) as $entity) {
+        foreach ($this->catRepo->findCategoriesMenuRows($currentUser->id, $where, $perm->params, $perm->types) as $entity) {
             $row             = $entity->toRow();
             $childDateLast   = (string) $entity->maxDateLast > (string) $entity->dateLast;
             $menuRenderEvent = new RenderCategoryName($entity->name, 'get_categories_menu');
@@ -292,14 +292,14 @@ final readonly class CategoryService
         if ($countImages <= 0) {
             return null;
         }
-        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'c.id', 'visible_categories' => 'c.id', 'visible_images' => 'image_id'], "\n  AND");
+        $perm = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'c.id', 'visible_categories' => 'c.id', 'visible_images' => 'image_id'], "\n  AND");
         return $this->catRepo->findRandomImageIdInCategoryWithPermissions(
             $catId,
             $uppercats,
             $recursive,
-            $permSql,
-            $permParams,
-            $permTypes,
+            $perm->where,
+            $perm->params,
+            $perm->types,
         );
     }
 
@@ -422,11 +422,9 @@ final readonly class CategoryService
         }
         $catIdsInt = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $catIds));
 
-        $permParams = [];
-        $permTypes  = [];
-        $permSql    = '';
+        $perm = new SqlFragment('');
         if ($usePermissions) {
-            [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'], "\n  AND");
+            $perm = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'], "\n  AND");
         }
 
         return $this->catRepo->findImageIdsForCategoriesWithPermissions(
@@ -434,9 +432,9 @@ final readonly class CategoryService
             $mode,
             $extraImagesWhereSql,
             empty($orderBy) ? $this->orderByService->buildOrderByClause(Config::orderBy()) : $orderBy,
-            $permSql,
-            $permParams,
-            $permTypes,
+            $perm->where,
+            $perm->params,
+            $perm->types,
         );
     }
 
@@ -451,12 +449,12 @@ final readonly class CategoryService
             return [];
         }
 
-        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id'], "\n    AND");
+        $perm     = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id'], "\n    AND");
         $imageIds = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $items));
         $excluded = array_values($excludedCatIds);
 
         $cats = [];
-        foreach ($this->catRepo->findCommonCategoriesWithPermissions($imageIds, $max, $excluded, $permSql, $permParams, $permTypes) as $row) {
+        foreach ($this->catRepo->findCommonCategoriesWithPermissions($imageIds, $max, $excluded, $perm->where, $perm->params, $perm->types) as $row) {
             $cats[(string) $row['id']] = $row;
         }
 

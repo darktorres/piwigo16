@@ -55,8 +55,8 @@ final readonly class GetInfoHandler implements WsAction
     {
         $input    = GetInfoParams::fromArray($params);
         $pImageId = $input->imageId;
-        [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], ' AND');
-        $image = $this->imageRepository->findByIdWithPermissions($pImageId, $permSql, $permParams, $permTypes);
+        $perm  = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], ' AND');
+        $image = $this->imageRepository->findByIdWithPermissions($pImageId, $perm->where, $perm->params, $perm->types);
         if ($image === null) {
             return new PwgError(404, 'image_id not found');
         }
@@ -73,8 +73,8 @@ final readonly class GetInfoHandler implements WsAction
         $imageRow['comment'] = $rowDescEvent->elementDescription;
         $isCommentable       = false;
         $relatedCategories   = [];
-        [$relPermSql, $relPermParams, $relPermTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND');
-        foreach ($this->categoryRepository->findRelatedCategoriesForImage($imageRowId, $relPermSql, $relPermParams, $relPermTypes) as $related) {
+        $relPerm = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND');
+        foreach ($this->categoryRepository->findRelatedCategoriesForImage($imageRowId, $relPerm->where, $relPerm->params, $relPerm->types) as $related) {
             if ($related->commentable) {
                 $isCommentable = true;
             }

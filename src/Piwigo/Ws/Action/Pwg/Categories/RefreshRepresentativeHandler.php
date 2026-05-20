@@ -33,16 +33,16 @@ final readonly class RefreshRepresentativeHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
-        $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
-        if (!$this->categoryRepository->existsById($categoryId)) {
+        $input = RefreshRepresentativeParams::fromArray($params);
+        if (!$this->categoryRepository->existsById($input->categoryId)) {
             return new PwgError(404, 'category_id not found');
         }
-        if (!$this->categoryRepository->hasCategoryImages($categoryId)) {
+        if (!$this->categoryRepository->hasCategoryImages($input->categoryId)) {
             return new PwgError(401, 'not permitted');
         }
-        $this->categoryAdminService->setRandomRepresentant([$categoryId]);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, 'edit'));
-        $category = $this->categoryRepository->findCategoryById($categoryId);
+        $this->categoryAdminService->setRandomRepresentant([$input->categoryId]);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $input->categoryId, 'edit'));
+        $category = $this->categoryRepository->findCategoryById($input->categoryId);
         $repId    = $category !== null && $category->representativePictureId !== null ? (string) $category->representativePictureId : '';
         return $this->imageAdminService->getCategoryRepresentantProperties($repId, DerivativeSize::Small->value);
     }

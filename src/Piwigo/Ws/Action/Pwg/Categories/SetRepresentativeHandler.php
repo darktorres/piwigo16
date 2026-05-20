@@ -29,17 +29,16 @@ final readonly class SetRepresentativeHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        $categoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
-        $imageId    = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        if (!$this->categoryRepository->existsById($categoryId)) {
+        $input = SetRepresentativeParams::fromArray($params);
+        if (!$this->categoryRepository->existsById($input->categoryId)) {
             return new PwgError(404, 'category_id not found');
         }
-        if (!$this->imageRepository->existsById($imageId)) {
+        if (!$this->imageRepository->existsById($input->imageId)) {
             return new PwgError(404, 'image_id not found');
         }
-        $this->categoryRepository->setRepresentativePicture([$categoryId], $imageId);
-        $this->userRepository->clearUserRepresentativeForCategory($categoryId);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, 'edit', ['image_id' => $imageId]));
+        $this->categoryRepository->setRepresentativePicture([$input->categoryId], $input->imageId);
+        $this->userRepository->clearUserRepresentativeForCategory($input->categoryId);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $input->categoryId, 'edit', ['image_id' => $input->imageId]));
         return null;
     }
 }

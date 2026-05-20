@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Extensions;
 
+use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Ws\WsParamException;
 use Piwigo\Ws\WsParams;
 
@@ -17,7 +18,7 @@ final readonly class UpdateParams implements WsParams
 {
     public function __construct(
         public string $pwgToken,
-        public string $type,
+        public ExtensionType $type,
         public string $id,
         public string $revision,
         public bool $reactivate,
@@ -35,9 +36,13 @@ final readonly class UpdateParams implements WsParams
         $typeIn  = $raw['type'] ?? null;
         $idIn    = $raw['id']   ?? null;
         $revIn   = $raw['revision'] ?? null;
+        $type    = is_string($typeIn) ? ExtensionType::tryFrom($typeIn) : null;
+        if ($type === null) {
+            throw new WsParamException('invalid extension type');
+        }
         return new self(
             pwgToken:   $pwgToken,
-            type:       is_string($typeIn) ? $typeIn : '',
+            type:       $type,
             id:         is_string($idIn) ? $idIn : '',
             revision:   is_string($revIn) ? $revIn : '',
             reactivate: array_key_exists('reactivate', $raw),

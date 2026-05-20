@@ -8,6 +8,7 @@ use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Extensions\ExtensionAction;
+use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
@@ -55,15 +56,12 @@ final readonly class UpdateHandler implements WsAction
         if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        if (!in_array($input->type, ['plugins', 'themes', 'languages'])) {
-            return new PwgError(403, 'invalid extension type');
-        }
         $type          = $input->type;
         $extensionId   = $input->id;
         $revision      = $input->revision;
         $upgradeStatus = 'ok';
         $extensionName = '';
-        if ($type === 'plugins') {
+        if ($type === ExtensionType::Plugin) {
             $extension = Kernel::service(Plugins::class);
             if (isset($extension->db_plugins_by_id[$extensionId]) && $extension->db_plugins_by_id[$extensionId]->state === 'active') {
                 $extension->performAction(ExtensionAction::Deactivate, $extensionId);
@@ -76,7 +74,7 @@ final readonly class UpdateHandler implements WsAction
             if ($input->reactivate) {
                 $extension->performAction(ExtensionAction::Activate, $extensionId);
             }
-        } elseif ($type === 'themes') {
+        } elseif ($type === ExtensionType::Theme) {
             $extension      = Kernel::service(Themes::class);
             $upgradeStatus  = $extension->extractThemeFiles('upgrade', $revision, $extensionId);
             $extensionName  = is_string($extension->fs_themes[$extensionId]['name'] ?? null) ? $extension->fs_themes[$extensionId]['name'] : '';
@@ -89,7 +87,8 @@ final readonly class UpdateHandler implements WsAction
                 $activityDetails['result'] = 'error';
             }
             $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, 'update', $activityDetails));
-        } elseif ($type === 'languages') {
+        } else {
+            // ExtensionType::Language — the only remaining case.
             $extension     = Kernel::service(Languages::class);
             $upgradeStatus = $extension->extractLanguageFiles('upgrade', $revision, $extensionId);
             $extensionName = is_string($extension->fs_languages[$extensionId]['name'] ?? null) ? $extension->fs_languages[$extensionId]['name'] : '';

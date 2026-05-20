@@ -247,34 +247,35 @@ final readonly class PictureController implements ControllerInterface
                     $this->inputValidator->check('comment_to_edit', $_GET, false, ValidationPattern::ID);
                     $comment_to_edit = StringUtil::inputInt('comment_to_edit', null, $_GET);
                     $author_id       = $this->commentService->getCommentAuthorId($comment_to_edit ?? 0);
-                    if ($this->permissionService->canManageComment(CommentManagementAction::Edit, $author_id)) {
-                        $post_content = StringUtil::inputString('content', null, $_POST);
-                        if ($post_content !== null && $post_content !== '') {
-                            $this->csrfService->check();
-                            $comment_action = $this->commentService->updateUserComment(
-                                ['comment_id' => $comment_to_edit, 'image_id' => $imageId, 'content' => $post_content, 'website_url' => StringUtil::inputString('website_url', null, $_POST)],
-                                StringUtil::inputString('key', null, $_POST) ?? ''
-                            );
-                            $perform_redirect = false;
-                            switch ($comment_action) {
-                                case CommentModerationAction::Moderate:
-                                    PageState::current()->addInfo(Lang::t('An administrator must authorize your comment before it is visible.'));
-                                    // no break
-                                case CommentModerationAction::Validate:
-                                    PageState::current()->addInfo(Lang::t('Your comment has been registered'));
-                                    $perform_redirect = true;
-                                    break;
-                                case CommentModerationAction::Reject:
-                                    PageState::current()->addError(Lang::t('Your comment has NOT been registered because it did not pass the validation rules'));
-                                    break;
-                            }
-                            if ($perform_redirect) {
-                                $this->redirectResponder->redirect($url_self);
-                            }
-                            unset($_POST['content']);
-                        }
-                        $edit_comment = $comment_to_edit;
+                    if (!$this->permissionService->canManageComment(CommentManagementAction::Edit, $author_id)) {
+                        break;
                     }
+                    $post_content = StringUtil::inputString('content', null, $_POST);
+                    if ($post_content !== null && $post_content !== '') {
+                        $this->csrfService->check();
+                        $comment_action = $this->commentService->updateUserComment(
+                            ['comment_id' => $comment_to_edit, 'image_id' => $imageId, 'content' => $post_content, 'website_url' => StringUtil::inputString('website_url', null, $_POST)],
+                            StringUtil::inputString('key', null, $_POST) ?? ''
+                        );
+                        $perform_redirect = false;
+                        switch ($comment_action) {
+                            case CommentModerationAction::Moderate:
+                                PageState::current()->addInfo(Lang::t('An administrator must authorize your comment before it is visible.'));
+                                // no break
+                            case CommentModerationAction::Validate:
+                                PageState::current()->addInfo(Lang::t('Your comment has been registered'));
+                                $perform_redirect = true;
+                                break;
+                            case CommentModerationAction::Reject:
+                                PageState::current()->addError(Lang::t('Your comment has NOT been registered because it did not pass the validation rules'));
+                                break;
+                        }
+                        if ($perform_redirect) {
+                            $this->redirectResponder->redirect($url_self);
+                        }
+                        unset($_POST['content']);
+                    }
+                    $edit_comment = $comment_to_edit;
                     break;
                 case 'delete_comment':
                     $this->csrfService->check();

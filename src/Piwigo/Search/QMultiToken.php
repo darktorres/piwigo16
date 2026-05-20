@@ -168,19 +168,18 @@ class QMultiToken implements \Stringable
 
                 if (!isset($token->scope)
                   && ($token->modifier & (QST_QUOTED | QST_WILDCARD)) == 0) {
-                    if ('not' == strtolower($token->term)) {
+                    $lowerTerm = strtolower($token->term);
+                    if ($lowerTerm === 'not') {
                         if ($i + 1 < count($this->tokens)) {
                             $this->tokens[$i + 1]->modifier |= QST_NOT;
                         }
                         $token->term = '';
-                    }
-                    if ('or' == strtolower($token->term)) {
+                    } elseif ($lowerTerm === 'or') {
                         if ($i + 1 < count($this->tokens)) {
                             $this->tokens[$i + 1]->modifier |= QST_OR;
                         }
                         $token->term = '';
-                    }
-                    if ('and' == strtolower($token->term)) {
+                    } elseif ($lowerTerm === 'and') {
                         $token->term = '';
                     }
                 }

@@ -13,6 +13,7 @@ use Piwigo\Users\UserService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.users.getApiKey` — list all API keys for the session user. */
 final readonly class GetApiKeyHandler implements WsAction
@@ -35,7 +36,12 @@ final readonly class GetApiKeyHandler implements WsAction
         if ($this->permissionService->isAGuest() || !$this->authService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = GetApiKeyParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
         $apiKeys = $this->userService->getApiKey((string) CurrentUser::get()->id);

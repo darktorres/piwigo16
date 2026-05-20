@@ -24,10 +24,9 @@ final readonly class CaddieAddHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): int
     {
-        $userId   = CurrentUser::get()->id;
-        $rawIds   = is_array($params['image_id']) ? $params['image_id'] : [];
-        $imageIds = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawIds));
-        $newIds   = $this->caddieRepository->findImagesNotInCaddie($imageIds, $userId);
+        $input  = CaddieAddParams::fromArray($params);
+        $userId = CurrentUser::get()->id;
+        $newIds = $this->caddieRepository->findImagesNotInCaddie($input->imageIds, $userId);
         $this->caddieRepository->insertImageIdsBatch($userId, $newIds);
         return count($newIds);
     }

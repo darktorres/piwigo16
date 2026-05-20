@@ -107,30 +107,74 @@ final readonly class TelemetryService
         }
         $officialExts = $this->indexOfficialExtensions($pemExtensions);
 
-        $generalStats = $this->buildGeneralStats();
-        [$plugins, $nbPrivatePlugins]               = $this->buildPluginsSnapshot($pemExtensions, $officialExts, $execId);
-        [$themes, $privateThemes]                   = $this->buildThemesSnapshot($pemExtensions, $officialExts, $execId);
-        $themesUsage                                = $this->buildThemesUsage($privateThemes);
-        $generalStats['nb_private_plugins']         = $nbPrivatePlugins;
-        $generalStats['nb_plugins']                 = $nbPrivatePlugins + count($plugins);
-        $generalStats['nb_private_themes']          = count($privateThemes);
-        $generalStats['nb_themes']                  = $generalStats['nb_private_themes'] + count($themes);
-        $defaultTheme                               = Kernel::service(UserService::class)->getDefaultTheme();
+        $adminStats = $this->adminService->getPwgGeneralStatitics();
+
+        [$plugins, $nbPrivatePlugins] = $this->buildPluginsSnapshot($pemExtensions, $officialExts, $execId);
+        [$themes, $privateThemes]     = $this->buildThemesSnapshot($pemExtensions, $officialExts, $execId);
+        $themesUsage                  = $this->buildThemesUsage($privateThemes);
+
+        $defaultTheme = Kernel::service(UserService::class)->getDefaultTheme();
         if (isset($privateThemes[$defaultTheme])) {
             $defaultTheme = 'private theme';
         }
-        $generalStats['default_theme']    = $defaultTheme;
-        $generalStats['default_language'] = Kernel::service(UserService::class)->getDefaultLanguage();
 
-        [$activities, $nbActivities]   = $this->buildUserActivities();
-        $activities['system']          = $this->buildSystemActivities();
-        $generalStats['nb_activities'] = $nbActivities;
+        [$activities, $nbActivities] = $this->buildUserActivities();
+        $activities['system']        = $this->buildSystemActivities();
+
+        $nbPrivateThemes = count($privateThemes);
+
+        $nbPhotosSynced  = 0;
+        $lastPhotoSynced = null;
+        $lastPhoto       = null;
+        if ($adminStats->nbPhotos > 0) {
+            if ($this->imageRepository->countWithStorageCategorySet() > 0) {
+                $filesByMethod   = $this->imageRepository->findFilesAddedByMethod();
+                $syncFiles       = $filesByMethod['sync'] ?? null;
+                $nbPhotosSynced  = $syncFiles['nb_files'] ?? 0;
+                $lastPhotoSynced = $syncFiles['last_added_on'] ?? null;
+                $methodOfLast    = 'sync';
+                if (isset($filesByMethod['api'])
+                    && strtotime($filesByMethod['api']['last_added_on']) > strtotime($syncFiles['last_added_on'] ?? '')
+                ) {
+                    $methodOfLast = 'api';
+                }
+                $lastPhoto = $filesByMethod[$methodOfLast]['last_added_on'] ?? null;
+            } else {
+                $lastPhoto = $this->imageRepository->findLatestDateAvailable();
+            }
+        }
+
+        $generalStats = new TelemetryGeneralStats(
+            nbPhotos:         $adminStats->nbPhotos,
+            nbCategories:     $adminStats->nbCategories,
+            nbTags:           $adminStats->nbTags,
+            nbImageTag:       $adminStats->nbImageTag,
+            nbUsers:          $adminStats->nbUsers,
+            nbAdmins:         $adminStats->nbAdmins,
+            nbGroups:         $adminStats->nbGroups,
+            nbRates:          $adminStats->nbRates,
+            nbViews:          $adminStats->nbViews,
+            diskUsage:        intdiv($adminStats->diskUsage, 1024),
+            nbFormats:        $adminStats->nbFormats,
+            formatsDiskUsage: $adminStats->formatsDiskUsage,
+            installedOn:      $this->adminService->getInstallationDate(),
+            nbPhotosSynced:   $nbPhotosSynced,
+            lastPhotoSynced:  $lastPhotoSynced,
+            lastPhoto:        $lastPhoto,
+            nbPrivatePlugins: $nbPrivatePlugins,
+            nbPlugins:        $nbPrivatePlugins + count($plugins),
+            nbPrivateThemes:  $nbPrivateThemes,
+            nbThemes:         $nbPrivateThemes + count($themes),
+            defaultTheme:     $defaultTheme,
+            defaultLanguage:  Kernel::service(UserService::class)->getDefaultLanguage(),
+            nbActivities:     $nbActivities,
+        );
 
         $payload = new TelemetryPayload(
             originHash:     Config::sendPiwigoInfosOriginHash() ?? '',
             technical:      $this->buildTechnical(),
             generalStats:   $generalStats,
-            fileExtensions: ($generalStats['nb_photos'] ?? 0) > 0 ? $this->imageRepository->findFileExtensionUsage() : [],
+            fileExtensions: $generalStats->nbPhotos > 0 ? $this->imageRepository->findFileExtensionUsage() : [],
             plugins:        $plugins,
             themes:         $themes,
             themesUsage:    $themesUsage,
@@ -176,37 +220,6 @@ final readonly class TelemetryService
             dbDatetime:       $dbCurrentDate,
             graphicsLibrary:  $this->adminService->getGraphicsLibrary(),
         );
-    }
-
-    /** @return array<string, mixed> */
-    private function buildGeneralStats(): array
-    {
-        $generalStats = $this->adminService->getPwgGeneralStatitics();
-        $du = $generalStats['disk_usage'] ?? 0;
-        $generalStats['disk_usage']        = intval((is_numeric($du) ? (float) $du : 0.0) / 1024.0);
-        $generalStats['installed_on']      = $this->adminService->getInstallationDate();
-        $generalStats['nb_photos_synced']  = 0;
-        $generalStats['last_photo_synced'] = null;
-        $generalStats['last_photo']        = null;
-
-        if (($generalStats['nb_photos'] ?? 0) > 0) {
-            if ($this->imageRepository->countWithStorageCategorySet() > 0) {
-                $filesByMethod = $this->imageRepository->findFilesAddedByMethod();
-                $syncFiles = $filesByMethod['sync'] ?? null;
-                $generalStats['nb_photos_synced']  = $syncFiles['nb_files'] ?? 0;
-                $generalStats['last_photo_synced'] = $syncFiles['last_added_on'] ?? null;
-                $methodOfLastPhoto = 'sync';
-                if (isset($filesByMethod['api'])
-                    && strtotime($filesByMethod['api']['last_added_on']) > strtotime($syncFiles['last_added_on'] ?? '')
-                ) {
-                    $methodOfLastPhoto = 'api';
-                }
-                $generalStats['last_photo'] = $filesByMethod[$methodOfLastPhoto]['last_added_on'] ?? null;
-            } else {
-                $generalStats['last_photo'] = $this->imageRepository->findLatestDateAvailable();
-            }
-        }
-        return $generalStats;
     }
 
     /**

@@ -5,11 +5,41 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Telemetry;
 
 use PHPUnit\Framework\TestCase;
+use Piwigo\Telemetry\TelemetryGeneralStats;
 use Piwigo\Telemetry\TelemetryPayload;
 use Piwigo\Telemetry\TelemetryTechnical;
 
 final class TelemetryPayloadTest extends TestCase
 {
+    private function generalStats(int $nbPhotos = 0): TelemetryGeneralStats
+    {
+        return new TelemetryGeneralStats(
+            nbPhotos: $nbPhotos,
+            nbCategories: 0,
+            nbTags: 0,
+            nbImageTag: 0,
+            nbUsers: 0,
+            nbAdmins: 0,
+            nbGroups: 0,
+            nbRates: 0,
+            nbViews: 0,
+            diskUsage: 0,
+            nbFormats: 0,
+            formatsDiskUsage: 0,
+            installedOn: null,
+            nbPhotosSynced: 0,
+            lastPhotoSynced: null,
+            lastPhoto: null,
+            nbPrivatePlugins: 0,
+            nbPlugins: 0,
+            nbPrivateThemes: 0,
+            nbThemes: 0,
+            defaultTheme: '',
+            defaultLanguage: '',
+            nbActivities: 0,
+        );
+    }
+
     private function technical(?string $phpVersion = '8.5'): TelemetryTechnical
     {
         return new TelemetryTechnical(
@@ -28,15 +58,17 @@ final class TelemetryPayloadTest extends TestCase
     public function testToArrayEmitsBaseShape(): void
     {
         $payload = new TelemetryPayload(
-            originHash: 'abc123',
-            technical:  $this->technical('8.5'),
-            generalStats: ['nb_photos' => 42],
+            originHash:   'abc123',
+            technical:    $this->technical('8.5'),
+            generalStats: $this->generalStats(nbPhotos: 42),
         );
         $arr = $payload->toArray();
         self::assertSame('abc123', $arr['origin_hash']);
         self::assertIsArray($arr['technical']);
         self::assertSame('8.5', $arr['technical']['php_version']);
-        self::assertSame(['nb_photos' => 42], $arr['general_stats']);
+        $gs = $arr['general_stats'];
+        self::assertIsArray($gs);
+        self::assertSame(42, $gs['nb_photos']);
         // Always-emitted (even when empty) sections per the remote contract:
         self::assertSame([], $arr['plugins']);
         self::assertSame([], $arr['themes']);
@@ -49,7 +81,7 @@ final class TelemetryPayloadTest extends TestCase
 
     public function testToArrayOmitsEmptyOptionalSections(): void
     {
-        $payload = new TelemetryPayload('h', $this->technical(''), []);
+        $payload = new TelemetryPayload('h', $this->technical(''), $this->generalStats());
         $arr     = $payload->toArray();
         self::assertArrayNotHasKey('file_extensions', $arr);
         self::assertArrayNotHasKey('updates', $arr);
@@ -58,11 +90,11 @@ final class TelemetryPayloadTest extends TestCase
     public function testToArrayIncludesOptionalSectionsWhenSet(): void
     {
         $payload = new TelemetryPayload(
-            originHash: 'h',
-            technical:  $this->technical(''),
-            generalStats: [],
+            originHash:     'h',
+            technical:      $this->technical(''),
+            generalStats:   $this->generalStats(),
             fileExtensions: ['jpg' => ['counter' => 7, 'filesize' => 1024]],
-            updates: [['from_version' => '15.0', 'to_version' => '16.0']],
+            updates:        [['from_version' => '15.0', 'to_version' => '16.0']],
         );
         $arr = $payload->toArray();
         self::assertArrayHasKey('file_extensions', $arr);

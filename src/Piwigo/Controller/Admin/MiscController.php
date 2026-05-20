@@ -602,12 +602,12 @@ final class MiscController implements AdminSubControllerInterface
 
         $stats      = $this->adminService->getPwgGeneralStatitics();
         $du_decimals = 1;
-        $du_gb      = (is_numeric($stats['disk_usage']) ? (float) $stats['disk_usage'] : 0.0) / (1024.0 * 1024.0);
+        $du_gb      = (float) $stats->diskUsage / (1024.0 * 1024.0);
         if ($du_gb > 100) {
             $du_decimals = 0;
         }
 
-        $tpl->assign(['NB_PHOTOS' => $stats['nb_photos'], 'NB_ALBUMS' => $stats['nb_categories'], 'NB_TAGS' => $stats['nb_tags'], 'NB_IMAGE_TAG' => $stats['nb_image_tag'], 'NB_USERS' => $stats['nb_users'], 'NB_GROUPS' => $stats['nb_groups'], 'NB_RATES' => $stats['nb_rates'], 'NB_VIEWS' => $this->adminService->numberFormatHumanReadable(is_numeric($stats['nb_views']) ? (float) $stats['nb_views'] : 0.0), 'NB_PLUGINS' => count($activePluginIds), 'STORAGE_USED' => new Html(str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals)))), 'U_QUICK_SYNC' => $this->urlGenerator->admin('site_update') . '&site=1&quick_sync=1&pwg_token=' . $this->csrfService->getToken(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
+        $tpl->assign(['NB_PHOTOS' => $stats->nbPhotos, 'NB_ALBUMS' => $stats->nbCategories, 'NB_TAGS' => $stats->nbTags, 'NB_IMAGE_TAG' => $stats->nbImageTag, 'NB_USERS' => $stats->nbUsers, 'NB_GROUPS' => $stats->nbGroups, 'NB_RATES' => $stats->nbRates, 'NB_VIEWS' => $this->adminService->numberFormatHumanReadable((float) $stats->nbViews), 'NB_PLUGINS' => count($activePluginIds), 'STORAGE_USED' => new Html(str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals)))), 'U_QUICK_SYNC' => $this->urlGenerator->admin('site_update') . '&site=1&quick_sync=1&pwg_token=' . $this->csrfService->getToken(), 'CHECK_FOR_UPDATES' => Config::dashboardCheckForUpdates()]);
 
         if (Config::activateComments()) {
             $tpl->assign('NB_COMMENTS', $this->commentRepository->countAll());

@@ -465,30 +465,31 @@ final readonly class AdminService
         return ($labelForLib[$libraryCode] ?? $libraryCode) . ' ' . $libraryVersion;
     }
 
-    /** @return array<string,mixed> */
-    public function getPwgGeneralStatitics(): array
+    public function getPwgGeneralStatitics(): AdminStats
     {
-        $stats    = [];
         $imgRepo  = $this->imageRepository;
         $catRepo  = $this->categoryRepository;
         $tagRepo  = $this->tagRepository;
         $userRepo = $this->userRepository;
         $histRepo = $this->historyRepository;
 
-        $stats['nb_photos']     = $imgRepo->countAll();
-        $stats['nb_categories'] = $catRepo->countAll();
-        $stats['nb_tags']       = $tagRepo->countAll();
-        $stats['nb_image_tag']  = $tagRepo->countImageTags();
-        $stats['nb_users']      = $userRepo->countAll(Tables::users());
-        $stats['nb_admins']     = $userRepo->countByStatus(['webmaster', 'admin']);
-        $stats['nb_groups']     = $userRepo->countGroups();
-        $stats['nb_rates']      = $imgRepo->countRatings();
-        $stats['nb_views']      = $histRepo->sumPageViews();
-        $stats['disk_usage']    = $imgRepo->sumFilesizeKb();
-        $stats['nb_formats']          = $this->imageFormatRepository->countAll();
-        $stats['formats_disk_usage']  = $this->imageFormatRepository->sumFilesizeKb();
-        $stats['disk_usage']         += $stats['formats_disk_usage'];
-        return $stats;
+        $imgDiskUsage    = $imgRepo->sumFilesizeKb();
+        $formatDiskUsage = $this->imageFormatRepository->sumFilesizeKb();
+
+        return new AdminStats(
+            nbPhotos:        $imgRepo->countAll(),
+            nbCategories:    $catRepo->countAll(),
+            nbTags:          $tagRepo->countAll(),
+            nbImageTag:      $tagRepo->countImageTags(),
+            nbUsers:         $userRepo->countAll(Tables::users()),
+            nbAdmins:        $userRepo->countByStatus(['webmaster', 'admin']),
+            nbGroups:        $userRepo->countGroups(),
+            nbRates:         $imgRepo->countRatings(),
+            nbViews:         $histRepo->sumPageViews(),
+            diskUsage:       $imgDiskUsage + $formatDiskUsage,
+            nbFormats:       $this->imageFormatRepository->countAll(),
+            formatsDiskUsage: $formatDiskUsage,
+        );
     }
 
     public function getInstallationDate(): ?string

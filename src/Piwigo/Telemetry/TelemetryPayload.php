@@ -16,7 +16,6 @@ namespace Piwigo\Telemetry;
 final readonly class TelemetryPayload
 {
     /**
-     * @param array<string, mixed>             $generalStats    Stats from AdminService::getPwgGeneralStatitics + augmentations
      * @param array<string, array{counter:int, filesize:int}> $fileExtensions Per-extension usage
      * @param list<string>                     $plugins         Plugin entries as `#eid/codename/version`
      * @param list<string>                     $themes          Theme entries as `#eid/codename/version`
@@ -28,9 +27,9 @@ final readonly class TelemetryPayload
      * @param array<string, TelemetryAppStat>  $apps            App name → counter + first/last encounter
      */
     public function __construct(
-        public string             $originHash,
-        public TelemetryTechnical $technical,
-        public array              $generalStats,
+        public string                $originHash,
+        public TelemetryTechnical    $technical,
+        public TelemetryGeneralStats $generalStats,
         public array              $fileExtensions = [],
         public array              $plugins = [],
         public array              $themes = [],
@@ -49,7 +48,7 @@ final readonly class TelemetryPayload
         $out = [
             'origin_hash'     => $this->originHash,
             'technical'       => $this->technical->toArray(),
-            'general_stats'   => $this->generalStats,
+            'general_stats'   => $this->generalStats->toArray(),
         ];
         if ($this->fileExtensions !== []) {
             $out['file_extensions'] = $this->fileExtensions;

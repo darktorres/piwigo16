@@ -252,104 +252,93 @@ final class UrlService
             }
         }
 
-        switch ($section) {
-            case 'categories':
-                {
-                    if (!isset($params['category'])) {
-                        $sectionString .= '/categories';
-                        break;
-                    }
+        return $sectionString . match ($section) {
+            'categories' => $this->buildCategoriesSection($params['category'] ?? null, $params['combined_categories'] ?? null),
+            'tags'       => $this->buildTagsSection($params['tags'] ?? null),
+            'search'     => '/search/' . (is_string($params['search'] ?? null) ? $params['search'] : ''),
+            'list'       => '/list/' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($params['list'] ?? null) ? $params['list'] : [])),
+            'none'       => '',
+            default      => '/' . (is_scalar($section) ? (string) $section : ''),
+        };
+    }
 
-                    $cat = is_array($params['category']) ? $params['category'] : [];
-                    if (!isset($cat['name'])) {
-                        throw new \InvalidArgumentException('make_section_in_url category name not set');
-                    }
-                    if (!array_key_exists('permalink', $cat)) {
-                        throw new \InvalidArgumentException('make_section_in_url category permalink not set');
-                    }
-
-                    $sectionString .= '/category/';
-                    if (!isset($cat['permalink']) || $cat['permalink'] === '') {
-                        $catIdRaw       = $cat['id'] ?? null;
-                        $sectionString .= is_scalar($catIdRaw) ? (string) $catIdRaw : '';
-                        if (Config::categoryUrlStyle() == 'id-name') {
-                            $catNameRaw = $cat['name'];
-                            $sectionString .= '-' . StringUtil::str2url(is_string($catNameRaw) ? $catNameRaw : '');
-                        }
-                    } else {
-                        $sectionString .= is_string($cat['permalink']) ? $cat['permalink'] : '';
-                    }
-
-                    if (!isset($params['combined_categories'])) {
-                        break;
-                    }
-                    foreach ((array) $params['combined_categories'] as $category) {
-                        if (!is_array($category)) {
-                            continue;
-                        }
-                        $sectionString .= '/';
-
-                        if (empty($category['permalink'])) {
-                            $sectionString .= is_scalar($category['id'] ?? null) ? (string) $category['id'] : '';
-                            if (Config::categoryUrlStyle() == 'id-name') {
-                                $sectionString .= '-' . StringUtil::str2url(is_string($category['name'] ?? null) ? $category['name'] : '');
-                            }
-                        } else {
-                            $sectionString .= is_string($category['permalink']) ? $category['permalink'] : '';
-                        }
-                    }
-
-                    break;
-                }
-            case 'tags':
-                {
-                    $sectionString .= '/tags';
-
-                    foreach ((array) $params['tags'] as $tag) {
-                        if (!is_array($tag)) {
-                            continue;
-                        }
-                        switch (Config::tagUrlStyle()) {
-                            case 'id':
-                                $sectionString .= '/' . (is_scalar($tag['id'] ?? null) ? (string) $tag['id'] : '');
-                                break;
-                            case 'tag':
-                                if (isset($tag['url_name'])) {
-                                    $sectionString .= '/' . (is_string($tag['url_name']) ? $tag['url_name'] : '');
-                                    break;
-                                }
-                                // no break
-                            default:
-                                $sectionString .= '/' . (is_scalar($tag['id'] ?? null) ? (string) $tag['id'] : '');
-                                if (isset($tag['url_name'])) {
-                                    $sectionString .= '-' . (is_string($tag['url_name']) ? $tag['url_name'] : '');
-                                }
-                        }
-                    }
-
-                    break;
-                }
-            case 'search':
-                {
-                    $sectionString .= '/search/' . (is_string($params['search'] ?? null) ? $params['search'] : '');
-                    break;
-                }
-            case 'list':
-                {
-                    $sectionString .= '/list/' . implode(',', array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', is_array($params['list']) ? $params['list'] : []));
-                    break;
-                }
-            case 'none':
-                {
-                    break;
-                }
-            default:
-                {
-                    $sectionString .= '/' . (is_scalar($section) ? (string) $section : '');
-                }
+    /**
+     * Render the `/category/…(/…)*` segment for makeSectionInUrl()
+     * given the primary category and any combined-category siblings.
+     * Returns `/categories` when no category is provided (the
+     * gallery-wide "all categories" landing page).
+     */
+    private function buildCategoriesSection(mixed $primary, mixed $combined): string
+    {
+        if ($primary === null) {
+            return '/categories';
+        }
+        $cat = is_array($primary) ? $primary : [];
+        if (!isset($cat['name'])) {
+            throw new \InvalidArgumentException('make_section_in_url category name not set');
+        }
+        if (!array_key_exists('permalink', $cat)) {
+            throw new \InvalidArgumentException('make_section_in_url category permalink not set');
         }
 
-        return $sectionString;
+        $out = '/category/' . $this->renderCategoryIdent($cat);
+        if ($combined === null) {
+            return $out;
+        }
+        foreach ((array) $combined as $category) {
+            if (!is_array($category)) {
+                continue;
+            }
+            $out .= '/' . $this->renderCategoryIdent($category);
+        }
+        return $out;
+    }
+
+    /**
+     * Render a single category as the URL-style id-or-permalink
+     * fragment (without leading slash). Used by both the primary
+     * `/category/…` segment and the combined-categories suffix.
+     *
+     * @param array<mixed> $cat
+     */
+    private function renderCategoryIdent(array $cat): string
+    {
+        if (!empty($cat['permalink'])) {
+            return is_string($cat['permalink']) ? $cat['permalink'] : '';
+        }
+        $catIdRaw = $cat['id'] ?? null;
+        $out      = is_scalar($catIdRaw) ? (string) $catIdRaw : '';
+        if (Config::categoryUrlStyle() == 'id-name') {
+            $catNameRaw = $cat['name'] ?? null;
+            $out       .= '-' . StringUtil::str2url(is_string($catNameRaw) ? $catNameRaw : '');
+        }
+        return $out;
+    }
+
+    /**
+     * Render the `/tags/…` segment for makeSectionInUrl(). Each tag
+     * is rendered per Config::tagUrlStyle(): `'id'` → numeric id,
+     * `'tag'` → url_name (falls back to id when missing), default →
+     * id-then-url_name combined.
+     */
+    private function buildTagsSection(mixed $tags): string
+    {
+        $out = '/tags';
+        foreach ((array) $tags as $tag) {
+            if (!is_array($tag)) {
+                continue;
+            }
+            $idStr  = is_scalar($tag['id'] ?? null) ? (string) $tag['id'] : '';
+            $urlRaw = $tag['url_name'] ?? null;
+            $urlStr = is_string($urlRaw) ? $urlRaw : '';
+
+            $out .= match (Config::tagUrlStyle()) {
+                'id'    => '/' . $idStr,
+                'tag'   => isset($tag['url_name']) ? '/' . $urlStr : '/' . $idStr,
+                default => '/' . $idStr . (isset($tag['url_name']) ? '-' . $urlStr : ''),
+            };
+        }
+        return $out;
     }
 
     /**

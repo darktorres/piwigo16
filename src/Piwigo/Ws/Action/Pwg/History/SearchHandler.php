@@ -167,7 +167,7 @@ final readonly class SearchHandler implements WsAction
         }
         if (count($userIds) > 0) {
             $userFields = Config::userFields();
-            $rawMap     = $this->userRepository->findUsernamesByIds($userFields['id'], $userFields['username'], Tables::users(), array_map(intval(...), array_keys($userIds)));
+            $rawMap     = $this->userRepository->findUsernamesByIds($userFields->id, $userFields->username, Tables::users(), array_map(intval(...), array_keys($userIds)));
             foreach ($rawMap as $id => $username) {
                 $usernameOf[$id] = stripslashes($username);
             }

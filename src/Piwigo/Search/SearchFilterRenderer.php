@@ -409,8 +409,8 @@ final readonly class SearchFilterRenderer
                     }
 
                     $username_of = $this->userRepository->findUsernamesByIds(
-                        Config::userFields()['id'],
-                        Config::userFields()['username'],
+                        Config::userFields()->id,
+                        Config::userFields()->username,
                         Tables::users(),
                         $user_ids,
                     );

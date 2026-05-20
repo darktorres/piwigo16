@@ -65,8 +65,8 @@ final readonly class AuthService
         if (InstallSentinel::isInstalled($this->paths) and $mailAddress !== null && $mailAddress !== '') {
             $userFields = Config::userFields();
             $count = $this->userRepo->countByEmail(
-                $userFields['email'],
-                $userFields['id'],
+                $userFields->email,
+                $userFields->id,
                 Tables::users(),
                 $mailAddress,
                 $userId
@@ -82,7 +82,7 @@ final readonly class AuthService
     {
         if (InstallSentinel::isInstalled($this->paths)) {
             $count = $this->userRepo->countByUsernameInsensitive(
-                Config::userFields()['username'],
+                Config::userFields()->username,
                 Tables::users(),
                 $login
             );
@@ -96,7 +96,7 @@ final readonly class AuthService
     public function searchCaseUsername(string $username): string
     {
         $usernameLo  = strtolower($username);
-        $allUsernames = $this->userRepo->findAllUsernames(Config::userFields()['username'], Tables::users());
+        $allUsernames = $this->userRepo->findAllUsernames(Config::userFields()->username, Tables::users());
         $scuUsers = [];
         foreach ($allUsernames as $u) {
             $scuUsers[$u] = strtolower($u);
@@ -112,9 +112,9 @@ final readonly class AuthService
     {
         $userFields = Config::userFields();
         $row = $this->userRepo->findAuthFieldsById(
-            $userFields['username'],
-            $userFields['password'],
-            $userFields['id'],
+            $userFields->username,
+            $userFields->password,
+            $userFields->id,
             Tables::users(),
             $userId
         );
@@ -252,10 +252,10 @@ final readonly class AuthService
     {
         $userFields = Config::userFields();
         $user = $this->userRepo->findByUsernameOrEmail(
-            $userFields['username'],
-            $userFields['email'],
-            $userFields['id'],
-            $userFields['password'],
+            $userFields->username,
+            $userFields->email,
+            $userFields->id,
+            $userFields->password,
             Tables::users(),
             $usernameOrEmail
         );
@@ -323,9 +323,9 @@ final readonly class AuthService
 
         $key = $this->authKeyRepo->findAuthKeyDetails(
             $authKey,
-            Config::userFields()['id'],
-            Config::userFields()['username'],
-            Config::userFields()['email'],
+            Config::userFields()->id,
+            Config::userFields()->username,
+            Config::userFields()->email,
             Tables::users(),
         );
         if ($key === null) {

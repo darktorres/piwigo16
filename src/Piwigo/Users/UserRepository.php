@@ -817,20 +817,17 @@ final class UserRepository extends AbstractRepository
      * Return user record selected via the Config::userFields() column map
      * (each value is `<dbfield> AS <pwgfield>`), keyed by pwgfield.
      *
-     * @param  array<string, string>     $userFields  pwgfield → dbfield
      * @return array<string, mixed>|null
      */
-    public function findByConfigFields(array $userFields, string $usersTable, int $userId): ?array
+    public function findByConfigFields(UserFieldsMap $userFields, string $usersTable, int $userId): ?array
     {
-        if ($userFields === []) {
-            return null;
-        }
-        $cols = [];
-        foreach ($userFields as $pwgfield => $dbfield) {
-            $cols[] = $dbfield . ' AS ' . $pwgfield;
-        }
-        $idField = $userFields['id'] ?? 'id';
-        $query   = 'SELECT ' . implode(', ', $cols) . ' FROM ' . $usersTable . ' WHERE ' . $idField . ' = ?';
+        $cols = [
+            $userFields->id       . ' AS id',
+            $userFields->username . ' AS username',
+            $userFields->password . ' AS password',
+            $userFields->email    . ' AS email',
+        ];
+        $query   = 'SELECT ' . implode(', ', $cols) . ' FROM ' . $usersTable . ' WHERE ' . $userFields->id . ' = ?';
         $row     = $this->conn->executeQuery($query, [$userId], [ParameterType::INTEGER])->fetchAssociative();
         return $row !== false ? $row : null;
     }

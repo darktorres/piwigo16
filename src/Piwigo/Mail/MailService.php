@@ -51,8 +51,8 @@ final readonly class MailService
     {
         $userFields = Config::userFields();
         $email      = $this->userRepository->getWebmasterEmail(
-            $userFields['email'],
-            $userFields['id'],
+            $userFields->email,
+            $userFields->id,
             Tables::users(),
             Config::webmasterId()
         );
@@ -308,9 +308,9 @@ final readonly class MailService
         $userFields = Config::userFields();
         $admins     = $this->userRepository->findAdminsForMail(
             Tables::users(),
-            $userFields['id'],
-            $userFields['username'],
-            $userFields['email'],
+            $userFields->id,
+            $userFields->username,
+            $userFields->email,
             $userStatuses,
             $excludeCurrentUser ? CurrentUser::get()->id : null,
             $groupId,
@@ -342,8 +342,8 @@ final readonly class MailService
         $userFields = Config::userFields();
         $languages  = $this->userRepository->findDistinctLanguagesInGroup(
             Tables::users(),
-            $userFields['id'],
-            $userFields['email'],
+            $userFields->id,
+            $userFields->email,
             $groupId,
             is_string($args['language_selected'] ?? null) ? $args['language_selected'] : null,
         );
@@ -355,9 +355,9 @@ final readonly class MailService
         foreach ($languages as $language) {
             $users = $this->userRepository->findGroupRecipientsForLanguage(
                 Tables::users(),
-                $userFields['id'],
-                $userFields['username'],
-                $userFields['email'],
+                $userFields->id,
+                $userFields->username,
+                $userFields->email,
                 $groupId,
                 $language,
             );

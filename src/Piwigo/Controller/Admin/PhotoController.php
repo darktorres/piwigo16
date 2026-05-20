@@ -341,8 +341,8 @@ final class PhotoController implements AdminSubControllerInterface
         $added_by  = 'N/A';
         $userFields = Config::userFields();
         $foundUsername = $this->userRepository->findUsernameById(
-            $userFields['id'],
-            $userFields['username'],
+            $userFields->id,
+            $userFields->username,
             Tables::users(),
             is_numeric($row['added_by'] ?? null) ? (int) $row['added_by'] : 0
         );

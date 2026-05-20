@@ -107,8 +107,8 @@ final readonly class ProfileService
             }
             if (!$inAdmin) {
                 $current_password = $this->userRepository->findPasswordById(
-                    Config::userFields()['password'],
-                    Config::userFields()['id'],
+                    Config::userFields()->password,
+                    Config::userFields()->id,
                     Tables::users(),
                     is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0
                 );
@@ -122,14 +122,14 @@ final readonly class ProfileService
             $activity_details_tables = [];
 
             if (isset($_POST['mail_address'])) {
-                $fields = [Config::userFields()['email']];
+                $fields = [Config::userFields()->email];
                 $data   = [];
-                $data[Config::userFields()['id']]    = $userdata['id'];
-                $data[Config::userFields()['email']] = $_POST['mail_address'];
+                $data[Config::userFields()->id]    = $userdata['id'];
+                $data[Config::userFields()->email] = $_POST['mail_address'];
 
                 if (isset($_POST['use_new_pwd']) && $_POST['use_new_pwd'] !== '') {
-                    $fields[]                                  = Config::userFields()['password'];
-                    $data[Config::userFields()['password']]    = password_hash(is_string($rawNewPwd = $_POST['use_new_pwd']) ? $rawNewPwd : '', PASSWORD_BCRYPT);
+                    $fields[]                                  = Config::userFields()->password;
+                    $data[Config::userFields()->password]    = password_hash(is_string($rawNewPwd = $_POST['use_new_pwd']) ? $rawNewPwd : '', PASSWORD_BCRYPT);
                     $this->authService->deactivateUserAuthKeys(is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0);
                 }
 
@@ -138,8 +138,8 @@ final readonly class ProfileService
                         PageState::current()->addError(Lang::t('this login is already used'));
                         unset($_POST['redirect']);
                     } else {
-                        $fields[]                                   = Config::userFields()['username'];
-                        $data[Config::userFields()['username']]     = $_POST['username'];
+                        $fields[]                                   = Config::userFields()->username;
+                        $data[Config::userFields()->username]     = $_POST['username'];
                         if ($_POST['username'] != $userdata['username']) {
                             $this->mailService->switchLangTo(is_string($userdata['language'] ?? null) ? $userdata['language'] : '');
                             $keyargs_content = [
@@ -155,7 +155,7 @@ final readonly class ProfileService
                     }
                 }
 
-                $idField = Config::userFields()['id'];
+                $idField = Config::userFields()->id;
                 $set     = [];
                 foreach ($fields as $field) {
                     $set[$field] = $data[$field] ?? null;

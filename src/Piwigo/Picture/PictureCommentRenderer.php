@@ -140,8 +140,8 @@ final readonly class PictureCommentRenderer
                     Config::nbCommentPage(),
                     $startOffset,
                     Tables::users(),
-                    Config::userFields()['id'],
-                    Config::userFields()['email'],
+                    Config::userFields()->id,
+                    Config::userFields()->email,
                 );
 
                 foreach ($commentRows as $row) {

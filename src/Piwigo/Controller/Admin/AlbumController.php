@@ -382,9 +382,9 @@ final class AlbumController implements AdminSubControllerInterface
                 $this->inputValidator->check('users', $_POST, true, ValidationPattern::ID);
                 $postUserIds = array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rawPostUsers));
                 $users = $this->userRepository->findMailRecipientInfoByIds(
-                    Config::userFields()['id'],
-                    Config::userFields()['username'],
-                    Config::userFields()['email'],
+                    Config::userFields()->id,
+                    Config::userFields()->username,
+                    Config::userFields()->email,
                     Tables::users(),
                     $postUserIds,
                 );
@@ -469,8 +469,8 @@ final class AlbumController implements AdminSubControllerInterface
 
         if (count($user_ids) > 0) {
             $tpl->assign('user_options', $this->userRepository->findIdToUsernameMapByIds(
-                Config::userFields()['id'],
-                Config::userFields()['username'],
+                Config::userFields()->id,
+                Config::userFields()->username,
                 Tables::users(),
                 $user_ids,
             ));
@@ -988,7 +988,7 @@ final class AlbumController implements AdminSubControllerInterface
 
         $groups          = $this->groupRepository->findAllIdToNameMapOrderedByName();
         $group_granted_ids = $this->permissionRepository->findGroupAccessGroupIdsByCategoryId($pageCat);
-        $users           = $this->userRepository->findAllUserIdNameMap(Config::userFields()['id'], Config::userFields()['username'], Tables::users());
+        $users           = $this->userRepository->findAllUserIdNameMap(Config::userFields()->id, Config::userFields()->username, Tables::users());
         $user_granted_direct_ids = $this->permissionRepository->findUserAccessUserIdsByCategoryId($pageCat);
 
         $tpl->assign('groups', $groups);

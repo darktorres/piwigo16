@@ -60,7 +60,7 @@ final readonly class SetMyInfoHandler implements WsAction
                 return new PwgError(403, Lang::t('The passwords do not match'));
             }
             $userFields      = Config::userFields();
-            $currentPassword = $this->userRepository->findPasswordById($userFields['password'], $userFields['id'], Tables::users(), $currentUser->id);
+            $currentPassword = $this->userRepository->findPasswordById($userFields->password, $userFields->id, Tables::users(), $currentUser->id);
             if (!password_verify($input->password ?? '', is_string($currentPassword) ? $currentPassword : '')) {
                 return new PwgError(403, Lang::t('Current password is wrong'));
             }

@@ -116,7 +116,7 @@ final class C13yInternal
           'l10n_non_existent' => 'Main "webmaster" user does not exist',
           'l10n_bad_status' => 'Main "webmaster" user status is incorrect'];
 
-        $idField = Config::userFields()['id'];
+        $idField = Config::userFields()->id;
         $status  = Kernel::service(UserRepository::class)->findStatusByUserIds(
             Tables::users(),
             $idField,

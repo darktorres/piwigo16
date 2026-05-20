@@ -133,8 +133,8 @@ final readonly class UsersController implements AdminSubControllerInterface
         }
 
         $webmasterUsername = $this->userRepository->findUsernameById(
-            Config::userFields()['username'],
-            Config::userFields()['id'],
+            Config::userFields()->username,
+            Config::userFields()->id,
             Tables::users(),
             Config::webmasterId(),
         );
@@ -375,8 +375,8 @@ final readonly class UsersController implements AdminSubControllerInterface
         $this->userTabRenderer->render('user_activity');
 
         if (isset($_GET['type']) && 'download_logs' == $_GET['type']) {
-            $usernameField = Config::userFields()['username'];
-            $idField       = Config::userFields()['id'];
+            $usernameField = Config::userFields()->username;
+            $idField       = Config::userFields()->id;
             $activityRows  = $this->activityRepository->findAllByObjectWithUsername('user', $idField, $usernameField, Tables::users());
 
             $output_lines = [['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details']];
@@ -418,8 +418,8 @@ final readonly class UsersController implements AdminSubControllerInterface
 
         $performerIds = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($nb_lines_for_user));
         $username_of  = $this->userRepository->findIdToUsernameMapByIds(
-            Config::userFields()['id'],
-            Config::userFields()['username'],
+            Config::userFields()->id,
+            Config::userFields()->username,
             Tables::users(),
             $performerIds,
         );

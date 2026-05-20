@@ -925,7 +925,7 @@ final class MiscController implements AdminSubControllerInterface
 
         $userFields = Config::userFields();
         $users      = [];
-        foreach ($this->userRepository->findAllUserIdNameMap($userFields['id'], $userFields['username'], Tables::users()) as $id => $username) {
+        foreach ($this->userRepository->findAllUserIdNameMap($userFields->id, $userFields->username, Tables::users()) as $id => $username) {
             $users[$id] = stripslashes($username);
         }
 
@@ -997,7 +997,7 @@ final class MiscController implements AdminSubControllerInterface
 
         $userFields  = Config::userFields();
         $users_by_id = [];
-        foreach ($this->userRepository->findAllWithStatus($userFields['id'], $userFields['username'], Tables::users()) as $row) {
+        foreach ($this->userRepository->findAllWithStatus($userFields->id, $userFields->username, Tables::users()) as $row) {
             $rowStatusForPerm = is_string($row['status'] ?? null) ? UserStatus::tryFrom($row['status']) : null;
             $users_by_id[is_numeric($row['id']) ? (int) $row['id'] : 0] = ['name' => is_string($row['username'] ?? null) ? $row['username'] : '', 'anon' => !$this->permissionService->isAutorizeStatus(AccessLevel::Classic, $rowStatusForPerm)];
         }
@@ -1174,8 +1174,8 @@ final class MiscController implements AdminSubControllerInterface
         $notifRepo = $this->notificationRepository;
         $userFields = Config::userFields();
 
-        $notifRepo->clearEmptyEmails($userFields['email'], Tables::users());
-        $users_without_notif = $notifRepo->findUsersWithoutNotification($userFields['id'], $userFields['username'], $userFields['email'], Tables::users());
+        $notifRepo->clearEmptyEmails($userFields->email, Tables::users());
+        $users_without_notif = $notifRepo->findUsersWithoutNotification($userFields->id, $userFields->username, $userFields->email, Tables::users());
 
         if (count($users_without_notif) > 0) {
             $inserts        = [];

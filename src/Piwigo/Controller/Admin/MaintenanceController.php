@@ -265,7 +265,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 $userRepo    = $this->userRepository;
                 $sessionRepo = $this->sessionRepository;
                 $sessions     = $userRepo->findAllSessions();
-                $all_user_ids = $userRepo->findAllUserIdsAsSet(Config::userFields()['id'], Tables::users());
+                $all_user_ids = $userRepo->findAllUserIdsAsSet(Config::userFields()->id, Tables::users());
                 $sessions_to_delete = [];
                 foreach ($sessions as $session) {
                     if (preg_match('/pwg_uid\|i:(\d+);/', is_string($session['data'] ?? null) ? $session['data'] : '', $matches)) {
@@ -501,7 +501,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 $userRepo    = $this->userRepository;
                 $sessionRepo = $this->sessionRepository;
                 $sessions     = $userRepo->findAllSessions();
-                $all_user_ids = $userRepo->findAllUserIdsAsSet(Config::userFields()['id'], Tables::users());
+                $all_user_ids = $userRepo->findAllUserIdsAsSet(Config::userFields()->id, Tables::users());
                 $sessions_to_delete = [];
                 foreach ($sessions as $session) {
                     if (preg_match('/pwg_uid\|i:(\d+);/', is_string($session['data'] ?? null) ? $session['data'] : '', $matches)) {
@@ -645,8 +645,8 @@ final class MaintenanceController implements AdminSubControllerInterface
             if (isset($_GET['method']) && 'pwg.activity_sys.getList' == $_GET['method']) {
                 $response = [];
                 $data     = [];
-                $usernameField = Config::userFields()['username'];
-                $idField       = Config::userFields()['id'];
+                $usernameField = Config::userFields()->username;
+                $idField       = Config::userFields()->id;
                 $activityRows  = $this->activityRepository->findSystemActivityRows(Tables::users(), $idField, $usernameField);
 
                 foreach ($activityRows as $row) {
@@ -894,7 +894,7 @@ final class MaintenanceController implements AdminSubControllerInterface
 
         if ($form_param['user_id'] != '-1') {
             $userFields = Config::userFields();
-            $foundUsername = $this->userRepository->findUsernameById($userFields['id'], $userFields['username'], Tables::users(), (int) $form_param['user_id']);
+            $foundUsername = $this->userRepository->findUsernameById($userFields->id, $userFields->username, Tables::users(), (int) $form_param['user_id']);
             if ($foundUsername !== null) {
                 $form_param['user_name'] = $foundUsername;
             } else {

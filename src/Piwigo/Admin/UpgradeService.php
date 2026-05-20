@@ -137,8 +137,8 @@ final class UpgradeService
             $query = 'SELECT password, status FROM '.Tables::users().' WHERE username = ?';
         } else {
             $query = 'SELECT u.password, ui.status FROM '.Tables::users().' AS u'
-                .' INNER JOIN '.Tables::userInfos().' AS ui ON u.'.Config::userFields()['id'].'=ui.user_id'
-                .' WHERE '.Config::userFields()['username'].' = ?';
+                .' INNER JOIN '.Tables::userInfos().' AS ui ON u.'.Config::userFields()->id.'=ui.user_id'
+                .' WHERE '.Config::userFields()->username.' = ?';
         }
         $rowResult = Kernel::service(Connection::class)->executeQuery($query, [$username])->fetchAssociative();
         $row = $rowResult !== false ? $rowResult : null;

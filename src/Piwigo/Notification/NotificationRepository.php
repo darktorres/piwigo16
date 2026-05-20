@@ -95,9 +95,9 @@ final class NotificationRepository extends AbstractRepository
         }
 
         $userFields    = Config::userFields();
-        $userIdField   = $userFields['id'] ?? 'id';
-        $usernameField = $userFields['username'] ?? 'username';
-        $emailField    = $userFields['email'] ?? 'mail_address';
+        $userIdField   = $userFields->id;
+        $usernameField = $userFields->username;
+        $emailField    = $userFields->email;
 
         $qb = $this->conn->createQueryBuilder()
             ->select(

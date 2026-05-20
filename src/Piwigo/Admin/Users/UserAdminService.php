@@ -48,14 +48,14 @@ final readonly class UserAdminService
         // user_cache_categories, user_group, favorites, caddie, user_infos,
         // user_auth_keys; FK SET NULL: comments.author_id, images.added_by.
         $this->sessionService->deleteUserSessions($userId);
-        $this->userRepository->deleteByUserId($userId, Tables::users(), Config::userFields()['id']);
+        $this->userRepository->deleteByUserId($userId, Tables::users(), Config::userFields()->id);
         $this->dispatcher->dispatch(new DeleteUser($userId));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, ActivityAction::Delete));
     }
 
     public function syncUsers(): void
     {
-        $baseUsers  = $this->userRepository->findAllUserIdsFromUsers(Config::userFields()['id'], Tables::users());
+        $baseUsers  = $this->userRepository->findAllUserIdsFromUsers(Config::userFields()->id, Tables::users());
         $infosUsers = $this->userRepository->findUserIdsFromUserInfos();
 
         $toCreate = array_values(array_diff($baseUsers, $infosUsers));
@@ -135,8 +135,8 @@ final readonly class UserAdminService
     {
         $userFields = Config::userFields();
         $username   = $this->userRepository->findUsernameById(
-            $userFields['id'],
-            $userFields['username'],
+            $userFields->id,
+            $userFields->username,
             Tables::users(),
             $userId
         );

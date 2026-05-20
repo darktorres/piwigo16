@@ -131,7 +131,7 @@ final readonly class CommentService
             }
             $comm['author_id'] = Config::guestId();
             if ($comm['author'] != 'guest') {
-                $usernameField = Config::userFields()['username'];
+                $usernameField = Config::userFields()->username;
                 $authorStr     = is_string($comm['author']) ? $comm['author'] : '';
                 $count = $this->repo->countByUsername($usernameField, $authorStr);
                 if ($count > 0) {

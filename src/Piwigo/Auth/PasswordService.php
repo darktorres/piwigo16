@@ -236,9 +236,9 @@ final readonly class PasswordService
 
         $this->userRepository->updateUserById(
             Tables::users(),
-            Config::userFields()['id'],
+            Config::userFields()->id,
             $user_id,
-            [Config::userFields()['password'] => password_hash(is_string($newPwd = $_POST['use_new_pwd'] ?? null) ? $newPwd : '', PASSWORD_BCRYPT)],
+            [Config::userFields()->password => password_hash(is_string($newPwd = $_POST['use_new_pwd'] ?? null) ? $newPwd : '', PASSWORD_BCRYPT)],
         );
 
         /** @var array{user_id: int|null, username: string, email: string, language: string}|null $valid_reset_code */

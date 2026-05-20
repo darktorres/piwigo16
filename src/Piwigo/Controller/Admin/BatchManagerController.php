@@ -1148,8 +1148,8 @@ final class BatchManagerController implements AdminSubControllerInterface
             $added_by_username_of = [];
             if (count($added_by_ids) > 0) {
                 $added_by_username_of = $this->userRepository->findIdToUsernameMapByIds(
-                    Config::userFields()['id'],
-                    Config::userFields()['username'],
+                    Config::userFields()->id,
+                    Config::userFields()->username,
                     Tables::users(),
                     $added_by_ids,
                 );

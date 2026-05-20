@@ -8,6 +8,7 @@ use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Image\OrderSpec;
+use Piwigo\Users\UserFieldsMap;
 
 /**
  * Typed facade over Piwigo's runtime configuration.
@@ -1317,19 +1318,10 @@ final class Config
         $v = self::src()['available_permission_levels'] ?? [0, 1, 2, 4, 8];
         return is_array($v) && count($v) > 0 ? array_values(array_map(static fn (mixed $x): int => is_scalar($x) ? (int) $x : 0, $v)) : [0, 1, 2, 4, 8];
     }
-    /** @return array<string,string> */
-    public static function userFields(): array
+    public static function userFields(): UserFieldsMap
     {
-        $default = ['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address'];
-        $v = self::src()['user_fields'] ?? $default;
-        if (!is_array($v)) {
-            return $default;
-        }
-        $result = [];
-        foreach ($v as $k => $val) {
-            $result[(string) $k] = is_scalar($val) ? (string) $val : '';
-        }
-        return $result;
+        $v = self::src()['user_fields'] ?? null;
+        return UserFieldsMap::fromArray(is_array($v) ? $v : []);
     }
     /** @return array<mixed> */
     public static function filterPages(): array

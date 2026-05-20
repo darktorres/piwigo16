@@ -51,12 +51,12 @@ final readonly class GetListHandler implements WsAction
         }
         $whereClauses = ['1=1'];
         if (count($input->userIds) > 0) {
-            $whereClauses[] = 'u.' . Config::userFields()['id'] . ' IN(' . implode(',', $input->userIds) . ')';
+            $whereClauses[] = 'u.' . Config::userFields()->id . ' IN(' . implode(',', $input->userIds) . ')';
         }
         $listParams = [];
         $listTypes  = [];
         if ($input->username !== null) {
-            $whereClauses[] = 'u.' . Config::userFields()['username'] . ' LIKE ?';
+            $whereClauses[] = 'u.' . Config::userFields()->username . ' LIKE ?';
             $listParams[]   = $input->username;
             $listTypes[]    = \Doctrine\DBAL\ParameterType::STRING;
         }
@@ -64,7 +64,7 @@ final readonly class GetListHandler implements WsAction
             $filterStr      = $input->filter;
             $filteredGroups = $this->groupRepository->findIdsByNameLike($filterStr);
             $filterLike     = '%' . $filterStr . '%';
-            $filterWhere    = '(u.' . Config::userFields()['username'] . ' LIKE ? OR u.' . Config::userFields()['email'] . ' LIKE ?';
+            $filterWhere    = '(u.' . Config::userFields()->username . ' LIKE ? OR u.' . Config::userFields()->email . ' LIKE ?';
             $listParams[]   = $filterLike;
             $listParams[]   = $filterLike;
             $listTypes[]    = \Doctrine\DBAL\ParameterType::STRING;
@@ -114,9 +114,9 @@ final readonly class GetListHandler implements WsAction
             $whereClauses[] = 'ug.group_id IN(' . implode(',', $input->groupIds) . ')';
         }
         if (count($input->excludeIds) > 0) {
-            $whereClauses[] = 'u.' . Config::userFields()['id'] . ' NOT IN(' . implode(',', $input->excludeIds) . ')';
+            $whereClauses[] = 'u.' . Config::userFields()->id . ' NOT IN(' . implode(',', $input->excludeIds) . ')';
         }
-        $display      = ['u.' . Config::userFields()['id'] => 'id'];
+        $display      = ['u.' . Config::userFields()->id => 'id'];
         $displayMap   = [];
         if ($input->display !== 'none') {
             $displayTokens = array_map(trim(...), explode(',', $input->display));
@@ -135,10 +135,10 @@ final readonly class GetListHandler implements WsAction
                 $displayMap['last_visit'] = true;
             }
             if (isset($displayMap['username'])) {
-                $display['u.' . Config::userFields()['username']] = 'username';
+                $display['u.' . Config::userFields()->username] = 'username';
             }
             if (isset($displayMap['email'])) {
-                $display['u.' . Config::userFields()['email']] = 'email';
+                $display['u.' . Config::userFields()->email] = 'email';
             }
             $uiFields = ['status','level','language','theme','nb_image_page','recent_period','expand','show_nb_comments','show_nb_hits','enabled_high','registration_date','last_visit'];
             foreach ($uiFields as $field) {
@@ -163,7 +163,7 @@ final readonly class GetListHandler implements WsAction
         if (isset($display['ui.last_visit'])) {
             $query .= ', ui.last_visit_from_history AS last_visit_from_history';
         }
-        $query  .= ' FROM ' . Tables::users() . ' AS u INNER JOIN ' . Tables::userInfos() . ' AS ui ON u.' . Config::userFields()['id'] . ' = ui.user_id LEFT JOIN ' . Tables::userGroup() . ' AS ug ON u.' . Config::userFields()['id'] . ' = ug.user_id WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY ' . $orderStr;
+        $query  .= ' FROM ' . Tables::users() . ' AS u INNER JOIN ' . Tables::userInfos() . ' AS ui ON u.' . Config::userFields()->id . ' = ui.user_id LEFT JOIN ' . Tables::userGroup() . ' AS ug ON u.' . Config::userFields()->id . ' = ug.user_id WHERE ' . implode(' AND ', $whereClauses) . ' ORDER BY ' . $orderStr;
         $perPage = $input->perPage;
         $page    = $input->page;
         if ($perPage !== 0 || $displayMap !== []) {

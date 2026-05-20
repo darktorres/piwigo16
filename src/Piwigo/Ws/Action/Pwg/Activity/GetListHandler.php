@@ -128,8 +128,8 @@ final readonly class GetListHandler implements WsAction
         if (count($userIds) > 0) {
             $userFields = Config::userFields();
             $usernameOf = $this->userRepository->findUsernamesByIds(
-                $userFields['id'],
-                $userFields['username'],
+                $userFields->id,
+                $userFields->username,
                 Tables::users(),
                 array_map(intval(...), array_keys($userIds)),
             );

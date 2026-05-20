@@ -148,7 +148,7 @@ final readonly class CommentsController implements ControllerInterface
 
         $get_author = StringUtil::inputString('author', null, $_GET);
         if ($get_author !== null && $get_author !== '') {
-            $whereClauses[] = '(u.' . Config::userFields()['username'] . ' = \'' . $get_author . '\' OR author = \'' . $get_author . '\')';
+            $whereClauses[] = '(u.' . Config::userFields()->username . ' = \'' . $get_author . '\' OR author = \'' . $get_author . '\')';
         }
 
         $get_comment_id_filter = StringUtil::inputInt('comment_id', null, $_GET);
@@ -289,8 +289,8 @@ SELECT id, name, uppercats, global_rank
         $element_ids  = [];
         $category_ids = [];
 
-        $userEmailField = Config::userFields()['email'];
-        $userIdField    = Config::userFields()['id'];
+        $userEmailField = Config::userFields()->email;
+        $userIdField    = Config::userFields()->id;
         $usersTable     = Tables::users();
 
         $counter = $this->commentRepository->countFilteredComments($whereClauses, $perm1->params, $perm1->types, $usersTable, $userIdField);

@@ -114,9 +114,9 @@ final class UserService
 
         if (empty($errors)) {
             $insert = [
-                Config::userFields()['username'] => $login,
-                Config::userFields()['password'] => password_hash($password, PASSWORD_BCRYPT),
-                Config::userFields()['email']    => $mailAddress,
+                Config::userFields()->username => $login,
+                Config::userFields()->password => password_hash($password, PASSWORD_BCRYPT),
+                Config::userFields()->email    => $mailAddress,
             ];
 
             $userId = $this->userRepo->insertNew(Tables::users(), $insert);
@@ -393,13 +393,13 @@ final class UserService
     public function getUserid(string $username): int|false
     {
         $userFields = Config::userFields();
-        return $this->userRepo->findIdByUsername($userFields['username'], $userFields['id'], Tables::users(), $username);
+        return $this->userRepo->findIdByUsername($userFields->username, $userFields->id, Tables::users(), $username);
     }
 
     public function getUseridByEmail(string $email): int|false
     {
         $userFields = Config::userFields();
-        return $this->userRepo->findIdByEmail($userFields['email'], $userFields['id'], Tables::users(), $email);
+        return $this->userRepo->findIdByEmail($userFields->email, $userFields->id, Tables::users(), $email);
     }
 
     /** @return array<mixed,mixed>|null */
@@ -542,14 +542,14 @@ final class UserService
                 if ($usernameStr != strip_tags($usernameStr)) {
                     return ['error' => ['code' => WsError::InvalidParam->value, 'message' => Lang::t('html tags are not allowed in login')]];
                 }
-                $updates[Config::userFields()['username']] = $params['username'];
+                $updates[Config::userFields()->username] = $params['username'];
             }
 
             if (!empty($params['email'])) {
                 if (($error = $this->authService->validateMailAddress(is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : null, is_scalar($params['email']) ? (string) $params['email'] : null)) != '') {
                     return ['error' => ['code' => WsError::InvalidParam->value, 'message' => $error]];
                 }
-                $updates[Config::userFields()['email']] = $params['email'];
+                $updates[Config::userFields()->email] = $params['email'];
             }
 
             if (!empty($params['password'])) {
@@ -561,7 +561,7 @@ final class UserService
                         return ['error' => ['code' => 403, 'message' => 'Only webmasters can change password of other "webmaster/admin" users']];
                     }
                 }
-                $updates[Config::userFields()['password']] = password_hash(is_string($params['password']) ? $params['password'] : '', PASSWORD_BCRYPT);
+                $updates[Config::userFields()->password] = password_hash(is_string($params['password']) ? $params['password'] : '', PASSWORD_BCRYPT);
             }
         }
 
@@ -608,12 +608,12 @@ final class UserService
         $paramUid0   = is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : 0;
         $paramGroupId = is_array($params['group_id'] ?? null) ? $params['group_id'] : [];
 
-        $this->userRepo->updateUserById(Tables::users(), Config::userFields()['id'], $paramUid0, $updates);
+        $this->userRepo->updateUserById(Tables::users(), Config::userFields()->id, $paramUid0, $updates);
 
-        if (isset($updates[Config::userFields()['password']])) {
+        if (isset($updates[Config::userFields()->password])) {
             $this->authService->deactivateUserAuthKeys($paramUid0);
         }
-        if (isset($updates[Config::userFields()['email']])) {
+        if (isset($updates[Config::userFields()->email])) {
             $this->authService->deactivatePasswordResetKey($paramUid0);
         }
 

@@ -23,8 +23,8 @@ final class SendNotificationEmailHandler
         if ($to === '') {
             $userFields = Config::userFields();
             $to = Kernel::service(UserRepository::class)->findEmailByUserId(
-                $userFields['email'],
-                $userFields['id'],
+                $userFields->email,
+                $userFields->id,
                 Tables::users(),
                 $job->userId,
             );

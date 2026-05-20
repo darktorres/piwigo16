@@ -106,8 +106,8 @@ final readonly class GetListHandler implements WsAction
             $qParams,
             $qTypes,
             Tables::users(),
-            $userFields['id'],
-            $userFields['username'],
+            $userFields->id,
+            $userFields->username,
             $perPage,
             $perPage * $pageNum,
         );

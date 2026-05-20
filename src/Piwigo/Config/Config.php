@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
+use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Image\OrderSpec;
 
 /**
  * Typed facade over Piwigo's runtime configuration.
@@ -1146,26 +1148,26 @@ final class Config
 
     // ---- Custom accessors (hand-written) --------------------------------
 
-    /** @return list<array{field: string, dir: string}> */
+    /** @return list<OrderSpec> */
     public static function orderBy(): array
     {
         return self::filterOrderEntries(self::src()['order_by'] ?? []);
     }
 
-    /** @return list<array{field: string, dir: string}>|null */
+    /** @return list<OrderSpec>|null */
     public static function orderByCustom(): ?array
     {
         $v = self::src()['order_by_custom'] ?? null;
         return is_array($v) ? self::filterOrderEntries($v) : null;
     }
 
-    /** @return list<array{field: string, dir: string}> */
+    /** @return list<OrderSpec> */
     public static function orderByInsideCategory(): array
     {
         return self::filterOrderEntries(self::src()['order_by_inside_category'] ?? []);
     }
 
-    /** @return list<array{field: string, dir: string}>|null */
+    /** @return list<OrderSpec>|null */
     public static function orderByInsideCategoryCustom(): ?array
     {
         $v = self::src()['order_by_inside_category_custom'] ?? null;
@@ -1174,9 +1176,10 @@ final class Config
 
     /**
      * Coerce a raw `order_by*` config value into a list of well-typed
-     * (field, dir) entries; drop anything that doesn't fit the shape.
+     * OrderSpec entries; drop anything that doesn't fit the shape or has
+     * a non-ASC/DESC direction.
      *
-     * @return list<array{field: string, dir: string}>
+     * @return list<OrderSpec>
      */
     private static function filterOrderEntries(mixed $value): array
     {
@@ -1193,7 +1196,11 @@ final class Config
             if (!is_string($field) || !is_string($dir)) {
                 continue;
             }
-            $out[] = ['field' => $field, 'dir' => $dir];
+            $sortOrder = SortOrder::tryFrom(strtoupper($dir));
+            if ($sortOrder === null) {
+                continue;
+            }
+            $out[] = new OrderSpec($field, $sortOrder);
         }
         return $out;
     }

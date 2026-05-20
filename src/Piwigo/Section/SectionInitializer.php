@@ -8,6 +8,7 @@ use Piwigo\Calendar\CalendarService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Enum\Section;
+use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
@@ -22,6 +23,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\OrderByService;
+use Piwigo\Image\OrderSpec;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\Session;
 use Piwigo\Tag\TagService;
@@ -394,7 +396,7 @@ final readonly class SectionInitializer
         } elseif ($section === Section::RecentPics) {
             if (!isset($page['super_order_by'])) {
                 Config::override('order_by', [
-                    ['field' => 'date_available', 'dir' => 'DESC'],
+                    new OrderSpec('date_available', SortOrder::Desc),
                     ...Config::orderBy(),
                 ]);
             }

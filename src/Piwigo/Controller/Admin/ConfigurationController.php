@@ -13,6 +13,7 @@ use Piwigo\Admin\Config\WatermarkProcessor;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
@@ -27,6 +28,7 @@ use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\OrderByService;
+use Piwigo\Image\OrderSpec;
 use Piwigo\Search\SearchFilterViewRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -152,7 +154,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                         if (isset($_POST['order_by']) && $_POST['order_by'] !== '') {
                             $this->inputValidator->check('order_by', $_POST, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
                             $post_order_by = is_array($_POST['order_by']) ? $_POST['order_by'] : [];
-                            /** @var list<array{field: string, dir: string}> $parsed */
+                            /** @var list<OrderSpec> $parsed */
                             $parsed = [];
                             $seen = [];
                             foreach ($post_order_by as $val) {
@@ -163,7 +165,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                                 if ($entry === null) {
                                     continue;
                                 }
-                                $key = $entry['field'] . ' ' . $entry['dir'];
+                                $key = $entry->field . ' ' . $entry->dir->value;
                                 if (isset($seen[$key])) {
                                     continue;
                                 }
@@ -176,12 +178,20 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                                 $sliced = array_slice($parsed, 0, (int) ceil(count($sort_fields) / 2));
                                 // `order_by` is the gallery-wide (non-category) ordering — strip `rank`
                                 // since manual rank only applies inside a category context.
-                                $orderBy = array_values(array_filter($sliced, static fn (array $e): bool => $e['field'] !== 'rank'));
+                                $orderBy = array_values(array_filter($sliced, static fn (OrderSpec $e): bool => $e->field !== 'rank'));
                                 if ($orderBy === []) {
-                                    $orderBy = [['field' => 'id', 'dir' => 'ASC']];
+                                    $orderBy = [new OrderSpec('id', SortOrder::Asc)];
                                 }
-                                $_POST['order_by']                  = $orderBy;
-                                $_POST['order_by_inside_category']  = $sliced;
+                                // Persist as legacy array shape so JSON round-trips and other
+                                // consumers reading raw config still see the dictionary form.
+                                $_POST['order_by'] = array_map(
+                                    static fn (OrderSpec $e): array => ['field' => $e->field, 'dir' => $e->dir->value],
+                                    $orderBy
+                                );
+                                $_POST['order_by_inside_category'] = array_map(
+                                    static fn (OrderSpec $e): array => ['field' => $e->field, 'dir' => $e->dir->value],
+                                    $sliced
+                                );
                             }
                         } else {
                             PageState::current()->addError(Lang::t('No order field selected'));
@@ -337,7 +347,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                     $tpl->assign('ORDER_BY_IS_CUSTOM', true);
                 } else {
                     $order_by = array_map(
-                        fn (array $e): string => $this->orderByService->toFormToken($e),
+                        $this->orderByService->toFormToken(...),
                         Config::orderByInsideCategory()
                     );
                 }

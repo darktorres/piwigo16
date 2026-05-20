@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Core;
 
 use PHPUnit\Framework\TestCase;
+use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
+use Piwigo\Image\OrderSpec;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Psr\Container\ContainerInterface;
@@ -59,7 +61,7 @@ final class KernelBootTest extends TestCase
 
         Config::override('order_by', [['field' => 'date_creation', 'dir' => 'DESC']]);
 
-        self::assertSame([['field' => 'date_creation', 'dir' => 'DESC']], Config::orderBy());
+        self::assertEquals([new OrderSpec('date_creation', SortOrder::Desc)], Config::orderBy());
     }
 
     public function test_PageState_addError_works_after_boot(): void

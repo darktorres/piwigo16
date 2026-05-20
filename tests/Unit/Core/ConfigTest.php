@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Core;
 
 use PHPUnit\Framework\TestCase;
+use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Config\Config;
 use Piwigo\Config\UnknownConfigKeyException;
+use Piwigo\Image\OrderSpec;
 use ReflectionMethod;
 
 final class ConfigTest extends TestCase
@@ -201,7 +203,7 @@ final class ConfigTest extends TestCase
         Config::loadArray(['order_by' => [['field' => 'id', 'dir' => 'ASC']]]);
         Config::override('order_by', [['field' => 'date_creation', 'dir' => 'DESC']]);
 
-        self::assertSame([['field' => 'date_creation', 'dir' => 'DESC']], Config::orderBy());
+        self::assertEquals([new OrderSpec('date_creation', SortOrder::Desc)], Config::orderBy());
     }
 
     public function test_galleryUrl_returns_null_when_unset(): void

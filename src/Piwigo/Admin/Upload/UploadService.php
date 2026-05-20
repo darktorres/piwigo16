@@ -8,6 +8,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\FormatAddDetails;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Image\PwgImage;
@@ -370,7 +371,7 @@ final readonly class UploadService
             $formatId  = $this->imageFormatRepository->insert($insert);
             $addStatus = UploadAddStatus::Add;
         }
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, (int) $formatOf, ActivityAction::Edit, ['action' => 'add format', 'format_ext' => $formatExt, 'format_id' => $formatId]));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, (int) $formatOf, ActivityAction::Edit, new FormatAddDetails($formatExt, $formatId)));
         $formatInfos = array_merge($insert, ['format_id' => $formatId]);
         $this->dispatcher->dispatch(new LocEndAddFormat($formatInfos));
         return $addStatus;

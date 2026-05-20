@@ -54,7 +54,6 @@ final readonly class ActivityLogger
     {
         $object  = $event->object->value;
         $action  = $event->action;
-        $details = $event->details;
 
         if (isset($_REQUEST['method']) && $_REQUEST['method'] === 'pwg.images.uploadAsync' && $action === ActivityAction::Login) {
             return;
@@ -68,18 +67,18 @@ final readonly class ActivityLogger
             return;
         }
 
-        if (isset($_REQUEST['method'])) {
-            $details['method'] = $_REQUEST['method'];
-        } else {
-            $details['script'] = StringUtil::scriptBasename();
-            if ($details['script'] === 'admin' && isset($_GET['page'])) {
-                $details['script'] .= '/' . (is_string($_GET['page']) ? $_GET['page'] : '');
-            }
-        }
+        $callerDetails  = $event->details->toJsonArray();
+        $runtimeContext = [];
 
-        if ($action === ActivityAction::AutoUpdate) {
-            unset($details['method']);
-            unset($details['script']);
+        if ($action !== ActivityAction::AutoUpdate) {
+            if (isset($_REQUEST['method'])) {
+                $runtimeContext['method'] = $_REQUEST['method'];
+            } else {
+                $runtimeContext['script'] = StringUtil::scriptBasename();
+                if ($runtimeContext['script'] === 'admin' && isset($_GET['page'])) {
+                    $runtimeContext['script'] .= '/' . (is_string($_GET['page']) ? $_GET['page'] : '');
+                }
+            }
         }
 
         $userAgent = null;
@@ -89,7 +88,7 @@ final readonly class ActivityLogger
             $userAgent = strip_tags(is_string($uaRaw) ? $uaRaw : '');
         }
         if ($this->session->connectedWith === 'api_key' && isset($_SERVER['HTTP_USER_AGENT'])) {
-            $details['connected_with'] = 'api_key';
+            $runtimeContext['connected_with'] = 'api_key';
             /** @var mixed $uaRaw */
             $uaRaw     = $_SERVER['HTTP_USER_AGENT'];
             $userAgent = strip_tags(is_string($uaRaw) ? $uaRaw : '');
@@ -99,31 +98,32 @@ final readonly class ActivityLogger
                 $calledFunctions = array_flip(array_column(debug_backtrace(), 'function'));
                 foreach (['auto_login', 'auth_key_login'] as $authFunction) {
                     if (isset($calledFunctions[$authFunction])) {
-                        $details['auth_function'] = $authFunction;
+                        $runtimeContext['auth_function'] = $authFunction;
                     }
                 }
             }
         }
-        if ($event->object === ActivityObject::Photo && $action === ActivityAction::Add && !isset($details['sync'])) {
-            $details['added_with'] = 'app';
-            $refRaw                = $_SERVER['HTTP_REFERER'] ?? null;
+        if ($event->object === ActivityObject::Photo && $action === ActivityAction::Add && !isset($callerDetails['sync'])) {
+            $runtimeContext['added_with'] = 'app';
+            $refRaw                       = $_SERVER['HTTP_REFERER'] ?? null;
             if (is_string($refRaw) && preg_match('/page=photos_add/', $refRaw)) {
-                $details['added_with'] = 'browser';
+                $runtimeContext['added_with'] = 'browser';
             }
         }
         if (in_array($event->object, [ActivityObject::Album, ActivityObject::Photo], true)
             && $action === ActivityAction::Delete
             && isset($_GET['page']) && $_GET['page'] === 'site_update'
         ) {
-            $details['sync'] = true;
+            $runtimeContext['sync'] = true;
         }
         if ($event->object === ActivityObject::Tag && $action === ActivityAction::Delete && isset($_POST['destination_tag'])) {
-            $details['action']          = 'merge';
-            $details['destination_tag'] = $_POST['destination_tag'];
+            $runtimeContext['action']          = 'merge';
+            $runtimeContext['destination_tag'] = $_POST['destination_tag'];
         }
 
         $inserts       = [];
-        $detailsInsert = json_encode($details, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        $merged        = array_merge($callerDetails, $runtimeContext);
+        $detailsInsert = json_encode($merged, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
         $ipAddress     = $_SERVER['REMOTE_ADDR'] ?? null;
         $sessionId     = session_id() !== '' ? session_id() : 'none';
 

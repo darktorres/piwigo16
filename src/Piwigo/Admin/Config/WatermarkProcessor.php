@@ -8,6 +8,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\ConfigDetails;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Filesystem;
@@ -164,7 +165,7 @@ final readonly class WatermarkProcessor
             }
 
             $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Config, ['config_section' => 'watermark']));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Config, new ConfigDetails('watermark')));
         } else {
             $tpl->assign('watermark', $pwatermark);
             $tpl->assign('ferrors', $errors);

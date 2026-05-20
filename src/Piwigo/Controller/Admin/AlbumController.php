@@ -10,6 +10,7 @@ use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\Details\GenericDetails;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Album\AlbumsTabRenderer;
 use Piwigo\Admin\Category\CategoryAdminService;
@@ -843,7 +844,7 @@ final class AlbumController implements AdminSubControllerInterface
                 'representative' => $this->categoryRepository->clearRepresentatives($cat_true),
                 default          => null,
             };
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $cat_true, ActivityAction::Edit, ['section' => $current_section, 'action' => 'falsify']));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $cat_true, ActivityAction::Edit, new GenericDetails(['section' => $current_section, 'action' => 'falsify'])));
         } elseif (isset($_POST['trueify']) && isset($_POST['cat_false']) && count(is_array($_POST['cat_false']) ? $_POST['cat_false'] : []) > 0) {
             /** @var int[] $cat_false */
             $cat_false       = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($_POST['cat_false']) ? $_POST['cat_false'] : []);
@@ -855,7 +856,7 @@ final class AlbumController implements AdminSubControllerInterface
                 'representative' => $this->categoryAdminService->setRandomRepresentant($cat_false),
                 default          => null,
             };
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $cat_false, ActivityAction::Edit, ['section' => $current_section, 'action' => 'trueify']));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $cat_false, ActivityAction::Edit, new GenericDetails(['section' => $current_section, 'action' => 'trueify'])));
         }
 
         $get_section = $_GET['section'] ?? null;

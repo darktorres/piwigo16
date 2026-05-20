@@ -8,6 +8,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\UserAssocDetails;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Csrf\CsrfService;
@@ -58,7 +59,7 @@ final readonly class DuplicateHandler implements WsAction
         $this->groupRepository->insertUserGroupIgnoreDuplicates($inserts);
         $this->userAdminService->invalidateUserCache();
         foreach ($users as $userId) {
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, ActivityAction::Edit, ['associated' => $input->groupId]));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, ActivityAction::Edit, new UserAssocDetails($input->groupId)));
         }
         return $server->invoke('pwg.groups.getList', ['group_id' => $insertedId]);
     }

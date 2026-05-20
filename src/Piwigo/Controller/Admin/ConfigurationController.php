@@ -9,6 +9,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\ConfigDetails;
 use Piwigo\Admin\Config\SizesProcessor;
 use Piwigo\Admin\Config\WatermarkProcessor;
 use Piwigo\Admin\Image\ImageAdminService;
@@ -188,7 +189,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                     }
                 }
                 $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Config, ['config_section' => $section]));
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Config, new ConfigDetails($section)));
             }
 
             ConfigService::loadConfFromDb();
@@ -201,7 +202,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
             $this->imageAdminService->clearDerivativeCache();
             ConfigService::loadConfFromDb();
             $tpl->assign(['save_success' => Lang::t('Your configuration settings are saved')]);
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Config, ['config_section' => $section, 'config_action' => $_GET['action']]));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Config, new ConfigDetails($section, 'restore_settings')));
         }
 
         // ── Template init ─────────────────────────────────────────────────────

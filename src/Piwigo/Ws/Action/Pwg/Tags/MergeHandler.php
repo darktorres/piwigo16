@@ -8,6 +8,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\GenericDetails;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Album\MergeTags;
@@ -60,7 +61,7 @@ final readonly class MergeHandler implements WsAction
         $this->tagRepository->insertImageTagsBatch($inserts, true);
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $destId, ActivityAction::Edit));
         foreach ($imageToAdd as $imageId) {
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, ActivityAction::Edit, ['tag-add' => $destId]));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, ActivityAction::Edit, new GenericDetails(['tag-add' => $destId])));
         }
         $this->dispatcher->dispatch(new MergeTags($destId, $mergeTag));
         $this->tagAdminService->deleteTags($mergeTag);

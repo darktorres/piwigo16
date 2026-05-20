@@ -9,6 +9,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\GenericDetails;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -588,7 +589,7 @@ final readonly class PictureController implements ControllerInterface
             case 'set_as_representative':
                 if ($this->permissionService->isAdmin() && $ctx->category !== null) {
                     $this->categoryRepository->setRepresentativePicture([$catId], $imageId);
-                    $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catId, ActivityAction::Edit, ['action' => $action, 'image_id' => $imageId]));
+                    $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catId, ActivityAction::Edit, new GenericDetails(['action' => $action, 'image_id' => $imageId])));
                     $this->userAdminService->invalidateUserCache();
                 }
                 $this->redirectResponder->redirect($urlSelf);

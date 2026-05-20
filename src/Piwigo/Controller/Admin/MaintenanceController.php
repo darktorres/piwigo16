@@ -10,6 +10,8 @@ use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\Details\MaintenanceDetails;
+use Piwigo\Activity\Details\SyncAddDetails;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\History\HistoryAdminService;
@@ -213,7 +215,8 @@ final class MaintenanceController implements AdminSubControllerInterface
 
         $maint_actions = $this->maintActions;
 
-        $action = $_GET['action'] ?? '';
+        $actionRaw = $_GET['action'] ?? null;
+        $action = is_string($actionRaw) ? $actionRaw : '';
         $register_activity = true;
 
         switch ($action) {
@@ -222,13 +225,13 @@ final class MaintenanceController implements AdminSubControllerInterface
                 exit();
             case 'lock_gallery':
                 $this->configService->confUpdateParam('gallery_locked', 'true');
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Maintenance, ['maintenance_action' => $action]));
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Maintenance, new MaintenanceDetails($action)));
                 $this->redirectResponder->redirect($this->urlGenerator->admin('maintenance'));
                 break;
             case 'unlock_gallery':
                 $this->configService->confUpdateParam('gallery_locked', 'false');
                 $this->session->flash->add('info', Lang::t('Gallery unlocked'));
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Maintenance, ['maintenance_action' => $action]));
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Maintenance, new MaintenanceDetails($action)));
                 $this->redirectResponder->redirect($this->urlGenerator->admin('maintenance'));
                 break;
             case 'categories':
@@ -349,7 +352,7 @@ final class MaintenanceController implements AdminSubControllerInterface
         }
 
         if ($register_activity) {
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Maintenance, ['maintenance_action' => $action]));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Maintenance, new MaintenanceDetails($action)));
         }
 
         $pwg_token    = $this->csrfService->getToken();
@@ -1143,7 +1146,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                     $category_up[] = $category['id_uppercat'];
                 }
             }
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $category_ids, ActivityAction::Add, ['sync' => true]));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $category_ids, ActivityAction::Add, new SyncAddDetails()));
             $category_up_str = implode(',', array_unique($category_up));
             $this->inheritCategoryPermissionsForBatch($category_up_str, $category_ids, $ctx->dbCategories);
         }
@@ -1270,7 +1273,7 @@ final class MaintenanceController implements AdminSubControllerInterface
         if (!$ctx->simulate) {
             if (count($inserts) > 0) {
                 $this->imageRepository->insertImageRowsBatch($inserts, $insert_links);
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $ctx->caddiables, ActivityAction::Add, ['sync' => true]));
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $ctx->caddiables, ActivityAction::Add, new SyncAddDetails()));
                 if (isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1) {
                     $this->userCaddieRepository->addElements(CurrentUser::get()->id, $ctx->caddiables);
                 }

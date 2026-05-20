@@ -8,6 +8,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\VersionDetails;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\IgnoredUpdatesRepository;
 use Piwigo\Admin\Users\UserAdminService;
@@ -656,7 +657,7 @@ final class Updates
                         $this->adminService->deltree($this->paths->root . Config::dataLocation() . 'update');
                         $this->userAdminService->invalidateUserCache(true);
                         $this->configService->confUpdateParam('piwigo_installed_version', $upgrade_to);
-                        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Update, ['from_version' => AppInfo::VERSION, 'to_version' => $upgrade_to]));
+                        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Update, new VersionDetails(AppInfo::VERSION, $upgrade_to)));
 
                         if ($step == 2) {
                             // only purge the compiled-template cache on minor updates;

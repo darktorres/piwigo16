@@ -8,6 +8,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\GenericDetails;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Event\Tag\RenderTagUrl;
 use Piwigo\Tag\TagRepository;
@@ -51,12 +52,12 @@ final readonly class DuplicateHandler implements WsAction
         $this->dispatcher->dispatch($urlEvent);
         $urlName          = $urlEvent->tagName;
         $destinationTagId = $this->tagRepository->insertNewTag(['name' => $input->copyName, 'url_name' => $urlName]);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $destinationTagId, ActivityAction::Add, ['action' => 'duplicate', 'source_tag' => $input->tagId]));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $destinationTagId, ActivityAction::Add, new GenericDetails(['action' => 'duplicate', 'source_tag' => $input->tagId])));
         $destinationTagImageIds = $this->tagRepository->findImageIdsByTagId($input->tagId);
         $inserts                = [];
         foreach ($destinationTagImageIds as $imageId) {
             $inserts[] = ['tag_id' => $destinationTagId, 'image_id' => $imageId];
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, ActivityAction::Edit, ['add-tag' => $destinationTagId]));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, ActivityAction::Edit, new GenericDetails(['add-tag' => $destinationTagId])));
         }
         $this->tagRepository->insertImageTagsBatch($inserts, false);
         return new DuplicateResult(

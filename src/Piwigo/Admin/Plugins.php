@@ -8,6 +8,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\GenericDetails;
 use Piwigo\Admin\Extensions\ExtensionAction;
 use Piwigo\Admin\Extensions\UpgradeStatus;
 use Piwigo\Common\Enum\UserStatus;
@@ -223,7 +224,7 @@ final class Plugins
                 break;
         }
 
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Plugin, ActivityAction::from($action->value), $activity_details));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Plugin, ActivityAction::from($action->value), new GenericDetails($activity_details)));
 
         return $errors;
     }

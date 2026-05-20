@@ -9,6 +9,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\ProfileEditDetails;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
@@ -198,7 +199,7 @@ final readonly class ProfileService
 
             $userId = is_numeric($userdata['id'] ?? null) ? (int) $userdata['id'] : 0;
             $this->dispatcher->dispatch(new SaveProfileFromPost($userId));
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, ActivityAction::Edit, ['function' => 'saveProfileFromPost', 'tables' => implode(',', $activity_details_tables)]));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, ActivityAction::Edit, new ProfileEditDetails('saveProfileFromPost', implode(',', $activity_details_tables))));
 
             if (isset($_POST['redirect']) && $_POST['redirect'] !== '') {
                 $this->redirectResponder->redirect(is_string($_POST['redirect']) ? $_POST['redirect'] : UrlService::getRootUrl());

@@ -8,6 +8,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\UserAssocDetails;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Group\GroupRepository;
@@ -62,7 +63,7 @@ final readonly class MergeHandler implements WsAction
         $this->userAdminService->invalidateUserCache();
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $destGroupId, ActivityAction::Edit));
         foreach ($userToAdd as $userId) {
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, ActivityAction::Edit, ['associated' => $destGroupId]));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, ActivityAction::Edit, new UserAssocDetails($destGroupId)));
         }
         $this->userAdminService->deleteGroups($mergeGroup);
         return ['destination_group' => $server->invoke('pwg.groups.getList', ['group_id' => $destGroupId]), 'deleted_group' => $mergeGroupObj];

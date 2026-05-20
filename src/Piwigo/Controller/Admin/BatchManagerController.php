@@ -10,6 +10,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\GenericDetails;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\Category\CategoryAdminService;
@@ -1028,7 +1029,7 @@ final class BatchManagerController implements AdminSubControllerInterface
         $authorValue = is_string($rawAuthor) ? $rawAuthor : null;
         $datas = array_map(fn (int $id): array => ['id' => $id, 'author' => $authorValue], array_values($collection));
         $this->imageRepository->setAuthorBatch($datas);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection, ActivityAction::Edit, ['action' => 'author']));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection, ActivityAction::Edit, new GenericDetails(['action' => 'author'])));
         return false;
     }
 
@@ -1039,7 +1040,7 @@ final class BatchManagerController implements AdminSubControllerInterface
         $titleValue = is_string($rawTitle) ? $rawTitle : null;
         $datas = array_map(fn (int $id): array => ['id' => $id, 'name' => $titleValue], array_values($collection));
         $this->imageRepository->setNameBatch($datas);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection, ActivityAction::Edit, ['action' => 'title']));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection, ActivityAction::Edit, new GenericDetails(['action' => 'title'])));
         return false;
     }
 
@@ -1050,7 +1051,7 @@ final class BatchManagerController implements AdminSubControllerInterface
         $date_creation   = is_string($rawDateCreation) ? $rawDateCreation : null;
         $datas = array_map(fn (int $id): array => ['id' => $id, 'date_creation' => $date_creation], array_values($collection));
         $this->imageRepository->setDateCreationBatch($datas);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection, ActivityAction::Edit, ['action' => 'date_creation']));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection, ActivityAction::Edit, new GenericDetails(['action' => 'date_creation'])));
         return false;
     }
 
@@ -1064,7 +1065,7 @@ final class BatchManagerController implements AdminSubControllerInterface
         $levelValue = is_numeric($rawLevel) ? (int) $rawLevel : 0;
         $datas      = array_map(fn (int $id): array => ['id' => $id, 'level' => $levelValue], array_values($collection));
         $this->imageRepository->setLevelBatch($datas);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection, ActivityAction::Edit, ['action' => 'privacy_level']));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection, ActivityAction::Edit, new GenericDetails(['action' => 'privacy_level'])));
         if (isset($bmf['level'])) {
             $bmf_level_val  = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
             $post_level_val = is_numeric($rawLevel) ? (int) $rawLevel : 0;

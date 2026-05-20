@@ -8,6 +8,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\GenericDetails;
 use Piwigo\Admin\Extensions\ExtensionAction;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\UpgradeStatus;
@@ -89,7 +90,7 @@ final readonly class UpdateHandler implements WsAction
             } else {
                 $activityDetails['result'] = 'error';
             }
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, ActivityAction::Update, $activityDetails));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, ActivityAction::Update, new GenericDetails($activityDetails)));
         } else {
             // ExtensionType::Language — the only remaining case.
             $extension     = Kernel::service(Languages::class);

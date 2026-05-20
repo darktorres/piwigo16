@@ -8,6 +8,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\GenericDetails;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -82,7 +83,7 @@ final readonly class SetInfoHandler implements WsAction
             unset($updateFields['id']);
             $this->categoryRepository->updateById($categoryId, $updateFields);
         }
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, ActivityAction::Edit, ['fields' => implode(',', array_keys($update))]));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, ActivityAction::Edit, new GenericDetails(['fields' => implode(',', array_keys($update))])));
         return null;
     }
 }

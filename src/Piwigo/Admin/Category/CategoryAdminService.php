@@ -8,6 +8,8 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\DeleteAlbumDetails;
+use Piwigo\Activity\Details\MoveAlbumDetails;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
@@ -85,7 +87,7 @@ final readonly class CategoryAdminService
 
         $this->categoryRepository->deleteCategoriesAndPermalinksAtomically($ids);
         $this->dispatcher->dispatch(new DeleteCategories($ids));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $ids, ActivityAction::Delete, ['photo_deletion_mode' => $photoDeletionMode]));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $ids, ActivityAction::Delete, new DeleteAlbumDetails($photoDeletionMode)));
     }
 
     public function imagesIntegrity(): void
@@ -469,7 +471,7 @@ final readonly class CategoryAdminService
             $this->setCatStatus(array_map(static fn (int|string $v): int => (int) $v, array_keys($categories)), Privacy::Private);
         }
         PageState::current()->addInfo(Translator::get()->plural('%d album moved', '%d albums moved', count($categories)));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catIdsInt, ActivityAction::Move, ['parent' => $newParent]));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catIdsInt, ActivityAction::Move, new MoveAlbumDetails((int) $newParent)));
     }
 
     /**

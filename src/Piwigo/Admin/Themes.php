@@ -8,6 +8,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\GenericDetails;
 use Piwigo\Admin\Extensions\ExtensionAction;
 use Piwigo\Admin\Extensions\UpgradeStatus;
 use Piwigo\Config\Config;
@@ -200,7 +201,7 @@ final class Themes
                 break;
         }
 
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, ActivityAction::from($action->value), $activity_details));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, ActivityAction::from($action->value), new GenericDetails($activity_details)));
 
         return array_values($errors);
     }

@@ -8,6 +8,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\GenericDetails;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Users\UserRepository;
@@ -39,7 +40,7 @@ final readonly class SetRepresentativeHandler implements WsAction
         }
         $this->categoryRepository->setRepresentativePicture([$input->categoryId], $input->imageId);
         $this->userRepository->clearUserRepresentativeForCategory($input->categoryId);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $input->categoryId, ActivityAction::Edit, ['image_id' => $input->imageId]));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $input->categoryId, ActivityAction::Edit, new GenericDetails(['image_id' => $input->imageId])));
         return null;
     }
 }

@@ -10,6 +10,7 @@ use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Activity\Details\InstallDetails;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\Extensions\ExtensionAction;
 use Piwigo\Admin\InstallService;
@@ -262,7 +263,7 @@ final readonly class InstallController implements ControllerInterface
         if ($step == 1) {
             $tpl->assign('install', true);
         } else {
-            Kernel::service(ActivityLogger::class)->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Install, ['version' => AppInfo::VERSION]));
+            Kernel::service(ActivityLogger::class)->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Install, new InstallDetails(AppInfo::VERSION)));
             $infos[] = Lang::t('Congratulations, Piwigo installation is completed');
 
             {

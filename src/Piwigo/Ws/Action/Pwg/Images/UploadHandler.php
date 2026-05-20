@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Images;
 
+use Piwigo\Admin\Upload\UploadAddStatus;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\Config;
@@ -109,7 +110,7 @@ final readonly class UploadHandler implements WsAction
         if (is_resource($in)) {
             fclose($in);
         }
-        $addStatus = 'add';
+        $addStatus = UploadAddStatus::Add;
         if (!$chunks || $chunk === $chunks - 1) {
             rename("{$filePath}.part", $filePath);
             if ($input->formatOf !== null) {
@@ -119,7 +120,7 @@ final readonly class UploadHandler implements WsAction
                 }
                 $srcImage  = SrcImage::fromImage($image);
                 $addStatus = $this->uploadService->addFormat($filePath, $formatExt, (string) $image->id->value);
-                return ['image_id' => $image->id->value, 'src' => DerivativeImage::thumbUrl($srcImage), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $srcImage), 'name' => $image->name, 'add_status' => $addStatus];
+                return ['image_id' => $image->id->value, 'src' => DerivativeImage::thumbUrl($srcImage), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $srcImage), 'name' => $image->name, 'add_status' => $addStatus->value];
             }
             $name           = stripslashes($input->name ?? '');
             $idImage        = null;
@@ -128,7 +129,7 @@ final readonly class UploadHandler implements WsAction
             if ($input->updateMode) {
                 $idImage = $this->imageRepository->findIdInCategoryByFile($pCategoryFirst, $name);
                 if ($idImage !== null) {
-                    $addStatus = 'update';
+                    $addStatus = UploadAddStatus::Update;
                 }
             }
             $imageId        = $this->uploadService->addUploadedFile($filePath, $name, $pCategoryInt, $input->level, $idImage);
@@ -140,7 +141,7 @@ final readonly class UploadHandler implements WsAction
                 return null;
             }
             $srcImage = SrcImage::fromImage($imageInfos);
-            return ['image_id' => $imageId, 'src' => DerivativeImage::thumbUrl($srcImage), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $srcImage), 'name' => $imageInfos->name, 'category' => ['id' => $pCategoryFirst, 'nb_photos' => $categoryInfos['nb_photos'] + $nbPhotosLounge, 'label' => $categoryName], 'add_status' => $addStatus];
+            return ['image_id' => $imageId, 'src' => DerivativeImage::thumbUrl($srcImage), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $srcImage), 'name' => $imageInfos->name, 'category' => ['id' => $pCategoryFirst, 'nb_photos' => $categoryInfos['nb_photos'] + $nbPhotosLounge, 'label' => $categoryName], 'add_status' => $addStatus->value];
         }
         return null;
     }

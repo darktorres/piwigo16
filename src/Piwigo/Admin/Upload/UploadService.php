@@ -327,7 +327,7 @@ final readonly class UploadService
         }
     }
 
-    public function addFormat(string $sourceFilepath, string $formatExt, string $formatOf): string
+    public function addFormat(string $sourceFilepath, string $formatExt, string $formatOf): UploadAddStatus
     {
         if (!$this->configService->enableFormats()) {
             throw new ConfigException('[addFormat] formats are disabled');
@@ -365,10 +365,10 @@ final readonly class UploadService
             $existingFormatId = is_numeric($existingFormat['format_id'] ?? null) ? (int) $existingFormat['format_id'] : 0;
             $this->imageFormatRepository->update($existingFormatId, (int) $formatOf, $formatExt, ['filesize' => $fileInfos['filesize']]);
             $formatId  = $existingFormatId;
-            $addStatus = 'update';
+            $addStatus = UploadAddStatus::Update;
         } else {
             $formatId  = $this->imageFormatRepository->insert($insert);
-            $addStatus = 'add';
+            $addStatus = UploadAddStatus::Add;
         }
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, (int) $formatOf, ActivityAction::Edit, ['action' => 'add format', 'format_ext' => $formatExt, 'format_id' => $formatId]));
         $formatInfos = array_merge($insert, ['format_id' => $formatId]);

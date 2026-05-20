@@ -11,7 +11,9 @@ use Piwigo\Config\Config;
 use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\StringUtil;
 use Piwigo\Db\SqlFragment;
+use Piwigo\History\HistoryPageRow;
 use Piwigo\History\HistoryRepository;
+use Piwigo\History\HistorySummaryDetail;
 use Piwigo\Image\ImageRepository;
 
 final readonly class HistoryAdminService
@@ -214,7 +216,7 @@ final readonly class HistoryAdminService
      *
      * @param array<mixed> $search prepared search array
      * @param string[]|string $types image_type enum values to keep
-     * @return array<array<string, mixed>>
+     * @return list<HistoryPageRow>
      */
     public function getHistoryPage(array $search, array|string $types, int $offset, int $limit): array
     {
@@ -242,30 +244,28 @@ final readonly class HistoryAdminService
         $first_time_key = null;
 
         foreach ($historyRows as $row) {
-            $row_date  = is_string($row['date'] ?? null) ? $row['date'] : '';
-            $row_hour  = is_numeric($row['hour']) ? (int) $row['hour'] : 0;
             $time_keys = [
-                substr($row_date, 0, 4),
-                substr($row_date, 0, 7),
-                substr($row_date, 0, 10),
-                sprintf('%s-%02u', $row_date, $row_hour),
+                substr($row->date, 0, 4),
+                substr($row->date, 0, 7),
+                substr($row->date, 0, 10),
+                sprintf('%s-%02u', $row->date, $row->hour),
             ];
 
             foreach ($time_keys as $time_key) {
                 if (!isset($need_update[$time_key])) {
                     $need_update[$time_key] = [
                         'nb_pages'        => 0,
-                        'history_id_from' => $row['min_id'],
-                        'history_id_to'   => $row['max_id'],
+                        'history_id_from' => $row->minId,
+                        'history_id_to'   => $row->maxId,
                     ];
                 }
-                $need_update[$time_key]['nb_pages'] += is_numeric($row['nb_pages']) ? (int) $row['nb_pages'] : 0;
+                $need_update[$time_key]['nb_pages'] += $row->nbPages;
 
-                if ($row['min_id'] < $need_update[$time_key]['history_id_from']) {
-                    $need_update[$time_key]['history_id_from'] = $row['min_id'];
+                if ($row->minId < $need_update[$time_key]['history_id_from']) {
+                    $need_update[$time_key]['history_id_from'] = $row->minId;
                 }
-                if ($row['max_id'] > $need_update[$time_key]['history_id_to']) {
-                    $need_update[$time_key]['history_id_to'] = $row['max_id'];
+                if ($row->maxId > $need_update[$time_key]['history_id_to']) {
+                    $need_update[$time_key]['history_id_to'] = $row->maxId;
                 }
             }
 
@@ -281,21 +281,26 @@ final readonly class HistoryAdminService
         if (isset($first_time_key)) {
             [$year, $month, $day, $hour] = explode('-', $first_time_key);
             foreach ($this->historyRepository->findSummariesAtTime((int) $year, (int) $month, (int) $day, (int) $hour) as $row) {
-                $key = sprintf('%4u', is_numeric($row['year']) ? (int) $row['year'] : 0);
-                if (isset($row['month'])) {
-                    $key .= sprintf('-%02u', is_numeric($row['month']) ? (int) $row['month'] : 0);
-                    if (isset($row['day'])) {
-                        $key .= sprintf('-%02u', is_numeric($row['day']) ? (int) $row['day'] : 0);
-                        if (isset($row['hour'])) {
-                            $key .= sprintf('-%02u', is_numeric($row['hour']) ? (int) $row['hour'] : 0);
+                $key = sprintf('%4u', $row->year ?? 0);
+                if ($row->month !== null) {
+                    $key .= sprintf('-%02u', $row->month);
+                    if ($row->day !== null) {
+                        $key .= sprintf('-%02u', $row->day);
+                        if ($row->hour !== null) {
+                            $key .= sprintf('-%02u', $row->hour);
                         }
                     }
                 }
 
                 if (isset($need_update[$key])) {
-                    $row['nb_pages']      = (is_numeric($row['nb_pages']) ? (int) $row['nb_pages'] : 0) + $need_update[$key]['nb_pages'];
-                    $row['history_id_to'] = $need_update[$key]['history_id_to'];
-                    $updates[]            = $row;
+                    $updates[] = new HistorySummaryDetail(
+                        $row->year,
+                        $row->month,
+                        $row->day,
+                        $row->hour,
+                        $row->nbPages + $need_update[$key]['nb_pages'],
+                        $need_update[$key]['history_id_to'],
+                    );
                     unset($need_update[$key]);
                 }
             }

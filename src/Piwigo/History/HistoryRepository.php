@@ -117,7 +117,7 @@ final class HistoryRepository extends AbstractRepository
      *
      * $type: 'hour' | 'day' | 'month' | 'year'
      *
-     * @return list<array<string, mixed>>
+     * @return list<HistorySummaryRow>
      */
     public function findSummaryByType(string $type, int $limit): array
     {
@@ -141,7 +141,16 @@ final class HistoryRepository extends AbstractRepository
                           ->orderBy('year', 'DESC'),
         };
 
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): HistorySummaryRow => new HistorySummaryRow(
+                is_numeric($r['year'] ?? null) ? (int) $r['year'] : null,
+                is_numeric($r['month'] ?? null) ? (int) $r['month'] : null,
+                is_numeric($r['day'] ?? null) ? (int) $r['day'] : null,
+                is_numeric($r['hour'] ?? null) ? (int) $r['hour'] : null,
+                is_numeric($r['nb_pages'] ?? null) ? (int) $r['nb_pages'] : 0,
+            ),
+            $qb->executeQuery()->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -273,7 +282,7 @@ final class HistoryRepository extends AbstractRepository
      *
      * @param list<mixed>                            $params
      * @param list<ArrayParameterType|ParameterType> $types
-     * @return list<array<string, mixed>>
+     * @return list<HistoryPageRow>
      */
     public function findPageByWhere(string $where, array $params, array $types, int $offset, int $limit): array
     {
@@ -282,7 +291,21 @@ final class HistoryRepository extends AbstractRepository
             . ' WHERE ' . $where
             . ' ORDER BY date DESC, time DESC'
             . ' LIMIT ' . $limit . ' OFFSET ' . $offset;
-        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): HistoryPageRow => new HistoryPageRow(
+                is_string($r['date'] ?? null) ? $r['date'] : '',
+                is_string($r['time'] ?? null) ? $r['time'] : '',
+                is_numeric($r['user_id'] ?? null) ? (int) $r['user_id'] : 0,
+                is_string($r['IP'] ?? null) ? $r['IP'] : '',
+                is_string($r['section'] ?? null) ? $r['section'] : null,
+                is_numeric($r['category_id'] ?? null) ? (int) $r['category_id'] : null,
+                is_numeric($r['search_id'] ?? null) ? (int) $r['search_id'] : null,
+                is_string($r['tag_ids'] ?? null) ? $r['tag_ids'] : null,
+                is_numeric($r['image_id'] ?? null) ? (int) $r['image_id'] : null,
+                is_string($r['image_type'] ?? null) ? $r['image_type'] : null,
+            ),
+            $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -321,7 +344,7 @@ final class HistoryRepository extends AbstractRepository
      * Hourly grouping (date, hour, min_id, max_id, nb_pages) for history rows
      * with id > $idAfter, optionally capped at id <= $idAfter + $maxLines.
      *
-     * @return list<array<string, mixed>>
+     * @return list<HourlyGroupingRow>
      */
     public function findHourlyGroupingAfterId(int $idAfter, ?int $maxLines): array
     {
@@ -342,7 +365,16 @@ SELECT
             $types[]   = ParameterType::INTEGER;
         }
         $sql .= ' GROUP BY date, hour ORDER BY date ASC, hour ASC';
-        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): HourlyGroupingRow => new HourlyGroupingRow(
+                is_string($r['date'] ?? null) ? $r['date'] : '',
+                is_numeric($r['hour'] ?? null) ? (int) $r['hour'] : 0,
+                is_numeric($r['min_id'] ?? null) ? (int) $r['min_id'] : 0,
+                is_numeric($r['max_id'] ?? null) ? (int) $r['max_id'] : 0,
+                is_numeric($r['nb_pages'] ?? null) ? (int) $r['nb_pages'] : 0,
+            ),
+            $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -350,7 +382,7 @@ SELECT
      * hour) tuple — month/day/hour are nullable and matched as "either NULL
      * or equal to the supplied value".
      *
-     * @return list<array<string, mixed>>
+     * @return list<HistorySummaryDetail>
      */
     public function findSummariesAtTime(int $year, int $month, int $day, int $hour): array
     {
@@ -367,11 +399,21 @@ SELECT *
         )
       )
     )';
-        return $this->conn->executeQuery(
-            $sql,
-            [$year, $month, $day, $hour],
-            [ParameterType::INTEGER, ParameterType::INTEGER, ParameterType::INTEGER, ParameterType::INTEGER],
-        )->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): HistorySummaryDetail => new HistorySummaryDetail(
+                is_numeric($r['year'] ?? null) ? (int) $r['year'] : null,
+                is_numeric($r['month'] ?? null) ? (int) $r['month'] : null,
+                is_numeric($r['day'] ?? null) ? (int) $r['day'] : null,
+                is_numeric($r['hour'] ?? null) ? (int) $r['hour'] : null,
+                is_numeric($r['nb_pages'] ?? null) ? (int) $r['nb_pages'] : 0,
+                is_numeric($r['history_id_to'] ?? null) ? (int) $r['history_id_to'] : null,
+            ),
+            $this->conn->executeQuery(
+                $sql,
+                [$year, $month, $day, $hour],
+                [ParameterType::INTEGER, ParameterType::INTEGER, ParameterType::INTEGER, ParameterType::INTEGER],
+            )->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -379,7 +421,7 @@ SELECT *
      * (year, month, day, hour). Each row is taken from findSummariesAtTime's
      * shape — month/day/hour may be null.
      *
-     * @param list<array<string, mixed>> $rows
+     * @param list<HistorySummaryDetail> $rows
      */
     public function updateSummaryBatch(array $rows): void
     {
@@ -390,16 +432,8 @@ SELECT *
             foreach ($rows as $row) {
                 $this->conn->update(
                     $this->table('history_summary'),
-                    [
-                        'nb_pages'      => $row['nb_pages'],
-                        'history_id_to' => $row['history_id_to'],
-                    ],
-                    [
-                        'year'  => $row['year'],
-                        'month' => $row['month'],
-                        'day'   => $row['day'],
-                        'hour'  => $row['hour'],
-                    ],
+                    ['nb_pages' => $row->nbPages, 'history_id_to' => $row->historyIdTo],
+                    ['year' => $row->year, 'month' => $row->month, 'day' => $row->day, 'hour' => $row->hour],
                 );
             }
         });
@@ -426,7 +460,7 @@ SELECT *
      * Monthly aggregates from history_summary (rows where month is set and
      * day is null), newest first. Caller supplies optional row limit.
      *
-     * @return list<array<string, mixed>>
+     * @return list<HistorySummaryRow>
      */
     public function findMonthlyRollups(?int $limit): array
     {
@@ -440,7 +474,16 @@ SELECT *
         if ($limit !== null) {
             $qb->setMaxResults($limit);
         }
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): HistorySummaryRow => new HistorySummaryRow(
+                is_numeric($r['year'] ?? null) ? (int) $r['year'] : null,
+                is_numeric($r['month'] ?? null) ? (int) $r['month'] : null,
+                is_numeric($r['day'] ?? null) ? (int) $r['day'] : null,
+                is_numeric($r['hour'] ?? null) ? (int) $r['hour'] : null,
+                is_numeric($r['nb_pages'] ?? null) ? (int) $r['nb_pages'] : 0,
+            ),
+            $qb->executeQuery()->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -448,7 +491,7 @@ SELECT *
      * (each a {year:int, month:int} tuple). Used by the admin stats page.
      *
      * @param  list<array{year: int, month: int}> $months
-     * @return list<array<string, mixed>>
+     * @return list<HistorySummaryRow>
      */
     public function findDailyStatsForMonths(array $months): array
     {
@@ -469,7 +512,16 @@ SELECT *
             $qb->setParameter("m$i", $month['month']);
         }
         $qb->where(implode(' OR ', $orParts));
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): HistorySummaryRow => new HistorySummaryRow(
+                is_numeric($r['year'] ?? null) ? (int) $r['year'] : null,
+                is_numeric($r['month'] ?? null) ? (int) $r['month'] : null,
+                is_numeric($r['day'] ?? null) ? (int) $r['day'] : null,
+                is_numeric($r['hour'] ?? null) ? (int) $r['hour'] : null,
+                is_numeric($r['nb_pages'] ?? null) ? (int) $r['nb_pages'] : 0,
+            ),
+            $qb->executeQuery()->fetchAllAssociative(),
+        );
     }
 
     /**

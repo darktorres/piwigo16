@@ -119,17 +119,13 @@ final readonly class SearchHandler implements WsAction
         $imageIds    = [];
         $hasTags     = false;
         foreach ($pageRows as $row) {
-            if (isset($row['category_id'])) {
-                $categoryIds[] = $row['category_id'];
+            if ($row->categoryId !== null) {
+                $categoryIds[] = $row->categoryId;
             }
-            if (isset($row['image_id'])) {
-                $rowImageId    = $row['image_id'];
-                $rowImageIdKey = is_scalar($rowImageId) ? (string) $rowImageId : '';
-                if ($rowImageIdKey !== '') {
-                    $imageIds[$rowImageIdKey] = 1;
-                }
+            if ($row->imageId !== null) {
+                $imageIds[(string) $row->imageId] = 1;
             }
-            if (isset($row['tag_ids'])) {
+            if ($row->tagIds !== null) {
                 $hasTags = true;
             }
         }
@@ -199,21 +195,17 @@ final readonly class SearchHandler implements WsAction
         }
         $result = [];
         foreach ($pageRows as $line) {
-            $lineImageType   = is_string($line['image_type'] ?? null) ? $line['image_type'] : '';
-            $lineImageId     = $line['image_id'] ?? null;
-            $lineImageIdInt  = is_numeric($lineImageId) ? (int) $lineImageId : 0;
-            $lineImageIdStr  = is_scalar($lineImageId) ? (string) $lineImageId : '';
-            $lineUserId      = $line['user_id'] ?? null;
-            $lineUserIdStr   = is_scalar($lineUserId) ? (string) $lineUserId : '';
-            $lineIP          = is_string($line['IP'] ?? null) ? $line['IP'] : '';
-            $lineCatId       = $line['category_id'] ?? null;
-            $lineCatIdStr    = is_scalar($lineCatId) ? (string) $lineCatId : '';
-            $lineSearchId    = $line['search_id'] ?? null;
-            $lineSearchIdStr = is_scalar($lineSearchId) ? (string) $lineSearchId : '';
-            $lineSection     = is_string($line['section'] ?? null) ? $line['section'] : '';
+            $lineImageType   = $line->imageType ?? '';
+            $lineImageIdInt  = $line->imageId ?? 0;
+            $lineImageIdStr  = $line->imageId !== null ? (string) $line->imageId : '';
+            $lineUserIdStr   = (string) $line->userId;
+            $lineIP          = $line->ip;
+            $lineCatIdStr    = $line->categoryId !== null ? (string) $line->categoryId : '';
+            $lineSearchIdStr = $line->searchId !== null ? (string) $line->searchId : '';
+            $lineSection     = $line->section ?? '';
             $userName        = '#unknown';
             $userString      = '';
-            if ($lineUserIdStr !== '' && isset($usernameOf[$lineUserIdStr])) {
+            if (isset($usernameOf[$lineUserIdStr])) {
                 $userName    = $usernameOf[$lineUserIdStr];
                 $userString .= $usernameOf[$lineUserIdStr];
             } else {
@@ -222,8 +214,8 @@ final readonly class SearchHandler implements WsAction
             $userString .= '&nbsp;<a href="' . $this->urlGenerator->admin('history') . '&amp;search_id=' . $searchId . '&amp;user_id=' . $lineUserIdStr . '">+</a>';
             $tagNames = '';
             $tagIds   = '';
-            if (isset($line['tag_ids'])) {
-                $lineTagIds = is_string($line['tag_ids']) ? $line['tag_ids'] : '';
+            if ($line->tagIds !== null) {
+                $lineTagIds = $line->tagIds;
                 $tagNames   = preg_replace_callback('/(\d+)/', function (array $m) use ($nameOfTag): string {
                     $k = $m[1];
                     return $nameOfTag[$k] ?? $k;
@@ -236,10 +228,10 @@ final readonly class SearchHandler implements WsAction
             $imageId         = '';
             if ($lineImageIdStr !== '') {
                 $imageEditString = $this->urlGenerator->admin('photo-' . $lineImageIdStr);
-                $pictureUrl      = $this->urlService->makePictureUrl(['image_id' => $lineImageId]);
+                $pictureUrl      = $this->urlService->makePictureUrl(['image_id' => $line->imageId]);
                 $element         = [];
                 if (isset($imageInfos[$lineImageIdInt])) {
-                    $element = ['id' => $lineImageId, 'file' => $imageInfos[$lineImageIdInt]['file'], 'path' => $imageInfos[$lineImageIdInt]['path'], 'representative_ext' => $imageInfos[$lineImageIdInt]['representative_ext']];
+                    $element = ['id' => $line->imageId, 'file' => $imageInfos[$lineImageIdInt]['file'], 'path' => $imageInfos[$lineImageIdInt]['path'], 'representative_ext' => $imageInfos[$lineImageIdInt]['representative_ext']];
                 }
                 $imageTitle = '';
                 if (isset($imageInfos[$lineImageIdInt]['label'])) {
@@ -250,7 +242,7 @@ final readonly class SearchHandler implements WsAction
                     $imageEditString = '';
                     $imageTitle     .= ' unknown filename';
                 }
-                $imageId = $lineImageId;
+                $imageId = $line->imageId;
                 set_error_handler(static fn (): bool => true);
                 try {
                     $imgUrl = DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $element);
@@ -296,8 +288,7 @@ final readonly class SearchHandler implements WsAction
                     'filetypes'   => (isset($sdFields['filetypes']) && $sdFields['filetypes'] !== '') ? $sdFields['filetypes'] : null,
                 ];
             }
-            $lineDate = is_scalar($line['date'] ?? null) ? $line['date'] : null;
-            array_push($result, ['DATE' => $this->dateService->formatDate(is_string($lineDate) || is_int($lineDate) ? $lineDate : null), 'TIME' => $line['time'] ?? null, 'USER' => $userString, 'USERNAME' => $userName, 'USERID' => $lineUserId, 'IP' => $lineIP, 'IMAGE' => $imageString, 'IMAGENAME' => $imageTitle, 'IMAGEID' => $imageId, 'EDIT_IMAGE' => $imageEditString, 'TYPE' => $lineImageType, 'SECTION' => $lineSection, 'FULL_CATEGORY_PATH' => ($lineCatIdStr !== '' && isset($fullCatPath[$lineCatIdStr])) ? strip_tags($fullCatPath[$lineCatIdStr]) : Lang::t('Root') . $lineCatIdStr, 'CATEGORY' => ($lineCatIdStr !== '' && isset($nameOfCategory[$lineCatIdStr])) ? $nameOfCategory[$lineCatIdStr] : Lang::t('Root') . $lineCatIdStr, 'SEARCH_ID' => $lineSearchId ?? null, 'TAGS' => explode(',', $tagNames), 'TAGIDS' => explode(',', $tagIds), 'SEARCH_DETAILS' => $searchDetail]);
+            array_push($result, ['DATE' => $this->dateService->formatDate($line->date), 'TIME' => $line->time, 'USER' => $userString, 'USERNAME' => $userName, 'USERID' => $line->userId, 'IP' => $lineIP, 'IMAGE' => $imageString, 'IMAGENAME' => $imageTitle, 'IMAGEID' => $imageId, 'EDIT_IMAGE' => $imageEditString, 'TYPE' => $lineImageType, 'SECTION' => $lineSection, 'FULL_CATEGORY_PATH' => ($lineCatIdStr !== '' && isset($fullCatPath[$lineCatIdStr])) ? strip_tags($fullCatPath[$lineCatIdStr]) : Lang::t('Root') . $lineCatIdStr, 'CATEGORY' => ($lineCatIdStr !== '' && isset($nameOfCategory[$lineCatIdStr])) ? $nameOfCategory[$lineCatIdStr] : Lang::t('Root') . $lineCatIdStr, 'SEARCH_ID' => $line->searchId, 'TAGS' => explode(',', $tagNames), 'TAGIDS' => explode(',', $tagIds), 'SEARCH_DETAILS' => $searchDetail]);
         }
         $sortedMembers = [];
         foreach ($userHitCounts as $uid => $hits) {

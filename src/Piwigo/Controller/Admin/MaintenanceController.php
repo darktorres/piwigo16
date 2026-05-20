@@ -49,6 +49,7 @@ use Piwigo\Exception\ConfigException;
 use Piwigo\Exception\NotFoundException;
 use Piwigo\Exception\ValidationException;
 use Piwigo\History\HistoryRepository;
+use Piwigo\History\HistorySummaryRow;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\DerivativeSize;
@@ -1712,7 +1713,7 @@ final class MaintenanceController implements AdminSubControllerInterface
 
     // ── stats helper methods (from stats.php) ─────────────────────────────────
 
-    /** @return array<mixed> */
+    /** @return list<HistorySummaryRow> */
     private function getLast(int $last_number = 60, string $type = 'year'): array
     {
         return $this->historyRepository->findSummaryByType($type, $last_number);
@@ -1739,8 +1740,8 @@ final class MaintenanceController implements AdminSubControllerInterface
     /** @return array<mixed> */
     private function getMonthStats(): array
     {
-        $result         = [];
-        $date           = new \DateTime();
+        $result          = [];
+        $date            = new \DateTime();
         $date_last_month = clone $date;
         $date_last_year  = clone $date;
         $date_last_month->sub(new \DateInterval('P1M'));
@@ -1760,7 +1761,13 @@ final class MaintenanceController implements AdminSubControllerInterface
 
         $actual_date = new \DateTime();
         if (!isset($months[$actual_date->format('Y/m/1')])) {
-            $months[$actual_date->format('Y/m/1')][] = ['year' => $actual_date->format('Y'), 'month' => $actual_date->format('n'), 'day' => null, 'hour' => null, 'nb_pages' => 0];
+            $months[$actual_date->format('Y/m/1')][] = new HistorySummaryRow(
+                (int) $actual_date->format('Y'),
+                (int) $actual_date->format('n'),
+                null,
+                null,
+                0,
+            );
         }
 
         foreach ($months as $key => $val) {
@@ -1779,21 +1786,17 @@ final class MaintenanceController implements AdminSubControllerInterface
      * @param array<mixed> $data
      * @return array<mixed>
      */
+    /**
+     * @param list<HistorySummaryRow> $data
+     * @return array<mixed>
+     */
     private function setMissingValues(string $unit, array $data, ?\DateTime $firstDate = null, ?\DateTime $lastDate = null): array
     {
         $result = [];
-        if ($firstDate === null) {
-            $data_last = $data[count($data) - 1] ?? null;
-            $date      = is_array($data_last) ? $this->getDateObject($data_last) : new \DateTime();
-        } else {
-            $date = $firstDate;
-        }
-        if ($lastDate === null) {
-            $data_first = $data[0] ?? null;
-            $date_end   = is_array($data_first) ? $this->getDateObject($data_first) : new \DateTime();
-        } else {
-            $date_end = $lastDate;
-        }
+        $last     = count($data) > 0 ? $data[count($data) - 1] : null;
+        $first    = count($data) > 0 ? $data[0] : null;
+        $date     = $firstDate ?? ($last !== null ? $this->getDateObject($last) : new \DateTime());
+        $date_end = $lastDate  ?? ($first !== null ? $this->getDateObject($first) : new \DateTime());
 
         $date_format = 'Y-m-d';
         $date_add    = 'P1D';
@@ -1817,28 +1820,24 @@ final class MaintenanceController implements AdminSubControllerInterface
         }
 
         foreach ($data as $value) {
-            if (!is_array($value)) {
-                continue;
-            }
             $str = $this->getDateObject($value)->format($date_format);
             if (isset($result[$str])) {
-                $result[$str] += is_numeric($value['nb_pages'] ?? null) ? (int) $value['nb_pages'] : 0;
+                $result[$str] += $value->nbPages;
             }
         }
 
         return $result;
     }
 
-    /** @param array<mixed> $row */
-    private function getDateObject(array $row): \DateTime
+    private function getDateObject(HistorySummaryRow $row): \DateTime
     {
-        $date_string = is_scalar($row['year'] ?? null) ? (string) $row['year'] : '2000';
-        if (($row['month'] ?? null) !== null) {
-            $date_string .= '-' . (is_string($row['month']) ? $row['month'] : '1');
-            if (($row['day'] ?? null) !== null) {
-                $date_string .= '-' . (is_string($row['day']) ? $row['day'] : '1');
-                if (($row['hour'] ?? null) !== null) {
-                    $date_string .= ' ' . (is_string($row['hour']) ? $row['hour'] : '0') . ':00';
+        $date_string = (string) ($row->year ?? 2000);
+        if ($row->month !== null) {
+            $date_string .= '-' . $row->month;
+            if ($row->day !== null) {
+                $date_string .= '-' . $row->day;
+                if ($row->hour !== null) {
+                    $date_string .= ' ' . $row->hour . ':00';
                 }
             }
         } else {

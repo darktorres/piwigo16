@@ -312,14 +312,18 @@ final readonly class SearchFilterRenderer
             $cache_key = md5('filter_author_rows' . $ctx->userId . $ctx->userCacheTime . AppInfo::VERSION);
             $item      = $this->pool->getItem($cache_key);
             if ($item->isHit()) {
-                $filter_rows_raw = $item->get();
-                $filter_rows     = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
+                $cached = $item->get();
+                $filter_rows = [];
+                foreach (is_array($cached) ? $cached : [] as $r) {
+                    if ($r instanceof AuthorCountRow) {
+                        $filter_rows[] = $r;
+                    }
+                }
             } else {
-                $db_rows = $this->searchRepository->findAuthorsForFilter($filter->where, $filter->params, $filter->types);
-                $item->set($db_rows);
+                $filter_rows = $this->searchRepository->findAuthorsForFilter($filter->where, $filter->params, $filter->types);
+                $item->set($filter_rows);
                 $item->expiresAfter(86400);
                 $this->pool->save($item);
-                $filter_rows = $this->normalizeRows($db_rows);
             }
         } else {
             $filter_rows = $this->searchRepository->findAuthorsForFilter($filter->where, $filter->params, $filter->types);
@@ -327,12 +331,15 @@ final readonly class SearchFilterRenderer
 
         $author_names = [];
         foreach ($filter_rows as $author) {
-            $author_names[] = $author['author'] ?? '';
+            $author_names[] = $author->author;
         }
-        $ctx->template->assign('AUTHORS', $filter_rows);
+        $ctx->template->assign('AUTHORS', array_map(
+            static fn (AuthorCountRow $r): array => ['author' => $r->author, 'counter' => $r->counter],
+            $filter_rows,
+        ));
 
         $author_words_raw = $ctx->rules->author === null ? [] : $ctx->rules->author->words;
-        $author_names_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $author_names);
+        $author_names_str = $author_names;
         $ctx->mySearch['fields']['author'] = [
             'words' => array_values(array_intersect($author_words_raw, $author_names_str)),
         ];
@@ -367,12 +374,12 @@ final readonly class SearchFilterRenderer
 
             foreach ($this->searchRepository->findImageDatePostedRows($filter->where, $filter->params, $filter->types) as $row) {
                 foreach ($thresholds as $threshold => $date_limit) {
-                    if ($row['date'] > $date_limit) {
+                    if ($row->date > $date_limit) {
                         $pre_counters[$threshold] = ($pre_counters[$threshold] ?? 0) + 1;
                     }
                 }
 
-                [$date_without_time] = explode(' ', is_string($row['date'] ?? null) ? $row['date'] : '');
+                [$date_without_time] = explode(' ', $row->date);
                 [$y, $m] = explode('-', $date_without_time);
 
                 $ymKey = $y . '-' . $m;
@@ -465,14 +472,14 @@ final readonly class SearchFilterRenderer
             $pre_counters = [];
 
             foreach ($this->searchRepository->findImageDateCreatedRows($filter->where, $filter->params, $filter->types) as $row) {
-                if (!empty($row['date'])) {
+                if ($row->date !== '') {
                     foreach ($thresholds as $threshold => $date_limit) {
-                        if ($row['date'] > $date_limit) {
+                        if ($row->date > $date_limit) {
                             $pre_counters[$threshold] = ($pre_counters[$threshold] ?? 0) + 1;
                         }
                     }
 
-                    [$date_without_time] = explode(' ', is_string($row['date']) ? $row['date'] : '');
+                    [$date_without_time] = explode(' ', $row->date);
                     [$y, $m] = explode('-', $date_without_time);
 
                     $ymKey2 = $y . '-' . $m;
@@ -553,25 +560,33 @@ final readonly class SearchFilterRenderer
             $cache_key = md5('filter_added_by_rows' . $ctx->userId . $ctx->userCacheTime . AppInfo::VERSION);
             $item_ab   = $this->pool->getItem($cache_key);
             if ($item_ab->isHit()) {
-                $filter_rows_raw = $item_ab->get();
-                $filter_rows     = $this->normalizeRows(is_array($filter_rows_raw) ? $filter_rows_raw : null);
+                $cached_ab = $item_ab->get();
+                $filter_rows = [];
+                foreach (is_array($cached_ab) ? $cached_ab : [] as $r) {
+                    if ($r instanceof AddedByCountRow) {
+                        $filter_rows[] = $r;
+                    }
+                }
             } else {
-                $db_rows = $this->searchRepository->findAddedByForFilter($filter->where, $filter->params, $filter->types);
-                $item_ab->set($db_rows);
+                $filter_rows = $this->searchRepository->findAddedByForFilter($filter->where, $filter->params, $filter->types);
+                $item_ab->set($filter_rows);
                 $item_ab->expiresAfter(86400);
                 $this->pool->save($item_ab);
-                $filter_rows = $this->normalizeRows($db_rows);
             }
         } else {
             $filter_rows = $this->searchRepository->findAddedByForFilter($filter->where, $filter->params, $filter->types);
         }
 
-        $added_by = $filter_rows;
+        // Convert to mutable arrays so we can append 'added_by_name' below.
+        $added_by = array_map(
+            static fn (AddedByCountRow $r): array => ['counter' => $r->counter, 'added_by_id' => $r->addedById],
+            $filter_rows,
+        );
         $user_ids = [];
 
         if (count($added_by) > 0) {
             foreach ($added_by as $i) {
-                $user_ids[] = is_numeric($i['added_by_id']) ? (int) $i['added_by_id'] : 0;
+                $user_ids[] = $i['added_by_id'];
             }
 
             $username_of = $this->userRepository->findUsernamesByIds(
@@ -582,8 +597,7 @@ final readonly class SearchFilterRenderer
             );
 
             foreach (array_keys($added_by) as $added_by_idx) {
-                $added_by_id_raw = $added_by[$added_by_idx]['added_by_id'];
-                $added_by_id = is_numeric($added_by_id_raw) ? (int) $added_by_id_raw : 0;
+                $added_by_id = $added_by[$added_by_idx]['added_by_id'];
                 $added_by[$added_by_idx]['added_by_name'] = $username_of[(string) $added_by_id] ?? 'user #' . $added_by_id . ' (deleted)';
             }
         }
@@ -692,13 +706,13 @@ final readonly class SearchFilterRenderer
             $ratings     = array_fill(0, 6, 0);
 
             foreach ($filter_rows as $row) {
-                if (!isset($row['rating_score'])) {
+                if ($row->ratingScore === null) {
                     $ratings[0]++;
                     continue;
                 }
                 $r = 5;
                 for ($i = 1; $i <= 4; $i++) {
-                    if ($row['rating_score'] < $i) {
+                    if ($row->ratingScore < $i) {
                         $r = $i;
                         break;
                     }
@@ -729,7 +743,7 @@ final readonly class SearchFilterRenderer
         $filesizes = [];
 
         foreach ($this->searchRepository->findFilesizesForFilter($filter->where, $filter->params, $filter->types) as $row) {
-            $fs_val = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
+            $fs_val = $row->filesize !== null ? (float) $row->filesize : 0.0;
             $key_fs = sprintf('%.1f', $fs_val / 1024.0);
             $filesizes[$key_fs] = ($filesizes[$key_fs] ?? 0) + 1;
         }
@@ -782,8 +796,8 @@ final readonly class SearchFilterRenderer
             $ratios = ['Portrait' => 0, 'square' => 0, 'Landscape' => 0, 'Panorama' => 0];
 
             foreach ($filter_rows as $row) {
-                $row_width = is_numeric($row['width']) ? (float) $row['width'] : 0.0;
-                $row_height = is_numeric($row['height']) ? (float) $row['height'] : 0.0;
+                $row_width = (float) $row->width;
+                $row_height = (float) $row->height;
                 if ($row_width <= 0 and $row_height <= 0) {
                     continue;
                 }
@@ -912,22 +926,4 @@ final readonly class SearchFilterRenderer
         return ['pre_counters' => $pre, 'list_of_dates' => $dates];
     }
 
-    /**
-     * Normalize a mixed cache value to a flat array of rows.
-     *
-     * @return array<int, array<mixed>>
-     *
-     * @param array<mixed>|null $raw
-     */
-    private function normalizeRows(array|null $raw): array
-    {
-        if ($raw === null) {
-            return [];
-        }
-        $out = [];
-        foreach ($raw as $row) {
-            $out[] = is_array($row) ? $row : [];
-        }
-        return $out;
-    }
 }

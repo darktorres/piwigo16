@@ -134,7 +134,7 @@ final class SearchRepository extends AbstractRepository
      *
      * @param list<mixed>                                              $params
      * @param list<ArrayParameterType|ParameterType>                   $types
-     * @return list<array<string, mixed>>
+     * @return list<AuthorCountRow>
      */
     public function findAuthorsForFilter(string $filterClause, array $params, array $types): array
     {
@@ -144,7 +144,13 @@ final class SearchRepository extends AbstractRepository
             . ' WHERE ' . $filterClause
             . ' AND author IS NOT NULL'
             . ' GROUP BY author';
-        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): AuthorCountRow => new AuthorCountRow(
+                author:  is_string($r['author'] ?? null) ? $r['author'] : '',
+                counter: is_numeric($r['counter'] ?? null) ? (int) $r['counter'] : 0,
+            ),
+            $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -186,7 +192,7 @@ final class SearchRepository extends AbstractRepository
      *
      * @param list<mixed>                                              $params
      * @param list<ArrayParameterType|ParameterType>                   $types
-     * @return list<array<string, mixed>>
+     * @return list<ImageDateRow>
      */
     public function findImageDatePostedRows(string $filterClause, array $params, array $types): array
     {
@@ -194,7 +200,13 @@ final class SearchRepository extends AbstractRepository
             . ' FROM ' . $this->table('images') . ' AS i'
             . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
             . ' WHERE ' . $filterClause;
-        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): ImageDateRow => new ImageDateRow(
+                id:   is_numeric($r['id'] ?? null) ? (int) $r['id'] : 0,
+                date: is_string($r['date'] ?? null) ? $r['date'] : '',
+            ),
+            $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -202,7 +214,7 @@ final class SearchRepository extends AbstractRepository
      *
      * @param list<mixed>                                              $params
      * @param list<ArrayParameterType|ParameterType>                   $types
-     * @return list<array<string, mixed>>
+     * @return list<ImageDateRow>
      */
     public function findImageDateCreatedRows(string $filterClause, array $params, array $types): array
     {
@@ -210,7 +222,13 @@ final class SearchRepository extends AbstractRepository
             . ' FROM ' . $this->table('images') . ' AS i'
             . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
             . ' WHERE ' . $filterClause;
-        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): ImageDateRow => new ImageDateRow(
+                id:   is_numeric($r['id'] ?? null) ? (int) $r['id'] : 0,
+                date: is_string($r['date'] ?? null) ? $r['date'] : '',
+            ),
+            $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -218,7 +236,7 @@ final class SearchRepository extends AbstractRepository
      *
      * @param list<mixed>                                              $params
      * @param list<ArrayParameterType|ParameterType>                   $types
-     * @return list<array<string, mixed>>
+     * @return list<AddedByCountRow>
      */
     public function findAddedByForFilter(string $filterClause, array $params, array $types): array
     {
@@ -228,7 +246,13 @@ final class SearchRepository extends AbstractRepository
             . ' WHERE ' . $filterClause
             . ' GROUP BY added_by_id'
             . ' ORDER BY counter DESC';
-        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): AddedByCountRow => new AddedByCountRow(
+                counter:    is_numeric($r['counter'] ?? null) ? (int) $r['counter'] : 0,
+                addedById:  is_numeric($r['added_by_id'] ?? null) ? (int) $r['added_by_id'] : 0,
+            ),
+            $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -283,7 +307,7 @@ final class SearchRepository extends AbstractRepository
      *
      * @param list<mixed>                                              $params
      * @param list<ArrayParameterType|ParameterType>                   $types
-     * @return list<array<string, mixed>>
+     * @return list<ImageRatingRow>
      */
     public function findRatingsForFilter(string $filterClause, array $params, array $types): array
     {
@@ -291,7 +315,13 @@ final class SearchRepository extends AbstractRepository
             . ' FROM ' . $this->table('images') . ' AS i'
             . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
             . ' WHERE ' . $filterClause;
-        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): ImageRatingRow => new ImageRatingRow(
+                id:          is_numeric($r['id'] ?? null) ? (int) $r['id'] : 0,
+                ratingScore: is_numeric($r['rating_score'] ?? null) ? (float) $r['rating_score'] : null,
+            ),
+            $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -299,7 +329,7 @@ final class SearchRepository extends AbstractRepository
      *
      * @param list<mixed>                                              $params
      * @param list<ArrayParameterType|ParameterType>                   $types
-     * @return list<array<string, mixed>>
+     * @return list<ImageFilesizeRow>
      */
     public function findFilesizesForFilter(string $filterClause, array $params, array $types): array
     {
@@ -307,7 +337,13 @@ final class SearchRepository extends AbstractRepository
             . ' FROM ' . $this->table('images') . ' AS i'
             . ' JOIN ' . $this->table('image_category') . ' AS ic ON ic.image_id = i.id'
             . ' WHERE ' . $filterClause;
-        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): ImageFilesizeRow => new ImageFilesizeRow(
+                id:       is_numeric($r['id'] ?? null) ? (int) $r['id'] : 0,
+                filesize: is_numeric($r['filesize'] ?? null) ? (int) $r['filesize'] : null,
+            ),
+            $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -315,7 +351,7 @@ final class SearchRepository extends AbstractRepository
      *
      * @param list<mixed>                                              $params
      * @param list<ArrayParameterType|ParameterType>                   $types
-     * @return list<array<string, mixed>>
+     * @return list<ImageDimensionRow>
      */
     public function findRatiosForFilter(string $filterClause, array $params, array $types): array
     {
@@ -325,7 +361,14 @@ final class SearchRepository extends AbstractRepository
             . ' WHERE ' . $filterClause
             . ' AND width IS NOT NULL'
             . ' AND height IS NOT NULL';
-        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(
+            static fn (array $r): ImageDimensionRow => new ImageDimensionRow(
+                id:     is_numeric($r['id'] ?? null) ? (int) $r['id'] : 0,
+                width:  is_numeric($r['width'] ?? null) ? (int) $r['width'] : 0,
+                height: is_numeric($r['height'] ?? null) ? (int) $r['height'] : 0,
+            ),
+            $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative(),
+        );
     }
 
     /**

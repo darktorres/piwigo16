@@ -506,122 +506,118 @@ final class Plugins
      */
     public function extractPluginFiles(string $action, string $revision, string $dest, ?string &$plugin_id = null): UpgradeStatus
     {
-        $logger = LoggerRegistry::current();
-
-        if (($archive = tempnam(Config::pluginsPath(), 'zip')) !== false) {
-            $url = $this->pemUrlResolver->url() . '/download.php';
-            $get_data = [
-              'rid' => $revision,
-              'origin' => 'piwigo_'.$action,
-            ];
-
-            $handle = Filesystem::tryFopen($archive, 'wb');
-            if (is_resource($handle)) {
-                $fh = $handle;
-                if ($this->adminService->fetchRemote($url, $handle, $get_data)) {
-                    fclose($fh);
-                    $names = ZipExtractor::listNames($archive);
-                    if ($names !== []) {
-                        $manifest_filepath = null;
-                        $status = UpgradeStatus::Ok;
-                        foreach ($names as $filename) {
-                            // plugin.json — track the shallowest path so a stray
-                            // plugin.json deeper in vendor/ doesn't win.
-                            if (basename($filename) === 'plugin.json'
-                              and ($manifest_filepath === null
-                              or strlen($filename) < strlen($manifest_filepath))) {
-                                $manifest_filepath = $filename;
-                            }
-                        }
-
-                        $logger->debug(__FUNCTION__.', $manifest_filepath = '.(string) $manifest_filepath);
-
-                        if (isset($manifest_filepath)) {
-                            $root = dirname($manifest_filepath); // path to plugin's root inside archive
-                            if ($action == 'upgrade') {
-                                $plugin_id = $dest;
-                            } else {
-                                $plugin_id = ($root == '.' ? 'extension_' . $dest : basename($root));
-                            }
-                            $extract_path = Config::pluginsPath() . $plugin_id;
-                            $logger->debug(__FUNCTION__.', $extract_path = '.$extract_path);
-
-                            $result = ZipExtractor::extract($archive, $extract_path, $root === '.' ? '' : $root);
-                            if ($result !== []) {
-                                foreach ($result as $file) {
-                                    if ($file['stored_filename'] === $manifest_filepath) {
-                                        if ($file['status'] !== ZipExtractor::STATUS_OK) {
-                                            $status = UpgradeStatus::ExtractError;
-                                        }
-                                        break;
-                                    }
-                                }
-                                if ($status === UpgradeStatus::Ok) {
-                                    // Refresh the registry so the freshly-extracted
-                                    // plugin.json is validated immediately. A
-                                    // PluginValidationException here means the ZIP
-                                    // shipped a malformed manifest — surface that
-                                    // as the extraction status.
-                                    $this->pluginRegistry->reload();
-                                    if ($this->pluginRegistry->getManifest($plugin_id) === null) {
-                                        $status = UpgradeStatus::ManifestInvalid;
-                                    }
-                                }
-                                if (file_exists($extract_path.'/obsolete.list')
-                                  and ($old_files = file($extract_path.'/obsolete.list', FILE_IGNORE_NEW_LINES)) !== false) {
-                                    $old_files[] = 'obsolete.list';
-                                    $logger->debug(__FUNCTION__.', $old_files = {'.join('},{', $old_files).'}');
-
-                                    $extract_path_realpath = realpath($extract_path);
-
-                                    foreach ($old_files as $old_file) {
-                                        $old_file = trim($old_file);
-                                        $old_file = trim($old_file, '/'); // prevent path starting with a "/"
-
-                                        if (empty($old_file)) { // empty here means the extension itself
-                                            continue;
-                                        }
-
-                                        $path = $extract_path.'/'.$old_file;
-
-                                        // make sure the obsolete file is withing the extension directory, prevent traversal path
-                                        $realpath = realpath($path);
-                                        if ($realpath === false or $extract_path_realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
-                                            continue;
-                                        }
-
-                                        $logger->debug(__FUNCTION__.', to delete = '.$path);
-
-                                        if (is_file($path)) {
-                                            Filesystem::tryUnlink($path);
-                                        } elseif (is_dir($path)) {
-                                            $this->adminService->deltree($path, Config::pluginsPath() . 'trash');
-                                        }
-                                    }
-                                }
-                            } else {
-                                $status = UpgradeStatus::ExtractError;
-                            }
-                        } else {
-                            $status = UpgradeStatus::ArchiveError;
-                        }
-                    } else {
-                        $status = UpgradeStatus::ArchiveError;
-                    }
-                } else {
-                    $status = UpgradeStatus::DlArchiveError;
-                }
-            } else {
-                $status = UpgradeStatus::DlArchiveError;
-            }
-        } else {
-            $status = UpgradeStatus::TempPathError;
+        $logger  = LoggerRegistry::current();
+        $archive = tempnam(Config::pluginsPath(), 'zip');
+        if ($archive === false) {
+            return UpgradeStatus::TempPathError;
         }
 
-        if (is_string($archive)) {
+        try {
+            $handle = Filesystem::tryFopen($archive, 'wb');
+            if (!is_resource($handle)) {
+                return UpgradeStatus::DlArchiveError;
+            }
+            // Keep a narrowed alias: AdminService::fetchRemote() takes
+            // its destination by reference as `mixed`, which widens
+            // $handle back to `mixed` for PHPStan after the call.
+            $fh = $handle;
+
+            $url      = $this->pemUrlResolver->url() . '/download.php';
+            $get_data = ['rid' => $revision, 'origin' => 'piwigo_' . $action];
+            if (!$this->adminService->fetchRemote($url, $handle, $get_data)) {
+                return UpgradeStatus::DlArchiveError;
+            }
+            fclose($fh);
+
+            $names = ZipExtractor::listNames($archive);
+            if ($names === []) {
+                return UpgradeStatus::ArchiveError;
+            }
+
+            $manifest_filepath = null;
+            foreach ($names as $filename) {
+                // plugin.json — track the shallowest path so a stray
+                // plugin.json deeper in vendor/ doesn't win.
+                if (basename($filename) === 'plugin.json'
+                  and ($manifest_filepath === null
+                  or strlen($filename) < strlen($manifest_filepath))) {
+                    $manifest_filepath = $filename;
+                }
+            }
+            $logger->debug(__FUNCTION__ . ', $manifest_filepath = ' . (string) $manifest_filepath);
+
+            if ($manifest_filepath === null) {
+                return UpgradeStatus::ArchiveError;
+            }
+
+            $root      = dirname($manifest_filepath); // path to plugin's root inside archive
+            $plugin_id = $action == 'upgrade' ? $dest : ($root == '.' ? 'extension_' . $dest : basename($root));
+            $extract_path = Config::pluginsPath() . $plugin_id;
+            $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extract_path);
+
+            $result = ZipExtractor::extract($archive, $extract_path, $root === '.' ? '' : $root);
+            if ($result === []) {
+                return UpgradeStatus::ExtractError;
+            }
+
+            $status = UpgradeStatus::Ok;
+            foreach ($result as $file) {
+                if ($file['stored_filename'] === $manifest_filepath) {
+                    if ($file['status'] !== ZipExtractor::STATUS_OK) {
+                        $status = UpgradeStatus::ExtractError;
+                    }
+                    break;
+                }
+            }
+            if ($status === UpgradeStatus::Ok) {
+                // Refresh the registry so the freshly-extracted
+                // plugin.json is validated immediately. A
+                // PluginValidationException here means the ZIP
+                // shipped a malformed manifest — surface that
+                // as the extraction status.
+                $this->pluginRegistry->reload();
+                if ($this->pluginRegistry->getManifest($plugin_id) === null) {
+                    $status = UpgradeStatus::ManifestInvalid;
+                }
+            }
+
+            if (file_exists($extract_path . '/obsolete.list')
+              and ($old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES)) !== false) {
+                $old_files[] = 'obsolete.list';
+                $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
+
+                $extract_path_realpath = realpath($extract_path);
+
+                foreach ($old_files as $old_file) {
+                    $old_file = trim($old_file);
+                    $old_file = trim($old_file, '/'); // prevent path starting with a "/"
+
+                    if (empty($old_file)) { // empty here means the extension itself
+                        continue;
+                    }
+
+                    $path = $extract_path . '/' . $old_file;
+
+                    // make sure the obsolete file is withing the extension directory, prevent traversal path
+                    $realpath = realpath($path);
+                    if ($realpath === false or $extract_path_realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
+                        continue;
+                    }
+
+                    $logger->debug(__FUNCTION__ . ', to delete = ' . $path);
+
+                    if (is_file($path)) {
+                        Filesystem::tryUnlink($path);
+                    } elseif (is_dir($path)) {
+                        $this->adminService->deltree($path, Config::pluginsPath() . 'trash');
+                    }
+                }
+            }
+
+            return $status;
+        } finally {
             Filesystem::tryUnlink($archive);
         }
-        return $status;
     }
 
     /**

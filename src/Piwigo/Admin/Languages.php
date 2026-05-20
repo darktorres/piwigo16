@@ -268,116 +268,118 @@ final class Languages
      */
     public function extractLanguageFiles(string $action, string $revision, string $dest = ''): UpgradeStatus
     {
-        $logger = LoggerRegistry::current();
+        $logger  = LoggerRegistry::current();
+        $archive = tempnam($this->paths->root . 'language', 'zip');
+        if ($archive === false) {
+            return UpgradeStatus::TempPathError;
+        }
 
-        if (($archive = tempnam($this->paths->root . 'language', 'zip')) !== false) {
-            $url = $this->pemUrlResolver->url() . '/download.php';
-            $get_data = [
-              'rid' => $revision,
-              'origin' => 'piwigo_'.$action,
-            ];
+        try {
+            $url      = $this->pemUrlResolver->url() . '/download.php';
+            $get_data = ['rid' => $revision, 'origin' => 'piwigo_' . $action];
 
             $handle = Filesystem::tryFopen($archive, 'wb');
-            $fh = $handle;
-            /** @var resource|string $handle */
-            if (is_resource($fh) && $this->adminService->fetchRemote($url, $handle, $get_data)) {
-                fclose($fh);
-                $names = ZipExtractor::listNames($archive);
-                if ($names !== []) {
-                    $main_filepath = null;
-                    $status = UpgradeStatus::Ok;
-                    foreach ($names as $filename) {
-                        // we search common.lang.php in archive
-                        if (basename($filename) == 'common.lang.php'
-                          and ($main_filepath === null
-                          or strlen($filename) < strlen($main_filepath))) {
-                            $main_filepath = $filename;
-                        }
-                    }
-
-                    $logger->debug(__FUNCTION__.', $main_filepath = '.(string) $main_filepath);
-
-                    if (isset($main_filepath)) {
-                        $root = basename(dirname($main_filepath)); // common.lang.php path in archive
-                        if (preg_match('/^[a-z]{2}_[A-Z]{2}$/', $root)) {
-                            if ($action == 'install') {
-                                $dest = $root;
-                            }
-                            $extract_path = $this->paths->root . 'language/' . $dest;
-
-                            $logger->debug(__FUNCTION__.', $extract_path = '.$extract_path);
-
-                            $result = ZipExtractor::extract($archive, $extract_path, $root === '.' ? '' : $root);
-                            if ($result !== []) {
-                                foreach ($result as $file) {
-                                    if ($file['stored_filename'] === $main_filepath) {
-                                        if ($file['status'] !== ZipExtractor::STATUS_OK) {
-                                            $status = UpgradeStatus::ExtractError;
-                                        }
-                                        break;
-                                    }
-                                }
-                                if ($status === UpgradeStatus::Ok) {
-                                    $this->getFsLanguages();
-                                    if ($action == 'install') {
-                                        $this->performAction(ExtensionAction::Activate, $dest);
-                                    }
-                                }
-                                if (file_exists($extract_path.'/obsolete.list')
-                                  and ($old_files = file($extract_path.'/obsolete.list', FILE_IGNORE_NEW_LINES)) !== false) {
-                                    $old_files[] = 'obsolete.list';
-                                    $logger->debug(__FUNCTION__.', $old_files = {'.join('},{', $old_files).'}');
-
-                                    $extract_path_realpath = realpath($extract_path);
-
-                                    foreach ($old_files as $old_file) {
-                                        $old_file = trim($old_file);
-                                        $old_file = trim($old_file, '/'); // prevent path starting with a "/"
-
-                                        if (empty($old_file)) { // empty here means the extension itself
-                                            continue;
-                                        }
-
-                                        $path = $extract_path.'/'.$old_file;
-
-                                        // make sure the obsolete file is withing the extension directory, prevent traversal path
-                                        $realpath = realpath($path);
-                                        if ($realpath === false or $extract_path_realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
-                                            continue;
-                                        }
-
-                                        $logger->debug(__FUNCTION__.', to delete = '.$path);
-
-                                        if (is_file($path)) {
-                                            Filesystem::tryUnlink($path);
-                                        } elseif (is_dir($path)) {
-                                            $this->adminService->deltree($path, $this->paths->root . 'language/trash');
-                                        }
-                                    }
-                                }
-                            } else {
-                                $status = UpgradeStatus::ExtractError;
-                            }
-                        } else {
-                            $status = UpgradeStatus::ArchiveError;
-                        }
-                    } else {
-                        $status = UpgradeStatus::ArchiveError;
-                    }
-                } else {
-                    $status = UpgradeStatus::ArchiveError;
-                }
-            } else {
-                $status = UpgradeStatus::DlArchiveError;
+            if (!is_resource($handle)) {
+                return UpgradeStatus::DlArchiveError;
             }
-        } else {
-            $status = UpgradeStatus::TempPathError;
-        }
+            // Keep a narrowed alias: AdminService::fetchRemote() takes
+            // its destination by reference as `mixed`, which widens
+            // $handle back to `mixed` for PHPStan after the call.
+            $fh = $handle;
+            if (!$this->adminService->fetchRemote($url, $handle, $get_data)) {
+                return UpgradeStatus::DlArchiveError;
+            }
+            fclose($fh);
 
-        if (is_string($archive)) {
+            $names = ZipExtractor::listNames($archive);
+            if ($names === []) {
+                return UpgradeStatus::ArchiveError;
+            }
+
+            $main_filepath = null;
+            foreach ($names as $filename) {
+                // we search common.lang.php in archive
+                if (basename($filename) == 'common.lang.php'
+                  and ($main_filepath === null
+                  or strlen($filename) < strlen($main_filepath))) {
+                    $main_filepath = $filename;
+                }
+            }
+            $logger->debug(__FUNCTION__ . ', $main_filepath = ' . (string) $main_filepath);
+
+            if ($main_filepath === null) {
+                return UpgradeStatus::ArchiveError;
+            }
+
+            $root = basename(dirname($main_filepath)); // common.lang.php path in archive
+            if (!preg_match('/^[a-z]{2}_[A-Z]{2}$/', $root)) {
+                return UpgradeStatus::ArchiveError;
+            }
+
+            if ($action == 'install') {
+                $dest = $root;
+            }
+            $extract_path = $this->paths->root . 'language/' . $dest;
+            $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extract_path);
+
+            $result = ZipExtractor::extract($archive, $extract_path, $root === '.' ? '' : $root);
+            if ($result === []) {
+                return UpgradeStatus::ExtractError;
+            }
+
+            $status = UpgradeStatus::Ok;
+            foreach ($result as $file) {
+                if ($file['stored_filename'] === $main_filepath) {
+                    if ($file['status'] !== ZipExtractor::STATUS_OK) {
+                        $status = UpgradeStatus::ExtractError;
+                    }
+                    break;
+                }
+            }
+            if ($status === UpgradeStatus::Ok) {
+                $this->getFsLanguages();
+                if ($action == 'install') {
+                    $this->performAction(ExtensionAction::Activate, $dest);
+                }
+            }
+
+            if (file_exists($extract_path . '/obsolete.list')
+              and ($old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES)) !== false) {
+                $old_files[] = 'obsolete.list';
+                $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
+
+                $extract_path_realpath = realpath($extract_path);
+
+                foreach ($old_files as $old_file) {
+                    $old_file = trim($old_file);
+                    $old_file = trim($old_file, '/'); // prevent path starting with a "/"
+
+                    if (empty($old_file)) { // empty here means the extension itself
+                        continue;
+                    }
+
+                    $path = $extract_path . '/' . $old_file;
+
+                    // make sure the obsolete file is withing the extension directory, prevent traversal path
+                    $realpath = realpath($path);
+                    if ($realpath === false or $extract_path_realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
+                        continue;
+                    }
+
+                    $logger->debug(__FUNCTION__ . ', to delete = ' . $path);
+
+                    if (is_file($path)) {
+                        Filesystem::tryUnlink($path);
+                    } elseif (is_dir($path)) {
+                        $this->adminService->deltree($path, $this->paths->root . 'language/trash');
+                    }
+                }
+            }
+
+            return $status;
+        } finally {
             Filesystem::tryUnlink($archive);
         }
-        return $status;
     }
 
     /**

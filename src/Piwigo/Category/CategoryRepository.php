@@ -19,6 +19,7 @@ use Piwigo\Category\Projection\MenuCategoryRow;
 use Piwigo\Category\Projection\PictureNavCategoryRow;
 use Piwigo\Category\Projection\RankUpdateRow;
 use Piwigo\Category\Projection\RelatedCategoryRow;
+use Piwigo\Common\Enum\Privacy;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the category domain. */
@@ -398,16 +399,17 @@ final class CategoryRepository extends AbstractRepository
         $qb->executeStatement();
     }
 
-    /** Return the status of a single category, or null if not found. */
-    public function findStatusById(int $id): ?string
+    /** Return the privacy status of a single category, or null if not found. */
+    public function findStatusById(int $id): ?Privacy
     {
-        return $this->fetchOneString(
+        $raw = $this->fetchOneString(
             $this->conn->createQueryBuilder()
                 ->select('status')
                 ->from($this->table('categories'))
                 ->where('id = :id')
                 ->setParameter('id', $id)
         );
+        return $raw !== null ? Privacy::tryFrom($raw) : null;
     }
 
     /**
@@ -1255,11 +1257,11 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
-     * Set the status ('public' or 'private') on the given category ids.
+     * Set the privacy status on the given category ids.
      *
      * @param int[] $ids
      */
-    public function setStatus(array $ids, string $status): void
+    public function setStatus(array $ids, Privacy $status): void
     {
         if ($ids === []) {
             return;
@@ -1267,7 +1269,7 @@ final class CategoryRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->update($this->table('categories'))
             ->set('status', ':status')
-            ->setParameter('status', $status);
+            ->setParameter('status', $status->value);
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         $qb->executeStatement();

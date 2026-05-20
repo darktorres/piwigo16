@@ -11,6 +11,7 @@ use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\Privacy;
 use Piwigo\Config\Config;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Ws\PwgError;
@@ -44,11 +45,12 @@ final readonly class SetInfoHandler implements WsAction
             return new PwgError(404, 'category_id not found');
         }
         if ($input->status !== null) {
-            if (!in_array($input->status, ['private', 'public'])) {
+            $statusEnum = Privacy::tryFrom($input->status);
+            if ($statusEnum === null) {
                 return new PwgError(WsError::InvalidParam->value, 'Invalid status, only public/private');
             }
-            if ($input->status !== $category->status->value) {
-                $this->categoryAdminService->setCatStatus([$categoryId], $input->status);
+            if ($statusEnum !== $category->status) {
+                $this->categoryAdminService->setCatStatus([$categoryId], $statusEnum);
             }
         }
         $update = ['id' => $categoryId];

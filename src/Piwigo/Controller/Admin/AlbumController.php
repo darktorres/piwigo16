@@ -18,6 +18,7 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\Privacy;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
@@ -838,7 +839,7 @@ final class AlbumController implements AdminSubControllerInterface
             match ($current_section) {
                 'comments'       => $this->categoryRepository->setCommentable($cat_true, false),
                 'visible'        => $this->categoryAdminService->setCatVisible($cat_true, 'false'),
-                'status'         => $this->categoryAdminService->setCatStatus($cat_true, 'private'),
+                'status'         => $this->categoryAdminService->setCatStatus($cat_true, Privacy::Private),
                 'representative' => $this->categoryRepository->clearRepresentatives($cat_true),
                 default          => null,
             };
@@ -850,7 +851,7 @@ final class AlbumController implements AdminSubControllerInterface
             match ($current_section) {
                 'comments'       => $this->categoryRepository->setCommentable($cat_false, true),
                 'visible'        => $this->categoryAdminService->setCatVisible($cat_false, 'true'),
-                'status'         => $this->categoryAdminService->setCatStatus($cat_false, 'public'),
+                'status'         => $this->categoryAdminService->setCatStatus($cat_false, Privacy::Public),
                 'representative' => $this->categoryAdminService->setRandomRepresentant($cat_false),
                 default          => null,
             };
@@ -919,17 +920,17 @@ final class AlbumController implements AdminSubControllerInterface
             $this->csrfService->check();
 
             $rawPostStatus = $_POST['status'] ?? null;
-            $post_status = is_string($rawPostStatus) ? $rawPostStatus : '';
-            if ($category['status'] != $post_status || ($category['status'] != 'public' && isset($_POST['apply_on_sub']))) {
+            $post_status   = is_string($rawPostStatus) ? Privacy::tryFrom($rawPostStatus) : null;
+            if ($post_status !== null && ($category['status'] !== $post_status->value || ($category['status'] !== Privacy::Public->value && isset($_POST['apply_on_sub'])))) {
                 $cat_ids = [$pageCat];
                 if (isset($_POST['apply_on_sub'])) {
                     $cat_ids = array_merge($cat_ids, $this->categoryService->getSubcatIds([$pageCat]));
                 }
                 $this->categoryAdminService->setCatStatus($cat_ids, $post_status);
-                $category['status'] = $post_status;
+                $category['status'] = $post_status->value;
             }
 
-            if ('private' == $post_status) {
+            if (Privacy::Private === $post_status) {
                 $groups_granted_int = $this->permissionRepository->findGroupAccessGroupIdsByCategoryId($pageCat);
                 if (!isset($_POST['groups'])) {
                     $_POST['groups'] = [];

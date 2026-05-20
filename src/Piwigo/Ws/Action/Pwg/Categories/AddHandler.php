@@ -38,7 +38,7 @@ final readonly class AddHandler implements WsAction
         }
         $options = [];
         if ($input->status !== null) {
-            $options['status'] = $input->status;
+            $options['status'] = $input->status->value;
         }
         $allowHtml = Config::allowHtmlDescriptions() && $input->pwgToken !== null;
         if ($input->comment !== null) {

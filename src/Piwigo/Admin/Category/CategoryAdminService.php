@@ -12,6 +12,7 @@ use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\Privacy;
 use Piwigo\Config\Config;
 use Piwigo\Core\BoolUtil;
 use Piwigo\Core\ExecutionMutex;
@@ -286,22 +287,19 @@ final readonly class CategoryAdminService
     }
 
     /** @param int[]|int|string $categories */
-    public function setCatStatus(array|int|string $categories, string $value): void
+    public function setCatStatus(array|int|string $categories, Privacy $value): void
     {
         if (!is_array($categories)) {
             $categories = [$categories];
         }
-        if (!in_array($value, ['public', 'private'])) {
-            throw new \InvalidArgumentException('set_cat_status invalid param: ' . $value);
-        }
         $catRepo = $this->categoryRepository;
-        if ($value === 'public') {
+        if ($value === Privacy::Public) {
             $uppercats = $this->getUppercatIds($categories);
-            $catRepo->setStatus(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $uppercats), 'public');
+            $catRepo->setStatus(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $uppercats), $value);
         }
-        if ($value === 'private') {
+        if ($value === Privacy::Private) {
             $subcats = $this->categoryService->getSubcatIds($categories);
-            $catRepo->setStatus(array_map(fn (int $v): int => $v, $subcats), 'private');
+            $catRepo->setStatus(array_map(fn (int $v): int => $v, $subcats), $value);
 
             $topCategories = [];
             $parentIds     = [];
@@ -331,7 +329,7 @@ final readonly class CategoryAdminService
             foreach ($topCategories as $topCategory) {
                 $refCatId         = $topCategory->id->value;
                 $topCatUppercatId = $topCategory->idUppercat?->value;
-                if ($topCatUppercatId !== null && isset($parentCats[$topCatUppercatId]) && $parentCats[$topCatUppercatId] === \Piwigo\Common\Enum\Privacy::Private) {
+                if ($topCatUppercatId !== null && isset($parentCats[$topCatUppercatId]) && $parentCats[$topCatUppercatId] === Privacy::Private) {
                     $refCatId = $topCatUppercatId;
                 }
                 $subCatsForRef = array_values($this->categoryService->getSubcatIds([(string) $topCategory->id->value]));
@@ -466,9 +464,9 @@ final readonly class CategoryAdminService
         $catRepo->updateParent($catIdsInt, $newParent === 'NULL' ? null : ($newParent));
         $this->updateUppercats();
         $this->updateGlobalRank();
-        $parentStatus = ($newParent === 'NULL') ? 'public' : ($catRepo->findStatusById($newParent) ?? 'public');
-        if ($parentStatus === 'private') {
-            $this->setCatStatus(array_map(static fn (int|string $v): int => (int) $v, array_keys($categories)), 'private');
+        $parentStatus = ($newParent === 'NULL') ? Privacy::Public : ($catRepo->findStatusById($newParent) ?? Privacy::Public);
+        if ($parentStatus === Privacy::Private) {
+            $this->setCatStatus(array_map(static fn (int|string $v): int => (int) $v, array_keys($categories)), Privacy::Private);
         }
         PageState::current()->addInfo(Translator::get()->plural('%d album moved', '%d albums moved', count($categories)));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catIdsInt, ActivityAction::Move, ['parent' => $newParent]));
@@ -495,7 +493,7 @@ final readonly class CategoryAdminService
         $insert = ['name' => $categoryName, '`rank`' => $rank, 'global_rank' => 0];
         $insert['commentable'] = BoolUtil::toInt(isset($options['commentable']) && is_bool($options['commentable']) ? $options['commentable'] : Config::newcatDefaultCommentable());
         $insert['visible']     = BoolUtil::toInt(isset($options['visible']) && is_bool($options['visible']) ? $options['visible'] : Config::newcatDefaultVisible());
-        $insert['status']      = (isset($options['status']) && $options['status'] === 'private') ? 'private' : Config::newcatDefaultStatus();
+        $insert['status']      = (isset($options['status']) && $options['status'] === Privacy::Private->value) ? Privacy::Private->value : Config::newcatDefaultStatus();
         if (isset($options['comment'])) {
             $cv = is_string($options['comment']) ? $options['comment'] : '';
             $insert['comment'] = Config::allowHtmlDescriptions() ? $cv : strip_tags($cv);
@@ -509,8 +507,8 @@ final readonly class CategoryAdminService
                 if (!$parent->visible) {
                     $insert['visible'] = 0;
                 }
-                if ($parent->status === \Piwigo\Common\Enum\Privacy::Private) {
-                    $insert['status'] = 'private';
+                if ($parent->status === Privacy::Private) {
+                    $insert['status'] = Privacy::Private->value;
                 }
                 $uppercatsPrefix = $parent->uppercats . ',';
             }
@@ -518,7 +516,7 @@ final readonly class CategoryAdminService
         $insertedId = $this->categoryRepository->insertVirtualAndFixUppercats($insert, $uppercatsPrefix);
         $this->updateGlobalRank();
         $idUppercatInt = $insert['id_uppercat'] ?? 0;
-        if ($insert['status'] === 'private' && $idUppercatInt !== 0 && ((isset($options['inherit']) && $options['inherit']) || Config::inheritanceByDefault())) {
+        if ($insert['status'] === Privacy::Private->value && $idUppercatInt !== 0 && ((isset($options['inherit']) && $options['inherit']) || Config::inheritanceByDefault())) {
             $grantedGrps = $this->permissionRepository->findGroupAccessGroupIdsByCategoryId($idUppercatInt);
             $groupInserts = [];
             foreach ($grantedGrps as $grp) {
@@ -527,7 +525,7 @@ final readonly class CategoryAdminService
             $this->permissionRepository->insertGroupAccessRows($groupInserts);
             $grantedUsers = $this->permissionRepository->findUserAccessUserIdsByCategoryId($idUppercatInt);
             $this->addPermissionOnCategory($insertedId, $grantedUsers);
-        } elseif ($insert['status'] === 'private') {
+        } elseif ($insert['status'] === Privacy::Private->value) {
             $userId = CurrentUser::get()->id;
             $this->addPermissionOnCategory($insertedId, array_unique(array_merge($this->userAdminService->getAdmins(), [$userId])));
         }

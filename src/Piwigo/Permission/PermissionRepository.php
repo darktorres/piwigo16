@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Permission;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Common\Enum\Privacy;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for category access/permission data. */
@@ -143,7 +144,7 @@ final class PermissionRepository extends AbstractRepository
             'SELECT c.id FROM ' . $this->table('categories') . ' c
              INNER JOIN ' . $this->table('group_access') . ' ga ON ga.cat_id = c.id
              WHERE c.status = ? AND ga.group_id = ?',
-            ['private', $groupId]
+            [Privacy::Private->value, $groupId]
         )->fetchFirstColumn();
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
     }

@@ -8,12 +8,12 @@ use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Users\UserAdminService;
-use Piwigo\Config\Config;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.images.setPrivacyLevel` — bulk-update the `level` column. */
 final readonly class SetPrivacyLevelHandler implements WsAction
@@ -29,13 +29,13 @@ final readonly class SetPrivacyLevelHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        if (!in_array($params['level'], Config::availablePermissionLevels())) {
-            return new PwgError(WsError::InvalidParam->value, 'Invalid level');
+        try {
+            $input = SetPrivacyLevelParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(WsError::InvalidParam->value, $e->getMessage());
         }
-        $pLevel    = is_numeric($params['level']) ? (int) $params['level'] : 0;
-        $pImageIds = is_array($params['image_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
-        $affected  = $this->imageRepository->setLevelForIds($pLevel, $pImageIds);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $pImageIds, 'edit'));
+        $affected = $this->imageRepository->setLevelForIds($input->level, $input->imageIds);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $input->imageIds, 'edit'));
         if ($affected) {
             $this->userAdminService->invalidateUserCache();
         }

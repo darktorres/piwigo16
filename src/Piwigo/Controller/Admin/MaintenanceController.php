@@ -662,163 +662,21 @@ final class MaintenanceController implements AdminSubControllerInterface
 
                 switch ((int) $row->objectId) {
                     case ActivitySystem::Core:
+                        $object      = Lang::t('Core');
                         $object_icon = 'icon-piwigo';
-                        $object = Lang::t('Core');
-                        switch ($row->action) {
-                            case 'install':   $action_icon = 'icon-download';
-                                $action_color = 'icon-green';
-                                $action = Lang::t('Install');
-                                break;
-                            case 'config':
-                                $action_icon = 'icon-cog-alt';
-                                $action_color = 'icon-yellow';
-                                $action = Lang::t('Configuration');
-                                if (isset($details['config_section'])) {
-                                    $c_icon = $c_text = '';
-                                    switch ($details['config_section']) {
-                                        case 'main':      $c_icon = 'icon-cog';
-                                            $c_text = Lang::t('General');
-                                            break;
-                                        case 'watermark': $c_icon = 'icon-file-image';
-                                            $c_text = Lang::t('Watermark');
-                                            break;
-                                        case 'sizes':
-                                            $c_icon = 'icon-zoom-square';
-                                            $c_text = Lang::t('Photo sizes');
-                                            if (isset($details['config_action']) && 'restore_settings' == $details['config_action']) {
-                                                $detail[] = ['icon' => 'icon-back-in-time', 'text' => Lang::t('Set as default')];
-                                            }
-                                            break;
-                                        case 'comments':  $c_icon = 'icon-chat';
-                                            $c_text = Lang::t('Comments');
-                                            break;
-                                        case 'display':   $c_icon = 'icon-television';
-                                            $c_text = Lang::t('Display');
-                                            break;
-                                        default:          $c_icon = 'icon-cog-alt';
-                                            $c_text = is_string($details['config_section']) ? $details['config_section'] : '';
-                                            break;
-                                    }
-                                    $detail['type'] = 'config_section';
-                                    $detail[]       = ['icon' => $c_icon, 'text' => $c_text];
-                                }
-                                break;
-                            case 'maintenance':
-                                $action_icon = 'icon-cone';
-                                $action_color = 'icon-yellow';
-                                $action = Lang::t('Maintenance');
-                                if (isset($details['maintenance_action'])) {
-                                    $maintActionRaw = $details['maintenance_action'];
-                                    $action_detail = is_string($maintActionRaw) ? $maintActionRaw : '';
-                                    $maint_action_entry = is_array($maint_actions[$action_detail] ?? null) ? $maint_actions[$action_detail] : [];
-                                    $detail = ['type' => 'maintenance_action', 'icon' => $maint_action_entry['icon'] ?? 'icon-cone', 'text' => $maint_action_entry['label'] ?? $action_detail];
-                                }
-                                break;
-                            case 'update':     $action_icon = 'icon-arrows-cw';
-                                $action_color = 'icon-blue';
-                                $action = Lang::t('Update');
-                                $major_infos = true;
-                                break;
-                            case 'autoupdate': $action_icon = 'icon-arrows-cw';
-                                $action_color = 'icon-blue';
-                                $action = Lang::t('Auto-update');
-                                $major_infos = true;
-                                break;
-                            default:           $action_icon = 'icon-download';
-                                $action_color = 'icon-yellow';
-                                break;
-                        }
+                        [$action_icon, $action_color, $action, $major_infos, $detail] = $this->describeCoreActivity($row->action, $details, $maint_actions);
                         break;
 
                     case ActivitySystem::Plugin:
+                        $object      = isset($details['plugin_id']) ? str_replace(['_', '-'], ' ', is_string($details['plugin_id']) ? $details['plugin_id'] : '') : 'plugin';
                         $object_icon = 'icon-puzzle';
-                        $object = 'plugin';
-                        if (isset($details['plugin_id'])) {
-                            $object = str_replace(['_', '-'], ' ', is_string($details['plugin_id']) ? $details['plugin_id'] : '');
-                        }
-                        switch ($row->action) {
-                            case 'install':    $action_icon = 'icon-download';
-                                $action_color = 'icon-green';
-                                $action = Lang::t('Install');
-                                break;
-                            case 'update':     $action_icon = 'icon-arrows-cw';
-                                $action_color = 'icon-blue';
-                                $action = Lang::t('Update');
-                                break;
-                            case 'activate':   $action_icon = 'icon-check';
-                                $action_color = 'icon-green';
-                                $action = Lang::t('Activate');
-                                break;
-                            case 'deactivate': $action_icon = 'icon-block';
-                                $action_color = 'icon-purple';
-                                $action = Lang::t('Deactivate');
-                                break;
-                            case 'uninstall':  $action_icon = 'icon-trash-1';
-                                $action_color = 'icon-red';
-                                $action = Lang::t('Uninstall');
-                                break;
-                            case 'restore':    $action_icon = 'icon-back-in-time';
-                                $action_color = 'icon-blue';
-                                $action = Lang::t('Restore');
-                                break;
-                            case 'delete':
-                                $action_icon = 'icon-trash-1';
-                                $action_color = 'icon-red';
-                                $action = Lang::t('Delete');
-                                if (isset($details['db_version'])) {
-                                    $detail['type'] = 'db_fs_version';
-                                    $detail[] = ['icon' => 'icon-flow-branch', 'text' => 'database : ' . (is_string($details['db_version']) ? $details['db_version'] : '')];
-                                }
-                                if (isset($details['fs_version'])) {
-                                    $detail['type'] = 'db_fs_version';
-                                    $detail[] = ['icon' => 'icon-flow-branch', 'text' => 'filesystem : ' . (is_string($details['fs_version']) ? $details['fs_version'] : '')];
-                                }
-                                break;
-                            case 'autoupdate': $action_icon = 'icon-arrows-cw';
-                                $action_color = 'icon-blue';
-                                $action = Lang::t('Auto-update');
-                                break;
-                            default:           $action_icon = 'icon-puzzle';
-                                $action_color = 'icon-yellow';
-                                break;
-                        }
+                        [$action_icon, $action_color, $action, $major_infos, $detail] = $this->describePluginActivity($row->action, $details);
                         break;
 
                     case ActivitySystem::Theme:
+                        $object      = isset($details['theme_id']) ? str_replace(['_', '-'], ' ', is_string($details['theme_id']) ? $details['theme_id'] : '') : 'theme';
                         $object_icon = 'icon-brush';
-                        $object = 'theme';
-                        if (isset($details['theme_id'])) {
-                            $object = str_replace(['_', '-'], ' ', is_string($details['theme_id']) ? $details['theme_id'] : '');
-                        }
-                        switch ($row->action) {
-                            case 'install':    $action_icon = 'icon-download';
-                                $action_color = 'icon-green';
-                                $action = Lang::t('Install');
-                                break;
-                            case 'activate':   $action_icon = 'icon-check';
-                                $action_color = 'icon-green';
-                                $action = Lang::t('Activate');
-                                break;
-                            case 'deactivate': $action_icon = 'icon-block';
-                                $action_color = 'icon-purple';
-                                $action = Lang::t('Deactivate');
-                                break;
-                            case 'delete':     $action_icon = 'icon-trash-1';
-                                $action_color = 'icon-red';
-                                $action = Lang::t('Delete');
-                                break;
-                            case 'set_default': $action_icon = 'icon-star';
-                                $action_color = 'icon-yellow';
-                                $action = Lang::t('Set as default');
-                                break;
-                            case 'update':     $action_icon = 'icon-arrows-cw';
-                                $action_color = 'icon-blue';
-                                $action = Lang::t('Update');
-                                break;
-                            default:           $action_icon = 'icon-brush';
-                                $action_color = 'icon-yellow';
-                                break;
-                        }
+                        [$action_icon, $action_color, $action, $major_infos, $detail] = $this->describeThemeActivity($row->action);
                         break;
                 }
 
@@ -1680,6 +1538,147 @@ final class MaintenanceController implements AdminSubControllerInterface
         }
         $this->permissionRepository->insertGroupAccessRows($insert_granted_grps);
         $this->permissionRepository->insertUserAccessIgnoreDuplicates(array_values(array_unique($insert_granted_users, SORT_REGULAR)));
+    }
+
+    /**
+     * Build the (action_icon, action_color, label, major_infos, detail)
+     * tuple for a Core-system activity row. Used by maintenanceSys()'s
+     * activity-log AJAX response.
+     *
+     * @param  array<mixed>                       $details
+     * @param  array<string, array<string, mixed>> $maint_actions
+     * @return array{string, string, string, bool, array<mixed>}
+     */
+    private function describeCoreActivity(string $action, array $details, array $maint_actions): array
+    {
+        $emptyDetail = ['type' => 'empty'];
+        return match ($action) {
+            'install'     => ['icon-download',   'icon-green',  Lang::t('Install'),       false, $emptyDetail],
+            'config'      => ['icon-cog-alt',    'icon-yellow', Lang::t('Configuration'), false, $this->describeCoreConfigDetail($details)],
+            'maintenance' => ['icon-cone',       'icon-yellow', Lang::t('Maintenance'),   false, $this->describeMaintenanceActionDetail($details, $maint_actions)],
+            'update'      => ['icon-arrows-cw',  'icon-blue',   Lang::t('Update'),        true,  $emptyDetail],
+            'autoupdate'  => ['icon-arrows-cw',  'icon-blue',   Lang::t('Auto-update'),   true,  $emptyDetail],
+            default       => ['icon-download',   'icon-yellow', $action,                  false, $emptyDetail],
+        };
+    }
+
+    /**
+     * Render the inner "configuration section" detail for a
+     * Core/config activity row. Sizes/restore_settings prepends a
+     * 'Set as default' marker before the section icon — preserving
+     * the original ordering of the rendered breadcrumb.
+     *
+     * @param  array<mixed> $details
+     * @return array<mixed>
+     */
+    private function describeCoreConfigDetail(array $details): array
+    {
+        if (!isset($details['config_section'])) {
+            return ['type' => 'empty'];
+        }
+        $section = $details['config_section'];
+
+        $detail = ['type' => 'config_section'];
+        if ($section === 'sizes' && isset($details['config_action']) && 'restore_settings' == $details['config_action']) {
+            $detail[] = ['icon' => 'icon-back-in-time', 'text' => Lang::t('Set as default')];
+        }
+
+        [$c_icon, $c_text] = match ($section) {
+            'main'      => ['icon-cog',          Lang::t('General')],
+            'watermark' => ['icon-file-image',   Lang::t('Watermark')],
+            'sizes'     => ['icon-zoom-square',  Lang::t('Photo sizes')],
+            'comments'  => ['icon-chat',         Lang::t('Comments')],
+            'display'   => ['icon-television',   Lang::t('Display')],
+            default     => ['icon-cog-alt',      is_string($section) ? $section : ''],
+        };
+
+        $detail[] = ['icon' => $c_icon, 'text' => $c_text];
+        return $detail;
+    }
+
+    /**
+     * @param  array<mixed>                        $details
+     * @param  array<string, array<string, mixed>> $maint_actions
+     * @return array<mixed>
+     */
+    private function describeMaintenanceActionDetail(array $details, array $maint_actions): array
+    {
+        if (!isset($details['maintenance_action'])) {
+            return ['type' => 'empty'];
+        }
+        $maintActionRaw = $details['maintenance_action'];
+        $action_detail  = is_string($maintActionRaw) ? $maintActionRaw : '';
+        $entry          = is_array($maint_actions[$action_detail] ?? null) ? $maint_actions[$action_detail] : [];
+        return [
+            'type' => 'maintenance_action',
+            'icon' => $entry['icon']  ?? 'icon-cone',
+            'text' => $entry['label'] ?? $action_detail,
+        ];
+    }
+
+    /**
+     * Build the (action_icon, action_color, label, major_infos, detail)
+     * tuple for a Plugin-system activity row.
+     *
+     * @param  array<mixed> $details
+     * @return array{string, string, string, bool, array<mixed>}
+     */
+    private function describePluginActivity(string $action, array $details): array
+    {
+        $detail = $action === 'delete' ? $this->describePluginDeleteDetail($details) : ['type' => 'empty'];
+        return match ($action) {
+            'install'    => ['icon-download',      'icon-green',  Lang::t('Install'),     false, $detail],
+            'update'     => ['icon-arrows-cw',     'icon-blue',   Lang::t('Update'),      false, $detail],
+            'activate'   => ['icon-check',         'icon-green',  Lang::t('Activate'),    false, $detail],
+            'deactivate' => ['icon-block',         'icon-purple', Lang::t('Deactivate'),  false, $detail],
+            'uninstall'  => ['icon-trash-1',       'icon-red',    Lang::t('Uninstall'),   false, $detail],
+            'restore'    => ['icon-back-in-time',  'icon-blue',   Lang::t('Restore'),     false, $detail],
+            'delete'     => ['icon-trash-1',       'icon-red',    Lang::t('Delete'),      false, $detail],
+            'autoupdate' => ['icon-arrows-cw',     'icon-blue',   Lang::t('Auto-update'), false, $detail],
+            default      => ['icon-puzzle',        'icon-yellow', $action,                false, $detail],
+        };
+    }
+
+    /**
+     * Plugin/delete activity row renders the db_version and fs_version
+     * (if known) as flow-branch tags so the operator can see what was
+     * removed. Both keys may be present, both absent, or just one.
+     *
+     * @param  array<mixed> $details
+     * @return array<mixed>
+     */
+    private function describePluginDeleteDetail(array $details): array
+    {
+        $detail = ['type' => 'empty'];
+        if (isset($details['db_version'])) {
+            $detail['type'] = 'db_fs_version';
+            $detail[] = ['icon' => 'icon-flow-branch', 'text' => 'database : ' . (is_string($details['db_version']) ? $details['db_version'] : '')];
+        }
+        if (isset($details['fs_version'])) {
+            $detail['type'] = 'db_fs_version';
+            $detail[] = ['icon' => 'icon-flow-branch', 'text' => 'filesystem : ' . (is_string($details['fs_version']) ? $details['fs_version'] : '')];
+        }
+        return $detail;
+    }
+
+    /**
+     * Build the (action_icon, action_color, label, major_infos, detail)
+     * tuple for a Theme-system activity row.
+     *
+     * @return array{string, string, string, bool, array<mixed>}
+     */
+    private function describeThemeActivity(string $action): array
+    {
+        $detail = ['type' => 'empty'];
+        return match ($action) {
+            'install'     => ['icon-download',    'icon-green',  Lang::t('Install'),         false, $detail],
+            'activate'    => ['icon-check',       'icon-green',  Lang::t('Activate'),        false, $detail],
+            'deactivate'  => ['icon-block',       'icon-purple', Lang::t('Deactivate'),      false, $detail],
+            'delete'      => ['icon-trash-1',     'icon-red',    Lang::t('Delete'),          false, $detail],
+            'set_default' => ['icon-star',        'icon-yellow', Lang::t('Set as default'),  false, $detail],
+            'update'      => ['icon-arrows-cw',   'icon-blue',   Lang::t('Update'),          false, $detail],
+            default       => ['icon-brush',       'icon-yellow', $action,                    false, $detail],
+        };
     }
 
     // ── stats helper methods (from stats.php) ─────────────────────────────────

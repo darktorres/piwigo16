@@ -1275,58 +1275,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 }
                 $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $category_ids, ActivityAction::Add, ['sync' => true]));
                 $category_up_str = implode(',', array_unique($category_up));
-                if (Config::inheritanceByDefault() && !empty($category_up_str)) {
-                    $permRepoSync    = $this->permissionRepository;
-                    $category_up_ids = array_map(intval(...), explode(',', $category_up_str));
-                    $groupAccessRows = $permRepoSync->findGroupCategoryAccess($category_up_ids);
-                    $granted_grps    = [];
-                    if (!empty($groupAccessRows)) {
-                        foreach ($groupAccessRows as $row) {
-                            $cik = is_scalar($row['cat_id'] ?? null) ? (string) $row['cat_id'] : '';
-                            if (!isset($granted_grps[$cik])) {
-                                $granted_grps[$cik] = [];
-                            }
-                            array_push($granted_grps, [$cik => array_push($granted_grps[$cik], $row['group_id'])]);
-                        }
-                    }
-                    $userAccessRows = $permRepoSync->findUserCategoryAccess($category_up_ids);
-                    $granted_users  = [];
-                    if (!empty($userAccessRows)) {
-                        foreach ($userAccessRows as $row) {
-                            $cik = is_scalar($row['cat_id'] ?? null) ? (string) $row['cat_id'] : '';
-                            if (!isset($granted_users[$cik])) {
-                                $granted_users[$cik] = [];
-                            }
-                            array_push($granted_users, [$cik => array_push($granted_users[$cik], $row['user_id'])]);
-                        }
-                    }
-                    $insert_granted_users = $insert_granted_grps = [];
-                    foreach ($category_ids as $ids) {
-                        $idsRow    = $db_categories[$ids] ?? null;
-                        $parent_id = $idsRow['id_uppercat'] ?? null;
-                        while ($parent_id !== null && in_array($parent_id, $category_ids)) {
-                            $pidRow    = $db_categories[$parent_id] ?? null;
-                            $parent_id = $pidRow['id_uppercat'] ?? null;
-                        }
-                        if ($idsRow !== null && $idsRow['status'] === 'private' && $parent_id !== null) {
-                            $idsInt = (int) $ids;
-                            if (isset($granted_grps[$parent_id])) {
-                                foreach ($granted_grps[$parent_id] as $granted_grp) {
-                                    $insert_granted_grps[] = ['group_id' => is_numeric($granted_grp) ? (int) $granted_grp : 0, 'cat_id' => $idsInt];
-                                }
-                            }
-                            if (isset($granted_users[$parent_id])) {
-                                foreach ($granted_users[$parent_id] as $granted_user) {
-                                    $insert_granted_users[] = ['user_id' => is_numeric($granted_user) ? (int) $granted_user : 0, 'cat_id' => $idsInt];
-                                }
-                            }
-                        }
-                    }
-                    $this->permissionRepository->insertGroupAccessRows($insert_granted_grps);
-                    $this->permissionRepository->insertUserAccessIgnoreDuplicates(array_values(array_unique($insert_granted_users, SORT_REGULAR)));
-                } else {
-                    $this->categoryAdminService->addPermissionOnCategory($category_ids, $this->userAdminService->getAdmins());
-                }
+                $this->inheritCategoryPermissionsForBatch($category_up_str, $category_ids, $db_categories);
             }
             $counts['new_categories'] = count($inserts);
 
@@ -1556,13 +1505,14 @@ final class MaintenanceController implements AdminSubControllerInterface
                     $data['id'] = $id;
                     $datas[]    = $data;
                     foreach (['keywords', 'tags'] as $key) {
-                        if (isset($data[$key])) {
-                            if (!isset($tags_of[$id])) {
-                                $tags_of[$id] = [];
-                            }
-                            foreach (explode(',', is_scalar($data[$key]) ? (string) $data[$key] : '') as $tag_name) {
-                                $tags_of[$id][] = $this->tagAdminService->tagIdFromTagName($tag_name);
-                            }
+                        if (!isset($data[$key])) {
+                            continue;
+                        }
+                        if (!isset($tags_of[$id])) {
+                            $tags_of[$id] = [];
+                        }
+                        foreach (explode(',', is_scalar($data[$key]) ? (string) $data[$key] : '') as $tag_name) {
+                            $tags_of[$id][] = $this->tagAdminService->tagIdFromTagName($tag_name);
                         }
                     }
                 } else {
@@ -1669,6 +1619,67 @@ final class MaintenanceController implements AdminSubControllerInterface
         }
 
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'site_update.latte');
+    }
+
+    /**
+     * Grant the freshly-synced categories the permission set inherited
+     * from their nearest already-existing ancestor, mirroring how the
+     * admin UI populates permissions when creating an album. When
+     * inheritance is disabled (Config::inheritanceByDefault() === false)
+     * or there is no in-tree ancestor (the new batch is at the root),
+     * fall back to granting access only to the admin user list.
+     *
+     * @param list<int>                                   $category_ids
+     * @param array<int, array<string, mixed>>            $db_categories
+     */
+    private function inheritCategoryPermissionsForBatch(string $category_up_str, array $category_ids, array $db_categories): void
+    {
+        if (!Config::inheritanceByDefault() || $category_up_str === '') {
+            $this->categoryAdminService->addPermissionOnCategory($category_ids, $this->userAdminService->getAdmins());
+            return;
+        }
+
+        $category_up_ids = array_map(intval(...), explode(',', $category_up_str));
+        $groupAccessRows = $this->permissionRepository->findGroupCategoryAccess($category_up_ids);
+        $granted_grps    = [];
+        foreach ($groupAccessRows as $row) {
+            $cik = is_scalar($row['cat_id'] ?? null) ? (string) $row['cat_id'] : '';
+            if (!isset($granted_grps[$cik])) {
+                $granted_grps[$cik] = [];
+            }
+            array_push($granted_grps, [$cik => array_push($granted_grps[$cik], $row['group_id'])]);
+        }
+        $userAccessRows = $this->permissionRepository->findUserCategoryAccess($category_up_ids);
+        $granted_users  = [];
+        foreach ($userAccessRows as $row) {
+            $cik = is_scalar($row['cat_id'] ?? null) ? (string) $row['cat_id'] : '';
+            if (!isset($granted_users[$cik])) {
+                $granted_users[$cik] = [];
+            }
+            array_push($granted_users, [$cik => array_push($granted_users[$cik], $row['user_id'])]);
+        }
+
+        $insert_granted_users = $insert_granted_grps = [];
+        foreach ($category_ids as $ids) {
+            $idsRow    = $db_categories[$ids] ?? null;
+            $parent_id = $idsRow['id_uppercat'] ?? null;
+            while ($parent_id !== null && is_scalar($parent_id) && in_array($parent_id, $category_ids)) {
+                $pidRow    = $db_categories[(int) $parent_id] ?? null;
+                $parent_id = $pidRow['id_uppercat'] ?? null;
+            }
+            if ($idsRow === null || $idsRow['status'] !== 'private' || !is_scalar($parent_id)) {
+                continue;
+            }
+            $parentKey = (string) $parent_id;
+            foreach ($granted_grps[$parentKey] ?? [] as $granted_grp) {
+                $insert_granted_grps[] = ['group_id' => is_numeric($granted_grp) ? (int) $granted_grp : 0, 'cat_id' => $ids];
+            }
+            foreach ($granted_users[$parentKey] ?? [] as $granted_user) {
+                $insert_granted_users[] = ['user_id' => is_numeric($granted_user) ? (int) $granted_user : 0, 'cat_id' => $ids];
+            }
+        }
+        $this->permissionRepository->insertGroupAccessRows($insert_granted_grps);
+        $this->permissionRepository->insertUserAccessIgnoreDuplicates(array_values(array_unique($insert_granted_users, SORT_REGULAR)));
     }
 
     // ── stats helper methods (from stats.php) ─────────────────────────────────

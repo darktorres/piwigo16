@@ -6,6 +6,8 @@ namespace Piwigo\Ws\Action\Pwg\Comments;
 
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Comment\CommentRepository;
+use Piwigo\Comment\SqlFilterClause;
+use Piwigo\Comment\SqlFilterKind;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\Lang;
@@ -45,39 +47,39 @@ final readonly class GetListHandler implements WsAction
         if (!in_array($input->perPage, [5, 10, 25, 50])) {
             return new PwgError(401, 'Per page must be: 5, 10, 25 or 50');
         }
-        /** @var list<array{sql: string, param: mixed, type: ParameterType, kind: string}> $filters */
+        /** @var list<SqlFilterClause> $filters */
         $filters = [];
         if ($input->authorId !== null) {
-            $filters[] = ['sql' => 'author_id = ?', 'param' => $input->authorId, 'type' => ParameterType::INTEGER, 'kind' => 'author'];
+            $filters[] = new SqlFilterClause('author_id = ?', $input->authorId, ParameterType::INTEGER, SqlFilterKind::Author);
         }
         if ($input->imageId !== null) {
-            $filters[] = ['sql' => 'image_id = ?', 'param' => $input->imageId, 'type' => ParameterType::INTEGER, 'kind' => 'image'];
+            $filters[] = new SqlFilterClause('image_id = ?', $input->imageId, ParameterType::INTEGER, SqlFilterKind::Image);
         }
         if ($input->fMinDate !== null) {
             $dmin = date_create($input->fMinDate);
             if ($dmin !== false) {
-                $filters[] = ['sql' => 'date >= ?', 'param' => date_format($dmin, 'Y-m-d 00:00:00'), 'type' => ParameterType::STRING, 'kind' => 'min_date'];
+                $filters[] = new SqlFilterClause('date >= ?', date_format($dmin, 'Y-m-d 00:00:00'), ParameterType::STRING, SqlFilterKind::MinDate);
             }
         }
         if ($input->fMaxDate !== null) {
             $dmax = date_create($input->fMaxDate);
             if ($dmax !== false) {
-                $filters[] = ['sql' => 'date <= ?', 'param' => date_format($dmax, 'Y-m-d 23:59:59'), 'type' => ParameterType::STRING, 'kind' => 'max_date'];
+                $filters[] = new SqlFilterClause('date <= ?', date_format($dmax, 'Y-m-d 23:59:59'), ParameterType::STRING, SqlFilterKind::MaxDate);
             }
         }
         if ($input->search !== null) {
-            $filters = [['sql' => 'content LIKE ?', 'param' => '%' . $input->search . '%', 'type' => ParameterType::STRING, 'kind' => 'search']];
+            $filters = [new SqlFilterClause('content LIKE ?', '%' . $input->search . '%', ParameterType::STRING, SqlFilterKind::Search)];
         }
 
         $build = static function (array $rows): array {
-            /** @var list<array{sql: string, param: mixed, type: ParameterType, kind: string}> $rows */
-            $where = ['1=1'];
+            /** @var list<SqlFilterClause> $rows */
+            $where  = ['1=1'];
             $params = [];
             $types  = [];
             foreach ($rows as $row) {
-                $where[]  = $row['sql'];
-                $params[] = $row['param'];
-                $types[]  = $row['type'];
+                $where[]  = $row->sql;
+                $params[] = $row->param;
+                $types[]  = $row->type;
             }
             return [$where, $params, $types];
         };
@@ -143,7 +145,7 @@ final readonly class GetListHandler implements WsAction
 
         [$authorsWhere, $authorsParams, $authorsTypes] = $build(array_values(array_filter(
             $filters,
-            static fn (array $f): bool => $f['kind'] !== 'author',
+            static fn (SqlFilterClause $f): bool => $f->kind !== SqlFilterKind::Author,
         )));
         $nbAuthorsIn = array_map(
             static fn (\Piwigo\Comment\Projection\AuthorCount $ac): array => $ac->toArray(),

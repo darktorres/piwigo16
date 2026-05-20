@@ -147,10 +147,10 @@ final readonly class SearchHandler implements WsAction
                 $rfTags      = is_array($rulesFields['tags'] ?? null) ? $rulesFields['tags'] : [];
                 /** @var array{words?: list<int|string>} $rfCat */
                 $rfCat       = is_array($rulesFields['cat'] ?? null) ? $rulesFields['cat'] : [];
-                if (!empty($rfTags['words'])) {
+                if (isset($rfTags['words']) && count($rfTags['words']) > 0) {
                     $hasTags = true;
                 }
-                if (!empty($rfCat['words'])) {
+                if (isset($rfCat['words']) && count($rfCat['words']) > 0) {
                     $catWords    = $rfCat['words'];
                     $categoryIds = array_merge($categoryIds, $catWords);
                 }
@@ -278,15 +278,12 @@ final readonly class SearchHandler implements WsAction
                 $sdAllwords      = is_array($sdFields['allwords'] ?? null) ? $sdFields['allwords'] : [];
                 /** @var array{words?: list<string>} $sdAuthor */
                 $sdAuthor        = is_array($sdFields['author'] ?? null) ? $sdFields['author'] : [];
-                /** @var list<int|string> $sdTagsWords */
-                $sdTagsWords     = is_array($sdTags['words'] ?? null) ? $sdTags['words'] : [];
-                /** @var list<int|string> $sdCatWords */
-                $sdCatWords      = is_array($sdCat['words'] ?? null) ? $sdCat['words'] : [];
+                $sdTagsWords     = $sdTags['words']   ?? [];
+                $sdCatWords      = $sdCat['words']    ?? [];
                 /** @var list<string>|string $sdAllwordsRaw */
                 $sdAllwordsRaw   = $sdAllwords['words'] ?? [];
                 $sdAllwordsWords = is_array($sdAllwordsRaw) ? $sdAllwordsRaw : [];
-                /** @var list<string> $sdAuthorWords */
-                $sdAuthorWords   = is_array($sdAuthor['words'] ?? null) ? $sdAuthor['words'] : [];
+                $sdAuthorWords   = $sdAuthor['words'] ?? [];
                 /** @var list<int|string> $sdAddedBy */
                 $sdAddedBy       = is_array($sdFields['added_by'] ?? null) ? $sdFields['added_by'] : [];
                 $searchDetail    = [

@@ -154,7 +154,7 @@ final class Plugins
                 }
 
                 if (count($errors) === 0) {
-                    $activity_details['version'] = $crt_db_plugin['version'] ?? '';
+                    $activity_details['version'] = is_array($crt_db_plugin) ? $crt_db_plugin['version'] : '';
 
                     try {
                         $this->pluginRegistry->activate($plugin_id);

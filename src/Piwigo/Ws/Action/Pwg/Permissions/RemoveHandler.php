@@ -34,13 +34,12 @@ final readonly class RemoveHandler implements WsAction
         if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $catIds    = $this->categoryService->getSubcatIds($input->categoryIds);
-        $catIdsInt = array_map(static fn (int|string $v): int => (int) $v, $catIds);
+        $catIds = $this->categoryService->getSubcatIds($input->categoryIds);
         if ($input->groupIds !== []) {
-            $this->permissionRepository->deleteGroupAccess($input->groupIds, $catIdsInt);
+            $this->permissionRepository->deleteGroupAccess($input->groupIds, $catIds);
         }
         if ($input->userIds !== []) {
-            $this->permissionRepository->deleteUserAccess($input->userIds, $catIdsInt);
+            $this->permissionRepository->deleteUserAccess($input->userIds, $catIds);
         }
         return $server->invoke('pwg.permissions.getList', ['cat_id' => $input->categoryIds]);
     }

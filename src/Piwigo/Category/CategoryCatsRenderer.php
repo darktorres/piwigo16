@@ -219,7 +219,7 @@ final readonly class CategoryCatsRenderer
                     $name = $subcatRenderEvent->categoryName;
                 }
 
-                $infosRaw = ($catRepPicId !== null) ? ($infos_of_image[$catRepPicId] ?? null) : null;
+                $infosRaw = ($catRepPicId !== null) ? ($infos_of_image[(string) $catRepPicId] ?? null) : null;
                 $representative_infos = is_array($infosRaw) ? $infosRaw : [];
 
                 $descEvent = new RenderCategoryDescription($catComment, 'subcatify_category_description');

@@ -181,19 +181,18 @@ final readonly class GetListHandler implements WsAction
                 if ($img->level <= $userLevel) {
                     $thumbnailSrcOf[$imgIdStr] = DerivativeImage::url($thumbnailSize, SrcImage::fromImage($img));
                 } else {
-                    foreach ($categories as &$category) {
+                    foreach ($categories as $catIdx => $category) {
                         if ($img->id->value === $category['representative_picture_id']) {
                             $newImgId = $this->categoryService->getRandomImageInCategory($category['id'], $category['uppercats'], $category['count_images'], true);
-                            if (isset($newImgId) && !in_array($newImgId, $imageIds)) {
+                            if ($newImgId !== null && !in_array($newImgId, $imageIds)) {
                                 $newImageIds[] = $newImgId;
                             }
                             if (Config::representativeCacheOnLevel()) {
                                 $userRepresentativeUpdatesFor[(string) $category['id']] = $newImgId;
                             }
-                            $category['representative_picture_id'] = $newImgId;
+                            $categories[$catIdx]['representative_picture_id'] = $newImgId;
                         }
                     }
-                    unset($category);
                 }
             }
             if (count($newImageIds) > 0) {
@@ -205,7 +204,7 @@ final readonly class GetListHandler implements WsAction
         if (!$input->public && count($userRepresentativeUpdatesFor)) {
             $updates = [];
             foreach ($userRepresentativeUpdatesFor as $catId => $imageId) {
-                $updates[] = ['cat_id' => $catId, 'image_id' => is_numeric($imageId) ? (int) $imageId : null];
+                $updates[] = ['cat_id' => $catId, 'image_id' => $imageId];
             }
             $userIdInt = is_numeric($user['id'] ?? null) ? (int) $user['id'] : 0;
             $this->categoryRepository->setUserRepresentativeBatch($userIdInt, $updates);

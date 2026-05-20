@@ -25,6 +25,10 @@ final readonly class SetRankHandler implements WsAction
     public function __invoke(array $params, PwgServer $server): mixed
     {
         $input      = SetRankParams::fromArray($params);
+        $singleCatId = $input->categoryIds[0] ?? null;
+        if ($singleCatId === null) {
+            return new PwgError(404, 'category_id not found');
+        }
         $categories = $this->categoryRepository->findIdIdUppercatRankByIds($input->categoryIds);
         if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
@@ -40,7 +44,6 @@ final readonly class SetRankHandler implements WsAction
                 return new PwgError(WsError::InvalidParam->value, 'you need to provide all sub-category ids for a given category');
             }
         } else {
-            $singleCatId  = $input->categoryIds[0];
             $parentForOld = $category->idUppercat?->value;
             $orderOld     = $this->categoryRepository->findOtherIdsByParentOrderedByRank($parentForOld, $singleCatId);
             $orderNew     = [];

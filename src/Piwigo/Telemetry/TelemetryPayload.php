@@ -16,31 +16,30 @@ namespace Piwigo\Telemetry;
 final readonly class TelemetryPayload
 {
     /**
-     * @param array<string, mixed>             $technical       Build/runtime metadata (php_version, db_version, container_type, …)
      * @param array<string, mixed>             $generalStats    Stats from AdminService::getPwgGeneralStatitics + augmentations
      * @param array<string, array{counter:int, filesize:int}> $fileExtensions Per-extension usage
      * @param list<string>                     $plugins         Plugin entries as `#eid/codename/version`
      * @param list<string>                     $themes          Theme entries as `#eid/codename/version`
      * @param array<string, int>               $themesUsage     theme_id → user count
      * @param array<string, int>               $languagesUsage  language code → user count
-     * @param array<string, array<string, mixed>> $activities   Object-name → action-name → counter
+     * @param array<string, array<string, int|array<string, int>>> $activities Object-name → action-name → counter; the 'system' bucket is one level deeper (label → action → counter)
      * @param list<array<string, mixed>>       $updates         Core-upgrade history entries
      * @param array<string, string>            $features        feature_name → 'yes'|'no'
-     * @param array<string, array<string, mixed>> $apps         App name → counter + first/last encounter
+     * @param array<string, TelemetryAppStat>  $apps            App name → counter + first/last encounter
      */
     public function __construct(
-        public string $originHash,
-        public array $technical,
-        public array $generalStats,
-        public array $fileExtensions = [],
-        public array $plugins = [],
-        public array $themes = [],
-        public array $themesUsage = [],
-        public array $languagesUsage = [],
-        public array $activities = [],
-        public array $updates = [],
-        public array $features = [],
-        public array $apps = [],
+        public string             $originHash,
+        public TelemetryTechnical $technical,
+        public array              $generalStats,
+        public array              $fileExtensions = [],
+        public array              $plugins = [],
+        public array              $themes = [],
+        public array              $themesUsage = [],
+        public array              $languagesUsage = [],
+        public array              $activities = [],
+        public array              $updates = [],
+        public array              $features = [],
+        public array              $apps = [],
     ) {
     }
 
@@ -49,7 +48,7 @@ final readonly class TelemetryPayload
     {
         $out = [
             'origin_hash'     => $this->originHash,
-            'technical'       => $this->technical,
+            'technical'       => $this->technical->toArray(),
             'general_stats'   => $this->generalStats,
         ];
         if ($this->fileExtensions !== []) {
@@ -64,7 +63,7 @@ final readonly class TelemetryPayload
             $out['updates'] = $this->updates;
         }
         $out['features'] = $this->features;
-        $out['apps']     = $this->apps;
+        $out['apps']     = array_map(static fn (TelemetryAppStat $s): array => $s->toArray(), $this->apps);
         return $out;
     }
 }

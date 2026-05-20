@@ -170,30 +170,32 @@ final class ActivityRepository extends AbstractRepository
     /**
      * (object, action, counter) groupings for non-system activities, used by telemetry.
      *
-     * @return list<array<string, mixed>>
+     * @return list<\Piwigo\Telemetry\TelemetryActivityGroup>
      */
     public function findUserActivityGroupCounts(): array
     {
-        return $this->conn->executeQuery(
+        $rows = $this->conn->executeQuery(
             'SELECT object, action, COUNT(*) AS counter'
             . ' FROM ' . $this->table('activity')
             . " WHERE object != 'system' GROUP BY object, action",
         )->fetchAllAssociative();
+        return array_map(\Piwigo\Telemetry\TelemetryActivityGroup::fromRow(...), $rows);
     }
 
     /**
      * (object_id, action, counter) groupings restricted to object='system',
      * used by telemetry.
      *
-     * @return list<array<string, mixed>>
+     * @return list<\Piwigo\Telemetry\TelemetryActivityGroup>
      */
     public function findSystemActivityGroupCounts(): array
     {
-        return $this->conn->executeQuery(
+        $rows = $this->conn->executeQuery(
             'SELECT object, object_id, action, COUNT(*) AS counter'
             . ' FROM ' . $this->table('activity')
             . " WHERE object = 'system' GROUP BY object, object_id, action",
         )->fetchAllAssociative();
+        return array_map(\Piwigo\Telemetry\TelemetryActivityGroup::fromRow(...), $rows);
     }
 
     /**

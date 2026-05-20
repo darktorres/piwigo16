@@ -160,22 +160,21 @@ final readonly class TelemetryService
         $this->log->info('[sendPiwigoInfos][exec=' . $execId . '] executed in ' . StringUtil::getElapsedTime($startTime, StringUtil::getMoment()));
     }
 
-    /** @return array<string, mixed> */
-    private function buildTechnical(): array
+    private function buildTechnical(): TelemetryTechnical
     {
         $dbCurrentDate                       = new \DateTimeImmutable()->format('Y-m-d H:i:s');
         [$containerType, $containerVersion]  = StringUtil::getContainerInfo();
-        return [
-            'php_version'       => PHP_VERSION,
-            'piwigo_version'    => AppInfo::VERSION,
-            'os_version'        => PHP_OS,
-            'container_type'    => $containerType,
-            'container_version' => $containerVersion,
-            'db_version'        => DbInfo::version(),
-            'php_datetime'      => date('Y-m-d H:i:s'),
-            'db_datetime'       => $dbCurrentDate,
-            'graphics_library'  => $this->adminService->getGraphicsLibrary(),
-        ];
+        return new TelemetryTechnical(
+            phpVersion:       PHP_VERSION,
+            piwigoVersion:    AppInfo::VERSION,
+            osVersion:        PHP_OS,
+            containerType:    $containerType,
+            containerVersion: $containerVersion,
+            dbVersion:        DbInfo::version(),
+            phpDatetime:      date('Y-m-d H:i:s'),
+            dbDatetime:       $dbCurrentDate,
+            graphicsLibrary:  $this->adminService->getGraphicsLibrary(),
+        );
     }
 
     /** @return array<string, mixed> */
@@ -347,36 +346,26 @@ final readonly class TelemetryService
         return $usage;
     }
 
-    /** @return array{0: array<string, array<string, mixed>>, 1: int} */
+    /** @return array{0: array<string, array<string, int>>, 1: int} */
     private function buildUserActivities(): array
     {
         $activities    = [];
         $nbActivities  = 0;
         foreach ($this->activityRepository->findUserActivityGroupCounts() as $activity) {
-            $nbActivities += is_numeric($activity['counter']) ? (int) $activity['counter'] : 0;
-            $objectKey = is_string($activity['object'] ?? null) ? $activity['object'] : '';
-            $actionKey = is_string($activity['action'] ?? null) ? $activity['action'] : '';
-            if (!isset($activities[$objectKey])) {
-                $activities[$objectKey] = [];
-            }
-            $activities[$objectKey][$actionKey] = $activity['counter'];
+            $nbActivities += $activity->counter;
+            $activities[$activity->object][$activity->action] = $activity->counter;
         }
         return [$activities, $nbActivities];
     }
 
-    /** @return array<string, array<string, mixed>> */
+    /** @return array<string, array<string, int>> */
     private function buildSystemActivities(): array
     {
         $labelForSystemObjectId = [1 => 'core', 2 => 'plugin', 3 => 'theme'];
         $systemActivities = [];
         foreach ($this->activityRepository->findSystemActivityGroupCounts() as $activity) {
-            $objectIdKey = is_numeric($activity['object_id']) ? (int) $activity['object_id'] : 0;
-            $actionKey   = is_string($activity['action'] ?? null) ? $activity['action'] : '';
-            $labelKey    = $labelForSystemObjectId[$objectIdKey] ?? 'undefined';
-            if (!isset($systemActivities[$labelKey])) {
-                $systemActivities[$labelKey] = [];
-            }
-            $systemActivities[$labelKey][$actionKey] = $activity['counter'];
+            $labelKey = $labelForSystemObjectId[$activity->objectId ?? 0] ?? 'undefined';
+            $systemActivities[$labelKey][$activity->action] = $activity->counter;
         }
         return $systemActivities;
     }
@@ -414,7 +403,7 @@ final readonly class TelemetryService
         ];
     }
 
-    /** @return array<string, array<string, mixed>> */
+    /** @return array<string, TelemetryAppStat> */
     private function buildAppsStats(): array
     {
         $appsPattern = [
@@ -430,9 +419,10 @@ final readonly class TelemetryService
             'WordPress'           => '/WordPress/',
             'pLoader'             => '/pLoader/',
         ];
+        /** @var array<string, TelemetryAppStat> $apps */
         $apps = [];
         foreach ($this->activityRepository->findAppUserAgentStats() as $activity) {
-            $userAgent      = is_string($activity['user_agent'] ?? null) ? $activity['user_agent'] : '';
+            $userAgent       = is_string($activity['user_agent'] ?? null) ? $activity['user_agent'] : '';
             $activityCounter = is_numeric($activity['counter'] ?? null) ? (int) $activity['counter'] : 0;
             $firstEncounter  = is_string($activity['first_encounter'] ?? null) ? $activity['first_encounter'] : '';
             $lastEncounter   = is_string($activity['last_encounter'] ?? null) ? $activity['last_encounter'] : '';
@@ -440,20 +430,17 @@ final readonly class TelemetryService
                 if (preg_match($pattern, $userAgent) !== 1) {
                     continue;
                 }
-                $existing         = $apps[$appName] ?? [];
-                $existingCounterRaw = $existing['counter'] ?? null;
-                $existingFirstRaw   = $existing['first_encounter'] ?? null;
-                $existingLastRaw    = $existing['last_encounter'] ?? null;
-                $existingCounter = is_int($existingCounterRaw) ? $existingCounterRaw : 0;
-                $apps[$appName]['counter'] = $existingCounter + $activityCounter;
-                $existingFirst = is_string($existingFirstRaw) ? $existingFirstRaw : '';
-                if ($existingFirst === '' || strtotime($existingFirst) > strtotime($firstEncounter)) {
-                    $apps[$appName]['first_encounter'] = $firstEncounter;
+                $existing = $apps[$appName] ?? null;
+                $counter  = ($existing !== null ? $existing->counter : 0) + $activityCounter;
+                $first    = $existing !== null ? $existing->firstEncounter : '';
+                if ($first === '' || strtotime($first) > strtotime($firstEncounter)) {
+                    $first = $firstEncounter;
                 }
-                $existingLast = is_string($existingLastRaw) ? $existingLastRaw : '';
-                if ($existingLast === '' || strtotime($existingLast) < strtotime($lastEncounter)) {
-                    $apps[$appName]['last_encounter'] = $lastEncounter;
+                $last = $existing !== null ? $existing->lastEncounter : '';
+                if ($last === '' || strtotime($last) < strtotime($lastEncounter)) {
+                    $last = $lastEncounter;
                 }
+                $apps[$appName] = new TelemetryAppStat($counter, $first, $last);
             }
         }
         return $apps;

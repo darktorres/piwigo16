@@ -12,8 +12,8 @@ namespace Piwigo\Search\Rules;
 final readonly class AllwordsFilter
 {
     /**
-     * @param list<string> $words   words submitted by the user (space-split client-side)
-     * @param list<string> $fields  whitelist of field names to match against
+     * @param list<string>         $words   words submitted by the user (space-split client-side)
+     * @param list<AllwordsField>  $fields  whitelist of fields to match against
      */
     public function __construct(
         public array $words,
@@ -31,9 +31,18 @@ final readonly class AllwordsFilter
         if ($words === []) {
             return null;
         }
-        $fields = is_array($fieldsRaw)
-            ? array_values(array_filter($fieldsRaw, static fn (mixed $v): bool => is_string($v)))
-            : [];
+        $fields = [];
+        if (is_array($fieldsRaw)) {
+            foreach ($fieldsRaw as $v) {
+                if (!is_string($v)) {
+                    continue;
+                }
+                $case = AllwordsField::tryFrom($v);
+                if ($case !== null) {
+                    $fields[] = $case;
+                }
+            }
+        }
         return new self($words, $fields, AllwordsMode::tryParse($raw['mode'] ?? null));
     }
 

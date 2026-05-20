@@ -14,6 +14,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Search\Rules\AllwordsField;
 use Piwigo\Search\SearchFilterViewRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Tag\TagService;
@@ -105,7 +106,7 @@ final readonly class SearchController implements ControllerInterface
             $search['fields']['allwords'] = [
                 'words'  => $words,
                 'mode'   => 'AND',
-                'fields' => ['file', 'name', 'comment', 'tags', 'author', 'cat-title', 'cat-desc'],
+                'fields' => AllwordsField::values(),
             ];
         }
 

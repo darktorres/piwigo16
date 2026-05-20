@@ -26,6 +26,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\OrderByService;
 use Piwigo\Search\Inflector\InflectorEn;
 use Piwigo\Search\Inflector\InflectorFr;
+use Piwigo\Search\Rules\AllwordsField;
 use Piwigo\Search\Rules\DatePresetCode;
 use Piwigo\Search\Rules\SearchRules;
 use Piwigo\Section\SectionContextRegistry;
@@ -241,23 +242,33 @@ final class SearchService
         }
 
         if ($rules->allwords !== null && count($rules->allwords->fields) > 0 && $allwordsFilter['access']) {
-            $hasFilersFilled = true;
-            $fields = ['file', 'name', 'comment', 'author'];
-            $allwordsFieldList = $rules->allwords->fields;
-            $fields = array_intersect($fields, $allwordsFieldList);
-            $catFieldsDictionary = ['cat-title' => 'name', 'cat-desc' => 'comment'];
-            $catFields           = array_intersect(array_keys($catFieldsDictionary), $allwordsFieldList);
-            $wordClauses         = [];
+            $hasFilersFilled    = true;
+            $allwordsFieldList  = $rules->allwords->fields;
+            $imageFieldColumns  = [];
+            $catFieldColumns    = [];
+            $wantsTags          = false;
+            foreach ($allwordsFieldList as $awf) {
+                match ($awf) {
+                    AllwordsField::File     => $imageFieldColumns[] = 'file',
+                    AllwordsField::Name     => $imageFieldColumns[] = 'name',
+                    AllwordsField::Comment  => $imageFieldColumns[] = 'comment',
+                    AllwordsField::Author   => $imageFieldColumns[] = 'author',
+                    AllwordsField::CatTitle => $catFieldColumns[]   = 'name',
+                    AllwordsField::CatDesc  => $catFieldColumns[]   = 'comment',
+                    AllwordsField::Tags     => $wantsTags           = true,
+                };
+            }
+            $wordClauses  = [];
             $catIdsByWord = $tagIdsByWord = [];
             foreach ($rules->allwords->words as $word) {
                 $fieldClauses = [];
-                foreach ($fields as $field) {
+                foreach ($imageFieldColumns as $field) {
                     $fieldClauses[] = $field . " LIKE '%" . $word . "%'";
                 }
-                if (count($catFields) > 0) {
+                if (count($catFieldColumns) > 0) {
                     $catFieldClauses = [];
-                    foreach ($catFields as $catField) {
-                        $catFieldClauses[] = $catFieldsDictionary[$catField] . " LIKE '%" . $word . "%'";
+                    foreach ($catFieldColumns as $catCol) {
+                        $catFieldClauses[] = $catCol . " LIKE '%" . $word . "%'";
                     }
                     $catIds = $this->categoryRepository->findIdsByOrClauses($catFieldClauses);
                     $catIdsByWord[$word] = $catIds;
@@ -268,7 +279,7 @@ final class SearchService
                         }
                     }
                 }
-                if (in_array('tags', $allwordsFieldList)) {
+                if ($wantsTags) {
                     $tagIds = $this->tagRepository->findIdsByNameLike($word);
                     $tagIdsByWord[$word] = $tagIds;
                     if ($tagIds !== []) {

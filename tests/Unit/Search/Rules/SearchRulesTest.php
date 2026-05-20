@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Search\Rules;
 
 use PHPUnit\Framework\TestCase;
 use Piwigo\Search\MalformedSearchRulesException;
+use Piwigo\Search\Rules\AllwordsField;
 use Piwigo\Search\Rules\AllwordsMode;
 use Piwigo\Search\Rules\DatePresetCode;
 use Piwigo\Search\Rules\SearchRules;
@@ -57,7 +58,7 @@ final class SearchRulesTest extends TestCase
         ]);
         self::assertNotNull($rules->allwords);
         self::assertSame(['sunset', 'beach'], $rules->allwords->words);
-        self::assertSame(['name', 'comment'], $rules->allwords->fields);
+        self::assertSame([AllwordsField::Name, AllwordsField::Comment], $rules->allwords->fields);
         self::assertSame(AllwordsMode::Or, $rules->allwords->mode);
     }
 

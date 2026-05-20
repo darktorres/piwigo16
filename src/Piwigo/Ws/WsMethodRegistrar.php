@@ -8,6 +8,7 @@ use Piwigo\Config\Config;
 use Piwigo\Event\Ws\WsMethodsRegistering;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Search\Rules\AllwordsField;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -1266,7 +1267,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
                 ParamDefinition::optionalFlag(name: 'search_id', info: 'prior search_id (or search_key), if any'),
                 ParamDefinition::optionalFlag(name: 'allwords', info: 'query to search by words'),
                 ParamDefinition::optionalFlag(name: 'allwords_mode', info: 'AND (by default) | OR'),
-                ParamDefinition::optionalFlag(name: 'allwords_fields', flags: WsParam::ForceArray->value, info: 'values among [name, comment, tags, file, author, cat-title, cat-desc]'),
+                ParamDefinition::optionalFlag(name: 'allwords_fields', flags: WsParam::ForceArray->value, info: 'values among [' . implode(', ', AllwordsField::values()) . ']'),
                 ParamDefinition::optionalFlag(name: 'tags', type: WsType::Id->value, flags: WsParam::ForceArray->value),
                 ParamDefinition::optionalFlag(name: 'tags_mode', info: 'AND (by default) | OR'),
                 ParamDefinition::optionalFlag(name: 'categories', type: WsType::Id->value, flags: WsParam::ForceArray->value),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Action\Pwg\Images;
 
 use Piwigo\Config\Config;
+use Piwigo\Search\Rules\AllwordsField;
 use Piwigo\Search\SearchService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
@@ -49,13 +50,12 @@ final readonly class FilteredSearchCreateHandler implements WsAction
                 return new PwgError(WsError::InvalidParam->value, 'Invalid parameter allwords_mode');
             }
             $search['fields']['allwords']['mode'] = $pAllwordsMode;
-            $allwordsFieldsAvailable              = ['name', 'comment', 'file', 'author', 'tags', 'cat-title', 'cat-desc'];
             if (!isset($params['allwords_fields'])) {
-                $params['allwords_fields'] = $allwordsFieldsAvailable;
+                $params['allwords_fields'] = AllwordsField::values();
             }
             $pAllwordsFields = is_array($params['allwords_fields']) ? $params['allwords_fields'] : [];
             foreach ($pAllwordsFields as $field) {
-                if (!in_array($field, $allwordsFieldsAvailable)) {
+                if (!is_string($field) || AllwordsField::tryFrom($field) === null) {
                     return new PwgError(WsError::InvalidParam->value, 'Invalid parameter allwords_fields');
                 }
             }

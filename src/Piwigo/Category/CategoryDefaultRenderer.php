@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Piwigo\Comment\CommentRepository;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\Config;
 use Piwigo\Core\DebugCollector;
 use Piwigo\Event\Location\LocBeginIndexThumbnails;
@@ -123,11 +124,11 @@ final readonly class CategoryDefaultRenderer
             }
 
             switch ($ctx->section) {
-                case 'best_rated':
+                case Section::BestRated:
                     $ratingScoreRaw = $row['rating_score'] ?? null;
                     $name = '(' . (is_string($ratingScoreRaw) ? $ratingScoreRaw : '') . ') ' . $name;
                     break;
-                case 'most_visited':
+                case Section::MostVisited:
                     if (!$user['show_nb_hits']) {
                         $hitRaw = $row['hit'] ?? null;
                         $name = '(' . (is_string($hitRaw) ? $hitRaw : '') . ') ' . $name;

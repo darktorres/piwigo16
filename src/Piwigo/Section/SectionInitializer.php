@@ -7,6 +7,7 @@ namespace Piwigo\Section;
 use Piwigo\Calendar\CalendarService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
@@ -155,7 +156,7 @@ final readonly class SectionInitializer
         // ── Extract typed locals now that $page is fully populated ───────────
 
         $pageSectionRaw = $page['section'] ?? null;
-        $section   = is_string($pageSectionRaw) ? $pageSectionRaw : 'categories';
+        $section   = is_string($pageSectionRaw) ? (Section::tryFrom($pageSectionRaw) ?? Section::Categories) : Section::Categories;
         $pageCategoryRaw = $page['category'] ?? null;
         $category  = is_array($pageCategoryRaw) ? $pageCategoryRaw : null;
         $pageTagsRaw = $page['tags'] ?? null;
@@ -169,7 +170,7 @@ final readonly class SectionInitializer
             ? (int) $user['nb_image_page']
             : 0;
 
-        if ($section === 'categories' && !isset($page['flat'])) {
+        if ($section === Section::Categories && !isset($page['flat'])) {
             Config::override('order_by', Config::orderByInsideCategory());
         }
 
@@ -218,7 +219,12 @@ final readonly class SectionInitializer
 
         // ── Categories ────────────────────────────────────────────────────────
 
-        if ($section === 'categories') {
+        // Initialize the title-related keys so psalm sees them as always-set
+        // after the section dispatch; each Section branch may overwrite them.
+        $page['title']         = '';
+        $page['section_title'] = '';
+
+        if ($section === Section::Categories) {
             if (isset($page['combined_categories'])) {
                 $page['title'] = $this->htmlService->getCombinedCategoriesContentTitle();
             } elseif ($category !== null) {
@@ -314,7 +320,7 @@ final readonly class SectionInitializer
 
         // ── Special sections ──────────────────────────────────────────────────
 
-        elseif ($section === 'tags') {
+        elseif ($section === Section::Tags) {
             $tagIds = [];
             foreach ($pageTags as $tag) {
                 if (!is_array($tag)) {
@@ -340,7 +346,7 @@ final readonly class SectionInitializer
                 'title' => $this->htmlService->getTagsContentTitle(),
                 'items' => $items,
             ]);
-        } elseif ($section === 'search') {
+        } elseif ($section === Section::Search) {
             $superOrderBy = isset($page['super_order_by']) && (bool) $page['super_order_by'];
             $pageSearchRaw = $page['search'] ?? null;
             $pageSearch   = is_scalar($pageSearchRaw) ? (string) $pageSearchRaw : '';
@@ -354,7 +360,7 @@ final readonly class SectionInitializer
                 'items' => $searchResult['items'],
                 'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Search results') . '</a>',
             ]);
-        } elseif ($section === 'favorites') {
+        } elseif ($section === Section::Favorites) {
             $this->userService->checkUserFavorites();
             $page = array_merge($page, [
                 'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Favorites') . '</a>',
@@ -385,7 +391,7 @@ final readonly class SectionInitializer
                     ]);
                 }
             }
-        } elseif ($section === 'recent_pics') {
+        } elseif ($section === Section::RecentPics) {
             if (!isset($page['super_order_by'])) {
                 Config::override('order_by', [
                     ['field' => 'date_available', 'dir' => 'DESC'],
@@ -396,11 +402,11 @@ final readonly class SectionInitializer
                 'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Recent photos') . '</a>',
                 'items' => $sectionImageIds($this->permissionService->getRecentPhotosSql('date_available')),
             ]);
-        } elseif ($section === 'recent_cats') {
+        } elseif ($section === Section::RecentCats) {
             $page = array_merge($page, [
                 'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Recent albums') . '</a>',
             ]);
-        } elseif ($section === 'most_visited') {
+        } elseif ($section === Section::MostVisited) {
             $page['super_order_by'] = true;
             Config::override('order_by', ' ORDER BY hit DESC, id DESC');
             $page = array_merge($page, [
@@ -408,7 +414,7 @@ final readonly class SectionInitializer
                            . Config::topNumber() . ' ' . Lang::t('Most visited') . '</a>',
                 'items' => $sectionImageIds('hit > 0', Config::topNumber()),
             ]);
-        } elseif ($section === 'best_rated') {
+        } elseif ($section === Section::BestRated) {
             $page['super_order_by'] = true;
             Config::override('order_by', ' ORDER BY rating_score DESC, id DESC');
             $page = array_merge($page, [
@@ -416,7 +422,8 @@ final readonly class SectionInitializer
                            . Config::topNumber() . ' ' . Lang::t('Best rated') . '</a>',
                 'items' => $sectionImageIds('rating_score IS NOT NULL', Config::topNumber()),
             ]);
-        } elseif ($section === 'list') {
+        } else {
+            // Exhaustive: Section::ListView is the only remaining case.
             $listIds = array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $pageList);
             $page    = array_merge($page, [
                 'title' => '<a href="' . $this->urlService->duplicateIndexUrl(['start' => 0]) . '">' . Lang::t('Random photos') . '</a>',
@@ -465,16 +472,15 @@ final readonly class SectionInitializer
 
         // ── Title ─────────────────────────────────────────────────────────────
 
-        if (isset($page['title'])) {
-            $page['section_title'] = '<a href="' . $this->urlService->getGalleryHomeUrl() . '">' . Lang::t('Home') . '</a>';
-            /** @var mixed $pageTitle */
-            $pageTitle = $page['title'];
-            if ($pageTitle !== '') {
-                $page['section_title'] .= Config::levelSeparator() . (is_scalar($pageTitle) ? (string) $pageTitle : '');
-            } else {
-                $page['title'] = $page['section_title'];
-            }
+        $pageTitle    = $page['title'];
+        $sectionTitle = '<a href="' . $this->urlService->getGalleryHomeUrl() . '">' . Lang::t('Home') . '</a>';
+        if ($pageTitle !== '') {
+            $sectionTitle .= Config::levelSeparator() . $pageTitle;
+        } else {
+            $pageTitle = $sectionTitle;
         }
+        $page['title']         = $pageTitle;
+        $page['section_title'] = $sectionTitle;
 
         // ── Meta robots ───────────────────────────────────────────────────────
 
@@ -482,20 +488,20 @@ final readonly class SectionInitializer
         $ps->metaRobots = [];
         if (isset($page['chronology_field'])
             || (isset($page['flat']) && $category !== null)
-            || $section === 'list'
-            || $section === 'recent_pics') {
+            || $section === Section::ListView
+            || $section === Section::RecentPics) {
             $ps->metaRobots = ['noindex' => 1, 'nofollow' => 1];
-        } elseif ($section === 'tags') {
+        } elseif ($section === Section::Tags) {
             $pageTagIdsRaw = $page['tag_ids'] ?? null;
             $tagIds = is_array($pageTagIdsRaw) ? $pageTagIdsRaw : [];
             if (count($tagIds) > 1) {
                 $ps->metaRobots = ['noindex' => 1, 'nofollow' => 1];
             }
-        } elseif ($section === 'recent_cats') {
+        } elseif ($section === Section::RecentCats) {
             $ps->metaRobots = ['noindex' => 1];
-        } elseif ($section === 'search') {
+        } elseif ($section === Section::Search) {
             $ps->metaRobots = ['noindex' => 1, 'nofollow' => 1];
-        } elseif ($section === 'categories' && isset($page['combined_categories'])) {
+        } elseif ($section === Section::Categories && isset($page['combined_categories'])) {
             $ps->metaRobots = ['noindex' => 1, 'nofollow' => 1];
         }
 
@@ -505,7 +511,7 @@ final readonly class SectionInitializer
 
         // ── Permalink redirect ────────────────────────────────────────────────
 
-        if ($section === 'categories' && $category !== null && !isset($page['combined_categories'])) {
+        if ($section === Section::Categories && $category !== null && !isset($page['combined_categories'])) {
             $catPermalink   = is_scalar($category['permalink'] ?? null) ? (string) $category['permalink'] : '';
             $catName        = is_scalar($category['name'] ?? null) ? (string) $category['name'] : '';
             $pageHitByRaw = $page['hit_by'] ?? null;
@@ -540,10 +546,10 @@ final readonly class SectionInitializer
         $bodyClasses = PageState::current()->bodyClasses;
         $bodyData    = PageState::current()->bodyData;
 
-        $bodyClasses[] = 'section-' . $section;
-        $bodyData['section'] = $section;
+        $bodyClasses[] = 'section-' . $section->value;
+        $bodyData['section'] = $section->value;
 
-        if ($section === 'categories' && $category !== null) {
+        if ($section === Section::Categories && $category !== null) {
             $catId = is_scalar($category['id'] ?? null) ? (string) $category['id'] : '0';
             $bodyClasses[] = 'category-' . $catId;
             $bodyData['category_id'] = $catId;
@@ -615,9 +621,7 @@ final readonly class SectionInitializer
         $chronoFieldRaw   = $page['chronology_field'] ?? null;
         $chronoViewRaw    = $page['chronology_view']  ?? null;
         $chronoStyleRaw   = $page['chronology_style'] ?? null;
-        $titleRaw         = $page['title']            ?? null;
         $commentRaw       = $page['comment']          ?? null;
-        $sectionTitleRaw  = $page['section_title']    ?? null;
         $feedRaw          = $page['feed']             ?? null;
 
         $rawItems       = is_array($itemsRaw) ? $itemsRaw : [];
@@ -654,9 +658,9 @@ final readonly class SectionInitializer
             chronologyField:    is_string($chronoFieldRaw) ? $chronoFieldRaw : '',
             chronologyView:     is_string($chronoViewRaw) ? $chronoViewRaw : '',
             chronologyStyle:    is_string($chronoStyleRaw) ? $chronoStyleRaw : '',
-            title:              is_scalar($titleRaw) ? (string) $titleRaw : '',
+            title:              $pageTitle,
             comment:            is_string($commentRaw) ? $commentRaw : '',
-            sectionTitle:       is_string($sectionTitleRaw) ? $sectionTitleRaw : '',
+            sectionTitle:       $sectionTitle,
             feed:               is_string($feedRaw) ? $feedRaw : '',
             isExternal:         isset($page['is_external']),
         );

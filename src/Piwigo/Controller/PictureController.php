@@ -12,6 +12,7 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
@@ -156,19 +157,19 @@ final readonly class PictureController implements ControllerInterface
                     $this->htmlService->pageNotFound('The requested image is filtered', $this->urlService->duplicateIndexUrl());
                     return ResponseFactory::create(404);
                 }
-                if ($ctx->section === 'categories' && $ctx->category === null) {
+                if ($ctx->section === Section::Categories && $ctx->category === null) {
                     $this->htmlService->accessDenied();
                 } else {
                     [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND');
                     if (!$this->categoryRepository->isImageInVisibleCategory($imageId, $permSql, $permParams, $permTypes)) {
                         $this->htmlService->accessDenied();
                     } else {
-                        if ($ctx->section === 'best_rated') {
+                        if ($ctx->section === Section::BestRated) {
                             $rankOf[$imageId] = count($items);
                             $items[]          = $imageId;
                         } else {
                             $url = $this->urlService->makePictureUrl(['image_id' => $imageId, 'image_file' => $resolvedImageFile, 'section' => 'categories', 'flat' => true]);
-                            $this->htmlService->setStatusHeader($ctx->section === 'recent_pics' ? 301 : 302);
+                            $this->htmlService->setStatusHeader($ctx->section === Section::RecentPics ? 301 : 302);
                             $this->redirectResponder->redirectHttp($url);
                         }
                     }
@@ -221,7 +222,7 @@ final readonly class PictureController implements ControllerInterface
                         is_numeric($user['id']) ? (int) $user['id'] : 0,
                         $imageId
                     );
-                    $this->redirectResponder->redirect($ctx->section === 'favorites' ? $url_up : $url_self);
+                    $this->redirectResponder->redirect($ctx->section === Section::Favorites ? $url_up : $url_self);
                     break;
                 case 'set_as_representative':
                     if ($this->permissionService->isAdmin() && $category !== null) {
@@ -525,7 +526,7 @@ final readonly class PictureController implements ControllerInterface
         $tpl->assign([
             'SECTION_TITLE'        => new Html($ctx->sectionTitle),
             'PHOTO'                => $title_nb,
-            'IS_HOME'              => ($ctx->section === 'categories' && $ctx->category === null),
+            'IS_HOME'              => ($ctx->section === Section::Categories && $ctx->category === null),
             'LEVEL_SEPARATOR'      => Config::levelSeparator(),
             'U_UP'                 => $url_up,
             'DISPLAY_NAV_BUTTONS'  => Config::pictureNavigationIcons(),

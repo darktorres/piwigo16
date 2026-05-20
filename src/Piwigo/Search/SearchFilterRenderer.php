@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DateService;
@@ -53,7 +54,7 @@ final readonly class SearchFilterRenderer
 
         $template->assign('display_filter', $filters_views);
 
-        if ('search' == $ctx->section and $ctx->searchDetails !== []) {
+        if (Section::Search === $ctx->section and $ctx->searchDetails !== []) {
             /** @var array<string, mixed> $search_details */
             $search_details = $this->searchService->getSearchDetails();
             if ($search_details === []) {

@@ -6,6 +6,7 @@ namespace Piwigo\Calendar;
 
 use Latte\Runtime\Html;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DebugCollector;
@@ -74,7 +75,7 @@ final class CalendarService
      * @param array<mixed>|null     $category
      */
     public function initializeCalendar(
-        string $section,
+        Section $section,
         ?array $category,
         bool $superOrderBy,
         string $chronologyField,
@@ -97,7 +98,7 @@ final class CalendarService
 
         $innerSql = ' FROM ' . Tables::images();
 
-        if ($section === 'categories') {
+        if ($section === Section::Categories) {
             $this->items = [];
             $innerSql .= '
 INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id';
@@ -273,7 +274,7 @@ WHERE id IN (' . implode(',', $items) . ')';
             }
 
             $cacheItem = null;
-            if ('categories' === $section && $category === null
+            if (Section::Categories === $section && $category === null
               && (count($chronologyDateList) === 0
                     || ($chronologyDateList[0] === 'any' && count($chronologyDateList) === 1))
             ) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Activity;
 
 use Piwigo\Admin\History\HistoryAdminService;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\Config;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
@@ -200,7 +201,7 @@ final readonly class ActivityLogger
 
         $tagsString  = null;
         $pageSection = $ctx->section;
-        if ($pageSection === 'tags') {
+        if ($pageSection === Section::Tags) {
             $tagsString = implode(',', array_map(static fn (int $v): string => (string) $v, $ctx->tagIds));
             if (strlen($tagsString) > 50) {
                 $tagsString = substr($tagsString, 0, 50);
@@ -218,16 +219,18 @@ final readonly class ActivityLogger
             $ip = substr($ip, 0, 39);
         }
 
-        if ($pageSection !== '') {
-            $historySections = SchemaHelper::getEnums(Tables::history(), 'section');
-            $lowerSet        = array_flip(array_map(strtolower(...), $historySections));
-            if (isset($lowerSet[strtolower($pageSection)])) {
-                $section = $pageSection;
-            } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $pageSection)) {
-                $historySections[] = $pageSection;
-                $this->historyRepository->extendSectionEnum(array_values($historySections));
-                $section = $pageSection;
-            }
+        $pageSectionValue = $pageSection->value;
+        $historySections  = SchemaHelper::getEnums(Tables::history(), 'section');
+        $lowerSet         = array_flip(array_map(strtolower(...), $historySections));
+        // Section enum values are lowercase by construction, so no extra strtolower.
+        if (isset($lowerSet[$pageSectionValue])) {
+            $section = $pageSectionValue;
+        } else {
+            // Self-heal: a Section enum case not yet in the DB enum (fresh
+            // deploy, missing migration). Extend the column once.
+            $historySections[] = $pageSectionValue;
+            $this->historyRepository->extendSectionEnum(array_values($historySections));
+            $section = $pageSectionValue;
         }
 
         $category   = $ctx->category;
@@ -238,7 +241,7 @@ final readonly class ActivityLogger
         $historyId = $this->historyRepository->insertLog(
             $userId,
             $ip,
-            $section ?? null,
+            $section,
             $categoryId !== 'NULL' ? $categoryId : null,
             $searchId !== 'NULL' ? $searchId : null,
             $imageId,

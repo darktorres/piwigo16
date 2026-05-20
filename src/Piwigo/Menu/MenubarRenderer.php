@@ -6,6 +6,7 @@ namespace Piwigo\Menu;
 
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -50,7 +51,7 @@ final readonly class MenubarRenderer
         }
         $menu->prepareDisplay();
 
-        if ($ctx->section === 'search' && $ctx->qsearchDetails !== []) {
+        if ($ctx->section === Section::Search && $ctx->qsearchDetails !== []) {
             $qsearchQ = is_scalar($ctx->qsearchDetails['q'] ?? null) ? (string) $ctx->qsearchDetails['q'] : '';
             $template->assign('QUERY_SEARCH', htmlspecialchars($qsearchQ));
         }

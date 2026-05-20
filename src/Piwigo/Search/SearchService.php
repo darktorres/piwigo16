@@ -7,6 +7,7 @@ namespace Piwigo\Search;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Projection\CategoryNamePermalink;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\StringUtil;
@@ -120,7 +121,7 @@ final class SearchService
             if (StringUtil::scriptBasename() != 'ws' and 'id = %u' == $clausePattern and isset($row['search_uuid'])) {
                 HtmlService::fatalError('this search is not reachable with its id, need the search_uuid instead');
             }
-            if ('search' == SectionContextRegistry::current()->section) {
+            if (Section::Search === SectionContextRegistry::current()->section) {
                 $rawId = $row['id'] ?? null;
                 $this->searchId = is_scalar($rawId) ? (string) $rawId : null;
             }

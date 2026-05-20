@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Latte\Runtime\Html;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
 use Piwigo\Core\DebugCollector;
@@ -55,7 +56,7 @@ final readonly class CategoryCatsRenderer
         $currentUser = CurrentUser::get();
         $user = $currentUser->rawAttributes;
 
-        if ('recent_cats' === $ctx->section) {
+        if (Section::RecentCats === $ctx->section) {
             $whereExtra = $this->permissionService->getRecentPhotosSql('date_last');
         } else {
             $whereExtra = 'id_uppercat ' . ($ctx->category === null ? 'IS NULL' : '= ' . (is_numeric($ctx->category['id'] ?? null) ? (int) $ctx->category['id'] : 0));
@@ -63,7 +64,7 @@ final readonly class CategoryCatsRenderer
 
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_categories' => 'id'], 'AND');
 
-        $orderBy = ('recent_cats' === $ctx->section) ? '' : 'ORDER BY `rank`';
+        $orderBy = (Section::RecentCats === $ctx->section) ? '' : 'ORDER BY `rank`';
 
         // LocBeginIndexCategoryThumbnailsQuery is preserved as a no-op event
         // for plugin compatibility — plugins that rebuilt the SQL string can
@@ -136,7 +137,7 @@ final readonly class CategoryCatsRenderer
             }
         }
 
-        if ('recent_cats' == $ctx->section) {
+        if (Section::RecentCats === $ctx->section) {
             usort($categories, static fn (array $a, array $b): int => strnatcasecmp($a['global_rank'] ?? '', $b['global_rank'] ?? ''));
         }
 
@@ -213,7 +214,7 @@ final readonly class CategoryCatsRenderer
                 $this->dispatcher->dispatch($subcatRenderEvent);
                 $category['name'] = $subcatRenderEvent->categoryName;
 
-                if ($ctx->section == 'recent_cats') {
+                if ($ctx->section === Section::RecentCats) {
                     $name = $this->htmlService->getCatDisplayNameCache($catUppercats, null);
                 } else {
                     $name = $subcatRenderEvent->categoryName;

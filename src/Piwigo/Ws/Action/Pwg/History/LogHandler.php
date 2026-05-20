@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Action\Pwg\History;
 
 use Piwigo\Activity\ActivityLogger;
-use Piwigo\Db\SchemaHelper;
-use Piwigo\Db\Tables;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Picture\PictureService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
@@ -30,8 +29,8 @@ final readonly class LogHandler implements WsAction
         $currentCtx = SectionContextRegistry::current();
 
         $section = $currentCtx->section;
-        if ($input->section !== null && in_array($input->section, SchemaHelper::getEnums(Tables::history(), 'section'))) {
-            $section = $input->section;
+        if ($input->section !== null) {
+            $section = Section::tryFrom($input->section) ?? $section;
         }
 
         $category = $currentCtx->category;

@@ -9,6 +9,7 @@ use Piwigo\Activity\ActivityLogger;
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
@@ -170,7 +171,7 @@ final readonly class GalleryController implements ControllerInterface
                 $tpl->assign('U_MODE_NORMAL', $this->urlService->duplicateIndexUrl([], ['chronology_field', 'start', 'flat']));
             }
 
-            if (Config::indexFlatIcon() && !$ctx->flat && $section === 'categories') {
+            if (Config::indexFlatIcon() && !$ctx->flat && $section === Section::Categories) {
                 $tpl->assign('U_MODE_FLAT', $this->urlService->duplicateIndexUrl(['flat' => ''], ['start', 'chronology_field']));
             }
 
@@ -204,7 +205,7 @@ final readonly class GalleryController implements ControllerInterface
 
             $this->searchFilterRenderer->render();
 
-            if ($section === 'categories' && $category !== null && $ctx->combinedCategories === null) {
+            if ($section === Section::Categories && $category !== null && $ctx->combinedCategories === null) {
                 $tpl->assign([
                     'SEARCH_IN_SET_BUTTON' => Config::indexSearchInSetButton(),
                     'SEARCH_IN_SET_ACTION' => Config::indexSearchInSetAction(),
@@ -255,7 +256,7 @@ final readonly class GalleryController implements ControllerInterface
             }
 
             // Search results hints
-            if ($section === 'search' && $start === 0 && $ctx->chronologyField === '' && $ctx->qsearchDetails !== []) {
+            if ($section === Section::Search && $start === 0 && $ctx->chronologyField === '' && $ctx->qsearchDetails !== []) {
                 $qd = $ctx->qsearchDetails;
                 $cats = array_merge(
                     is_array($qd['matching_cats_no_images'] ?? null) ? $qd['matching_cats_no_images'] : [],
@@ -292,7 +293,7 @@ final readonly class GalleryController implements ControllerInterface
             }
 
             // Image-order selector
-            if (Config::indexSortOrderInput() && count($items) > 0 && $section !== 'most_visited' && $section !== 'best_rated') {
+            if (Config::indexSortOrderInput() && count($items) > 0 && $section !== Section::MostVisited && $section !== Section::BestRated) {
                 $preferredOrders = $this->categoryService->getCategoryPreferredImageOrders();
                 $orderIdx        = $this->session->imageOrder ?? 0;
                 $orderEntries  = Config::orderBy();
@@ -335,7 +336,7 @@ final readonly class GalleryController implements ControllerInterface
             if ($start === 0
                 && !$ctx->flat
                 && $ctx->chronologyField === ''
-                && ($section === 'recent_cats' || $section === 'categories')
+                && ($section === Section::RecentCats || $section === Section::Categories)
                 && ($countCats === null || $countCats > 0)
             ) {
                 $this->categoryCatsRenderer->render();

@@ -86,15 +86,15 @@ final readonly class GetListHandler implements WsAction
         [$whereClauses, $qParams, $qTypes] = $build($filters);
 
         $summary = $this->commentRepository->findCommentsSummary($whereClauses, $qParams, $qTypes);
-        $totalComments = $summary['all_comments'];
+        $totalComments = $summary->allComments;
         switch ($input->status) {
             case CommentListFilter::Pending:
                 $whereClauses[] = 'validated = 0';
-                $totalComments  = $summary['pending'];
+                $totalComments  = $summary->pending;
                 break;
             case CommentListFilter::Validated:
                 $whereClauses[] = 'validated = 1';
-                $totalComments  = $summary['validated'];
+                $totalComments  = $summary->validated;
                 break;
             case CommentListFilter::All:
                 break;
@@ -152,6 +152,6 @@ final readonly class GetListHandler implements WsAction
             $this->commentRepository->findCommentAuthorCounts($authorsWhere, $authorsParams, $authorsTypes),
         );
 
-        return ['summary' => $summary, 'comments' => $list, 'filters' => ['nb_authors' => $nbAuthorsIn, 'started_at' => $dates['started_at'], 'ended_at' => $dates['ended_at']], 'paging' => ['page' => $input->page, 'per_page' => $input->perPage, 'total_pages' => max(0, (int) ceil((float) $totalComments / (float) max(1, $perPage)) - 1)]];
+        return ['summary' => $summary->toArray(), 'comments' => $list, 'filters' => ['nb_authors' => $nbAuthorsIn, 'started_at' => $dates->startedAt, 'ended_at' => $dates->endedAt], 'paging' => ['page' => $input->page, 'per_page' => $input->perPage, 'total_pages' => max(0, (int) ceil((float) $totalComments / (float) max(1, $perPage)) - 1)]];
     }
 }

@@ -47,9 +47,8 @@ final class LoungeRepository extends AbstractRepository
      * images table to surface its date_available, plus the DB's current
      * timestamp. Used by the lounge take-off scheduler.
      *
-     * @return array{image_id: int, date_available: string, dbnow: string}|null
      */
-    public function findOldestEntry(): ?array
+    public function findOldestEntry(): ?LoungeEntry
     {
         $row = $this->conn->executeQuery(
             'SELECT image_id, date_available, NOW() AS dbnow FROM ' . $this->table('lounge')
@@ -59,11 +58,11 @@ final class LoungeRepository extends AbstractRepository
         if ($row === false) {
             return null;
         }
-        return [
-            'image_id'       => is_numeric($row['image_id']) ? (int) $row['image_id'] : 0,
-            'date_available' => is_string($row['date_available'] ?? null) ? $row['date_available'] : '',
-            'dbnow'          => is_string($row['dbnow'] ?? null) ? $row['dbnow'] : '',
-        ];
+        return new LoungeEntry(
+            imageId:       is_numeric($row['image_id']) ? (int) $row['image_id'] : 0,
+            dateAvailable: is_string($row['date_available'] ?? null) ? $row['date_available'] : '',
+            dbnow:         is_string($row['dbnow'] ?? null) ? $row['dbnow'] : '',
+        );
     }
 
     /**

@@ -341,9 +341,8 @@ final class CommentRepository extends AbstractRepository
      * @param list<string>                                $whereClauses
      * @param list<mixed>                                 $params
      * @param list<ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
-     * @return array{all_comments: int, validated: int, pending: int}
      */
-    public function findCommentsSummary(array $whereClauses, array $params, array $types): array
+    public function findCommentsSummary(array $whereClauses, array $params, array $types): CommentsSummary
     {
         if ($whereClauses === []) {
             $whereClauses = ['1=1'];
@@ -354,13 +353,13 @@ final class CommentRepository extends AbstractRepository
             . ' WHERE ' . implode(' AND ', $whereClauses);
         $row = $this->conn->executeQuery($sql, $params, $types)->fetchAssociative();
         if ($row === false) {
-            return ['all_comments' => 0, 'validated' => 0, 'pending' => 0];
+            return new CommentsSummary(0, 0, 0);
         }
-        return [
-            'all_comments' => is_numeric($row['all_comments'] ?? null) ? (int) $row['all_comments'] : 0,
-            'validated'    => is_numeric($row['validated'] ?? null) ? (int) $row['validated'] : 0,
-            'pending'      => is_numeric($row['pending'] ?? null) ? (int) $row['pending'] : 0,
-        ];
+        return new CommentsSummary(
+            allComments: is_numeric($row['all_comments'] ?? null) ? (int) $row['all_comments'] : 0,
+            validated:   is_numeric($row['validated'] ?? null) ? (int) $row['validated'] : 0,
+            pending:     is_numeric($row['pending'] ?? null) ? (int) $row['pending'] : 0,
+        );
     }
 
     /**
@@ -404,9 +403,8 @@ final class CommentRepository extends AbstractRepository
      * @param list<string>                                $whereClauses
      * @param list<mixed>                                 $params
      * @param list<ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
-     * @return array{started_at: ?string, ended_at: ?string}
      */
-    public function findCommentDateRange(array $whereClauses, array $params, array $types): array
+    public function findCommentDateRange(array $whereClauses, array $params, array $types): CommentDateRange
     {
         if ($whereClauses === []) {
             $whereClauses = ['1=1'];
@@ -418,12 +416,12 @@ final class CommentRepository extends AbstractRepository
             $types,
         )->fetchAssociative();
         if ($row === false) {
-            return ['started_at' => null, 'ended_at' => null];
+            return new CommentDateRange(null, null);
         }
-        return [
-            'started_at' => is_string($row['started_at'] ?? null) ? $row['started_at'] : null,
-            'ended_at'   => is_string($row['ended_at'] ?? null) ? $row['ended_at'] : null,
-        ];
+        return new CommentDateRange(
+            startedAt: is_string($row['started_at'] ?? null) ? $row['started_at'] : null,
+            endedAt:   is_string($row['ended_at'] ?? null) ? $row['ended_at'] : null,
+        );
     }
 
     /**

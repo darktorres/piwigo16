@@ -17,9 +17,8 @@ final class MessengerRepository extends AbstractRepository
     /**
      * Return body+headers for a single failed job (by message id).
      *
-     * @return array{body: string, headers: string}|null
      */
-    public function findFailedJobById(int $id): ?array
+    public function findFailedJobById(int $id): ?FailedJob
     {
         $row = $this->conn->executeQuery(
             'SELECT body, headers FROM ' . $this->table('messenger_messages')
@@ -30,10 +29,10 @@ final class MessengerRepository extends AbstractRepository
         if ($row === false) {
             return null;
         }
-        return [
-            'body'    => is_string($row['body'] ?? null) ? $row['body'] : '',
-            'headers' => is_string($row['headers'] ?? null) ? $row['headers'] : '',
-        ];
+        return new FailedJob(
+            body:    is_string($row['body'] ?? null) ? $row['body'] : '',
+            headers: is_string($row['headers'] ?? null) ? $row['headers'] : '',
+        );
     }
 
     /**

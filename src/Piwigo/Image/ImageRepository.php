@@ -197,9 +197,8 @@ final class ImageRepository extends AbstractRepository
      * Return the category_id and uppercats of the category that holds the most recently uploaded image.
      * Used by photos_add_direct_prepare.inc.php to pre-select the last-used album.
      *
-     * @return array{category_id: int, uppercats: string}|null
      */
-    public function findLastUploadedCategoryInfo(): ?array
+    public function findLastUploadedCategoryInfo(): ?LastUploadedCategoryInfo
     {
         $row = $this->conn->executeQuery(
             'SELECT ic.category_id, c.uppercats
@@ -212,10 +211,10 @@ final class ImageRepository extends AbstractRepository
         if ($row === false) {
             return null;
         }
-        return [
-            'category_id' => is_numeric($row['category_id']) ? (int) $row['category_id'] : 0,
-            'uppercats'   => is_string($row['uppercats']) ? $row['uppercats'] : '',
-        ];
+        return new LastUploadedCategoryInfo(
+            categoryId: is_numeric($row['category_id']) ? (int) $row['category_id'] : 0,
+            uppercats:  is_string($row['uppercats']) ? $row['uppercats'] : '',
+        );
     }
 
     /**
@@ -241,9 +240,8 @@ final class ImageRepository extends AbstractRepository
      * Return (MAX(id)+1, COUNT(*)) for the images table.
      * Used by ws_getMissingDerivatives() to page through image ids.
      *
-     * @return array{0: int, 1: int}
      */
-    public function findMaxIdAndCount(): array
+    public function findMaxIdAndCount(): MaxIdAndCount
     {
         $row = $this->conn->createQueryBuilder()
             ->select('MAX(id) + 1', 'COUNT(*)')
@@ -252,10 +250,10 @@ final class ImageRepository extends AbstractRepository
             ->fetchNumeric();
         $row0 = ($row !== false) ? ($row[0] ?? null) : null;
         $row1 = ($row !== false) ? ($row[1] ?? null) : null;
-        return [
-            is_numeric($row0) ? (int) $row0 : 0,
-            is_numeric($row1) ? (int) $row1 : 0,
-        ];
+        return new MaxIdAndCount(
+            nextId: is_numeric($row0) ? (int) $row0 : 0,
+            total:  is_numeric($row1) ? (int) $row1 : 0,
+        );
     }
 
     /**

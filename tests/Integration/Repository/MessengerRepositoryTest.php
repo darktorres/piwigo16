@@ -68,7 +68,7 @@ final class MessengerRepositoryTest extends IntegrationTestCase
         // Only the failed-queue id resolves.
         $row = $this->repo->findFailedJobById($failedId);
         self::assertNotNull($row);
-        self::assertSame('{"failed":2}', $row['body']);
+        self::assertSame('{"failed":2}', $row->body);
 
         // Async id is rejected — the method filters on queue_name.
         self::assertNull($this->repo->findFailedJobById($asyncId));

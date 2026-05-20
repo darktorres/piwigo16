@@ -697,8 +697,8 @@ final readonly class CategoryAdminService
         if ($voyager === null) {
             return;
         }
-        $dbnowTs     = strtotime($voyager['dbnow']);
-        $dateAvailTs = strtotime($voyager['date_available']);
+        $dbnowTs     = strtotime($voyager->dbnow);
+        $dateAvailTs = strtotime($voyager->dateAvailable);
         $age         = ($dbnowTs !== false ? $dbnowTs : 0) - ($dateAvailTs !== false ? $dateAvailTs : 0);
         if ($age > Config::loungeMaxDuration()) {
             $this->emptyLounge();

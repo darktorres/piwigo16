@@ -106,8 +106,8 @@ final readonly class DirectPreparer
         } else {
             $last_cat = $this->imageRepository->findLastUploadedCategoryInfo();
             if ($last_cat !== null) {
-                $selected_category = [$last_cat['category_id']];
-                $selected_category_name = $this->htmlService->getCatDisplayNameCache($last_cat['uppercats'], null);
+                $selected_category = [$last_cat->categoryId];
+                $selected_category_name = $this->htmlService->getCatDisplayNameCache($last_cat->uppercats, null);
                 $tpl->assign('selected_category_name', new Html($selected_category_name));
             }
         }

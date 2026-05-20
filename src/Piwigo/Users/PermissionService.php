@@ -174,10 +174,12 @@ final readonly class PermissionService
                     }
                     // no break — visible includes forbidden
                 case 'forbidden_images':
-                    [$addClauses, $addParams, $addTypes] = $this->buildImageAccessClauses($fieldName, $user);
-                    array_push($clauses, ...$addClauses);
-                    array_push($params, ...$addParams);
-                    array_push($types, ...$addTypes);
+                    $frag = $this->buildImageAccessClauses($fieldName, $user);
+                    if ($frag->where !== '') {
+                        $clauses[] = $frag->where;
+                    }
+                    array_push($params, ...$frag->params);
+                    array_push($types, ...$frag->types);
                     break;
                 default:
                     throw new \LogicException('Unknown condition');
@@ -215,15 +217,14 @@ final readonly class PermissionService
     }
 
     /**
-     * Builds the SQL clause/params/types for the forbidden_images / visible_images access check.
+     * Builds the WHERE fragment for the forbidden_images / visible_images access check.
      *
-     * @param  array<array-key, mixed> $user
-     * @return array{list<string>, list<mixed>, list<ParameterType|ArrayParameterType>}
+     * @param array<array-key, mixed> $user
      */
-    private function buildImageAccessClauses(string $fieldName, array $user): array
+    private function buildImageAccessClauses(string $fieldName, array $user): SqlFragment
     {
         if (empty($user['image_access_list']) && ($user['image_access_type'] ?? null) === 'NOT IN') {
-            return [[], [], []];
+            return new SqlFragment('');
         }
 
         $tablePrefix = match ($fieldName) {
@@ -233,26 +234,26 @@ final readonly class PermissionService
         };
 
         if ($tablePrefix !== null) {
-            return [
-                [$tablePrefix . 'level <= ?'],
+            return new SqlFragment(
+                $tablePrefix . 'level <= ?',
                 [is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0],
                 [ParameterType::INTEGER],
-            ];
+            );
         }
 
         if (!empty($user['image_access_list']) && !empty($user['image_access_type'])) {
             $accessIds = $this->asIntArray($user['image_access_list']);
             $op        = (is_string($user['image_access_type']) && $user['image_access_type'] === 'IN') ? 'IN' : 'NOT IN';
             if ($accessIds !== []) {
-                return [
-                    [$fieldName . ' ' . $op . ' (?)'],
+                return new SqlFragment(
+                    $fieldName . ' ' . $op . ' (?)',
                     [$accessIds],
                     [ArrayParameterType::INTEGER],
-                ];
+                );
             }
         }
 
-        return [[], [], []];
+        return new SqlFragment('');
     }
 
     public function getRecentPhotosSql(string $dbField): string

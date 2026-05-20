@@ -41,7 +41,9 @@ final readonly class GetMissingDerivativesHandler implements WsAction
         } catch (WsParamException $e) {
             return new PwgError(WsError::InvalidParam->value, $e->getMessage());
         }
-        [$maxId, $imageCount] = $this->imageRepository->findMaxIdAndCount();
+        $maxIdAndCount = $this->imageRepository->findMaxIdAndCount();
+        $maxId = $maxIdAndCount->nextId;
+        $imageCount = $maxIdAndCount->total;
         if ($imageCount === 0) {
             return [];
         }

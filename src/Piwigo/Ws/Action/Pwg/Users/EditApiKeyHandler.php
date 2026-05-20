@@ -14,6 +14,7 @@ use Piwigo\Users\UserService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.users.editApiKey` — rename a personal API key. */
 final readonly class EditApiKeyHandler implements WsAction
@@ -35,19 +36,22 @@ final readonly class EditApiKeyHandler implements WsAction
         if ($this->permissionService->isAGuest() || !$this->authService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = EditApiKeyParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
-        $editPkid = is_string($params['pkid'] ?? null) ? $params['pkid'] : '';
-        if (!preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $editPkid)) {
+        if (!preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $input->pkid)) {
             return new PwgError(403, Lang::t('Invalid pkid format'));
         }
-        $keyName   = is_string($params['key_name'] ?? null) ? $params['key_name'] : '';
-        $editedKey = $this->userService->editApiKey($userId, $editPkid, $keyName);
+        $editedKey = $this->userService->editApiKey($userId, $input->pkid, $input->keyName);
         if (true !== $editedKey) {
             return new PwgError(403, $editedKey);
         }
-        $logger->info('[api_key][user_id=' . $userId . '][action=edit][pkid=' . $editPkid . '][new_name=' . $keyName . ']');
+        $logger->info('[api_key][user_id=' . $userId . '][action=edit][pkid=' . $input->pkid . '][new_name=' . $input->keyName . ']');
         return Lang::t('API Key has been successfully edited.');
     }
 }

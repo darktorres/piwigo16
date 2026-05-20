@@ -58,8 +58,9 @@ final readonly class FavoritesGetListHandler implements WsAction
             ];
             $images[] = array_merge($image, $this->wsHelper->getUrls($img->toRow()));
         }
-        $favPerPage = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
-        $favPage    = is_numeric($params['page']) ? (int) $params['page'] : 0;
+        $favInput   = FavoritesGetListParams::fromArray($params);
+        $favPerPage = $favInput->perPage;
+        $favPage    = $favInput->page;
         $count      = count($images);
         $images     = array_slice($images, $favPerPage * $favPage, $favPerPage);
         return ['paging' => new PwgNamedStruct(['page' => $favPage, 'per_page' => $favPerPage, 'count' => $count]), 'images' => new PwgNamedArray($images, 'image', $this->wsHelper->getImageXmlAttributes())];

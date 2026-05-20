@@ -16,6 +16,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.users.generatePasswordLink` — issue a password-reset link (optionally email it). */
 final readonly class GeneratePasswordLinkHandler implements WsAction
@@ -37,10 +38,15 @@ final readonly class GeneratePasswordLinkHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = GeneratePasswordLinkParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $targetUserId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
+        $targetUserId = $input->userId;
         if ($this->userAdminService->getUsername($targetUserId) === false) {
             return new PwgError(WsError::InvalidParam->value, 'This user does not exist.');
         }
@@ -69,7 +75,7 @@ final readonly class GeneratePasswordLinkHandler implements WsAction
         $userLostUsername     = is_string($userLostUsernameRaw) ? $userLostUsernameRaw : '';
         $genPasswordLink      = is_string($genPasswordLinkRaw) ? $genPasswordLinkRaw : '';
         $genTimeValidation    = is_string($genTimeValidationRaw) ? $genTimeValidationRaw : '';
-        if ($params['send_by_mail'] && $userLostEmail !== '') {
+        if ($input->sendByMail && $userLostEmail !== '') {
             $emailParams    = $firstLogin ? $this->mailService->pwgGenerateSetPasswordMail($userLostUsername, $genPasswordLink, Config::galleryTitle(), $genTimeValidation) : $this->mailService->pwgGenerateResetPasswordMail($userLostUsername, $genPasswordLink, Config::galleryTitle(), $genTimeValidation);
             $sendByMailResp = $this->mailService->pwgMail($userLostEmail, $emailParams) ? 'Mail sent at : ' . $userLostEmail : false;
         }

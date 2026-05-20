@@ -13,6 +13,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.users.add` — register a new user. */
 final readonly class AddHandler implements WsAction
@@ -27,21 +28,23 @@ final readonly class AddHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = AddParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        if (strlen(str_replace(' ', '', is_string($params['username']) ? $params['username'] : '')) === 0) {
+        if (strlen(str_replace(' ', '', $input->username)) === 0) {
             return new PwgError(WsError::InvalidParam->value, 'Name field must not be empty');
         }
-        if (Config::doublePasswordTypeInAdmin() && $params['password'] !== $params['password_confirm']) {
+        if (Config::doublePasswordTypeInAdmin() && $input->password !== ($input->passwordConfirm ?? '')) {
             return new PwgError(WsError::InvalidParam->value, Lang::t('The passwords do not match'));
         }
-        if ($params['auto_password']) {
-            $params['password'] = StringUtil::generateKey(random_int(15, 20));
-        }
-        $errors      = [];
-        $passwordRaw = $params['password'] ?? null;
-        $userId      = $this->userService->registerUser(is_string($params['username']) ? $params['username'] : '', is_string($passwordRaw) ? $passwordRaw : '', is_string($params['email']) ? $params['email'] : null, false, $errors, false);
+        $password = $input->autoPassword ? StringUtil::generateKey(random_int(15, 20)) : $input->password;
+        $errors   = [];
+        $userId   = $this->userService->registerUser($input->username, $password, $input->email, false, $errors, false);
         if ($userId === false || $userId === 0) {
             return new PwgError(WsError::InvalidParam->value, $errors[0]);
         }

@@ -13,6 +13,7 @@ use Piwigo\Users\UserService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.users.createApiKey` — mint an API key for the session user. */
 final readonly class CreateApiKeyHandler implements WsAction
@@ -37,19 +38,22 @@ final readonly class CreateApiKeyHandler implements WsAction
         if ($this->permissionService->isAGuest() || !$this->authService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = CreateApiKeyParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        if ($params['duration'] < 1 || $params['duration'] > 999999) {
+        if ($input->rawDuration < 1 || $input->rawDuration > 999999) {
             return new PwgError(400, 'Invalid duration max days is 999999');
         }
-        $apiKeyNameRaw = is_string($params['key_name'] ?? null) ? $params['key_name'] : '';
-        if (strlen($apiKeyNameRaw) > 100) {
+        if (strlen($input->keyName) > 100) {
             return new PwgError(400, 'Key name is too long');
         }
-        $duration = is_numeric($params['duration']) ? (0 == (int) $params['duration'] ? 1 : (int) $params['duration']) : 1;
-        $secret   = $this->userService->createApiKey($userId, $duration, $apiKeyNameRaw);
-        $logger->info('[api_key][user_id=' . $userId . '][action=create][key_name=' . $apiKeyNameRaw . ']');
+        $secret = $this->userService->createApiKey($userId, $input->duration, $input->keyName);
+        $logger->info('[api_key][user_id=' . $userId . '][action=create][key_name=' . $input->keyName . ']');
         return $secret;
     }
 }

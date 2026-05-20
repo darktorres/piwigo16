@@ -13,6 +13,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.users.setMainUser` — promote a webmaster to gallery main user. */
 final readonly class SetMainUserHandler implements WsAction
@@ -33,10 +34,15 @@ final readonly class SetMainUserHandler implements WsAction
         if (!$this->permissionService->isWebmaster()) {
             return new PwgError(403, 'You cannot perform this action');
         }
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = SetMainUserParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $mainUserId = is_numeric($params['user_id']) ? (int) $params['user_id'] : 0;
+        $mainUserId = $input->userId;
         if ($this->userAdminService->getUsername($mainUserId) === false) {
             return new PwgError(WsError::InvalidParam->value, 'This user does not exist.');
         }

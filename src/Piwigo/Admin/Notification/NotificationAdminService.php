@@ -9,14 +9,17 @@ use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\StringUtil;
+use Piwigo\Event\Mail\NbmRenderUserCustomizeMailContent;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\Notification\MailNotificationContext;
 use Piwigo\Notification\NotificationRepository;
+use Piwigo\Notification\NotificationService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 final readonly class NotificationAdminService
 {
@@ -26,6 +29,8 @@ final readonly class NotificationAdminService
         private UrlGenerator $urlGenerator,
         private UrlService $urlService,
         private UserService $userService,
+        private NotificationService $notificationService,
+        private EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -167,6 +172,78 @@ final readonly class NotificationAdminService
             'CONTACT_EMAIL'    => $ctx->sendAsMailAddress,
         ]);
         $this->urlService->unsetMakeFullUrl();
+    }
+
+    /**
+     * Builds and sends the notification email for a single NBM user.
+     * Increments success/failure counters and tears down the full-URL flag
+     * that the caller installed before resolving the auth_key.
+     *
+     * @param array<string, float|int|string|null> $nbmUser
+     * @param string[] $news
+     * @param array<string, string> $urlParams
+     */
+    public function sendNotificationEmailToUser(
+        array $nbmUser,
+        string $dbnow,
+        string $customizeMailContent,
+        array $news,
+        ?string $auth,
+        array $urlParams,
+    ): bool {
+        $ctx = MailNotificationContext::current();
+        $subject = '[' . Config::galleryTitle() . '] ' . Lang::t('New photos added');
+        $this->assignVarsNbmMailContent($nbmUser);
+        $nbmTpl = $ctx->mailTemplate ?? throw new \LogicException('mail_template not set');
+
+        if (!is_null($nbmUser['last_send'])) {
+            $nbmTpl->assign('content_new_elements_between', ['DATE_BETWEEN_1' => $nbmUser['last_send'], 'DATE_BETWEEN_2' => $dbnow]);
+        } else {
+            $nbmTpl->assign('content_new_elements_single', ['DATE_SINGLE' => $dbnow]);
+        }
+
+        if (Config::nbmSendDetailedContent()) {
+            $nbmTpl->assign('global_new_lines', $news);
+        }
+
+        $nbmEvent = new NbmRenderUserCustomizeMailContent($customizeMailContent, $nbmUser);
+        $this->dispatcher->dispatch($nbmEvent);
+        $nbmUserCustomizeMailContent = $nbmEvent->customizeMailContent;
+        if (!empty($nbmUserCustomizeMailContent)) {
+            $nbmTpl->assign('custom_mail_content', $nbmUserCustomizeMailContent);
+        }
+
+        if (Config::nbmSendHtmlMail() && Config::nbmSendRecentPostDates()) {
+            $recentPostDates = $this->notificationService->getRecentPostDatesArray(Config::recentPostDates()['NBM']);
+            foreach ($recentPostDates as $dateDetail) {
+                $dateDetailArr = is_array($dateDetail) ? $dateDetail : [];
+                $nbmTpl->append('recent_posts', [
+                    'TITLE' => $this->notificationService->getTitleRecentPostDate($dateDetailArr),
+                    'HTML_DATA' => $this->notificationService->getHtmlDescriptionRecentPostDate($dateDetailArr, $auth),
+                ]);
+            }
+        }
+
+        $nbmTpl->assign([
+            'GOTO_GALLERY_TITLE' => Config::galleryTitle(),
+            'GOTO_GALLERY_URL' => $this->urlService->addUrlParams($this->urlService->getGalleryHomeUrl(), $urlParams),
+            'SEND_AS_NAME' => $ctx->sendAsName,
+        ]);
+
+        $nbmUsernameRaw    = $nbmUser['username']     ?? null;
+        $nbmMailAddressRaw = $nbmUser['mail_address'] ?? null;
+        $ret = $this->mailService->pwgMail(
+            ['name' => stripslashes(is_string($nbmUsernameRaw) ? $nbmUsernameRaw : ''), 'email' => is_string($nbmMailAddressRaw) ? $nbmMailAddressRaw : ''],
+            ['from' => $ctx->sendAsMailFormated, 'subject' => $subject, 'email_format' => $ctx->emailFormat, 'content' => $nbmTpl->parse('notification_by_mail.latte', true), 'content_format' => $ctx->emailFormat, 'auth_key' => $auth],
+        );
+
+        if ($ret) {
+            $this->incMailSentSuccess($nbmUser);
+        } else {
+            $this->incMailSentFailed($nbmUser);
+        }
+        $this->urlService->unsetMakeFullUrl();
+        return $ret;
     }
 
     /**

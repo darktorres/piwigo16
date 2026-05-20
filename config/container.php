@@ -300,7 +300,7 @@ return [
             )
         );
     }),
-    NotificationAdminService::class  => factory(static fn (MailService $mail, NotificationRepository $nR, UrlGenerator $ug, UrlService $u, UserService $us): NotificationAdminService => new NotificationAdminService($mail, $nR, $ug, $u, $us)),
+    NotificationAdminService::class  => factory(static fn (MailService $mail, NotificationRepository $nR, UrlGenerator $ug, UrlService $u, UserService $us, NotificationService $nS, EventDispatcherInterface $dispatcher): NotificationAdminService => new NotificationAdminService($mail, $nR, $ug, $u, $us, $nS, $dispatcher)),
     UploadService::class             => factory(static fn (CategoryAdminService $catA, ConfigService $cfg, DerivativeService $der, ImageAdminService $iA, ImageFormatRepository $iF, ImageRepository $i, MetadataAdminService $mA, UserAdminService $uA, ActivityLogger $al, EventDispatcherInterface $dispatcher, Paths $paths, Session $session): UploadService => new UploadService($catA, $cfg, $der, $iA, $iF, $i, $mA, $uA, $al, $dispatcher, $paths, $session)),
     AlbumsTabRenderer::class         => factory(static fn (CategoryRepository $catR): AlbumsTabRenderer => new AlbumsTabRenderer($catR)),
     UserTabRenderer::class           => factory(static fn (): UserTabRenderer => new UserTabRenderer()),

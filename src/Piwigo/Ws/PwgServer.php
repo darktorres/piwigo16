@@ -23,8 +23,7 @@ use Piwigo\Ws\Protocol\PwgRestRequestHandler;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @phpstan-type WsParamDef array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string, chooseList?: list<mixed>}
- * @phpstan-type WsMethod array{callback: mixed, handlerClass: ?string, description: string, signature: array<string, WsParamDef>, options: array<string, mixed>}
+ * @phpstan-type WsMethod array{callback: mixed, handlerClass: ?string, description: string, signature: array<string, ParamDefinition>, options: array<string, mixed>}
  */
 final class PwgServer
 {
@@ -69,7 +68,7 @@ final class PwgServer
 
         $signature = [];
         foreach ($def->params as $param) {
-            $signature[$param->name] = $param->toWsParamDef();
+            $signature[$param->name] = $param;
         }
 
         $options = [];
@@ -204,7 +203,7 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         return isset($this->_methods[$methodName]) ? $this->_methods[$methodName]['description'] : '';
     }
 
-    /** @return array<string, WsParamDef> */
+    /** @return array<string, ParamDefinition> */
     public function getMethodSignature(string $methodName): array
     {
         return isset($this->_methods[$methodName]) ? $this->_methods[$methodName]['signature'] : [];
@@ -341,15 +340,15 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
         $signature = $method['signature'];
         $missing_params = [];
 
-        foreach ($signature as $name => $options) {
-            $flags = $options['flags'];
+        foreach ($signature as $name => $param) {
+            $flags = $param->flags;
 
             // parameter not provided in the request
             if (!array_key_exists($name, $params)) {
                 if (!self::hasFlag($flags, WsParam::Optional->value)) {
                     $missing_params[] = $name;
-                } elseif (array_key_exists('default', $options)) {
-                    $params[$name] = $options['default'];
+                } elseif ($param->hasDefault) {
+                    $params[$name] = $param->default;
                     if (self::hasFlag($flags, WsParam::ForceArray->value)) {
                         self::makeArrayParam($params[$name]);
                     }
@@ -371,14 +370,14 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
                     self::makeArrayParam($the_param);
                 }
 
-                if ($options['type'] > 0) {
-                    if (($ret = self::checkType($the_param, $options['type'], $name)) !== null) {
+                if ($param->type > 0) {
+                    if (($ret = self::checkType($the_param, $param->type, $name)) !== null) {
                         return $ret;
                     }
                 }
 
-                if (isset($options['maxValue']) and $the_param > $options['maxValue']) {
-                    $the_param = $options['maxValue'];
+                if ($param->maxValue !== null and $the_param > $param->maxValue) {
+                    $the_param = $param->maxValue;
                 }
 
                 $params[$name] = $the_param;
@@ -458,35 +457,35 @@ Request format: '.$this->_requestFormat.' Response format: '.$this->_responseFor
           'options' => $service->getMethodOptions($methodName),
         ];
 
-        foreach ($service->getMethodSignature($methodName) as $name => $options) {
+        foreach ($service->getMethodSignature($methodName) as $name => $param) {
             $param_data = [
               'name' => $name,
-              'optional' => self::hasFlag($options['flags'], WsParam::Optional->value),
-              'acceptArray' => self::hasFlag($options['flags'], WsParam::AcceptArray->value),
+              'optional' => self::hasFlag($param->flags, WsParam::Optional->value),
+              'acceptArray' => self::hasFlag($param->flags, WsParam::AcceptArray->value),
               'type' => 'mixed',
               ];
 
-            if (isset($options['default'])) {
-                $param_data['defaultValue'] = $options['default'];
+            if ($param->hasDefault) {
+                $param_data['defaultValue'] = $param->default;
             }
-            if (isset($options['maxValue'])) {
-                $param_data['maxValue'] = $options['maxValue'];
+            if ($param->maxValue !== null) {
+                $param_data['maxValue'] = $param->maxValue;
             }
-            if (isset($options['info'])) {
-                $param_data['info'] = $options['info'];
+            if ($param->info !== '') {
+                $param_data['info'] = $param->info;
             }
 
-            if (self::hasFlag($options['type'], WsType::Bool->value)) {
+            if (self::hasFlag($param->type, WsType::Bool->value)) {
                 $param_data['type'] = 'bool';
-            } elseif (self::hasFlag($options['type'], WsType::Int->value)) {
+            } elseif (self::hasFlag($param->type, WsType::Int->value)) {
                 $param_data['type'] = 'int';
-            } elseif (self::hasFlag($options['type'], WsType::Float->value)) {
+            } elseif (self::hasFlag($param->type, WsType::Float->value)) {
                 $param_data['type'] = 'float';
             }
-            if (self::hasFlag($options['type'], WsType::Positive->value)) {
+            if (self::hasFlag($param->type, WsType::Positive->value)) {
                 $param_data['type'] .= ' positive';
             }
-            if (self::hasFlag($options['type'], WsType::NotNull->value)) {
+            if (self::hasFlag($param->type, WsType::NotNull->value)) {
                 $param_data['type'] .= ' notnull';
             }
 

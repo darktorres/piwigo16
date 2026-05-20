@@ -10,8 +10,6 @@ namespace Piwigo\Ws;
  * Use the named constructors:
  *   ParamDefinition::required('image_id', WsType::Id->value)
  *   ParamDefinition::optional('per_page', 100, WsType::Int->value | WsType::Positive->value, maxValue: 500)
- *
- * @phpstan-import-type WsParamDef from PwgServer
  */
 final readonly class ParamDefinition
 {
@@ -62,24 +60,4 @@ final readonly class ParamDefinition
         return new self($name, $type, $flags | WsParam::Optional->value, null, false, $maxValue, $info);
     }
 
-    /**
-     * Converts to the internal WsParamDef array format stored in PwgServer::$_methods.
-     *
-     * @return array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string}
-     */
-    public function toWsParamDef(): array
-    {
-        /** @var array{flags: int, type: int, default?: mixed, maxValue?: int|float, info?: string} $def */
-        $def = ['flags' => $this->flags, 'type' => $this->type];
-        if ($this->hasDefault) {
-            $def['default'] = $this->default;
-        }
-        if ($this->maxValue !== null) {
-            $def['maxValue'] = $this->maxValue;
-        }
-        if ($this->info !== '') {
-            $def['info'] = $this->info;
-        }
-        return $def;
-    }
 }

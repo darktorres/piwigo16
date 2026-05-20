@@ -1559,10 +1559,10 @@ final class MaintenanceController implements AdminSubControllerInterface
             }
             $parentKey = (string) $parent_id;
             foreach ($granted_grps[$parentKey] ?? [] as $granted_grp) {
-                $insert_granted_grps[] = ['group_id' => is_numeric($granted_grp) ? (int) $granted_grp : 0, 'cat_id' => $ids];
+                $insert_granted_grps[] = ['group_id' => $granted_grp, 'cat_id' => $ids];
             }
             foreach ($granted_users[$parentKey] ?? [] as $granted_user) {
-                $insert_granted_users[] = ['user_id' => is_numeric($granted_user) ? (int) $granted_user : 0, 'cat_id' => $ids];
+                $insert_granted_users[] = ['user_id' => $granted_user, 'cat_id' => $ids];
             }
         }
         $this->permissionRepository->insertGroupAccessRows($insert_granted_grps);

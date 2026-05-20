@@ -42,9 +42,9 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         $this->repo->insertLog(3, '127.0.0.1', 'categories', '1', null, null, null, null, null, null);
 
         $last = $this->repo->findLastVisitByUserId(3);
-        self::assertIsArray($last);
-        self::assertArrayHasKey('date', $last);
-        self::assertArrayHasKey('time', $last);
+        self::assertNotNull($last);
+        self::assertNotEmpty($last->date);
+        self::assertNotEmpty($last->time);
     }
 
     public function test_countAll_increments_with_inserts(): void

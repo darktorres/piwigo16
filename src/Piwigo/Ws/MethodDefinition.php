@@ -8,8 +8,8 @@ namespace Piwigo\Ws;
  * Typed descriptor for a WS method registration.
  *
  * Pass to PwgServer::register(). The server stores the MethodDefinition for
- * SpecBuilder / #22 and normalizes params to the internal WsParamDef array
- * so invoke() works unchanged.
+ * SpecBuilder / #22 and keeps ParamDefinition objects directly in the
+ * signature map so invoke() reads typed properties.
  *
  * Example:
  *   $server->register(new MethodDefinition(

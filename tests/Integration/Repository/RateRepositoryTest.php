@@ -69,9 +69,9 @@ final class RateRepositoryTest extends IntegrationTestCase
         $this->repo->insert(1, '127.0.0.1', 1, 2.0);
         $this->repo->insert(3, '127.0.0.2', 1, 4.0);
 
-        [$count, $avg] = $this->repo->findCountAndAvgByElementId(1);
-        self::assertSame(2, $count);
-        self::assertSame(3.0, $avg);
+        $result = $this->repo->findCountAndAvgByElementId(1);
+        self::assertSame(2, $result['count']);
+        self::assertSame(3.0, $result['average']);
     }
 
     /**

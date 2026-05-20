@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\OpenApi;
 
 use Piwigo\Ws\MethodDefinition;
+use Piwigo\Ws\ParamDefinition;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsParam;
 use Piwigo\Ws\WsType;
@@ -17,8 +18,7 @@ use Piwigo\Ws\WsType;
  * POST-only methods are documented as HTTP POST with form-encoded body;
  * all others as HTTP GET with query parameters.
  *
- * @phpstan-import-type WsMethod   from PwgServer
- * @phpstan-import-type WsParamDef from PwgServer
+ * @phpstan-import-type WsMethod from PwgServer
  */
 final readonly class SpecBuilder
 {
@@ -120,17 +120,17 @@ final readonly class SpecBuilder
         $formRequired   = [];
 
         foreach ($method['signature'] as $paramName => $paramDef) {
-            $isOptional = self::hasFlag($paramDef['flags'], WsParam::Optional->value);
+            $isOptional = self::hasFlag($paramDef->flags, WsParam::Optional->value);
             $schema     = $this->buildParamSchema($paramDef);
 
-            if (array_key_exists('default', $paramDef)) {
-                $default = $paramDef['default'];
+            if ($paramDef->hasDefault) {
+                $default = $paramDef->default;
                 if (is_scalar($default)) {
                     $schema['default'] = $default;
                 }
             }
 
-            $info = $paramDef['info'] ?? '';
+            $info = $paramDef->info;
 
             if ($isPost) {
                 if ($info !== '') {
@@ -183,17 +183,14 @@ final readonly class SpecBuilder
         return [$httpVerb => $operation];
     }
 
-    /**
-     * @phpstan-param WsParamDef $paramDef
-     * @return array<mixed>
-     */
-    private function buildParamSchema(array $paramDef): array
+    /** @return array<mixed> */
+    private function buildParamSchema(ParamDefinition $paramDef): array
     {
-        $flags  = $paramDef['flags'];
-        $scalar = $this->buildScalarSchema($paramDef['type']);
+        $flags  = $paramDef->flags;
+        $scalar = $this->buildScalarSchema($paramDef->type);
 
-        if (isset($paramDef['maxValue'])) {
-            $scalar['maximum'] = $paramDef['maxValue'];
+        if ($paramDef->maxValue !== null) {
+            $scalar['maximum'] = $paramDef->maxValue;
         }
 
         if (self::hasFlag($flags, WsParam::ForceArray->value)) {

@@ -781,7 +781,7 @@ final class AlbumController implements AdminSubControllerInterface
                 $tpl_representant['picture'] = $this->imageAdminService->getCategoryRepresentantProperties($catRepPic, DerivativeSize::Medium->value);
             }
             $tpl_representant['ALLOW_SET_RANDOM'] = $category['has_images'];
-            if (($category['has_images'] && Config::allowRandomRepresentative()) || (!$category['has_images'] && $catRepPic !== '')) {
+            if (($category['has_images'] && Config::allowRandomRepresentative()) || !$category['has_images']) {
                 $tpl_representant['ALLOW_DELETE'] = true;
             }
             $tpl->assign('representant', $tpl_representant);

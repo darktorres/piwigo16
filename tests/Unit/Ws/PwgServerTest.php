@@ -82,8 +82,8 @@ final class PwgServerTest extends TestCase
         $sig = $this->server->getMethodSignature('pwg.typed');
 
         self::assertArrayHasKey('image_id', $sig);
-        self::assertSame(WsType::Int->value | WsType::Positive->value, $sig['image_id']['type']);
-        self::assertSame(0, $sig['image_id']['flags'] & WsParam::Optional->value);
+        self::assertSame(WsType::Int->value | WsType::Positive->value, $sig['image_id']->type);
+        self::assertSame(0, $sig['image_id']->flags & WsParam::Optional->value);
     }
 
     public function test_register_optional_param_sets_optional_flag_and_default(): void
@@ -96,9 +96,9 @@ final class PwgServerTest extends TestCase
         $sig = $this->server->getMethodSignature('pwg.optional_param');
 
         self::assertArrayHasKey('limit', $sig);
-        self::assertTrue((bool) ($sig['limit']['flags'] & WsParam::Optional->value));
-        self::assertArrayHasKey('default', $sig['limit']);
-        self::assertSame(100, $sig['limit']['default'] ?? null);
+        self::assertTrue((bool) ($sig['limit']->flags & WsParam::Optional->value));
+        self::assertTrue($sig['limit']->hasDefault);
+        self::assertSame(100, $sig['limit']->default);
     }
 
     public function test_register_optionalflag_param_sets_optional_without_default(): void
@@ -111,8 +111,8 @@ final class PwgServerTest extends TestCase
         $sig = $this->server->getMethodSignature('pwg.optional_no_default');
 
         self::assertArrayHasKey('group_id', $sig);
-        self::assertTrue((bool) ($sig['group_id']['flags'] & WsParam::Optional->value));
-        self::assertArrayNotHasKey('default', $sig['group_id']);
+        self::assertTrue((bool) ($sig['group_id']->flags & WsParam::Optional->value));
+        self::assertFalse($sig['group_id']->hasDefault);
     }
 
     public function test_multiple_methods_registered_independently(): void

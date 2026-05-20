@@ -279,7 +279,7 @@ final readonly class CategoryCatsRenderer
             $template->assignVarFromTemplate('CATEGORIES', 'mainpage_categories.latte');
 
             $catsNavigationBar = [];
-            if ($totalCategories > Config::nbCategoriesPage()) {
+            if ($totalCategories !== null && $totalCategories > Config::nbCategoriesPage()) {
                 $catsNavigationBar = $this->paginationService->createNavigationBar(
                     $this->urlService->duplicateIndexUrl([], ['startcat']),
                     $totalCategories,

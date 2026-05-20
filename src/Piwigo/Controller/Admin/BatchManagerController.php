@@ -1011,7 +1011,8 @@ final class BatchManagerController implements AdminSubControllerInterface
     /** @param array<int> $collection */
     private function handleBatchDissociate(array $collection): bool
     {
-        $dissociate_raw = is_string($_POST['dissociate'] ?? null) ? $_POST['dissociate'] : '';
+        $dissociate_post = $_POST['dissociate'] ?? '';
+        $dissociate_raw = is_string($dissociate_post) ? $dissociate_post : '';
         $nb_dissociated = $this->categoryAdminService->dissociateImagesFromCategory($collection, $dissociate_raw);
         if ($nb_dissociated > 0) {
             $this->session->flash->add('info', Lang::t('Information data registered in database'));

@@ -11,6 +11,11 @@ use Piwigo\Users\CurrentUser;
 
 final class DateService
 {
+    /**
+     * @phpstan-ignore typePerfect.narrowReturnObjectType (PHP 8.5 stubs infer DateTime::diff()
+     *   as DateInterval&object{days:int}; that intersection type cannot be expressed as a native
+     *   PHP return type, so the narrow_return rule is an unavoidable false positive here.)
+     */
     public function dateDiff(\DateTime $date1, \DateTime $date2): \DateInterval
     {
         return $date1->diff($date2);

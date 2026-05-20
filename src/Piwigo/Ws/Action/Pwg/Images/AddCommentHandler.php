@@ -35,14 +35,15 @@ final readonly class AddCommentHandler implements WsAction
         if (!Config::activateComments()) {
             return new PwgError(403, 'Comments are disabled');
         }
-        $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
+        $input    = AddCommentParams::fromArray($params);
+        $pImageId = $input->imageId;
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'id', 'visible_categories' => 'id', 'visible_images' => 'image_id'], ' AND');
         if (!$this->categoryRepository->isImageInVisibleCommentableCategory($pImageId, $permSql, $permParams, $permTypes)) {
             return new PwgError(WsError::InvalidParam->value, 'Invalid image_id');
         }
-        $comm = ['author' => trim(is_string($params['author'] ?? null) ? $params['author'] : ''), 'content' => trim(is_string($params['content'] ?? null) ? $params['content'] : ''), 'image_id' => $pImageId];
+        $comm = ['author' => $input->author, 'content' => $input->content, 'image_id' => $pImageId];
         $infos         = [];
-        $commentAction = $this->commentService->insertUserComment($comm, is_string($params['key'] ?? null) ? $params['key'] : '', $infos);
+        $commentAction = $this->commentService->insertUserComment($comm, $input->key, $infos);
         switch ($commentAction) {
             case 'reject':
                 $infos[] = Lang::t('Your comment has NOT been registered because it did not pass the validation rules');

@@ -24,14 +24,14 @@ final readonly class CheckFilesHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
-        $checkImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $path         = $this->imageRepository->findPathById($checkImageId);
+        $input = CheckFilesParams::fromArray($params);
+        $path  = $this->imageRepository->findPathById($input->imageId);
         if ($path === null) {
             return new PwgError(404, 'image_id not found');
         }
         $ret = [];
-        if (isset($params['file_sum'])) {
-            $ret['file'] = md5_file($path) !== $params['file_sum'] ? 'differs' : 'equals';
+        if ($input->fileSum !== null) {
+            $ret['file'] = md5_file($path) !== $input->fileSum ? 'differs' : 'equals';
         }
         return $ret;
     }

@@ -11,6 +11,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.images.setCategory` — associate / dissociate / move bulk images. */
 final readonly class SetCategoryHandler implements WsAction
@@ -27,20 +28,24 @@ final readonly class SetCategoryHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = SetCategoryParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $scCategoryId = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
-        $scImageIds   = is_array($params['image_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
+        $scCategoryId = $input->categoryId;
+        $scImageIds   = $input->imageIds;
         if (!$this->categoryRepository->existsById($scCategoryId)) {
             return new PwgError(404, 'category_id not found');
         }
-        $scAction = is_string($params['action'] ?? null) ? $params['action'] : '';
-        if ($scAction === 'associate') {
+        if ($input->action === 'associate') {
             $this->categoryAdminService->associateImagesToCategories($scImageIds, [$scCategoryId]);
-        } elseif ($scAction === 'dissociate') {
+        } elseif ($input->action === 'dissociate') {
             $this->categoryAdminService->dissociateImagesFromCategory($scImageIds, (string) $scCategoryId);
-        } elseif ($scAction === 'move') {
+        } elseif ($input->action === 'move') {
             $this->categoryAdminService->moveImagesToCategories($scImageIds, [$scCategoryId]);
         }
         $this->userAdminService->invalidateUserCache();

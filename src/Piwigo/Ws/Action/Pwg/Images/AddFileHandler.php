@@ -27,7 +27,7 @@ final readonly class AddFileHandler implements WsAction
     {
         $logger = LoggerRegistry::current();
         $logger->debug(__FUNCTION__, $params);
-        $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
+        $pImageId = AddFileParams::fromArray($params)->imageId;
         $image    = $this->imageRepository->findById($pImageId);
         if ($image === null) {
             return new PwgError(404, 'image_id not found');

@@ -23,14 +23,12 @@ final readonly class AddChunkHandler implements WsAction
         if (!Filesystem::mkgetdir($uploadDir, Filesystem::FLAG_DEFAULT & ~Filesystem::FLAG_DIE_ON_ERROR)) {
             return new PwgError(500, 'error during buffer directory creation');
         }
-        $pOriginalSum = is_string($params['original_sum'] ?? null) ? $params['original_sum'] : '';
-        $pPosition    = is_numeric($params['position']) ? (int) $params['position'] : 0;
-        $pData        = is_string($params['data'] ?? null) ? $params['data'] : '';
-        $filename     = sprintf('%s-file-%05u.block', $pOriginalSum, $pPosition);
-        $logger->debug('[addChunk] data length : ' . strlen($pData));
-        $bytesWritten = file_put_contents($uploadDir . '/' . $filename, base64_decode($pData));
+        $input        = AddChunkParams::fromArray($params);
+        $filename     = sprintf('%s-file-%05u.block', $input->originalSum, $input->position);
+        $logger->debug('[addChunk] data length : ' . strlen($input->data));
+        $bytesWritten = file_put_contents($uploadDir . '/' . $filename, base64_decode($input->data));
         if ($bytesWritten === false) {
-            return new PwgError(500, 'an error has occured while writting chunk ' . $pPosition);
+            return new PwgError(500, 'an error has occured while writting chunk ' . $input->position);
         }
         return null;
     }

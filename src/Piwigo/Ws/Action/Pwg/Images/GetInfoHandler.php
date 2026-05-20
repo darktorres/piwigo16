@@ -53,7 +53,8 @@ final readonly class GetInfoHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
-        $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
+        $input    = GetInfoParams::fromArray($params);
+        $pImageId = $input->imageId;
         [$permSql, $permParams, $permTypes] = $this->permissionService->getSqlConditionFandF(['visible_images' => 'id'], ' AND');
         $image = $this->imageRepository->findByIdWithPermissions($pImageId, $permSql, $permParams, $permTypes);
         if ($image === null) {
@@ -111,8 +112,8 @@ final readonly class GetInfoHandler implements WsAction
             $whereComments .= ' AND validated = 1';
         }
         $nbComments       = $this->commentRepository->countByWhereFragment($whereComments, $commentParams, $commentTypes);
-        $pCommentsPerPage = is_numeric($params['comments_per_page']) ? (int) $params['comments_per_page'] : 0;
-        $pCommentsPage    = is_numeric($params['comments_page']) ? (int) $params['comments_page'] : 0;
+        $pCommentsPerPage = $input->commentsPerPage;
+        $pCommentsPage    = $input->commentsPage;
         if ($nbComments > 0 && $pCommentsPerPage > 0) {
             foreach ($this->commentRepository->findByWhereFragmentOrderedByDate($whereComments, $pCommentsPerPage, $pCommentsPerPage * $pCommentsPage, $commentParams, $commentTypes) as $row) {
                 $relatedComments[] = [
@@ -141,7 +142,7 @@ final readonly class GetInfoHandler implements WsAction
         if (isset($commentPostData)) {
             $ret['comment_post'] = [PwgResponseEncoder::ATTRIBUTES_KEY => $commentPostData];
         }
-        $ret['comments_paging'] = new PwgNamedStruct(['page' => $params['comments_page'], 'per_page' => $params['comments_per_page'], 'count' => count($relatedComments), 'total_count' => $nbComments]);
+        $ret['comments_paging'] = new PwgNamedStruct(['page' => $input->commentsPage, 'per_page' => $input->commentsPerPage, 'count' => count($relatedComments), 'total_count' => $nbComments]);
         $ret['comments']        = new PwgNamedArray($relatedComments, 'comment', ['id', 'date']);
         if ($server->getResponseFormat() !== 'rest') {
             return $ret;

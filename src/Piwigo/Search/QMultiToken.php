@@ -12,14 +12,6 @@ class QMultiToken implements \Stringable
     /** @var array<QSingleToken|QMultiToken> */
     public array $tokens = []; // the actual array of QSingleToken or QMultiToken
 
-    // In-flight parser state. Reset at the start of parseExpression()
-    // and mutated by each per-char-class handler. Each QMultiToken
-    // instance carries its own — recursion (sub-expressions via '(')
-    // constructs a fresh QMultiToken with its own crt* slots.
-    private string $crtToken = '';
-    private int $crtModifier = 0;
-    private ?QSearchScope $crtScope = null;
-
     #[\Override]
     public function __toString(): string
     {
@@ -46,17 +38,17 @@ class QMultiToken implements \Stringable
         return $s;
     }
 
-    private function push(): void
+    private function push(QParserState $state): void
     {
-        if (strlen($this->crtToken) || ($this->crtScope !== null && $this->crtScope->nullable)) {
-            if ($this->crtScope !== null) {
-                $this->crtModifier |= QST_BREAK;
+        if (strlen($state->token) || ($state->scope !== null && $state->scope->nullable)) {
+            if ($state->scope !== null) {
+                $state->modifier |= QST_BREAK;
             }
-            $this->tokens[] = new QSingleToken($this->crtToken, $this->crtModifier, $this->crtScope);
+            $this->tokens[] = new QSingleToken($state->token, $state->modifier, $state->scope);
         }
-        $this->crtToken = '';
-        $this->crtModifier = 0;
-        $this->crtScope = null;
+        $state->token = '';
+        $state->modifier = 0;
+        $state->scope = null;
     }
 
     /**
@@ -68,152 +60,131 @@ class QMultiToken implements \Stringable
     */
     public function parseExpression(string $q, int &$qi, int $level, QExpression $root): void
     {
-        $this->crtToken = '';
-        $this->crtModifier = 0;
-        $this->crtScope = null;
+        $state = new QParserState();
 
         for (; $qi < strlen($q); $qi++) {
             $ch = $q[$qi];
-            if (($this->crtModifier & QST_QUOTED) !== 0) {
-                $this->handleQuotedChar($ch, $q, $qi);
+            if (($state->modifier & QST_QUOTED) !== 0) {
+                $this->handleQuotedChar($state, $ch, $q, $qi);
                 continue;
             }
             $exitLoop = match ($ch) {
-                '(' => $this->handleOpenParen($q, $qi, $level, $root),
-                ')' => $this->handleCloseParen($level),
-                ':' => $this->handleColon($root),
-                '"' => $this->handleQuote(),
-                '-' => $this->handleMinus(),
-                '*' => $this->handleAsterisk(),
-                '.' => $this->handleDot($q, $qi),
-                default => $this->handleDefault($ch),
+                '(' => $this->handleOpenParen($state, $q, $qi, $level, $root),
+                ')' => $level > 0,
+                ':' => $this->handleColon($state, $root),
+                '"' => $this->handleQuote($state),
+                '-' => $this->handleMinus($state),
+                '*' => $this->handleAsterisk($state),
+                '.' => $this->handleDot($state, $q, $qi),
+                default => $this->handleDefault($state, $ch),
             };
             if ($exitLoop) {
                 break;
             }
         }
 
-        $this->push();
+        $this->push($state);
         $this->postProcessTokens($level);
     }
 
-    // The handle* methods below all mutate $this->crtToken / crtModifier /
-    // crtScope and are flagged @phpstan-impure so PHPStan re-reads those
-    // properties after each call instead of remembering their pre-call
-    // value (the loop's QST_QUOTED check would otherwise be const-folded).
-
-    /** @phpstan-impure */
-    private function handleOpenParen(string $q, int &$qi, int $level, QExpression $root): bool
+    private function handleOpenParen(QParserState $state, string $q, int &$qi, int $level, QExpression $root): bool
     {
-        if (strlen($this->crtToken)) {
-            $this->push();
+        if (strlen($state->token)) {
+            $this->push($state);
         }
         $sub = new QMultiToken();
         $qi++;
         $sub->parseExpression($q, $qi, $level + 1, $root);
-        $sub->modifier = $this->crtModifier;
-        if ($this->crtScope instanceof QSearchScope && $this->crtScope->is_text) {
-            $sub->applyScope($this->crtScope); // eg. 'tag:(John OR Bill)'
+        $sub->modifier = $state->modifier;
+        if ($state->scope instanceof QSearchScope && $state->scope->is_text) {
+            $sub->applyScope($state->scope); // eg. 'tag:(John OR Bill)'
         }
         $this->tokens[] = $sub;
-        $this->crtModifier = 0;
-        $this->crtScope = null;
+        $state->modifier = 0;
+        $state->scope = null;
         return false;
     }
 
-    /** Returns true when the caller should exit the outer parse loop. */
-    private function handleCloseParen(int $level): bool
+    private function handleColon(QParserState $state, QExpression $root): bool
     {
-        return $level > 0;
-    }
-
-    /** @phpstan-impure */
-    private function handleColon(QExpression $root): bool
-    {
-        $scope = $root->scopes[strtolower($this->crtToken)] ?? null;
-        if (!isset($scope) || isset($this->crtScope)) { // white space
-            $this->push();
+        $scope = $root->scopes[strtolower($state->token)] ?? null;
+        if (!isset($scope) || isset($state->scope)) { // white space
+            $this->push($state);
         } else {
-            $this->crtToken = '';
-            $this->crtScope = $scope;
+            $state->token = '';
+            $state->scope = $scope;
         }
         return false;
     }
 
-    /** @phpstan-impure */
-    private function handleQuote(): bool
+    private function handleQuote(QParserState $state): bool
     {
-        if (strlen($this->crtToken)) {
-            $this->push();
+        if (strlen($state->token)) {
+            $this->push($state);
         }
-        $this->crtModifier |= QST_QUOTED;
+        $state->modifier |= QST_QUOTED;
         return false;
     }
 
-    /** @phpstan-impure */
-    private function handleMinus(): bool
+    private function handleMinus(QParserState $state): bool
     {
-        if (strlen($this->crtToken) || isset($this->crtScope)) {
-            $this->crtToken .= '-';
+        if (strlen($state->token) || isset($state->scope)) {
+            $state->token .= '-';
         } else {
-            $this->crtModifier |= QST_NOT;
+            $state->modifier |= QST_NOT;
         }
         return false;
     }
 
-    /** @phpstan-impure */
-    private function handleAsterisk(): bool
+    private function handleAsterisk(QParserState $state): bool
     {
-        if (strlen($this->crtToken)) {
-            $this->crtToken .= '*'; // wildcard end later
+        if (strlen($state->token)) {
+            $state->token .= '*'; // wildcard end later
         } else {
-            $this->crtModifier |= QST_WILDCARD_BEGIN;
+            $state->modifier |= QST_WILDCARD_BEGIN;
         }
         return false;
     }
 
-    /** @phpstan-impure */
-    private function handleDot(string $q, int $qi): bool
+    private function handleDot(QParserState $state, string $q, int $qi): bool
     {
-        if ($this->crtScope instanceof QSearchScope && !$this->crtScope->is_text) {
-            $this->crtToken .= '.';
+        if ($state->scope instanceof QSearchScope && !$state->scope->is_text) {
+            $state->token .= '.';
             return false;
         }
-        if (strlen($this->crtToken) && preg_match('/[0-9]/', substr($this->crtToken, -1))
+        if (strlen($state->token) && preg_match('/[0-9]/', substr($state->token, -1))
           && $qi + 1 < strlen($q) && preg_match('/[0-9]/', $q[$qi + 1])) { // dot between digits is not a separator e.g. F2.8
-            $this->crtToken .= '.';
+            $state->token .= '.';
             return false;
         }
         // else white space go on..
-        return $this->handleDefault('.');
+        return $this->handleDefault($state, '.');
     }
 
-    /** @phpstan-impure */
-    private function handleDefault(string $ch): bool
+    private function handleDefault(QParserState $state, string $ch): bool
     {
-        if ($this->crtScope instanceof QSearchScope && $this->crtScope->processChar($ch, $this->crtToken)) {
+        if ($state->scope instanceof QSearchScope && $state->scope->processChar($ch, $state->token)) {
             return false;
         }
         if (in_array($ch, [' ', ',', '.', ';', '!', '?'], true)) { // white space
-            $this->push();
+            $this->push($state);
         } else {
-            $this->crtToken .= $ch;
+            $state->token .= $ch;
         }
         return false;
     }
 
-    /** @phpstan-impure */
-    private function handleQuotedChar(string $ch, string $q, int &$qi): void
+    private function handleQuotedChar(QParserState $state, string $ch, string $q, int &$qi): void
     {
         if ($ch !== '"') {
-            $this->crtToken .= $ch;
+            $state->token .= $ch;
             return;
         }
         if ($qi + 1 < strlen($q) && $q[$qi + 1] == '*') {
-            $this->crtModifier |= QST_WILDCARD_END;
+            $state->modifier |= QST_WILDCARD_END;
             $qi++;
         }
-        $this->push();
+        $this->push($state);
     }
 
     private function postProcessTokens(int $level): void

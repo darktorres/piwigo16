@@ -40,6 +40,7 @@ use Piwigo\Http\RedirectResponder;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageType;
 use Piwigo\Image\View\PictureViewModel;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Page\PageHeaderRenderer;
@@ -555,7 +556,7 @@ final readonly class PictureController implements ControllerInterface
             $tpl->pparse('picture.latte');
         }
 
-        $this->activityLogger->pageView($currentVm->image->id->value, 'picture');
+        $this->activityLogger->pageView($currentVm->image->id->value, ImageType::Picture);
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);

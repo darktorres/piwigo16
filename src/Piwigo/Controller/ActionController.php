@@ -17,6 +17,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageFormatRepository;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageType;
 use Piwigo\Image\SrcImage;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -122,9 +123,9 @@ final readonly class ActionController implements ControllerInterface
         }
 
         if ($get_part == 'e') {
-            $this->activityLogger->pageView($get_id, 'high');
+            $this->activityLogger->pageView($get_id, ImageType::High);
         } elseif ($get_part == 'f') {
-            $this->activityLogger->pageView($get_id, 'high', is_scalar($format['format_id'] ?? null) ? (string) $format['format_id'] : null);
+            $this->activityLogger->pageView($get_id, ImageType::High, is_scalar($format['format_id'] ?? null) ? (string) $format['format_id'] : null);
         }
 
         $this->dispatcher->dispatch(new LocActionBeforeHttpHeaders());

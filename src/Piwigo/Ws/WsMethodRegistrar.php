@@ -8,6 +8,7 @@ use Piwigo\Config\Config;
 use Piwigo\Event\Ws\WsMethodsRegistering;
 use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\ImageType;
 use Piwigo\Search\Rules\AllwordsField;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PermissionService;
@@ -1248,7 +1249,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             params:       [
                 ParamDefinition::optional('start'),
                 ParamDefinition::optional('end'),
-                ParamDefinition::optional(name: 'types', default: ['none', 'picture', 'high', 'other'], flags: WsParam::ForceArray->value),
+                ParamDefinition::optional(name: 'types', default: ImageType::values(), flags: WsParam::ForceArray->value),
                 ParamDefinition::optional(name: 'user_id', default: -1),
                 ParamDefinition::optional(name: 'image_id', default: null, type: WsType::Id->value),
                 ParamDefinition::optional('filename'),

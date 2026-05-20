@@ -8,6 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\SqlExpr;
+use Piwigo\Image\ImageType;
 
 /** Persistence layer for the history domain. */
 final class HistoryRepository extends AbstractRepository
@@ -197,7 +198,7 @@ final class HistoryRepository extends AbstractRepository
         $sql = 'SELECT COALESCE(SUM(i.filesize), 0)'
             . ' FROM ' . $this->table('history') . ' h'
             . ' INNER JOIN ' . $this->table('images') . ' i ON i.id = h.image_id'
-            . " WHERE h.image_type = 'high' AND " . $where;
+            . " WHERE h.image_type = '" . ImageType::High->value . "' AND " . $where;
         $value = $this->conn->executeQuery($sql, $params, $types)->fetchOne();
         return is_numeric($value) ? (int) $value : 0;
     }

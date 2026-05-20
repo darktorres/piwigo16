@@ -14,6 +14,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\PwgLogAllowed;
 use Piwigo\Event\Picture\PwgLogUpdateLastVisit;
 use Piwigo\History\HistoryRepository;
+use Piwigo\Image\ImageType;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\Session;
 use Piwigo\Users\CurrentUser;
@@ -151,7 +152,7 @@ final readonly class ActivityLogger
      * the current user's permission level, then lets a plugin override
      * via the `pwg_log_allowed` hook.
      */
-    public function isLoggingEnabled(int|null $imageId = null, string|null $imageType = null): bool
+    public function isLoggingEnabled(int|null $imageId = null, ?ImageType $imageType = null): bool
     {
         $doLog = Config::logConf();
         if ($this->permissionService->isAdmin()) {
@@ -163,7 +164,7 @@ final readonly class ActivityLogger
         $allowEvent = new PwgLogAllowed(
             $doLog,
             $imageId ?? 0,
-            $imageType ?? '',
+            $imageType,
         );
         $this->dispatcher->dispatch($allowEvent);
         return $allowEvent->doLog;
@@ -175,7 +176,7 @@ final readonly class ActivityLogger
      * history summarize / autopurge passes when the just-inserted row id
      * lands on the configured multiple.
      */
-    public function pageView(int|string|null $imageId = null, ?string $imageType = null, ?string $formatId = null): bool
+    public function pageView(int|string|null $imageId = null, ?ImageType $imageType = null, ?string $formatId = null): bool
     {
         $user = CurrentUser::get()->rawAttributes;
         $ctx  = SectionContextRegistry::current();
@@ -245,7 +246,7 @@ final readonly class ActivityLogger
             $categoryId !== 'NULL' ? $categoryId : null,
             $searchId !== 'NULL' ? $searchId : null,
             $imageId,
-            $imageType ?? null,
+            $imageType?->value,
             $formatId,
             $authKeyId !== 'NULL' ? $authKeyId : null,
             $tagsString ?? null

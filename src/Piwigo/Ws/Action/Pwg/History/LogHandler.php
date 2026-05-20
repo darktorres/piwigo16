@@ -6,6 +6,7 @@ namespace Piwigo\Ws\Action\Pwg\History;
 
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Common\Enum\Section;
+use Piwigo\Image\ImageType;
 use Piwigo\Picture\PictureService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
@@ -52,7 +53,7 @@ final readonly class LogHandler implements WsAction
         if ($input->imageId !== null) {
             $this->pictureService->increaseImageVisitCounter($input->imageId);
         }
-        $imageType = $input->isDownload ? 'high' : 'picture';
+        $imageType = $input->isDownload ? ImageType::High : ImageType::Picture;
         $this->activityLogger->pageView($input->imageId, $imageType);
         return null;
     }

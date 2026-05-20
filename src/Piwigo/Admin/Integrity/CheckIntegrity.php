@@ -72,24 +72,25 @@ final class CheckIntegrity
             $not_corrected_count = 0;
 
             foreach ($this->retrieve_list as $i => $c13y) {
-                if (!empty($c13y['correction_fct']) and
-                    $c13y['is_callable'] and
-                    in_array($c13y['id'], $c13y_selection_post)) {
-                    if (is_array($c13y['correction_fct_args'])) {
-                        $args = $c13y['correction_fct_args'];
-                    } elseif (!is_null($c13y['correction_fct_args'])) {
-                        $args = [$c13y['correction_fct_args']];
-                    } else {
-                        $args = [];
-                    }
-                    $fct = $c13y['correction_fct'];
-                    $this->retrieve_list[$i]['corrected'] = is_callable($fct) ? call_user_func_array($fct, $args) : false;
+                if (empty($c13y['correction_fct'])
+                    || !$c13y['is_callable']
+                    || !in_array($c13y['id'], $c13y_selection_post)) {
+                    continue;
+                }
+                if (is_array($c13y['correction_fct_args'])) {
+                    $args = $c13y['correction_fct_args'];
+                } elseif (!is_null($c13y['correction_fct_args'])) {
+                    $args = [$c13y['correction_fct_args']];
+                } else {
+                    $args = [];
+                }
+                $fct = $c13y['correction_fct'];
+                $this->retrieve_list[$i]['corrected'] = is_callable($fct) ? call_user_func_array($fct, $args) : false;
 
-                    if ($this->retrieve_list[$i]['corrected'] !== false && $this->retrieve_list[$i]['corrected'] !== null && $this->retrieve_list[$i]['corrected'] !== '' && $this->retrieve_list[$i]['corrected'] !== 0) {
-                        $corrected_count += 1;
-                    } else {
-                        $not_corrected_count += 1;
-                    }
+                if ($this->retrieve_list[$i]['corrected'] !== false && $this->retrieve_list[$i]['corrected'] !== null && $this->retrieve_list[$i]['corrected'] !== '' && $this->retrieve_list[$i]['corrected'] !== 0) {
+                    $corrected_count += 1;
+                } else {
+                    $not_corrected_count += 1;
                 }
             }
 
@@ -107,25 +108,24 @@ final class CheckIntegrity
                     $not_corrected_count
                 ));
             }
-        } else {
-            if (isset($_POST['c13y_submit_ignore']) and isset($_POST['c13y_selection'])) {
-                $ignored_count = 0;
+        } elseif (isset($_POST['c13y_submit_ignore']) and isset($_POST['c13y_selection'])) {
+            $ignored_count = 0;
 
-                foreach ($this->retrieve_list as $i => $c13y) {
-                    if (in_array($c13y['id'], $c13y_selection_post)) {
-                        $this->build_ignore_list[] = is_string($c13y['id']) ? $c13y['id'] : '';
-                        $this->retrieve_list[$i]['ignored'] = true;
-                        $ignored_count += 1;
-                    }
+            foreach ($this->retrieve_list as $i => $c13y) {
+                if (!in_array($c13y['id'], $c13y_selection_post)) {
+                    continue;
                 }
+                $this->build_ignore_list[] = is_string($c13y['id']) ? $c13y['id'] : '';
+                $this->retrieve_list[$i]['ignored'] = true;
+                $ignored_count += 1;
+            }
 
-                if ($ignored_count > 0) {
-                    PageState::current()->addInfo(Translator::get()->plural(
-                        '%d anomaly has been ignored.',
-                        '%d anomalies have been ignored.',
-                        $ignored_count
-                    ));
-                }
+            if ($ignored_count > 0) {
+                PageState::current()->addInfo(Translator::get()->plural(
+                    '%d anomaly has been ignored.',
+                    '%d anomalies have been ignored.',
+                    $ignored_count
+                ));
             }
         }
 
@@ -165,30 +165,27 @@ final class CheckIntegrity
                   ];
 
                 if (isset($c13y['ignored'])) {
-                    if ($c13y['ignored']) {
-                        $c13y_display['show_ignore_msg'] = true;
-                    } else {
+                    if (!$c13y['ignored']) {
                         die('$c13y[\'ignored\'] cannot be false');
                     }
+                    $c13y_display['show_ignore_msg'] = true;
                 } else {
-                    if (!empty($c13y['correction_fct'])) {
-                        if (isset($c13y['corrected'])) {
-                            if ($c13y['corrected']) {
-                                $c13y_display['show_correction_success_fct'] = true;
-                            } else {
-                                $c13y_display['correction_error_fct'] = new Html($this->getHtlmLinksMoreInfo());
-                            }
-                        } elseif ($c13y['is_callable']) {
-                            $c13y_display['show_correction_fct'] = true;
-                            $rawId = $c13y['id'] ?? null;
-                            $template->append('c13y_do_check', is_string($rawId) ? $rawId : (is_int($rawId) ? (string) $rawId : ''));
-                            $submit_automatic_correction = true;
-                            $can_select = true;
+                    if (empty($c13y['correction_fct'])) {
+                        $can_select = true;
+                    } elseif (isset($c13y['corrected'])) {
+                        if ($c13y['corrected']) {
+                            $c13y_display['show_correction_success_fct'] = true;
                         } else {
-                            $c13y_display['show_correction_bad_fct'] = true;
-                            $can_select = true;
+                            $c13y_display['correction_error_fct'] = new Html($this->getHtlmLinksMoreInfo());
                         }
+                    } elseif ($c13y['is_callable']) {
+                        $c13y_display['show_correction_fct'] = true;
+                        $rawId = $c13y['id'] ?? null;
+                        $template->append('c13y_do_check', is_string($rawId) ? $rawId : (is_int($rawId) ? (string) $rawId : ''));
+                        $submit_automatic_correction = true;
+                        $can_select = true;
                     } else {
+                        $c13y_display['show_correction_bad_fct'] = true;
                         $can_select = true;
                     }
 

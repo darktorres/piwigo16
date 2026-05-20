@@ -149,65 +149,69 @@ final class C13yInternal
      */
     public function c13yCorrectionUser(int $id, string $action): bool
     {
+        if (empty($id)) {
+            return false;
+        }
+
         $result = false;
 
-        if (!empty($id)) {
-            switch ($action) {
-                case 'creation':
-                    $password = null;
-                    if ($id == Config::guestId()) {
-                        $name = 'guest';
-                    } elseif ($id == Config::defaultUserId()) {
-                        $name = 'guest';
-                    } elseif ($id == Config::webmasterId()) {
-                        $name = 'webmaster';
-                        $password = StringUtil::generateKey(6);
-                    }
+        switch ($action) {
+            case 'creation':
+                $password = null;
+                if ($id == Config::guestId()) {
+                    $name = 'guest';
+                } elseif ($id == Config::defaultUserId()) {
+                    $name = 'guest';
+                } elseif ($id == Config::webmasterId()) {
+                    $name = 'webmaster';
+                    $password = StringUtil::generateKey(6);
+                }
 
-                    if (isset($name)) {
-                        $name_ok = false;
-                        while (!$name_ok) {
-                            $name_ok = (Kernel::service(UserService::class)->getUserid($name) === false);
-                            if (!$name_ok) {
-                                $name .= StringUtil::generateKey(1);
-                            }
-                        }
-
-                        Kernel::service(UserRepository::class)->insertNew(
-                            Tables::users(),
-                            [
-                                'id'       => $id,
-                                'username' => addslashes($name),
-                                'password' => $password,
-                            ],
-                        );
-
-                        Kernel::service(UserService::class)->createUserInfos($id);
-
-                        PageState::current()->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, (string) $password));
-
-                        $result = true;
-                    }
+                if (!isset($name)) {
                     break;
-                case 'status':
-                    if ($id == Config::guestId()) {
-                        $status = 'guest';
-                    } elseif ($id == Config::defaultUserId()) {
-                        $status = 'guest';
-                    } elseif ($id == Config::webmasterId()) {
-                        $status = 'webmaster';
+                }
+                $name_ok = false;
+                while (!$name_ok) {
+                    $name_ok = (Kernel::service(UserService::class)->getUserid($name) === false);
+                    if (!$name_ok) {
+                        $name .= StringUtil::generateKey(1);
                     }
+                }
 
-                    if (isset($status)) {
-                        Kernel::service(UserRepository::class)->updateUserInfosById($id, ['status' => $status]);
+                Kernel::service(UserRepository::class)->insertNew(
+                    Tables::users(),
+                    [
+                        'id'       => $id,
+                        'username' => addslashes($name),
+                        'password' => $password,
+                    ],
+                );
 
-                        $usernameResult = Kernel::service(UserAdminService::class)->getUsername($id);
-                        PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $usernameResult !== false ? $usernameResult : (string) $id));
+                Kernel::service(UserService::class)->createUserInfos($id);
 
-                        $result = true;
-                    }
+                PageState::current()->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, (string) $password));
+
+                $result = true;
+                break;
+            case 'status':
+                if ($id == Config::guestId()) {
+                    $status = 'guest';
+                } elseif ($id == Config::defaultUserId()) {
+                    $status = 'guest';
+                } elseif ($id == Config::webmasterId()) {
+                    $status = 'webmaster';
+                }
+
+                if (!isset($status)) {
                     break;
-            }
+                }
+                Kernel::service(UserRepository::class)->updateUserInfosById($id, ['status' => $status]);
+
+                $usernameResult = Kernel::service(UserAdminService::class)->getUsername($id);
+                PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $usernameResult !== false ? $usernameResult : (string) $id));
+
+                $result = true;
+                break;
         }
 
         return $result;

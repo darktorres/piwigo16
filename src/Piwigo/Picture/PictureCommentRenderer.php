@@ -102,140 +102,141 @@ final readonly class PictureCommentRenderer
             throw new AuthException('ugly spammer');
         }
 
-        if ($showComments) {
-            $validatedOnly = !$this->permissionService->isAdmin();
-            $nb_comments   = $this->commentRepository->countByImageId($imageId, $validatedOnly);
-            $startOffset   = SectionContextRegistry::current()->start;
+        if (!$showComments) {
+            return;
+        }
+        $validatedOnly = !$this->permissionService->isAdmin();
+        $nb_comments   = $this->commentRepository->countByImageId($imageId, $validatedOnly);
+        $startOffset   = SectionContextRegistry::current()->start;
 
-            $navigation_bar = $this->paginationService->createNavigationBar(
-                $this->urlService->duplicatePictureUrl([], ['start']),
-                $nb_comments,
-                $startOffset,
-                Config::nbCommentPage(),
-                true
-            );
+        $navigation_bar = $this->paginationService->createNavigationBar(
+            $this->urlService->duplicatePictureUrl([], ['start']),
+            $nb_comments,
+            $startOffset,
+            Config::nbCommentPage(),
+            true
+        );
+
+        $template->assign([
+            'COMMENT_COUNT' => $nb_comments,
+            'navbar' => $navigation_bar,
+            'comments' => [],
+        ]);
+
+        if ($nb_comments > 0) {
+            $get_comments_order = $_GET['comments_order'] ?? null;
+            if (($get_comments_order !== null && $get_comments_order !== '') && in_array(strtoupper(is_string($get_comments_order) ? $get_comments_order : ''), ['ASC', 'DESC'])) {
+                $this->session->commentsOrder = is_string($get_comments_order) ? $get_comments_order : '';
+            }
+            $comments_order = $this->session->commentsOrder ?? Config::commentsOrder();
 
             $template->assign([
-                'COMMENT_COUNT' => $nb_comments,
-                'navbar' => $navigation_bar,
-                'comments' => [],
+                'COMMENTS_ORDER_URL' => $this->urlService->addUrlParams($this->urlService->duplicatePictureUrl(), ['comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC')]),
+                'COMMENTS_ORDER_TITLE' => $comments_order == 'ASC' ? Lang::t('Show latest comments first') : Lang::t('Show oldest comments first'),
             ]);
 
-            if ($nb_comments > 0) {
-                $get_comments_order = $_GET['comments_order'] ?? null;
-                if (($get_comments_order !== null && $get_comments_order !== '') && in_array(strtoupper(is_string($get_comments_order) ? $get_comments_order : ''), ['ASC', 'DESC'])) {
-                    $this->session->commentsOrder = is_string($get_comments_order) ? $get_comments_order : '';
+            $commentRows = $this->commentRepository->findForImagePage(
+                $imageId,
+                $validatedOnly,
+                $comments_order,
+                Config::nbCommentPage(),
+                $startOffset,
+                Tables::users(),
+                Config::userFields()->id,
+                Config::userFields()->email,
+            );
+
+            foreach ($commentRows as $row) {
+                $author = $row->author === 'guest' ? Lang::t('guest') : ($row->author ?? '');
+
+                $email = $row->userEmail ?? $row->email;
+                if ($email === '' || $email === null) {
+                    $email = null;
                 }
-                $comments_order = $this->session->commentsOrder ?? Config::commentsOrder();
 
-                $template->assign([
-                    'COMMENTS_ORDER_URL' => $this->urlService->addUrlParams($this->urlService->duplicatePictureUrl(), ['comments_order' => ($comments_order == 'ASC' ? 'DESC' : 'ASC')]),
-                    'COMMENTS_ORDER_TITLE' => $comments_order == 'ASC' ? Lang::t('Show latest comments first') : Lang::t('Show oldest comments first'),
-                ]);
+                $contentEvent = new RenderCommentContent($row->content ?? '');
+                $this->dispatcher->dispatch($contentEvent);
+                $authorEvent = new RenderCommentAuthor($author);
+                $this->dispatcher->dispatch($authorEvent);
+                $rowId       = $row->id->value;
+                $authorId    = $row->authorId !== null ? $row->authorId->value : 0;
+                $tpl_comment = [
+                    'ID' => $rowId,
+                    'AUTHOR' => $authorEvent->commentAuthor,
+                    'DATE' => $this->dateService->formatDate($row->date !== null ? $row->date->value : '', ['day_name', 'day', 'month', 'year', 'time']),
+                    'CONTENT' => new Html($contentEvent->commentContent),
+                    'WEBSITE_URL' => $row->websiteUrl,
+                ];
 
-                $commentRows = $this->commentRepository->findForImagePage(
-                    $imageId,
-                    $validatedOnly,
-                    $comments_order,
-                    Config::nbCommentPage(),
-                    $startOffset,
-                    Tables::users(),
-                    Config::userFields()->id,
-                    Config::userFields()->email,
-                );
-
-                foreach ($commentRows as $row) {
-                    $author = $row->author === 'guest' ? Lang::t('guest') : ($row->author ?? '');
-
-                    $email = $row->userEmail ?? $row->email;
-                    if ($email === '' || $email === null) {
-                        $email = null;
+                if ($this->permissionService->canManageComment(CommentManagementAction::Delete, $authorId)) {
+                    $tpl_comment['U_DELETE'] = $this->urlService->addUrlParams($url_self, [
+                        'action' => 'delete_comment',
+                        'comment_to_delete' => $rowId,
+                        'pwg_token' => $this->csrfService->getToken(),
+                    ]);
+                }
+                if ($this->permissionService->canManageComment(CommentManagementAction::Edit, $authorId)) {
+                    $tpl_comment['U_EDIT'] = $this->urlService->addUrlParams($url_self, [
+                        'action' => 'edit_comment',
+                        'comment_to_edit' => $rowId,
+                    ]);
+                    if ($editComment !== null && $rowId === $editComment) {
+                        $tpl_comment['IN_EDIT'] = true;
+                        $key = $this->ephemeralKeyService->generate(2, (string) $imageId);
+                        $tpl_comment['KEY'] = $key;
+                        $tpl_comment['CONTENT'] = $row->content;
+                        $tpl_comment['PWG_TOKEN'] = $this->csrfService->getToken();
+                        $tpl_comment['U_CANCEL'] = $url_self;
                     }
+                }
+                if ($this->permissionService->isAdmin()) {
+                    $tpl_comment['EMAIL'] = $email;
 
-                    $contentEvent = new RenderCommentContent($row->content ?? '');
-                    $this->dispatcher->dispatch($contentEvent);
-                    $authorEvent = new RenderCommentAuthor($author);
-                    $this->dispatcher->dispatch($authorEvent);
-                    $rowId       = $row->id->value;
-                    $authorId    = $row->authorId !== null ? $row->authorId->value : 0;
-                    $tpl_comment = [
-                        'ID' => $rowId,
-                        'AUTHOR' => $authorEvent->commentAuthor,
-                        'DATE' => $this->dateService->formatDate($row->date !== null ? $row->date->value : '', ['day_name', 'day', 'month', 'year', 'time']),
-                        'CONTENT' => new Html($contentEvent->commentContent),
-                        'WEBSITE_URL' => $row->websiteUrl,
-                    ];
-
-                    if ($this->permissionService->canManageComment(CommentManagementAction::Delete, $authorId)) {
-                        $tpl_comment['U_DELETE'] = $this->urlService->addUrlParams($url_self, [
-                            'action' => 'delete_comment',
-                            'comment_to_delete' => $rowId,
+                    if (!$row->validated) {
+                        $tpl_comment['U_VALIDATE'] = $this->urlService->addUrlParams($url_self, [
+                            'action' => 'validate_comment',
+                            'comment_to_validate' => $rowId,
                             'pwg_token' => $this->csrfService->getToken(),
                         ]);
                     }
-                    if ($this->permissionService->canManageComment(CommentManagementAction::Edit, $authorId)) {
-                        $tpl_comment['U_EDIT'] = $this->urlService->addUrlParams($url_self, [
-                            'action' => 'edit_comment',
-                            'comment_to_edit' => $rowId,
-                        ]);
-                        if ($editComment !== null && $rowId === $editComment) {
-                            $tpl_comment['IN_EDIT'] = true;
-                            $key = $this->ephemeralKeyService->generate(2, (string) $imageId);
-                            $tpl_comment['KEY'] = $key;
-                            $tpl_comment['CONTENT'] = $row->content;
-                            $tpl_comment['PWG_TOKEN'] = $this->csrfService->getToken();
-                            $tpl_comment['U_CANCEL'] = $url_self;
-                        }
-                    }
-                    if ($this->permissionService->isAdmin()) {
-                        $tpl_comment['EMAIL'] = $email;
-
-                        if (!$row->validated) {
-                            $tpl_comment['U_VALIDATE'] = $this->urlService->addUrlParams($url_self, [
-                                'action' => 'validate_comment',
-                                'comment_to_validate' => $rowId,
-                                'pwg_token' => $this->csrfService->getToken(),
-                            ]);
-                        }
-                    }
-                    $template->append('comments', $tpl_comment);
                 }
+                $template->append('comments', $tpl_comment);
             }
-
-            $show_add_comment_form = true;
-            if ($editComment !== null) {
-                $show_add_comment_form = false;
-            }
-            if ($this->permissionService->isAGuest() and !Config::commentsForall()) {
-                $show_add_comment_form = false;
-            }
-
-            if ($show_add_comment_form) {
-                $key = $this->ephemeralKeyService->generate(3, (string) $imageId);
-
-                $tpl_var = [
-                    'F_ACTION' => $url_self,
-                    'KEY' => $key,
-                    'CONTENT' => '',
-                    'SHOW_AUTHOR' => !$this->permissionService->isClassicUser(),
-                    'AUTHOR_MANDATORY' => Config::commentsAuthorMandatory(),
-                    'AUTHOR' => '',
-                    'WEBSITE_URL' => '',
-                    'SHOW_EMAIL' => !$this->permissionService->isClassicUser() or empty(CurrentUser::get()->email),
-                    'EMAIL_MANDATORY' => Config::commentsEmailMandatory(),
-                    'EMAIL' => '',
-                    'SHOW_WEBSITE' => Config::commentsEnableWebsite(),
-                ];
-
-                if (CommentModerationAction::Reject === $comment_action) {
-                    foreach (['content', 'author', 'website_url', 'email'] as $k) {
-                        $post_val = $_POST[$k] ?? null;
-                        $tpl_var[strtoupper($k)] = (isset($post_val) && is_string($post_val)) ? htmlspecialchars(stripslashes($post_val)) : '';
-                    }
-                }
-                $template->assign('comment_add', $tpl_var);
-            }
-            $template->assignVarFromTemplate('COMMENT_LIST', 'comment_list.latte');
         }
+
+        $show_add_comment_form = true;
+        if ($editComment !== null) {
+            $show_add_comment_form = false;
+        }
+        if ($this->permissionService->isAGuest() and !Config::commentsForall()) {
+            $show_add_comment_form = false;
+        }
+
+        if ($show_add_comment_form) {
+            $key = $this->ephemeralKeyService->generate(3, (string) $imageId);
+
+            $tpl_var = [
+                'F_ACTION' => $url_self,
+                'KEY' => $key,
+                'CONTENT' => '',
+                'SHOW_AUTHOR' => !$this->permissionService->isClassicUser(),
+                'AUTHOR_MANDATORY' => Config::commentsAuthorMandatory(),
+                'AUTHOR' => '',
+                'WEBSITE_URL' => '',
+                'SHOW_EMAIL' => !$this->permissionService->isClassicUser() or empty(CurrentUser::get()->email),
+                'EMAIL_MANDATORY' => Config::commentsEmailMandatory(),
+                'EMAIL' => '',
+                'SHOW_WEBSITE' => Config::commentsEnableWebsite(),
+            ];
+
+            if (CommentModerationAction::Reject === $comment_action) {
+                foreach (['content', 'author', 'website_url', 'email'] as $k) {
+                    $post_val = $_POST[$k] ?? null;
+                    $tpl_var[strtoupper($k)] = (isset($post_val) && is_string($post_val)) ? htmlspecialchars(stripslashes($post_val)) : '';
+                }
+            }
+            $template->assign('comment_add', $tpl_var);
+        }
+        $template->assignVarFromTemplate('COMMENT_LIST', 'comment_list.latte');
     }
 }

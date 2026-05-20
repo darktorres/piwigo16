@@ -163,57 +163,59 @@ final class SizesProcessor
                 /** @var array<string, mixed> $pderivative */
                 $pderivative = $pderivatives[$type] ?? [];
 
-                if ($pderivative['enabled']) {
-                    $pd_w = is_numeric($pderivative['w']) ? (int) $pderivative['w'] : 0;
-                    $pd_h = is_numeric($pderivative['h']) ? (int) $pderivative['h'] : 0;
-                    $pd_crop = is_numeric($pderivative['crop']) ? (float) $pderivative['crop'] : 0.0;
-                    $pd_minw = is_numeric($pderivative['minw']) ? (int) $pderivative['minw'] : 0;
-                    $pd_minh = is_numeric($pderivative['minh']) ? (int) $pderivative['minh'] : 0;
-                    $pd_sharpen = is_numeric($pderivative['sharpen']) ? (int) $pderivative['sharpen'] : 0;
-                    $new_params = new DerivativeParams(
-                        new SizingParams(
-                            [$pd_w, $pd_h],
-                            round($pd_crop / 100.0, 2),
-                            [$pd_minw, $pd_minh]
-                        )
-                    );
-                    $new_params->sharpen = $pd_sharpen;
-
-                    ImageStdParams::applyGlobal($new_params);
-
-                    if (isset($enabled[$type])) {
-                        $old_params = $enabled[$type];
-                        $same = true;
-                        if (!DerivativeEncoding::sizeEquals($old_params->sizing->ideal_size, $new_params->sizing->ideal_size)
-                            || $old_params->sizing->max_crop != $new_params->sizing->max_crop) {
-                            $same = false;
-                        }
-                        if ($same
-                            && $new_params->sizing->max_crop != 0
-                            && !DerivativeEncoding::sizeEquals($old_params->sizing->min_size ?? [], $new_params->sizing->min_size)) {
-                            $same = false;
-                        }
-                        if ($quality_changed || $new_params->sharpen != $old_params->sharpen) {
-                            $same = false;
-                        }
-                        if (!$same) {
-                            $new_params->last_mod_time = time();
-                            $changed_types[] = $type;
-                        } else {
-                            $new_params->last_mod_time = $old_params->last_mod_time;
-                        }
-                        $enabled[$type] = $new_params;
-                    } else {
-                        $enabled[$type] = $new_params;
-                        unset($disabled[$type]);
-                    }
-                } else {
+                if (!$pderivative['enabled']) {
                     if (isset($enabled[$type])) {
                         $changed_types[] = $type;
                         $disabled[$type] = $enabled[$type];
                         unset($enabled[$type]);
                     }
+                    continue;
                 }
+
+                $pd_w = is_numeric($pderivative['w']) ? (int) $pderivative['w'] : 0;
+                $pd_h = is_numeric($pderivative['h']) ? (int) $pderivative['h'] : 0;
+                $pd_crop = is_numeric($pderivative['crop']) ? (float) $pderivative['crop'] : 0.0;
+                $pd_minw = is_numeric($pderivative['minw']) ? (int) $pderivative['minw'] : 0;
+                $pd_minh = is_numeric($pderivative['minh']) ? (int) $pderivative['minh'] : 0;
+                $pd_sharpen = is_numeric($pderivative['sharpen']) ? (int) $pderivative['sharpen'] : 0;
+                $new_params = new DerivativeParams(
+                    new SizingParams(
+                        [$pd_w, $pd_h],
+                        round($pd_crop / 100.0, 2),
+                        [$pd_minw, $pd_minh]
+                    )
+                );
+                $new_params->sharpen = $pd_sharpen;
+
+                ImageStdParams::applyGlobal($new_params);
+
+                if (!isset($enabled[$type])) {
+                    $enabled[$type] = $new_params;
+                    unset($disabled[$type]);
+                    continue;
+                }
+
+                $old_params = $enabled[$type];
+                $same = true;
+                if (!DerivativeEncoding::sizeEquals($old_params->sizing->ideal_size, $new_params->sizing->ideal_size)
+                    || $old_params->sizing->max_crop != $new_params->sizing->max_crop) {
+                    $same = false;
+                }
+                if ($same
+                    && $new_params->sizing->max_crop != 0
+                    && !DerivativeEncoding::sizeEquals($old_params->sizing->min_size ?? [], $new_params->sizing->min_size)) {
+                    $same = false;
+                }
+                if ($quality_changed || $new_params->sharpen != $old_params->sharpen) {
+                    $same = false;
+                }
+                if ($same) {
+                    $new_params->last_mod_time = $old_params->last_mod_time;
+                } else {
+                    $new_params->last_mod_time = time();
+                    $changed_types[] = $type;
+                }
+                $enabled[$type] = $new_params;
             }
 
             $enabled_by = [];

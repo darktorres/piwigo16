@@ -106,8 +106,7 @@ final class SearchService
         return $clause_pattern;
     }
 
-    /** @return array<string,mixed>|null */
-    public function getSearchInfo(string $candidate): ?array
+    public function getSearchInfo(string $candidate): ?SearchInfo
     {
         $clausePattern = $this->getSearchIdPattern($candidate);
         if ($clausePattern === null || $clausePattern === '') {
@@ -116,29 +115,39 @@ final class SearchService
         $idColumn = $clausePattern === 'id = %u' ? 'id' : 'search_uuid';
 
         $row = $this->searchRepo->findSearchRow($idColumn, $candidate);
-        if ($row !== null) {
-            if (StringUtil::scriptBasename() != 'ws' and 'id = %u' == $clausePattern and isset($row['search_uuid'])) {
-                HtmlService::fatalError('this search is not reachable with its id, need the search_uuid instead');
-            }
-            if (Section::Search === SectionContextRegistry::current()->section) {
-                $rawId = $row['id'] ?? null;
-                $this->searchId = is_scalar($rawId) ? (string) $rawId : null;
-            }
-            return $row;
+        if ($row === null) {
+            return null;
         }
 
-        return null;
+        if (StringUtil::scriptBasename() != 'ws' and 'id = %u' == $clausePattern and isset($row['search_uuid'])) {
+            HtmlService::fatalError('this search is not reachable with its id, need the search_uuid instead');
+        }
+
+        $rawId = $row['id'] ?? null;
+        $id    = is_int($rawId) ? SearchId::fromInt($rawId) : SearchId::fromUuid(is_scalar($rawId) ? (string) $rawId : '');
+
+        if (Section::Search === SectionContextRegistry::current()->section) {
+            $this->searchId = (string) $id;
+        }
+
+        $rawForked  = $row['forked_from'] ?? null;
+        $forkedFrom = is_int($rawForked) ? SearchId::fromInt($rawForked) : null;
+
+        $rulesJson = is_string($row['rules'] ?? null) ? (string) $row['rules'] : '';
+
+        return new SearchInfo($id, $forkedFrom, $rulesJson);
     }
 
     /** @return array<string, mixed> */
     public function getSearchArray(string $searchId): array
     {
         $search = $this->getSearchInfo($searchId);
-        if ($search === null || count($search) === 0) {
+        if ($search === null) {
             $this->htmlService->badRequest('this search identifier does not exist');
+            return [];
         }
-        $rules  = $search['rules'] ?? '';
-        if (!is_string($rules) || $rules === '') {
+        $rules = $search->rulesJson;
+        if ($rules === '') {
             return [];
         }
         $decoded = json_decode($rules, associative: true);

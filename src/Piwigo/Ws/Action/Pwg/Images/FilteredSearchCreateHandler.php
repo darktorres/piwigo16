@@ -35,7 +35,7 @@ final readonly class FilteredSearchCreateHandler implements WsAction
                 return new PwgError(WsError::InvalidParam->value, 'Invalid search_id input parameter.');
             }
             $searchInfo = $this->searchService->getSearchInfo($input->searchId);
-            if ($searchInfo === null || count($searchInfo) === 0) {
+            if ($searchInfo === null) {
                 return new PwgError(WsError::InvalidParam->value, 'This search does not exist.');
             }
         }
@@ -172,7 +172,7 @@ final readonly class FilteredSearchCreateHandler implements WsAction
                 }
             }
         }
-        $forkedFrom = isset($searchInfo['id']) && is_scalar($searchInfo['id']) ? (string) $searchInfo['id'] : null;
+        $forkedFrom = $searchInfo !== null ? (string) $searchInfo->id : null;
         [$searchUuid, $searchUrl] = $this->searchService->saveSearch($search, $forkedFrom);
         return ['search_id' => $searchUuid, 'search_url' => $searchUrl];
     }

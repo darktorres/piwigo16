@@ -155,83 +155,114 @@ final class Updates
           'is_dev' => true,
           ];
 
+        if (!preg_match('/^(\d+\.\d+)\.(\d+)$/', AppInfo::VERSION)) {
+            return $new_versions;
+        }
+        $new_versions['is_dev'] = false;
+
         [$env, $build_version] = StringUtil::getContainerInfo();
         $build_version = is_string($build_version) ? $build_version : '';
-        if (preg_match('/^(\d+\.\d+)\.(\d+)$/', AppInfo::VERSION)) {
-            $new_versions['is_dev'] = false;
-            $actual_branch = AppInfo::branchFromVersion(
-                ('Official' === $env)
-        ? substr($build_version, 0, -1)
-        : AppInfo::VERSION
-            );
+        $isOfficial = 'Official' === $env;
+        $actual_branch = AppInfo::branchFromVersion(
+            $isOfficial ? substr($build_version, 0, -1) : AppInfo::VERSION
+        );
 
-            $url = AppInfo::PROJECT_URL.'/download/all_versions.php';
-            $url .= '?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)); // Avoid server cache
-            $url .= ('Official' === $env) ? '&docker' : '&show_requirements'; // Check docker version if in container
-            $url .= '&origin_hash='.sha1(Config::secretKey().UrlService::getAbsoluteRootUrl());
+        $url = AppInfo::PROJECT_URL.'/download/all_versions.php';
+        $url .= '?rand='.md5(uniqid((string) random_int(0, mt_getrandmax()), true)); // Avoid server cache
+        $url .= $isOfficial ? '&docker' : '&show_requirements'; // Check docker version if in container
+        $url .= '&origin_hash='.sha1(Config::secretKey().UrlService::getAbsoluteRootUrl());
 
-            $result = '';
-            if ($this->adminService->fetchRemote($url, $result) && is_string($result)) {
-                $all_versions = explode("\n", $result);
-                $new_versions['piwigo.org-checked'] = true;
-                $last_version = trim($all_versions[0]);
-                if ('Official' === $env) {
-                    // Check if build_version is lower than the latest version
-                    if ($this->containerVersionCompare($build_version, $last_version) == '-1') {
-                        $last_branch = AppInfo::branchFromVersion(substr($last_version, 0, -1));
-                        if ($last_branch == $actual_branch) {
-                            $new_versions['minor'] = $last_version;
-                        } else {
-                            $new_versions['major'] = $last_version;
-                            foreach ($all_versions as $version) {
-                                $branch = AppInfo::branchFromVersion(substr($version, 0, -1));
-                                if ($branch != $actual_branch) {
-                                    continue;
-                                }
-                                if ($this->containerVersionCompare($build_version, $version) == '-1') {
-                                    $new_versions['minor'] = $version;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    $parts0 = explode('/', trim($all_versions[0]));
-                    $last_version_number = $parts0[0];
-                    $last_version_php = $parts0[1] ?? '';
-
-                    if (version_compare(AppInfo::VERSION, $last_version_number, '<')) {
-                        $last_branch = AppInfo::branchFromVersion($last_version_number);
-
-                        if ($last_branch == $actual_branch) {
-                            $new_versions['minor'] = $last_version_number;
-                            $new_versions['minor_php'] = $last_version_php;
-                        } else {
-                            $new_versions['major'] = $last_version_number;
-                            $new_versions['major_php'] = $last_version_php;
-
-                            // Check if new version exists in same branch
-                            foreach ($all_versions as $version) {
-                                $vparts = explode('/', trim($version));
-                                $version_number = $vparts[0];
-                                $version_php = $vparts[1] ?? '';
-                                $branch = AppInfo::branchFromVersion($version_number);
-
-                                if ($branch != $actual_branch) {
-                                    continue;
-                                }
-                                if (version_compare(AppInfo::VERSION, $version_number, '<')) {
-                                    $new_versions['minor'] = $version_number;
-                                    $new_versions['minor_php'] = $version_php;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
+        $result = '';
+        if (!$this->adminService->fetchRemote($url, $result) || !is_string($result)) {
+            return $new_versions;
         }
-        return $new_versions;
+
+        $all_versions = explode("\n", $result);
+        $new_versions['piwigo.org-checked'] = true;
+
+        $resolved = $isOfficial
+            ? $this->resolveOfficialNewVersions($build_version, $actual_branch, trim($all_versions[0]), $all_versions)
+            : $this->resolveGenericNewVersions($actual_branch, $all_versions);
+
+        return array_merge($new_versions, $resolved);
+    }
+
+    /**
+     * @param list<string> $all_versions
+     * @return array{minor?: string, major?: string}
+     */
+    private function resolveOfficialNewVersions(
+        string $build_version,
+        string $actual_branch,
+        string $last_version,
+        array $all_versions,
+    ): array {
+        if ($this->containerVersionCompare($build_version, $last_version) != '-1') {
+            return [];
+        }
+
+        $last_branch = AppInfo::branchFromVersion(substr($last_version, 0, -1));
+        if ($last_branch == $actual_branch) {
+            return ['minor' => $last_version];
+        }
+
+        $resolved = ['major' => $last_version];
+        foreach ($all_versions as $version) {
+            $branch = AppInfo::branchFromVersion(substr($version, 0, -1));
+            if ($branch != $actual_branch) {
+                continue;
+            }
+            if ($this->containerVersionCompare($build_version, $version) == '-1') {
+                $resolved['minor'] = $version;
+            }
+            break;
+        }
+        return $resolved;
+    }
+
+    /**
+     * @param list<string> $all_versions
+     * @return array{minor?: string, major?: string, minor_php?: string, major_php?: string}
+     */
+    private function resolveGenericNewVersions(string $actual_branch, array $all_versions): array
+    {
+        $parts0 = explode('/', trim($all_versions[0]));
+        $last_version_number = $parts0[0];
+        $last_version_php = $parts0[1] ?? '';
+
+        if (!version_compare(AppInfo::VERSION, $last_version_number, '<')) {
+            return [];
+        }
+
+        $last_branch = AppInfo::branchFromVersion($last_version_number);
+        if ($last_branch == $actual_branch) {
+            return [
+                'minor' => $last_version_number,
+                'minor_php' => $last_version_php,
+            ];
+        }
+
+        $resolved = [
+            'major' => $last_version_number,
+            'major_php' => $last_version_php,
+        ];
+
+        foreach ($all_versions as $version) {
+            $vparts = explode('/', trim($version));
+            $version_number = $vparts[0];
+            $version_php = $vparts[1] ?? '';
+            $branch = AppInfo::branchFromVersion($version_number);
+
+            if ($branch != $actual_branch) {
+                continue;
+            }
+            if (version_compare(AppInfo::VERSION, $version_number, '<')) {
+                $resolved['minor'] = $version_number;
+                $resolved['minor_php'] = $version_php;
+            }
+            break;
+        }
+        return $resolved;
     }
 
     /**

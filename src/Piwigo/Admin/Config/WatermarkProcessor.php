@@ -17,6 +17,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\WatermarkParams;
+use Piwigo\Image\WatermarkPosition;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\PermissionService;
@@ -85,28 +86,10 @@ final readonly class WatermarkProcessor
         }
 
         // step 1 — sanitize HTML input
-        $position = is_scalar($pwatermark['position'] ?? null) ? (string) $pwatermark['position'] : '';
-        switch ($position) {
-            case 'topleft':
-                $pwatermark['xpos'] = 0;
-                $pwatermark['ypos'] = 0;
-                break;
-            case 'topright':
-                $pwatermark['xpos'] = 100;
-                $pwatermark['ypos'] = 0;
-                break;
-            case 'middle':
-                $pwatermark['xpos'] = 50;
-                $pwatermark['ypos'] = 50;
-                break;
-            case 'bottomleft':
-                $pwatermark['xpos'] = 0;
-                $pwatermark['ypos'] = 100;
-                break;
-            case 'bottomright':
-                $pwatermark['xpos'] = 100;
-                $pwatermark['ypos'] = 100;
-                break;
+        $positionRaw   = is_scalar($pwatermark['position'] ?? null) ? (string) $pwatermark['position'] : '';
+        $positionEnum  = WatermarkPosition::tryFrom($positionRaw);
+        if ($positionEnum !== null) {
+            [$pwatermark['xpos'], $pwatermark['ypos']] = $positionEnum->coords();
         }
 
         // step 2 — check validity

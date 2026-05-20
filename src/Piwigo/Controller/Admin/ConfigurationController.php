@@ -30,6 +30,7 @@ use Piwigo\Image\DerivativeSize;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\OrderByService;
 use Piwigo\Image\OrderSpec;
+use Piwigo\Image\WatermarkPosition;
 use Piwigo\Search\SearchFilterViewRepository;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
@@ -544,26 +545,9 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                 $tpl->assign('watermark_files', $watermark_filemap);
 
                 if ($tpl->getTemplateVars('watermark') === null) {
-                    $wm = ImageStdParams::getWatermark();
-                    $position = 'custom';
-                    if ($wm->xpos == 0   && $wm->ypos == 0) {
-                        $position = 'topleft';
-                    }
-                    if ($wm->xpos == 100 && $wm->ypos == 0) {
-                        $position = 'topright';
-                    }
-                    if ($wm->xpos == 50  && $wm->ypos == 50) {
-                        $position = 'middle';
-                    }
-                    if ($wm->xpos == 0   && $wm->ypos == 100) {
-                        $position = 'bottomleft';
-                    }
-                    if ($wm->xpos == 100 && $wm->ypos == 100) {
-                        $position = 'bottomright';
-                    }
-                    if ($wm->xrepeat != 0 || $wm->yrepeat != 0) {
-                        $position = 'custom';
-                    }
+                    $wm           = ImageStdParams::getWatermark();
+                    $positionCase = ($wm->xrepeat != 0 || $wm->yrepeat != 0) ? null : WatermarkPosition::fromCoords($wm->xpos, $wm->ypos);
+                    $position     = $positionCase !== null ? $positionCase->value : 'custom';
 
                     $tpl->assign('watermark', [
                         'file'     => $wm->file,

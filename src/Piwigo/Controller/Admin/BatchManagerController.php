@@ -13,6 +13,7 @@ use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\AdminService;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Image\DuplicateField;
 use Piwigo\Admin\Image\ImageAdminService;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Tag\TagAdminService;
@@ -183,20 +184,14 @@ final class BatchManagerController implements AdminSubControllerInterface
                 $bmf['prefilter'] = $_POST['filter_prefilter'];
                 if ('duplicates' == $_POST['filter_prefilter']) {
                     $has_options = false;
-                    if (isset($_POST['filter_duplicates_checksum'])) {
-                        $bmf['duplicates_checksum']  = true;
-                        $has_options = true;
-                    }
-                    if (isset($_POST['filter_duplicates_date'])) {
-                        $bmf['duplicates_date']       = true;
-                        $has_options = true;
-                    }
-                    if (isset($_POST['filter_duplicates_dimensions'])) {
-                        $bmf['duplicates_dimensions'] = true;
-                        $has_options = true;
+                    foreach ([DuplicateField::Checksum, DuplicateField::Date, DuplicateField::Dimensions] as $duplicateField) {
+                        if (isset($_POST['filter_duplicates_' . $duplicateField->value])) {
+                            $bmf['duplicates_' . $duplicateField->value] = true;
+                            $has_options                                  = true;
+                        }
                     }
                     if (!$has_options || isset($_POST['filter_duplicates_filename'])) {
-                        $bmf['duplicates_filename'] = true;
+                        $bmf['duplicates_' . DuplicateField::Filename->value] = true;
                     }
                 }
             }
@@ -284,7 +279,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                             $dupParts = explode('-', $value, 2);
                             $duplicate_field = $dupParts[1] ?? '';
                             $bmf['prefilter'] = 'duplicates';
-                            if (in_array($duplicate_field, ['filename', 'checksum', 'date', 'dimensions'])) {
+                            if (DuplicateField::tryFrom($duplicate_field) !== null) {
                                 $bmf['duplicates_' . $duplicate_field] = true;
                             }
                         } else {
@@ -402,18 +397,10 @@ final class BatchManagerController implements AdminSubControllerInterface
                     break;
                 case 'duplicates':
                     $duplicates_on_fields = [];
-                    if (isset($bmf['duplicates_filename'])) {
-                        $duplicates_on_fields[] = 'file';
-                    }
-                    if (isset($bmf['duplicates_checksum'])) {
-                        $duplicates_on_fields[] = 'md5sum';
-                    }
-                    if (isset($bmf['duplicates_date'])) {
-                        $duplicates_on_fields[] = 'date_creation';
-                    }
-                    if (isset($bmf['duplicates_dimensions'])) {
-                        $duplicates_on_fields[] = 'width';
-                        $duplicates_on_fields[] = 'height';
+                    foreach (DuplicateField::cases() as $duplicateField) {
+                        if (isset($bmf['duplicates_' . $duplicateField->value])) {
+                            $duplicates_on_fields = [...$duplicates_on_fields, ...$duplicateField->dbColumns()];
+                        }
                     }
                     $filter_sets[] = $this->imageRepository->findIdsInDuplicateGroups(
                         $duplicates_on_fields,

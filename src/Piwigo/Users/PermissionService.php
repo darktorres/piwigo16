@@ -7,6 +7,7 @@ namespace Piwigo\Users;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Comment\CommentManagementAction;
 use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
@@ -82,13 +83,9 @@ final readonly class PermissionService
         return $this->isAutorizeStatus(AccessLevel::Webmaster, $userStatus);
     }
 
-    public function canManageComment(string $action, int $commentAuthorId): bool
+    public function canManageComment(CommentManagementAction $action, int $commentAuthorId): bool
     {
         if ($this->isAGuest()) {
-            return false;
-        }
-
-        if (!in_array($action, ['delete', 'edit', 'validate'])) {
             return false;
         }
 
@@ -98,13 +95,13 @@ final readonly class PermissionService
 
         $currentUserId = CurrentUser::get()->id;
 
-        if ('edit' == $action and Config::userCanEditComment()) {
+        if ($action === CommentManagementAction::Edit and Config::userCanEditComment()) {
             if ($commentAuthorId == $currentUserId) {
                 return true;
             }
         }
 
-        if ('delete' == $action and Config::userCanDeleteComment()) {
+        if ($action === CommentManagementAction::Delete and Config::userCanDeleteComment()) {
             if ($commentAuthorId == $currentUserId) {
                 return true;
             }

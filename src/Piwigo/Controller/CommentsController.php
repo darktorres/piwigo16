@@ -8,6 +8,7 @@ use Latte\Runtime\Html;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentManagementAction;
 use Piwigo\Comment\CommentModerationAction;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
@@ -193,31 +194,31 @@ final readonly class CommentsController implements ControllerInterface
         $action     = null;
         $edit_comment = null;
 
-        foreach (['delete', 'validate', 'edit'] as $loop_action) {
-            if (isset($_GET[$loop_action])) {
+        foreach (CommentManagementAction::cases() as $loop_action) {
+            if (isset($_GET[$loop_action->value])) {
                 $action = $loop_action;
-                $this->inputValidator->check($action, $_GET, false, ValidationPattern::ID);
-                $actionRaw = $_GET[$action] ?? null;
+                $this->inputValidator->check($action->value, $_GET, false, ValidationPattern::ID);
+                $actionRaw = $_GET[$action->value] ?? null;
                 $comment_id = is_numeric($actionRaw) ? (int) $actionRaw : 0;
                 break;
             }
         }
 
-        if (isset($action)) {
+        if ($action !== null) {
             $comment_author_id = $this->commentService->getCommentAuthorId($comment_id);
             if ($this->permissionService->canManageComment($action, $comment_author_id)) {
                 $perform_redirect = false;
-                if ('delete' == $action) {
+                if (CommentManagementAction::Delete === $action) {
                     $this->csrfService->check();
                     $this->commentService->deleteUserComment($comment_id);
                     $perform_redirect = true;
                 }
-                if ('validate' == $action) {
+                if (CommentManagementAction::Validate === $action) {
                     $this->csrfService->check();
                     $this->commentService->validateUserComment($comment_id);
                     $perform_redirect = true;
                 }
-                if ('edit' == $action) {
+                if (CommentManagementAction::Edit === $action) {
                     $post_content = StringUtil::inputString('content', null, $_POST);
                     if ($post_content !== null && $post_content !== '') {
                         $this->csrfService->check();
@@ -371,10 +372,10 @@ SELECT id, name, uppercats, global_rank
                 if ($this->permissionService->isAdmin()) {
                     $tpl_comment['EMAIL'] = $email;
                 }
-                if ($this->permissionService->canManageComment('delete', $cAuthorId)) {
+                if ($this->permissionService->canManageComment(CommentManagementAction::Delete, $cAuthorId)) {
                     $tpl_comment['U_DELETE'] = $this->urlService->addUrlParams($url_self, ['delete' => $cId, 'pwg_token' => $this->csrfService->getToken()]);
                 }
-                if ($this->permissionService->canManageComment('edit', $cAuthorId)) {
+                if ($this->permissionService->canManageComment(CommentManagementAction::Edit, $cAuthorId)) {
                     $tpl_comment['U_EDIT'] = $this->urlService->addUrlParams($url_self, ['edit' => $cId]);
                     if ($edit_comment !== null && $cId === $edit_comment) {
                         $key = $this->ephemeralKeyService->generate(2, (string) $cImageId);
@@ -386,7 +387,7 @@ SELECT id, name, uppercats, global_rank
                         $tpl_comment['U_CANCEL']  = $url_self;
                     }
                 }
-                if ($this->permissionService->canManageComment('validate', $cAuthorId) && !$comment->validated) {
+                if ($this->permissionService->canManageComment(CommentManagementAction::Validate, $cAuthorId) && !$comment->validated) {
                     $tpl_comment['U_VALIDATE'] = $this->urlService->addUrlParams($url_self, ['validate' => $cId, 'pwg_token' => $this->csrfService->getToken()]);
                 }
                 $tpl->append('comments', $tpl_comment);

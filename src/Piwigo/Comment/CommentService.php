@@ -292,7 +292,7 @@ final readonly class CommentService
         if ($affected > 0) {
             $this->invalidateUserCacheNbComments();
 
-            $this->emailAdmin('delete', [
+            $this->emailAdmin(CommentManagementAction::Delete, [
                 'author'     => is_string($globalUser['username'] ?? null) ? $globalUser['username'] : '',
                 'comment_id' => $commentId,
             ]);
@@ -367,7 +367,7 @@ final readonly class CommentService
                     $keyargsContent
                 );
             } elseif ($result) {
-                $this->emailAdmin('edit', [
+                $this->emailAdmin(CommentManagementAction::Edit, [
                     'author'  => is_string($globalUser['username'] ?? null) ? $globalUser['username'] : '',
                     'content' => stripslashes(is_string($comment['content'] ?? null) ? $comment['content'] : ''),
                 ]);
@@ -382,11 +382,11 @@ final readonly class CommentService
      *
      * @param array<string,mixed> $comment
      */
-    public function emailAdmin(string $action, array $comment): void
+    public function emailAdmin(CommentManagementAction $action, array $comment): void
     {
-        if (!in_array($action, ['edit', 'delete'])
-            or (($action == 'edit')   and !Config::emailAdminOnCommentEdition())
-            or (($action == 'delete') and !Config::emailAdminOnCommentDeletion())) {
+        if ($action === CommentManagementAction::Validate
+            or ($action === CommentManagementAction::Edit   and !Config::emailAdminOnCommentEdition())
+            or ($action === CommentManagementAction::Delete and !Config::emailAdminOnCommentDeletion())) {
             return;
         }
 
@@ -400,7 +400,7 @@ final readonly class CommentService
 
         $keyargsContent = [$this->langService->getL10nArgs('Author: %s', $authorStr)];
 
-        if ($action == 'delete') {
+        if ($action === CommentManagementAction::Delete) {
             $keyargsContent[] = $this->langService->getL10nArgs('This author removed the comment with id %d', $commentIdStr);
         } else {
             $keyargsContent[] = $this->langService->getL10nArgs('This author modified following comment:');

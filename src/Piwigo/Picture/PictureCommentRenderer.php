@@ -6,6 +6,7 @@ namespace Piwigo\Picture;
 
 use Latte\Runtime\Html;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Comment\CommentManagementAction;
 use Piwigo\Comment\CommentModerationAction;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
@@ -165,14 +166,14 @@ final readonly class PictureCommentRenderer
                         'WEBSITE_URL' => $row->websiteUrl,
                     ];
 
-                    if ($this->permissionService->canManageComment('delete', $authorId)) {
+                    if ($this->permissionService->canManageComment(CommentManagementAction::Delete, $authorId)) {
                         $tpl_comment['U_DELETE'] = $this->urlService->addUrlParams($url_self, [
                             'action' => 'delete_comment',
                             'comment_to_delete' => $rowId,
                             'pwg_token' => $this->csrfService->getToken(),
                         ]);
                     }
-                    if ($this->permissionService->canManageComment('edit', $authorId)) {
+                    if ($this->permissionService->canManageComment(CommentManagementAction::Edit, $authorId)) {
                         $tpl_comment['U_EDIT'] = $this->urlService->addUrlParams($url_self, [
                             'action' => 'edit_comment',
                             'comment_to_edit' => $rowId,
@@ -226,7 +227,7 @@ final readonly class PictureCommentRenderer
                     'SHOW_WEBSITE' => Config::commentsEnableWebsite(),
                 ];
 
-                if ('reject' == $comment_action) {
+                if (CommentModerationAction::Reject === $comment_action) {
                     foreach (['content', 'author', 'website_url', 'email'] as $k) {
                         $post_val = $_POST[$k] ?? null;
                         $tpl_var[strtoupper($k)] = (isset($post_val) && is_string($post_val)) ? htmlspecialchars(stripslashes($post_val)) : '';

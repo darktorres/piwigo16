@@ -12,6 +12,7 @@ use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentManagementAction;
 use Piwigo\Comment\CommentModerationAction;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\Enum\Section;
@@ -246,7 +247,7 @@ final readonly class PictureController implements ControllerInterface
                     $this->inputValidator->check('comment_to_edit', $_GET, false, ValidationPattern::ID);
                     $comment_to_edit = StringUtil::inputInt('comment_to_edit', null, $_GET);
                     $author_id       = $this->commentService->getCommentAuthorId($comment_to_edit ?? 0);
-                    if ($this->permissionService->canManageComment('edit', $author_id)) {
+                    if ($this->permissionService->canManageComment(CommentManagementAction::Edit, $author_id)) {
                         $post_content = StringUtil::inputString('content', null, $_POST);
                         if ($post_content !== null && $post_content !== '') {
                             $this->csrfService->check();
@@ -279,7 +280,7 @@ final readonly class PictureController implements ControllerInterface
                     $this->csrfService->check();
                     $this->inputValidator->check('comment_to_delete', $_GET, false, ValidationPattern::ID);
                     $author_id = $this->commentService->getCommentAuthorId(StringUtil::inputInt('comment_to_delete', null, $_GET) ?? 0);
-                    if ($this->permissionService->canManageComment('delete', $author_id)) {
+                    if ($this->permissionService->canManageComment(CommentManagementAction::Delete, $author_id)) {
                         $this->commentService->deleteUserComment(StringUtil::inputInt('comment_to_delete', null, $_GET) ?? 0);
                     }
                     $this->redirectResponder->redirect($url_self);
@@ -288,7 +289,7 @@ final readonly class PictureController implements ControllerInterface
                     $this->csrfService->check();
                     $this->inputValidator->check('comment_to_validate', $_GET, false, ValidationPattern::ID);
                     $author_id = $this->commentService->getCommentAuthorId(StringUtil::inputInt('comment_to_validate', null, $_GET) ?? 0);
-                    if ($this->permissionService->canManageComment('validate', $author_id)) {
+                    if ($this->permissionService->canManageComment(CommentManagementAction::Validate, $author_id)) {
                         $this->commentService->validateUserComment(StringUtil::inputInt('comment_to_validate', null, $_GET) ?? 0);
                     }
                     $this->redirectResponder->redirect($url_self);

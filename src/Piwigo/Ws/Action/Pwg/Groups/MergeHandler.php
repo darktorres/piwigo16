@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Groups;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -59,9 +60,9 @@ final readonly class MergeHandler implements WsAction
         }
         $this->groupRepository->insertUserGroupIgnoreDuplicates($inserts);
         $this->userAdminService->invalidateUserCache();
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $destGroupId, 'edit'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $destGroupId, ActivityAction::Edit));
         foreach ($userToAdd as $userId) {
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'edit', ['associated' => $destGroupId]));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, ActivityAction::Edit, ['associated' => $destGroupId]));
         }
         $this->userAdminService->deleteGroups($mergeGroup);
         return ['destination_group' => $server->invoke('pwg.groups.getList', ['group_id' => $destGroupId]), 'deleted_group' => $mergeGroupObj];

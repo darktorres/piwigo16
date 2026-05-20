@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Tags;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -54,7 +55,7 @@ final readonly class RenameHandler implements WsAction
             $this->dispatcher->dispatch($urlEvent);
             $update = ['name' => $input->newName, 'url_name' => $urlEvent->tagName];
         }
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $input->tagId, 'edit'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $input->tagId, ActivityAction::Edit));
         $this->tagRepository->updateById($input->tagId, $update);
         $entity          = $this->tagRepository->findById($input->tagId);
         $tag             = $entity !== null ? $entity->toRow() : [];

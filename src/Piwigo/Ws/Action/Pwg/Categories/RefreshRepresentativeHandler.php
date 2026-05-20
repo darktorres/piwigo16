@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Categories;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -41,7 +42,7 @@ final readonly class RefreshRepresentativeHandler implements WsAction
             return new PwgError(401, 'not permitted');
         }
         $this->categoryAdminService->setRandomRepresentant([$input->categoryId]);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $input->categoryId, 'edit'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $input->categoryId, ActivityAction::Edit));
         $category = $this->categoryRepository->findCategoryById($input->categoryId);
         $repId    = $category !== null && $category->representativePictureId !== null ? (string) $category->representativePictureId : '';
         return $this->imageAdminService->getCategoryRepresentantProperties($repId, DerivativeSize::Small->value);

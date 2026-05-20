@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -163,7 +164,7 @@ final readonly class AuthService
         $this->session->userId = UserId::from($userId);
 
         $this->dispatcher->dispatch(new UserLogin($userId));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'login'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, ActivityAction::Login));
     }
 
     public function autoLogin(): bool
@@ -216,7 +217,7 @@ final readonly class AuthService
 
         if ($userFound === null || count($userFound) === 0 || 'guest' === $userFound['status'] || !$passwordVerify) {
             if ($userFound !== null && count($userFound) > 0 && !$passwordVerify) {
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $ufId, 'login_failure_wrong_password'));
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $ufId, ActivityAction::LoginFailureWrongPassword));
             }
             $this->dispatcher->dispatch(new LoginFailure(stripslashes($username)));
             return false;
@@ -231,7 +232,7 @@ final readonly class AuthService
         if (!$state['can_login']) {
             /** @psalm-var mixed $stateReasonRaw */
             $stateReasonRaw = $state['reason'] ?? null;
-            $stateReason    = is_string($stateReasonRaw) ? $stateReasonRaw : 'login_failure_before_log_user';
+            $stateReason    = is_string($stateReasonRaw) ? (ActivityAction::tryFrom($stateReasonRaw) ?? ActivityAction::LoginFailureBeforeLogUser) : ActivityAction::LoginFailureBeforeLogUser;
             $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $ufId, $stateReason));
             $this->dispatcher->dispatch(new LoginFailureBeforeLogUser(stripslashes($username)));
             return false;
@@ -288,7 +289,7 @@ final readonly class AuthService
     {
         $logoutUid = $this->session->userId !== null ? $this->session->userId->value : 0;
         $this->dispatcher->dispatch(new UserLogout($logoutUid));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $logoutUid, 'logout'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $logoutUid, ActivityAction::Logout));
 
         // Reset typed Session slots; persistInto() at request end will then
         // diff against the hydration snapshot and unset every key Session

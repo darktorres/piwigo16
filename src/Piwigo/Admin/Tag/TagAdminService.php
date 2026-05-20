@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Tag;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -107,7 +108,7 @@ final class TagAdminService
         $tagRepo->deleteImageTagsByTagIds($tagIds);
         $tagRepo->deleteByIds($tagIds);
         $this->dispatcher->dispatch(new DeleteTags($tagIds));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagIds, 'delete'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagIds, ActivityAction::Delete));
         $this->imageAdminService->updateImagesLastmodified($imageIds);
         $this->userAdminService->invalidateUserCacheNbTags();
     }

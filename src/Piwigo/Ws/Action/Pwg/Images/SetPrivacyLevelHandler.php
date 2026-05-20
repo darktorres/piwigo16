@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Images;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -35,7 +36,7 @@ final readonly class SetPrivacyLevelHandler implements WsAction
             return new PwgError(WsError::InvalidParam->value, $e->getMessage());
         }
         $affected = $this->imageRepository->setLevelForIds($input->level, $input->imageIds);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $input->imageIds, 'edit'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $input->imageIds, ActivityAction::Edit));
         if ($affected) {
             $this->userAdminService->invalidateUserCache();
         }

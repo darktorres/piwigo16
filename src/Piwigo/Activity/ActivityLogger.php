@@ -55,10 +55,10 @@ final readonly class ActivityLogger
         $action  = $event->action;
         $details = $event->details;
 
-        if (isset($_REQUEST['method']) && $_REQUEST['method'] === 'pwg.images.uploadAsync' && $action === 'login') {
+        if (isset($_REQUEST['method']) && $_REQUEST['method'] === 'pwg.images.uploadAsync' && $action === ActivityAction::Login) {
             return;
         }
-        if (isset($_REQUEST['method']) && $_REQUEST['method'] === 'pwg.plugins.performAction' && $_REQUEST['action'] !== $action) {
+        if (isset($_REQUEST['method']) && $_REQUEST['method'] === 'pwg.plugins.performAction' && $_REQUEST['action'] !== $action->value) {
             return;
         }
 
@@ -76,13 +76,13 @@ final readonly class ActivityLogger
             }
         }
 
-        if ($action === 'autoupdate') {
+        if ($action === ActivityAction::AutoUpdate) {
             unset($details['method']);
             unset($details['script']);
         }
 
         $userAgent = null;
-        if ($event->object === ActivityObject::User && $action === 'login' && isset($_SERVER['HTTP_USER_AGENT'])) {
+        if ($event->object === ActivityObject::User && $action === ActivityAction::Login && isset($_SERVER['HTTP_USER_AGENT'])) {
             /** @var mixed $uaRaw */
             $uaRaw     = $_SERVER['HTTP_USER_AGENT'];
             $userAgent = strip_tags(is_string($uaRaw) ? $uaRaw : '');
@@ -93,7 +93,7 @@ final readonly class ActivityLogger
             $uaRaw     = $_SERVER['HTTP_USER_AGENT'];
             $userAgent = strip_tags(is_string($uaRaw) ? $uaRaw : '');
         }
-        if ($event->object === ActivityObject::User && $action === 'login') {
+        if ($event->object === ActivityObject::User && $action === ActivityAction::Login) {
             if (function_exists('debug_backtrace')) {
                 $calledFunctions = array_flip(array_column(debug_backtrace(), 'function'));
                 foreach (['auto_login', 'auth_key_login'] as $authFunction) {
@@ -103,7 +103,7 @@ final readonly class ActivityLogger
                 }
             }
         }
-        if ($event->object === ActivityObject::Photo && $action === 'add' && !isset($details['sync'])) {
+        if ($event->object === ActivityObject::Photo && $action === ActivityAction::Add && !isset($details['sync'])) {
             $details['added_with'] = 'app';
             $refRaw                = $_SERVER['HTTP_REFERER'] ?? null;
             if (is_string($refRaw) && preg_match('/page=photos_add/', $refRaw)) {
@@ -111,12 +111,12 @@ final readonly class ActivityLogger
             }
         }
         if (in_array($event->object, [ActivityObject::Album, ActivityObject::Photo], true)
-            && $action === 'delete'
+            && $action === ActivityAction::Delete
             && isset($_GET['page']) && $_GET['page'] === 'site_update'
         ) {
             $details['sync'] = true;
         }
-        if ($event->object === ActivityObject::Tag && $action === 'delete' && isset($_POST['destination_tag'])) {
+        if ($event->object === ActivityObject::Tag && $action === ActivityAction::Delete && isset($_POST['destination_tag'])) {
             $details['action']          = 'merge';
             $details['destination_tag'] = $_POST['destination_tag'];
         }
@@ -128,13 +128,13 @@ final readonly class ActivityLogger
 
         foreach ($objectIds as $loopObjectId) {
             $performedBy = CurrentUser::isInitialized() ? CurrentUser::get()->id : null;
-            if ($action === 'logout') {
+            if ($action === ActivityAction::Logout) {
                 $performedBy = $loopObjectId;
             }
             $inserts[] = [
                 'object'       => $object,
                 'object_id'    => $loopObjectId,
-                'action'       => $action,
+                'action'       => $action->value,
                 'performed_by' => $performedBy,
                 'session_idx'  => $sessionId,
                 'ip_address'   => $ipAddress,

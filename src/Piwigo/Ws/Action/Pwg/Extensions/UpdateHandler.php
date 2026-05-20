@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Extensions;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -86,7 +87,7 @@ final readonly class UpdateHandler implements WsAction
             } else {
                 $activityDetails['result'] = 'error';
             }
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, 'update', $activityDetails));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, ActivityAction::Update, $activityDetails));
         } else {
             // ExtensionType::Language — the only remaining case.
             $extension     = Kernel::service(Languages::class);

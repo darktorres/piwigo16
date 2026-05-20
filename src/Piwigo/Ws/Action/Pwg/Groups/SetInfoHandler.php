@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Groups;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -57,7 +58,7 @@ final readonly class SetInfoHandler implements WsAction
             $updates['is_default'] = BoolUtil::toInt($input->isDefault ?? '');
         }
         $this->groupRepository->updateById($groupId, $updates);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $groupId, 'edit'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $groupId, ActivityAction::Edit));
         return $server->invoke('pwg.groups.getList', ['group_id' => $groupId]);
     }
 }

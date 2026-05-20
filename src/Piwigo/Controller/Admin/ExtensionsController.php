@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -346,7 +347,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                     $pluginIdRaw = $_GET['plugin_id'] ?? null;
                     $getPluginId = is_string($pluginIdRaw) ? $pluginIdRaw : '';
                     if ($getPluginId !== '' && isset($plugins->fs_plugins[$getPluginId])) {
-                        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Plugin, 'install', ['plugin_id' => $getPluginId, 'version' => $plugins->fs_plugins[$getPluginId]['version']]));
+                        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Plugin, ActivityAction::Install, ['plugin_id' => $getPluginId, 'version' => $plugins->fs_plugins[$getPluginId]['version']]));
                     }
                     break;
                 case 'temp_path_error':   PageState::current()->addError(Lang::t('Can\'t create temporary file.'));
@@ -620,7 +621,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                     $themeIdRaw = $_GET['theme_id'] ?? null;
                     $theme_id_str = is_string($themeIdRaw) ? $themeIdRaw : '';
                     if ($theme_id_str !== '' && isset($themes->fs_themes[$theme_id_str])) {
-                        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, 'install', ['theme_id' => $theme_id_str, 'version' => $themes->fs_themes[$theme_id_str]['version']]));
+                        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, ActivityAction::Install, ['theme_id' => $theme_id_str, 'version' => $themes->fs_themes[$theme_id_str]['version']]));
                     }
                     break;
                 case 'temp_path_error':  PageState::current()->addError(Lang::t('Can\'t create temporary file.'));

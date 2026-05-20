@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Categories;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -36,7 +37,7 @@ final readonly class DeleteRepresentativeHandler implements WsAction
             return new PwgError(401, 'not permitted');
         }
         $this->categoryRepository->clearRepresentatives([$categoryId]);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, 'edit'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, ActivityAction::Edit));
         return null;
     }
 }

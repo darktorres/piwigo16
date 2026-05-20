@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Categories;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -79,7 +80,7 @@ final readonly class SetInfoHandler implements WsAction
             unset($updateFields['id']);
             $this->categoryRepository->updateById($categoryId, $updateFields);
         }
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, 'edit', ['fields' => implode(',', array_keys($update))]));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $categoryId, ActivityAction::Edit, ['fields' => implode(',', array_keys($update))]));
         return null;
     }
 }

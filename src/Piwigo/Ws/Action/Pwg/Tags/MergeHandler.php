@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Tags;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -57,9 +58,9 @@ final readonly class MergeHandler implements WsAction
             $inserts[] = ['tag_id' => $destId, 'image_id' => $image];
         }
         $this->tagRepository->insertImageTagsBatch($inserts, true);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $destId, 'edit'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $destId, ActivityAction::Edit));
         foreach ($imageToAdd as $imageId) {
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, 'edit', ['tag-add' => $destId]));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, ActivityAction::Edit, ['tag-add' => $destId]));
         }
         $this->dispatcher->dispatch(new MergeTags($destId, $mergeTag));
         $this->tagAdminService->deleteTags($mergeTag);

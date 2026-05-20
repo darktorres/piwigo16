@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -198,7 +199,7 @@ final class Themes
                 break;
         }
 
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, $action->value, $activity_details));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, ActivityAction::from($action->value), $activity_details));
 
         return array_values($errors);
     }

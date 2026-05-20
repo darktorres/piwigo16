@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Detection\MobileDetect;
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -282,7 +283,7 @@ final class PhotoController implements AdminSubControllerInterface
 
             $represented_albums = is_array($_POST['represent']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['represent']) : [];
             $tpl->assign(['save_success' => Lang::t('Photo informations updated')]);
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $getImageIdInt, 'edit'));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $getImageIdInt, ActivityAction::Edit));
 
             $rawImageId3 = $_GET['image_id'] ?? null;
             $this->imageInfo = $this->imageAdminService->getImageInfos(is_string($rawImageId3) ? $rawImageId3 : '', true);

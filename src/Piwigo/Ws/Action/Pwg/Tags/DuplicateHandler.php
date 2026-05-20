@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Tags;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -50,12 +51,12 @@ final readonly class DuplicateHandler implements WsAction
         $this->dispatcher->dispatch($urlEvent);
         $urlName          = $urlEvent->tagName;
         $destinationTagId = $this->tagRepository->insertNewTag(['name' => $input->copyName, 'url_name' => $urlName]);
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $destinationTagId, 'add', ['action' => 'duplicate', 'source_tag' => $input->tagId]));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $destinationTagId, ActivityAction::Add, ['action' => 'duplicate', 'source_tag' => $input->tagId]));
         $destinationTagImageIds = $this->tagRepository->findImageIdsByTagId($input->tagId);
         $inserts                = [];
         foreach ($destinationTagImageIds as $imageId) {
             $inserts[] = ['tag_id' => $destinationTagId, 'image_id' => $imageId];
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, 'edit', ['add-tag' => $destinationTagId]));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, ActivityAction::Edit, ['add-tag' => $destinationTagId]));
         }
         $this->tagRepository->insertImageTagsBatch($inserts, false);
         return new DuplicateResult(

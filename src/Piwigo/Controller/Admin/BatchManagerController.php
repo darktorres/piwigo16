@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\ParameterType;
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -809,7 +810,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                     $datas[] = ['id' => $image_id, 'author' => $authorValue];
                 }
                 $this->imageRepository->setAuthorBatch($datas);
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'author']));
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, ActivityAction::Edit, ['action' => 'author']));
             } elseif ('title' == $action) {
                 $rawTitle   = isset($_POST['remove_title']) ? null : ($_POST['title'] ?? null);
                 $titleValue = is_string($rawTitle) ? $rawTitle : null;
@@ -818,7 +819,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                     $datas[] = ['id' => $image_id, 'name' => $titleValue];
                 }
                 $this->imageRepository->setNameBatch($datas);
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'title']));
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, ActivityAction::Edit, ['action' => 'title']));
             } elseif ('date_creation' == $action) {
                 $rawDateCreation = (isset($_POST['remove_date_creation']) || !isset($_POST['date_creation']) || $_POST['date_creation'] === '') ? null : $_POST['date_creation'];
                 $date_creation   = is_string($rawDateCreation) ? $rawDateCreation : null;
@@ -827,7 +828,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                     $datas[] = ['id' => $image_id, 'date_creation' => $date_creation];
                 }
                 $this->imageRepository->setDateCreationBatch($datas);
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'date_creation']));
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, ActivityAction::Edit, ['action' => 'date_creation']));
             } elseif ('level' == $action) {
                 $rawLevel   = $_POST['level'] ?? null;
                 $levelValue = is_numeric($rawLevel) ? (int) $rawLevel : 0;
@@ -836,7 +837,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                     $datas[] = ['id' => $image_id, 'level' => $levelValue];
                 }
                 $this->imageRepository->setLevelBatch($datas);
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, 'edit', ['action' => 'privacy_level']));
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, ActivityAction::Edit, ['action' => 'privacy_level']));
                 if (isset($bmf['level'])) {
                     $bmf_level_val  = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
                     $postLevelRaw = $_POST['level'] ?? null;

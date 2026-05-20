@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -260,7 +261,7 @@ final readonly class InstallController implements ControllerInterface
         if ($step == 1) {
             $tpl->assign('install', true);
         } else {
-            Kernel::service(ActivityLogger::class)->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'install', ['version' => AppInfo::VERSION]));
+            Kernel::service(ActivityLogger::class)->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Install, ['version' => AppInfo::VERSION]));
             $infos[] = Lang::t('Congratulations, Piwigo installation is completed');
 
             {

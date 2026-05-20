@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Users;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -49,7 +50,7 @@ final readonly class UserAdminService
         $this->sessionService->deleteUserSessions($userId);
         $this->userRepository->deleteByUserId($userId, Tables::users(), Config::userFields()['id']);
         $this->dispatcher->dispatch(new DeleteUser($userId));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'delete'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, ActivityAction::Delete));
     }
 
     public function syncUsers(): void
@@ -126,7 +127,7 @@ final readonly class UserAdminService
         $this->groupRepository->deleteByIds($groupIdsInt);
         // FK CASCADE clears group_access.group_id + user_group.group_id.
         $this->dispatcher->dispatch(new DeleteGroup($groupids));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $groupids, 'delete'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $groupids, ActivityAction::Delete));
         return $groupList;
     }
 

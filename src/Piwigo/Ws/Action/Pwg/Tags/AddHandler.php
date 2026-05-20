@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Tags;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -39,7 +40,7 @@ final readonly class AddHandler implements WsAction
             return new PwgError(WsError::InvalidParam->value, is_string($creationOutput['error']) ? $creationOutput['error'] : '');
         }
         $tagAddId = is_numeric($creationOutput['id'] ?? null) ? (int) $creationOutput['id'] : 0;
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagAddId, 'add'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagAddId, ActivityAction::Add));
         $newTag = $this->tagRepository->findById($tagAddId);
         return new AddResult(
             info:    is_string($creationOutput['info'] ?? null) ? $creationOutput['info'] : '',

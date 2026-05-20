@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Groups;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -44,8 +45,8 @@ final readonly class DeleteUserHandler implements WsAction
         }
         $this->groupRepository->deleteUserGroupMembers($input->groupId, $input->userIds);
         $this->userAdminService->invalidateUserCache();
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $input->groupId, 'edit'));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $input->userIds, 'edit'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $input->groupId, ActivityAction::Edit));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $input->userIds, ActivityAction::Edit));
         return $server->invoke('pwg.groups.getList', ['group_id' => $input->groupId]);
     }
 }

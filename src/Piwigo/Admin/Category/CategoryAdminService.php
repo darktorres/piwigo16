@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Category;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -83,7 +84,7 @@ final readonly class CategoryAdminService
 
         $this->categoryRepository->deleteCategoriesAndPermalinksAtomically($ids);
         $this->dispatcher->dispatch(new DeleteCategories($ids));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $ids, 'delete', ['photo_deletion_mode' => $photoDeletionMode]));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $ids, ActivityAction::Delete, ['photo_deletion_mode' => $photoDeletionMode]));
     }
 
     public function imagesIntegrity(): void
@@ -470,7 +471,7 @@ final readonly class CategoryAdminService
             $this->setCatStatus(array_map(static fn (int|string $v): int => (int) $v, array_keys($categories)), 'private');
         }
         PageState::current()->addInfo(Translator::get()->plural('%d album moved', '%d albums moved', count($categories)));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catIdsInt, 'move', ['parent' => $newParent]));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catIdsInt, ActivityAction::Move, ['parent' => $newParent]));
     }
 
     /**
@@ -531,7 +532,7 @@ final readonly class CategoryAdminService
             $this->addPermissionOnCategory($insertedId, array_unique(array_merge($this->userAdminService->getAdmins(), [$userId])));
         }
         $this->dispatcher->dispatch(new CreateVirtualCategory(array_merge(['id' => $insertedId], $insert)));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $insertedId, 'add'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $insertedId, ActivityAction::Add));
         return ['info' => Lang::t('Album added'), 'id' => $insertedId];
     }
 

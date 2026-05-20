@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -124,7 +125,7 @@ final class ImageAdminService
             $this->categoryAdminService->updateCategory($categoryIds);
         }
         $this->dispatcher->dispatch(new DeleteElements($ids));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $ids, 'delete'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $ids, ActivityAction::Delete));
         return count($ids);
     }
 

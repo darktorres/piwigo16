@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -220,7 +221,7 @@ final class Plugins
                 break;
         }
 
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Plugin, $action->value, $activity_details));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Plugin, ActivityAction::from($action->value), $activity_details));
 
         return $errors;
     }

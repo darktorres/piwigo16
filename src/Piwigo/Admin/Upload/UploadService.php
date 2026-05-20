@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -280,7 +281,7 @@ final readonly class UploadService
                 $insert['representative_ext'] = $representativeExt;
             }
             $imageId = $this->imageRepository->insertNew($insert);
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, 'add'));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $imageId, ActivityAction::Add));
         }
 
         $this->addUploadedFileAddToCategories($imageId, $categories);
@@ -369,7 +370,7 @@ final readonly class UploadService
             $formatId  = $this->imageFormatRepository->insert($insert);
             $addStatus = 'add';
         }
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, (int) $formatOf, 'edit', ['action' => 'add format', 'format_ext' => $formatExt, 'format_id' => $formatId]));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, (int) $formatOf, ActivityAction::Edit, ['action' => 'add format', 'format_ext' => $formatExt, 'format_id' => $formatId]));
         $formatInfos = array_merge($insert, ['format_id' => $formatId]);
         $this->dispatcher->dispatch(new LocEndAddFormat($formatInfos));
         return $addStatus;

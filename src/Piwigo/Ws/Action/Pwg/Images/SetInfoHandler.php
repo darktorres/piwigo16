@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Images;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -93,7 +94,7 @@ final readonly class SetInfoHandler implements WsAction
         }
         if (count($update) > 0) {
             $this->imageRepository->updateById($setImageId, $update);
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $setImageId, 'edit'));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $setImageId, ActivityAction::Edit));
         }
         if ($input->categories !== null) {
             $this->categoryAdminService->addImageCategoryRelations($setImageId, $input->categories, $multipleValueMode === 'replace');

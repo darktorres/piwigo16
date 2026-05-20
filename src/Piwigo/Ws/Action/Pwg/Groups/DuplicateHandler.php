@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Groups;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -48,7 +49,7 @@ final readonly class DuplicateHandler implements WsAction
         }
         $isDefault  = $this->groupRepository->findIsDefault($input->groupId);
         $insertedId = $this->groupRepository->insertNew($input->copyName, BoolUtil::toInt($isDefault));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $insertedId, 'add'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $insertedId, ActivityAction::Add));
         $users   = $this->groupRepository->findUserIdsByGroupId($input->groupId);
         $inserts = [];
         foreach ($users as $user) {
@@ -57,7 +58,7 @@ final readonly class DuplicateHandler implements WsAction
         $this->groupRepository->insertUserGroupIgnoreDuplicates($inserts);
         $this->userAdminService->invalidateUserCache();
         foreach ($users as $userId) {
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'edit', ['associated' => $input->groupId]));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, ActivityAction::Edit, ['associated' => $input->groupId]));
         }
         return $server->invoke('pwg.groups.getList', ['group_id' => $insertedId]);
     }

@@ -6,6 +6,7 @@ namespace Piwigo\Bootstrap;
 
 use Doctrine\DBAL\Connection;
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -147,7 +148,7 @@ final class CommonBootstrap
         if (!Config::has('piwigo_installed_version')) {
             Kernel::service(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         } elseif (Config::piwigoInstalledVersion() != AppInfo::VERSION) {
-            Kernel::service(ActivityLogger::class)->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'autoupdate', ['from_version' => Config::piwigoInstalledVersion(), 'to_version' => AppInfo::VERSION]));
+            Kernel::service(ActivityLogger::class)->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::AutoUpdate, ['from_version' => Config::piwigoInstalledVersion(), 'to_version' => AppInfo::VERSION]));
             Kernel::service(ConfigService::class)->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         }
 

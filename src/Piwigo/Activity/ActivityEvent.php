@@ -21,7 +21,7 @@ final readonly class ActivityEvent
     public function __construct(
         public ActivityObject $object,
         public int|array $objectId,
-        public string $action,
+        public ActivityAction $action,
         public array $details = [],
     ) {
     }

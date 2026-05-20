@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Groups;
 
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -35,7 +36,7 @@ final readonly class AddHandler implements WsAction
             return new PwgError(WsError::InvalidParam->value, 'Name field must not be empty');
         }
         $insertedId = $this->groupRepository->insertNew($input->name, BoolUtil::toInt($input->isDefault));
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $insertedId, 'add'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Group, $insertedId, ActivityAction::Add));
         return $server->invoke('pwg.groups.getList', ['group_id' => $insertedId]);
     }
 }

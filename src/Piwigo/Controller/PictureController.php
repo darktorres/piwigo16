@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -227,7 +228,7 @@ final readonly class PictureController implements ControllerInterface
                 case 'set_as_representative':
                     if ($this->permissionService->isAdmin() && $category !== null) {
                         $this->categoryRepository->setRepresentativePicture([$catId], $imageId);
-                        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catId, 'edit', ['action' => $get_action, 'image_id' => $imageId]));
+                        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catId, ActivityAction::Edit, ['action' => $get_action, 'image_id' => $imageId]));
                         $this->userAdminService->invalidateUserCache();
                     }
                     $this->redirectResponder->redirect($url_self);

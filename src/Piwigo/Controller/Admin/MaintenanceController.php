@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Latte\Runtime\Html;
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -218,13 +219,13 @@ final class MaintenanceController implements AdminSubControllerInterface
                 exit();
             case 'lock_gallery':
                 $this->configService->confUpdateParam('gallery_locked', 'true');
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]));
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Maintenance, ['maintenance_action' => $action]));
                 $this->redirectResponder->redirect($this->urlGenerator->admin('maintenance'));
                 break;
             case 'unlock_gallery':
                 $this->configService->confUpdateParam('gallery_locked', 'false');
                 $this->session->flash->add('info', Lang::t('Gallery unlocked'));
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]));
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Maintenance, ['maintenance_action' => $action]));
                 $this->redirectResponder->redirect($this->urlGenerator->admin('maintenance'));
                 break;
             case 'categories':
@@ -345,7 +346,7 @@ final class MaintenanceController implements AdminSubControllerInterface
         }
 
         if ($register_activity) {
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, 'maintenance', ['maintenance_action' => $action]));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Core, ActivityAction::Maintenance, ['maintenance_action' => $action]));
         }
 
         $pwg_token    = $this->csrfService->getToken();
@@ -1273,7 +1274,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                         $category_up[] = $category['id_uppercat'];
                     }
                 }
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $category_ids, 'add', ['sync' => true]));
+                $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $category_ids, ActivityAction::Add, ['sync' => true]));
                 $category_up_str = implode(',', array_unique($category_up));
                 if (Config::inheritanceByDefault() && !empty($category_up_str)) {
                     $permRepoSync    = $this->permissionRepository;
@@ -1443,7 +1444,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             if (!$simulate) {
                 if (count($inserts) > 0) {
                     $this->imageRepository->insertImageRowsBatch($inserts, $insert_links);
-                    $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $caddiables, 'add', ['sync' => true]));
+                    $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $caddiables, ActivityAction::Add, ['sync' => true]));
                     if (isset($_POST['add_to_caddie']) && $_POST['add_to_caddie'] == 1) {
                         $this->userCaddieRepository->addElements(CurrentUser::get()->id, $caddiables);
                     }

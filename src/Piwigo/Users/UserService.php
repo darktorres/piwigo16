@@ -6,6 +6,7 @@ namespace Piwigo\Users;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Piwigo\Activity\ActivityAction;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
@@ -173,7 +174,7 @@ final class UserService
             }
 
             $this->dispatcher->dispatch(new RegisterUser(['id' => $userId, 'username' => $login, 'email' => $mailAddress]));
-            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, 'add'));
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $userId, ActivityAction::Add));
 
             return $userId;
         } else {
@@ -657,7 +658,7 @@ final class UserService
         }
 
         $this->userAdminService->invalidateUserCache();
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId), 'edit'));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::User, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId), ActivityAction::Edit));
 
         return ['user_id' => $params['user_id'], 'infos' => $updatesInfos, 'account' => $updates];
     }

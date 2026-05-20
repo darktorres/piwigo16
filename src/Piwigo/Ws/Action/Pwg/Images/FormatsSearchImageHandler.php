@@ -24,7 +24,8 @@ final readonly class FormatsSearchImageHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        $candidates        = json_decode(stripslashes(is_string($params['filename_list'] ?? null) ? $params['filename_list'] : ''), true);
+        $input             = FormatsSearchImageParams::fromArray($params);
+        $candidates        = json_decode(stripslashes($input->filenameListJson), true);
         $uniqueFilenamesDb = [];
         foreach ($this->imageRepository->findAllIdFilename() as $row) {
             $filenameWoExt = StringUtil::getFilenameWoExtension((string) $row->file);

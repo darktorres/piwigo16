@@ -13,6 +13,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.images.formats.delete` — unlink format files + drop their rows. */
 final readonly class FormatsDeleteHandler implements WsAction
@@ -29,19 +30,20 @@ final readonly class FormatsDeleteHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|bool
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = FormatsDeleteParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        if (!is_array($params['format_id'])) {
-            $params['format_id'] = (($fmtSplit = preg_split('/[\s,;\|]/', is_string($params['format_id']) ? $params['format_id'] : '', -1, PREG_SPLIT_NO_EMPTY)) !== false ? $fmtSplit : []);
-        }
-        $params['format_id'] = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['format_id']);
-        $formatIds = array_filter($params['format_id'], fn (int $v): bool => $v >= 0);
+        $formatIds = $input->formatIds;
         /** @var array<string, list<string>> $formatsOf */
         $formatsOf = [];
         /** @var list<string> $imageIds */
         $imageIds  = [];
-        foreach ($this->imageFormatRepository->findByFormatIds(array_map(intval(...), $formatIds)) as $row) {
+        foreach ($this->imageFormatRepository->findByFormatIds($formatIds) as $row) {
             $rowImageId = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
             $rowExt     = is_string($row['ext'] ?? null) ? $row['ext'] : '';
             if (!isset($formatsOf[$rowImageId])) {
@@ -72,7 +74,7 @@ final readonly class FormatsDeleteHandler implements WsAction
                 }
             }
         }
-        $this->imageFormatRepository->deleteByFormatIds(array_map(intval(...), $formatIds));
+        $this->imageFormatRepository->deleteByFormatIds($formatIds);
         $this->userAdminService->invalidateUserCache();
         return true;
     }

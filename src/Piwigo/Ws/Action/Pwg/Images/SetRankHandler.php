@@ -29,15 +29,16 @@ final readonly class SetRankHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): array|PwgError
     {
-        $pImageIdArr   = is_array($params['image_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['image_id']) : [];
-        $pCategoryId   = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
+        $input       = SetRankParams::fromArray($params);
+        $pImageIdArr = $input->imageIds;
+        $pCategoryId = $input->categoryId;
         if (count($pImageIdArr) > 1) {
             $this->categoryAdminService->saveImagesOrder($pCategoryId, $pImageIdArr);
             $imageIds = $this->imageRepository->findIdsByCategoryIdOrderedByRank($pCategoryId);
             return ['image_id' => $imageIds, 'category_id' => $pCategoryId];
         }
         $pImageId = $pImageIdArr[0] ?? 0;
-        if (empty($params['rank'])) {
+        if ($input->rank === null) {
             return new PwgError(WsError::MissingParam->value, 'rank is missing');
         }
         $catRepo = $this->categoryRepository;
@@ -47,7 +48,7 @@ final readonly class SetRankHandler implements WsAction
         if (!$catRepo->hasImageInCategory($pImageId, $pCategoryId)) {
             return new PwgError(404, 'This image is not associated to this category');
         }
-        $pRank   = is_numeric($params['rank']) ? (int) $params['rank'] : 1;
+        $pRank   = $input->rank;
         $maxRank = $catRepo->findMaxRankInCategory($pCategoryId);
         if ($maxRank !== null) {
             if ($pRank > $maxRank) {

@@ -129,7 +129,7 @@ final class ImageFormatRepository extends AbstractRepository
      * Per-extension totals across the image_format table — image-format
      * rows store ext explicitly rather than via SUBSTRING_INDEX.
      *
-     * @return array<string, array{ext_counter: int, filesize: int}>
+     * @return array<string, ExtensionStat>
      */
     public function findExtensionTotals(): array
     {
@@ -140,10 +140,10 @@ final class ImageFormatRepository extends AbstractRepository
         $out = [];
         foreach ($rows as $row) {
             $ext = is_string($row['ext'] ?? null) ? $row['ext'] : '';
-            $out[$ext] = [
-                'ext_counter' => is_numeric($row['ext_counter'] ?? null) ? (int) $row['ext_counter'] : 0,
-                'filesize'    => is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0,
-            ];
+            $out[$ext] = new ExtensionStat(
+                is_numeric($row['ext_counter'] ?? null) ? (int) $row['ext_counter'] : 0,
+                is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0,
+            );
         }
         return $out;
     }

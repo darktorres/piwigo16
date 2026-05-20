@@ -552,7 +552,7 @@ final class ImageRepository extends AbstractRepository
      * Return (ext_counter, filesize) totals across all images, keyed by ext.
      * Used by the admin maintenance page's storage breakdown.
      *
-     * @return array<string, array{ext_counter: int, filesize: int}>
+     * @return array<string, ExtensionStat>
      */
     public function findFileExtensionTotals(): array
     {
@@ -563,10 +563,10 @@ final class ImageRepository extends AbstractRepository
         $out = [];
         foreach ($rows as $row) {
             $ext = is_string($row['ext'] ?? null) ? $row['ext'] : '';
-            $out[$ext] = [
-                'ext_counter' => is_numeric($row['ext_counter'] ?? null) ? (int) $row['ext_counter'] : 0,
-                'filesize'    => is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0,
-            ];
+            $out[$ext] = new ExtensionStat(
+                is_numeric($row['ext_counter'] ?? null) ? (int) $row['ext_counter'] : 0,
+                is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0,
+            );
         }
         return $out;
     }

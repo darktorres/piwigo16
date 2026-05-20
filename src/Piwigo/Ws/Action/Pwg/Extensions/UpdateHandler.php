@@ -22,6 +22,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.extensions.update` — upgrade a plugin/theme/language from PEM. */
 final readonly class UpdateHandler implements WsAction
@@ -45,15 +46,20 @@ final readonly class UpdateHandler implements WsAction
         if (!$this->permissionService->isWebmaster()) {
             return new PwgError(401, Lang::t('Webmaster status is required.'));
         }
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = UpdateParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        if (!in_array($params['type'], ['plugins', 'themes', 'languages'])) {
+        if (!in_array($input->type, ['plugins', 'themes', 'languages'])) {
             return new PwgError(403, 'invalid extension type');
         }
-        $type          = is_string($params['type']) ? $params['type'] : '';
-        $extensionId   = is_string($params['id']) ? $params['id'] : '';
-        $revision      = is_string($params['revision']) ? $params['revision'] : '';
+        $type          = $input->type;
+        $extensionId   = $input->id;
+        $revision      = $input->revision;
         $upgradeStatus = 'ok';
         $extensionName = '';
         if ($type === 'plugins') {
@@ -66,7 +72,7 @@ final readonly class UpdateHandler implements WsAction
             $upgradeStatus = is_array($performResult) ? ($performResult[0] ?? 'ok') : 'ok';
             $upgradeStatus = is_string($upgradeStatus) ? $upgradeStatus : 'ok';
             $extensionName = is_string($extension->fs_plugins[$extensionId]['name'] ?? null) ? $extension->fs_plugins[$extensionId]['name'] : '';
-            if (isset($params['reactivate'])) {
+            if ($input->reactivate) {
                 $extension->performAction('activate', $extensionId);
             }
         } elseif ($type === 'themes') {

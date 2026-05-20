@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Extensions;
 
-use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\IgnoredUpdatesRepository;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Session\Session;
@@ -12,6 +11,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.extensions.ignoreUpdate` — mute an extension's pending-update marker. */
 final readonly class IgnoreUpdateHandler implements WsAction
@@ -31,26 +31,27 @@ final readonly class IgnoreUpdateHandler implements WsAction
         if (!$this->permissionService->isWebmaster()) {
             return new PwgError(401, 'Access denied');
         }
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = IgnoreUpdateParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $typeRaw = $params['type'] ?? null;
-        $type    = is_string($typeRaw) ? ExtensionType::tryFrom($typeRaw) : null;
-        if ($params['reset']) {
-            if ($type !== null) {
-                $this->ignoredUpdates->clearType($type);
+        if ($input->reset) {
+            if ($input->type !== null) {
+                $this->ignoredUpdates->clearType($input->type);
             } else {
                 $this->ignoredUpdates->clearAll();
             }
             $this->session->extensionsNeedUpdate = null;
             return true;
         }
-        $idRaw    = $params['id'] ?? null;
-        $ignoreId = is_string($idRaw) ? $idRaw : '';
-        if ($ignoreId === '' || $type === null) {
+        if ($input->id === '' || $input->type === null) {
             return new PwgError(403, 'Invalid parameters');
         }
-        $this->ignoredUpdates->ignore($type, $ignoreId);
+        $this->ignoredUpdates->ignore($input->type, $input->id);
         $this->session->extensionsNeedUpdate = null;
         return true;
     }

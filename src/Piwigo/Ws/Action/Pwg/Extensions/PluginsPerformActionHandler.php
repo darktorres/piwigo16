@@ -14,6 +14,7 @@ use Piwigo\Users\PermissionService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.extensions.plugins.performAction` — install/activate/deactivate/uninstall/delete. */
 final readonly class PluginsPerformActionHandler implements WsAction
@@ -29,23 +30,26 @@ final readonly class PluginsPerformActionHandler implements WsAction
     public function __invoke(array $params, PwgServer $server): PwgError|true
     {
         $template = TemplateRegistry::current();
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = PluginsPerformActionParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
         if (!$this->permissionService->isWebmaster()) {
             return new PwgError(403, Lang::t('Webmaster status is required.'));
         }
-        if (!Config::enableExtensionsInstall() && $params['action'] === 'delete') {
+        if (!Config::enableExtensionsInstall() && $input->action === 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
-        $plugins      = Kernel::service(Plugins::class);
-        $pluginAction = is_string($params['action']) ? $params['action'] : '';
-        $pluginId     = is_string($params['plugin']) ? $params['plugin'] : '';
-        $errors       = $plugins->performAction($pluginAction, $pluginId);
+        $plugins = Kernel::service(Plugins::class);
+        $errors  = $plugins->performAction($input->action, $input->plugin);
         if (!empty($errors)) {
             return new PwgError(500, implode(', ', array_map(fn (mixed $e): string => is_scalar($e) ? (string) $e : '', is_array($errors) ? $errors : [])));
         }
-        if (in_array($pluginAction, ['activate', 'deactivate'])) {
+        if (in_array($input->action, ['activate', 'deactivate'])) {
             $template->deleteCompiledTemplates();
         }
         return true;

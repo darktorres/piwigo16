@@ -12,6 +12,7 @@ use Piwigo\Template\TemplateRegistry;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.extensions.themes.performAction` — activate/deactivate/delete/set_default. */
 final readonly class ThemesPerformActionHandler implements WsAction
@@ -26,20 +27,23 @@ final readonly class ThemesPerformActionHandler implements WsAction
     public function __invoke(array $params, PwgServer $server): PwgError|true
     {
         $template = TemplateRegistry::current();
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = ThemesPerformActionParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        if (!Config::enableExtensionsInstall() && $params['action'] === 'delete') {
+        if (!Config::enableExtensionsInstall() && $input->action === 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
-        $themes      = Kernel::service(Themes::class);
-        $themeAction = is_string($params['action']) ? $params['action'] : '';
-        $themeId     = is_string($params['theme']) ? $params['theme'] : '';
-        $errors      = $themes->performAction($themeAction, $themeId);
+        $themes = Kernel::service(Themes::class);
+        $errors = $themes->performAction($input->action, $input->theme);
         if (!empty($errors)) {
             return new PwgError(500, implode(', ', array_map(fn (mixed $e): string => is_scalar($e) ? (string) $e : '', $errors)));
         }
-        if (in_array($themeAction, ['activate', 'deactivate'])) {
+        if (in_array($input->action, ['activate', 'deactivate'])) {
             $template->deleteCompiledTemplates();
         }
         return true;

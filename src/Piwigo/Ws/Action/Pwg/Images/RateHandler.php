@@ -26,13 +26,12 @@ final readonly class RateHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        $pImageId = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $pRate    = is_numeric($params['rate']) ? (int) $params['rate'] : 0;
+        $input = RateParams::fromArray($params);
         [$ratePermSql, $ratePermParams, $ratePermTypes] = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id', 'forbidden_images' => 'id'], '    AND');
-        if (!$this->categoryRepository->isImageInVisibleCategory($pImageId, $ratePermSql, $ratePermParams, $ratePermTypes)) {
+        if (!$this->categoryRepository->isImageInVisibleCategory($input->imageId, $ratePermSql, $ratePermParams, $ratePermTypes)) {
             return new PwgError(404, 'Invalid image_id or access denied');
         }
-        $res = $this->rateService->ratePicture($pImageId, $pRate);
+        $res = $this->rateService->ratePicture($input->imageId, $input->rate);
         if ($res === false) {
             return new PwgError(403, 'Forbidden or rate not in ' . implode(',', Config::rateItems()));
         }

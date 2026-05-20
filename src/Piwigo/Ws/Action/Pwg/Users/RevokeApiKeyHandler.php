@@ -14,6 +14,7 @@ use Piwigo\Users\UserService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.users.revokeApiKey` — invalidate a personal API key. */
 final readonly class RevokeApiKeyHandler implements WsAction
@@ -35,18 +36,19 @@ final readonly class RevokeApiKeyHandler implements WsAction
         if ($this->permissionService->isAGuest() || !$this->authService->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = RevokeApiKeyParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, Lang::t('Invalid security token'));
         }
-        $revokePkid = is_string($params['pkid'] ?? null) ? $params['pkid'] : '';
-        if (!preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $revokePkid)) {
-            return new PwgError(403, Lang::t('Invalid pkid format'));
-        }
-        $revokedKey = $this->userService->revokeApiKey($userId, $revokePkid);
+        $revokedKey = $this->userService->revokeApiKey($userId, $input->pkid);
         if (true !== $revokedKey) {
             return new PwgError(403, is_string($revokedKey) ? $revokedKey : '');
         }
-        $logger->info('[api_key][user_id=' . $userId . '][action=revoke][pkid=' . $revokePkid . ']');
+        $logger->info('[api_key][user_id=' . $userId . '][action=revoke][pkid=' . $input->pkid . ']');
         return Lang::t('API Key has been successfully revoked.');
     }
 }

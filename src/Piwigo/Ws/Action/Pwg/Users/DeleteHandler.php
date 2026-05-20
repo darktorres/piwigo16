@@ -13,6 +13,7 @@ use Piwigo\Users\UserRepository;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.users.delete` — remove users (preserves photos owned by them). */
 final readonly class DeleteHandler implements WsAction
@@ -28,7 +29,12 @@ final readonly class DeleteHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|string
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = DeleteParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
         $currentUser    = CurrentUser::get();
@@ -36,10 +42,9 @@ final readonly class DeleteHandler implements WsAction
         if ($currentUser->status === 'admin') {
             $protectedUsers = array_merge($protectedUsers, $this->userRepository->findAdminUserIds());
         }
-        $userIdArr = is_array($params['user_id']) ? array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $params['user_id']) : [];
-        $userIdArr = array_diff($userIdArr, $protectedUsers);
-        $counter   = 0;
-        foreach ($userIdArr as $userId) {
+        $userIds = array_values(array_diff($input->userIds, $protectedUsers));
+        $counter = 0;
+        foreach ($userIds as $userId) {
             $this->userAdminService->deleteUser($userId);
             $counter++;
         }

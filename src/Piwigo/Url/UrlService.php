@@ -257,43 +257,45 @@ final class UrlService
                 {
                     if (!isset($params['category'])) {
                         $sectionString .= '/categories';
-                    } else {
-                        $cat = is_array($params['category']) ? $params['category'] : [];
-                        if (!isset($cat['name'])) {
-                            throw new \InvalidArgumentException('make_section_in_url category name not set');
-                        }
-                        if (!array_key_exists('permalink', $cat)) {
-                            throw new \InvalidArgumentException('make_section_in_url category permalink not set');
-                        }
+                        break;
+                    }
 
-                        $sectionString .= '/category/';
-                        if (!isset($cat['permalink']) || $cat['permalink'] === '') {
-                            $catIdRaw       = $cat['id'] ?? null;
-                            $sectionString .= is_scalar($catIdRaw) ? (string) $catIdRaw : '';
+                    $cat = is_array($params['category']) ? $params['category'] : [];
+                    if (!isset($cat['name'])) {
+                        throw new \InvalidArgumentException('make_section_in_url category name not set');
+                    }
+                    if (!array_key_exists('permalink', $cat)) {
+                        throw new \InvalidArgumentException('make_section_in_url category permalink not set');
+                    }
+
+                    $sectionString .= '/category/';
+                    if (!isset($cat['permalink']) || $cat['permalink'] === '') {
+                        $catIdRaw       = $cat['id'] ?? null;
+                        $sectionString .= is_scalar($catIdRaw) ? (string) $catIdRaw : '';
+                        if (Config::categoryUrlStyle() == 'id-name') {
+                            $catNameRaw = $cat['name'];
+                            $sectionString .= '-' . StringUtil::str2url(is_string($catNameRaw) ? $catNameRaw : '');
+                        }
+                    } else {
+                        $sectionString .= is_string($cat['permalink']) ? $cat['permalink'] : '';
+                    }
+
+                    if (!isset($params['combined_categories'])) {
+                        break;
+                    }
+                    foreach ((array) $params['combined_categories'] as $category) {
+                        if (!is_array($category)) {
+                            continue;
+                        }
+                        $sectionString .= '/';
+
+                        if (empty($category['permalink'])) {
+                            $sectionString .= is_scalar($category['id'] ?? null) ? (string) $category['id'] : '';
                             if (Config::categoryUrlStyle() == 'id-name') {
-                                $catNameRaw = $cat['name'];
-                                $sectionString .= '-' . StringUtil::str2url(is_string($catNameRaw) ? $catNameRaw : '');
+                                $sectionString .= '-' . StringUtil::str2url(is_string($category['name'] ?? null) ? $category['name'] : '');
                             }
                         } else {
-                            $sectionString .= is_string($cat['permalink']) ? $cat['permalink'] : '';
-                        }
-
-                        if (isset($params['combined_categories'])) {
-                            foreach ((array) $params['combined_categories'] as $category) {
-                                if (!is_array($category)) {
-                                    continue;
-                                }
-                                $sectionString .= '/';
-
-                                if (empty($category['permalink'])) {
-                                    $sectionString .= is_scalar($category['id'] ?? null) ? (string) $category['id'] : '';
-                                    if (Config::categoryUrlStyle() == 'id-name') {
-                                        $sectionString .= '-' . StringUtil::str2url(is_string($category['name'] ?? null) ? $category['name'] : '');
-                                    }
-                                } else {
-                                    $sectionString .= is_string($category['permalink']) ? $category['permalink'] : '';
-                                }
-                            }
+                            $sectionString .= is_string($category['permalink']) ? $category['permalink'] : '';
                         }
                     }
 

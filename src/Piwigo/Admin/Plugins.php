@@ -212,9 +212,8 @@ final class Plugins
                 }
                 if (!isset($this->fs_plugins[$plugin_id])) {
                     break;
-                } else {
-                    $activity_details['fs_version'] = $this->fs_plugins[$plugin_id]['version'];
                 }
+                $activity_details['fs_version'] = $this->fs_plugins[$plugin_id]['version'];
 
                 $this->adminService->deltree(Config::pluginsPath() . $plugin_id, Config::pluginsPath() . 'trash');
                 break;

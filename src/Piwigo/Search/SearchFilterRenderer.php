@@ -489,56 +489,46 @@ final readonly class SearchFilterRenderer
                 unset($my_search['fields']['filetypes']);
             }
 
-            if (Config::rateEnabled()) {
-                $template->assign('SHOW_FILTER_RATINGS', true);
+            $rateEnabled = Config::rateEnabled();
+            $template->assign('SHOW_FILTER_RATINGS', $rateEnabled);
 
-                if (isset($my_search['fields']['ratings']) and $display_filters['rating']['access']) {
-                    $filter = $this->searchService->getClauseForFilter('ratings');
-                    $cache_key         = md5('filter_ratings' . $userId . $userCacheTime . AppInfo::VERSION);
-                    $item_rat          = $this->pool->getItem($cache_key);
-                    $cache_hit_ratings = !preg_match('/^image_id IN/', $filter->where) && $item_rat->isHit();
-                    if ($cache_hit_ratings) {
-                        $ratings_raw = $item_rat->get();
-                    } else {
-                        $ratings_raw = null;
-                    }
-                    $ratings      = is_array($ratings_raw) ? $ratings_raw : null;
-                    $set_cache_rat = !preg_match('/^image_id IN/', $filter->where) && !$cache_hit_ratings;
+            if ($rateEnabled && isset($my_search['fields']['ratings']) && $display_filters['rating']['access']) {
+                $filter            = $this->searchService->getClauseForFilter('ratings');
+                $cache_key         = md5('filter_ratings' . $userId . $userCacheTime . AppInfo::VERSION);
+                $item_rat          = $this->pool->getItem($cache_key);
+                $cache_hit_ratings = !preg_match('/^image_id IN/', $filter->where) && $item_rat->isHit();
+                $ratings_raw       = $cache_hit_ratings ? $item_rat->get() : null;
+                $ratings           = is_array($ratings_raw) ? $ratings_raw : null;
+                $set_cache_rat     = !preg_match('/^image_id IN/', $filter->where) && !$cache_hit_ratings;
 
-                    if (!$cache_hit_ratings) {
-                        $filter_rows = $this->searchRepository->findRatingsForFilter($filter->where, $filter->params, $filter->types);
-                        $ratings = array_fill(0, 6, 0);
+                if (!$cache_hit_ratings) {
+                    $filter_rows = $this->searchRepository->findRatingsForFilter($filter->where, $filter->params, $filter->types);
+                    $ratings     = array_fill(0, 6, 0);
 
-                        foreach ($filter_rows as $row) {
-                            $r = 5;
-                            if (!isset($row['rating_score'])) {
-                                $r = 0;
-                            } else {
-                                for ($i = 1; $i <= 4; $i++) {
-                                    if ($row['rating_score'] < $i) {
-                                        $r = $i;
-                                        break;
-                                    }
-                                }
+                    foreach ($filter_rows as $row) {
+                        if (!isset($row['rating_score'])) {
+                            $ratings[0]++;
+                            continue;
+                        }
+                        $r = 5;
+                        for ($i = 1; $i <= 4; $i++) {
+                            if ($row['rating_score'] < $i) {
+                                $r = $i;
+                                break;
                             }
-                            $ratings[$r]++;
                         }
-
-                        if ($set_cache_rat) {
-                            $item_rat->set($ratings);
-                            $item_rat->expiresAfter(86400);
-                            $this->pool->save($item_rat);
-                        }
+                        $ratings[$r]++;
                     }
-                    $template->assign('RATING', $ratings);
-                } elseif (isset($my_search['fields']['ratings'])) {
-                    unset($my_search['fields']['ratings']);
+
+                    if ($set_cache_rat) {
+                        $item_rat->set($ratings);
+                        $item_rat->expiresAfter(86400);
+                        $this->pool->save($item_rat);
+                    }
                 }
-            } else {
-                $template->assign('SHOW_FILTER_RATINGS', false);
-                if (isset($my_search['fields']['ratings'])) {
-                    unset($my_search['fields']['ratings']);
-                }
+                $template->assign('RATING', $ratings);
+            } elseif (isset($my_search['fields']['ratings'])) {
+                unset($my_search['fields']['ratings']);
             }
 
             if (isset($my_search['fields']['filesize_min']) && isset($my_search['fields']['filesize_max']) and $display_filters['file_size']['access']) {

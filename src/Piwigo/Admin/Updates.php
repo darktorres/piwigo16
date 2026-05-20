@@ -185,12 +185,13 @@ final class Updates
                             $new_versions['major'] = $last_version;
                             foreach ($all_versions as $version) {
                                 $branch = AppInfo::branchFromVersion(substr($version, 0, -1));
-                                if ($branch == $actual_branch) {
-                                    if ($this->containerVersionCompare($build_version, $version) == '-1') {
-                                        $new_versions['minor'] = $version;
-                                    }
-                                    break;
+                                if ($branch != $actual_branch) {
+                                    continue;
                                 }
+                                if ($this->containerVersionCompare($build_version, $version) == '-1') {
+                                    $new_versions['minor'] = $version;
+                                }
+                                break;
                             }
                         }
                     }
@@ -216,13 +217,14 @@ final class Updates
                                 $version_php = $vparts[1] ?? '';
                                 $branch = AppInfo::branchFromVersion($version_number);
 
-                                if ($branch == $actual_branch) {
-                                    if (version_compare(AppInfo::VERSION, $version_number, '<')) {
-                                        $new_versions['minor'] = $version_number;
-                                        $new_versions['minor_php'] = $version_php;
-                                    }
-                                    break;
+                                if ($branch != $actual_branch) {
+                                    continue;
                                 }
+                                if (version_compare(AppInfo::VERSION, $version_number, '<')) {
+                                    $new_versions['minor'] = $version_number;
+                                    $new_versions['minor_php'] = $version_php;
+                                }
+                                break;
                             }
                         }
                     }

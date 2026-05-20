@@ -63,15 +63,15 @@ final readonly class CommentService
     }
 
     /** @param array<string,mixed> $comment */
-    public function userCommentCheck(string $action, array $comment): string
+    public function userCommentCheck(CommentModerationAction $action, array $comment): CommentModerationAction
     {
-        if ($action == 'reject') {
+        if ($action === CommentModerationAction::Reject) {
             return $action;
         }
 
-        $myAction = Config::commentSpamReject() ? 'reject' : 'moderate';
+        $myAction = Config::commentSpamReject() ? CommentModerationAction::Reject : CommentModerationAction::Moderate;
 
-        if ($action == $myAction) {
+        if ($action === $myAction) {
             return $action;
         }
 
@@ -105,9 +105,8 @@ final readonly class CommentService
      *
      * @param array<string,mixed> $comm
      * @param string[]            $infos
-     * @return string validate, moderate, or reject
      */
-    public function insertUserComment(array &$comm, string $key, array &$infos): string
+    public function insertUserComment(array &$comm, string $key, array &$infos): CommentModerationAction
     {
         $comm = array_merge($comm, [
             'ip'    => $_SERVER['REMOTE_ADDR'] ?? '',
@@ -116,16 +115,16 @@ final readonly class CommentService
 
         $infos = [];
         if (!Config::commentsValidation() or $this->permissionService->isAdmin()) {
-            $commentAction = 'validate';
+            $commentAction = CommentModerationAction::Validate;
         } else {
-            $commentAction = 'moderate';
+            $commentAction = CommentModerationAction::Moderate;
         }
 
         if (!$this->permissionService->isClassicUser()) {
             if (empty($comm['author'])) {
                 if (Config::commentsAuthorMandatory()) {
                     $infos[]       = Lang::t('Username is mandatory');
-                    $commentAction = 'reject';
+                    $commentAction = CommentModerationAction::Reject;
                 }
                 $comm['author'] = 'guest';
             }
@@ -136,7 +135,7 @@ final readonly class CommentService
                 $count = $this->repo->countByUsername($usernameField, $authorStr);
                 if ($count > 0) {
                     $infos[]       = Lang::t('This login is already used by another user');
-                    $commentAction = 'reject';
+                    $commentAction = CommentModerationAction::Reject;
                 }
             }
         } else {
@@ -146,12 +145,12 @@ final readonly class CommentService
         }
 
         if (empty($comm['content'])) {
-            $commentAction = 'reject';
+            $commentAction = CommentModerationAction::Reject;
         }
 
         $commImageIdRaw = $comm['image_id'] ?? null;
         if (!$this->ephemeralKeyService->verify($key, is_string($commImageIdRaw) ? $commImageIdRaw : '')) {
-            $commentAction = 'reject';
+            $commentAction = CommentModerationAction::Reject;
             if (!is_array($_POST['cr'] ?? null)) {
                 $_POST['cr'] = [];
             }
@@ -160,7 +159,7 @@ final readonly class CommentService
 
         if (!empty($comm['website_url'])) {
             if (!Config::commentsEnableWebsite()) {
-                $commentAction = 'reject';
+                $commentAction = CommentModerationAction::Reject;
                 if (!is_array($_POST['cr'] ?? null)) {
                     $_POST['cr'] = [];
                 }
@@ -172,7 +171,7 @@ final readonly class CommentService
                 }
                 if (!StringUtil::urlCheckFormat($comm['website_url'])) {
                     $infos[]       = Lang::t('Your website URL is invalid');
-                    $commentAction = 'reject';
+                    $commentAction = CommentModerationAction::Reject;
                 }
             }
         }
@@ -183,11 +182,11 @@ final readonly class CommentService
                 $comm['email'] = $currentUserEmail;
             } elseif (Config::commentsEmailMandatory()) {
                 $infos[]       = Lang::t('Email address is missing. Please specify an email address.');
-                $commentAction = 'reject';
+                $commentAction = CommentModerationAction::Reject;
             }
         } elseif (!StringUtil::emailCheckFormat(is_string($comm['email']) ? $comm['email'] : '')) {
             $infos[]       = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
-            $commentAction = 'reject';
+            $commentAction = CommentModerationAction::Reject;
         }
 
         // $comm['ip'] was set above from $_SERVER['REMOTE_ADDR'] ?? ''
@@ -203,7 +202,7 @@ final readonly class CommentService
         }
         $anonymousId = implode('.', $ipComponents);
 
-        if ($commentAction != 'reject' and Config::antiFloodTime() > 0 and !$this->permissionService->isAdmin()) {
+        if ($commentAction !== CommentModerationAction::Reject and Config::antiFloodTime() > 0 and !$this->permissionService->isAdmin()) {
             $counter = $this->repo->countRecentByAuthor(
                 $comm['author_id'],
                 Config::antiFloodTime(),
@@ -211,7 +210,7 @@ final readonly class CommentService
             );
             if ($counter > 0) {
                 $infos[]       = Lang::t('Anti-flood system : please wait for a moment before trying to post another comment');
-                $commentAction = 'reject';
+                $commentAction = CommentModerationAction::Reject;
                 if (!is_array($_POST['cr'] ?? null)) {
                     $_POST['cr'] = [];
                 }
@@ -223,7 +222,7 @@ final readonly class CommentService
         $this->dispatcher->dispatch($checkEvent);
         $commentAction = $checkEvent->commentAction;
 
-        if ($commentAction != 'reject') {
+        if ($commentAction !== CommentModerationAction::Reject) {
             $commAuthorRaw  = $comm['author'] ?? null;
             // PHPStan sees `ip` as always defined on $comm (set on
             // line 120 above), so it flags the defensive ?? null as
@@ -240,7 +239,7 @@ final readonly class CommentService
                 'author_id'    => $comm['author_id'],
                 'anonymous_id' => is_string($commIpRaw) ? $commIpRaw : '',
                 'content'      => is_string($commContentRaw) ? $commContentRaw : '',
-                'validated'    => $commentAction === 'validate',
+                'validated'    => $commentAction === CommentModerationAction::Validate,
                 'image_id'     => is_scalar($commImgIdRaw) ? (int) $commImgIdRaw : 0,
                 'website_url'  => (is_string($commWebsiteRaw) && $commWebsiteRaw !== '') ? $commWebsiteRaw : null,
                 'email'        => (is_string($commEmailRaw) && $commEmailRaw !== '') ? $commEmailRaw : null,
@@ -248,8 +247,8 @@ final readonly class CommentService
 
             $this->invalidateUserCacheNbComments();
 
-            if ((Config::emailAdminOnComment() && 'validate' == $commentAction)
-                or (Config::emailAdminOnCommentValidation() and 'moderate' == $commentAction)) {
+            if ((Config::emailAdminOnComment() && CommentModerationAction::Validate === $commentAction)
+                or (Config::emailAdminOnCommentValidation() and CommentModerationAction::Moderate === $commentAction)) {
 
                 $commentUrl = $this->urlService->addUrlParams($this->urlGenerator->comments(), ['comment_id' => (string) $comm['id']]);
 
@@ -264,7 +263,7 @@ final readonly class CommentService
                     $this->langService->getL10nArgs('Manage this user comment: %s', $commentUrl),
                 ];
 
-                if ('moderate' == $commentAction) {
+                if (CommentModerationAction::Moderate === $commentAction) {
                     $keyargsContent[] = $this->langService->getL10nArgs('(!) This comment requires validation');
                 }
 
@@ -309,18 +308,15 @@ final readonly class CommentService
      * Tries to update a user comment.
      *
      * @param array<string,mixed> $comment
-     * @return string validate, moderate, or reject
      */
-    public function updateUserComment(array $comment, string $postKey): string
+    public function updateUserComment(array $comment, string $postKey): CommentModerationAction
     {
-        $commentAction = 'validate';
-
         if (!$this->ephemeralKeyService->verify($postKey, is_scalar($comment['image_id'] ?? null) ? (string) $comment['image_id'] : '')) {
-            $commentAction = 'reject';
+            $commentAction = CommentModerationAction::Reject;
         } elseif (!Config::commentsValidation() or $this->permissionService->isAdmin()) {
-            $commentAction = 'validate';
+            $commentAction = CommentModerationAction::Validate;
         } else {
-            $commentAction = 'moderate';
+            $commentAction = CommentModerationAction::Moderate;
         }
 
         $globalUser = CurrentUser::isInitialized() ? CurrentUser::get()->rawAttributes : [];
@@ -339,23 +335,23 @@ final readonly class CommentService
             }
             if (!StringUtil::urlCheckFormat($comment['website_url'])) {
                 PageState::current()->addError(Lang::t('Your website URL is invalid'));
-                $commentAction = 'reject';
+                $commentAction = CommentModerationAction::Reject;
             }
         }
 
-        if ($commentAction != 'reject') {
+        if ($commentAction !== CommentModerationAction::Reject) {
             $updateAuthorId = $this->permissionService->isAdmin() ? null : (is_numeric($globalUser['id'] ?? null) ? (int) $globalUser['id'] : null);
             $result = $this->repo->update(
                 (int) (is_scalar($comment['comment_id']) ? $comment['comment_id'] : 0),
                 [
                     'content'     => is_string($comment['content'] ?? null) ? $comment['content'] : '',
                     'website_url' => !empty($comment['website_url']) ? (is_string($comment['website_url']) ? $comment['website_url'] : null) : null,
-                    'validated'   => $commentAction === 'validate',
+                    'validated'   => $commentAction === CommentModerationAction::Validate,
                 ],
                 $updateAuthorId
             );
 
-            if ($result and Config::emailAdminOnCommentValidation() and 'moderate' == $commentAction) {
+            if ($result and Config::emailAdminOnCommentValidation() and CommentModerationAction::Moderate === $commentAction) {
 
                 $commentUrl     = $this->urlService->addUrlParams($this->urlGenerator->comments(), ['comment_id' => is_scalar($comment['comment_id'] ?? null) ? (string) $comment['comment_id'] : '0']);
                 $keyargsContent = [

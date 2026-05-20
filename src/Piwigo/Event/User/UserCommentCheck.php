@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Event\User;
 
+use Piwigo\Comment\CommentModerationAction;
+
 /**
  * Typed event for legacy `user_comment_check` (dispatch).
  *
@@ -17,7 +19,7 @@ final readonly class UserCommentCheck
      * @param array<mixed> $comm
      */
     public function __construct(
-        public string $commentAction,
+        public CommentModerationAction $commentAction,
         public array $comm,
     ) {
     }

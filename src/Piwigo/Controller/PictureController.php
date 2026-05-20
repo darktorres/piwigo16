@@ -12,6 +12,7 @@ use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentModerationAction;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\ImageId;
@@ -255,18 +256,16 @@ final readonly class PictureController implements ControllerInterface
                             );
                             $perform_redirect = false;
                             switch ($comment_action) {
-                                case 'moderate':
+                                case CommentModerationAction::Moderate:
                                     PageState::current()->addInfo(Lang::t('An administrator must authorize your comment before it is visible.'));
                                     // no break
-                                case 'validate':
+                                case CommentModerationAction::Validate:
                                     PageState::current()->addInfo(Lang::t('Your comment has been registered'));
                                     $perform_redirect = true;
                                     break;
-                                case 'reject':
+                                case CommentModerationAction::Reject:
                                     PageState::current()->addError(Lang::t('Your comment has NOT been registered because it did not pass the validation rules'));
                                     break;
-                                default:
-                                    throw new \LogicException('Invalid comment action: ' . $comment_action);
                             }
                             if ($perform_redirect) {
                                 $this->redirectResponder->redirect($url_self);

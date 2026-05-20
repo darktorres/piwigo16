@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Action\Pwg\Images;
 
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Comment\CommentModerationAction;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
 use Piwigo\Core\Lang;
@@ -44,15 +45,10 @@ final readonly class AddCommentHandler implements WsAction
         $comm = ['author' => $input->author, 'content' => $input->content, 'image_id' => $pImageId];
         $infos         = [];
         $commentAction = $this->commentService->insertUserComment($comm, $input->key, $infos);
-        switch ($commentAction) {
-            case 'reject':
-                $infos[] = Lang::t('Your comment has NOT been registered because it did not pass the validation rules');
-                return new PwgError(403, implode('; ', $infos));
-            case 'validate':
-            case 'moderate':
-                return ['comment' => new PwgNamedStruct(['id' => $comm['id'], 'validation' => $commentAction === 'validate'])];
-            default:
-                return new PwgError(500, 'Unknown comment action ' . $commentAction);
-        }
+        return match ($commentAction) {
+            CommentModerationAction::Reject   => new PwgError(403, implode('; ', array_merge($infos, [Lang::t('Your comment has NOT been registered because it did not pass the validation rules')]))),
+            CommentModerationAction::Validate, CommentModerationAction::Moderate
+                => ['comment' => new PwgNamedStruct(['id' => $comm['id'], 'validation' => $commentAction === CommentModerationAction::Validate])],
+        };
     }
 }

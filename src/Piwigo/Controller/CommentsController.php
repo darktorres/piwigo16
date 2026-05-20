@@ -8,6 +8,7 @@ use Latte\Runtime\Html;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Comment\CommentModerationAction;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
@@ -225,18 +226,16 @@ final readonly class CommentsController implements ControllerInterface
                             StringUtil::inputString('key', null, $_POST) ?? ''
                         );
                         switch ($comment_action) {
-                            case 'moderate':
+                            case CommentModerationAction::Moderate:
                                 $this->session->flash->add('info', Lang::t('An administrator must authorize your comment before it is visible.'));
                                 // no break
-                            case 'validate':
+                            case CommentModerationAction::Validate:
                                 $this->session->flash->add('info', Lang::t('Your comment has been registered'));
                                 $perform_redirect = true;
                                 break;
-                            case 'reject':
+                            case CommentModerationAction::Reject:
                                 $this->session->flash->add('error', Lang::t('Your comment has NOT been registered because it did not pass the validation rules'));
                                 break;
-                            default:
-                                throw new \LogicException('Invalid comment action: ' . $comment_action);
                         }
                     }
                     $edit_comment = $comment_id;

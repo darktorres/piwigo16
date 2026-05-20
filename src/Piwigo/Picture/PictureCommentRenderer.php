@@ -6,6 +6,7 @@ namespace Piwigo\Picture;
 
 use Latte\Runtime\Html;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Comment\CommentModerationAction;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\Config;
@@ -82,21 +83,19 @@ final readonly class PictureCommentRenderer
             }
 
             switch ($comment_action) {
-                case 'moderate':
+                case CommentModerationAction::Moderate:
                     PageState::current()->addInfo(Lang::t('An administrator must authorize your comment before it is visible.'));
                     // no break
-                case 'validate':
+                case CommentModerationAction::Validate:
                     PageState::current()->addInfo(Lang::t('Your comment has been registered'));
                     break;
-                case 'reject':
+                case CommentModerationAction::Reject:
                     $this->htmlService->setStatusHeader(403);
                     PageState::current()->addError(Lang::t('Your comment has NOT been registered because it did not pass the validation rules'));
                     break;
-                default:
-                    throw new \LogicException('Invalid comment action: ' . $comment_action);
             }
 
-            $this->dispatcher->dispatch(new UserCommentInsertion(array_merge($comm, ['action' => $comment_action])));
+            $this->dispatcher->dispatch(new UserCommentInsertion(array_merge($comm, ['action' => $comment_action->value])));
         } elseif (isset($_POST['content'])) {
             $this->htmlService->setStatusHeader(403);
             throw new AuthException('ugly spammer');

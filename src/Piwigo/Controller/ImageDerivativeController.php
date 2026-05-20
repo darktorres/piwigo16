@@ -207,11 +207,12 @@ final readonly class ImageDerivativeController implements ControllerInterface
                             }
                             $x2 = $x + (float) $i * $xpad;
                             $y2 = $y + (float) $j * $ypad;
-                            if ($x2 >= 0 && $x2 + (float) $wm_size[0] < (float) $d_size[0] &&
-                                $y2 >= 0 && $y2 + (float) $wm_size[1] < (float) $d_size[1]) {
-                                if (!$image->compose($wm_image, (int) $x2, (int) $y2, $wm->opacity)) {
-                                    break;
-                                }
+                            if ($x2 < 0 || $x2 + (float) $wm_size[0] >= (float) $d_size[0] ||
+                                $y2 < 0 || $y2 + (float) $wm_size[1] >= (float) $d_size[1]) {
+                                continue;
+                            }
+                            if (!$image->compose($wm_image, (int) $x2, (int) $y2, $wm->opacity)) {
+                                break;
                             }
                         }
                     }

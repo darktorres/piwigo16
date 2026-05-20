@@ -311,18 +311,19 @@ final class BatchManagerController implements AdminSubControllerInterface
                         $url_dim_filter = is_array($bmf['dimension'] ?? null) ? $bmf['dimension'] : [];
                         foreach (explode('-', $value) as $part) {
                             $values = explode('..', substr($part, 1));
-                            if (isset($dim_map[$part[0]])) {
-                                $dtype = $dim_map[$part[0]];
-                                $filter_validate = ['width' => FILTER_VALIDATE_INT, 'height' => FILTER_VALIDATE_INT, 'ratio' => FILTER_VALIDATE_FLOAT];
-                                $valid = true;
-                                foreach ($values as $v) {
-                                    if (filter_var($v, $filter_validate[$dtype]) === false) {
-                                        $valid = false;
-                                    }
+                            if (!isset($dim_map[$part[0]])) {
+                                continue;
+                            }
+                            $dtype = $dim_map[$part[0]];
+                            $filter_validate = ['width' => FILTER_VALIDATE_INT, 'height' => FILTER_VALIDATE_INT, 'ratio' => FILTER_VALIDATE_FLOAT];
+                            $valid = true;
+                            foreach ($values as $v) {
+                                if (filter_var($v, $filter_validate[$dtype]) === false) {
+                                    $valid = false;
                                 }
-                                if ($valid) {
-                                    [$url_dim_filter['min_' . $dtype], $url_dim_filter['max_' . $dtype]] = $values;
-                                }
+                            }
+                            if ($valid) {
+                                [$url_dim_filter['min_' . $dtype], $url_dim_filter['max_' . $dtype]] = $values;
                             }
                         }
                         $bmf['dimension'] = $url_dim_filter;

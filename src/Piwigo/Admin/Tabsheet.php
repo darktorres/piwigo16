@@ -37,16 +37,14 @@ final class Tabsheet
     */
     public function add(string $name, string $caption, string $url, bool $selected = false): bool
     {
-        if (!isset($this->sheets[$name])) {
-            $this->sheets[$name] = ['caption' => $caption,
-                                         'url' => $url,
-                                         'selected' => $selected];
-            if ($selected) {
-                $this->selected = $name;
-            }
-            return true;
+        if (isset($this->sheets[$name])) {
+            return false;
         }
-        return false;
+        $this->sheets[$name] = ['caption' => $caption, 'url' => $url, 'selected' => $selected];
+        if ($selected) {
+            $this->selected = $name;
+        }
+        return true;
     }
 
     /*
@@ -54,15 +52,15 @@ final class Tabsheet
     */
     public function delete(string $name): bool
     {
-        if (isset($this->sheets[$name])) {
-            unset($this->sheets[$name]);
-
-            if ($this->selected == $name) {
-                $this->selected = '';
-            }
-            return true;
+        if (!isset($this->sheets[$name])) {
+            return false;
         }
-        return false;
+        unset($this->sheets[$name]);
+
+        if ($this->selected == $name) {
+            $this->selected = '';
+        }
+        return true;
     }
 
     /*
@@ -104,11 +102,10 @@ final class Tabsheet
     /** @return array<string, bool|string>|null */
     public function getSelected(): ?array
     {
-        if ($this->selected !== '') {
-            return $this->sheets[$this->selected];
-        } else {
+        if ($this->selected === '') {
             return null;
         }
+        return $this->sheets[$this->selected];
     }
 
     /*

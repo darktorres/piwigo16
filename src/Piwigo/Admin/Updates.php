@@ -612,9 +612,8 @@ final class Updates
                             $retryEntry = array_find($retry, fn ($row): bool => $row['stored_filename'] === $extractStoredName);
                             if ($retryEntry !== null && $retryEntry['status'] === 'ok') {
                                 continue;
-                            } else {
-                                $error .= $extractFilename.': '.$extractStatus."\n";
                             }
+                            $error .= $extractFilename.': '.$extractStatus."\n";
                         }
                     }
 

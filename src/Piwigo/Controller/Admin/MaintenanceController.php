@@ -19,6 +19,7 @@ use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomaliesRepository;
 use Piwigo\Admin\MaintenanceService;
 use Piwigo\Admin\Metadata\MetadataAdminService;
+use Piwigo\Admin\SyncMode;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Tag\TagAdminService;
 use Piwigo\Admin\Users\UserAdminService;
@@ -1172,6 +1173,7 @@ final class MaintenanceController implements AdminSubControllerInterface
         $basedir         = '';
         $to_delete       = [];
         $caddiables      = [];
+        $syncMode        = isset($_POST['sync']) && is_string($_POST['sync']) ? SyncMode::tryFrom($_POST['sync']) : null;
 
         if (isset($_POST['submit'])) {
             if ($site_reader->open()) {
@@ -1182,11 +1184,11 @@ final class MaintenanceController implements AdminSubControllerInterface
 
         // ── directories / categories ──────────────────────────────────────────
 
-        if (isset($_POST['submit']) && ($_POST['sync'] == 'dirs' || $_POST['sync'] == 'files')) {
+        if (isset($_POST['submit']) && $syncMode !== null) {
             $counts['new_categories'] = $counts['del_categories'] = $counts['del_elements'] = $counts['new_elements'] = $counts['upd_elements'] = 0;
         }
 
-        if (isset($_POST['submit']) && ($_POST['sync'] == 'dirs' || $_POST['sync'] == 'files') && !$general_failure) {
+        if (isset($_POST['submit']) && $syncMode !== null && !$general_failure) {
             $start = StringUtil::getMoment();
             $catFilter = isset($_POST['cat']) && is_numeric($_POST['cat']) ? (int) $_POST['cat'] : null;
             $subcatsIncluded = isset($_POST['subcats-included']) && $_POST['subcats-included'] == 1;
@@ -1357,7 +1359,7 @@ final class MaintenanceController implements AdminSubControllerInterface
 
         // ── files / elements ──────────────────────────────────────────────────
 
-        if (isset($_POST['submit']) && $_POST['sync'] == 'files' && !$general_failure) {
+        if (isset($_POST['submit']) && $syncMode === SyncMode::Files && !$general_failure) {
             $start_files = $start = StringUtil::getMoment();
             $fs = $site_reader->getElements($basedir);
             $tpl->append('footer_elements', '<!-- get_elements: ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
@@ -1477,7 +1479,7 @@ final class MaintenanceController implements AdminSubControllerInterface
 
         // ── sync categories & files ───────────────────────────────────────────
 
-        if (isset($_POST['submit']) && ($_POST['sync'] == 'dirs' || $_POST['sync'] == 'files') && !$general_failure) {
+        if (isset($_POST['submit']) && $syncMode !== null && !$general_failure) {
             if (!$simulate) {
                 $start = StringUtil::getMoment();
                 $this->categoryAdminService->updateCategory('all');
@@ -1486,7 +1488,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 $this->categoryAdminService->updateGlobalRank();
                 $tpl->append('footer_elements', '<!-- ordering categories : ' . StringUtil::getElapsedTime($start, StringUtil::getMoment()) . ' -->');
             }
-            if ($_POST['sync'] == 'files') {
+            if ($syncMode === SyncMode::Files) {
                 $start = StringUtil::getMoment();
                 $opts  = ['category_id' => '', 'recursive' => true];
                 if (isset($_POST['cat'])) {
@@ -1525,7 +1527,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             }
         }
 
-        if (isset($_POST['submit']) && ($_POST['sync'] == 'dirs' || $_POST['sync'] == 'files')) {
+        if (isset($_POST['submit']) && $syncMode !== null) {
             $tpl->assign('update_result', ['NB_NEW_CATEGORIES' => $counts['new_categories'] ?? 0, 'NB_DEL_CATEGORIES' => $counts['del_categories'] ?? 0, 'NB_NEW_ELEMENTS' => $counts['new_elements'] ?? 0, 'NB_DEL_ELEMENTS' => $counts['del_elements'] ?? 0, 'NB_UPD_ELEMENTS' => $counts['upd_elements'] ?? 0, 'NB_ERRORS' => count($errors)]);
         }
 

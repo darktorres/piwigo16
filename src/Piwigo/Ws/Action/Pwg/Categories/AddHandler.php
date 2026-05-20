@@ -29,25 +29,23 @@ final readonly class AddHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
-        if (isset($params['pwg_token']) && $this->csrfService->getToken() !== $params['pwg_token']) {
+        $input = AddParams::fromArray($params);
+        if ($input->pwgToken !== null && $this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        if (!empty($params['position']) && in_array($params['position'], ['first', 'last'])) {
-            Config::override('newcat_default_position', is_string($params['position']) ? $params['position'] : '');
+        if ($input->position !== null) {
+            Config::override('newcat_default_position', $input->position);
         }
         $options = [];
-        if (!empty($params['status']) && in_array($params['status'], ['private', 'public'])) {
-            $options['status'] = $params['status'];
+        if ($input->status !== null) {
+            $options['status'] = $input->status;
         }
-        if (!empty($params['comment'])) {
-            $commentStr         = is_string($params['comment']) ? $params['comment'] : '';
-            $options['comment'] = (!Config::allowHtmlDescriptions() || !isset($params['pwg_token'])) ? strip_tags($commentStr) : $commentStr;
+        $allowHtml = Config::allowHtmlDescriptions() && $input->pwgToken !== null;
+        if ($input->comment !== null) {
+            $options['comment'] = $allowHtml ? $input->comment : strip_tags($input->comment);
         }
-        $catNameRaw     = $params['name'] ?? null;
-        $catNameStr     = is_string($catNameRaw) ? $catNameRaw : '';
-        $catName        = (!Config::allowHtmlDescriptions() || !isset($params['pwg_token'])) ? strip_tags($catNameStr) : $catNameStr;
-        $catParent      = is_numeric($params['parent']) ? (int) $params['parent'] : (is_string($params['parent']) ? $params['parent'] : null);
-        $creationOutput = $this->categoryAdminService->createVirtualCategory($catName, $catParent, $options);
+        $catName        = $allowHtml ? $input->name : strip_tags($input->name);
+        $creationOutput = $this->categoryAdminService->createVirtualCategory($catName, $input->parent, $options);
         if (isset($creationOutput['error'])) {
             return new PwgError(500, is_string($creationOutput['error']) ? $creationOutput['error'] : '');
         }

@@ -16,6 +16,7 @@ use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
 use Piwigo\Ws\WsError;
+use Piwigo\Ws\WsParamException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 /** `pwg.tags.rename` — change a tag's display name (recomputes url_name). */
@@ -33,26 +34,29 @@ final readonly class RenameHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = RenameParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $tagId   = is_numeric($params['tag_id']) ? (int) $params['tag_id'] : 0;
-        $tagName = strip_tags(stripslashes(is_string($params['new_name'] ?? null) ? $params['new_name'] : ''));
-        if ($this->tagRepository->countById($tagId) === 0) {
+        if ($this->tagRepository->countById($input->tagId) === 0) {
             return new PwgError(WsError::InvalidParam->value, 'This tag does not exist.');
         }
-        $existingNames = $this->tagRepository->findNamesExcluding($tagId);
+        $existingNames = $this->tagRepository->findNamesExcluding($input->tagId);
         $update        = [];
-        if (in_array($tagName, $existingNames)) {
+        if (in_array($input->newName, $existingNames)) {
             return new PwgError(WsError::InvalidParam->value, 'This name is already token');
-        } elseif (!empty($tagName)) {
-            $urlEvent = new RenderTagUrl($tagName);
+        } elseif (!empty($input->newName)) {
+            $urlEvent = new RenderTagUrl($input->newName);
             $this->dispatcher->dispatch($urlEvent);
-            $update = ['name' => $tagName, 'url_name' => $urlEvent->tagName];
+            $update = ['name' => $input->newName, 'url_name' => $urlEvent->tagName];
         }
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagId, 'edit'));
-        $this->tagRepository->updateById($tagId, $update);
-        $entity          = $this->tagRepository->findById($tagId);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $input->tagId, 'edit'));
+        $this->tagRepository->updateById($input->tagId, $update);
+        $entity          = $this->tagRepository->findById($input->tagId);
         $tag             = $entity !== null ? $entity->toRow() : [];
         $rawTagNameStr   = $entity !== null ? $entity->name : '';
         $tag['raw_name'] = $rawTagNameStr;

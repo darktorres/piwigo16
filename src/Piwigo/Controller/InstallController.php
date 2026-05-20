@@ -10,6 +10,7 @@ use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\AdminService;
+use Piwigo\Admin\Extensions\ExtensionAction;
 use Piwigo\Admin\InstallService;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\UpgradeService;
@@ -205,7 +206,7 @@ final readonly class InstallController implements ControllerInterface
                 $configService->confUpdateParam('gallery_title', Lang::t('Just another Piwigo gallery'));
                 $configService->confUpdateParam('page_banner', '<h1>%gallery_title%</h1>' . "\n\n<p>" . Lang::t('Welcome to my photo gallery') . '</p>');
 
-                Kernel::service(Languages::class)->performAction('activate', $language);
+                Kernel::service(Languages::class)->performAction(ExtensionAction::Activate, $language);
                 ConfigService::loadConfFromDb();
                 InstallService::activateCoreThemes();
                 InstallService::activateCorePlugins();

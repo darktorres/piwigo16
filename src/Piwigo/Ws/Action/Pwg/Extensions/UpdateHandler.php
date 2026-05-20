@@ -7,6 +7,7 @@ namespace Piwigo\Ws\Action\Pwg\Extensions;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Admin\Extensions\ExtensionAction;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\Plugins;
 use Piwigo\Admin\Themes;
@@ -64,16 +65,16 @@ final readonly class UpdateHandler implements WsAction
         $extensionName = '';
         if ($type === 'plugins') {
             $extension = Kernel::service(Plugins::class);
-            if (isset($extension->db_plugins_by_id[$extensionId]) && $extension->db_plugins_by_id[$extensionId]['state'] === 'active') {
-                $extension->performAction('deactivate', $extensionId);
+            if (isset($extension->db_plugins_by_id[$extensionId]) && $extension->db_plugins_by_id[$extensionId]->state === 'active') {
+                $extension->performAction(ExtensionAction::Deactivate, $extensionId);
                 $this->redirectResponder->redirect($this->urlGenerator->ws(['method' => 'pwg.extensions.update', 'type' => 'plugins', 'id' => $extensionId, 'revision' => $revision, 'reactivate' => 'true', 'pwg_token' => $this->csrfService->getToken(), 'format' => 'json']));
             }
-            $performResult = $extension->performAction('update', $extensionId, $revision);
+            $performResult = $extension->performAction(ExtensionAction::Update, $extensionId, $revision);
             $upgradeStatus = is_array($performResult) ? ($performResult[0] ?? 'ok') : 'ok';
             $upgradeStatus = is_string($upgradeStatus) ? $upgradeStatus : 'ok';
             $extensionName = is_string($extension->fs_plugins[$extensionId]['name'] ?? null) ? $extension->fs_plugins[$extensionId]['name'] : '';
             if ($input->reactivate) {
-                $extension->performAction('activate', $extensionId);
+                $extension->performAction(ExtensionAction::Activate, $extensionId);
             }
         } elseif ($type === 'themes') {
             $extension      = Kernel::service(Themes::class);

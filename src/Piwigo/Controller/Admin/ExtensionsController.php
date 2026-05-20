@@ -9,6 +9,7 @@ use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Admin\AdminService;
+use Piwigo\Admin\Extensions\ExtensionAction;
 use Piwigo\Admin\Extensions\IgnoredUpdatesRepository;
 use Piwigo\Admin\Languages;
 use Piwigo\Admin\PemUrlResolver;
@@ -237,7 +238,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                 'SETTINGS_URL' => $setting_url,
             ];
 
-            $tpl_plugin['STATE'] = isset($plugins->db_plugins_by_id[$plugin_id]) ? $plugins->db_plugins_by_id[$plugin_id]['state'] : 'inactive';
+            $tpl_plugin['STATE'] = isset($plugins->db_plugins_by_id[$plugin_id]) ? $plugins->db_plugins_by_id[$plugin_id]->state : 'inactive';
 
             $fsExtId = $fs_plugin['extension'] ?? null;
             if (isset($fsExtId) && (is_string($fsExtId) || is_int($fsExtId)) && isset($merged_extensions[$fsExtId])) {
@@ -262,7 +263,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         $missing_plugin_ids = array_diff(array_keys($plugins->db_plugins_by_id), array_keys($plugins->fs_plugins));
         if (count($missing_plugin_ids) > 0) {
             foreach ($missing_plugin_ids as $plugin_id) {
-                $tpl_plugins[] = ['NAME' => $plugin_id, 'ID' => $plugin_id, 'VERSION' => $plugins->db_plugins_by_id[$plugin_id]['version'], 'DESC' => Lang::t('ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW.'), 'U_ACTION' => sprintf($action_url, $plugin_id), 'STATE' => 'missing'];
+                $tpl_plugins[] = ['NAME' => $plugin_id, 'ID' => $plugin_id, 'VERSION' => $plugins->db_plugins_by_id[$plugin_id]->version, 'DESC' => Lang::t('ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW.'), 'U_ACTION' => sprintf($action_url, $plugin_id), 'STATE' => 'missing'];
                 $count_types_plugins['missing']++;
             }
             $tpl->append('plugin_states', 'missing');
@@ -499,14 +500,16 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         $themes   = Kernel::service(Themes::class);
 
         if (isset($_GET['action']) && isset($_GET['theme'])) {
-            $get_action = is_string($_GET['action']) ? $_GET['action'] : '';
+            $get_action = is_string($_GET['action']) ? ExtensionAction::tryFrom($_GET['action']) : null;
             $get_theme  = is_string($_GET['theme']) ? $_GET['theme'] : '';
-            PageState::current()->errors = array_values(array_filter($themes->performAction($get_action, $get_theme), is_string(...)));
-            if (empty(PageState::current()->errors)) {
-                if ($_GET['action'] == 'activate' || $_GET['action'] == 'deactivate') {
-                    $tpl->deleteCompiledTemplates();
+            if ($get_action !== null) {
+                PageState::current()->errors = array_values(array_filter($themes->performAction($get_action, $get_theme), is_string(...)));
+                if (empty(PageState::current()->errors)) {
+                    if ($get_action === ExtensionAction::Activate || $get_action === ExtensionAction::Deactivate) {
+                        $tpl->deleteCompiledTemplates();
+                    }
+                    $this->redirectResponder->redirect($base_url);
                 }
-                $this->redirectResponder->redirect($base_url);
             }
         }
 
@@ -801,9 +804,12 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         $this->inputValidator->check('language', $_GET, false, '/^(' . join('|', array_keys($languages->fs_languages)) . ')$/');
 
         if (isset($_GET['action']) && isset($_GET['language']) && $this->permissionService->isWebmaster()) {
-            PageState::current()->errors = array_values(array_filter($languages->performAction(is_string($_GET['action']) ? $_GET['action'] : '', is_string($_GET['language']) ? $_GET['language'] : ''), is_string(...)));
-            if (empty(PageState::current()->errors)) {
-                $this->redirectResponder->redirect($base_url);
+            $langAction = is_string($_GET['action']) ? ExtensionAction::tryFrom($_GET['action']) : null;
+            if ($langAction !== null) {
+                PageState::current()->errors = array_values(array_filter($languages->performAction($langAction, is_string($_GET['language']) ? $_GET['language'] : ''), is_string(...)));
+                if (empty(PageState::current()->errors)) {
+                    $this->redirectResponder->redirect($base_url);
+                }
             }
         }
 

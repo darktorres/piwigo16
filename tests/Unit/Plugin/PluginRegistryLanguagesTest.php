@@ -9,6 +9,7 @@ use Piwigo\Core\InstallSentinel;
 use Piwigo\Core\Lang;
 use Piwigo\Lang\LangService;
 use Piwigo\Lang\Translator;
+use Piwigo\Plugin\PluginRecord;
 use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Plugin\PluginRepository;
 use Psr\Log\NullLogger;
@@ -82,14 +83,14 @@ final class PluginRegistryLanguagesTest extends TestCase
     {
         /** @psalm-suppress PropertyNotSetInConstructor — parent's $conn/$tablePrefix intentionally skipped; stub has no DB */
         return new class ($states) extends PluginRepository {
-            /** @var array<string, array{id: string, state: string, version: string}> */
+            /** @var array<string, PluginRecord> */
             private array $rows = [];
 
             /** @param array<string, string> $states */
             public function __construct(array $states)
             {
                 foreach ($states as $id => $state) {
-                    $this->rows[$id] = ['id' => $id, 'state' => $state, 'version' => '1.0.0'];
+                    $this->rows[$id] = new PluginRecord($id, $state, '1.0.0');
                 }
             }
 
@@ -98,10 +99,10 @@ final class PluginRegistryLanguagesTest extends TestCase
             {
                 $out = array_values($this->rows);
                 if ($state !== null && $state !== '') {
-                    $out = array_values(array_filter($out, static fn (array $r): bool => $r['state'] === $state));
+                    $out = array_values(array_filter($out, static fn (PluginRecord $r): bool => $r->state === $state));
                 }
                 if ($id !== null && $id !== '') {
-                    $out = array_values(array_filter($out, static fn (array $r): bool => $r['id'] === $id));
+                    $out = array_values(array_filter($out, static fn (PluginRecord $r): bool => $r->id === $id));
                 }
                 return $out;
             }

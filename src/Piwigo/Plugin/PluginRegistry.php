@@ -180,7 +180,7 @@ final class PluginRegistry
                 "Plugin '$pluginId' must be installed before activation.",
             );
         }
-        if ($rows[0]['state'] === 'active') {
+        if ($rows[0]->state === 'active') {
             return;
         }
 
@@ -197,7 +197,7 @@ final class PluginRegistry
         $manifest = $this->requireManifest($pluginId);
 
         $rows = $this->repository->findAll('', $pluginId);
-        if ($rows === [] || $rows[0]['state'] !== 'active') {
+        if ($rows === [] || $rows[0]->state !== 'active') {
             return;
         }
 
@@ -238,7 +238,7 @@ final class PluginRegistry
         if ($rows === []) {
             return;
         }
-        $oldVersion = $rows[0]['version'];
+        $oldVersion = $rows[0]->version;
         $newVersion = $manifest->version;
         if ($oldVersion === $newVersion) {
             return;
@@ -377,8 +377,8 @@ final class PluginRegistry
     {
         $ids = [];
         foreach ($this->repository->findAll('active') as $row) {
-            if ($row['id'] !== '') {
-                $ids[] = $row['id'];
+            if ($row->id !== '') {
+                $ids[] = $row->id;
             }
         }
         return $ids;

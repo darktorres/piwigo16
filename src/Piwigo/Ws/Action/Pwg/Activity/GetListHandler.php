@@ -143,7 +143,7 @@ final readonly class GetListHandler implements WsAction
                 /** @phpstan-ignore-next-line nullCoalesce.offset */
                 $objIds = $outputLine['object_id'] ?? [];
                 foreach ($objIds as $uid) {
-                    $uidKey = is_scalar($uid) ? (string) $uid : '';
+                    $uidKey = is_string($uid) ? $uid : '';
                     $detRaw = $outputLines[$idx]['details'] ?? null;
                     /** @var array<string, mixed> $detArr */
                     $detArr = is_array($detRaw) ? $detRaw : [];

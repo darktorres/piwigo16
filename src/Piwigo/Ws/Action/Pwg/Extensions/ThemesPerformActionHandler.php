@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Extensions;
 
+use Piwigo\Admin\Extensions\ExtensionAction;
 use Piwigo\Admin\Themes;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
@@ -35,15 +36,19 @@ final readonly class ThemesPerformActionHandler implements WsAction
         if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        if (!Config::enableExtensionsInstall() && $input->action === 'delete') {
+        $action = ExtensionAction::tryFrom($input->action);
+        if ($action === null) {
+            return new PwgError(403, 'Invalid action');
+        }
+        if (!Config::enableExtensionsInstall() && $action === ExtensionAction::Delete) {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
         $themes = Kernel::service(Themes::class);
-        $errors = $themes->performAction($input->action, $input->theme);
+        $errors = $themes->performAction($action, $input->theme);
         if (!empty($errors)) {
             return new PwgError(500, implode(', ', array_map(fn (mixed $e): string => is_scalar($e) ? (string) $e : '', $errors)));
         }
-        if (in_array($input->action, ['activate', 'deactivate'])) {
+        if ($action === ExtensionAction::Activate || $action === ExtensionAction::Deactivate) {
             $template->deleteCompiledTemplates();
         }
         return true;

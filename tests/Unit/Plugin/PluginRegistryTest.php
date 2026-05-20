@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Plugin;
 
 use PHPUnit\Framework\TestCase;
 use Piwigo\Plugin\PluginDependencyException;
+use Piwigo\Plugin\PluginRecord;
 use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Plugin\PluginValidationException;
@@ -136,7 +137,7 @@ final class PluginRegistryTest extends TestCase
         $registry->update('ValidPlugin');
         self::assertSame('0.9.0', ValidPlugin::$lastUpdateOldVersion);
         self::assertSame('1.0.0', ValidPlugin::$lastUpdateNewVersion);
-        self::assertSame('1.0.0', $repo->findAll('', 'ValidPlugin')[0]['version']);
+        self::assertSame('1.0.0', $repo->findAll('', 'ValidPlugin')[0]->version);
     }
 
     public function testGetPathReturnsAbsoluteFilesystemPath(): void
@@ -163,7 +164,7 @@ final class PluginRegistryTest extends TestCase
     {
         /** @psalm-suppress PropertyNotSetInConstructor — parent's $conn/$tablePrefix intentionally skipped; stub has no DB */
         return new class () extends PluginRepository {
-            /** @var array<string, array{id: string, state: string, version: string}> */
+            /** @var array<string, PluginRecord> */
             private array $rows = [];
 
             public function __construct()
@@ -179,7 +180,7 @@ final class PluginRegistryTest extends TestCase
                 }
                 $out = array_values($this->rows);
                 if ($state !== null && $state !== '') {
-                    $out = array_values(array_filter($out, static fn (array $r): bool => $r['state'] === $state));
+                    $out = array_values(array_filter($out, static fn (PluginRecord $r): bool => $r->state === $state));
                 }
                 return $out;
             }
@@ -187,14 +188,15 @@ final class PluginRegistryTest extends TestCase
             #[\Override]
             public function insert(string $pluginId, string $version): void
             {
-                $this->rows[$pluginId] = ['id' => $pluginId, 'version' => $version, 'state' => 'inactive'];
+                $this->rows[$pluginId] = new PluginRecord($pluginId, 'inactive', $version);
             }
 
             #[\Override]
             public function updateVersion(string $pluginId, string $version): void
             {
                 if (isset($this->rows[$pluginId])) {
-                    $this->rows[$pluginId]['version'] = $version;
+                    $existing = $this->rows[$pluginId];
+                    $this->rows[$pluginId] = new PluginRecord($existing->id, $existing->state, $version);
                 }
             }
 
@@ -202,7 +204,8 @@ final class PluginRegistryTest extends TestCase
             public function updateState(string $pluginId, string $state): void
             {
                 if (isset($this->rows[$pluginId])) {
-                    $this->rows[$pluginId]['state'] = $state;
+                    $existing = $this->rows[$pluginId];
+                    $this->rows[$pluginId] = new PluginRecord($existing->id, $state, $existing->version);
                 }
             }
 

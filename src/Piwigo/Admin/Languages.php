@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Extensions\ExtensionAction;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
@@ -44,9 +45,9 @@ final class Languages
      * Perform requested actions
      * @return list<('CANNOT ACTIVATE - LANGUAGE IS ALREADY ACTIVATED' | 'CANNOT DEACTIVATE - LANGUAGE IS ALREADY DEACTIVATED' | 'CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE' | 'CANNOT DELETE - LANGUAGE DOES NOT EXIST' | 'CANNOT DELETE - LANGUAGE IS ACTIVATED')>
      */
-    public function performAction(string $action, string $language_id): array
+    public function performAction(ExtensionAction $action, string $language_id): array
     {
-        if (!Config::enableExtensionsInstall() and 'delete' == $action) {
+        if (!Config::enableExtensionsInstall() and ExtensionAction::Delete === $action) {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -57,7 +58,7 @@ final class Languages
         $errors = [];
 
         switch ($action) {
-            case 'activate':
+            case ExtensionAction::Activate:
                 if (isset($crt_db_language)) {
                     $errors[] = 'CANNOT ACTIVATE - LANGUAGE IS ALREADY ACTIVATED';
                     break;
@@ -70,7 +71,7 @@ final class Languages
                 $this->languageRepository->activate($language_id, $langVersion, $langName);
                 break;
 
-            case 'deactivate':
+            case ExtensionAction::Deactivate:
                 if (!isset($crt_db_language)) {
                     $errors[] = 'CANNOT DEACTIVATE - LANGUAGE IS ALREADY DEACTIVATED';
                     break;
@@ -84,7 +85,7 @@ final class Languages
                 $this->languageRepository->deactivate($language_id);
                 break;
 
-            case 'delete':
+            case ExtensionAction::Delete:
                 if (!empty($crt_db_language)) {
                     $errors[] = 'CANNOT DELETE - LANGUAGE IS ACTIVATED';
                     break;
@@ -100,11 +101,18 @@ final class Languages
                 $this->adminService->deltree($this->paths->root . 'language/' . $language_id, $this->paths->root . 'language/trash');
                 break;
 
-            case 'set_default':
+            case ExtensionAction::SetDefault:
                 $this->languageRepository->setDefaultForSystemUsers(
                     $language_id,
                     [Config::defaultUserId(), Config::guestId()]
                 );
+                break;
+
+            case ExtensionAction::Install:
+            case ExtensionAction::Update:
+            case ExtensionAction::Uninstall:
+            case ExtensionAction::Restore:
+                // Languages do not support these actions directly — silently no-op.
                 break;
         }
         return $errors;
@@ -309,7 +317,7 @@ final class Languages
                                 if ($status == 'ok') {
                                     $this->getFsLanguages();
                                     if ($action == 'install') {
-                                        $this->performAction('activate', $dest);
+                                        $this->performAction(ExtensionAction::Activate, $dest);
                                     }
                                 }
                                 if (file_exists($extract_path.'/obsolete.list')

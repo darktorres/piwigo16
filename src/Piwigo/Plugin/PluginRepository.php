@@ -19,7 +19,7 @@ class PluginRepository extends AbstractRepository
      * Schema is fixed: id (string), state (enum 'inactive' / 'active'),
      * version (string).
      *
-     * @return list<array{id: string, state: string, version: string}>
+     * @return list<PluginRecord>
      */
     public function findAll(?string $state = '', ?string $id = ''): array
     {
@@ -44,11 +44,11 @@ class PluginRepository extends AbstractRepository
             if (!is_string($idRaw)) {
                 continue;
             }
-            $out[] = [
-                'id'      => $idRaw,
-                'state'   => is_string($stateRaw) ? $stateRaw : 'inactive',
-                'version' => is_string($versionRaw) ? $versionRaw : '0',
-            ];
+            $out[] = new PluginRecord(
+                id:      $idRaw,
+                state:   is_string($stateRaw) ? $stateRaw : 'inactive',
+                version: is_string($versionRaw) ? $versionRaw : '0',
+            );
         }
         return $out;
     }

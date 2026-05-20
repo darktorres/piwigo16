@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Admin\Extensions\ExtensionAction;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
@@ -68,9 +69,9 @@ final class Themes
      * Perform requested actions
      * @return list<mixed>
      */
-    public function performAction(string $action, string $theme_id): array
+    public function performAction(ExtensionAction $action, string $theme_id): array
     {
-        if (!Config::enableExtensionsInstall() and 'delete' == $action) {
+        if (!Config::enableExtensionsInstall() and ExtensionAction::Delete === $action) {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -83,7 +84,7 @@ final class Themes
         $activity_details = ['theme_id' => $theme_id];
 
         switch ($action) {
-            case 'activate':
+            case ExtensionAction::Activate:
                 if (isset($crt_db_theme)) {
                     // the theme is already active
                     break;
@@ -131,7 +132,7 @@ final class Themes
                 }
                 break;
 
-            case 'deactivate':
+            case ExtensionAction::Deactivate:
                 if (!isset($crt_db_theme)) {
                     // the theme is already inactive
                     break;
@@ -156,7 +157,7 @@ final class Themes
                 }
                 break;
 
-            case 'delete':
+            case ExtensionAction::Delete:
                 if (!empty($crt_db_theme)) {
                     $errors[] = 'CANNOT DELETE - THEME IS INSTALLED';
                     break;
@@ -184,13 +185,20 @@ final class Themes
                 $this->adminService->deltree(Config::themesPath().$theme_id, Config::themesPath() . 'trash');
                 break;
 
-            case 'set_default':
+            case ExtensionAction::SetDefault:
                 // first we need to know which users are using the current default theme
                 $this->setDefaultTheme($theme_id);
                 break;
+
+            case ExtensionAction::Install:
+            case ExtensionAction::Update:
+            case ExtensionAction::Uninstall:
+            case ExtensionAction::Restore:
+                // Themes do not support these actions directly — silently no-op.
+                break;
         }
 
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, $action, $activity_details));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Theme, $action->value, $activity_details));
 
         return array_values($errors);
     }

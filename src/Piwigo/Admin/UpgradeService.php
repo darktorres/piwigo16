@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\Extensions\ExtensionAction;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
@@ -41,8 +42,8 @@ final class UpgradeService
         $allActive  = $pluginRepo->findAll('active');
         $plugins    = [];
         foreach ($allActive as $row) {
-            if ($row['id'] !== '' && !in_array($row['id'], $standard_plugins)) {
-                $plugins[] = $row['id'];
+            if ($row->id !== '' && !in_array($row->id, $standard_plugins)) {
+                $plugins[] = $row->id;
             }
         }
 
@@ -90,7 +91,7 @@ final class UpgradeService
             if (in_array($default_theme, $theme_ids)) {
                 if (!$themeRepo->existsById(AppInfo::DEFAULT_TEMPLATE)) {
                     $themes = Kernel::service(Themes::class);
-                    $themes->performAction('activate', AppInfo::DEFAULT_TEMPLATE);
+                    $themes->performAction(ExtensionAction::Activate, AppInfo::DEFAULT_TEMPLATE);
                 }
                 $themeRepo->setThemeForUsers([Config::defaultUserId()], AppInfo::DEFAULT_TEMPLATE);
             }

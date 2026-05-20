@@ -23,7 +23,7 @@ final readonly class PluginsGetListHandler implements WsAction
         $plugins->sortFsPlugins('name');
         $pluginList = [];
         foreach ($plugins->fs_plugins as $pluginId => $fsPlugin) {
-            $state        = isset($plugins->db_plugins_by_id[$pluginId]) ? $plugins->db_plugins_by_id[$pluginId]['state'] : 'uninstalled';
+            $state        = isset($plugins->db_plugins_by_id[$pluginId]) ? $plugins->db_plugins_by_id[$pluginId]->state : 'uninstalled';
             $pluginList[] = ['id' => $pluginId, 'name' => $fsPlugin['name'], 'version' => $fsPlugin['version'], 'state' => $state, 'description' => $fsPlugin['description']];
         }
         return $pluginList;

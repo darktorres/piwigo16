@@ -44,8 +44,8 @@ final class PluginRepositoryTest extends IntegrationTestCase
 
         $rows = $this->repo->findAll();
         self::assertCount(1, $rows);
-        self::assertSame('myplugin', $rows[0]['id']);
-        self::assertSame('1.2.3', $rows[0]['version']);
+        self::assertSame('myplugin', $rows[0]->id);
+        self::assertSame('1.2.3', $rows[0]->version);
     }
 
     public function test_updateVersion_changes_only_version(): void
@@ -54,7 +54,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
         $this->repo->updateVersion('myplugin', '2.0.0');
 
         $rows = $this->repo->findAll(id: 'myplugin');
-        self::assertSame('2.0.0', $rows[0]['version']);
+        self::assertSame('2.0.0', $rows[0]->version);
     }
 
     public function test_updateState_changes_only_state(): void
@@ -64,7 +64,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
 
         $rows = $this->repo->findAll(state: 'active');
         self::assertCount(1, $rows);
-        self::assertSame('myplugin', $rows[0]['id']);
+        self::assertSame('myplugin', $rows[0]->id);
     }
 
     public function test_findAll_filters_by_state_and_id_independently(): void

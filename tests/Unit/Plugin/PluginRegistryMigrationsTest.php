@@ -9,6 +9,7 @@ use Doctrine\DBAL\DriverManager;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Plugin\Migration\PluginMigrationLedger;
 use Piwigo\Plugin\Migration\PluginMigrationRunner;
+use Piwigo\Plugin\PluginRecord;
 use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Tests\Fixtures\Plugins\MigrationPlugin\Plugin as MigrationPlugin;
@@ -93,7 +94,7 @@ final class PluginRegistryMigrationsTest extends TestCase
     {
         /** @psalm-suppress PropertyNotSetInConstructor — parent's $conn/$tablePrefix intentionally skipped; stub has no DB */
         return new class () extends PluginRepository {
-            /** @var array<string, array{id: string, state: string, version: string}> */
+            /** @var array<string, PluginRecord> */
             private array $rows = [];
 
             public function __construct()
@@ -112,14 +113,15 @@ final class PluginRegistryMigrationsTest extends TestCase
             #[\Override]
             public function insert(string $pluginId, string $version): void
             {
-                $this->rows[$pluginId] = ['id' => $pluginId, 'version' => $version, 'state' => 'inactive'];
+                $this->rows[$pluginId] = new PluginRecord($pluginId, 'inactive', $version);
             }
 
             #[\Override]
             public function updateVersion(string $pluginId, string $version): void
             {
                 if (isset($this->rows[$pluginId])) {
-                    $this->rows[$pluginId]['version'] = $version;
+                    $existing = $this->rows[$pluginId];
+                    $this->rows[$pluginId] = new PluginRecord($existing->id, $existing->state, $version);
                 }
             }
 
@@ -127,7 +129,8 @@ final class PluginRegistryMigrationsTest extends TestCase
             public function updateState(string $pluginId, string $state): void
             {
                 if (isset($this->rows[$pluginId])) {
-                    $this->rows[$pluginId]['state'] = $state;
+                    $existing = $this->rows[$pluginId];
+                    $this->rows[$pluginId] = new PluginRecord($existing->id, $state, $existing->version);
                 }
             }
 

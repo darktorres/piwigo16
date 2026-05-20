@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Activity\ActivityEvent;
 use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
+use Piwigo\Admin\Extensions\ExtensionAction;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
@@ -18,6 +19,7 @@ use Piwigo\Core\ZipExtractor;
 use Piwigo\Event\Lifecycle\PluginInstallErrors;
 use Piwigo\Html\HtmlService;
 use Piwigo\Plugin\PluginDependencyException;
+use Piwigo\Plugin\PluginRecord;
 use Piwigo\Plugin\PluginRegistry;
 use Piwigo\Plugin\PluginRepository;
 use Piwigo\Plugin\PluginValidationException;
@@ -29,7 +31,7 @@ final class Plugins
 {
     /** @var array<string, array<string,mixed>> */
     public array $fs_plugins = [];
-    /** @var array<string, array{id: string, state: string, version: string}> */
+    /** @var array<string, PluginRecord> */
     public array $db_plugins_by_id = [];
     /** @var array<int|string, array<mixed>> */
     public array $server_plugins = [];
@@ -53,7 +55,7 @@ final class Plugins
         $this->getFsPlugins();
 
         foreach ($this->pluginRepository->findAll() as $db_plugin) {
-            $this->db_plugins_by_id[$db_plugin['id']] = $db_plugin;
+            $this->db_plugins_by_id[$db_plugin->id] = $db_plugin;
         }
     }
 
@@ -80,23 +82,21 @@ final class Plugins
      * action when fetching the upgrade archive; ignored for every other
      * action.
      */
-    public function performAction(string $action, string $plugin_id, ?string $revision = null): mixed
+    public function performAction(ExtensionAction $action, string $plugin_id, ?string $revision = null): mixed
     {
-        if (!Config::enableExtensionsInstall() and 'delete' == $action) {
+        if (!Config::enableExtensionsInstall() and ExtensionAction::Delete === $action) {
             die('Piwigo extensions install/update/delete system is disabled');
         }
 
-        if (isset($this->db_plugins_by_id[$plugin_id])) {
-            $crt_db_plugin = $this->db_plugins_by_id[$plugin_id];
-        }
+        $crt_db_plugin = $this->db_plugins_by_id[$plugin_id] ?? null;
 
         $activity_details = ['plugin_id' => $plugin_id];
 
         $errors = [];
 
         switch ($action) {
-            case 'install':
-                if (!empty($crt_db_plugin) or !isset($this->fs_plugins[$plugin_id])) {
+            case ExtensionAction::Install:
+                if ($crt_db_plugin !== null or !isset($this->fs_plugins[$plugin_id])) {
                     break;
                 }
 
@@ -119,7 +119,7 @@ final class Plugins
                 }
                 break;
 
-            case 'update':
+            case ExtensionAction::Update:
                 $prevVersionRaw = $this->fs_plugins[$plugin_id]['version'] ?? '';
                 $previous_version = is_string($prevVersionRaw) ? $prevVersionRaw : '';
                 $activity_details['from_version'] = $previous_version;
@@ -143,18 +143,18 @@ final class Plugins
 
                 break;
 
-            case 'activate':
-                if (!isset($crt_db_plugin)) {
-                    $installResult = $this->performAction('install', $plugin_id);
+            case ExtensionAction::Activate:
+                if ($crt_db_plugin === null) {
+                    $installResult = $this->performAction(ExtensionAction::Install, $plugin_id);
                     $errors = is_array($installResult) ? $installResult : [];
                     $crt_db_plugin = $this->pluginRepository->findAll(null, $plugin_id)[0] ?? null;
                     ConfigService::loadConfFromDb();
-                } elseif ($crt_db_plugin['state'] == 'active') {
+                } elseif ($crt_db_plugin->state === 'active') {
                     break;
                 }
 
                 if (count($errors) === 0) {
-                    $activity_details['version'] = is_array($crt_db_plugin) ? $crt_db_plugin['version'] : '';
+                    $activity_details['version'] = $crt_db_plugin !== null ? $crt_db_plugin->version : '';
 
                     try {
                         $this->pluginRegistry->activate($plugin_id);
@@ -168,43 +168,43 @@ final class Plugins
                 }
                 break;
 
-            case 'deactivate':
-                if (!isset($crt_db_plugin) or $crt_db_plugin['state'] != 'active') {
+            case ExtensionAction::Deactivate:
+                if ($crt_db_plugin === null or $crt_db_plugin->state !== 'active') {
                     $activity_details['result'] = 'error';
                     break;
                 }
 
-                $activity_details['version'] = $crt_db_plugin['version'];
+                $activity_details['version'] = $crt_db_plugin->version;
 
                 $this->pluginRegistry->deactivate($plugin_id);
                 break;
 
-            case 'uninstall':
-                if (!isset($crt_db_plugin)) {
+            case ExtensionAction::Uninstall:
+                if ($crt_db_plugin === null) {
                     $activity_details['result'] = 'error';
                     $activity_details['error'] = 'plugin not installed';
                     break;
                 }
 
-                $activity_details['version'] = $crt_db_plugin['version'];
+                $activity_details['version'] = $crt_db_plugin->version;
 
-                if ($crt_db_plugin['state'] == 'active') {
-                    $this->performAction('deactivate', $plugin_id);
+                if ($crt_db_plugin->state === 'active') {
+                    $this->performAction(ExtensionAction::Deactivate, $plugin_id);
                 }
 
                 $this->pluginRegistry->uninstall($plugin_id);
                 break;
 
-            case 'restore':
-                $this->performAction('uninstall', $plugin_id);
+            case ExtensionAction::Restore:
+                $this->performAction(ExtensionAction::Uninstall, $plugin_id);
                 unset($this->db_plugins_by_id[$plugin_id]);
-                $errors = $this->performAction('activate', $plugin_id);
+                $errors = $this->performAction(ExtensionAction::Activate, $plugin_id);
                 break;
 
-            case 'delete':
-                if (!empty($crt_db_plugin)) {
-                    $activity_details['db_version'] = $crt_db_plugin['version'];
-                    $this->performAction('uninstall', $plugin_id);
+            case ExtensionAction::Delete:
+                if ($crt_db_plugin !== null) {
+                    $activity_details['db_version'] = $crt_db_plugin->version;
+                    $this->performAction(ExtensionAction::Uninstall, $plugin_id);
                 }
                 if (!isset($this->fs_plugins[$plugin_id])) {
                     break;
@@ -214,9 +214,13 @@ final class Plugins
 
                 $this->adminService->deltree(Config::pluginsPath() . $plugin_id, Config::pluginsPath() . 'trash');
                 break;
+
+            case ExtensionAction::SetDefault:
+                // Plugins do not support set_default — silently no-op.
+                break;
         }
 
-        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Plugin, $action, $activity_details));
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::System, ActivitySystem::Plugin, $action->value, $activity_details));
 
         return $errors;
     }
@@ -715,7 +719,7 @@ final class Plugins
 
         foreach ($this->fs_plugins as $plugin_id => $plugin) {
             if (isset($this->db_plugins_by_id[$plugin_id])) {
-                $this->db_plugins_by_id[$plugin_id]['state'] == 'active' ?
+                $this->db_plugins_by_id[$plugin_id]->state === 'active' ?
                   $active_plugins[$plugin_id] = $plugin : $inactive_plugins[$plugin_id] = $plugin;
             } else {
                 $not_installed[$plugin_id] = $plugin;

@@ -36,9 +36,10 @@ final readonly class SearchHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): array
     {
-        $pQuery   = is_string($params['query'] ?? null) ? $params['query'] : '';
-        $pPage    = is_numeric($params['page']) ? (int) $params['page'] : 0;
-        $pPerPage = is_numeric($params['per_page']) ? (int) $params['per_page'] : 0;
+        $input    = SearchParams::fromArray($params);
+        $pQuery   = $input->query;
+        $pPage    = $input->page;
+        $pPerPage = $input->perPage;
         $images   = [];
         /** @var array<string> $whereClauses */
         $whereClauses = $this->wsHelper->imageSqlFilter($params, 'i.');

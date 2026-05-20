@@ -56,8 +56,9 @@ final readonly class AddSimpleHandler implements WsAction
             $logger->error(__FUNCTION__ . ' ' . $message);
             return new PwgError(500, $message);
         }
-        $pImageIdAs  = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $pCategoryAs = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['category']) ? $params['category'] : []);
+        $input       = AddSimpleParams::fromArray($params);
+        $pImageIdAs  = $input->imageId;
+        $pCategoryAs = $input->categoryIds;
         if ($pImageIdAs > 0 && !$this->imageRepository->existsById($pImageIdAs)) {
             return new PwgError(404, 'image_id not found');
         }
@@ -66,22 +67,22 @@ final readonly class AddSimpleHandler implements WsAction
         $filesName   = is_string($filesImage['name'] ?? null) ? $filesImage['name'] : null;
         $imageId     = $this->uploadService->addUploadedFile($filesTmp, $filesName, $pCategoryAs, 8, $pImageIdAs > 0 ? $pImageIdAs : null);
         $update      = [];
-        foreach (['name', 'author', 'comment', 'level', 'date_creation'] as $key) {
-            if (isset($params[$key])) {
-                $update[$key] = $params[$key];
+        foreach (['name' => $input->name, 'author' => $input->author, 'comment' => $input->comment, 'level' => $input->level, 'date_creation' => $input->dateCreation] as $key => $val) {
+            if ($val !== null) {
+                $update[$key] = $val;
             }
         }
         if (count($update) > 0) {
             $this->imageRepository->updateById($imageId, $update);
         }
-        if (isset($params['tags']) && !empty($params['tags'])) {
+        if ($input->tags !== null && !empty($input->tags)) {
             $tagIds = [];
-            if (is_array($params['tags'])) {
-                foreach ($params['tags'] as $tagName) {
+            if (is_array($input->tags)) {
+                foreach ($input->tags as $tagName) {
                     $tagIds[] = $this->tagAdminService->tagIdFromTagName(is_scalar($tagName) ? (string) $tagName : '');
                 }
             } else {
-                $tagNamesSplit = preg_split('~(?<!\\\),~', is_string($params['tags']) ? $params['tags'] : '');
+                $tagNamesSplit = preg_split('~(?<!\\\),~', is_string($input->tags) ? $input->tags : '');
                 $tagNames      = $tagNamesSplit !== false ? $tagNamesSplit : [];
                 foreach ($tagNames as $tagName) {
                     $tagIds[] = $this->tagAdminService->tagIdFromTagName(preg_replace('#\\\\*,#', ',', $tagName) ?? '');
@@ -91,7 +92,7 @@ final readonly class AddSimpleHandler implements WsAction
         }
         $urlParams = ['image_id' => $imageId];
         if (!empty($pCategoryAs)) {
-            $firstCatId            = $pCategoryAs[0] ?? 0;
+            $firstCatId            = $pCategoryAs[0];
             $category              = $this->categoryRepository->findCategoryById($firstCatId);
             $urlParams['section']  = 'categories';
             $urlParams['category'] = $category?->toRow();

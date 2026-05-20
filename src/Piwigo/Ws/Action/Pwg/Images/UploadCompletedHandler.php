@@ -12,6 +12,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 /** `pwg.images.uploadCompleted` — flush the lounge + dispatch the upload-completed event. */
@@ -33,16 +34,16 @@ final readonly class UploadCompletedHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        try {
+            $input = UploadCompletedParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        $ucImageIdsRaw = $params['image_id'];
-        if (!is_array($ucImageIdsRaw)) {
-            $ucImageIdsRaw = (($ucSplit = preg_split('/[\s,;\|]/', is_scalar($ucImageIdsRaw) ? (string) $ucImageIdsRaw : '', -1, PREG_SPLIT_NO_EMPTY)) !== false ? $ucSplit : []);
-        }
-        $ucImageIdsRaw   = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $ucImageIdsRaw);
-        $imageIds        = array_values(array_filter($ucImageIdsRaw, fn (int $v): bool => $v > 0));
-        $ucCategoryId    = is_numeric($params['category_id']) ? (int) $params['category_id'] : 0;
+        $imageIds        = $input->imageIds;
+        $ucCategoryId    = $input->categoryId;
         $movedFromLounge = $this->categoryAdminService->emptyLounge();
         $categoryInfos   = ['nb_photos' => $this->categoryRepository->countImagesByCategoryId($ucCategoryId)];
         $categoryName    = $this->htmlService->getCatDisplayNameFromId($ucCategoryId, null);

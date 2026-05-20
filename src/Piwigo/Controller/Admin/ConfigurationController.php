@@ -349,65 +349,7 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
                 break;
 
             case 'sizes':
-                if (!$this->sizesProcessor->isSizesLoadedInTpl()) {
-                    $is_gd = (PwgImage::getLibrary() == 'gd');
-                    $tpl->assign('is_gd', $is_gd);
-                    $tpl->assign('sizes', [
-                        'original_resize_maxwidth'  => Config::originalResizeMaxwidth(),
-                        'original_resize_maxheight' => Config::originalResizeMaxheight(),
-                        'original_resize_quality'   => Config::originalResizeQuality(),
-                    ]);
-                    $tpl->append('sizes', [
-                        'original_resize' => Config::originalResize(),
-                    ], true);
-
-                    $enabled  = ImageStdParams::getDefinedTypeMap();
-                    $disabled = ImageStdParams::getDisabledTypeMap();
-
-                    $tpl_vars = [];
-                    foreach (ImageStdParams::getAllTypes() as $type) {
-                        $tpl_var = [];
-                        $tpl_var['must_square']  = ($type == DerivativeSize::Square->value);
-                        $tpl_var['must_enable']  = ($type == DerivativeSize::Square->value || $type == DerivativeSize::Thumb->value || $type == Config::derivativeDefaultSize());
-                        $params = $enabled[$type] ?? null;
-                        if ($params !== null) {
-                            $tpl_var['enabled'] = true;
-                        } else {
-                            $tpl_var['enabled'] = false;
-                            $params_raw = $disabled[$type] ?? null;
-                            $params = ($params_raw instanceof DerivativeParams) ? $params_raw : null;
-                        }
-                        if ($params instanceof DerivativeParams) {
-                            $idealSize = $params->sizing->ideal_size;
-                            [$tpl_var['w'], $tpl_var['h']] = [$idealSize[0] ?? 0, $idealSize[1] ?? 0];
-                            if (($tpl_var['crop'] = round(100.0 * $params->sizing->max_crop)) > 0) {
-                                $minSize = $params->sizing->min_size;
-                                [$tpl_var['minw'], $tpl_var['minh']] = [$minSize[0] ?? 0, $minSize[1] ?? 0];
-                            } else {
-                                $tpl_var['minw'] = $tpl_var['minh'] = '';
-                            }
-                            $tpl_var['sharpen'] = $params->sharpen;
-                        }
-                        $tpl_vars[$type] = $tpl_var;
-                    }
-                    $tpl->assign('derivatives', $tpl_vars);
-                    $tpl->assign('resize_quality', ImageStdParams::$quality);
-
-                    $tpl_vars = [];
-                    $now = time();
-                    foreach (ImageStdParams::$custom as $custom => $time) {
-                        $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? Lang::t('today') : $this->dateService->timeSince($time, 'day');
-                    }
-                    $tpl->assign('custom_derivatives', $tpl_vars);
-                }
-
-                $tpl->assign('page_data_json', json_encode([
-                    'str_restore_confirm' => Lang::t('Are you sure you want to restore to default settings?'),
-                    'str_max_width'       => Lang::t('Maximum width'),
-                    'str_width'           => Lang::t('Width'),
-                    'str_max_height'      => Lang::t('Maximum height'),
-                    'str_height'          => Lang::t('Height'),
-                ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
+                $this->renderSizesSection();
                 break;
 
             case 'watermark':
@@ -461,6 +403,68 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
         $tpl->assign('isWebmaster', $this->permissionService->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Configuration'));
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'configuration_' . $section . '.latte');
+    }
+
+    private function renderSizesSection(): void
+    {
+        $tpl = TemplateRegistry::current();
+
+        if (!$this->sizesProcessor->isSizesLoadedInTpl()) {
+            $tpl->assign('is_gd', PwgImage::getLibrary() == 'gd');
+            $tpl->assign('sizes', [
+                'original_resize_maxwidth'  => Config::originalResizeMaxwidth(),
+                'original_resize_maxheight' => Config::originalResizeMaxheight(),
+                'original_resize_quality'   => Config::originalResizeQuality(),
+            ]);
+            $tpl->append('sizes', ['original_resize' => Config::originalResize()], true);
+
+            $enabled  = ImageStdParams::getDefinedTypeMap();
+            $disabled = ImageStdParams::getDisabledTypeMap();
+
+            $tpl_vars = [];
+            foreach (ImageStdParams::getAllTypes() as $type) {
+                $tpl_var                 = [];
+                $tpl_var['must_square']  = ($type == DerivativeSize::Square->value);
+                $tpl_var['must_enable']  = ($type == DerivativeSize::Square->value || $type == DerivativeSize::Thumb->value || $type == Config::derivativeDefaultSize());
+                $params = $enabled[$type] ?? null;
+                if ($params !== null) {
+                    $tpl_var['enabled'] = true;
+                } else {
+                    $tpl_var['enabled'] = false;
+                    $params_raw = $disabled[$type] ?? null;
+                    $params     = ($params_raw instanceof DerivativeParams) ? $params_raw : null;
+                }
+                if ($params instanceof DerivativeParams) {
+                    $idealSize              = $params->sizing->ideal_size;
+                    [$tpl_var['w'], $tpl_var['h']] = [$idealSize[0] ?? 0, $idealSize[1] ?? 0];
+                    if (($tpl_var['crop'] = round(100.0 * $params->sizing->max_crop)) > 0) {
+                        $minSize = $params->sizing->min_size;
+                        [$tpl_var['minw'], $tpl_var['minh']] = [$minSize[0] ?? 0, $minSize[1] ?? 0];
+                    } else {
+                        $tpl_var['minw'] = $tpl_var['minh'] = '';
+                    }
+                    $tpl_var['sharpen'] = $params->sharpen;
+                }
+                $tpl_vars[$type] = $tpl_var;
+            }
+            $tpl->assign('derivatives', $tpl_vars);
+            $tpl->assign('resize_quality', ImageStdParams::$quality);
+
+            $custom_tpl_vars = [];
+            $now = time();
+            foreach (ImageStdParams::$custom as $custom => $time) {
+                $custom_tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? Lang::t('today') : $this->dateService->timeSince($time, 'day');
+            }
+            $tpl->assign('custom_derivatives', $custom_tpl_vars);
+        }
+
+        $tpl->assign('page_data_json', json_encode([
+            'str_restore_confirm' => Lang::t('Are you sure you want to restore to default settings?'),
+            'str_max_width'       => Lang::t('Maximum width'),
+            'str_width'           => Lang::t('Width'),
+            'str_max_height'      => Lang::t('Maximum height'),
+            'str_height'          => Lang::t('Height'),
+        ], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE));
     }
 
     /**

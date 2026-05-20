@@ -51,6 +51,7 @@ use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Picture\PictureService;
 use Piwigo\Rate\RateService;
+use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionInitializer;
 use Piwigo\Session\Session;
@@ -135,48 +136,9 @@ final readonly class PictureController implements ControllerInterface
         $rankOf = array_flip($items);
 
         if (!isset($rankOf[$imageId])) {
-            $imageRepo = $this->imageRepository;
-            if ($imageId > 0) {
-                $image = $imageRepo->findById($imageId);
-            } else {
-                $imageFileStr = $ctx->imageFile;
-                $replaced     = str_replace(['_', '%'], ['/_', '/%'], $imageFileStr);
-                $pattern      = $replaced . '.%';
-                $image        = $imageRepo->findByFilePattern($pattern);
-            }
-            if ($image === null) {
-                $this->htmlService->pageNotFound('The requested image does not exist', $this->urlService->duplicateIndexUrl());
-                return ResponseFactory::create(404);
-            }
-            $resolvedImageFile = $image->file->value;
-            $imageId           = $image->id->value;
-            if (is_numeric($user['level'] ?? null) && $image->level > $user['level']) {
-                $this->htmlService->accessDenied();
-            }
-
-            if (!isset($rankOf[$imageId])) {
-                $visibleImages = FilterContextRegistry::current()->visibleImages;
-                if ($visibleImages !== [] && !in_array($imageId, $visibleImages, true)) {
-                    $this->htmlService->pageNotFound('The requested image is filtered', $this->urlService->duplicateIndexUrl());
-                    return ResponseFactory::create(404);
-                }
-                if ($ctx->section === Section::Categories && $ctx->category === null) {
-                    $this->htmlService->accessDenied();
-                } else {
-                    $perm = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND');
-                    if (!$this->categoryRepository->isImageInVisibleCategory($imageId, $perm->where, $perm->params, $perm->types)) {
-                        $this->htmlService->accessDenied();
-                    } else {
-                        if ($ctx->section === Section::BestRated) {
-                            $rankOf[$imageId] = count($items);
-                            $items[]          = $imageId;
-                        } else {
-                            $url = $this->urlService->makePictureUrl(['image_id' => $imageId, 'image_file' => $resolvedImageFile, 'section' => 'categories', 'flat' => true]);
-                            $this->htmlService->setStatusHeader($ctx->section === Section::RecentPics ? 301 : 302);
-                            $this->redirectResponder->redirectHttp($url);
-                        }
-                    }
-                }
+            $earlyResponse = $this->resolveImageNotInSet($imageId, $items, $rankOf, $catId, $ctx, $user);
+            if ($earlyResponse !== null) {
+                return $earlyResponse;
             }
         }
 
@@ -210,92 +172,10 @@ final readonly class PictureController implements ControllerInterface
         $url_self = $this->urlService->duplicatePictureUrl();
 
         // Actions
-        $get_action = StringUtil::inputString('action', null, $_GET);
+        $edit_comment = null;
+        $get_action   = StringUtil::inputString('action', null, $_GET);
         if ($get_action !== null) {
-            switch ($get_action) {
-                case 'add_to_favorites':
-                    $this->userFavoriteRepository->add(
-                        is_numeric($user['id']) ? (int) $user['id'] : 0,
-                        $imageId
-                    );
-                    $this->redirectResponder->redirect($url_self);
-                    break;
-                case 'remove_from_favorites':
-                    $this->userFavoriteRepository->delete(
-                        is_numeric($user['id']) ? (int) $user['id'] : 0,
-                        $imageId
-                    );
-                    $this->redirectResponder->redirect($ctx->section === Section::Favorites ? $url_up : $url_self);
-                    break;
-                case 'set_as_representative':
-                    if ($this->permissionService->isAdmin() && $category !== null) {
-                        $this->categoryRepository->setRepresentativePicture([$catId], $imageId);
-                        $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catId, ActivityAction::Edit, ['action' => $get_action, 'image_id' => $imageId]));
-                        $this->userAdminService->invalidateUserCache();
-                    }
-                    $this->redirectResponder->redirect($url_self);
-                    break;
-                case 'add_to_caddie':
-                    $this->userCaddieRepository->addElements(CurrentUser::get()->id, [$imageId]);
-                    $this->redirectResponder->redirect($url_self);
-                    break;
-                case 'rate':
-                    $this->rateService->ratePicture($imageId, StringUtil::inputInt('rate', 0, $_POST));
-                    $this->redirectResponder->redirect($url_self);
-                    break;
-                case 'edit_comment':
-                    $this->inputValidator->check('comment_to_edit', $_GET, false, ValidationPattern::ID);
-                    $comment_to_edit = StringUtil::inputInt('comment_to_edit', null, $_GET);
-                    $author_id       = $this->commentService->getCommentAuthorId($comment_to_edit ?? 0);
-                    if (!$this->permissionService->canManageComment(CommentManagementAction::Edit, $author_id)) {
-                        break;
-                    }
-                    $post_content = StringUtil::inputString('content', null, $_POST);
-                    if ($post_content !== null && $post_content !== '') {
-                        $this->csrfService->check();
-                        $comment_action = $this->commentService->updateUserComment(
-                            ['comment_id' => $comment_to_edit, 'image_id' => $imageId, 'content' => $post_content, 'website_url' => StringUtil::inputString('website_url', null, $_POST)],
-                            StringUtil::inputString('key', null, $_POST) ?? ''
-                        );
-                        $perform_redirect = false;
-                        switch ($comment_action) {
-                            case CommentModerationAction::Moderate:
-                                PageState::current()->addInfo(Lang::t('An administrator must authorize your comment before it is visible.'));
-                                // no break
-                            case CommentModerationAction::Validate:
-                                PageState::current()->addInfo(Lang::t('Your comment has been registered'));
-                                $perform_redirect = true;
-                                break;
-                            case CommentModerationAction::Reject:
-                                PageState::current()->addError(Lang::t('Your comment has NOT been registered because it did not pass the validation rules'));
-                                break;
-                        }
-                        if ($perform_redirect) {
-                            $this->redirectResponder->redirect($url_self);
-                        }
-                        unset($_POST['content']);
-                    }
-                    $edit_comment = $comment_to_edit;
-                    break;
-                case 'delete_comment':
-                    $this->csrfService->check();
-                    $this->inputValidator->check('comment_to_delete', $_GET, false, ValidationPattern::ID);
-                    $author_id = $this->commentService->getCommentAuthorId(StringUtil::inputInt('comment_to_delete', null, $_GET) ?? 0);
-                    if ($this->permissionService->canManageComment(CommentManagementAction::Delete, $author_id)) {
-                        $this->commentService->deleteUserComment(StringUtil::inputInt('comment_to_delete', null, $_GET) ?? 0);
-                    }
-                    $this->redirectResponder->redirect($url_self);
-                    break;
-                case 'validate_comment':
-                    $this->csrfService->check();
-                    $this->inputValidator->check('comment_to_validate', $_GET, false, ValidationPattern::ID);
-                    $author_id = $this->commentService->getCommentAuthorId(StringUtil::inputInt('comment_to_validate', null, $_GET) ?? 0);
-                    if ($this->permissionService->canManageComment(CommentManagementAction::Validate, $author_id)) {
-                        $this->commentService->validateUserComment(StringUtil::inputInt('comment_to_validate', null, $_GET) ?? 0);
-                    }
-                    $this->redirectResponder->redirect($url_self);
-                    break;
-            }
+            $edit_comment = $this->handlePictureAction($get_action, $imageId, $url_self, $url_up, $catId, $ctx);
         }
 
         // Hit counter
@@ -679,5 +559,175 @@ final readonly class PictureController implements ControllerInterface
         PageTailRenderer::render();
 
         return ResponseFactory::create(200);
+    }
+
+    /**
+     * Dispatches a picture-page action (add/remove favorites, rate, comment management, etc.).
+     * Most cases redirect immediately; only `edit_comment` returns the comment ID for later use.
+     */
+    private function handlePictureAction(
+        string $action,
+        int $imageId,
+        string $urlSelf,
+        string $urlUp,
+        int $catId,
+        SectionContext $ctx,
+    ): ?int {
+        $userId = CurrentUser::get()->id;
+
+        switch ($action) {
+            case 'add_to_favorites':
+                $this->userFavoriteRepository->add($userId, $imageId);
+                $this->redirectResponder->redirect($urlSelf);
+                break;
+            case 'remove_from_favorites':
+                $this->userFavoriteRepository->delete($userId, $imageId);
+                $this->redirectResponder->redirect($ctx->section === Section::Favorites ? $urlUp : $urlSelf);
+                break;
+            case 'set_as_representative':
+                if ($this->permissionService->isAdmin() && $ctx->category !== null) {
+                    $this->categoryRepository->setRepresentativePicture([$catId], $imageId);
+                    $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catId, ActivityAction::Edit, ['action' => $action, 'image_id' => $imageId]));
+                    $this->userAdminService->invalidateUserCache();
+                }
+                $this->redirectResponder->redirect($urlSelf);
+                break;
+            case 'add_to_caddie':
+                $this->userCaddieRepository->addElements($userId, [$imageId]);
+                $this->redirectResponder->redirect($urlSelf);
+                break;
+            case 'rate':
+                $this->rateService->ratePicture($imageId, StringUtil::inputInt('rate', 0, $_POST));
+                $this->redirectResponder->redirect($urlSelf);
+                break;
+            case 'edit_comment':
+                return $this->handleEditCommentAction($imageId, $urlSelf);
+            case 'delete_comment':
+                $this->csrfService->check();
+                $this->inputValidator->check('comment_to_delete', $_GET, false, ValidationPattern::ID);
+                $authorId = $this->commentService->getCommentAuthorId(StringUtil::inputInt('comment_to_delete', null, $_GET) ?? 0);
+                if ($this->permissionService->canManageComment(CommentManagementAction::Delete, $authorId)) {
+                    $this->commentService->deleteUserComment(StringUtil::inputInt('comment_to_delete', null, $_GET) ?? 0);
+                }
+                $this->redirectResponder->redirect($urlSelf);
+                break;
+            case 'validate_comment':
+                $this->csrfService->check();
+                $this->inputValidator->check('comment_to_validate', $_GET, false, ValidationPattern::ID);
+                $authorId = $this->commentService->getCommentAuthorId(StringUtil::inputInt('comment_to_validate', null, $_GET) ?? 0);
+                if ($this->permissionService->canManageComment(CommentManagementAction::Validate, $authorId)) {
+                    $this->commentService->validateUserComment(StringUtil::inputInt('comment_to_validate', null, $_GET) ?? 0);
+                }
+                $this->redirectResponder->redirect($urlSelf);
+                break;
+        }
+        return null;
+    }
+
+    private function handleEditCommentAction(int $imageId, string $urlSelf): ?int
+    {
+        $this->inputValidator->check('comment_to_edit', $_GET, false, ValidationPattern::ID);
+        $commentToEdit = StringUtil::inputInt('comment_to_edit', null, $_GET);
+        $authorId      = $this->commentService->getCommentAuthorId($commentToEdit ?? 0);
+        if (!$this->permissionService->canManageComment(CommentManagementAction::Edit, $authorId)) {
+            return null;
+        }
+        $postContent = StringUtil::inputString('content', null, $_POST);
+        if ($postContent !== null && $postContent !== '') {
+            $this->csrfService->check();
+            $commentAction = $this->commentService->updateUserComment(
+                ['comment_id' => $commentToEdit, 'image_id' => $imageId, 'content' => $postContent, 'website_url' => StringUtil::inputString('website_url', null, $_POST)],
+                StringUtil::inputString('key', null, $_POST) ?? ''
+            );
+            $performRedirect = match ($commentAction) {
+                CommentModerationAction::Moderate => $this->addModerationInfo(),
+                CommentModerationAction::Validate => $this->addValidateInfo(),
+                CommentModerationAction::Reject   => $this->addRejectError(),
+            };
+            if ($performRedirect) {
+                $this->redirectResponder->redirect($urlSelf);
+            }
+            unset($_POST['content']);
+        }
+        return $commentToEdit;
+    }
+
+    private function addModerationInfo(): bool
+    {
+        PageState::current()->addInfo(Lang::t('An administrator must authorize your comment before it is visible.'));
+        PageState::current()->addInfo(Lang::t('Your comment has been registered'));
+        return true;
+    }
+
+    private function addValidateInfo(): bool
+    {
+        PageState::current()->addInfo(Lang::t('Your comment has been registered'));
+        return true;
+    }
+
+    private function addRejectError(): bool
+    {
+        PageState::current()->addError(Lang::t('Your comment has NOT been registered because it did not pass the validation rules'));
+        return false;
+    }
+
+    /**
+     * Resolves an image that is not present in the sorted item set.
+     * Looks the image up by ID or file pattern, checks level/visibility/category
+     * access, and either inserts it into the working set, redirects, or returns a
+     * 404 Response. Returns null to continue normal rendering.
+     *
+     * @param list<int>            &$items
+     * @param array<int, int>      &$rankOf
+     * @param array<string, mixed> $user
+     */
+    private function resolveImageNotInSet(
+        int &$imageId,
+        array &$items,
+        array &$rankOf,
+        int $catId,
+        SectionContext $ctx,
+        array $user,
+    ): ?ResponseInterface {
+        if ($imageId > 0) {
+            $image = $this->imageRepository->findById($imageId);
+        } else {
+            $imageFileStr = $ctx->imageFile;
+            $replaced     = str_replace(['_', '%'], ['/_', '/%'], $imageFileStr);
+            $image        = $this->imageRepository->findByFilePattern($replaced . '.%');
+        }
+        if ($image === null) {
+            $this->htmlService->pageNotFound('The requested image does not exist', $this->urlService->duplicateIndexUrl());
+            return ResponseFactory::create(404);
+        }
+        $resolvedImageFile = $image->file->value;
+        $imageId           = $image->id->value;
+        if (is_numeric($user['level'] ?? null) && $image->level > $user['level']) {
+            $this->htmlService->accessDenied();
+        }
+
+        if (!isset($rankOf[$imageId])) {
+            $visibleImages = FilterContextRegistry::current()->visibleImages;
+            if ($visibleImages !== [] && !in_array($imageId, $visibleImages, true)) {
+                $this->htmlService->pageNotFound('The requested image is filtered', $this->urlService->duplicateIndexUrl());
+                return ResponseFactory::create(404);
+            }
+            if ($ctx->section === Section::Categories && $ctx->category === null) {
+                $this->htmlService->accessDenied();
+            } else {
+                $perm = $this->permissionService->getSqlConditionFandF(['forbidden_categories' => 'category_id'], ' AND');
+                if (!$this->categoryRepository->isImageInVisibleCategory($imageId, $perm->where, $perm->params, $perm->types)) {
+                    $this->htmlService->accessDenied();
+                } elseif ($ctx->section === Section::BestRated) {
+                    $rankOf[$imageId] = count($items);
+                    $items[]          = $imageId;
+                } else {
+                    $url = $this->urlService->makePictureUrl(['image_id' => $imageId, 'image_file' => $resolvedImageFile, 'section' => 'categories', 'flat' => true]);
+                    $this->htmlService->setStatusHeader($ctx->section === Section::RecentPics ? 301 : 302);
+                    $this->redirectResponder->redirectHttp($url);
+                }
+            }
+        }
+        return null;
     }
 }

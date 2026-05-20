@@ -177,90 +177,7 @@ final class BatchManagerController implements AdminSubControllerInterface
 
         if (isset($_POST['submitFilter'])) {
             unset($_REQUEST['start']);
-            /** @var array<string, mixed> $bmf */
-            $bmf = [];
-
-            if (isset($_POST['filter_prefilter_use'])) {
-                $bmf['prefilter'] = $_POST['filter_prefilter'];
-                if ('duplicates' == $_POST['filter_prefilter']) {
-                    $has_options = false;
-                    foreach ([DuplicateField::Checksum, DuplicateField::Date, DuplicateField::Dimensions] as $duplicateField) {
-                        if (isset($_POST['filter_duplicates_' . $duplicateField->value])) {
-                            $bmf['duplicates_' . $duplicateField->value] = true;
-                            $has_options                                  = true;
-                        }
-                    }
-                    if (!$has_options || isset($_POST['filter_duplicates_filename'])) {
-                        $bmf['duplicates_' . DuplicateField::Filename->value] = true;
-                    }
-                }
-            }
-
-            if (isset($_POST['filter_category_use'])) {
-                $this->inputValidator->check('filter_category', $_POST, false, ValidationPattern::ID);
-                $bmf['category'] = $_POST['filter_category'];
-                if (isset($_POST['filter_category_recursive'])) {
-                    $bmf['category_recursive'] = true;
-                }
-            }
-
-            if (isset($_POST['filter_tags_use'])) {
-                $filter_tags_post = $_POST['filter_tags'] ?? null;
-                if (is_array($filter_tags_post)) {
-                    $filter_tags_raw = array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $filter_tags_post);
-                } else {
-                    $filter_tags_raw = is_string($filter_tags_post) ? $filter_tags_post : '';
-                }
-                $bmf['tags'] = $this->tagAdminService->getTagIds($filter_tags_raw, false);
-                if (isset($_POST['tag_mode']) && in_array($_POST['tag_mode'], ['AND', 'OR'])) {
-                    $bmf['tag_mode'] = $_POST['tag_mode'];
-                }
-            }
-
-            if (isset($_POST['filter_level_use'])) {
-                $this->inputValidator->check('filter_level', $_POST, false, '/^\d+$/');
-                if (in_array($_POST['filter_level'], Config::availablePermissionLevels())) {
-                    $bmf['level'] = $_POST['filter_level'];
-                    if (isset($_POST['filter_level_include_lower'])) {
-                        $bmf['level_include_lower'] = true;
-                    }
-                }
-            }
-
-            if (isset($_POST['filter_dimension_use'])) {
-                /** @var array<string, mixed> $dim_filter */
-                $dim_filter = [];
-                foreach (['min_width', 'max_width', 'min_height', 'max_height'] as $type) {
-                    if (filter_var($_POST['filter_dimension_' . $type], FILTER_VALIDATE_INT) !== false) {
-                        $dim_filter[$type] = $_POST['filter_dimension_' . $type];
-                    }
-                }
-                foreach (['min_ratio', 'max_ratio'] as $type) {
-                    if (filter_var($_POST['filter_dimension_' . $type], FILTER_VALIDATE_FLOAT) !== false) {
-                        $dim_filter[$type] = $_POST['filter_dimension_' . $type];
-                    }
-                }
-                $bmf['dimension'] = $dim_filter;
-            }
-
-            if (isset($_POST['filter_filesize_use'])) {
-                /** @var array<string, mixed> $fs_filter */
-                $fs_filter = [];
-                foreach (['min', 'max'] as $type) {
-                    if (filter_var($_POST['filter_filesize_' . $type], FILTER_VALIDATE_FLOAT) !== false) {
-                        $fs_filter[$type] = $_POST['filter_filesize_' . $type];
-                    }
-                }
-                $bmf['filesize'] = $fs_filter;
-            }
-
-            if (isset($_POST['filter_search_use'])) {
-                $bmf['search'] = ['q' => $_POST['q']];
-            }
-
-            $registerEvent = new BatchManagerRegisterFilters($bmf);
-            $this->dispatcher->dispatch($registerEvent);
-            $this->session->bulkManagerFilter = $registerEvent->bulkManagerFilter;
+            $this->parsePostFilter();
         } elseif (isset($_GET['filter'])) {
             if (!is_array($_GET['filter'])) {
                 /** @var string $rawFilter */
@@ -410,64 +327,16 @@ final class BatchManagerController implements AdminSubControllerInterface
         }
 
         if (isset($bmf['dimension'])) {
-            $bmf_dimension = is_array($bmf['dimension']) ? $bmf['dimension'] : [];
-            $where_clauses = [];
-            $where_params  = [];
-            $where_types   = [];
-            $dimensionFields = [
-                'min_width'  => ['width >= ?',  ParameterType::INTEGER],
-                'max_width'  => ['width <= ?',  ParameterType::INTEGER],
-                'min_height' => ['height >= ?', ParameterType::INTEGER],
-                'max_height' => ['height <= ?', ParameterType::INTEGER],
-                'min_ratio'  => ['width/height >= ?', ParameterType::STRING],
-            ];
-            foreach ($dimensionFields as $fieldKey => [$clause, $type]) {
-                if (isset($bmf_dimension[$fieldKey])) {
-                    $where_clauses[] = $clause;
-                    $where_params[]  = is_scalar($bmf_dimension[$fieldKey]) ? (string) $bmf_dimension[$fieldKey] : '0';
-                    $where_types[]   = $type;
-                }
-            }
-            if (isset($bmf_dimension['max_ratio'])) {
-                $max_ratio       = is_numeric($bmf_dimension['max_ratio']) ? (float) $bmf_dimension['max_ratio'] : 0.0;
-                $where_clauses[] = 'width/height < ?';
-                $where_params[]  = number_format($max_ratio + 0.01, 4, '.', '');
-                $where_types[]   = ParameterType::STRING;
-            }
-            if (!empty($where_clauses)) {
-                $filter_sets[] = $this->imageRepository->findIdsByWhereFragment(
-                    implode(' AND ', $where_clauses),
-                    $this->orderByService->buildOrderByClause(Config::orderBy()),
-                    $where_params,
-                    $where_types,
-                );
+            $ids = $this->buildDimensionFilterSet(is_array($bmf['dimension']) ? $bmf['dimension'] : []);
+            if ($ids !== null) {
+                $filter_sets[] = $ids;
             }
         }
 
         if (isset($bmf['filesize'])) {
-            $bmf_filesize = is_array($bmf['filesize']) ? $bmf['filesize'] : [];
-            $where_clauses = [];
-            $where_params  = [];
-            $where_types   = [];
-            if (isset($bmf_filesize['min'])) {
-                $fs_min = is_numeric($bmf_filesize['min']) ? (float) $bmf_filesize['min'] : 0.0;
-                $where_clauses[] = 'filesize >= ?';
-                $where_params[]  = number_format(($fs_min - 0.1) * 1024.0, 4, '.', '');
-                $where_types[]   = ParameterType::STRING;
-            }
-            if (isset($bmf_filesize['max'])) {
-                $fs_max = is_numeric($bmf_filesize['max']) ? (float) $bmf_filesize['max'] : 0.0;
-                $where_clauses[] = 'filesize <= ?';
-                $where_params[]  = number_format(($fs_max + 0.1) * 1024.0, 4, '.', '');
-                $where_types[]   = ParameterType::STRING;
-            }
-            if (!empty($where_clauses)) {
-                $filter_sets[] = $this->imageRepository->findIdsByWhereFragment(
-                    implode(' AND ', $where_clauses),
-                    $this->orderByService->buildOrderByClause(Config::orderBy()),
-                    $where_params,
-                    $where_types,
-                );
+            $ids = $this->buildFilesizeFilterSet(is_array($bmf['filesize']) ? $bmf['filesize'] : []);
+            if ($ids !== null) {
+                $filter_sets[] = $ids;
             }
         }
 
@@ -619,6 +488,94 @@ final class BatchManagerController implements AdminSubControllerInterface
         }
     }
 
+    private function parsePostFilter(): void
+    {
+        /** @var array<string, mixed> $bmf */
+        $bmf = [];
+
+        if (isset($_POST['filter_prefilter_use'])) {
+            $bmf['prefilter'] = $_POST['filter_prefilter'];
+            if ('duplicates' == $_POST['filter_prefilter']) {
+                $has_options = false;
+                foreach ([DuplicateField::Checksum, DuplicateField::Date, DuplicateField::Dimensions] as $duplicateField) {
+                    if (isset($_POST['filter_duplicates_' . $duplicateField->value])) {
+                        $bmf['duplicates_' . $duplicateField->value] = true;
+                        $has_options                                  = true;
+                    }
+                }
+                if (!$has_options || isset($_POST['filter_duplicates_filename'])) {
+                    $bmf['duplicates_' . DuplicateField::Filename->value] = true;
+                }
+            }
+        }
+
+        if (isset($_POST['filter_category_use'])) {
+            $this->inputValidator->check('filter_category', $_POST, false, ValidationPattern::ID);
+            $bmf['category'] = $_POST['filter_category'];
+            if (isset($_POST['filter_category_recursive'])) {
+                $bmf['category_recursive'] = true;
+            }
+        }
+
+        if (isset($_POST['filter_tags_use'])) {
+            $filter_tags_post = $_POST['filter_tags'] ?? null;
+            if (is_array($filter_tags_post)) {
+                $filter_tags_raw = array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $filter_tags_post);
+            } else {
+                $filter_tags_raw = is_string($filter_tags_post) ? $filter_tags_post : '';
+            }
+            $bmf['tags'] = $this->tagAdminService->getTagIds($filter_tags_raw, false);
+            if (isset($_POST['tag_mode']) && in_array($_POST['tag_mode'], ['AND', 'OR'])) {
+                $bmf['tag_mode'] = $_POST['tag_mode'];
+            }
+        }
+
+        if (isset($_POST['filter_level_use'])) {
+            $this->inputValidator->check('filter_level', $_POST, false, '/^\d+$/');
+            if (in_array($_POST['filter_level'], Config::availablePermissionLevels())) {
+                $bmf['level'] = $_POST['filter_level'];
+                if (isset($_POST['filter_level_include_lower'])) {
+                    $bmf['level_include_lower'] = true;
+                }
+            }
+        }
+
+        if (isset($_POST['filter_dimension_use'])) {
+            /** @var array<string, mixed> $dim_filter */
+            $dim_filter = [];
+            foreach (['min_width', 'max_width', 'min_height', 'max_height'] as $type) {
+                if (filter_var($_POST['filter_dimension_' . $type], FILTER_VALIDATE_INT) !== false) {
+                    $dim_filter[$type] = $_POST['filter_dimension_' . $type];
+                }
+            }
+            foreach (['min_ratio', 'max_ratio'] as $type) {
+                if (filter_var($_POST['filter_dimension_' . $type], FILTER_VALIDATE_FLOAT) !== false) {
+                    $dim_filter[$type] = $_POST['filter_dimension_' . $type];
+                }
+            }
+            $bmf['dimension'] = $dim_filter;
+        }
+
+        if (isset($_POST['filter_filesize_use'])) {
+            /** @var array<string, mixed> $fs_filter */
+            $fs_filter = [];
+            foreach (['min', 'max'] as $type) {
+                if (filter_var($_POST['filter_filesize_' . $type], FILTER_VALIDATE_FLOAT) !== false) {
+                    $fs_filter[$type] = $_POST['filter_filesize_' . $type];
+                }
+            }
+            $bmf['filesize'] = $fs_filter;
+        }
+
+        if (isset($_POST['filter_search_use'])) {
+            $bmf['search'] = ['q' => $_POST['q']];
+        }
+
+        $registerEvent = new BatchManagerRegisterFilters($bmf);
+        $this->dispatcher->dispatch($registerEvent);
+        $this->session->bulkManagerFilter = $registerEvent->bulkManagerFilter;
+    }
+
     /** @param array<mixed> $bmf */
     private function parseDuplicatesFilterValue(string $value, array &$bmf): void
     {
@@ -676,6 +633,84 @@ final class BatchManagerController implements AdminSubControllerInterface
         [$url_fs_filter['min'], $url_fs_filter['max']] = $values;
         $bmf['filesize'] = $url_fs_filter;
         return true;
+    }
+
+    /**
+     * Builds a photo-id filter set from bmf dimension constraints.
+     * Returns null when no constraints are active (caller skips filter_sets append).
+     *
+     * @param  array<mixed> $bmfDimension
+     * @return list<int>|null
+     */
+    private function buildDimensionFilterSet(array $bmfDimension): ?array
+    {
+        $where_clauses = [];
+        $where_params  = [];
+        $where_types   = [];
+        $dimensionFields = [
+            'min_width'  => ['width >= ?',        ParameterType::INTEGER],
+            'max_width'  => ['width <= ?',        ParameterType::INTEGER],
+            'min_height' => ['height >= ?',       ParameterType::INTEGER],
+            'max_height' => ['height <= ?',       ParameterType::INTEGER],
+            'min_ratio'  => ['width/height >= ?', ParameterType::STRING],
+        ];
+        foreach ($dimensionFields as $fieldKey => [$clause, $type]) {
+            if (isset($bmfDimension[$fieldKey])) {
+                $where_clauses[] = $clause;
+                $where_params[]  = is_scalar($bmfDimension[$fieldKey]) ? (string) $bmfDimension[$fieldKey] : '0';
+                $where_types[]   = $type;
+            }
+        }
+        if (isset($bmfDimension['max_ratio'])) {
+            $max_ratio       = is_numeric($bmfDimension['max_ratio']) ? (float) $bmfDimension['max_ratio'] : 0.0;
+            $where_clauses[] = 'width/height < ?';
+            $where_params[]  = number_format($max_ratio + 0.01, 4, '.', '');
+            $where_types[]   = ParameterType::STRING;
+        }
+        if (empty($where_clauses)) {
+            return null;
+        }
+        return $this->imageRepository->findIdsByWhereFragment(
+            implode(' AND ', $where_clauses),
+            $this->orderByService->buildOrderByClause(Config::orderBy()),
+            $where_params,
+            $where_types,
+        );
+    }
+
+    /**
+     * Builds a photo-id filter set from bmf filesize constraints.
+     * Returns null when no constraints are active (caller skips filter_sets append).
+     *
+     * @param  array<mixed> $bmfFilesize
+     * @return list<int>|null
+     */
+    private function buildFilesizeFilterSet(array $bmfFilesize): ?array
+    {
+        $where_clauses = [];
+        $where_params  = [];
+        $where_types   = [];
+        if (isset($bmfFilesize['min'])) {
+            $fs_min          = is_numeric($bmfFilesize['min']) ? (float) $bmfFilesize['min'] : 0.0;
+            $where_clauses[] = 'filesize >= ?';
+            $where_params[]  = number_format(($fs_min - 0.1) * 1024.0, 4, '.', '');
+            $where_types[]   = ParameterType::STRING;
+        }
+        if (isset($bmfFilesize['max'])) {
+            $fs_max          = is_numeric($bmfFilesize['max']) ? (float) $bmfFilesize['max'] : 0.0;
+            $where_clauses[] = 'filesize <= ?';
+            $where_params[]  = number_format(($fs_max + 0.1) * 1024.0, 4, '.', '');
+            $where_types[]   = ParameterType::STRING;
+        }
+        if (empty($where_clauses)) {
+            return null;
+        }
+        return $this->imageRepository->findIdsByWhereFragment(
+            implode(' AND ', $where_clauses),
+            $this->orderByService->buildOrderByClause(Config::orderBy()),
+            $where_params,
+            $where_types,
+        );
     }
 
     // ── batch_manager_global ──────────────────────────────────────────────────

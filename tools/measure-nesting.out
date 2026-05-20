@@ -1,20 +1,18 @@
 === Histogram (max nesting depth per function/method) ===
-  depth  0 :  2469 methods ( 61.8%)
-  depth  1 :   790 methods ( 19.8%)
-  depth  2 :   388 methods (  9.7%)
-  depth  3 :   186 methods (  4.7%)
-  depth  4 :    87 methods (  2.2%)
-  depth  5 :    44 methods (  1.1%)
-  depth 6+ :    30 methods (  0.8%)
+  depth  0 :  2472 methods ( 61.7%)
+  depth  1 :   791 methods ( 19.8%)
+  depth  2 :   390 methods (  9.7%)
+  depth  3 :   187 methods (  4.7%)
+  depth  4 :    88 methods (  2.2%)
+  depth  5 :    48 methods (  1.2%)
+  depth 6+ :    28 methods (  0.7%)
   -----
-  total : 3994 methods
+  total : 4004 methods
 
 === Top 50 methods by depth ===
-  depth=8  PictureController::__invoke  (src/Piwigo/Controller/PictureController.php:109)
   depth=7  SearchService::qsearchEval  (src/Piwigo/Search/SearchService.php:859)
   depth=7  SectionInitializer::initialize  (src/Piwigo/Section/SectionInitializer.php:74)
   depth=7  GetListHandler::__invoke  (src/Piwigo/Ws/Action/Pwg/Categories/GetListHandler.php:51)
-  depth=7  ConfigurationController::configuration  (src/Piwigo/Controller/Admin/ConfigurationController.php:77)
   depth=7  BatchManagerController::batchManager  (src/Piwigo/Controller/Admin/BatchManagerController.php:138)
   depth=6  MetadataService::getIptcData  (src/Piwigo/Metadata/MetadataService.php:29)
   depth=6  ImageAdminService::clearDerivativeCacheRec  (src/Piwigo/Admin/Image/ImageAdminService.php:227)
@@ -60,6 +58,8 @@
   depth=5  SearchFilterRenderer::renderDateCreatedFilter  (src/Piwigo/Search/SearchFilterRenderer.php:440)
   depth=5  SearchService::getRegularSearchResults  (src/Piwigo/Search/SearchService.php:172)
   depth=5  SearchService::qsearchGetImages  (src/Piwigo/Search/SearchService.php:624)
+  depth=5  SearchService::qsearchGetTags  (src/Piwigo/Search/SearchService.php:713)
+  depth=5  SearchService::qsearchGetCategories  (src/Piwigo/Search/SearchService.php:779)
 
 === Reference-method sanity check (N1/N3/N4 targets) ===
   depth=3  SearchFilterRenderer::render  (src/Piwigo/Search/SearchFilterRenderer.php:43)
@@ -88,10 +88,10 @@
     2  src/Piwigo/Admin/Plugins.php
     2  src/Piwigo/Ws/PwgServer.php
     2  src/Piwigo/Controller/Admin/AlbumController.php
-    1  src/Piwigo/Controller/PictureController.php
+    2  src/Piwigo/Controller/Admin/ConfigurationController.php
+    2  src/Piwigo/Controller/PictureController.php
     1  src/Piwigo/Section/SectionInitializer.php
     1  src/Piwigo/Ws/Action/Pwg/Categories/GetListHandler.php
-    1  src/Piwigo/Controller/Admin/ConfigurationController.php
     1  src/Piwigo/Admin/Config/WatermarkProcessor.php
     1  src/Piwigo/Search/QNumericRangeScope.php
     1  src/Piwigo/Ws/Action/Pwg/Images/FilteredSearchCreateHandler.php

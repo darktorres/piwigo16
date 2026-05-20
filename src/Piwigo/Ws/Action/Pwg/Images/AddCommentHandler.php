@@ -47,8 +47,8 @@ final readonly class AddCommentHandler implements WsAction
         $commentAction = $this->commentService->insertUserComment($comm, $input->key, $infos);
         return match ($commentAction) {
             CommentModerationAction::Reject   => new PwgError(403, implode('; ', array_merge($infos, [Lang::t('Your comment has NOT been registered because it did not pass the validation rules')]))),
-            CommentModerationAction::Validate, CommentModerationAction::Moderate
-                => ['comment' => new PwgNamedStruct(['id' => $comm['id'], 'validation' => $commentAction === CommentModerationAction::Validate])],
+            CommentModerationAction::Validate => ['comment' => new PwgNamedStruct(['id' => $comm['id'], 'validation' => true])],
+            CommentModerationAction::Moderate => ['comment' => new PwgNamedStruct(['id' => $comm['id'], 'validation' => false])],
         };
     }
 }

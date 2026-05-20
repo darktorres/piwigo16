@@ -37,14 +37,15 @@ final readonly class UploadAsyncHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
-        $logger       = LoggerRegistry::current();
-        $pOriginalSum = is_string($params['original_sum'] ?? null) ? $params['original_sum'] : '';
+        $logger        = LoggerRegistry::current();
+        $input         = UploadAsyncParams::fromArray($params);
+        $pOriginalSum  = $input->originalSum;
         if (!preg_match('/^[a-fA-F0-9]{32}$/', $pOriginalSum)) {
             return new PwgError(WsError::InvalidParam->value, 'Invalid original_sum');
         }
-        $pImageIdAsync = is_numeric($params['image_id']) ? (int) $params['image_id'] : 0;
-        $pChunk        = is_numeric($params['chunk']) ? (int) $params['chunk'] : 0;
-        $pChunks       = is_numeric($params['chunks']) ? (int) $params['chunks'] : 0;
+        $pImageIdAsync = $input->imageId;
+        $pChunk        = $input->chunk;
+        $pChunks       = $input->chunks;
         if ($pImageIdAsync > 0 && !$this->imageRepository->existsById($pImageIdAsync)) {
             return new PwgError(404, __FUNCTION__ . ' : image_id not found');
         }
@@ -70,7 +71,7 @@ final readonly class UploadAsyncHandler implements WsAction
         }
         $logger->debug(__FUNCTION__ . ' uploaded ' . $chunkfilePath);
         $chunkMd5  = md5_file($chunkfilePath);
-        $pChunkSum = is_string($params['chunk_sum'] ?? null) ? $params['chunk_sum'] : '';
+        $pChunkSum = $input->chunkSum;
         if ($chunkMd5 !== $pChunkSum) {
             unlink($chunkfilePath);
             $logger->error(__FUNCTION__ . ' ' . $chunkfilePath . ' MD5 checksum mismatched');
@@ -107,7 +108,7 @@ final readonly class UploadAsyncHandler implements WsAction
         }
         $logger->debug(__FUNCTION__ . ' lock obtained to merge chunks');
         foreach ($chunkIdsUploaded as $chunkId) {
-            $chunkfilePath = sprintf($chunkfilePathPattern, $chunkId, is_numeric($params['chunks']) ? (int) $params['chunks'] : 0);
+            $chunkfilePath = sprintf($chunkfilePathPattern, $chunkId, $input->chunks);
             if (!file_exists($chunkfilePath)) {
                 $logger->error(__FUNCTION__ . ' ' . $chunkfilePath . ' already merged');
                 flock($fp, LOCK_UN);
@@ -136,27 +137,27 @@ final readonly class UploadAsyncHandler implements WsAction
             return new PwgError(500, 'MD5 checksum merged file mismatched');
         }
         $logger->debug(__FUNCTION__ . ' ' . $outputFilepath . ' MD5 checksum OK');
-        $pFilename      = is_scalar($params['filename']) ? (string) $params['filename'] : null;
-        $pCategoryAsync = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($params['category']) ? $params['category'] : []);
-        $pLevelAsync    = is_numeric($params['level']) ? (int) $params['level'] : null;
-        $pImageIdUpload = is_numeric($params['image_id']) ? (int) $params['image_id'] : null;
+        $pFilename      = $input->filename;
+        $pCategoryAsync = $input->categoryIds;
+        $pLevelAsync    = $input->level;
+        $pImageIdUpload = $input->imageIdForUpload;
         $imageId        = $this->uploadService->addUploadedFile($outputFilepath, $pFilename, $pCategoryAsync, $pLevelAsync, $pImageIdUpload, $pOriginalSum);
         $logger->debug(__FUNCTION__ . ' image_id after add_uploaded_file = ' . $imageId);
-        if (isset($params['tag_ids']) && $params['tag_ids'] !== '') {
-            $this->tagAdminService->setTags(explode(',', is_string($params['tag_ids']) ? $params['tag_ids'] : ''), $imageId);
+        if ($input->tagIds !== null && $input->tagIds !== '') {
+            $this->tagAdminService->setTags(explode(',', $input->tagIds), $imageId);
         }
         $update = [];
-        foreach (['name', 'author', 'comment', 'date_creation'] as $key) {
-            if (isset($params[$key])) {
-                $update[$key] = $params[$key];
+        foreach (['name' => $input->name, 'author' => $input->author, 'comment' => $input->comment, 'date_creation' => $input->dateCreation] as $key => $val) {
+            if ($val !== null) {
+                $update[$key] = $val;
             }
         }
         if (count($update) > 0) {
             $this->imageRepository->updateById($imageId, $update);
         }
         $this->userAdminService->invalidateUserCache();
-        if (CurrentUser::isInitialized() && !empty($params['level']) && $params['level'] > (CurrentUser::get()->rawAttributes['level'] ?? 0)) {
-            $newLevel = $params['level'];
+        if (CurrentUser::isInitialized() && !empty($input->rawLevel) && $input->rawLevel > (CurrentUser::get()->rawAttributes['level'] ?? 0)) {
+            $newLevel = $input->rawLevel;
             CurrentUser::update(static fn (User $u): User => $u->withRawAttribute('level', $newLevel));
         }
         $now              = time();

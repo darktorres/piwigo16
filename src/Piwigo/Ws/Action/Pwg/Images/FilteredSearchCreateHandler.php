@@ -26,14 +26,14 @@ final readonly class FilteredSearchCreateHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): PwgError|array
     {
+        $input      = FilteredSearchCreateParams::fromArray($params);
         $searchInfo = null;
-        if (isset($params['search_id'])) {
-            $pSearchId     = is_string($params['search_id']) ? $params['search_id'] : '';
-            $searchPattern = $this->searchService->getSearchIdPattern($pSearchId);
+        if ($input->searchId !== null) {
+            $searchPattern = $this->searchService->getSearchIdPattern($input->searchId);
             if ($searchPattern === null || $searchPattern === '') {
                 return new PwgError(WsError::InvalidParam->value, 'Invalid search_id input parameter.');
             }
-            $searchInfo = $this->searchService->getSearchInfo($pSearchId);
+            $searchInfo = $this->searchService->getSearchInfo($input->searchId);
             if ($searchInfo === null || count($searchInfo) === 0) {
                 return new PwgError(WsError::InvalidParam->value, 'This search does not exist.');
             }

@@ -19,6 +19,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Ws\PwgError;
 use Piwigo\Ws\PwgServer;
 use Piwigo\Ws\WsAction;
+use Piwigo\Ws\WsParamException;
 
 /** `pwg.images.upload` — plupload-style endpoint; chunked or single-shot form upload + format-of support. */
 final readonly class UploadHandler implements WsAction
@@ -37,16 +38,20 @@ final readonly class UploadHandler implements WsAction
     #[\Override]
     public function __invoke(array $params, PwgServer $server): mixed
     {
+        try {
+            $input = UploadParams::fromArray($params);
+        } catch (WsParamException $e) {
+            return new PwgError(403, $e->getMessage());
+        }
         $formatExt = null;
-        if ($this->csrfService->getToken() !== $params['pwg_token']) {
+        if ($this->csrfService->getToken() !== $input->pwgToken) {
             return new PwgError(403, 'Invalid security token');
         }
-        if (isset($params['format_of'])) {
+        if ($input->formatOf !== null) {
             if (!Config::isFormatsEnabled()) {
                 return new PwgError(401, 'formats are disabled');
             }
-            $pNameRaw = $params['name'] ?? null;
-            $pName    = is_string($pNameRaw) ? $pNameRaw : '';
+            $pName = $input->name ?? '';
             if (preg_match('/\.(' . implode('|', Config::formatExtensions()) . ')$/', $pName, $matches)) {
                 $formatExt = $matches[1];
             }
@@ -107,28 +112,26 @@ final readonly class UploadHandler implements WsAction
         $addStatus = 'add';
         if (!$chunks || $chunk === $chunks - 1) {
             rename("{$filePath}.part", $filePath);
-            if (isset($params['format_of'])) {
-                $formatOfId = is_numeric($params['format_of']) ? (int) $params['format_of'] : 0;
-                $image      = $this->imageRepository->findById($formatOfId);
+            if ($input->formatOf !== null) {
+                $image = $this->imageRepository->findById($input->formatOf);
                 if ($image === null) {
                     return new PwgError(404, __FUNCTION__ . ' : image_id not found');
                 }
                 $srcImage  = SrcImage::fromImage($image);
-                $addStatus = $this->uploadService->addFormat($filePath, $formatExt ?? '', (string) $image->id->value);
+                $addStatus = $this->uploadService->addFormat($filePath, $formatExt, (string) $image->id->value);
                 return ['image_id' => $image->id->value, 'src' => DerivativeImage::thumbUrl($srcImage), 'square_src' => DerivativeImage::url(ImageStdParams::getByType(DerivativeSize::Square->value), $srcImage), 'name' => $image->name, 'add_status' => $addStatus];
             }
-            $name           = stripslashes(is_string($params['name'] ?? null) ? $params['name'] : '');
+            $name           = stripslashes($input->name ?? '');
             $idImage        = null;
-            $pCategory      = is_array($params['category']) ? $params['category'] : [];
-            $pCategoryInt   = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $pCategory);
+            $pCategoryInt   = $input->categoryIds;
             $pCategoryFirst = $pCategoryInt[0] ?? 0;
-            if ($params['update_mode']) {
+            if ($input->updateMode) {
                 $idImage = $this->imageRepository->findIdInCategoryByFile($pCategoryFirst, $name);
                 if ($idImage !== null) {
                     $addStatus = 'update';
                 }
             }
-            $imageId        = $this->uploadService->addUploadedFile($filePath, $name, $pCategoryInt, is_numeric($params['level']) ? (int) $params['level'] : null, $idImage);
+            $imageId        = $this->uploadService->addUploadedFile($filePath, $name, $pCategoryInt, $input->level, $idImage);
             $imageInfos     = $this->imageRepository->findById($imageId);
             $categoryInfos  = ['nb_photos' => $this->categoryRepository->countImagesByCategoryId($pCategoryFirst)];
             $nbPhotosLounge = $this->loungeRepository->countInCategoryNotAssociated($pCategoryFirst);

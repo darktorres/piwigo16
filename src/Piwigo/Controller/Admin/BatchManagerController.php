@@ -330,18 +330,15 @@ final class BatchManagerController implements AdminSubControllerInterface
                         break;
                     case 'filesize':
                         $values = explode('..', $value);
-                        $valid  = true;
                         foreach ($values as $v) {
                             if (filter_var($v, FILTER_VALIDATE_FLOAT) === false) {
-                                $valid = false;
+                                break 2;
                             }
                         }
-                        if ($valid) {
-                            /** @var array<string, string> $url_fs_filter */
-                            $url_fs_filter = [];
-                            [$url_fs_filter['min'], $url_fs_filter['max']] = $values;
-                            $bmf['filesize'] = $url_fs_filter;
-                        }
+                        /** @var array<string, string> $url_fs_filter */
+                        $url_fs_filter = [];
+                        [$url_fs_filter['min'], $url_fs_filter['max']] = $values;
+                        $bmf['filesize'] = $url_fs_filter;
                         break;
                     default:
                         $urlFilterEvent = new BatchManagerUrlFilter($bmf, is_string($filter) ? $filter : '');

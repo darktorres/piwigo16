@@ -205,12 +205,13 @@ final class MiscController implements AdminSubControllerInterface
                     $updated_param_count = 0;
                     foreach ($this->configRepository->findByParamPattern('nbm\\_%') as $nbm_user) {
                         $param = $nbm_user['param'];
-                        if (isset($_POST[$param])) {
-                            /** @var string $rawParamVal */
-                            $rawParamVal = $_POST[$param];
-                            $this->configService->confUpdateParam($param, $rawParamVal, true);
-                            $updated_param_count++;
+                        if (!isset($_POST[$param])) {
+                            continue;
                         }
+                        /** @var string $rawParamVal */
+                        $rawParamVal = $_POST[$param];
+                        $this->configService->confUpdateParam($param, $rawParamVal, true);
+                        $updated_param_count++;
                     }
                     $tpl->assign(['save_success' => Translator::get()->plural('%d parameter was updated.', '%d parameters were updated.', $updated_param_count)]);
                 }
@@ -234,15 +235,16 @@ final class MiscController implements AdminSubControllerInterface
                 }
                 break;
             case 'send':
-                if (isset($_POST['send_submit']) && isset($_POST['send_selection']) && isset($_POST['send_customize_mail_content'])) {
-                    $rawSendSelection = $_POST['send_selection'];
-                    $send_selection = is_array($rawSendSelection) ? array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawSendSelection) : [];
-                    $rawCustomMail = $_POST['send_customize_mail_content'];
-                    $check_key_treated = $this->doActionSendMailNotification('send', $send_selection, stripslashes(is_string($rawCustomMail) ? $rawCustomMail : ''));
-                    $check_key_treated_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $check_key_treated);
-                    if ($this->doTimeoutTreatment('send_selection', $check_key_treated_str)) {
-                        $this->mustRepost = true;
-                    }
+                if (!isset($_POST['send_submit']) || !isset($_POST['send_selection']) || !isset($_POST['send_customize_mail_content'])) {
+                    break;
+                }
+                $rawSendSelection = $_POST['send_selection'];
+                $send_selection = is_array($rawSendSelection) ? array_map(fn (mixed $v): string => is_string($v) ? $v : '', $rawSendSelection) : [];
+                $rawCustomMail = $_POST['send_customize_mail_content'];
+                $check_key_treated = $this->doActionSendMailNotification('send', $send_selection, stripslashes(is_string($rawCustomMail) ? $rawCustomMail : ''));
+                $check_key_treated_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $check_key_treated);
+                if ($this->doTimeoutTreatment('send_selection', $check_key_treated_str)) {
+                    $this->mustRepost = true;
                 }
                 break;
         }

@@ -276,12 +276,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                 switch ($type) {
                     case 'prefilter':
                         if (preg_match('/^duplicates-?/', $value)) {
-                            $dupParts = explode('-', $value, 2);
-                            $duplicate_field = $dupParts[1] ?? '';
-                            $bmf['prefilter'] = 'duplicates';
-                            if (DuplicateField::tryFrom($duplicate_field) !== null) {
-                                $bmf['duplicates_' . $duplicate_field] = true;
-                            }
+                            $this->parseDuplicatesFilterValue($value, $bmf);
                         } else {
                             $bmf['prefilter'] = $value;
                         }
@@ -306,39 +301,12 @@ final class BatchManagerController implements AdminSubControllerInterface
                         $bmf['search'] = ['q' => $value];
                         break;
                     case 'dimension':
-                        $dim_map = ['w' => 'width', 'h' => 'height', 'r' => 'ratio'];
-                        /** @var array<string, string> $url_dim_filter */
-                        $url_dim_filter = is_array($bmf['dimension'] ?? null) ? $bmf['dimension'] : [];
-                        foreach (explode('-', $value) as $part) {
-                            $values = explode('..', substr($part, 1));
-                            if (!isset($dim_map[$part[0]])) {
-                                continue;
-                            }
-                            $dtype = $dim_map[$part[0]];
-                            $filter_validate = ['width' => FILTER_VALIDATE_INT, 'height' => FILTER_VALIDATE_INT, 'ratio' => FILTER_VALIDATE_FLOAT];
-                            $valid = true;
-                            foreach ($values as $v) {
-                                if (filter_var($v, $filter_validate[$dtype]) === false) {
-                                    $valid = false;
-                                }
-                            }
-                            if ($valid) {
-                                [$url_dim_filter['min_' . $dtype], $url_dim_filter['max_' . $dtype]] = $values;
-                            }
-                        }
-                        $bmf['dimension'] = $url_dim_filter;
+                        $this->parseDimensionFilterValue($value, $bmf);
                         break;
                     case 'filesize':
-                        $values = explode('..', $value);
-                        foreach ($values as $v) {
-                            if (filter_var($v, FILTER_VALIDATE_FLOAT) === false) {
-                                break 2;
-                            }
+                        if (!$this->parseFilesizeFilterValue($value, $bmf)) {
+                            break 2;
                         }
-                        /** @var array<string, string> $url_fs_filter */
-                        $url_fs_filter = [];
-                        [$url_fs_filter['min'], $url_fs_filter['max']] = $values;
-                        $bmf['filesize'] = $url_fs_filter;
                         break;
                     default:
                         $urlFilterEvent = new BatchManagerUrlFilter($bmf, is_string($filter) ? $filter : '');
@@ -649,6 +617,65 @@ final class BatchManagerController implements AdminSubControllerInterface
         } elseif ($tab === 'unit') {
             $this->batchManagerUnit();
         }
+    }
+
+    /** @param array<mixed> $bmf */
+    private function parseDuplicatesFilterValue(string $value, array &$bmf): void
+    {
+        $dupParts = explode('-', $value, 2);
+        $duplicate_field = $dupParts[1] ?? '';
+        $bmf['prefilter'] = 'duplicates';
+        if (DuplicateField::tryFrom($duplicate_field) !== null) {
+            $bmf['duplicates_' . $duplicate_field] = true;
+        }
+    }
+
+    /** @param array<mixed> $bmf */
+    private function parseDimensionFilterValue(string $value, array &$bmf): void
+    {
+        $dim_map = ['w' => 'width', 'h' => 'height', 'r' => 'ratio'];
+        /** @var array<string, string> $url_dim_filter */
+        $url_dim_filter = is_array($bmf['dimension'] ?? null) ? $bmf['dimension'] : [];
+        foreach (explode('-', $value) as $part) {
+            $values = explode('..', substr($part, 1));
+            if (!isset($dim_map[$part[0]])) {
+                continue;
+            }
+            $dtype = $dim_map[$part[0]];
+            $filter_validate = ['width' => FILTER_VALIDATE_INT, 'height' => FILTER_VALIDATE_INT, 'ratio' => FILTER_VALIDATE_FLOAT];
+            $valid = true;
+            foreach ($values as $v) {
+                if (filter_var($v, $filter_validate[$dtype]) === false) {
+                    $valid = false;
+                }
+            }
+            if ($valid) {
+                [$url_dim_filter['min_' . $dtype], $url_dim_filter['max_' . $dtype]] = $values;
+            }
+        }
+        $bmf['dimension'] = $url_dim_filter;
+    }
+
+    /**
+     * Returns false when any min/max value fails float validation,
+     * signalling the caller should abort the surrounding URL-filter loop
+     * (preserving the original break-2 semantics).
+     *
+     * @param array<mixed> $bmf
+     */
+    private function parseFilesizeFilterValue(string $value, array &$bmf): bool
+    {
+        $values = explode('..', $value);
+        foreach ($values as $v) {
+            if (filter_var($v, FILTER_VALIDATE_FLOAT) === false) {
+                return false;
+            }
+        }
+        /** @var array<string, string> $url_fs_filter */
+        $url_fs_filter = [];
+        [$url_fs_filter['min'], $url_fs_filter['max']] = $values;
+        $bmf['filesize'] = $url_fs_filter;
+        return true;
     }
 
     // ── batch_manager_global ──────────────────────────────────────────────────

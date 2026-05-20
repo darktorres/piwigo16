@@ -10,6 +10,7 @@ use Piwigo\Activity\ActivityLogger;
 use Piwigo\Activity\ActivityObject;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\CookieService;
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
@@ -338,7 +339,8 @@ final readonly class AuthService
             return false;
         }
 
-        if (ConnectionType::AuthKey === $validKey and !in_array($key['status'], ['normal', 'generic'])) {
+        $keyStatus = is_string($key['status'] ?? null) ? UserStatus::tryFrom($key['status']) : null;
+        if (ConnectionType::AuthKey === $validKey and !in_array($keyStatus, [UserStatus::Normal, UserStatus::Generic])) {
             return false;
         }
 
@@ -399,7 +401,7 @@ final readonly class AuthService
             }
         }
 
-        if (!in_array($userStatus, ['normal', 'generic'])) {
+        if (!in_array(UserStatus::tryFrom($userStatus), [UserStatus::Normal, UserStatus::Generic])) {
             return false;
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\LoggerRegistry;
@@ -166,8 +167,7 @@ final class UserBootstrap
 
         // Browser-language override for guests (read status from built array to avoid circular dep)
         if (Config::browserLanguage()) {
-            $status = is_string($builtUser['status'] ?? null) ? $builtUser['status'] : '';
-            if (in_array($status, ['guest', 'generic'], true)) {
+            if (in_array(UserStatus::tryFrom(is_string($builtUser['status'] ?? null) ? $builtUser['status'] : ''), [UserStatus::Guest, UserStatus::Generic], true)) {
                 $language = Kernel::service(PreferencesService::class)->getBrowserLanguage();
                 if ($language !== false && $language !== '') {
                     $builtUser['language'] = $language;

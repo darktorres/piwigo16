@@ -530,7 +530,7 @@ final class CategoryRepository extends AbstractRepository
         $qb = $this->conn->createQueryBuilder()
             ->select('id')
             ->from($this->table('categories'))
-            ->where("status = 'private'");
+            ->where("status = '" . Privacy::Private->value . "'");
         $qb->andWhere($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
         return array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
@@ -954,7 +954,7 @@ final class CategoryRepository extends AbstractRepository
                 'id_uppercat' => is_numeric($idUpRaw) ? (int) $idUpRaw : null,
                 'uppercats'   => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
                 'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
-                'status'      => is_string($row['status'] ?? null) ? $row['status'] : 'public',
+                'status'      => is_string($row['status'] ?? null) ? $row['status'] : Privacy::Public->value,
                 'visible'     => is_bool($visibleRaw) ? $visibleRaw : (is_numeric($visibleRaw) ? (int) $visibleRaw !== 0 : true),
             ];
         }
@@ -2257,7 +2257,7 @@ SELECT
         $rows = $this->conn->createQueryBuilder()
             ->select('id')
             ->from($this->table('categories'))
-            ->where("status = 'private'")
+            ->where("status = '" . Privacy::Private->value . "'")
             ->executeQuery()
             ->fetchFirstColumn();
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows);
@@ -2379,7 +2379,7 @@ SELECT
                 'id'           => (int) $idRaw,
                 'name'         => is_string($row['name'] ?? null) ? $row['name'] : '',
                 'rank'         => is_numeric($rankRaw) ? (int) $rankRaw : null,
-                'status'       => is_string($row['status'] ?? null) ? $row['status'] : 'public',
+                'status'       => is_string($row['status'] ?? null) ? $row['status'] : Privacy::Public->value,
                 'visible'      => is_bool($visibleRaw) ? $visibleRaw : (is_numeric($visibleRaw) ? (int) $visibleRaw !== 0 : true),
                 'uppercats'    => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
                 'lastmodified' => is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
@@ -2525,7 +2525,7 @@ SELECT
                 'permalink' => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
                 'dir'       => is_string($row['dir'] ?? null) ? $row['dir'] : null,
                 'rank'      => is_numeric($rankRaw) ? (int) $rankRaw : null,
-                'status'    => is_string($row['status'] ?? null) ? $row['status'] : 'public',
+                'status'    => is_string($row['status'] ?? null) ? $row['status'] : Privacy::Public->value,
             ];
         }
         return $out;
@@ -2594,7 +2594,7 @@ SELECT SQL_CALC_FOUND_ROWS
                 'comment'                         => is_string($row['comment'] ?? null) ? $row['comment'] : null,
                 'uppercats'                       => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
                 'permalink'                       => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
-                'status'                          => is_string($row['status'] ?? null) ? $row['status'] : 'public',
+                'status'                          => is_string($row['status'] ?? null) ? $row['status'] : Privacy::Public->value,
                 'global_rank'                     => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
                 'representative_picture_id'       => is_numeric($repPicIdRaw) ? (int) $repPicIdRaw : null,
                 'user_representative_picture_id'  => is_numeric($userRepPicRaw) ? (int) $userRepPicRaw : null,
@@ -3008,7 +3008,7 @@ SELECT
                 'name'                            => is_string($row['name'] ?? null) ? $row['name'] : '',
                 'comment'                         => is_string($row['comment'] ?? null) ? $row['comment'] : null,
                 'permalink'                       => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
-                'status'                          => is_string($row['status'] ?? null) ? $row['status'] : 'public',
+                'status'                          => is_string($row['status'] ?? null) ? $row['status'] : Privacy::Public->value,
                 'uppercats'                       => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
                 'global_rank'                     => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
                 'id_uppercat'                     => is_numeric($idUppercatRaw) ? (int) $idUppercatRaw : null,
@@ -3069,7 +3069,7 @@ SELECT
                 'uppercats'   => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
                 'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
                 'dir'         => is_string($row['dir'] ?? null) ? $row['dir'] : null,
-                'status'      => is_string($row['status'] ?? null) ? $row['status'] : 'public',
+                'status'      => is_string($row['status'] ?? null) ? $row['status'] : Privacy::Public->value,
                 'image_order' => is_string($row['image_order'] ?? null) ? $row['image_order'] : null,
             ];
         }

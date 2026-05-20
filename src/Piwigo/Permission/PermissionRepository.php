@@ -181,7 +181,7 @@ final class PermissionRepository extends AbstractRepository
             ->select('c.id')
             ->from($this->table('categories'), 'c')
             ->innerJoin('c', $this->table('user_access'), 'ua', 'ua.cat_id = c.id')
-            ->where("c.status = 'private'")
+            ->where("c.status = '" . Privacy::Private->value . "'")
             ->andWhere('ua.user_id = :userId')
             ->setParameter('userId', $userId);
 

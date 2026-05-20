@@ -12,6 +12,14 @@ class QMultiToken implements \Stringable
     /** @var array<QSingleToken|QMultiToken> */
     public array $tokens = []; // the actual array of QSingleToken or QMultiToken
 
+    // In-flight parser state. Reset at the start of parseExpression()
+    // and mutated by each per-char-class handler. Each QMultiToken
+    // instance carries its own — recursion (sub-expressions via '(')
+    // constructs a fresh QMultiToken with its own crt* slots.
+    private string $crtToken = '';
+    private int $crtModifier = 0;
+    private ?QSearchScope $crtScope = null;
+
     #[\Override]
     public function __toString(): string
     {
@@ -38,18 +46,17 @@ class QMultiToken implements \Stringable
         return $s;
     }
 
-    private function push(string &$token, int &$modifier, mixed &$scope): void
+    private function push(): void
     {
-        $typedScope = $scope instanceof QSearchScope ? $scope : null;
-        if (strlen($token) || ($typedScope !== null && $typedScope->nullable)) {
-            if ($typedScope !== null) {
-                $modifier |= QST_BREAK;
+        if (strlen($this->crtToken) || ($this->crtScope !== null && $this->crtScope->nullable)) {
+            if ($this->crtScope !== null) {
+                $this->crtModifier |= QST_BREAK;
             }
-            $this->tokens[] = new QSingleToken($token, $modifier, $typedScope);
+            $this->tokens[] = new QSingleToken($this->crtToken, $this->crtModifier, $this->crtScope);
         }
-        $token = '';
-        $modifier = 0;
-        $scope = null;
+        $this->crtToken = '';
+        $this->crtModifier = 0;
+        $this->crtScope = null;
     }
 
     /**
@@ -61,101 +68,156 @@ class QMultiToken implements \Stringable
     */
     public function parseExpression(string $q, int &$qi, int $level, QExpression $root): void
     {
-        $crt_token = '';
-        $crt_modifier = 0;
-        $crt_scope = null; // ?QSearchScope
+        $this->crtToken = '';
+        $this->crtModifier = 0;
+        $this->crtScope = null;
 
         for (; $qi < strlen($q); $qi++) {
             $ch = $q[$qi];
-            if (($crt_modifier & QST_QUOTED) == 0) {
-                switch ($ch) {
-                    case '(':
-                        if (strlen($crt_token)) {
-                            $this->push($crt_token, $crt_modifier, $crt_scope);
-                        }
-                        $sub = new QMultiToken();
-                        $qi++;
-                        $sub->parseExpression($q, $qi, $level + 1, $root);
-                        $sub->modifier = $crt_modifier;
-                        if ($crt_scope instanceof QSearchScope && $crt_scope->is_text) {
-                            $sub->applyScope($crt_scope); // eg. 'tag:(John OR Bill)'
-                        }
-                        $this->tokens[] = $sub;
-                        $crt_modifier = 0;
-                        $crt_scope = null;
-                        break;
-                    case ')':
-                        if ($level > 0) {
-                            break 2;
-                        }
-                        break;
-                    case ':':
-                        $scope = $root->scopes[strtolower($crt_token)] ?? null;
-                        if (!isset($scope) || isset($crt_scope)) { // white space
-                            $this->push($crt_token, $crt_modifier, $crt_scope);
-                        } else {
-                            $crt_token = '';
-                            $crt_scope = $scope;
-                        }
-                        break;
-                    case '"':
-                        if (strlen($crt_token)) {
-                            $this->push($crt_token, $crt_modifier, $crt_scope);
-                        }
-                        $crt_modifier |= QST_QUOTED;
-                        break;
-                    case '-':
-                        if (strlen($crt_token) || isset($crt_scope)) {
-                            $crt_token .= $ch;
-                        } else {
-                            $crt_modifier |= QST_NOT;
-                        }
-                        break;
-                    case '*':
-                        if (strlen($crt_token)) {
-                            $crt_token .= $ch;
-                        } // wildcard end later
-                        else {
-                            $crt_modifier |= QST_WILDCARD_BEGIN;
-                        }
-                        break;
-                    case '.':
-                        if ($crt_scope instanceof QSearchScope && !$crt_scope->is_text) {
-                            $crt_token .= $ch;
-                            break;
-                        }
-                        if (strlen($crt_token) && preg_match('/[0-9]/', substr($crt_token, -1))
-                          && $qi + 1 < strlen($q) && preg_match('/[0-9]/', $q[$qi + 1])) {// dot between digits is not a separator e.g. F2.8
-                            $crt_token .= $ch;
-                            break;
-                        }
-                        // else white space go on..
-                        // no break
-                    default:
-                        if (!($crt_scope instanceof QSearchScope) || !$crt_scope->processChar($ch, $crt_token)) {
-                            if (in_array($ch, [' ', ',', '.', ';', '!', '?'], true)) { // white space
-                                $this->push($crt_token, $crt_modifier, $crt_scope);
-                            } else {
-                                $crt_token .= $ch;
-                            }
-                        }
-                        break;
-                }
-            } else {// quoted
-                if ($ch == '"') {
-                    if ($qi + 1 < strlen($q) && $q[$qi + 1] == '*') {
-                        $crt_modifier |= QST_WILDCARD_END;
-                        $qi++;
-                    }
-                    $this->push($crt_token, $crt_modifier, $crt_scope);
-                } else {
-                    $crt_token .= $ch;
-                }
+            if (($this->crtModifier & QST_QUOTED) !== 0) {
+                $this->handleQuotedChar($ch, $q, $qi);
+                continue;
+            }
+            $exitLoop = match ($ch) {
+                '(' => $this->handleOpenParen($q, $qi, $level, $root),
+                ')' => $this->handleCloseParen($level),
+                ':' => $this->handleColon($root),
+                '"' => $this->handleQuote(),
+                '-' => $this->handleMinus(),
+                '*' => $this->handleAsterisk(),
+                '.' => $this->handleDot($q, $qi),
+                default => $this->handleDefault($ch),
+            };
+            if ($exitLoop) {
+                break;
             }
         }
 
-        $this->push($crt_token, $crt_modifier, $crt_scope);
+        $this->push();
+        $this->postProcessTokens($level);
+    }
 
+    // The handle* methods below all mutate $this->crtToken / crtModifier /
+    // crtScope and are flagged @phpstan-impure so PHPStan re-reads those
+    // properties after each call instead of remembering their pre-call
+    // value (the loop's QST_QUOTED check would otherwise be const-folded).
+
+    /** @phpstan-impure */
+    private function handleOpenParen(string $q, int &$qi, int $level, QExpression $root): bool
+    {
+        if (strlen($this->crtToken)) {
+            $this->push();
+        }
+        $sub = new QMultiToken();
+        $qi++;
+        $sub->parseExpression($q, $qi, $level + 1, $root);
+        $sub->modifier = $this->crtModifier;
+        if ($this->crtScope instanceof QSearchScope && $this->crtScope->is_text) {
+            $sub->applyScope($this->crtScope); // eg. 'tag:(John OR Bill)'
+        }
+        $this->tokens[] = $sub;
+        $this->crtModifier = 0;
+        $this->crtScope = null;
+        return false;
+    }
+
+    /** Returns true when the caller should exit the outer parse loop. */
+    private function handleCloseParen(int $level): bool
+    {
+        return $level > 0;
+    }
+
+    /** @phpstan-impure */
+    private function handleColon(QExpression $root): bool
+    {
+        $scope = $root->scopes[strtolower($this->crtToken)] ?? null;
+        if (!isset($scope) || isset($this->crtScope)) { // white space
+            $this->push();
+        } else {
+            $this->crtToken = '';
+            $this->crtScope = $scope;
+        }
+        return false;
+    }
+
+    /** @phpstan-impure */
+    private function handleQuote(): bool
+    {
+        if (strlen($this->crtToken)) {
+            $this->push();
+        }
+        $this->crtModifier |= QST_QUOTED;
+        return false;
+    }
+
+    /** @phpstan-impure */
+    private function handleMinus(): bool
+    {
+        if (strlen($this->crtToken) || isset($this->crtScope)) {
+            $this->crtToken .= '-';
+        } else {
+            $this->crtModifier |= QST_NOT;
+        }
+        return false;
+    }
+
+    /** @phpstan-impure */
+    private function handleAsterisk(): bool
+    {
+        if (strlen($this->crtToken)) {
+            $this->crtToken .= '*'; // wildcard end later
+        } else {
+            $this->crtModifier |= QST_WILDCARD_BEGIN;
+        }
+        return false;
+    }
+
+    /** @phpstan-impure */
+    private function handleDot(string $q, int $qi): bool
+    {
+        if ($this->crtScope instanceof QSearchScope && !$this->crtScope->is_text) {
+            $this->crtToken .= '.';
+            return false;
+        }
+        if (strlen($this->crtToken) && preg_match('/[0-9]/', substr($this->crtToken, -1))
+          && $qi + 1 < strlen($q) && preg_match('/[0-9]/', $q[$qi + 1])) { // dot between digits is not a separator e.g. F2.8
+            $this->crtToken .= '.';
+            return false;
+        }
+        // else white space go on..
+        return $this->handleDefault('.');
+    }
+
+    /** @phpstan-impure */
+    private function handleDefault(string $ch): bool
+    {
+        if ($this->crtScope instanceof QSearchScope && $this->crtScope->processChar($ch, $this->crtToken)) {
+            return false;
+        }
+        if (in_array($ch, [' ', ',', '.', ';', '!', '?'], true)) { // white space
+            $this->push();
+        } else {
+            $this->crtToken .= $ch;
+        }
+        return false;
+    }
+
+    /** @phpstan-impure */
+    private function handleQuotedChar(string $ch, string $q, int &$qi): void
+    {
+        if ($ch !== '"') {
+            $this->crtToken .= $ch;
+            return;
+        }
+        if ($qi + 1 < strlen($q) && $q[$qi + 1] == '*') {
+            $this->crtModifier |= QST_WILDCARD_END;
+            $qi++;
+        }
+        $this->push();
+    }
+
+    private function postProcessTokens(int $level): void
+    {
         for ($i = 0; $i < count($this->tokens); $i++) {
             $token = $this->tokens[$i];
             $remove = false;

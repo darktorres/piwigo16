@@ -143,21 +143,6 @@ final readonly class PermissionService
         $filter = FilterContextRegistry::current();
         $user   = CurrentUser::get()->rawAttributes;
 
-        $asIntArray = static function (mixed $v): array {
-            if (!is_array($v)) {
-                return [];
-            }
-            $out = [];
-            foreach ($v as $item) {
-                if (is_int($item)) {
-                    $out[] = $item;
-                } elseif (is_numeric($item)) {
-                    $out[] = (int) $item;
-                }
-            }
-            return $out;
-        };
-
         $clauses = [];
         $params  = [];
         $types   = [];
@@ -165,7 +150,7 @@ final readonly class PermissionService
         foreach ($conditionFields as $condition => $fieldName) {
             switch ($condition) {
                 case 'forbidden_categories':
-                    $ids = $asIntArray($user['forbidden_categories'] ?? null);
+                    $ids = $this->asIntArray($user['forbidden_categories'] ?? null);
                     if ($ids !== []) {
                         $clauses[] = $fieldName . ' NOT IN (?)';
                         $params[]  = $ids;
@@ -173,7 +158,7 @@ final readonly class PermissionService
                     }
                     break;
                 case 'visible_categories':
-                    $ids = $asIntArray($filter->visibleCategories);
+                    $ids = $this->asIntArray($filter->visibleCategories);
                     if ($ids !== []) {
                         $clauses[] = $fieldName . ' IN (?)';
                         $params[]  = $ids;
@@ -181,7 +166,7 @@ final readonly class PermissionService
                     }
                     break;
                 case 'visible_images':
-                    $ids = $asIntArray($filter->visibleImages);
+                    $ids = $this->asIntArray($filter->visibleImages);
                     if ($ids !== []) {
                         $clauses[] = $fieldName . ' IN (?)';
                         $params[]  = $ids;
@@ -189,27 +174,10 @@ final readonly class PermissionService
                     }
                     // no break — visible includes forbidden
                 case 'forbidden_images':
-                    if (!empty($user['image_access_list']) or ($user['image_access_type'] ?? null) != 'NOT IN') {
-                        $tablePrefix = null;
-                        if ($fieldName === 'id') {
-                            $tablePrefix = '';
-                        } elseif ($fieldName === 'i.id') {
-                            $tablePrefix = 'i.';
-                        }
-                        if (isset($tablePrefix)) {
-                            $clauses[] = $tablePrefix . 'level <= ?';
-                            $params[]  = is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0;
-                            $types[]   = ParameterType::INTEGER;
-                        } elseif (!empty($user['image_access_list']) and !empty($user['image_access_type'])) {
-                            $accessIds = $asIntArray($user['image_access_list']);
-                            $op = (is_string($user['image_access_type']) && $user['image_access_type'] === 'IN') ? 'IN' : 'NOT IN';
-                            if ($accessIds !== []) {
-                                $clauses[] = $fieldName . ' ' . $op . ' (?)';
-                                $params[]  = $accessIds;
-                                $types[]   = ArrayParameterType::INTEGER;
-                            }
-                        }
-                    }
+                    [$addClauses, $addParams, $addTypes] = $this->buildImageAccessClauses($fieldName, $user);
+                    array_push($clauses, ...$addClauses);
+                    array_push($params, ...$addParams);
+                    array_push($types, ...$addTypes);
                     break;
                 default:
                     throw new \LogicException('Unknown condition');
@@ -227,6 +195,64 @@ final readonly class PermissionService
         }
 
         return new SqlFragment($sql, $params, $types);
+    }
+
+    /** @return list<int> */
+    private function asIntArray(mixed $v): array
+    {
+        if (!is_array($v)) {
+            return [];
+        }
+        $out = [];
+        foreach ($v as $item) {
+            if (is_int($item)) {
+                $out[] = $item;
+            } elseif (is_numeric($item)) {
+                $out[] = (int) $item;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Builds the SQL clause/params/types for the forbidden_images / visible_images access check.
+     *
+     * @param  array<array-key, mixed> $user
+     * @return array{list<string>, list<mixed>, list<ParameterType|ArrayParameterType>}
+     */
+    private function buildImageAccessClauses(string $fieldName, array $user): array
+    {
+        if (empty($user['image_access_list']) && ($user['image_access_type'] ?? null) === 'NOT IN') {
+            return [[], [], []];
+        }
+
+        $tablePrefix = match ($fieldName) {
+            'id'   => '',
+            'i.id' => 'i.',
+            default => null,
+        };
+
+        if ($tablePrefix !== null) {
+            return [
+                [$tablePrefix . 'level <= ?'],
+                [is_numeric($user['level'] ?? null) ? (int) $user['level'] : 0],
+                [ParameterType::INTEGER],
+            ];
+        }
+
+        if (!empty($user['image_access_list']) && !empty($user['image_access_type'])) {
+            $accessIds = $this->asIntArray($user['image_access_list']);
+            $op        = (is_string($user['image_access_type']) && $user['image_access_type'] === 'IN') ? 'IN' : 'NOT IN';
+            if ($accessIds !== []) {
+                return [
+                    [$fieldName . ' ' . $op . ' (?)'],
+                    [$accessIds],
+                    [ArrayParameterType::INTEGER],
+                ];
+            }
+        }
+
+        return [[], [], []];
     }
 
     public function getRecentPhotosSql(string $dbField): string

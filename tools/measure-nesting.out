@@ -1,0 +1,121 @@
+=== Histogram (max nesting depth per function/method) ===
+  depth  0 :  2469 methods ( 61.8%)
+  depth  1 :   790 methods ( 19.8%)
+  depth  2 :   388 methods (  9.7%)
+  depth  3 :   186 methods (  4.7%)
+  depth  4 :    87 methods (  2.2%)
+  depth  5 :    44 methods (  1.1%)
+  depth 6+ :    30 methods (  0.8%)
+  -----
+  total : 3994 methods
+
+=== Top 50 methods by depth ===
+  depth=8  PictureController::__invoke  (src/Piwigo/Controller/PictureController.php:109)
+  depth=7  SearchService::qsearchEval  (src/Piwigo/Search/SearchService.php:859)
+  depth=7  SectionInitializer::initialize  (src/Piwigo/Section/SectionInitializer.php:74)
+  depth=7  GetListHandler::__invoke  (src/Piwigo/Ws/Action/Pwg/Categories/GetListHandler.php:51)
+  depth=7  ConfigurationController::configuration  (src/Piwigo/Controller/Admin/ConfigurationController.php:77)
+  depth=7  BatchManagerController::batchManager  (src/Piwigo/Controller/Admin/BatchManagerController.php:138)
+  depth=6  MetadataService::getIptcData  (src/Piwigo/Metadata/MetadataService.php:29)
+  depth=6  ImageAdminService::clearDerivativeCacheRec  (src/Piwigo/Admin/Image/ImageAdminService.php:227)
+  depth=6  ImageAdminService::getCacheSizeDerivatives  (src/Piwigo/Admin/Image/ImageAdminService.php:263)
+  depth=6  WatermarkProcessor::process  (src/Piwigo/Admin/Config/WatermarkProcessor.php:34)
+  depth=6  Updates::checkExtensions  (src/Piwigo/Admin/Updates.php:453)
+  depth=6  Updates::upgradeTo  (src/Piwigo/Admin/Updates.php:576)
+  depth=6  AdminService::deltree  (src/Piwigo/Admin/AdminService.php:95)
+  depth=6  UploadService::addUploadedFile  (src/Piwigo/Admin/Upload/UploadService.php:158)
+  depth=6  QMultiToken::postProcessTokens  (src/Piwigo/Search/QMultiToken.php:190)
+  depth=6  QNumericRangeScope::parse  (src/Piwigo/Search/QNumericRangeScope.php:15)
+  depth=6  FilteredSearchCreateHandler::__invoke  (src/Piwigo/Ws/Action/Pwg/Images/FilteredSearchCreateHandler.php:27)
+  depth=6  GetListHandler::__invoke  (src/Piwigo/Ws/Action/Pwg/Activity/GetListHandler.php:34)
+  depth=6  PwgNamedStruct::__construct  (src/Piwigo/Ws/PwgNamedStruct.php:28)
+  depth=6  ProfileService::saveProfileFromPost  (src/Piwigo/Users/ProfileService.php:55)
+  depth=6  UserService::getuserdata  (src/Piwigo/Users/UserService.php:211)
+  depth=6  UrlService::getAbsoluteRootUrl  (src/Piwigo/Url/UrlService.php:47)
+  depth=6  UrlService::parseWellKnownParamsUrl  (src/Piwigo/Url/UrlService.php:579)
+  depth=6  CalendarService::initializeCalendar  (src/Piwigo/Calendar/CalendarService.php:77)
+  depth=6  MailService::pwgMail  (src/Piwigo/Mail/MailService.php:431)
+  depth=6  MiscController::notificationByMail  (src/Piwigo/Controller/Admin/MiscController.php:167)
+  depth=6  MaintenanceController::maintenanceActions  (src/Piwigo/Controller/Admin/MaintenanceController.php:207)
+  depth=6  MaintenanceController::maintenanceEnv  (src/Piwigo/Controller/Admin/MaintenanceController.php:462)
+  depth=6  ExtensionsController::themesStandardPages  (src/Piwigo/Controller/Admin/ExtensionsController.php:658)
+  depth=6  ImageDerivativeController::__invoke  (src/Piwigo/Controller/ImageDerivativeController.php:47)
+  depth=5  NoPhotoYetRenderer::render  (src/Piwigo/Page/NoPhotoYetRenderer.php:41)
+  depth=5  MetadataService::cleanIptcValue  (src/Piwigo/Metadata/MetadataService.php:67)
+  depth=5  MetadataService::getExifData  (src/Piwigo/Metadata/MetadataService.php:102)
+  depth=5  StringUtil::getContainerInfo  (src/Piwigo/Core/StringUtil.php:441)
+  depth=5  Themes::extractThemeFiles  (src/Piwigo/Admin/Themes.php:493)
+  depth=5  MetadataAdminService::getSyncMetadata  (src/Piwigo/Admin/Metadata/MetadataAdminService.php:123)
+  depth=5  HistoryAdminService::buildHistoryWhereSql  (src/Piwigo/Admin/History/HistoryAdminService.php:69)
+  depth=5  HistoryAdminService::historySummarize  (src/Piwigo/Admin/History/HistoryAdminService.php:225)
+  depth=5  CategoryAdminService::setCatStatus  (src/Piwigo/Admin/Category/CategoryAdminService.php:290)
+  depth=5  ImageAdminService::getFsDirectories  (src/Piwigo/Admin/Image/ImageAdminService.php:145)
+  depth=5  Plugins::performAction  (src/Piwigo/Admin/Plugins.php:89)
+  depth=5  Plugins::extractPluginFiles  (src/Piwigo/Admin/Plugins.php:506)
+  depth=5  Languages::extractLanguageFiles  (src/Piwigo/Admin/Languages.php:269)
+  depth=5  AdminService::fetchRemote  (src/Piwigo/Admin/AdminService.php:220)
+  depth=5  NotificationAdminService::doSubscribeUnsubscribeNotificationByMail  (src/Piwigo/Admin/Notification/NotificationAdminService.php:253)
+  depth=5  UploadService::saveUploadFormConfig  (src/Piwigo/Admin/Upload/UploadService.php:115)
+  depth=5  QMultiToken::checkOperatorPriority  (src/Piwigo/Search/QMultiToken.php:269)
+  depth=5  SearchFilterRenderer::renderDateCreatedFilter  (src/Piwigo/Search/SearchFilterRenderer.php:440)
+  depth=5  SearchService::getRegularSearchResults  (src/Piwigo/Search/SearchService.php:172)
+  depth=5  SearchService::qsearchGetImages  (src/Piwigo/Search/SearchService.php:624)
+
+=== Reference-method sanity check (N1/N3/N4 targets) ===
+  depth=3  SearchFilterRenderer::render  (src/Piwigo/Search/SearchFilterRenderer.php:43)
+  depth=2  QMultiToken::parseExpression  (src/Piwigo/Search/QMultiToken.php:61)
+  depth=2  MaintenanceController::siteUpdate  (src/Piwigo/Controller/Admin/MaintenanceController.php:965)
+  depth=1  Updates::getPiwigoNewVersions  (src/Piwigo/Admin/Updates.php:151)
+  depth=4  MiscController::doActionSendMailNotification  (src/Piwigo/Controller/Admin/MiscController.php:1207)
+  depth=7  BatchManagerController::batchManager  (src/Piwigo/Controller/Admin/BatchManagerController.php:138)
+
+=== Files containing at least one method at depth >= 5 ===
+    5  src/Piwigo/Search/SearchService.php
+    4  src/Piwigo/Controller/Admin/MaintenanceController.php
+    3  src/Piwigo/Metadata/MetadataService.php
+    3  src/Piwigo/Admin/Image/ImageAdminService.php
+    2  src/Piwigo/Controller/Admin/BatchManagerController.php
+    2  src/Piwigo/Admin/Updates.php
+    2  src/Piwigo/Admin/AdminService.php
+    2  src/Piwigo/Admin/Upload/UploadService.php
+    2  src/Piwigo/Search/QMultiToken.php
+    2  src/Piwigo/Users/UserService.php
+    2  src/Piwigo/Url/UrlService.php
+    2  src/Piwigo/Mail/MailService.php
+    2  src/Piwigo/Controller/Admin/MiscController.php
+    2  src/Piwigo/Controller/Admin/ExtensionsController.php
+    2  src/Piwigo/Admin/History/HistoryAdminService.php
+    2  src/Piwigo/Admin/Plugins.php
+    2  src/Piwigo/Ws/PwgServer.php
+    2  src/Piwigo/Controller/Admin/AlbumController.php
+    1  src/Piwigo/Controller/PictureController.php
+    1  src/Piwigo/Section/SectionInitializer.php
+    1  src/Piwigo/Ws/Action/Pwg/Categories/GetListHandler.php
+    1  src/Piwigo/Controller/Admin/ConfigurationController.php
+    1  src/Piwigo/Admin/Config/WatermarkProcessor.php
+    1  src/Piwigo/Search/QNumericRangeScope.php
+    1  src/Piwigo/Ws/Action/Pwg/Images/FilteredSearchCreateHandler.php
+    1  src/Piwigo/Ws/Action/Pwg/Activity/GetListHandler.php
+    1  src/Piwigo/Ws/PwgNamedStruct.php
+    1  src/Piwigo/Users/ProfileService.php
+    1  src/Piwigo/Calendar/CalendarService.php
+    1  src/Piwigo/Controller/ImageDerivativeController.php
+    1  src/Piwigo/Page/NoPhotoYetRenderer.php
+    1  src/Piwigo/Core/StringUtil.php
+    1  src/Piwigo/Admin/Themes.php
+    1  src/Piwigo/Admin/Metadata/MetadataAdminService.php
+    1  src/Piwigo/Admin/Category/CategoryAdminService.php
+    1  src/Piwigo/Admin/Languages.php
+    1  src/Piwigo/Admin/Notification/NotificationAdminService.php
+    1  src/Piwigo/Search/SearchFilterRenderer.php
+    1  src/Piwigo/Image/SizingParams.php
+    1  src/Piwigo/Image/SrcImage.php
+    1  src/Piwigo/Image/DerivativeImage.php
+    1  src/Piwigo/Ws/Action/Pwg/History/SearchHandler.php
+    1  src/Piwigo/Ws/Action/Pwg/Categories/CalculateOrphansHandler.php
+    1  src/Piwigo/Ws/Action/Pwg/Categories/GetImagesHandler.php
+    1  src/Piwigo/Http/Middleware/FilterMiddleware.php
+    1  src/Piwigo/Site/LocalSiteReader.php
+    1  src/Piwigo/Controller/Admin/AdminController.php
+    1  src/Piwigo/Controller/CommentsController.php
+    1  src/Piwigo/Controller/IdentificationController.php

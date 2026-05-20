@@ -150,93 +150,22 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
 
             switch ($section) {
                 case 'main':
-                    if (!Config::has('order_by_custom') && !Config::has('order_by_inside_category_custom')) {
-                        $this->orderByService->normalizeFromPost($sort_fields);
-                    }
-
-                    if (!isset($_POST['email_admin_on_new_user']) || $_POST['email_admin_on_new_user'] === '') {
-                        $_POST['email_admin_on_new_user'] = 'none';
-                    } elseif ('all' == $_POST['email_admin_on_new_user_filter']) {
-                        $_POST['email_admin_on_new_user'] = 'all';
-                    } else {
-                        $filterGroup = $_POST['email_admin_on_new_user_filter_group'] ?? null;
-                        $_POST['email_admin_on_new_user'] = (is_string($filterGroup) && $filterGroup !== '') ? 'group:' . $filterGroup : 'all';
-                    }
-
-                    foreach ($main_checkboxes as $checkbox) {
-                        $_POST[$checkbox] = (!isset($_POST[$checkbox]) || $_POST[$checkbox] === '') ? 'false' : 'true';
-                    }
+                    $this->handleMainSectionPost($sort_fields, $main_checkboxes);
                     break;
-
                 case 'watermark':
                     $this->watermarkProcessor->process();
                     break;
-
                 case 'sizes':
                     $this->sizesProcessor->process();
                     break;
-
                 case 'comments':
-                    $nb_comment_page = is_string($rawNbCommentPage = $_POST['nb_comment_page'] ?? null) ? $rawNbCommentPage : '';
-                    if (!preg_match($int_pattern, $nb_comment_page)
-                        || (is_numeric($nb_comment_page) && $nb_comment_page < 5)
-                        || (is_numeric($nb_comment_page) && $nb_comment_page > 50)) {
-                        PageState::current()->addError(Lang::t('The number of comments a page must be between 5 and 50 included.'));
-                    }
-                    foreach ($comments_checkboxes as $checkbox) {
-                        $_POST[$checkbox] = (!isset($_POST[$checkbox]) || $_POST[$checkbox] === '') ? 'false' : 'true';
-                    }
+                    $this->handleCommentsSectionPost($comments_checkboxes);
                     break;
-
                 case 'display':
-                    $nb_categories_page = is_string($rawNbCatPage = $_POST['nb_categories_page'] ?? null) ? $rawNbCatPage : '';
-                    if (!preg_match($int_pattern, $nb_categories_page)
-                        || (is_numeric($nb_categories_page) && $nb_categories_page < 4)) {
-                        PageState::current()->addError(Lang::t('The number of albums a page must be above 4.'));
-                    }
-                    foreach ($display_checkboxes as $checkbox) {
-                        $_POST[$checkbox] = (!isset($_POST[$checkbox]) || $_POST[$checkbox] === '') ? 'false' : 'true';
-                    }
-                    $picInfoRaw = $_POST['picture_informations'] ?? null;
-                    $post_picture_informations = is_array($picInfoRaw) ? $picInfoRaw : [];
-                    foreach ($display_info_checkboxes as $checkbox) {
-                        $picInfoVal = $post_picture_informations[$checkbox] ?? null;
-                        $post_picture_informations[$checkbox] = $picInfoVal !== null;
-                    }
-                    $_POST['picture_informations'] = json_encode($post_picture_informations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+                    $this->handleDisplaySectionPost($display_checkboxes, $display_info_checkboxes);
                     break;
-
                 case 'search':
-                    $filtersViewsRaw = $_POST['filters_views'] ?? null;
-                    $rawSrc = is_array($filtersViewsRaw) ? $filtersViewsRaw : [];
-                    $filtersViewsBoxRaw = $_POST['filters_views_box'] ?? null;
-                    $post_filters_views_box = is_array($filtersViewsBoxRaw) ? $filtersViewsBoxRaw : [];
-                    /** @var array<string, mixed> $post_filters_views */
-                    $post_filters_views = [];
-                    foreach ($rawSrc as $key => $val) {
-                        if (is_string($key)) {
-                            $post_filters_views[$key] = $val;
-                        }
-                    }
-                    foreach ($filters_names_checkboxes as $checkbox) {
-                        $fvRaw = $post_filters_views[$checkbox] ?? null;
-                        $fv_entry = is_array($fvRaw) ? $fvRaw : [];
-                        $fvBoxVal = $post_filters_views_box[$checkbox] ?? null;
-                        if ($fvBoxVal === null || $fvBoxVal === '') {
-                            $fv_entry['access'] = 'nobody';
-                            $fv_entry['default'] = false;
-                        } else {
-                            $fvDefaultVal = $fv_entry['default'] ?? null;
-                            $fv_entry['default'] = $fvDefaultVal !== null && $fvDefaultVal !== '';
-                        }
-                        $post_filters_views[$checkbox] = $fv_entry;
-                    }
-                    $lastFiltersConfVal = $post_filters_views['last_filters_conf'] ?? null;
-                    $post_filters_views['last_filters_conf'] = $lastFiltersConfVal !== null && $lastFiltersConfVal !== '';
-                    $this->filterViewRepo->replaceAll($post_filters_views);
-                    // Removed from $_POST so the conf-table loop below
-                    // doesn't try to mirror this key back into config.
-                    unset($_POST['filters_views']);
+                    $this->handleSearchSectionPost($filters_names_checkboxes);
                     break;
             }
 
@@ -532,6 +461,104 @@ final readonly class ConfigurationController implements AdminSubControllerInterf
         $tpl->assign('isWebmaster', $this->permissionService->isWebmaster() ? 1 : 0);
         $tpl->assign('ADMIN_PAGE_TITLE', Lang::t('Configuration'));
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'configuration_' . $section . '.latte');
+    }
+
+    /**
+     * @param array<string, string> $sortFields
+     * @param list<string>          $mainCheckboxes
+     */
+    private function handleMainSectionPost(array $sortFields, array $mainCheckboxes): void
+    {
+        if (!Config::has('order_by_custom') && !Config::has('order_by_inside_category_custom')) {
+            $this->orderByService->normalizeFromPost($sortFields);
+        }
+
+        if (!isset($_POST['email_admin_on_new_user']) || $_POST['email_admin_on_new_user'] === '') {
+            $_POST['email_admin_on_new_user'] = 'none';
+        } elseif ('all' == $_POST['email_admin_on_new_user_filter']) {
+            $_POST['email_admin_on_new_user'] = 'all';
+        } else {
+            $filterGroup = $_POST['email_admin_on_new_user_filter_group'] ?? null;
+            $_POST['email_admin_on_new_user'] = (is_string($filterGroup) && $filterGroup !== '') ? 'group:' . $filterGroup : 'all';
+        }
+
+        foreach ($mainCheckboxes as $checkbox) {
+            $_POST[$checkbox] = (!isset($_POST[$checkbox]) || $_POST[$checkbox] === '') ? 'false' : 'true';
+        }
+    }
+
+    /** @param list<string> $commentsCheckboxes  */
+    private function handleCommentsSectionPost(array $commentsCheckboxes): void
+    {
+        $nb_comment_page = is_string($rawNbCommentPage = $_POST['nb_comment_page'] ?? null) ? $rawNbCommentPage : '';
+        if (!preg_match('/^\d+$/', $nb_comment_page)
+            || (is_numeric($nb_comment_page) && $nb_comment_page < 5)
+            || (is_numeric($nb_comment_page) && $nb_comment_page > 50)) {
+            PageState::current()->addError(Lang::t('The number of comments a page must be between 5 and 50 included.'));
+        }
+        foreach ($commentsCheckboxes as $checkbox) {
+            $_POST[$checkbox] = (!isset($_POST[$checkbox]) || $_POST[$checkbox] === '') ? 'false' : 'true';
+        }
+    }
+
+    /**
+     * @param list<string> $displayCheckboxes
+     * @param list<string> $displayInfoCheckboxes
+     */
+    private function handleDisplaySectionPost(array $displayCheckboxes, array $displayInfoCheckboxes): void
+    {
+        $nb_categories_page = is_string($rawNbCatPage = $_POST['nb_categories_page'] ?? null) ? $rawNbCatPage : '';
+        if (!preg_match('/^\d+$/', $nb_categories_page) || (is_numeric($nb_categories_page) && $nb_categories_page < 4)) {
+            PageState::current()->addError(Lang::t('The number of albums a page must be above 4.'));
+        }
+        foreach ($displayCheckboxes as $checkbox) {
+            $_POST[$checkbox] = (!isset($_POST[$checkbox]) || $_POST[$checkbox] === '') ? 'false' : 'true';
+        }
+        $picInfoRaw = $_POST['picture_informations'] ?? null;
+        $post_picture_informations = is_array($picInfoRaw) ? $picInfoRaw : [];
+        foreach ($displayInfoCheckboxes as $checkbox) {
+            $picInfoVal = $post_picture_informations[$checkbox] ?? null;
+            $post_picture_informations[$checkbox] = $picInfoVal !== null;
+        }
+        $_POST['picture_informations'] = json_encode($post_picture_informations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+    }
+
+    /** @param list<string> $filtersNamesCheckboxes */
+    private function handleSearchSectionPost(array $filtersNamesCheckboxes): void
+    {
+        $filtersViewsRaw    = $_POST['filters_views'] ?? null;
+        $rawSrc             = is_array($filtersViewsRaw) ? $filtersViewsRaw : [];
+        $filtersViewsBoxRaw = $_POST['filters_views_box'] ?? null;
+        $filtersViewsBox    = is_array($filtersViewsBoxRaw) ? $filtersViewsBoxRaw : [];
+
+        /** @var array<string, mixed> $filtersViews */
+        $filtersViews = [];
+        foreach ($rawSrc as $key => $val) {
+            if (is_string($key)) {
+                $filtersViews[$key] = $val;
+            }
+        }
+
+        foreach ($filtersNamesCheckboxes as $checkbox) {
+            $fvRaw   = $filtersViews[$checkbox] ?? null;
+            $fvEntry = is_array($fvRaw) ? $fvRaw : [];
+            $fvBoxVal = $filtersViewsBox[$checkbox] ?? null;
+            if ($fvBoxVal === null || $fvBoxVal === '') {
+                $fvEntry['access']  = 'nobody';
+                $fvEntry['default'] = false;
+            } else {
+                $fvDefaultVal       = $fvEntry['default'] ?? null;
+                $fvEntry['default'] = $fvDefaultVal !== null && $fvDefaultVal !== '';
+            }
+            $filtersViews[$checkbox] = $fvEntry;
+        }
+
+        $lastFiltersConfVal = $filtersViews['last_filters_conf'] ?? null;
+        $filtersViews['last_filters_conf'] = $lastFiltersConfVal !== null && $lastFiltersConfVal !== '';
+        $this->filterViewRepo->replaceAll($filtersViews);
+        // Removed from $_POST so the conf-table loop in the caller
+        // doesn't try to mirror this key back into config.
+        unset($_POST['filters_views']);
     }
 
     private function orderByIsLocal(): bool

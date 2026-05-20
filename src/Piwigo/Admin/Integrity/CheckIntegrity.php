@@ -144,71 +144,83 @@ final class CheckIntegrity
      */
     public function display(): void
     {
-        $template = TemplateRegistry::current();
+        if (count($this->retrieve_list) === 0) {
+            return;
+        }
 
-        $check_automatic_correction = false;
+        $template = TemplateRegistry::current();
         $submit_automatic_correction = false;
         $submit_ignore = false;
 
-        if (count($this->retrieve_list) > 0) {
-            foreach ($this->retrieve_list as $i => $c13y) {
-                $can_select = false;
-                $c13y_display = [
-                   'id' => $c13y['id'],
-                   'anomaly' => $c13y['anomaly'],
-                   'show_ignore_msg' => false,
-                   'show_correction_success_fct' => false,
-                   'correction_error_fct' => '',
-                   'show_correction_fct' => false,
-                   'show_correction_bad_fct' => false,
-                   'correction_msg' => '',
-                  ];
+        foreach ($this->retrieve_list as $c13y) {
+            $c13y_display = $this->buildAnomalyDisplay($c13y);
 
-                if (isset($c13y['ignored'])) {
-                    if (!$c13y['ignored']) {
-                        die('$c13y[\'ignored\'] cannot be false');
-                    }
-                    $c13y_display['show_ignore_msg'] = true;
-                } else {
-                    if (empty($c13y['correction_fct'])) {
-                        $can_select = true;
-                    } elseif (isset($c13y['corrected'])) {
-                        if ($c13y['corrected']) {
-                            $c13y_display['show_correction_success_fct'] = true;
-                        } else {
-                            $c13y_display['correction_error_fct'] = new Html($this->getHtlmLinksMoreInfo());
-                        }
-                    } elseif ($c13y['is_callable']) {
-                        $c13y_display['show_correction_fct'] = true;
-                        $rawId = $c13y['id'] ?? null;
-                        $template->append('c13y_do_check', is_string($rawId) ? $rawId : (is_int($rawId) ? (string) $rawId : ''));
-                        $submit_automatic_correction = true;
-                        $can_select = true;
-                    } else {
-                        $c13y_display['show_correction_bad_fct'] = true;
-                        $can_select = true;
-                    }
-
-                    if (!empty($c13y['correction_msg']) and !isset($c13y['corrected'])) {
-                        $msg = $c13y['correction_msg'];
-                        $c13y_display['correction_msg'] = is_string($msg) ? new Html($msg) : $msg;
-                    }
-                }
-
-                $c13y_display['can_select'] = $can_select;
-                if ($can_select) {
-                    $submit_ignore = true;
-                }
-
-                $template->append('c13y_list', $c13y_display);
+            if ($c13y_display['show_correction_fct']) {
+                $rawId = $c13y['id'] ?? null;
+                $template->append('c13y_do_check', is_string($rawId) ? $rawId : (is_int($rawId) ? (string) $rawId : ''));
+                $submit_automatic_correction = true;
             }
 
-            $template->assign('c13y_show_submit_automatic_correction', $submit_automatic_correction);
-            $template->assign('c13y_show_submit_ignore', $submit_ignore);
+            if ($c13y_display['can_select']) {
+                $submit_ignore = true;
+            }
 
-            $template->concat('ADMIN_CONTENT', (string) $template->parse('check_integrity.latte', true));
-
+            $template->append('c13y_list', $c13y_display);
         }
+
+        $template->assign('c13y_show_submit_automatic_correction', $submit_automatic_correction);
+        $template->assign('c13y_show_submit_ignore', $submit_ignore);
+        $template->concat('ADMIN_CONTENT', (string) $template->parse('check_integrity.latte', true));
+    }
+
+    /**
+     * @param  array<array-key, mixed> $c13y
+     * @return array<string, mixed>
+     */
+    private function buildAnomalyDisplay(array $c13y): array
+    {
+        $display = [
+            'id'                           => $c13y['id'],
+            'anomaly'                      => $c13y['anomaly'],
+            'show_ignore_msg'              => false,
+            'show_correction_success_fct'  => false,
+            'correction_error_fct'         => '',
+            'show_correction_fct'          => false,
+            'show_correction_bad_fct'      => false,
+            'correction_msg'               => '',
+            'can_select'                   => false,
+        ];
+
+        if (isset($c13y['ignored'])) {
+            if (!$c13y['ignored']) {
+                die('$c13y[\'ignored\'] cannot be false');
+            }
+            $display['show_ignore_msg'] = true;
+            return $display;
+        }
+
+        if (empty($c13y['correction_fct'])) {
+            $display['can_select'] = true;
+        } elseif (isset($c13y['corrected'])) {
+            if ($c13y['corrected']) {
+                $display['show_correction_success_fct'] = true;
+            } else {
+                $display['correction_error_fct'] = new Html($this->getHtlmLinksMoreInfo());
+            }
+        } elseif ($c13y['is_callable']) {
+            $display['show_correction_fct'] = true;
+            $display['can_select'] = true;
+        } else {
+            $display['show_correction_bad_fct'] = true;
+            $display['can_select'] = true;
+        }
+
+        if (!empty($c13y['correction_msg']) and !isset($c13y['corrected'])) {
+            $msg = $c13y['correction_msg'];
+            $display['correction_msg'] = is_string($msg) ? new Html($msg) : $msg;
+        }
+
+        return $display;
     }
 
     /**

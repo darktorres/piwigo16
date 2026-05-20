@@ -732,167 +732,25 @@ final class BatchManagerController implements AdminSubControllerInterface
 
             $selectActionRaw = $_POST['selectAction'] ?? null;
             $action   = is_string($selectActionRaw) ? $selectActionRaw : '';
-            $redirect = false;
+            $redirect = match ($action) {
+                'remove_from_caddie'   => $this->handleBatchRemoveFromCaddie($user, $collection_int),
+                'add_tags'             => $this->handleBatchAddTags($collection_int),
+                'del_tags'             => $this->handleBatchDelTags($collection_int, $bmf),
+                'associate'            => $this->handleBatchAssociate($collection_int),
+                'move'                 => $this->handleBatchMove($collection_int, $bmf),
+                'dissociate'           => $this->handleBatchDissociate($collection_int),
+                'author'               => $this->handleBatchAuthor($collection_int),
+                'title'                => $this->handleBatchTitle($collection_int),
+                'date_creation'        => $this->handleBatchDateCreation($collection_int),
+                'level'                => $this->handleBatchLevel($collection_int, $bmf),
+                'add_to_caddie'        => $this->handleBatchAddToCaddie($collection_int),
+                'delete'               => $this->handleBatchDelete($collection_int),
+                'metadata'             => $this->handleBatchMetadata($collection_int),
+                'delete_derivatives'   => $this->handleBatchDeleteDerivatives($collection_int),
+                'generate_derivatives' => $this->handleBatchGenerateDerivatives(),
+                default                => false,
+            };
 
-            if ('remove_from_caddie' == $action) {
-                $this->userCaddieRepository->deleteByImageIds(is_numeric($user['id']) ? (int) $user['id'] : 0, $collection_int);
-                $redirect = true;
-            } elseif ('add_tags' == $action) {
-                if (!isset($_POST['add_tags']) || $_POST['add_tags'] === '') {
-                    PageState::current()->addError(Lang::t('Select at least one tag'));
-                } else {
-                    /** @var array<mixed>|string $add_tags_raw */
-                    $add_tags_raw = $_POST['add_tags'];
-                    if (is_array($add_tags_raw)) {
-                        $add_tags_val = array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $add_tags_raw);
-                    } else {
-                        $add_tags_val = $add_tags_raw;
-                    }
-                    $tag_ids = $this->tagAdminService->getTagIds($add_tags_val);
-                    $this->tagAdminService->addTags($tag_ids, $collection_int);
-                    if ('no_tag' == $this->prefilter) {
-                        $redirect = true;
-                    }
-                }
-            } elseif ('del_tags' == $action) {
-                $del_tags_raw = $_POST['del_tags'] ?? null;
-                $del_tags_post = is_array($del_tags_raw) ? $del_tags_raw : [];
-                /** @var array<int> $del_tags_int */
-                $del_tags_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $del_tags_post);
-                if (count($del_tags_int) > 0) {
-                    $taglist_before = $this->tagAdminService->getImageTagIds($collection_int);
-                    $this->tagRepository->deleteImageTagsByImageIdsAndTagIds($collection_int, $del_tags_int);
-                    $taglist_after  = $this->tagAdminService->getImageTagIds($collection_int);
-                    /** @var array<int> $images_to_update */
-                    $images_to_update = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->tagAdminService->compareImageTagLists($taglist_before, $taglist_after));
-                    $this->imageAdminService->updateImagesLastmodified($images_to_update);
-                    $bmf_tags_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($bmf['tags'] ?? null) ? $bmf['tags'] : []);
-                    if (count(array_intersect($bmf_tags_int, $del_tags_int)) > 0) {
-                        $redirect = true;
-                    }
-                } else {
-                    PageState::current()->addError(Lang::t('Select at least one tag'));
-                }
-            } elseif ('associate' == $action) {
-                if (!isset($_POST['associate']) || $_POST['associate'] === '') {
-                    PageState::current()->addError(Lang::t('Select at least one album'));
-                } else {
-                    $associate_raw = is_array($_POST['associate']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : [];
-                    $this->categoryAdminService->associateImagesToCategories($collection_int, $associate_raw);
-                    $this->session->flash->add('info', Lang::t('Information data registered in database'));
-                    if ('no_album' == $this->prefilter) {
-                        $redirect = true;
-                    } elseif ('no_virtual_album' == $this->prefilter) {
-                        $rawAssociate  = $_POST['associate'];
-                        $associate_id  = is_string($rawAssociate) ? $rawAssociate : '';
-                        $category_info = $this->categoryService->getCatInfo($associate_id);
-                        if (!isset($category_info['dir']) || $category_info['dir'] === '') {
-                            $redirect = true;
-                        }
-                    }
-                }
-            } elseif ('move' == $action) {
-                $moveRaw     = $_POST['move'] ?? null;
-                $move_id     = is_string($moveRaw) ? $moveRaw : '';
-                $move_id_int = is_numeric($move_id) ? (int) $move_id : 0;
-                $this->categoryAdminService->moveImagesToCategories($collection_int, [$move_id_int]);
-                $this->session->flash->add('info', Lang::t('Information data registered in database'));
-                if ('no_album' == $this->prefilter) {
-                    $redirect = true;
-                } elseif ('no_virtual_album' == $this->prefilter) {
-                    $category_info = $this->categoryService->getCatInfo($move_id);
-                    if (!isset($category_info['dir']) || $category_info['dir'] === '') {
-                        $redirect = true;
-                    }
-                } elseif (isset($bmf['category']) && $move_id != (is_string($bmf['category']) ? $bmf['category'] : '')) {
-                    $redirect = true;
-                }
-            } elseif ('dissociate' == $action) {
-                $dissociate_key = $_POST['dissociate'] ?? null;
-                $dissociate_raw = is_string($dissociate_key) ? $dissociate_key : '';
-                $nb_dissociated = $this->categoryAdminService->dissociateImagesFromCategory($collection_int, $dissociate_raw);
-                if ($nb_dissociated > 0) {
-                    $this->session->flash->add('info', Lang::t('Information data registered in database'));
-                    $redirect = true;
-                }
-            } elseif ('author' == $action) {
-                $rawAuthor   = isset($_POST['remove_author']) ? null : ($_POST['author'] ?? null);
-                $authorValue = is_string($rawAuthor) ? $rawAuthor : null;
-                $datas = [];
-                foreach ($collection_int as $image_id) {
-                    $datas[] = ['id' => $image_id, 'author' => $authorValue];
-                }
-                $this->imageRepository->setAuthorBatch($datas);
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, ActivityAction::Edit, ['action' => 'author']));
-            } elseif ('title' == $action) {
-                $rawTitle   = isset($_POST['remove_title']) ? null : ($_POST['title'] ?? null);
-                $titleValue = is_string($rawTitle) ? $rawTitle : null;
-                $datas = [];
-                foreach ($collection_int as $image_id) {
-                    $datas[] = ['id' => $image_id, 'name' => $titleValue];
-                }
-                $this->imageRepository->setNameBatch($datas);
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, ActivityAction::Edit, ['action' => 'title']));
-            } elseif ('date_creation' == $action) {
-                $rawDateCreation = (isset($_POST['remove_date_creation']) || !isset($_POST['date_creation']) || $_POST['date_creation'] === '') ? null : $_POST['date_creation'];
-                $date_creation   = is_string($rawDateCreation) ? $rawDateCreation : null;
-                $datas = [];
-                foreach ($collection_int as $image_id) {
-                    $datas[] = ['id' => $image_id, 'date_creation' => $date_creation];
-                }
-                $this->imageRepository->setDateCreationBatch($datas);
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, ActivityAction::Edit, ['action' => 'date_creation']));
-            } elseif ('level' == $action) {
-                $rawLevel   = $_POST['level'] ?? null;
-                $levelValue = is_numeric($rawLevel) ? (int) $rawLevel : 0;
-                $datas = [];
-                foreach ($collection_int as $image_id) {
-                    $datas[] = ['id' => $image_id, 'level' => $levelValue];
-                }
-                $this->imageRepository->setLevelBatch($datas);
-                $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection_int, ActivityAction::Edit, ['action' => 'privacy_level']));
-                if (isset($bmf['level'])) {
-                    $bmf_level_val  = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
-                    $postLevelRaw = $_POST['level'] ?? null;
-                    $post_level_val = is_numeric($postLevelRaw) ? (int) $postLevelRaw : 0;
-                    if ($post_level_val < $bmf_level_val) {
-                        $redirect = true;
-                    }
-                }
-            } elseif ('add_to_caddie' == $action) {
-                $this->userCaddieRepository->addElements(CurrentUser::get()->id, array_values($collection_int));
-            } elseif ('delete' == $action) {
-                if (isset($_POST['confirm_deletion']) && 1 == $_POST['confirm_deletion']) {
-                    if (count($collection_int) > 0) {
-                        $this->session->flash->add('info', Translator::get()->plural('%d photo was deleted', '%d photos were deleted', count($collection_int)));
-                        $redirect_url = $this->urlGenerator->admin() . '&page=' . (is_string($rawPage = $_GET['page'] ?? null) ? $rawPage : '');
-                        $redirect     = true;
-                    } else {
-                        PageState::current()->addError(Lang::t('No photo can be deleted'));
-                    }
-                } else {
-                    PageState::current()->addError(Lang::t('You need to confirm deletion'));
-                }
-            } elseif ('metadata' == $action) {
-                PageState::current()->addInfo(new Html(Lang::t('Metadata synchronized from file') . ' <span class="badge">' . count($collection_int) . '</span>'));
-            } elseif ('delete_derivatives' == $action && isset($_POST['del_derivatives_type']) && $_POST['del_derivatives_type'] !== '') {
-                foreach ($this->imageRepository->findPathsAndRepresentativesByIds($collection_int) as $proj) {
-                    $del_types = is_array($_POST['del_derivatives_type']) ? $_POST['del_derivatives_type'] : [];
-                    $infoShim  = ['path' => $proj->path->value, 'representative_ext' => $proj->representativeExt];
-                    foreach ($del_types as $dtype) {
-                        $this->imageAdminService->deleteElementDerivatives($infoShim, is_string($dtype) ? $dtype : '');
-                    }
-                }
-            } elseif ('generate_derivatives' == $action) {
-                if ($_POST['regenerateSuccess'] != '0') {
-                    $regenSuccess = $_POST['regenerateSuccess'] ?? '';
-                    PageState::current()->addInfo(Lang::t('%s photos have been regenerated', is_string($regenSuccess) ? $regenSuccess : ''));
-                }
-                if ($_POST['regenerateError'] != '0') {
-                    $regenError = $_POST['regenerateError'] ?? '';
-                    PageState::current()->addWarning(Lang::t('%s photos can not be regenerated', is_string($regenError) ? $regenError : ''));
-                }
-            }
 
             if (!in_array($action, ['remove_from_caddie', 'add_to_caddie', 'delete_derivatives', 'generate_derivatives'])) {
                 $this->userAdminService->invalidateUserCache();
@@ -1016,6 +874,225 @@ final class BatchManagerController implements AdminSubControllerInterface
 
         $this->dispatcher->dispatch(new LocEndElementSetGlobal());
         $tpl->assignVarFromTemplate('ADMIN_CONTENT', 'batch_manager_global.latte');
+    }
+
+    // ── batch_manager_global action handlers ─────────────────────────────────
+
+    /**
+     * @param array<string, mixed> $user
+     * @param array<int>           $collection
+     */
+    private function handleBatchRemoveFromCaddie(array $user, array $collection): bool
+    {
+        $this->userCaddieRepository->deleteByImageIds(is_numeric($user['id']) ? (int) $user['id'] : 0, $collection);
+        return true;
+    }
+
+    /** @param array<int> $collection */
+    private function handleBatchAddTags(array $collection): bool
+    {
+        if (!isset($_POST['add_tags']) || $_POST['add_tags'] === '') {
+            PageState::current()->addError(Lang::t('Select at least one tag'));
+            return false;
+        }
+        /** @var array<mixed>|string $add_tags_raw */
+        $add_tags_raw = $_POST['add_tags'];
+        $add_tags_val = is_array($add_tags_raw)
+            ? array_map(static fn (mixed $v): string => is_string($v) ? $v : '', $add_tags_raw)
+            : $add_tags_raw;
+        $this->tagAdminService->addTags($this->tagAdminService->getTagIds($add_tags_val), $collection);
+        return 'no_tag' === $this->prefilter;
+    }
+
+    /**
+     * @param array<int>           $collection
+     * @param array<string, mixed> $bmf
+     */
+    private function handleBatchDelTags(array $collection, array $bmf): bool
+    {
+        $del_tags_raw  = $_POST['del_tags'] ?? null;
+        $del_tags_post = is_array($del_tags_raw) ? $del_tags_raw : [];
+        /** @var array<int> $del_tags_int */
+        $del_tags_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $del_tags_post);
+        if (count($del_tags_int) === 0) {
+            PageState::current()->addError(Lang::t('Select at least one tag'));
+            return false;
+        }
+        $taglist_before   = $this->tagAdminService->getImageTagIds($collection);
+        $this->tagRepository->deleteImageTagsByImageIdsAndTagIds($collection, $del_tags_int);
+        $taglist_after    = $this->tagAdminService->getImageTagIds($collection);
+        /** @var array<int> $images_to_update */
+        $images_to_update = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->tagAdminService->compareImageTagLists($taglist_before, $taglist_after));
+        $this->imageAdminService->updateImagesLastmodified($images_to_update);
+        $bmf_tags_int = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, is_array($bmf['tags'] ?? null) ? $bmf['tags'] : []);
+        return count(array_intersect($bmf_tags_int, $del_tags_int)) > 0;
+    }
+
+    /** @param array<int> $collection */
+    private function handleBatchAssociate(array $collection): bool
+    {
+        if (!isset($_POST['associate']) || $_POST['associate'] === '') {
+            PageState::current()->addError(Lang::t('Select at least one album'));
+            return false;
+        }
+        $associate_raw = is_array($_POST['associate']) ? array_map(fn ($v): int => is_numeric($v) ? (int) $v : 0, $_POST['associate']) : [];
+        $this->categoryAdminService->associateImagesToCategories($collection, $associate_raw);
+        $this->session->flash->add('info', Lang::t('Information data registered in database'));
+        if ('no_album' === $this->prefilter) {
+            return true;
+        }
+        if ('no_virtual_album' === $this->prefilter) {
+            $associate_id  = is_string($_POST['associate']) ? $_POST['associate'] : '';
+            $category_info = $this->categoryService->getCatInfo($associate_id);
+            return !isset($category_info['dir']) || $category_info['dir'] === '';
+        }
+        return false;
+    }
+
+    /**
+     * @param array<int>           $collection
+     * @param array<string, mixed> $bmf
+     */
+    private function handleBatchMove(array $collection, array $bmf): bool
+    {
+        $moveRaw     = $_POST['move'] ?? null;
+        $move_id     = is_string($moveRaw) ? $moveRaw : '';
+        $move_id_int = is_numeric($move_id) ? (int) $move_id : 0;
+        $this->categoryAdminService->moveImagesToCategories($collection, [$move_id_int]);
+        $this->session->flash->add('info', Lang::t('Information data registered in database'));
+        if ('no_album' === $this->prefilter) {
+            return true;
+        }
+        if ('no_virtual_album' === $this->prefilter) {
+            $category_info = $this->categoryService->getCatInfo($move_id);
+            return !isset($category_info['dir']) || $category_info['dir'] === '';
+        }
+        if (isset($bmf['category']) && $move_id !== (is_string($bmf['category']) ? $bmf['category'] : '')) {
+            return true;
+        }
+        return false;
+    }
+
+    /** @param array<int> $collection */
+    private function handleBatchDissociate(array $collection): bool
+    {
+        $dissociate_raw = is_string($_POST['dissociate'] ?? null) ? $_POST['dissociate'] : '';
+        $nb_dissociated = $this->categoryAdminService->dissociateImagesFromCategory($collection, $dissociate_raw);
+        if ($nb_dissociated > 0) {
+            $this->session->flash->add('info', Lang::t('Information data registered in database'));
+            return true;
+        }
+        return false;
+    }
+
+    /** @param array<int> $collection */
+    private function handleBatchAuthor(array $collection): bool
+    {
+        $rawAuthor   = isset($_POST['remove_author']) ? null : ($_POST['author'] ?? null);
+        $authorValue = is_string($rawAuthor) ? $rawAuthor : null;
+        $datas = array_map(fn (int $id): array => ['id' => $id, 'author' => $authorValue], array_values($collection));
+        $this->imageRepository->setAuthorBatch($datas);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection, ActivityAction::Edit, ['action' => 'author']));
+        return false;
+    }
+
+    /** @param array<int> $collection */
+    private function handleBatchTitle(array $collection): bool
+    {
+        $rawTitle   = isset($_POST['remove_title']) ? null : ($_POST['title'] ?? null);
+        $titleValue = is_string($rawTitle) ? $rawTitle : null;
+        $datas = array_map(fn (int $id): array => ['id' => $id, 'name' => $titleValue], array_values($collection));
+        $this->imageRepository->setNameBatch($datas);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection, ActivityAction::Edit, ['action' => 'title']));
+        return false;
+    }
+
+    /** @param array<int> $collection */
+    private function handleBatchDateCreation(array $collection): bool
+    {
+        $rawDateCreation = (isset($_POST['remove_date_creation']) || !isset($_POST['date_creation']) || $_POST['date_creation'] === '') ? null : $_POST['date_creation'];
+        $date_creation   = is_string($rawDateCreation) ? $rawDateCreation : null;
+        $datas = array_map(fn (int $id): array => ['id' => $id, 'date_creation' => $date_creation], array_values($collection));
+        $this->imageRepository->setDateCreationBatch($datas);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection, ActivityAction::Edit, ['action' => 'date_creation']));
+        return false;
+    }
+
+    /**
+     * @param array<int>           $collection
+     * @param array<string, mixed> $bmf
+     */
+    private function handleBatchLevel(array $collection, array $bmf): bool
+    {
+        $rawLevel   = $_POST['level'] ?? null;
+        $levelValue = is_numeric($rawLevel) ? (int) $rawLevel : 0;
+        $datas      = array_map(fn (int $id): array => ['id' => $id, 'level' => $levelValue], array_values($collection));
+        $this->imageRepository->setLevelBatch($datas);
+        $this->activityLogger->log(new ActivityEvent(ActivityObject::Photo, $collection, ActivityAction::Edit, ['action' => 'privacy_level']));
+        if (isset($bmf['level'])) {
+            $bmf_level_val  = is_numeric($bmf['level']) ? (int) $bmf['level'] : 0;
+            $post_level_val = is_numeric($rawLevel) ? (int) $rawLevel : 0;
+            return $post_level_val < $bmf_level_val;
+        }
+        return false;
+    }
+
+    /** @param array<int> $collection */
+    private function handleBatchAddToCaddie(array $collection): bool
+    {
+        $this->userCaddieRepository->addElements(CurrentUser::get()->id, array_values($collection));
+        return false;
+    }
+
+    /** @param array<int> $collection */
+    private function handleBatchDelete(array $collection): bool
+    {
+        if (!isset($_POST['confirm_deletion']) || 1 != $_POST['confirm_deletion']) {
+            PageState::current()->addError(Lang::t('You need to confirm deletion'));
+            return false;
+        }
+        if (count($collection) === 0) {
+            PageState::current()->addError(Lang::t('No photo can be deleted'));
+            return false;
+        }
+        $this->session->flash->add('info', Translator::get()->plural('%d photo was deleted', '%d photos were deleted', count($collection)));
+        return true;
+    }
+
+    /** @param array<int> $collection */
+    private function handleBatchMetadata(array $collection): bool
+    {
+        PageState::current()->addInfo(new Html(Lang::t('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>'));
+        return false;
+    }
+
+    /** @param array<int> $collection */
+    private function handleBatchDeleteDerivatives(array $collection): bool
+    {
+        if (!isset($_POST['del_derivatives_type']) || $_POST['del_derivatives_type'] === '') {
+            return false;
+        }
+        $del_types = is_array($_POST['del_derivatives_type']) ? $_POST['del_derivatives_type'] : [];
+        foreach ($this->imageRepository->findPathsAndRepresentativesByIds($collection) as $proj) {
+            $infoShim = ['path' => $proj->path->value, 'representative_ext' => $proj->representativeExt];
+            foreach ($del_types as $dtype) {
+                $this->imageAdminService->deleteElementDerivatives($infoShim, is_string($dtype) ? $dtype : '');
+            }
+        }
+        return false;
+    }
+
+    private function handleBatchGenerateDerivatives(): bool
+    {
+        if ($_POST['regenerateSuccess'] != '0') {
+            $regenSuccess = $_POST['regenerateSuccess'] ?? '';
+            PageState::current()->addInfo(Lang::t('%s photos have been regenerated', is_string($regenSuccess) ? $regenSuccess : ''));
+        }
+        if ($_POST['regenerateError'] != '0') {
+            $regenError = $_POST['regenerateError'] ?? '';
+            PageState::current()->addWarning(Lang::t('%s photos can not be regenerated', is_string($regenError) ? $regenError : ''));
+        }
+        return false;
     }
 
     // ── batch_manager_unit ────────────────────────────────────────────────────

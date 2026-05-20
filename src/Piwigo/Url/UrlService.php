@@ -347,186 +347,229 @@ final class UrlService
      */
     public function parseSectionUrl(array $tokens, int &$nextToken): array
     {
-        $page = ['hit_by' => [], 'combined_categories' => null];
-        if (isset($tokens[$nextToken]) and str_starts_with($tokens[$nextToken], 'categor')) {
-            $page['section'] = 'categories';
+        $base  = ['hit_by' => [], 'combined_categories' => null];
+        $token = $tokens[$nextToken] ?? null;
+
+        if ($token !== null && str_starts_with($token, 'categor')) {
+            return $this->parseCategoriesSection($tokens, $nextToken);
+        }
+        if ('tags' === $token) {
+            return array_merge($base, $this->parseTagsSection($tokens, $nextToken));
+        }
+        if ('search' === $token) {
+            return array_merge($base, $this->parseSearchSection($tokens, $nextToken));
+        }
+        if ('list' === $token) {
+            return array_merge($base, $this->parseListSection($tokens, $nextToken));
+        }
+
+        $simpleSection = match ($token) {
+            'favorites', 'most_visited', 'best_rated',
+            'recent_pics', 'recent_cats'               => $token,
+            default                                    => null,
+        };
+        if ($simpleSection !== null) {
+            $base['section'] = $simpleSection;
             $nextToken++;
+        }
+        return $base;
+    }
 
-            $i           = $nextToken;
-            $loopCounter = 0;
+    /**
+     * @param string[] $tokens
+     * @return array<string, mixed>
+     */
+    private function parseCategoriesSection(array $tokens, int &$nextToken): array
+    {
+        $nextToken++;
+        $loopCounter = 0;
+        /** @var array<string, string> $hitBy */
+        $hitBy    = [];
+        $category = null;   // int|string|null — raw parsed ID before getCatInfo resolve
+        $combined = [];     // list<int|string>
 
-            while (isset($tokens[$nextToken])) {
-                if ($loopCounter++ > count($tokens) + 10) {
-                    throw new \LogicException('infinite loop?');
-                }
-
-                if (
-                    str_starts_with($tokens[$nextToken], 'created-')
-                    or str_starts_with($tokens[$nextToken], 'posted-')
-                    or str_starts_with($tokens[$nextToken], 'start-')
-                    or str_starts_with($tokens[$nextToken], 'startcat-')
-                    or 'flat' == $tokens[$nextToken]
-                ) {
-                    break;
-                }
-
-                if (preg_match('/^(\d+)(?:-(.+))?$/', $tokens[$nextToken], $matches)) {
-                    if (isset($matches[2])) {
-                        $page['hit_by']['cat_url_name'] = $matches[2];
-                    }
-
-                    if (!isset($page['category'])) {
-                        $page['category'] = $matches[1];
-                    } else {
-                        if (!is_array($page['combined_categories'])) {
-                            $page['combined_categories'] = [];
-                        }
-                        $page['combined_categories'][] = $matches[1];
-                    }
-                    $nextToken++;
-                } else {
-                    $maybePermalinks = [];
-                    $currentToken    = $nextToken;
-                    while (isset($tokens[$currentToken])
-                        and !str_starts_with($tokens[$currentToken], 'created-')
-                        and !str_starts_with($tokens[$currentToken], 'posted-')
-                        and $tokens[$currentToken] != 'flat') {
-                        if (empty($maybePermalinks)) {
-                            $maybePermalinks[] = $tokens[$currentToken];
-                        } else {
-                            $maybePermalinks[] =
-                                $maybePermalinks[count($maybePermalinks) - 1]
-                                . '/' . $tokens[$currentToken];
-                        }
-                        $currentToken++;
-                    }
-
-                    if (count($maybePermalinks)) {
-                        $permaIndex = 0;
-                        $catId      = $this->categoryService->getCatIdFromPermalinks($maybePermalinks, $permaIndex);
-                        if (isset($catId)) {
-                            $nextToken += $permaIndex + 1;
-
-                            if (!isset($page['category'])) {
-                                $page['category']                = $catId;
-                                $page['hit_by']['cat_permalink'] = $maybePermalinks[$permaIndex];
-                            } else {
-                                if (!is_array($page['combined_categories'])) {
-                                    $page['combined_categories'] = [];
-                                }
-                                $page['combined_categories'][] = $catId;
-                            }
-                        } else {
-                            $this->htmlService->pageNotFound(Lang::t('Permalink for album not found'));
-                        }
-                    }
-                }
+        while (isset($tokens[$nextToken])) {
+            if ($loopCounter++ > count($tokens) + 10) {
+                throw new \LogicException('infinite loop?');
             }
 
-            if (isset($page['category'])) {
-                $result = $this->categoryService->getCatInfo($page['category']);
+            if (
+                str_starts_with($tokens[$nextToken], 'created-')
+                or str_starts_with($tokens[$nextToken], 'posted-')
+                or str_starts_with($tokens[$nextToken], 'start-')
+                or str_starts_with($tokens[$nextToken], 'startcat-')
+                or 'flat' == $tokens[$nextToken]
+            ) {
+                break;
+            }
+
+            if (preg_match('/^(\d+)(?:-(.+))?$/', $tokens[$nextToken], $matches)) {
+                if (isset($matches[2])) {
+                    $hitBy['cat_url_name'] = $matches[2];
+                }
+                if ($category === null) {
+                    $category = $matches[1];
+                } else {
+                    $combined[] = $matches[1];
+                }
+                $nextToken++;
+            } else {
+                $this->resolvePermalinkTokens($tokens, $nextToken, $hitBy, $category, $combined);
+            }
+        }
+
+        $resolvedCategory = null;
+        if ($category !== null) {
+            $result = $this->categoryService->getCatInfo($category);
+            if ($result === null || count($result) === 0) {
+                $this->htmlService->pageNotFound(Lang::t('Requested album does not exist'));
+            }
+            $resolvedCategory = $result;
+        }
+
+        $resolvedCombined = null;
+        if ($combined !== []) {
+            $resolvedCombined = [];
+            foreach ($combined as $catId) {
+                $result = $this->categoryService->getCatInfo($catId);
                 if ($result === null || count($result) === 0) {
                     $this->htmlService->pageNotFound(Lang::t('Requested album does not exist'));
                 }
-                $page['category'] = $result;
+                $resolvedCombined[] = $result;
             }
+        }
 
-            if (isset($page['combined_categories'])) {
-                $combinedCategories = [];
+        $page = ['section' => 'categories', 'hit_by' => $hitBy, 'combined_categories' => $resolvedCombined];
+        if ($resolvedCategory !== null) {
+            $page['category'] = $resolvedCategory;
+        }
+        return $page;
+    }
 
-                foreach ($page['combined_categories'] as $catId) {
-                    $result = $this->categoryService->getCatInfo($catId);
-                    if ($result === null || count($result) === 0) {
-                        $this->htmlService->pageNotFound(Lang::t('Requested album does not exist'));
-                    }
+    /**
+     * Resolves the current token position as a permalink (or chain of slugs).
+     * Advances $nextToken past the matched tokens on success.
+     *
+     * @param  string[]              $tokens
+     * @param  array<string, string> $hitBy
+     * @param  list<int|string>      $combined
+     */
+    private function resolvePermalinkTokens(
+        array $tokens,
+        int &$nextToken,
+        array &$hitBy,
+        int|string|null &$category,
+        array &$combined,
+    ): void {
+        $maybePermalinks = [];
+        $currentToken    = $nextToken;
+        while (isset($tokens[$currentToken])
+            and !str_starts_with($tokens[$currentToken], 'created-')
+            and !str_starts_with($tokens[$currentToken], 'posted-')
+            and $tokens[$currentToken] != 'flat') {
+            $maybePermalinks[] = empty($maybePermalinks)
+                ? $tokens[$currentToken]
+                : $maybePermalinks[count($maybePermalinks) - 1] . '/' . $tokens[$currentToken];
+            $currentToken++;
+        }
 
-                    $combinedCategories[] = $result;
-                }
+        if ($maybePermalinks === []) {
+            return;
+        }
 
-                $page['combined_categories'] = $combinedCategories;
+        $permaIndex = 0;
+        $catId      = $this->categoryService->getCatIdFromPermalinks($maybePermalinks, $permaIndex);
+        if ($catId === null) {
+            $this->htmlService->pageNotFound(Lang::t('Permalink for album not found'));
+            return;
+        }
+
+        $nextToken += $permaIndex + 1;
+        if ($category === null) {
+            $category              = $catId;
+            $hitBy['cat_permalink'] = $maybePermalinks[$permaIndex];
+        } else {
+            $combined[] = $catId;
+        }
+    }
+
+    /**
+     * @param string[] $tokens
+     * @return array<string, mixed>
+     */
+    private function parseTagsSection(array $tokens, int &$nextToken): array
+    {
+        $nextToken++;
+        $requestedTagIds      = [];
+        $requestedTagUrlNames = [];
+
+        while (isset($tokens[$nextToken])) {
+            if (str_starts_with($tokens[$nextToken], 'created-')
+                or str_starts_with($tokens[$nextToken], 'posted-')
+                or str_starts_with($tokens[$nextToken], 'start-')) {
+                break;
             }
-        } elseif ('tags' == ($tokens[$nextToken] ?? null)) {
-            $page['section'] = 'tags';
-            $page['tags']    = [];
-
-            $nextToken++;
-            $i = $nextToken;
-
-            $requestedTagIds      = [];
-            $requestedTagUrlNames = [];
-
-            while (isset($tokens[$i])) {
-                if (str_starts_with($tokens[$i], 'created-')
-                     or str_starts_with($tokens[$i], 'posted-')
-                     or str_starts_with($tokens[$i], 'start-')) {
-                    break;
-                }
-
-                if (Config::tagUrlStyle() != 'tag' and preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)) {
-                    $requestedTagIds[] = $matches[1];
-                } else {
-                    $requestedTagUrlNames[] = $tokens[$i];
-                }
-                $i++;
-            }
-            $nextToken = $i;
-
-            if (empty($requestedTagIds) && empty($requestedTagUrlNames)) {
-                $this->htmlService->badRequest('at least one tag required');
-            }
-
-            $page['tags'] = $this->tagService->findTags($requestedTagIds, $requestedTagUrlNames);
-            if (empty($page['tags'])) {
-                $this->htmlService->pageNotFound(Lang::t('Requested tag does not exist'), Kernel::service(UrlGenerator::class)->tagsPage());
-            }
-        } elseif ('favorites' == ($tokens[$nextToken] ?? null)) {
-            $page['section'] = 'favorites';
-            $nextToken++;
-        } elseif ('most_visited' == ($tokens[$nextToken] ?? null)) {
-            $page['section'] = 'most_visited';
-            $nextToken++;
-        } elseif ('best_rated' == ($tokens[$nextToken] ?? null)) {
-            $page['section'] = 'best_rated';
-            $nextToken++;
-        } elseif ('recent_pics' == ($tokens[$nextToken] ?? null)) {
-            $page['section'] = 'recent_pics';
-            $nextToken++;
-        } elseif ('recent_cats' == ($tokens[$nextToken] ?? null)) {
-            $page['section'] = 'recent_cats';
-            $nextToken++;
-        } elseif ('search' == ($tokens[$nextToken] ?? null)) {
-            $page['section'] = 'search';
-            $nextToken++;
-
-            preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', $tokens[$nextToken] ?? '', $matches);
-            if (!isset($matches[1])) {
-                preg_match('/(\d+)/', $tokens[$nextToken] ?? '', $matches);
-                if (!isset($matches[1])) {
-                    $this->htmlService->badRequest('search identifier is missing');
-                    return $page;
-                }
-            }
-            $page['search'] = $matches[1];
-            $nextToken++;
-        } elseif ('list' == ($tokens[$nextToken] ?? null)) {
-            $page['section'] = 'list';
-            $nextToken++;
-
-            $page['list'] = [];
-
-            if (!isset($tokens[$nextToken]) || $tokens[$nextToken] === '') {
-                $page['list'][] = -1;
+            if (Config::tagUrlStyle() != 'tag' and preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$nextToken], $matches)) {
+                $requestedTagIds[] = $matches[1];
             } else {
-                if (!preg_match('/^\d+(,\d+)*$/', $tokens[$nextToken])) {
-                    $this->htmlService->badRequest('wrong format on list GET parameter');
-                }
-                foreach (explode(',', $tokens[$nextToken]) as $imageId) {
-                    $page['list'][] = $imageId;
-                }
+                $requestedTagUrlNames[] = $tokens[$nextToken];
             }
             $nextToken++;
         }
-        return $page;
+
+        if (empty($requestedTagIds) && empty($requestedTagUrlNames)) {
+            $this->htmlService->badRequest('at least one tag required');
+        }
+
+        $tags = $this->tagService->findTags($requestedTagIds, $requestedTagUrlNames);
+        if (empty($tags)) {
+            $this->htmlService->pageNotFound(Lang::t('Requested tag does not exist'), Kernel::service(UrlGenerator::class)->tagsPage());
+        }
+
+        return ['section' => 'tags', 'tags' => $tags];
+    }
+
+    /**
+     * @param string[] $tokens
+     * @return array<string, mixed>
+     */
+    private function parseSearchSection(array $tokens, int &$nextToken): array
+    {
+        $nextToken++;
+
+        preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', $tokens[$nextToken] ?? '', $matches);
+        if (!isset($matches[1])) {
+            preg_match('/(\d+)/', $tokens[$nextToken] ?? '', $matches);
+            if (!isset($matches[1])) {
+                $this->htmlService->badRequest('search identifier is missing');
+                return ['section' => 'search'];
+            }
+        }
+        $nextToken++;
+        return ['section' => 'search', 'search' => $matches[1]];
+    }
+
+    /**
+     * @param string[] $tokens
+     * @return array<string, mixed>
+     */
+    private function parseListSection(array $tokens, int &$nextToken): array
+    {
+        $nextToken++;
+        $list = [];
+
+        if (!isset($tokens[$nextToken]) || $tokens[$nextToken] === '') {
+            $list[] = -1;
+        } else {
+            if (!preg_match('/^\d+(,\d+)*$/', $tokens[$nextToken])) {
+                $this->htmlService->badRequest('wrong format on list GET parameter');
+            }
+            foreach (explode(',', $tokens[$nextToken]) as $imageId) {
+                $list[] = $imageId;
+            }
+        }
+        $nextToken++;
+        return ['section' => 'list', 'list' => $list];
     }
 
     /**

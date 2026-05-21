@@ -282,7 +282,7 @@ final readonly class PictureController implements ControllerInterface
             throw new NotFoundException('Current picture not found.');
         }
 
-        $slideshow_params     = null;
+        $slideshow_params     = $this->pictureService->getDefaultSlideshowParams();
         $slideshow_url_params = [];
         $get_slideshow        = StringUtil::inputString('slideshow', null, $_GET);
 
@@ -383,7 +383,7 @@ final readonly class PictureController implements ControllerInterface
         ));
 
         // Slideshow controls
-        if ($slideshowActive && $slideshow_params !== null) {
+        if ($slideshowActive) {
             $tpl_slideshow = [];
             $currentUrl    = $currentVm->url;
             $tpl->assign(['U_SLIDESHOW_STOP' => $currentUrl]);

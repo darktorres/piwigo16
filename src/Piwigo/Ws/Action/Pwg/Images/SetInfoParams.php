@@ -54,7 +54,7 @@ final readonly class SetInfoParams implements WsParams
             author:            array_key_exists('author', $raw) ? (is_scalar($authorIn) ? (string) $authorIn : '') : null,
             comment:           array_key_exists('comment', $raw) ? (is_scalar($commIn) ? (string) $commIn : '') : null,
             level:             array_key_exists('level', $raw) ? $raw['level'] : null,
-            dateCreation:      array_key_exists('date_creation', $raw) ? (is_scalar($dateIn) ? (string) $dateIn : '') : null,
+            dateCreation:      array_key_exists('date_creation', $raw) ? (is_string($dateIn) && $dateIn !== '' ? $dateIn : null) : null,
             file:              array_key_exists('file', $raw) ? (is_string($fileIn) ? $fileIn : '') : null,
             categories:        array_key_exists('categories', $raw) ? (is_string($catIn) ? $catIn : '') : null,
             tagIds:            array_key_exists('tag_ids', $raw) ? (is_string($tagsIn) ? $tagsIn : '') : null,

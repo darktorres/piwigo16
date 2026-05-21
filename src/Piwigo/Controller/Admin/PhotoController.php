@@ -21,6 +21,7 @@ use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\Projection\CategoryNamePermalink;
 use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Core\AppInfo;
@@ -417,12 +418,14 @@ final class PhotoController implements AdminSubControllerInterface
             ));
             if (count($authorizeds) > 0) {
                 $category    = $authorizeds[array_rand($authorizeds)];
-                $catNamesRaw = RequestCache::remember('cat_names', 'all', fn (): array => $this->categoryRepository->findAllIdNamePermalinkMap());
+                $catNamesRaw = RequestCache::remember('cat_names', 'all', fn (): array => $this->categoryRepository->findIdNamePermalinkAll());
+                /** @var array<int, CategoryNamePermalink> $catNames */
                 $catNames    = is_array($catNamesRaw) ? $catNamesRaw : [];
+                $catRow      = ($catNames[(int) $category] ?? null)?->toRow();
                 $tpl->assign('U_JUMPTO', $this->urlService->makePictureUrl([
                     'image_id'   => $_GET['image_id'],
                     'image_file' => $image_file,
-                    'category'   => $catNames[(string) $category] ?? null,
+                    'category'   => $catRow,
                 ]));
             }
         }

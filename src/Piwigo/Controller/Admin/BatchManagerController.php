@@ -22,6 +22,7 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Cache\RequestCache;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\CategoryNamePermalink;
 use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Config\Config;
 use Piwigo\Core\DateService;
@@ -1321,15 +1322,17 @@ final class BatchManagerController implements AdminSubControllerInterface
                     $forbidden,
                 ));
 
-                $catNamesRaw = RequestCache::remember('cat_names', 'all', fn (): array => $this->categoryRepository->findAllIdNamePermalinkMap());
+                $catNamesRaw = RequestCache::remember('cat_names', 'all', fn (): array => $this->categoryRepository->findIdNamePermalinkAll());
+                /** @var array<int, CategoryNamePermalink> $catNames */
                 $catNames    = is_array($catNamesRaw) ? $catNamesRaw : [];
                 $url_img     = null;
                 if (isset($row['cat_id']) && is_numeric($row['cat_id']) && in_array((int) $row['cat_id'], $authorizeds, true)) {
-                    $catIdStr = (string) (int) $row['cat_id'];
-                    $url_img  = $this->urlService->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => $catNames[$catIdStr] ?? null]);
+                    $catRow  = ($catNames[(int) $row['cat_id']] ?? null)?->toRow();
+                    $url_img = $this->urlService->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => $catRow]);
                 } else {
                     foreach ($authorizeds as $category) {
-                        $url_img = $this->urlService->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => $catNames[(string) $category] ?? null]);
+                        $catRow  = ($catNames[(int) $category] ?? null)?->toRow();
+                        $url_img = $this->urlService->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => $catRow]);
                         break;
                     }
                 }

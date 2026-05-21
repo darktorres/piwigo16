@@ -234,16 +234,16 @@ final readonly class CommentService
             $commImgIdRaw   = $comm['image_id'] ?? null;
             $commWebsiteRaw = $comm['website_url'] ?? null;
             $commEmailRaw   = $comm['email'] ?? null;
-            $comm['id'] = $this->repo->insert([
-                'author'       => is_string($commAuthorRaw) ? $commAuthorRaw : '',
-                'author_id'    => $comm['author_id'],
-                'anonymous_id' => is_string($commIpRaw) ? $commIpRaw : '',
-                'content'      => is_string($commContentRaw) ? $commContentRaw : '',
-                'validated'    => $commentAction === CommentModerationAction::Validate,
-                'image_id'     => is_scalar($commImgIdRaw) ? (int) $commImgIdRaw : 0,
-                'website_url'  => (is_string($commWebsiteRaw) && $commWebsiteRaw !== '') ? $commWebsiteRaw : null,
-                'email'        => (is_string($commEmailRaw) && $commEmailRaw !== '') ? $commEmailRaw : null,
-            ]);
+            $comm['id'] = $this->repo->insert(new NewCommentData(
+                author:      is_string($commAuthorRaw) ? $commAuthorRaw : '',
+                authorId:    $comm['author_id'],
+                anonymousId: is_string($commIpRaw) ? $commIpRaw : '',
+                content:     is_string($commContentRaw) ? $commContentRaw : '',
+                validated:   $commentAction === CommentModerationAction::Validate,
+                imageId:     is_scalar($commImgIdRaw) ? (int) $commImgIdRaw : 0,
+                websiteUrl:  (is_string($commWebsiteRaw) && $commWebsiteRaw !== '') ? $commWebsiteRaw : null,
+                email:       (is_string($commEmailRaw) && $commEmailRaw !== '') ? $commEmailRaw : null,
+            ));
 
             $this->invalidateUserCacheNbComments();
 
@@ -343,11 +343,11 @@ final readonly class CommentService
             $updateAuthorId = $this->permissionService->isAdmin() ? null : (is_numeric($globalUser['id'] ?? null) ? (int) $globalUser['id'] : null);
             $result = $this->repo->update(
                 (int) (is_scalar($comment['comment_id']) ? $comment['comment_id'] : 0),
-                [
-                    'content'     => is_string($comment['content'] ?? null) ? $comment['content'] : '',
-                    'website_url' => !empty($comment['website_url']) ? (is_string($comment['website_url']) ? $comment['website_url'] : null) : null,
-                    'validated'   => $commentAction === CommentModerationAction::Validate,
-                ],
+                new CommentUpdateData(
+                    content:    is_string($comment['content'] ?? null) ? $comment['content'] : '',
+                    validated:  $commentAction === CommentModerationAction::Validate,
+                    websiteUrl: !empty($comment['website_url']) ? (is_string($comment['website_url']) ? $comment['website_url'] : null) : null,
+                ),
                 $updateAuthorId
             );
 

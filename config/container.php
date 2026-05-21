@@ -335,7 +335,7 @@ return [
     InputValidator::class      => factory(static fn (): InputValidator => new InputValidator()),
     LanguageService::class     => factory(static fn (LanguageRepository $r, Paths $paths): LanguageService => new LanguageService($r, $paths)),
     PaginationService::class   => factory(static fn (): PaginationService => new PaginationService()),
-    RedirectResponder::class   => factory(static fn (LangService $lang, EventDispatcherInterface $dispatcher, Paths $paths): RedirectResponder => new RedirectResponder($lang, $dispatcher, $paths)),
+    RedirectResponder::class   => factory(static fn (LangService $lang, EventDispatcherInterface $dispatcher, Paths $paths, Session $session): RedirectResponder => new RedirectResponder($lang, $dispatcher, $paths, $session)),
     TelemetryService::class    => factory(static fn (ActivityRepository $aR, ConfigService $cfg, ImageRepository $i, LoggerInterface $log, AdminService $admin, ExecutionMutex $mutex, UserRepository $u, PemUrlResolver $pem): TelemetryService => new TelemetryService($aR, $cfg, $i, $log, $admin, $mutex, $u, $pem)),
     ThemeService::class        => factory(static fn (ThemeRepository $r, EventDispatcherInterface $dispatcher): ThemeService => new ThemeService($r, $dispatcher)),
     ThemeRegistry::class       => factory(static fn (ThemeRepository $r, LoggerInterface $log, EventDispatcherInterface $dispatcher, Paths $paths): ThemeRegistry => new ThemeRegistry($r, $log, $paths->root . 'themes', $paths->root . 'docs/schemas/theme.schema.json', $dispatcher)),

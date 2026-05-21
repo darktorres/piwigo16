@@ -14,6 +14,7 @@ use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Lang\LangService;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\Session\Session;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Users\CurrentUser;
@@ -38,6 +39,7 @@ final readonly class RedirectResponder
         private LangService $langService,
         private EventDispatcherInterface $dispatcher,
         private Paths $paths,
+        private Session $session,
     ) {
     }
 
@@ -56,6 +58,10 @@ final readonly class RedirectResponder
             ob_clean();
         }
         $url = html_entity_decode($url);
+        // Flush session changes before exit() — PHP's finally blocks do not
+        // run on exit(), so SessionMiddleware::persistInto() would be skipped
+        // without this explicit call.
+        $this->session->persistInto($_SESSION);
         header('Request-URI: ' . $url);
         header('Content-Location: ' . $url);
         header('Location: ' . $url);
@@ -92,6 +98,7 @@ final readonly class RedirectResponder
         $tpl->parse('redirect.latte');
 
         PageTailRenderer::render();
+        $this->session->persistInto($_SESSION);
         exit();
     }
 }

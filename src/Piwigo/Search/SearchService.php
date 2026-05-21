@@ -138,29 +138,28 @@ final class SearchService
         return new SearchInfo($id, $forkedFrom, $rulesJson);
     }
 
-    /** @return array<string, mixed> */
-    public function getSearchArray(string $searchId): array
+    public function getSearchArray(string $searchId): SearchQuery
     {
         $search = $this->getSearchInfo($searchId);
         if ($search === null) {
             $this->htmlService->badRequest('this search identifier does not exist');
-            return [];
+            return new SearchQuery();
         }
         $rules = $search->rulesJson;
         if ($rules === '') {
-            return [];
+            return new SearchQuery();
         }
         $decoded = json_decode($rules, associative: true);
         if (!is_array($decoded)) {
-            return [];
+            return new SearchQuery();
         }
-        $out = [];
+        $raw = [];
         foreach ($decoded as $key => $val) {
             if (is_string($key)) {
-                $out[$key] = $val;
+                $raw[$key] = $val;
             }
         }
-        return $out;
+        return SearchQuery::fromArray($raw);
     }
 
     /**
@@ -172,15 +171,11 @@ final class SearchService
      * narrows just-in-time at the field it consumes; mixed reads here are
      * boundary-edge, not domain code.
      *
-     * @param array{
-     *     fields?: array<string, mixed>,
-     *     mode?: string,
-     * }|array<string, mixed> $search
      * @return array<string, mixed>
      */
-    public function getRegularSearchResults(array $search, string $imagesWhere = ''): array
+    public function getRegularSearchResults(SearchQuery $search, string $imagesWhere = ''): array
     {
-        $this->logger->debug('getRegularSearchResults', $search);
+        $this->logger->debug('getRegularSearchResults', $search->toArray());
 
         $hasFilersFilled = false;
 
@@ -242,7 +237,7 @@ final class SearchService
         // once; the filter blocks below all read typed VO properties from
         // it, leaving $search untouched as the loose-array entrypoint for
         // legacy callers / saved-search round-tripping.
-        $rules = SearchRules::fromArray($search);
+        $rules = SearchRules::fromArray($search->toArray());
 
         if ($rules->expert !== null && $expertFilter['access']) {
             $hasFilersFilled = true;
@@ -1085,12 +1080,7 @@ final class SearchService
     public function getSearchResults(string $searchId, bool $superOrderBy): array
     {
         $search = $this->getSearchArray($searchId);
-        if (!isset($search['q'])) {
-            return $this->getRegularSearchResults($search, '');
-        } else {
-            $searchQ = is_string($search['q']) ? $search['q'] : '';
-            return $this->getQuickSearchResults($searchQ, ['super_order_by' => $superOrderBy, 'images_where' => '']) ?? [];
-        }
+        return $this->getRegularSearchResults($search, '');
     }
 
     /** @return string[]|null */

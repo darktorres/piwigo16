@@ -185,85 +185,93 @@ final class Updates
             ? $this->resolveOfficialNewVersions($build_version, $actual_branch, trim($all_versions[0]), $all_versions)
             : $this->resolveGenericNewVersions($actual_branch, $all_versions);
 
-        return array_merge($new_versions, $resolved);
+        if ($resolved->minor !== null) {
+            $new_versions['minor'] = $resolved->minor;
+        }
+        if ($resolved->major !== null) {
+            $new_versions['major'] = $resolved->major;
+        }
+        if ($resolved->minorPhp !== null) {
+            $new_versions['minor_php'] = $resolved->minorPhp;
+        }
+        if ($resolved->majorPhp !== null) {
+            $new_versions['major_php'] = $resolved->majorPhp;
+        }
+        return $new_versions;
     }
 
-    /**
-     * @param list<string> $all_versions
-     * @return array{minor?: string, major?: string}
-     */
+    /** @param list<string> $all_versions */
     private function resolveOfficialNewVersions(
         string $build_version,
         string $actual_branch,
         string $last_version,
         array $all_versions,
-    ): array {
+    ): AvailableVersions {
         if ($this->containerVersionCompare($build_version, $last_version) != '-1') {
-            return [];
+            return new AvailableVersions();
         }
 
         $last_branch = AppInfo::branchFromVersion(substr($last_version, 0, -1));
         if ($last_branch == $actual_branch) {
-            return ['minor' => $last_version];
+            return new AvailableVersions(minor: $last_version);
         }
 
-        $resolved = ['major' => $last_version];
+        $minor = null;
         foreach ($all_versions as $version) {
             $branch = AppInfo::branchFromVersion(substr($version, 0, -1));
             if ($branch != $actual_branch) {
                 continue;
             }
             if ($this->containerVersionCompare($build_version, $version) == '-1') {
-                $resolved['minor'] = $version;
+                $minor = $version;
             }
             break;
         }
-        return $resolved;
+        return new AvailableVersions(minor: $minor, major: $last_version);
     }
 
-    /**
-     * @param list<string> $all_versions
-     * @return array{minor?: string, major?: string, minor_php?: string, major_php?: string}
-     */
-    private function resolveGenericNewVersions(string $actual_branch, array $all_versions): array
+    /** @param list<string> $all_versions */
+    private function resolveGenericNewVersions(string $actual_branch, array $all_versions): AvailableVersions
     {
         $parts0 = explode('/', trim($all_versions[0]));
         $last_version_number = $parts0[0];
         $last_version_php = $parts0[1] ?? '';
 
         if (!version_compare(AppInfo::VERSION, $last_version_number, '<')) {
-            return [];
+            return new AvailableVersions();
         }
 
         $last_branch = AppInfo::branchFromVersion($last_version_number);
         if ($last_branch == $actual_branch) {
-            return [
-                'minor' => $last_version_number,
-                'minor_php' => $last_version_php,
-            ];
+            return new AvailableVersions(
+                minor:    $last_version_number,
+                minorPhp: $last_version_php,
+            );
         }
 
-        $resolved = [
-            'major' => $last_version_number,
-            'major_php' => $last_version_php,
-        ];
-
+        $minor    = null;
+        $minorPhp = null;
         foreach ($all_versions as $version) {
-            $vparts = explode('/', trim($version));
+            $vparts         = explode('/', trim($version));
             $version_number = $vparts[0];
-            $version_php = $vparts[1] ?? '';
-            $branch = AppInfo::branchFromVersion($version_number);
+            $version_php    = $vparts[1] ?? '';
+            $branch         = AppInfo::branchFromVersion($version_number);
 
             if ($branch != $actual_branch) {
                 continue;
             }
             if (version_compare(AppInfo::VERSION, $version_number, '<')) {
-                $resolved['minor'] = $version_number;
-                $resolved['minor_php'] = $version_php;
+                $minor    = $version_number;
+                $minorPhp = $version_php;
             }
             break;
         }
-        return $resolved;
+        return new AvailableVersions(
+            minor:    $minor,
+            major:    $last_version_number,
+            minorPhp: $minorPhp,
+            majorPhp: $last_version_php,
+        );
     }
 
     /**

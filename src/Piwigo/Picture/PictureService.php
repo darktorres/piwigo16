@@ -15,73 +15,75 @@ final readonly class PictureService
     ) {
     }
 
-    /** @return array<string, mixed> */
-    public function getDefaultSlideshowParams(): array
+    public function getDefaultSlideshowParams(): SlideshowParams
     {
-        return [
-            'period' => Config::slideshowPeriod(),
-            'repeat' => Config::slideshowRepeat(),
-            'play'   => true,
-        ];
+        return new SlideshowParams(
+            period: Config::slideshowPeriod(),
+            repeat: Config::slideshowRepeat(),
+            play:   true,
+        );
     }
 
-    /**
-     * @param array<string, mixed> $params
-     * @return array<string, mixed>
-     */
-    public function correctSlideshowParams(array $params = []): array
+    public function correctSlideshowParams(SlideshowParams $params): SlideshowParams
     {
-        $period = is_numeric($params['period'] ?? null) ? (float) $params['period'] : null;
-        if ($period !== null) {
-            if ($period < Config::slideshowPeriodMin()) {
-                $params['period'] = Config::slideshowPeriodMin();
-            } elseif ($period > Config::slideshowPeriodMax()) {
-                $params['period'] = Config::slideshowPeriodMax();
-            }
+        $period = $params->period;
+        if ($period < Config::slideshowPeriodMin()) {
+            $period = Config::slideshowPeriodMin();
+        } elseif ($period > Config::slideshowPeriodMax()) {
+            $period = Config::slideshowPeriodMax();
         }
-        return $params;
+        if ($period === $params->period) {
+            return $params;
+        }
+        return new SlideshowParams($period, $params->repeat, $params->play);
     }
 
-    /** @return array<string, mixed> */
-    public function decodeSlideshowParams(string $encoded = ''): array
+    public function decodeSlideshowParams(string $encoded = ''): SlideshowParams
     {
-        $result = $this->getDefaultSlideshowParams();
+        $period = Config::slideshowPeriod();
+        $repeat = Config::slideshowRepeat();
+        $play   = true;
 
         if (is_numeric($encoded)) {
-            $result['period'] = $encoded;
+            $period = (float) $encoded;
         } else {
             $matches = [];
             if (preg_match_all('/([a-z]+)-(\d+)/', $encoded, $matches) > 0) {
                 $matchcount = count($matches[1]);
                 for ($i = 0; $i < $matchcount; $i++) {
-                    $result[$matches[1][$i]] = $matches[2][$i];
+                    if ($matches[1][$i] === 'period') {
+                        $period = (float) $matches[2][$i];
+                    }
                 }
             }
-
             if (preg_match_all('/([a-z]+)-(true|false)/', $encoded, $matches) > 0) {
                 $matchcount = count($matches[1]);
                 for ($i = 0; $i < $matchcount; $i++) {
-                    $result[$matches[1][$i]] = BoolUtil::fromMixed($matches[2][$i]);
+                    match ($matches[1][$i]) {
+                        'repeat' => $repeat = BoolUtil::fromMixed($matches[2][$i]),
+                        'play'   => $play   = BoolUtil::fromMixed($matches[2][$i]),
+                        default  => null,
+                    };
                 }
             }
         }
 
-        return $this->correctSlideshowParams($result);
+        return $this->correctSlideshowParams(new SlideshowParams($period, $repeat, $play));
     }
 
-    /** @param array<string, mixed> $params */
-    public function encodeSlideshowParams(array $params = []): string
+    public function encodeSlideshowParams(SlideshowParams $params): string
     {
-        $corrected = $this->correctSlideshowParams($params);
-        $default   = $this->getDefaultSlideshowParams();
-        $result    = '';
+        $default = $this->getDefaultSlideshowParams();
+        $result  = '';
 
-        foreach ($corrected as $name => $value) {
-            if (array_key_exists($name, $default) && $default[$name] === $value) {
-                continue;
-            }
-            $bool_val = is_bool($value) ? $value : (is_string($value) ? $value : '');
-            $result .= '+' . $name . '-' . (is_bool($bool_val) ? ($bool_val ? 'true' : 'false') : $bool_val);
+        if ($params->period !== $default->period) {
+            $result .= '+period-' . $params->period;
+        }
+        if ($params->repeat !== $default->repeat) {
+            $result .= '+repeat-' . ($params->repeat ? 'true' : 'false');
+        }
+        if ($params->play !== $default->play) {
+            $result .= '+play-' . ($params->play ? 'true' : 'false');
         }
 
         return $result;

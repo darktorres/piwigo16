@@ -45,11 +45,11 @@ final readonly class AddHandler implements WsAction
             $options['comment'] = $allowHtml ? $input->comment : strip_tags($input->comment);
         }
         $catName        = $allowHtml ? $input->name : strip_tags($input->name);
-        $creationOutput = $this->categoryAdminService->createVirtualCategory($catName, $input->parent, $options);
-        if (isset($creationOutput['error'])) {
-            return new PwgError(500, is_string($creationOutput['error']) ? $creationOutput['error'] : '');
+        $result = $this->categoryAdminService->createVirtualCategory($catName, $input->parent, $options);
+        if ($result->isError) {
+            return new PwgError(500, $result->error ?? '');
         }
         $this->userAdminService->invalidateUserCache();
-        return $creationOutput;
+        return ['info' => $result->info, 'id' => $result->id];
     }
 }

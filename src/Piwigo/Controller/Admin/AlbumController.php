@@ -528,11 +528,11 @@ final class AlbumController implements AdminSubControllerInterface
                 isset($_GET['parent_id']) ? (is_string($rawParentId = $_GET['parent_id']) ? $rawParentId : null) : null
             );
             $this->userAdminService->invalidateUserCache();
-            if (isset($output_create['error'])) {
-                PageState::current()->addError(is_string($output_create['error']) ? $output_create['error'] : '');
+            if ($output_create->isError) {
+                PageState::current()->addError($output_create->error ?? '');
             } else {
-                $edit_url = $this->urlGenerator->admin('album-' . (is_scalar($output_create['id'] ?? '') ? (string) ($output_create['id'] ?? '') : ''));
-                PageState::current()->addInfo(new Html((is_scalar($output_create['info'] ?? '') ? (string) ($output_create['info'] ?? '') : '') . ' <a class="icon-pencil" href="' . $edit_url . '">' . Lang::t('Edit album') . '</a>'));
+                $edit_url = $this->urlGenerator->admin('album-' . $output_create->id);
+                PageState::current()->addInfo(new Html(($output_create->info ?? '') . ' <a class="icon-pencil" href="' . $edit_url . '">' . Lang::t('Edit album') . '</a>'));
             }
         }
 

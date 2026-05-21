@@ -22,6 +22,8 @@ use Piwigo\Admin\Integrity\IntegrityIgnoredAnomaliesRepository;
 use Piwigo\Admin\MaintenanceService;
 use Piwigo\Admin\Metadata\MetadataAdminService;
 use Piwigo\Admin\Sync\SiteSyncContext;
+use Piwigo\Admin\Sync\SyncError;
+use Piwigo\Admin\Sync\SyncInfo;
 use Piwigo\Admin\SyncMode;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Tag\TagAdminService;
@@ -29,6 +31,7 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\PhysicalCategoryRow;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivitySystem;
@@ -1102,15 +1105,15 @@ final class MaintenanceController implements AdminSubControllerInterface
                     $parentRow = $ctx->dbCategories[$parent] ?? null;
                     $parentId  = $parent;
                     $insert['id_uppercat'] = $parent;
-                    $insert['uppercats']   = ($parentRow['uppercats'] ?? '') . ',' . $insert['id'];
+                    $insert['uppercats']   = ($parentRow?->uppercats ?? '') . ',' . $insert['id'];
                     $nextRankParent        = is_int($next_rank[$parentKey] ?? null) ? $next_rank[$parentKey] : 0;
                     $insert['rank']        = $nextRankParent;
                     $next_rank[$parentKey] = $nextRankParent + 1;
-                    $insert['global_rank'] = ($parentRow['global_rank'] ?? '') . '.' . $insert['rank'];
-                    if (($parentRow['status'] ?? '') === 'private') {
+                    $insert['global_rank'] = ($parentRow?->globalRank ?? '') . '.' . $insert['rank'];
+                    if (($parentRow?->status ?? '') === 'private') {
                         $insert['status'] = 'private';
                     }
-                    if ($parentRow !== null && !$parentRow['visible']) {
+                    if ($parentRow !== null && !$parentRow->visible) {
                         $insert['visible'] = 0;
                     }
                 } else {
@@ -1121,19 +1124,19 @@ final class MaintenanceController implements AdminSubControllerInterface
                     $insert['global_rank'] = $insert['rank'];
                 }
                 $inserts[] = $insert;
-                $ctx->infos[] = ['path' => $fulldir, 'info' => Lang::t('added')];
-                $ctx->dbCategories[$insert['id']] = [
-                    'id'          => $insert['id'],
-                    'id_uppercat' => $parentId,
-                    'uppercats'   => (string) $insert['uppercats'],
-                    'global_rank' => (string) $insert['global_rank'],
-                    'status'      => $insert['status'],
-                    'visible'     => $insert['visible'] !== 0,
-                ];
+                $ctx->infos[] = new SyncInfo($fulldir, Lang::t('added'));
+                $ctx->dbCategories[$insert['id']] = new PhysicalCategoryRow(
+                    id:         $insert['id'],
+                    idUppercat: $parentId,
+                    uppercats:  (string) $insert['uppercats'],
+                    globalRank: (string) $insert['global_rank'],
+                    status:     $insert['status'],
+                    visible:    $insert['visible'] !== 0,
+                );
                 $ctx->dbFulldirs[$fulldir] = $insert['id'];
                 $next_rank[$insert['id']] = 1;
             } else {
-                $ctx->errors[] = ['path' => $fulldir, 'type' => 'PWG-UPDATE-1'];
+                $ctx->errors[] = new SyncError($fulldir, 'PWG-UPDATE-1');
             }
         }
 
@@ -1156,7 +1159,7 @@ final class MaintenanceController implements AdminSubControllerInterface
         foreach (array_diff(array_keys($ctx->dbFulldirs), $fs_fulldirs) as $fulldir) {
             $ctx->toDelete[] = $ctx->dbFulldirs[$fulldir];
             unset($ctx->dbFulldirs[$fulldir]);
-            $ctx->infos[] = ['path' => $fulldir, 'info' => Lang::t('deleted')];
+            $ctx->infos[] = new SyncInfo($fulldir, Lang::t('deleted'));
             if (substr_compare($fulldir, '../', 0, 3) == 0) {
                 $fulldir = substr($fulldir, 3);
             }
@@ -1206,7 +1209,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             }
             $filename = basename((string) $path);
             if (!preg_match(Config::syncCharsRegex(), $filename)) {
-                $ctx->errors[] = ['path' => $path, 'type' => 'PWG-UPDATE-1'];
+                $ctx->errors[] = new SyncError($path, 'PWG-UPDATE-1');
                 continue;
             }
             $insert = ['id' => $next_element_id++, 'file' => $filename, 'name' => StringUtil::getNameFromFile($filename), 'date_available' => $ctx->nowDateTime, 'path' => $path, 'representative_ext' => is_array($fs[$path]) ? ($fs[$path]['representative_ext'] ?? null) : null, 'storage_category_id' => $ctx->dbFulldirs[$dirname], 'added_by' => $user['id']];
@@ -1215,12 +1218,12 @@ final class MaintenanceController implements AdminSubControllerInterface
             }
             $inserts[]      = $insert;
             $insert_links[] = ['image_id' => $insert['id'], 'category_id' => $insert['storage_category_id']];
-            $ctx->infos[]   = ['path' => $insert['path'], 'info' => Lang::t('added')];
+            $ctx->infos[]   = new SyncInfo($insert['path'], Lang::t('added'));
             if (Config::isFormatsEnabled()) {
                 $fs_path_formats = is_array($fs[$path]) && is_array($fs[$path]['formats'] ?? null) ? $fs[$path]['formats'] : [];
                 foreach ($fs_path_formats as $ext => $filesize) {
                     $insert_formats[] = ['image_id' => $insert['id'], 'ext' => $ext, 'filesize' => $filesize];
-                    $ctx->infos[] = ['path' => $insert['path'], 'info' => Lang::t('format %s added', $ext)];
+                    $ctx->infos[] = new SyncInfo($insert['path'], Lang::t('format %s added', $ext));
                 }
             }
             $ctx->caddiables[] = $insert['id'];
@@ -1252,7 +1255,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                     $logger->debug('image_formats_to_delete', $image_formats_to_delete);
                     foreach ($image_formats_to_delete as $ext => $format_id) {
                         $formats_to_delete[] = $format_id;
-                        $ctx->infos[] = ['path' => $db_elem_path, 'info' => Lang::t('format %s removed', $ext)];
+                        $ctx->infos[] = new SyncInfo($db_elem_path, Lang::t('format %s removed', $ext));
                     }
                 }
                 foreach ($existing_ids as $image_id) {
@@ -1264,7 +1267,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                     $logger->debug('image_formats_to_insert', $image_formats_to_insert);
                     foreach ($image_formats_to_insert as $ext => $filesize) {
                         $insert_formats[] = ['image_id' => $image_id, 'ext' => $ext, 'filesize' => $filesize];
-                        $ctx->infos[] = ['path' => $path, 'info' => Lang::t('format %s added', $ext)];
+                        $ctx->infos[] = new SyncInfo($path, Lang::t('format %s added', $ext));
                     }
                 }
             }
@@ -1293,7 +1296,7 @@ final class MaintenanceController implements AdminSubControllerInterface
             if ($found !== false) {
                 $to_delete_elements[] = $found;
             }
-            $ctx->infos[] = ['path' => $path, 'info' => Lang::t('deleted')];
+            $ctx->infos[] = new SyncInfo($path, Lang::t('deleted'));
         }
         if (count($to_delete_elements) > 0) {
             if (!$ctx->simulate) {
@@ -1403,7 +1406,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                     }
                 }
             } else {
-                $ctx->errors[] = ['path' => $proj->path->value, 'type' => 'PWG-ERROR-NO-FS'];
+                $ctx->errors[] = new SyncError($proj->path->value, 'PWG-ERROR-NO-FS');
             }
         }
         if (!$ctx->simulate) {
@@ -1496,7 +1499,7 @@ final class MaintenanceController implements AdminSubControllerInterface
 
         if (count($ctx->errors) > 0) {
             foreach ($ctx->errors as $error) {
-                $tpl->append('sync_errors', ['ELEMENT' => $error['path'], 'LABEL' => $error['type'] . ' (' . $errorLabels[$error['type']][0] . ')']);
+                $tpl->append('sync_errors', ['ELEMENT' => $error->path, 'LABEL' => $error->type . ' (' . $errorLabels[$error->type][0] . ')']);
             }
             foreach ($errorLabels as $error_type => $error_description) {
                 $tpl->append('sync_error_captions', ['TYPE' => $error_type, 'LABEL' => $error_description[1]]);
@@ -1505,7 +1508,7 @@ final class MaintenanceController implements AdminSubControllerInterface
 
         if (count($ctx->infos) > 0 && isset($_POST['display_info']) && $_POST['display_info'] == 1) {
             foreach ($ctx->infos as $info) {
-                $tpl->append('sync_infos', ['ELEMENT' => $info['path'], 'LABEL' => $info['info']]);
+                $tpl->append('sync_infos', ['ELEMENT' => $info->path, 'LABEL' => $info->info]);
             }
         }
 
@@ -1553,12 +1556,12 @@ final class MaintenanceController implements AdminSubControllerInterface
         $insert_granted_users = $insert_granted_grps = [];
         foreach ($category_ids as $ids) {
             $idsRow    = $db_categories[$ids] ?? null;
-            $parent_id = $idsRow['id_uppercat'] ?? null;
+            $parent_id = $idsRow?->idUppercat;
             while ($parent_id !== null && is_scalar($parent_id) && in_array($parent_id, $category_ids)) {
                 $pidRow    = $db_categories[(int) $parent_id] ?? null;
-                $parent_id = $pidRow['id_uppercat'] ?? null;
+                $parent_id = $pidRow?->idUppercat;
             }
-            if ($idsRow === null || $idsRow['status'] !== 'private' || !is_scalar($parent_id)) {
+            if ($idsRow === null || $idsRow->status !== 'private' || !is_scalar($parent_id)) {
                 continue;
             }
             $parentKey = (string) $parent_id;

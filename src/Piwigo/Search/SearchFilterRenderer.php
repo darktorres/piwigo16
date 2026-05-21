@@ -84,16 +84,7 @@ final readonly class SearchFilterRenderer
         $searchKey = $ctx->search ?? '';
         $searchRaw = $ctx->search;
         $my_search = $this->searchService->getSearchArray($searchKey);
-        /** @var array<string, mixed> $my_search_fields_tmp */
-        $my_search_fields_tmp = is_array($my_search['fields'] ?? null) ? $my_search['fields'] : [];
-        $my_search['fields'] = $my_search_fields_tmp;
-        // Typed view of the same data — used for read-side narrowing.
-        // The mutation paths below (intersecting selected words against
-        // the available set, dropping filter blocks the user can't
-        // access) still update $my_search so the template's hidden
-        // form re-emits the same JSON shape the gallery search form
-        // accepts.
-        $rules = \Piwigo\Search\Rules\SearchRules::fromArray($my_search);
+        $rules = \Piwigo\Search\Rules\SearchRules::fromArray($my_search->toArray());
 
         $forbidden = $this->permissionService->getSqlConditionFandF(
             ['forbidden_categories' => 'category_id', 'visible_categories' => 'category_id', 'visible_images' => 'id'],
@@ -244,8 +235,8 @@ final readonly class SearchFilterRenderer
 
     private function renderAllwordsFilter(FilterRenderContext $ctx): void
     {
-        if (isset($ctx->mySearch['fields']['allwords']) and !$ctx->displayFilters['words']['access']) {
-            unset($ctx->mySearch['fields']['allwords']);
+        if (isset($ctx->mySearch->fields['allwords']) and !$ctx->displayFilters['words']['access']) {
+            unset($ctx->mySearch->fields['allwords']);
         }
     }
 
@@ -255,7 +246,7 @@ final readonly class SearchFilterRenderer
             return;
         }
         if (!$ctx->displayFilters['tags']['access']) {
-            unset($ctx->mySearch['fields']['tags']);
+            unset($ctx->mySearch->fields['tags']);
             return;
         }
 
@@ -279,7 +270,7 @@ final readonly class SearchFilterRenderer
         $filter_tag_ids     = count($filter_tags) > 0 ? array_column($filter_tags, 'id') : [];
         $filter_tag_ids_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $filter_tag_ids);
         $selected_str       = array_map(static fn (int $v): string => (string) $v, $ctx->rules->tags->tagIds);
-        $ctx->mySearch['fields']['tags'] = [
+        $ctx->mySearch->fields['tags'] = [
             'words' => array_values(array_intersect($selected_str, $filter_tag_ids_str)),
             'mode'  => $ctx->rules->tags->mode->value,
         ];
@@ -287,11 +278,11 @@ final readonly class SearchFilterRenderer
 
     private function renderExpertFilter(FilterRenderContext $ctx): void
     {
-        if (!isset($ctx->mySearch['fields']['expert'])) {
+        if (!isset($ctx->mySearch->fields['expert'])) {
             return;
         }
         if (!$ctx->displayFilters['expert']['access']) {
-            unset($ctx->mySearch['fields']['expert']);
+            unset($ctx->mySearch->fields['expert']);
             return;
         }
         $this->langService->loadLanguage('help_quick_search.lang');
@@ -299,9 +290,9 @@ final readonly class SearchFilterRenderer
 
     private function renderAuthorFilter(FilterRenderContext $ctx): void
     {
-        if (!isset($ctx->mySearch['fields']['author']) || !$ctx->displayFilters['author']['access']) {
-            if (isset($ctx->mySearch['fields']['author'])) {
-                unset($ctx->mySearch['fields']['author']);
+        if (!isset($ctx->mySearch->fields['author']) || !$ctx->displayFilters['author']['access']) {
+            if (isset($ctx->mySearch->fields['author'])) {
+                unset($ctx->mySearch->fields['author']);
             }
             return;
         }
@@ -340,16 +331,16 @@ final readonly class SearchFilterRenderer
 
         $author_words_raw = $ctx->rules->author === null ? [] : $ctx->rules->author->words;
         $author_names_str = $author_names;
-        $ctx->mySearch['fields']['author'] = [
+        $ctx->mySearch->fields['author'] = [
             'words' => array_values(array_intersect($author_words_raw, $author_names_str)),
         ];
     }
 
     private function renderDatePostedFilter(FilterRenderContext $ctx): void
     {
-        if (!isset($ctx->mySearch['fields']['date_posted']) || !$ctx->displayFilters['post_date']['access']) {
-            if (isset($ctx->mySearch['fields']['date_posted'])) {
-                unset($ctx->mySearch['fields']['date_posted']);
+        if (!isset($ctx->mySearch->fields['date_posted']) || !$ctx->displayFilters['post_date']['access']) {
+            if (isset($ctx->mySearch->fields['date_posted'])) {
+                unset($ctx->mySearch->fields['date_posted']);
             }
             return;
         }
@@ -446,9 +437,9 @@ final readonly class SearchFilterRenderer
 
     private function renderDateCreatedFilter(FilterRenderContext $ctx): void
     {
-        if (!isset($ctx->mySearch['fields']['date_created']) || !$ctx->displayFilters['creation_date']['access']) {
-            if (isset($ctx->mySearch['fields']['date_created'])) {
-                unset($ctx->mySearch['fields']['date_created']);
+        if (!isset($ctx->mySearch->fields['date_created']) || !$ctx->displayFilters['creation_date']['access']) {
+            if (isset($ctx->mySearch->fields['date_created'])) {
+                unset($ctx->mySearch->fields['date_created']);
             }
             return;
         }
@@ -547,9 +538,9 @@ final readonly class SearchFilterRenderer
 
     private function renderAddedByFilter(FilterRenderContext $ctx): void
     {
-        if (!isset($ctx->mySearch['fields']['added_by']) || !$ctx->displayFilters['added_by']['access']) {
-            if (isset($ctx->mySearch['fields']['added_by'])) {
-                unset($ctx->mySearch['fields']['added_by']);
+        if (!isset($ctx->mySearch->fields['added_by']) || !$ctx->displayFilters['added_by']['access']) {
+            if (isset($ctx->mySearch->fields['added_by'])) {
+                unset($ctx->mySearch->fields['added_by']);
             }
             return;
         }
@@ -604,21 +595,21 @@ final readonly class SearchFilterRenderer
 
         $ctx->template->assign('ADDED_BY', $added_by);
 
-        $added_by_field_raw = is_array($ctx->mySearch['fields']['added_by']) ? $ctx->mySearch['fields']['added_by'] : [];
+        $added_by_field_raw = is_array($ctx->mySearch->fields['added_by']) ? $ctx->mySearch->fields['added_by'] : [];
         $added_by_field_int = array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $added_by_field_raw);
-        $ctx->mySearch['fields']['added_by'] = array_intersect($added_by_field_int, $user_ids);
+        $ctx->mySearch->fields['added_by'] = array_intersect($added_by_field_int, $user_ids);
     }
 
     private function renderCategoryFilter(FilterRenderContext $ctx): void
     {
-        if (!isset($ctx->mySearch['fields']['cat']) || !$ctx->displayFilters['album']['access']) {
-            if (isset($ctx->mySearch['fields']['cat'])) {
-                unset($ctx->mySearch['fields']['cat']);
+        if (!isset($ctx->mySearch->fields['cat']) || !$ctx->displayFilters['album']['access']) {
+            if (isset($ctx->mySearch->fields['cat'])) {
+                unset($ctx->mySearch->fields['cat']);
             }
             return;
         }
 
-        $cat_field = is_array($ctx->mySearch['fields']['cat']) ? $ctx->mySearch['fields']['cat'] : [];
+        $cat_field = is_array($ctx->mySearch->fields['cat']) ? $ctx->mySearch->fields['cat'] : [];
         $cat_words = is_array($cat_field['words'] ?? null) ? $cat_field['words'] : [];
         if (count($cat_words) === 0) {
             return;
@@ -642,14 +633,14 @@ final readonly class SearchFilterRenderer
 
         $cat_words_str = array_map(fn (mixed $v): string => is_scalar($v) ? (string) $v : '0', $cat_words);
         $cat_field['words'] = array_intersect($cat_words_str, array_keys($fullname_of));
-        $ctx->mySearch['fields']['cat'] = $cat_field;
+        $ctx->mySearch->fields['cat'] = $cat_field;
     }
 
     private function renderFiletypeFilter(FilterRenderContext $ctx): void
     {
-        if (!isset($ctx->mySearch['fields']['filetypes']) || !$ctx->displayFilters['file_type']['access']) {
-            if (isset($ctx->mySearch['fields']['filetypes'])) {
-                unset($ctx->mySearch['fields']['filetypes']);
+        if (!isset($ctx->mySearch->fields['filetypes']) || !$ctx->displayFilters['file_type']['access']) {
+            if (isset($ctx->mySearch->fields['filetypes'])) {
+                unset($ctx->mySearch->fields['filetypes']);
             }
             return;
         }
@@ -686,9 +677,9 @@ final readonly class SearchFilterRenderer
         $rateEnabled = Config::rateEnabled();
         $ctx->template->assign('SHOW_FILTER_RATINGS', $rateEnabled);
 
-        if (!$rateEnabled || !isset($ctx->mySearch['fields']['ratings']) || !$ctx->displayFilters['rating']['access']) {
-            if (isset($ctx->mySearch['fields']['ratings'])) {
-                unset($ctx->mySearch['fields']['ratings']);
+        if (!$rateEnabled || !isset($ctx->mySearch->fields['ratings']) || !$ctx->displayFilters['rating']['access']) {
+            if (isset($ctx->mySearch->fields['ratings'])) {
+                unset($ctx->mySearch->fields['ratings']);
             }
             return;
         }
@@ -731,10 +722,10 @@ final readonly class SearchFilterRenderer
 
     private function renderFilesizeFilter(FilterRenderContext $ctx): void
     {
-        if (!isset($ctx->mySearch['fields']['filesize_min']) || !isset($ctx->mySearch['fields']['filesize_max']) || !$ctx->displayFilters['file_size']['access']) {
-            if (isset($ctx->mySearch['fields']['filesize_min']) && isset($ctx->mySearch['fields']['filesize_max'])) {
-                unset($ctx->mySearch['fields']['filesize_min']);
-                unset($ctx->mySearch['fields']['filesize_max']);
+        if (!isset($ctx->mySearch->fields['filesize_min']) || !isset($ctx->mySearch->fields['filesize_max']) || !$ctx->displayFilters['file_size']['access']) {
+            if (isset($ctx->mySearch->fields['filesize_min']) && isset($ctx->mySearch->fields['filesize_max'])) {
+                unset($ctx->mySearch->fields['filesize_min']);
+                unset($ctx->mySearch->fields['filesize_max']);
             }
             return;
         }
@@ -755,8 +746,8 @@ final readonly class SearchFilterRenderer
         $unique_filesizes = array_keys($filesizes);
         sort($unique_filesizes, SORT_NUMERIC);
 
-        $fs_min_raw = $ctx->mySearch['fields']['filesize_min'];
-        $fs_max_raw = $ctx->mySearch['fields']['filesize_max'];
+        $fs_min_raw = $ctx->mySearch->fields['filesize_min'];
+        $fs_max_raw = $ctx->mySearch->fields['filesize_max'];
         $filesize = [
             'list' => implode(',', $unique_filesizes),
             'bounds' => ['min' => $unique_filesizes[0], 'max' => end($unique_filesizes)],
@@ -772,9 +763,9 @@ final readonly class SearchFilterRenderer
 
     private function renderRatioFilter(FilterRenderContext $ctx): void
     {
-        if (!isset($ctx->mySearch['fields']['ratios']) || !$ctx->displayFilters['ratio']['access']) {
-            if (isset($ctx->mySearch['fields']['ratios'])) {
-                unset($ctx->mySearch['fields']['ratios']);
+        if (!isset($ctx->mySearch->fields['ratios']) || !$ctx->displayFilters['ratio']['access']) {
+            if (isset($ctx->mySearch->fields['ratios'])) {
+                unset($ctx->mySearch->fields['ratios']);
             }
             return;
         }
@@ -824,10 +815,10 @@ final readonly class SearchFilterRenderer
 
     private function renderHeightFilter(FilterRenderContext $ctx): void
     {
-        if (!isset($ctx->mySearch['fields']['height_min']) || !isset($ctx->mySearch['fields']['height_max']) || !$ctx->displayFilters['height']['access']) {
-            if (isset($ctx->mySearch['fields']['height_min']) && isset($ctx->mySearch['fields']['height_max'])) {
-                unset($ctx->mySearch['fields']['height_min']);
-                unset($ctx->mySearch['fields']['height_max']);
+        if (!isset($ctx->mySearch->fields['height_min']) || !isset($ctx->mySearch->fields['height_max']) || !$ctx->displayFilters['height']['access']) {
+            if (isset($ctx->mySearch->fields['height_min']) && isset($ctx->mySearch->fields['height_max'])) {
+                unset($ctx->mySearch->fields['height_min']);
+                unset($ctx->mySearch->fields['height_max']);
             }
             return;
         }
@@ -856,8 +847,8 @@ final readonly class SearchFilterRenderer
             'list' => implode(',', array_map(static fn (int $v): string => (string) $v, $heights)),
             'bounds' => ['min' => $heights[0] ?? 0, 'max' => (int) end($heights)],
             'selected' => [
-                'min' => !empty($ctx->mySearch['fields']['height_min']) ? $ctx->mySearch['fields']['height_min'] : ($heights[0] ?? 0),
-                'max' => !empty($ctx->mySearch['fields']['height_max']) ? $ctx->mySearch['fields']['height_max'] : (int) end($heights),
+                'min' => !empty($ctx->mySearch->fields['height_min']) ? $ctx->mySearch->fields['height_min'] : ($heights[0] ?? 0),
+                'max' => !empty($ctx->mySearch->fields['height_max']) ? $ctx->mySearch->fields['height_max'] : (int) end($heights),
             ],
         ];
         $ctx->template->assign('HEIGHT', $height);
@@ -866,10 +857,10 @@ final readonly class SearchFilterRenderer
 
     private function renderWidthFilter(FilterRenderContext $ctx): void
     {
-        if (!isset($ctx->mySearch['fields']['width_min']) || !isset($ctx->mySearch['fields']['width_max']) || !$ctx->displayFilters['width']['access']) {
-            if (isset($ctx->mySearch['fields']['width_min']) && isset($ctx->mySearch['fields']['width_max'])) {
-                unset($ctx->mySearch['fields']['width_min']);
-                unset($ctx->mySearch['fields']['width_max']);
+        if (!isset($ctx->mySearch->fields['width_min']) || !isset($ctx->mySearch->fields['width_max']) || !$ctx->displayFilters['width']['access']) {
+            if (isset($ctx->mySearch->fields['width_min']) && isset($ctx->mySearch->fields['width_max'])) {
+                unset($ctx->mySearch->fields['width_min']);
+                unset($ctx->mySearch->fields['width_max']);
             }
             return;
         }
@@ -898,8 +889,8 @@ final readonly class SearchFilterRenderer
             'list' => implode(',', array_map(static fn (int $v): string => (string) $v, $widths)),
             'bounds' => ['min' => $widths[0] ?? 0, 'max' => (int) end($widths)],
             'selected' => [
-                'min' => !empty($ctx->mySearch['fields']['width_min']) ? $ctx->mySearch['fields']['width_min'] : ($widths[0] ?? 0),
-                'max' => !empty($ctx->mySearch['fields']['width_max']) ? $ctx->mySearch['fields']['width_max'] : (int) end($widths),
+                'min' => !empty($ctx->mySearch->fields['width_min']) ? $ctx->mySearch->fields['width_min'] : ($widths[0] ?? 0),
+                'max' => !empty($ctx->mySearch->fields['width_max']) ? $ctx->mySearch->fields['width_max'] : (int) end($widths),
             ],
         ];
         $ctx->template->assign('WIDTH', $width);

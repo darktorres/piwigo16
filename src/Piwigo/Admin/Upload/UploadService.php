@@ -60,14 +60,14 @@ final readonly class UploadService
     ) {
     }
 
-    /** @return array<string, array{default: bool|int|string, can_be_null: bool, min?: int, max?: int, pattern?: string, error_message?: string}> */
+    /** @return array<string, UploadParamSpec> */
     public function getUploadFormConfig(): array
     {
         return [
-            'original_resize' => ['default' => false, 'can_be_null' => false],
-            'original_resize_maxwidth' => ['default' => 2000, 'min' => 500, 'max' => 20000, 'pattern' => '/^\d+$/', 'can_be_null' => false, 'error_message' => Lang::t('The original maximum width must be a number between %d and %d')],
-            'original_resize_maxheight' => ['default' => 2000, 'min' => 300, 'max' => 20000, 'pattern' => '/^\d+$/', 'can_be_null' => false, 'error_message' => Lang::t('The original maximum height must be a number between %d and %d')],
-            'original_resize_quality' => ['default' => 95, 'min' => 50, 'max' => 98, 'pattern' => '/^\d+$/', 'can_be_null' => false, 'error_message' => Lang::t('The original image quality must be a number between %d and %d')],
+            'original_resize'          => new UploadParamSpec(default: false, canBeNull: false),
+            'original_resize_maxwidth'  => new UploadParamSpec(default: 2000, canBeNull: false, min: 500, max: 20000, pattern: '/^\d+$/', errorMessage: Lang::t('The original maximum width must be a number between %d and %d')),
+            'original_resize_maxheight' => new UploadParamSpec(default: 2000, canBeNull: false, min: 300, max: 20000, pattern: '/^\d+$/', errorMessage: Lang::t('The original maximum height must be a number between %d and %d')),
+            'original_resize_quality'   => new UploadParamSpec(default: 95, canBeNull: false, min: 50, max: 98, pattern: '/^\d+$/', errorMessage: Lang::t('The original image quality must be a number between %d and %d')),
         ];
     }
 
@@ -124,16 +124,16 @@ final readonly class UploadService
             if (!isset($config[$field])) {
                 continue;
             }
-            if (is_bool($config[$field]['default'])) {
+            if (is_bool($config[$field]->default)) {
                 $value     = isset($value);
                 $updates[] = ['param' => $field, 'value' => $value];
-            } elseif ($config[$field]['can_be_null'] && empty($value)) {
+            } elseif ($config[$field]->canBeNull && empty($value)) {
                 $updates[] = ['param' => $field, 'value' => false];
             } else {
-                $min     = $config[$field]['min'] ?? 0;
-                $max     = $config[$field]['max'] ?? PHP_INT_MAX;
-                $pattern = $config[$field]['pattern'] ?? '';
-                $errMsg  = $config[$field]['error_message'] ?? '%s - %s';
+                $min     = $config[$field]->min ?? 0;
+                $max     = $config[$field]->max ?? PHP_INT_MAX;
+                $pattern = $config[$field]->pattern ?? '';
+                $errMsg  = $config[$field]->errorMessage ?? '%s - %s';
                 $effectivePattern = $pattern !== '' ? $pattern : '//';
                 if (preg_match($effectivePattern, is_scalar($value) ? (string) $value : '') && $value >= $min && $value <= $max) {
                     $updates[] = ['param' => $field, 'value' => $value];

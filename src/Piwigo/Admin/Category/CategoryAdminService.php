@@ -474,14 +474,11 @@ final readonly class CategoryAdminService
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $catIdsInt, ActivityAction::Move, new MoveAlbumDetails((int) $newParent)));
     }
 
-    /**
-     * @param array<mixed> $options
-     * @return array<mixed>
-     */
-    public function createVirtualCategory(string $categoryName, int|string|null $parentId = null, array $options = []): array
+    /** @param array<mixed> $options */
+    public function createVirtualCategory(string $categoryName, int|string|null $parentId = null, array $options = []): CreateCategoryResult
     {
         if (preg_match('/^\s*$/', $categoryName)) {
-            return ['error' => Lang::t('The name of an album must not be empty')];
+            return CreateCategoryResult::error(Lang::t('The name of an album must not be empty'));
         }
         $rank = 0;
         if (Config::newcatDefaultPosition() === 'last') {
@@ -533,7 +530,7 @@ final readonly class CategoryAdminService
         }
         $this->dispatcher->dispatch(new CreateVirtualCategory(array_merge(['id' => $insertedId], $insert)));
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Album, $insertedId, ActivityAction::Add));
-        return ['info' => Lang::t('Album added'), 'id' => $insertedId];
+        return CreateCategoryResult::success($insertedId, Lang::t('Album added'));
     }
 
     /**

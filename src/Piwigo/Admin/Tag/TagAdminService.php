@@ -298,8 +298,7 @@ final class TagAdminService
         return $tagIds;
     }
 
-    /** @return array<mixed> */
-    public function createTag(string $tagName): array
+    public function createTag(string $tagName): CreateTagResult
     {
         $tagName    = strip_tags($tagName);
         $existingId = $this->tagRepository->findIdByExactName($tagName);
@@ -307,8 +306,8 @@ final class TagAdminService
             $createUrlEvent = new RenderTagUrl($tagName);
             $this->dispatcher->dispatch($createUrlEvent);
             $newId = $this->tagRepository->insertNewTag(['name' => $tagName, 'url_name' => $createUrlEvent->tagName]);
-            return ['info' => Lang::t('Tag "%s" was added', stripslashes($tagName)), 'id' => $newId];
+            return CreateTagResult::success($newId, Lang::t('Tag "%s" was added', stripslashes($tagName)));
         }
-        return ['error' => Lang::t('Tag "%s" already exists', stripslashes($tagName))];
+        return CreateTagResult::error(Lang::t('Tag "%s" already exists', stripslashes($tagName)));
     }
 }

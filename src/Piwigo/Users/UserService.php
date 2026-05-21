@@ -513,14 +513,11 @@ final class UserService
         return $this->actRepo->hasLoggedIn($userId);
     }
 
-    /**
-     * @param array<mixed>  $params
-     * @return array<mixed>
-     */
-    public function checkAndSaveUserInfos(array $params): array
+    /** @param array<mixed> $params */
+    public function checkAndSaveUserInfos(array $params): UpdateUserResult
     {
         if (isset($params['username']) and strlen(str_replace(' ', '', is_string($params['username']) ? $params['username'] : '')) == 0) {
-            return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'Name field must not be empty']];
+            return UpdateUserResult::error(WsError::InvalidParam->value, 'Name field must not be empty');
         }
 
         $currentUser = CurrentUser::get();
@@ -530,24 +527,24 @@ final class UserService
         $paramUserId = is_array($params['user_id']) ? $params['user_id'] : [];
         if (count($paramUserId) == 1) {
             if ($this->userAdminService->getUsername(is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : 0) === false) {
-                return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'This user does not exist.']];
+                return UpdateUserResult::error(WsError::InvalidParam->value, 'This user does not exist.');
             }
 
             if (isset($params['username']) && $params['username'] !== '') {
                 $userId = $this->getUserid(is_string($params['username']) ? $params['username'] : '');
                 if ($userId !== false && $userId !== 0 && $userId != $paramUserId[0]) {
-                    return ['error' => ['code' => WsError::InvalidParam->value, 'message' => Lang::t('this login is already used')]];
+                    return UpdateUserResult::error(WsError::InvalidParam->value, Lang::t('this login is already used'));
                 }
                 $usernameStr = is_string($params['username']) ? $params['username'] : '';
                 if ($usernameStr != strip_tags($usernameStr)) {
-                    return ['error' => ['code' => WsError::InvalidParam->value, 'message' => Lang::t('html tags are not allowed in login')]];
+                    return UpdateUserResult::error(WsError::InvalidParam->value, Lang::t('html tags are not allowed in login'));
                 }
                 $updates[Config::userFields()->username] = $params['username'];
             }
 
             if (!empty($params['email'])) {
                 if (($error = $this->authService->validateMailAddress(is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : null, is_scalar($params['email']) ? (string) $params['email'] : null)) != '') {
-                    return ['error' => ['code' => WsError::InvalidParam->value, 'message' => $error]];
+                    return UpdateUserResult::error(WsError::InvalidParam->value, $error);
                 }
                 $updates[Config::userFields()->email] = $params['email'];
             }
@@ -558,7 +555,7 @@ final class UserService
                     $adminIds = $this->userRepo->findAdminUserIds();
                     $passwordProtectedUsers = array_merge($passwordProtectedUsers, array_diff(array_map(static fn (int $v): string => (string) $v, $adminIds), [(string) $currentUser->id]));
                     if (in_array($paramUserId[0], $passwordProtectedUsers)) {
-                        return ['error' => ['code' => 403, 'message' => 'Only webmasters can change password of other "webmaster/admin" users']];
+                        return UpdateUserResult::error(403, 'Only webmasters can change password of other "webmaster/admin" users');
                     }
                 }
                 $updates[Config::userFields()->password] = password_hash(is_string($params['password']) ? $params['password'] : '', PASSWORD_BCRYPT);
@@ -568,10 +565,10 @@ final class UserService
         if (!empty($params['status'])) {
             $paramStatus = is_string($params['status']) ? UserStatus::tryFrom($params['status']) : null;
             if ($paramStatus === null) {
-                return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'Invalid status']];
+                return UpdateUserResult::error(WsError::InvalidParam->value, 'Invalid status');
             }
             if (in_array($paramStatus, [UserStatus::Webmaster, UserStatus::Admin], true) and !$this->permissionService->isWebmaster()) {
-                return ['error' => ['code ' => 403, 'message' => 'Only webmasters can grant "webmaster/admin" status']];
+                return UpdateUserResult::error(403, 'Only webmasters can grant "webmaster/admin" status');
             }
 
             $protectedUsers = [$currentUser->id, Config::guestId(), Config::webmasterId()];
@@ -595,14 +592,14 @@ final class UserService
 
         if (!empty($params['level']) or $params['level'] === 0) {
             if (!in_array($params['level'], Config::availablePermissionLevels())) {
-                return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'Invalid level']];
+                return UpdateUserResult::error(WsError::InvalidParam->value, 'Invalid level');
             }
         }
         if (!empty($params['language']) and !in_array($params['language'], array_keys($this->languageService->getActiveLanguages()))) {
-            return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'Invalid language']];
+            return UpdateUserResult::error(WsError::InvalidParam->value, 'Invalid language');
         }
         if (!empty($params['theme']) and !in_array($params['theme'], array_keys($this->themeService->getActiveThemes()))) {
-            return ['error' => ['code' => WsError::InvalidParam->value, 'message' => 'Invalid theme']];
+            return UpdateUserResult::error(WsError::InvalidParam->value, 'Invalid theme');
         }
 
         $paramUid0   = is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : 0;
@@ -661,7 +658,11 @@ final class UserService
         $this->userAdminService->invalidateUserCache();
         $this->activityLogger->log(new ActivityEvent(ActivityObject::User, array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $paramUserId), ActivityAction::Edit));
 
-        return ['user_id' => $params['user_id'], 'infos' => $updatesInfos, 'account' => $updates];
+        return UpdateUserResult::success(
+            userId:  is_array($params['user_id']) ? $params['user_id'] : [],
+            infos:   $updatesInfos,
+            account: $updates,
+        );
     }
 
     /** @return array<string,mixed> */

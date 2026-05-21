@@ -14,9 +14,4 @@ final readonly class CommentsSummary
     ) {
     }
 
-    /** @return array{all_comments: int, validated: int, pending: int} */
-    public function toArray(): array
-    {
-        return ['all_comments' => $this->allComments, 'validated' => $this->validated, 'pending' => $this->pending];
-    }
 }

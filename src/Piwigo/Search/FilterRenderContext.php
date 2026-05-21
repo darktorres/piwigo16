@@ -10,8 +10,7 @@ use Piwigo\Template\Template;
 
 final class FilterRenderContext
 {
-    /** @var array{fields: array<string, mixed>}&array<string, mixed> */
-    public array $mySearch;
+    public SearchQuery $mySearch;
     /** @var array{list: string, bounds: array<string, mixed>, selected: array<string, mixed>}|null */
     public ?array $filesize = null;
     /** @var array{list: string, bounds: array<string, mixed>, selected: array<string, mixed>}|null */
@@ -21,12 +20,9 @@ final class FilterRenderContext
     /** @var array<string, string>|null */
     public ?array $fullnameOf = null;
 
-    /**
-     * @param array{fields: array<string, mixed>}&array<string, mixed> $mySearch
-     * @param array<string, array{access: bool, default: bool}> $displayFilters
-     */
+    /** @param array<string, array{access: bool, default: bool}> $displayFilters */
     public function __construct(
-        array $mySearch,
+        SearchQuery $mySearch,
         public readonly array $displayFilters,
         public readonly string $userId,
         public readonly string $userCacheTime,

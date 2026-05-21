@@ -35,15 +35,15 @@ final readonly class AddHandler implements WsAction
         } catch (WsParamException $e) {
             return new PwgError(WsError::InvalidParam->value, $e->getMessage());
         }
-        $creationOutput = $this->tagAdminService->createTag($input->name);
-        if (isset($creationOutput['error'])) {
-            return new PwgError(WsError::InvalidParam->value, is_string($creationOutput['error']) ? $creationOutput['error'] : '');
+        $result = $this->tagAdminService->createTag($input->name);
+        if ($result->isError) {
+            return new PwgError(WsError::InvalidParam->value, $result->error ?? '');
         }
-        $tagAddId = is_numeric($creationOutput['id'] ?? null) ? (int) $creationOutput['id'] : 0;
+        $tagAddId = $result->id ?? 0;
         $this->activityLogger->log(new ActivityEvent(ActivityObject::Tag, $tagAddId, ActivityAction::Add));
         $newTag = $this->tagRepository->findById($tagAddId);
         return new AddResult(
-            info:    is_string($creationOutput['info'] ?? null) ? $creationOutput['info'] : '',
+            info:    $result->info ?? '',
             id:      $tagAddId,
             name:    $newTag !== null ? $newTag->name : '',
             urlName: $newTag !== null ? $newTag->urlName : '',

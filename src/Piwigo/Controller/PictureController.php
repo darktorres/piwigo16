@@ -52,6 +52,7 @@ use Piwigo\Picture\PictureContextRegistry;
 use Piwigo\Picture\PictureMetadataRenderer;
 use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Picture\PictureService;
+use Piwigo\Picture\SlideshowParams;
 use Piwigo\Rate\RateService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
@@ -281,25 +282,25 @@ final readonly class PictureController implements ControllerInterface
             throw new NotFoundException('Current picture not found.');
         }
 
-        $slideshow_params     = [];
+        $slideshow_params     = null;
         $slideshow_url_params = [];
         $get_slideshow        = StringUtil::inputString('slideshow', null, $_GET);
 
         if ($get_slideshow !== null) {
-            $slideshowActive  = true;
+            $slideshowActive      = true;
             PageState::current()->metaRobots = ['noindex' => 1, 'nofollow' => 1];
             $slideshow_params     = $this->pictureService->decodeSlideshowParams($get_slideshow);
             $slideshow_url_params['slideshow'] = $this->pictureService->encodeSlideshowParams($slideshow_params);
 
-            if ($slideshow_params['play']) {
+            if ($slideshow_params->play) {
                 $id_pict_redirect = '';
                 if ($nextItem !== null) {
                     $id_pict_redirect = 'next';
-                } elseif ($slideshow_params['repeat'] && $firstItem !== null) {
+                } elseif ($slideshow_params->repeat && $firstItem !== null) {
                     $id_pict_redirect = 'first';
                 }
                 if (!empty($id_pict_redirect) && isset($pictureVms[$id_pict_redirect])) {
-                    $refresh  = $slideshow_params['period'];
+                    $refresh  = $slideshow_params->period;
                     $url_link = $this->urlService->addUrlParams($pictureVms[$id_pict_redirect]->url, $slideshow_url_params);
                 }
             }
@@ -385,20 +386,28 @@ final readonly class PictureController implements ControllerInterface
 
         // Slideshow controls
         if ($slideshowActive) {
+            assert($slideshow_params instanceof SlideshowParams);
             $tpl_slideshow = [];
             $currentUrl    = $currentVm->url;
             $tpl->assign(['U_SLIDESHOW_STOP' => $currentUrl]);
             foreach (['repeat', 'play'] as $p) {
-                $pVal = $slideshow_params[$p] ?? false;
-                $pValBool = $pVal !== false && $pVal !== '' && $pVal !== 0 && $pVal !== [];
+                $pValBool = match ($p) {
+                    'repeat' => $slideshow_params->repeat,
+                    'play'   => $slideshow_params->play,
+                    default  => false,
+                };
                 $var_name = 'U_' . ($pValBool ? 'STOP_' : 'START_') . strtoupper($p);
-                $tpl_slideshow[$var_name] = $this->urlService->addUrlParams($currentUrl, ['slideshow' => $this->pictureService->encodeSlideshowParams(array_merge($slideshow_params, [$p => !$pValBool]))]);
+                $toggled  = match ($p) {
+                    'repeat' => new SlideshowParams($slideshow_params->period, !$slideshow_params->repeat, $slideshow_params->play),
+                    'play'   => new SlideshowParams($slideshow_params->period, $slideshow_params->repeat, !$slideshow_params->play),
+                    default  => $slideshow_params,
+                };
+                $tpl_slideshow[$var_name] = $this->urlService->addUrlParams($currentUrl, ['slideshow' => $this->pictureService->encodeSlideshowParams($toggled)]);
             }
             foreach (['dec', 'inc'] as $op) {
-                $periodRaw = $slideshow_params['period'] ?? 0;
-                $new_period  = (is_numeric($periodRaw) ? (int) $periodRaw : 0) + (($op == 'dec' ? -1 : 1) * Config::slideshowPeriodStep());
-                $new_params  = $this->pictureService->correctSlideshowParams(array_merge($slideshow_params, ['period' => $new_period]));
-                if ($new_params['period'] === $new_period) {
+                $new_period = (int) $slideshow_params->period + (($op == 'dec' ? -1 : 1) * Config::slideshowPeriodStep());
+                $new_params = $this->pictureService->correctSlideshowParams(new SlideshowParams($new_period, $slideshow_params->repeat, $slideshow_params->play));
+                if ($new_params->period === $new_period) {
                     $tpl_slideshow['U_' . strtoupper($op) . '_PERIOD'] = $this->urlService->addUrlParams($currentUrl, ['slideshow' => $this->pictureService->encodeSlideshowParams($new_params)]);
                 }
             }

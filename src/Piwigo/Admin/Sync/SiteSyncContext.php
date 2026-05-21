@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Sync;
 
 use Piwigo\Admin\SyncMode;
+use Piwigo\Category\Projection\PhysicalCategoryRow;
 use Piwigo\Site\LocalSiteReader;
 
 /**
@@ -15,13 +16,13 @@ use Piwigo\Site\LocalSiteReader;
  */
 final class SiteSyncContext
 {
-    /** @var list<array{path: string, type: string}> */
+    /** @var list<SyncError> */
     public array $errors = [];
-    /** @var list<array{path: string, info: string}> */
+    /** @var list<SyncInfo> */
     public array $infos = [];
     /** @var array<string, int> */
     public array $counts = [];
-    /** @var array<int, array<string, mixed>> */
+    /** @var array<int, PhysicalCategoryRow> */
     public array $dbCategories = [];
     /** @var array<string, int> */
     public array $dbFulldirs = [];

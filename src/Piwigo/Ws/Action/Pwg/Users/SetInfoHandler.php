@@ -33,11 +33,9 @@ final readonly class SetInfoHandler implements WsAction
             return new PwgError(403, 'Invalid security token');
         }
         $updatedUsers = $this->userService->checkAndSaveUserInfos($input->payload);
-        if (isset($updatedUsers['error'])) {
-            $err = is_array($updatedUsers['error']) ? $updatedUsers['error'] : [];
-            return new PwgError(is_int($err['code'] ?? null) ? $err['code'] : null, is_string($err['message'] ?? null) ? $err['message'] : '');
+        if ($updatedUsers->isError) {
+            return new PwgError($updatedUsers->errorCode, $updatedUsers->errorMessage ?? '');
         }
-        $infosVal = is_array($updatedUsers['infos'] ?? null) ? $updatedUsers['infos'] : [];
-        return $server->invoke('pwg.users.getList', ['user_id' => $updatedUsers['user_id'], 'display' => 'basics,' . implode(',', array_keys($infosVal))]);
+        return $server->invoke('pwg.users.getList', ['user_id' => $updatedUsers->userId, 'display' => 'basics,' . implode(',', array_keys($updatedUsers->infos ?? []))]);
     }
 }

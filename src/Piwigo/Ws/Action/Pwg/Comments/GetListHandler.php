@@ -152,6 +152,6 @@ final readonly class GetListHandler implements WsAction
             $this->commentRepository->findCommentAuthorCounts($authorsWhere, $authorsParams, $authorsTypes),
         );
 
-        return ['summary' => $summary->toArray(), 'comments' => $list, 'filters' => ['nb_authors' => $nbAuthorsIn, 'started_at' => $dates->startedAt, 'ended_at' => $dates->endedAt], 'paging' => ['page' => $input->page, 'per_page' => $input->perPage, 'total_pages' => max(0, (int) ceil((float) $totalComments / (float) max(1, $perPage)) - 1)]];
+        return ['summary' => ['all_comments' => $summary->allComments, 'validated' => $summary->validated, 'pending' => $summary->pending], 'comments' => $list, 'filters' => ['nb_authors' => $nbAuthorsIn, 'started_at' => $dates->startedAt, 'ended_at' => $dates->endedAt], 'paging' => ['page' => $input->page, 'per_page' => $input->perPage, 'total_pages' => max(0, (int) ceil((float) $totalComments / (float) max(1, $perPage)) - 1)]];
     }
 }

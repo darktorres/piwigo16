@@ -65,24 +65,32 @@ final readonly class GetAdminListHandler implements WsAction
         $counter    = $adminPage->total;
         $cats       = [];
         foreach ($searchRows as $row) {
-            $row['nb_images']  = $nbImagesOf[$row['id']] ?? 0;
-            $catDisplayName    = $this->htmlService->getCatDisplayNameCache($row['uppercats'], $this->urlGenerator->admin() . '&page=album-');
-            $row['name_raw']   = $row['name'];
-            $adminRenderEvent  = new RenderCategoryName($row['name'], 'ws_categories_getAdminList');
+            $catDisplayName   = $this->htmlService->getCatDisplayNameCache($row->uppercats, $this->urlGenerator->admin() . '&page=album-');
+            $adminRenderEvent = new RenderCategoryName($row->name, 'ws_categories_getAdminList');
             $this->dispatcher->dispatch($adminRenderEvent);
-            $row['name']        = strip_tags($adminRenderEvent->categoryName);
-            $row['fullname']    = strip_tags($catDisplayName);
-            $row['comment_raw'] = $row['comment'];
-            $adminCatDescEvent  = new RenderCategoryDescription($row['comment'] ?? '', 'ws_categories_getAdminList');
+            $adminCatDescEvent = new RenderCategoryDescription($row->comment ?? '', 'ws_categories_getAdminList');
             $this->dispatcher->dispatch($adminCatDescEvent);
-            $row['comment']     = $adminCatDescEvent->categoryDescription;
-            if ($row['image_order'] === null || $row['image_order'] === '') {
-                $row['image_order'] = $this->orderByService->buildBareOrderByClause(Config::orderBy());
-            }
+            $imageOrder = ($row->imageOrder === null || $row->imageOrder === '')
+                ? $this->orderByService->buildBareOrderByClause(Config::orderBy())
+                : $row->imageOrder;
+            $cat = [
+                'id'          => $row->id,
+                'name'        => strip_tags($adminRenderEvent->categoryName),
+                'name_raw'    => $row->name,
+                'comment'     => $adminCatDescEvent->categoryDescription,
+                'comment_raw' => $row->comment,
+                'uppercats'   => $row->uppercats,
+                'global_rank' => $row->globalRank,
+                'dir'         => $row->dir,
+                'status'      => $row->status,
+                'image_order' => $imageOrder,
+                'fullname'    => strip_tags($catDisplayName),
+                'nb_images'   => $nbImagesOf[$row->id] ?? 0,
+            ];
             if (in_array('full_name_with_admin_links', $input->additionalOutput)) {
-                $row['full_name_with_admin_links'] = $catDisplayName;
+                $cat['full_name_with_admin_links'] = $catDisplayName;
             }
-            $cats[] = $row;
+            $cats[] = $cat;
         }
         if (!$input->recursive) {
             $catsIds     = array_column($cats, 'id');

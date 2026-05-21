@@ -68,10 +68,9 @@ final readonly class SetMyInfoHandler implements WsAction
         }
         unset($payload['new_password'], $payload['conf_new_password'], $payload['username'], $payload['status'], $payload['level'], $payload['group_id'], $payload['enabled_high']);
         $payload['user_id'] = [$currentUser->id];
-        $updatedUsers2      = $this->userService->checkAndSaveUserInfos($payload);
-        if (isset($updatedUsers2['error'])) {
-            $err2 = is_array($updatedUsers2['error']) ? $updatedUsers2['error'] : [];
-            return new PwgError(is_int($err2['code'] ?? null) ? $err2['code'] : null, is_string($err2['message'] ?? null) ? $err2['message'] : '');
+        $updatedUsers2 = $this->userService->checkAndSaveUserInfos($payload);
+        if ($updatedUsers2->isError) {
+            return new PwgError($updatedUsers2->errorCode, $updatedUsers2->errorMessage ?? '');
         }
         return Lang::t('Your changes have been applied.');
     }

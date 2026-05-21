@@ -7,6 +7,7 @@ namespace Piwigo\Category;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\Entity\Category;
+use Piwigo\Category\Projection\AdminCategoryRow;
 use Piwigo\Category\Projection\CategoryDetail;
 use Piwigo\Category\Projection\CategoryNamePermalink;
 use Piwigo\Category\Projection\CategoryNamePermalinkUppercats;
@@ -16,6 +17,7 @@ use Piwigo\Category\Projection\CategoryUppercatsSite;
 use Piwigo\Category\Projection\ImageCategoryInfo;
 use Piwigo\Category\Projection\ImageCategoryLink;
 use Piwigo\Category\Projection\MenuCategoryRow;
+use Piwigo\Category\Projection\PhysicalCategoryRow;
 use Piwigo\Category\Projection\PictureNavCategoryRow;
 use Piwigo\Category\Projection\RankUpdateRow;
 use Piwigo\Category\Projection\RelatedCategoryRow;
@@ -922,7 +924,7 @@ final class CategoryRepository extends AbstractRepository
      * not null. Optional $catFilter restricts to a single id (subcats included
      * via uppercats REGEXP when $subcatsIncluded is true). Result keyed by id.
      *
-     * @return array<int, array{id: int, id_uppercat: int|null, uppercats: string, global_rank: string|null, status: string, visible: bool}>
+     * @return array<int, PhysicalCategoryRow>
      */
     public function findPhysicalSyncableForSite(int $siteId, ?int $catFilter, bool $subcatsIncluded): array
     {
@@ -949,14 +951,14 @@ final class CategoryRepository extends AbstractRepository
             if (!is_numeric($idRaw)) {
                 continue;
             }
-            $out[(int) $idRaw] = [
-                'id'          => (int) $idRaw,
-                'id_uppercat' => is_numeric($idUpRaw) ? (int) $idUpRaw : null,
-                'uppercats'   => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
-                'status'      => is_string($row['status'] ?? null) ? $row['status'] : Privacy::Public->value,
-                'visible'     => is_bool($visibleRaw) ? $visibleRaw : (is_numeric($visibleRaw) ? (int) $visibleRaw !== 0 : true),
-            ];
+            $out[(int) $idRaw] = new PhysicalCategoryRow(
+                id:         (int) $idRaw,
+                idUppercat: is_numeric($idUpRaw) ? (int) $idUpRaw : null,
+                uppercats:  is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+                status:     is_string($row['status'] ?? null) ? $row['status'] : Privacy::Public->value,
+                visible:    is_bool($visibleRaw) ? $visibleRaw : (is_numeric($visibleRaw) ? (int) $visibleRaw !== 0 : true),
+            );
         }
         return $out;
     }
@@ -3040,10 +3042,7 @@ SELECT
      * @param list<string>                           $whereClauses
      * @param list<mixed>                            $params
      * @param list<ArrayParameterType|ParameterType> $types
-     * @return PaginatedResult<array{
-     *     id: int, name: string, comment: string|null, uppercats: string,
-     *     global_rank: string|null, dir: string|null, status: string, image_order: string|null,
-     * }>
+     * @return PaginatedResult<AdminCategoryRow>
      */
     public function findAdminListPage(
         array $whereClauses,
@@ -3062,16 +3061,16 @@ SELECT
             if (!is_numeric($idRaw)) {
                 continue;
             }
-            $rows[] = [
-                'id'          => (int) $idRaw,
-                'name'        => is_string($row['name'] ?? null) ? $row['name'] : '',
-                'comment'     => is_string($row['comment'] ?? null) ? $row['comment'] : null,
-                'uppercats'   => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
-                'dir'         => is_string($row['dir'] ?? null) ? $row['dir'] : null,
-                'status'      => is_string($row['status'] ?? null) ? $row['status'] : Privacy::Public->value,
-                'image_order' => is_string($row['image_order'] ?? null) ? $row['image_order'] : null,
-            ];
+            $rows[] = new AdminCategoryRow(
+                id:         (int) $idRaw,
+                name:       is_string($row['name'] ?? null) ? $row['name'] : '',
+                comment:    is_string($row['comment'] ?? null) ? $row['comment'] : null,
+                uppercats:  is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+                dir:        is_string($row['dir'] ?? null) ? $row['dir'] : null,
+                status:     is_string($row['status'] ?? null) ? $row['status'] : Privacy::Public->value,
+                imageOrder: is_string($row['image_order'] ?? null) ? $row['image_order'] : null,
+            );
         }
         $totalRaw = $this->conn->executeQuery('SELECT FOUND_ROWS()')->fetchOne();
         return new PaginatedResult($rows, is_numeric($totalRaw) ? (int) $totalRaw : 0);

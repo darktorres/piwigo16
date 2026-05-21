@@ -78,10 +78,13 @@ final class ConfigLoaderApplyDefaultsTest extends TestCase
             ['jpg', 'jpeg', 'png', 'gif', 'webp', 'tiff', 'tif', 'mpg', 'zip', 'avi', 'mp3', 'ogg', 'pdf', 'svg', 'heic'],
             Config::fileExtensions()
         );
-        self::assertSame(
-            ['RSS' => ['max_dates' => 5, 'max_elements' => 6, 'max_cats' => 6], 'NBM' => ['max_dates' => 7, 'max_elements' => 3, 'max_cats' => 9]],
-            Config::recentPostDates()
-        );
+        $dates = Config::recentPostDates();
+        self::assertSame(5, $dates->rss->maxDates);
+        self::assertSame(6, $dates->rss->maxElements);
+        self::assertSame(6, $dates->rss->maxCats);
+        self::assertSame(7, $dates->nbm->maxDates);
+        self::assertSame(3, $dates->nbm->maxElements);
+        self::assertSame(9, $dates->nbm->maxCats);
         self::assertCount(8, Config::apiKeyForbiddenMethods());
     }
 }

@@ -67,10 +67,10 @@ final class IgnoredUpdatesRepositoryTest extends TestCase
             });
 
         $repo = new IgnoredUpdatesRepository($conn);
-        self::assertSame(
-            ['plugins' => ['plugin-a'], 'themes' => [], 'languages' => ['lang-fr', 'lang-es']],
-            $repo->listAll()
-        );
+        $result = $repo->listAll();
+        self::assertSame(['plugin-a'], $result->plugins);
+        self::assertSame([], $result->themes);
+        self::assertSame(['lang-fr', 'lang-es'], $result->languages);
     }
 
     public function testIsIgnoredReturnsTrueWhenCountPositive(): void

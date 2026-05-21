@@ -231,11 +231,11 @@ final readonly class SearchHandler implements WsAction
                 $pictureUrl      = $this->urlService->makePictureUrl(['image_id' => $line->imageId]);
                 $element         = [];
                 if (isset($imageInfos[$lineImageIdInt])) {
-                    $element = ['id' => $line->imageId, 'file' => $imageInfos[$lineImageIdInt]['file'], 'path' => $imageInfos[$lineImageIdInt]['path'], 'representative_ext' => $imageInfos[$lineImageIdInt]['representative_ext']];
+                    $element = ['id' => $line->imageId, 'file' => $imageInfos[$lineImageIdInt]->file, 'path' => $imageInfos[$lineImageIdInt]->path, 'representative_ext' => $imageInfos[$lineImageIdInt]->representativeExt];
                 }
                 $imageTitle = '';
-                if (isset($imageInfos[$lineImageIdInt]['label'])) {
-                    $descEvent = new RenderElementDescription($imageInfos[$lineImageIdInt]['label'], __FUNCTION__);
+                if (isset($imageInfos[$lineImageIdInt])) {
+                    $descEvent = new RenderElementDescription($imageInfos[$lineImageIdInt]->label, __FUNCTION__);
                     $this->dispatcher->dispatch($descEvent);
                     $imageTitle .= ' ' . $descEvent->elementDescription;
                 } else {

@@ -241,12 +241,19 @@ final class AlbumController implements AdminSubControllerInterface
         $allAlbum = $this->categoryRepository->findAllForAdminTreeOverview();
 
         $associatedTree = [];
-        foreach ($allAlbum as $album) {
-            $albumRenderEvent = new RenderCategoryName($album['name'], 'admin_cat_list');
+        foreach ($allAlbum as $albumRow) {
+            $albumRenderEvent = new RenderCategoryName($albumRow->name, 'admin_cat_list');
             $this->dispatcher->dispatch($albumRenderEvent);
-            $album['name']         = $albumRenderEvent->categoryName;
-            $album['lastmodified'] = $this->dateService->timeSince($album['lastmodified'], 'year');
-            $parents               = array_map(strval(...), explode(',', $album['uppercats']));
+            $album = [
+                'id'           => $albumRow->id,
+                'name'         => $albumRenderEvent->categoryName,
+                'rank'         => $albumRow->rank,
+                'status'       => $albumRow->status,
+                'visible'      => $albumRow->visible,
+                'uppercats'    => $albumRow->uppercats,
+                'lastmodified' => $this->dateService->timeSince($albumRow->lastmodified, 'year'),
+            ];
+            $parents = array_map(strval(...), explode(',', $albumRow->uppercats));
             self::placeAlbumInTree($associatedTree, $parents, $album);
         }
 
@@ -391,8 +398,8 @@ final class AlbumController implements AdminSubControllerInterface
                 );
                 $usernames = [];
                 foreach ($users as $u) {
-                    $usernames[] = is_string($u['username'] ?? null) ? $u['username'] : '';
-                    $authkey     = $this->authService->createUserAuthKey(is_numeric($u['user_id']) ? (int) $u['user_id'] : 0, is_string($u['status']) ? $u['status'] : null);
+                    $usernames[] = $u->username;
+                    $authkey     = $this->authService->createUserAuthKey($u->userId, $u->status);
                     $user_tpl    = $mailTpl;
                     if ($authkey !== false) {
                         $user_tpl['assign']['LINK'] = $this->urlService->addUrlParams($mailTpl['assign']['LINK'], ['auth' => $authkey['auth_key']]);
@@ -404,8 +411,8 @@ final class AlbumController implements AdminSubControllerInterface
                     if (isset($authkey['auth_key'])) {
                         $user_args['auth_key'] = $authkey['auth_key'];
                     }
-                    $this->mailService->switchLangTo(is_string($u['language'] ?? null) ? $u['language'] : '');
-                    $this->mailService->pwgMail(is_string($u['email'] ?? null) ? $u['email'] : '', $user_args, $user_tpl);
+                    $this->mailService->switchLangTo($u->language);
+                    $this->mailService->pwgMail($u->email, $user_args, $user_tpl);
                     $this->mailService->switchLangBack();
                 }
                 $message  = Translator::get()->plural('%d mail was sent.', '%d mails were sent.', count($users));
@@ -563,7 +570,14 @@ final class AlbumController implements AdminSubControllerInterface
         $listingRows = $this->categoryRepository->findCategoryListing($parentIdArg);
         $categories  = [];
         foreach ($listingRows as $row) {
-            $categories[(string) $row['id']] = $row;
+            $categories[(string) $row->id] = [
+                'id'        => $row->id,
+                'name'      => $row->name,
+                'permalink' => $row->permalink,
+                'dir'       => $row->dir,
+                'rank'      => $row->rank,
+                'status'    => $row->status,
+            ];
         }
 
         $nb_photos_in  = [];
@@ -1001,11 +1015,11 @@ final class AlbumController implements AdminSubControllerInterface
         if (count($group_granted_ids) > 0) {
             $granted_groups = [];
             foreach ($this->groupRepository->findUserGroupMembersByGroupIds($group_granted_ids) as $row) {
-                $row_group_id = is_scalar($row['group_id'] ?? null) ? (string) $row['group_id'] : '';
+                $row_group_id = (string) $row->groupId;
                 if (!isset($granted_groups[$row_group_id])) {
                     $granted_groups[$row_group_id] = [];
                 }
-                $granted_groups[$row_group_id][] = is_scalar($row['user_id'] ?? null) ? (string) $row['user_id'] : '';
+                $granted_groups[$row_group_id][] = (string) $row->userId;
             }
             $user_granted_by_group_ids = [];
             foreach ($granted_groups as $group_users) {

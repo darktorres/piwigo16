@@ -69,7 +69,18 @@ final readonly class NotificationAdminService
         $enabledFilter = ($enabledFilterValue !== '' && $enabledFilterValue !== false)
             ? (bool) $enabledFilterValue
             : null;
-        return $this->notificationRepository->getUserNotifications($action, $checkKeyList, $enabledFilter);
+        return array_map(
+            static fn (\Piwigo\Notification\Projection\UserNotificationRow $r): array => [
+                'user_id'      => $r->userId,
+                'check_key'    => $r->checkKey,
+                'username'     => $r->username,
+                'mail_address' => $r->mailAddress,
+                'enabled'      => $r->enabled ? 1 : 0,
+                'last_send'    => $r->lastSend,
+                'status'       => $r->status,
+            ],
+            $this->notificationRepository->getUserNotifications($action, $checkKeyList, $enabledFilter),
+        );
     }
 
     public function beginUsersEnvNbm(bool $isToSendMail = false): void

@@ -9,6 +9,9 @@ use Doctrine\DBAL\ParameterType;
 use Piwigo\Config\Config;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\SqlFragment;
+use Piwigo\Notification\Projection\NotifiableUserRow;
+use Piwigo\Notification\Projection\RecentCategoryRow;
+use Piwigo\Notification\Projection\UserNotificationRow;
 
 /** Persistence layer for the notification domain. */
 final class NotificationRepository extends AbstractRepository
@@ -28,7 +31,7 @@ final class NotificationRepository extends AbstractRepository
      * Return users who have an email address but no notification subscription yet.
      * Column names are admin-configured — not user-supplied.
      *
-     * @return list<array<string, mixed>>
+     * @return list<NotifiableUserRow>
      */
     public function findUsersWithoutNotification(
         string $idField,
@@ -36,14 +39,17 @@ final class NotificationRepository extends AbstractRepository
         string $emailField,
         string $usersTable
     ): array {
-        return $this->conn->executeQuery(
-            "SELECT u.$idField AS user_id, u.$usernameField AS username, u.$emailField AS mail_address
-             FROM $usersTable AS u
-             LEFT JOIN " . $this->table('user_mail_notification') . " AS m ON u.$idField = m.user_id
-             WHERE u.$emailField IS NOT NULL
-               AND m.user_id IS NULL
-             ORDER BY user_id"
-        )->fetchAllAssociative();
+        return array_map(
+            NotifiableUserRow::fromRow(...),
+            $this->conn->executeQuery(
+                "SELECT u.$idField AS user_id, u.$usernameField AS username, u.$emailField AS mail_address
+                 FROM $usersTable AS u
+                 LEFT JOIN " . $this->table('user_mail_notification') . " AS m ON u.$idField = m.user_id
+                 WHERE u.$emailField IS NOT NULL
+                   AND m.user_id IS NULL
+                 ORDER BY user_id"
+            )->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -86,7 +92,7 @@ final class NotificationRepository extends AbstractRepository
      * from Config::userFields() — not user-supplied values, so safe to interpolate.
      *
      * @param  string[] $checkKeyList
-     * @return list<array<string, float|int|string|null>>
+     * @return list<UserNotificationRow>
      */
     public function getUserNotifications(string $action, array $checkKeyList = [], ?bool $enabledFilter = null): array
     {
@@ -135,8 +141,7 @@ final class NotificationRepository extends AbstractRepository
             $qb->orderBy('username');
         }
 
-        /** @var list<array<string, float|int|string|null>> */
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(UserNotificationRow::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**
@@ -423,7 +428,7 @@ SELECT DISTINCT i.*
      *
      * @param list<mixed>                                  $permParams
      * @param list<ArrayParameterType|ParameterType>       $permTypes
-     * @return list<array<string, mixed>>
+     * @return list<RecentCategoryRow>
      */
     public function findRecentCategoriesForDate(string $dateAvailable, int $max, string $permWhere, array $permParams, array $permTypes): array
     {
@@ -439,10 +444,13 @@ SELECT
   GROUP BY category_id, c.uppercats
   ORDER BY img_count DESC
   LIMIT ' . $max;
-        return $this->conn->executeQuery(
-            $sql,
-            [...$permParams, $dateAvailable],
-            [...$permTypes, ParameterType::STRING],
-        )->fetchAllAssociative();
+        return array_map(
+            RecentCategoryRow::fromRow(...),
+            $this->conn->executeQuery(
+                $sql,
+                [...$permParams, $dateAvailable],
+                [...$permTypes, ParameterType::STRING],
+            )->fetchAllAssociative(),
+        );
     }
 }

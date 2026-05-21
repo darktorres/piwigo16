@@ -345,25 +345,23 @@ final readonly class PictureController implements ControllerInterface
             $tpl->append('current', ['U_DOWNLOAD' => $currentVm->downloadUrl], true);
 
             if (Config::isFormatsEnabled()) {
-                $formats = $this->imageFormatRepository->findByImageIds([$currentVm->image->id->value]);
-                array_unshift($formats, [
+                $origExt     = StringUtil::getExtension($currentVm->image->file->value);
+                $origLangKey = 'format ' . strtoupper($origExt);
+                $formats     = [[
                     'download_url' => $currentVm->downloadUrl,
-                    'ext'          => StringUtil::getExtension($currentVm->image->file->value),
-                    'filesize'     => $currentVm->image->filesize,
-                ]);
-                foreach ($formats as &$format) {
-                    if (!isset($format['download_url'])) {
-                        $format['download_url'] = $this->urlGenerator->actionFormat((int) (is_scalar($format['format_id'] ?? null) ? $format['format_id'] : 0));
-                    }
-                    $fmtExtRaw        = $format['ext'] ?? null;
-                    $extStr           = is_scalar($fmtExtRaw) ? (string) $fmtExtRaw : '';
-                    $format['label']  = strtoupper($extStr);
-                    $lang_key         = 'format ' . strtoupper($extStr);
-                    if (Lang::has($lang_key)) {
-                        $format['label'] = Lang::t($lang_key);
-                    }
-                    $fsRaw                = $format['filesize'] ?? 0;
-                    $format['filesize']   = sprintf('%.1fMB', (is_numeric($fsRaw) ? (float) $fsRaw : 0.0) / 1024.0);
+                    'ext'          => $origExt,
+                    'label'        => Lang::has($origLangKey) ? Lang::t($origLangKey) : strtoupper($origExt),
+                    'filesize'     => sprintf('%.1fMB', (is_numeric($currentVm->image->filesize) ? (float) $currentVm->image->filesize : 0.0) / 1024.0),
+                ]];
+                foreach ($this->imageFormatRepository->findByImageIds([$currentVm->image->id->value]) as $fmt) {
+                    $label    = strtoupper($fmt->ext);
+                    $langKey  = 'format ' . $label;
+                    $formats[] = [
+                        'download_url' => $this->urlGenerator->actionFormat($fmt->formatId),
+                        'ext'          => $fmt->ext,
+                        'label'        => Lang::has($langKey) ? Lang::t($langKey) : $label,
+                        'filesize'     => sprintf('%.1fMB', ($fmt->filesize ?? 0) / 1024.0),
+                    ];
                 }
                 $tpl->append('current', ['formats' => $formats], true);
             }

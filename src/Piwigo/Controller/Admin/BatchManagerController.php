@@ -395,12 +395,10 @@ final class BatchManagerController implements AdminSubControllerInterface
 
         $widths = $heights = $ratios = [];
         foreach ($this->imageRepository->findDistinctDimensions() as $row) {
-            $row_width  = $row['width'];
-            $row_height = $row['height'];
-            if ($row_width > 0 && $row_height > 0) {
-                $widths[]  = $row_width;
-                $heights[] = $row_height;
-                $ratios[]  = floor((float) $row_width / (float) $row_height * 100.0) / 100.0;
+            if ($row->width > 0 && $row->height > 0) {
+                $widths[]  = $row->width;
+                $heights[] = $row->height;
+                $ratios[]  = floor((float) $row->width / (float) $row->height * 100.0) / 100.0;
             }
         }
         if (empty($widths)) {

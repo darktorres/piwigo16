@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity;
 
+use Piwigo\Activity\Projection\ActionCountRow;
+use Piwigo\Activity\Projection\AppUserAgentStatRow;
+use Piwigo\Activity\Projection\CoreUpdateActivityRow;
+use Piwigo\Activity\Projection\DailyActionCountRow;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the activity-log domain. */
@@ -129,7 +133,7 @@ final class ActivityRepository extends AbstractRepository
      * Return action breakdown across activity, optionally filtered to a
      * single object kind. Returns (object, action, counter) tuples.
      *
-     * @return list<array<string, mixed>>
+     * @return list<ActionCountRow>
      */
     public function findActionCountsByObject(?string $objectFilter): array
     {
@@ -142,7 +146,7 @@ final class ActivityRepository extends AbstractRepository
             $types[]   = \Doctrine\DBAL\ParameterType::STRING;
         }
         $sql .= ' GROUP BY action, object ORDER BY object ASC';
-        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(ActionCountRow::fromRow(...), $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative());
     }
 
     /**
@@ -202,18 +206,21 @@ final class ActivityRepository extends AbstractRepository
      * Core update history (in ascending order) for telemetry's "updates" feed.
      * Filters object='system', object_id=$coreObjectId, action IN (update, autoupdate).
      *
-     * @return list<array<string, mixed>>
+     * @return list<CoreUpdateActivityRow>
      */
     public function findCoreUpdateActivities(int $coreObjectId): array
     {
-        return $this->conn->executeQuery(
-            'SELECT action, occured_on, details'
-            . ' FROM ' . $this->table('activity')
-            . " WHERE object = 'system' AND object_id = ? AND action IN ('update', 'autoupdate')"
-            . ' ORDER BY activity_id ASC',
-            [$coreObjectId],
-            [\Doctrine\DBAL\ParameterType::INTEGER],
-        )->fetchAllAssociative();
+        return array_map(
+            CoreUpdateActivityRow::fromRow(...),
+            $this->conn->executeQuery(
+                'SELECT action, occured_on, details'
+                . ' FROM ' . $this->table('activity')
+                . " WHERE object = 'system' AND object_id = ? AND action IN ('update', 'autoupdate')"
+                . ' ORDER BY activity_id ASC',
+                [$coreObjectId],
+                [\Doctrine\DBAL\ParameterType::INTEGER],
+            )->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -313,34 +320,40 @@ final class ActivityRepository extends AbstractRepository
      * per (day, object, action) tuple with a counter. Used by the admin
      * dashboard last-weeks-activity heatmap.
      *
-     * @return list<array<string, mixed>>
+     * @return list<DailyActionCountRow>
      */
     public function findDailyActionCountsSince(string $sinceDate): array
     {
-        return $this->conn->executeQuery(
-            "SELECT DATE_FORMAT(occured_on, '%Y-%m-%d') AS activity_day,"
-            . ' object, action, COUNT(*) AS activity_counter'
-            . ' FROM ' . $this->table('activity')
-            . ' WHERE occured_on >= ?'
-            . ' GROUP BY activity_day, object, action',
-            [$sinceDate],
-            [\Doctrine\DBAL\ParameterType::STRING],
-        )->fetchAllAssociative();
+        return array_map(
+            DailyActionCountRow::fromRow(...),
+            $this->conn->executeQuery(
+                "SELECT DATE_FORMAT(occured_on, '%Y-%m-%d') AS activity_day,"
+                . ' object, action, COUNT(*) AS activity_counter'
+                . ' FROM ' . $this->table('activity')
+                . ' WHERE occured_on >= ?'
+                . ' GROUP BY activity_day, object, action',
+                [$sinceDate],
+                [\Doctrine\DBAL\ParameterType::STRING],
+            )->fetchAllAssociative(),
+        );
     }
 
     /**
      * Per-user_agent counter + first/last sighting timestamps, excluding the
      * generic "Mozilla/5*" browser bucket. Used by telemetry's "apps" feed.
      *
-     * @return list<array<string, mixed>>
+     * @return list<AppUserAgentStatRow>
      */
     public function findAppUserAgentStats(): array
     {
-        return $this->conn->executeQuery(
-            'SELECT user_agent, COUNT(*) AS counter,'
-            . ' MIN(occured_on) AS first_encounter, MAX(occured_on) AS last_encounter'
-            . ' FROM ' . $this->table('activity')
-            . " WHERE user_agent NOT LIKE 'Mozilla/5%' GROUP BY user_agent",
-        )->fetchAllAssociative();
+        return array_map(
+            AppUserAgentStatRow::fromRow(...),
+            $this->conn->executeQuery(
+                'SELECT user_agent, COUNT(*) AS counter,'
+                . ' MIN(occured_on) AS first_encounter, MAX(occured_on) AS last_encounter'
+                . ' FROM ' . $this->table('activity')
+                . " WHERE user_agent NOT LIKE 'Mozilla/5%' GROUP BY user_agent",
+            )->fetchAllAssociative(),
+        );
     }
 }

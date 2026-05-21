@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Group;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Common\Dto\UserGroupPair;
 use Piwigo\Db\AbstractRepository;
+use Piwigo\Group\Projection\GroupBrief;
+use Piwigo\Group\Projection\GroupWithCount;
 
 /** Persistence layer for the group domain. */
 final class GroupRepository extends AbstractRepository
@@ -89,7 +92,7 @@ final class GroupRepository extends AbstractRepository
      * Used by cat_perm.php to find indirect user grants via group membership.
      *
      * @param int[] $groupIds
-     * @return list<array<string, mixed>>
+     * @return list<UserGroupPair>
      */
     public function findUserGroupMembersByGroupIds(array $groupIds): array
     {
@@ -101,7 +104,7 @@ final class GroupRepository extends AbstractRepository
             ->from($this->table('user_group'));
         $qb->where($qb->expr()->in('group_id', ':groupIds'))
            ->setParameter('groupIds', $groupIds, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(UserGroupPair::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**
@@ -193,32 +196,38 @@ final class GroupRepository extends AbstractRepository
     /**
      * Return all groups with their member counts.
      *
-     * @return list<array<string, mixed>>
+     * @return list<GroupWithCount>
      */
     public function findWithMemberCounts(): array
     {
-        return $this->conn->executeQuery(
-            'SELECT g.id, g.name, COUNT(ug.user_id) AS nb_users_of
-             FROM ' . $this->table('groups') . ' g
-             LEFT JOIN ' . $this->table('user_group') . ' ug ON g.id = ug.group_id
-             GROUP BY g.id, g.name
-             ORDER BY g.name ASC'
-        )->fetchAllAssociative();
+        return array_map(
+            GroupWithCount::fromRow(...),
+            $this->conn->executeQuery(
+                'SELECT g.id, g.name, COUNT(ug.user_id) AS nb_users_of
+                 FROM ' . $this->table('groups') . ' g
+                 LEFT JOIN ' . $this->table('user_group') . ' ug ON g.id = ug.group_id
+                 GROUP BY g.id, g.name
+                 ORDER BY g.name ASC'
+            )->fetchAllAssociative(),
+        );
     }
 
     /**
      * Return all groups ordered by name (id, name, is_default).
      *
-     * @return list<array<string, mixed>>
+     * @return list<GroupBrief>
      */
     public function findAllOrdered(): array
     {
-        return $this->conn->createQueryBuilder()
-            ->select('id', 'name', 'is_default')
-            ->from($this->table('groups'))
-            ->orderBy('name', 'ASC')
-            ->executeQuery()
-            ->fetchAllAssociative();
+        return array_map(
+            GroupBrief::fromRow(...),
+            $this->conn->createQueryBuilder()
+                ->select('id', 'name', 'is_default')
+                ->from($this->table('groups'))
+                ->orderBy('name', 'ASC')
+                ->executeQuery()
+                ->fetchAllAssociative(),
+        );
     }
 
     /**

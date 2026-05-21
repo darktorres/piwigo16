@@ -389,12 +389,12 @@ final readonly class TelemetryService
     {
         $out = [];
         foreach ($this->activityRepository->findCoreUpdateActivities(ActivitySystem::Core) as $update) {
-            $detailsDecoded = json_decode(is_string($update['details']) ? $update['details'] : '', associative: true);
+            $detailsDecoded = json_decode($update->details ?? '', associative: true);
             $details        = is_array($detailsDecoded) ? $detailsDecoded : [];
             if (isset($details['from_version']) && isset($details['to_version'])) {
                 $out[] = [
-                    'action'       => $update['action'],
-                    'occured_on'   => $update['occured_on'],
+                    'action'       => $update->action,
+                    'occured_on'   => $update->occurredOn,
                     'from_version' => $details['from_version'],
                     'to_version'   => $details['to_version'],
                 ];
@@ -436,23 +436,19 @@ final readonly class TelemetryService
         /** @var array<string, TelemetryAppStat> $apps */
         $apps = [];
         foreach ($this->activityRepository->findAppUserAgentStats() as $activity) {
-            $userAgent       = is_string($activity['user_agent'] ?? null) ? $activity['user_agent'] : '';
-            $activityCounter = is_numeric($activity['counter'] ?? null) ? (int) $activity['counter'] : 0;
-            $firstEncounter  = is_string($activity['first_encounter'] ?? null) ? $activity['first_encounter'] : '';
-            $lastEncounter   = is_string($activity['last_encounter'] ?? null) ? $activity['last_encounter'] : '';
             foreach ($appsPattern as $appName => $pattern) {
-                if (preg_match($pattern, $userAgent) !== 1) {
+                if (preg_match($pattern, $activity->userAgent) !== 1) {
                     continue;
                 }
                 $existing = $apps[$appName] ?? null;
-                $counter  = ($existing !== null ? $existing->counter : 0) + $activityCounter;
+                $counter  = ($existing !== null ? $existing->counter : 0) + $activity->counter;
                 $first    = $existing !== null ? $existing->firstEncounter : '';
-                if ($first === '' || strtotime($first) > strtotime($firstEncounter)) {
-                    $first = $firstEncounter;
+                if ($first === '' || strtotime($first) > strtotime($activity->firstEncounter)) {
+                    $first = $activity->firstEncounter;
                 }
                 $last = $existing !== null ? $existing->lastEncounter : '';
-                if ($last === '' || strtotime($last) < strtotime($lastEncounter)) {
-                    $last = $lastEncounter;
+                if ($last === '' || strtotime($last) < strtotime($activity->lastEncounter)) {
+                    $last = $activity->lastEncounter;
                 }
                 $apps[$appName] = new TelemetryAppStat($counter, $first, $last);
             }

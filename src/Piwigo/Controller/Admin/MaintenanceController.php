@@ -943,8 +943,8 @@ final class MaintenanceController implements AdminSubControllerInterface
             $tpl_var = [
                 'NAME'       => $row['galleries_url'],
                 'TYPE'       => Lang::t($is_remote ? 'Remote' : 'Local'),
-                'CATEGORIES' => $sites_detail[$site_id]['nb_categories'] ?? 0,
-                'IMAGES'     => $sites_detail[$site_id]['nb_images'] ?? 0,
+                'CATEGORIES' => $sites_detail[$site_id]?->nbCategories ?? 0,
+                'IMAGES'     => $sites_detail[$site_id]?->nbImages ?? 0,
                 'U_SYNCHRONIZE' => $update_url,
             ];
 
@@ -1240,12 +1240,10 @@ final class MaintenanceController implements AdminSubControllerInterface
             if (count($existing_ids) > 0) {
                 $db_formats = [];
                 foreach ($this->imageFormatRepository->findByImageIds(array_map(intval(...), $existing_ids)) as $row) {
-                    $row_image_id = is_numeric($row['image_id'] ?? null) ? (int) $row['image_id'] : 0;
-                    $row_ext      = is_scalar($row['ext'] ?? null) ? (string) $row['ext'] : '';
-                    if (!isset($db_formats[$row_image_id])) {
-                        $db_formats[$row_image_id] = [];
+                    if (!isset($db_formats[$row->imageId])) {
+                        $db_formats[$row->imageId] = [];
                     }
-                    $db_formats[$row_image_id][$row_ext] = $row['format_id'];
+                    $db_formats[$row->imageId][$row->ext] = $row->formatId;
                 }
                 foreach ($db_formats as $image_id => $formats) {
                     $db_elem_path  = $db_elements[$image_id] ?? '';

@@ -374,7 +374,7 @@ final class PhotoController implements AdminSubControllerInterface
         if (!empty($formats)) {
             $format_strings = [];
             foreach ($formats as $format) {
-                $format_strings[] = sprintf('%s (%.2fMB)', is_string($format['ext'] ?? null) ? $format['ext'] : '', (is_numeric($format['filesize']) ? (int) $format['filesize'] : 0) / 1024);
+                $format_strings[] = sprintf('%s (%.2fMB)', $format->ext, ($format->filesize ?? 0) / 1024);
             }
             $intro_vars['formats'] = Lang::t('Formats: %s', implode(', ', $format_strings));
         }
@@ -550,20 +550,17 @@ final class PhotoController implements AdminSubControllerInterface
 
         $picFmtIdInt = (int) $picFmtId;
         $image       = $this->imageRepository->findById($picFmtIdInt);
-        $formats     = $this->imageFormatRepository->findByImageIds([$picFmtIdInt]);
-
-        foreach ($formats as &$format) {
-            $format['download_url'] = $this->urlGenerator->actionFormat((int) (is_scalar($format['format_id']) ? $format['format_id'] : 0));
-            $extRaw = $format['ext'] ?? null;
-            $extStr = is_string($extRaw) ? $extRaw : '';
-            $format['label']        = strtoupper($extStr);
-            $lang_key = 'format ' . strtoupper($extStr);
-            if (Lang::has($lang_key)) {
-                $format['label'] = Lang::t($lang_key);
-            }
-            $format['filesize'] = round((is_numeric($format['filesize']) ? (float) $format['filesize'] : 0.0) / 1024.0, 2);
-        }
-        unset($format);
+        $formats = array_map(function (\Piwigo\Image\Projection\ImageFormatPair $fmt): array {
+            $label    = strtoupper($fmt->ext);
+            $lang_key = 'format ' . $label;
+            return [
+                'format_id'    => $fmt->formatId,
+                'ext'          => $fmt->ext,
+                'download_url' => $this->urlGenerator->actionFormat($fmt->formatId),
+                'label'        => Lang::has($lang_key) ? Lang::t($lang_key) : $label,
+                'filesize'     => round(($fmt->filesize ?? 0) / 1024.0, 2),
+            ];
+        }, $this->imageFormatRepository->findByImageIds([$picFmtIdInt]));
 
         $tpl->assign([
             'ADD_FORMATS_URL' => $this->urlGenerator->admin('photos_add') . '&formats=' . $picFmtId,
@@ -658,9 +655,8 @@ final class PhotoController implements AdminSubControllerInterface
                     $format_strings = [];
                     $formats_exts   = [];
                     foreach ($fmtRow as $fmt) {
-                        $fmtExtRaw = $fmt['ext'] ?? null;
-                        $format_strings[] = sprintf('%s (%.2fMB)', is_string($fmtExtRaw) ? $fmtExtRaw : '', (is_numeric($fmt['filesize']) ? (int) $fmt['filesize'] : 0) / 1024);
-                        $formats_exts[]   = strtolower(is_string($fmtExtRaw) ? $fmtExtRaw : '');
+                        $format_strings[] = sprintf('%s (%.2fMB)', $fmt->ext, ($fmt->filesize ?? 0) / 1024);
+                        $formats_exts[]   = strtolower($fmt->ext);
                     }
                     $formats_original_info['formats'] = Lang::t('Formats: %s', implode(', ', $format_strings));
                     $formats_ext_info                 = json_encode($formats_exts);

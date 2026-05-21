@@ -36,9 +36,7 @@ final readonly class FormatsSearchImageHandler implements WsAction
         /** @var array<string, list<string>> $formatDb */
         $formatDb = [];
         foreach ($this->imageFormatRepository->findAll() as $row) {
-            $fmtImageId = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
-            $fmtExtVal  = is_string($row['ext'] ?? null) ? $row['ext'] : '';
-            $formatDb[$fmtImageId][] = $fmtExtVal;
+            $formatDb[(string) $row->imageId][] = $row->ext;
         }
         $result        = [];
         $candidatesArr = is_array($candidates) ? $candidates : [];

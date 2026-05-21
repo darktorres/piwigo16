@@ -88,10 +88,9 @@ final readonly class RateService
         $byItem           = [];
 
         foreach ($this->rateRepo->getSumsByElement() as $row) {
-            $allRatesCount += is_numeric($row['rcount']) ? (int) $row['rcount'] : 0;
-            $allRatesAvg   += is_numeric($row['rsum']) ? (float) $row['rsum'] : 0.0;
-            $elementIdKey   = is_numeric($row['element_id']) ? (int) $row['element_id'] : (is_scalar($row['element_id']) ? (string) $row['element_id'] : 0);
-            $byItem[$elementIdKey] = $row;
+            $allRatesCount    += $row->rcount;
+            $allRatesAvg      += (float) $row->rsum;
+            $byItem[$row->elementId] = $row;
         }
 
         if ($allRatesCount > 0) {
@@ -103,8 +102,8 @@ final readonly class RateService
         $return  = null;
         $updates = [];
         foreach ($byItem as $id => $rateSummary) {
-            $rsum   = is_numeric($rateSummary['rsum']) ? (float) $rateSummary['rsum'] : 0.0;
-            $rcount = is_numeric($rateSummary['rcount']) ? (int)   $rateSummary['rcount'] : 0;
+            $rsum   = (float) $rateSummary->rsum;
+            $rcount = $rateSummary->rcount;
             $score  = ($itemRatecountAvg * $allRatesAvg + $rsum) / ($itemRatecountAvg + (float) $rcount);
             $score  = round($score, 2);
             if ($id == $elementId) {

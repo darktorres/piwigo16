@@ -44,13 +44,12 @@ final readonly class FormatsDeleteHandler implements WsAction
         /** @var list<string> $imageIds */
         $imageIds  = [];
         foreach ($this->imageFormatRepository->findByFormatIds($formatIds) as $row) {
-            $rowImageId = is_scalar($row['image_id'] ?? null) ? (string) $row['image_id'] : '';
-            $rowExt     = is_string($row['ext'] ?? null) ? $row['ext'] : '';
+            $rowImageId = (string) $row->imageId;
             if (!isset($formatsOf[$rowImageId])) {
                 $imageIds[] = $rowImageId;
                 $formatsOf[$rowImageId] = [];
             }
-            $formatsOf[$rowImageId][] = $rowExt;
+            $formatsOf[$rowImageId][] = $row->ext;
         }
         if (count($imageIds) === 0) {
             return new PwgError(404, 'No format found for the id(s) given');

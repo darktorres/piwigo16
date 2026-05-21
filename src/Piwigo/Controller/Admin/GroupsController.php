@@ -12,7 +12,6 @@ use Piwigo\Admin\Users\UserAdminService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\Config;
-use Piwigo\Core\BoolUtil;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Csrf\CsrfService;
@@ -119,19 +118,18 @@ final readonly class GroupsController implements AdminSubControllerInterface
         $group_counter         = 0;
 
         foreach ($groupRepo->findAllOrdered() as $row) {
-            $row_id_str = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
-            $members    = $groupRepo->findMemberUsernamesByGroupId($userFields->username, $userFields->id, Tables::users(), is_numeric($row['id']) ? (int) $row['id'] : 0);
+            $members    = $groupRepo->findMemberUsernamesByGroupId($userFields->username, $userFields->id, Tables::users(), $row->id);
             $tpl->append('groups', [
-                'NAME'      => $row['name'],
-                'ID'        => $row['id'],
-                'IS_DEFAULT' => (BoolUtil::fromMixed(is_string($row['is_default']) || is_int($row['is_default']) || is_float($row['is_default']) ? $row['is_default'] : null) ? ' [' . Lang::t('default') . ']' : ''),
+                'NAME'      => $row->name,
+                'ID'        => $row->id,
+                'IS_DEFAULT' => ($row->isDefault ? ' [' . Lang::t('default') . ']' : ''),
                 'NB_MEMBERS' => count($members),
                 'L_MEMBERS'  => implode(' <span class="userSeparator">&middot;</span> ', $members),
                 'MEMBERS'    => Translator::get()->plural('%d member', '%d members', count($members)),
-                'U_DELETE'   => $del_url . $row_id_str . '&pwg_token=' . $this->csrfService->getToken(),
-                'U_PERM'     => $perm_url . $row_id_str,
-                'U_USERS'    => $users_url . $row_id_str,
-                'U_ISDEFAULT' => $toggle_is_default_url . $row_id_str . '&pwg_token=' . $this->csrfService->getToken(),
+                'U_DELETE'   => $del_url . (string) $row->id . '&pwg_token=' . $this->csrfService->getToken(),
+                'U_PERM'     => $perm_url . (string) $row->id,
+                'U_USERS'    => $users_url . (string) $row->id,
+                'U_ISDEFAULT' => $toggle_is_default_url . (string) $row->id . '&pwg_token=' . $this->csrfService->getToken(),
             ]);
             $group_counter++;
         }

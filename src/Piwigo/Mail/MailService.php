@@ -294,8 +294,8 @@ final readonly class MailService
             $userStatuses[] = 'admin';
         }
 
-        $userFields = Config::userFields();
-        $admins     = $this->userRepository->findAdminsForMail(
+        $userFields   = Config::userFields();
+        $adminRows    = $this->userRepository->findAdminsForMail(
             Tables::users(),
             $userFields->id,
             $userFields->username,
@@ -303,6 +303,10 @@ final readonly class MailService
             $userStatuses,
             $excludeCurrentUser ? CurrentUser::get()->id : null,
             $groupId,
+        );
+        $admins = array_map(
+            static fn (\Piwigo\Users\Projection\UserMailRecipient $r): array => ['user_id' => $r->userId, 'name' => $r->name, 'email' => $r->email],
+            $adminRows,
         );
 
         if (empty($admins)) {
@@ -358,8 +362,7 @@ final readonly class MailService
             $this->switchLangTo($language);
 
             foreach ($users as $u) {
-                $userId  = is_numeric($u['user_id'] ?? null) ? (int) $u['user_id'] : 0;
-                $authkey = $this->authService->createUserAuthKey($userId, is_string($u['status'] ?? null) ? $u['status'] : null);
+                $authkey = $this->authService->createUserAuthKey($u->userId, $u->status);
 
                 $userTpl = $tpl;
 
@@ -383,7 +386,7 @@ final readonly class MailService
                     $userArgs['auth_key'] = $authkey['auth_key'];
                 }
 
-                $return = $return && $this->pwgMail(is_string($u['email']) ? $u['email'] : '', $userArgs, $userTpl);
+                $return = $return && $this->pwgMail($u->email, $userArgs, $userTpl);
             }
 
             $this->switchLangBack();

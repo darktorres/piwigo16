@@ -99,8 +99,8 @@ final readonly class UsersController implements AdminSubControllerInterface
         $groups            = [];
         $groups_for_filter = [];
         foreach ($this->groupRepository->findWithMemberCounts() as $row) {
-            $groups[is_numeric($row['id']) ? (int) $row['id'] : 0] = $row['name'];
-            $groups_for_filter[] = ['id' => $row['id'], 'name' => $row['name'], 'counter' => $row['nb_users_of']];
+            $groups[$row->id] = $row->name;
+            $groups_for_filter[] = ['id' => $row->id, 'name' => $row->name, 'counter' => $row->nbUsersOf];
         }
         $tpl->assign('groups_for_filter', $groups_for_filter);
 
@@ -206,8 +206,8 @@ final readonly class UsersController implements AdminSubControllerInterface
 
         $groups_arr_id = $groups_arr_name = [];
         foreach ($this->groupRepository->findAllOrdered() as $row) {
-            $groups_arr_name[] = '"' . addslashes(is_string($row['name'] ?? null) ? $row['name'] : '') . '"';
-            $groups_arr_id[]   = is_scalar($row['id'] ?? null) ? (string) $row['id'] : '';
+            $groups_arr_name[] = '"' . addslashes($row->name) . '"';
+            $groups_arr_id[]   = (string) $row->id;
         }
         $tpl->assign('groups_arr_id', implode(',', $groups_arr_id));
         $tpl->assign('groups_arr_name', implode(',', $groups_arr_name));
@@ -463,11 +463,15 @@ final readonly class UsersController implements AdminSubControllerInterface
 
         $tpl->assign('ADDITIONAL_FILT', ['type' => $additional_filt_type, 'name' => $additional_filt_name, 'value' => $additional_filt_value]);
 
-        $actions = $this->activityRepository->findActionCountsByObject(is_string($additional_filt_type) ? $additional_filt_type : null);
-        foreach ($actions as &$action) {
-            $action['value'] = (is_string($action['object'] ?? null) ? $action['object'] : '') . '/' . (is_string($action['action'] ?? null) ? $action['action'] : '');
-        }
-        unset($action);
+        $actions = array_map(
+            static fn (\Piwigo\Activity\Projection\ActionCountRow $a): array => [
+                'object'  => $a->object,
+                'action'  => $a->action,
+                'counter' => $a->counter,
+                'value'   => $a->object . '/' . $a->action,
+            ],
+            $this->activityRepository->findActionCountsByObject(is_string($additional_filt_type) ? $additional_filt_type : null),
+        );
 
         $tpl->assign('ACTIONS', $actions);
         $tpl->assign('page_data_json', json_encode([

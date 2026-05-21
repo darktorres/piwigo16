@@ -198,15 +198,13 @@ final readonly class PasswordService
 
         $user_id = null;
         foreach ($this->userRepository->findByActiveActivationKey() as $row) {
-            $activation_key  = is_string($row['activation_key'] ?? null) ? $row['activation_key'] : '';
-            $row_statusRaw   = $row['status'] ?? null;
-            $row_status      = is_string($row_statusRaw) ? UserStatus::tryFrom($row_statusRaw) : null;
-            if (password_verify($reset_key, $activation_key)) {
+            $row_status = UserStatus::tryFrom($row->status);
+            if (password_verify($reset_key, $row->activationKey)) {
                 if ($this->permissionService->isAGuest($row_status) || $this->permissionService->isGeneric($row_status)) {
                     PageState::current()->addKeyedError('password_page_error', Lang::t('Password reset is not allowed for this user'));
                     return false;
                 }
-                $user_id = is_numeric($row['user_id']) ? (int) $row['user_id'] : null;
+                $user_id = $row->userId;
                 break;
             }
         }

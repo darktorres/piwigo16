@@ -185,11 +185,10 @@ final readonly class GetListHandler implements WsAction
             if (array_key_exists('groups', $displayMap)) {
                 $userIds = array_keys($users);
                 foreach ($this->userRepository->findUserGroupPairsByUserIds($userIds) as $row) {
-                    $grpUid = $row['user_id'];
-                    if (!isset($users[$grpUid]['groups']) || !is_array($users[$grpUid]['groups'])) {
-                        $users[$grpUid]['groups'] = [];
+                    if (!isset($users[$row->userId]['groups']) || !is_array($users[$row->userId]['groups'])) {
+                        $users[$row->userId]['groups'] = [];
                     }
-                    $users[$grpUid]['groups'][] = $row['group_id'];
+                    $users[$row->userId]['groups'][] = $row->groupId;
                 }
             }
             foreach ($users as $curUser) {

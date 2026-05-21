@@ -64,8 +64,8 @@ final readonly class GetMissingDerivativesHandler implements WsAction
             $rows   = $this->imageRepository->findDerivativeCandidatesBeforeId($startId, array_values($whereClauses), $qlimit);
             $isLast = count($rows) < $qlimit;
             foreach ($rows as $row) {
-                $startId  = $row['id'];
-                $srcImage = new SrcImage($row);
+                $startId  = $row->id;
+                $srcImage = new SrcImage(['id' => $row->id, 'path' => $row->path, 'representative_ext' => $row->representativeExt]);
                 if ($srcImage->isMimetype()) {
                     continue;
                 }

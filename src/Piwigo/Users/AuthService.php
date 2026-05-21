@@ -262,9 +262,10 @@ final readonly class AuthService
             $usernameOrEmail
         );
 
-        if ($user !== null && count($user) > 0) {
-            $user['status'] ??= 'normal';
-            return $user;
+        if ($user !== null) {
+            $arr = $user->toArray();
+            $arr['status'] ??= 'normal';
+            return $arr;
         }
         return null;
     }

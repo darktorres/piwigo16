@@ -215,7 +215,12 @@ final readonly class CategoryService
      */
     public function displaySelectCatWrapper(string $query, array|string $selecteds, string $blockname, bool|string $fullname = true, array $params = [], array $types = []): void
     {
-        $categories = $this->catRepo->executeListingQuery($query, $params, $types);
+        $categories = array_map(
+            static fn (\Piwigo\Category\Projection\CategoryLinkRow $r): array => [
+                'id' => $r->id, 'name' => $r->name, 'uppercats' => $r->uppercats, 'global_rank' => $r->globalRank,
+            ],
+            $this->catRepo->executeListingQuery($query, $params, $types),
+        );
         usort($categories, $this->globalRankCompare(...));
         $this->displaySelectCategories($categories, $selecteds, $blockname, $fullname);
     }
@@ -318,16 +323,23 @@ final readonly class CategoryService
         $userdata['last_photo_date'] = null;
         $cats                        = [];
         foreach ($this->catRepo->findComputedCategoryAggregates($userLevel, $recentSql, $forbidden) as $row) {
-            $udIdRaw                 = $userdata['id'] ?? null;
-            $row['user_id']          = is_scalar($udIdRaw) ? $udIdRaw : 0;
-            $row['nb_categories']    = 0;
-            $row['count_categories'] = 0;
-            $row['count_images']     = $row['nb_images'];
-            $row['max_date_last']    = $row['date_last'];
-            if ($row['date_last'] !== null && $row['date_last'] > (string) $userdata['last_photo_date']) {
-                $userdata['last_photo_date'] = $row['date_last'];
+            $udIdRaw = $userdata['id'] ?? null;
+            $entry   = [
+                'cat_id'          => $row->catId,
+                'id_uppercat'     => $row->idUppercat,
+                'global_rank'     => $row->globalRank,
+                'date_last'       => $row->dateLast,
+                'nb_images'       => $row->nbImages,
+                'user_id'         => is_scalar($udIdRaw) ? $udIdRaw : 0,
+                'nb_categories'   => 0,
+                'count_categories' => 0,
+                'count_images'    => $row->nbImages,
+                'max_date_last'   => $row->dateLast,
+            ];
+            if ($row->dateLast !== null && $row->dateLast > (string) $userdata['last_photo_date']) {
+                $userdata['last_photo_date'] = $row->dateLast;
             }
-            $cats[(string) $row['cat_id']] = $row;
+            $cats[(string) $row->catId] = $entry;
         }
 
         uasort($cats, $this->globalRankCompare(...));
@@ -455,7 +467,7 @@ final readonly class CategoryService
 
         $cats = [];
         foreach ($this->catRepo->findCommonCategoriesWithPermissions($imageIds, $max, $excluded, $perm->where, $perm->params, $perm->types) as $row) {
-            $cats[(string) $row['id']] = $row;
+            $cats[(string) $row->id] = ['id' => $row->id, 'uppercats' => $row->uppercats, 'counter' => $row->counter];
         }
 
         return $cats;
@@ -483,7 +495,13 @@ final readonly class CategoryService
         }
 
         $navIds = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, array_keys($catIds));
-        $cats = $this->catRepo->findRelatedNavRowsByIds($navIds);
+        $cats   = array_map(
+            static fn (\Piwigo\Category\Projection\CategoryBrief $r): array => [
+                'id' => $r->id, 'name' => $r->name, 'permalink' => $r->permalink,
+                'id_uppercat' => $r->idUppercat, 'uppercats' => $r->uppercats, 'global_rank' => $r->globalRank,
+            ],
+            $this->catRepo->findRelatedNavRowsByIds($navIds),
+        );
         usort($cats, $this->globalRankCompare(...));
 
         $indexOfCat = [];

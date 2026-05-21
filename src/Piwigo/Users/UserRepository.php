@@ -7,7 +7,14 @@ namespace Piwigo\Users;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Common\Dto\PaginatedResult;
+use Piwigo\Common\Dto\UserGroupPair;
 use Piwigo\Db\AbstractRepository;
+use Piwigo\Users\Projection\ActivationKeyRow;
+use Piwigo\Users\Projection\GroupMailRecipient;
+use Piwigo\Users\Projection\MailRecipientFull;
+use Piwigo\Users\Projection\UserCredentialRow;
+use Piwigo\Users\Projection\UserMailRecipient;
+use Piwigo\Users\Projection\UserStatusRow;
 
 /** Persistence layer for the user domain. */
 final class UserRepository extends AbstractRepository
@@ -380,15 +387,18 @@ final class UserRepository extends AbstractRepository
     /**
      * Return all users with their status from user_infos.
      *
-     * @return list<array<string, mixed>>
+     * @return list<UserStatusRow>
      */
     public function findAllWithStatus(string $idField, string $usernameField, string $usersTable): array
     {
-        return $this->conn->executeQuery(
-            "SELECT DISTINCT u.$idField AS id, u.$usernameField AS username, ui.status
-             FROM $usersTable AS u
-             JOIN " . $this->table('user_infos') . " AS ui ON u.$idField = ui.user_id"
-        )->fetchAllAssociative();
+        return array_map(
+            UserStatusRow::fromRow(...),
+            $this->conn->executeQuery(
+                "SELECT DISTINCT u.$idField AS id, u.$usernameField AS username, ui.status
+                 FROM $usersTable AS u
+                 JOIN " . $this->table('user_infos') . " AS ui ON u.$idField = ui.user_id"
+            )->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -619,8 +629,6 @@ final class UserRepository extends AbstractRepository
      * Find a user by exact username or exact email match (username tried first).
      * Returns id/username/email/password/status or null.
      * All column/table names are admin-configured — not user-supplied.
-     *
-     * @return array<string, mixed>|null
      */
     public function findByUsernameOrEmail(
         string $usernameField,
@@ -629,7 +637,7 @@ final class UserRepository extends AbstractRepository
         string $passwordField,
         string $usersTable,
         string $usernameOrEmail
-    ): ?array {
+    ): ?UserCredentialRow {
         $select = "$idField AS id, $usernameField AS username, $emailField AS email, $passwordField AS password, status";
         $userInfos = $this->table('user_infos');
         $joinCond  = "u.$idField = i.user_id";
@@ -641,24 +649,27 @@ final class UserRepository extends AbstractRepository
             $row = $this->conn->executeQuery("$sql $emailField = ?", [$usernameOrEmail])->fetchAssociative();
         }
 
-        return $row !== false ? $row : null;
+        return $row !== false ? UserCredentialRow::fromRow($row) : null;
     }
 
 
     /**
      * Return all user_infos rows that have a non-null, non-expired activation key.
      *
-     * @return list<array<string, mixed>>
+     * @return list<ActivationKeyRow>
      */
     public function findByActiveActivationKey(): array
     {
-        return $this->conn->createQueryBuilder()
-            ->select('user_id', 'status', 'activation_key')
-            ->from($this->table('user_infos'))
-            ->where('activation_key IS NOT NULL')
-            ->andWhere('activation_key_expire > NOW()')
-            ->executeQuery()
-            ->fetchAllAssociative();
+        return array_map(
+            ActivationKeyRow::fromRow(...),
+            $this->conn->createQueryBuilder()
+                ->select('user_id', 'status', 'activation_key')
+                ->from($this->table('user_infos'))
+                ->where('activation_key IS NOT NULL')
+                ->andWhere('activation_key_expire > NOW()')
+                ->executeQuery()
+                ->fetchAllAssociative(),
+        );
     }
 
     /**
@@ -685,7 +696,7 @@ final class UserRepository extends AbstractRepository
      * Return (user_id, group_id) rows for the given users.
      *
      * @param  list<int> $userIds
-     * @return list<array{user_id: int, group_id: int}>
+     * @return list<UserGroupPair>
      */
     public function findUserGroupPairsByUserIds(array $userIds): array
     {
@@ -697,10 +708,7 @@ final class UserRepository extends AbstractRepository
             ->from($this->table('user_group'));
         $qb->where($qb->expr()->in('user_id', ':ids'))
            ->setParameter('ids', $userIds, ArrayParameterType::INTEGER);
-        return array_map(static fn (array $row): array => [
-            'user_id'  => is_numeric($row['user_id']) ? (int) $row['user_id'] : 0,
-            'group_id' => is_numeric($row['group_id']) ? (int) $row['group_id'] : 0,
-        ], $qb->executeQuery()->fetchAllAssociative());
+        return array_map(UserGroupPair::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**
@@ -1135,7 +1143,7 @@ final class UserRepository extends AbstractRepository
      * user ids — used by admin-notification mailers.
      *
      * @param  list<int> $ids
-     * @return list<array<string, mixed>>
+     * @return list<MailRecipientFull>
      */
     public function findMailRecipientInfoByIds(string $idField, string $usernameField, string $emailField, string $usersTable, array $ids): array
     {
@@ -1146,7 +1154,7 @@ final class UserRepository extends AbstractRepository
             . ' FROM ' . $this->table('user_infos') . ' AS ui'
             . " JOIN $usersTable AS u ON u.$idField = ui.user_id"
             . ' WHERE ui.user_id IN (?)';
-        return $this->conn->executeQuery($query, [$ids], [ArrayParameterType::INTEGER])->fetchAllAssociative();
+        return array_map(MailRecipientFull::fromRow(...), $this->conn->executeQuery($query, [$ids], [ArrayParameterType::INTEGER])->fetchAllAssociative());
     }
 
     /**
@@ -1207,7 +1215,7 @@ final class UserRepository extends AbstractRepository
      * Column names come from Config — admin-configured.
      *
      * @param  list<string> $statuses
-     * @return list<array<string, mixed>>
+     * @return list<UserMailRecipient>
      */
     public function findAdminsForMail(
         string $usersTable,
@@ -1235,7 +1243,7 @@ final class UserRepository extends AbstractRepository
             $qb->andWhere('i.user_id <> :excludeUid')
                ->setParameter('excludeUid', $excludeUserId);
         }
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(UserMailRecipient::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**
@@ -1272,7 +1280,7 @@ final class UserRepository extends AbstractRepository
      * $language. Used by MailService::pwgMailGroup to send a single language
      * shard.
      *
-     * @return list<array<string, mixed>>
+     * @return list<GroupMailRecipient>
      */
     public function findGroupRecipientsForLanguage(
         string $usersTable,
@@ -1282,18 +1290,21 @@ final class UserRepository extends AbstractRepository
         int $groupId,
         string $language,
     ): array {
-        return $this->conn->executeQuery(
-            'SELECT ui.user_id, ui.status,'
-            . " u.{$usernameField} AS name, u.{$emailField} AS email"
-            . ' FROM ' . $this->table('user_group') . ' AS ug'
-            . " INNER JOIN $usersTable AS u ON u.{$idField} = ug.user_id"
-            . ' INNER JOIN ' . $this->table('user_infos') . ' AS ui ON ui.user_id = ug.user_id'
-            . ' WHERE ug.group_id = ?'
-            . " AND u.{$emailField} <> ''"
-            . ' AND language = ?',
-            [$groupId, $language],
-            [\Doctrine\DBAL\ParameterType::INTEGER, \Doctrine\DBAL\ParameterType::STRING],
-        )->fetchAllAssociative();
+        return array_map(
+            GroupMailRecipient::fromRow(...),
+            $this->conn->executeQuery(
+                'SELECT ui.user_id, ui.status,'
+                . " u.{$usernameField} AS name, u.{$emailField} AS email"
+                . ' FROM ' . $this->table('user_group') . ' AS ug'
+                . " INNER JOIN $usersTable AS u ON u.{$idField} = ug.user_id"
+                . ' INNER JOIN ' . $this->table('user_infos') . ' AS ui ON ui.user_id = ug.user_id'
+                . ' WHERE ug.group_id = ?'
+                . " AND u.{$emailField} <> ''"
+                . ' AND language = ?',
+                [$groupId, $language],
+                [\Doctrine\DBAL\ParameterType::INTEGER, \Doctrine\DBAL\ParameterType::STRING],
+            )->fetchAllAssociative(),
+        );
     }
 
     /**

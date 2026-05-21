@@ -253,8 +253,8 @@ final readonly class CategoryCatsRenderer
                 }
 
                 if (Config::displayFromto() && isset($dates_of_category[$catIdInt])) {
-                    $from = $dates_of_category[$catIdInt]['from'];
-                    $to   = $dates_of_category[$catIdInt]['to'];
+                    $from = $dates_of_category[$catIdInt]->from;
+                    $to   = $dates_of_category[$catIdInt]->to;
                     if ($from !== null && $from !== '') {
                         $tpl_var['INFO_DATES'] = $this->dateService->formatFromto($from, $to);
                     }

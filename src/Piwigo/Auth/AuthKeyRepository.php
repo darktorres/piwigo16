@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use Doctrine\DBAL\ParameterType;
+use Piwigo\Auth\Projection\ApiKeyRow;
 use Piwigo\Db\AbstractRepository;
 
 /** Persistence layer for the user_auth_keys domain. */
@@ -118,16 +119,19 @@ final class AuthKeyRepository extends AbstractRepository
     /**
      * Return all api_key rows for the given user.
      *
-     * @return list<array<string, mixed>>
+     * @return list<ApiKeyRow>
      */
     public function findApiKeysByUserId(int $userId): array
     {
-        return $this->conn->executeQuery(
-            'SELECT * FROM ' . $this->table('user_auth_keys')
-            . " WHERE user_id = ? AND key_type = 'api_key'",
-            [$userId],
-            [ParameterType::INTEGER],
-        )->fetchAllAssociative();
+        return array_map(
+            ApiKeyRow::fromRow(...),
+            $this->conn->executeQuery(
+                'SELECT * FROM ' . $this->table('user_auth_keys')
+                . " WHERE user_id = ? AND key_type = 'api_key'",
+                [$userId],
+                [ParameterType::INTEGER],
+            )->fetchAllAssociative(),
+        );
     }
 
     /**

@@ -368,8 +368,13 @@ final class MiscController implements AdminSubControllerInterface
         $sortBy0  = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
         $categories = [];
         foreach ($this->categoryRepository->findCategoriesWithPermalink($sortBy0) as $row) {
-            $row['name']  = $this->htmlService->getCatDisplayNameCache($row['uppercats']);
-            $categories[] = $row;
+            $categories[] = [
+                'id'          => $row->id,
+                'permalink'   => $row->permalink,
+                'uppercats'   => $row->uppercats,
+                'global_rank' => $row->globalRank,
+                'name'        => $this->htmlService->getCatDisplayNameCache($row->uppercats),
+            ];
         }
         if ($sort_by[0] == 'name') {
             usort($categories, $this->categoryService->globalRankCompare(...));
@@ -381,9 +386,15 @@ final class MiscController implements AdminSubControllerInterface
         $sortByOld0         = is_scalar($sort_by[0] ?? null) ? (string) $sort_by[0] : '';
         $deleted_permalinks = [];
         foreach ($this->categoryRepository->findOldPermalinks($sortByOld0) as $row) {
-            $row['name']          = $this->htmlService->getCatDisplayNameCache((string) $row['cat_id']);
-            $row['U_DELETE']      = $this->urlService->addUrlParams($url_del_base, ['delete_permanent' => $row['permalink'], 'pwg_token' => $pwg_token]);
-            $deleted_permalinks[] = $row;
+            $deleted_permalinks[] = [
+                'cat_id'       => $row->catId,
+                'permalink'    => $row->permalink,
+                'date_deleted' => $row->dateDeleted,
+                'last_hit'     => $row->lastHit,
+                'hit'          => $row->hit,
+                'name'         => $this->htmlService->getCatDisplayNameCache((string) $row->catId),
+                'U_DELETE'     => $this->urlService->addUrlParams($url_del_base, ['delete_permanent' => $row->permalink, 'pwg_token' => $pwg_token]),
+            ];
         }
 
         $tpl->assign(['PWG_TOKEN' => $pwg_token, 'U_HELP' => $this->urlGenerator->adminPopupHelp('permalinks'), 'deleted_permalinks' => $deleted_permalinks, 'ADMIN_PAGE_TITLE' => Lang::t('Albums'), 'page_data_json' => json_encode(['nb_cats' => count($categories)], JSON_HEX_TAG | JSON_UNESCAPED_UNICODE)]);
@@ -657,7 +668,7 @@ final class MiscController implements AdminSubControllerInterface
             $activity_actions = $this->activityRepository->findDailyActionCountsSince($date_string);
 
             foreach ($activity_actions as $action) {
-                $day_date = new \DateTime((is_string($action['activity_day'] ?? null) ? $action['activity_day'] : '') . ' 12:00:00');
+                $day_date = new \DateTime($action->activityDay . ' 12:00:00');
                 $week     = 0;
                 for ($i = 0; $i < $nb_weeks; $i++) {
                     if ($week_number[$i] == $day_date->format('W')) {
@@ -665,8 +676,8 @@ final class MiscController implements AdminSubControllerInterface
                     }
                 }
                 $day_nb = $day_date->format('N');
-                $activity_last_weeks[$week][$day_nb]['details'][ucfirst(is_string($action['object'] ?? null) ? $action['object'] : '')][ucfirst(is_string($action['action'] ?? null) ? $action['action'] : '')] = $action['activity_counter'];
-                $activity_last_weeks[$week][$day_nb]['number'] = ($activity_last_weeks[$week][$day_nb]['number'] ?? 0) + (is_numeric($action['activity_counter']) ? (int) $action['activity_counter'] : 0);
+                $activity_last_weeks[$week][$day_nb]['details'][ucfirst($action->object)][ucfirst($action->action)] = $action->activityCounter;
+                $activity_last_weeks[$week][$day_nb]['number'] = ($activity_last_weeks[$week][$day_nb]['number'] ?? 0) + $action->activityCounter;
                 $activity_last_weeks[$week][$day_nb]['date']   = $this->dateService->formatDate($day_date->getTimestamp());
             }
 
@@ -957,11 +968,10 @@ final class MiscController implements AdminSubControllerInterface
         );
         $tpl->assign('images', []);
         foreach ($images as $image) {
-            $thumbnail_src = DerivativeImage::thumbUrl($image);
-            $image_id_int  = is_numeric($image['id']) ? (int) $image['id'] : 0;
-            $image_url     = $this->urlGenerator->admin('photo-' . $image_id_int);
-            $all_rates     = $this->rateRepository->findByElementId($image_id_int);
-            $tpl_image     = ['id' => $image['id'], 'U_THUMB' => $thumbnail_src, 'U_URL' => $image_url, 'SCORE_RATE' => $image['score'], 'AVG_RATE' => $image['avg_rates'], 'SUM_RATE' => $image['sum_rates'], 'NB_RATES' => is_numeric($image['nb_rates']) ? (int) $image['nb_rates'] : 0, 'NB_RATES_TOTAL' => count($all_rates), 'FILE' => $image['file'], 'rates' => []];
+            $thumbnail_src = DerivativeImage::thumbUrl(['id' => $image->id, 'path' => $image->path, 'file' => $image->file, 'representative_ext' => $image->representativeExt]);
+            $image_url     = $this->urlGenerator->admin('photo-' . $image->id);
+            $all_rates     = $this->rateRepository->findByElementId($image->id);
+            $tpl_image     = ['id' => $image->id, 'U_THUMB' => $thumbnail_src, 'U_URL' => $image_url, 'SCORE_RATE' => $image->score, 'AVG_RATE' => $image->avgRates, 'SUM_RATE' => $image->sumRates, 'NB_RATES' => $image->nbRates, 'NB_RATES_TOTAL' => count($all_rates), 'FILE' => $image->file, 'rates' => []];
             foreach ($all_rates as $row) {
                 $user_id = is_numeric($row['user_id']) ? (int) $row['user_id'] : 0;
                 $user_rate = $users[$user_id] ?? '? ' . $user_id;
@@ -997,8 +1007,8 @@ final class MiscController implements AdminSubControllerInterface
         $userFields  = Config::userFields();
         $users_by_id = [];
         foreach ($this->userRepository->findAllWithStatus($userFields->id, $userFields->username, Tables::users()) as $row) {
-            $rowStatusForPerm = is_string($row['status'] ?? null) ? UserStatus::tryFrom($row['status']) : null;
-            $users_by_id[is_numeric($row['id']) ? (int) $row['id'] : 0] = ['name' => is_string($row['username'] ?? null) ? $row['username'] : '', 'anon' => !$this->permissionService->isAutorizeStatus(AccessLevel::Classic, $rowStatusForPerm)];
+            $rowStatusForPerm = UserStatus::tryFrom($row->status);
+            $users_by_id[$row->id] = ['name' => $row->username, 'anon' => !$this->permissionService->isAutorizeStatus(AccessLevel::Classic, $rowStatusForPerm)];
         }
 
         $by_user_rating_model = ['rates' => []];
@@ -1044,7 +1054,7 @@ final class MiscController implements AdminSubControllerInterface
 
         $all_img_sum = [];
         foreach ($this->rateRepository->findAverageByElement() as $row) {
-            $all_img_sum[is_numeric($row['element_id']) ? (int) $row['element_id'] : 0] = ['avg' => is_numeric($row['avg_rate']) ? (float) $row['avg_rate'] : 0.0];
+            $all_img_sum[$row->elementId] = ['avg' => $row->avgRate];
         }
 
         $best_rated = array_flip($this->imageRepository->findTopRatedIds($consensus_top_number));
@@ -1180,12 +1190,10 @@ final class MiscController implements AdminSubControllerInterface
             $inserts        = [];
             $check_key_list = [];
             foreach ($users_without_notif as $nbm_user) {
-                $nbm_user['check_key'] = $this->notificationAdminService->findAvailableCheckKey();
-                $check_key_list[]      = $nbm_user['check_key'];
-                $inserts[]             = ['user_id' => $nbm_user['user_id'], 'check_key' => $nbm_user['check_key'], 'enabled' => 0];
-                $mailAddressRaw = $nbm_user['mail_address'] ?? null;
-                $usernameRaw    = $nbm_user['username'] ?? null;
-                PageState::current()->addInfo(Lang::t('User %s [%s] added.', stripslashes(is_string($usernameRaw) ? $usernameRaw : ''), is_string($mailAddressRaw) ? $mailAddressRaw : ''));
+                $check_key         = $this->notificationAdminService->findAvailableCheckKey();
+                $check_key_list[]  = $check_key;
+                $inserts[]         = ['user_id' => $nbm_user->userId, 'check_key' => $check_key, 'enabled' => 0];
+                PageState::current()->addInfo(Lang::t('User %s [%s] added.', stripslashes($nbm_user->username), $nbm_user->mailAddress));
             }
             $this->notificationRepository->insertSubscriptionsBatch($inserts);
             $check_key_treated = $this->notificationAdminService->doSubscribeUnsubscribeNotificationByMail(true, Config::nbmDefaultValueUserEnabled(), $check_key_list);

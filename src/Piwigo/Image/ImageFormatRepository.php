@@ -6,6 +6,7 @@ namespace Piwigo\Image;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
+use Piwigo\Image\Projection\ImageFormatPair;
 
 /**
  * Persistence for the `image_format` table — alternate-extension files
@@ -17,10 +18,10 @@ use Piwigo\Db\AbstractRepository;
 final class ImageFormatRepository extends AbstractRepository
 {
     /**
-     * Return (image_id, ext) rows for specific format ids.
+     * Return (format_id, image_id, ext, filesize) rows for specific format ids.
      *
      * @param  int[] $formatIds
-     * @return list<array<string, mixed>>
+     * @return list<ImageFormatPair>
      */
     public function findByFormatIds(array $formatIds): array
     {
@@ -28,11 +29,11 @@ final class ImageFormatRepository extends AbstractRepository
             return [];
         }
         $qb = $this->conn->createQueryBuilder()
-            ->select('image_id', 'ext')
+            ->select('format_id', 'image_id', 'ext', 'filesize')
             ->from($this->table('image_format'));
         $qb->where($qb->expr()->in('format_id', ':formatIds'))
            ->setParameter('formatIds', $formatIds, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(ImageFormatPair::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /**
@@ -53,25 +54,28 @@ final class ImageFormatRepository extends AbstractRepository
     }
 
     /**
-     * Return all (image_id, ext) rows from image_format.
+     * Return all (format_id, image_id, ext, filesize) rows from image_format.
      * Used to build a map of alternate format extensions per image.
      *
-     * @return list<array<string, mixed>>
+     * @return list<ImageFormatPair>
      */
     public function findAll(): array
     {
-        return $this->conn->createQueryBuilder()
-            ->select('image_id', 'ext')
-            ->from($this->table('image_format'))
-            ->executeQuery()
-            ->fetchAllAssociative();
+        return array_map(
+            ImageFormatPair::fromRow(...),
+            $this->conn->createQueryBuilder()
+                ->select('format_id', 'image_id', 'ext', 'filesize')
+                ->from($this->table('image_format'))
+                ->executeQuery()
+                ->fetchAllAssociative(),
+        );
     }
 
     /**
-     * Return (image_id, ext) rows for formats attached to the given images.
+     * Return (format_id, image_id, ext, filesize) rows for formats attached to the given images.
      *
      * @param  int[] $imageIds
-     * @return list<array<string, mixed>>
+     * @return list<ImageFormatPair>
      */
     public function findByImageIds(array $imageIds): array
     {
@@ -79,11 +83,11 @@ final class ImageFormatRepository extends AbstractRepository
             return [];
         }
         $qb = $this->conn->createQueryBuilder()
-            ->select('image_id', 'ext')
+            ->select('format_id', 'image_id', 'ext', 'filesize')
             ->from($this->table('image_format'));
         $qb->where($qb->expr()->in('image_id', ':imageIds'))
            ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
-        return $qb->executeQuery()->fetchAllAssociative();
+        return array_map(ImageFormatPair::fromRow(...), $qb->executeQuery()->fetchAllAssociative());
     }
 
     /** Total number of alternate formats. */

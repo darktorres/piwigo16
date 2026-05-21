@@ -8,12 +8,21 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\Entity\Category;
 use Piwigo\Category\Projection\AdminCategoryRow;
+use Piwigo\Category\Projection\CategoryBrief;
+use Piwigo\Category\Projection\CategoryDateRange;
 use Piwigo\Category\Projection\CategoryDetail;
+use Piwigo\Category\Projection\CategoryLinkRow;
+use Piwigo\Category\Projection\CategoryListingBrief;
+use Piwigo\Category\Projection\CategoryListingRow;
 use Piwigo\Category\Projection\CategoryNamePermalink;
 use Piwigo\Category\Projection\CategoryNamePermalinkUppercats;
 use Piwigo\Category\Projection\CategoryParentInfo;
+use Piwigo\Category\Projection\CategoryPermalinkRow;
 use Piwigo\Category\Projection\CategoryRankInfo;
 use Piwigo\Category\Projection\CategoryUppercatsSite;
+use Piwigo\Category\Projection\CategoryWithCounter;
+use Piwigo\Category\Projection\ComputedCategoryRow;
+use Piwigo\Category\Projection\DeletedPermalinkRow;
 use Piwigo\Category\Projection\ImageCategoryInfo;
 use Piwigo\Category\Projection\ImageCategoryLink;
 use Piwigo\Category\Projection\MenuCategoryRow;
@@ -21,6 +30,7 @@ use Piwigo\Category\Projection\PhysicalCategoryRow;
 use Piwigo\Category\Projection\PictureNavCategoryRow;
 use Piwigo\Category\Projection\RankUpdateRow;
 use Piwigo\Category\Projection\RelatedCategoryRow;
+use Piwigo\Category\Projection\SiteStorageStat;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\Enum\Privacy;
 use Piwigo\Db\AbstractRepository;
@@ -776,7 +786,7 @@ final class CategoryRepository extends AbstractRepository
      * has a permalink set. $orderBy is restricted to 'id' / 'permalink' by
      * the caller (admin permalinks page sort).
      *
-     * @return list<array{id: int, permalink: string, uppercats: string, global_rank: string|null}>
+     * @return list<CategoryPermalinkRow>
      */
     public function findCategoriesWithPermalink(string $orderBy): array
     {
@@ -789,16 +799,10 @@ final class CategoryRepository extends AbstractRepository
         }
         $out = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
-            $idRaw = $row['id'] ?? null;
-            if (!is_numeric($idRaw)) {
+            if (!is_numeric($row['id'] ?? null)) {
                 continue;
             }
-            $out[] = [
-                'id'          => (int) $idRaw,
-                'permalink'   => is_string($row['permalink'] ?? null) ? $row['permalink'] : '',
-                'uppercats'   => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
-            ];
+            $out[] = CategoryPermalinkRow::fromRow($row);
         }
         return $out;
     }
@@ -807,7 +811,7 @@ final class CategoryRepository extends AbstractRepository
      * Return every row from old_permalinks, ordered by a caller-validated column.
      * $orderBy whitelist: cat_id / permalink / date_deleted / last_hit / hit.
      *
-     * @return list<array{cat_id: int, permalink: string, date_deleted: string, last_hit: string|null, hit: int}>
+     * @return list<DeletedPermalinkRow>
      */
     public function findOldPermalinks(string $orderBy): array
     {
@@ -820,17 +824,10 @@ final class CategoryRepository extends AbstractRepository
         }
         $out = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
-            $catIdRaw = $row['cat_id'] ?? null;
-            if (!is_numeric($catIdRaw)) {
+            if (!is_numeric($row['cat_id'] ?? null)) {
                 continue;
             }
-            $out[] = [
-                'cat_id'       => (int) $catIdRaw,
-                'permalink'    => is_string($row['permalink'] ?? null) ? $row['permalink'] : '',
-                'date_deleted' => is_string($row['date_deleted'] ?? null) ? $row['date_deleted'] : '',
-                'last_hit'     => is_string($row['last_hit'] ?? null) ? $row['last_hit'] : null,
-                'hit'          => is_numeric($row['hit'] ?? null) ? (int) $row['hit'] : 0,
-            ];
+            $out[] = DeletedPermalinkRow::fromRow($row);
         }
         return $out;
     }
@@ -850,10 +847,10 @@ final class CategoryRepository extends AbstractRepository
     }
 
     /**
-     * Per-site (categories, images) counts: result keyed by site_id with
-     * {nb_categories, nb_images}. Used by the admin sites listing.
+     * Per-site (categories, images) counts: result keyed by site_id.
+     * Used by the admin sites listing.
      *
-     * @return array<int, array{nb_categories: int, nb_images: int}>
+     * @return array<int, SiteStorageStat>
      */
     public function findSiteStorageStats(): array
     {
@@ -870,10 +867,7 @@ final class CategoryRepository extends AbstractRepository
             if (!is_numeric($siteIdRaw)) {
                 continue;
             }
-            $out[(int) $siteIdRaw] = [
-                'nb_categories' => is_numeric($row['nb_categories'] ?? null) ? (int) $row['nb_categories'] : 0,
-                'nb_images'     => is_numeric($row['nb_images'] ?? null) ? (int) $row['nb_images'] : 0,
-            ];
+            $out[(int) $siteIdRaw] = SiteStorageStat::fromRow($row);
         }
         return $out;
     }
@@ -1802,22 +1796,16 @@ WHERE ' . $whereClause;
      *
      * @param list<mixed>                            $params
      * @param list<ArrayParameterType|ParameterType> $types
-     * @return list<array{id: int, name: string, uppercats: string, global_rank: string|null}>
+     * @return list<CategoryLinkRow>
      */
     public function executeListingQuery(string $query, array $params, array $types): array
     {
         $out = [];
         foreach ($this->conn->executeQuery($query, $params, $types)->fetchAllAssociative() as $row) {
-            $idRaw = $row['id'] ?? null;
-            if (!is_numeric($idRaw)) {
+            if (!is_numeric($row['id'] ?? null)) {
                 continue;
             }
-            $out[] = [
-                'id'          => (int) $idRaw,
-                'name'        => is_string($row['name'] ?? null) ? $row['name'] : '',
-                'uppercats'   => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
-            ];
+            $out[] = CategoryLinkRow::fromRow($row);
         }
         return $out;
     }
@@ -1933,7 +1921,7 @@ SELECT image_id
      * category ids.
      *
      * @param  list<int> $forbiddenCategoryIds
-     * @return list<array{cat_id: int, id_uppercat: int|null, global_rank: string|null, date_last: string|null, nb_images: int}>
+     * @return list<ComputedCategoryRow>
      */
     public function findComputedCategoryAggregates(
         int $userLevel,
@@ -1971,17 +1959,10 @@ FROM ' . $this->table('categories') . ' as c
         $rows = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
         $out  = [];
         foreach ($rows as $row) {
-            $catIdRaw = $row['cat_id'] ?? null;
-            if (!is_numeric($catIdRaw)) {
+            if (!is_numeric($row['cat_id'] ?? null)) {
                 continue;
             }
-            $out[] = [
-                'cat_id'      => (int) $catIdRaw,
-                'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
-                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
-                'date_last'   => is_string($row['date_last'] ?? null) ? $row['date_last'] : null,
-                'nb_images'   => is_numeric($row['nb_images'] ?? null) ? (int) $row['nb_images'] : 0,
-            ];
+            $out[] = ComputedCategoryRow::fromRow($row);
         }
         return $out;
     }
@@ -2042,7 +2023,7 @@ SELECT id
      * @param  list<int>                              $excludedCatIds
      * @param  list<mixed>                            $permParams
      * @param  list<ArrayParameterType|ParameterType> $permTypes
-     * @return list<array{id: int, uppercats: string, counter: int}>
+     * @return list<CategoryWithCounter>
      */
     public function findCommonCategoriesWithPermissions(
         array $imageIds,
@@ -2083,15 +2064,10 @@ SELECT
         $rows = $this->conn->executeQuery($query, $params, $types)->fetchAllAssociative();
         $out  = [];
         foreach ($rows as $row) {
-            $idRaw = $row['id'] ?? null;
-            if (!is_numeric($idRaw)) {
+            if (!is_numeric($row['id'] ?? null)) {
                 continue;
             }
-            $out[] = [
-                'id'        => (int) $idRaw,
-                'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-                'counter'   => is_numeric($row['counter'] ?? null) ? (int) $row['counter'] : 0,
-            ];
+            $out[] = CategoryWithCounter::fromRow($row);
         }
         return $out;
     }
@@ -2102,7 +2078,7 @@ SELECT
      * "related albums" navigation strip.
      *
      * @param  list<int> $ids
-     * @return list<array{id: int, name: string, permalink: string|null, id_uppercat: int|null, uppercats: string, global_rank: string|null}>
+     * @return list<CategoryBrief>
      */
     public function findRelatedNavRowsByIds(array $ids): array
     {
@@ -2114,21 +2090,12 @@ SELECT
             ->from($this->table('categories'));
         $qb->where($qb->expr()->in('id', ':ids'))
            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
-        $rows = $qb->executeQuery()->fetchAllAssociative();
-        $out  = [];
-        foreach ($rows as $row) {
-            $idRaw = $row['id'] ?? null;
-            if (!is_numeric($idRaw)) {
+        $out = [];
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            if (!is_numeric($row['id'] ?? null)) {
                 continue;
             }
-            $out[] = [
-                'id'          => (int) $idRaw,
-                'name'        => is_string($row['name'] ?? null) ? $row['name'] : '',
-                'permalink'   => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
-                'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
-                'uppercats'   => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
-            ];
+            $out[] = CategoryBrief::fromRow($row);
         }
         return $out;
     }
@@ -2360,32 +2327,20 @@ SELECT
      * Return (id, name, rank, status, visible, uppercats, lastmodified) for
      * every category — used by the admin album-tree overview.
      *
-     * @return list<array{id: int, name: string, rank: int|null, status: string, visible: bool, uppercats: string, lastmodified: string}>
+     * @return list<CategoryListingRow>
      */
     public function findAllForAdminTreeOverview(): array
     {
-        $rows = $this->conn->createQueryBuilder()
+        $out = [];
+        foreach ($this->conn->createQueryBuilder()
             ->select('id', 'name', '`rank`', 'status', 'visible', 'uppercats', 'lastmodified')
             ->from($this->table('categories'))
             ->executeQuery()
-            ->fetchAllAssociative();
-        $out = [];
-        foreach ($rows as $row) {
-            $idRaw      = $row['id'] ?? null;
-            $rankRaw    = $row['rank'] ?? null;
-            $visibleRaw = $row['visible'] ?? null;
-            if (!is_numeric($idRaw)) {
+            ->fetchAllAssociative() as $row) {
+            if (!is_numeric($row['id'] ?? null)) {
                 continue;
             }
-            $out[] = [
-                'id'           => (int) $idRaw,
-                'name'         => is_string($row['name'] ?? null) ? $row['name'] : '',
-                'rank'         => is_numeric($rankRaw) ? (int) $rankRaw : null,
-                'status'       => is_string($row['status'] ?? null) ? $row['status'] : Privacy::Public->value,
-                'visible'      => is_bool($visibleRaw) ? $visibleRaw : (is_numeric($visibleRaw) ? (int) $visibleRaw !== 0 : true),
-                'uppercats'    => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-                'lastmodified' => is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
-            ];
+            $out[] = CategoryListingRow::fromRow($row);
         }
         return $out;
     }
@@ -2501,7 +2456,7 @@ SELECT
      * Return (id, name, permalink, dir, rank, status) rows for the listing
      * pane, optionally restricted to direct children of $parentId (null = root).
      *
-     * @return list<array{id: int, name: string, permalink: string|null, dir: string|null, rank: int|null, status: string}>
+     * @return list<CategoryListingBrief>
      */
     public function findCategoryListing(?int $parentId): array
     {
@@ -2516,19 +2471,10 @@ SELECT
         }
         $out = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
-            $idRaw   = $row['id'] ?? null;
-            $rankRaw = $row['rank'] ?? null;
-            if (!is_numeric($idRaw)) {
+            if (!is_numeric($row['id'] ?? null)) {
                 continue;
             }
-            $out[] = [
-                'id'        => (int) $idRaw,
-                'name'      => is_string($row['name'] ?? null) ? $row['name'] : '',
-                'permalink' => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
-                'dir'       => is_string($row['dir'] ?? null) ? $row['dir'] : null,
-                'rank'      => is_numeric($rankRaw) ? (int) $rankRaw : null,
-                'status'    => is_string($row['status'] ?? null) ? $row['status'] : Privacy::Public->value,
-            ];
+            $out[] = CategoryListingBrief::fromRow($row);
         }
         return $out;
     }
@@ -2651,7 +2597,7 @@ SELECT representative_picture_id
      * @param  list<int>                              $catIds
      * @param  list<mixed>                            $permParams
      * @param  list<ArrayParameterType|ParameterType> $permTypes
-     * @return array<int, array{from: string|null, to: string|null}>
+     * @return array<int, CategoryDateRange>
      */
     public function findDateRangesForCategoriesKeyedById(
         array $catIds,
@@ -2680,10 +2626,7 @@ SELECT
             if (!is_numeric($idRaw)) {
                 continue;
             }
-            $out[(int) $idRaw] = [
-                'from' => is_string($row['from'] ?? null) ? $row['from'] : null,
-                'to'   => is_string($row['to'] ?? null) ? $row['to'] : null,
-            ];
+            $out[(int) $idRaw] = CategoryDateRange::fromRow($row);
         }
         return $out;
     }

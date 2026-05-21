@@ -12,6 +12,9 @@ use Piwigo\Image\Entity\Image;
 use Piwigo\Image\Entity\ImageIdFilename;
 use Piwigo\Image\Entity\ImageIdPathRepresentative;
 use Piwigo\Image\Entity\PathRepresentative;
+use Piwigo\Image\Projection\DerivativeCandidateRow;
+use Piwigo\Image\Projection\ImageDimension;
+use Piwigo\Image\Projection\ImageSummaryRow;
 
 /** Persistence layer for the image domain. */
 final class ImageRepository extends AbstractRepository
@@ -29,23 +32,19 @@ final class ImageRepository extends AbstractRepository
     /**
      * Return all distinct (width, height) combinations for images with known dimensions.
      *
-     * @return list<array{width: int, height: int}>
+     * @return list<ImageDimension>
      */
     public function findDistinctDimensions(): array
     {
-        $rows = $this->conn->createQueryBuilder()
-            ->select('DISTINCT width', 'height')
-            ->from($this->table('images'))
-            ->where('width IS NOT NULL')
-            ->andWhere('height IS NOT NULL')
-            ->executeQuery()
-            ->fetchAllAssociative();
         return array_map(
-            fn (array $r): array => [
-                'width'  => is_numeric($r['width']) ? (int) $r['width'] : 0,
-                'height' => is_numeric($r['height']) ? (int) $r['height'] : 0,
-            ],
-            $rows
+            ImageDimension::fromRow(...),
+            $this->conn->createQueryBuilder()
+                ->select('DISTINCT width', 'height')
+                ->from($this->table('images'))
+                ->where('width IS NOT NULL')
+                ->andWhere('height IS NOT NULL')
+                ->executeQuery()
+                ->fetchAllAssociative(),
         );
     }
 
@@ -453,12 +452,8 @@ final class ImageRepository extends AbstractRepository
      * label (= COALESCE(name, file)), filesize, file, path, representative_ext.
      * Result keyed by id.
      *
-     * @param  list<int> $ids
-     * @return array<int|string, array<string, mixed>>
-     */
-    /**
      * @param  int[] $ids
-     * @return array<int, array{id: int, label: string, filesize: ?int, file: string, path: string, representative_ext: ?string}>
+     * @return array<int, ImageSummaryRow>
      */
     public function findActivityFeedSummaryByIds(array $ids): array
     {
@@ -473,14 +468,7 @@ final class ImageRepository extends AbstractRepository
         $out = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
             $rowId = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
-            $out[$rowId] = [
-                'id'                 => $rowId,
-                'label'              => is_string($row['label'] ?? null) ? $row['label'] : '',
-                'filesize'           => is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : null,
-                'file'               => is_string($row['file'] ?? null) ? $row['file'] : '',
-                'path'               => is_string($row['path'] ?? null) ? $row['path'] : '',
-                'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
-            ];
+            $out[$rowId] = ImageSummaryRow::fromRow($row);
         }
         return $out;
     }
@@ -514,37 +502,20 @@ final class ImageRepository extends AbstractRepository
      * extra WHERE clauses joined in.
      *
      * @param  list<string> $extraWhereClauses
-     * @return list<array<string, mixed>>
-     */
-    /**
-     * @param  list<string> $extraWhereClauses
-     * @return list<array{id: int, path: string, representative_ext: ?string, width: ?int, height: ?int, rotation: ?int}>
+     * @return list<DerivativeCandidateRow>
      */
     public function findDerivativeCandidatesBeforeId(int $startId, array $extraWhereClauses, int $limit): array
     {
-        $clauses = $extraWhereClauses;
+        $clauses   = $extraWhereClauses;
         $clauses[] = 'id < ?';
-        $sql = 'SELECT id, path, representative_ext, width, height, rotation'
+        $sql       = 'SELECT id, path, representative_ext, width, height, rotation'
             . ' FROM ' . $this->table('images')
             . ' WHERE ' . implode(' AND ', $clauses)
             . ' ORDER BY id DESC LIMIT ' . $limit;
-        $rows = $this->conn->executeQuery(
-            $sql,
-            [$startId],
-            [\Doctrine\DBAL\ParameterType::INTEGER],
-        )->fetchAllAssociative();
-        $out = [];
-        foreach ($rows as $row) {
-            $out[] = [
-                'id'                 => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
-                'path'               => is_string($row['path'] ?? null) ? $row['path'] : '',
-                'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
-                'width'              => is_numeric($row['width'] ?? null) ? (int) $row['width'] : null,
-                'height'             => is_numeric($row['height'] ?? null) ? (int) $row['height'] : null,
-                'rotation'           => is_numeric($row['rotation'] ?? null) ? (int) $row['rotation'] : null,
-            ];
-        }
-        return $out;
+        return array_map(
+            DerivativeCandidateRow::fromRow(...),
+            $this->conn->executeQuery($sql, [$startId], [\Doctrine\DBAL\ParameterType::INTEGER])->fetchAllAssociative(),
+        );
     }
 
     /**

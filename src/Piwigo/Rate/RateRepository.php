@@ -6,6 +6,9 @@ namespace Piwigo\Rate;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Db\AbstractRepository;
+use Piwigo\Rate\Projection\ElementAvgRate;
+use Piwigo\Rate\Projection\ElementRateSum;
+use Piwigo\Rate\Projection\RatedImageRow;
 
 /** Persistence layer for the photo-rating domain. */
 final class RateRepository extends AbstractRepository
@@ -105,7 +108,7 @@ final class RateRepository extends AbstractRepository
      * comes from a static whitelist; user-class/cat filters are bound.
      *
      * @param list<int> $catFilterIds
-     * @return list<array<string, mixed>>
+     * @return list<RatedImageRow>
      */
     public function findRatedImagesAdminPage(
         string $userClass,
@@ -143,7 +146,7 @@ final class RateRepository extends AbstractRepository
         $sql .= ' GROUP BY i.id, i.path, i.file, i.representative_ext, i.rating_score, r.element_id'
               . ' ORDER BY ' . $orderBy
               . ' LIMIT ' . $limit . ' OFFSET ' . $offset;
-        return $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative();
+        return array_map(RatedImageRow::fromRow(...), $this->conn->executeQuery($sql, $params, $types)->fetchAllAssociative());
     }
 
     /** Reassign all rate rows from $oldAnonId to $newAnonId for the given user. */
@@ -269,16 +272,19 @@ final class RateRepository extends AbstractRepository
     /**
      * Return (element_id, avg_rate) for all elements.
      *
-     * @return list<array<string, mixed>>
+     * @return list<ElementAvgRate>
      */
     public function findAverageByElement(): array
     {
-        return $this->conn->createQueryBuilder()
-            ->select('element_id', 'AVG(rate) AS avg_rate')
-            ->from($this->table('rate'))
-            ->groupBy('element_id')
-            ->executeQuery()
-            ->fetchAllAssociative();
+        return array_map(
+            ElementAvgRate::fromRow(...),
+            $this->conn->createQueryBuilder()
+                ->select('element_id', 'AVG(rate) AS avg_rate')
+                ->from($this->table('rate'))
+                ->groupBy('element_id')
+                ->executeQuery()
+                ->fetchAllAssociative(),
+        );
     }
 
     /** Count how many times the given image has been rated. */
@@ -298,16 +304,19 @@ final class RateRepository extends AbstractRepository
      * Return (element_id, rcount, rsum) for every element that has at least one rate.
      * Used by the Bayesian average recalculation in RateService::updateRatingScore().
      *
-     * @return list<array<string, mixed>>
+     * @return list<ElementRateSum>
      */
     public function getSumsByElement(): array
     {
-        return $this->conn->createQueryBuilder()
-            ->select('element_id', 'COUNT(rate) AS rcount', 'SUM(rate) AS rsum')
-            ->from($this->table('rate'))
-            ->groupBy('element_id')
-            ->executeQuery()
-            ->fetchAllAssociative();
+        return array_map(
+            ElementRateSum::fromRow(...),
+            $this->conn->createQueryBuilder()
+                ->select('element_id', 'COUNT(rate) AS rcount', 'SUM(rate) AS rsum')
+                ->from($this->table('rate'))
+                ->groupBy('element_id')
+                ->executeQuery()
+                ->fetchAllAssociative(),
+        );
     }
 
     /**

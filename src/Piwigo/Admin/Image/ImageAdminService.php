@@ -63,11 +63,10 @@ final class ImageAdminService
         $formatsOf = [];
         $repo      = $this->imageRepository;
         foreach ($this->imageFormatRepository->findByImageIds($ids) as $row) {
-            $fmtImageId = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
-            if (!isset($formatsOf[$fmtImageId])) {
-                $formatsOf[$fmtImageId] = [];
+            if (!isset($formatsOf[$row->imageId])) {
+                $formatsOf[$row->imageId] = [];
             }
-            $formatsOf[$fmtImageId][] = is_string($row['ext'] ?? null) ? $row['ext'] : '';
+            $formatsOf[$row->imageId][] = $row->ext;
         }
         foreach ($repo->findPathsByIds($ids) as $proj) {
             if (UrlService::urlIsRemote($proj->path->value)) {

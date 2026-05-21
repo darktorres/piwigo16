@@ -721,39 +721,50 @@ final class UserService
 
         $now = new \DateTimeImmutable()->format('Y-m-d H:i:s');
 
-        foreach ($apiKeys as $i => $apiKey) {
-            $apiKey['apikey_secret'] = str_repeat('*', 40);
-            unset($apiKey['auth_key_id'], $apiKey['user_id'], $apiKey['key_type']);
-            $apiKey['apikey_name']        = stripslashes(is_string($apiKey['apikey_name']) ? $apiKey['apikey_name'] : '');
-            $akCreatedOn                   = is_scalar($apiKey['created_on']) ? (string) $apiKey['created_on'] : null;
-            $akExpiredOn                   = is_scalar($apiKey['expired_on']) ? (string) $apiKey['expired_on'] : null;
-            $akLastUsedOn                  = is_scalar($apiKey['last_used_on']) ? (string) $apiKey['last_used_on'] : null;
-            $akRevokedOn                   = is_scalar($apiKey['revoked_on']) ? (string) $apiKey['revoked_on'] : null;
-            $apiKey['created_on_format']   = $this->dateService->formatDate($akCreatedOn, ['day', 'month', 'year']);
-            $apiKey['expired_on_format']   = $this->dateService->formatDate($akExpiredOn, ['day', 'month', 'year']);
-            $apiKey['last_used_on_since']  = ($akLastUsedOn !== null && $akLastUsedOn !== '') ? $this->dateService->timeSince($akLastUsedOn, 'day') : Lang::t('Never');
-            $expiredOn                     = $this->dateService->str2DateTime($akExpiredOn);
-            $nowDt                         = $this->dateService->str2DateTime($now);
-            $apiKey['is_expired']          = $expiredOn < $nowDt;
-            if ($apiKey['is_expired']) {
-                $apiKey['expiration'] = Lang::t('Expired');
-            } elseif ($nowDt !== false && $expiredOn !== false) {
-                $diff = $this->dateService->dateDiff($nowDt, $expiredOn);
+        $result = [];
+        foreach ($apiKeys as $apiKey) {
+            $akCreatedOn  = $apiKey->createdOn;
+            $akExpiredOn  = $apiKey->expiredOn;
+            $akLastUsedOn = $apiKey->lastUsedOn;
+            $akRevokedOn  = $apiKey->revokedOn;
+            $expiredOnDt  = $this->dateService->str2DateTime($akExpiredOn);
+            $nowDt        = $this->dateService->str2DateTime($now);
+            $isExpired    = $expiredOnDt < $nowDt;
+            if ($isExpired) {
+                $expiration = Lang::t('Expired');
+            } elseif ($nowDt !== false && $expiredOnDt !== false) {
+                $diff = $this->dateService->dateDiff($nowDt, $expiredOnDt);
                 if ($diff->days > 0) {
-                    $apiKey['expiration'] = Lang::t('%d days', $diff->days);
+                    $expiration = Lang::t('%d days', $diff->days);
                 } elseif ($diff->h > 0) {
-                    $apiKey['expiration'] = Lang::t('%d hours', $diff->h);
+                    $expiration = Lang::t('%d hours', $diff->h);
                 } else {
-                    $apiKey['expiration'] = Lang::t('%d minutes', $diff->i);
+                    $expiration = Lang::t('%d minutes', $diff->i);
                 }
+            } else {
+                $expiration = null;
             }
-            $apiKey['expired_on_since'] = $this->dateService->timeSince($akExpiredOn, 'day');
-            $apiKey['revoked_on_since'] = ($akRevokedOn !== null && $akRevokedOn !== '') ? $this->dateService->timeSince($akRevokedOn, 'day') : null;
-            $apiKey['revoked_on_message'] = ($akRevokedOn !== null && $akRevokedOn !== '') ? Lang::t('This API key was manually revoked on %s', $this->dateService->formatDate($akRevokedOn, ['day', 'month', 'year'])) : null;
-            $apiKeys[$i] = $apiKey;
+            $result[] = [
+                'auth_key'            => $apiKey->authKey,
+                'apikey_secret'       => str_repeat('*', 40),
+                'duration'            => $apiKey->duration,
+                'apikey_name'         => stripslashes($apiKey->apikeyName ?? ''),
+                'created_on'          => $akCreatedOn,
+                'expired_on'          => $akExpiredOn,
+                'last_used_on'        => $akLastUsedOn,
+                'revoked_on'          => $akRevokedOn,
+                'created_on_format'   => $this->dateService->formatDate($akCreatedOn, ['day', 'month', 'year']),
+                'expired_on_format'   => $this->dateService->formatDate($akExpiredOn, ['day', 'month', 'year']),
+                'last_used_on_since'  => ($akLastUsedOn !== null && $akLastUsedOn !== '') ? $this->dateService->timeSince($akLastUsedOn, 'day') : Lang::t('Never'),
+                'is_expired'          => $isExpired,
+                'expiration'          => $expiration,
+                'expired_on_since'    => $this->dateService->timeSince($akExpiredOn, 'day'),
+                'revoked_on_since'    => ($akRevokedOn !== null && $akRevokedOn !== '') ? $this->dateService->timeSince($akRevokedOn, 'day') : null,
+                'revoked_on_message'  => ($akRevokedOn !== null && $akRevokedOn !== '') ? Lang::t('This API key was manually revoked on %s', $this->dateService->formatDate($akRevokedOn, ['day', 'month', 'year'])) : null,
+            ];
         }
 
-        return $apiKeys;
+        return $result;
     }
 
     /** @return array<mixed>|false */

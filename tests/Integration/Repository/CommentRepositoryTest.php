@@ -46,14 +46,16 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
     public function test_insert_round_trips_and_increments_count(): void
     {
-        $newId = $this->repo->insert([
-            'author'       => 'integration_test_author',
-            'author_id'    => 1,
-            'anonymous_id' => '127.0.0.1',
-            'content'      => 'Integration-test comment',
-            'image_id'     => 1,
-            'validated'    => true,
-        ]);
+        $newId = $this->repo->insert(new \Piwigo\Comment\NewCommentData(
+            author:      'integration_test_author',
+            authorId:    1,
+            anonymousId: '127.0.0.1',
+            content:     'Integration-test comment',
+            validated:   true,
+            imageId:     1,
+            websiteUrl:  null,
+            email:       null,
+        ));
 
         self::assertGreaterThan(1, $newId);
         self::assertSame(2, $this->repo->countAll());

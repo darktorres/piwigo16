@@ -216,17 +216,12 @@ final readonly class NotificationService
           . '</li>';
 
         $description .= '<ul>';
+        /** @var list<\Piwigo\Notification\Projection\RecentCategoryRow> $categories */
         $categories = is_array($dateDetail['categories'] ?? null) ? $dateDetail['categories'] : [];
         foreach ($categories as $cat) {
-            $uppercats = $cat instanceof \Piwigo\Notification\Projection\RecentCategoryRow
-                ? $cat->uppercats
-                : (is_scalar($cat['uppercats'] ?? null) ? (string) $cat['uppercats'] : '');
-            $imgCount = $cat instanceof \Piwigo\Notification\Projection\RecentCategoryRow
-                ? $cat->imgCount
-                : (is_numeric($cat['img_count'] ?? null) ? (int) $cat['img_count'] : 0);
             $description .= '<li>'
-              . $this->htmlService->getCatDisplayNameCache($uppercats, '', false, null, $authKey)
-              . ' (' . Translator::get()->plural('%d new photo', '%d new photos', $imgCount) . ')'
+              . $this->htmlService->getCatDisplayNameCache($cat->uppercats, '', false, null, $authKey)
+              . ' (' . Translator::get()->plural('%d new photo', '%d new photos', $cat->imgCount) . ')'
               . '</li>';
         }
         $description .= '</ul></ul>';

@@ -50,9 +50,9 @@ final class DerivativeSettingsRepositoryTest extends IntegrationTestCase
     {
         $loaded = $this->repo->load();
 
-        self::assertSame(95, $loaded['quality']);
-        self::assertInstanceOf(WatermarkParams::class, $loaded['watermark']);
-        self::assertSame([], $loaded['custom']);
+        self::assertSame(95, $loaded->quality);
+        self::assertInstanceOf(WatermarkParams::class, $loaded->watermark);
+        self::assertSame([], $loaded->custom);
     }
 
     public function test_save_then_load_round_trips_quality_and_custom(): void
@@ -63,8 +63,8 @@ final class DerivativeSettingsRepositoryTest extends IntegrationTestCase
 
         // MySQL 8 JSON object storage normalises key order — assertEquals
         // is the right matcher for round-tripping a map.
-        self::assertSame(85, $loaded['quality']);
-        self::assertEquals(['small' => 1, 'medium' => 2, 'large' => 3], $loaded['custom']);
+        self::assertSame(85, $loaded->quality);
+        self::assertEquals(['small' => 1, 'medium' => 2, 'large' => 3], $loaded->custom);
     }
 
     public function test_save_is_upsert_on_singleton_row(): void
@@ -73,8 +73,8 @@ final class DerivativeSettingsRepositoryTest extends IntegrationTestCase
         $this->repo->save(80, new WatermarkParams(), ['xs' => 99]);
 
         $loaded = $this->repo->load();
-        self::assertSame(80, $loaded['quality']);
-        self::assertSame(['xs' => 99], $loaded['custom']);
+        self::assertSame(80, $loaded->quality);
+        self::assertSame(['xs' => 99], $loaded->custom);
 
         $count = $this->conn->executeQuery(
             'SELECT COUNT(*) FROM piwigo_derivative_settings'

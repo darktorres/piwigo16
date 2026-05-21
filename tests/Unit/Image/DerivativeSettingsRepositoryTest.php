@@ -35,9 +35,9 @@ final class DerivativeSettingsRepositoryTest extends TestCase
         $conn->method('executeQuery')->willReturn($result);
 
         $data = (new DerivativeSettingsRepository($conn))->load();
-        self::assertSame(95, $data['quality']);
-        self::assertSame('', $data['watermark']->file);
-        self::assertSame([], $data['custom']);
+        self::assertSame(95, $data->quality);
+        self::assertSame('', $data->watermark->file);
+        self::assertSame([], $data->custom);
     }
 
     public function testLoadDecodesQualityWatermarkAndCustom(): void
@@ -53,11 +53,11 @@ final class DerivativeSettingsRepositoryTest extends TestCase
         $conn->method('executeQuery')->willReturn($result);
 
         $data = (new DerivativeSettingsRepository($conn))->load();
-        self::assertSame(88, $data['quality']);
-        self::assertSame('./watermark.png', $data['watermark']->file);
-        self::assertSame([640, 480], $data['watermark']->min_size);
-        self::assertSame(80, $data['watermark']->opacity);
-        self::assertSame(['e120x90' => 1700000000, 'e240x180' => 1700001000], $data['custom']);
+        self::assertSame(88, $data->quality);
+        self::assertSame('./watermark.png', $data->watermark->file);
+        self::assertSame([640, 480], $data->watermark->min_size);
+        self::assertSame(80, $data->watermark->opacity);
+        self::assertSame(['e120x90' => 1700000000, 'e240x180' => 1700001000], $data->custom);
     }
 
     public function testSaveUpsertsSingletonRow(): void

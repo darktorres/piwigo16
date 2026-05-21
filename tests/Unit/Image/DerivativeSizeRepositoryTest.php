@@ -39,11 +39,11 @@ final class DerivativeSizeRepositoryTest extends TestCase
         $conn->method('executeQuery')->willReturn($result);
 
         $rows = (new DerivativeSizeRepository($conn))->loadAll();
-        self::assertArrayHasKey('square', $rows['enabled']);
-        self::assertArrayHasKey('3xlarge', $rows['disabled']);
-        self::assertSame(120, $rows['enabled']['square']->sizing->ideal_size[0]);
-        self::assertSame(1.0, $rows['enabled']['square']->sizing->max_crop);
-        self::assertNull($rows['disabled']['3xlarge']->sizing->min_size);
+        self::assertArrayHasKey('square', $rows->enabled);
+        self::assertArrayHasKey('3xlarge', $rows->disabled);
+        self::assertSame(120, $rows->enabled['square']->sizing->ideal_size[0]);
+        self::assertSame(1.0, $rows->enabled['square']->sizing->max_crop);
+        self::assertNull($rows->disabled['3xlarge']->sizing->min_size);
     }
 
     public function testHasAnyReturnsTrueWhenCountPositive(): void

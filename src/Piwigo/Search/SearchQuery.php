@@ -28,8 +28,17 @@ final class SearchQuery
     /** @param array<string, mixed> $raw */
     public static function fromArray(array $raw): self
     {
+        $rawFields = $raw['fields'] ?? null;
+        $fields    = [];
+        if (is_array($rawFields)) {
+            foreach ($rawFields as $k => $v) {
+                if (is_string($k)) {
+                    $fields[$k] = $v;
+                }
+            }
+        }
         return new self(
-            fields:  is_array($raw['fields'] ?? null) ? $raw['fields'] : [],
+            fields:  $fields,
             mode:    is_string($raw['mode'] ?? null) ? $raw['mode'] : 'AND',
             version: is_int($raw['version'] ?? null) ? $raw['version'] : 1,
         );

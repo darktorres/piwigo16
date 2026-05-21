@@ -250,6 +250,7 @@ final readonly class AuthService
     }
 
     /** @return array<string,mixed>|null */
+    /** @return array<string, mixed>|null */
     public function findUserByUsernameOrEmail(string $usernameOrEmail): ?array
     {
         $userFields = Config::userFields();

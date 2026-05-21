@@ -79,8 +79,8 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         // user 1 has a mail_address in the fixture, user 3 doesn't —
         // getUserNotifications('send') also filters mail_address IS NOT NULL.
         self::assertCount(1, $rows);
-        self::assertSame(1, $rows[0]['user_id']);
-        self::assertSame(1, $rows[0]['enabled']);
+        self::assertSame(1, $rows[0]->userId);
+        self::assertSame(true, $rows[0]->enabled);
     }
 
     public function test_getUserNotifications_subscribe_returns_all_with_filter(): void
@@ -95,8 +95,8 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
         self::assertCount(1, $enabled);
         self::assertCount(1, $disabled);
-        self::assertSame(1, $enabled[0]['enabled']);
-        self::assertSame(0, $disabled[0]['enabled']);
+        self::assertSame(true, $enabled[0]->enabled);
+        self::assertSame(false, $disabled[0]->enabled);
     }
 
     public function test_setEnabledByCheckKeysBatch_flips_the_flag(): void
@@ -111,6 +111,6 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
         $rows = $this->repo->getUserNotifications('subscribe', ['flip-me']);
         self::assertCount(1, $rows);
-        self::assertSame(0, $rows[0]['enabled']);
+        self::assertSame(false, $rows[0]->enabled);
     }
 }

@@ -384,7 +384,6 @@ final readonly class PictureController implements ControllerInterface
 
         // Slideshow controls
         if ($slideshowActive) {
-            assert($slideshow_params instanceof SlideshowParams);
             $tpl_slideshow = [];
             $currentUrl    = $currentVm->url;
             $tpl->assign(['U_SLIDESHOW_STOP' => $currentUrl]);
@@ -392,13 +391,11 @@ final readonly class PictureController implements ControllerInterface
                 $pValBool = match ($p) {
                     'repeat' => $slideshow_params->repeat,
                     'play'   => $slideshow_params->play,
-                    default  => false,
                 };
                 $var_name = 'U_' . ($pValBool ? 'STOP_' : 'START_') . strtoupper($p);
                 $toggled  = match ($p) {
                     'repeat' => new SlideshowParams($slideshow_params->period, !$slideshow_params->repeat, $slideshow_params->play),
                     'play'   => new SlideshowParams($slideshow_params->period, $slideshow_params->repeat, !$slideshow_params->play),
-                    default  => $slideshow_params,
                 };
                 $tpl_slideshow[$var_name] = $this->urlService->addUrlParams($currentUrl, ['slideshow' => $this->pictureService->encodeSlideshowParams($toggled)]);
             }

@@ -943,8 +943,8 @@ final class MaintenanceController implements AdminSubControllerInterface
             $tpl_var = [
                 'NAME'       => $row['galleries_url'],
                 'TYPE'       => Lang::t($is_remote ? 'Remote' : 'Local'),
-                'CATEGORIES' => $sites_detail[$site_id]?->nbCategories ?? 0,
-                'IMAGES'     => $sites_detail[$site_id]?->nbImages ?? 0,
+                'CATEGORIES' => isset($sites_detail[$site_id]) ? $sites_detail[$site_id]->nbCategories : 0,
+                'IMAGES'     => isset($sites_detail[$site_id]) ? $sites_detail[$site_id]->nbImages : 0,
                 'U_SYNCHRONIZE' => $update_url,
             ];
 
@@ -1103,14 +1103,14 @@ final class MaintenanceController implements AdminSubControllerInterface
                     $parent    = $ctx->dbFulldirs[dirname($fulldir)];
                     $parentKey = $parent;
                     $parentRow = $ctx->dbCategories[$parent] ?? null;
-                    $parentId  = $parent;
+                    $parentId  = (int) $parent;
                     $insert['id_uppercat'] = $parent;
-                    $insert['uppercats']   = ($parentRow?->uppercats ?? '') . ',' . $insert['id'];
+                    $insert['uppercats']   = ($parentRow !== null ? $parentRow->uppercats : '') . ',' . $insert['id'];
                     $nextRankParent        = is_int($next_rank[$parentKey] ?? null) ? $next_rank[$parentKey] : 0;
                     $insert['rank']        = $nextRankParent;
                     $next_rank[$parentKey] = $nextRankParent + 1;
-                    $insert['global_rank'] = ($parentRow?->globalRank ?? '') . '.' . $insert['rank'];
-                    if (($parentRow?->status ?? '') === 'private') {
+                    $insert['global_rank'] = ($parentRow !== null ? $parentRow->globalRank : '') . '.' . $insert['rank'];
+                    if ($parentRow !== null && $parentRow->status === 'private') {
                         $insert['status'] = 'private';
                     }
                     if ($parentRow !== null && !$parentRow->visible) {
@@ -1283,7 +1283,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 $this->imageFormatRepository->insertRowsBatch($insert_formats);
             }
             if (count($formats_to_delete) > 0) {
-                $this->imageFormatRepository->deleteByFormatIds(array_map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $formats_to_delete));
+                $this->imageFormatRepository->deleteByFormatIds(array_map(fn (mixed $v): int => (int) $v, $formats_to_delete));
             }
         }
         $ctx->counts['new_elements'] = count($inserts);
@@ -1524,6 +1524,10 @@ final class MaintenanceController implements AdminSubControllerInterface
      * @param list<int>                                   $category_ids
      * @param array<int, array<string, mixed>>            $db_categories
      */
+    /**
+     * @param list<int>                          $category_ids
+     * @param array<int, PhysicalCategoryRow>    $db_categories
+     */
     private function inheritCategoryPermissionsForBatch(string $category_up_str, array $category_ids, array $db_categories): void
     {
         if (!Config::inheritanceByDefault() || $category_up_str === '') {
@@ -1555,11 +1559,11 @@ final class MaintenanceController implements AdminSubControllerInterface
         foreach ($category_ids as $ids) {
             $idsRow    = $db_categories[$ids] ?? null;
             $parent_id = $idsRow?->idUppercat;
-            while ($parent_id !== null && is_scalar($parent_id) && in_array($parent_id, $category_ids)) {
-                $pidRow    = $db_categories[(int) $parent_id] ?? null;
+            while ($parent_id !== null && in_array($parent_id, $category_ids)) {
+                $pidRow    = $db_categories[$parent_id] ?? null;
                 $parent_id = $pidRow?->idUppercat;
             }
-            if ($idsRow === null || $idsRow->status !== 'private' || !is_scalar($parent_id)) {
+            if ($idsRow === null || $idsRow->status !== 'private' || $parent_id === null) {
                 continue;
             }
             $parentKey = (string) $parent_id;

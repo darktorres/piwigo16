@@ -28,7 +28,7 @@ final readonly class UserCredentialRow
         );
     }
 
-    /** Convert to legacy array format for callers that need array access. */
+    /** @return array<string, mixed> */
     public function toArray(): array
     {
         return [

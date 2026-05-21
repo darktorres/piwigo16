@@ -214,7 +214,7 @@ final readonly class NotificationAdminService
         }
 
         if (Config::nbmSendHtmlMail() && Config::nbmSendRecentPostDates()) {
-            $recentPostDates = $this->notificationService->getRecentPostDatesArray(Config::recentPostDates()['NBM']);
+            $recentPostDates = $this->notificationService->getRecentPostDatesArray(Config::recentPostDates()->nbm);
             foreach ($recentPostDates as $dateDetail) {
                 $dateDetailArr = is_array($dateDetail) ? $dateDetail : [];
                 $nbmTpl->append('recent_posts', [

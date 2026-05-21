@@ -267,14 +267,14 @@ final readonly class UploadService
         $fileInfos     = $this->pwgImageInfos($filePath);
 
         if (isset($imageId)) {
-            $update = ['file' => $originalFilename ?? basename($filePath), 'filesize' => $fileInfos['filesize'], 'width' => $fileInfos['width'], 'height' => $fileInfos['height'], 'md5sum' => $md5sum, 'added_by' => $userId, 'rotation' => $rotation];
+            $update = ['file' => $originalFilename ?? basename($filePath), 'filesize' => $fileInfos->filesize, 'width' => $fileInfos->width, 'height' => $fileInfos->height, 'md5sum' => $md5sum, 'added_by' => $userId, 'rotation' => $rotation];
             if (isset($level)) {
                 $update['level'] = $level;
             }
             $this->imageRepository->updateById($imageId, $update);
         } else {
             $file   = $originalFilename ?? basename($filePath);
-            $insert = ['file' => $file, 'name' => StringUtil::getNameFromFile($file), 'date_available' => $dbnow, 'path' => preg_replace('#^' . preg_quote($this->paths->root) . '#', '', $filePath), 'filesize' => $fileInfos['filesize'], 'width' => $fileInfos['width'], 'height' => $fileInfos['height'], 'md5sum' => $md5sum, 'added_by' => $userId, 'rotation' => $rotation];
+            $insert = ['file' => $file, 'name' => StringUtil::getNameFromFile($file), 'date_available' => $dbnow, 'path' => preg_replace('#^' . preg_quote($this->paths->root) . '#', '', $filePath), 'filesize' => $fileInfos->filesize, 'width' => $fileInfos->width, 'height' => $fileInfos->height, 'md5sum' => $md5sum, 'added_by' => $userId, 'rotation' => $rotation];
             if (isset($level)) {
                 $insert['level'] = $level;
             }
@@ -360,11 +360,11 @@ final readonly class UploadService
         }
         Filesystem::tryChmod($formatPath, Config::chmodValue() & 0o666);
         $fileInfos      = $this->pwgImageInfos($formatPath);
-        $insert         = ['image_id' => $formatOf, 'ext' => $formatExt, 'filesize' => $fileInfos['filesize']];
+        $insert         = ['image_id' => $formatOf, 'ext' => $formatExt, 'filesize' => $fileInfos->filesize];
         $existingFormat = $this->imageFormatRepository->findByImageAndExt((int) $formatOf, $formatExt);
         if ($existingFormat !== null) {
             $existingFormatId = is_numeric($existingFormat['format_id'] ?? null) ? (int) $existingFormat['format_id'] : 0;
-            $this->imageFormatRepository->update($existingFormatId, (int) $formatOf, $formatExt, ['filesize' => $fileInfos['filesize']]);
+            $this->imageFormatRepository->update($existingFormatId, (int) $formatOf, $formatExt, ['filesize' => $fileInfos->filesize]);
             $formatId  = $existingFormatId;
             $addStatus = UploadAddStatus::Update;
         } else {
@@ -573,12 +573,15 @@ final readonly class UploadService
         return false;
     }
 
-    /** @return array<string,mixed> */
-    public function pwgImageInfos(string $path): array
+    public function pwgImageInfos(string $path): ImageFileInfo
     {
         [$width, $height] = getimagesize($path) ?: [0, 0];
         $fsize = filesize($path);
-        return ['width' => $width, 'height' => $height, 'filesize' => floor(($fsize !== false ? $fsize : 0) / 1024)];
+        return new ImageFileInfo(
+            width:    (int) $width,
+            height:   (int) $height,
+            filesize: floor(($fsize !== false ? $fsize : 0) / 1024),
+        );
     }
 
     /** @return string[] */

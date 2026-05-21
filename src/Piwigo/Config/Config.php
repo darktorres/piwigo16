@@ -1261,25 +1261,22 @@ final class Config
         }
         return array_values(array_map(static fn (mixed $x): string => is_scalar($x) || $x === null ? (string) $x : '', $v));
     }
-    /**
-     * @return array{RSS: array{max_dates: int, max_elements: int, max_cats: int}, NBM: array{max_dates: int, max_elements: int, max_cats: int}}
-     */
-    public static function recentPostDates(): array
+    public static function recentPostDates(): NotificationConfig
     {
         $default = ['RSS' => ['max_dates' => 5, 'max_elements' => 6, 'max_cats' => 6], 'NBM' => ['max_dates' => 7, 'max_elements' => 3, 'max_cats' => 9]];
         $v = self::src()['recent_post_dates'] ?? $default;
         if (!is_array($v)) {
-            return $default;
+            $v = $default;
         }
-        foreach (['RSS', 'NBM'] as $key) {
-            if (!isset($v[$key]) || !is_array($v[$key])) {
-                $v[$key] = $default[$key];
-            } else {
-                $v[$key] = ['max_dates' => isset($v[$key]['max_dates']) && is_int($v[$key]['max_dates']) ? $v[$key]['max_dates'] : $default[$key]['max_dates'], 'max_elements' => isset($v[$key]['max_elements']) && is_int($v[$key]['max_elements']) ? $v[$key]['max_elements'] : $default[$key]['max_elements'], 'max_cats' => isset($v[$key]['max_cats']) && is_int($v[$key]['max_cats']) ? $v[$key]['max_cats'] : $default[$key]['max_cats']];
-            }
-        }
-        /** @var array{RSS: array{max_dates: int, max_elements: int, max_cats: int}, NBM: array{max_dates: int, max_elements: int, max_cats: int}} $v */
-        return $v;
+        $build = static function (string $key) use ($v, $default): NotificationChannelConfig {
+            $src = (isset($v[$key]) && is_array($v[$key])) ? $v[$key] : $default[$key];
+            return new NotificationChannelConfig(
+                maxDates:    isset($src['max_dates']) && is_int($src['max_dates']) ? $src['max_dates'] : $default[$key]['max_dates'],
+                maxElements: isset($src['max_elements']) && is_int($src['max_elements']) ? $src['max_elements'] : $default[$key]['max_elements'],
+                maxCats:     isset($src['max_cats']) && is_int($src['max_cats']) ? $src['max_cats'] : $default[$key]['max_cats'],
+            );
+        };
+        return new NotificationConfig(rss: $build('RSS'), nbm: $build('NBM'));
     }
     public static function nbmMaxTreatmentTimeoutPercent(): float
     {

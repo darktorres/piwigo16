@@ -115,7 +115,7 @@ final readonly class FeedController implements ControllerInterface
             }
         }
 
-        $dates = $this->notificationService->getRecentPostDatesArray(Config::recentPostDates()['RSS']);
+        $dates = $this->notificationService->getRecentPostDatesArray(Config::recentPostDates()->rss);
         foreach ($dates as $date_detail) {
             if (!is_array($date_detail)) {
                 continue;

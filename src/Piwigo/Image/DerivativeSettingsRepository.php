@@ -27,10 +27,7 @@ final readonly class DerivativeSettingsRepository
     {
     }
 
-    /**
-     * @return array{quality: int, watermark: WatermarkParams, custom: array<string, int>}
-     */
-    public function load(): array
+    public function load(): DerivativeSettings
     {
         $row = $this->conn->executeQuery(
             'SELECT default_quality, watermark_json, custom_json FROM ' . Tables::derivativeSettings()
@@ -61,7 +58,7 @@ final readonly class DerivativeSettingsRepository
             }
         }
 
-        return ['quality' => $quality, 'watermark' => $watermark, 'custom' => $custom];
+        return new DerivativeSettings($quality, $watermark, $custom);
     }
 
     /**

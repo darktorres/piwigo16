@@ -194,12 +194,10 @@ final class RateRepository extends AbstractRepository
     }
 
     /**
-     * Return (count, average) for a given element's rates.
+     * Return count and average rating for a given element.
      * Used by picture_rate.inc.php to display rating summary.
-     *
-     * @return array{count: int, average: float|null}
      */
-    public function findCountAndAvgByElementId(int $elementId): array
+    public function findCountAndAvgByElementId(int $elementId): RateStats
     {
         $row = $this->conn->executeQuery(
             'SELECT COUNT(rate), ROUND(AVG(rate),2) FROM ' . $this->table('rate') . ' WHERE element_id = ?',
@@ -207,10 +205,10 @@ final class RateRepository extends AbstractRepository
         )->fetchNumeric();
         $row0 = ($row !== false) ? ($row[0] ?? null) : null;
         $row1 = ($row !== false) ? ($row[1] ?? null) : null;
-        return [
-            'count'   => is_numeric($row0) ? (int) $row0 : 0,
-            'average' => is_numeric($row1) ? (float) $row1 : null,
-        ];
+        return new RateStats(
+            count:   is_numeric($row0) ? (int) $row0 : 0,
+            average: is_numeric($row1) ? (float) $row1 : null,
+        );
     }
 
     /**

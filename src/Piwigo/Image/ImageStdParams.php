@@ -121,14 +121,14 @@ final class ImageStdParams
         $settingsRepo = Kernel::service(DerivativeSettingsRepository::class);
 
         $settings        = $settingsRepo->load();
-        self::$watermark = $settings['watermark'];
-        self::$custom    = $settings['custom'];
-        self::$quality   = $settings['quality'];
+        self::$watermark = $settings->watermark;
+        self::$custom    = $settings->custom;
+        self::$quality   = $settings->quality;
 
         if ($sizeRepo->hasAny()) {
             $rows = $sizeRepo->loadAll();
-            self::$type_map          = $rows['enabled'];
-            self::$disabled_type_map = $rows['disabled'];
+            self::$type_map          = $rows->enabled;
+            self::$disabled_type_map = $rows->disabled;
         } else {
             self::$type_map          = self::getEnabledDefaultSizes();
             self::$disabled_type_map = self::getDisabledDefaultSizes();

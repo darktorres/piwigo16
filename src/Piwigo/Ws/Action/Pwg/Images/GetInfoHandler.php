@@ -105,8 +105,8 @@ final readonly class GetInfoHandler implements WsAction
             $rateData = $this->rateRepository->findCountAndAvgByElementId($imageRowId);
             $rating   = new RatingScore(
                 is_numeric($imageRatingScore) ? (float) $imageRatingScore : 0.0,
-                $rateData['count'],
-                $rateData['average'],
+                $rateData->count,
+                $rateData->average,
             );
         } else {
             $rating = new RatingScore(0.0, 0, null);

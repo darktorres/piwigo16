@@ -36,7 +36,7 @@ final readonly class PictureRateRenderer
 
         if ($picCtx->ratingScore !== null) {
             $rateData    = $this->rateRepository->findCountAndAvgByElementId($picCtx->currentItem);
-            $rate_summary = new RatingScore($picCtx->ratingScore, $rateData['count'], $rateData['average']);
+            $rate_summary = new RatingScore($picCtx->ratingScore, $rateData->count, $rateData->average);
         } else {
             $rate_summary = new RatingScore(0.0, 0, null);
         }

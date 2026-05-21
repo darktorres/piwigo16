@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Notification;
 
+use Piwigo\Config\NotificationChannelConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Db\SqlFragment;
@@ -179,17 +180,10 @@ final readonly class NotificationService
         return $dates;
     }
 
-    /**
-     * @param array<mixed> $args
-     * @return array<mixed>
-     */
-    public function getRecentPostDatesArray(array $args): array
+    /** @return array<mixed> */
+    public function getRecentPostDatesArray(NotificationChannelConfig $config): array
     {
-        return $this->getRecentPostDates(
-            empty($args['max_dates']) ? 3 : (is_numeric($args['max_dates']) ? (int) $args['max_dates'] : 3),
-            empty($args['max_elements']) ? 3 : (is_numeric($args['max_elements']) ? (int) $args['max_elements'] : 3),
-            empty($args['max_cats']) ? 3 : (is_numeric($args['max_cats']) ? (int) $args['max_cats'] : 3)
-        ) ?? [];
+        return $this->getRecentPostDates($config->maxDates, $config->maxElements, $config->maxCats) ?? [];
     }
 
     /** @param array<mixed> $dateDetail */

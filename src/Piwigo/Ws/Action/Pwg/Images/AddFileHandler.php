@@ -41,9 +41,9 @@ final readonly class AddFileHandler implements WsAction
         }
         chmod($filePath, Config::chmodValue() & 0o666);
         $infos    = $this->uploadService->pwgImageInfos($filePath);
-        $doUpdate = ($infos['width'] > ($image->width ?? 0))
-                 || ($infos['height'] > ($image->height ?? 0))
-                 || ($infos['filesize'] > ($image->filesize ?? 0));
+        $doUpdate = ($infos->width > ($image->width ?? 0))
+                 || ($infos->height > ($image->height ?? 0))
+                 || ($infos->filesize > ($image->filesize ?? 0));
         if (!$doUpdate) {
             unlink($filePath);
             return true;

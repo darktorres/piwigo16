@@ -24,12 +24,8 @@ final readonly class DerivativeSizeRepository
     {
     }
 
-    /**
-     * Load all sizes in a single query, partitioned by enabled status.
-     *
-     * @return array{enabled: array<string, DerivativeParams>, disabled: array<string, DerivativeParams>}
-     */
-    public function loadAll(): array
+    /** Load all sizes in a single query, partitioned by enabled status. */
+    public function loadAll(): PartitionedDerivativeSizes
     {
         $rows = $this->conn->executeQuery(
             'SELECT name, enabled, max_width, max_height, max_crop, '
@@ -51,7 +47,7 @@ final readonly class DerivativeSizeRepository
                 $disabled[$name] = $params;
             }
         }
-        return ['enabled' => $enabled, 'disabled' => $disabled];
+        return new PartitionedDerivativeSizes($enabled, $disabled);
     }
 
     public function hasAny(): bool

@@ -36,14 +36,13 @@ final readonly class IgnoredUpdatesRepository
         return $rows;
     }
 
-    /** @return array{plugins: list<string>, themes: list<string>, languages: list<string>} */
-    public function listAll(): array
+    public function listAll(): IgnoredExtensionLists
     {
-        return [
-            'plugins'   => $this->listForType(ExtensionType::Plugin),
-            'themes'    => $this->listForType(ExtensionType::Theme),
-            'languages' => $this->listForType(ExtensionType::Language),
-        ];
+        return new IgnoredExtensionLists(
+            plugins:   $this->listForType(ExtensionType::Plugin),
+            themes:    $this->listForType(ExtensionType::Theme),
+            languages: $this->listForType(ExtensionType::Language),
+        );
     }
 
     public function isIgnored(ExtensionType $type, string $extensionId): bool

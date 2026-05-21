@@ -544,7 +544,7 @@ final class UserService
 
             if (!empty($params['email'])) {
                 if (($error = $this->authService->validateMailAddress(is_numeric($paramUserId[0]) ? (int) $paramUserId[0] : null, is_scalar($params['email']) ? (string) $params['email'] : null)) != '') {
-                    return UpdateUserResult::error(WsError::InvalidParam->value, $error);
+                    return UpdateUserResult::error(WsError::InvalidParam->value, (string) $error);
                 }
                 $updates[Config::userFields()->email] = $params['email'];
             }

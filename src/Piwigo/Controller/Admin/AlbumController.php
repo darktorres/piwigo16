@@ -538,7 +538,7 @@ final class AlbumController implements AdminSubControllerInterface
             if ($output_create->isError) {
                 PageState::current()->addError($output_create->error ?? '');
             } else {
-                $edit_url = $this->urlGenerator->admin('album-' . $output_create->id);
+                $edit_url = $this->urlGenerator->admin('album-' . ($output_create->id ?? 0));
                 PageState::current()->addInfo(new Html(($output_create->info ?? '') . ' <a class="icon-pencil" href="' . $edit_url . '">' . Lang::t('Edit album') . '</a>'));
             }
         }

@@ -77,7 +77,7 @@ final readonly class PictureService
         $result  = '';
 
         if ($params->period !== $default->period) {
-            $result .= '+period-' . $params->period;
+            $result .= '+period-' . (string) $params->period;
         }
         if ($params->repeat !== $default->repeat) {
             $result .= '+repeat-' . ($params->repeat ? 'true' : 'false');

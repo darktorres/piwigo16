@@ -1283,7 +1283,7 @@ final class MaintenanceController implements AdminSubControllerInterface
                 $this->imageFormatRepository->insertRowsBatch($insert_formats);
             }
             if (count($formats_to_delete) > 0) {
-                $this->imageFormatRepository->deleteByFormatIds(array_map(fn (mixed $v): int => (int) $v, $formats_to_delete));
+                $this->imageFormatRepository->deleteByFormatIds($formats_to_delete);
             }
         }
         $ctx->counts['new_elements'] = count($inserts);

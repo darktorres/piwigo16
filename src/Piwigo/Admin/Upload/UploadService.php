@@ -578,8 +578,8 @@ final readonly class UploadService
         [$width, $height] = getimagesize($path) ?: [0, 0];
         $fsize = filesize($path);
         return new ImageFileInfo(
-            width:    (int) $width,
-            height:   (int) $height,
+            width:    $width,
+            height:   $height,
             filesize: floor(($fsize !== false ? $fsize : 0) / 1024),
         );
     }

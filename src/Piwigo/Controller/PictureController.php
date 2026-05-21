@@ -360,7 +360,7 @@ final readonly class PictureController implements ControllerInterface
                         'download_url' => $this->urlGenerator->actionFormat($fmt->formatId),
                         'ext'          => $fmt->ext,
                         'label'        => Lang::has($langKey) ? Lang::t($langKey) : $label,
-                        'filesize'     => sprintf('%.1fMB', ($fmt->filesize ?? 0) / 1024.0),
+                        'filesize'     => sprintf('%.1fMB', (float) ($fmt->filesize ?? 0) / 1024.0),
                     ];
                 }
                 $tpl->append('current', ['formats' => $formats], true);
@@ -383,7 +383,7 @@ final readonly class PictureController implements ControllerInterface
         ));
 
         // Slideshow controls
-        if ($slideshowActive) {
+        if ($slideshowActive && $slideshow_params !== null) {
             $tpl_slideshow = [];
             $currentUrl    = $currentVm->url;
             $tpl->assign(['U_SLIDESHOW_STOP' => $currentUrl]);

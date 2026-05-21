@@ -558,7 +558,7 @@ final class PhotoController implements AdminSubControllerInterface
                 'ext'          => $fmt->ext,
                 'download_url' => $this->urlGenerator->actionFormat($fmt->formatId),
                 'label'        => Lang::has($lang_key) ? Lang::t($lang_key) : $label,
-                'filesize'     => round(($fmt->filesize ?? 0) / 1024.0, 2),
+                'filesize'     => round((float) ($fmt->filesize ?? 0) / 1024.0, 2),
             ];
         }, $this->imageFormatRepository->findByImageIds([$picFmtIdInt]));
 

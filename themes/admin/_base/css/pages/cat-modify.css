@@ -476,7 +476,7 @@
   background: var(--admin-bg-page);
   display: flex;
   justify-content: space-between;
-  border-top: 1px solid;
+  border-top: 1px solid var(--admin-border);
   padding: 12px;
   position: fixed;
   bottom: 0;

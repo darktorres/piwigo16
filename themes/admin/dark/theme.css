@@ -95,9 +95,6 @@ h3,
   margin: 2px;
 }
 
-ul.thumbnails span.wrap2 {
-  background-color: #333;
-}
 
 /* .throw, */
 td h3 {
@@ -353,10 +350,6 @@ a.Piwigo:hover span.Piwigo {
   box-shadow: -1px 1px 2px #1a1a1a;
 }
 
-.groups .group_number_users {
-  color: #777;
-}
-
 #addGroupNameInput {
   color: #999;
   background-color: #252525 ;
@@ -595,11 +588,6 @@ a#showPermissions {
 .selectAlbumFirst {
   background: #343434 ;
 }
-.categoryBox,
-.addAlbum {
-  background-color: #333 ;
-  box-shadow: -1px 1px 2px #1a1a1a;
-}
 .categoryBox.line_cat:hover {
   background: #f9852c ;
   color: #333 ;
@@ -617,12 +605,6 @@ a#showPermissions {
 .cat-modify-info-card {
   background: #333;
   color: #c1c1c1;
-}
-
-
-.cat-modify-footer,
-.savebar-footer {
-  border-color: rgb(0, 0, 0, 0.2);
 }
 
 .cat-modify-actions a:hover .cat-modify-actions .toggle-comment-option:hover {

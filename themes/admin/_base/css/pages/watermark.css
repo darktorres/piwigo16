@@ -179,6 +179,7 @@ input[type="text"].dError {
   font-weight: 700;
   font-size: 1em;
   margin: 12px;
+  color: var(--admin-border);
 }
 
 .groups input[type="text"] {

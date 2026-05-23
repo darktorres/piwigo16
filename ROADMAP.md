@@ -2389,27 +2389,28 @@ rm themes/_base/template/_probe.latte
 
 ### 1.6 Type correctness — three tactical streams
 
-**Status:** 🟢 Active ▸ 11 of 13 sub-tasks done · **Effort:** M
+**Status:** ✅ Closed 2026-05-23 ▸ 13 of 13 sub-tasks done · **Effort:** M
 
-> **Audit refresh (2026-05-23).** Streams 1.6a and 1.6b are fully closed.
+> **Audit refresh (2026-05-23).** All three streams closed today.
 > Stream **1.6a** closed 2026-05-23: `@template T` on `RequestCache::remember()`,
-> widened `set()` to `mixed`, and refactored all three imperative
+> widened `set()` to `mixed`, refactored all three imperative
 > `has()+set()+get()` sites (HtmlService, MailService) to use `remember()`.
 > Stream **1.6b** closed 2026-05-16.
-> Stream **1.6c** has 3 of 5 items shipped (sensitive, required, plugin template)
-> and 1 moot (accessor generator deleted 2026-05-13). Only the `description`
-> field (~280 SCHEMA entries) remains open.
+> Stream **1.6c** closed 2026-05-23: `sensitive`+`dumpForLog`,
+> `required`+`MissingRequiredConfigException`, plugin-Config reference template,
+> and the `'description'` field on all 277 SCHEMA entries. The accessor-generator
+> sub-item was moot (the generator was deleted 2026-05-13).
 
-After PHPStan level 10 landed, three threads tighten the remaining
-mixed-type surface that doesn't require new architectural patterns:
+After PHPStan level 10 landed, three threads tightened the remaining
+mixed-type surface that didn't require new architectural patterns:
 
 - **1.6a** — six high-ROI mixed-type fixes from the codebase audit.
-  **1 still open** (5 done/moot).
+  **Closed** (all 6 done/moot).
 - **1.6b** — `$GLOBALS` cleanup that was deferred since the
   modernization phases that retired the procedural layer.
   **Closed** — only the intentional `Lang::attachGlobals` read remains.
 - **1.6c** — five `Config::SCHEMA` enhancements left as deferred design
-  surface from the schema work. **4 still open** (1 moot).
+  surface from the schema work. **Closed** (4 shipped, 1 moot).
 
 Architectural boundary work — typed entities for DB rows and typed DTOs
 for HTTP input — was originally drafted under 1.6a (items 8–9) but lives
@@ -2474,11 +2475,14 @@ written against the old `Piwigo\Image\` namespace). No work left.
   (PSR-14 contract), so the `@template T` win the original item
   promised is now structural — no annotation needed.
 
-##### Sequencing (remaining 1)
+##### Sequencing
 
-Only `RequestCache::remember` / `::get` templates is still open
-(1 file + 9 callers in `src/Piwigo/`). `PersistentCache` doesn't
-exist anymore — `RequestCache` is the only request-scoped cache
+Closed 2026-05-23. `RequestCache::remember` got `@template T`, `set()` was
+widened to `mixed`, and the three imperative `has()+set()+get()` sites
+(HtmlService×2, MailService) were refactored to use `remember()`. The five
+follow-on defensive guards (`is_array`/`is_int` narrowings on cached values)
+were dropped in the same commit since T is now inferred. `PersistentCache`
+doesn't exist anymore — `RequestCache` is the only request-scoped cache
 shipping today.
 
 #### 1.6b Globals cleanup
@@ -2518,9 +2522,9 @@ which is now complete on its own.
 
 #### 1.6c Config schema metadata
 
-**Status:** 🟢 Active ▸ 3 of 5 done · 1 moot · 1 item left
+**Status:** ✅ Closed 2026-05-23 ▸ 4 of 5 shipped · 1 moot
 
-Four `Config::SCHEMA` enhancements still deferred design surface. The
+Four `Config::SCHEMA` enhancements were deferred design surface. The
 fifth has been overtaken by events (see below). They're independent of
 each other; pick whichever delivers value first.
 

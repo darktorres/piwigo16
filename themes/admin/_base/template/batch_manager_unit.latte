@@ -140,7 +140,7 @@
 				</div>
 				<div class="full-line-tag-box" id="action_add_tags">
 					<strong>{='Tags'|translate}</strong>
-					<select id="tags" data-selectize="tags" data-value="{$element['TAGS']|json_encode}"placeholder="{='Type in a search term'|translate}"data-create="true" name="tags" id="tags-{$element['id']}[]" multiple></select>
+					<select id="tags" data-ts="tags" data-value="{$element['TAGS']|json_encode}"placeholder="{='Type in a search term'|translate}"data-create="true" name="tags" id="tags-{$element['id']}[]" multiple></select>
 				</div>
 				<div class="full-line-box" id="{$element['ID']}">
 					<strong>{='Linked albums'|translate} <span class="linked-albums-badge {if count($element['related_categories']) < 1 } badge-red {/if}"> {$element['related_categories']|count} </span></strong>

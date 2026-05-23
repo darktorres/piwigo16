@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document
-        .querySelectorAll<HTMLSelectElement>('.filterBlock select[data-selectize="tags"]')
+        .querySelectorAll<HTMLSelectElement>('.filterBlock select[data-ts="tags"]')
         .forEach((sel) => {
             // Hide the original select element - Tom Select creates a styled replacement
             sel.style.display = 'none';
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filterTags = document.getElementById('filter_tags');
         if (filterTags && getComputedStyle(filterTags).display !== 'none') {
             const tags = document.querySelector<HTMLSelectElement>(
-                '.filterBlock select[data-selectize="tags"]'
+                '.filterBlock select[data-ts="tags"]'
             );
             if (tags === null || tags.value === '') {
                 e.preventDefault();

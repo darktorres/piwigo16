@@ -75,13 +75,13 @@ const categoriesCache = new CategoriesCache({
     rootUrl: pageData.ROOT_URL,
 });
 
-tagsCache.attach(document.querySelector('[data-selectize=tags]'), {
+tagsCache.attach(document.querySelector('[data-ts=tags]'), {
     lang: {
         Add: pageData.str_create,
     },
 });
 
-categoriesCache.attach(document.querySelector('[data-selectize=categories]'), {
+categoriesCache.attach(document.querySelector('[data-ts=categories]'), {
     filter: function (categories: CacheItem[], options: TomSelectAttachOptions) {
         if (this.name === 'dissociate') {
             const filtered = categories.filter(

@@ -22,8 +22,8 @@ const usersCache = new UsersCache({
     rootUrl: pageData.ROOT_URL,
 });
 
-groupsCache.attach(document.querySelector('[data-selectize=groups]'));
-usersCache.attach(document.querySelector('[data-selectize=users]'));
+groupsCache.attach(document.querySelector('[data-ts=groups]'));
+usersCache.attach(document.querySelector('[data-ts=users]'));
 
 /*---- Status / private-options + indirect-perm details (from {footer_script}) ----*/
 

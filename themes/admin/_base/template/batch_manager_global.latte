@@ -147,27 +147,27 @@
 
       <!-- move -->
       <div id="action_move" class="bulkAction">
-        <select data-selectize="categories" data-default="" name="move" class="u-w-600" placeholder="{='Select an album... or type it!'|translate}"></select>
+        <select data-ts="categories" data-default="" name="move" class="u-w-600" placeholder="{='Select an album... or type it!'|translate}"></select>
         <a href="#" data-add-album="move" title="{='create a new album'|translate}" class="icon-plus"></a>
       </div>
 
       <!-- dissociate -->
       <div id="action_dissociate" class="bulkAction">
-        <select data-selectize="categories" placeholder="{='Type in a search term'|translate}"
+        <select data-ts="categories" placeholder="{='Type in a search term'|translate}"
           name="dissociate" class="u-w-600"></select>
       </div>
 
 
       <!-- add_tags -->
       <div id="action_add_tags" class="bulkAction">
-        <select data-selectize="tags" data-create="true" placeholder="{='Type in a search term'|translate}"
+        <select data-ts="tags" data-create="true" placeholder="{='Type in a search term'|translate}"
           name="add_tags[]" multiple class="u-w-400"></select>
       </div>
 
       <!-- del_tags -->
       <div id="action_del_tags" class="bulkAction">
   {if !empty($associated_tags)}
-        <select data-selectize="tags" name="del_tags[]" multiple class="u-w-400"
+        <select data-ts="tags" name="del_tags[]" multiple class="u-w-400"
           placeholder="{='Type in a search term'|translate}">
         {foreach $associated_tags as $tag}
           <option value="{$tag['id']}">{$tag['name']}</option>

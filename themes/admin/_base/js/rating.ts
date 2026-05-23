@@ -29,7 +29,7 @@ const categoriesCache = new CategoriesCache({
     rootUrl: pageData.ROOT_URL,
 });
 
-categoriesCache.attach(document.querySelector('[data-selectize=categories]'));
+categoriesCache.attach(document.querySelector('[data-ts=categories]'));
 
 /*---- Filter UI (migrated from {footer_script}) ----*/
 

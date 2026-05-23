@@ -87,13 +87,13 @@ const categoriesCache = new CategoriesCache({
     rootUrl: cacheData.ROOT_URL,
 });
 
-tagsCache.attach(document.querySelector('[data-selectize=tags]'), {
+tagsCache.attach(document.querySelector('[data-ts=tags]'), {
     lang: {
         Add: cacheData.str_create,
     },
 });
 
-categoriesCache.attach(document.querySelector('[data-selectize=categories]'), {
+categoriesCache.attach(document.querySelector('[data-ts=categories]'), {
     filter: function (categories, options) {
         if (this.name === 'dissociate') {
             const filtered = categories.filter((cat) =>

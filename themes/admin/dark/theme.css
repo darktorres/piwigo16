@@ -193,10 +193,10 @@ label {
   background: #333;
 }
 .menuLi_hidden {
-  background: #333 !important;
+  background: #333 ;
 }
 a.Piwigo {
-  font-family: verdana, arial, helvetica, sans-serif !important;
+  font-family: verdana, arial, helvetica, sans-serif ;
   font-size: 11px;
   font-weight: normal;
   letter-spacing: 0;
@@ -239,11 +239,11 @@ ul.actions,
 /* Filter */
 
 .search-input {
-  background-color: #333 !important;
+  background-color: #333 ;
 }
 
 .search-input:hover {
-  background-color: #222 !important;
+  background-color: #222 ;
 }
 
 /* Pagination */
@@ -266,8 +266,8 @@ ul.actions,
 }
 
 .selected-pagination {
-  background: #ffa646 !important;
-  color: #444 !important;
+  background: #ffa646 ;
+  color: #444 ;
 }
 
 input[type="text"].large {
@@ -386,8 +386,8 @@ a.stat-box:hover {
 
 .intro-charts .tooltip .tooltip-details-title,
 .intro-charts .tooltip-title {
-  color: #aeaeae !important;
-  border: none !important;
+  color: #aeaeae ;
+  border: none ;
 }
 
 .activity-chart span div,
@@ -496,7 +496,7 @@ a.stat-box:hover {
   color: #aaa;
 }
 .pluginBox.incompatible {
-  border-color: #800 !important;
+  border-color: #800 ;
 }
 /* .pluginActionLevel1 {color: #333;} */
 .pluginActionLevel2 {
@@ -526,11 +526,11 @@ a.stat-box:hover {
   color: #999;
 }
 .GroupBackgroudSelected .Group-name {
-  color: #333 !important;
+  color: #333 ;
 }
 .GroupContainer .group_name-editable {
-  background-color: #323232 !important;
-  border: 1px solid #666 !important;
+  background-color: #323232 ;
+  border: 1px solid #666 ;
 }
 .GroupContainer .group-rename .icon-ok {
   color: #222;
@@ -555,11 +555,11 @@ a.stat-box:hover {
 }
 
 #batchManagerGlobal .thumbSelected {
-  background-color: transparent !important;
+  background-color: transparent ;
 }
 
 #batchManagerGlobal .thumbSelected .wrap2 {
-  background-color: #555 !important;
+  background-color: #555 ;
 }
 
 #batchManagerGlobal #selectedMessage {
@@ -574,7 +574,7 @@ a.stat-box:hover {
 
 #batchManagerGlobal #applyFilter:hover {
   background-color: #1b1b1b;
-  cursor: pointer !important;
+  cursor: pointer ;
 }
 
 #batchManagerGlobal #filterList li {
@@ -587,24 +587,24 @@ a.stat-box:hover {
 
 /* TokenInput (with Facebook style for ROMA) */
 ul.token-input-list {
-  border-color: #666 !important;
-  background-color: #444 !important;
+  border-color: #666 ;
+  background-color: #444 ;
 }
 ul.token-input-list li input {
-  background-color: #444 !important;
+  background-color: #444 ;
 }
 li.token-input-token span {
-  color: #878787 !important;
+  color: #878787 ;
 }
 div.token-input-dropdown {
-  background-color: #eee !important;
-  border-color: #666 !important;
+  background-color: #eee ;
+  border-color: #666 ;
 }
 div.token-input-dropdown ul li {
-  background-color: #eee !important;
+  background-color: #eee ;
 }
 div.token-input-dropdown ul li.token-input-selected-dropdown-item {
-  background-color: #ff7800 !important;
+  background-color: #ff7800 ;
 }
 
 .big-progressbar {
@@ -635,11 +635,11 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
 
 .info-framed-title,
 .info-framed-icon {
-  color: #c1c1c1 !important;
+  color: #c1c1c1 ;
 }
 
 .info-framed {
-  border-color: #333 !important;
+  border-color: #333 ;
 }
 
 /* Album edit */
@@ -661,7 +661,7 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
 }
 
 .disabledToggle .move-cat-toogler {
-  color: #808080 !important;
+  color: #808080 ;
   opacity: 0.5;
   pointer-events: none;
 }
@@ -780,8 +780,8 @@ label > p.group_select {
 
 #addGroupNameInput {
   color: #999;
-  background-color: #252525 !important;
-  border: none !important;
+  background-color: #252525 ;
+  border: none ;
   outline: none;
 }
 
@@ -805,7 +805,7 @@ label > p.group_select {
 }
 
 .groups .Group-name .Group-name-container p:focus {
-  border: 1px solid #303030 !important;
+  border: 1px solid #303030 ;
   background-color: #1a1a1a;
 }
 
@@ -896,7 +896,7 @@ input:checked + .slider::after {
 }
 
 input:checked + .slider {
-  background-color: #ffa646 !important;
+  background-color: #ffa646 ;
 }
 
 input:focus + .slider {
@@ -910,22 +910,22 @@ input:focus + .slider {
 }
 
 .GroupBackgroudSelected {
-  background-color: #f9852c !important;
-  box-shadow: none !important;
+  background-color: #f9852c ;
+  box-shadow: none ;
 }
 
 .OrangeIcon {
-  background-color: #ae5d1e !important;
-  color: #faa96b !important;
-  border-color: #ae5d1e !important;
+  background-color: #ae5d1e ;
+  color: #faa96b ;
+  border-color: #ae5d1e ;
 }
 
 .OrangeFont {
-  color: #fddaba !important;
+  color: #fddaba ;
 }
 
 .BlackFont {
-  color: #000 !important;
+  color: #000 ;
 }
 
 #checkActions a:hover {
@@ -1063,7 +1063,7 @@ input:focus + .slider {
 
 .ValidationUserAssociated p,
 .ValidationUserDissociated p {
-  color: #1b3a33 !important;
+  color: #1b3a33 ;
 }
 
 #UserList .group-name-block .UserNumberBadge {
@@ -1079,8 +1079,8 @@ input:focus + .slider {
 }
 
 .user-property-main-user-content-header .main-user-icon {
-  background-color: #be4949 !important;
-  color: #ffc8c8 !important;
+  background-color: #be4949 ;
+  color: #ffc8c8 ;
 }
 
 .userSeparator {
@@ -1089,13 +1089,13 @@ input:focus + .slider {
 }
 
 .GuestUserListPopInContainer {
-  background-color: #444 !important;
+  background-color: #444 ;
 }
 
 .AddUserSubmit,
 .update-user-button,
 .user-property-main-user-body .main-user-btn-validate {
-  color: #493c21 !important;
+  color: #493c21 ;
   background-color: #ffa646;
 }
 
@@ -1104,24 +1104,24 @@ input:focus + .slider {
 }
 
 table.dataTable tr.even {
-  background-color: #111 !important;
+  background-color: #111 ;
 }
 
 table.dataTable tr.even td.sorting_1 {
-  background-color: #181818 !important;
+  background-color: #181818 ;
 }
 
 table.dataTable tr.odd {
-  background-color: #222 !important;
+  background-color: #222 ;
 }
 
 table.dataTable tr.odd td.sorting_1 {
-  background-color: #282828 !important;
+  background-color: #282828 ;
 }
 
 table.dataTable thead th,
 table.dataTable.no-footer {
-  border-color: #333 !important;
+  border-color: #333 ;
 }
 
 .userPropertiesContainer {
@@ -1136,7 +1136,7 @@ table.qsearch_help_table td {
 }
 
 #cboxLoadedContent {
-  background-color: #333 !important;
+  background-color: #333 ;
 }
 
 #watermarkPositionBox {
@@ -1209,32 +1209,32 @@ a#showPermissions:hover {
   border: 1px solid #aaa;
 }
 .selectize-control.single .selectize-input {
-  border: 2px solid #ffa646 !important;
+  border: 2px solid #ffa646 ;
   color: #d5d5d5;
 }
 .selectize-control.single .selectize-input:hover {
-  border-color: #f70 !important;
+  border-color: #f70 ;
 }
 .plupload_filelist {
-  background-color: #444 !important;
-  scrollbar-color: #555 #444 !important;
+  background-color: #444 ;
+  scrollbar-color: #555 #444 ;
 }
 .plupload_filelist li {
-  border-bottom: 1px solid #343434 !important;
-  color: #a5a5a5 !important;
+  border-bottom: 1px solid #343434 ;
+  color: #a5a5a5 ;
 }
 .plupload_filelist_footer {
-  background-color: #3c3939 !important;
-  border: 0 !important;
-  color: #a5a5a5 !important;
+  background-color: #3c3939 ;
+  border: 0 ;
+  color: #a5a5a5 ;
 }
 li.plupload_delete a {
-  background: url("images/cancel.svg") !important;
-  background-size: cover !important;
+  background: url("images/cancel.svg") ;
+  background-size: cover ;
 }
 li.plupload_delete a:hover {
-  background: url("images/cancelhover.svg") !important;
-  background-size: cover !important;
+  background: url("images/cancelhover.svg") ;
+  background-size: cover ;
 }
 li.plupload_delete a span {
   background: #444;
@@ -1253,23 +1253,23 @@ li.plupload_delete a.remove-format:hover {
   color: #c1c1c1;
 }
 #cboxTitle {
-  color: #7f7f7f !important;
+  color: #7f7f7f ;
 }
 #addAlbumForm {
   color: #999;
 }
 .addAlbum form input {
-  color: #777 !important;
-  background-color: #252525 !important;
-  border: none !important;
+  color: #777 ;
+  background-color: #252525 ;
+  border: none ;
 }
 .addAlbum form input::placeholder {
-  color: #777 !important;
+  color: #777 ;
 }
 
 #uploadForm li.plupload_droptext {
-  background-color: #343434 !important;
-  color: #777 !important;
+  background-color: #343434 ;
+  color: #777 ;
 }
 .addFilesButtonChanged {
   background-color: #888;
@@ -1278,20 +1278,20 @@ li.plupload_delete a.remove-format:hover {
   background-color: #777;
 }
 .selectAlbumFirst {
-  background: #343434 !important;
+  background: #343434 ;
 }
 .categoryBox,
 .addAlbum {
-  background-color: #333 !important;
+  background-color: #333 ;
   box-shadow: -1px 1px 2px #1a1a1a;
 }
 .categoryBox.line_cat:hover {
-  background: #f9852c !important;
-  color: #333 !important;
+  background: #f9852c ;
+  color: #333 ;
   transition: 0.2s linear;
 }
 .categoryBox.line_cat:hover .albumInfos {
-  color: #333 !important;
+  color: #333 ;
   transition: 0.2s linear;
 }
 .categoryBox.line_cat:hover .albumActions a span {
@@ -1302,8 +1302,8 @@ li.plupload_delete a.remove-format:hover {
 .cat-modify-info-card,
 .cat-modify-input-container input,
 .cat-modify-input-container textarea {
-  background: #333 !important;
-  color: #c1c1c1 !important;
+  background: #333 ;
+  color: #c1c1c1 ;
 }
 
 .cat-modify-representative {
@@ -1311,7 +1311,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .cat-modify-info-content {
-  color: #c1c1c1 !important;
+  color: #c1c1c1 ;
 }
 
 .cat-modify-footer,
@@ -1321,32 +1321,32 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .cat-modify-actions a:hover .cat-modify-actions .toggle-comment-option:hover {
-  color: #fff !important;
+  color: #fff ;
 }
 
 .cat-modify-actions a::after,
 .cat-modify-actions .toggle-comment-option::after,
 .mores-plugins::after {
-  background: #111 !important;
+  background: #111 ;
 }
 
 .cat-modify-input-container #cat-parent {
   background: #333;
-  box-shadow: 0 2px #0000007a !important;
+  box-shadow: 0 2px #0000007a ;
 }
 
 .albumActions a:hover span {
-  color: #fff !important;
+  color: #fff ;
 }
 .albumActions a {
   text-decoration: none;
 }
 
 .albumIconLineHover {
-  background: #ae5d1e !important;
-  color: #ffa96b !important;
+  background: #ae5d1e ;
+  color: #ffa96b ;
   transition: 0.5s ease;
-  border-color: #ae5d1e !important;
+  border-color: #ae5d1e ;
 }
 
 #checkActions a,
@@ -1355,8 +1355,8 @@ li.plupload_delete a.remove-format:hover {
 }
 #checkActions a:hover,
 .deleteDerivButtons a:hover {
-  background-color: #1b1b1b !important;
-  color: #777 !important;
+  background-color: #1b1b1b ;
+  color: #777 ;
 }
 #addFilter,
 #filterList select,
@@ -1405,7 +1405,7 @@ li.plupload_delete a.remove-format:hover {
 #filter_filesize .slider-choice:hover,
 .dimension-cancel:hover {
   text-decoration: none;
-  background-color: #ffa646 !important;
+  background-color: #ffa646 ;
   color: initial;
 }
 #forbidAction,
@@ -1425,17 +1425,17 @@ li.plupload_delete a.remove-format:hover {
   background-color: #555;
 }
 .dimension-cancel {
-  background-color: #555 !important;
+  background-color: #555 ;
 }
 .pageNumberSelected {
   background-color: #b4b4b4;
-  color: #777 !important;
+  color: #777 ;
   font-weight: bold;
 }
 
 .help-popin-search:hover span,
 .help-popin-search:hover .icon-help-circled::before {
-  color: #ededed !important;
+  color: #ededed ;
 }
 
 .selected-associate-item {
@@ -1533,45 +1533,45 @@ li.plupload_delete a.remove-format:hover {
 /* Popin Jconfirm */
 
 .jconfirm .jconfirm-box {
-  background-color: #333 !important;
+  background-color: #333 ;
 }
 
 .jconfirm-title {
-  color: #777 !important;
+  color: #777 ;
 }
 
 .jconfirmAlert .jconfirm-icon-c i {
-  color: #c2f5c2 !important;
-  background-color: #0a0 !important;
+  color: #c2f5c2 ;
+  background-color: #0a0 ;
 }
 
 .jconfirmWarning .jconfirm-icon-c i {
-  color: #ffa744 !important;
-  background-color: #ffe9cf !important;
+  color: #ffa744 ;
+  background-color: #ffe9cf ;
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-default {
-  color: #777 !important;
-  background-color: #222 !important;
+  color: #777 ;
+  background-color: #222 ;
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-default:hover {
-  color: #222 !important;
-  background-color: #777 !important;
+  color: #222 ;
+  background-color: #777 ;
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-red,
 .DeleteAlbumSubmit {
-  background-color: #be4949 !important;
+  background-color: #be4949 ;
 }
 
 .jconfirm .jconfirm-box.jconfirm-type-red,
 .DeleteAlbumPopInContainer {
-  border-top: 7px solid #be4949 !important;
+  border-top: 7px solid #be4949 ;
 }
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-red:hover,
 .DeleteAlbumSubmit:hover {
-  background: #6c2d2d !important;
+  background: #6c2d2d ;
 }
 
 .jconfirm.jconfirm-modern .jconfirm-box .jconfirm-buttons button + button {
@@ -1584,7 +1584,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .jconfirm .jconfirm-box.loading::before {
-  background: #333 !important;
+  background: #333 ;
 }
 
 /* Tag Manager */
@@ -1592,13 +1592,13 @@ li.plupload_delete a.remove-format:hover {
 .tag-box,
 .tag-header .selection-controller a,
 .comments-selection-controller .comments-selection-btn {
-  background-color: #333 !important;
+  background-color: #333 ;
 }
 
 .tag-header #add-tag.input-mode .add-tag-label {
-  background: transparent !important;
+  background: transparent ;
   box-shadow: none;
-  color: rgb(119, 119, 119) !important;
+  color: rgb(119, 119, 119) ;
 }
 
 .tag-container .tag-box p {
@@ -1606,7 +1606,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .tag-header #add-tag.input-mode .add-tag-container input:hover {
-  background-color: #222 !important;
+  background-color: #222 ;
 }
 
 .tag-header .selection-controller p {
@@ -1614,7 +1614,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .tag-container.selection .tag-box[data-selected="1"] {
-  background-color: #f9852c !important;
+  background-color: #f9852c ;
   box-shadow: none;
 }
 
@@ -1661,8 +1661,8 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .tag-checkmark {
-  color: #aaf6e4 !important;
-  background-color: #4ea590 !important;
+  color: #aaf6e4 ;
+  background-color: #4ea590 ;
 }
 
 /* Album Move (and album search) */
@@ -1834,8 +1834,8 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .pluginBox.plugin-active .pluginActionsSmallIcons a span {
-  background: #ffa744 !important;
-  color: #3c3c3c !important;
+  background: #ffa744 ;
+  color: #3c3c3c ;
 }
 
 .pluginContainer.line .pluginBox:hover .pluginContent {
@@ -1865,12 +1865,12 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .pluginContainer.line .pluginBox:hover .pluginUnavailableAction {
-  opacity: 0.5 !important;
+  opacity: 0.5 ;
 }
 
 .pluginContainer.line .pluginBox.plugin-inactive:hover .pluginUnavailableAction {
-  color: #3c3c3c !important;
-  background: #dddd !important;
+  color: #3c3c3c ;
+  background: #dddd ;
 }
 
 .pluginBox.active .pluginActionsSmallIcons a span {
@@ -1932,7 +1932,7 @@ li.plupload_delete a.remove-format:hover {
 
 .AlbumViewSelector,
 .UserViewSelector {
-  background: #555 !important;
+  background: #555 ;
 }
 
 .AlbumViewSelector label span {
@@ -1969,20 +1969,20 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .head-button-1 {
-  color: #444 !important;
+  color: #444 ;
 }
 
 .head-button-1:hover {
-  color: #444 !important;
+  color: #444 ;
 }
 
 .head-button-2 {
-  background-color: #333 !important;
-  box-shadow: 0 2px #0000007a !important;
+  background-color: #333 ;
+  box-shadow: 0 2px #0000007a ;
 }
 
 .head-button-2:hover {
-  background-color: #222 !important;
+  background-color: #222 ;
 }
 
 .user-container {
@@ -1998,19 +1998,19 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .user-first-col:hover .select-checkbox {
-  border: solid #ffa646 2px !important;
-  background-color: #ffa646 !important;
+  border: solid #ffa646 2px ;
+  background-color: #ffa646 ;
 }
 .user-first-col .select-checkbox {
-  border: solid #ffa646 2px !important;
-  background-color: transparent !important;
+  border: solid #ffa646 2px ;
+  background-color: transparent ;
 }
 
 /* Selected container in userManager */
 
 .user-container.container-selected .user-container-checkbox.user-list-checkbox .select-checkbox {
-  border: solid #ffa646 2px !important;
-  background-color: #ffa646 !important;
+  border: solid #ffa646 2px ;
+  background-color: #ffa646 ;
 }
 
 .user-container:hover {
@@ -2033,7 +2033,7 @@ li.plupload_delete a.remove-format:hover {
 
 .user-container.container-selected .user-container-status,
 .user-container.container-selected .user-container-registration-date-since {
-  color: #777 !important;
+  color: #777 ;
 }
 
 .user-container.container-selected .user-groups,
@@ -2044,7 +2044,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .user-groups {
-  padding: 6px 15px !important;
+  padding: 6px 15px ;
 }
 
 /****  */
@@ -2132,7 +2132,7 @@ li.plupload_delete a.remove-format:hover {
 .guest-edit-user-tab-title .selected,
 .guest-edit-user-tab-title:hover .selected {
   color: #c1c1c1;
-  border-bottom: solid 4px #c1c1c1 !important;
+  border-bottom: solid 4px #c1c1c1 ;
 }
 
 .edit-user-tab-title p:hover,
@@ -2157,24 +2157,24 @@ li.plupload_delete a.remove-format:hover {
 
 .edit-password-success-reset-link,
 .user-property-input-icon {
-  background-color: #505050 !important;
-  color: #999 !important;
+  background-color: #505050 ;
+  color: #999 ;
 }
 
 .edit-password-success-ok .icon-button,
 .user-property-main-user-close .icon-button {
-  background-color: #333 !important;
+  background-color: #333 ;
 }
 
 .edit-password-success-ok .icon-button:hover,
 .user-property-main-user-close .icon-button:hover {
-  color: #c1c1c1 !important;
+  color: #c1c1c1 ;
 }
 
 .main-user-proceed,
 .main-user-rewrite,
 .main-user-validate {
-  color: #a4a4a4 !important;
+  color: #a4a4a4 ;
 }
 
 .update-container {
@@ -2190,7 +2190,7 @@ li.plupload_delete a.remove-format:hover {
 
 .password-choice-content .unavailable,
 .password-choice-content .unavailable:hover {
-  color: #777 !important;
+  color: #777 ;
 }
 
 .password-choice-content .head-button-2,
@@ -2199,8 +2199,8 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .lineView .user-container-initials-wrapper > span {
-  height: 31px !important;
-  width: 31px !important;
+  height: 31px ;
+  width: 31px ;
 }
 
 .storage-chart span {
@@ -2226,12 +2226,12 @@ li.plupload_delete a.remove-format:hover {
 
 .activity-more-filters,
 .activity-more-filters-content {
-  background-color: #343434 !important;
+  background-color: #343434 ;
 }
 
 .selectize-control.user-selecter.single .selectize-input,
 .selectize-control.action-selecter.single .selectize-input {
-  border-color: #555 !important;
+  border-color: #555 ;
 }
 
 .activity-select-title {
@@ -2259,8 +2259,8 @@ li.plupload_delete a.remove-format:hover {
 
 /* Strange why this is different from light mode */
 .compactView .user-container-initials-wrapper > span {
-  height: 40px !important;
-  width: 40px !important;
+  height: 40px ;
+  width: 40px ;
 
   box-sizing: border-box;
 }
@@ -2320,10 +2320,10 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .selectedAlbum span a {
-  color: #777 !important;
+  color: #777 ;
 }
 .selectedAlbum span:first-child {
-  background-color: #343434 !important;
+  background-color: #343434 ;
 }
 
 .AddUserErrors,
@@ -2440,7 +2440,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .history-filter {
-  background: #333 !important;
+  background: #333 ;
   color: #a1a1a1;
   box-shadow: 0 2px 4px #00000024;
 }
@@ -2453,13 +2453,13 @@ li.plupload_delete a.remove-format:hover {
 
 #start_unset:hover,
 #end_unset:hover {
-  color: #ffa646 !important;
+  color: #ffa646 ;
 }
 
 .hasDatepicker,
 .elem-type-select {
-  background: #252525 !important;
-  border-color: transparent !important;
+  background: #252525 ;
+  border-color: transparent ;
   color: #777;
 }
 
@@ -2492,7 +2492,7 @@ li.plupload_delete a.remove-format:hover {
 .breadcrumb-item.add-item.highlight {
   background: #f7a43c;
   box-shadow: 0 2px #af7200;
-  color: #493c21 !important;
+  color: #493c21 ;
 }
 
 .breadcrumb-item.add-item.highlight:hover {
@@ -2534,14 +2534,14 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .see-out.disabled p {
-  background-color: #5d5d5d !important;
-  color: #373737 !important;
+  background-color: #5d5d5d ;
+  color: #373737 ;
 }
 
 /* album-tree (vanilla TS) overrides */
 
 .pwgtree-moving .move-cat-container {
-  background-color: #232323 !important;
+  background-color: #232323 ;
 }
 
 .pwgtree-moving .move-cat-container .badge-container i.icon-green,
@@ -2579,7 +2579,7 @@ li.plupload_delete a.remove-format:hover {
 .pwgtree-moving .move-cat-container .icon-purple,
 .pwgtree-moving .move-cat-container .icon-blue,
 .pwgtree-moving .move-cat-container .icon-green {
-  opacity: 0.6 !important;
+  opacity: 0.6 ;
 }
 
 .comment-container {
@@ -2588,7 +2588,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .comment-validated {
-  border-color: #232323 !important;
+  border-color: #232323 ;
 }
 
 .comment-author,
@@ -2638,7 +2638,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .desc-modal-body textarea {
-  background-color: #333 !important;
+  background-color: #333 ;
 }
 
 /* Batch manager, unit mode */
@@ -2676,7 +2676,7 @@ li.plupload_delete a.remove-format:hover {
 .calendar-input,
 .description-box {
   border: 1px solid #474747;
-  background-color: #333 !important;
+  background-color: #333 ;
   color: #757575;
 }
 
@@ -2689,7 +2689,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .calendar-input input {
-  background-color: #333 !important;
+  background-color: #333 ;
 }
 
 .pictureIdLabel {
@@ -2737,11 +2737,11 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .filter-counter {
-  background-color: #ffa646 !important;
+  background-color: #ffa646 ;
 }
 
 .certification[data-certification="-1"] {
-  background-image: url("images/certification/CertificationWarningDM.svg") !important;
+  background-image: url("images/certification/CertificationWarningDM.svg") ;
 }
 
 .RenameTagPopInContainer {
@@ -2783,11 +2783,11 @@ label:has(> .filters-icon-check:disabled) {
 }
 
 .comments-search {
-  background-color: #333 !important;
+  background-color: #333 ;
 }
 
 .comments-search:hover {
-  background-color: #222 !important;
+  background-color: #222 ;
 }
 
 .comments-search input:focus {

@@ -75,6 +75,33 @@ final class WsApiTest extends IntegrationTestCase
         self::assertMatchesRegularExpression('/^\d+\.\d+/', $data['result']);
     }
 
+    public function test_security_headers_are_present_on_every_response(): void
+    {
+        $url = $this->baseUrl . '/index.php?/ws&method=pwg.getVersion&format=json';
+        $ch = self::$ch;
+        self::assertNotNull($ch);
+        curl_reset($ch);
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADER         => true,
+            CURLOPT_HTTPHEADER     => $this->testHeader(),
+        ]);
+        $result = curl_exec($ch);
+        self::assertIsString($result);
+        $headerSize = (int) curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $headers = strtolower(substr($result, 0, $headerSize));
+
+        self::assertStringContainsString("content-security-policy: default-src 'self'", $headers);
+        self::assertStringContainsString("script-src 'self'", $headers);
+        self::assertStringContainsString('x-frame-options: sameorigin', $headers);
+        self::assertStringContainsString('x-content-type-options: nosniff', $headers);
+        self::assertStringContainsString('referrer-policy: strict-origin-when-cross-origin', $headers);
+        self::assertStringContainsString('permissions-policy:', $headers);
+        // HSTS is conditional on HTTPS and the test runner hits Apache over plain HTTP.
+        self::assertStringNotContainsString('strict-transport-security:', $headers);
+    }
+
     public function test_session_login_with_valid_credentials(): void
     {
         $data = $this->apiPost('pwg.session.login', [

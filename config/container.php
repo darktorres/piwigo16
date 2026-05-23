@@ -69,6 +69,7 @@ use Piwigo\Http\Middleware\CsrfMiddleware;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
 use Piwigo\Http\Middleware\FilterMiddleware;
 use Piwigo\Http\Middleware\RoutingMiddleware;
+use Piwigo\Http\Middleware\SecurityHeadersMiddleware;
 use Piwigo\Http\Middleware\SessionMiddleware;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Image\DerivativePipeline;
@@ -380,6 +381,7 @@ return [
 
     // ── PSR-7/15 routing infrastructure ──────────────────────────────────────
     Router::class                     => factory(static fn (): Router => new Router(dirname(__DIR__) . '/config/routes.php')),
+    SecurityHeadersMiddleware::class  => factory(static fn (): SecurityHeadersMiddleware => new SecurityHeadersMiddleware()),
     ExceptionHandlerMiddleware::class => factory(static fn (): ExceptionHandlerMiddleware => new ExceptionHandlerMiddleware()),
     SessionMiddleware::class          => factory(static fn (Session $session): SessionMiddleware => new SessionMiddleware($session)),
     AuthMiddleware::class             => factory(static fn (): AuthMiddleware => new AuthMiddleware()),

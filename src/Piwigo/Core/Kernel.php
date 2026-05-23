@@ -12,6 +12,7 @@ use Piwigo\Http\Middleware\CsrfMiddleware;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
 use Piwigo\Http\Middleware\FilterMiddleware;
 use Piwigo\Http\Middleware\RoutingMiddleware;
+use Piwigo\Http\Middleware\SecurityHeadersMiddleware;
 use Piwigo\Http\Middleware\SessionMiddleware;
 use Piwigo\Http\MiddlewarePipeline;
 use Piwigo\Storage\StorageRegistry;
@@ -115,6 +116,7 @@ final class Kernel
 
         return new MiddlewarePipeline(
             [
+                self::service(SecurityHeadersMiddleware::class),
                 self::service(ExceptionHandlerMiddleware::class),
                 self::service(SessionMiddleware::class),
                 self::service(AuthMiddleware::class),

@@ -147,11 +147,6 @@ input[type="submit"]:hover,
 input[type="reset"]:hover {
   cursor: pointer;
 }
-input.bigbutton:hover {
-  background-color: #222;
-  color: #f33;
-  border: 0;
-}
 .throw {
   font-size: 120%;
   line-height: 26px;
@@ -204,54 +199,6 @@ a.Piwigo:hover span.Piwigo {
   background-color: var(--admin-disabled-bg);
 }
 
-.bigbutton {
-  background: transparent url("images/quickLocalSync_inactiv.png") no-repeat scroll left top;
-  display: block;
-  color: #111;
-  font-size: 28px;
-  height: 161px;
-  margin: 0 20px 0 auto;
-  padding: 0 18px;
-  text-align: center;
-  width: 625px;
-  position: relative;
-  z-index: 50;
-}
-.bigtext {
-  display: block;
-  font-weight: bold;
-  left: 225px;
-  position: relative;
-  top: 35px;
-  width: 320px;
-  z-index: 55;
-  cursor: pointer;
-}
-.bigbutton:hover {
-  background: transparent url("images/quickLocalSync_hover.png") no-repeat scroll left top;
-  color: #000;
-}
-.bigbutton input {
-  background: transparent url("images/transparent.gif") repeat scroll left top;
-  border: 0;
-  display: block;
-  height: 85px;
-  left: 225px;
-  position: relative;
-  top: -42px;
-  width: 313px;
-  z-index: 99;
-  padding: 0;
-  color: transparent;
-}
-.bigbutton input:hover {
-  cursor: pointer;
-  background: transparent url("images/transparent.gif") repeat scroll left top;
-  border: 0;
-  padding: 0;
-  color: transparent;
-}
-
 /* Dark-only structural overrides — not theme-color */
 .intro-charts .tooltip {
   box-shadow: none;
@@ -296,12 +243,8 @@ a.Piwigo:hover span.Piwigo {
 .showInfo-dropdown-header a {
   color: #3a3a3a;
 }
-#pluginsMenuSeparator {
-  border: 1px solid #333;
-}
 
 #helpContent,
-#pLoaderPage,
 #ftpPage,
 #ftpPage legend {
   color: #aaa;
@@ -619,16 +562,12 @@ input:focus + .slider {
 
 /* UserList Pop in */
 
-#CloseDeleteAlbum,
 .close-modal {
   color: #444;
 }
 
 .CloseUserList:hover,
 .CloseAddAlbum:hover,
-#CloseDeleteAlbum:hover {
-  color: #ffa646;
-}
 
 .UsernameBlock {
   background-color: #393939;
@@ -689,12 +628,6 @@ input:focus + .slider {
   background-color: #f70;
 }
 
-.userPropertiesContainer {
-  border-color: #333;
-}
-.userPrefs {
-  border-color: #333;
-}
 
 table.qsearch_help_table td {
   border-color: #444;
@@ -722,10 +655,6 @@ table.qsearch_help_table td {
 }
 .font-checkbox:hover {
   color: #ededed;
-}
-.with-border legend,
-.with-border strong {
-  color: #c0c0c0;
 }
 
 a#showPermissions {
@@ -776,12 +705,6 @@ li.plupload_delete a.remove-format:hover {
   background-color: #343434 ;
   color: #777 ;
 }
-.addFilesButtonChanged {
-  background-color: #888;
-}
-.addFilesButtonChanged:hover {
-  background-color: #777;
-}
 .selectAlbumFirst {
   background: #343434 ;
 }
@@ -821,9 +744,6 @@ li.plupload_delete a.remove-format:hover {
 
 .cat-modify-actions a::after,
 .cat-modify-actions .toggle-comment-option::after,
-.mores-plugins::after {
-  background: #111 ;
-}
 
 .cat-modify-input-container #cat-parent {
   background: #333;
@@ -855,7 +775,6 @@ li.plupload_delete a.remove-format:hover {
 }
 #addFilter,
 #filterList select,
-.pictureLevels select,
 #permitAction select,
 .sort-by select {
   background-color: #444;
@@ -1636,14 +1555,6 @@ li.plupload_delete a.remove-format:hover {
   color: #d5d5d5;
 }
 
-.start-date,
-.end-date {
-  padding: 5px 10px;
-  background: #555;
-  border-radius: 50px;
-  margin: 5px;
-  color: #bbb;
-}
 
 /* Strange why this is different from light mode */
 .compactView .user-container-initials-wrapper > span {
@@ -1838,7 +1749,6 @@ li.plupload_delete a.remove-format:hover {
   color: #ffa646 ;
 }
 
-.hasDatepicker,
 .elem-type-select {
   background: #252525 ;
   border-color: transparent ;
@@ -2033,7 +1943,6 @@ li.plupload_delete a.remove-format:hover {
   background-color: #1c1c1c;
 }
 
-.full-line-info-box input,
 .half-line-info-box input,
 .half-line-info-box select,
 .full-line-tag-box select,
@@ -2043,7 +1952,6 @@ li.plupload_delete a.remove-format:hover {
   color: #757575;
 }
 
-.full-line-info-box,
 .half-line-info-box,
 .calendar-box,
 .full-line-description-box,

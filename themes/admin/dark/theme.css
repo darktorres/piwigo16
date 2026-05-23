@@ -70,14 +70,10 @@ h1 .bc-albums {
   background-color: #565656;
 }
 
-.tabsheet li.selected_tab {
-  background-color: #444;
-}
 .tabsheet li.selected_tab a {
   color: #c1c1c1;
 }
 .tabsheet a {
-  color: #7e7e7e;
   font-weight: normal;
 }
 

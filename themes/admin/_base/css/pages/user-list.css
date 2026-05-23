@@ -498,11 +498,9 @@ a.group_users {
   border-top: solid 1px #ddd;
 }
 
-.user-property-input.user-property-input-username:hover {
-  background-color: #f0f0f0;
-}
+.user-property-input.user-property-input-username:hover,
 .user-property-input.user-property-input-password:hover {
-  background-color: #f0f0f0;
+  background-color: var(--admin-bg-elevated);
 }
 
 .password-choice-content .unavailable,

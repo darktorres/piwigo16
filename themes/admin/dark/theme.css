@@ -1818,12 +1818,6 @@ li.plupload_delete a.remove-format:hover {
   border-top: solid 1px #333;
 }
 
-.user-property-input.user-property-input-username:hover {
-  background-color: #333;
-}
-.user-property-input.user-property-input-password:hover {
-  background-color: #333;
-}
 
 .password-choice-content .unavailable,
 .password-choice-content .unavailable:hover {

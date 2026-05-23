@@ -21,6 +21,8 @@
   --admin-danger: #be4949;
   --admin-danger-hover: #6c2d2d;
   --admin-input-border: #474747;
+  --admin-disabled-bg: #666;
+  --admin-disabled-fg: #555;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -208,15 +210,11 @@ a.Piwigo:hover span.Piwigo {
 }
 
 
-.buttonLike:disabled,
-.filters-icon-check:disabled,
-input[type="button"]:disabled,
-input[type="submit"]:disabled,
-input[type="reset"]:disabled {
-  color: #555;
-  border-color: #666;
+.filters-icon-check:disabled {
+  color: var(--admin-disabled-fg);
+  border-color: var(--admin-disabled-bg);
   cursor: not-allowed;
-  background-color: #666;
+  background-color: var(--admin-disabled-bg);
 }
 
 .bigbutton {

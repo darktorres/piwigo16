@@ -293,6 +293,16 @@ input:checked + .slider {
   background-color: var(--admin-accent-soft);
 }
 
+/* Disabled form controls (buttons, inputs). */
+.buttonLike:disabled,
+input[type="button"]:disabled,
+input[type="submit"]:disabled,
+input[type="reset"]:disabled {
+  background-color: var(--admin-disabled-bg);
+  color: var(--admin-disabled-fg);
+  cursor: not-allowed;
+}
+
 /* DataTables (jQuery DataTables) — alternating stripes + active-sort cells. */
 table.dataTable tr.even {
   background-color: var(--admin-stripe-odd);

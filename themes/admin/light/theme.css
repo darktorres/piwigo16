@@ -286,15 +286,6 @@ ul.thumbnails li.rank-of-image {
   font-size: 14px;
 }
 
-.buttonLike:disabled,
-input[type="submit"]:disabled,
-input[type="button"]:disabled,
-input[type="reset"]:disabled {
-  background: #ececec ;
-  color: #d5d5d5 ;
-  cursor: not-allowed;
-}
-
 .resetButton {
   background-color: transparent;
   color: #aaa;

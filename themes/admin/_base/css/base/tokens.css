@@ -51,4 +51,8 @@
 
   /* form input border (batch manager unit, picture modify, etc.) */
   --admin-input-border: #d3d3d3;
+
+  /* disabled form controls */
+  --admin-disabled-bg: #ececec;
+  --admin-disabled-fg: #d5d5d5;
 }

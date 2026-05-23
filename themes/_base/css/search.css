@@ -173,7 +173,7 @@
   top: 20px;
   right: 20px;
   gap: var(--space-xs);
-  color: #aaa;
+  color: var(--color-text-muted);
 }
 
 .filter-actions > * {
@@ -359,7 +359,7 @@
 
 .date_posted-option .accordion-toggle:hover,
 .date_created-option .accordion-toggle:hover {
-  color: #f70;
+  color: var(--color-accent);
   cursor: pointer;
 }
 
@@ -398,8 +398,8 @@
 .date_posted-option .custom_posted_date_toggle,
 .date_created-option .custom_created_date_toggle {
   padding: 5px 0;
-  border-top: 0.3px solid #aaa;
-  border-bottom: 0.3px solid #aaa;
+  border-top: 0.3px solid var(--color-text-muted);
+  border-bottom: 0.3px solid var(--color-text-muted);
 }
 
 .custom_posted_date_toggle .gallery-icon-up-open::before,
@@ -428,7 +428,7 @@
   cursor: pointer;
   transition: 0.2s;
   width: fit-content;
-  color: #777;
+  color: var(--color-text-muted);
   background: var(--search-head-btn2-bg);
   box-shadow: 0 2px #00000024;
 }
@@ -491,7 +491,7 @@
   width: min-content;
   cursor: pointer;
   transition: 0.3s;
-  color: #777;
+  color: var(--color-text-muted);
 }
 
 .clear-all {
@@ -633,12 +633,12 @@
 /* Slider css */
 
 .slider-info {
-  color: #f70;
+  color: var(--color-accent);
   font-weight: bold;
 }
 
 .slider-choice {
-  color: #777;
+  color: var(--color-text-muted);
   border-radius: 4px;
   padding: 2px 8px;
   margin: 0 3px;
@@ -664,7 +664,7 @@
 }
 
 .close-modal {
-  color: #fff;
+  color: var(--color-text);
   position: absolute;
   right: -40px;
   top: -40px;
@@ -673,7 +673,7 @@
 }
 
 .close-modal:hover {
-  color: #fff;
+  color: var(--color-text);
   text-decoration: none;
 }
 
@@ -737,7 +737,7 @@
 }
 
 .filter-actions > *:hover {
-  color: #777;
+  color: var(--color-text-muted);
 }
 
 .filetypes-option:nth-child(odd),
@@ -800,15 +800,15 @@
 }
 
 .ClosePopIn:hover {
-  color: #fff;
+  color: var(--color-text);
 }
 
 .search-result-item {
   background-color: #fafafa;
   box-shadow: 0 2px #00000024;
-  color: #777;
+  color: var(--color-text-muted);
 }
 
 .and-more {
-  color: #777;
+  color: var(--color-text-muted);
 }

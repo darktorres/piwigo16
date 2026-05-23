@@ -37,6 +37,8 @@
   --color-info-bg: #bde5f8;
   --color-info-fg: #00529b;
   --color-error-fg: #eb3223;
+  --color-error-bg: #f8d7dc;
+
   /* Disabled button background */
   --color-disabled-btn-bg: #aaa;
 
@@ -88,6 +90,8 @@
   --color-success-fg: #aaf6e4;
   --color-info-bg: #4f71a4;
   --color-info-fg: #bad6ff;
+  --color-error-bg: #be4949;
+  --color-error-fg: #ffc8c8;
   --color-list-head: #2a2a2a;
   --color-list-row-alt: #333;
   --color-close-modal: var(--color-text);
@@ -523,9 +527,9 @@ p.error-message,
 
 .error_block {
   display: flex;
-  background-color: var(--color-error-bg-dark);
+  background-color: #be4949;
   border-radius: var(--radius-sm);
-  color: var(--color-error-fg-dark);
+  color: #ffc8c8;
   padding: var(--space-md);
   position: relative;
   align-items: center;

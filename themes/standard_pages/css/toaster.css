@@ -29,22 +29,12 @@
   font-size: 33px;
 }
 
-.light .toast.success {
-  background-color: #d6ffcf;
-  color: #4ca530;
+.toast.success {
+  background-color: var(--color-success-bg);
+  color: var(--color-success-fg);
 }
 
-.light .toast.error {
-  background-color: #f8d7dc;
-  color: #eb3d33;
-}
-
-.dark .toast.success {
-  background-color: #4ea590;
-  color: #aaf6e4;
-}
-
-.dark .toast.error {
-  background-color: #be4949;
-  color: #ffc8c8;
+.toast.error {
+  background-color: var(--color-error-bg);
+  color: var(--color-error-fg);
 }

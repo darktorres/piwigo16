@@ -2,7 +2,10 @@
   --color-accent: #4cae4f;
   --color-btn-primary-fg: #fff;
   --color-light-gradient: linear-gradient(75.69deg, #a7d69f 7.64%, #e2f8e6 77.87%);
-  --color-dark-link: #a7d69f;
-  --color-dark-link-hover: #4cae4f;
-  --color-dark-header-link: #e2f8e6;
+}
+
+.dark {
+  --color-link: #a7d69f;
+  --color-link-hover: #4cae4f;
+  --color-header-link: #e2f8e6;
 }

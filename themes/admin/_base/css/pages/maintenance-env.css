@@ -6,7 +6,7 @@
 .cache-size-text,
 .cache-size-value {
   color: var(--admin-text);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 .cache-lastCalculated-text,

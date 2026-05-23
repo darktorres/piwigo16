@@ -44,7 +44,7 @@
   transform: translate(-50%, -60%);
 }
 .see-out p i {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   line-height: 12px;
   vertical-align: 1px;
 }

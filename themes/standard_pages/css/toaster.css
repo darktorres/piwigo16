@@ -19,7 +19,7 @@
   padding: 10px;
   border-radius: var(--radius-sm);
   align-items: center;
-  font-size: 15px;
+  font-size: var(--font-size-base);
   width: fit-content;
   align-self: flex-end;
   box-shadow: 0 4px 10px 0 rgb(0, 0, 0, 0.15);

@@ -261,7 +261,7 @@
 }
 
 .linked-add-radio-input label {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
 }
 

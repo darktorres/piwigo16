@@ -17,7 +17,7 @@
   margin-bottom: 20px;
 }
 .maintenance-action.icon-th-list {
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 .delete-size-checks {
@@ -46,7 +46,7 @@
 }
 .delete-size-check .picture-deletion-size {
   color: var(--admin-text);
-  font-size: 14px;
+  font-size: var(--font-size-md);
   margin-left: 5px;
   padding-top: 2px;
 }

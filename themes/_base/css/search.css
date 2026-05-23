@@ -198,7 +198,7 @@
   transition: 0.3s;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  font-size: 15px;
+  font-size: var(--font-size-base);
   font-weight: 600;
   padding: 4px 10px;
   white-space: nowrap;
@@ -210,7 +210,7 @@
   transition: 0.3s;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  font-size: 15px;
+  font-size: var(--font-size-base);
   font-weight: 600;
   padding: 4px 10px;
   background: var(--search-cancel-bg);
@@ -222,7 +222,7 @@
 }
 
 .mcs-container .filter {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   position: relative;
   border-radius: var(--radius-xl);
   padding: 3px 6px;
@@ -290,7 +290,7 @@
 
 .word-help {
   text-decoration: underline;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   cursor: pointer;
   color: #888;
 }
@@ -343,7 +343,7 @@
 }
 
 .filter-word-form .search-params-title {
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   font-weight: 600;
   margin-top: 15px;
 }
@@ -705,7 +705,7 @@
 }
 
 .mcs-no-result .text span:last-child {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   font-weight: 500;
   max-width: 350px;
   color: #6e6e6e;
@@ -832,14 +832,14 @@
 
   .delete::before,
   .clear::before {
-    font-size: 15px;
+    font-size: var(--font-size-base);
   }
 
   /* disable zoom on focus in IOS Device */
   input,
   select,
   textarea {
-    font-size: 16px;
+    font-size: var(--font-size-lg);
   }
 
   #word-search {
@@ -900,7 +900,7 @@
 .mcs-container div .slider_input p {
   margin: 0;
   color: #656565;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .no_filtered_photos {

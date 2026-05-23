@@ -61,7 +61,7 @@
   color: #000;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  font-size: 15px;
+  font-size: var(--font-size-base);
   margin-bottom: 3px;
 }
 
@@ -225,7 +225,7 @@ div:has(> .activity-header) {
 }
 
 .activity-select span {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   font-weight: bold;
 }
 
@@ -311,7 +311,7 @@ div:has(> .activity-header) {
   height: 25.5px;
   width: 130px;
   margin-top: 10px;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: bold;
 }
 

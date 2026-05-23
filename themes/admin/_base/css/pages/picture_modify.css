@@ -89,7 +89,7 @@
 
 #picture-content .date-input i {
   position: absolute;
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   top: 50%;
   transform: translate(6px, -50%);
   opacity: 0.6;
@@ -192,7 +192,7 @@
   color: #fff;
   margin-top: 5px;
   z-index: 2;
-  font-size: 20px;
+  font-size: var(--font-size-xl);
 }
 
 

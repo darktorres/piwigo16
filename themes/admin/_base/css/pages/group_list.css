@@ -22,7 +22,7 @@
 /* Options menu */
 
 .group-dropdown-options {
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   position: absolute;
   top: 10px;
   right: 0;
@@ -53,7 +53,7 @@
   right: 33px;
   top: 4px;
   padding: 11px 0;
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   color: #777;
   transition: 0.2s ease;
 }
@@ -92,7 +92,7 @@
 }
 
 .jconfirmAlert .jconfirm-title {
-  font-size: 20px;
+  font-size: var(--font-size-xl);
 }
 
 .jconfirmAlert .jconfirm-icon-c i {
@@ -253,7 +253,7 @@
 .groups button.submit {
   background-color: #ffa744;
   color: var(--admin-text);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 13px 20px;
   border: none;
@@ -269,7 +269,7 @@
 }
 
 .groups #addGroupForm .actionButtons a {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   border: none;
   padding: 13px 9px;
   font-weight: bold;
@@ -291,7 +291,7 @@
 
 .groups .manage-users,
 .groups .manage-permissions {
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   display: inline-block;
 }
 

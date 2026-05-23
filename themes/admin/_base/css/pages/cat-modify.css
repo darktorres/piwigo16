@@ -131,7 +131,7 @@
 
 @media (max-width: 1050px) {
   .promote-text span {
-    font-size: 20px;
+    font-size: var(--font-size-xl);
   }
 
   .promote-content .left-side img {
@@ -237,7 +237,7 @@
 
 .cat-modify-actions a,
 .cat-modify-ariane a.icon-sitemap {
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   position: relative;
   width: 24px;
   height: 24px;
@@ -274,7 +274,7 @@
 }
 
 .cat-modify-actions .toggle-comment-option {
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   padding: 5px;
   width: 20px;
   height: 24px;
@@ -350,7 +350,7 @@
 }
 
 .cat-modify-infos .cat-modify-info-content {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   color: var(--admin-text);
   font-weight: bold;
 }
@@ -389,7 +389,7 @@
   align-items: center;
   opacity: 0;
   transition: 0.2s ease-in-out;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   box-sizing: border-box;
   background: rgb(0, 0, 0, 0.301);
 }
@@ -424,7 +424,7 @@
 .cat-modify-input-container label {
   color: #a4a4a4;
   font-weight: bold;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   margin-bottom: 5px;
 }
 
@@ -491,7 +491,7 @@
 .buttonSecond {
   display: flex;
   padding: 9px 10px;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-style: normal;
   font-weight: 700;
   line-height: normal;
@@ -502,7 +502,7 @@
 .savebar-footer-block .badge {
   border-radius: var(--radius-lg);
   padding: 5px 10px;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   display: block;
   height: auto;

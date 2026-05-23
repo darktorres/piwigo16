@@ -100,7 +100,7 @@ Advanced filter
 
 .advanced-filter-btn::before {
   /* Change icon size */
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 .advanced-filter-btn.advanced-filter-open::after {
@@ -187,7 +187,7 @@ Advanced filter Select
 .user-action-select-container::before,
 .advanced-filter-select-container::before {
   content: "\e835";
-  font-size: 14px;
+  font-size: var(--font-size-md);
   position: absolute;
   font-family: fontello, sans-serif;
   color: #6e6e6e;
@@ -303,7 +303,7 @@ Info
 .info-error::before {
   line-height: 35px;
   margin: 0 10px;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
 }
 
 .info-warning {

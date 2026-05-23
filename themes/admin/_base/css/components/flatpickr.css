@@ -148,7 +148,7 @@
   color: #393939;
   cursor: pointer;
   flex-basis: calc(100% / 7);
-  font-size: 14px;
+  font-size: var(--font-size-md);
   height: 39px;
   line-height: 39px;
   margin: 0;
@@ -214,7 +214,7 @@
   height: inherit;
   line-height: inherit;
   color: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   position: relative;
 }
 

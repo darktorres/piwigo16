@@ -27,7 +27,7 @@
 #UserList .group-name-block p {
   color: var(--admin-text);
   font-weight: 700;
-  font-size: 15px;
+  font-size: var(--font-size-base);
   margin-left: 10px;
 }
 
@@ -36,7 +36,7 @@
   color: rgb(44, 132, 195);
   background-color: #cde9fd;
   border-radius: 25px;
-  font-size: 15px;
+  font-size: var(--font-size-base);
 }
 
 #UserList .group-name-block .UserNumberBadge {
@@ -107,7 +107,7 @@
 #UserList .AddUserBlock button {
   background-color: #ffa744;
   color: #3c3c3c;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 16px 10px;
   border: none;
@@ -124,7 +124,7 @@
 }
 
 #UserList .AddUserBlock p {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   margin-left: 0;
   color: var(--admin-text);
 }
@@ -136,7 +136,7 @@
 }
 
 #UserList .FilterUserBlock p {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   margin-right: 5px;
 }
 
@@ -169,7 +169,7 @@
 .UsersInGroupList span {
   border-radius: 25px;
   padding: 3px;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .UsersInGroupList .icon-cancel:hover {
@@ -205,7 +205,7 @@
 
 .ValidationUserAssociated {
   display: inline-block;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   text-align: left;
   padding: 4px 6px;
   border-top-right-radius: var(--radius-md);
@@ -228,7 +228,7 @@
 
 .ValidationUserDissociated p {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 500;
 }
 
@@ -238,7 +238,7 @@
 }
 
 #UserList .FilterUserBlock .AmountOfUsersShown p {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .LinkUserManager {
@@ -941,14 +941,14 @@ a.group_users {
   /* justify-content: space-between; */
   gap: 30px;
   font-weight: bold;
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 .guest-edit-user-tab-title {
   display: flex;
   gap: 40px;
   font-weight: bold;
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 .edit-user-tab-title .edit-user-tabsheet,
@@ -1035,7 +1035,7 @@ a.group_users {
 
 #dropdown_mores_plugins .edit-user-tabsheet {
   padding: 5px 0;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   color: #fff;
 }
 
@@ -1078,7 +1078,7 @@ a.group_users {
 }
 
 .user-property-input-icon .icon-show-password {
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   cursor: pointer;
 }
 
@@ -1089,7 +1089,7 @@ a.group_users {
 .user-property-input-icon .user-property-input {
   background-color: transparent;
   padding: 0 0 0 5px;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
 }
 
 .user-property-input-icon .user-property-input:hover {
@@ -1160,7 +1160,7 @@ a.group_users {
 .user-list-checkbox-label {
   margin-left: 5px;
   vertical-align: top;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   cursor: pointer;
 }
 
@@ -1182,7 +1182,7 @@ a.group_users {
 }
 
 .edit-user-icons span::before {
-  font-size: 16px;
+  font-size: var(--font-size-lg);
 }
 
 .delete-user-button {
@@ -1323,7 +1323,7 @@ a.group_users {
 .edit-password-success .edit-password-success-input,
 .AddUserPasswordInput {
   background-color: transparent;
-  font-size: 15px;
+  font-size: var(--font-size-base);
   border: none;
   flex: auto;
   padding: 0 5px;
@@ -1450,7 +1450,7 @@ a.group_users {
 }
 
 .AddUserGenPassword span {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .EditUserErrors {
@@ -1592,7 +1592,7 @@ a.group_users {
   width: 40px;
   height: 40px;
   display: flex;
-  font-size: 15px;
+  font-size: var(--font-size-base);
   justify-content: center;
   align-items: center;
   align-self: center;
@@ -1606,7 +1606,7 @@ a.group_users {
 
 .user-property-main-user-content-header .main-user-title {
   font-weight: 700;
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 .user-property-main-user-body .main-user-proceed,
@@ -2019,7 +2019,7 @@ a.group_users {
   display: block;
   color: #ffa646;
   font-weight: bold;
-  font-size: 15px;
+  font-size: var(--font-size-base);
 }
 
 .user-action-select {
@@ -2287,7 +2287,7 @@ Advanced filter
 .tileView .user-container-username {
   margin-top: 10px;
   margin-bottom: 5px;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   height: 15px;
   width: 140px;
   overflow: hidden;
@@ -2431,7 +2431,7 @@ Advanced filter
 
 .tooltip-status-content {
   text-align: left;
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 .tooltip-status-row {
   margin-top: 10px;

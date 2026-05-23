@@ -7,7 +7,7 @@
 
 #debug {
   margin-left: 227px;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .tag-header {
@@ -262,7 +262,7 @@
 .tag-container .tag-box .select-checkbox i,
 .delete-size-check .select-checkbox i {
   display: none;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   transform: translate(-10px, -3px);
   position: absolute;
   color: #fafafa;
@@ -337,7 +337,7 @@
   margin: 10px;
   text-align: start;
   font-weight: 700;
-  font-size: 15px;
+  font-size: var(--font-size-base);
   overflow: hidden;
   max-height: 160px;
 }
@@ -361,7 +361,7 @@
 .comments-and-others {
   color: #ffa646;
   font-weight: bold;
-  font-size: 15px;
+  font-size: var(--font-size-base);
 }
 
 .tag-select-message {
@@ -369,7 +369,7 @@
   height: 46px;
   justify-content: center;
   align-items: center;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   display: none;
   margin: 10px 243px 10px 32px;
   color: #0051a5;
@@ -546,7 +546,7 @@
 #MergeOptionsBlock p {
   margin: 20px;
   font-weight: 700;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 #MergeOptionsBlock .ItalicTextInfo {
@@ -557,13 +557,13 @@
 }
 
 #MergeOptionsBlock a {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
 }
 
 .MergeOptionsChoice {
   display: block;
-  font-size: 15px;
+  font-size: var(--font-size-base);
 }
 
 .MergeOptionsChoice input {
@@ -581,7 +581,7 @@
 .ConfirmMergeButton {
   display: block;
   margin: 20px auto;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 13px 40px;
   border: none;
@@ -591,7 +591,7 @@
 .MergeOptionsContainer {
   display: block;
   position: relative;
-  font-size: 15px;
+  font-size: var(--font-size-base);
 }
 .MergeOptionsContainer label,
 .MergeOptionsContainer select {

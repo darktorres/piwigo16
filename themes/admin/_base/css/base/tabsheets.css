@@ -59,7 +59,7 @@
   color: #555;
 }
 .tabsheet a span {
-  font-size: 14px;
+  font-size: var(--font-size-md);
   margin-right: 2px;
   padding: 0 3px 0 1px;
 }

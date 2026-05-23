@@ -69,7 +69,7 @@
   text-align: left;
 }
 .u-fs-15 {
-  font-size: 15px;
+  font-size: var(--font-size-base);
 }
 .u-w-99p {
   width: 99%;
@@ -86,7 +86,7 @@
 }
 
 .showInfo {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   cursor: pointer;
   line-height: 15px;
   display: flex;

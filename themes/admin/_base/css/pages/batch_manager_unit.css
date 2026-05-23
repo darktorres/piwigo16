@@ -16,7 +16,7 @@
   right: 0;
   text-align: right;
   color: #7a7a7a89;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   padding: 14px 20px 14px 0;
 }
 
@@ -77,7 +77,7 @@
 .main-info-title {
   color: #000;
   text-align: center;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   line-height: normal;
   width: 100px;
@@ -88,7 +88,7 @@
   color: #777;
   text-align: center;
   font-family: "Open Sans", sans-serif;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-style: normal;
   font-weight: 400;
   line-height: normal;
@@ -365,5 +365,5 @@
   padding: 1em;
 }
 .bm-deleted-icon {
-  font-size: 20px;
+  font-size: var(--font-size-xl);
 }

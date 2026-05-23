@@ -34,7 +34,7 @@
 }
 
 #batchManagerGlobal legend {
-  font-size: 14px;
+  font-size: var(--font-size-md);
   color: #444;
   margin: 10px 0;
   padding: 0;
@@ -44,7 +44,7 @@
   padding: 3px;
   border-radius: 100%;
   margin-right: 6px;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
 }
 
 #batchManagerGlobal ul.thumbnails div.actions a {
@@ -108,7 +108,7 @@
   margin-right: 0;
   content: "\e822";
   margin-left: 6px;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   color: #777;
 }
 #batchManagerGlobal a.removeFilter:hover::before {
@@ -140,7 +140,7 @@
   position: absolute;
   left: 84px;
   top: 84px;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   display: none;
 }
 
@@ -186,7 +186,7 @@
   display: block;
   text-align: initial;
   padding: 5px 10px;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   padding-right: 15px;
   color: #fff;
   font-weight: 600;

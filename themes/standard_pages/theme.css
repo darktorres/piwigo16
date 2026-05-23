@@ -114,7 +114,7 @@ h1 i {
 #password-form p,
 .profile-section p {
   text-align: center;
-  font-size: 15px;
+  font-size: var(--font-size-base);
   font-weight: 500;
   margin: 0;
 }
@@ -169,7 +169,7 @@ select {
 
 .input-container i,
 .input-modal i {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   margin-right: 5px;
 }
 
@@ -190,7 +190,7 @@ select {
   align-items: center;
   cursor: pointer;
   font-family: "Open_Sans", sans-serif;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   margin-bottom: 5px;
   margin-left: 20px;
 }
@@ -202,7 +202,7 @@ select {
   display: inline-block;
   margin-right: 8px;
   line-height: 18px;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   border: 1px solid #777;
 }
 
@@ -221,14 +221,14 @@ input[type="checkbox"]#remember_me {
 input[type="checkbox"]#remember_me:checked + label ~ .gallery-icon-checkmark::before,
 input[type="checkbox"]#remember_me:checked + .gallery-icon-checkmark::before {
   opacity: 1;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   margin: 2px;
   vertical-align: text-top;
 }
 
 label {
   margin-bottom: 5px;
-  font-size: 15px;
+  font-size: var(--font-size-base);
   font-weight: 700;
 }
 
@@ -255,7 +255,7 @@ p.form-instructions {
   font: inherit;
   color: inherit;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   line-height: 1;
   height: fit-content;
 }
@@ -313,7 +313,7 @@ a.btn-main {
   width: 100%;
   display: flex;
   justify-content: space-between;
-  font-size: 15px;
+  font-size: var(--font-size-base);
 }
 
 #header-options > * {
@@ -336,7 +336,7 @@ a.btn-main {
 #language-switch {
   display: flex;
   justify-content: flex-end;
-  font-size: 15px;
+  font-size: var(--font-size-base);
   position: fixed;
   right: 0;
   bottom: 0;
@@ -417,7 +417,7 @@ a.btn-main {
 }
 
 .password-webmaster-hint {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .error-message i,
@@ -560,7 +560,7 @@ p.error-message,
 
 .profile-section .api-icon-action {
   padding-right: 10px;
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 .profile-section .input-container.radio label {
@@ -603,7 +603,7 @@ p.error-message,
 
 .profile-section .api-mail-infos {
   position: relative;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   padding-top: 20px;
   margin-bottom: 25px;
   text-align: start;
@@ -688,7 +688,7 @@ p.error-message,
 .profile-section .api-copy {
   padding: 1px 10px;
   width: fit-content;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .profile-section #show_expired_list {
@@ -703,7 +703,7 @@ p.error-message,
 }
 
 .profile-section .api-info {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .profile-section .api_key .profile-section #api_id_key,
@@ -766,7 +766,7 @@ p.error-message,
 }
 
 .subtitle-modal {
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   font-weight: 400;
 }
 
@@ -855,7 +855,7 @@ input:checked + .slider::after {
   border-radius: var(--radius-sm);
   max-width: 100%;
   text-align: center;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   padding: 5px 10px;
   box-shadow: 0 10px 33px #3333332e;
 }

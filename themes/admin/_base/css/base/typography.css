@@ -21,7 +21,7 @@
   transform: translate(-50%, -50%);
 }
 .themeName {
-  font-size: 14px;
+  font-size: var(--font-size-md);
   margin: 10px;
   position: relative;
   text-transform: capitalize;
@@ -61,7 +61,7 @@
   padding: 5px 10px;
   white-space: nowrap;
   font-weight: bold;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 .showInfo-dropdown-header a:hover {
   color: #fff;
@@ -98,7 +98,7 @@
   padding: 10px;
   margin: 0 10px 10px;
   font-weight: bold;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 .themeActions span {
   font-size: 11px;
@@ -110,7 +110,7 @@
   padding: 10px;
   margin: 0 10px 10px;
   font-weight: bold;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   background: #ebebeb;
 }
 
@@ -137,7 +137,7 @@
 }
 
 #themesContent h3 {
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   text-align: left;
   border-bottom: 1px solid #444;
   letter-spacing: 1px;
@@ -167,7 +167,7 @@ h1 .bc-albums {
   text-align: center;
   border-radius: 7px;
   background-color: #c6c6c6;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   position: relative;
   top: -3px;
 }
@@ -201,7 +201,7 @@ dd {
 
 textarea {
   cursor: text;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 label {
@@ -209,7 +209,7 @@ label {
 }
 
 .content h3 {
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   letter-spacing: -0.4px;
   margin: 0 20px 12px 0;
   text-align: center;

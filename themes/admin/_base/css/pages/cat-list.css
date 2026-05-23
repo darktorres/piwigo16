@@ -9,7 +9,7 @@ form#categoryOrdering p.albumTitle {
   margin-bottom: 4px;
 }
 form#categoryOrdering p.albumTitle a {
-  font-size: 14px;
+  font-size: var(--font-size-md);
   font-weight: 600;
 }
 form#categoryOrdering p.albumTitle i {
@@ -90,7 +90,7 @@ form#categoryOrdering p.albumActions .userSeparator {
 }
 
 .albumTitle {
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   padding: 0 15px;
   font-weight: bold;
   overflow: hidden;
@@ -102,7 +102,7 @@ form#categoryOrdering p.albumActions .userSeparator {
 .albumInfos {
   text-align: center;
   font-weight: 600;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   color: #a9a9a9;
   display: flex;
   flex-direction: column;
@@ -135,7 +135,7 @@ form#categoryOrdering p.albumActions .userSeparator {
 .albumActions a,
 .albumActions span {
   margin: 5px;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   text-transform: capitalize;
   font-weight: bold;
   transition: 0.2s ease;
@@ -178,12 +178,12 @@ form#categoryOrdering p.albumActions .userSeparator {
   padding: 2px;
   position: absolute;
   left: 16px;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   color: #3c3c3c;
 }
 
 .addAlbumHead {
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -224,7 +224,7 @@ form#categoryOrdering p.albumActions .userSeparator {
   max-width: 200px;
   width: 75%;
   margin: 0 10px;
-  font-size: 15px;
+  font-size: var(--font-size-base);
   border: none;
   border-radius: var(--radius-sm);
   color: #353535 !important; /* keep: overrides dark theme input color */
@@ -335,7 +335,7 @@ li.menuLi {
 }
 
 .albumActions a span.iconLegend {
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 /* Tiles display */

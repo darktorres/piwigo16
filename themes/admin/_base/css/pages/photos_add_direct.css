@@ -166,7 +166,7 @@ a#showPermissions:hover {
 }
 #photosAddContent .Addedphotos .format-ext-name span {
   color: #fff;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   font-weight: bold;
   text-transform: uppercase;
   padding: 5px;
@@ -186,7 +186,7 @@ a#showPermissions:hover {
   font-weight: bold;
 }
 .addAlbumEmptyInfos {
-  font-size: 14px;
+  font-size: var(--font-size-md);
   margin-bottom: 25px;
   margin-top: 5px;
 }
@@ -194,7 +194,7 @@ a#showPermissions:hover {
   display: inline-block;
   padding: 10px 15px;
   font-weight: bold;
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 .addAlbumEmpty a:hover {
   text-decoration: none;
@@ -222,7 +222,7 @@ a#showPermissions:hover {
 #albumCreationLoading {
   background-color: #ffa744;
   color: #3c3c3c;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   border: none;
   padding: 12.2px 28.4px;
   font-weight: bold;
@@ -254,7 +254,7 @@ a#showPermissions:hover {
 }
 .selectedAlbum #selectedAlbumEdit,
 .selectedAlbum #selectedAlbumEditFilter {
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   cursor: pointer;
 }
 
@@ -282,7 +282,7 @@ a#showPermissions:hover {
 }
 #addFiles i::before {
   margin-left: 13px;
-  font-size: 15px;
+  font-size: var(--font-size-base);
 }
 .plupload_filelist_footer {
   display: none;
@@ -533,7 +533,7 @@ li.plupload_delete a:hover span {
 }
 #set_date_creation i {
   position: absolute;
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   top: 50%;
   transform: translate(6px, -50%);
   opacity: 0.6;
@@ -585,7 +585,7 @@ li.plupload_delete a:hover span {
   border: 1px solid transparent;
 }
 #batchManagerGlobal ul.thumbnails .wrap2 .icon-pencil {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   margin-left: 4px;
 }
 #batchManagerGlobal ul.thumbnails .wrap2 .icon-plus {
@@ -665,7 +665,7 @@ li.plupload_delete a:hover span {
   flex-direction: column;
 }
 #batchManagerGlobal .thumbnails .wrap2 .icon-zoom-square::before {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   margin-top: 2.9px;
   margin-right: 7px;
 }
@@ -974,7 +974,7 @@ li.plupload_delete a.remove-format:hover {
 .go-to-porg {
   cursor: pointer;
   padding: 7px 14px;
-  font-size: 15px;
+  font-size: var(--font-size-base);
   font-weight: bold;
   max-width: 41.06%;
   background-color: #f4ab4f;

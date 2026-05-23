@@ -1,11 +1,11 @@
 /* Set the width of the menubar for the galery */
 
 #menubar i {
-  font-size: 20px;
+  font-size: var(--font-size-xl);
 }
 
 #menubar dl dd ul li a i[class^="icon-"] {
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 #menubar dd [class^="icon-"]::before {
@@ -55,7 +55,7 @@
   font-weight: bold;
   position: relative;
   padding: 5px 1px 4px 5px;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   color: #aaa;
   cursor: pointer;
   line-height: 25px;
@@ -92,7 +92,7 @@
 }
 
 #menubar i.open-menu {
-  font-size: 14px;
+  font-size: var(--font-size-md);
   color: #666;
   float: right;
   margin-right: 5px;

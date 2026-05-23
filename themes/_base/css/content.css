@@ -52,7 +52,7 @@
 
 /* category and tag results paragraphs on a quick search */
 .search_results {
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   margin: 10px 16px;
 }
 
@@ -124,7 +124,7 @@
 .mcs-side-results > div p {
   margin: 0 0 0 10px;
   white-space: nowrap;
-  font-size: 15px;
+  font-size: var(--font-size-base);
 }
 
 .mcs-side-results .mcs-side-badge {
@@ -168,7 +168,7 @@ h3.related-tags-title {
 
 #selected-tags-container .selected-related-tag a {
   font-weight: 700;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   color: #f70;
 }
 
@@ -181,7 +181,7 @@ h3.related-tags-title {
   border-radius: var(--radius-sm);
   margin: 2px 5px 0 15px;
   font-weight: 900;
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   padding: 0 5px;
   color: #777;
 }

@@ -50,7 +50,7 @@
 .slider::after {
   content: "\E81D";
   font-family: fontello, sans-serif;
-  font-size: 15px;
+  font-size: var(--font-size-base);
   animation-name: spin;
   animation-duration: 0.5s;
   animation-iteration-count: infinite;
@@ -160,7 +160,7 @@ input:checked + .slider.small::after {
 
 .SelectionModeGroupList {
   font-weight: 700;
-  font-size: 15px;
+  font-size: var(--font-size-base);
 }
 
 .SelectionModeGroupList div {
@@ -189,7 +189,7 @@ input:checked + .slider.small::after {
 #commentsSelection button {
   display: block;
   margin: 20px auto;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 13px 30px;
   background-color: transparent;
@@ -209,7 +209,7 @@ input:checked + .slider.small::after {
 }
 
 #ConfirmGroupAction {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 20px;
   display: none;
@@ -218,13 +218,13 @@ input:checked + .slider.small::after {
 #ConfirmGroupAction p {
   margin: 20px;
   font-weight: 700;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 .ConfirmDeleteButton {
   display: block;
   margin: 20px auto;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 13px 40px;
   background-color: #ffa744;

@@ -217,7 +217,7 @@
   font-style: italic;
   text-align: start;
   padding-bottom: 5px;
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 .comment-select-checkbox,
@@ -249,7 +249,7 @@
   font-weight: 600;
   color: #3c3c3c;
   justify-content: end;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .comment-author-icon {
@@ -275,7 +275,7 @@
   border-radius: 6px;
   padding: 5px 10px;
   font-weight: bold;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   cursor: pointer;
 }
 
@@ -313,7 +313,7 @@
 .comments-selected-item {
   display: flex;
   align-items: center;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   gap: 5px;
 }
 
@@ -374,7 +374,7 @@
 }
 
 .comments-modal .comment-author-icon {
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   height: 24px;
   width: 24px;
 }

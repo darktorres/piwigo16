@@ -43,7 +43,7 @@
 }
 
 #whats_new h4 {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   font-weight: 700;
   line-height: 20.43px;
   text-align: left;
@@ -112,7 +112,7 @@
 
 #whats_new button {
   padding: 9px 10px;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-style: normal;
   font-weight: 700;
   line-height: normal;
@@ -168,7 +168,7 @@ div.stat-box {
 .stat-box .number,
 .stat-box .caption {
   display: block;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   font-weight: 600;
   text-align: center;
 }
@@ -192,7 +192,7 @@ a.stat-box:hover {
 }
 
 .chart-title-infos {
-  font-size: 14px;
+  font-size: var(--font-size-md);
   position: absolute;
   right: 0;
   bottom: 0;
@@ -205,7 +205,7 @@ a.stat-box:hover {
    inline declarations. */
 .activity-chart {
   font-weight: bold;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   display: grid;
   grid-template-columns: repeat(8, 5vw);
   grid-template-rows: repeat(var(--chart-rows), 5vw);
@@ -289,7 +289,7 @@ a.stat-box:hover {
   position: absolute;
   display: none;
   z-index: 102;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: normal;
   background-color: var(--admin-popin-bg);
   padding: 10px;
@@ -303,7 +303,7 @@ a.stat-box:hover {
   margin-bottom: 10px;
   display: flex;
   justify-content: space-between;
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 .intro-charts .tooltip .tooltip-header span {
@@ -322,7 +322,7 @@ a.stat-box:hover {
 
 .intro-charts .tooltip span::before {
   width: 1.2em;
-  font-size: 15px;
+  font-size: var(--font-size-base);
 }
 
 .intro-charts .tooltip .tooltip-details {
@@ -459,7 +459,7 @@ a.stat-box:hover {
   grid-column: 3;
   text-align: end;
   margin: 0 !important; /* keep: resets inherited tooltip margin */
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-style: italic;
   align-self: self-end;
 }
@@ -485,10 +485,10 @@ a.stat-box:hover {
 
 .tooltip-details-ext,
 .tooltip-details-size {
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 .tooltip-details-files {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-style: italic;
 }
 
@@ -499,7 +499,7 @@ a.stat-box:hover {
 
 .storage-chart span p {
   font-weight: bold;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
   color: #000;
   opacity: 0;
   line-height: 0;
@@ -528,7 +528,7 @@ a.stat-box:hover {
   padding: 10px;
   display: flex;
   align-items: center;
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 .storage-chart-legend div span {
@@ -602,7 +602,7 @@ a.stat-box:hover {
 
 .promote-link {
   color: #e18c32;
-  font-size: 15px;
+  font-size: var(--font-size-base);
   margin-block: 3.5%;
   font-weight: 700;
 }
@@ -617,7 +617,7 @@ a.stat-box:hover {
 }
 
 .subscribe-newsletter {
-  font-size: 15px;
+  font-size: var(--font-size-base);
   max-height: 17.5%;
   display: flex;
   gap: 4.64%;

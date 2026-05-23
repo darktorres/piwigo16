@@ -22,7 +22,7 @@ body {
 }
 
 #pwgHead .visit-gallery i {
-  font-size: 14px;
+  font-size: var(--font-size-md);
   color: #777;
   margin-left: -20px;
 }
@@ -270,7 +270,7 @@ form.properties span.property {
   position: absolute;
   right: 20px;
   opacity: 0.4;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
 }
 
 /* button tools */
@@ -359,7 +359,7 @@ body {
 a.admin-main {
   color: #aaa;
   display: block;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   font-weight: bold;
   text-decoration: none;
 }

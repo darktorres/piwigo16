@@ -1,5 +1,5 @@
 body {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   background-color: #1b1b1b;
   color: #c1c1c1;
 }
@@ -34,7 +34,7 @@ legend {
 
 .content h2 {
   display: block;
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   text-align: center;
   color: #c1c1c1;
 }
@@ -63,7 +63,7 @@ table.table2 td.fielddesc {
 input[type="submit"],
 input[type="button"],
 a.bigButton {
-  font-size: 14px;
+  font-size: var(--font-size-md);
   font-weight: bold;
   letter-spacing: 2px;
   border: none;

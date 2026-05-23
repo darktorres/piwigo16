@@ -53,7 +53,7 @@
 .quick-search-section {
   font-weight: bold;
   margin: 10px 0;
-  font-size: 16px;
+  font-size: var(--font-size-lg);
 }
 
 .dark.quick-search-items p {

@@ -16,6 +16,10 @@
   background: var(--admin-bg-elevated);
 }
 
+.menuLi_hidden {
+  background: var(--admin-border);
+}
+
 /* menubar is on all admin pages => No specific css file */
 #menubar {
   width: 205px;

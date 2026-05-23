@@ -92,9 +92,6 @@ ul.thumbnails input {
   padding-top: 10px;
   font-weight: bold;
 }
-.menuLi_hidden {
-  background: #ccc ;
-}
 a.Piwigo {
   font-family: verdana, arial, helvetica, sans-serif ;
   font-size: 11px;
@@ -163,9 +160,6 @@ a:focus {
 }
 .pluginName {
   color: #111;
-}
-.pluginBox.incompatible {
-  border-color: #a00 ;
 }
 
 .languageBox {
@@ -260,11 +254,6 @@ p.albumTitle img {
   color: #3c3c3c;
 }
 
-.groups .Group-name .Group-name-container p:focus {
-  border: 1px solid #3c3c3c ;
-  background-color: #fff;
-}
-
 /* Add Group */
 
 /* Group manager buttons */
@@ -326,9 +315,6 @@ input:focus + .slider {
   color: #ffe4c7 ;
 }
 
-.OrangeFont {
-  color: #f70 ;
-}
 
 /* Selection mode content */
 
@@ -358,14 +344,6 @@ input:focus + .slider {
   border: 2px solid #ffa646;
 }
 
-.groups .Group-checkbox:hover input ~ .group-checkmark {
-  background-color: #ffa646;
-}
-
-.groups .Group-checkbox input:checked ~ .group-checkmark {
-  background-color: #ffa646;
-}
-
 /* UserList Pop in */
 
 
@@ -383,16 +361,6 @@ input:focus + .slider {
   border: 1px solid #3c3c3c;
 }
 
-.ValidationUserAssociated,
-.ValidationUserDissociated {
-  color: #0a0 ;
-  background-color: #c2f5c2;
-}
-
-.ValidationUserAssociated p,
-.ValidationUserDissociated p {
-  color: #0a0 ;
-}
 
 /* ------ */
 
@@ -418,9 +386,6 @@ input:focus + .slider {
   background-color: #ffa646;
 }
 
-.font-checkbox:hover {
-  color: #3c3c3c;
-}
 a#showPermissions {
   color: #5b5b5b;
   border: 1px solid #d6d6d6;
@@ -622,11 +587,6 @@ a#showPermissions {
   background-color: #f98100;
 }
 
-.eiw .messages a {
-  background-color: #00529b;
-  color: #bde5f8;
-  padding: 2px 7px;
-}
 
 #wImg {
   background-color: #e5e5e5;
@@ -690,19 +650,3 @@ a#showPermissions {
   background-color: #f3f3f3;
 }
 
-.filter-manager-options-container {
-  color: #474747;
-}
-
-.filter-manager-options-container:hover {
-  background-color: #ededed;
-}
-
-.filter-manager-options-container.selected-filter-container {
-  background-color: #777;
-  color: #fff;
-}
-
-.filter-manager-options-container.selected-filter-container:hover {
-  background-color: #5d5d5d;
-}

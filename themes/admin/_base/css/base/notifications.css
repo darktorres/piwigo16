@@ -151,6 +151,12 @@
   text-decoration: underline;
 }
 
+.eiw .messages a {
+  background-color: var(--admin-info-message-fg);
+  color: var(--admin-text-on-accent);
+  padding: 2px 7px;
+}
+
 .header_notes {
   border: 1px solid #666;
   background: transparent url("../../icon/note.png") no-repeat right top;

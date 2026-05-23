@@ -262,6 +262,10 @@ table.languages tr td {
   color: var(--admin-accent-soft);
 }
 
+.font-checkbox:hover {
+  color: var(--admin-text);
+}
+
 .font-checkbox:hover .icon-check-empty,
 .font-checkbox:hover .icon-check {
   color: var(--admin-accent);

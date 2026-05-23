@@ -135,9 +135,6 @@ input[type="reset"]:hover {
   font-weight: bold;
   color: #9e9e9e;
 }
-.menuLi_hidden {
-  background: #333 ;
-}
 a.Piwigo {
   font-family: verdana, arial, helvetica, sans-serif ;
   font-size: 11px;
@@ -249,9 +246,6 @@ a.Piwigo:hover span.Piwigo {
 
 .pluginName {
   color: #aaa;
-}
-.pluginBox.incompatible {
-  border-color: #800 ;
 }
 /* .pluginActionLevel1 {color: #333;} */
 .pluginActionLevel2 {
@@ -619,9 +613,6 @@ table.qsearch_help_table td {
 .font-checkbox {
   color: #898888;
 }
-.font-checkbox:hover {
-  color: #ededed;
-}
 
 a#showPermissions {
   color: #d6d6d6;
@@ -824,12 +815,6 @@ a#showPermissions {
   background-color: #734627;
   padding: 2px 7px;
   color: #fff;
-}
-
-.eiw .messages a {
-  background-color: #273d5f;
-  color: #fff;
-  padding: 2px 7px;
 }
 
 .AddPluginSuccess label,
@@ -1893,25 +1878,6 @@ a#showPermissions {
   background-color: #444;
   color: #898888;
   border: 1px solid #666;
-}
-
-.filter-manager-options-container {
-  background-color: #333;
-  color: #aaa;
-  border-color: #333;
-}
-
-.filter-manager-options-container:hover {
-  background-color: #5d5d5d;
-}
-
-.filter-manager-options-container.selected-filter-container {
-  background-color: #777;
-  color: #ddd;
-}
-
-.filter-manager-options-container.selected-filter-container:hover {
-  background-color: #aaa;
 }
 
 .comments-advanced-filter .advanced-filter-btn {

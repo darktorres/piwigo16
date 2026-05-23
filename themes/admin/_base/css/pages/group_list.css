@@ -372,3 +372,31 @@
   font-size: 1.2em;
   background-color: var(--admin-bg-elevated);
 }
+
+.groups .Group-checkbox:hover input ~ .group-checkmark {
+  background-color: var(--admin-accent-soft);
+}
+
+.groups .Group-checkbox input:checked ~ .group-checkmark {
+  background-color: var(--admin-accent-soft);
+}
+
+.groups .Group-name .Group-name-container p:focus {
+  border: 1px solid var(--admin-text);
+  background-color: var(--admin-bg-page);
+}
+
+.ValidationUserAssociated,
+.ValidationUserDissociated {
+  color: var(--admin-info-success-fg);
+  background-color: var(--admin-info-success-bg);
+}
+
+.ValidationUserAssociated p,
+.ValidationUserDissociated p {
+  color: var(--admin-info-success-fg);
+}
+
+.OrangeFont {
+  color: var(--admin-accent);
+}

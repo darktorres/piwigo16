@@ -487,8 +487,7 @@
 }
 
 .cat-modify-footer-see-out,
-.savebar-see-out,
-.buttonSecond {
+.savebar-see-out {
   display: flex;
   padding: 9px 10px;
   font-size: var(--font-size-xs);

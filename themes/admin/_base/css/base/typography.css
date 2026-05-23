@@ -234,11 +234,6 @@ input[type="text"].large {
   background-color: var(--admin-stripe-even);
 }
 
-#pluginsMenuSeparator {
-  width: 80%;
-  margin: 5px auto;
-}
-
 #helpContent p {
   text-align: left;
   margin-left: var(--space-sm);

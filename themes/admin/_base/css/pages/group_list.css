@@ -208,6 +208,7 @@
 }
 
 .groups #addGroup {
+  color: var(--admin-text-muted);
   font-weight: 700;
   width: 145px;
   margin: auto;
@@ -250,11 +251,17 @@
 }
 
 .groups button.submit {
+  background-color: #ffa744;
+  color: var(--admin-text);
   font-size: 12px;
   font-weight: 700;
   padding: 13px 20px;
   border: none;
   display: inline-block;
+}
+
+.groups button.submit:hover {
+  background-color: var(--admin-accent);
 }
 
 .groups #addGroupForm .actionButtons {
@@ -333,4 +340,48 @@
 
 .UsersInGroupList .icon-cancel:hover {
   color: var(--admin-accent);
+}
+
+/* Group manager — base rules (migrated from dark/light theme.css).
+   Identical values in both themes except where noted. */
+.groups .Group-name > p,
+.addGroupForm .addGroupFormTitle {
+  color: var(--admin-text);
+  font-size: 1.2em;
+}
+
+.groups p.list_user {
+  color: var(--admin-text);
+}
+
+.addUserButton:hover {
+  text-decoration: none;
+  color: var(--admin-text);
+  background-color: var(--admin-bg-elevated);
+}
+
+label > p.group_select {
+  color: var(--admin-text-strong);
+  background-color: #c2f5c2;
+}
+
+.groups .AddUser .icon-user-add::before {
+  background-color: var(--admin-bg-elevated);
+  color: #e0e0e0;
+}
+
+.groups fieldset input[type="text"]::placeholder {
+  color: #d5d5d5;
+}
+
+.groups input[type="text"] {
+  background-color: var(--admin-bg-page);
+  border: 1px solid #d5d5d5;
+}
+
+.groups .GroupContainer,
+.groups .showCreateGroup,
+.groups .addGroupFormBlock {
+  font-size: 1.2em;
+  background-color: var(--admin-bg-elevated);
 }

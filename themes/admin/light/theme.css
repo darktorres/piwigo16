@@ -402,17 +402,9 @@ p.albumTitle img {
   margin-bottom: -3px;
 }
 
-.groups .Group-name > p,
-.addGroupForm .addGroupFormTitle {
-  color: #3c3c3c;
-  font-size: 1.2em;
-}
-
 .groups .GroupContainer,
 .groups .showCreateGroup,
 .groups .addGroupFormBlock {
-  font-size: 1.2em;
-  background-color: #fafafa;
   box-shadow: 0 2px 5px #00000024;
 }
 
@@ -422,41 +414,12 @@ p.albumTitle img {
   text-decoration: none;
 }
 
-.groups #addGroup {
-  color: #777;
-}
-
 .groups .group_number_users {
   color: #d5d5d5;
 }
 
 .addGroupLabel {
   color: #3c3c3c;
-}
-
-.addUserButton:hover {
-  text-decoration: none;
-  color: #3c3c3c;
-  background-color: #f3f3f3;
-}
-
-.groups p.list_user {
-  color: #3c3c3c;
-}
-
-label > p.group_select {
-  color: #000;
-  background-color: #c2f5c2;
-}
-
-.groups input[type="text"] {
-  background-color: #fff;
-  border: 1px solid #d5d5d5;
-}
-
-.groups .AddUser .icon-user-add::before {
-  background-color: #f3f3f3;
-  color: #e0e0e0;
 }
 
 /* Edit group name */
@@ -471,19 +434,6 @@ label > p.group_select {
 }
 
 /* Add Group */
-
-.groups fieldset input[type="text"]::placeholder {
-  color: #d5d5d5;
-}
-
-.groups button.submit {
-  background-color: #ffa744;
-  color: #3c3c3c;
-}
-
-.groups button.submit:hover {
-  background-color: #f70;
-}
 
 /* Group manager buttons */
 

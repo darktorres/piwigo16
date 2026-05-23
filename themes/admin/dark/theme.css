@@ -710,17 +710,9 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
   background-color: #111;
 }
 
-.groups .Group-name > p,
-.addGroupForm .addGroupFormTitle {
-  color: #3c3c3c;
-  font-size: 1.2em;
-}
-
 .groups .GroupContainer,
 .groups .showCreateGroup,
 .groups .addGroupFormBlock {
-  font-size: 1.2em;
-  background-color: #333;
   box-shadow: -1px 1px 2px #1a1a1a;
 }
 
@@ -730,32 +722,8 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
   text-decoration: none;
 }
 
-.groups #addGroup {
-  color: #777;
-}
-
 .groups .group_number_users {
   color: #777;
-}
-
-.addUserButton:hover {
-  text-decoration: none;
-  color: #3c3c3c;
-  background-color: #f3f3f3;
-}
-
-.groups p.list_user {
-  color: #3c3c3c;
-}
-
-label > p.group_select {
-  color: #000;
-  background-color: #c2f5c2;
-}
-
-.groups input[type="text"] {
-  background-color: #444;
-  border: 1px solid #d5d5d5;
 }
 
 #addGroupNameInput {
@@ -773,11 +741,6 @@ label > p.group_select {
   color: #bbb;
 }
 
-.groups .AddUser .icon-user-add::before {
-  background-color: #f3f3f3;
-  color: #e0e0e0;
-}
-
 /* Edit group name */
 
 .groups .Group-name {
@@ -790,19 +753,6 @@ label > p.group_select {
 }
 
 /* Add Group */
-
-.groups fieldset input[type="text"]::placeholder {
-  color: #d5d5d5;
-}
-
-.groups button.submit {
-  background-color: #ffa744;
-  color: #3c3c3c;
-}
-
-.groups button.submit:hover {
-  background-color: #f70;
-}
 
 /* Group Options */
 

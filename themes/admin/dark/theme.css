@@ -1859,11 +1859,6 @@ li.plupload_delete a.remove-format:hover {
 
 /* Activity Tab in user manager */
 
-.activity-more-filters,
-.activity-more-filters-content {
-  background-color: #343434 ;
-}
-
 .activity-select-title {
   color: #bbb;
 }

@@ -648,7 +648,7 @@ div:has(> .activity-header) {
 
 .activity-more-filters,
 .activity-more-filters-content {
-  background-color: #f3f3f3;
+  background-color: var(--admin-bg-elevated);
 }
 
 .activity-more-filters-content {

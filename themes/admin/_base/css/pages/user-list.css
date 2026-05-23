@@ -78,13 +78,13 @@
 .EditUserErrors,
 .update-password-fail,
 .icon-red-error {
-  background-color: #ffcfcf;
-  color: #ff5252;
-  border-left: solid 3px #f00;
+  background-color: var(--admin-info-error-bg);
+  color: var(--admin-info-error-fg);
+  border-left: solid 3px var(--admin-info-error-fg);
 }
 
 #AddUserSuccess span {
-  color: #0a0;
+  color: var(--admin-info-success-fg);
 }
 
 .update-user-success,
@@ -496,9 +496,9 @@ a.group_users {
 }
 
 #AddUserSuccess label {
-  background-color: #c2f5c2;
-  border-left: 2px solid #0f0;
-  color: #0a0;
+  background-color: var(--admin-info-success-bg);
+  border-left: 2px solid var(--admin-info-success-fg);
+  color: var(--admin-info-success-fg);
   padding: var(--space-sm);
   cursor: default;
 }
@@ -1295,7 +1295,7 @@ a.group_users {
 .EditUserErrors {
   opacity: 0;
   padding: 7px 0;
-  border-left: solid 3px #f00;
+  border-left: solid 3px var(--admin-info-error-fg);
   margin: 10px 0;
   font-weight: bold;
 }
@@ -1756,7 +1756,7 @@ a.group_users {
 .AddUserErrors {
   visibility: hidden;
   padding: var(--space-xs);
-  border-left: solid 3px #f00;
+  border-left: solid 3px var(--admin-info-error-fg);
 }
 
 .AddUserSubmit {

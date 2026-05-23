@@ -111,7 +111,7 @@
   color: #ffa646;
 }
 #batchManagerGlobal a.removeFilter:hover {
-  color: #f00;
+  color: var(--admin-info-error-fg);
 }
 #batchManagerGlobal .removeFilter span {
   display: none;

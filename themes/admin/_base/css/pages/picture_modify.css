@@ -224,7 +224,7 @@
 }
 
 .linked-albums-badge.badge-red {
-  background: #f00;
+  background: var(--admin-info-error-fg);
   color: #fff;
 }
 

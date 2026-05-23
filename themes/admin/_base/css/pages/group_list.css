@@ -92,13 +92,13 @@
   border-radius: 60px;
   padding: 2px;
   font-size: 45px;
-  color: #0a0;
-  background-color: #c2f5c2;
+  color: var(--admin-info-success-fg);
+  background-color: var(--admin-info-success-bg);
 }
 
 .jconfirmWarning .jconfirm-icon-c i {
   color: var(--admin-accent-soft);
-  background-color: #ffe9cf;
+  background-color: var(--admin-info-warning-bg);
 }
 
 .jconfirm-title {

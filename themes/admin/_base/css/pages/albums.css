@@ -949,5 +949,5 @@ input[name="position"] {
    add-album form. Used by include/add_album.inc.latte (line 19) +
    addAlbum.ts. */
 #categoryNameError {
-  color: #f00;
+  color: var(--admin-info-error-fg);
 }

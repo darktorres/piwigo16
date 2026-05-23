@@ -793,14 +793,14 @@
 .AddPluginSuccess span,
 .RestorePluginSuccess span,
 .DeactivatePluginSuccess span {
-  color: #0a0;
+  color: var(--admin-info-success-fg);
 }
 
 .AddPluginSuccess label,
 .DeactivatePluginSuccess label,
 .RestorePluginSuccess label {
-  background-color: #c2f5c2;
-  color: #0a0;
+  background-color: var(--admin-info-success-bg);
+  color: var(--admin-info-success-fg);
   padding: var(--space-sm);
   cursor: default;
   border-radius: 30px;

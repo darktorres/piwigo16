@@ -457,7 +457,7 @@
   visibility: hidden;
   width: 100%;
   padding: var(--space-xs);
-  border-left: solid 3px #f00;
+  border-left: solid 3px var(--admin-info-error-fg);
 }
 
 .TagSubmitOptions {

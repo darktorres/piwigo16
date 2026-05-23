@@ -34,7 +34,7 @@ input[type="text"].dError {
   background-color: #ffe5e5;
 }
 .dErrorDesc {
-  background-color: #f00;
+  background-color: var(--admin-info-error-fg);
   color: #fff;
   padding: 0 5px;
   border-radius: var(--radius-md);
@@ -226,8 +226,8 @@ input[type="text"].dError {
   z-index: 2;
   display: none;
   position: absolute;
-  color: #f22;
-  background-color: #ffd5dc;
+  color: var(--admin-info-error-fg);
+  background-color: var(--admin-info-error-bg);
   min-height: 17px;
   padding: var(--space-sm);
   border-radius: 30px;

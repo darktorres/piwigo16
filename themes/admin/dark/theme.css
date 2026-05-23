@@ -1520,9 +1520,9 @@ a#showPermissions {
 .EditUserErrors,
 .update-password-fail,
 .icon-red-error {
-  background-color: #f22;
-  color: #ffd5dc;
-  border-left: solid 3px #f22;
+  background-color: var(--admin-info-error-bg);
+  color: var(--admin-info-error-fg);
+  border-left: solid 3px var(--admin-info-error-fg);
 }
 
 .AddUserPopInContainer {
@@ -1547,13 +1547,13 @@ a#showPermissions {
 }
 
 #AddUserSuccess span {
-  color: #a9f6e3;
+  color: var(--admin-info-success-fg);
 }
 
 #AddUserSuccess label {
-  background-color: #50a48f;
-  border-left: 2px solid #a9f6e3;
-  color: #a9f6e3;
+  background-color: var(--admin-info-success-bg);
+  border-left: 2px solid var(--admin-info-success-fg);
+  color: var(--admin-info-success-fg);
 }
 
 .update-container .close-update-button:hover {

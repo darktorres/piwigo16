@@ -48,7 +48,7 @@ final readonly class TagService
     {
         if (count($tagIds) === 0) {
             $cached = RequestCache::remember('tag', 'available', fn (): array => $this->fetchAvailableTags([]));
-            return is_array($cached) ? $cached : [];
+            return $cached;
         }
         return $this->fetchAvailableTags($tagIds);
     }

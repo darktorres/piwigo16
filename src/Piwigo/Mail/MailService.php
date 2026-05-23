@@ -513,9 +513,8 @@ final readonly class MailService
                 $cacheKey .= '-' . (is_string($args['auth_key']) ? $args['auth_key'] : '');
             }
 
-            if (!RequestCache::has('mail_tpl', $cacheKey)) {
+            $template = RequestCache::remember('mail_tpl', $cacheKey, function () use ($contentType, $cacheKey, $args): Template {
                 $mailTpl = $this->getMailTemplate($contentType);
-                RequestCache::set('mail_tpl', $cacheKey, $mailTpl);
                 $this->dispatcher->dispatch(new BeforeParseMailTemplate($cacheKey, $contentType));
 
                 $addUrlParams = [];
@@ -542,12 +541,9 @@ final readonly class MailService
                         $mailTpl->assignVarFromTemplate('MAIL_CSS', 'mail-css-' . $mailTheme . '.latte');
                     }
                 }
-            }
 
-            $cachedTpl = RequestCache::get('mail_tpl', $cacheKey);
-            $template  = $cachedTpl instanceof Template
-                ? $cachedTpl
-                : throw new \LogicException('mail template not in cache for key ' . $cacheKey);
+                return $mailTpl;
+            });
             $template->assign(['MAIL_TITLE' => $args['mail_title'], 'MAIL_SUBTITLE' => $args['mail_subtitle']]);
 
             $contents[$contentType] = $template->parse('header.latte', true) ?? '';

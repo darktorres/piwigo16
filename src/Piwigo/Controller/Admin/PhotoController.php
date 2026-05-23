@@ -418,9 +418,7 @@ final class PhotoController implements AdminSubControllerInterface
             ));
             if (count($authorizeds) > 0) {
                 $category    = $authorizeds[array_rand($authorizeds)];
-                $catNamesRaw = RequestCache::remember('cat_names', 'all', fn (): array => $this->categoryRepository->findIdNamePermalinkAll());
-                /** @var array<int, CategoryNamePermalink> $catNames */
-                $catNames    = is_array($catNamesRaw) ? $catNamesRaw : [];
+                $catNames = RequestCache::remember('cat_names', 'all', fn () => $this->categoryRepository->findIdNamePermalinkAll());
                 $catRow      = ($catNames[(int) $category] ?? null)?->toRow();
                 $tpl->assign('U_JUMPTO', $this->urlService->makePictureUrl([
                     'image_id'   => $_GET['image_id'],

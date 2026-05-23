@@ -59,7 +59,7 @@ final readonly class CommentService
             $this->repo->setNbAvailableCommentsCache(CurrentUser::get()->id, $nb);
             return $nb;
         });
-        return is_int($cached) ? $cached : 0;
+        return $cached;
     }
 
     /** @param array<string,mixed> $comment */

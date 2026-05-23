@@ -1322,9 +1322,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                     $forbidden,
                 ));
 
-                $catNamesRaw = RequestCache::remember('cat_names', 'all', fn (): array => $this->categoryRepository->findIdNamePermalinkAll());
-                /** @var array<int, CategoryNamePermalink> $catNames */
-                $catNames    = is_array($catNamesRaw) ? $catNamesRaw : [];
+                $catNames = RequestCache::remember('cat_names', 'all', fn () => $this->categoryRepository->findIdNamePermalinkAll());
                 $url_img     = null;
                 if (isset($row['cat_id']) && is_numeric($row['cat_id']) && in_array((int) $row['cat_id'], $authorizeds, true)) {
                     $catRow  = ($catNames[(int) $row['cat_id']] ?? null)?->toRow();

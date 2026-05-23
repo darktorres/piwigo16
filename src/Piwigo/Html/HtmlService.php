@@ -90,13 +90,11 @@ final readonly class HtmlService
             $addUrlParamsArr['auth'] = $authKey;
         }
 
-        $catNamesRaw = RequestCache::remember(
+        $catNames = RequestCache::remember(
             'cat_names',
             'all',
-            fn (): array => $this->categoryRepository->findIdNamePermalinkAll(),
+            fn () => $this->categoryRepository->findIdNamePermalinkAll(),
         );
-        /** @var array<int, \Piwigo\Category\Projection\CategoryNamePermalink> $catNames */
-        $catNames = is_array($catNamesRaw) ? $catNamesRaw : [];
 
         $output = '';
         if ($singleLink) {
@@ -194,19 +192,11 @@ final readonly class HtmlService
      */
     public function tagAlphaCompare(array $a, array $b): int
     {
-        foreach ([$a, $b] as $tag) {
-            $tagName = is_string($tag['name'] ?? null) ? $tag['name'] : '';
-            RequestCache::remember('tag_alpha', $tagName, fn (): string => StringUtil::pwgTransliterate($tagName));
-        }
-
         $aName = is_string($a['name'] ?? null) ? $a['name'] : '';
         $bName = is_string($b['name'] ?? null) ? $b['name'] : '';
-        $aSlug = RequestCache::get('tag_alpha', $aName);
-        $bSlug = RequestCache::get('tag_alpha', $bName);
-        return strcmp(
-            is_string($aSlug) ? $aSlug : '',
-            is_string($bSlug) ? $bSlug : ''
-        );
+        $aSlug = RequestCache::remember('tag_alpha', $aName, fn (): string => StringUtil::pwgTransliterate($aName));
+        $bSlug = RequestCache::remember('tag_alpha', $bName, fn (): string => StringUtil::pwgTransliterate($bName));
+        return strcmp($aSlug, $bSlug);
     }
 
     public function accessDenied(): void
@@ -557,17 +547,15 @@ $btraceMsg
             'photos posted during the last %d days',
             $recentPeriod
         ));
-        $icon = ['TITLE' => $title, 'IS_CHILD_DATE' => $isChildDate];
-        if (RequestCache::has('get_icon', $date)) {
-            return RequestCache::get('get_icon', $date) ? $icon : [];
-        }
-        $sqlRecentDate = RequestCache::remember(
-            'get_icon',
-            'sql_recent_date',
-            fn (): string => $this->categoryRepository->findRecentDateThreshold($recentPeriod),
-        );
-        $isRecent = $date > $sqlRecentDate;
-        RequestCache::set('get_icon', $date, $isRecent);
+        $icon     = ['TITLE' => $title, 'IS_CHILD_DATE' => $isChildDate];
+        $isRecent = RequestCache::remember('get_icon', $date, function () use ($date, $recentPeriod): bool {
+            $sqlRecentDate = RequestCache::remember(
+                'get_icon',
+                'sql_recent_date',
+                fn (): string => $this->categoryRepository->findRecentDateThreshold($recentPeriod),
+            );
+            return $date > $sqlRecentDate;
+        });
         return $isRecent ? $icon : [];
     }
 }

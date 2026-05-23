@@ -2705,6 +2705,16 @@ typed properties without `is_*` guards.
 > currently **1814** as of 2026-05-23. §1.7 contributes to that goal
 > via its 2 phases but doesn't deliver the gate alone — the other 3
 > boundaries need to close as well.
+>
+> **Lineage**: §1.7's 2 phases correspond to §1.5a items 8 (repository
+> entity layer) and 9 (HTTP input boundary) per
+> `.claude/plans/lets-do-1-5a-of-sparkling-tome.md`. The earlier
+> §1.5a item 6 (typed DB scalar helpers `fetchIntColumn` /
+> `fetchStringColumn`) was dropped on the grounds that it would
+> create a transitional API made vestigial by item 8's repository
+> entity migration — that's why the 291 `fn (mixed $v)` lambdas
+> tracked in Phase 2 (was 257 at §1.5a time) belong to §1.7 rather
+> than to a standalone helper rollout.
 
 #### Phase 1 — Request DTO layer (HTTP boundary)
 
@@ -3147,8 +3157,29 @@ when its time comes:
 - `docs/SQL-DTO-AUDIT.md` — canonical list of Phase 2 work items
   with A/B/C/D/E/F/G/H/I IDs. The `feat(dto):` commit series tracks
   execution against these IDs.
-- `docs/ARRAY-REFACTOR-AUDIT.md` + `-2.md` + `-3.md` + `-4.md` —
-  earlier audit rounds; the round-4 doc is the one currently active.
+- `docs/ARRAY-REFACTOR-AUDIT.md` + `-2.md` + `-3.md` + `-4.md` — a
+  separate audit campaign from SQL-DTO-AUDIT, scoped to broader
+  array→{DTO, enum, value-object} refactors (not just SQL projection
+  rows). Round-by-round progress:
+  - **Round 1** retired 8 items (Section enum, ExtensionAction,
+    OrderSpec, SqlFragment, etc.).
+  - **Round 2** retired 31 of 33 (UserStatus, Privacy, enums A4-A18,
+    PaginatedResult, HistoryRepository DTOs, ActivityDetails, …);
+    2 dropped (MimeExtension open set, ImageInsertRow disjoint
+    callers).
+  - **Round 3** picked up adoption gaps + new DTO shapes from
+    re-grep; status doc is the canonical "what's retired" record.
+  - **Round 4** is currently active with **18 items** across Tier 1
+    (named result DTOs: `RateStats`, `PartitionedDerivativeSizes`,
+    `DerivativeSettings`, `IgnoredExtensionLists`, `ImageFileInfo`,
+    `AvailableVersions`, `NotificationConfig`) and Tier 2 (input
+    DTOs: `NewCommentData`, `CommentUpdateData`, …). Tracked via
+    the `audit-4` commit prefix.
+
+This campaign overlaps §1.7 Phase 2 in spirit but covers more than
+SQL projections — admin services, config aggregates, derivative
+settings, etc. Coordinating: every new shaped-array DTO either
+campaign promotes counts against the same F5-k psalm-info gate.
 - `.claude/plans/what-is-the-proper-magical-taco.md` — F5 master plan
   (506 lines, "Ground-up Refactor: Eliminate `mixed` from the Domain").
   Defines all 11 F5 sub-codes (F5-a through F5-k), the 5-boundary

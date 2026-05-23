@@ -881,14 +881,6 @@ table.qsearch_help_table td {
   border-color: #444;
 }
 
-#cboxLoadedContent {
-  background-color: #333 ;
-}
-
-#watermarkPositionBox {
-  background-color: #333;
-}
-
 #watermarkPositionBox label {
   color: #aaa;
 }
@@ -2071,10 +2063,6 @@ li.plupload_delete a.remove-format:hover {
 .applicationCard {
   box-shadow: -1px 1px 2px #1a1a1a;
   background: #333;
-}
-
-.applicationCard .applicationName {
-  color: #c1c1c1;
 }
 
 .applicationCard .applicationDesc {

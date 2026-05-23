@@ -203,6 +203,7 @@ a#showPermissions:hover {
   text-transform: capitalize;
 }
 #cboxLoadedContent {
+  background-color: var(--admin-bg-elevated);
   height: auto;
   padding: 20px;
 }

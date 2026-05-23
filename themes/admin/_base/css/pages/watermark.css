@@ -1,6 +1,7 @@
 /* watermark configuration (base — previously in _base/theme.css global) */
 /* watermark configuration screen */
 #watermarkPositionBox {
+  background-color: var(--admin-bg-elevated);
   width: 500px;
   padding: 5px;
 }

@@ -291,7 +291,7 @@ a.stat-box:hover {
   z-index: 102;
   font-size: 12px;
   font-weight: normal;
-  background-color: #fff;
+  background-color: var(--admin-popin-bg);
   padding: 10px;
   box-shadow: 0 0 5px #acacac;
   border-radius: 10px;
@@ -310,9 +310,10 @@ a.stat-box:hover {
   margin: 0 5px;
 }
 
-.intro-charts .tooltip .tooltip-title {
+.intro-charts .tooltip .tooltip-title,
+.intro-charts .tooltip .tooltip-details-title {
   font-weight: bold;
-  color: #3b3b3b;
+  color: var(--admin-text);
 }
 
 .intro-charts .tooltip .tooltip-date {

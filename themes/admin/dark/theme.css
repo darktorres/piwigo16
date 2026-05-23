@@ -300,7 +300,6 @@ a.stat-box:hover {
 }
 
 .intro-charts .tooltip {
-  background-color: #333;
   box-shadow: none;
 }
 
@@ -319,7 +318,6 @@ a.stat-box:hover {
 
 .intro-charts .tooltip .tooltip-details-title,
 .intro-charts .tooltip-title {
-  color: #aeaeae ;
   border: none ;
 }
 

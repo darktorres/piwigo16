@@ -2745,6 +2745,15 @@ Serializer / Validator dependency — `fromArray()` is hand-rolled, and
 in attribute constraints. The WS-layer architectural choice is settled
 and not under review here.
 
+**Also shipped on the async boundary: typed Messenger Job DTOs.** 6
+`final readonly` Job classes at `src/Piwigo/Job/{GenerateDerivative,
+BatchUpload,ReindexImages,RegenerateAllDerivatives,SendNotificationEmail,
+Failed}Job.php` carry typed properties; `Job/Handler/*Handler.php`
+classes use `#[AsMessageHandler]` + typed `$job` parameter. Same
+"typed object at the boundary" philosophy as `WsParams` but on the
+async/queue boundary instead of the sync HTTP boundary. Already
+shipping; no §1.7 work needed on this front.
+
 **Also shipped on the WS layer: typed responses via `WsResult`.** The
 interface at `src/Piwigo/Ws/WsResult.php` is the output counterpart to
 `WsParams` — each handler returning structured data returns a
@@ -2991,33 +3000,40 @@ updated to access typed properties, removed-`is_*`-guards diff in the
 PR description (see Verification below — there's no static-analysis
 baseline file to diff against).
 
-##### Audit-first
+##### The audit already exists: `docs/SQL-DTO-AUDIT.md`
 
-Before the sweep starts, bucket the 249 bare-`array` methods into:
+⚠ The "audit-first" step the original §1.7 reconciliation
+recommended is **already done** and **already shipped substantially**.
+`docs/SQL-DTO-AUDIT.md` (181 lines, as of 2026-05-23) catalogs the
+genuinely-untyped repository methods with table-per-repository
+structure: ID (A1, A2…I7), method name + line, SELECT shape, proposed
+projection class. The "feat(dto)" commit series executes against
+those IDs:
 
-- **(a) Already tight via docblock** — `@return list<NamedProjection>`
-  or `@return list<int>` etc. PHPStan already infers the element type
-  at call sites; the runtime declaration can't tighten further (no
-  `list<T>` runtime type). Work: hunt for any defensive `is_*` guards
-  at callers that are now redundant and drop them. No repo-side change.
-- **(b) Tuple-shape** — `@return list<array{registration_month: int,
-  registration_year: int}>` (real example, `UserRepository:136`).
-  Work: optionally promote to a named Projection (nicer call sites,
-  more files); or leave the array-shape annotation in place. Judgment
-  call per method.
-- **(c) Genuinely untyped** — `@return list<array<string, mixed>>`,
-  `@return array<string, mixed>`, or no `@return` annotation. Work:
-  design and add a new Projection. These are the **only** docblocks
-  that meaningfully add to the Projection class count. Initial scan
-  finds **31 such docblocks across 18 repository files** as of
-  2026-05-23 (`UserRepository` has 5 alone). The real method count is
-  lower — bucket (d) below explains why.
-- **(d) Orphaned dead docblocks** — `@return` annotations sitting
-  above an unrelated method whose own docblock immediately follows.
-  Confirmed in at least `Tag/TagRepository.php:192` and
-  `Image/ImageRepository.php:316`. Work: delete the dead docblock; no
-  Projection needed. These artificially inflate bucket (c)'s scan
-  count.
+- `091fd0c32 feat(dto): SQL-DTO-AUDIT — 31 projection classes across
+  8 repositories` (the big drop)
+- `0552664de feat(dto): A6/Tier4-6/Tier3/B3-B4 — remainder of audit-4`
+- `9a4c94c90 feat(dto): A1-A5/A7 — audit-4 Tier 1 named result DTOs`
+- … plus follow-ups for B/C/D/E groups
+
+So Phase 2 work is **substantially underway via the SQL-DTO-AUDIT
+campaign**, not in a "let's design the audit" phase. Remaining work
+breakdown:
+
+- **Done** — audit-4 Tier 1 (A1-A7, named result DTOs); B1-B6;
+  C1-C10; D1-D3; E1; F-I groups per the 091fd0c32 manifest.
+- **Open** — audit-4 remainder (Tier 5-6, follow-ons); plus any
+  drift since the audit doc was written.
+- **Out of audit scope** — methods marked "Skip" in the audit (dynamic
+  column names like `findAllByObjectWithUsername()`; SELECT * blobs
+  with admin-configured columns); orphaned dead `@return` docblocks
+  (e.g. `Tag/TagRepository.php:192`, `Image/ImageRepository.php:316`
+  — leftover from deleted methods, separate cleanup).
+
+The original "31 docblocks across 18 files" scan number I reported
+overcounted because it included methods already covered by `feat(dto)`
+commits but not yet re-grepped, plus the orphans. Cross-reference
+`docs/SQL-DTO-AUDIT.md` for the canonical open list.
 
 This audit produces the **real** target count, replacing the original
 draft's fictional "21 entities" number. Output of the audit is a
@@ -3106,6 +3122,15 @@ when its time comes:
   classes carry it — orthogonal to §1.7.
 - §1.8 (test infrastructure) — Projection fixtures and web-side DTO
   factories are good candidates for the early Pest/PHPUnit suite.
+- `docs/SQL-DTO-AUDIT.md` — canonical list of Phase 2 work items
+  with A/B/C/D/E/F/G/H/I IDs. The `feat(dto):` commit series tracks
+  execution against these IDs.
+- `docs/ARRAY-REFACTOR-AUDIT.md` + `-2.md` + `-3.md` + `-4.md` —
+  earlier audit rounds; the round-4 doc is the one currently active.
+- `docs/F5-PENDING.md` — F5 series status (F5-b factory classes,
+  F5-c session rename, F5-d Image entity foundation, F5-h WS
+  handler-class migration — confirms the F5 sub-codes I cite are
+  real and tracked).
 
 #### Verification
 

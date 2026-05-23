@@ -446,3 +446,44 @@
     max-width: 170px;
   }
 }
+
+/* Relocated from pages/user-activity.css — history search line and
+   filter chrome. Used by history.latte (per template grep). */
+.search-line {
+  background: #fafafa;
+}
+
+.search-line .date-section,
+.search-line .user-section,
+.search-line .type-section {
+  border-right: 1px solid #bbb;
+}
+
+.search-line .type-name a {
+  color: #a1a1a1;
+}
+
+.history-filter {
+  background: #f3f3f3;
+}
+
+.hasDatepicker,
+.elem-type-select {
+  background: #fff;
+}
+
+.selectable-filter label {
+  margin-bottom: 5px;
+}
+
+.selectable-filter .elem-type-select {
+  margin-top: 5px;
+}
+
+.filter-title,
+.remove-filter,
+.filter-icon {
+  color: #777;
+  background: #fff;
+  padding: 5px 0;
+}

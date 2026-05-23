@@ -402,10 +402,6 @@ p.albumTitle img {
   color: #fff;
 }
 
-input:checked + .slider {
-  background-color: #ffa646;
-}
-
 input:focus + .slider {
   box-shadow: 0 0 1px #ffa646;
 }

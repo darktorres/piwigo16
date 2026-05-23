@@ -285,3 +285,7 @@ table.languages tr td {
   color: var(--admin-accent);
 }
 
+input:checked + .slider {
+  background-color: var(--admin-accent-soft);
+}
+

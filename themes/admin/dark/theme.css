@@ -715,10 +715,6 @@ input:checked + .slider::after {
   background-color: #333;
 }
 
-input:checked + .slider {
-  background-color: #ffa646 ;
-}
-
 input:focus + .slider {
   box-shadow: 0 0 1px #ffc27f;
 }

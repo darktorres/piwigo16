@@ -1,0 +1,26 @@
+/* Admin design tokens — light defaults.
+   Child themes (dark/light/theme.css) override at :root {} when their
+   value differs from these defaults. Component-scoped tokens
+   (--admin-filter-*, --admin-info-*) live where they are consumed,
+   not here. */
+:root {
+  /* surfaces */
+  --admin-bg-page: #fff;
+  --admin-bg-panel: #fafafa;
+  --admin-bg-elevated: #f3f3f3;
+  --admin-bg-deepest: #ececec;
+
+  /* foreground */
+  --admin-text: #3c3c3c;
+  --admin-text-strong: #000;
+  --admin-text-muted: #777;
+  --admin-text-on-accent: #fff;
+
+  /* borders */
+  --admin-border: #ddd;
+  --admin-border-strong: #aaa;
+
+  /* accents (same across themes — tokenized only for consistency) */
+  --admin-accent: #f70;
+  --admin-accent-soft: #ffa646;
+}

@@ -547,15 +547,15 @@ ul.pwgtree-tree .pwgtree-element {
 
 .AlbumViewSelector input:checked + label span,
 .UserViewSelector input:checked + label span {
-  background: #ffa646;
+  background: var(--admin-accent-soft);
 }
 
 .head-button {
-  background-color: #fafafa;
+  background-color: var(--admin-bg-panel);
 }
 
 .user-container {
-  background-color: #f3f3f3;
+  background-color: var(--admin-bg-elevated);
 }
 
 .user-first-col:hover {

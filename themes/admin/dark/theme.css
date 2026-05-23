@@ -1614,11 +1614,6 @@ li.plupload_delete a.remove-format:hover {
   color: #fff;
 }
 
-.AlbumViewSelector input:checked + label span,
-.UserViewSelector input:checked + label span {
-  background: #ffa646;
-}
-
 .AlbumViewSelector input:checked + label .icon-th-large,
 .AlbumViewSelector input:checked + label .icon-th-list,
 .AlbumViewSelector input:checked + label .icon-pause {
@@ -1654,9 +1649,6 @@ li.plupload_delete a.remove-format:hover {
   background-color: #222 ;
 }
 
-.user-container {
-  background-color: #333;
-}
 
 .user-first-col:hover {
   box-sizing: border-box;

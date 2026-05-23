@@ -8,6 +8,10 @@
   --admin-info-success-fg: #0a0;
   --admin-info-warning-bg: #fd9;
   --admin-info-warning-fg: #e80;
+  --admin-info-error-bg: #ffd5dc;
+  --admin-info-error-fg: #f22;
+  --admin-info-message-bg: #bde5f8;
+  --admin-info-message-fg: #00529b;
 }
 
 /* -------------
@@ -318,8 +322,8 @@ Info
 }
 
 .info-error {
-  color: #f22;
-  background-color: #ffd5dc;
+  color: var(--admin-info-error-fg);
+  background-color: var(--admin-info-error-bg);
   display: none;
   animation-name: info-error-appear;
   animation-duration: 0.4s;

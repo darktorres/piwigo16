@@ -52,7 +52,9 @@
   /* form input border (batch manager unit, picture modify, etc.) */
   --admin-input-border: #d3d3d3;
 
-  /* h2 heading color */
+  /* heading colors */
+  --admin-h1-bg: #f3f3f3;
+  --admin-h1-fg: #333;
   --admin-h2-fg: #777;
 
   /* .showInfo (info tooltip trigger) */

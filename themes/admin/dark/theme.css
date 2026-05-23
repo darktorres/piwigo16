@@ -51,6 +51,8 @@
   --admin-bm-icon-check-selected-fg: #3c3c3c;
   --admin-big-progressbar-bg: #3c3939;
   --admin-move-cat-hover-bg: #232323;
+  --admin-h1-bg: #565656;
+  --admin-h1-fg: #c1c1c1;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -77,24 +79,9 @@ h3,
   background-color: transparent;
 }
 
-
-h1 {
-  background-color: #565656;
-  color: #c1c1c1;
-}
-#tabsheet {
-  background-color: #565656;
-}
-
-.tabsheet li.selected_tab a {
-  color: #c1c1c1;
-}
+/* Dark tabsheet: lighter font-weight than base's bold */
 .tabsheet a {
   font-weight: normal;
-}
-
-.tabsheet li:hover a {
-  color: #c1c1c1;
 }
 
 .content h4 {
@@ -813,15 +800,10 @@ a#showPermissions {
   color: #ae5d1e;
 }
 
-/* Error message */
+/* Notification sub-selectors (link/list dark overrides — tokens handle the box) */
 
-.errors {
-  color: #fec6c7;
-  background-color: #bc4b4a;
-  border-left: 4px solid #fec6c7;
-}
-
-.errors li {
+.errors li,
+.infos li {
   color: #fff;
 }
 
@@ -831,43 +813,10 @@ a#showPermissions {
   color: #fff;
 }
 
-/* Success message */
-
-.infos {
-  color: #b8feee;
-  background-color: #50a48f;
-  border-left: 4px solid #b8feee;
-}
-
-.AddPluginSuccess label,
-.DeactivatePluginSuccess label,
-.RestorePluginSuccess label {
-  color: #b8feee;
-  background-color: #50a48f;
-}
-
-.AddPluginSuccess span,
-.RestorePluginSuccess span,
-.DeactivatePluginSuccess span {
-  color: #b8feee;
-}
-
-.infos li {
-  color: #fff;
-}
-
 .infos a {
   background-color: #28554a;
   padding: 2px 7px;
   color: #fff;
-}
-
-/* Warning message */
-
-.warnings {
-  color: #fedac0;
-  background-color: #d47f44;
-  border-left: 4px solid #fedac0;
 }
 
 .warnings a {
@@ -876,18 +825,23 @@ a#showPermissions {
   color: #fff;
 }
 
-/* announcement message */
-
-.messages {
-  color: #bad6ff;
-  background-color: #4f71a4;
-  border-left: 4px solid #bad6ff;
-}
-
 .eiw .messages a {
   background-color: #273d5f;
   color: #fff;
   padding: 2px 7px;
+}
+
+.AddPluginSuccess label,
+.DeactivatePluginSuccess label,
+.RestorePluginSuccess label {
+  color: var(--admin-info-success-fg);
+  background-color: var(--admin-info-success-bg);
+}
+
+.AddPluginSuccess span,
+.RestorePluginSuccess span,
+.DeactivatePluginSuccess span {
+  color: var(--admin-info-success-fg);
 }
 
 /* Popin Jconfirm */
@@ -988,20 +942,12 @@ a#showPermissions {
   color: #0051a5;
 }
 
-.info-warning {
-  background-color: #d47f44;
-  color: #fedac0;
-}
-
+/* .info-warning/.info-error pill colors now handled by tokens in
+   dark/css/components/general.css; link color stays dark-only. */
 .info-warning a,
 .info-message a,
 .info-error a {
   color: #fff;
-}
-
-.info-error {
-  color: #ffd5dc;
-  background-color: #f22;
 }
 
 .tag-checkmark {

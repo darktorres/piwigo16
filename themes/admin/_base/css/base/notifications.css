@@ -22,7 +22,7 @@
 }
 
 .infos ul {
-  color: #3c3c3c;
+  color: var(--admin-text);
 }
 
 .eiw-icon {
@@ -31,38 +31,39 @@
 }
 
 .infos {
-  color: #0a0;
-  background-color: #c2f5c2;
+  color: var(--admin-info-success-fg);
+  background-color: var(--admin-info-success-bg);
+  border-left: 4px solid var(--admin-info-success-fg);
 }
 
 .infos a {
-  color: #3c3c3c;
+  color: var(--admin-text);
 }
 
 .errors {
-  color: #f22;
-  background-color: #ffd5dc;
-  border-left: 4px solid #f22;
+  color: var(--admin-info-error-fg);
+  background-color: var(--admin-info-error-bg);
+  border-left: 4px solid var(--admin-info-error-fg);
 }
 
 .warnings {
-  color: #e80;
-  background-color: #fd9;
-  border-left: 4px solid #e80;
+  color: var(--admin-info-warning-fg);
+  background-color: var(--admin-info-warning-bg);
+  border-left: 4px solid var(--admin-info-warning-fg);
 }
 
 .messages {
-  color: #00529b;
-  background-color: #bde5f8;
-  border-left: 4px solid #00529b;
+  color: var(--admin-info-message-fg);
+  background-color: var(--admin-info-message-bg);
+  border-left: 4px solid var(--admin-info-message-fg);
 }
 
 .success {
-  color: #3c3c3c;
+  color: var(--admin-text);
 }
 
 .error {
-  color: #3c3c3c;
+  color: var(--admin-text);
 }
 
 .metasync-success {
@@ -73,8 +74,8 @@
 }
 
 .badge {
-  background-color: #0a0;
-  color: #fff;
+  background-color: var(--admin-info-success-fg);
+  color: var(--admin-text-on-accent);
   padding: 1px 5px;
   border-radius: var(--radius-md);
   margin-left: var(--space-xs);
@@ -130,8 +131,8 @@
 .header_msgs {
   text-align: center;
   font-weight: bold;
-  color: #ff5252;
-  background-color: #ffcfcf;
+  color: var(--admin-info-error-fg);
+  background-color: var(--admin-info-error-bg);
   margin: 0;
   padding: 0 0 0 205px;
   border: 0;
@@ -140,13 +141,13 @@
 }
 
 .header_msgs a {
-  background-color: #ff5252;
-  color: #fff;
+  background-color: var(--admin-info-error-fg);
+  color: var(--admin-text-on-accent);
   padding: 8px 20px;
 }
 
 .header_msgs a:hover {
-  color: #fff;
+  color: var(--admin-text-on-accent);
   text-decoration: underline;
 }
 

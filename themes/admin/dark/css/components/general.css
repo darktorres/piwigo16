@@ -8,4 +8,8 @@
   --admin-info-success-fg: #aaf6e4;
   --admin-info-warning-bg: #d68042;
   --admin-info-warning-fg: #ffdcc2;
+  --admin-info-error-bg: #bc4b4a;
+  --admin-info-error-fg: #fec6c7;
+  --admin-info-message-bg: #4f71a4;
+  --admin-info-message-fg: #bad6ff;
 }

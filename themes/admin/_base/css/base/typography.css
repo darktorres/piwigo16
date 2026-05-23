@@ -149,12 +149,12 @@
 }
 
 h1 {
-  background-color: #f3f3f3;
+  background-color: var(--admin-h1-bg);
   margin: 0;
   padding: var(--space-lg);
   text-align: left;
   font-weight: normal;
-  color: #333;
+  color: var(--admin-h1-fg);
   font-size: 22px;
 }
 h1 .image-id {

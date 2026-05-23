@@ -274,7 +274,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                 'pwg_token'          => $pwg_token,
                 'isWebmaster'        => $this->permissionService->isWebmaster() ? 1 : 0,
                 'show_details'       => $show_details,
-                'nb_plugin'          => ['all' => $count_types_plugins['active'] + $count_types_plugins['inactive'] + $count_types_plugins['missing'] + $count_types_plugins['merged'], 'active' => $count_types_plugins['active'], 'inactive' => $count_types_plugins['inactive'], 'other' => $count_types_plugins['missing'] + $count_types_plugins['merged']],
+                'nb_plugin'          => ['all' => $count_types_plugins['active'] + $count_types_plugins['inactive'] + $count_types_plugins['missing'], 'active' => $count_types_plugins['active'], 'inactive' => $count_types_plugins['inactive'], 'other' => $count_types_plugins['missing']],
                 'activate_msg'       => Lang::t('Do you want to activate anyway?'),
                 'cancel_msg'         => Lang::t('No, I have changed my mind'),
                 'confirm_msg'        => Lang::t('Yes, I am sure'),

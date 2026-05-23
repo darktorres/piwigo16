@@ -372,8 +372,7 @@ function filterPlugins(text: string, activeFilter: string) {
         const desc = box.querySelector<HTMLElement>('.pluginDesc')?.textContent.toLowerCase() ?? '';
         const isActive = box.classList.contains('plugin-active');
         const isInactive = box.classList.contains('plugin-inactive');
-        const isOther =
-            box.classList.contains('plugin-merged') || box.classList.contains('plugin-missing');
+        const isOther = box.classList.contains('plugin-missing');
 
         const matchesText = text === '' || name.includes(text) || desc.includes(text);
         const matchesFilter =

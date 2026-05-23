@@ -167,14 +167,14 @@ td.nbEntries {
 }
 
 fieldset.tagLetter {
-  border: 1px solid #d3d3d3;
+  border: 1px solid var(--color-border);
   width: 200px;
   margin: 0.5em;
   padding: var(--space-sm);
 }
 
 legend.tagLetterLegend {
-  border: 1px solid #d3d3d3;
+  border: 1px solid var(--color-border);
   font-size: 120%;
   font-weight: bold;
   padding: 0 5px;

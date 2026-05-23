@@ -79,14 +79,14 @@
   margin: 0;
 }
 .mcs-side-results.search-in-set-button a {
-  color: #777;
+  color: var(--color-text-muted);
   font-weight: 600;
 }
 .mcs-side-results.search-in-set-button a::before {
   margin-right: var(--space-sm);
 }
 .mcs-side-results.search-in-set-button a:hover {
-  color: #777;
+  color: var(--color-text-muted);
   font-weight: 600;
   text-decoration: none;
 }
@@ -98,7 +98,7 @@
 }
 
 .mcs-side-results > div {
-  background: #555;
+  background: var(--color-border);
   box-shadow: 0 2px #00000024;
   position: relative;
   padding: 4px 10px;
@@ -108,13 +108,13 @@
   align-items: center;
   cursor: pointer;
   margin-right: var(--space-md);
-  color: #ccc;
+  color: var(--color-text);
   width: fit-content;
 }
 
 .mcs-side-results > div:hover {
-  background: #444;
-  color: #777;
+  background: var(--color-bg-elevated);
+  color: var(--color-text-muted);
 }
 .mcs-side-results > div:active {
   transform: translateY(2px);
@@ -159,7 +159,7 @@ h3.related-tags-title {
 #selected-tags-container .selected-related-tag a {
   font-weight: 700;
   font-size: var(--font-size-xs);
-  color: #f70;
+  color: var(--color-accent);
 }
 
 #selected-tags-container .selected-related-tag a.selected-related-tag-remove:hover {

@@ -1,14 +1,14 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #1b1b1b;
+  background-color: var(--color-bg-page);
 }
 
 p {
   text-align: center;
 }
 td {
-  color: #c1c1c1;
+  color: var(--color-text);
   letter-spacing: 1px;
 }
 
@@ -20,13 +20,13 @@ td {
   height: 400px;
   margin-top: -200px;
   margin-left: -350px;
-  background-color: #2c2c2c;
-  border: 2px solid #444;
+  background-color: var(--color-bg-panel);
+  border: 2px solid var(--color-bg-elevated);
 }
 
 #noPhotoWelcome {
   font-size: 25px;
-  color: #c1c1c1;
+  color: var(--color-text);
   text-align: center;
   letter-spacing: 1px;
   margin-top: var(--space-xl);
@@ -38,20 +38,20 @@ td {
 }
 
 .bigButton a {
-  background-color: #ffa646;
+  background-color: var(--color-accent-soft);
   padding: var(--space-lg);
   text-decoration: none;
   margin: 0 5px;
   border-radius: 6px;
-  color: #493c21;
+  color: var(--color-accent-text);
   font-size: 25px;
   letter-spacing: 2px;
 }
 
 .bigButton a:hover {
-  background-color: #f70;
+  background-color: var(--color-accent);
   outline: none;
-  color: #493c21;
+  color: var(--color-accent-text);
   border: none;
 }
 
@@ -73,18 +73,18 @@ td {
 #deactivate a {
   text-decoration: none;
   border: none;
-  color: #ffa646;
+  color: var(--color-link);
 }
 
 #deactivate a:hover {
-  border-bottom: 1px dotted #ffa646;
+  border-bottom: 1px dotted var(--color-link);
 }
 
 #quickconnect {
   margin: 0 auto;
   margin-top: 60px;
   width: 300px;
-  color: #c1c1c1;
+  color: var(--color-text);
   font-size: var(--font-size-md);
   letter-spacing: 1px;
 }
@@ -92,11 +92,11 @@ td {
 #quickconnect input[type="text"],
 #quickconnect input[type="password"] {
   width: 300px;
-  color: #c1c1c1;
+  color: var(--color-text);
   font-size: var(--font-size-xl);
   margin-top: 3px;
-  background-color: #3c3c3c;
-  border: 2px solid #555;
+  background-color: var(--color-bg-input);
+  border: 2px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 2px 6px;
   box-sizing: border-box;
@@ -104,8 +104,8 @@ td {
 
 #quickconnect input[type="text"]:focus,
 #quickconnect input[type="password"]:focus {
-  background-color: #444;
-  border: 2px solid #f70;
+  background-color: var(--color-bg-elevated);
+  border: 2px solid var(--color-border-accent);
   outline: none;
 }
 
@@ -114,14 +114,14 @@ td {
   font-weight: bold;
   letter-spacing: 2px;
   border: none;
-  background-color: #ffa646;
-  color: #493c21;
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent-text);
   padding: 5px 14px;
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
 #quickconnect input[type="submit"]:hover {
-  background-color: #f70;
-  color: #493c21;
+  background-color: var(--color-accent);
+  color: var(--color-accent-text);
 }

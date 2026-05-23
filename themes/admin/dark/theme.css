@@ -8,6 +8,7 @@
   --admin-border: #555;
   --admin-border-strong: #666;
   --admin-link: #777;
+  --admin-input-bg: #2c2c2c;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -759,25 +760,6 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
 }
 
 /* UserList Pop in */
-
-#UserList .AddUserBlock button {
-  background-color: #ffa744;
-  color: #3c3c3c;
-}
-
-#UserList .AddUserBlock button:hover {
-  background-color: #f70;
-}
-
-#UserList .AddUserBlock input,
-#UserList .FilterUserBlock input {
-  background-color: #2c2c2c;
-}
-
-#UserList .AddUserBlock p,
-#UserList .FilterUserBlock {
-  color: #c0c0c0;
-}
 
 .LinkUserManager a {
   background-color: #2e2e2e;
@@ -1922,10 +1904,6 @@ li.plupload_delete a.remove-format:hover {
   color: #c1c1c1;
 }
 
-.UserListPopInContainer {
-  background-color: #444;
-  border-radius: 10px;
-}
 
 .user-property-column-title,
 .edit-username-title {

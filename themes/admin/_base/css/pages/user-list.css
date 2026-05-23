@@ -60,6 +60,7 @@
 }
 
 #UserList .FilterUserBlock {
+  color: var(--admin-text);
   position: absolute;
   right: 0;
   top: 15px;
@@ -103,6 +104,8 @@
 }
 
 #UserList .AddUserBlock button {
+  background-color: #ffa744;
+  color: #3c3c3c;
   font-size: 12px;
   font-weight: 700;
   padding: 16px 10px;
@@ -110,9 +113,19 @@
   margin-top: 1px;
 }
 
+#UserList .AddUserBlock button:hover {
+  background-color: var(--admin-accent);
+}
+
+#UserList .AddUserBlock input,
+#UserList .FilterUserBlock input {
+  background-color: var(--admin-input-bg);
+}
+
 #UserList .AddUserBlock p {
   font-size: 15px;
   margin-left: 0;
+  color: var(--admin-text);
 }
 
 #UserList .FilterUserBlock span,
@@ -855,6 +868,8 @@ a.group_users {
 }
 
 .UserListPopInContainer {
+  background-color: var(--admin-bg-page);
+  border-radius: 10px;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -864,7 +879,6 @@ a.group_users {
   display: flex;
   width: 745px;
   height: 630px;
-  background-color: #fff;
 }
 
 .summary-properties-update-container {

@@ -437,30 +437,6 @@ p.albumTitle img {
 
 /* UserList Pop in */
 
-.UserListPopInContainer {
-  background-color: #fff;
-  border-radius: 10px;
-}
-
-#UserList .AddUserBlock button {
-  background-color: #ffa744;
-  color: #3c3c3c;
-}
-
-#UserList .AddUserBlock button:hover {
-  background-color: #f70;
-}
-
-#UserList .AddUserBlock input,
-#UserList .FilterUserBlock input {
-  background-color: #fff;
-}
-
-#UserList .AddUserBlock p,
-#UserList .FilterUserBlock {
-  color: #3c3c3c;
-}
-
 .LinkUserManager {
   color: #3c3c3c;
 }

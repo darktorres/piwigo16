@@ -26,4 +26,7 @@
 
   /* link color */
   --admin-link: #3a3a3a;
+
+  /* form input background */
+  --admin-input-bg: #fff;
 }

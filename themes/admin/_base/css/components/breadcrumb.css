@@ -1,3 +1,47 @@
 /* breadcrumb-item — shared chip widget used by batch_manager_unit
    and picture_modify breadcrumbs. Loaded via the admin shell @import
-   in _base/theme.css. */
+   in _base/theme.css.
+
+   Rules relocated from pages/user-activity.css; theme-specific color
+   overrides (bg, hover bg, etc.) remain in themes/admin/{dark,light}/
+   theme.css. */
+
+.breadcrumb-item {
+  margin: 0 10px 10px 12px;
+  padding: 7px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.breadcrumb-item .link-path {
+  margin-right: 15px;
+}
+.breadcrumb-item:hover .icon-cancel-circled {
+  color: #000;
+}
+
+.breadcrumb-item a {
+  padding: 0 5px;
+  font-weight: 400;
+}
+
+.breadcrumb-item .icon-cancel-circled,
+.breadcrumb-item .help-item {
+  margin-left: auto;
+  cursor: pointer;
+  position: absolute;
+  right: 10px;
+}
+
+.breadcrumb-item.add-item {
+  width: fit-content;
+  cursor: pointer;
+  color: #777;
+  transition: 0.3s;
+}
+
+.breadcrumb-item a:hover {
+  color: #3a3a3a;
+}

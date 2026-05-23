@@ -61,10 +61,14 @@ body {
 }
 
 a {
+  color: var(--admin-link);
   text-decoration: none;
 }
-a:hover {
+a:hover,
+a:active {
+  color: var(--admin-accent-soft);
   text-decoration: underline;
+  cursor: pointer;
 }
 img {
   border: none;
@@ -270,6 +274,10 @@ form.properties span.property {
 }
 
 /* button tools */
+ul.actions,
+.content form#waiting {
+  text-align: center;
+}
 ul.actions {
   text-indent: 0;
   list-style: none;

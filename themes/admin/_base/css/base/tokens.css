@@ -23,4 +23,7 @@
   /* accents (same across themes — tokenized only for consistency) */
   --admin-accent: #f70;
   --admin-accent-soft: #ffa646;
+
+  /* link color */
+  --admin-link: #3a3a3a;
 }

@@ -7,6 +7,7 @@
   --admin-text-strong: #fff;
   --admin-border: #555;
   --admin-border-strong: #666;
+  --admin-link: #777;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -192,19 +193,6 @@ a.Piwigo:hover span.Piwigo {
 /* RADU - I comment this because it makes FF form controls activation very slow)
 *, *:focus, *:active, input:active, a:active, input:focus, a:focus { outline: none; -moz-outline-width: 0px; }
 */
-
-a {
-  color: #777;
-}
-a:hover,
-a:active {
-  color: #ffa646;
-  cursor: pointer;
-}
-ul.actions,
-.content form#waiting {
-  text-align: center;
-}
 
 #adminHome a,
 #menubar li a,

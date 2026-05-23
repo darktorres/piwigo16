@@ -284,8 +284,9 @@ a#showPermissions:hover {
   background-color: var(--admin-accent-soft);
   color: initial;
 }
-#checkActions a {
-  background-color: #f0f0f0;
+#checkActions a,
+.deleteDerivButtons a {
+  background-color: var(--admin-bg-elevated);
   padding: var(--space-sm);
   color: #777;
   font-weight: bold;

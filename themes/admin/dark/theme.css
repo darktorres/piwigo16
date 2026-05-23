@@ -54,6 +54,9 @@
   --admin-h1-bg: #565656;
   --admin-h1-fg: #c1c1c1;
   --admin-accent-pale: #ffa646;
+  --admin-form-bg: #444;
+  --admin-form-fg: #999;
+  --admin-form-border: #666;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -100,14 +103,6 @@ ul.thumbnails span.wrap2 {
 td h3 {
   background-image: url("images/fillet.png");
   background-repeat: repeat-x;
-}
-/* borders */
-input,
-select,
-textarea {
-  color: #999;
-  background-color: #444;
-  border: 1px solid #666;
 }
 input:focus,
 select:focus,
@@ -445,10 +440,6 @@ a.Piwigo:hover span.Piwigo {
 input:checked + .slider::before,
 input:checked + .slider::after {
   background-color: #333;
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px #ffc27f;
 }
 
 #selection-mode-block,

@@ -487,7 +487,8 @@
 }
 
 .cat-modify-footer-see-out,
-.savebar-see-out {
+.savebar-see-out,
+.buttonSecond {
   display: flex;
   padding: 9px 10px;
   font-size: var(--font-size-xs);
@@ -496,6 +497,8 @@
   line-height: normal;
   border: none;
   cursor: pointer;
+  background-color: var(--admin-bg-deepest);
+  color: var(--admin-text);
 }
 
 .savebar-footer-block .badge {
@@ -510,6 +513,21 @@
 .cat-modify-footer-see-out:hover,
 .savebar-see-out:hover {
   text-decoration: none;
+}
+
+.cat-modify-footer-see-out:focus {
+  border: 2px solid var(--admin-accent-soft);
+  background: var(--admin-bg-deepest);
+}
+
+.buttonSecondary {
+  background-color: var(--admin-bg-deepest);
+  color: var(--admin-text);
+}
+
+.buttonSecondary:hover {
+  background-color: var(--admin-border-strong);
+  color: var(--admin-text);
 }
 
 .cat-modify-footer-start,

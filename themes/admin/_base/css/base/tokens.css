@@ -50,6 +50,11 @@
   --admin-danger: #e74c3c;
   --admin-danger-hover: #c0392b;
 
+  /* global form element defaults */
+  --admin-form-bg: #ccc;
+  --admin-form-fg: #666;
+  --admin-form-border: #999;
+
   /* form input border (batch manager unit, picture modify, etc.) */
   --admin-input-border: #d3d3d3;
 

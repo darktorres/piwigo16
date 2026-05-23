@@ -81,6 +81,10 @@ input:checked + .slider.small::after {
   margin-left: 0;
 }
 
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--admin-accent-soft);
+}
+
 .slider.loading::before {
   opacity: 0;
 }

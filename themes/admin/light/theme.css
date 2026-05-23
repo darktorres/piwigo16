@@ -36,14 +36,6 @@ textarea:focus {
   color: #666;
 }
 
-input,
-select,
-textarea {
-  color: #666;
-  background-color: #ccc;
-  border: 1px solid #999;
-}
-
 #copyright {
   color: #777;
   margin: 5px auto 0 240px;
@@ -91,18 +83,6 @@ ul.thumbnails input {
   line-height: 26px;
   padding-top: 10px;
   font-weight: bold;
-}
-a.Piwigo {
-  font-family: verdana, arial, helvetica, sans-serif ;
-  font-size: 11px;
-  font-weight: normal;
-  letter-spacing: 0;
-  color: #0cc;
-  text-decoration: none;
-  border: 0;
-}
-a.Piwigo:hover span.Piwigo {
-  border-bottom: 1px solid #0cc;
 }
 table.table2 {
   border: 2px solid #ddd;
@@ -184,15 +164,9 @@ ul.thumbnails li.rank-of-image {
 }
 
 #batchManagerGlobal #applyFilter,
-#batchManagerGlobal .addFilter-button,
-.buttonSecondary {
-  color: #3c3c3c;
-  background-color: #ececec;
-}
-
-.buttonSecondary:hover {
-  color: #3c3c3c;
-  background-color: #aaa;
+#batchManagerGlobal .addFilter-button {
+  color: var(--admin-text);
+  background-color: var(--admin-bg-deepest);
 }
 
 #batchManagerGlobal #applyFilter:hover,
@@ -292,10 +266,6 @@ p.albumTitle img {
 
 .slider::after {
   color: #fff;
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px #ffa646;
 }
 
 #selection-mode-block,
@@ -401,10 +371,6 @@ a#showPermissions {
 }
 #addAlbumForm input[name="category_name"]:focus {
   background-color: #ddd;
-}
-#checkActions a,
-.deleteDerivButtons a {
-  background-color: #e8e8e8;
 }
 #filterList select,
 #permitAction select,
@@ -590,24 +556,6 @@ a#showPermissions {
   border-color: #ececec;
 }
 
-.cat-modify-footer-see-out,
-.savebar-see-out,
-.buttonSecond {
-  background-color: #ececec ;
-  color: #3c3c3c ;
-}
-
-.cat-modify-footer-see-out:hover,
-.savebar-see-out:hover,
-.buttonSecond:hover {
-  background-color: #f29f4b ;
-  color: #3c3c3c ;
-}
-
-.cat-modify-footer-see-out:focus {
-  border: 2px solid #f4ab4f;
-  background: #ececec;
-}
 
 .cat-modify-footer-see-out.disabled {
   background-color: #ececec;

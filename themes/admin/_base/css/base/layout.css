@@ -70,6 +70,20 @@ a:active {
   text-decoration: underline;
   cursor: pointer;
 }
+a.Piwigo {
+  font-family: verdana, arial, helvetica, sans-serif;
+  font-size: 11px;
+  font-weight: normal;
+  letter-spacing: 0;
+  color: #0cc;
+  text-decoration: none;
+  border: 0;
+}
+
+a.Piwigo:hover span.Piwigo {
+  border-bottom: 1px solid #0cc;
+}
+
 img {
   border: none;
 }
@@ -79,6 +93,14 @@ input,
 select {
   margin: 0;
   font-size: 1em; /* <= some browsers don't set it correctly */
+}
+
+input,
+select,
+textarea {
+  color: var(--admin-form-fg);
+  background-color: var(--admin-form-bg);
+  border: 1px solid var(--admin-form-border);
 }
 ul,
 dl,

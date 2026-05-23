@@ -16,7 +16,7 @@
 | 1.4  | Plugin / theme + WS           | ✅ **Done**            | L         | shipped 2026-05-16 in 19 batches (B0–B18) on `16.x-rewrite`: `PluginInterface` + `PluginRegistry`, ~160 typed PSR-14 events under `src/Piwigo/Event/`, `ThemeInterface` + `ThemeRegistry`, 95 WS endpoints registered via typed `MethodDefinition` and exposed as OpenAPI 3.1 (via `SpecBuilder`) with cebe/redocly CI gates, legacy runtime deleted. `#[ApiMethod]` attribute + SpecBuilder reflection wired but no endpoint yet decorates with it — per-domain decomposition deferred (see §1.4 Phase 3 follow-up)                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | 1.5  | Security hardening            | ✅ **Done**            | M         | shipped 2026-05-22 in 4 waves on `16.x-rewrite` (A: `SameSite=Lax`/`HttpOnly`/scheme-conditional `Secure` session cookie, B: `piwigo_user_failed_logins`+`LoginThrottle` lockout & `symfony/rate-limiter` sliding-window per-IP/per-account on form+WS-API, C: `SecurityHeadersMiddleware` CSP/XFO/XCTO/Referrer-Policy/Permissions-Policy/HSTS + `composer lint:no-inline-scripts` CI guard, D: `docs/SECURITY.md`) + 3 polish commits (`Http\RequestScheme` for `PIWIGO_TRUSTED_PROXIES` X-Forwarded-Proto/-For trust, `SecurityHeaders::emitDirect()` on install/upgrade/i fast paths, doc tightening). Deferred follow-ups inventoried under §1.5                                                                                                                              |
 | 1.6  | Type correctness              | ✅ **Closed** ▸ 13 / 13 | M        | 1.6b closed; 1.6a ✅ closed (2026-05-23 — `RequestCache @template T` + imperative-cache refactor); 1.6c ✅ closed (2026-05-23): `sensitive`+`dumpForLog`, `required`+`MissingRequiredConfigException`, plugin-Config template, and `'description'` field on all 277 SCHEMA entries                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| 1.7  | Typed boundaries              | 🟢 **Active** ▸ partly shipped under different names | L         | Phase 1: ~94/99 WS endpoints already use `WsAction`+`WsParams` (per §1.4 F5-h) — admin/web-side DTOs still open. Phase 2: ~55 narrow `Projection/*` classes already in tree — 249/646 bare-`array` repo returns + 291 `fn(mixed)` lambdas still to tighten.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 1.7  | Typed boundaries              | 🟢 **Active** ▸ partly shipped under different names | L         | Phase 1: ~94/99 WS endpoints already use `WsAction`+`WsParams` (delivered as part of §1.4) — admin/web-side DTOs still open. Phase 2: 56 narrow `Projection/*` classes already in tree — 249/646 bare-`array` repo returns + 291 `fn(mixed)` lambdas still to tighten.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | 1.8  | Test infrastructure           | 🟡 **Not started**     | M + L + S | Pest → coverage → Infection (chained)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | 1.9  | Deferred / on-demand          | 🟠 **On-demand**       | —         | Monolog · S3/SFTP · supervisor · Renovate · ScriptLoader dep graph                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | 1.10 | `PHPWG_ROOT_PATH` elimination | ✅ **Done**            | L         | shipped 2026-05-17 in 13 commits + 1 fix on `16.x-rewrite`: `Piwigo\Core\Paths` value object replaces the legacy global string, threaded through DI from `Paths::fromIndex(__FILE__)` in `index.php` → `Container::build($paths)` → service constructors; 195 reads across 72 files migrated; URL-context callers cleaned up (see [#33](docs/ROADMAP-PHP.md#33--eliminate-phpwg_root_path-global-replace-with-typed-paths))                                                                                                                                                                                                                                                                                      |
@@ -2672,8 +2672,8 @@ typed properties without `is_*` guards.
 
 > **Status reconciliation (2026-05-23).** Both phases have partially
 > shipped under different names than the original §1.7 draft proposed:
-> the WS layer acquired `*Params` + `*Handler` per-endpoint classes via
-> §1.4 F5-h (~94/99 endpoints), and the repository layer grew ~55
+> the WS layer acquired `*Params` + `*Handler` per-endpoint classes
+> during §1.4 (~94/99 endpoints), and the repository layer grew 56
 > narrow `Projection/*` classes with `fromRow()` factories. The
 > remaining work — admin/web-side DTOs and the bare-`array` repo-return
 > sweep — is described below using the established in-tree patterns
@@ -2687,14 +2687,15 @@ typed properties without `is_*` guards.
 
 ##### Done — WS layer per-endpoint DTOs
 
-§1.4 F5-h shipped the per-endpoint pattern: each WS method has a
-`*Handler` (implementing `WsAction`) plus a `*Params` DTO (implementing
-`WsParams`) with a hand-rolled `public static function fromArray(array
-$raw): self` factory. As of 2026-05-23: **83 `*Params.php` + 94
-`*Handler.php` files** under `src/Piwigo/Ws/Action/Pwg/<Domain>/`,
-backing ~94 of the **99** `new MethodDefinition(...)` registrations
-(handful of legacy callback registrations remain). Representative
-example:
+§1.4 shipped the per-endpoint pattern: each WS method has a `*Handler`
+(implementing `WsAction`) plus a `*Params` DTO (implementing `WsParams`)
+with a hand-rolled `public static function fromArray(array $raw): self`
+factory. As of 2026-05-23: **83 `*Params.php` + 94 `*Handler.php` files**
+under `src/Piwigo/Ws/Action/Pwg/<Domain>/`, backing ~94 of the **99**
+`new MethodDefinition(...)` registrations (a handful of legacy callback
+registrations remain — `grep -rn 'new MethodDefinition' src/Piwigo | wc -l`
+= 99; `find src/Piwigo/Ws/Action -name '*Handler.php' | wc -l` = 94).
+Representative example:
 
 ```php
 // src/Piwigo/Ws/Action/Pwg/Images/AddCommentParams.php
@@ -2822,7 +2823,7 @@ Phase 1 carry over unchanged if that adoption ever happens.
 
 The repository layer adopted **narrow query-specific projections**
 rather than the wide-`*Entity` shape the original §1.7 draft proposed.
-As of 2026-05-23: **~55 `Projection/*` classes** in tree across
+As of 2026-05-23: **56 `Projection/*` classes** in tree across
 `src/Piwigo/{Image,Category,Tag,User,Activity,Comment,Group,Notification,Rate,Auth,Telemetry}/Projection/`,
 backed by **64 `public static function fromRow(array $row): self`**
 factories (also covers `src/Piwigo/Common/Dto/`).
@@ -2871,7 +2872,9 @@ public function findDistinctDimensions(): list
 
 `ImageDimension` is already in `src/Piwigo/Image/Projection/`. The
 work is a single-file PR per repository: tighten return types, drop
-now-redundant `@return` annotations, baseline diff committed.
+now-redundant `@return` annotations, removed-`is_*`-guards diff in
+the PR description (see Verification below — there's no static-analysis
+baseline file to diff against).
 
 ##### Audit-first
 
@@ -2908,8 +2911,8 @@ One repository at a time. `ImageRepository` remains the natural
 starter because its rows touch the most callers (`CategoryDefaultRenderer`,
 `PictureController`, `BatchManagerController`, the photo-admin pages).
 Each migration is a single PR: tightened return types, new Projection
-classes when needed, callers updated to access typed properties (where
-the old return type forced defensive guards), baseline diff committed.
+classes when needed, callers updated to access typed properties, and
+the removed-`is_*`-guards diff committed (see Verification below).
 
 > **ServiceLocator** was deleted in §1.3 — callers receive their
 > repositories via constructor injection. Confirmed
@@ -2924,25 +2927,35 @@ the old return type forced defensive guards), baseline diff committed.
   bridge cleanup and the Phase 3 channel migration. It did **not**
   depend on a typed `UserEntity` (the original §1.7 cross-ref to this
   effect was stale and has been corrected).
-- §1.4 — plugin/theme system shipped. WS handler-class migration
-  (F5-h) gave Phase 1 its WS-side win; the remaining web-side sweep
-  is independent. `#[ApiMethod]` decoration is wired but undecorated
-  on endpoint classes — orthogonal to §1.7.
+- §1.4 — plugin/theme system shipped. The WS handler-class pattern
+  (`WsAction` + `WsParams`) was delivered as part of §1.4's WS-method
+  registration work, giving Phase 1 its WS-side win; the remaining
+  web-side sweep is independent. `#[ApiMethod]` decoration is wired
+  (§1.4 Phase 3) but no endpoint classes carry it — orthogonal to §1.7.
 - §1.8 (test infrastructure) — Projection fixtures and web-side DTO
   factories are good candidates for the early Pest/PHPUnit suite.
 
 #### Verification
 
-Per migration PR:
+The repo runs PHPStan at level 10 with **no baseline file** and Psalm
+at errorLevel 2 with **no baseline file** (only two narrow
+`<issueHandlers>` suppressions in `psalm.xml`). The original §1.7 draft
+proposed "baseline diff per migration" as evidence; that workflow
+doesn't apply here — everything passes clean today. Replacement
+evidence per migration PR:
 
-- PHPStan / Psalm baseline diff — removed baseline lines are direct
-  evidence the tightening was real.
+- `composer analyse` (= phpstan + psalm) stays clean — any tightening
+  that introduced a regression would fail level-10 / errorLevel-2
+  immediately.
+- Diff inspection — the value of the migration is **removed defensive
+  `is_string` / `is_numeric` / `is_array` guards at call sites** that
+  the loose return type forced. Count those removals in the PR
+  description as the concrete win.
 - Snapshot test of one full request path through the new boundary
   (e.g. comment submission round-trip for Phase 1; a typed
-  `ImageRepository::findById()` consumer for Phase 2 — adapt to
-  whatever the migrated repo exposes).
-- `composer analyse && composer test && composer lint` clean after
-  each migration.
+  `ImageRepository` consumer for Phase 2 — adapt to whatever the
+  migrated repo exposes).
+- `composer test && composer lint` clean after each migration.
 - For Phase 2: `tools/openapi-dump.php` runs clean and
   `composer test:parallel` passes — the WS spec generator reads
   repository return types reflectively and can surface regressions

@@ -1,5 +1,21 @@
 @import "iconset.css";
 
+/* Design tokens — used by component files in css/ and inherited by child themes.
+   Note: custom properties cannot be used in @media conditions; the breakpoint
+   comment below is for documentation. Public gallery breakpoint: 600px. */
+:root {
+  --space-xs: 5px;
+  --space-sm: 10px;
+  --space-md: 15px;
+  --space-lg: 20px;
+  --space-xl: 30px;
+  --radius-sm: 5px;
+  --radius-md: 10px;
+  --z-dropdown: 100;
+  --z-overlay: 500;
+  --z-modal: 1000;
+}
+
 /* HTML5 hidden attribute — needs !important to win over class rules
    like .foo { display: flex } that would otherwise override the UA
    stylesheet's [hidden] { display: none } at higher specificity. */
@@ -878,7 +894,7 @@ because of this it needs to specifically be added to each theme */
   box-shadow: 0 2px #00000024;
   position: relative;
   padding: 4px 10px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -1086,7 +1102,7 @@ div.thumbHover {
 .switchBox {
   padding: 0.5em 5px;
   border-radius: 4px;
-  z-index: 100;
+  z-index: var(--z-dropdown);
   text-align: left;
   display: none;
   position: absolute;
@@ -1192,7 +1208,7 @@ span.related-tags .tag-counter {
 }
 
 .commentElement {
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   margin: 5px;
   padding: 2px 0 0 2px;
   float: left;

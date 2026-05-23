@@ -117,6 +117,7 @@ final class CommonBootstrap
         // Load application config from the DB. Container is available, so this can
         // go through the typed service path.
         Kernel::service(ConfigService::class)->loadConfFromDb();
+        ConfigLoader::validateRequired();
 
         LoggerRegistry::set(new Logger([
             'directory'   => $paths->root . Config::dataLocation() . Config::logDir(),

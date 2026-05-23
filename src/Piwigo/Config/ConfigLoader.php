@@ -151,4 +151,26 @@ final class ConfigLoader
             }
         }
     }
+
+    /**
+     * Assert that all SCHEMA keys marked 'required' => true have a non-empty
+     * value. Call after loadConfFromDb() so all sources (defaults, env, DB)
+     * are resolved before checking.
+     *
+     * @throws MissingRequiredConfigException
+     */
+    public static function validateRequired(): void
+    {
+        foreach (Config::SCHEMA as $key => $meta) {
+            if (!($meta['required'] ?? false)) {
+                continue;
+            }
+            $value = Config::all()[$key] ?? null;
+            if ($value === null || $value === '') {
+                throw new MissingRequiredConfigException(
+                    "Required config key '$key' is missing or empty."
+                );
+            }
+        }
+    }
 }

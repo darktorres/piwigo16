@@ -2918,9 +2918,13 @@ value-objects (ImageId, RelPath, MysqlDateTime, Md5Sum, …) for
 column-level safety. Used for identity-based queries (`findById`,
 `findByPath`, `findByFilePattern`). As of 2026-05-23: **7 Entity
 classes** under `src/Piwigo/{Image,Category,Tag,Comment}/Entity/`
-(Image=4 entity classes including `Image`, `ImageIdFilename`,
-`ImageIdPathRepresentative`, `PathRepresentative`; Category=1; Tag=1;
-Comment=1), backed by **21 ValueObject classes** in
+(Image=4: `Image`, `ImageIdFilename`, `ImageIdPathRepresentative`,
+`PathRepresentative`; Category=1; Tag=1; Comment=1). ⚠ Name drift:
+the F5 plan named the Image sub-entities `ImageThumbnail` /
+`ImageDimensions` and named a `CategoryInfo` entity; none exist
+under those names. The 3 actual Image sub-entities serve similar
+roles but were renamed during implementation. Backed by **21
+ValueObject classes** in
 `src/Piwigo/Common/ValueObject/` (the F5 master plan inventories ~32
 target VOs across identifiers, shaped strings, temporals, and enums —
 shipped 21, remaining ~11 are mostly admin-side IDs and string-shape
@@ -3212,15 +3216,23 @@ campaign promotes counts against the same F5-k psalm-info gate.
   strings / temporal / enums — `ImageId`, `Email`, `MysqlDateTime`,
   `UserStatus`, etc.; 21 shipped today). Completion status per plan
   (read 2026-05-23):
-  - **F5-a** — VO + enum foundation. Shipped (21 of ~32 VOs).
+  - **F5-a** — VO + enum foundation. Shipped: 21 of ~25 ValueObjects
+    + **4 of ~10 enums** (`src/Piwigo/Common/Enum/` has 4 files —
+    6 short of the plan's "~10 enums" target).
   - **F5-b** — `resolve()` helper shipped (`src/Piwigo/Core/resolve.php`);
     factory classes still open per F5-PENDING.
   - **F5-c** — `Session` VO shipped; `$_SESSION[` access now only in
     `Session.php` + `FlashBag.php` (gate met); `SessionStore` rename open.
-  - **F5-d** — ✓ **COMPLETE**: `Image` entity + 14 sub-steps (F5-d/1
-    through F5-d/14) all shipped, including `findById(): ?Image`,
-    `findByIds(): list<Image>`, ImageFormat + Lounge aggregate
-    extraction, `findRowsByRawQuery` escape hatch dropped.
+  - **F5-d** — ✓ **substantially COMPLETE**: `Image` entity + 12 of
+    14 enumerated sub-steps shipped (the plan claims "F5-d/1 through
+    F5-d/14 all shipped" but its own bullet list only enumerates
+    /1, /2, /3, /4, /5, /6, /7, /9, /11, /12, /13, /14 — F5-d/8 and
+    F5-d/10 either don't exist as planned sub-steps or were folded
+    into other commits without the label; `git log --grep 'F5-d/8'`
+    and `'F5-d/10'` both return zero hits). Shipped includes
+    `findById(): ?Image`, `findByIds(): list<Image>`, ImageFormat +
+    Lounge aggregate extraction, `findRowsByRawQuery` escape hatch
+    dropped.
   - **F5-e** — ✓ **COMPLETE**: Category/Tag/Comment entities; ~30
     projection DTOs across the three aggregates; full CategoryRepository
     (27/27 reading methods), TagRepository (10/10), CommentRepository

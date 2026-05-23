@@ -135,6 +135,10 @@
   cursor: pointer;
 }
 
+.search-result-item .icon-plus-circled:hover {
+  color: var(--admin-accent);
+}
+
 .notClickable {
   opacity: 0.3;
   cursor: default;

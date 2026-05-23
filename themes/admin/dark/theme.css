@@ -967,9 +967,6 @@ a#showPermissions {
   border: 1px solid #d6d6d6;
   background-color: #414141;
 }
-a#showPermissions:hover {
-  border-color: #a5a5a5;
-}
 .icon-plus.cboxElement {
   border: 1px solid #777;
   color: #c0c0c0;
@@ -1142,13 +1139,6 @@ li.plupload_delete a.remove-format:hover {
 #filter_dimension .slider-choice,
 #filter_filesize .slider-choice {
   background-color: #393939;
-}
-#filter_dimension .slider-choice:hover,
-#filter_filesize .slider-choice:hover,
-.dimension-cancel:hover {
-  text-decoration: none;
-  background-color: #ffa646 ;
-  color: initial;
 }
 #forbidAction,
 .selectionEmptyBlock,
@@ -2147,9 +2137,6 @@ li.plupload_delete a.remove-format:hover {
   color: #777;
 }
 
-.search-result-item .icon-plus-circled:hover {
-  color: #f70;
-}
 
 .search-line {
   background: #333;

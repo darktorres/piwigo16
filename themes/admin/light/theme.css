@@ -599,9 +599,6 @@ a#showPermissions {
   border: 1px solid #d6d6d6;
   background-color: #fafafa;
 }
-a#showPermissions:hover {
-  border-color: #a5a5a5;
-}
 .icon-plus.cboxElement {
   background-color: #f6f6f6;
 }
@@ -683,13 +680,6 @@ li.plupload_delete a.remove-format:hover {
 #filter_filesize .slider-choice {
   background-color: #eee;
   color: #777;
-}
-#filter_dimension .slider-choice:hover,
-#filter_filesize .slider-choice:hover,
-.dimension-cancel:hover {
-  text-decoration: none;
-  background-color: #ffa646 ;
-  color: initial;
 }
 
 #batchManagerGlobal option[disabled] {
@@ -827,9 +817,6 @@ li.plupload_delete a.remove-format:hover {
   color: #000;
 }
 
-.search-result-item .icon-plus-circled:hover {
-  color: #f70;
-}
 
 .breadcrumb-item.add-item.highlight {
   background: #ffa646;

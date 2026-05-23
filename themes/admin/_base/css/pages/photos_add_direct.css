@@ -60,6 +60,7 @@ a#showPermissions {
   margin-left: 35px;
 }
 a#showPermissions:hover {
+  border-color: #a5a5a5;
   text-decoration: none;
 }
 
@@ -334,6 +335,14 @@ li.plupload_delete a:hover span {
   border-radius: 4px;
   padding: 2px 8px;
   margin: 0 3px;
+}
+
+#filter_dimension .slider-choice:hover,
+#filter_filesize .slider-choice:hover,
+.dimension-cancel:hover {
+  text-decoration: none;
+  background-color: var(--admin-accent-soft);
+  color: initial;
 }
 #checkActions a {
   background-color: #f0f0f0;

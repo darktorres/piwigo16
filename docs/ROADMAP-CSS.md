@@ -305,13 +305,14 @@ variable override blocks. Same treatment for
 `themes/admin/dark/css/components/general.css` (content moves into the
 parent).
 
-Status after the §3.1 close-out:
+Status after the §3.1 close-out + R.0-R.7 relocation pass:
 
 | file | start | now | Δ |
 |---|---:|---:|---:|
-| `themes/admin/dark/theme.css` | 2,773 | 2,245 | -528 (-19%) |
+| `themes/admin/dark/theme.css` | 2,773 | 2,229 | -544 (-20%) |
 | `themes/admin/light/theme.css` | 1,204 | 835 | -369 (-31%) |
 | `themes/admin/_base/css/base/tokens.css` | 26 | 65 | +39 (12 → 33 tokens) |
+| `themes/admin/_base/css/pages/user-activity.css` (dumping ground) | 713 | 331 | -382 (-54%) |
 
 Both child files still carry more than a pure `:root {}` block. The
 remaining ~3,080 lines of overrides fall into three categories

@@ -73,15 +73,6 @@ a#showPermissions:hover {
   }
 }
 
-@keyframes animatedBackground {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 33px 0;
-  }
-}
-
 .big-progressbar .progressbar {
   height: 8px;
   min-width: 5px;

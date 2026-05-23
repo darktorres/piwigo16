@@ -375,3 +375,26 @@ a.admin-main:hover {
   display: none;
 }
 
+/* Help button in the admin shell header (admin.latte: <ul class="HelpActions">).
+   Relocated from pages/plugins.css — this is global admin chrome, not
+   plugins-specific. */
+.HelpActions {
+  float: right;
+  margin: 0;
+  padding: 0;
+  margin-right: 15px;
+}
+
+.HelpActions a {
+  border: 0;
+  margin: 0;
+}
+.HelpActions li {
+  list-style: none outside none;
+  text-align: center;
+  text-indent: 0;
+}
+.HelpActions .icon-help-circled::before {
+  font-size: 22px;
+}
+

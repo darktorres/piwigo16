@@ -41,7 +41,7 @@ Defenses currently in tree, grouped by adversary.
 
 | Attack              | Defense                                                                                                                                                                  |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Credential stuffing | Per-user lockout (5 failures / 15 min) backed by `piwigo_user_failed_logins`; per-IP rate limit 5/min; per-account rate limit 10/10min. See `LoginThrottle` + `LoginRateLimiterFactory`. |
+| Credential stuffing | Two stacked defenses: (a) per-user lockout (5 failures / 15 min) — `LoginThrottle` + `piwigo_user_failed_logins` — defends **targeted password spraying of known accounts**; (b) per-IP rate limit (5/min) via `LoginRateLimiterFactory` defends **username enumeration + cross-account spraying**. The per-account 10/10min bucket is a tail-end belt for case-folded username collisions. The lockout only fires for known usernames; the IP limit covers enumeration of unknown ones. |
 | CSRF                | `CsrfMiddleware` validates `pwg_token` on every POST that isn't on the exempt path-prefix list (`/ws`, `/admin`, `/install`, `/upgrade`, `/identification`, `/register`, `/qsearch`). |
 | XSS                 | `Content-Security-Policy: script-src 'self'` blocks executable inline JS; `composer lint:no-inline-scripts` catches regressions at CI time before they reach the browser. |
 | Clickjacking        | `X-Frame-Options: SAMEORIGIN` + CSP `frame-ancestors 'self'` (defense in depth — older browsers honour XFO, modern ones prefer the CSP directive).                       |
@@ -60,18 +60,22 @@ Defenses currently in tree, grouped by adversary.
 
 - `composer.lock` and `package-lock.json` are committed. Restore from
   lockfile, not from manifest, in production.
-- Composer is configured with `classmap-authoritative: true` — only
-  classes the maintainer has explicitly opted into are autoloadable
-  in production.
+- Composer runs in `classmap-authoritative` mode in production —
+  only classes present in the pre-built classmap load, so a runtime
+  PSR-4 directory walk can't pick up a dropped-in file.
 - `composer audit` and `npm audit` run in CI on every PR.
 
 ## Response headers reference
 
-Every response that flows through the PSR-15 pipeline carries the
-following headers (set by `SecurityHeadersMiddleware`, position 0).
-Bypass paths in `index.php` for `install`, `upgrade`, and the
-`i/` derivative fast-path do **not** carry these headers by design —
-they're admin-only or short-lived flows.
+Every response carries the headers below. The shapes are defined once
+in `Piwigo\Http\SecurityHeaders` (`headerMap()`); two callers apply
+them:
+- `SecurityHeadersMiddleware` runs at pipeline position 0 for normal
+  requests.
+- `SecurityHeaders::emitDirect()` runs in each fast-path branch in
+  `index.php` — `install`, `upgrade`, `upgrade_feed`, and the
+  `i/` derivative path — since those branches short-circuit before
+  the pipeline.
 
 | Header                              | Value                                                                                                                                                                          |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -92,6 +96,12 @@ they're admin-only or short-lived flows.
   CSS-variable bridges on a handful of templates (thumbnails, month
   calendar, format cards, …). The corresponding `style-src-elem`
   remains strict (`'self'`) — no inline `<style>` blocks are allowed.
+  **Note:** the policy does not restrict inline styles to the
+  `--var:value` shape — the browser accepts any inline `style=""`
+  attribute. Latte autoescaping protects against the obvious
+  XSS-via-style vector, but `|noescape` inside a `style=""` attribute
+  would bypass it. Treat any new `|noescape` near a style attribute
+  with the same scrutiny as `|noescape` near a `<script>` tag.
 - `img-src` permits `data:` and `blob:` so derivative previews and
   in-browser blob URLs work.
 - HSTS is intentionally emitted **only over HTTPS** — browsers ignore
@@ -163,9 +173,14 @@ An admin-UI button for this lives behind §1.5's "Known gaps" below.
   per-install secret. Lifetime is `Config::rememberMeLength()`.
 - **WS-API login errors:** `pwg.session.login` returns
   `PwgError(429, …)` for **both** the per-IP / per-account rate
-  limit and the per-user lockout (the lockout message is
-  `AuthException::accountLocked()`'s string). Treat any `429` as
-  "wait and try again later" — don't retry immediately.
+  limit and the per-user lockout. Treat any `429` as "wait and try
+  again later" — don't retry immediately. The locked-account branch
+  is currently detected via the `PageState::current()->loginFailureReason`
+  back-channel from `AuthService::pwgLogin()`; `AuthException::accountLocked()`
+  exists but is not yet thrown. If you replicate the login flow,
+  propagate `loginFailureReason` through your own handler until the
+  typed-Response refactor in §1.7 promotes this to a thrown
+  exception caught at the controller / WS boundary.
 
 ## CSP override procedure
 
@@ -188,6 +203,13 @@ guarantees than the code delivers.
   hardcoded in `LoginThrottle` (5 / 15 min) and
   `LoginRateLimiterFactory` (5/min IP, 10/10min account). Config
   keys are gated on §1.6c (config-schema metadata).
+- **Trusted reverse-proxy handling.** Behind a TLS-terminating proxy,
+  set `PIWIGO_TRUSTED_PROXIES` to a comma-separated CIDR list (e.g.
+  `10.0.0.0/8,172.16.0.0/12`) so `X-Forwarded-Proto` and
+  `X-Forwarded-For` are honoured for the `Secure` cookie flag, HSTS
+  emission, and per-IP rate-limit accuracy. With the var unset (the
+  default), forwarded headers are ignored entirely — secure-by-default
+  for direct deployments. See `Piwigo\Http\RequestScheme`.
 - **HSTS `preload`.** Not in the header value — committing to the
   preload list is a one-way deployment policy decision, not a code
   change. Operators who want it can append `; preload` at the
@@ -196,8 +218,22 @@ guarantees than the code delivers.
   `secure`.** Gated on a future "force HTTPS" config flag.
 - **CSP `report-uri` / `report-to`.** No reporting endpoint exists
   to wire to yet; will be revisited if production violations appear.
-- **Per-plugin CSP relaxation hook.** See "CSP override procedure"
-  above.
+- **Cross-Origin-* response headers.** `Cross-Origin-Opener-Policy`,
+  `Cross-Origin-Resource-Policy`, and `Cross-Origin-Embedder-Policy`
+  are not emitted. Each one breaks a concrete UX flow (popup-window
+  flows, third-party hotlinking), so they're left off until a
+  concrete deployment justifies the breakage.
+- **CSP escape hatch for plugins.** `SecurityHeadersMiddleware` sits
+  at pipeline position 0 and uses `withHeader` (replace, not append),
+  so a controller or plugin middleware that sets its own
+  `Content-Security-Policy` is silently overwritten. The eventual
+  contract is: inner code appends to a per-response CSP-fragment
+  attribute; the outer middleware merges fragments into the final
+  header value. See "CSP override procedure" above for the interim.
+- **Per-plugin CSP relaxation hook.** See above.
 - **WS-API rate-limit response shape.** Currently
   `PwgError(429, …)`. A typed HTTP `Response` body comes with §1.7
-  (typed boundaries / HTTP DTO Phase 1).
+  (typed boundaries / HTTP DTO Phase 1) — that same refactor will
+  promote the locked-account back-channel
+  (`PageState::loginFailureReason`) into a thrown
+  `AuthException::accountLocked()` caught at the boundary.

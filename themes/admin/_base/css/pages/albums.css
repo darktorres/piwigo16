@@ -1009,3 +1009,10 @@ input[name="position"] {
     max-width: 40%;
   }
 }
+
+/* Relocated from pages/user-list.css — error message for the
+   add-album form. Used by include/add_album.inc.latte (line 19) +
+   addAlbum.ts. */
+#categoryNameError {
+  color: #f00;
+}

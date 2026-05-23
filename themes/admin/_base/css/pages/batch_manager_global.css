@@ -297,3 +297,10 @@ ul.thumbnails span.wrap2 {
   max-width: 100%;
   margin-bottom: 10px;
 }
+
+/* Relocated from pages/user-list.css — utility class used by
+   batch_manager_global.latte (line 251: <span class="badge-number
+   badge-number-fs-128">). */
+.badge-number-fs-128 {
+  font-size: 12.8px;
+}

@@ -3,15 +3,76 @@
   src: url("fonts/OpenSans-VariableFont_wdth\,wght.ttf");
 }
 
-/* Skin color tokens — overridden per skin in skins/*.css.
-   Default values match the "default" (orange) skin. */
+/* Color tokens for the standard_pages theme.
+
+   The first six tokens (--color-accent through --color-dark-header-link)
+   are overridden per skin in skins/*.css — they encode the brand color
+   variations across the 11 skin variants.
+
+   The remaining tokens are constants — same values across all skins —
+   but live here as named tokens for centralization, intent
+   documentation, and to make future overrides cheap. */
 :root {
+  /* Per-skin (overridden in skins/*.css) */
   --color-accent: #f70;
   --color-btn-primary-fg: #fff;
   --color-light-gradient: linear-gradient(75.69deg, #ffeacf 7.64%, #fffaf3 77.87%);
   --color-dark-link: #ffebd0;
   --color-dark-link-hover: #f70;
   --color-dark-header-link: #ffebd0;
+
+  /* Surfaces — light mode */
+  --color-surface: #fff;
+  --color-surface-alt: #f8f8f8;
+  --color-surface-input: #f0f0f0;
+  --color-surface-disabled: #ccc;
+
+  /* Foreground — light mode */
+  --color-text: #3c3c3c;
+  --color-text-muted: #898989;
+  --color-text-disabled: #656565;
+
+  /* Borders / dividers */
+  --color-divider: #d8d8d8;
+
+  /* Surfaces — dark mode */
+  --color-dark-surface: #303030;
+  --color-dark-surface-alt: #3c3c3c;
+  --color-dark-surface-deepest: #202020;
+
+  /* Foreground — dark mode */
+  --color-dark-text: #d6d6d6;
+
+  /* Status — light mode */
+  --color-success-bg: #dbf6d7;
+  --color-success-fg: #6dce5e;
+  --color-info-bg: #bde5f8;
+  --color-info-fg: #00529b;
+  --color-error-fg: #eb3223;
+  --color-error-bg-dark: #be4949;
+  --color-error-fg-dark: #ffc8c8;
+
+  /* Status — dark mode */
+  --color-success-bg-dark: #4ea590;
+  --color-success-fg-dark: #aaf6e4;
+  --color-info-bg-dark: #4f71a4;
+  --color-info-fg-dark: #bad6ff;
+
+  /* Disabled button background */
+  --color-disabled-btn-bg: #aaa;
+
+  /* Borders & dark slider thumb */
+  --color-border-strong: #777;
+
+  /* Light .btn-secondary background */
+  --color-btn-secondary-bg: #ececec;
+
+  /* Dark list/row backgrounds (used in the api key list table) */
+  --color-dark-list-head: #2a2a2a;
+  --color-dark-list-row-alt: #333;
+
+  /* Accent variants */
+  --color-accent-soft: #ffa646;
 }
 
 html {
@@ -203,7 +264,7 @@ select {
   margin-right: 8px;
   line-height: 18px;
   font-size: var(--font-size-md);
-  border: 1px solid #777;
+  border: 1px solid var(--color-border-strong);
 }
 
 .remember-me-container:hover label {
@@ -272,8 +333,8 @@ a.btn-main {
 
 .btn-main:disabled {
   cursor: not-allowed;
-  background-color: #aaa;
-  color: #3c3c3c;
+  background-color: var(--color-disabled-btn-bg);
+  color: var(--color-text);
 }
 
 #return-to-gallery {
@@ -305,7 +366,7 @@ a.btn-main {
   width: 300px;
   display: block;
   margin: 15px auto;
-  border-bottom: 1px solid #d8d8d8;
+  border-bottom: 1px solid var(--color-divider);
 }
 
 #header-options {
@@ -423,7 +484,7 @@ a.btn-main {
 .error-message i,
 p.error-message,
 .modal-secret {
-  color: #eb3223;
+  color: var(--color-error-fg);
 }
 
 .error_block_container {
@@ -435,9 +496,9 @@ p.error-message,
 
 .error_block {
   display: flex;
-  background-color: #be4949;
+  background-color: var(--color-error-bg-dark);
   border-radius: var(--radius-sm);
-  color: #ffc8c8;
+  color: var(--color-error-fg-dark);
   padding: var(--space-md);
   position: relative;
   align-items: center;
@@ -815,7 +876,7 @@ label.switch {
   cursor: pointer;
   inset: 0;
   transition: 0.4s;
-  background-color: #ccc;
+  background-color: var(--color-surface-disabled);
 }
 
 .slider::before {
@@ -826,7 +887,7 @@ label.switch {
   left: 4px;
   bottom: 4px;
   transition: 0.4s;
-  background-color: #fff;
+  background-color: var(--color-surface);
 }
 
 input:checked + .slider::before {
@@ -896,8 +957,8 @@ input[type="radio"] {
 }
 
 .btn-secondary {
-  background-color: #ececec;
-  color: #3c3c3c;
+  background-color: var(--color-btn-secondary-bg);
+  color: var(--color-text);
 }
 
 .profile-section .api-icon-action i:hover,
@@ -907,7 +968,7 @@ input[type="radio"] {
 }
 
 .profile-section div.api-tab-line:nth-child(even) {
-  background-color: #303030;
+  background-color: var(--color-dark-surface);
 }
 
 .profile-section #api_key_list .edit {
@@ -930,7 +991,7 @@ input[type="radio"] {
 .light .slider::before,
 .light .body-modal,
 .light [data-tooltip]:hover::after {
-  background-color: #fff;
+  background-color: var(--color-surface);
 }
 
 #theIdentificationPage .light a,
@@ -952,7 +1013,7 @@ input[type="radio"] {
 .light #lang-select #other-languages span,
 .light .btn-cancel,
 .light .btn-link {
-  color: #3c3c3c;
+  color: var(--color-text);
 }
 
 #theIdentificationPage .light a:hover,
@@ -971,55 +1032,55 @@ input[type="radio"] {
 .light .input-container,
 .light .input-modal,
 .light .api-list-head {
-  background-color: #f0f0f0;
-  border: 1px solid #f0f0f0;
+  background-color: var(--color-surface-input);
+  border: 1px solid var(--color-surface-input);
 }
 
 .light .input-container input:is(:-webkit-autofill, :autofill) {
   box-shadow: 0 0 0 1000px #f0f0f0 inset !important; /* keep: override UA autofill bg */
-  -webkit-text-fill-color: #3c3c3c;
-  color: #3c3c3c;
+  -webkit-text-fill-color: var(--color-text);
+  color: var(--color-text);
 }
 
 .light #separator {
-  border-bottom: 1px solid #d8d8d8;
+  border-bottom: 1px solid var(--color-divider);
 }
 
 .light .gallery-icon-eye {
-  color: #898989;
+  color: var(--color-text-muted);
 }
 
 .light .success-message {
-  background-color: #dbf6d7;
-  color: #6dce5e !important; /* keep: must win over inherited color */
-  border-left: 4px solid #6dce5e;
+  background-color: var(--color-success-bg);
+  color: var(--color-success-fg) !important; /* keep: must win over inherited color */
+  border-left: 4px solid var(--color-success-fg);
 }
 
 .light .success-message i {
-  color: #6dce5e;
+  color: var(--color-success-fg);
 }
 
 .light .infos-message {
-  background-color: #bde5f8;
-  color: #00529b !important; /* keep: must win over inherited color */
-  border-left: 4px solid #00529b;
+  background-color: var(--color-info-bg);
+  color: var(--color-info-fg) !important; /* keep: must win over inherited color */
+  border-left: 4px solid var(--color-info-fg);
 }
 
 .light input:checked + .slider {
-  background-color: #ffa646;
+  background-color: var(--color-accent-soft);
 }
 
 .light input:focus + .slider {
-  box-shadow: 0 0 1px #ffa646;
+  box-shadow: 0 0 1px var(--color-accent-soft);
 }
 
 .light .slider {
-  background-color: #ccc;
+  background-color: var(--color-surface-disabled);
 }
 
 .light .api-list-body > div:nth-child(4n + 1),
 .light .api-list-body > div:nth-child(4n + 2) {
-  background-color: #f8f8f8;
+  background-color: var(--color-surface-alt);
 }
 
 .light .api-tab-line p,
@@ -1027,7 +1088,7 @@ input[type="radio"] {
 .light .keys p:not(.api-copy),
 .light .keys i,
 .light #api_key_list_expired .api-skull {
-  color: #656565;
+  color: var(--color-text-disabled);
 }
 
 .light .close-modal {
@@ -1059,7 +1120,7 @@ input[type="radio"] {
 .dark #password-form,
 .dark .profile-section,
 .dark .body-modal {
-  background-color: #3c3c3c;
+  background-color: var(--color-text);
 }
 
 #theIdentificationPage .dark a,
@@ -1084,7 +1145,7 @@ input[type="radio"] {
 .dark #lang-select #other-languages span,
 .dark .btn-cancel,
 .dark .btn-link {
-  color: #d6d6d6;
+  color: var(--color-dark-text);
 }
 
 #theIdentificationPage .dark a:hover,
@@ -1103,44 +1164,44 @@ input[type="radio"] {
 
 .dark .input-container,
 .dark .input-modal {
-  background-color: #303030;
-  border: 1px solid #303030;
+  background-color: var(--color-dark-surface);
+  border: 1px solid var(--color-dark-surface);
 }
 
 .dark .input-container input:is(:-webkit-autofill, :autofill) {
   box-shadow: 0 0 0 1000px #303030 inset !important; /* keep: override UA autofill bg */
-  -webkit-text-fill-color: #d6d6d6;
-  color: #d6d6d6;
+  -webkit-text-fill-color: var(--color-dark-text);
+  color: var(--color-dark-text);
 }
 
 .dark #separator {
-  border-bottom: 1px solid #303030;
+  border-bottom: 1px solid var(--color-dark-surface);
 }
 
 .dark .gallery-icon-eye {
-  color: #898989;
+  color: var(--color-text-muted);
 }
 
 .dark #lang-select #other-languages,
 .dark .slider,
 .dark input:checked + .slider::before {
-  background-color: #3c3c3c;
+  background-color: var(--color-text);
 }
 
 .dark .success-message {
-  background-color: #4ea590;
-  color: #aaf6e4 !important; /* keep: must win over inherited color */
-  border-left: 4px solid #aaf6e4;
+  background-color: var(--color-success-bg-dark);
+  color: var(--color-success-fg-dark) !important; /* keep: must win over inherited color */
+  border-left: 4px solid var(--color-success-fg-dark);
 }
 
 .dark .success-message i {
-  color: #aaf6e4;
+  color: var(--color-success-fg-dark);
 }
 
 .dark .infos-message {
-  background-color: #4f71a4;
-  color: #bad6ff !important; /* keep: must win over inherited color */
-  border-left: 4px solid #bad6ff;
+  background-color: var(--color-info-bg-dark);
+  color: var(--color-info-fg-dark) !important; /* keep: must win over inherited color */
+  border-left: 4px solid var(--color-info-fg-dark);
 }
 
 .dark .btn-secondary {
@@ -1149,21 +1210,21 @@ input[type="radio"] {
 }
 
 .dark input:checked + .slider {
-  background-color: #ffa646;
+  background-color: var(--color-accent-soft);
 }
 
 .dark .slider::before {
-  background-color: #777;
+  background-color: var(--color-border-strong);
 }
 
 .dark .api-list-head,
 .dark [data-tooltip]:hover::after {
-  background-color: #2a2a2a;
+  background-color: var(--color-dark-list-head);
 }
 
 .dark .api-list-body > div:nth-child(4n + 1),
 .dark .api-list-body > div:nth-child(4n + 2) {
-  background-color: #333;
+  background-color: var(--color-dark-list-row-alt);
 }
 
 .dark .icon-collapse {
@@ -1171,7 +1232,7 @@ input[type="radio"] {
 }
 
 .dark .close-modal {
-  color: #3c3c3c;
+  color: var(--color-text);
 }
 
 .dark input[type="date"] {

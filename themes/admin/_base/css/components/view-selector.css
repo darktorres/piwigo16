@@ -1,0 +1,35 @@
+/* View-selector chrome (AlbumViewSelector + UserViewSelector) — the
+   grid-vs-line toggle widget used by cat_list / albums / plugins /
+   themes_installed / languages_installed / user_list.
+
+   Rules consolidated from three duplicate copies in pages/albums.css,
+   pages/cat-list.css, pages/plugins.css, plus pages/user-list.css's
+   UserViewSelector copy. Page-specific positioning / padding stays
+   in each page CSS; the shared color + corner-radius rules live
+   here. Loaded via the admin shell @import in _base/theme.css. */
+
+.AlbumViewSelector,
+.UserViewSelector {
+  background: #fafafa;
+}
+
+.AlbumViewSelector input:checked + label,
+.UserViewSelector input:checked + label {
+  background: transparent;
+  color: #fff;
+}
+
+.AlbumViewSelector input:checked + label span,
+.UserViewSelector input:checked + label span {
+  background: var(--admin-accent-soft);
+}
+
+.AlbumViewSelector label span.firstIcon,
+.UserViewSelector label span.firstIcon {
+  border-radius: 7px 0 0 7px;
+}
+
+.AlbumViewSelector label span.lastIcon,
+.UserViewSelector label span.lastIcon {
+  border-radius: 0 7px 7px 0;
+}

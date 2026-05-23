@@ -2201,16 +2201,6 @@ Advanced filter
   padding: 6px;
 }
 
-/* Should be done with :first-child and :last-child but doesn't work */
-
-.UserViewSelector label span.firstIcon {
-  border-radius: 7px 0 0 7px;
-}
-
-.UserViewSelector label span.lastIcon {
-  border-radius: 0 7px 7px 0;
-}
-
 .icon-th-large,
 .icon-th-list,
 .icon-pause {

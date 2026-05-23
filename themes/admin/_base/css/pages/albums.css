@@ -531,25 +531,6 @@ ul.pwgtree-tree .pwgtree-element {
 }
 
 
-/* View selectors (base — previously in _base/theme.css global) */
-/* View selectors css (colors) */
-
-.AlbumViewSelector,
-.UserViewSelector {
-  background: #fafafa;
-}
-
-.AlbumViewSelector input:checked + label,
-.UserViewSelector input:checked + label {
-  background: transparent;
-  color: #fff;
-}
-
-.AlbumViewSelector input:checked + label span,
-.UserViewSelector input:checked + label span {
-  background: var(--admin-accent-soft);
-}
-
 .head-button {
   background-color: var(--admin-bg-panel);
 }

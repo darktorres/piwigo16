@@ -334,14 +334,6 @@ li.menuLi {
   white-space: nowrap;
 }
 
-.AlbumViewSelector label span.firstIcon {
-  border-radius: 7px 0 0 7px;
-}
-
-.AlbumViewSelector label span.lastIcon {
-  border-radius: 0 7px 7px 0;
-}
-
 .icon-th-large,
 .icon-th-list,
 .icon-pause {

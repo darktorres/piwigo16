@@ -1,0 +1,121 @@
+/**
+ * Picture page
+ */
+#imageHeaderBar {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  overflow: hidden;
+  width: 100%;
+}
+
+#imageHeaderBar .browsePath {
+  float: left;
+  margin-left: 10px;
+}
+
+#imageToolBar .imageNumber {
+  float: right;
+  margin: -20px 9px 0 0;
+}
+
+#imageHeaderBar h2 {
+  display: inline;
+  text-align: center;
+  padding: 0;
+}
+
+#imageToolBar {
+  text-align: center;
+  margin-bottom: 2px;
+  padding: 0;
+  height: 28px;
+}
+
+#imageToolBar .actionButtons {
+  float: left;
+}
+#imageToolBar .navigationButtons {
+  float: right;
+}
+#imageToolBar .pwg-button {
+  width: 42px;
+}
+
+#downloadSwitchBox ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+#theImage {
+  text-align: center;
+}
+
+.pdf-too-heavy {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.pdf-too-heavy a {
+  text-decoration: underline;
+}
+
+#imageInfos {
+  position: relative;
+  min-height: 120px;
+}
+
+#linkPrev {
+  float: left;
+  margin: 5px 10px 0 5px;
+}
+
+#linkNext {
+  float: right;
+  margin: 5px 5px 0 10px;
+  text-align: right;
+}
+
+#linkPrev img.svgImg,
+#linkNext img.svgImg {
+  width: 50px;
+  height: 50px;
+}
+
+.imageInfoTable ul {
+  /* this is the album list */
+  margin: 0;
+  padding: 0 0 0 1em;
+  list-style-type: square;
+}
+
+.rateButton,
+.rateButtonSelected,
+.rateButtonStarFull,
+.rateButtonStarEmpty {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background-color: transparent !important; /* keep: Konqueror doesn't accept transparent here */
+}
+
+.rateButton,
+.rateButtonStarFull,
+.rateButtonStarEmpty {
+  cursor: pointer;
+}
+
+.rateButtonSelected {
+  font-weight: bold;
+  font-size: 120%;
+}
+
+.rateButtonStarFull {
+  background: url("../icon/rating-stars.gif") no-repeat -16px center;
+  width: 16px;
+}
+
+.rateButtonStarEmpty {
+  background: url("../icon/rating-stars.gif") no-repeat 0 center;
+  width: 16px;
+}

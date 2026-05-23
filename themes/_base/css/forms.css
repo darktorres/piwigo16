@@ -1,0 +1,112 @@
+/**
+ * Default (light) form colors, image comments, image info table.
+ * These are overridden by css/colors.css for the dark public-gallery theme.
+ */
+
+/* Tables & forms */
+input[type="text"],
+input[type="password"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="file"] {
+  color: #000;
+  background-color: #d3d3d3; /* lightgrey */
+}
+
+select,
+textarea {
+  color: #000;
+  background-color: #d3d3d3; /* lightgrey */
+}
+
+.content.messages {
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+legend {
+  font-style: italic;
+  color: inherit; /* for IE */
+}
+
+#piwigoAbout {
+  width: 600px;
+  margin: 0 auto;
+}
+#linkToPiwigo {
+  text-align: center;
+}
+
+#lostPassword p {
+  text-align: left;
+  margin: 1.5em 0;
+  line-height: 1.5em;
+}
+
+/* image comments rules */
+
+#commentAdd,
+#pictureCommentList {
+  width: 48%;
+  padding: 0 1%;
+}
+#commentAdd {
+  float: left;
+}
+#pictureCommentList {
+  float: right;
+}
+
+#commentAdd input[type="text"],
+#comments textarea {
+  max-width: 99%;
+  width: 99%;
+}
+
+.commentAuthor {
+  font-weight: bold;
+}
+
+.commentDate {
+  font-style: italic;
+}
+
+#pictureCommentList .commentsOrder {
+  float: left;
+  margin-bottom: 5px;
+}
+#pictureCommentList .navigationBar {
+  float: right;
+  margin-bottom: 5px;
+}
+#pictureComments h4 {
+  margin: 0;
+}
+#comments form p {
+  margin: 5px 0;
+  text-align: left;
+}
+
+/* image info table */
+
+.imageInfoTable {
+  display: table;
+  margin: auto;
+}
+.imageInfo {
+  display: table-row;
+  line-height: 20px;
+}
+.imageInfo dt {
+  display: table-cell;
+  text-align: right;
+  font-weight: bold;
+  padding-right: 0.5em;
+}
+.imageInfo dd {
+  display: table-cell;
+  text-align: left;
+  font-weight: normal;
+}

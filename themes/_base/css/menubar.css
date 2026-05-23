@@ -1,0 +1,87 @@
+/**
+ * Menubar
+ */
+#menubar {
+  float: left;
+  margin: 0 0 10px 1em;
+  padding: 0;
+  display: inline;
+  width: 18em;
+}
+
+#menubar dl,
+#menubar dt,
+#menubar dd {
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+.menubarFilter {
+  float: right;
+  margin: -4px 0 0;
+}
+
+/* H2 properties copied here */
+#menubar dt {
+  font-weight: bold;
+  padding: 5px;
+  font-size: 120%;
+  text-align: center;
+}
+
+#menubar ul,
+#menubar form,
+#menubar p {
+  font-size: 92%;
+  margin: 10px 0 10px 5px;
+}
+#menubar ul {
+  list-style-type: square;
+  list-style-position: inside;
+  padding: 0 0 0 2px;
+}
+#menubar ul ul {
+  font-size: 100%;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+#menubar li.selected > a {
+  font-weight: bold;
+}
+
+#menubar .menuInfoCatByChild {
+  font-size: 80%;
+  font-style: italic;
+}
+
+#mbCategories img {
+  vertical-align: bottom; /* otherwise line height changes */
+}
+
+#menubar input {
+  text-indent: 2px;
+}
+
+/* quickconnect form */
+
+#quickconnect fieldset {
+  margin: 0 5px 0 0;
+  padding: 0;
+}
+
+#quickconnect div {
+  margin: 8px 5px;
+  padding: 0;
+}
+
+#menuTagCloud {
+  text-align: center;
+  margin: 5px 0;
+}
+
+#menuTagCloud span {
+  white-space: nowrap;
+  margin-right: 5px;
+}

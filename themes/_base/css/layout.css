@@ -1,0 +1,192 @@
+/**
+ * Default layout, forms, tag cloud, popup help
+ */
+
+img {
+  border: 0;
+}
+
+#thePopuphelpPage {
+  min-width: 0; /* reset the min width */
+}
+
+h1 {
+  text-align: center;
+  font-size: 150%;
+  font-weight: bold;
+  padding: 0;
+  margin: 0.5em 0 1em;
+}
+
+h2 {
+  margin: 0;
+  padding: 5px 0.5em;
+  text-align: left;
+  font-size: 120%;
+}
+
+a.pwg-state-default:hover {
+  border-bottom: 0; /* reset above for icons */
+}
+
+input,
+select {
+  margin: 0;
+  font-size: 1em; /* <= some browsers don't set it correctly */
+}
+
+form {
+  padding: 0;
+  margin: 0;
+}
+
+form p {
+  text-align: center;
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+/**
+ * Filter forms are displayed label by label with the input (or select...)
+ * below the label. Use an UL to make a group (radiobox for instance).
+ * Use a SPAN to group objects in line
+ */
+
+.filter ul {
+  display: block;
+  float: left;
+  margin: 0 1em 1em 0;
+  padding: 0;
+}
+
+.filter li {
+  list-style: none;
+  margin-bottom: 0.5em;
+}
+
+.filter fieldset {
+  padding-bottom: 0;
+}
+
+.filter p {
+  text-align: left;
+  margin: 0 0 15px;
+  line-height: 20px;
+}
+
+.filter input[name="search_allwords"],
+.filter #authors,
+.filter #tags {
+  width: 500px;
+}
+
+.filter p input[type="checkbox"],
+.filter p input[type="radio"] {
+  vertical-align: middle;
+  margin-top: -4px;
+}
+
+.filter input[type="submit"] {
+  margin-left: 1em;
+}
+
+.filter p label {
+  margin-right: 1em;
+}
+
+.properties ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.properties li {
+  margin-bottom: 0.5em;
+  padding: 0;
+  line-height: 1.8em;
+  clear: left;
+}
+
+.properties span.property {
+  font-weight: bold;
+  float: left;
+  width: 50%;
+  text-align: right;
+  margin: 0;
+  padding: 0 0.5em 0 0;
+}
+
+#fullTagCloud {
+  font-size: 120%;
+  text-align: justify;
+  padding: 0;
+  margin: 1em;
+}
+
+#fullTagCloud span {
+  white-space: nowrap;
+  margin: 0 2px;
+}
+
+/* Tag cloud font-size levels — each level is a discrete font-size step.
+   !important is needed because the public gallery may apply conflicting
+   inline or theme styles; these levels must always win their own cascade. */
+.tagLevel5 {
+  font-size: 150% !important; /* keep: must override any cascade conflict */
+}
+.tagLevel4 {
+  font-size: 140% !important; /* keep: must override any cascade conflict */
+}
+.tagLevel3 {
+  font-size: 120% !important; /* keep: must override any cascade conflict */
+}
+.tagLevel2 {
+  font-size: 100% !important; /* keep: must override any cascade conflict */
+}
+.tagLevel1 {
+  font-size: 90% !important; /* keep: must override any cascade conflict */
+}
+
+/* Popup help page */
+#thePopuphelpPage #copyright {
+  display: none;
+}
+
+#thePopuphelpPage p {
+  padding: 0.5em;
+}
+
+#thePopuphelpPage dl {
+  margin: 0 25px 25px;
+}
+
+td.nbEntries {
+  text-align: right;
+  font-style: italic;
+  font-size: 90%;
+}
+
+fieldset.tagLetter {
+  border: 1px solid #d3d3d3;
+  width: 200px;
+  margin: 0.5em;
+  padding: 10px;
+}
+
+legend.tagLetterLegend {
+  border: 1px solid #d3d3d3;
+  font-size: 120%;
+  font-weight: bold;
+  padding: 0 5px;
+  font-style: normal;
+}
+
+table.tagLetterContent {
+  width: 100%;
+  font-size: 80%;
+  border-collapse: collapse;
+}
+
+#theHeader {
+  text-align: center;
+}

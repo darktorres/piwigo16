@@ -1,0 +1,71 @@
+/* Design tokens — used by component files in css/ and inherited by child themes.
+   Note: custom properties cannot be used in @media conditions; the breakpoint
+   comment below is for documentation. Public gallery breakpoint: 600px. */
+:root {
+  --space-xs: 5px;
+  --space-sm: 10px;
+  --space-md: 15px;
+  --space-lg: 20px;
+  --space-xl: 30px;
+  --radius-sm: 5px;
+  --radius-md: 10px;
+  --z-dropdown: 100;
+  --z-overlay: 500;
+  --z-modal: 1000;
+}
+
+/* HTML5 hidden attribute — needs !important to win over class rules
+   like .foo { display: flex } that would otherwise override the UA
+   stylesheet's [hidden] { display: none } at higher specificity. */
+[hidden] {
+  display: none !important;
+}
+
+/* Atomic utility classes used across templates instead of inline style="". */
+.u-cursor-help {
+  cursor: help;
+}
+.u-invisible {
+  visibility: hidden;
+}
+.u-text-center {
+  text-align: center;
+}
+.u-text-bold {
+  font-weight: bold;
+}
+.u-d-inline {
+  display: inline;
+}
+.u-d-block {
+  display: block;
+}
+.u-clear-both {
+  clear: both;
+}
+.u-box-border {
+  box-sizing: border-box;
+}
+.u-text-left {
+  text-align: left;
+}
+.u-w-99p {
+  width: 99%;
+}
+.u-w-90p {
+  width: 90%;
+}
+.u-reset-margin {
+  margin: 0;
+  padding: 0;
+}
+
+.selected-related-tag-remove {
+  border: none;
+}
+#rateForm {
+  margin: 0;
+}
+.quick-search-section {
+  padding-top: 30px;
+}

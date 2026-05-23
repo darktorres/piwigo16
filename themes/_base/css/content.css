@@ -1,0 +1,204 @@
+/**
+ * Content layout, navigation badges, and inline content components
+ * (selectize, MCS search-in-set, action buttons, related tags).
+ */
+
+.contentWithMenu {
+  margin-left: 20em; /* = #menubar width + 2em */
+}
+
+.content .navigationBar,
+.content .additional_info,
+.content .calendarBar {
+  margin: 8px 4px;
+  text-align: center;
+}
+
+.content .pageNumberSelected {
+  font-style: italic;
+  font-weight: bold;
+}
+
+.content .additional_info {
+  font-size: 110%;
+}
+
+.content .titrePage {
+  padding: 0 0 3px;
+}
+
+.content .notification {
+  padding: 0 25px;
+}
+
+#menubar .badge {
+  margin-left: 5px;
+}
+
+.badge::before {
+  content: "[";
+}
+
+.badge::after {
+  content: "]";
+}
+
+.badge.badgeCategories::before {
+  content: "(";
+}
+.badge.badgeCategories::after {
+  content: ")";
+}
+
+/* category and tag results paragraphs on a quick search */
+.search_results {
+  font-size: 16px;
+  margin: 10px 16px;
+}
+
+/* actions */
+.categoryActions {
+  margin: 0 2px;
+  width: auto;
+  padding: 0;
+  text-indent: 0;
+  list-style: none;
+  text-align: center;
+  float: right;
+}
+
+.categoryActions li {
+  display: inline;
+}
+
+/* Selectize */
+.selectize-dropdown [data-selectable],
+.selectize-dropdown .optgroup-header {
+  padding: 0 5px !important;
+}
+
+/* Search-in-set button CSS — must live here (not search.css) because it is
+   needed on non-search pages that do not load the search-specific stylesheet. */
+
+/* the related tags button also uses this css */
+.mcs-side-results.search-in-set-button p {
+  margin: 0;
+}
+.mcs-side-results.search-in-set-button a {
+  color: #777;
+  font-weight: 600;
+}
+.mcs-side-results.search-in-set-button a::before {
+  margin-right: 10px;
+}
+.mcs-side-results.search-in-set-button a:hover {
+  color: #777;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mcs-side-results {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+
+.mcs-side-results > div {
+  background: #555;
+  box-shadow: 0 2px #00000024;
+  position: relative;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-right: 15px;
+  color: #ccc;
+  width: fit-content;
+}
+
+.mcs-side-results > div:hover {
+  background: #444;
+  color: #777;
+}
+.mcs-side-results > div:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.mcs-side-results > div p {
+  margin: 0 0 0 10px;
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+.mcs-side-results .mcs-side-badge {
+  border-radius: 25px;
+  font-weight: 700;
+  color: #fafafa;
+  margin-left: 5px;
+  padding: 2px 5px !important;
+  font-size: 10px;
+  background: #777;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: start;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 0 15px;
+}
+
+h3.related-tags-title {
+  margin: 4px 0;
+  margin-right: 10px;
+  font-weight: 400;
+}
+
+#relatedTagsBox.switchBox a {
+  padding: unset;
+  display: block;
+}
+
+#selected-tags-container {
+  margin: 0 15px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#selected-tags-container .selected-related-tag.unique-tag {
+  padding: 2px 10px;
+}
+
+#selected-tags-container .selected-related-tag a {
+  font-weight: 700;
+  font-size: 12px;
+  color: #f70;
+}
+
+#selected-tags-container .selected-related-tag a.selected-related-tag-remove:hover {
+  text-decoration: none;
+  color: #000;
+}
+
+.related-tag-condition {
+  border-radius: 5px;
+  margin: 2px 5px 0 15px;
+  font-weight: 900;
+  font-size: 20px;
+  padding: 0 5px;
+  color: #777;
+}
+
+#breadcrumb {
+  display: flex;
+  align-items: baseline;
+}
+
+@media (max-width: 600px) {
+  #breadcrumb {
+    flex-direction: column;
+  }
+}

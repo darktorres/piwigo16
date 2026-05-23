@@ -1,0 +1,103 @@
+/* Chronology / calendar elements */
+.calendarViews {
+  float: right;
+  margin: 5px 5px 0 0;
+}
+
+.calItem {
+  font-weight: bold;
+  margin: 0 1px;
+  padding: 0 1px;
+  border: 1px solid #808080;
+}
+
+.calendarCalBar {
+  margin: 10px;
+}
+
+.calCalHead {
+  font-weight: bold;
+  font-size: 110%;
+  margin: 0 2px;
+}
+
+.calCal {
+  margin: 0 2px;
+}
+
+/* nice looking month calendar */
+table.calMonth {
+  border: 0;
+  border-collapse: collapse;
+  margin-bottom: 10px; /* <-IE ignores this */
+}
+
+td.calDayCellFull,
+td.calDayCellEmpty {
+  vertical-align: top;
+  font-weight: bold;
+  font-size: 18px;
+  border: 1px solid #808080;
+}
+
+.calForeDate {
+  padding-left: 5px;
+  padding-top: 1px;
+  z-index: 3;
+  position: absolute;
+  vertical-align: top;
+  color: #fff;
+}
+
+/* Category thumbnails on main page */
+.thumbnailCategories {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+  width: 100%;
+}
+
+.thumbnailCategories li {
+  margin: 0;
+  padding: 0;
+  float: left;
+  width: 49.7%; /* 49.7% for 2 per line, 33.2% for 3 per line */
+}
+
+.thumbnailCategory {
+  display: block;
+  padding: 2px 0 0 2px;
+  margin: 5px;
+}
+
+.thumbnailCategory .description {
+  font-size: 90%;
+  overflow: auto;
+  /* width: inherit; */
+}
+
+.thumbnailCategory .description h3 {
+  text-align: left;
+  margin: 0;
+  padding: 0.1em;
+  font-size: 120%;
+}
+
+.thumbnailCategory .description p {
+  margin: 0;
+}
+
+.illustration {
+  /* also used by comment lists */
+  text-align: left;
+  margin: 2px 0 0 2px;
+  float: left;
+}
+
+.loader {
+  display: none;
+  position: fixed;
+  right: 0;
+  bottom: 0;
+}

@@ -1,0 +1,247 @@
+/**
+ * Dark theme — the public gallery default color scheme.
+ * Overrides form colors and structural elements set above.
+ */
+body {
+  margin: 5px;
+  padding: 0;
+  font-size: 0.8em;
+  font-family: Arial, Helvetica, sans-serif;
+  min-width: 60em;
+  background-color: #1b1b1b;
+  color: #c1c1c1;
+}
+
+a {
+  text-decoration: none;
+  color: #ffa646;
+}
+a:hover {
+  border-bottom: 1px solid #858460;
+  border-bottom-color: #ffa646;
+  color: #f70;
+}
+
+h1,
+h2,
+h3 {
+  color: #c1c1c1;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="file"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+select,
+textarea {
+  color: #c1c1c1;
+  background-color: #3c3c3c;
+  border: 1px solid #555;
+}
+
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  background-color: #ffa646;
+  color: #493c21;
+  border: none;
+  cursor: pointer;
+}
+
+input[type="submit"]:hover,
+input[type="button"]:hover,
+input[type="reset"]:hover {
+  background-color: #f70;
+  color: #493c21;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  background-color: #444;
+  border-color: #f70;
+  outline: none;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  border: none;
+  accent-color: #ffa646;
+}
+
+fieldset {
+  padding: 1em;
+  margin: 1em;
+  border-color: #444;
+}
+
+fieldset.tagLetter,
+legend.tagLetterLegend {
+  border-color: #555;
+}
+
+tr.tagLine {
+  border-bottom: 1px solid #ddd;
+  border-bottom-color: #444;
+}
+
+div.thumbHover {
+  /* only first & last holders are divs */
+  width: 108px;
+  height: 118px;
+  border: 1px solid #808080;
+  padding: 0 5px;
+  line-height: 1.2;
+  border-color: #555;
+}
+
+.switchBoxTitle {
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  border-bottom-color: #555;
+}
+
+.switchBox {
+  padding: 0.5em 5px;
+  border-radius: 4px;
+  z-index: var(--z-dropdown);
+  text-align: left;
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background-color: #2c2c2c;
+  border: 1px solid #444;
+  /* left, right set through js */
+}
+
+.errors {
+  /* Errors display */
+  font-weight: bold;
+  margin: 5px;
+  border: 1px solid #f00;
+  background: #3a1a1a;
+  padding: 10px 50px 10px 10px;
+  color: #f77;
+  border-color: #f22;
+}
+
+.infos {
+  color: #7ecf7e;
+  background: #1a3a1a;
+  margin: 5px;
+  padding: 10px 50px 10px 10px;
+  border: none;
+}
+
+.message {
+  background-color: #2c2c1a;
+  color: #c1c1c1;
+  margin-bottom: 1em;
+  padding: 12px;
+  border-radius: 3px;
+}
+
+.header_msgs {
+  text-align: center;
+  font-weight: bold;
+  color: #c1c1c1;
+  /* dimgray */
+  margin: 1px;
+  padding: 1px;
+  background-color: #2c2c2c;
+}
+
+.header_notes {
+  border: 1px solid #aaa;
+  text-align: center;
+  background-image: url("../icon/note.png");
+  background-repeat: no-repeat;
+  background-position: top left;
+  font-weight: bold;
+  margin: 14px;
+  padding: 5px 0 0;
+  border-color: #555;
+  color: #c1c1c1;
+}
+
+span.related-tags {
+  padding: 4px 12px;
+  margin: 3px;
+  border-radius: 15px;
+  background-color: #2c2c2c;
+}
+
+span.related-tags a {
+  font-weight: 700;
+  color: #c1c1c1;
+  text-decoration: none;
+}
+
+span.related-tags:hover {
+  background-color: #3c3c3c;
+}
+
+span.related-tags .tag-counter {
+  display: inline-block;
+  margin-left: 9px;
+  color: #777;
+  font-weight: 700;
+}
+
+#selected-tags-container .selected-related-tag {
+  background-color: #3a2800;
+  border: 1px solid #f70;
+  color: #f70;
+  border-radius: 15px;
+  padding: 2px 10px;
+  padding-right: 5px;
+  margin-right: 15px;
+  border-color: #f70;
+}
+
+.calBackDate {
+  padding-left: 4px;
+  padding-top: 0;
+  z-index: 2;
+  position: absolute;
+  vertical-align: top;
+  color: #c1c1c1;
+}
+
+.commentElement {
+  border-radius: var(--radius-sm);
+  margin: 5px;
+  padding: 2px 0 0 2px;
+  float: left;
+  width: 99%;
+  background-color: #2c2c2c;
+  border: 1px solid #444;
+}
+
+td {
+  color: #c1c1c1;
+}
+table {
+  /* horizontaly centered */
+  margin-left: auto;
+  margin-right: auto;
+  color: #c1c1c1;
+}
+
+.content .navigationBar,
+span.calItem,
+td.calDayCellEmpty {
+  color: #666;
+}
+
+#copyright {
+  clear: both;
+  font-size: 83%;
+  text-align: center;
+  margin: 0 0 10px;
+  color: #777;
+}

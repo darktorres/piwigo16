@@ -16,7 +16,7 @@
 | 1.4  | Plugin / theme + WS           | ✅ **Done**            | L         | shipped 2026-05-16 in 19 batches (B0–B18) on `16.x-rewrite`: `PluginInterface` + `PluginRegistry`, ~160 typed PSR-14 events under `src/Piwigo/Event/`, `ThemeInterface` + `ThemeRegistry`, 95 WS endpoints registered via typed `MethodDefinition` and exposed as OpenAPI 3.1 (via `SpecBuilder`) with cebe/redocly CI gates, legacy runtime deleted. `#[ApiMethod]` attribute + SpecBuilder reflection wired but no endpoint yet decorates with it — per-domain decomposition deferred (see §1.4 Phase 3 follow-up)                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | 1.5  | Security hardening            | ✅ **Done**            | M         | shipped 2026-05-22 in 4 waves on `16.x-rewrite` (A: `SameSite=Lax`/`HttpOnly`/scheme-conditional `Secure` session cookie, B: `piwigo_user_failed_logins`+`LoginThrottle` lockout & `symfony/rate-limiter` sliding-window per-IP/per-account on form+WS-API, C: `SecurityHeadersMiddleware` CSP/XFO/XCTO/Referrer-Policy/Permissions-Policy/HSTS + `composer lint:no-inline-scripts` CI guard, D: `docs/SECURITY.md`) + 3 polish commits (`Http\RequestScheme` for `PIWIGO_TRUSTED_PROXIES` X-Forwarded-Proto/-For trust, `SecurityHeaders::emitDirect()` on install/upgrade/i fast paths, doc tightening). Deferred follow-ups inventoried under §1.5                                                                                                                              |
 | 1.6  | Type correctness              | ✅ **Closed** ▸ 13 / 13 | M        | 1.6b closed; 1.6a ✅ closed (2026-05-23 — `RequestCache @template T` + imperative-cache refactor); 1.6c ✅ closed (2026-05-23): `sensitive`+`dumpForLog`, `required`+`MissingRequiredConfigException`, plugin-Config template, and `'description'` field on all 277 SCHEMA entries                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| 1.7  | Typed boundaries              | 🟢 **Active** ▸ partly shipped under different names | L         | Phase 1: ~94/99 WS endpoints already use `WsAction`+`WsParams` (delivered as part of §1.4) — admin/web-side DTOs still open. Phase 2: 56 narrow `Projection/*` classes already in tree — 249/646 bare-`array` repo returns + 291 `fn(mixed)` lambdas still to tighten.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 1.7  | Typed boundaries (eliminate `mixed` from the domain) | 🟢 **Active** ▸ 5 boundaries opened, 3 substantially shipped | L         | Full mixed-elimination effort across 5 boundaries (HTTP request, Stored JSON, DB rows, `$_SESSION`, PSR-11 container). Shipped: WS handler+Params layer (95/95), Entity+Projection patterns (7 Entity + 73 projection-shape), `Session` VO + gate met, TelemetryPayload + SearchRules foundation, `resolve()` helper, 21 of ~25 ValueObjects, 4 of ~10 Enums. Open: WsResult tightening (7/95), 30-50 web/admin Request DTOs (758 raw `$_POST`/`$_GET` reads), F5-i SearchService/Renderer deep adoption, F5-b 118 inline factory closures, 249 bare-`array` repo returns (audit-tracked), typed error responses, AuthService result-DTO, Plugins-admin coupling, F5-c SessionStore rename, ~4 VOs + ~6 Enums to close F5-a, HttpKernel adoption (longer horizon). Goal: `psalm --show-info <50` (F5-k gate; currently **1796**, −245 net from 2,041 baseline). |
 | 1.8  | Test infrastructure           | 🟡 **Not started**     | M + L + S | Pest → coverage → Infection (chained)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | 1.9  | Deferred / on-demand          | 🟠 **On-demand**       | —         | Monolog · S3/SFTP · supervisor · Renovate · ScriptLoader dep graph                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | 1.10 | `PHPWG_ROOT_PATH` elimination | ✅ **Done**            | L         | shipped 2026-05-17 in 13 commits + 1 fix on `16.x-rewrite`: `Piwigo\Core\Paths` value object replaces the legacy global string, threaded through DI from `Paths::fromIndex(__FILE__)` in `index.php` → `Container::build($paths)` → service constructors; 195 reads across 72 files migrated; URL-context callers cleaned up (see [#33](docs/ROADMAP-PHP.md#33--eliminate-phpwg_root_path-global-replace-with-typed-paths))                                                                                                                                                                                                                                                                                      |
@@ -2659,87 +2659,86 @@ its current shape." The `SchemaIntegrityTest` line stays load-bearing.
 
 ---
 
-### 1.7 Typed boundaries — HTTP input and DB rows
+### 1.7 Typed boundaries — eliminate `mixed` from the domain
 
-**Status:** 🟢 Active · **Effort:** L · 2 phases (both partly shipped)
+**Status:** 🟢 Active ▸ 5 boundaries opened, 3 substantially shipped · **Effort:** L
 
-The codebase has two boundaries where untyped data crosses into the
-domain: HTTP input (`$_POST`/`$_GET` is `array<string, mixed>`) and DB
-rows (`fetchAssociative()` returns `array<string, mixed>`). Both are
-solved by the same architectural pattern: a single-cast factory at the
-boundary that produces a typed object, and business logic that consumes
-typed properties without `is_*` guards.
+The application has five edges where untyped data (`array<string, mixed>`)
+crosses into the domain. §1.7 is the parse-once-at-the-boundary refactor
+that pins each crossing through a typed factory and forbids `mixed`
+downstream. End state: `psalm --show-info <50` (currently **1796**; was
+2,041 at plan inception, −245 net).
 
-> **Status reconciliation (2026-05-23).** Both phases have partially
-> shipped under different names than the original §1.7 draft proposed:
-> the WS layer acquired `*Params` + `*Handler` per-endpoint classes
-> during §1.4 (~94/99 endpoints, tracked as the **F5-h** commit series
-> — 127 F5-* commits in git log; `WsAction.php` interface docblock
-> literally says "per F5-h"), and the repository layer grew **two
-> complementary** typed-row patterns: 7 wide `*/Entity/` classes
-> (Image=4, Category=1, Tag=1, Comment=1) supported by 21 value-object
-> types under `src/Piwigo/Common/ValueObject/`, plus 56 narrow
-> `*/Projection/` classes. The original §1.7 draft's `ImageEntity`
-> example was prescient — `Image/Entity/Image.php` exists and is
-> richer (value-object-typed) than the draft showed. The remaining
-> work — admin/web-side DTOs and the bare-`array` repo-return sweep —
-> is described below as the next step in patterns the codebase has
-> already chosen. This section is comparable in scope to §1.2
-> (templates) or §1.4 (plugins).
+This section covers the **full mixed-elimination effort** — what was
+formerly split across §1.7 (HTTP + DB only) and "F5 sub-codes tracked
+elsewhere" (Stored JSON, `$_SESSION`, container) is consolidated here.
+The canonical execution plan lives at
+`.claude/plans/what-is-the-proper-magical-taco.md` (506 lines,
+"Ground-up Refactor: Eliminate `mixed` from the Domain") with live
+status at `docs/F5-PENDING.md`. Lineage: this section's HTTP and DB
+work originated as §1.5a items 9 and 8 respectively
+(`.claude/plans/lets-do-1-5a-of-sparkling-tome.md`); §1.5a item 6
+(typed DB scalar helpers) was dropped because item 8 naturally
+subsumes the 291 `fn(mixed)` lambdas it would have addressed.
 
-> **§1.7 is a 2-of-5 slice of the broader F5 master plan**
-> (`.claude/plans/what-is-the-proper-magical-taco.md`, 506 lines,
-> titled "Ground-up Refactor: Eliminate `mixed` from the Domain").
-> The F5 plan identifies **5 boundaries** where `mixed` enters the
-> domain and requires a single-cast parser per boundary:
->
-> | # | Boundary             | §1.7 coverage | Tracker             |
-> | - | -------------------- | ------------- | ------------------- |
-> | 1 | HTTP request         | **Phase 1 ✓** | F5-h (per-endpoint) |
-> | 2 | Stored JSON          | ✗ — out of §1.7 scope | F5-i — `SearchRules` deep adoption (foundation shipped; #1 Psalm-info hotspot pending) |
-> | 3 | DB rows              | **Phase 2 ✓** | F5-d/e (Entity + Projection patterns) + SQL-DTO-AUDIT |
-> | 4 | `$_SESSION`          | ✗ — out of §1.7 scope | F5-c — `Session.php` typed wrapper exists; `SessionService` → `SessionStore` rename pending |
-> | 5 | PSR-11 container     | ✗ — out of §1.7 scope | F5-b — `Container/*Factory.php` extraction from `config/container.php`'s 50+ inline closures |
->
-> The end goal of the F5 plan is `psalm --show-info <50` (F5-k gate),
-> currently **1796** as of 2026-05-23 (was 1814 earlier today; dropped 18 from the Psalm-error fixes in commit `dd15d9bf4`). §1.7 contributes to that goal
-> via its 2 phases but doesn't deliver the gate alone — the other 3
-> boundaries need to close as well.
->
-> **Lineage**: §1.7's 2 phases correspond to §1.5a items 8 (repository
-> entity layer) and 9 (HTTP input boundary) per
-> `.claude/plans/lets-do-1-5a-of-sparkling-tome.md`. The earlier
-> §1.5a item 6 (typed DB scalar helpers `fetchIntColumn` /
-> `fetchStringColumn`) was dropped on the grounds that it would
-> create a transitional API made vestigial by item 8's repository
-> entity migration — that's why the 291 `fn (mixed $v)` lambdas
-> tracked in Phase 2 (was 257 at §1.5a time) belong to §1.7 rather
-> than to a standalone helper rollout.
+---
 
-#### Phase 1 — Request DTO layer (HTTP boundary)
+#### Architecture — the five boundaries
 
-**Status:** 🟢 Active ▸ WS layer ~94/99 done · admin/web side open
+| # | Boundary             | Parser shape                                                                  | Status                                                          |
+| - | -------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| 1 | HTTP request         | `*Params::fromArray()` (WS) / hand-written `*Request` DTO (web/admin)         | WS substantially shipped; web/admin open                        |
+| 2 | Stored JSON          | `*::fromJson()` / `*::fromArray()` with versioned schema                      | TelemetryPayload + SearchRules shipped; deep adoption open      |
+| 3 | DB rows              | `Entity::fromRow()` (wide) or `Projection::fromRow()` (narrow) + value objects | Patterns shipped; bare-`array` long tail open                   |
+| 4 | `$_SESSION`          | `Session::fromSuperglobal()`                                                  | Shipped + gate met; `SessionStore` rename pending               |
+| 5 | PSR-11 container     | Typed `*Factory::build()` + `resolve()` helper                                | `resolve()` shipped; 118 inline closures pending                |
 
-##### Done — WS layer per-endpoint DTOs
+`mixed` is acceptable *inside* a parser. *Outside* a parser, `mixed` is
+a bug. Static-analysis gates enforce this by counting
+`psalm --show-info` issues and forbidding `is_array(.* ?? null)`.
 
-§1.4 shipped the per-endpoint pattern: each WS method has a `*Handler`
-(implementing `WsAction`) plus a `*Params` DTO (implementing `WsParams`)
-with a hand-rolled `public static function fromArray(array $raw): self`
-factory. As of 2026-05-23: **94 `*Handler.php` + 83 `*Params.php` files**
-under `src/Piwigo/Ws/Action/Pwg/<Domain>/`. `grep -rn 'new
-MethodDefinition' src/Piwigo` returns **99 hits across 4 files**; of
-those, **1 is a doc-comment example** in `MethodDefinition.php` itself
-and the remaining 98 are real registrations: **95 use `handlerClass:`**
-and **3 use the legacy `callback:` path** (`reflection.getMethodList`
-+ `reflection.getMethodDetails` in `PwgServer.php` — both WS
-self-introspection, intentionally inline — plus
-`pwg.activity.downloadLog` in `WsMethodRegistrar.php`, a
-"Not implemented" stub). Of the 95 handler endpoints, 11 are
-zero-param and need no `*Params` companion (83 + 11 ≈ 95, give-or-take
-one-off shapes; see F5-PENDING for the exact list). One handler
-appears in count summaries but doesn't have a directly paired Params
-class (likely a multi-method handler or naming variance — within
-margin).
+---
+
+#### Status snapshot (2026-05-23)
+
+| Surface                                                              | Shipped | Target / Total       | Notes                                                                                       |
+| -------------------------------------------------------------------- | ------- | -------------------- | ------------------------------------------------------------------------------------------- |
+| ValueObjects (`src/Piwigo/Common/ValueObject/`)                      | 21      | ~25 plan target      | F5-a; ~4 remaining (admin-side IDs + string-shape wrappers)                                 |
+| Enums (`src/Piwigo/Common/Enum/`)                                    | 4       | ~10 plan target      | F5-a; ~6 remaining                                                                          |
+| Entities (`src/Piwigo/{Image,Category,Tag,Comment}/Entity/`)         | 7       | 7                    | F5-d + F5-e complete                                                                        |
+| Projection-shape classes total                                       | 73      | open-ended           | 56 in `Projection/` + 7 in `Entity/` + 10 root-level `*Row`                                 |
+| `fromRow()` factories                                                | 64      | open-ended           | Plus 1 outlier `fromUserArray()` on `Users/User`                                            |
+| WS Handler classes                                                   | 95      | 95                   | F5-h handler-side complete; 9/9 `*Endpoints` god-classes drained                            |
+| WS Params DTOs                                                       | 83      | 95                   | 11 zero-param endpoints need no companion; 1 multi-method naming variance                   |
+| WS Result DTOs                                                       | 7       | 95                   | F5-h Result side sparse — see Boundary 1 below                                              |
+| Job DTOs (Symfony Messenger)                                         | 6       | 6                    | Async queue boundary fully typed                                                            |
+| Web/admin Request DTOs                                               | 0       | 30–50 est.           | Phase 1 open work                                                                           |
+| Container Factory classes                                            | 0       | ~10                  | F5-b; 118 inline `factory(static fn …)` closures in `config/container.php`                  |
+| Repository methods returning bare `array`                            | —       | 249 of 646 public    | Tracked by `docs/SQL-DTO-AUDIT.md` + `docs/ARRAY-REFACTOR-AUDIT-{1..4}.md`                  |
+| `fn (mixed $v)` lambdas at DB call sites                             | —       | 291 across 95 files  | Decreases as repos return typed values                                                      |
+| Raw `$_POST`/`$_GET` reads in `src/Piwigo/`                          | —       | 758 across 54 files  | Web/admin side; WS handler layer doesn't contribute (protocol layer has 3 reads)            |
+
+---
+
+#### Boundary 1 — HTTP request
+
+##### Done — WS handler + Params layer (F5-g + F5-h handler-side)
+
+Per-endpoint pattern: each WS method has a `*Handler implements WsAction`
+plus a `*Params implements WsParams` DTO with a hand-rolled
+`public static function fromArray(array $raw): self` factory.
+
+As of 2026-05-23: **95 `*Handler.php` + 83 `*Params.php`** files under
+`src/Piwigo/Ws/Action/Pwg/<Domain>/`. The 99 `new MethodDefinition`
+grep hits decompose as: 1 doc-comment example in
+`MethodDefinition.php`; 95 use the `handlerClass:` path (modern); 3
+use the legacy `callback:` path —
+`reflection.getMethodList` + `reflection.getMethodDetails` (WS
+self-introspection, intentionally inline) and
+`pwg.activity.downloadLog` ("Not implemented" stub). Of the 95
+handler endpoints, 11 are zero-param and need no `*Params` companion
+(83 + 11 + minor naming variance ≈ 95).
+
 Representative example:
 
 ```php
@@ -2773,253 +2772,334 @@ final readonly class AddCommentParams implements WsParams
 $input = AddCommentParams::fromArray($params);
 ```
 
-This is the same architectural shape the original §1.7 draft called for
-("typed object built at the boundary; business logic consumes typed
-properties"), with two deliberate differences: (a) no Symfony
-Serializer / Validator dependency — `fromArray()` is hand-rolled, and
-(b) validation lives inside the factory (defensive casts) rather than
-in attribute constraints. The WS-layer architectural choice is settled
-and not under review here.
+##### Done — typed Messenger Job DTOs (async queue boundary)
 
-⚠ **Handler-interface divergence from the F5 master plan**: the plan
-proposed `handle(TypedParams): TypedResult|PwgError` (fully end-to-end
-typed). The actual `WsAction` interface shipped as
-`__invoke(array $params, PwgServer $server): mixed` (loose). The
-typed Params input still happens (each Handler calls
-`*Params::fromArray($params)` first), but the **interface doesn't
-require typed Results**, which is the structural reason WsResult
-adoption is only 7/95. Tightening the interface to typed Results is
-~F5-h follow-up work; it would let `PwgServer::invoke()` enforce the
-output contract too.
+The async counterpart to `WsParams`. 6 `final readonly` Job classes at
+`src/Piwigo/Job/{GenerateDerivative,BatchUpload,ReindexImages,RegenerateAllDerivatives,SendNotificationEmail,Failed}Job.php`;
+handlers use `#[AsMessageHandler]` + typed `$job` parameter. No
+`mixed` on this boundary.
 
-**Also shipped on the async boundary: typed Messenger Job DTOs.** 6
-`final readonly` Job classes at `src/Piwigo/Job/{GenerateDerivative,
-BatchUpload,ReindexImages,RegenerateAllDerivatives,SendNotificationEmail,
-Failed}Job.php` carry typed properties; `Job/Handler/*Handler.php`
-classes use `#[AsMessageHandler]` + typed `$job` parameter. Same
-"typed object at the boundary" philosophy as `WsParams` but on the
-async/queue boundary instead of the sync HTTP boundary. Already
-shipping; no §1.7 work needed on this front.
+##### Open — `WsAction` interface tightening + Result DTOs (F5-h Result side)
 
-**Also shipped on the WS layer: typed responses via `WsResult`.** The
-interface at `src/Piwigo/Ws/WsResult.php` is the output counterpart to
-`WsParams` — each handler returning structured data returns a
-`*Result` instance whose `toArray()` produces the wire-format dict
-that `PwgServer` JSON-encodes. As of 2026-05-23: **7 `*Result`
-implementations** in tree (`Categories/MoveResult`,
+`WsResult` interface ships at `src/Piwigo/Ws/WsResult.php` with **7
+implementations** (`Categories/MoveResult`,
 `Tags/{Add,Delete,Merge,Duplicate}Result`,
-`GetMissingDerivativesResult`, `Session/GetStatusResult`). So
-**7/94 handler endpoints have typed responses**; the remaining ~87
-still return `array<string, mixed>`. Extending `WsResult` to those
-handlers (plus to error envelopes, currently inline as `PwgError`) is
-listed in "Additional in-scope work" below.
+`GetMissingDerivativesResult`, `Session/GetStatusResult`). The
+remaining 88 handlers return `array<string, mixed>` (12 explicitly
+carry the `array<string, mixed>|PwgError` union return type).
 
-##### Open — admin / web side
+The structural cause: `WsAction` shipped *looser than the F5 plan
+called for*. Plan: `handle(TypedParams): TypedResult|PwgError`.
+Actual: `__invoke(array $params, PwgServer $server): mixed`. Params
+stays typed (each Handler calls `*Params::fromArray($params)`
+manually), but the interface doesn't enforce typed Results, so
+WsResult adoption is voluntary.
 
-Admin controllers and page renderers still read `$_POST` / `$_GET`
-directly. As of 2026-05-23: **758 raw `$_POST` / `$_GET` reads across
-54 files** (was 626 / 45 at the original audit; surface drifts up as
-new admin endpoints land). The WS *handler* layer doesn't contribute —
-handlers receive the params map from `PwgServer::invoke()`, not the
-superglobals — but the WS *protocol* layer does: `PwgServer.php`,
-`Ws/Protocol/PwgRestRequestHandler.php` (the transport that picks
-`$_POST` vs `$_GET` based on HTTP method), and one stray mutation in
-`Action/Pwg/Permissions/AddHandler.php`. So ~3 files in `Ws/` and ~51
-on the web/admin side account for the 758 reads.
+Two work strands:
 
-Target classes for the sweep (representative, not exhaustive):
+1. **Tighten `WsAction` to `__invoke(...): WsResult|PwgError`** so
+   `PwgServer::invoke()` enforces the output contract. Requires
+   updating all 95 handlers.
+2. **Add `*Result.php` per endpoint** to back the new contract. Start
+   with the 11 zero-params endpoints F5-PENDING enumerates
+   (`Pwg/Extensions/{CheckUpdates,PluginsGetList}`,
+   `Pwg/{GetCacheSize,GetInfos,GetVersion}`, `Pwg/History/Search`,
+   `Pwg/Images/{CheckUpload,EmptyLounge}`, `Pwg/Session/Logout`,
+   `Pwg/Tags/GetAdminList`); then the 12 explicit-union handlers;
+   then the remainder.
 
-- `src/Piwigo/Controller/Admin/MaintenanceController.php`
-- `src/Piwigo/Controller/Admin/BatchManagerController.php`
-- `src/Piwigo/Controller/PictureController.php`
-- `src/Piwigo/Picture/PictureCommentRenderer.php` — multi-field comment
-  submission; the original §1.7 draft's `CommentSubmitRequest`
-  proof-of-pattern target still applies here (the WS equivalent
-  `AddCommentParams` already proves the shape).
-- The upload / maintenance / admin form controllers under
-  `src/Piwigo/Controller/Admin/` more generally.
+> The master plan's "F5-h ✓ COMPLETE" verdict and F5-PENDING's
+> "F5-h Result DTOs sparse" verdict refer to different aspects of
+> the same migration: handler-class side is done; Result side is
+> ~7% adopted.
 
-Keep `StringUtil::inputInt/inputString/inputBool` for one-shot reads
-(`?image_id=42`) where a DTO is ceremony. Realistic estimate (carried
-from original draft, still applicable): 30–50 web-side DTOs cover most
-multi-field admin / submission endpoints; the long tail stays on
-`StringUtil::input*`.
+##### Open — web/admin Request DTOs
 
-##### Open architectural choice
+Admin controllers and page renderers still read `$_POST`/`$_GET`
+directly: **758 raw reads across 54 files** (was 626/45 at the
+§1.5a-era audit; surface drifts up). The WS handler layer doesn't
+contribute; the WS protocol layer reads superglobals in only 3 files
+(`PwgServer.php`, `Ws/Protocol/PwgRestRequestHandler.php`, plus a
+stray mutation `$_POST['apply_on_sub'] = true` in
+`Action/Pwg/Permissions/AddHandler.php` — that mutation is a code
+smell flagged for separate cleanup).
 
-For the web-side sweep, two viable patterns:
+Target classes: `MaintenanceController`, `BatchManagerController`,
+`PictureController`, `PictureCommentRenderer`, and the upload /
+maintenance / admin form controllers under
+`src/Piwigo/Controller/Admin/`. Realistic estimate: 30–50 web-side
+DTOs cover the multi-field surface; the long tail stays on
+`StringUtil::input{Int,String,Bool}` for one-shot reads
+(`?image_id=42`).
 
-- **(a) Extend `WsParams::fromArray()`** to the web layer (with a
-  sibling marker interface or just freestanding `*Request` classes).
-  No new dependencies. Matches what already ships in the WS layer.
-- **(b) Adopt `symfony/serializer + symfony/validator`** for the web
-  layer only. Brings attribute-based validation (`#[Assert\Email]`,
-  `#[Assert\Length(max: 5000)]`, etc.), which is genuinely nicer for
-  admin forms with many constraints. Adds two dependencies that the
-  WS layer doesn't need.
+**Architectural pattern**: extend the `WsParams::fromArray()` shape
+to the web layer (`final readonly class XxxRequest` with a
+sibling `WebRequest` marker interface or freestanding). No new
+dependencies. Matches what already ships in the WS layer. The
+alternative — adopting `symfony/serializer + symfony/validator` —
+would bring attribute-based constraints (`#[Assert\Email]`,
+`#[Assert\Length(max: 5000)]`) but adds two dependencies the WS
+layer doesn't need and that other Symfony packages we already pull
+(`symfony/cache`, `symfony/event-dispatcher`, `symfony/messenger`,
+etc.) don't drag in transitively. **Decision: extend `fromArray()`**
+for consistency.
 
-The original ROADMAP picked (b) without knowing (a) was already
-shipping in the WS layer. **Recommend defaulting to (a)** for
-consistency unless validator attributes prove worth the deps for
-admin forms specifically. Make this decision before the
-proof-of-pattern PR — it determines whether
-`PictureCommentRenderer` migration looks like `AddCommentParams` or
-like `CommentSubmitRequest` (the original draft snippet).
+`PictureCommentRenderer` is the natural first target — its WS
+sibling `AddCommentParams` already exists for cross-reference.
 
-##### Deferred — HttpKernel adoption
+##### Open — typed error responses (the `PwgError` message side)
+
+`PwgError` is already a `final readonly` typed value object
+(`code(): ?int`, `message(): string`). What remains untyped is the
+**message string** — currently free-form English at the 2 throw
+sites in `Session/LoginHandler.php:47,59`
+(`PwgError(429, 'Too many login attempts; please retry shortly')`
+and the account-locked sibling). Replace the message with a typed
+error-code enum + translation key so the wire format carries a
+stable identifier and the human message is i18n-ready. Referenced
+from ROADMAP.md:2076 and `docs/SECURITY.md:182,235,238`.
+
+##### Open — back-channel cleanup + AuthService result-DTO
+
+`PageState::loginFailureReason` is a session-flag back-channel for
+"account locked" vs "bad credentials" detection in
+`IdentificationController` / `LoginHandler`.
+`AuthException::accountLocked()` is defined but not yet thrown.
+Cleanup: throw `AuthException::accountLocked()` from the WS / form
+login paths, catch in the controller, drop the flag. Closes Review
+finding F5.
+
+Adjacent: `AuthService::getLastFailureReason()` surfaces the
+lockout-vs-bad-credentials signal through a getter after the auth
+attempt. Restructure to an explicit result-DTO
+(`AuthResult { ?UserId $userId, ?AuthFailureReason $failureReason }`)
+returned from `AuthService::login()` directly. Referenced from
+ROADMAP.md:2240–2243.
+
+##### Open — Plugins admin coupling (blocks 6 `pwg.extensions.*` handlers)
+
+`pwg.extensions.*` WS handlers reach into the Plugins admin
+god-classes' public mutable arrays (`$plugins->fs_plugins`,
+`$plugins->db_plugins_by_id`). 6 handlers blocked on the Plugins
+admin refactor (`.claude/plans/there-is-a-plan-prancy-castle.md` —
+collapses `Plugins.php` 726/14, `Themes.php` 692/16, `Languages.php`
+385/6 god-classes into typed services with
+`PluginRegistry`/`ThemeRegistry` as read SoT). This refactor
+unblocks the final WS handler cleanup pass.
+
+##### In scope (longer horizon) — HttpKernel adoption
 
 Full Symfony HttpKernel adoption (PSR-7 → HttpFoundation, kernel
-events, standard ArgumentResolver pipeline, exception → response flow)
-is a separate architectural decision. Not in scope for §1.7.
-`symfony/http-kernel` is **not** currently a dependency (`grep
-http-kernel composer.json` returns nothing); adoption would add it.
-HttpKernel uses the existing Symfony EventDispatcher (same bus, no
-second bus added) but introduces a new request-lifecycle event suite
-(`kernel.request`, `kernel.response`, `kernel.exception`, …) and
-changes the request/response data structures (PSR-7 is in tree via
-`psr/http-message` + `psr/http-server-handler` + `psr/http-server-middleware`,
-with `nyholm/psr7` + `nyholm/psr7-server` as the concrete
-implementation in `Http/RequestFactory.php` + `Http/ResponseFactory.php`,
-used in **37 src/Piwigo files** including `Core/Kernel.php`,
-`Http/MiddlewarePipeline.php`, `Http/ResponseEmitter.php`).
-Revisit when there's a concrete need. The DTOs from Phase 1 carry over
-unchanged if that adoption ever happens.
+events, standard ArgumentResolver pipeline, exception → response
+flow). `symfony/http-kernel` is **not** currently a dependency
+(`grep http-kernel composer.json` returns nothing). PSR-7 is already
+in tree via `psr/http-message` + `psr/http-server-handler` +
+`psr/http-server-middleware`, with `nyholm/psr7` + `nyholm/psr7-server`
+as the concrete implementation in `Http/RequestFactory.php` +
+`Http/ResponseFactory.php`, used in 37 src/Piwigo files.
 
-##### Migration order
+HttpKernel adoption uses the existing Symfony EventDispatcher (same
+bus, no second bus added) but introduces a new request-lifecycle
+event suite (`kernel.request`, `kernel.response`, `kernel.exception`,
+…) and changes the request/response data structures. The Request DTOs
+from this section carry over unchanged. Sequenced last in the
+migration order — it's a future architectural step, not a current
+prerequisite for §1.7's other phases.
 
-1. Decide architectural pattern (a) vs (b) above.
-2. Land first web-side DTO + (if pattern b) `PayloadFactory` glue as
-   proof-of-pattern. `PictureCommentRenderer` is the natural first
-   target — the WS sibling `AddCommentParams` already exists for
-   cross-reference.
-3. Sweep multi-field admin endpoints (`MaintenanceController`,
-   `BatchManagerController`, etc.).
-4. *(If pattern b is chosen)* Optional follow-on: a ~30-line
-   ArgumentResolver in the dispatcher that reads `#[MapRequestPayload]`
-   on the controller signature and calls `PayloadFactory::create()`
-   automatically. Pure ergonomics, same dependencies. Decide based on
-   how repetitive explicit `create()` calls feel.
+---
 
-> The `#[ApiMethod]` per-endpoint decoration is defined
-> (`src/Piwigo/Ws/OpenApi/ApiMethod.php`) and consumed by `SpecBuilder`,
-> but **0 endpoint classes currently carry it** as of 2026-05-23. Phase 1
-> doesn't depend on it — the attribute can layer onto WS endpoints
-> later under a §1.4 follow-on without re-sweeping any payloads.
+#### Boundary 2 — Stored JSON
 
-> **Phase 1 known blocker for further `pwg.extensions.*` cleanup**:
-> `there-is-a-plan-prancy-castle.md` (plugins/extensions modernization)
-> notes that 6 `pwg.extensions.*` WS handlers were "skipped during
-> F5-g/h because of these couplings" — the Plugins admin god-classes
-> (`Plugins.php` 726 lines / 14 methods / 4 public mutable arrays,
-> `Themes.php` 692 / 16, `Languages.php` 385 / 6) hold public mutable
-> arrays that those WS handlers reach into directly. Cleaning up the
-> last ~6 extensions handlers requires the plugins-admin refactor to
-> ship first.
+##### Done — `TelemetryPayload` (F5-j)
 
-#### Phase 2 — Repository entity layer (DB boundary)
+`src/Piwigo/Telemetry/TelemetryPayload.php` is a 12-slot typed DTO.
+`TelemetryService::sendInfos()` refactored from a 200-line mutator
+into a 50-line orchestrator + 12 narrow private helpers
+(`buildTechnical`, `buildGeneralStats`, `fetchPemExtensions`,
+`indexOfficialExtensions`, `buildPluginsSnapshot`,
+`buildThemesSnapshot`, `buildThemesUsage`, `buildUserActivities`,
+`buildSystemActivities`, `buildUpdates`, `buildFeatures`,
+`buildAppsStats`). Outbound HTTP body is now
+`TelemetryPayload::toArray()`.
 
-**Status:** 🟢 Active ▸ pattern in place · sweep open
+##### Done — `SearchRules` foundation + 14 filter VOs (F5-i foundation)
 
-##### Done — both `*/Entity/` and `*/Projection/` patterns shipped
+`src/Piwigo/Search/Rules/` ships 18 files:
 
-The repository layer uses **two complementary typed-row patterns**:
+- `SearchRules` with versioned `fromJson` / `fromArray`
+- 14 filter classes: `AddedByFilter`, `AllwordsFilter`,
+  `AuthorFilter`, `CatFilter`, `DateCreatedFilter`,
+  `DatePostedFilter`, `ExpertFilter`, `FileSizeFilter`,
+  `FiletypesFilter`, `HeightFilter`, `RatingFilter`, `RatioFilter`,
+  `TagsFilter`, `WidthFilter`
+- 3 helpers: `AllwordsField`, `AllwordsMode`, `DatePresetCode`
 
-**Wide Entity pattern** — one class per table, every column typed,
-value-objects (ImageId, RelPath, MysqlDateTime, Md5Sum, …) for
-column-level safety. Used for identity-based queries (`findById`,
-`findByPath`, `findByFilePattern`). As of 2026-05-23: **7 Entity
-classes** under `src/Piwigo/{Image,Category,Tag,Comment}/Entity/`
-(Image=4: `Image`, `ImageIdFilename`, `ImageIdPathRepresentative`,
-`PathRepresentative`; Category=1; Tag=1; Comment=1). ⚠ Name drift:
-the F5 plan named the Image sub-entities `ImageThumbnail` /
-`ImageDimensions` and named a `CategoryInfo` entity; none exist
-under those names. The 3 actual Image sub-entities serve similar
-roles but were renamed during implementation. Backed by **21
-ValueObject classes** in
-`src/Piwigo/Common/ValueObject/` (the F5 master plan inventories ~32
-target VOs across identifiers, shaped strings, temporals, and enums —
-shipped 21, remaining ~11 are mostly admin-side IDs and string-shape
-wrappers). Six repository methods return `?Image`/`?Category`/`?Tag`
-directly; nine `@return list<Image|Category|Tag>` annotations exist.
-`ImageRepository::findById(int): ?Image` is the canonical example —
-and is exactly what the original §1.7 draft proposed (with
-value-objects added).
+Plus `MalformedSearchRulesException` at
+`src/Piwigo/Search/MalformedSearchRulesException.php`.
 
-**Narrow Projection pattern** — query-specific subset, no identity,
-no value-objects. Used for listings, lookups, distinct queries,
-calendar/stats rollups. As of 2026-05-23, **73 projection-shape
-classes** in tree across three location conventions:
+Plan named 2 additional helpers not in tree yet: `DateCustom` and
+`MysqlDateRange`. Add as part of the deep adoption below.
 
-- **56 under `*/Projection/`** — the canonical location, across
-  `src/Piwigo/{Image,Category,Tag,Users,Activity,Comment,Group,Notification,Rate,Auth}/Projection/`
-  (per-namespace counts: Category=24, Users=6, Comment=5, Image=4,
-  Tag=4, Activity=4, Notification=3, Rate=3, Group=2, Auth=1).
-- **10 `*Row.php` at namespace roots** — Search=6 (AuthorCountRow,
-  ImageFilesizeRow, ImageDateRow, ImageDimensionRow, ImageRatingRow,
-  AddedByCountRow), History=3, Activity=1. Same shape as `Projection/`
-  classes, just located one level up. Pre-dates or sidesteps the
-  `Projection/` convention; a code-quality follow-up could consolidate
-  the location.
-- **7 in `*/Entity/`** — counted in the wide-Entity pattern above; they
-  share the `fromRow()` shape with Projections.
+##### Open — deep `SearchService` / `SearchFilterRenderer` adoption (F5-i deep)
 
-Plus the generic wrapper: **`Piwigo\Common\Dto\PaginatedResult<T>`**
-(`@template T`, used in 19 call sites across Image, Category, User
-repos) wraps `list<T> $rows + ?int $total` for paginated reads. T is
-parametrized over `Image`, `AdminCategoryRow`, inline array tuples, or
-(in one stale call site) `array<string, mixed>` — the untyped variant
-counts as part of the bare-`array` sweep target.
+Foundation shipped; adoption shallow. `SearchFilterRenderer.php` is
+the **#1 psalm-info hotspot** (67 issues — top of the entire
+codebase). `SearchService.php` is #7 (47). 200+ mixed accesses
+remain across both files. F5 plan note: "high-risk; needs
+end-to-end smoke for every filter combination (allwords, tags,
+dates, ratios, ratings, dimensions, expert, added_by, filetypes)
+before/after."
 
-Total of **64 `function fromRow` factories** across the tree
-(54 in `Projection/`, 7 in `Entity/`, 3 outside both:
-`Common/Dto/UserGroupPair.php`, `Telemetry/TelemetryActivityGroup.php`,
-`Activity/ActivityRow.php`). Outlier outside the 64: `Piwigo\Users\User`
-at namespace root uses `fromUserArray()` instead of `fromRow()` — same
-shape, different naming. The 10 root-level `*Row.php` classes also use
-`fromRow()` (already counted in the 64 above for the `Activity/ActivityRow`
-case; spot-check the 9 Search/History rows when sweeping).
+Add the 2 missing helper classes (`DateCustom`, `MysqlDateRange`)
+during this pass.
 
-Representative examples already in tree:
+---
 
-- `src/Piwigo/Image/Entity/Image.php` — wide entity, 24 value-object-typed
-  properties (F5 plan named 17; actual shipped with 7 extras: `coi`,
-  `dateMetadataUpdate`, `ratingScore`, `addedBy`, `latitude`,
-  `longitude`, `lastModified`), `Image::fromRow($row)` factory, plus
-  derived behavior methods `aspectRatio(): ?float` and `isPortrait():
-  bool` (F5 plan also named `isOriginal()` and `withRotation()` — not
-  found in the entity; either implemented elsewhere or deferred).
-  Covered by `tests/Unit/Image/Entity/ImageTest.php` (one of 5 Entity
-  unit-test files: Image, ImageIdFilename, Category, Tag, Comment —
-  26 tests, 142 assertions, all green at 2026-05-23).
-- `src/Piwigo/Image/Projection/ImageDimension.php` — narrow projection,
-  width+height only, used by `findDistinctDimensions()`.
-- `src/Piwigo/Category/Projection/CategoryNamePermalink.php` — the
-  `(id, name, permalink)` projection used by admin pickers.
+#### Boundary 3 — DB rows
 
-Both patterns are established. The open work is migrating the methods
-that pre-date them and picking which pattern fits each case (Entity
-for identity-based row reads; Projection for query-specific subsets).
+##### Done — value-object foundation (F5-a, partial)
 
-##### Open — bare-`array` repo-return sweep
+21 ValueObject classes at `src/Piwigo/Common/ValueObject/`:
+`ImageId`, `UserId`, `CategoryId`, `TagId`, `CommentId`, `GroupId`,
+`RateId`, `SearchId`, `Username`, `Email`, `RelPath`, `AbsPath`,
+`Url`, `Permalink`, `Md5Sum`, `MysqlDate`, `MysqlDateTime`, plus a
+shared `NumericId` contract and a few more. F5 plan target ~25 —
+remaining ~4 are admin-side IDs and string-shape wrappers.
 
-Of **646 public methods** across `src/Piwigo/**/*Repository.php`,
-**249 still return bare `array`** (`: array$` without a typed wrapper).
-Most carry a tight `@return list<TypedProjection>` or
-`@return list<array{key: type, …}>` docblock that PHPStan validates
-against — those call sites are already typed via PHPStan inference;
-the runtime declaration can't be tightened further because **PHP has no
-`list<T>` runtime type** (`list` is the destructuring keyword). The
-real sweep target is methods whose docblock is still
-`@return list<array<string, mixed>>` / `@return array<string, mixed>`
-(or has no `@return` at all): **31 such docblock occurrences across 18
-repository files** as of 2026-05-23. ⚠ Caveat: an unknown subset of
-these are **orphaned dead docblocks** — leftover `@return` annotations
-sitting above unrelated methods whose own docblock immediately follows
-(spot-checked in `Tag/TagRepository.php:192` and
-`Image/ImageRepository.php:316`, both orphans). The audit-first step
-must categorise each docblock as orphan / tuple-shape / real-attached.
+4 Enums at `src/Piwigo/Common/Enum/` (`UserStatus`, `Privacy`,
+`SortOrder`, `ExtensionType` etc.); plan target ~10. **6 short** —
+open work. The plan-named missing enums include `ImageLevel`,
+`DerivativeType`, `Locale`, `Section`.
 
-Concrete example of the tightening, using a real attached method:
+##### Done — Entity pattern (F5-d, F5-e, F5-f)
+
+Wide entities, one class per aggregate, value-object-typed columns.
+Used for identity-based queries (`findById`, `findByPath`,
+`findByFilePattern`):
+
+- **F5-d Image** —
+  `src/Piwigo/Image/Entity/{Image,ImageIdFilename,ImageIdPathRepresentative,PathRepresentative}.php`
+  (4 entities). `Image` has 24 value-object-typed properties (plan
+  named 17 — actual richer: adds `coi`, `dateMetadataUpdate`,
+  `ratingScore`, `addedBy`, `latitude`, `longitude`, `lastModified`)
+  plus derived methods `aspectRatio(): ?float` and
+  `isPortrait(): bool`. Plan-named `isOriginal()` and
+  `withRotation()` are not on the entity — either implemented in a
+  related service or deferred. Plan claims "F5-d/1 through F5-d/14
+  all shipped" but enumerates 12 (F5-d/8 and F5-d/10 don't exist as
+  commits).
+- **F5-e Category, Tag, Comment** — entity foundations + ~30
+  projection DTOs across the three aggregates. Migration coverage:
+  CategoryRepository (27/27 reading methods), TagRepository (10/10),
+  CommentRepository (5/5).
+- **F5-f User readonly** — `Piwigo\Users\User` is `final readonly
+  class` with `with*` mutators (`withLanguage`, `withUsername`,
+  `withEnabledHigh`, `withRawAttribute`, `withoutRawAttribute`); 8
+  direct-write sites migrated via `CurrentUser::update(\Closure)`.
+  Plan estimated 85 sites; actual 8 (10× over-estimate).
+
+Six repository methods return `?Image`/`?Category`/`?Tag` directly;
+nine `@return list<Image|Category|Tag>` annotations exist. Covered
+by 5 unit-test files (`tests/Unit/{Image,Category,Tag,Comment}/Entity/*Test.php`
+— 26 tests, 142 assertions, green at 2026-05-23).
+
+Canonical example:
+
+```php
+// src/Piwigo/Image/ImageRepository.php
+public function findById(int $id): ?Image
+{
+    $row = $this->conn->createQueryBuilder()
+        ->select('*')->from($this->table('images'))
+        ->where('id = :id')->setParameter('id', $id)
+        ->executeQuery()->fetchAssociative();
+    return $row !== false ? Image::fromRow($row) : null;
+}
+```
+
+##### Done — Projection pattern
+
+Narrow query-specific projections, no identity, no value-objects.
+**73 projection-shape classes** across 3 location conventions:
+
+- **56 under `*/Projection/`** — per-namespace counts: Category=24,
+  Users=6, Comment=5, Image=4, Tag=4, Activity=4, Notification=3,
+  Rate=3, Group=2, Auth=1.
+- **10 `*Row.php` at namespace roots** — Search=6 (`AuthorCountRow`,
+  `ImageFilesizeRow`, `ImageDateRow`, `ImageDimensionRow`,
+  `ImageRatingRow`, `AddedByCountRow`), History=3, Activity=1.
+  Same shape as `Projection/` classes; located one level up.
+  Code-quality follow-up: consolidate into `Projection/` for tree
+  consistency.
+- **7 in `*/Entity/`** — counted above; same `fromRow()` shape.
+
+**64 `fromRow()` factory functions** total (54 in `Projection/`, 7
+in `Entity/`, 3 outside both: `Common/Dto/UserGroupPair.php`,
+`Telemetry/TelemetryActivityGroup.php`, `Activity/ActivityRow.php`).
+Outlier: `Piwigo\Users\User::fromUserArray()` uses different naming
+for the same shape.
+
+##### Done — generic wrapper `PaginatedResult<T>`
+
+`src/Piwigo/Common/Dto/PaginatedResult.php` (`@template T`) wraps
+`list<T> $rows + ?int $total` for paginated reads. 19 usages across
+Image, Category, User repositories. T parametrizes over `Image`,
+`AdminCategoryRow`, inline `array{...}` tuples, or — in one stale
+call site — `array<string, mixed>` (sweep target).
+
+##### Open — bare-`array` repo-return sweep (audit-driven)
+
+**249 of 646 public repository methods** still return bare `array`
+(`: array$` without a typed wrapper). PHP has no `list<T>` runtime
+type (`list` is the destructuring keyword), so methods with tight
+`@return list<TypedProjection>` annotations can't tighten further
+at the return-type level; what tightens is **removing defensive
+`is_*` guards at call sites** that the loose return forced.
+
+Two parallel audit campaigns track the remaining work:
+
+- **`docs/SQL-DTO-AUDIT.md`** (181 lines): SQL projection rows
+  specifically. A1–I7 IDs per repository, "proposed projection"
+  column. The `feat(dto):` commit series executes against these IDs.
+  Major drops:
+  - `091fd0c32 SQL-DTO-AUDIT — 31 projection classes across 8 repositories`
+  - `0552664de A6/Tier4-6/Tier3/B3-B4 — remainder of audit-4`
+  - `9a4c94c90 A1-A5/A7 — audit-4 Tier 1 named result DTOs`
+  - …plus B/C/D/E follow-ons
+- **`docs/ARRAY-REFACTOR-AUDIT-{1,2,3,4}.md`** (4 rounds): broader
+  array→{DTO, enum, value-object} refactor (admin services, config
+  aggregates, derivative settings, etc.). Rounds 1-3 retired ~70
+  items; round 4 had 18 IDs across 6 Tiers (Tier 1 named result
+  DTOs, Tier 2 input DTOs, Tier 3 result-union types, Tier 4
+  SlideshowParams VO, Tier 5 CategoryRepository inner shapes, Tier
+  6 UploadService config spec) and is substantially closed —
+  verified ~25 of 30 proposed class names exist (`RateStats`,
+  `PartitionedDerivativeSizes`, `DerivativeSettings`,
+  `IgnoredExtensionLists`, `ImageFileInfo`, `AvailableVersions`,
+  `NotificationConfig`, `NewCommentData`, `CommentUpdateData` all
+  ✓). Remaining ~5 likely in B1/B2/C/D ranges; a round-5 audit will
+  enumerate.
+
+The remaining 249 bare-`array` methods break into:
+
+- **(a) Already tight via docblock** — `@return list<NamedProjection>`
+  / `@return list<int>` etc. PHPStan infers element types at call
+  sites; work is dropping now-redundant `is_*` guards at callers.
+  No repo-side change.
+- **(b) Tuple-shape** — `@return list<array{registration_month: int,
+  registration_year: int}>` (real example,
+  `UserRepository:136`). Optional Projection promotion per method.
+- **(c) Genuinely untyped** — `@return list<array<string, mixed>>`,
+  `@return array<string, mixed>`, or no `@return` annotation. **31
+  such docblocks across 18 repository files** (UserRepository has
+  5 alone). Each needs a new Projection class.
+- **(d) Orphaned dead docblocks** — `@return` annotations sitting
+  above an unrelated method whose own docblock immediately follows
+  (confirmed at `Tag/TagRepository.php:192`,
+  `Image/ImageRepository.php:316` — leftover from deleted methods).
+  Delete the dead annotation; no Projection needed.
+
+Concrete tightening example using a real attached method:
 
 ```php
 // Today — src/Piwigo/Search/SearchRepository.php:159
@@ -3035,8 +3115,7 @@ public function findDatePostedThresholds(): array
     return $rows[0] ?? [];
 }
 
-// After — caller receives typed projection; defensive `is_string` /
-// `is_numeric` guards at call sites drop
+// After — caller receives typed projection; defensive guards at call sites drop
 public function findDatePostedThresholds(): ?DatePostedThresholds
 {
     $rows = $this->conn->executeQuery(/* … */)->fetchAllAssociative();
@@ -3044,10 +3123,9 @@ public function findDatePostedThresholds(): ?DatePostedThresholds
 }
 
 // New file: src/Piwigo/Search/DatePostedThresholds.php (namespace-root,
-// matching Search/'s existing *Row convention — AuthorCountRow,
-// ImageDateRow, etc. — rather than Search/Projection/ which doesn't
-// exist; a follow-up could consolidate Search/ into Projection/ for
-// consistency with the rest of the tree)
+// matching Search/'s existing *Row convention rather than Search/Projection/
+// which doesn't exist; a follow-up could consolidate Search/ into Projection/
+// for tree-wide consistency)
 final readonly class DatePostedThresholds
 {
     public function __construct(
@@ -3063,309 +3141,266 @@ final readonly class DatePostedThresholds
 }
 ```
 
-The work is a single-file PR per migrated method: new Projection class
-when needed, repository method's docblock + `array_map` updated, callers
-updated to access typed properties, removed-`is_*`-guards diff in the
-PR description (see Verification below — there's no static-analysis
-baseline file to diff against).
+##### Open — mixed-lambda cleanup (companion to the bare-`array` sweep)
 
-##### The audit already exists: `docs/SQL-DTO-AUDIT.md`
+**291 `fn (mixed $v)` lambdas across 95 files** (was 257 at
+§1.5a-era audit). These get removed naturally as queries move into
+typed repository methods that return id-arrays (e.g. `: array` with
+`@return list<int>` so PHPStan infers the element type at call
+sites). No transitional helper API; the count is a useful progress
+signal.
 
-⚠ The "audit-first" step the original §1.7 reconciliation
-recommended is **already done** and **already shipped substantially**.
-`docs/SQL-DTO-AUDIT.md` (181 lines, as of 2026-05-23) catalogs the
-genuinely-untyped repository methods with table-per-repository
-structure: ID (A1, A2…I7), method name + line, SELECT shape, proposed
-projection class. The "feat(dto)" commit series executes against
-those IDs:
+---
 
-- `091fd0c32 feat(dto): SQL-DTO-AUDIT — 31 projection classes across
-  8 repositories` (the big drop)
-- `0552664de feat(dto): A6/Tier4-6/Tier3/B3-B4 — remainder of audit-4`
-- `9a4c94c90 feat(dto): A1-A5/A7 — audit-4 Tier 1 named result DTOs`
-- … plus follow-ups for B/C/D/E groups
+#### Boundary 4 — `$_SESSION`
 
-So Phase 2 work is **substantially underway via the SQL-DTO-AUDIT
-campaign**, not in a "let's design the audit" phase. Remaining work
-breakdown:
+##### Done — typed `Session` VO + confinement gate (F5-c)
 
-- **Done** — audit-4 Tier 1 (A1-A7, named result DTOs); B1-B6;
-  C1-C10; D1-D3; E1; F-I groups per the 091fd0c32 manifest.
-- **Open** — audit-4 remainder (Tier 5-6, follow-ons); plus any
-  drift since the audit doc was written.
-- **Out of audit scope** — methods marked "Skip" in the audit (dynamic
-  column names like `findAllByObjectWithUsername()`; SELECT * blobs
-  with admin-configured columns); orphaned dead `@return` docblocks
-  (e.g. `Tag/TagRepository.php:192`, `Image/ImageRepository.php:316`
-  — leftover from deleted methods, separate cleanup).
+`src/Piwigo/Session/Session.php` is the typed wrapper. `$_SESSION[`
+access is now confined to `Session.php` + `FlashBag.php` only.
+Verified 2026-05-23:
+`grep -rln '\$_SESSION\[' src/Piwigo | grep -vE 'Session\.php|FlashBag\.php'`
+returns nothing — **gate met**.
 
-The original "31 docblocks across 18 files" scan number I reported
-overcounted because it included methods already covered by `feat(dto)`
-commits but not yet re-grepped, plus the orphans. Cross-reference
-`docs/SQL-DTO-AUDIT.md` for the canonical open list.
+##### Open — `SessionService` → `SessionStore` rename (F5-c remainder)
 
-This audit produces the **real** target count, replacing the original
-draft's fictional "21 entities" number. Output of the audit is a
-revised Phase 2 task list; the migration itself runs as multiple
-follow-up sessions, one repository at a time.
+Cosmetic but in scope. `SessionService.php` (87 lines, PHP
+`SessionHandlerInterface` impl) needs renaming to `SessionStore.php`;
+6 call sites to sweep (`UserAdminService`, `AuthService`,
+`MaintenanceController`, `UserService`, `SessionBootstrap`, the
+file itself).
 
-##### Companion: the mixed-lambda cleanup
+---
 
-`fn (mixed $v)` lambdas at DB call sites: **291 occurrences across 95
-files** as of 2026-05-23 (drift from the original draft's 257). These
-get removed naturally as queries move into typed repository methods
-that return id-arrays (e.g. `: array` with `@return list<int>` so
-PHPStan infers the element type at call sites) — no transitional
-helper API, but the count is a useful progress signal during the
-sweep.
+#### Boundary 5 — PSR-11 container
 
-##### Migration order
+##### Done — `resolve()` helper (F5-b foundation)
 
-One repository at a time. `ImageRepository` remains the natural
-starter because its rows touch the most callers (`CategoryDefaultRenderer`,
-`PictureController`, `BatchManagerController`, the photo-admin pages).
-Each migration is a single PR: tightened return types, new Projection
-classes when needed, callers updated to access typed properties, and
-the removed-`is_*`-guards diff committed (see Verification below).
+`src/Piwigo/Core/resolve.php` exists and is used in
+`config/container.php:54`. Templated helper for residual `$c->get`
+calls in dispatch-time closures (e.g. the event-subscriber
+resolver). Pattern proven.
 
-> **ServiceLocator** was deleted in §1.3 — callers receive their
-> repositories via constructor injection. Confirmed
-> 2026-05-23 (`find src -name 'ServiceLocator.php'` returns nothing,
-> grep for `ServiceLocator::` in `src/` returns nothing).
+```php
+/**
+ * @template T of object
+ * @param  class-string<T> $id
+ * @return T
+ */
+function resolve(ContainerInterface $c, string $id): object {
+    $svc = $c->get($id);
+    assert($svc instanceof $id);
+    return $svc;
+}
+```
 
-#### Additional in-scope work (referenced from other ROADMAP sections)
+##### Open — extract inline factory closures into typed `*Factory` classes (F5-b remainder)
 
-Other sections of this ROADMAP and `docs/SECURITY.md` explicitly
-delegate further work to §1.7 beyond the HTTP-input + DB-row split
-above. Catalogued here for visibility — each is a separate sub-task
-when its time comes:
+`config/container.php` has **118 inline `factory(static fn …)`
+closures** (`grep -c 'factory(static fn' config/container.php`).
+F5-PENDING reports "50+" — stale; actual is more than 2× that. The
+`src/Piwigo/Core/Container/` directory doesn't exist yet; every
+planned Factory class is open work.
 
-- **Typed HTTP `Response` body — partly shipped, mostly open.** Two
-  separate gaps live behind the original draft's "typed `Response`
-  body" wording:
-  - **Success-side**: 7/94 handlers already return `WsResult`
-    subclasses (see Phase 1 "Done" above). The remaining ~87 still
-    return `array<string, mixed>` or `array<string, mixed>|PwgError`
-    (12 explicitly carry the union return type). Migrating them is
-    the bulk of the work.
-  - **Error-side**: `PwgError` is **already a typed value object**
-    (`final readonly class` with `code(): ?int` + `message(): string`)
-    — not an untyped envelope. The rate-limit cite at ROADMAP.md:2076
-    and `docs/SECURITY.md:182, 235` refers to `PwgError(429, …)`
-    thrown in 2 sites (`Session/LoginHandler.php:47,59`); what's
-    "typed" here is the *message string* — currently a free-form
-    English phrase, candidate for replacement with a typed error-code
-    enum + translation key. Lower priority than the success-side sweep.
-- **Eliminate `PageState::loginFailureReason` back-channel** — when
-  §1.7 promotes the WS / form login paths to a throw-and-catch flow,
-  `AuthException::accountLocked()` (already defined but unthrown)
-  replaces the current side-effect flag. Referenced from
-  ROADMAP.md:2078–2083 (Review finding F5).
-- **`AuthService` result-DTO** — the lockout-vs-bad-credentials
-  signal is currently surfaced via `AuthService::getLastFailureReason()`;
-  restructuring to an explicit result-DTO belongs to §1.7. Referenced
-  from ROADMAP.md:2240–2243.
-- **`UserEntity` design follow-up** — §1.6b's relationship note
-  (ROADMAP.md:2517) refers to "`UserEntity`'s design," but the typed
-  user wrapper actually shipped as `Piwigo\Users\User` at namespace
-  root (not under `Users/Entity/`). The §1.6b reference is to a
-  hypothetical class name, not a real one; the real `User` wrapper
-  exists and works.
+Representative shape per the F5 plan:
+
+```php
+final readonly class CategoryAdminServiceFactory {
+    public function __construct(
+        private Connection $conn,
+        private CategoryRepository $repo,
+        private CategoryService $cat,
+        // … additional deps autowired by PHP-DI
+    ) {}
+    public function build(): CategoryAdminService {
+        return new CategoryAdminService($this->conn, $this->repo, $this->cat, /* … */);
+    }
+}
+```
+
+Container entry becomes `factory(CategoryAdminServiceFactory::build(...))`.
+PHP-DI autowires the factory constructor.
+
+---
+
+#### Acceptance gates (F5-k)
+
+| Gate                                                                | Target               | Current (2026-05-23)                                  | Status   |
+| ------------------------------------------------------------------- | -------------------- | ----------------------------------------------------- | -------- |
+| `psalm --show-info` total                                           | <50                  | **1796** (was 2,041 at plan inception; net −245)      | Open     |
+| `grep -rn 'is_array(.* ?? null)' src/`                              | 0                    | 153 (F5-PENDING reported 154 — slight drift)          | Open     |
+| `$_SESSION[` outside `Session.php` / `FlashBag.php`                 | 0                    | 0                                                     | ✅ Met   |
+| Raw SQL outside repos / migrations / 8 install-flow files           | 0                    | 0                                                     | ✅ Met   |
+| Every `@psalm-suppress` / `@phpstan-ignore` has rationale comment   | 100%                 | 29/29 sites                                           | ✅ Met   |
+| PHPStan level-10                                                    | 0 errors             | 0                                                     | ✅ Met   |
+| Psalm errors-only                                                   | 0 errors             | 0 (fixed in `dd15d9bf4` as §1.7 prerequisite)         | ✅ Met   |
+| PHPUnit                                                             | green                | 1282 / 1282                                           | ✅ Met   |
+
+The `<50` info-level target is load-bearing on F5-i deep adoption —
+`SearchFilterRenderer` (67) + `SearchService` (47) alone account for
+114 of the 1796. Next-largest hotspots: `CategoryRepository` (57),
+`SectionInitializer` (56), `TelemetryService` body (55),
+`MiscController` (52), `MaintenanceController` (50). Beyond F5-i, a
+residue sweep is needed.
+
+---
+
+#### Migration order
+
+Independently mergeable phases. Sequenced per `docs/F5-PENDING.md`'s
+suggested order, extended for items added since:
+
+1. **F5-i deep adoption** (Boundary 2) — rewrite `SearchService::getRegularSearchResults`
+   and `SearchFilterRenderer` to consume typed `SearchRules` + filter
+   VOs end-to-end. Add `DateCustom` and `MysqlDateRange`. Highest
+   psalm-info payoff per LoC.
+2. **F5-h Result side** (Boundary 1) — tighten `WsAction` interface to
+   `__invoke(...): WsResult|PwgError`; add `*Result.php` starting
+   with the 11 zero-params handlers, then the 12 explicit-union
+   ones, then the remainder (95 total).
+3. **Web/admin Request DTOs** (Boundary 1) — sweep the 758 raw
+   `$_POST`/`$_GET` reads into hand-rolled `*Request` DTOs following
+   the `WsParams::fromArray()` shape. Start with
+   `PictureCommentRenderer` (`AddCommentParams` is its WS sibling
+   for cross-reference).
+4. **Typed error responses** (Boundary 1) — replace free-form
+   `PwgError` message strings with a typed error-code enum +
+   translation key; start with the 2 `Session/LoginHandler.php`
+   cite sites.
+5. **Back-channel cleanup + AuthService result-DTO** (Boundary 1) —
+   throw `AuthException::accountLocked()`, drop
+   `PageState::loginFailureReason`, restructure `AuthService::login()`
+   to return `AuthResult`.
+6. **Plugins admin modernization** (`there-is-a-plan-prancy-castle.md`)
+   — collapses the 3 admin god-classes into typed services;
+   unblocks the final 6 `pwg.extensions.*` WS cleanup.
+7. **Audit-driven Projection sweep** (Boundary 3) — execute against
+   `docs/SQL-DTO-AUDIT.md` open items + `docs/ARRAY-REFACTOR-AUDIT-4.md`
+   remainder. Run round-5 audit to enumerate remaining open IDs.
+   Bucket (a) caller cleanups can ride along; bucket (d) orphaned
+   docblocks are deletions.
+8. **F5-b factory class extraction** (Boundary 5) — 118 inline
+   closures → typed `*Factory.php` classes under
+   `src/Piwigo/Core/Container/`.
+9. **F5-c SessionStore rename** (Boundary 4) — 6 call sites; pair
+   with another low-risk batch.
+10. **VO + Enum completion** (cross-cutting) — ship the ~4 remaining
+    ValueObjects + ~6 remaining Enums to close F5-a.
+11. **F5-k residue sweep** — long-tail psalm-info burndown across
+    controllers, admin classes, residual repo internals after the
+    named hotspots are drained. May reveal further work; needs its
+    own audit pass when scheduled.
+12. **HttpKernel adoption** (Boundary 1, longer horizon) — Symfony
+    HttpKernel + HttpFoundation + standard ArgumentResolver
+    pipeline. Adds `symfony/http-kernel` dep; new
+    request-lifecycle events on the existing EventDispatcher (no
+    second bus). Request DTOs from item 3 carry over unchanged.
+
+Each step shippable independently. No external compatibility
+constraint (v17 already breaks extensions; in-tree consumers move
+in lockstep per [[project_plugins_rewrite]]).
+
+---
 
 #### Cross-references
 
-- §1.6a — tactical type tightening; ✅ closed 2026-05-23. Cleared the
-  ground for the Phase 2 sweep.
-- §1.6b — globals cleanup; ✅ closed 2026-05-16 via Wave A reference-
-  bridge cleanup and the Phase 3 channel migration. It did **not**
-  block on a typed user wrapper specifically (the original §1.7 cross-ref
-  framed that as a prerequisite — corrected). A typed user wrapper
-  does exist: `Piwigo\Users\User` at `src/Piwigo/Users/User.php`
-  (uses `UserStatus` enum + has `fromUserArray()` factory), used
-  throughout `CurrentUser::get()`.
-- §1.4 — plugin/theme system shipped. The WS handler-class pattern
-  (`WsAction` + `WsParams`) was delivered as the F5-h commit series
-  within §1.4's WS-method registration work, giving Phase 1 its
-  WS-side win; the remaining web-side sweep is independent.
-  `#[ApiMethod]` decoration is wired (§1.4 Phase 3) but no endpoint
-  classes carry it — orthogonal to §1.7.
-- §1.8 (test infrastructure) — Projection fixtures and web-side DTO
-  factories are good candidates for the early Pest/PHPUnit suite.
-- `docs/SQL-DTO-AUDIT.md` — canonical list of Phase 2 work items
-  with A/B/C/D/E/F/G/H/I IDs. The `feat(dto):` commit series tracks
-  execution against these IDs.
-- `docs/ARRAY-REFACTOR-AUDIT.md` + `-2.md` + `-3.md` + `-4.md` — a
-  separate audit campaign from SQL-DTO-AUDIT, scoped to broader
-  array→{DTO, enum, value-object} refactors (not just SQL projection
-  rows). Round-by-round progress:
-  - **Round 1** retired 8 items (Section enum, ExtensionAction,
-    OrderSpec, SqlFragment, etc.).
-  - **Round 2** retired 31 of 33 (UserStatus, Privacy, enums A4-A18,
-    PaginatedResult, HistoryRepository DTOs, ActivityDetails, …);
-    2 dropped (MimeExtension open set, ImageInsertRow disjoint
-    callers).
-  - **Round 3** picked up adoption gaps + new DTO shapes from
-    re-grep; status doc is the canonical "what's retired" record.
-  - **Round 4** has **18 IDs across 6 tiers** (Tier 1 named result
-    DTOs, Tier 2 input DTOs, Tier 3 result-union types, Tier 4
-    SlideshowParams VO, Tier 5 CategoryRepository inner shapes,
-    Tier 6 UploadService config spec). **Substantially closed as
-    of 2026-05-23**: two commits (`9a4c94c90 A1-A5/A7`, `0552664de
-    A6/Tier4-6/Tier3/B3-B4`) executed against most of the IDs;
-    verified ~25 of 30 proposed class names exist in tree (e.g.
-    `RateStats`, `PartitionedDerivativeSizes`, `DerivativeSettings`,
-    `IgnoredExtensionLists`, `ImageFileInfo`, `AvailableVersions`,
-    `NotificationConfig`, `NewCommentData`, `CommentUpdateData` —
-    all ✓). Remaining handful (e.g. `AdminListPage`, `ImageXmlAttributes`,
-    `PhysicalSyncableForSite`, `SharpenMatrix`, `UploadParamsDef`,
-    `VirtualCategory`) — likely B1/B2/C1-C3/D1-D4 IDs not covered by
-    the 2 commits above; needs a round-5 audit to confirm.
+**Authoritative plans + status docs**:
 
-This campaign overlaps §1.7 Phase 2 in spirit but covers more than
-SQL projections — admin services, config aggregates, derivative
-settings, etc. Coordinating: every new shaped-array DTO either
-campaign promotes counts against the same F5-k psalm-info gate.
-- `.claude/plans/what-is-the-proper-magical-taco.md` — F5 master plan
-  (506 lines, "Ground-up Refactor: Eliminate `mixed` from the Domain").
-  Defines all 11 F5 sub-codes (F5-a through F5-k), the 5-boundary
-  framing, and the value-object inventory (32 planned identifiers /
-  strings / temporal / enums — `ImageId`, `Email`, `MysqlDateTime`,
-  `UserStatus`, etc.; 21 shipped today). Completion status per plan
-  (read 2026-05-23):
-  - **F5-a** — VO + enum foundation. Shipped: 21 of ~25 ValueObjects
-    + **4 of ~10 enums** (`src/Piwigo/Common/Enum/` has 4 files —
-    6 short of the plan's "~10 enums" target).
-  - **F5-b** — `resolve()` helper shipped (`src/Piwigo/Core/resolve.php`);
-    factory classes still open per F5-PENDING.
-  - **F5-c** — `Session` VO shipped; **`$_SESSION[` confinement gate
-    verified met 2026-05-23**: `grep -rln '\$_SESSION\[' src/Piwigo |
-    grep -vE 'Session\.php|FlashBag\.php'` returns nothing.
-    `SessionStore` rename still open (cosmetic).
-  - **F5-d** — ✓ **substantially COMPLETE**: `Image` entity + 12 of
-    14 enumerated sub-steps shipped (the plan claims "F5-d/1 through
-    F5-d/14 all shipped" but its own bullet list only enumerates
-    /1, /2, /3, /4, /5, /6, /7, /9, /11, /12, /13, /14 — F5-d/8 and
-    F5-d/10 either don't exist as planned sub-steps or were folded
-    into other commits without the label; `git log --grep 'F5-d/8'`
-    and `'F5-d/10'` both return zero hits). Shipped includes
-    `findById(): ?Image`, `findByIds(): list<Image>`, ImageFormat +
-    Lounge aggregate extraction, `findRowsByRawQuery` escape hatch
-    dropped.
-  - **F5-e** — ✓ **COMPLETE**: Category/Tag/Comment entities; ~30
-    projection DTOs across the three aggregates; full CategoryRepository
-    (27/27 reading methods), TagRepository (10/10), CommentRepository
-    (5/5) migrated.
-  - **F5-f** — ✓ **COMPLETE**: `User` is `final readonly class` with
-    `with*` mutators; 8 direct-write sites migrated (plan estimated 85
-    — was off by ~10×).
-  - **F5-g** — ✓ shipped: WS scaffolding (`WsAction`, `WsParamException`,
-    `MethodDefinition.handlerClass`, dual-path dispatch).
-  - **F5-h** — ✓ **COMPLETE**: 95/95 endpoints migrated, 9/9 *Endpoints
-    god-classes drained, `src/Piwigo/Ws/Method/` directory removed.
-    Legacy `callback:` path remains for plugin compat but no in-tree
-    registration uses it (the 3 remaining callback registrations are
-    intentional: 2 `reflection.*` self-introspection + 1 not-implemented
-    stub).
-  - **F5-i** — More shipped than F5-PENDING says: `SearchRules` +
-    `MalformedSearchRulesException` + versioned `fromJson`/`fromArray`
-    foundation shipped, AND **all 14 typed filter VOs + 2 enums** are
-    in tree (`src/Piwigo/Search/Rules/`: AddedBy, Allwords (+ field +
-    mode), Author, Cat, DateCreated, DatePosted (+ preset code),
-    Expert, FileSize, Filetypes, Height, Rating, Ratio, Tags, Width
-    = 18 files total). 2 plan-named classes still missing: `DateCustom`,
-    `MysqlDateRange`. F5-PENDING (and the F5 plan body) say "Remaining:
-    15 typed filter VOs + adoption inside SearchService" — the **filter
-    VOs are done; only the deep SearchService / SearchFilterRenderer
-    adoption (200+ mixed accesses) is left.**
-  - **F5-j** — ✓ **COMPLETE**: `TelemetryPayload` 12-slot typed DTO;
-    `sendInfos()` refactored from 200-line mutator into 50-line
-    orchestrator + 12 narrow private helpers.
-  - **F5-k** — Partial: suppression-rationale audit complete (all 29
-    sites have rationale comments); `$_SESSION[` gate met; raw-SQL gate
-    met. **Unmet**: `psalm --show-info <50` (currently **1796**, plan
-    baseline was 2041, plan-snapshot showed 1862; net −245 since plan
-    inception).
-- `docs/F5-PENDING.md` — live status of the F5 series, audited against
-  the codebase (not git history). Open work as of 2026-05-23:
-  - **F5-b** — extract inline `factory(static fn …)` closures from
-    `config/container.php` into `src/Piwigo/Core/Container/*Factory.php`.
-    Boundary 5 (PSR-11). Out of §1.7 scope. ⚠ **Closure count drifted
-    up: F5-PENDING reports "50+", today is 118** (`grep -c 'factory(static fn'
-    config/container.php`). The `Core/Container/` directory still doesn't
-    exist — every planned Factory class is open work. F5-PENDING is
-    stale on the count.
-  - **F5-c** — rename `SessionService` → `SessionStore` (87 lines,
-    6 call sites; cosmetic). `Session.php` typed wrapper itself is
-    shipped (boundary 4). Out of §1.7 scope.
-  - **F5-h Result DTOs** (scope-split from the master plan's
-    "F5-h": F5-PENDING expands the label to also cover Result DTO
-    adoption, which the master plan marks ✓ COMPLETE only for the
-    handler-class side). Result DTOs sparse: 7 vs 83 Params;
-    F5-PENDING lists the same 11 zero-params endpoints I identified
-    above as a low-hanging chunk for 100% coverage. **§1.7 Phase 1
-    territory.** Note the label collision: the master plan's "F5-h ✓
-    COMPLETE" (95/95 handlers migrated) and F5-PENDING's "F5-h Result
-    DTOs sparse" refer to different aspects of the same migration
-    code series.
-  - **F5-i** — `SearchRules` deep adoption (200+ mixed accesses;
-    `SearchFilterRenderer` is the #1 Psalm-info hotspot at 67 issues).
-    Boundary 2 (Stored JSON). Out of §1.7 scope; load-bearing for the
-    F5-k psalm-info gate.
-  - **F5-k** — acceptance gates: `psalm --show-info <50` (currently
-    **1796**), `grep 'is_array(.* ?? null)' src/` count = 0 (currently
-    **153**, was 154 in F5-PENDING — slight drift), every
-    `@psalm-suppress` / `@phpstan-ignore` has rationale
-    (28 sites need re-audit).
-  Suggested order per F5-PENDING: F5-i → F5-h → F5-b → F5-c → residue.
+- `.claude/plans/what-is-the-proper-magical-taco.md` — F5 master
+  plan (506 lines, "Ground-up Refactor: Eliminate `mixed` from the
+  Domain"). Defines all 11 F5 sub-codes (F5-a through F5-k) and the
+  5-boundary framing this section follows. ⚠ The plan itself can
+  drift (e.g. claims F5-d/1–14 shipped but enumerates 12; names
+  entities `ImageThumbnail`/`ImageDimensions`/`CategoryInfo` that
+  shipped under different names) — spot-check against the codebase.
+- `docs/F5-PENDING.md` — live F5 status, audited against the
+  codebase. ⚠ Also goes stale: F5-i filter-VO count, F5-b closure
+  count of "50+" vs actual 118, F5-h Result DTO scope label
+  collision with the master plan's "F5-h ✓ COMPLETE" — all
+  reconciled in §1.7 validation.
+- `docs/SQL-DTO-AUDIT.md` — canonical Boundary 3 work list (A1–I7
+  IDs per repository, proposed projection per method).
+- `docs/ARRAY-REFACTOR-AUDIT.md` + `-2.md` + `-3.md` + `-4.md` —
+  broader array→DTO/enum/VO refactor across 4 audit rounds.
+  Tracked via `audit-N` commit prefix.
+- `.claude/plans/there-is-a-plan-prancy-castle.md` —
+  plugins/extensions modernization plan; unblocks the final 6
+  `pwg.extensions.*` WS handlers.
+- `.claude/plans/lets-do-1-5a-of-sparkling-tome.md` — §1.5a item 8
+  (Boundary 3 lineage) + item 9 (Boundary 1 lineage).
+
+**ROADMAP cross-references**:
+
+- §1.4 — plugin/theme system shipped. Per-endpoint Handler classes
+  (F5-h handler-side, F5-g scaffolding) delivered as part of §1.4's
+  WS-method registration work. `#[ApiMethod]` decoration is wired
+  (§1.4 Phase 3) but no endpoint classes carry it — orthogonal to
+  §1.7.
+- §1.5a items 8 + 9 — original lineage. The 291 `fn(mixed)` lambda
+  count (was 257) originally belonged to §1.5a item 6 (typed DB
+  scalar helpers `fetchIntColumn` / `fetchStringColumn`); dropped
+  as a standalone step because Boundary 3 naturally subsumes it.
+- §1.6a — tactical type tightening; ✅ closed 2026-05-23. Cleared
+  ground for Boundary 3.
+- §1.6b — globals cleanup; ✅ closed 2026-05-16 via Wave A
+  reference-bridge cleanup + Phase 3 channel migration. Did not
+  block on a typed user wrapper specifically. A typed user wrapper
+  does exist: `Piwigo\Users\User` at namespace root (uses
+  `UserStatus` enum + `fromUserArray()` factory, used throughout
+  `CurrentUser::get()`).
+- §1.6c — Config schema metadata; ✅ closed 2026-05-23.
+- §1.8 — test infrastructure; Projection fixtures and web-side
+  `*Request` DTO factories are good candidates for the early
+  Pest/PHPUnit suite once §1.8 starts.
+- §3.x (CSS) — orthogonal; no shared scope.
+
+**docs/SECURITY.md cross-refs**: lines 182, 235, 238 reference §1.7
+for typed Response, rate-limit error envelopes, and
+`PageState::loginFailureReason` cleanup — all in scope above.
+
+---
 
 #### Verification
 
-The repo runs PHPStan at level 10 with **no baseline file** and Psalm
-at errorLevel 2 with **no baseline file** (only two narrow
-`<issueHandlers>` suppressions in `psalm.xml`). The original §1.7 draft
-proposed "baseline diff per migration" as evidence; that workflow
-doesn't apply for errors. Errors-only state (2026-05-23): PHPStan
-clean, Psalm clean (fixed in commit `dd15d9bf4` as a §1.7 prerequisite).
+Static-analysis baseline (2026-05-23): PHPStan level-10 clean; Psalm
+errors-only clean. No baseline file in either analyzer
+(`phpstan.neon` and `psalm.xml` carry only the 2 narrow
+`<issueHandlers>` suppressions in `psalm.xml`). Per-PR evidence:
 
-**Info-level signal exists separately.** `psalm --show-info` reports
-**1796 informational issues** today; the F5-k acceptance gate in
-`docs/F5-PENDING.md` targets `<50`. Top hotspots:
-`SearchFilterRenderer.php` (67), `CategoryRepository.php` (57),
-`SectionInitializer.php` (56), `TelemetryService.php` (55) — the
-SearchRenderer one alone is load-bearing for F5-i (deep `SearchRules`
-adoption). §1.7 migrations should not increase the 1796 count and
-should opportunistically reduce it.
+- `composer analyse` (= phpstan + psalm) stays clean — any
+  regression fails the level-10 / errorLevel-2 contract immediately.
+- `composer test && composer lint` green.
+- **Removed `is_*` guard count** in the PR diff — the concrete win
+  of a Boundary 3 tightening (`is_string`, `is_numeric`,
+  `is_array(.* ?? null)` removals at call sites the loose return
+  type forced). Track in the PR description; F5-k counts the
+  global `is_array(.* ?? null)` site count toward the 0 target.
+- **Per-boundary smoke**:
+  - **Boundary 1** — `tests/Integration/WsApiTest.php` (292 lines)
+    must stay green; for web-side DTOs, browser-smoke the migrated
+    form/controller.
+  - **Boundary 2** — search end-to-end (allwords, tags, dates,
+    ratios, ratings, dimensions, expert, added_by, filetypes)
+    before/after F5-i deep adoption.
+  - **Boundary 3** — `tests/Integration/Repository/{SearchRepositoryTest, ThemeRepositoryTest}.php`
+    + `tests/Unit/{Image,Category,Tag,Comment}/Entity/*Test.php`
+    (5 files, 26 tests, 142 assertions) must stay green.
+  - **Boundary 4** — `tests/Integration/` session-handling paths
+    (`FastPathHeadersTest`, etc.) must stay green.
+  - **Boundary 5** — `tests/Integration/ContainerSmokeTest.php`
+    must stay green after each Factory extraction.
+- **psalm-info delta** — F5 plan's standard cadence:
+  `vendor/bin/psalm --show-info=true > /tmp/psalm.txt` before and
+  after; record the delta in the commit message. Goal: monotone
+  decrease toward F5-k's `<50` gate.
+- `composer test:parallel` for the larger boundary sweeps — surfaces
+  regressions the regular unit suite misses.
 
-Replacement evidence per migration PR:
-
-- `composer analyse` (= phpstan + psalm) stays clean — any tightening
-  that introduced a regression would fail level-10 / errorLevel-2
-  immediately.
-- Diff inspection — the value of the migration is **removed defensive
-  `is_string` / `is_numeric` / `is_array` guards at call sites** that
-  the loose return type forced. Count those removals in the PR
-  description as the concrete win.
-- Snapshot test of one full request path through the new boundary
-  (e.g. comment submission round-trip for Phase 1; a typed
-  `ImageRepository` consumer for Phase 2 — adapt to whatever the
-  migrated repo exposes).
-- `composer test && composer lint` clean after each migration.
-- **Phase 1 migrations:** `tests/Integration/WsApiTest.php` (292
-  lines) exercises the WS contract end-to-end — must stay green;
-  any handler-shape change has to keep this test passing.
-- **Phase 2 migrations:** `tests/Integration/Repository/*` (e.g.
-  `SearchRepositoryTest.php`, `ThemeRepositoryTest.php`) and
-  `tests/Unit/{Image,Category,Tag,Comment}/Entity/*Test.php` (5 files,
-  26 tests, 142 assertions) exercise repository contracts + entity
-  factories — must stay green.
-- For Phase 2: `composer test:parallel` passes — surfaces regressions
-  the regular unit suite misses.
-  ⚠ `tools/openapi-dump.php` is **broken on `16.x-rewrite` head as of
-  2026-05-23** (`Piwigo\Users\User::__construct()` TypeError at line
-  56 — passes `string` where `UserStatus` enum is expected). The script
-  is a useful Phase 2 evidence gate once fixed, but isn't usable today.
-  Don't add it to the per-migration checklist until the User-construction
-  bug is resolved (separate issue).
+⚠ `tools/openapi-dump.php` is broken on `16.x-rewrite` head as of
+2026-05-23 (`Piwigo\Users\User::__construct()` TypeError at line
+56 — passes `string` where `UserStatus` enum is expected). Useful
+Boundary 1 evidence gate once fixed; not on the per-migration
+checklist until then (separate issue).
 
 ---
 

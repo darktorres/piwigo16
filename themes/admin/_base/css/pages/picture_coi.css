@@ -1,0 +1,12 @@
+/* Photo "center of interest" editor page (picture_coi.latte).
+   The template renders a small form with cropped derivative previews
+   and an intro paragraph.
+
+   Rules relocated from pages/user-list.css where this rule was
+   sitting historically with no actual consumer load path — the
+   template now calls {do combineCss(...)} on this file directly. */
+
+.picture-coi-intro {
+  margin: 0 0 10px;
+  padding: 0;
+}

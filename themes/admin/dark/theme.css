@@ -414,9 +414,6 @@ a.stat-box:hover {
 .pluginActionLevel2 {
   color: #bbb;
 }
-.pluginFilter {
-  color: #c1c1c1;
-}
 .pluginFilter input {
   border-color: #c1c1c1;
 }
@@ -448,9 +445,6 @@ a.stat-box:hover {
   color: #222;
 }
 
-.maintenance-action {
-  color: #c1c1c1;
-}
 
 /* Batch Manager */
 #batchManagerGlobal .thumbnails .font-checkbox [class*="icon-check"]::before {
@@ -1020,9 +1014,6 @@ li.plupload_delete a.remove-format:hover {
   background-color: #333;
 }
 
-.cat-modify-info-content {
-  color: #c1c1c1 ;
-}
 
 .cat-modify-footer,
 .savebar-footer {
@@ -1306,9 +1297,6 @@ li.plupload_delete a.remove-format:hover {
   background-color: #222 ;
 }
 
-.tag-header .selection-controller p {
-  color: #c1c1c1;
-}
 
 .tag-container.selection .tag-box[data-selected="1"] {
   background-color: #f9852c ;

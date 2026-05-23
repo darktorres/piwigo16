@@ -72,6 +72,7 @@
 }
 
 .pluginFilter {
+  color: var(--admin-text);
   justify-content: end;
   position: absolute;
   right: 160px;

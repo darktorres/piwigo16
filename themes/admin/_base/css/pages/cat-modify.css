@@ -351,7 +351,7 @@
 
 .cat-modify-infos .cat-modify-info-content {
   font-size: 15px;
-  color: #333;
+  color: var(--admin-text);
   font-weight: bold;
 }
 

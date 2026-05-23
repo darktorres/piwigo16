@@ -119,7 +119,7 @@
 
 .tag-header .selection-controller p {
   margin-right: 10px;
-  color: #555;
+  color: var(--admin-text);
 }
 
 .tag-header .selection-controller a,

@@ -463,15 +463,15 @@ a.group_users {
 
 .edit-user-tab-title,
 .guest-edit-user-tab-title {
-  border-bottom: solid 1px #ddd;
+  border-bottom: solid 1px var(--admin-border);
 }
 
 .edit-user-tab-title .selected,
 .edit-user-tab-title .selected:hover,
 .guest-edit-user-tab-title .selected,
 .guest-edit-user-tab-title .selected:hover {
-  color: #323232;
-  border-bottom: solid 4px #323232;
+  color: var(--admin-text);
+  border-bottom: solid 4px var(--admin-text);
 }
 
 .edit-user-icons .delete-user-button::before,
@@ -909,7 +909,7 @@ a.group_users {
   overflow-x: auto;
   display: flex;
   flex-direction: column;
-  border-left: solid 1px #ddd;
+  border-left: solid 1px var(--admin-border);
 }
 
 .edit-user-slides,

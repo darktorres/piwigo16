@@ -3127,10 +3127,23 @@ when its time comes:
   execution against these IDs.
 - `docs/ARRAY-REFACTOR-AUDIT.md` + `-2.md` + `-3.md` + `-4.md` —
   earlier audit rounds; the round-4 doc is the one currently active.
-- `docs/F5-PENDING.md` — F5 series status (F5-b factory classes,
-  F5-c session rename, F5-d Image entity foundation, F5-h WS
-  handler-class migration — confirms the F5 sub-codes I cite are
-  real and tracked).
+- `docs/F5-PENDING.md` — F5 series status doc (per the master plan
+  at `.claude/plans/what-is-the-proper-magical-taco.md`). Confirms
+  the F5 sub-codes I cite. Open work catalogued there:
+  - **F5-b** — extract 50+ inline `factory(static fn …)` closures
+    from `config/container.php` into `src/Piwigo/Core/Container/*Factory.php`.
+  - **F5-c** — rename `SessionService` → `SessionStore` (87 lines,
+    6 call sites; cosmetic).
+  - **F5-h** — Result DTOs sparse (7 vs 83 Params); F5-PENDING lists
+    the same 11 zero-params endpoints I identified above as a low-hanging
+    chunk for 100% coverage.
+  - **F5-i** — `SearchRules` deep adoption (200+ mixed accesses;
+    `SearchFilterRenderer` is the #1 Psalm-info hotspot at 67 issues).
+  - **F5-k** — acceptance gates: `psalm --show-info <50` (currently
+    1815/1877), `is_array(.* ?? null)` count = 0 (currently 154),
+    every `@psalm-suppress` / `@phpstan-ignore` has rationale (28
+    sites need re-audit).
+  Suggested order per F5-PENDING: F5-i → F5-h → F5-b → F5-c → residue.
 
 #### Verification
 
@@ -3138,8 +3151,19 @@ The repo runs PHPStan at level 10 with **no baseline file** and Psalm
 at errorLevel 2 with **no baseline file** (only two narrow
 `<issueHandlers>` suppressions in `psalm.xml`). The original §1.7 draft
 proposed "baseline diff per migration" as evidence; that workflow
-doesn't apply here — both analyzers pass clean today (verified
-2026-05-23). Replacement evidence per migration PR:
+doesn't apply for errors. Errors-only state (2026-05-23): PHPStan
+clean, Psalm clean (fixed in commit `dd15d9bf4` as a §1.7 prerequisite).
+
+**Info-level signal exists separately.** `psalm --show-info` reports
+**1815 informational issues** today; the F5-k acceptance gate in
+`docs/F5-PENDING.md` targets `<50`. Top hotspots:
+`SearchFilterRenderer.php` (67), `CategoryRepository.php` (57),
+`SectionInitializer.php` (56), `TelemetryService.php` (55) — the
+SearchRenderer one alone is load-bearing for F5-i (deep `SearchRules`
+adoption). §1.7 migrations should not increase the 1815 count and
+should opportunistically reduce it.
+
+Replacement evidence per migration PR:
 
 - `composer analyse` (= phpstan + psalm) stays clean — any tightening
   that introduced a regression would fail level-10 / errorLevel-2

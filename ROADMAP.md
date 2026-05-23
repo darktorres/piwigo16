@@ -14,7 +14,7 @@
 | 1.2  | Templates pipeline            | ✅ **Done**            | XL        | waves 1+2+3 done — Smarty hygiene → 133/133 Latte conversion → deploy-time precompile (`composer precompile:templates`) + CI gate                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | 1.3  | Kill ServiceLocator + DI      | ✅ **Done**            | L         | constructor injection everywhere; `ServiceLocator.php` deleted; `DbConnection::get()` callers eliminated                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 1.4  | Plugin / theme + WS           | ✅ **Done**            | L         | shipped 2026-05-16 in 19 batches (B0–B18) on `16.x-rewrite`: `PluginInterface` + `PluginRegistry`, 153 typed PSR-14 events, `ThemeInterface` + `ThemeRegistry`, 94 `#[ApiMethod]`-decorated WS endpoints + cebe/redocly OpenAPI gates, legacy runtime deleted                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| 1.5  | Security hardening            | 🟢 **Active** ▸ 1 / 6  | M         | 4 waves: session cookie → lockout + rate limit → CSP/headers → `SECURITY.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 1.5  | Security hardening            | ✅ **Done**            | M         | shipped 2026-05-22 in 4 commits on `16.x-rewrite`: Wave A session cookie hardening (`SameSite=Lax` + `HttpOnly` + scheme-conditional `Secure`), Wave B brute-force lockout (`piwigo_user_failed_logins` + `LoginThrottle`) + sliding-window rate limiting via `symfony/rate-limiter` (per-IP 5/min, per-account 10/10min) on both form + WS-API, Wave C `SecurityHeadersMiddleware` (CSP, XFO, XCTO, Referrer-Policy, Permissions-Policy, HSTS-on-HTTPS) + `composer lint:no-inline-scripts` CI guard, Wave D `docs/SECURITY.md` (threat model + admin runbook + plugin-author reference)                                                                                                                              |
 | 1.6  | Type correctness              | 🟢 **Active** ▸ 4 / 13 | M         | 1.6b globals cleanup ✅ closed; 1.6a mixed-types 2 / 6 done (4 left); 1.6c schema metadata 0 / 5 done (1 moot)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 1.7  | Typed boundaries              | 🟡 **Not started**     | L         | HTTP request DTOs (Phase 1) → repository entity layer (Phase 2)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | 1.8  | Test infrastructure           | 🟡 **Not started**     | M + L + S | Pest → coverage → Infection (chained)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
@@ -1967,18 +1967,75 @@ npx playwright test
 
 ### 1.5 Security hardening
 
-**Status:** 🟢 Active ▸ 1 of 6 sub-tasks done · **Effort:** M
+**Status:** ✅ Done 2026-05-22 ▸ all 4 waves shipped on `16.x-rewrite`
+in 4 commits. **Effort:** M (delivered).
 
-CSRF middleware is already in place (centralized in `CsrfMiddleware`
-during the front-controller work). It validates `pwg_token` on POST
-requests, with a small allow-list for endpoints that don't carry CSRF
-state (`/ws`, `/install`, `/upgrade`, `/identification`, `/register`).
+**Delivered.** CSRF middleware was already in tree from the
+front-controller work (`CsrfMiddleware` validating `pwg_token` on POST
+with an allow-list for `/ws`, `/admin`, `/install`, `/upgrade`,
+`/identification`, `/register`, `/qsearch`); §1.5 added the rest of
+the posture:
 
-The five remaining sub-tasks are sequenced into four PR-sized waves.
-Each merge keeps CI green and improves the security posture
-monotonically. Wave order is set so the docs (Wave D) describe the
-final posture on first publish, and so the no-DB changes (Wave A) land
-before the migration-bearing wave (Wave B).
+- **Wave A** (`56b671e1b`) — `SessionBootstrap.php` now sets
+  `SameSite=Lax`, `HttpOnly`, and a request-scheme-conditional
+  `Secure` flag via the array form of `session_set_cookie_params`.
+- **Wave B** (`e64282b79`) — `piwigo_user_failed_logins` table +
+  `UserFailedLoginRepository` + `LoginThrottle` (5 failures /
+  15 min lockout, default thresholds hardcoded; config keys gated
+  on §1.6c) + `LoginRateLimiterFactory` over the existing
+  `symfony/cache` pool (sliding-window 5/min per IP, 10/10 min per
+  account). Wired into `AuthService::pwgLogin`,
+  `IdentificationController`, and the WS-API `LoginHandler`
+  (returns `PwgError(429)` on rate-limit or lockout). Bypassed
+  under `TestMode` so the integration suite can log in repeatedly
+  from loopback. `AuthException::accountLocked()` /
+  `rateLimited()` named ctors + `ActivityAction::LoginFailureLocked`
+  case. Includes 8 integration tests covering the repo + throttle
+  paths.
+- **Wave C** (`dc1f59d6f`) — `SecurityHeadersMiddleware` at
+  position 0 of the PSR-15 pipeline emits CSP (`default-src 'self'`
+  with `img-src 'self' data: blob:`, `style-src-attr 'unsafe-inline'`
+  for the inline `style="--var:value"` CSS-variable bridges,
+  `script-src 'self'` with no nonce since every `<script>` in tree
+  is `type="application/json"`), `X-Frame-Options: SAMEORIGIN`,
+  `X-Content-Type-Options: nosniff`, `Referrer-Policy:
+strict-origin-when-cross-origin`, `Permissions-Policy:
+geolocation=(), microphone=(), camera=()`, and HSTS
+  (`max-age=31536000; includeSubDomains`) only when
+  `$_SERVER['HTTPS']` is on. Plus
+  `tools/check-no-executable-inline-scripts.php` + `composer
+lint:no-inline-scripts` CI guard scanning `themes/**/*.latte`
+  (mail templates excluded — never HTTP-served).
+- **Wave D** (`6aff94432`) — new `docs/SECURITY.md` covering
+  reporting workflow (GitHub private advisories at
+  `darktorres/piwigo16`), three-group threat model mapped to
+  defenses in tree, response-header + session-cookie + lockout
+  reference tables, plugin/theme-author auth notes, CSP-override
+  stub, and a known-gaps list (admin unlock UI, configurable
+  thresholds, HSTS preload, `__Host-` / `__Secure-` cookie
+  prefixes, CSP reporting, per-plugin CSP relaxation hook).
+
+Verified by `composer lint:php` clean, `vendor/bin/phpstan analyse`
+clean, `vendor/bin/phpunit` 1272 tests / 17656 assertions green (up
+from 1259 / 16566 at the start of §1.5).
+
+#### Deferred follow-ups (carried forward, not blockers)
+
+- **Configurable lockout / rate-limit thresholds.** Gated on §1.6c
+  (config-schema metadata). Currently hardcoded in `LoginThrottle`
+  and `LoginRateLimiterFactory`.
+- **Admin UI for unlocking users.** Register an `AdminPage` for the
+  unlock UI via the §1.4 `AdminPagesRegistering` event.
+- **HSTS `preload`** — deployment-policy decision, not a code change.
+- **`__Host-` / `__Secure-` cookie prefixes + unconditional `secure`**
+  — gated on a future "force HTTPS" config flag.
+- **CSP `report-uri` / `report-to`** — no reporting endpoint
+  designed yet; revisit if production violations appear.
+- **Per-plugin CSP relaxation hook** — `PluginInterface::boot()`
+  surface to be added when the first plugin needs it.
+- **Typed HTTP response for the WS rate-limit error.** Currently
+  `PwgError(429, …)`; typed `Response` body comes with §1.7
+  (typed boundaries / HTTP DTO Phase 1).
 
 #### Wave A — Session cookie hardening + `SECURITY.md` skeleton
 

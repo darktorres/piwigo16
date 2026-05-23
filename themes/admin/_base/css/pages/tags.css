@@ -435,6 +435,7 @@
 }
 
 .RenameTagPopInContainer {
+  background-color: var(--admin-bg-page);
   display: flex;
   position: absolute;
   left: 50%;

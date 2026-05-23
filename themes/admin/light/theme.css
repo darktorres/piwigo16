@@ -456,10 +456,7 @@ input:focus + .slider {
 
 /* UserList Pop in */
 
-.CloseUserList,
-.CloseAddAlbum,
-.CloseDeleteAlbum,
-.CloseRenameAlbum {
+.CloseDeleteAlbum {
   color: #fff;
 }
 
@@ -876,10 +873,6 @@ li.plupload_delete a.remove-format:hover {
 .cat-modify-footer-see-out.disabled {
   background-color: #ececec;
   color: #b8b8b8;
-}
-
-.RenameTagPopInContainer {
-  background-color: #fff;
 }
 
 /* Filters options */

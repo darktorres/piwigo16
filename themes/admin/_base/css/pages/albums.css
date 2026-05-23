@@ -741,6 +741,7 @@ ul.pwgtree-tree .pwgtree-element {
 
 .CloseAddAlbum,
 .CloseRenameAlbum {
+  color: var(--admin-bg-page);
   position: absolute;
   right: -40px;
   top: -40px;

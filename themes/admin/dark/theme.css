@@ -796,8 +796,6 @@ input:focus + .slider {
 
 /* UserList Pop in */
 
-.CloseUserList,
-.CloseAddAlbum,
 #CloseDeleteAlbum,
 .close-modal {
   color: #444;
@@ -2439,10 +2437,6 @@ li.plupload_delete a.remove-format:hover {
 
 .certification[data-certification="-1"] {
   background-image: url("images/certification/CertificationWarningDM.svg") ;
-}
-
-.RenameTagPopInContainer {
-  background-color: #444;
 }
 
 /* Filters options */

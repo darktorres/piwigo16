@@ -2822,7 +2822,9 @@ second bus added) but introduces a new request-lifecycle event suite
 (`kernel.request`, `kernel.response`, `kernel.exception`, …) and
 changes the request/response data structures (PSR-7 is in tree via
 `psr/http-message` + `psr/http-server-handler` + `psr/http-server-middleware`,
-used in **37 files** including `Core/Kernel.php`,
+with `nyholm/psr7` + `nyholm/psr7-server` as the concrete
+implementation in `Http/RequestFactory.php` + `Http/ResponseFactory.php`,
+used in **37 src/Piwigo files** including `Core/Kernel.php`,
 `Http/MiddlewarePipeline.php`, `Http/ResponseEmitter.php`).
 Revisit when there's a concrete need. The DTOs from Phase 1 carry over
 unchanged if that adoption ever happens.
@@ -3053,14 +3055,22 @@ delegate further work to §1.7 beyond the HTTP-input + DB-row split
 above. Catalogued here for visibility — each is a separate sub-task
 when its time comes:
 
-- **Typed HTTP `Response` body — partly shipped, fully open.** The
-  `WsResult` interface + 7 implementations cover 7/94 success-response
-  endpoints already (see Phase 1 "Done" above). The remaining work is
-  (a) migrating the other ~87 handlers from `array<string, mixed>`
-  returns to `WsResult` subclasses, and (b) extending the typed-response
-  pattern to error envelopes — currently `PwgError(429, …)` carries
-  the rate-limit error inline; that one specifically is referenced from
-  ROADMAP.md:2076 and `docs/SECURITY.md:182, 235`.
+- **Typed HTTP `Response` body — partly shipped, mostly open.** Two
+  separate gaps live behind the original draft's "typed `Response`
+  body" wording:
+  - **Success-side**: 7/94 handlers already return `WsResult`
+    subclasses (see Phase 1 "Done" above). The remaining ~87 still
+    return `array<string, mixed>` or `array<string, mixed>|PwgError`
+    (12 explicitly carry the union return type). Migrating them is
+    the bulk of the work.
+  - **Error-side**: `PwgError` is **already a typed value object**
+    (`final readonly class` with `code(): ?int` + `message(): string`)
+    — not an untyped envelope. The rate-limit cite at ROADMAP.md:2076
+    and `docs/SECURITY.md:182, 235` refers to `PwgError(429, …)`
+    thrown in 2 sites (`Session/LoginHandler.php:47,59`); what's
+    "typed" here is the *message string* — currently a free-form
+    English phrase, candidate for replacement with a typed error-code
+    enum + translation key. Lower priority than the success-side sweep.
 - **Eliminate `PageState::loginFailureReason` back-channel** — when
   §1.7 promotes the WS / form login paths to a throw-and-catch flow,
   `AuthException::accountLocked()` (already defined but unthrown)
@@ -3118,6 +3128,14 @@ doesn't apply here — both analyzers pass clean today (verified
   `ImageRepository` consumer for Phase 2 — adapt to whatever the
   migrated repo exposes).
 - `composer test && composer lint` clean after each migration.
+- **Phase 1 migrations:** `tests/Integration/WsApiTest.php` (292
+  lines) exercises the WS contract end-to-end — must stay green;
+  any handler-shape change has to keep this test passing.
+- **Phase 2 migrations:** `tests/Integration/Repository/*` (e.g.
+  `SearchRepositoryTest.php`, `ThemeRepositoryTest.php`) and
+  `tests/Unit/{Image,Category,Tag,Comment}/Entity/*Test.php` (5 files,
+  26 tests, 142 assertions) exercise repository contracts + entity
+  factories — must stay green.
 - For Phase 2: `composer test:parallel` passes — surfaces regressions
   the regular unit suite misses.
   ⚠ `tools/openapi-dump.php` is **broken on `16.x-rewrite` head as of

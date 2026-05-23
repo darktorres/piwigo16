@@ -4,7 +4,7 @@ import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { AlbumSelector } from './album_selector';
 import { TagsCache, CategoriesCache } from './LocalStorageCache';
-import type { CacheItem, SelectizerOptions } from './LocalStorageCache';
+import type { CacheItem, TomSelectAttachOptions } from './LocalStorageCache';
 import { getPageData } from './page-data';
 import { config } from './config';
 
@@ -75,14 +75,14 @@ const categoriesCache = new CategoriesCache({
     rootUrl: pageData.ROOT_URL,
 });
 
-tagsCache.selectize(document.querySelector('[data-selectize=tags]'), {
+tagsCache.attach(document.querySelector('[data-selectize=tags]'), {
     lang: {
         Add: pageData.str_create,
     },
 });
 
-categoriesCache.selectize(document.querySelector('[data-selectize=categories]'), {
-    filter: function (categories: CacheItem[], options: SelectizerOptions) {
+categoriesCache.attach(document.querySelector('[data-selectize=categories]'), {
+    filter: function (categories: CacheItem[], options: TomSelectAttachOptions) {
         if (this.name === 'dissociate') {
             const filtered = categories.filter(
                 (cat) => pageData.associated_categories[String(cat.id)] !== undefined

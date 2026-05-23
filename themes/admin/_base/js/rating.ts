@@ -29,16 +29,16 @@ const categoriesCache = new CategoriesCache({
     rootUrl: pageData.ROOT_URL,
 });
 
-categoriesCache.selectize(document.querySelector('[data-selectize=categories]'));
+categoriesCache.attach(document.querySelector('[data-selectize=categories]'));
 
 /*---- Filter UI (migrated from {footer_script}) ----*/
 
-interface SelectizeSelect extends HTMLSelectElement {
-    selectize?: { setValue: (v: string | null) => void };
+interface TomSelectSelect extends HTMLSelectElement {
+    tomselect?: { setValue: (v: string) => void; clear: () => void };
 }
 
 function checkCatFilter(): void {
-    const catSelect = document.querySelector<SelectizeSelect>('select[name=cat]');
+    const catSelect = document.querySelector<TomSelectSelect>('select[name=cat]');
     const removeBtn = document.getElementById('removeAlbumFilter');
     if (!catSelect || !removeBtn) return;
     removeBtn.style.display = catSelect.value === '' ? 'none' : '';
@@ -46,8 +46,8 @@ function checkCatFilter(): void {
 
 document.getElementById('removeAlbumFilter')?.addEventListener('click', (e) => {
     e.preventDefault();
-    const catSelect = document.querySelector<SelectizeSelect>('select[name=cat]');
-    catSelect?.selectize?.setValue(null);
+    const catSelect = document.querySelector<TomSelectSelect>('select[name=cat]');
+    catSelect?.tomselect?.clear();
 });
 
 checkCatFilter();

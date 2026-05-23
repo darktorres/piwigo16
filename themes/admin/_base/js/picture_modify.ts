@@ -34,9 +34,9 @@ const tagsCache = new TagsCache({
     rootUrl: pageData.ROOT_URL,
 });
 
-categoriesCache.selectize(document.querySelector('[data-selectize=categories]'));
+categoriesCache.attach(document.querySelector('[data-selectize=categories]'));
 
-tagsCache.selectize(document.querySelector('[data-selectize=tags]'), {
+tagsCache.attach(document.querySelector('[data-selectize=tags]'), {
     lang: {
         Add: pageData.str_create,
     },

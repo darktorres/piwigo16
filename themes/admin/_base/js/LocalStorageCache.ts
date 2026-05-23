@@ -21,14 +21,14 @@ interface CacheEnvelope<T> {
     data: T;
 }
 
-export interface SelectizerOptions {
+export interface TomSelectAttachOptions {
     value?: Array<number | string | CacheItem>;
     default?: number | string;
     create?: boolean;
     filter?: (
         this: HTMLSelectElement,
         data: CacheItem[],
-        options: SelectizerOptions
+        options: TomSelectAttachOptions
     ) => CacheItem[];
     lang?: { Add: string };
 }
@@ -96,12 +96,12 @@ export class LocalStorageCache<T = CacheItem[]> {
 }
 
 type CachedSelect = HTMLSelectElement & {
-    _cache?: AbstractSelectizer;
+    _cache?: AbstractTomSelectCache;
     _tomSelect?: TomSelect;
 };
 
-export abstract class AbstractSelectizer extends LocalStorageCache<CacheItem[]> {
-    protected _selectize(target: HTMLSelectElement | null, globalOptions: SelectizerOptions): void {
+export abstract class AbstractTomSelectCache extends LocalStorageCache<CacheItem[]> {
+    protected _attach(target: HTMLSelectElement | null, globalOptions: TomSelectAttachOptions): void {
         if (target === null) return;
         (target as CachedSelect)._cache = this;
         this.get((data) => {
@@ -183,7 +183,7 @@ function makeTomSelect(
     return ts;
 }
 
-export class CategoriesCache extends AbstractSelectizer {
+export class CategoriesCache extends AbstractTomSelectCache {
     constructor(options: AdminListCacheOptions) {
         super({
             ...options,
@@ -206,7 +206,7 @@ export class CategoriesCache extends AbstractSelectizer {
         });
     }
 
-    selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
+    attach(target: HTMLSelectElement | null, options: TomSelectAttachOptions = {}): void {
         if (target === null) return;
         makeTomSelect(target, {
             valueField: 'id',
@@ -214,13 +214,13 @@ export class CategoriesCache extends AbstractSelectizer {
             sortField: 'pos',
             searchField: ['fullname'],
             plugins: { remove_button: {} },
-            render: AbstractSelectizer.getRender('fullname', options.lang),
+            render: AbstractTomSelectCache.getRender('fullname', options.lang),
         });
-        this._selectize(target, options);
+        this._attach(target, options);
     }
 }
 
-export class TagsCache extends AbstractSelectizer {
+export class TagsCache extends AbstractTomSelectCache {
     constructor(options: AdminListCacheOptions) {
         super({
             ...options,
@@ -243,7 +243,7 @@ export class TagsCache extends AbstractSelectizer {
         });
     }
 
-    selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
+    attach(target: HTMLSelectElement | null, options: TomSelectAttachOptions = {}): void {
         if (target === null) return;
         makeTomSelect(target, {
             valueField: 'id',
@@ -251,13 +251,13 @@ export class TagsCache extends AbstractSelectizer {
             sortField: 'name',
             searchField: ['name'],
             plugins: { remove_button: {} },
-            render: AbstractSelectizer.getRender('name', options.lang),
+            render: AbstractTomSelectCache.getRender('name', options.lang),
         });
-        this._selectize(target, options);
+        this._attach(target, options);
     }
 }
 
-export class GroupsCache extends AbstractSelectizer {
+export class GroupsCache extends AbstractTomSelectCache {
     constructor(options: AdminListCacheOptions) {
         super({
             ...options,
@@ -278,7 +278,7 @@ export class GroupsCache extends AbstractSelectizer {
         });
     }
 
-    selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
+    attach(target: HTMLSelectElement | null, options: TomSelectAttachOptions = {}): void {
         if (target === null) return;
         makeTomSelect(target, {
             valueField: 'id',
@@ -286,13 +286,13 @@ export class GroupsCache extends AbstractSelectizer {
             sortField: 'name',
             searchField: ['name'],
             plugins: { remove_button: {} },
-            render: AbstractSelectizer.getRender('name', options.lang),
+            render: AbstractTomSelectCache.getRender('name', options.lang),
         });
-        this._selectize(target, options);
+        this._attach(target, options);
     }
 }
 
-export class UsersCache extends AbstractSelectizer {
+export class UsersCache extends AbstractTomSelectCache {
     constructor(options: AdminListCacheOptions) {
         super({
             ...options,
@@ -323,7 +323,7 @@ export class UsersCache extends AbstractSelectizer {
         });
     }
 
-    selectize(target: HTMLSelectElement | null, options: SelectizerOptions = {}): void {
+    attach(target: HTMLSelectElement | null, options: TomSelectAttachOptions = {}): void {
         if (target === null) return;
         makeTomSelect(target, {
             valueField: 'id',
@@ -331,8 +331,8 @@ export class UsersCache extends AbstractSelectizer {
             sortField: 'username',
             searchField: ['username'],
             plugins: { remove_button: {} },
-            render: AbstractSelectizer.getRender('username', options.lang),
+            render: AbstractTomSelectCache.getRender('username', options.lang),
         });
-        this._selectize(target, options);
+        this._attach(target, options);
     }
 }

@@ -18,7 +18,7 @@ interface TomSelectInstance {
 }
 
 interface CategoriesCacheLike {
-    selectize(
+    attach(
         target: HTMLSelectElement,
         options: {
             default?: number;
@@ -74,7 +74,7 @@ function pwgAddAlbum(
 
     function init(): void {
         initialized = true;
-        cache!.selectize(albumParentSel, {
+        cache!.attach(albumParentSel, {
             default: 0,
             filter(this: HTMLSelectElement, categoriesIn: CategoryOption[]): CategoryOption[] {
                 let categories = categoriesIn;

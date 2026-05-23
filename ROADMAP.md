@@ -2673,7 +2673,9 @@ typed properties without `is_*` guards.
 > **Status reconciliation (2026-05-23).** Both phases have partially
 > shipped under different names than the original §1.7 draft proposed:
 > the WS layer acquired `*Params` + `*Handler` per-endpoint classes
-> during §1.4 (~94/99 endpoints), and the repository layer grew **two
+> during §1.4 (~94/99 endpoints, tracked as the **F5-h** commit series
+> — 127 F5-* commits in git log; `WsAction.php` interface docblock
+> literally says "per F5-h"), and the repository layer grew **two
 > complementary** typed-row patterns: 7 wide `*/Entity/` classes
 > (Image=4, Category=1, Tag=1, Comment=1) supported by 21 value-object
 > types under `src/Piwigo/Common/ValueObject/`, plus 56 narrow
@@ -2807,7 +2809,7 @@ second bus added) but introduces a new request-lifecycle event suite
 (`kernel.request`, `kernel.response`, `kernel.exception`, …) and
 changes the request/response data structures (PSR-7 is in tree via
 `psr/http-message` + `psr/http-server-handler` + `psr/http-server-middleware`,
-used in 10+ files including `Core/Kernel.php`,
+used in **37 files** including `Core/Kernel.php`,
 `Http/MiddlewarePipeline.php`, `Http/ResponseEmitter.php`).
 Revisit when there's a concrete need. The DTOs from Phase 1 carry over
 unchanged if that adoption ever happens.
@@ -2857,17 +2859,37 @@ proposed (with value-objects added).
 
 **Narrow Projection pattern** — query-specific subset, no identity,
 no value-objects. Used for listings, lookups, distinct queries,
-calendar/stats rollups. As of 2026-05-23: **56 `Projection/*` classes**
-across `src/Piwigo/{Image,Category,Tag,Users,Activity,Comment,Group,Notification,Rate,Auth}/Projection/`
-(per-namespace counts: Category=24, Users=6, Comment=5, Image=4, Tag=4,
-Activity=4, Notification=3, Rate=3, Group=2, Auth=1).
+calendar/stats rollups. As of 2026-05-23, **73 projection-shape
+classes** in tree across three location conventions:
+
+- **56 under `*/Projection/`** — the canonical location, across
+  `src/Piwigo/{Image,Category,Tag,Users,Activity,Comment,Group,Notification,Rate,Auth}/Projection/`
+  (per-namespace counts: Category=24, Users=6, Comment=5, Image=4,
+  Tag=4, Activity=4, Notification=3, Rate=3, Group=2, Auth=1).
+- **10 `*Row.php` at namespace roots** — Search=6 (AuthorCountRow,
+  ImageFilesizeRow, ImageDateRow, ImageDimensionRow, ImageRatingRow,
+  AddedByCountRow), History=3, Activity=1. Same shape as `Projection/`
+  classes, just located one level up. Pre-dates or sidesteps the
+  `Projection/` convention; a code-quality follow-up could consolidate
+  the location.
+- **7 in `*/Entity/`** — counted in the wide-Entity pattern above; they
+  share the `fromRow()` shape with Projections.
+
+Plus the generic wrapper: **`Piwigo\Common\Dto\PaginatedResult<T>`**
+(`@template T`, used in 19 call sites across Image, Category, User
+repos) wraps `list<T> $rows + ?int $total` for paginated reads. T is
+parametrized over `Image`, `AdminCategoryRow`, inline array tuples, or
+(in one stale call site) `array<string, mixed>` — the untyped variant
+counts as part of the bare-`array` sweep target.
 
 Total of **64 `function fromRow` factories** across the tree
 (54 in `Projection/`, 7 in `Entity/`, 3 outside both:
 `Common/Dto/UserGroupPair.php`, `Telemetry/TelemetryActivityGroup.php`,
-`Activity/ActivityRow.php`). One outlier outside the 64: `Piwigo\Users\User`
+`Activity/ActivityRow.php`). Outlier outside the 64: `Piwigo\Users\User`
 at namespace root uses `fromUserArray()` instead of `fromRow()` — same
-shape, different naming.
+shape, different naming. The 10 root-level `*Row.php` classes also use
+`fromRow()` (already counted in the 64 above for the `Activity/ActivityRow`
+case; spot-check the 9 Search/History rows when sweeping).
 
 Representative examples already in tree:
 
@@ -2925,7 +2947,11 @@ public function findDatePostedThresholds(): ?DatePostedThresholds
     return $rows === [] ? null : DatePostedThresholds::fromRow($rows[0]);
 }
 
-// New file: src/Piwigo/Search/Projection/DatePostedThresholds.php
+// New file: src/Piwigo/Search/DatePostedThresholds.php (namespace-root,
+// matching Search/'s existing *Row convention — AuthorCountRow,
+// ImageDateRow, etc. — rather than Search/Projection/ which doesn't
+// exist; a follow-up could consolidate Search/ into Projection/ for
+// consistency with the rest of the tree)
 final readonly class DatePostedThresholds
 {
     public function __construct(
@@ -3043,10 +3069,11 @@ when its time comes:
   (uses `UserStatus` enum + has `fromUserArray()` factory), used
   throughout `CurrentUser::get()`.
 - §1.4 — plugin/theme system shipped. The WS handler-class pattern
-  (`WsAction` + `WsParams`) was delivered as part of §1.4's WS-method
-  registration work, giving Phase 1 its WS-side win; the remaining
-  web-side sweep is independent. `#[ApiMethod]` decoration is wired
-  (§1.4 Phase 3) but no endpoint classes carry it — orthogonal to §1.7.
+  (`WsAction` + `WsParams`) was delivered as the F5-h commit series
+  within §1.4's WS-method registration work, giving Phase 1 its
+  WS-side win; the remaining web-side sweep is independent.
+  `#[ApiMethod]` decoration is wired (§1.4 Phase 3) but no endpoint
+  classes carry it — orthogonal to §1.7.
 - §1.8 (test infrastructure) — Projection fixtures and web-side DTO
   factories are good candidates for the early Pest/PHPUnit suite.
 

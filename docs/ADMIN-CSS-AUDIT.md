@@ -130,6 +130,38 @@ correctly belong in `dark/theme.css` rather than in theme-neutral
 component files. The placeholders are documented for future
 neutralized component CSS if the need arises.
 
+### Relocation pass 2 (R.8-R.16) summary
+
+A second relocation pass focused on `pages/user-list.css` (started
+2,628 lines, ended **2,583**) and `pages/plugins.css` (started 1,122
+lines, ended **1,088**), plus three triplicated-rule dedups across
+albums/cat-list/plugins/user-list. Each commit verifies the consumer
+template/JS before moving:
+
+| commit | what moved | from → to |
+|---|---|---|
+| R.8 | `.AlbumViewSelector` / `.UserViewSelector` color + corner-radius shared rules | albums.css + cat-list.css + plugins.css + user-list.css → new `components/view-selector.css` |
+| R.9 | `.icon-th-large/.icon-th-list/.icon-pause` defaults + `.switchLayout { display: none }` | cat-list.css + user-list.css + plugins.css → `base/icons.css` and `components/view-selector.css` (3× dedup each) |
+| R.10 | drop dead `.albumsFilter` (no template/JS consumer) | dropped from plugins.css |
+| R.11 | `.HelpActions*` family (admin shell help button rendered by `admin.latte`) | plugins.css → `base/layout.css`; plugins.css keeps a 1-line plugins-specific `margin-top` override |
+| R.12 | `#categoryNameError` (rendered by `include/add_album.inc.latte`) | user-list.css → albums.css |
+| R.13 | `.badge-number-fs-128` (rendered by `batch_manager_global.latte`) | user-list.css → batch_manager_global.css |
+| R.14 | `.thumbnailsActionsShow` (used by user_list / tags / comments templates) | user-list.css → `base/utilities.css` |
+| R.15 | `#up_to_date` (rendered by `updates_ext.latte`, which loads `plugins.css`) | user-list.css → plugins.css. `#template` + `#the_king` verified as user-list-correct and left in place. |
+| R.16 | `.picture-coi-intro` (rendered by `picture_coi.latte` — previously had no `combineCss(...)` loader at all) | user-list.css → new `pages/picture_coi.css` + `combineCss(...)` added to the template (rule now actually loads on the page) |
+
+Net file-size change across the pass:
+
+| file | start of R.8 | end of R.16 | Δ |
+|---|---:|---:|---:|
+| `pages/user-list.css` | 2,628 | 2,583 | -45 |
+| `pages/plugins.css` | 1,122 | 1,088 | -34 |
+| `pages/cat-list.css` | 369 | 349 | -20 |
+| `pages/albums.css` | 1,030 | 1,018 | -12 |
+
+New files: `components/view-selector.css` (42 lines),
+`pages/picture_coi.css` (12 lines).
+
 ### Visual smoke test required
 
 Per the §3.1 plan, an end-to-end visual smoke is needed across:

@@ -305,14 +305,21 @@ variable override blocks. Same treatment for
 `themes/admin/dark/css/components/general.css` (content moves into the
 parent).
 
-Status after the §3.1 close-out + R.0-R.7 relocation pass:
+Status after the §3.1 close-out + R.0-R.16 relocation passes:
 
 | file | start | now | Δ |
 |---|---:|---:|---:|
 | `themes/admin/dark/theme.css` | 2,773 | 2,229 | -544 (-20%) |
 | `themes/admin/light/theme.css` | 1,204 | 835 | -369 (-31%) |
 | `themes/admin/_base/css/base/tokens.css` | 26 | 65 | +39 (12 → 33 tokens) |
-| `themes/admin/_base/css/pages/user-activity.css` (dumping ground) | 713 | 331 | -382 (-54%) |
+| `themes/admin/_base/css/pages/user-activity.css` (dumping ground 1) | 713 | 331 | -382 (-54%) |
+| `themes/admin/_base/css/pages/user-list.css` (dumping ground 2) | 2,628 | 2,583 | -45 (-1.7%) |
+| `themes/admin/_base/css/pages/plugins.css` | 1,122 | 1,088 | -34 (-3%) |
+
+Two relocation passes consolidated misplaced base-file rules. The
+second pass also dedup'd the `.AlbumViewSelector` / `.UserViewSelector`
+chrome (4 file copies → 1 shared `components/view-selector.css`) and
+the `.icon-th-*` / `.switchLayout` triplicates (3 copies → 1 each).
 
 Both child files still carry more than a pure `:root {}` block. The
 remaining ~3,080 lines of overrides fall into three categories

@@ -2020,8 +2020,6 @@ msgstr "FIGYELEM! Ez a bővítmény nem kompatibilis a Piwigo jelenleg futó ver
 msgid "Do you want to activate anyway?"
 msgstr "Aktiváljuk mindenképp?"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "EZ A BŐVÍTMÉNY MÁR BE VAN ÉPÍTVE A PIWIGO RENDSZERBE! ELTÁVOLÍTANDÓ!"
 
 msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
 msgstr "HIBA: EZ A BŐVÍTMÉNY NEM ELÉRHETŐ, DE TELEPÍTVE VAN! ELTÁVOLÍTANDÓ!"

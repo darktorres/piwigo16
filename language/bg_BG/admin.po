@@ -2653,8 +2653,6 @@ msgstr "снимки кандидати за синхронизация на м�
 msgid "Tag \"%s\" already exists"
 msgstr "Етикет \"%s\" вече съществува"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "ТОВА РАЗШИРЕНИЕ НЕ Е ЧАСТ ОТ ЯДРОТО НА PIWIGO! ДЕИНСТАЛИРАЙТЕ ГО СЕГА!"
 
 msgid "Storage album"
 msgstr "Албум за съхранение"

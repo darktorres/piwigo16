@@ -2449,8 +2449,6 @@ msgstr "Informează administratorii când un comentariu este"
 msgid "Number of albums per page"
 msgstr "Numărul de albume pe pagină"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "ACEST PLUGIN ESTE ACUM PARTE DIN NUCLEUL PIWIGO! DEZINSTEALEAZĂ-L ACUM!"
 
 msgid "Templates configuration has been recorded."
 msgstr "Configurația șabloanelor a fost înregistrată."

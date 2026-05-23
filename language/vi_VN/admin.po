@@ -2029,8 +2029,6 @@ msgstr "CẢNH BÁO! Plugin này có thể không tương thích với phiên b�
 msgid "Do you want to activate anyway?"
 msgstr "Bạn vẫn muốn kích hoạt?"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "PLUGIN NÀY GIỜ LÀ MỘT PHẦN CỦA NHÂN PIWIGO! GỠ BỎ NGAY!"
 
 msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
 msgstr "LỖI: PLUGIN NÀY BỊ THIẾU NHƯNG NÓ ĐÃ ĐƯỢC CÀI ĐẶT! GỠ BỎ NGAY."

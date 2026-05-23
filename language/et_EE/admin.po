@@ -1870,8 +1870,6 @@ msgstr "Sünkroniseeri metaandmed"
 msgid "Synchronize"
 msgstr "Sünkroniseerimine"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "SEE PLUGIN ON NÜÜD OSA PÄRIS PIWIGOST, KÕRVALDA SEE KOHE!"
 
 msgid "Tag \"%s\" already exists"
 msgstr "Märksõna \"%s\" on juba olemas"

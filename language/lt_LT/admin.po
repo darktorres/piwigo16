@@ -2407,8 +2407,6 @@ msgstr "Sinchronizuoti"
 msgid "Synchronize metadata"
 msgstr "Sinchronizuoti metaduomenis"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "ŠIS PRIEDAS YRA INTEGRUOTAS Į PIWIGO! NEDELSIANT JĮ IŠINSTALIUOKITE!"
 
 msgid "Tag \"%s\" already exists"
 msgstr "Žyma \"%s\" jau egzistuoja"

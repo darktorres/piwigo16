@@ -2026,8 +2026,6 @@ msgstr "VARNING! Denna insticksmodul verkar inte vara kompatibel med denna versi
 msgid "Do you want to activate anyway?"
 msgstr "Vill du aktivera ändå?"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "Dennna insticksmodul är nu del av PIWIGO CORE! Avinstallera det NU!"
 
 msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
 msgstr "FEL: Denna insticksmodul saknas men är installerad! Avinstallera den nu!"

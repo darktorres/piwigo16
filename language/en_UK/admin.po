@@ -2392,8 +2392,6 @@ msgstr "This is a minor update, with only bug corrections."
 msgid "This name is already used by another group."
 msgstr "This name is already used by another group."
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "THIS PLUGIN IS NOW PART OF PIWIGO CORE! UNINSTALL IT NOW!"
 
 msgid "This group will be set to default"
 msgstr "This group will be used by default"

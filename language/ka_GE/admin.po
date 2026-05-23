@@ -2056,8 +2056,6 @@ msgstr "გართხილება! ამ პლაგინს არ ა�
 msgid "Do you want to activate anyway?"
 msgstr "თქვენ მაინც გინდათ გაააქტიუროთ?"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "ეს პლაგინი უკვე PIWIGO–ს ბირთვის ნაწილია! წაშალეთ იგი!"
 
 msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
 msgstr "შეცდომაა: ეს პლაგინი აკლია, მაგრამ იგი დაყენებულია! წაშალეთ იგი."

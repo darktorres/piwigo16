@@ -2404,8 +2404,6 @@ msgstr "A anomalía será ignorada ata a próxima versión do aplicativo"
 msgid "Synchronize metadata"
 msgstr "Sincronizar metadatos"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "ESTE ENGADIDO AGORA É PARTE DO NÚCLEO PIWIGO! DESINSTÁLAO AGORA!"
 
 msgid "Tag \"%s\" already exists"
 msgstr "A etiqueta \"%s\" xa existe"

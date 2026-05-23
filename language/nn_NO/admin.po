@@ -1868,8 +1868,6 @@ msgstr "Synkroniser"
 msgid "Synchronize metadata"
 msgstr "Synkroniser metadata"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "DETTE TILLEGGSPROGRAMMET ER NÅ EIN DEL AV KJERNA I PIWIGO! AVINNSTALLER DET NÅ!"
 
 msgid "Tag \"%s\" already exists"
 msgstr "Stikkordet \"%s\" finst allereie"

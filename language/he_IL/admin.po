@@ -2035,8 +2035,6 @@ msgstr "אזהרה! נראה כי תוסף זה לא מתאים לגירסא ז�
 msgid "Do you want to activate anyway?"
 msgstr "אתה רוצה להפעיל בכל מיקרה?"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "תוסף זה הוא לא חלק מליבת PIWIGO ! הסר אותו מייד!"
 
 msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
 msgstr "*שגיאה*: תוסף זה נראה חסר אבל מותקן! הסר אותו מייד."

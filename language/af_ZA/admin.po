@@ -1040,8 +1040,6 @@ msgstr "Sinchroniseer metadata"
 msgid "Synchronize"
 msgstr "Sinchroniseer"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "HIERDIE INVOEGSEL IS NOU DEEL VAN DIE PIWIGO KERN! VERWYDER ONMIDDELIK!"
 
 msgid "Templates"
 msgstr "Template"

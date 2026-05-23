@@ -2065,8 +2065,6 @@ msgstr "คำเตือน! ปลั๊กนี้ไม่รองรั�
 msgid "Do you want to activate anyway?"
 msgstr "คุณต้องการเปิดการใช้งาน ไม่ว่าอย่างไรก็ตาม?"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "ปลั๊กอินนี้ไม่ใช่ส่วนหนึ่งของ PIWIGO CORE! ถอนการติดตั้งตอนนี้!"
 
 msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
 msgstr "เกิดความผิดพลาด: ไม่พบปลั๊กอินนี้แต่มันได้ถูกติดตั้งแล้ว! ถอนการติดตั้งตอนนี้."

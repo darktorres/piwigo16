@@ -2023,8 +2023,6 @@ msgstr "ВНИМАНИЕ! По всей вероятности, этот пла�
 msgid "Do you want to activate anyway?"
 msgstr "Всё равно хотите активировать?"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "ЭТОТ ПЛАГИН УЖЕ ЯВЛЯЕТСЯ ЧАСТЬЮ ЯДРА PIWIGO! УДАЛИТЕ ЕГО!"
 
 msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
 msgstr "ОШИБКА: НЕСМОТРЯ НА ТО, ЧТО ЭТОТ ПЛАГИН УСТАНОВЛЕН, ОН НЕ НАЙДЕН! УДАЛИТЕ ЕГО."

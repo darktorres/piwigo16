@@ -2428,8 +2428,6 @@ msgstr "手動の並び順を保存する"
 msgid "Select the destination tag"
 msgstr "タグの行き先を選択します。"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "このプラグインは現在PIWIGO本ソフトに含まれています！今すぐアンインストールしてください！"
 
 msgid "The uploaded file was only partially uploaded"
 msgstr "アップロードされたファイルが途中失敗しました。"

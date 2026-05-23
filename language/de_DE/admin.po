@@ -2038,8 +2038,6 @@ msgstr "WARNUNG! Dieses Plugin ist nicht kompatibel zu dieser Piwigo-Version."
 msgid "Do you want to activate anyway?"
 msgstr "Soll dies wirklich wieder aktiviert werden?"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "DIESES PLUGIN IST JETZT IN DEN PIWIGO-KERN INTEGRIERT! JETZT UNBEDINGT DEINSTALLIEREN!"
 
 msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
 msgstr "ERROR: DIESES PLUGIN FEHLT, OBWOHL ES INSTALLIERT IST! BITTE JETZT DEINSTALLIEREN!"

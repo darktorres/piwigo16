@@ -2026,8 +2026,6 @@ msgstr "UWAGA! Ta wtyczka wydaje się nie być kompatybilna z tą wersją Piwigo
 msgid "Do you want to activate anyway?"
 msgstr "Czy jednak chcesz aktywować?"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "TA WTYCZKA JEST TERAZ CZĘŚCIĄ PODSTAWOWEJ WERSJI PIWIGO! ODINSTALUJ JĄ TERAZ!"
 
 msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
 msgstr "BŁĄD: BRAK WTYCZKI CHOĆ JEST ZAINSTALOWANA! ODINSTALUJ JĄ TERAZ."

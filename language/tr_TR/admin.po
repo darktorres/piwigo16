@@ -1972,8 +1972,6 @@ msgstr "Bu sadece hata düzeltmeleri ile, küçük bir güncelleştirme."
 msgid "This name is already used by another group."
 msgstr "Bu isim baska bir grup tarafindan kullanilmaktadir"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "BU EKLENTİ PIWIGO ÇEKİRDEĞİNDE BULUNMAKTADIR! ŞİMDİ KALDIRIN!"
 
 msgid "This site already exists"
 msgstr "Bu site zaten var"

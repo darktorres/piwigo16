@@ -2947,8 +2947,6 @@ msgstr "Merki \"%s\" stofnað"
 msgid "Tag \"%s\" already exists"
 msgstr "Merki \"%s\" er þegar til"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "ÞESSI VIÐBÓT ER NÚNA HLUTI AF PIWIGO! FJARLÆGÐU HANA NÚNA!"
 
 msgid "Synchronize metadata"
 msgstr "Samstilla lýsigögn"

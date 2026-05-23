@@ -2206,8 +2206,6 @@ msgstr "Dette er en større opdatering, med <a href=\"%s\">nye spændende funkti
 msgid "This is a minor update, with only bug corrections."
 msgstr "Dette er en mindre opdatering, kun med fejlrettelser."
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "DENNE PLUGIN ER NU EN DEL AF PIWIGOS KERNE! AFINDSTALLER DEN NU!"
 
 msgid "Thumbnails generation in progress..."
 msgstr "Dannelse af miniaturebilleder er i gang ..."

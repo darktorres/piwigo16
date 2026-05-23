@@ -2029,8 +2029,6 @@ msgstr "Це велике оновлення з <a href=\"%s\">нововвед�
 msgid "This is a minor update, with only bug corrections."
 msgstr "Це невелике оновлення, тільки з виправленнями помилок."
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "ЦЕЙ ПЛАҐІН Є ЧАСТИНОЮ CORE Piwigo! ВИДАЛІТЬ ЙОГО НЕГАЙНО!"
 
 msgid "Thumbnails generation in progress..."
 msgstr "Процес генерації мініатюр..."

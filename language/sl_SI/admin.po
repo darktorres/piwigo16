@@ -2284,8 +2284,6 @@ msgstr "Predloga je bila uspešno nameščena."
 msgid "The version of %s [%s] installed is not compatible with the version required [%s]"
 msgstr "Različica %s [%s] ki je nameščena ni v skladu z zahtevano različico [%s]"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "TA VTIČNIK JE SEDAJ ŽE DEL PIVIGO PROGRAMA. ODSTRANITE VTIČNIK!"
 
 msgid "To export your photos from digiKam to Piwigo, simply install digiKam and the Kipi-plugins."
 msgstr "Da bi vaše slike prenesli iz digiKam v Piwigo preprosto namestite digiKam in Kipi-vtičnike."

@@ -2335,8 +2335,6 @@ msgstr "Inicie o pLoader e adicione suas fotos."
 msgid "Switch to clear or dark colors for administration"
 msgstr "Troque para cores claras ou escuras na Adminstração."
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "ESSE PLUGIN AGORA FAZ PARTE DO NÙCLEO DO PIWIGO! DESINSTALE-O AGORA!"
 
 msgid "Tag \"%s\" is now a duplicate of \"%s\""
 msgstr "A tag \"%s\" agora está duplicada de \"%s\""

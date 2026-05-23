@@ -3454,8 +3454,6 @@ msgstr "Vaihda ylläpito tummaan tai vaaleaan teemaan"
 msgid "System Activities"
 msgstr "Järjestelmän toiminnot"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "TÄMÄ LIITÄNNÄINEN ON NYT OSA PIWIGON YDINTÄ! POISTA SE HETI!"
 
 msgid "Synchronization"
 msgstr "Synkronointi"

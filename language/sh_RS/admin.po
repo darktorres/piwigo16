@@ -2314,8 +2314,6 @@ msgstr "Ovo je bitna nadogradnja, sa <a href=\"%s\"> novim mogućnostima</a>."
 msgid "This is a minor update, with only bug corrections."
 msgstr "Ovo je manja nadogradnja, sa ispravkama bagova."
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "OVAJ PLAGIN JE SADA DEO PIWIGO JEZGRA! OBRIŠITE GA SADA!"
 
 msgid "This theme was not designed to be directly activated"
 msgstr "Ova tema nije dizajnirana da bude direktno aktivirana"

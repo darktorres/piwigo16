@@ -318,7 +318,7 @@ Files updated:
 
 ### Step 11 — Move install SQL
 
-- `install/{config.sql,piwigo_structure-mysql.sql,db/*,obsolete*.list}` →
+- `install/{config.sql,piwigo_structure-mysql.sql,db/*}` →
   `resources/install-sql/`.
 - Update `InstallController`, `UpgradeController`, `Admin/InstallService`.
 

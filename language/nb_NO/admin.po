@@ -2326,8 +2326,6 @@ msgstr "Dette albumet inneholder %d bilder, lag til %s."
 msgid "This album contains no photo."
 msgstr "Dette albumet inneholder ikke noe bilder."
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "DETTE POGAMTILLEGGET ER NÅ EN DEL AV PIWIGO! AVINSTALLER DET NÅ! "
 
 msgid "Thumbnails generation in progress..."
 msgstr "Generering av miniatyrbilder er i gang."

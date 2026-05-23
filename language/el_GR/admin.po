@@ -2140,8 +2140,6 @@ msgstr "Διαύγεια  "
 msgid "Shotwell is an open source digital photo organizer that runs on Linux. It is the default photo manager in Ubuntu and Fedora."
 msgstr "Shotwell είναι ένας οργανωτής ανοιχτού κώδικα ψηφιακών φωτογραφιών και τρέχει σε Linux. Είναι ο προεπιλεγμένος δαιχειριστής φωτογραφιών στο Ubuntu και στο Fedora."
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "ΑΥΤΟ ΤΟ ΠΡΟΣΘΕΤΟ ΕΙΝΑΙ ΤΩΡΑ ΜΕΡΟΣ ΤΟΥ ΠΗΡΥΝΑ ΤΟΥ PIWIGO! ΑΠΕΓΚΑΤΑΣΤΗΣΤΕ ΤΩΡΑ!"
 
 msgid "The Piwigo export plugin allows you to create albums and export photos."
 msgstr "Το  Piwigo export plugin σας επιτρέπει να δημιουργήσετε άλμπουμ και να εξαγετε φωτογραφίες."

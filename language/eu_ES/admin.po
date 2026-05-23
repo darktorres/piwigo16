@@ -2617,8 +2617,6 @@ msgstr "\"%s\" etiketa \"%s\" etiketaren bikoiztua da orain"
 msgid "Tag \"%s\" already exists"
 msgstr "\"%s\" etiketa lehendik badago"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "PLUGIN HAU PIWIGOREN MUINAREN PARTE DA ORAIN! INSTALATU!"
 
 msgid "Synchronize metadata"
 msgstr "Sinkronizatu metadatuak"

@@ -3529,8 +3529,6 @@ msgstr "태그 \"%s\"(이)가 추가되었습니다"
 msgid "Tag \"%s\" succesfully deleted"
 msgstr "태그 \"%s\"(이)가 성공적으로 삭제되었습니다"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "이 플러그인은 이제 Piwigo 코어의 일부입니다! 지금 바로 제거하세요!"
 
 msgid "Synchronization in progress"
 msgstr "동기화 진행 중"

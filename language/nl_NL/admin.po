@@ -2023,8 +2023,6 @@ msgstr "PAS OP! Deze plug-in schijnt niet compatibel te zijn met deze versie van
 msgid "Do you want to activate anyway?"
 msgstr "Wil je desondanks activeren?"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "DEZE PLUG-IN IS NU ONDERDEEL VAN PIWIGO CORE! VERWIJDER DE PLUG-IN NU."
 
 msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
 msgstr "FOUT: DEZE PLUG-IN NIET GEVONDEN MAAR IS GEÏNSTALLEERD! DE-ÏNSTALLEER DE PLUG-IN NU."

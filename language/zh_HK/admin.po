@@ -1906,8 +1906,6 @@ msgstr "同步"
 msgid "Synchronize metadata"
 msgstr "metadata 同步"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "這個插件已是Piwigo核心一部份! 請立即移除它!"
 
 msgid "Send mail as"
 msgstr "發送郵件為"

@@ -2026,8 +2026,6 @@ msgstr "ATENÇÃO! Esta extensão não parece ser compatível com esta versão P
 msgid "Do you want to activate anyway?"
 msgstr "Deseja mesmo activar a extensão?"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "ESTA EXTENSÃO JÁ FAZ PARTE DO PIWIGO! DESINSTALE-A AGORA!"
 
 msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
 msgstr "ERRO: ESTA EXTENSÃO NÃO EXISTE MAS ESTÁ INSTALADA! DESINSTALE-A AGORA."

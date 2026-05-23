@@ -2029,8 +2029,6 @@ msgstr "تحذير !! هذه الاضافة لا تبدو ناها متوافق�
 msgid "Do you want to activate anyway?"
 msgstr "هل تريد تفعيلها بأي شكل تفعيلها"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "هذه الاداة اصبحت جزءا من PIWIGO نفسها يجب ان تزيلها الان"
 
 msgid "ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW."
 msgstr "خطأ : هذه الاداة مفقودة لكنها مثبتة, الغ تثبيتها الان"

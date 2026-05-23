@@ -2524,8 +2524,6 @@ msgstr "Selekti almenaŭ unu etikedon"
 msgid "Switch to clear or dark colors for administration"
 msgstr "Ŝalti al helaj aŭ malhelaj koloroj por administro"
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "TIU KROMPROGRAMO NUN APARTENAS AL LA KERNO DE PIWIGO! MALINSTALIGU ĜIN NUN!"
 
 msgid "Tags <em>%s</em> merged into tag <em>%s</em>"
 msgstr "La etikedoj <em>%s</em> kunfandiĝis en etikedon <em>%s</em>"

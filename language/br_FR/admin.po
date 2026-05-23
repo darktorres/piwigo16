@@ -2764,8 +2764,6 @@ msgstr "talvoudoù dre ziouer"
 msgid "The picture dimensions will be reduced to %dx%d pixels."
 msgstr "Ment al luc'hskeudenn a vo bihanaet da %dx%d piksel."
 
-msgid "THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW."
-msgstr "AL LUGANT-SE A ZO BREMAÑ E-BARZH KRAOÑELL PIWIGO! RET EO DISTALIAÑ ANEZHAÑ DIOUZHTU."
 
 msgid "Subscribers could be listed (available) only if there is new elements to notify."
 msgstr "Koumananterien a zo bet listennet nemet ma vez elfennoù nevez da gemenn dezho."

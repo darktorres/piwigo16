@@ -11,6 +11,8 @@
   --admin-input-bg: #2c2c2c;
   --admin-stripe-odd: #111;
   --admin-stripe-even: #222;
+  --admin-stripe-odd-active: #181818;
+  --admin-stripe-even-active: #282828;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -844,27 +846,6 @@ input:focus + .slider {
 
 .AddUserSubmit:hover {
   background-color: #f70;
-}
-
-table.dataTable tr.even {
-  background-color: #111 ;
-}
-
-table.dataTable tr.even td.sorting_1 {
-  background-color: #181818 ;
-}
-
-table.dataTable tr.odd {
-  background-color: #222 ;
-}
-
-table.dataTable tr.odd td.sorting_1 {
-  background-color: #282828 ;
-}
-
-table.dataTable thead th,
-table.dataTable.no-footer {
-  border-color: #333 ;
 }
 
 .userPropertiesContainer {

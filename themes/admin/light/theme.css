@@ -484,29 +484,6 @@ input:focus + .slider {
   visibility: hidden;
 }
 
-table.dataTable tr.even {
-  background-color: #ddd ;
-}
-
-table.dataTable tr.even td.sorting_1 {
-  background-color: #ccc ;
-  color: #333;
-}
-
-table.dataTable tr.odd {
-  background-color: #eee ;
-}
-
-table.dataTable tr.odd td.sorting_1 {
-  background-color: #ddd ;
-  color: #333;
-}
-
-table.dataTable thead th,
-table.dataTable.no-footer {
-  border-color: #ddd ;
-}
-
 .userPropertiesContainer {
   border-color: #ddd;
 }

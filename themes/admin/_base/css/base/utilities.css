@@ -293,3 +293,20 @@ input:checked + .slider {
   background-color: var(--admin-accent-soft);
 }
 
+/* DataTables (jQuery DataTables) — alternating stripes + active-sort cells. */
+table.dataTable tr.even {
+  background-color: var(--admin-stripe-odd);
+}
+table.dataTable tr.even td.sorting_1 {
+  background-color: var(--admin-stripe-odd-active);
+}
+table.dataTable tr.odd {
+  background-color: var(--admin-stripe-even);
+}
+table.dataTable tr.odd td.sorting_1 {
+  background-color: var(--admin-stripe-even-active);
+}
+table.dataTable thead th,
+table.dataTable.no-footer {
+  border-color: var(--admin-border);
+}

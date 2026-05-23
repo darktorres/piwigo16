@@ -33,4 +33,6 @@
   /* alternating row stripes (.row1/.row2/.throw/table.dataTable) */
   --admin-stripe-odd: #ddd;
   --admin-stripe-even: #eee;
+  --admin-stripe-odd-active: #ccc;
+  --admin-stripe-even-active: #ddd;
 }

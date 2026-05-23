@@ -763,9 +763,6 @@ a#showPermissions {
 #batchManagerGlobal option[disabled] {
   background-color: #555;
 }
-.dimension-cancel {
-  background-color: #555 ;
-}
 .pageNumberSelected {
   background-color: #b4b4b4;
   color: #777 ;

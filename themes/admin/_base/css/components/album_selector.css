@@ -136,6 +136,10 @@
   cursor: pointer;
 }
 
+.search-result-item .icon-plus-circled {
+  color: var(--admin-text-strong);
+}
+
 .search-result-item .icon-plus-circled:hover {
   color: var(--admin-accent);
 }

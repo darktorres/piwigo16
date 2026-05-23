@@ -19,7 +19,7 @@
   margin-right: var(--space-md);
 }
 .breadcrumb-item:hover .icon-cancel-circled {
-  color: #000;
+  color: var(--admin-text-strong);
 }
 
 .breadcrumb-item a {
@@ -40,6 +40,20 @@
   cursor: pointer;
   color: #777;
   transition: 0.3s;
+}
+
+.breadcrumb-item:hover {
+  background: var(--admin-move-cat-hover-bg);
+}
+
+.breadcrumb-item .icon-cancel-circled:hover {
+  color: var(--admin-accent);
+}
+
+.breadcrumb-item.add-item.highlight {
+  background: var(--admin-accent-soft);
+  box-shadow: 0 2px #af7200;
+  color: var(--admin-text-on-accent);
 }
 
 .breadcrumb-item a:hover {

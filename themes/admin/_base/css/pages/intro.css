@@ -119,6 +119,12 @@
   border: none;
   cursor: pointer;
   transition: all 125ms ease-out;
+  background-color: var(--admin-bg-deepest);
+  color: var(--admin-text);
+}
+
+#whats_new button:hover {
+  background-color: var(--admin-accent-soft);
 }
 
 #whats_new_notification {

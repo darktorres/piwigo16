@@ -135,9 +135,6 @@ a:focus {
 .themeSelect {
   background-color: #fafafa;
 }
-.themeSelect.themeDefault {
-  background-color: #ffd7ad;
-}
 
 
 #pwgHead,
@@ -446,9 +443,6 @@ a#showPermissions {
 #batchManagerGlobal option[disabled] {
   background-color: #eee;
 }
-.dimension-cancel {
-  background-color: #f8f8f8 ;
-}
 .pageNumberSelected {
   color: #fff ;
   font-weight: bold;
@@ -553,13 +547,6 @@ a#showPermissions {
   background-color: #fafafa;
   box-shadow: 0 2px #00000024;
 }
-.breadcrumb-item:hover {
-  background: #ffd7ad;
-}
-.breadcrumb-item .icon-cancel-circled:hover {
-  color: #f70;
-}
-
 .AddIconTitle {
   color: #000;
 }
@@ -570,16 +557,8 @@ a#showPermissions {
   color: #777;
 }
 
-.search-result-item .icon-plus-circled {
-  color: #000;
-}
 
 
-.breadcrumb-item.add-item.highlight {
-  background: #ffa646;
-  box-shadow: 0 2px #af7200;
-  color: #fff ;
-}
 
 .move-cat-container:hover .badge-container i,
 .move-cat-container:hover .node-icon {
@@ -596,9 +575,6 @@ a#showPermissions {
   background-color: #d9d9d9;
 }
 
-.cat-move-order-popin input[name="recursiveAutoOrder"]:hover {
-  background-color: #ffc17e;
-}
 
 #whats_new_popin {
   background-color: #fff;
@@ -608,14 +584,6 @@ a#showPermissions {
   color: #fff;
 }
 
-#whats_new button {
-  background-color: #ececec;
-  color: #3c3c3c;
-}
-
-#whats_new button:hover {
-  background-color: #ffa646;
-}
 
 .cat-modify-footer,
 .savebar-footer {

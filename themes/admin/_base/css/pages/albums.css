@@ -233,8 +233,12 @@
   color: #fff;
 }
 
+.cat-move-order-popin input[name="recursiveAutoOrder"]:hover {
+  background-color: var(--admin-accent-pale);
+}
+
 .cat-move-order-popin .close-popin:hover {
-  color: #ffa646;
+  color: var(--admin-accent-soft);
 }
 
 .popin-title {

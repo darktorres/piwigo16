@@ -57,6 +57,10 @@
   margin-right: var(--space-sm);
   transition: 0.4s ease;
 }
+
+.themeSelect.themeDefault {
+  background-color: var(--admin-move-cat-hover-bg);
+}
 .showInfo-dropdown-header {
   padding: 5px 10px;
   white-space: nowrap;

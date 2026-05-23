@@ -273,6 +273,10 @@ a#showPermissions:hover {
   margin: 0 3px;
 }
 
+.dimension-cancel {
+  background-color: var(--admin-bg-panel);
+}
+
 #filter_dimension .slider-choice:hover,
 #filter_filesize .slider-choice:hover,
 .dimension-cancel:hover {

@@ -205,6 +205,23 @@ label {
   cursor: pointer;
 }
 
+.content h3 {
+  font-size: 20px;
+  letter-spacing: -0.4px;
+  margin: 0 20px 12px 0;
+  text-align: center;
+  background: none;
+  border: 0;
+}
+
+.content h3 ~ h3 {
+  margin-top: 40px;
+}
+
+input[type="text"].large {
+  width: 317px;
+}
+
 #pluginsMenuSeparator {
   width: 80%;
   margin: 5px auto;

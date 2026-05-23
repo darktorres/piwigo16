@@ -1079,3 +1079,10 @@ legend span {
   margin-right: 6px;
   font-size: 16px;
 }
+
+/* Relocated from pages/user-list.css — rendered by updates_ext.latte
+   (line 18: <p id="up_to_date">), which loads pages/plugins.css. */
+#up_to_date {
+  text-align: left;
+  margin-left: 20px;
+}

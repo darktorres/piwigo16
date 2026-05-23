@@ -620,23 +620,10 @@ final class Plugins
         }
     }
 
-    /**
-     * @return string[]
-     */
-    /** @return array<mixed> */
+    /** @return array<string, string> */
     public function getMergedExtensions(string $version = AppInfo::VERSION): array
     {
-        $file = $this->paths->root . 'install/obsolete_extensions.list';
-        $merged_extensions = [];
-
-        if (file_exists($file) and ($obsolete_ext = file($file, FILE_IGNORE_NEW_LINES)) !== false) {
-            foreach ($obsolete_ext as $ext) {
-                if (preg_match('/^(\d+) ?: ?(.*?)$/', $ext, $matches)) {
-                    $merged_extensions[$matches[1]] = $matches[2];
-                }
-            }
-        }
-        return $merged_extensions;
+        return [];
     }
 
     /**

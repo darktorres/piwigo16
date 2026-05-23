@@ -255,7 +255,6 @@ db/                              Incremental DB upgrade scripts (.php).
                                  Numbered from 182 onwards (16.x era);
                                  files 1–181 deleted — upgrade floor is 16.0.0.
                                  Currently only contains `index.php` (directory protection).
-obsolete_extensions.list         Extensions that should be removed on upgrade
 index.php                        Directory-protection redirect
 ```
 

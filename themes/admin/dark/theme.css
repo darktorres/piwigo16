@@ -2272,10 +2272,6 @@ li.plupload_delete a.remove-format:hover {
   background-color: #aaa;
 }
 
-label:has(> .filters-icon-check:disabled) {
-  color: #555;
-}
-
 .comments-advanced-filter .advanced-filter-btn {
   box-shadow: 0 2px #333;
 }

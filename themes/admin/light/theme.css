@@ -816,13 +816,6 @@ li.plupload_delete a.remove-format:hover {
   color: #b8b8b8;
 }
 
-/* Filters options */
-label:has(> .filters-icon-check:disabled),
-span:has(+ .filters-icon-check:disabled) {
-  color: #d5d5d5 ;
-  cursor: not-allowed;
-}
-
 .select-views {
   background-color: #f3f3f3;
 }

@@ -303,6 +303,12 @@ input[type="reset"]:disabled {
   cursor: not-allowed;
 }
 
+label:has(> .filters-icon-check:disabled),
+span:has(+ .filters-icon-check:disabled) {
+  color: var(--admin-disabled-fg);
+  cursor: not-allowed;
+}
+
 /* DataTables (jQuery DataTables) — alternating stripes + active-sort cells. */
 table.dataTable tr.even {
   background-color: var(--admin-stripe-odd);

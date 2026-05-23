@@ -75,6 +75,7 @@
   min-height: 467px;
   margin-left: 205px;
   margin-top: 0;
+  background-color: var(--admin-bg-page);
 }
 
 #thePopuphelpPage {

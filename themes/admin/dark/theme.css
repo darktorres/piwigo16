@@ -13,6 +13,9 @@
   --admin-stripe-even: #222;
   --admin-stripe-odd-active: #181818;
   --admin-stripe-even-active: #282828;
+  --admin-popin-bg: #333;
+  --admin-popin-input-bg: #252525;
+  --admin-popin-input-border: #252525;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -546,25 +549,13 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
   pointer-events: none;
 }
 
-.AddUserPopInContainer,
-.AddAlbumPopInContainer,
-.DeleteAlbumPopInContainer,
-.RenameAlbumPopInContainer {
-  background-color: #333;
-}
-.AddUserPopInContainer .AddIconTitle,
-.AddAlbumPopInContainer .AddIconTitle,
-.DeleteAlbumPopInContainer .DeleteIconTitle,
-.RenameAlbumPopInContainer .RenameAlbumTitle {
-  color: #777;
-}
+/* dark popin inputs suppress default focus outline (existing dark-only
+   behavior; light keeps the default outline for a11y). */
 .AddUserPopInContainer .AddUserInput,
 .AddAlbumPopInContainer .user-property-input,
 .DeleteAlbumPopInContainer .DeleteAlbumInput,
 .RenameAlbumPopInContainer .RenameAlbumInput,
 .RenameAlbumLabelUsername input {
-  background-color: #252525;
-  border: solid 2px #252525;
   outline: none;
 }
 

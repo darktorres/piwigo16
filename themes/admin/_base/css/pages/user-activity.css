@@ -74,28 +74,30 @@
 .AddAlbumPopInContainer,
 .DeleteAlbumPopInContainer,
 .RenameAlbumPopInContainer {
-  background-color: #fff;
+  background-color: var(--admin-popin-bg);
 }
 
 .AddUserPopInContainer .AddIconTitle,
 .AddAlbumPopInContainer .AddIconTitle,
 .DeleteAlbumPopInContainer .DeleteIconTitle,
 .RenameAlbumPopInContainer .RenameAlbumTitle {
-  color: #000;
+  color: var(--admin-text-strong);
 }
 
 .AddUserPopInContainer .AddUserLabel,
 .AddAlbumPopInContainer .AddAlbumLabel,
 .DeleteAlbumPopInContainer .DeleteAlbumLabel {
-  color: #3e3e3e;
+  color: var(--admin-text);
 }
 
 .AddUserPopInContainer .AddUserInput,
 .AddAlbumPopInContainer .AddAlbumInput,
+.AddAlbumPopInContainer .user-property-input,
 .DeleteAlbumPopInContainer .DeleteAlbumInput,
-.RenameAlbumPopInContainer .RenameAlbumInput {
-  background-color: #fff;
-  border: solid 2px #d4d4d4;
+.RenameAlbumPopInContainer .RenameAlbumInput,
+.RenameAlbumLabelUsername input {
+  background-color: var(--admin-popin-input-bg);
+  border: solid 2px var(--admin-popin-input-border);
 }
 
 .AddAlbumCancel,

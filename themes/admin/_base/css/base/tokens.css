@@ -35,4 +35,9 @@
   --admin-stripe-even: #eee;
   --admin-stripe-odd-active: #ccc;
   --admin-stripe-even-active: #ddd;
+
+  /* popin (modal dialog) surface + input tokens */
+  --admin-popin-bg: #fff;
+  --admin-popin-input-bg: #fff;
+  --admin-popin-input-border: #d4d4d4;
 }

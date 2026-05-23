@@ -526,14 +526,6 @@ label > p.group_select {
   color: #3c3c3c;
 }
 
-.UsersInGroupList span {
-  color: #d5d5d5;
-}
-
-.UsersInGroupList .icon-cancel:hover {
-  color: #f70;
-}
-
 .LinkUserManager {
   color: #3c3c3c;
 }
@@ -607,34 +599,6 @@ input:focus + .slider {
 #commentsSelection button:hover {
   background-color: #ffa744;
   border: 1px solid #ffa744;
-}
-
-#ConfirmGroupAction {
-  color: #3c3c3c;
-}
-
-#ConfirmGroupAction p {
-  color: #777;
-}
-
-.ConfirmDeleteButton {
-  background-color: #ffa744;
-}
-
-/* Merge Options */
-
-#MergeOptionsBlock p {
-  color: #777;
-}
-
-#MergeOptionsBlock a {
-  color: #3c3c3c;
-}
-
-/* Merge options Radio buttons */
-
-.ConfirmMergeButton {
-  background-color: #ffa744;
 }
 
 .MergeOptionsContainer select {

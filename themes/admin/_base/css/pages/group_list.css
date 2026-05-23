@@ -305,4 +305,32 @@
   }
 }
 
+/* Confirm action / Merge options dialogs.
+   Migrated from dark/light theme.css — both themes had identical rules
+   for the accent buttons; the text colors use the standard --admin-text*
+   tokens (dark overrides them globally). */
+#ConfirmGroupAction {
+  color: var(--admin-text);
+}
 
+#ConfirmGroupAction p,
+#MergeOptionsBlock p {
+  color: var(--admin-text-muted);
+}
+
+.ConfirmDeleteButton,
+.ConfirmMergeButton {
+  background-color: #ffa744;
+}
+
+#MergeOptionsBlock a {
+  color: var(--admin-text);
+}
+
+.UsersInGroupList span {
+  color: #d5d5d5;
+}
+
+.UsersInGroupList .icon-cancel:hover {
+  color: var(--admin-accent);
+}

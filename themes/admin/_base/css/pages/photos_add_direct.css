@@ -284,6 +284,23 @@ a#showPermissions:hover {
   display: none;
 }
 
+/* plupload delete-button (migrated from dark/light theme.css —
+   icons identical; span background tracks page bg in each theme). */
+li.plupload_delete a {
+  background: url("images/cancel.svg");
+  background-size: cover;
+}
+
+li.plupload_delete a:hover {
+  background: url("images/cancelhover.svg");
+  background-size: cover;
+}
+
+li.plupload_delete a span,
+li.plupload_delete a:hover span {
+  background: var(--admin-bg-page);
+}
+
 .permitActionListButton .actionButtons {
   display: flex;
   flex-direction: column;

@@ -1103,20 +1103,6 @@ a#showPermissions:hover {
   border: 0 ;
   color: #a5a5a5 ;
 }
-li.plupload_delete a {
-  background: url("images/cancel.svg") ;
-  background-size: cover ;
-}
-li.plupload_delete a:hover {
-  background: url("images/cancelhover.svg") ;
-  background-size: cover ;
-}
-li.plupload_delete a span {
-  background: #444;
-}
-li.plupload_delete a:hover span {
-  background: #444;
-}
 li.plupload_delete a.remove-format:hover {
   color: #c0c0c0;
 }

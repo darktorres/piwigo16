@@ -190,10 +190,6 @@ a.Piwigo:hover span.Piwigo {
   color: #c1c1c1;
 }
 
-.pagination-per-page a {
-  color: #c1c1c1;
-}
-
 .pagination-per-page a:hover {
   background-color: #888;
   color: #444;

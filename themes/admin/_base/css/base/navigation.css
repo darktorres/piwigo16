@@ -219,7 +219,7 @@
 
 .pagination-per-page a {
   border: none;
-  color: #3a3a3a;
+  color: var(--admin-text);
 }
 
 .pagination-per-page a:hover {

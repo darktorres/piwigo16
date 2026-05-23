@@ -44,6 +44,7 @@ session bootstrap, WS handlers, controllers. Same shape Section had
 before A1: enum sitting unused.
 
 Concrete validators that take a list of these literals:
+
 - `UserService.php:571` — `in_array($params['status'], ['guest','generic','normal','admin','webmaster'])`
 - `UserBootstrap.php:170` — `in_array($status, ['guest','generic'], true)`
 - `AuthService.php:340` — `in_array($key['status'], ['normal','generic'])`
@@ -85,6 +86,7 @@ the `userCommentCheck($action, $comment): string` signature returns
 one of these literals (line 66, 68).
 
 Consumers:
+
 - `PictureCommentRenderer.php:84` — `switch ($comment_action)`
 - `CommentsController.php:223-239` — `switch` with `'moderate'/'validate'/'reject'/default-throw`
 - `PictureController.php:252` — switches on `updateUserComment` return
@@ -115,6 +117,7 @@ Re-verified: 10 sites in `MaintenanceController.php` (lines 1158,
 ### A7 🟨 `AllwordsField` enum — 7 cases
 
 Re-verified:
+
 - `SearchController.php:108` — `'fields' => ['file','name','comment','tags','author','cat-title','cat-desc']` (the 7-case list)
 - `FilteredSearchCreateHandler.php:52` — `$allwordsFieldsAvailable = [same 7]`
 - `WsMethodRegistrar.php:1269` — info string mentioning the 7
@@ -125,6 +128,7 @@ Re-verified:
 ### A8 🟨 `DuplicateField` enum — `filename/checksum/date/dimensions`
 
 Re-verified in `BatchManagerController.php`:
+
 - Line 286 — `in_array($duplicate_field, ['filename','checksum','date','dimensions'])` gate
 - Lines 185-198 — `if (isset($_POST['filter_duplicates_<field>']))` quartet
 - Lines 404-413 — paired build of `$duplicates_on_fields[]` from same set
@@ -150,6 +154,7 @@ change, small.
 ### A10 🟧 `CommentListFilter` enum — `'all'/'pending'/'validated'`
 
 Re-verified in `Ws/Action/Pwg/Comments/GetListHandler.php`:
+
 - Line 45 — `in_array($input->status, ['all','pending','validated'])` gate
 - Lines 92/94/96/98 — switch arms on `'pending'`/`'validated'`
 
@@ -254,6 +259,7 @@ Eliminates every `['email' => $x, 'name' => $y]` builder.
 ### B3 🟨 `PermissionLevel` VO — undercounted
 
 Round 1 said 10+; re-verified at **21 call sites across 9 files**:
+
 - `WsMethodRegistrar.php` × 8
 - `UserService.php` × 2
 - `Config.php` × 2
@@ -280,6 +286,7 @@ ext literals (`jpg`/`jpeg`/`png`/`gif`/`webp`/`tiff`/`tif`/`svg`/
 src-image resolver.
 
 Concrete duplicated patterns:
+
 - `Config::pictureExtensions()` returning `list<string>` — 4 callers
 - Per-extension capability checks (e.g., `MetadataAdminService.php:148`
   has `in_array($mime_type, ['image/svg+xml','image/svg'])`)
@@ -378,6 +385,7 @@ where/params/types). 4 internal callers.
 ### C11 (new) 🟨 `PaginatedResult<T>` DTO
 
 5 repositories return `['rows' => list<T>, 'total' => int]`:
+
 - `CategoryRepository.php:3054, 3105`
 - `ImageRepository.php:1563`
 - `UserRepository.php:681`
@@ -406,6 +414,7 @@ needs to grow a typed return. Largest deferred item from C7 — multi-step.
 Punted in C5's commit body. `HistoryRepository.php` returns
 `list<array<string, mixed>>` from **6 methods** (lines 121, 277, 325,
 354, 430, 452). Each returns a different shape:
+
 - `findSummaryByType` — `{year, month, day, hour, nb_pages}`
 - `findPageByWhere` — full history-row projection
 - `findHourlyGroupingAfterId` — `{year, month, day, hour, count}`
@@ -429,6 +438,7 @@ slot is still `array<string, mixed>` across **66 ActivityEvent
 constructor sites**.
 
 Per-action shapes (verified by reading details-building patterns):
+
 - `Edit` × ~53 sites — payload varies wildly per object type
 - `Add` × 9 — `{plugin_id, version}` for plugins, `{sync: true}` for
   bulk import, sometimes empty
@@ -487,41 +497,41 @@ array form.
 Highest leverage first; "Issues retired" is a coarse psalm-info
 estimate from grepping `mixed`/`array<string,mixed>` references.
 
-| # | Refactor | Files | Issues retired (est.) | Notes |
-|---|---|---|---|---|
-| 1 | A1' — `UserStatus` adoption | 35 (81 sites) | ~40 | Enum exists, zero adopt — same shape Round 1 A1 had |
-| 2 | C9 — HistoryAdminService `SqlFragment` | 1 | ~10 | Missed in Round 1 C1; ~5 min fix |
-| 3 | C10 — NotificationRepository `SqlFragment` | 1 | ~10 | Same as C9 — normalise to existing DTO |
-| 4 | A17 — `PluginState` enum | 6 | ~18 | Punted in Round 1 C3 commit |
-| 5 | A3 — Privacy enum write path | 4 | ~15 | Round 1 only retyped the read path |
-| 6 | D3 — `UserFieldsMap` VO | 29 (91 sites) | ~30 | Pure consumer collapse |
-| 7 | B3 — `PermissionLevel` VO | 9 (21 sites) | ~12 | Pairs with A1' (User edit surface) |
-| 8 | A4 — `CommentModerationAction` | 5 | ~8 | Closes the comment-service switch chain |
-| 9 | A10 — `CommentListFilter` | 1 | ~5 | Single handler |
-| 10 | A12 — `UpgradeStatus` enum | 4 | ~6 | Extract methods return enum |
-| 11 | A7 — `AllwordsField` | 4 | ~5 | Search-form reach |
-| 12 | A8 — `DuplicateField` | 1 | ~6 | Dynamic-key smell goes away |
-| 13 | A6 — `SyncMode` | 1 | ~5 | Trivial |
-| 14 | A18 — `UserManagementAction` | 3 | ~6 | PermissionService gates |
-| 15 | A5 — `UploadAddStatus` | 2 | ~3 | Tiny |
-| 16 | A14 — `WatermarkPosition` | 1 | ~5 | Self-contained switch |
-| 17 | A9 — `ExifOrientation` | 1 | ~4 | Single-file change |
-| 18 | A16 — `ImageType` | 4 | ~6 | History/activity surface |
-| 19 | A15 — `ConnectionType` | 6 | ~8 | Session attribute |
-| 20 | B1 — `MailAddress` | 1 (7 sites) | ~5 | Local cleanup |
-| 21 | C2 — `SqlFilterClause` + `SqlFilterKind` | 1 | ~6 | Comments getList |
-| 22 | C4 — `ExtensionStat` | 3 | ~4 | Two repos + MiscController |
-| 23 | C6 — `RatingScore` | 2 | ~4 | GetInfoHandler + RateRepository |
-| 24 | C11 — `PaginatedResult` | 5 | ~5 | Generic-ish shape |
-| 25 | B4 — `MimeExtension` enum | 14 | ~25 | Largest after A1' |
-| 26 | B5 — `Credentials` | 1 | ~2 | Tiny |
-| 27 | B6 — `LastVisit` | 1 | ~2 | Tiny |
-| 28 | C8 — `ImageInsertRow`/`UpdateRow` | 2 | ~8 | Sister DTOs |
-| 29 | C13 — HistoryRepository per-method DTOs | 1 src + 1 consumer | ~40 | 6 DTOs, mostly mechanical |
-| 30 | C12 — `TelemetryGeneralStats` | 2 | ~30 | Multi-step (touches AdminService) |
-| 31 | D1 — `ActivityDetails` sealed hierarchy | 66 | ~60 | Largest single change; defer until everything else lands |
-| 32 | D2 — `SearchInfo` | 2 | ~5 | Local cleanup |
-| 33 | D4 — `ParamDefinition::toArray()` | 1 | ~3 | Stops the `array{...}` projection |
+| #   | Refactor                                   | Files              | Issues retired (est.) | Notes                                                    |
+| --- | ------------------------------------------ | ------------------ | --------------------- | -------------------------------------------------------- |
+| 1   | A1' — `UserStatus` adoption                | 35 (81 sites)      | ~40                   | Enum exists, zero adopt — same shape Round 1 A1 had      |
+| 2   | C9 — HistoryAdminService `SqlFragment`     | 1                  | ~10                   | Missed in Round 1 C1; ~5 min fix                         |
+| 3   | C10 — NotificationRepository `SqlFragment` | 1                  | ~10                   | Same as C9 — normalise to existing DTO                   |
+| 4   | A17 — `PluginState` enum                   | 6                  | ~18                   | Punted in Round 1 C3 commit                              |
+| 5   | A3 — Privacy enum write path               | 4                  | ~15                   | Round 1 only retyped the read path                       |
+| 6   | D3 — `UserFieldsMap` VO                    | 29 (91 sites)      | ~30                   | Pure consumer collapse                                   |
+| 7   | B3 — `PermissionLevel` VO                  | 9 (21 sites)       | ~12                   | Pairs with A1' (User edit surface)                       |
+| 8   | A4 — `CommentModerationAction`             | 5                  | ~8                    | Closes the comment-service switch chain                  |
+| 9   | A10 — `CommentListFilter`                  | 1                  | ~5                    | Single handler                                           |
+| 10  | A12 — `UpgradeStatus` enum                 | 4                  | ~6                    | Extract methods return enum                              |
+| 11  | A7 — `AllwordsField`                       | 4                  | ~5                    | Search-form reach                                        |
+| 12  | A8 — `DuplicateField`                      | 1                  | ~6                    | Dynamic-key smell goes away                              |
+| 13  | A6 — `SyncMode`                            | 1                  | ~5                    | Trivial                                                  |
+| 14  | A18 — `UserManagementAction`               | 3                  | ~6                    | PermissionService gates                                  |
+| 15  | A5 — `UploadAddStatus`                     | 2                  | ~3                    | Tiny                                                     |
+| 16  | A14 — `WatermarkPosition`                  | 1                  | ~5                    | Self-contained switch                                    |
+| 17  | A9 — `ExifOrientation`                     | 1                  | ~4                    | Single-file change                                       |
+| 18  | A16 — `ImageType`                          | 4                  | ~6                    | History/activity surface                                 |
+| 19  | A15 — `ConnectionType`                     | 6                  | ~8                    | Session attribute                                        |
+| 20  | B1 — `MailAddress`                         | 1 (7 sites)        | ~5                    | Local cleanup                                            |
+| 21  | C2 — `SqlFilterClause` + `SqlFilterKind`   | 1                  | ~6                    | Comments getList                                         |
+| 22  | C4 — `ExtensionStat`                       | 3                  | ~4                    | Two repos + MiscController                               |
+| 23  | C6 — `RatingScore`                         | 2                  | ~4                    | GetInfoHandler + RateRepository                          |
+| 24  | C11 — `PaginatedResult`                    | 5                  | ~5                    | Generic-ish shape                                        |
+| 25  | B4 — `MimeExtension` enum                  | 14                 | ~25                   | Largest after A1'                                        |
+| 26  | B5 — `Credentials`                         | 1                  | ~2                    | Tiny                                                     |
+| 27  | B6 — `LastVisit`                           | 1                  | ~2                    | Tiny                                                     |
+| 28  | C8 — `ImageInsertRow`/`UpdateRow`          | 2                  | ~8                    | Sister DTOs                                              |
+| 29  | C13 — HistoryRepository per-method DTOs    | 1 src + 1 consumer | ~40                   | 6 DTOs, mostly mechanical                                |
+| 30  | C12 — `TelemetryGeneralStats`              | 2                  | ~30                   | Multi-step (touches AdminService)                        |
+| 31  | D1 — `ActivityDetails` sealed hierarchy    | 66                 | ~60                   | Largest single change; defer until everything else lands |
+| 32  | D2 — `SearchInfo`                          | 2                  | ~5                    | Local cleanup                                            |
+| 33  | D4 — `ParamDefinition::toArray()`          | 1                  | ~3                    | Stops the `array{...}` projection                        |
 
 A1' / C9 / C10 are the cheapest cross-cutting wins this round — same
 "enum/DTO already exists, retire the residue" pattern that made

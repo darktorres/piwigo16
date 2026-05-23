@@ -211,11 +211,12 @@ test.describe.serial('regenerate dev/fixtures/piwigo-17.0.sql', () => {
         }
 
         // A few config tweaks (exercise the $conf write path per README intent)
-        for (const [param, value] of [
+        const configEntries: [string, string][] = [
             ['gallery_title', 'Fixture Gallery'],
             ['comments_validation', 'true'],
             ['nb_categories_page', '12'],
-        ] as const) {
+        ];
+        for (const [param, value] of configEntries) {
             const res = await callWs(request, cookieHeader, 'pwg.config.setKeyValue', {
                 param,
                 value,
@@ -226,10 +227,13 @@ test.describe.serial('regenerate dev/fixtures/piwigo-17.0.sql', () => {
             // round-trip through JSON.stringify on the fallback path.
             if (res.stat !== 'ok') {
                 const jsonValue =
-                    value === 'true' ? 'true'
-                    : value === 'false' ? 'false'
-                    : /^-?\d+(\.\d+)?$/.test(value) ? value
-                    : JSON.stringify(value);
+                    value === 'true'
+                        ? 'true'
+                        : value === 'false'
+                          ? 'false'
+                          : /^-?\d+(\.\d+)?$/.test(value)
+                            ? value
+                            : JSON.stringify(value);
                 mysqlExec(
                     `USE ${SCRATCH_DB}; UPDATE piwigo_config SET value=${shellQuote(jsonValue)} ` +
                         `WHERE param=${shellQuote(param)};`

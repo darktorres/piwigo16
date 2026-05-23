@@ -61,10 +61,7 @@
       "description": "Minimum Piwigo branch this plugin targets, formatted 'MAJOR.MINOR' (e.g. '17.0'). PluginRegistry compares this against AppInfo::branchFromVersion(AppInfo::VERSION); mismatches are refused."
     },
     "hasSettings": {
-      "oneOf": [
-        {"type": "boolean"},
-        {"type": "string", "enum": ["webmaster"]}
-      ],
+      "oneOf": [{ "type": "boolean" }, { "type": "string", "enum": ["webmaster"] }],
       "description": "Whether the plugin exposes a settings page: true (admin), false (none), or 'webmaster' (webmaster-only). Default: false."
     },
     "require": {

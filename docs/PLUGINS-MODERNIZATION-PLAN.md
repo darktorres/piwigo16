@@ -134,21 +134,21 @@ final readonly class FilesystemPluginScanner {
 
 Each phase ships independently. Order is dependency-driven, not aesthetic. Sub-numbering attached to F5-g/h where the work folds into the in-flight migration; M-numbers where it doesn't.
 
-| # | Phase | Scope | Depends on |
-|---|-------|-------|------------|
-| **M1** | `LifecycleAction` enum + `LifecycleResult` VO + `LifecycleStatus` enum | New code only under `src/Piwigo/Extension/Lifecycle/` | — |
-| **M2** | `PluginInstallErrors::$errors` retype `array<mixed>` → `list<string>` | Drops 1 mixed; 1-file change | M1 not strictly required |
-| **M3** | `PluginLifecycleService` extracted from `Plugins::performAction` | New service, returns `LifecycleResult`; `Plugins::performAction()` retained as a thin shim until M9 | M1, M2 |
-| **M4** | `PluginCatalog` (snapshots) | New read SoT composing `PluginRegistry` + `PluginRepository`; `Plugins::$fs_plugins` / `$db_plugins_by_id` become `private` once all 10 callers migrate | M1 (uses `PluginState` enum) |
-| **M5** | `PemPluginCatalog` + Symfony `HttpClient` | Extracts the PEM HTTP/cache code from `Plugins.php` | — |
-| **M6** | `PluginLifecycleCompleted` event + `ActivityLoggerSubscriber` | Moves `activityLogger->log(...)` calls out of the lifecycle body | M3 |
-| **M7** | Mirror for themes: `ThemeLifecycleService`, `ThemeCatalog`, `PemThemeCatalog` | Parallel structure to Plugins; reuses `LifecycleAction`/`Result` | M3, M4, M5 |
-| **M8** | Mirror for languages: `LanguageLifecycleService`, `LanguageCatalog`, `PemLanguageCatalog` | Same | M3, M4, M5 |
-| **F5-g/h /11** | `IgnoreUpdate` + `CheckUpdates` DTOs | Mechanical lift; no architectural deps | (current WIP `/10` ships first) |
-| **F5-g/h /12** | `PluginsGetList` (uses `PluginCatalog`) + `ThemesPerformAction` DTOs | First WS-tier consumer of `PluginCatalog` | M4 (for Plugins side); themes side is mechanical |
-| **F5-g/h /13** | `PluginsPerformAction` + `Update` DTOs | Routes via `PluginLifecycleService` | M3 (plus M7/M8 for `Update`'s themes/languages branches) |
-| **M9** | Delete legacy surfaces: `Plugins::performAction()` shim, public mutable arrays, dead sort comparators | Once all 10 cross-module callers + 6 WS handlers migrate to typed services | All above |
-| **M10** | Session→Cache for `piwigoNeedsUpdate` / `extensionsNeedUpdate` | New `UpdatesCheckCache` (PSR-6 / Symfony Cache); drops the Session-as-cache anti-pattern | — (independent) |
+| #              | Phase                                                                                                 | Scope                                                                                                                                                   | Depends on                                               |
+| -------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| **M1**         | `LifecycleAction` enum + `LifecycleResult` VO + `LifecycleStatus` enum                                | New code only under `src/Piwigo/Extension/Lifecycle/`                                                                                                   | —                                                        |
+| **M2**         | `PluginInstallErrors::$errors` retype `array<mixed>` → `list<string>`                                 | Drops 1 mixed; 1-file change                                                                                                                            | M1 not strictly required                                 |
+| **M3**         | `PluginLifecycleService` extracted from `Plugins::performAction`                                      | New service, returns `LifecycleResult`; `Plugins::performAction()` retained as a thin shim until M9                                                     | M1, M2                                                   |
+| **M4**         | `PluginCatalog` (snapshots)                                                                           | New read SoT composing `PluginRegistry` + `PluginRepository`; `Plugins::$fs_plugins` / `$db_plugins_by_id` become `private` once all 10 callers migrate | M1 (uses `PluginState` enum)                             |
+| **M5**         | `PemPluginCatalog` + Symfony `HttpClient`                                                             | Extracts the PEM HTTP/cache code from `Plugins.php`                                                                                                     | —                                                        |
+| **M6**         | `PluginLifecycleCompleted` event + `ActivityLoggerSubscriber`                                         | Moves `activityLogger->log(...)` calls out of the lifecycle body                                                                                        | M3                                                       |
+| **M7**         | Mirror for themes: `ThemeLifecycleService`, `ThemeCatalog`, `PemThemeCatalog`                         | Parallel structure to Plugins; reuses `LifecycleAction`/`Result`                                                                                        | M3, M4, M5                                               |
+| **M8**         | Mirror for languages: `LanguageLifecycleService`, `LanguageCatalog`, `PemLanguageCatalog`             | Same                                                                                                                                                    | M3, M4, M5                                               |
+| **F5-g/h /11** | `IgnoreUpdate` + `CheckUpdates` DTOs                                                                  | Mechanical lift; no architectural deps                                                                                                                  | (current WIP `/10` ships first)                          |
+| **F5-g/h /12** | `PluginsGetList` (uses `PluginCatalog`) + `ThemesPerformAction` DTOs                                  | First WS-tier consumer of `PluginCatalog`                                                                                                               | M4 (for Plugins side); themes side is mechanical         |
+| **F5-g/h /13** | `PluginsPerformAction` + `Update` DTOs                                                                | Routes via `PluginLifecycleService`                                                                                                                     | M3 (plus M7/M8 for `Update`'s themes/languages branches) |
+| **M9**         | Delete legacy surfaces: `Plugins::performAction()` shim, public mutable arrays, dead sort comparators | Once all 10 cross-module callers + 6 WS handlers migrate to typed services                                                                              | All above                                                |
+| **M10**        | Session→Cache for `piwigoNeedsUpdate` / `extensionsNeedUpdate`                                        | New `UpdatesCheckCache` (PSR-6 / Symfony Cache); drops the Session-as-cache anti-pattern                                                                | — (independent)                                          |
 
 ### Phase folding
 
@@ -159,24 +159,29 @@ The minimum cut to unblock F5-g/h is **M1 → M2 → M3 → F5-g/h /11–/13** (
 ## Critical files
 
 **New (under `src/Piwigo/Extension/` — the shared abstractions):**
+
 - `Lifecycle/{LifecycleAction, LifecycleResult, LifecycleStatus}.php`
 - `Lifecycle/{ExtensionLifecycleService}.php` (interface, with `PluginLifecycleService`, `ThemeLifecycleService`, `LanguageLifecycleService` implementing it)
 - `{ExtensionState, ExtensionType}.php` — `ExtensionType` enum already exists at `src/Piwigo/Admin/Extensions/ExtensionType.php`; relocate or alias.
 
 **New (under `src/Piwigo/Plugin/`):**
+
 - `PluginCatalog.php`, `PluginSnapshot.php`, `FilesystemPluginScanner.php`
 - `PluginLifecycleService.php`
 - Update `Event/Lifecycle/PluginInstallErrors.php` (retype) + new `Event/Lifecycle/PluginLifecycleCompleted.php`.
 
 **New (under `src/Piwigo/Pem/`):**
+
 - `PemPluginCatalog.php`, `PemThemeCatalog.php`, `PemLanguageCatalog.php` — or a single `PemCatalog<T>` with three frontends.
 - Reuses existing `PemUrlResolver`.
 
 **New (WS DTOs — under `src/Piwigo/Ws/Action/Pwg/Extensions/`):**
+
 - `{IgnoreUpdate, Update, ThemesPerformAction, PluginsPerformAction}Params.php`
 - `{CheckUpdates, PluginsGetList}Result.php` + `PluginListItem.php`
 
 **Modified:**
+
 - `src/Piwigo/Admin/Plugins.php` — shrinks dramatically: ~150 LOC of orchestration around the new services, ultimately deleted in M9.
 - `src/Piwigo/Admin/Themes.php`, `src/Piwigo/Admin/Languages.php` — same trajectory.
 - `src/Piwigo/Ws/Action/Pwg/Extensions/*Handler.php` (×6) — call typed services instead of admin god-classes.
@@ -186,6 +191,7 @@ The minimum cut to unblock F5-g/h is **M1 → M2 → M3 → F5-g/h /11–/13** (
 **Mirror / mirror-mirror:** `src/Piwigo/Theme/{ThemeCatalog, ThemeLifecycleService, ThemeSnapshot}.php` + `src/Piwigo/Language/{LanguageCatalog, LanguageLifecycleService, LanguageSnapshot}.php`.
 
 **Reused (already modern, no change):**
+
 - `PluginInterface`, `ThemeInterface`, `PluginRegistry`, `ThemeRegistry`, `PluginManifest`, `ThemeManifest`, `PluginMigrationRunner`, `PluginMigrationLedger`.
 - `IgnoredUpdatesRepository` + `ExtensionType` enum (already typed in F5).
 - `PemUrlResolver`.
@@ -195,6 +201,7 @@ The minimum cut to unblock F5-g/h is **M1 → M2 → M3 → F5-g/h /11–/13** (
 ## Verification
 
 After each commit:
+
 - `composer dump-autoload` for every new class.
 - `composer lint:php` (Pint).
 - `vendor/bin/phpstan analyse` — green.
@@ -202,6 +209,7 @@ After each commit:
 - `vendor/bin/phpunit` — full suite green.
 
 End-to-end smoke (no automated coverage in this area):
+
 - **Plugin lifecycle**: in admin UI as webmaster, install → activate → deactivate → uninstall → reinstall an in-tree plugin (use a fixture under `plugins/` if any ship post-B17; otherwise install via `pwg.extensions.update` against PEM). Verify `LifecycleResult::status` reaches `Ok` and `errors === []` on success; trigger a validation error and confirm `Failed` with the message list.
 - **Theme switch**: activate / deactivate / set-default a theme via the admin UI; confirm compiled template invalidation still fires.
 - **PEM update flow**: trigger `pwg.extensions.checkUpdates`, then `pwg.extensions.update` for plugins, themes, languages — verify the redirect-and-reactivate dance on a currently-active plugin still works.

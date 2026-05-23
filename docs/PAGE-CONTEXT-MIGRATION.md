@@ -29,13 +29,13 @@ No key reads `mixed` at the call site.
 These are memoization caches that belong to the service that owns the data.
 Move them to `private` instance fields; no new class needed.
 
-| Key | Owner | Migration |
-|---|---|---|
-| `is_ext_imagick`, `ext_imagick_command` | `PwgImage` | `private static ?string $cmd = null` + lazy init |
-| `fs_quick_check_already_called` | `ImageAdminService` | `private bool $fsQuickCheckCalled = false` |
-| `tag_id_from_tag_name_cache` | `TagAdminService` | `private array<string, int\|string> $tagCache = []` |
-| `user_use_cache` | `UserBootstrap` | local variable, never crosses method boundaries |
-| `sizes_loaded_in_tpl` | `SizesProcessor` | `private bool $loadedInTpl = false` |
+| Key                                     | Owner               | Migration                                           |
+| --------------------------------------- | ------------------- | --------------------------------------------------- |
+| `is_ext_imagick`, `ext_imagick_command` | `PwgImage`          | `private static ?string $cmd = null` + lazy init    |
+| `fs_quick_check_already_called`         | `ImageAdminService` | `private bool $fsQuickCheckCalled = false`          |
+| `tag_id_from_tag_name_cache`            | `TagAdminService`   | `private array<string, int\|string> $tagCache = []` |
+| `user_use_cache`                        | `UserBootstrap`     | local variable, never crosses method boundaries     |
+| `sizes_loaded_in_tpl`                   | `SizesProcessor`    | `private bool $loadedInTpl = false`                 |
 
 ---
 
@@ -210,12 +210,12 @@ Same registry + DI pattern as `SectionContext`.
 These are set once per request and read by `PageHeaderRenderer`. Add them
 as typed properties to the existing `PageState` singleton.
 
-| Key | New `PageState` property | Type |
-|---|---|---|
-| `body_id` | `$bodyId` | `string` |
-| `page_banner` | `$pageBanner` | `string\|null` |
-| `meta_robots` | `$metaRobots` | `array<string,int>` |
-| `gallery_title` | `$galleryTitle` | `string\|null` |
+| Key             | New `PageState` property | Type                |
+| --------------- | ------------------------ | ------------------- |
+| `body_id`       | `$bodyId`                | `string`            |
+| `page_banner`   | `$pageBanner`            | `string\|null`      |
+| `meta_robots`   | `$metaRobots`            | `array<string,int>` |
+| `gallery_title` | `$galleryTitle`          | `string\|null`      |
 
 ---
 

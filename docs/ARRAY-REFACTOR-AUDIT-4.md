@@ -12,15 +12,15 @@ These are `array{...}` return types where every key and type is known. Pure
 additions — no callers need to change because the new class gets a `toArray()`
 shim if needed, or callers are already using the keys directly.
 
-| ID | Location | Current shape | Proposed type |
-|----|----------|---------------|---------------|
-| A1 | `Rate/RateRepository.php:200` | `array{count: int, average: float\|null}` | `RateStats` readonly class |
-| A2 | `Image/DerivativeSizeRepository.php:30` | `array{enabled: array<string, DerivativeParams>, disabled: array<string, DerivativeParams>}` | `PartitionedDerivativeSizes` readonly class |
-| A3 | `Image/DerivativeSettingsRepository.php:31` | `array{quality: int, watermark: WatermarkParams, custom: array<string, int>}` | `DerivativeSettings` readonly class |
-| A4 | `Admin/Extensions/IgnoredUpdatesRepository.php:39` | `array{plugins: list<string>, themes: list<string>, languages: list<string>}` | `IgnoredExtensionLists` readonly class |
-| A5 | `Admin/Upload/UploadService.php:576` | `array{width: int, height: int, filesize: int\|float}` | `ImageFileInfo` readonly class |
-| A6 | `Admin/Updates.php:193,226` | `array{minor?: string, major?: string, minor_php?: string, major_php?: string}` | `AvailableVersions` readonly class (covers both the 2-key and 4-key variants) |
-| A7 | `Config/Config.php:1265` | `array{RSS: array{max_dates, max_elements, max_cats}, NBM: array{...}}` | `NotificationConfig` + inner `NotificationChannelConfig` readonly classes |
+| ID  | Location                                           | Current shape                                                                                | Proposed type                                                                 |
+| --- | -------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| A1  | `Rate/RateRepository.php:200`                      | `array{count: int, average: float\|null}`                                                    | `RateStats` readonly class                                                    |
+| A2  | `Image/DerivativeSizeRepository.php:30`            | `array{enabled: array<string, DerivativeParams>, disabled: array<string, DerivativeParams>}` | `PartitionedDerivativeSizes` readonly class                                   |
+| A3  | `Image/DerivativeSettingsRepository.php:31`        | `array{quality: int, watermark: WatermarkParams, custom: array<string, int>}`                | `DerivativeSettings` readonly class                                           |
+| A4  | `Admin/Extensions/IgnoredUpdatesRepository.php:39` | `array{plugins: list<string>, themes: list<string>, languages: list<string>}`                | `IgnoredExtensionLists` readonly class                                        |
+| A5  | `Admin/Upload/UploadService.php:576`               | `array{width: int, height: int, filesize: int\|float}`                                       | `ImageFileInfo` readonly class                                                |
+| A6  | `Admin/Updates.php:193,226`                        | `array{minor?: string, major?: string, minor_php?: string, major_php?: string}`              | `AvailableVersions` readonly class (covers both the 2-key and 4-key variants) |
+| A7  | `Config/Config.php:1265`                           | `array{RSS: array{max_dates, max_elements, max_cats}, NBM: array{...}}`                      | `NotificationConfig` + inner `NotificationChannelConfig` readonly classes     |
 
 **A7 note:** `CommentsSummary::toArray()` at `Comment/CommentsSummary.php:17` is
 an unnecessary escape hatch — the only caller (`Ws/Action/Pwg/Comments/GetListHandler.php:155`)
@@ -29,17 +29,17 @@ should be dropped.
 
 ---
 
-## Tier 2 — Input DTOs (shaped array *parameters*)
+## Tier 2 — Input DTOs (shaped array _parameters_)
 
 Replace an `array{...}`-annotated `$data` / `$search` parameter with a typed
 object. The constructor call site changes; the repository internals stay the same.
 
-| ID | Location | Current shape | Proposed type |
-|----|----------|---------------|---------------|
-| B1 | `Comment/CommentRepository.php:73` | `array{author, author_id, anonymous_id, content, validated, image_id, website_url?, email?}` → `insert()` | `NewCommentData` readonly class |
-| B2 | `Comment/CommentRepository.php:134` | `array{content, website_url?: string\|null, validated: bool}` → `update()` | `CommentUpdateData` readonly class |
-| B3 | `Search/SearchService.php:175` | `array{fields?: array<string,mixed>, mode?: string}\|array<string,mixed>` — an intersection type papering over a missing model | `SearchQuery` class; the `&array<string,mixed>` fallback is a code smell that disappears once the type exists |
-| B4 | `Search/FilterRenderContext.php:25` | same `$mySearch` intersection type passed through | follows B3 — `FilterRenderContext` receives `SearchQuery` |
+| ID  | Location                            | Current shape                                                                                                                  | Proposed type                                                                                                 |
+| --- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| B1  | `Comment/CommentRepository.php:73`  | `array{author, author_id, anonymous_id, content, validated, image_id, website_url?, email?}` → `insert()`                      | `NewCommentData` readonly class                                                                               |
+| B2  | `Comment/CommentRepository.php:134` | `array{content, website_url?: string\|null, validated: bool}` → `update()`                                                     | `CommentUpdateData` readonly class                                                                            |
+| B3  | `Search/SearchService.php:175`      | `array{fields?: array<string,mixed>, mode?: string}\|array<string,mixed>` — an intersection type papering over a missing model | `SearchQuery` class; the `&array<string,mixed>` fallback is a code smell that disappears once the type exists |
+| B4  | `Search/FilterRenderContext.php:25` | same `$mySearch` intersection type passed through                                                                              | follows B3 — `FilterRenderContext` receives `SearchQuery`                                                     |
 
 ---
 
@@ -48,11 +48,11 @@ object. The constructor call site changes; the repository internals stay the sam
 Functions returning either `['error' => ...]` or `['info' => ..., 'id' => ...]`
 should use a discriminated result object with static constructors.
 
-| ID | Location | Current | Proposed |
-|----|----------|---------|----------|
-| C1 | `Admin/Category/CategoryAdminService.php:484,536` | `array{error: string}\|array{info: string, id: int}` from `createVirtualCategory()` | `CreateCategoryResult` with `::error(string)` / `::success(int, string)` |
-| C2 | `Admin/Tag/TagAdminService.php:302,310,312` | `array{info: string, id: int}\|array{error: string}` from `createTag()` | `CreateTagResult` same pattern |
-| C3 | `Users/UserService.php:518+` | `array{error: array{code: int, message: string}}\|array{user_id: int, infos: ..., account: ...}` | `UpdateUserResult` VO |
+| ID  | Location                                          | Current                                                                                          | Proposed                                                                 |
+| --- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| C1  | `Admin/Category/CategoryAdminService.php:484,536` | `array{error: string}\|array{info: string, id: int}` from `createVirtualCategory()`              | `CreateCategoryResult` with `::error(string)` / `::success(int, string)` |
+| C2  | `Admin/Tag/TagAdminService.php:302,310,312`       | `array{info: string, id: int}\|array{error: string}` from `createTag()`                          | `CreateTagResult` same pattern                                           |
+| C3  | `Users/UserService.php:518+`                      | `array{error: array{code: int, message: string}}\|array{user_id: int, infos: ..., account: ...}` | `UpdateUserResult` VO                                                    |
 
 ---
 
@@ -75,12 +75,12 @@ Eliminates all string key references in both files.
 Shaped arrays produced by raw SQL projections; the inner `array{...}` should
 become a named projection class in `Category/Projection/`.
 
-| ID | Method | Shape | Proposed |
-|----|--------|-------|----------|
-| D1 | `CategoryRepository::findPhysicalSyncableForSite` `:925` | `array{id: int, id_uppercat: int\|null, uppercats: string, global_rank: string\|null, status: string, visible: bool}` | `PhysicalCategoryRow` projection |
-| D2 | `CategoryRepository::findAdminListPage` `:3043` | `array{id, name, comment, uppercats, global_rank, dir, status, image_order}` inside `PaginatedResult<array{...}>` | `AdminCategoryRow` projection |
-| D3 | `Admin/Sync/SiteSyncContext.php:24` | `$dbCategories: array<int, array<string, mixed>>` populated by `findPhysicalSyncableForSite` | share `PhysicalCategoryRow` (D1); `$dbCategories` becomes `array<int, PhysicalCategoryRow>` |
-| D4 | `Admin/Sync/SiteSyncContext.php:18,20` | `list<array{path: string, type: string}>` and `list<array{path: string, info: string}>` | `SyncError` and `SyncInfo` mini-DTOs |
+| ID  | Method                                                   | Shape                                                                                                                 | Proposed                                                                                    |
+| --- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| D1  | `CategoryRepository::findPhysicalSyncableForSite` `:925` | `array{id: int, id_uppercat: int\|null, uppercats: string, global_rank: string\|null, status: string, visible: bool}` | `PhysicalCategoryRow` projection                                                            |
+| D2  | `CategoryRepository::findAdminListPage` `:3043`          | `array{id, name, comment, uppercats, global_rank, dir, status, image_order}` inside `PaginatedResult<array{...}>`     | `AdminCategoryRow` projection                                                               |
+| D3  | `Admin/Sync/SiteSyncContext.php:24`                      | `$dbCategories: array<int, array<string, mixed>>` populated by `findPhysicalSyncableForSite`                          | share `PhysicalCategoryRow` (D1); `$dbCategories` becomes `array<int, PhysicalCategoryRow>` |
+| D4  | `Admin/Sync/SiteSyncContext.php:18,20`                   | `list<array{path: string, type: string}>` and `list<array{path: string, info: string}>`                               | `SyncError` and `SyncInfo` mini-DTOs                                                        |
 
 ---
 

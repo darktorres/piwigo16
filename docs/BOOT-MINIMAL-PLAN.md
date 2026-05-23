@@ -8,13 +8,13 @@
 Five fast-paths exist. Three already call `Kernel::boot()` correctly; two
 bypass it.
 
-| Route prefix | `Kernel::boot()` | Verdict |
-|---|---|---|
-| *(normal)* | Yes — via `CommonBootstrap::run()` | Correct |
-| `upgrade_feed` | Yes — directly | Correct |
-| `upgrade` | Yes — directly | Correct |
-| `install` | No at index level; `InstallController::__invoke()` calls it internally | Justified — see §2 |
-| `i/` | No — deliberately skipped | ~~Needs fix~~ **Fixed** — uses `bootMinimal()` |
+| Route prefix   | `Kernel::boot()`                                                       | Verdict                                        |
+| -------------- | ---------------------------------------------------------------------- | ---------------------------------------------- |
+| _(normal)_     | Yes — via `CommonBootstrap::run()`                                     | Correct                                        |
+| `upgrade_feed` | Yes — directly                                                         | Correct                                        |
+| `upgrade`      | Yes — directly                                                         | Correct                                        |
+| `install`      | No at index level; `InstallController::__invoke()` calls it internally | Justified — see §2                             |
+| `i/`           | No — deliberately skipped                                              | ~~Needs fix~~ **Fixed** — uses `bootMinimal()` |
 
 ---
 
@@ -34,7 +34,7 @@ LoggerRegistry::set($logger);
 ```
 
 The performance rationale is correct (derivative serving must not trigger
-session startup, auth checks, or language loading), but the *implementation*
+session startup, auth checks, or language loading), but the _implementation_
 of the skip is wrong.
 
 ---
@@ -55,15 +55,15 @@ eager singletons.
 
 ### What `bootMinimal()` does vs `boot()`
 
-| Step | `boot()` | `bootMinimal()` |
-|---|---|---|
-| Set `self::$booted = true` | Yes | Yes (shared flag — the `i/` path never escalates to full boot) |
-| `LoggerRegistry` NullLogger fallback | Yes | Yes |
-| `Container::build()` | Yes | Yes |
-| `PageState::current()` (singleton init) | Yes | **No** |
-| `Lang::attachGlobals()` | Yes | **No** |
-| `CurrentUser::attachGlobals()` | Yes | **No** |
-| Eager `StorageRegistry` init | Yes | **No** |
+| Step                                    | `boot()` | `bootMinimal()`                                                |
+| --------------------------------------- | -------- | -------------------------------------------------------------- |
+| Set `self::$booted = true`              | Yes      | Yes (shared flag — the `i/` path never escalates to full boot) |
+| `LoggerRegistry` NullLogger fallback    | Yes      | Yes                                                            |
+| `Container::build()`                    | Yes      | Yes                                                            |
+| `PageState::current()` (singleton init) | Yes      | **No**                                                         |
+| `Lang::attachGlobals()`                 | Yes      | **No**                                                         |
+| `CurrentUser::attachGlobals()`          | Yes      | **No**                                                         |
+| Eager `StorageRegistry` init            | Yes      | **No**                                                         |
 
 ### Why the shared `$booted` flag is safe
 
@@ -149,11 +149,11 @@ fast-path regardless.
 
 ## §5 Files touched ✓
 
-| File | Change |
-|---|---|
-| `src/Piwigo/Core/Kernel.php` | Added `bootMinimal()` method |
-| `index.php` | Replaced manual controller construction with `bootMinimal()` + `Kernel::service()` |
-| `config/routes.php` | Added note: `image` route exists for URL generation only; `index.php` intercepts `i/` before it is dispatched |
+| File                         | Change                                                                                                        |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `src/Piwigo/Core/Kernel.php` | Added `bootMinimal()` method                                                                                  |
+| `index.php`                  | Replaced manual controller construction with `bootMinimal()` + `Kernel::service()`                            |
+| `config/routes.php`          | Added note: `image` route exists for URL generation only; `index.php` intercepts `i/` before it is dispatched |
 
 `config/container.php`, `Kernel::reset()`, and the `install`/`upgrade`/`upgrade_feed`
 fast-paths left as-is.

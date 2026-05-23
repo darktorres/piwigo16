@@ -72,16 +72,16 @@ ratings, dimensions, expert, added_by, filetypes) before/after.
 
 ## F5-k — acceptance gates
 
-| Gate | Target | Current |
-|---|---|---|
-| `psalm --show-info` total | `<50` | **1877** |
-| `grep -rn 'is_array(.* ?? null)' src/` | 0 | **154** |
-| `$_SESSION[` outside Session.php/FlashBag.php | 0 | 0 ✓ |
-| Raw SQL outside repos/migrations | 8 (install/upgrade umbrella, deferred per [[project_install_rework_planned]]) | 8 ✓ |
-| Every `@psalm-suppress` / `@phpstan-ignore` has rationale comment | 100% | 28 sites (need re-audit) |
-| Psalm errors-only | 0 | **0** ✓ |
-| PHPStan level-10 | 0 | **0** ✓ |
-| PHPUnit | green | **1239/1239** ✓ |
+| Gate                                                              | Target                                                                        | Current                  |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------ |
+| `psalm --show-info` total                                         | `<50`                                                                         | **1877**                 |
+| `grep -rn 'is_array(.* ?? null)' src/`                            | 0                                                                             | **154**                  |
+| `$_SESSION[` outside Session.php/FlashBag.php                     | 0                                                                             | 0 ✓                      |
+| Raw SQL outside repos/migrations                                  | 8 (install/upgrade umbrella, deferred per [[project_install_rework_planned]]) | 8 ✓                      |
+| Every `@psalm-suppress` / `@phpstan-ignore` has rationale comment | 100%                                                                          | 28 sites (need re-audit) |
+| Psalm errors-only                                                 | 0                                                                             | **0** ✓                  |
+| PHPStan level-10                                                  | 0                                                                             | **0** ✓                  |
+| PHPUnit                                                           | green                                                                         | **1239/1239** ✓          |
 
 ### Psalm-info hotspots (top 10 files)
 

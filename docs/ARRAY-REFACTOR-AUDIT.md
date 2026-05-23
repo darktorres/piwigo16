@@ -210,13 +210,15 @@ public SortOrder $dir; }` reusing the existing `SortOrder` enum.
 `Config::availablePermissionLevels()` returns `list<int>` defaulting
 to `[0, 1, 2, 4, 8]` (`Config.php:1308-1311`). Used in 10+ sites for
 `max(...)` and range checks (`Ws/WsMethodRegistrar.php` 6 occurrences
-+ `Html/HtmlService.php:534` + `Admin/BatchManager/FilterResolver.php:79`).
+
+- `Html/HtmlService.php:534` + `Admin/BatchManager/FilterResolver.php:79`).
 
 **Refactor**: `final readonly class PermissionLevel { ... public static
 function tryFrom(int $v): ?self ... }` with the validation embedded.
 WS handlers go from `is_numeric($params['min_level']) ? (int) ... : 0`
-+ `in_array(..., availablePermissionLevels())` to
-`PermissionLevel::tryFrom($input->minLevel)`.
+
+- `in_array(..., availablePermissionLevels())` to
+  `PermissionLevel::tryFrom($input->minLevel)`.
 
 ### B4 🟨 `MimeExtension` VO / enum
 
@@ -228,7 +230,8 @@ WS handlers go from `is_numeric($params['min_level']) ? (int) ... : 0`
 
 **Refactor**: closed enum (jpg/jpeg/png/gif/webp/svg/tiff/tif/heic/avif/...);
 Config returns `list<MimeExtension>`. The `strtolower(getExtension($filePath))`
-+ `in_array(...)` pattern becomes `MimeExtension::tryFromPath($filePath)`.
+
+- `in_array(...)` pattern becomes `MimeExtension::tryFromPath($filePath)`.
 
 ---
 
@@ -297,10 +300,11 @@ all as `mixed`. `Ws/Action/Pwg/Activity/GetListHandler.php` is the
 heaviest consumer.
 
 **Refactor**: `final readonly class HistoryEntry` with typed slots
-+ `ActivityAction $action` (A13) + `ActivityObject $object` (existing
-enum). Migration is bigger than a typical projection because the
-`details` blob is JSON — likely needs its own `ActivityDetails`
-union per `action`.
+
+- `ActivityAction $action` (A13) + `ActivityObject $object` (existing
+  enum). Migration is bigger than a typical projection because the
+  `details` blob is JSON — likely needs its own `ActivityDetails`
+  union per `action`.
 
 ### C6 🟨 `RatingScore` projection — `array{score: ?float, count: int, average: ?float}`
 
@@ -386,16 +390,16 @@ and re-emitted via `toArray()`.
 The highest-value moves are the ones that retire the most
 psalm-info issues per LOC changed:
 
-| # | Refactor | Files touched | Issues retired (est.) |
-|---|---|---|---|
-| 1 | A1 — `Section` enum adoption | 9 | ~30 |
-| 2 | C1 — `SqlFragment` DTO | 24 | ~30 (mixed[]/[]→typed) |
-| 3 | C5 — `HistoryEntry` entity | 8 | ~40 (HistoryRepository residue) |
-| 4 | C3 + A2 — `PluginRecord` + `ExtensionAction` | 5 | ~25 |
-| 5 | A11 — `ExtensionType` adoption in UpdateHandler | 1 | ~5 |
-| 6 | B2 — `OrderSpec` VO | 11 | ~15 |
-| 7 | A13 — `ActivityAction` enum | 30+ (53 'edit' literals) | ~10 |
-| 8 | C7 — Telemetry sub-DTOs | 1 (TelemetryService) | ~40 |
+| #   | Refactor                                        | Files touched            | Issues retired (est.)           |
+| --- | ----------------------------------------------- | ------------------------ | ------------------------------- |
+| 1   | A1 — `Section` enum adoption                    | 9                        | ~30                             |
+| 2   | C1 — `SqlFragment` DTO                          | 24                       | ~30 (mixed[]/[]→typed)          |
+| 3   | C5 — `HistoryEntry` entity                      | 8                        | ~40 (HistoryRepository residue) |
+| 4   | C3 + A2 — `PluginRecord` + `ExtensionAction`    | 5                        | ~25                             |
+| 5   | A11 — `ExtensionType` adoption in UpdateHandler | 1                        | ~5                              |
+| 6   | B2 — `OrderSpec` VO                             | 11                       | ~15                             |
+| 7   | A13 — `ActivityAction` enum                     | 30+ (53 'edit' literals) | ~10                             |
+| 8   | C7 — Telemetry sub-DTOs                         | 1 (TelemetryService)     | ~40                             |
 
 Smaller cleanups (A5/A6/A8/A9/C6) can ride along inside touched
 files when convenient. The B1 (`MailAddress`) and A4

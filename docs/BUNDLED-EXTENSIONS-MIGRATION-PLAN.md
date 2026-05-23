@@ -4,15 +4,15 @@
 
 Upstream Piwigo ships seven "bundled" extensions with every release:
 
-| Kind   | id                | Upstream tree                                  | Upstream LOC (PHP) |
-| ------ | ----------------- | ---------------------------------------------- | -----------------: |
-| plugin | `AdminTools`      | `piwigo16-plugins/AdminTools_16.3.0/`          |               ~750 |
-| plugin | `LocalFilesEditor`| `piwigo16-plugins/LocalFilesEditor_16.3.0/`    |               ~600 |
-| plugin | `TakeATour`       | `piwigo16-plugins/TakeATour_16.3.0/`           |              ~1.0k |
-| plugin | `language_switch` | `piwigo16-plugins/language_switch_16.3.0/`     |               ~200 |
-| theme  | `elegant`         | `piwigo16-themes/elegant_16.3.0/`              |               ~400 |
-| theme  | `modus`           | `piwigo16-themes/modus_16.3.0.1/`              |              ~1.0k |
-| theme  | `smartpocket`     | `piwigo16-themes/smartpocket_16.3.0/`          |               ~400 |
+| Kind   | id                 | Upstream tree                               | Upstream LOC (PHP) |
+| ------ | ------------------ | ------------------------------------------- | -----------------: |
+| plugin | `AdminTools`       | `piwigo16-plugins/AdminTools_16.3.0/`       |               ~750 |
+| plugin | `LocalFilesEditor` | `piwigo16-plugins/LocalFilesEditor_16.3.0/` |               ~600 |
+| plugin | `TakeATour`        | `piwigo16-plugins/TakeATour_16.3.0/`        |              ~1.0k |
+| plugin | `language_switch`  | `piwigo16-plugins/language_switch_16.3.0/`  |               ~200 |
+| theme  | `elegant`          | `piwigo16-themes/elegant_16.3.0/`           |               ~400 |
+| theme  | `modus`            | `piwigo16-themes/modus_16.3.0.1/`           |              ~1.0k |
+| theme  | `smartpocket`      | `piwigo16-themes/smartpocket_16.3.0/`       |               ~400 |
 
 §1.4 shipped the v17 plugin/theme contracts (`PluginInterface` +
 `plugin.json`, `ThemeInterface` + `theme.json`, typed PSR-14 events,
@@ -101,47 +101,47 @@ commit (CI runs the same job).
 1. **`add_event_handler('xxx', fn)` → `subscribedEvents()`.** Map
    legacy hook names to typed events under `src/Piwigo/Event/`:
 
-   | Legacy hook                          | Typed event                                       |
-   | ------------------------------------ | ------------------------------------------------- |
-   | `init`                               | `Piwigo\Event\Lifecycle\Init`                     |
-   | `user_init`                          | `Piwigo\Event\User\UserInit`                      |
-   | `loading_lang`                       | `Piwigo\Event\Lifecycle\LoadingLang`              |
-   | `loc_after_page_header`              | `Piwigo\Event\Lifecycle\LocAfterPageHeader`       |
-   | `loc_begin_page_header`              | `Piwigo\Event\LocBeginPageHeader`                 |
-   | `loc_begin_picture` / `_index`       | `Piwigo\Event\LocBeginPicture` / `LocBeginIndex`  |
-   | `loc_end_themes_installed`           | `Piwigo\Event\LocEndThemesInstalled`              |
-   | `loc_end_index`                      | `Piwigo\Event\LocEndIndex`                        |
-   | `loc_end_help` / `no_photo_yet`      | `Piwigo\Event\LocEndHelp` / `LocEndNoPhotoYet`    |
-   | `ws_add_methods`                     | `Piwigo\Event\Ws\WsMethodsRegistering`            |
-   | `delete_user` / `register_user`      | `Piwigo\Event\User\DeleteUser` / `RegisterUser`   |
-   | `render_element_content`             | `Piwigo\Event\Picture\RenderElementContent`       |
-   | `get_index_derivative_params`        | `Piwigo\Event\Picture\GetIndexDerivativeParams`   |
-   | `loc_end_index_category_thumbnails`  | `Piwigo\Event\LocEndIndexCategoryThumbnails`      |
-   | `loc_index_thumbnails_selection`     | `Piwigo\Event\LocIndexThumbnailsSelection`        |
-   | `loc_end_section_init`               | `Piwigo\Event\LocEndSectionInit`                  |
-   | `get_admin_plugin_menu_links`        | `Piwigo\Event\Admin\GetAdminPluginMenuLinks`      |
-   | `loc_begin_admin_page`               | `Piwigo\Event\LocBeginAdminPage`                  |
+   | Legacy hook                         | Typed event                                      |
+   | ----------------------------------- | ------------------------------------------------ |
+   | `init`                              | `Piwigo\Event\Lifecycle\Init`                    |
+   | `user_init`                         | `Piwigo\Event\User\UserInit`                     |
+   | `loading_lang`                      | `Piwigo\Event\Lifecycle\LoadingLang`             |
+   | `loc_after_page_header`             | `Piwigo\Event\Lifecycle\LocAfterPageHeader`      |
+   | `loc_begin_page_header`             | `Piwigo\Event\LocBeginPageHeader`                |
+   | `loc_begin_picture` / `_index`      | `Piwigo\Event\LocBeginPicture` / `LocBeginIndex` |
+   | `loc_end_themes_installed`          | `Piwigo\Event\LocEndThemesInstalled`             |
+   | `loc_end_index`                     | `Piwigo\Event\LocEndIndex`                       |
+   | `loc_end_help` / `no_photo_yet`     | `Piwigo\Event\LocEndHelp` / `LocEndNoPhotoYet`   |
+   | `ws_add_methods`                    | `Piwigo\Event\Ws\WsMethodsRegistering`           |
+   | `delete_user` / `register_user`     | `Piwigo\Event\User\DeleteUser` / `RegisterUser`  |
+   | `render_element_content`            | `Piwigo\Event\Picture\RenderElementContent`      |
+   | `get_index_derivative_params`       | `Piwigo\Event\Picture\GetIndexDerivativeParams`  |
+   | `loc_end_index_category_thumbnails` | `Piwigo\Event\LocEndIndexCategoryThumbnails`     |
+   | `loc_index_thumbnails_selection`    | `Piwigo\Event\LocIndexThumbnailsSelection`       |
+   | `loc_end_section_init`              | `Piwigo\Event\LocEndSectionInit`                 |
+   | `get_admin_plugin_menu_links`       | `Piwigo\Event\Admin\GetAdminPluginMenuLinks`     |
+   | `loc_begin_admin_page`              | `Piwigo\Event\LocBeginAdminPage`                 |
 
    159 typed events exist today (`find src/Piwigo/Event -name "*.php"
-   | wc -l` → 159). Any legacy hook the upstream code uses without a
+| wc -l` → 159). Any legacy hook the upstream code uses without a
    matching event class becomes a porting blocker — add it to core in
    the same commit.
 
 2. **Legacy global APIs → typed services** (injected via the Plugin
    constructor, autowired by PHP-DI):
 
-   | Upstream call                                        | Service replacement                              |
-   | ---------------------------------------------------- | ------------------------------------------------ |
-   | `pwg_query`, `query2array`                           | `Piwigo\Db\DbConnection` (Doctrine DBAL)         |
-   | `conf_update_param`, `conf_delete_param`, `$conf[…]` | `Piwigo\Config\ConfigService`                    |
-   | `l10n(...)`, `load_language(...)`                    | `Piwigo\Lang\LangService` (`$lang->t($key)`)     |
-   | `get_root_url`, `add_url_params`                     | `Piwigo\Url\UrlService`                          |
-   | `trigger_change`, `trigger_notify`                   | `Psr\EventDispatcher\EventDispatcherInterface`   |
-   | `pwg_set_session_var`, `pwg_get_session_var`         | `Piwigo\Session\SessionService`                  |
-   | `get_pwg_token`, `check_pwg_token`                   | `Piwigo\Csrf\CsrfTokenService`                   |
-   | `global $user`, `is_admin()`                         | `Piwigo\Users\CurrentUser`                       |
-   | `global $page`                                       | `Piwigo\Page\PageState`                          |
-   | `safe_unserialize`, `safe_serialize`                 | `Piwigo\Core\StringUtil`                         |
+   | Upstream call                                        | Service replacement                            |
+   | ---------------------------------------------------- | ---------------------------------------------- |
+   | `pwg_query`, `query2array`                           | `Piwigo\Db\DbConnection` (Doctrine DBAL)       |
+   | `conf_update_param`, `conf_delete_param`, `$conf[…]` | `Piwigo\Config\ConfigService`                  |
+   | `l10n(...)`, `load_language(...)`                    | `Piwigo\Lang\LangService` (`$lang->t($key)`)   |
+   | `get_root_url`, `add_url_params`                     | `Piwigo\Url\UrlService`                        |
+   | `trigger_change`, `trigger_notify`                   | `Psr\EventDispatcher\EventDispatcherInterface` |
+   | `pwg_set_session_var`, `pwg_get_session_var`         | `Piwigo\Session\SessionService`                |
+   | `get_pwg_token`, `check_pwg_token`                   | `Piwigo\Csrf\CsrfTokenService`                 |
+   | `global $user`, `is_admin()`                         | `Piwigo\Users\CurrentUser`                     |
+   | `global $page`                                       | `Piwigo\Page\PageState`                        |
+   | `safe_unserialize`, `safe_serialize`                 | `Piwigo\Core\StringUtil`                       |
 
 3. **Smarty `set_prefilter('xxx', fn)` has no Latte equivalent.**
    Three of the four plugins use this pattern to inject HTML into core
@@ -156,16 +156,16 @@ commit (CI runs the same job).
 
    Slots added by this work:
 
-   | Slot                              | Core template                                                    | Used by                       |
-   | --------------------------------- | ---------------------------------------------------------------- | ----------------------------- |
-   | `$PLUGIN_INDEX_ACTIONS`           | `themes/_base/template/index.latte` (already present, verify)    | language_switch               |
-   | `$PLUGIN_LANGUAGE_SWITCH_HEADER`  | `themes/_base/template/header.latte`                             | language_switch (CSS link)    |
-   | `$ADMINTOOLS_PUBLIC_TOOLBAR`      | `themes/_base/template/header.latte` / `picture.latte`           | AdminTools                    |
-   | `$ADMINTOOLS_ADMIN_TOOLBAR`       | `themes/admin/_base/template/header.latte`                       | AdminTools                    |
-   | `$LFE_THEMES_DROPDOWN_EXTRA`      | `themes/admin/_base/template/themes_installed.latte`             | LocalFilesEditor              |
-   | `$TAT_BOOTSTRAP`                  | `themes/admin/_base/template/header.latte` (admin only)          | TakeATour                     |
-   | `$TAT_HELP_LINK`                  | `themes/admin/_base/template/help.latte`                         | TakeATour                     |
-   | `$TAT_NO_PHOTO_BUTTON`            | `themes/admin/_base/template/no_photo_yet.latte`                 | TakeATour                     |
+   | Slot                             | Core template                                                 | Used by                    |
+   | -------------------------------- | ------------------------------------------------------------- | -------------------------- |
+   | `$PLUGIN_INDEX_ACTIONS`          | `themes/_base/template/index.latte` (already present, verify) | language_switch            |
+   | `$PLUGIN_LANGUAGE_SWITCH_HEADER` | `themes/_base/template/header.latte`                          | language_switch (CSS link) |
+   | `$ADMINTOOLS_PUBLIC_TOOLBAR`     | `themes/_base/template/header.latte` / `picture.latte`        | AdminTools                 |
+   | `$ADMINTOOLS_ADMIN_TOOLBAR`      | `themes/admin/_base/template/header.latte`                    | AdminTools                 |
+   | `$LFE_THEMES_DROPDOWN_EXTRA`     | `themes/admin/_base/template/themes_installed.latte`          | LocalFilesEditor           |
+   | `$TAT_BOOTSTRAP`                 | `themes/admin/_base/template/header.latte` (admin only)       | TakeATour                  |
+   | `$TAT_HELP_LINK`                 | `themes/admin/_base/template/help.latte`                      | TakeATour                  |
+   | `$TAT_NO_PHOTO_BUTTON`           | `themes/admin/_base/template/no_photo_yet.latte`              | TakeATour                  |
 
 4. **`.lang.php` → `.po`.** Run `tools/i18n/convert-ext-languages.php`
    pointed at each extension dir. Upstream key→string PHP arrays
@@ -180,7 +180,6 @@ commit (CI runs the same job).
 6. **JS → TS, jQuery → vanilla DOM.** Source moves to `src/web/*.ts`,
    built by Vite into `dist/`. The two extensions with vendored
    3rd-party JS:
-
    - **LocalFilesEditor**: drop the entire `codemirror/` subtree (~3
      MB of CM v2). Add `@codemirror/state`, `@codemirror/view`,
      `@codemirror/lang-css`, `@codemirror/lang-javascript`,
@@ -204,13 +203,13 @@ commit (CI runs the same job).
 8. **Lifecycle.** `maintain.class.php` / `maintain.inc.php` lifecycle
    functions fold onto the `Plugin` class:
 
-   | Upstream                                                       | New                                  |
-   | -------------------------------------------------------------- | ------------------------------------ |
-   | `function plugin_install` / `install()` of `_maintain` class   | `Plugin::install()`                  |
-   | `function plugin_activate`                                     | `Plugin::activate()`                 |
-   | `function plugin_deactivate`                                   | `Plugin::deactivate()`               |
-   | `function plugin_uninstall`                                    | `Plugin::uninstall()`                |
-   | `function plugin_update`                                       | `Plugin::update($old, $new)`         |
+   | Upstream                                                     | New                          |
+   | ------------------------------------------------------------ | ---------------------------- |
+   | `function plugin_install` / `install()` of `_maintain` class | `Plugin::install()`          |
+   | `function plugin_activate`                                   | `Plugin::activate()`         |
+   | `function plugin_deactivate`                                 | `Plugin::deactivate()`       |
+   | `function plugin_uninstall`                                  | `Plugin::uninstall()`        |
+   | `function plugin_update`                                     | `Plugin::update($old, $new)` |
 
 9. **Tests.** Each extension ships at least one `PluginTestCase`-based
    smoke test under `tests/` that boots the plugin against a sandboxed
@@ -443,7 +442,7 @@ to inject tour-step anchors.
   completion callback), the new approach is to **add a typed event
   or a stable CSS-class hook to the core template** in the same
   commit. Inventory per-tour:
-  - `first_contact` (TAT_FC_*): 6 prefilters across photos_add /
+  - `first_contact` (TAT*FC*\*): 6 prefilters across photos_add /
     element_set_global / picture_modify / cat_modify /
     themes_installed. Each becomes a Shepherd step that selects an
     existing element by stable class (e.g. `.batch-completed`,
@@ -563,7 +562,7 @@ consumer (core template hook).
 ### Per-extension (each commit)
 
 1. `composer dump-autoload && composer lint:php && composer lint:latte
-   && composer piwigo:lint && composer analyse && composer test` —
+&& composer piwigo:lint && composer analyse && composer test` —
    all green.
 2. **Manual smoke test** in the running app:
    - Plugin admin install/activate via the Extensions UI.
@@ -595,7 +594,7 @@ consumer (core template hook).
 ### End-to-end (after all 7 commits)
 
 - `composer piwigo:lint plugins/AdminTools plugins/LocalFilesEditor
-  plugins/TakeATour plugins/language_switch` → zero violations.
+plugins/TakeATour plugins/language_switch` → zero violations.
 - `find plugins themes -name 'plugin.json' -o -name 'theme.json'` →
   9 files (4 plugins + 5 themes including the existing `_base`,
   `standard_pages`, `admin/*`).

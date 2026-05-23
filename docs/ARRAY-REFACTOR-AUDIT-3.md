@@ -56,12 +56,14 @@ gates still compare raw strings:
 `CategoryRepository`'s read path. Nine raw-string sites remain on the write path:
 
 SQL `WHERE` literals (replace with `Privacy::Private->value`):
+
 - `src/Piwigo/Category/CategoryRepository.php:533` — `->where("status = 'private'")`
 - `src/Piwigo/Category/CategoryRepository.php:2260` — same
 - `src/Piwigo/Permission/PermissionRepository.php:184` —
   `c.status = 'private'` (inside raw SQL string)
 
 Row-default string assignments (replace with `Privacy::Public->value`):
+
 - `CategoryRepository.php:957, 2382, 2528, 2597, 3011, 3072` —
   `'status' => is_string($row['status'] ?? null) ? $row['status'] : 'public'`
 
@@ -81,6 +83,7 @@ Consumer: `src/Piwigo/Ws/Action/Pwg/Comments/GetListHandler.php:88-98` —
 accesses `$summary['all_comments']`, `$summary['pending']`, `$summary['validated']`.
 
 **Refactor**:
+
 ```php
 final readonly class CommentsSummary {
     public function __construct(
@@ -90,6 +93,7 @@ final readonly class CommentsSummary {
     ) {}
 }
 ```
+
 `findCommentsSummary()` returns `CommentsSummary`; consumer reads typed properties.
 
 ### B2 🟩 `CommentDateRange` DTO
@@ -100,6 +104,7 @@ final readonly class CommentsSummary {
 Consumer: `src/Piwigo/Ws/Action/Pwg/Comments/GetListHandler.php:144`.
 
 **Refactor**:
+
 ```php
 final readonly class CommentDateRange {
     public function __construct(
@@ -108,6 +113,7 @@ final readonly class CommentDateRange {
     ) {}
 }
 ```
+
 B1 and B2 share one commit (same file, same consumer).
 
 ### B3 🟩 `LoungeEntry` DTO
@@ -137,6 +143,7 @@ Consumer: `src/Piwigo/Ws/Action/Pwg/GetMissingDerivativesHandler.php:44` —
 `[$maxId, $imageCount] = $this->imageRepository->findMaxIdAndCount()`.
 
 **Refactor**:
+
 ```php
 final readonly class MaxIdAndCount {
     public function __construct(
@@ -145,6 +152,7 @@ final readonly class MaxIdAndCount {
     ) {}
 }
 ```
+
 Named fields (`nextId`, `total`) are more expressive than positional `[0]`/`[1]`.
 
 ### B6 🟩 `LastUploadedCategoryInfo` DTO
@@ -172,6 +180,7 @@ Consumer: `src/Piwigo/Search/SearchFilterRenderer.php:318` and `:325`
 Key accesses: `$author['author']` (:329), row passed as `$filter_rows` to template.
 
 **Refactor**:
+
 ```php
 final readonly class AuthorCountRow {
     public function __construct(
@@ -223,8 +232,9 @@ Key accesses: `$row['width']` at `:785`, `$row['height']` at `:786`.
 **Refactor**: `final readonly class ImageDimensionRow { int $id; int $width; int $height; }`.
 
 **Suggested commit**: one commit covering all 6 DTOs (`src/Piwigo/Search/`)
-+ the 7 repo method return-type changes + the `SearchFilterRenderer` property-access
-updates. All files are in the `Search` namespace with a single consumer.
+
+- the 7 repo method return-type changes + the `SearchFilterRenderer` property-access
+  updates. All files are in the `Search` namespace with a single consumer.
 
 ---
 
@@ -235,12 +245,14 @@ updates. All files are in the `Search` namespace with a single consumer.
 `src/Piwigo/Permission/PermissionRepository.php:18` — `findUserCategoryAccess()`.
 `src/Piwigo/Permission/PermissionRepository.php:40` — `findGroupUserCategoryAccess()`.
 Same 2-column shape. 4 consumer sites:
+
 - `src/Piwigo/Ws/Action/Pwg/Permissions/GetListHandler.php:37` —
   `$row['cat_id']`, `$row['user_id']`
 - `src/Piwigo/Ws/Action/Pwg/Permissions/GetListHandler.php:44` — same keys
 - `src/Piwigo/Controller/Admin/MaintenanceController.php:1543` — `findUserCategoryAccess`
 
 **Refactor**:
+
 ```php
 final readonly class UserCatAccess {
     public function __construct(
@@ -254,6 +266,7 @@ final readonly class UserCatAccess {
 
 `src/Piwigo/Permission/PermissionRepository.php:62` — `findGroupCategoryAccess()`.
 3 consumer sites:
+
 - `src/Piwigo/Ws/Action/Pwg/Permissions/GetListHandler.php:51` —
   `$row['cat_id']`, `$row['group_id']`
 - `src/Piwigo/Controller/Admin/MaintenanceController.php:1534`
@@ -282,6 +295,7 @@ The method always yields **0 or 1 clauses** (never a multi-clause join), making 
 a natural `SqlFragment` — the `where` field is either `''` or the single clause.
 
 Single caller at `:177`:
+
 ```php
 // current
 [$addClauses, $addParams, $addTypes] = $this->buildImageAccessClauses($fieldName, $user);

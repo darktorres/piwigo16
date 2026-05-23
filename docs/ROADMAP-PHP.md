@@ -1366,18 +1366,18 @@ Pure rendering includes (`include/page_header.php`, `include/page_tail.php`, `in
 
 A full codebase scan surfaces several additional files with free functions that are intentionally **not** in task #19's scope:
 
-| File(s)                                                                           | Functions | Why out of scope                                                                                                 |
-| --------------------------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------- |
-| `i.php`                                                                           | 12        | ✅ deleted — `DerivativePipeline` handles image serving; `i.php` merged into `index.php` fast-path (`9cb3d6087`) |
-| `admin/*.php` page files                                                          | ~30       | ✅ deleted — all controller logic inlined into typed sub-controllers (#22 Wave B)                                |
-| Root entry points (`password.php`, `profile.php`, `action.php`, `feed.php`, etc.) | ~15       | ✅ deleted — migrated to typed controllers (#22 Wave A)                                                          |
-| `ws.php:ws_addDefaultMethods`                                                     | 1         | ✅ migrated to `WsMethodRegistrar::register()` — lives in `src/Piwigo/Ws/`                                       |
-| `include/menubar.inc.php:initialize_menu`                                         | 1         | ✅ deleted — migrated to `MenubarRenderer` service                                                               |
-| `include/common.inc.php:sanitize_mysql_kv`                                        | 1         | ✅ deleted with `common.inc.php` — migrated to `CommonBootstrap::run()`                                          |
+| File(s)                                                                           | Functions | Why out of scope                                                                                                   |
+| --------------------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------ |
+| `i.php`                                                                           | 12        | ✅ deleted — `DerivativePipeline` handles image serving; `i.php` merged into `index.php` fast-path (`9cb3d6087`)   |
+| `admin/*.php` page files                                                          | ~30       | ✅ deleted — all controller logic inlined into typed sub-controllers (#22 Wave B)                                  |
+| Root entry points (`password.php`, `profile.php`, `action.php`, `feed.php`, etc.) | ~15       | ✅ deleted — migrated to typed controllers (#22 Wave A)                                                            |
+| `ws.php:ws_addDefaultMethods`                                                     | 1         | ✅ migrated to `WsMethodRegistrar::register()` — lives in `src/Piwigo/Ws/`                                         |
+| `include/menubar.inc.php:initialize_menu`                                         | 1         | ✅ deleted — migrated to `MenubarRenderer` service                                                                 |
+| `include/common.inc.php:sanitize_mysql_kv`                                        | 1         | ✅ deleted with `common.inc.php` — migrated to `CommonBootstrap::run()`                                            |
 | `include/ws_protocols/xmlrpc_encoder.php:xmlrpc_encode`                           | 1         | ✅ deleted — first ported to `PwgXmlRpcEncoder`, then retired entirely in Phase 2d (xmlrpc PHP ext gone since 8.1) |
-| `_data/templates_c/*.php`                                                         | many      | Smarty auto-compiled templates — not hand-written, ignore                                                        |
-| `plugins/**`                                                                      | many      | Bundled third-party plugins — out of first-party scope                                                           |
-| `tools/**`                                                                        | few       | Dev utilities — out of scope                                                                                     |
+| `_data/templates_c/*.php`                                                         | many      | Smarty auto-compiled templates — not hand-written, ignore                                                          |
+| `plugins/**`                                                                      | many      | Bundled third-party plugins — out of first-party scope                                                             |
+| `tools/**`                                                                        | few       | Dev utilities — out of scope                                                                                       |
 
 ### Verification (per module)
 
@@ -1588,16 +1588,16 @@ Fallback (no rewrite needed):
 
 #### Type mapping (`WsType` → OpenAPI)
 
-| WS type flags                                       | OpenAPI schema                                    |
-| --------------------------------------------------- | ------------------------------------------------- |
-| `WsType::Bool->value`                               | `{type: boolean}`                                 |
-| `WsType::Int->value`                                | `{type: integer, format: int32}`                  |
-| `WsType::Int \| WsType::Positive`                   | `{type: integer, minimum: 0}`                     |
-| `WsType::Id` (`Int \| Positive \| NotNull`)         | `{type: integer, minimum: 1}`                     |
-| `WsType::Float->value`                              | `{type: number, format: float}`                   |
-| (none)                                              | `{type: string}`                                  |
-| `WsParam::ForceArray->value`                        | wraps scalar in `{type: array, items: …}`         |
-| `WsParam::AcceptArray->value`                       | `{oneOf: [scalar, {type: array, items: scalar}]}` |
+| WS type flags                               | OpenAPI schema                                    |
+| ------------------------------------------- | ------------------------------------------------- |
+| `WsType::Bool->value`                       | `{type: boolean}`                                 |
+| `WsType::Int->value`                        | `{type: integer, format: int32}`                  |
+| `WsType::Int \| WsType::Positive`           | `{type: integer, minimum: 0}`                     |
+| `WsType::Id` (`Int \| Positive \| NotNull`) | `{type: integer, minimum: 1}`                     |
+| `WsType::Float->value`                      | `{type: number, format: float}`                   |
+| (none)                                      | `{type: string}`                                  |
+| `WsParam::ForceArray->value`                | wraps scalar in `{type: array, items: …}`         |
+| `WsParam::AcceptArray->value`               | `{oneOf: [scalar, {type: array, items: scalar}]}` |
 
 POST-only methods (options `post_only: true`) are documented as `POST` with an `application/x-www-form-urlencoded` request body; all others as `GET` with query parameters.
 
@@ -1818,7 +1818,7 @@ Method groups:
 | `PicturePageContext`                   | `picture`, `relatedCategories`, `items`, `category`, `commentAction`, `urlSelf` |
 | `SearchPageContext`                    | `query`, `filters`, `results`, `pagination`                                     |
 | `TagsPageContext`                      | `tags`, `selectedTags`, `photos`, `displayMode`                                 |
-| `AdminPageContext` *(base, non-final)* | `pageTitle`, `pageMeta`, `themeAssets`, `flashMessages`                         |
+| `AdminPageContext` _(base, non-final)_ | `pageTitle`, `pageMeta`, `themeAssets`, `flashMessages`                         |
 
 No controllers populate them yet — that migration happens as each `.latte` partial is written in #23.
 
@@ -2231,8 +2231,8 @@ Themes hook into the same event bus as plugins, so most of the foundation from P
 4. **`Piwigo\Theme\ThemeRegistry`.** Parallel to `PluginRegistry`. Reads `theme.json`, resolves the parent chain, registers PSR-4 autoload, instantiates `Theme`, calls `boot()`. Caches the resolved chain to avoid re-walking on every request.
 
 5. **Inheritance via class hierarchy or composition.** Two viable approaches — pick one:
-   - *Class inheritance:* `class StandardPagesTheme extends DefaultTheme implements ThemeInterface` — overrides only what differs.
-   - *Composition:* `Theme` always has a `?ThemeInterface $parent` and methods walk up the chain (`getAssetDir()` falls back to parent if not declared). More flexible, but more boilerplate.
+   - _Class inheritance:_ `class StandardPagesTheme extends DefaultTheme implements ThemeInterface` — overrides only what differs.
+   - _Composition:_ `Theme` always has a `?ThemeInterface $parent` and methods walk up the chain (`getAssetDir()` falls back to parent if not declared). More flexible, but more boilerplate.
 
    Recommendation: composition. It mirrors how `themeconf.inc.php` currently works (array merge along the chain) and avoids forcing 3rd-party themes to extend a base class.
 
@@ -2291,7 +2291,7 @@ PHPStan analyse passes at level 10 with no baseline file. Level 10 enforces full
 
 ### What was done
 
-- `phpstan.neon` is set to `level: 10`, no baseline file. `vendor/bin/phpstan analyse` reports `[OK] No errors` (commit `8e141735f` — *chore(phpstan): raise to level 10 — zero errors*).
+- `phpstan.neon` is set to `level: 10`, no baseline file. `vendor/bin/phpstan analyse` reports `[OK] No errors` (commit `8e141735f` — _chore(phpstan): raise to level 10 — zero errors_).
 - The post-#6/#17 error count came in well below the original 1000+ estimate; cleanup landed across the same series of commits without a baseline carry-over.
 - Custom rules still registered: `ConfigKeyExistsRule`, `NoDynamicNewRule`, `NoErrorSuppressionRule`, `NoGlobalInSrcRule`, `StrictTypesRequiredRule`, plus the dynamic-return-type extension `EventDispatcherDispatchDynamicReturnType`. The deprecation-rules pack is included.
 - Remaining `mixed` occurrences are catalogued in `docs/MIXED-TYPES.md` — most are legitimate (DB row results, event payloads, generic cache get/put). Reduction work continues opportunistically; the level-10 gate does not require eliminating them.
@@ -2675,21 +2675,21 @@ Three problems with keeping it:
 
 13 commits + 1 fix on `16.x-rewrite`:
 
-| Phase   | Scope                                                                                                                                          |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1       | `Piwigo\Core\Paths` value object (immutable, absolute, `fromIndex()` / `fromRoot()` factories) + initial DI wiring.                            |
-| 2       | `config/container.php` and `config/storage.php` factories autowire `Paths`; storage closures wrapped in `Closure(Paths): array`.               |
-| 3a      | `Image/*` services and `ImageDerivativeController`. `DerivativePipeline` converted from all-static to a DI instance class.                     |
-| 3b      | `Admin/Updates.php` (12 reads — biggest single file).                                                                                          |
-| 3c      | `Admin/Languages.php` + `Admin/Upload/UploadService.php`.                                                                                       |
-| 3d      | 9 controllers (Install, Upgrade, UpgradeFeed, NBM, Admin/Configuration, Admin/Extensions, Admin/Maintenance, Admin/Users, Admin/AdminController). |
-| 3e1     | Remaining `Admin/*` services (`ImageAdminService`, `WatermarkProcessor`, `MetadataAdminService`, `Themes`, `Plugins`, `UpgradeService`).        |
-| (fix)   | URL-semantics regression — reverted `define('PHPWG_ROOT_PATH', $paths->root)` back to `'./'` after `<a href>` URLs were rendering as `/home/.../themes/...`. |
-| 3e2     | Remaining `src/` filesystem services; `Kernel::isBooted ? : PHPWG_ROOT_PATH` fallbacks added to the static-utility classes.                    |
-| 4       | `Container::build(Paths $paths, …)` + `Kernel::boot/bootMinimal(?Paths $paths = null)` + `CommonBootstrap::run(Paths $paths)`.                  |
-| 4.5     | URL-root cleanup: `UrlService::getRootUrl` simplified; `HtmlService` drops the no-op `./` prefix; `CookieService::cookiePath` deletes the dead `str_starts_with('../')` branch; `SectionInitializer` sets `root_path=''` directly. Net –18 LOC. |
-| 5       | 31 test/tool files migrated to inline `dirname(__DIR__, N)`. `InstallSentinel` refactored to take `Paths` explicitly (it ran pre-Kernel-boot in `CommonBootstrap`, so a service-locator dependency wouldn't have worked). `MessengerFactory::build(Connection, Paths $paths)`. |
-| 6       | Final fallbacks removed from `ScriptLoader`, `LatteEngine::default`, `LatteEngine::sandboxed`. Tests boot `Kernel(Paths::fromRoot(...))` in `setUp`. `define('PHPWG_ROOT_PATH', ...)` deleted from `index.php`, `tests/bootstrap.php`, `tools/phpstan-bootstrap.php`, `tools/psalm-stubs.phpstub`. |
+| Phase | Scope                                                                                                                                                                                                                                                                                              |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | `Piwigo\Core\Paths` value object (immutable, absolute, `fromIndex()` / `fromRoot()` factories) + initial DI wiring.                                                                                                                                                                                |
+| 2     | `config/container.php` and `config/storage.php` factories autowire `Paths`; storage closures wrapped in `Closure(Paths): array`.                                                                                                                                                                   |
+| 3a    | `Image/*` services and `ImageDerivativeController`. `DerivativePipeline` converted from all-static to a DI instance class.                                                                                                                                                                         |
+| 3b    | `Admin/Updates.php` (12 reads — biggest single file).                                                                                                                                                                                                                                              |
+| 3c    | `Admin/Languages.php` + `Admin/Upload/UploadService.php`.                                                                                                                                                                                                                                          |
+| 3d    | 9 controllers (Install, Upgrade, UpgradeFeed, NBM, Admin/Configuration, Admin/Extensions, Admin/Maintenance, Admin/Users, Admin/AdminController).                                                                                                                                                  |
+| 3e1   | Remaining `Admin/*` services (`ImageAdminService`, `WatermarkProcessor`, `MetadataAdminService`, `Themes`, `Plugins`, `UpgradeService`).                                                                                                                                                           |
+| (fix) | URL-semantics regression — reverted `define('PHPWG_ROOT_PATH', $paths->root)` back to `'./'` after `<a href>` URLs were rendering as `/home/.../themes/...`.                                                                                                                                       |
+| 3e2   | Remaining `src/` filesystem services; `Kernel::isBooted ? : PHPWG_ROOT_PATH` fallbacks added to the static-utility classes.                                                                                                                                                                        |
+| 4     | `Container::build(Paths $paths, …)` + `Kernel::boot/bootMinimal(?Paths $paths = null)` + `CommonBootstrap::run(Paths $paths)`.                                                                                                                                                                     |
+| 4.5   | URL-root cleanup: `UrlService::getRootUrl` simplified; `HtmlService` drops the no-op `./` prefix; `CookieService::cookiePath` deletes the dead `str_starts_with('../')` branch; `SectionInitializer` sets `root_path=''` directly. Net –18 LOC.                                                    |
+| 5     | 31 test/tool files migrated to inline `dirname(__DIR__, N)`. `InstallSentinel` refactored to take `Paths` explicitly (it ran pre-Kernel-boot in `CommonBootstrap`, so a service-locator dependency wouldn't have worked). `MessengerFactory::build(Connection, Paths $paths)`.                     |
+| 6     | Final fallbacks removed from `ScriptLoader`, `LatteEngine::default`, `LatteEngine::sandboxed`. Tests boot `Kernel(Paths::fromRoot(...))` in `setUp`. `define('PHPWG_ROOT_PATH', ...)` deleted from `index.php`, `tests/bootstrap.php`, `tools/phpstan-bootstrap.php`, `tools/psalm-stubs.phpstub`. |
 
 ### End state in `index.php`
 
@@ -2732,35 +2732,35 @@ After [#33](#33--eliminate-phpwg_root_path-global-replace-with-typed-paths)
 retired `PHPWG_ROOT_PATH`, twelve `define()`-style global constants
 remained as residual pre-PSR-4 debris:
 
-| # | Constant | Readers | Disposition |
-|---|----------|---------|-------------|
-| 1 | `PHPWG_DOMAIN` | **0** | DELETE — 3 writers, 36 lines of locale switch, never read. |
-| 2 | `PWG_HELP` | **0** | DELETE — 2 writers, never read. |
-| 3 | `PHPWG_URL` | ~30 | Class const `AppInfo::PROJECT_URL = 'https://piwigo.example'` (RFC 2606 placeholder pending fork-site launch). |
-| 4 | `PEM_URL` | ~20 | New `PemUrlResolver` service, constructor-injected. |
-| 5 | `PWG_API_KEY_REQUEST` | 4 | New `ApiKeyAuthRegistry` (mirrors `RequestContextRegistry`). |
-| 6 | `PWG_LOCAL_DIR` | 17 | Route through existing `Paths::$local`. |
-| 7 | `DEFAULT_PREFIX_TABLE` | 3 | Class const `InstallController::DEFAULT_DB_PREFIX`. |
-| 8 | `PREFIX_TABLE` | 2 | Inline `Tables::upgrade()` at the 2 reader sites. |
-| 9 | `UPGRADES_PATH` | 2 | Inline path + switch the second reader to `RequestContextRegistry`. |
-| 10 | `PHOTOS_ADD_BASE_URL` | 4 | Inline `$urlGenerator->admin('photos_add')`. |
-| 11 | `BUTTONS_RANK_NEUTRAL` | 2 | Class const `Template::BUTTONS_RANK_NEUTRAL`. |
-| 12 | `QST_*` (7 flags) | — | `tests/bootstrap.php` stubs deleted; `QConstants.php` already file-autoloaded via composer's `"files"`. |
+| #   | Constant               | Readers | Disposition                                                                                                    |
+| --- | ---------------------- | ------- | -------------------------------------------------------------------------------------------------------------- |
+| 1   | `PHPWG_DOMAIN`         | **0**   | DELETE — 3 writers, 36 lines of locale switch, never read.                                                     |
+| 2   | `PWG_HELP`             | **0**   | DELETE — 2 writers, never read.                                                                                |
+| 3   | `PHPWG_URL`            | ~30     | Class const `AppInfo::PROJECT_URL = 'https://piwigo.example'` (RFC 2606 placeholder pending fork-site launch). |
+| 4   | `PEM_URL`              | ~20     | New `PemUrlResolver` service, constructor-injected.                                                            |
+| 5   | `PWG_API_KEY_REQUEST`  | 4       | New `ApiKeyAuthRegistry` (mirrors `RequestContextRegistry`).                                                   |
+| 6   | `PWG_LOCAL_DIR`        | 17      | Route through existing `Paths::$local`.                                                                        |
+| 7   | `DEFAULT_PREFIX_TABLE` | 3       | Class const `InstallController::DEFAULT_DB_PREFIX`.                                                            |
+| 8   | `PREFIX_TABLE`         | 2       | Inline `Tables::upgrade()` at the 2 reader sites.                                                              |
+| 9   | `UPGRADES_PATH`        | 2       | Inline path + switch the second reader to `RequestContextRegistry`.                                            |
+| 10  | `PHOTOS_ADD_BASE_URL`  | 4       | Inline `$urlGenerator->admin('photos_add')`.                                                                   |
+| 11  | `BUTTONS_RANK_NEUTRAL` | 2       | Class const `Template::BUTTONS_RANK_NEUTRAL`.                                                                  |
+| 12  | `QST_*` (7 flags)      | —       | `tests/bootstrap.php` stubs deleted; `QConstants.php` already file-autoloaded via composer's `"files"`.        |
 
 ### What shipped
 
 7 commits + 1 follow-up on `16.x-rewrite`:
 
-| Phase | Constants                                                              | Commit       |
-| ----- | ---------------------------------------------------------------------- | ------------ |
-| A     | `PHPWG_DOMAIN` + `PWG_HELP` (pure deletes)                             | `ca00c194c`  |
-| B     | `BUTTONS_RANK_NEUTRAL` + `DEFAULT_PREFIX_TABLE` + `PHOTOS_ADD_BASE_URL`| `5a23a7185`  |
-| C     | `PWG_LOCAL_DIR` → `Paths::$local`                                      | `086a9f8ac`  |
-| D     | `PREFIX_TABLE` + `UPGRADES_PATH` + `RequestContext::Upgrade` switch    | `348e1fb1c`  |
-| E     | `PWG_API_KEY_REQUEST` → `ApiKeyAuthRegistry`                           | `f0d3e0e91`  |
-| F     | `PEM_URL` → `PemUrlResolver` service                                   | `2a6781e22`  |
-| G     | `QST_*` test stub cleanup + roadmap                                    | `efaa150b3`  |
-| H     | `PHPWG_URL` → `AppInfo::PROJECT_URL` placeholder                       | (this commit)|
+| Phase | Constants                                                               | Commit        |
+| ----- | ----------------------------------------------------------------------- | ------------- |
+| A     | `PHPWG_DOMAIN` + `PWG_HELP` (pure deletes)                              | `ca00c194c`   |
+| B     | `BUTTONS_RANK_NEUTRAL` + `DEFAULT_PREFIX_TABLE` + `PHOTOS_ADD_BASE_URL` | `5a23a7185`   |
+| C     | `PWG_LOCAL_DIR` → `Paths::$local`                                       | `086a9f8ac`   |
+| D     | `PREFIX_TABLE` + `UPGRADES_PATH` + `RequestContext::Upgrade` switch     | `348e1fb1c`   |
+| E     | `PWG_API_KEY_REQUEST` → `ApiKeyAuthRegistry`                            | `f0d3e0e91`   |
+| F     | `PEM_URL` → `PemUrlResolver` service                                    | `2a6781e22`   |
+| G     | `QST_*` test stub cleanup + roadmap                                     | `efaa150b3`   |
+| H     | `PHPWG_URL` → `AppInfo::PROJECT_URL` placeholder                        | (this commit) |
 
 Each phase passed the same gate: Pint, PHPStan, Psalm, full PHPUnit
 suite, and `grep -rn 'define('` to confirm the targeted writers were

@@ -69,6 +69,22 @@
   --admin-pagination-link-hover-bg: #ffd2a1;
   --admin-pagination-link-hover-fg: #666;
 
+  /* dashboard stat boxes */
+  --admin-stat-box-fg: #3b3b3b;
+  --admin-stat-box-hover-fg: #777;
+
+  /* dashboard / stats — segmented label selector */
+  --admin-stat-label-fg: #000;
+  --admin-stat-label-bg: #eee;
+  --admin-stat-label-unavailable-fg: #808080;
+  --admin-stat-label-unavailable-bg: #aaa;
+  --admin-stat-label-hover-bg: #ccc;
+
+  /* chart titles + tooltip chrome */
+  --admin-chart-title-fg: #3b3b3b;
+  --admin-tooltip-arrow-color: #fff;
+  --admin-tooltip-separator-bg: #ccc;
+
   /* disabled form controls */
   --admin-disabled-bg: #ececec;
   --admin-disabled-fg: #d5d5d5;

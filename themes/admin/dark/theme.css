@@ -37,6 +37,16 @@
   --admin-pagination-span-fg: #c1c1c1;
   --admin-pagination-link-hover-bg: #888;
   --admin-pagination-link-hover-fg: #444;
+  --admin-stat-box-fg: #9c9c9c;
+  --admin-stat-box-hover-fg: #aeaeae;
+  --admin-stat-label-fg: #777;
+  --admin-stat-label-bg: #333;
+  --admin-stat-label-unavailable-fg: #666;
+  --admin-stat-label-unavailable-bg: #3c3c3c;
+  --admin-stat-label-hover-bg: #555;
+  --admin-chart-title-fg: #777;
+  --admin-tooltip-arrow-color: #333;
+  --admin-tooltip-separator-bg: #777;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -238,59 +248,14 @@ a.Piwigo:hover span.Piwigo {
   color: transparent;
 }
 
-/* dashboard */
-.stat-box {
-  color: #9c9c9c;
-}
-
-a.stat-box:hover {
-  color: #aeaeae;
-}
-
-.stat-data-selector label {
-  color: #777;
-  padding: 10px;
-  background-color: #333;
-  transition: 0.2s ease;
-}
-
-.stat-data-selector input:checked + label {
-  color: #444;
-}
-
-.stat-data-selector label:hover {
-  background-color: #555;
-}
-
-.stat-data-selector label.unavailable {
-  background: #3c3c3c;
-  color: #666;
-}
-
-.chart-title {
-  color: #777;
-}
-
+/* Dark-only structural overrides — not theme-color */
 .intro-charts .tooltip {
   box-shadow: none;
 }
 
-.storage-tooltips .separated {
-  background: #777;
-}
-
-.storage-tooltips .tooltip-arrow,
-.activity-chart .tooltip-arrow {
-  border-color: transparent transparent #333;
-}
-
-.storage-tooltips .tooltip-arrow.bottom {
-  border-color: #333 transparent transparent;
-}
-
 .intro-charts .tooltip .tooltip-details-title,
 .intro-charts .tooltip-title {
-  border: none ;
+  border: none;
 }
 
 /* charts: dark forces opacity 1 on the default-color cells (which

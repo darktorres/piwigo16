@@ -149,7 +149,7 @@
   display: inline-block;
   width: 150px;
   margin: 10px 10px 40px;
-  color: #3b3b3b;
+  color: var(--admin-stat-box-fg);
   text-align: center;
 }
 
@@ -179,7 +179,7 @@ div.stat-box {
 
 a.stat-box:hover {
   text-decoration: none;
-  color: #777;
+  color: var(--admin-stat-box-hover-fg);
 }
 
 .chart-title {
@@ -187,7 +187,7 @@ a.stat-box:hover {
   text-align: left;
   font-weight: bold;
   margin-bottom: var(--space-lg);
-  color: #3b3b3b;
+  color: var(--admin-chart-title-fg);
   position: relative;
 }
 
@@ -417,19 +417,19 @@ a.stat-box:hover {
   margin-left: -5px;
   border-width: 5px;
   border-style: solid;
-  border-color: transparent transparent #fff;
+  border-color: transparent transparent var(--admin-tooltip-arrow-color);
 }
 
 .storage-tooltips .tooltip-arrow.bottom {
   top: 100%;
-  border-color: #fff transparent transparent;
+  border-color: var(--admin-tooltip-arrow-color) transparent transparent;
 }
 
 .storage-tooltips .separated {
   display: block !important; /* keep: forces block on dynamically-inserted element */
   width: 100%;
   height: 1px;
-  background: #ccc;
+  background: var(--admin-tooltip-separator-bg);
 }
 
 .storage-tooltips .tooltip {

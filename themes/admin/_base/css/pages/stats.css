@@ -11,26 +11,26 @@
 }
 
 .stat-data-selector label {
-  color: #000;
+  color: var(--admin-stat-label-fg);
   padding: var(--space-sm);
-  background-color: #eee;
+  background-color: var(--admin-stat-label-bg);
   transition: 0.2s ease;
 }
 
 .stat-data-selector label.unavailable {
-  color: #808080;
-  background-color: #aaa;
+  color: var(--admin-stat-label-unavailable-fg);
+  background-color: var(--admin-stat-label-unavailable-bg);
   cursor: default;
   pointer-events: none;
 }
 
 .stat-data-selector label:hover {
-  background-color: #ccc;
+  background-color: var(--admin-stat-label-hover-bg);
 }
 
 .stat-data-selector input:checked + label {
   background-color: #ffa646;
-  color: #fff;
+  color: var(--admin-bg-page);
   pointer-events: none;
 }
 

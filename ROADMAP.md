@@ -3210,7 +3210,44 @@ campaign promotes counts against the same F5-k psalm-info gate.
   Defines all 11 F5 sub-codes (F5-a through F5-k), the 5-boundary
   framing, and the value-object inventory (32 planned identifiers /
   strings / temporal / enums — `ImageId`, `Email`, `MysqlDateTime`,
-  `UserStatus`, etc.; 21 shipped today).
+  `UserStatus`, etc.; 21 shipped today). Completion status per plan
+  (read 2026-05-23):
+  - **F5-a** — VO + enum foundation. Shipped (21 of ~32 VOs).
+  - **F5-b** — `resolve()` helper shipped (`src/Piwigo/Core/resolve.php`);
+    factory classes still open per F5-PENDING.
+  - **F5-c** — `Session` VO shipped; `$_SESSION[` access now only in
+    `Session.php` + `FlashBag.php` (gate met); `SessionStore` rename open.
+  - **F5-d** — ✓ **COMPLETE**: `Image` entity + 14 sub-steps (F5-d/1
+    through F5-d/14) all shipped, including `findById(): ?Image`,
+    `findByIds(): list<Image>`, ImageFormat + Lounge aggregate
+    extraction, `findRowsByRawQuery` escape hatch dropped.
+  - **F5-e** — ✓ **COMPLETE**: Category/Tag/Comment entities; ~30
+    projection DTOs across the three aggregates; full CategoryRepository
+    (27/27 reading methods), TagRepository (10/10), CommentRepository
+    (5/5) migrated.
+  - **F5-f** — ✓ **COMPLETE**: `User` is `final readonly class` with
+    `with*` mutators; 8 direct-write sites migrated (plan estimated 85
+    — was off by ~10×).
+  - **F5-g** — ✓ shipped: WS scaffolding (`WsAction`, `WsParamException`,
+    `MethodDefinition.handlerClass`, dual-path dispatch).
+  - **F5-h** — ✓ **COMPLETE**: 95/95 endpoints migrated, 9/9 *Endpoints
+    god-classes drained, `src/Piwigo/Ws/Method/` directory removed.
+    Legacy `callback:` path remains for plugin compat but no in-tree
+    registration uses it (the 3 remaining callback registrations are
+    intentional: 2 `reflection.*` self-introspection + 1 not-implemented
+    stub).
+  - **F5-i** — Partial: `SearchRules` + `MalformedSearchRulesException`
+    + versioned `fromJson`/`toJson` foundation shipped; 15 typed filter
+    VOs + deep `SearchService`/`SearchFilterRenderer` adoption pending
+    (200+ mixed accesses; high-risk).
+  - **F5-j** — ✓ **COMPLETE**: `TelemetryPayload` 12-slot typed DTO;
+    `sendInfos()` refactored from 200-line mutator into 50-line
+    orchestrator + 12 narrow private helpers.
+  - **F5-k** — Partial: suppression-rationale audit complete (all 29
+    sites have rationale comments); `$_SESSION[` gate met; raw-SQL gate
+    met. **Unmet**: `psalm --show-info <50` (currently **1796**, plan
+    baseline was 2041, plan-snapshot showed 1862; net −245 since plan
+    inception).
 - `docs/F5-PENDING.md` — live status of the F5 series, audited against
   the codebase (not git history). Open work as of 2026-05-23:
   - **F5-b** — extract 50+ inline `factory(static fn …)` closures

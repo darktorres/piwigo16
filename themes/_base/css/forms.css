@@ -75,11 +75,11 @@ legend {
 
 #pictureCommentList .commentsOrder {
   float: left;
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
 }
 #pictureCommentList .navigationBar {
   float: right;
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
 }
 #pictureComments h4 {
   margin: 0;

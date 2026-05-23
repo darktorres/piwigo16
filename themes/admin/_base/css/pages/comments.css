@@ -4,7 +4,7 @@
   display: grid;
   grid-template-rows: auto 1fr;
   min-height: calc(100vh - 169px);
-  padding-left: 20px;
+  padding-left: var(--space-lg);
 }
 
 .comments p {
@@ -25,7 +25,7 @@
 }
 
 .comments-selection {
-  padding-top: 20px;
+  padding-top: var(--space-lg);
 }
 
 .comments-container.active {
@@ -56,11 +56,11 @@
   height: 100%;
   align-content: center;
   text-align: start;
-  padding-left: 20px;
+  padding-left: var(--space-lg);
 }
 
 .comments-selection-switch {
-  margin-top: 20px;
+  margin-top: var(--space-lg);
 }
 
 .comments-search-cancel {
@@ -75,7 +75,7 @@
 }
 
 .comments-advanced-filter {
-  gap: 10px;
+  gap: var(--space-sm);
 }
 
 .comments-tabs-filters {
@@ -146,8 +146,8 @@
 .comments-filters-container {
   display: flex;
   align-items: center;
-  padding: 10px;
-  gap: 20px;
+  padding: var(--space-sm);
+  gap: var(--space-lg);
 }
 
 .comments-filters-date {
@@ -158,8 +158,8 @@
 .comments-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
-  padding-top: 20px;
+  gap: var(--space-lg);
+  padding-top: var(--space-lg);
   transition: flex-wrap 0.5s ease;
 }
 
@@ -187,7 +187,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 10px;
+  padding: var(--space-sm);
   cursor: pointer;
 }
 
@@ -210,13 +210,13 @@
 .comment-msgs {
   display: flex;
   justify-content: space-between;
-  gap: 5px;
+  gap: var(--space-xs);
 }
 
 .comment-msg {
   font-style: italic;
   text-align: start;
-  padding-bottom: 5px;
+  padding-bottom: var(--space-xs);
   font-size: var(--font-size-md);
 }
 
@@ -245,7 +245,7 @@
 .comment-date {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--space-xs);
   font-weight: 600;
   color: #3c3c3c;
   justify-content: end;
@@ -314,7 +314,7 @@
   display: flex;
   align-items: center;
   font-size: var(--font-size-lg);
-  gap: 5px;
+  gap: var(--space-xs);
 }
 
 .comment-paging-current {
@@ -349,20 +349,20 @@
 .comments-modal-infos {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: var(--space-xs);
   align-items: start;
 }
 
 .comments-modal-img-info {
   display: flex;
   align-items: start;
-  gap: 5px;
+  gap: var(--space-xs);
 }
 
 .comments-modal-img-i {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: var(--space-xs);
   align-items: self-end;
 }
 

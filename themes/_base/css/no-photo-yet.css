@@ -29,7 +29,7 @@ td {
   color: #c1c1c1;
   text-align: center;
   letter-spacing: 1px;
-  margin-top: 30px;
+  margin-top: var(--space-xl);
 }
 
 .bigButton {
@@ -39,7 +39,7 @@ td {
 
 .bigButton a {
   background-color: #ffa646;
-  padding: 20px;
+  padding: var(--space-lg);
   text-decoration: none;
   margin: 0 5px;
   border-radius: 6px;

@@ -29,7 +29,7 @@
 
 #batchManagerGlobal fieldset {
   margin: 0;
-  margin-top: 30px;
+  margin-top: var(--space-xl);
   border: none;
 }
 
@@ -56,7 +56,7 @@
 #batchManagerGlobal #selectedMessage {
   color: var(--admin-accent-soft);
   font-weight: bold;
-  padding: 5px;
+  padding: var(--space-xs);
   border-radius: var(--radius-sm);
   float: right;
 }
@@ -81,12 +81,12 @@
   flex-wrap: wrap;
   align-items: start;
   margin-top: 0;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 #batchManagerGlobal #filterList li {
   list-style-type: none;
   background-color: #fafafa;
-  padding: 10px;
+  padding: var(--space-sm);
   margin: 0 10px 10px 0;
   box-shadow: 0 2px 1px #00000024;
   border-radius: var(--radius-sm);
@@ -96,7 +96,7 @@
   font-weight: bold;
   display: block;
   margin: 0;
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
 }
 #batchManagerGlobal a.removeFilter {
   color: #aaa;
@@ -132,7 +132,7 @@
 }
 
 #batchManagerGlobal #duplicates_options label {
-  margin-left: 10px;
+  margin-left: var(--space-sm);
 }
 
 #batchManagerGlobal .thumbnails span.icon-check,
@@ -156,7 +156,7 @@
   text-align: center;
   font-weight: 600;
   padding: 27px 0;
-  margin-bottom: 30px;
+  margin-bottom: var(--space-xl);
   display: none;
 }
 
@@ -166,7 +166,7 @@
 
 .filterActions #addFilter {
   position: relative;
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 }
 
 .addFilter-dropdown {
@@ -187,7 +187,7 @@
   text-align: initial;
   padding: 5px 10px;
   font-size: var(--font-size-xs);
-  padding-right: 15px;
+  padding-right: var(--space-md);
   color: #fff;
   font-weight: 600;
   cursor: pointer;
@@ -222,7 +222,7 @@
   max-height: 400px;
   height: 100%;
   width: 500px;
-  gap: 20px;
+  gap: var(--space-lg);
 }
 
 .quick-search-content {
@@ -230,11 +230,11 @@
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-lg);
 }
 
 .quick-search-header {
-  padding-top: 5px;
+  padding-top: var(--space-xs);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -248,7 +248,7 @@
 } /* can't delete the first field */
 #order_filters span.filter {
   display: block;
-  margin-left: 20px;
+  margin-left: var(--space-lg);
 }
 #order_filters .transparent {
   opacity: 0.5;
@@ -257,7 +257,7 @@
   display: block;
   font-weight: normal;
   font-style: italic;
-  margin-left: 20px;
+  margin-left: var(--space-lg);
 }
 
 
@@ -290,12 +290,12 @@ ul.thumbnails span.wrap2 {
 }
 
 #regenerationStatus {
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 
 #batchManagerGlobal .big-progressbar {
   max-width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 
 /* Relocated from pages/user-list.css — utility class used by

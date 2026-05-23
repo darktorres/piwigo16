@@ -14,10 +14,10 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  margin-left: 20px;
+  margin-left: var(--space-lg);
   max-width: calc(100% - 530px);
   overflow: hidden;
-  padding: 10px;
+  padding: var(--space-sm);
 }
 
 .tag-header #search-tag {
@@ -57,7 +57,7 @@
 
 .tag-header #add-tag.input-mode .add-tag-container input {
   padding: 9px;
-  margin-left: 10px;
+  margin-left: var(--space-sm);
   border: solid 2px #ffa744;
   background: none;
   width: 100px;
@@ -118,14 +118,14 @@
 }
 
 .tag-header .selection-controller p {
-  margin-right: 10px;
+  margin-right: var(--space-sm);
   color: var(--admin-text);
 }
 
 .tag-header .selection-controller a,
 .comments-selection-controller .comments-selection-btn {
   background-color: #f0f0f0;
-  padding: 10px;
+  padding: var(--space-sm);
   color: #777;
   font-weight: bold;
   margin: 4px;
@@ -326,7 +326,7 @@
 
 .tag-selection .tag-selection-content {
   margin-top: 90px;
-  padding: 5px;
+  padding: var(--space-xs);
 }
 
 .tag-selection .tag-selection-content .selection-mode-tag {
@@ -334,7 +334,7 @@
 }
 
 .selection-mode-tag .tag-list {
-  margin: 10px;
+  margin: var(--space-sm);
   text-align: start;
   font-weight: 700;
   font-size: var(--font-size-base);
@@ -353,7 +353,7 @@
 
 .selection-mode-tag .tag-list div {
   display: flex;
-  margin: 10px;
+  margin: var(--space-sm);
   text-align: start;
 }
 
@@ -393,7 +393,7 @@
 .tag-pagination {
   margin: 0 20px;
   display: flex;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
   margin-right: 223px;
   padding: 0 15px;
   justify-content: space-between;
@@ -420,7 +420,7 @@
 }
 
 .AddIconContainer {
-  margin-top: 5px;
+  margin-top: var(--space-xs);
 }
 
 .RenameTagPopIn {
@@ -442,7 +442,7 @@
   top: 50%;
   transform: translate(-50%, -48%);
   text-align: left;
-  padding: 20px;
+  padding: var(--space-lg);
   flex-direction: column;
   border-radius: var(--radius-lg);
   align-items: center;
@@ -459,7 +459,7 @@
 
 .AddIcon {
   border-radius: 9999px;
-  padding: 10px;
+  padding: var(--space-sm);
   font-size: 2em;
 }
 .AddIconTitle {
@@ -467,8 +467,8 @@
   font-weight: bold;
   text-align: center;
   color: #000;
-  margin-bottom: 10px;
-  margin-top: 15px;
+  margin-bottom: var(--space-sm);
+  margin-top: var(--space-md);
 }
 
 .RenameTagInputContainer {
@@ -478,7 +478,7 @@
   color: #a4a4a4;
   font-weight: bold;
   font-size: 1.1em;
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
 }
 .tag-property-input {
   width: 100%;
@@ -491,7 +491,7 @@
 .TagErrors {
   visibility: hidden;
   width: 100%;
-  padding: 5px;
+  padding: var(--space-xs);
   border-left: solid 3px #f00;
 }
 
@@ -544,7 +544,7 @@
 }
 
 #MergeOptionsBlock p {
-  margin: 20px;
+  margin: var(--space-lg);
   font-weight: 700;
   font-size: var(--font-size-sm);
 }

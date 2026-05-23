@@ -19,16 +19,16 @@
 }
 .sizeDetails {
   display: none;
-  margin-left: 10px;
+  margin-left: var(--space-sm);
 }
 .sizeDetails-row {
   margin: 10px 0 0;
 }
 .sizeEditOpen {
-  margin-left: 10px;
+  margin-left: var(--space-sm);
 }
 .watermark-position-custom-label {
   display: block;
-  margin-top: 10px;
+  margin-top: var(--space-sm);
   font-weight: normal;
 }

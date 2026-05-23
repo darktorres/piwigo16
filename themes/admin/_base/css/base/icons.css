@@ -46,7 +46,7 @@ input[type="reset"]:hover {
 }
 
 #cboxLoadedContent input[type="submit"] {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
   float: none;
 }
 
@@ -57,10 +57,10 @@ input[type="reset"]:hover {
 #permissions {
   display: none !important /* keep: JS-toggled visibility */;
   margin-top: 35px;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 #uploadForm fieldset:last-child {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 .originalPicture .info-framed {
@@ -72,7 +72,7 @@ input[type="reset"]:hover {
 }
 .selectAlbumSelector {
   display: flex;
-  gap: 5px;
+  gap: var(--space-xs);
 }
 .icon-plus.cboxElement {
   padding: 8px;
@@ -85,11 +85,11 @@ input[type="reset"]:hover {
   box-shadow: 0 2px 4px rgb(0, 0, 0, 0.16);
 }
 #albumSelection {
-  margin-right: 20px;
+  margin-right: var(--space-lg);
 }
 .buttonLike {
   padding: 8px 10px;
-  margin-left: 5px;
+  margin-left: var(--space-xs);
 }
 .changeUsername .buttonLike {
   padding: 1px 10px;
@@ -99,10 +99,10 @@ input[type="reset"]:hover {
 }
 .selectFilesButtonBlock {
   display: flex;
-  margin-top: 10px;
+  margin-top: var(--space-sm);
 }
 .selectFilesinfo {
-  margin-left: 15px;
+  margin-left: var(--space-md);
   font-size: 90%;
   color: #999;
   display: flex;
@@ -158,7 +158,7 @@ li.plupload_delete a:hover {
 .icon-th-large,
 .icon-th-list,
 .icon-pause {
-  padding: 10px;
+  padding: var(--space-sm);
   font-size: 19px;
   transition: 0.3s;
 }

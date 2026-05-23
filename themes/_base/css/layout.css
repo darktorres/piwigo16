@@ -170,7 +170,7 @@ fieldset.tagLetter {
   border: 1px solid #d3d3d3;
   width: 200px;
   margin: 0.5em;
-  padding: 10px;
+  padding: var(--space-sm);
 }
 
 legend.tagLetterLegend {

@@ -19,13 +19,13 @@ table.qsearch_help_table q::after {
 }
 table.qsearch_help_table td {
   border: 1px solid #ccc;
-  padding: 5px;
+  padding: var(--space-xs);
   vertical-align: top;
 }
 
 .font-checkbox [class*="icon-check"]::before {
   line-height: 16px;
-  margin-right: 5px;
+  margin-right: var(--space-xs);
   margin-left: 0;
   font-size: 145%;
 }

@@ -150,7 +150,7 @@ input:checked + .slider.small::after {
 
 #nothing-selected {
   display: block;
-  margin: 10px;
+  margin: var(--space-sm);
 }
 
 .SelectionModeGroup {
@@ -164,7 +164,7 @@ input:checked + .slider.small::after {
 }
 
 .SelectionModeGroupList div {
-  margin: 10px;
+  margin: var(--space-sm);
   text-align: start;
 }
 
@@ -211,12 +211,12 @@ input:checked + .slider.small::after {
 #ConfirmGroupAction {
   font-size: var(--font-size-xs);
   font-weight: 700;
-  padding: 20px;
+  padding: var(--space-lg);
   display: none;
 }
 
 #ConfirmGroupAction p {
-  margin: 20px;
+  margin: var(--space-lg);
   font-weight: 700;
   font-size: var(--font-size-sm);
 }

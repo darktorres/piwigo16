@@ -26,7 +26,7 @@
   position: absolute;
   top: 10px;
   right: 0;
-  padding: 5px;
+  padding: var(--space-xs);
   cursor: pointer;
 }
 
@@ -202,7 +202,7 @@
   font-size: 19px;
   width: 27px;
   height: 27px;
-  padding: 10px;
+  padding: var(--space-sm);
   border-radius: 30px;
   margin: 10px auto;
 }
@@ -237,15 +237,15 @@
 }
 
 .addGroupFormLabelAndInput {
-  margin: 10px;
+  margin: var(--space-sm);
   text-align: center;
   margin-top: 18px;
   position: relative;
 }
 
 .groups fieldset input[type="text"] {
-  margin: 10px;
-  padding: 10px;
+  margin: var(--space-sm);
+  padding: var(--space-sm);
   display: inline-block;
   width: 159px;
 }
@@ -286,7 +286,7 @@
 }
 
 .manage-permissions {
-  margin-bottom: 15px;
+  margin-bottom: var(--space-md);
 }
 
 .groups .manage-users,

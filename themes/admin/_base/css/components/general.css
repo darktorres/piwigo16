@@ -25,13 +25,13 @@ or
 .head-button-1,
 .head-button-2 {
   position: relative;
-  padding: 10px;
+  padding: var(--space-sm);
   border-radius: var(--radius-sm);
   font-weight: bold;
   display: flex;
   align-items: baseline;
   cursor: pointer;
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 }
 
 .head-button-1:active,
@@ -92,7 +92,7 @@ Advanced filter
   z-index: 2;
   position: relative;
   cursor: pointer;
-  padding: 10px;
+  padding: var(--space-sm);
   text-align: center;
   font-weight: bold;
   background-color: var(--admin-filter-bg);
@@ -116,7 +116,7 @@ Advanced filter
 
 .advanced-filter {
   display: none;
-  padding: 15px;
+  padding: var(--space-md);
   font-size: 1em;
   flex-direction: column;
 
@@ -130,7 +130,7 @@ Advanced filter
 .advanced-filter-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 
 .advanced-filter-title {
@@ -154,13 +154,13 @@ Advanced filter
 }
 
 .advanced-filter-item:not(:last-child) {
-  margin-right: 30px;
+  margin-right: var(--space-xl);
 }
 
 .advanced-filter-item-label {
   text-align: left;
   display: flex;
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
 
   color: var(--admin-filter-text);
 }
@@ -173,7 +173,7 @@ Advanced filter
 
 /* Set Margin if the last element is a slider */
 .advanced-filter-item:last-child .advanced-filter-item-container .slider-bar-wrapper {
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 }
 
 /* -------------
@@ -225,7 +225,7 @@ Info Framed
 .info-framed {
   display: flex;
   border: var(--admin-border) solid 2px;
-  padding: 20px;
+  padding: var(--space-lg);
   border-radius: var(--radius-sm);
   margin: 0 10px;
   align-items: center;
@@ -238,7 +238,7 @@ a.info-framed:hover {
 
 .info-framed-icon {
   font-size: 34px;
-  margin-right: 20px;
+  margin-right: var(--space-lg);
   display: flex;
   color: var(--admin-text);
 }
@@ -281,7 +281,7 @@ Info
   display: flex;
   padding: 0 10px 0 0;
   font-weight: bold;
-  margin-left: 10px;
+  margin-left: var(--space-sm);
 }
 
 .info.hide {

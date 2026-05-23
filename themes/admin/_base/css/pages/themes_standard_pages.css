@@ -8,7 +8,7 @@
 .std_pgs_previews {
   display: flex;
   flex-direction: row;
-  margin-top: 15px;
+  margin-top: var(--space-md);
 }
 
 .std_pgs_mini_previews {
@@ -28,7 +28,7 @@
   text-align: center;
   display: flex;
   width: 85%;
-  margin-left: 15px;
+  margin-left: var(--space-md);
   align-items: center;
 }
 
@@ -58,8 +58,8 @@
 #use_existing_logo,
 .use_existing_logo_container,
 .change_logo_container {
-  margin-left: 30px;
-  margin-bottom: 5px;
+  margin-left: var(--space-xl);
+  margin-bottom: var(--space-xs);
 }
 
 .custom_logo_preview.show {
@@ -99,6 +99,6 @@
 }
 
 .skin_choice {
-  padding-top: 30px;
+  padding-top: var(--space-xl);
 }
 

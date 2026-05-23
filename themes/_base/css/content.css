@@ -32,7 +32,7 @@
 }
 
 #menubar .badge {
-  margin-left: 5px;
+  margin-left: var(--space-xs);
 }
 
 .badge::before {
@@ -83,7 +83,7 @@
   font-weight: 600;
 }
 .mcs-side-results.search-in-set-button a::before {
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 }
 .mcs-side-results.search-in-set-button a:hover {
   color: #777;
@@ -94,7 +94,7 @@
 .mcs-side-results {
   display: flex;
   flex-direction: row;
-  gap: 5px;
+  gap: var(--space-xs);
 }
 
 .mcs-side-results > div {
@@ -107,7 +107,7 @@
   display: flex;
   align-items: center;
   cursor: pointer;
-  margin-right: 15px;
+  margin-right: var(--space-md);
   color: #ccc;
   width: fit-content;
 }
@@ -131,7 +131,7 @@
   border-radius: 25px;
   font-weight: 700;
   color: #fafafa;
-  margin-left: 5px;
+  margin-left: var(--space-xs);
   padding: 2px 5px !important; /* keep: overrides .mcs-side-results > div padding */
   font-size: 10px;
   background: #777;
@@ -141,13 +141,13 @@
   display: flex;
   align-items: start;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
   padding: 0 15px;
 }
 
 h3.related-tags-title {
   margin: 4px 0;
-  margin-right: 10px;
+  margin-right: var(--space-sm);
   font-weight: 400;
 }
 

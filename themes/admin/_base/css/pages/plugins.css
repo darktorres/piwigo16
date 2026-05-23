@@ -7,14 +7,14 @@
   text-align: left;
   clear: none;
   flex-direction: column;
-  margin-bottom: 15px;
+  margin-bottom: var(--space-md);
 }
 
 .sort-actions {
   display: flex;
   align-items: center;
   justify-content: end;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
   position: relative;
 }
 
@@ -32,7 +32,7 @@
   color: #777;
   font-weight: bold;
   font-size: 1.1em;
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 }
 
 .sort-by select {
@@ -64,7 +64,7 @@
 
 .revision-date {
   color: #f70;
-  margin-left: 5px;
+  margin-left: var(--space-xs);
 }
 
 .advanced-filter-revision-date .advanced-filter-item-label {
@@ -129,7 +129,7 @@
 
 .pluginBigBox .pluginInfo,
 .pluginBigBox .pluginMoreInfo {
-  margin-left: 15px;
+  margin-left: var(--space-md);
   height: 180px;
   overflow: hidden;
 }
@@ -146,7 +146,7 @@
 }
 
 .rating-star-container {
-  margin-right: 5px;
+  margin-right: var(--space-xs);
   display: flex;
 }
 
@@ -182,7 +182,7 @@
 }
 
 .advanced-filter-certification .advanced-filter-item-label span {
-  margin-left: 5px;
+  margin-left: var(--space-xs);
   height: 19px;
 }
 
@@ -214,14 +214,14 @@
 
 .buttonInstall {
   margin-left: 0;
-  margin-right: 5px;
+  margin-right: var(--space-xs);
 }
 
 .autoupdate_bar {
   display: flex;
   align-items: center;
-  margin-left: 20px;
-  margin-bottom: 10px;
+  margin-left: var(--space-lg);
+  margin-bottom: var(--space-sm);
 }
 
 .plugin-version {
@@ -240,7 +240,7 @@
 .plugin-revision-info {
   display: inline-grid;
   max-width: 40%;
-  margin-left: 5px;
+  margin-left: var(--space-xs);
 }
 
 .plugin-revision-info span {
@@ -249,7 +249,7 @@
 }
 
 .plugin-update-link {
-  margin-left: 5px;
+  margin-left: var(--space-xs);
 }
 
 .pluginImage .screenshot {
@@ -272,7 +272,7 @@
   width: 100%;
   text-align: left;
   background-color: #fafafa;
-  padding: 15px;
+  padding: var(--space-md);
   position: relative;
   border-left: solid 5px #ffc17e;
   border-top-right-radius: var(--radius-sm);
@@ -298,7 +298,7 @@
 }
 
 .pluginMoreInfo {
-  margin-left: 15px;
+  margin-left: var(--space-md);
   position: relative;
 }
 
@@ -340,19 +340,19 @@
   background-color: #e0e0e0;
   border-radius: var(--radius-md);
   padding: 3px 10px;
-  margin-right: 5px;
-  margin-bottom: 5px;
+  margin-right: var(--space-xs);
+  margin-bottom: var(--space-xs);
   white-space: nowrap;
   margin-top: 4px;
 }
 
 .pluginActions a {
-  margin-top: 15px;
+  margin-top: var(--space-md);
   font-size: var(--font-size-xs);
 }
 
 .pluginUpdateContainer {
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
 }
 
 .pluginUpdateContainer legend {
@@ -395,7 +395,7 @@
 }
 
 .pluginActionLevel2 {
-  padding-left: 5px;
+  padding-left: var(--space-xs);
 }
 
 .pluginUnavailableAction {
@@ -487,7 +487,7 @@
   border-radius: var(--radius-xl);
   text-align: center;
   padding: 0 7px;
-  margin-left: 10px;
+  margin-left: var(--space-sm);
 }
 
 .tab-filters input:checked + label,
@@ -572,7 +572,7 @@
 .deactivate_all {
   font-size: 11px;
   margin-top: -5px;
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
   font-weight: bold;
   opacity: 0.6;
 }
@@ -593,7 +593,7 @@
   font-size: 18px;
 }
 .showInactivePluginsInfo > * {
-  margin: 5px;
+  margin: var(--space-xs);
 }
 .showInactivePlugins button {
   font-size: var(--font-size-lg);
@@ -608,7 +608,7 @@
   text-align: center;
   width: 200px;
   height: 40px;
-  margin: 5px;
+  margin: var(--space-xs);
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
@@ -747,7 +747,7 @@
   text-align: initial;
   padding: 5px 10px;
   font-size: var(--font-size-sm);
-  padding-right: 15px;
+  padding-right: var(--space-md);
   color: #fff;
   font-weight: bold;
   cursor: pointer;
@@ -767,7 +767,7 @@
   text-align: initial;
   padding: 5px 10px;
   font-size: var(--font-size-sm);
-  padding-right: 15px;
+  padding-right: var(--space-md);
   color: #fff;
   font-weight: bold;
   cursor: pointer;
@@ -825,7 +825,7 @@
 .RestorePluginSuccess label {
   background-color: #c2f5c2;
   color: #0a0;
-  padding: 10px;
+  padding: var(--space-sm);
   cursor: default;
   border-radius: 30px;
 }
@@ -837,7 +837,7 @@
 .PluginActionError label {
   background-color: #f5c2c2;
   color: rgb(170, 0, 0);
-  padding: 10px;
+  padding: var(--space-sm);
   cursor: default;
   border-radius: 30px;
 }
@@ -912,7 +912,7 @@
 
 .pluginContainer.classic-form .pluginName {
   position: relative;
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 }
 
 .pluginContainer.classic-form .switch {
@@ -960,15 +960,15 @@
   display: flex;
   align-items: flex-start;
   flex-direction: column;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 .cache-infos {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 .cache-infos a {
-  margin-left: 10px;
+  margin-left: var(--space-sm);
   font-size: var(--font-size-base);
 }
 
@@ -1000,11 +1000,11 @@
 }
 
 .multiple-compiledTemplate-sizes {
-  margin-left: 10px;
+  margin-left: var(--space-sm);
 }
 
 .multiple-pictures-sizes {
-  margin-left: 10px;
+  margin-left: var(--space-sm);
 }
 
 /* Tables & forms */
@@ -1084,5 +1084,5 @@ legend span {
    (line 18: <p id="up_to_date">), which loads pages/plugins.css. */
 #up_to_date {
   text-align: left;
-  margin-left: 20px;
+  margin-left: var(--space-lg);
 }

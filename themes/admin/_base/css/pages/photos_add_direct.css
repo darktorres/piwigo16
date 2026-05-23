@@ -16,11 +16,11 @@
 }
 
 #uploadBoxes .file {
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
   text-align: left;
 }
 #uploadBoxes {
-  margin-top: 20px;
+  margin-top: var(--space-lg);
 }
 #addUploadBox {
   margin-bottom: 2em;
@@ -79,7 +79,7 @@ a#showPermissions:hover {
   margin-right: 0.5em;
 }
 #uploadForm #addFiles {
-  margin-right: 10px;
+  margin-right: var(--space-sm);
   float: left;
   height: 45.6px;
 }
@@ -89,7 +89,7 @@ a#showPermissions:hover {
 #uploadForm .big-progressbar {
   vertical-align: middle;
   display: inline-block;
-  margin-left: 10px;
+  margin-left: var(--space-sm);
 }
 
 .big-progressbar {
@@ -149,8 +149,8 @@ a#showPermissions:hover {
   height: 120px;
 }
 #photosAddContent .Addedphotos a {
-  margin-right: 5px;
-  margin-bottom: 5px;
+  margin-right: var(--space-xs);
+  margin-bottom: var(--space-xs);
   display: flex;
 }
 #photosAddContent .Addedphotos .format-ext-name {
@@ -169,7 +169,7 @@ a#showPermissions:hover {
   font-size: var(--font-size-lg);
   font-weight: bold;
   text-transform: uppercase;
-  padding: 5px;
+  padding: var(--space-xs);
 }
 
 .addAlbumEmpty {
@@ -188,7 +188,7 @@ a#showPermissions:hover {
 .addAlbumEmptyInfos {
   font-size: var(--font-size-md);
   margin-bottom: 25px;
-  margin-top: 5px;
+  margin-top: var(--space-xs);
 }
 .addAlbumEmpty a {
   display: inline-block;
@@ -205,7 +205,7 @@ a#showPermissions:hover {
 #cboxLoadedContent {
   background-color: var(--admin-bg-elevated);
   height: auto;
-  padding: 20px;
+  padding: var(--space-lg);
 }
 .buttonSeparator {
   color: var(--admin-text);
@@ -229,20 +229,20 @@ a#showPermissions:hover {
   display: none;
 }
 .popinField {
-  margin-top: 30px;
+  margin-top: var(--space-xl);
 }
 .popinField.addAlbumFormParent {
   margin-top: 0;
 }
 .popinFieldLabel {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
 }
 .selectedAlbum {
-  margin-left: 5px;
+  margin-left: var(--space-xs);
   display: flex;
   align-items: baseline;
-  gap: 5px;
+  gap: var(--space-xs);
 }
 .selectedAlbum #selectedAlbumName,
 .selectedAlbum #selectedAlbumNameFilter {
@@ -259,7 +259,7 @@ a#showPermissions:hover {
 }
 
 .selectedAlbum#selectedAlbumFilter {
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
   align-items: center;
 }
 
@@ -349,7 +349,7 @@ li.plupload_delete a:hover span {
 }
 #checkActions a {
   background-color: #f0f0f0;
-  padding: 10px;
+  padding: var(--space-sm);
   color: #777;
   font-weight: bold;
   margin: 4px;
@@ -367,12 +367,12 @@ li.plupload_delete a:hover span {
 #filterList select {
   display: block;
   padding: 10px 18px;
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
   width: 290px;
 }
 #filterList li {
   margin-left: 25px;
-  margin-bottom: 15px;
+  margin-bottom: var(--space-md);
 }
 #applyFilter,
 .addFilter-button {
@@ -393,7 +393,7 @@ li.plupload_delete a:hover span {
   color: #3c3c3c;
 }
 #removeFilters {
-  margin-top: 20px;
+  margin-top: var(--space-lg);
   margin-left: 13px;
 }
 .filter_search_input {
@@ -416,30 +416,30 @@ li.plupload_delete a:hover span {
   margin-bottom: 25px;
 }
 .permitActionItem {
-  margin-left: 30px;
+  margin-left: var(--space-xl);
   width: 225px;
 }
 #action_move {
   display: flex;
 }
 #action_move a:last-child {
-  margin-left: 15px;
-  padding: 10px;
+  margin-left: var(--space-md);
+  padding: var(--space-sm);
 }
 #action_associate .head-button-2 {
   width: fit-content;
 }
 #action_associate .head-button-2 p {
-  margin-left: 5px;
+  margin-left: var(--space-xs);
   background: transparent;
 }
 .deleteDerivButtons a {
   border-radius: 4px;
   padding: 4px 10px;
-  margin: 5px;
+  margin: var(--space-xs);
 }
 .deleteDerivButtons {
-  margin-bottom: 15px;
+  margin-bottom: var(--space-md);
   margin-right: 51px;
   width: 100%;
   text-align: center;
@@ -475,7 +475,7 @@ li.plupload_delete a:hover span {
 }
 .pictureLevels::before {
   margin-left: 216px;
-  margin-top: 10px;
+  margin-top: var(--space-sm);
 }
 .permitActionListButton div.hidden::after {
   display: none;
@@ -485,7 +485,7 @@ li.plupload_delete a:hover span {
   right: 10px;
 }
 .user-property-select-container::before {
-  margin-top: 10px;
+  margin-top: var(--space-sm);
   margin-left: 270px;
 }
 #filter_prefilter::before {
@@ -546,7 +546,7 @@ li.plupload_delete a:hover span {
   border: 1px solid var(--admin-input-border);
 }
 #set_date_creation {
-  margin-top: 5px;
+  margin-top: var(--space-xs);
   margin-left: -2px;
 }
 #action_title .large,
@@ -565,7 +565,7 @@ li.plupload_delete a:hover span {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;
-  margin-left: 30px;
+  margin-left: var(--space-xl);
 }
 #batchManagerGlobal ul.thumbnails .actions .icon-plus.cboxElement {
   background-color: transparent;
@@ -673,7 +673,7 @@ li.plupload_delete a:hover span {
   width: 300px;
   border-radius: var(--radius-lg);
   height: 8px;
-  margin-top: 5px;
+  margin-top: var(--space-xs);
   background-size: cover;
   background-repeat: no-repeat;
   background-color: #f5f5f5;
@@ -685,10 +685,10 @@ li.plupload_delete a:hover span {
   display: flex;
 }
 #progressBar_pbText {
-  margin-left: 15px;
+  margin-left: var(--space-md);
 }
 #filter_search .icon-help-circled::before {
-  margin-right: 5px;
+  margin-right: var(--space-xs);
   color: #777;
 }
 .dimensionSlidersBlocks {
@@ -702,10 +702,10 @@ li.plupload_delete a:hover span {
   justify-content: space-between;
 }
 .dimensionSlidersTitleButtons {
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
 }
 .dimensionSlidersRatioButtons {
-  margin-bottom: 15px;
+  margin-bottom: var(--space-md);
 }
 #action_delete .errors {
   display: block;
@@ -724,12 +724,12 @@ li.plupload_delete a:hover span {
   width: 320px;
 }
 #associate_as {
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 .selected-associate-item {
   background-color: #fafafa;
   box-shadow: 0 2px #00000024;
-  margin-top: 5px;
+  margin-top: var(--space-xs);
   padding: 7px 10px;
   border-radius: var(--radius-sm);
   font-weight: bold;
@@ -766,7 +766,7 @@ li.plupload_delete a:hover span {
 
 .category_selection {
   min-height: 65px;
-  margin-top: 5px;
+  margin-top: var(--space-xs);
 }
 
 .category_selection table {
@@ -783,7 +783,7 @@ li.plupload_delete a:hover span {
 
 #photosAddContent th {
   text-align: right;
-  padding-right: 5px;
+  padding-right: var(--space-xs);
 }
 
 .selectFiles legend {
@@ -810,7 +810,7 @@ li.plupload_delete a:hover span {
   font-weight: normal;
   padding: 23px;
   width: 100%;
-  margin-top: 10px;
+  margin-top: var(--space-sm);
   box-sizing: border-box;
 }
 
@@ -855,7 +855,7 @@ li.plupload_delete a:hover span {
 }
 
 .plupload_file_name a {
-  margin-left: 5px;
+  margin-left: var(--space-xs);
   position: relative;
   bottom: 3px;
 }
@@ -865,7 +865,7 @@ li.plupload_delete a:hover span {
 }
 
 .update-warning {
-  margin-right: 5px;
+  margin-right: var(--space-xs);
   color: #ed5f59;
   text-decoration: underline;
 }
@@ -875,7 +875,7 @@ li.plupload_delete a:hover span {
 }
 
 li.plupload_delete a.remove-format {
-  margin-left: 5px;
+  margin-left: var(--space-xs);
   background: none !important; /* keep: removes inherited button background from these link-styled elements */
   color: #a4a4a4;
 }
@@ -892,7 +892,7 @@ li.plupload_delete a.remove-format:hover {
 } /* specific to this page, do not move in theme.css */
 
 .afterUploadActions {
-  margin: 10px;
+  margin: var(--space-sm);
 }
 .selectFiles legend > div:first-child {
   display: flex;
@@ -903,7 +903,7 @@ li.plupload_delete a.remove-format:hover {
 }
 #uploadingActions .big-progressbar {
   max-width: 98%;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 
 /* Relocated from pages/user-activity.css — "promote to Piwigo.org"
@@ -916,7 +916,7 @@ li.plupload_delete a.remove-format:hover {
   flex-direction: column;
   justify-content: flex-end;
 
-  padding: 15px;
+  padding: var(--space-md);
   margin: 0 20px 15px;
   border-radius: var(--radius-sm);
 
@@ -965,10 +965,10 @@ li.plupload_delete a.remove-format:hover {
   font-size: 35px;
 }
 .promote-text span:first-child {
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
 }
 .promote-text span:last-child {
-  margin-top: 5px;
+  margin-top: var(--space-xs);
 }
 
 .go-to-porg {
@@ -984,7 +984,7 @@ li.plupload_delete a.remove-format:hover {
 }
 
 .go-to-porg::before {
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 }
 .go-to-porg:hover {
   color: #3c3c3c;

@@ -15,7 +15,7 @@
 }
 
 .group-name-block {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 #UserList .group-name-block span,
@@ -28,7 +28,7 @@
   color: var(--admin-text);
   font-weight: 700;
   font-size: var(--font-size-base);
-  margin-left: 10px;
+  margin-left: var(--space-sm);
 }
 
 #UserList .group-name-block span {
@@ -45,7 +45,7 @@
   background-color: rgb(44, 132, 195);
   color: #cde9fd;
   font-size: 10px;
-  margin-left: 10px;
+  margin-left: var(--space-sm);
   font-weight: 700;
 }
 
@@ -55,7 +55,7 @@
 
 #UserList .AddUserBlock {
   padding: 10px 0;
-  margin-bottom: 30px;
+  margin-bottom: var(--space-xl);
   display: flex;
   align-items: center;
 }
@@ -137,7 +137,7 @@
 
 #UserList .FilterUserBlock p {
   font-size: var(--font-size-base);
-  margin-right: 5px;
+  margin-right: var(--space-xs);
 }
 
 .UsersInGroupList {
@@ -211,7 +211,7 @@
   border-top-right-radius: var(--radius-md);
   border-bottom-right-radius: var(--radius-md);
   margin-left: -5px;
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 }
 
 .ValidationUserAssociated p {
@@ -302,7 +302,7 @@ a.group_users {
 .userPropertiesSet {
   width: 350px;
   float: left;
-  padding-top: 5px;
+  padding-top: var(--space-xs);
 }
 .userPropertiesSetTitle {
   font-weight: bold;
@@ -310,12 +310,12 @@ a.group_users {
 }
 .userPrefs {
   border-left: 1px solid #ddd;
-  padding-left: 10px;
+  padding-left: var(--space-sm);
 }
 .userProperty {
   width: 340px;
   float: left;
-  margin-bottom: 15px;
+  margin-bottom: var(--space-md);
 }
 .userActions {
   float: right;
@@ -325,7 +325,7 @@ a.group_users {
 .user_form_popin {
   width: 750px;
   height: 450px;
-  padding: 20px;
+  padding: var(--space-lg);
 }
 
 .userProperties form {
@@ -393,7 +393,7 @@ a.group_users {
   background-color: #ffd9a7;
   font-weight: bold;
   border-radius: var(--radius-md);
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 .user-container.container-selected .user-groups,
@@ -428,7 +428,7 @@ a.group_users {
   color: #a4a4a4;
   font-weight: bold;
   font-size: 1.1em;
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
 }
 
 .user-property-input[type="text"] {
@@ -503,7 +503,7 @@ a.group_users {
 
 #the_king {
   color: #f4ab4f;
-  margin-left: 5px;
+  margin-left: var(--space-xs);
 }
 
 .can-change:hover {
@@ -518,7 +518,7 @@ a.group_users {
 
 .user-selection-content {
   margin-top: 90px;
-  padding: 5px;
+  padding: var(--space-xs);
 }
 
 #user-table #selection-mode-block {
@@ -530,7 +530,7 @@ a.group_users {
 }
 
 #forbidAction {
-  padding: 5px;
+  padding: var(--space-xs);
 }
 /* user header */
 
@@ -539,7 +539,7 @@ a.group_users {
   flex-wrap: nowrap;
   align-items: center;
   overflow: hidden;
-  padding-bottom: 10px;
+  padding-bottom: var(--space-sm);
 }
 
 #AddUserSuccess {
@@ -554,14 +554,14 @@ a.group_users {
   background-color: #c2f5c2;
   border-left: 2px solid #0f0;
   color: #0a0;
-  padding: 10px;
+  padding: var(--space-sm);
   cursor: default;
 }
 
 #AddUserSuccess .edit-now {
   color: #3a3a3a;
   cursor: pointer;
-  margin-left: 10px;
+  margin-left: var(--space-sm);
 }
 
 .user-header-button {
@@ -590,8 +590,8 @@ a.group_users {
 
 /* User Table */
 #user-table {
-  margin-left: 30px;
-  margin-top: 30px;
+  margin-left: var(--space-xl);
+  margin-top: var(--space-xl);
   display: flex;
   flex-wrap: nowrap;
   min-height: calc(100vh - 216px);
@@ -604,7 +604,7 @@ a.group_users {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  margin-right: 30px;
+  margin-right: var(--space-xl);
 }
 
 .user-container-header {
@@ -612,7 +612,7 @@ a.group_users {
   text-align: left;
   font-size: 1.1em;
   font-weight: bold;
-  margin-top: 20px;
+  margin-top: var(--space-lg);
   color: #9e9e9e;
 }
 
@@ -629,7 +629,7 @@ a.group_users {
 
   font-weight: bold;
   border-radius: var(--radius-md);
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
   transition: background-color 500ms linear;
   box-shadow: 0 2px 2px #00000024;
 }
@@ -663,7 +663,7 @@ a.group_users {
   overflow: hidden;
   text-overflow: ellipsis;
 
-  padding-right: 10px;
+  padding-right: var(--space-sm);
 }
 
 .user-container-username span {
@@ -682,7 +682,7 @@ a.group_users {
 .user-container-email {
   width: 20%;
   max-width: 220px;
-  margin-right: 20px;
+  margin-right: var(--space-lg);
 }
 .user-container-email span {
   overflow: hidden;
@@ -769,12 +769,12 @@ a.group_users {
 }
 
 .user-container-initials-wrapper {
-  padding-left: 10px;
+  padding-left: var(--space-sm);
 }
 
 .user-container-initials-wrapper > span {
   border-radius: 50%;
-  padding: 5px;
+  padding: var(--space-xs);
   width: 30px;
   height: 30px;
   display: inline-block;
@@ -797,11 +797,11 @@ a.group_users {
 
 .registration-clock {
   background: #e3e5e5;
-  padding: 5px;
+  padding: var(--space-xs);
   width: 50%;
   height: 50%;
   border-radius: 30px;
-  margin-right: 5px;
+  margin-right: var(--space-xs);
   font-size: 1.5em;
 }
 
@@ -811,7 +811,7 @@ a.group_users {
 }
 
 .user-groups {
-  margin-right: 5px;
+  margin-right: var(--space-xs);
   border-radius: 9999px;
   padding: 10px 15px;
 }
@@ -852,7 +852,7 @@ a.group_users {
   top: 50%;
   transform: translate(-50%, -48%);
   text-align: left;
-  padding: 30px;
+  padding: var(--space-xl);
   display: flex;
   width: 745px;
   height: 630px;
@@ -875,13 +875,13 @@ a.group_users {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-right: 30px;
+  padding-right: var(--space-xl);
 }
 
 .edit-user-tab,
 .guest-edit-user-tab {
   width: 65%;
-  padding-left: 30px;
+  padding-left: var(--space-xl);
   overflow-x: auto;
   display: flex;
   flex-direction: column;
@@ -914,21 +914,21 @@ a.group_users {
   transition: transform 0.5s;
   position: relative;
   width: 100%;
-  margin-right: 5px;
-  margin-top: 20px;
+  margin-right: var(--space-xs);
+  margin-top: var(--space-lg);
 }
 
 .UserListPopInContainer .update-container,
 .GuestUserListPopInContainer .update-container {
   display: flex;
   justify-content: space-between;
-  padding-top: 20px;
+  padding-top: var(--space-lg);
 }
 
 /* general pop in rules */
 .user-property-column-title {
   font-weight: bold;
-  margin-bottom: 15px;
+  margin-bottom: var(--space-md);
   font-size: 1.4em;
 }
 
@@ -939,7 +939,7 @@ a.group_users {
 .edit-user-tab-title {
   display: flex;
   /* justify-content: space-between; */
-  gap: 30px;
+  gap: var(--space-xl);
   font-weight: bold;
   font-size: var(--font-size-md);
 }
@@ -953,7 +953,7 @@ a.group_users {
 
 .edit-user-tab-title .edit-user-tabsheet,
 .guest-edit-user-tab-title .guest-edit-user-tabsheet {
-  padding-bottom: 5px;
+  padding-bottom: var(--space-xs);
   margin: 0;
   border-bottom: solid 4px transparent;
   transition: border-bottom 0.4s;
@@ -1066,13 +1066,13 @@ a.group_users {
 .dates-infos {
   color: #ffa646;
   font-weight: bold;
-  margin-left: 5px;
+  margin-left: var(--space-xs);
 }
 
 .user-property-input-icon {
   display: flex;
   align-items: center;
-  padding: 5px;
+  padding: var(--space-xs);
   color: #353535;
   background-color: #f3f3f3;
 }
@@ -1105,7 +1105,7 @@ a.group_users {
   background-color: #f3f3f3;
   margin-top: 0;
   font-size: 1.1em;
-  margin-bottom: 15px;
+  margin-bottom: var(--space-md);
   border: none;
   margin-right: 0;
   font-weight: normal;
@@ -1127,12 +1127,12 @@ a.group_users {
   appearance: none;
   border: none;
   width: 100%;
-  padding: 10px;
+  padding: var(--space-sm);
   font-size: 1.1em;
 }
 
 .user-property-select-container::before {
-  margin-top: 10px;
+  margin-top: var(--space-sm);
   margin-left: 418px;
 }
 
@@ -1149,7 +1149,7 @@ a.group_users {
 }
 
 .user-list-checkbox {
-  margin-bottom: 15px;
+  margin-bottom: var(--space-md);
   user-select: none;
 }
 
@@ -1158,15 +1158,15 @@ a.group_users {
 }
 
 .user-list-checkbox-label {
-  margin-left: 5px;
+  margin-left: var(--space-xs);
   vertical-align: top;
   font-size: var(--font-size-md);
   cursor: pointer;
 }
 
 #AddUser .user-list-checkbox {
-  margin-top: 5px;
-  margin-bottom: 5px;
+  margin-top: var(--space-xs);
+  margin-bottom: var(--space-xs);
   align-self: start;
 }
 
@@ -1190,16 +1190,16 @@ a.group_users {
 }
 
 .user-property-initials {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 .user-property-initials i {
-  margin-left: 5px;
+  margin-left: var(--space-xs);
 }
 
 .user-property-initials span {
   border-radius: 50%;
-  padding: 5px;
+  padding: var(--space-xs);
   width: 83px;
   height: 83px;
   display: inline-block;
@@ -1218,7 +1218,7 @@ a.group_users {
   margin-bottom: 45px;
   height: 30px;
   display: flex;
-  gap: 5px;
+  gap: var(--space-xs);
   max-width: 250px;
 }
 
@@ -1260,7 +1260,7 @@ a.group_users {
 
 .user-property-password .icon-edit-pass {
   margin-left: auto;
-  padding: 10px;
+  padding: var(--space-sm);
   background-color: #ffa744;
   color: #3c3c3c;
 }
@@ -1302,7 +1302,7 @@ a.group_users {
   display: block;
   text-align: center;
   margin-right: 0;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 .user-property-password-choice .edit-password-cancel {
@@ -1317,7 +1317,7 @@ a.group_users {
 }
 
 .edit-password-success {
-  padding-top: 30px;
+  padding-top: var(--space-xl);
 }
 
 .edit-password-success .edit-password-success-input,
@@ -1340,7 +1340,7 @@ a.group_users {
 
 .edit-password-success .edit-password-success-reset-link span,
 .AddUserPasswordInputContainer span {
-  padding: 5px;
+  padding: var(--space-xs);
   cursor: pointer;
 }
 
@@ -1361,34 +1361,34 @@ a.group_users {
 .update-password-success,
 .update-password-fail,
 .update-main-user-success {
-  padding: 10px;
+  padding: var(--space-sm);
   font-weight: bold;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 #result_send_mail {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
 }
 
 #edit_password_result_mail {
-  padding-top: 20px;
+  padding-top: var(--space-lg);
 }
 
 .update-username-success {
   display: flex;
-  padding: 10px;
+  padding: var(--space-sm);
   font-weight: bold;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
   align-items: center;
-  gap: 10px;
+  gap: var(--space-sm);
 }
 
 .edit-password-success-ok {
   align-self: center;
-  margin-top: 30px;
+  margin-top: var(--space-xl);
 }
 
 .edit-username-success-ok {
@@ -1434,7 +1434,7 @@ a.group_users {
 
 .EditUserGenPassword,
 .AddUserGenPassword {
-  margin-top: 15px;
+  margin-top: var(--space-md);
   font-size: 1.1em;
   cursor: pointer;
 }
@@ -1446,7 +1446,7 @@ a.group_users {
 
 .EditUserGenPassword span,
 .AddUserGenPassword span {
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 }
 
 .AddUserGenPassword span {
@@ -1494,7 +1494,7 @@ a.group_users {
 .user-property-password-container {
   display: flex;
   flex-direction: column;
-  margin-bottom: 30px;
+  margin-bottom: var(--space-xl);
   width: 100%;
 }
 
@@ -1543,7 +1543,7 @@ a.group_users {
   align-items: first baseline;
   text-align: center;
   margin-top: auto;
-  margin-bottom: 15px;
+  margin-bottom: var(--space-md);
   justify-content: space-between;
 }
 
@@ -1573,7 +1573,7 @@ a.group_users {
   top: 50%;
   transform: translate(-50%, -50%);
   text-align: left;
-  padding: 30px;
+  padding: var(--space-xl);
   border-radius: var(--radius-md);
   width: 300px;
   display: flex;
@@ -1584,7 +1584,7 @@ a.group_users {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: var(--space-xs);
 }
 
 .user-property-main-user-content-header .main-user-icon {
@@ -1648,7 +1648,7 @@ a.group_users {
 }
 
 .user-property-main-user-body .user-property-main-user-close {
-  margin-top: 10px;
+  margin-top: var(--space-sm);
   align-self: center;
 }
 
@@ -1668,7 +1668,7 @@ a.group_users {
 .properties-container .user-list-checkbox {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--space-xs);
 }
 
 .properties-container .select-checkbox {
@@ -1689,7 +1689,7 @@ a.group_users {
 .preferencies-container {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: var(--space-xl);
 }
 
 .preferencies-container p {
@@ -1699,7 +1699,7 @@ a.group_users {
 .preferences-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-sm);
 }
 
 .preferences-container .user-property-label.period-select-bar {
@@ -1709,7 +1709,7 @@ a.group_users {
 .user-group-checkbox {
   display: flex;
   flex-direction: column;
-  padding-top: 10px;
+  padding-top: var(--space-sm);
 }
 
 .nb-img-page-infos {
@@ -1730,7 +1730,7 @@ a.group_users {
 .edit-user-tabsheet-plugins {
   width: 435px;
   height: 480px;
-  margin-right: 15px;
+  margin-right: var(--space-md);
   margin-top: 29px;
 }
 /* update */
@@ -1773,7 +1773,7 @@ a.group_users {
 }
 
 .update-user-success {
-  padding: 10px;
+  padding: var(--space-sm);
   display: none;
 }
 
@@ -1807,7 +1807,7 @@ a.group_users {
   transform: translate(-50%, -48%);
   text-align: left;
   background-color: var(--admin-popin-bg);
-  padding: 30px;
+  padding: var(--space-xl);
   width: 745px;
   height: 635px;
   flex-direction: column;
@@ -1838,7 +1838,7 @@ a.group_users {
   top: 50%;
   transform: translate(-50%, -48%);
   text-align: left;
-  padding: 20px;
+  padding: var(--space-lg);
   flex-direction: column;
   border-radius: var(--radius-lg);
   align-items: center;
@@ -1883,20 +1883,20 @@ a.group_users {
 }
 
 .AddIconContainer {
-  margin-top: 10px;
+  margin-top: var(--space-sm);
 }
 
 .AddIcon {
   border-radius: 9999px;
-  padding: 10px;
+  padding: var(--space-sm);
   font-size: 2em;
 }
 
 .AddIconTitle {
   font-size: 1.4em;
   font-weight: bold;
-  margin-bottom: 20px;
-  margin-top: 15px;
+  margin-bottom: var(--space-lg);
+  margin-top: var(--space-md);
   text-align: center;
 }
 
@@ -1920,7 +1920,7 @@ a.group_users {
 
 .AddUserErrors {
   visibility: hidden;
-  padding: 5px;
+  padding: var(--space-xs);
   border-left: solid 3px #f00;
 }
 
@@ -1929,8 +1929,8 @@ a.group_users {
   font-weight: bold;
   color: #3f3e40;
   background-color: #ffa646;
-  padding: 10px;
-  margin-top: 5px;
+  padding: var(--space-sm);
+  margin-top: var(--space-xs);
   font-size: 1em;
   margin-bottom: 0;
 }
@@ -1947,7 +1947,7 @@ a.group_users {
 }
 
 .AddUserResult {
-  padding: 10px;
+  padding: var(--space-sm);
   text-align: start;
 }
 
@@ -2002,7 +2002,7 @@ a.group_users {
 
 .user-selected-item {
   display: flex;
-  margin: 10px;
+  margin: var(--space-sm);
   text-align: start;
 }
 
@@ -2030,7 +2030,7 @@ a.group_users {
 }
 
 .user-action-select[name="selectAction"] {
-  margin-bottom: 30px;
+  margin-bottom: var(--space-xl);
 }
 
 .search-icon {
@@ -2049,7 +2049,7 @@ Advanced filter
 .advanced-filter-btn {
   position: absolute;
   right: 650px;
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 
   display: flex;
   justify-content: center;
@@ -2068,14 +2068,14 @@ Advanced filter
 
 #advanced-filter-container {
   display: none;
-  padding: 15px;
+  padding: var(--space-md);
   font-size: 1em;
 }
 
 .advanced-filter-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 
 .advanced-filter-title {
@@ -2110,13 +2110,13 @@ Advanced filter
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding-right: 15px;
+  padding-right: var(--space-md);
 }
 
 .advanced-filter-label {
   text-align: left;
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
   white-space: nowrap;
 }
 
@@ -2147,7 +2147,7 @@ Advanced filter
 
 .yes_no_radio .user-list-checkbox .user-list-checkbox-label {
   margin-left: 0;
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 }
 
 #user-table #action {
@@ -2185,7 +2185,7 @@ Advanced filter
   display: flex;
   flex-flow: row wrap;
 
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 .tileView .user-container {
@@ -2285,8 +2285,8 @@ Advanced filter
 }
 
 .tileView .user-container-username {
-  margin-top: 10px;
-  margin-bottom: 5px;
+  margin-top: var(--space-sm);
+  margin-bottom: var(--space-xs);
   font-size: var(--font-size-sm);
   height: 15px;
   width: 140px;
@@ -2356,14 +2356,14 @@ Advanced filter
 .compactView .user-container-username {
   width: max-content;
   min-width: auto;
-  margin-right: 10px;
+  margin-right: var(--space-sm);
   padding-right: 0;
 }
 
 /* Line View */
 
 .lineView {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 .lineView .user-container-username {
@@ -2372,7 +2372,7 @@ Advanced filter
 
 .lineView .user-container.container-selected {
   height: 50px;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 
 .lineView .user-container-initials-wrapper > span {
@@ -2390,13 +2390,13 @@ Advanced filter
 }
 
 .lineView .group-primary {
-  margin-right: 15px;
+  margin-right: var(--space-md);
 }
 
 /* User Edit */
 
 .user-edit-icon {
-  margin-right: 5px;
+  margin-right: var(--space-xs);
 }
 
 /* Selection mode */
@@ -2434,8 +2434,8 @@ Advanced filter
   font-size: var(--font-size-md);
 }
 .tooltip-status-row {
-  margin-top: 10px;
-  margin-bottom: 20px;
+  margin-top: var(--space-sm);
+  margin-bottom: var(--space-lg);
   padding: 0 10px;
 }
 .tooltip-col1 {
@@ -2544,7 +2544,7 @@ Advanced filter
   display: inline-block;
   max-width: 100%;
   margin: 0;
-  margin-top: 30px;
+  margin-top: var(--space-xl);
   min-height: 0;
 }
 
@@ -2552,10 +2552,10 @@ Advanced filter
   margin-bottom: 35px;
 }
 .user-property-input-icon-mb-10 {
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 .user-property-input-icon-mb-5 {
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
 }
 .notifications-tab-wip {
   margin: 0;

@@ -6,9 +6,9 @@
 
 .calendarBar > .nav-prev {
   float: left;
-  margin-right: 5px;
+  margin-right: var(--space-xs);
 }
 .calendarBar > .nav-next {
   float: right;
-  margin-left: 5px;
+  margin-left: var(--space-xs);
 }

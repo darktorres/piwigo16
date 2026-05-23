@@ -2,15 +2,15 @@ form {
   width: 750px;
 }
 fieldset {
-  padding-bottom: 30px;
+  padding-bottom: var(--space-xl);
 }
 p,
 form p {
   text-align: left;
-  margin-left: 20px;
+  margin-left: var(--space-lg);
 }
 li {
-  margin: 5px;
+  margin: var(--space-xs);
 }
 
 .badge-release {
@@ -33,12 +33,12 @@ a.badge-release:hover {
 }
 
 .update-recommendation {
-  margin-top: 30px;
+  margin-top: var(--space-xl);
 }
 
 .goto-update-guide {
   background-color: #f0f0f0;
-  padding: 10px;
+  padding: var(--space-sm);
   font-weight: bold;
 }
 

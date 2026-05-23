@@ -1,5 +1,5 @@
 .who_option {
-  margin-top: 5px;
+  margin-top: var(--space-xs);
 }
 
 span.errors {

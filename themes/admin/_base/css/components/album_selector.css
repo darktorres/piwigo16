@@ -21,7 +21,7 @@
   top: 50%;
   transform: translate(-50%, -48%);
   text-align: left;
-  padding: 20px;
+  padding: var(--space-lg);
   flex-direction: column;
   border-radius: var(--radius-lg);
   align-items: center;
@@ -47,12 +47,12 @@
 }
 
 .linkedAlbumPopInContainer .AddIconContainer {
-  margin-top: 20px;
+  margin-top: var(--space-lg);
 }
 
 .linkedAlbumPopInContainer .AddIcon {
   border-radius: 9999px;
-  padding: 10px;
+  padding: var(--space-sm);
   font-size: 2em;
 }
 
@@ -60,8 +60,8 @@
   font-size: 1.4em;
   font-weight: bold;
   text-align: center;
-  margin-bottom: 10px;
-  margin-top: 15px;
+  margin-bottom: var(--space-sm);
+  margin-top: var(--space-md);
 }
 
 #linkedAlbumSearch .search-icon {
@@ -84,7 +84,7 @@
 }
 
 .linkedAlbumPopInContainer .searching {
-  margin-top: 10px;
+  margin-top: var(--space-sm);
 }
 
 .linkedAlbumPopInContainer #searchResult {
@@ -96,7 +96,7 @@
 
 .put-to-root {
   width: 220px;
-  margin-top: 5px;
+  margin-top: var(--space-xs);
 }
 .put-to-root p {
   margin: 0 auto;
@@ -224,7 +224,7 @@
   width: 100%;
   display: flex;
   flex-wrap: wrap;
-  margin-top: 5px;
+  margin-top: var(--space-xs);
   align-items: center;
   justify-content: space-between;
   height: 40px;
@@ -241,23 +241,23 @@
 }
 
 .linked-album-input-container.album-name {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 .linked-album-input-container .user-property-input,
 .linked-add-radio-input {
-  margin-top: 10px;
+  margin-top: var(--space-sm);
 }
 
 .linked-add-radio-input {
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 
 .linked-add-radio-input input {
-  margin-right: 5px;
+  margin-right: var(--space-xs);
 }
 
 .linked-add-radio-input label {
@@ -292,7 +292,7 @@
 #linkedAddAlbumErrors {
   margin: 0;
   text-align: start;
-  padding: 10px;
+  padding: var(--space-sm);
 }
 
 /* Relocated from pages/user-activity.css — .search-result-item is

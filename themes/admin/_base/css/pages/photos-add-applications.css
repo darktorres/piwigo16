@@ -6,7 +6,7 @@
 
 .applicationCard {
   max-width: 500px;
-  margin: 20px;
+  margin: var(--space-lg);
 
   display: flex;
   flex-direction: row;
@@ -15,7 +15,7 @@
 .applicationCard img {
   max-width: 210px;
   height: 175px;
-  margin: 20px;
+  margin: var(--space-lg);
 }
 
 .applicationCard .textSide {
@@ -28,13 +28,13 @@
   font-size: var(--font-size-base);
   font-weight: bold;
   margin: 20px 0 10px;
-  padding-right: 15px;
+  padding-right: var(--space-md);
   text-align: left;
 }
 
 .applicationCard .applicationDesc {
   text-align: left;
-  padding-right: 15px;
+  padding-right: var(--space-md);
 
   display: -webkit-box;
   -webkit-line-clamp: 6;
@@ -45,7 +45,7 @@
 .applicationCard .applicationLink {
   width: fit-content;
   margin-top: auto;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
   display: flex;
   justify-content: flex-start;
 }

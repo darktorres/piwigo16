@@ -10,7 +10,7 @@
 
 #imageHeaderBar .browsePath {
   float: left;
-  margin-left: 10px;
+  margin-left: var(--space-sm);
 }
 
 #imageToolBar .imageNumber {
@@ -52,8 +52,8 @@
 }
 
 .pdf-too-heavy {
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-lg);
 }
 
 .pdf-too-heavy a {

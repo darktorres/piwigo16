@@ -42,7 +42,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-right: 5px;
+  margin-right: var(--space-xs);
 }
 
 .tab-body-object p,
@@ -56,8 +56,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-right: 5px;
-  padding: 10px;
+  margin-right: var(--space-xs);
+  padding: var(--space-sm);
 }
 
 .tab-header p {
@@ -70,7 +70,7 @@
   min-height: 40px;
   align-content: center;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 
 .tab-body p {
@@ -79,7 +79,7 @@
 }
 
 .tab-body-object .icon_object {
-  margin-left: 10px;
+  margin-left: var(--space-sm);
   margin-right: 0.4em;
 }
 
@@ -103,7 +103,7 @@
   height: 30px;
   min-width: 30px;
   border-radius: 50%;
-  margin-right: 10px;
+  margin-right: var(--space-sm);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -126,7 +126,7 @@
   border-radius: 3px;
   padding: 4px;
   padding-right: 8px;
-  margin-right: 5px;
+  margin-right: var(--space-xs);
   font-weight: normal;
 }
 @media (min-width: 1350px) {

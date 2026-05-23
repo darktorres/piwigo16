@@ -35,7 +35,7 @@
 .filter-container {
   display: flex;
   flex-flow: row wrap;
-  gap: 10px;
+  gap: var(--space-sm);
 }
 
 .filter-manager-popin,
@@ -61,7 +61,7 @@
   top: 50%;
   transform: translate(-50%, -48%);
   text-align: left;
-  padding: 20px;
+  padding: var(--space-lg);
   flex-direction: column;
   border-radius: var(--radius-lg);
   align-items: center;
@@ -81,7 +81,7 @@
 }
 
 .filter-manager-controller-container .mcs-icon::before {
-  margin-right: 5px;
+  margin-right: var(--space-xs);
 }
 
 .filter-manager .mcs-icon::before {
@@ -109,7 +109,7 @@
 .albums-found-container {
   display: flex;
   flex-flow: row wrap;
-  gap: 5px;
+  gap: var(--space-xs);
 }
 
 .albums-found-container {
@@ -146,8 +146,8 @@
 .filter-manager-popin .filter-manager-controller-container {
   display: flex;
   flex-flow: row wrap;
-  gap: 15px;
-  margin-bottom: 20px;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
 
 .filter-manager-popin .filter-manager-controller-container .mcs-icon::before {
@@ -181,7 +181,7 @@
 .filter-manager-actions {
   display: flex;
   margin: 0 0 0 auto;
-  gap: 10px;
+  gap: var(--space-sm);
 }
 
 .mcs-container {
@@ -190,7 +190,7 @@
   gap: 10px 15px;
   align-items: center;
   margin: 0 15px;
-  margin-top: 15px;
+  margin-top: var(--space-md);
 }
 
 .filter-manager,
@@ -218,7 +218,7 @@
 }
 
 .mcs-icon.pwg-icon-cog {
-  margin-right: 5px;
+  margin-right: var(--space-xs);
 }
 
 .mcs-container .filter {
@@ -246,7 +246,7 @@
   display: none;
   position: absolute;
   z-index: 5;
-  padding: 20px;
+  padding: var(--space-lg);
   border-radius: var(--radius-sm);
   top: 35px;
   left: 0;
@@ -267,7 +267,7 @@
   flex-direction: row;
   top: 20px;
   right: 20px;
-  gap: 5px;
+  gap: var(--space-xs);
   color: #aaa;
 }
 
@@ -285,7 +285,7 @@
 .filter-date_created-form .filter-actions,
 .filter-ratios-form .filter-actions,
 .filter-ratings-form .filter-actions {
-  gap: 5px;
+  gap: var(--space-xs);
 }
 
 .word-help {
@@ -322,7 +322,7 @@
 
 .form-container .filter-validate {
   width: fit-content;
-  margin-left: 20px;
+  margin-left: var(--space-lg);
 }
 
 .filter .search-words {
@@ -345,7 +345,7 @@
 .filter-word-form .search-params-title {
   font-size: var(--font-size-lg);
   font-weight: 600;
-  margin-top: 15px;
+  margin-top: var(--space-md);
 }
 
 .filter-filetypes-form,
@@ -376,7 +376,7 @@
 
 .height-option-container,
 .width-option-container {
-  margin-bottom: 30px;
+  margin-bottom: var(--space-xl);
 }
 
 .filetypes-option input,
@@ -398,7 +398,7 @@
   flex-direction: row;
   align-items: baseline;
   position: relative;
-  padding: 5px;
+  padding: var(--space-xs);
 }
 
 .filetypes-option label .checked-icon,
@@ -431,17 +431,17 @@
 .preset_posted_date .date_posted-option .date-period,
 .preset_created_date .date_created-option .date-period,
 .ratings-option label .ratings-name {
-  margin-left: 30px;
+  margin-left: var(--space-xl);
 }
 
 .added_by-option label .added_by-name {
   white-space: nowrap;
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 }
 
 .custom_posted_date .date_posted-option label .date-period,
 .custom_created_date .date_created-option label .date-period {
-  margin-right: 30px;
+  margin-right: var(--space-xl);
 }
 
 .filetypes-option label .ext-badge,
@@ -484,7 +484,7 @@
 }
 
 .filter-album-form .search-sub-cats {
-  margin-top: 10px;
+  margin-top: var(--space-sm);
 }
 
 .filter-filesize-form,
@@ -512,7 +512,7 @@
   flex-direction: row;
   align-items: baseline;
   position: relative;
-  padding: 5px;
+  padding: var(--space-xs);
   margin-left: -1px;
 }
 
@@ -523,7 +523,7 @@
 
 .date_posted-option .accordion-toggle,
 .date_created-option .accordion-toggle {
-  padding: 5px;
+  padding: var(--space-xs);
   rotate: 90deg;
 }
 
@@ -535,14 +535,14 @@
 
 .date_posted-option.month,
 .date_created-option.month {
-  margin-left: 15px;
+  margin-left: var(--space-md);
   display: none;
 }
 
 .date_posted-option.day,
 .date_created-option.day {
-  margin-left: 30px;
-  margin-right: 10px;
+  margin-left: var(--space-xl);
+  margin-right: var(--space-sm);
   display: none;
 }
 
@@ -631,7 +631,7 @@
 }
 
 .breadcrumb-item .link-path {
-  margin-right: 15px;
+  margin-right: var(--space-md);
   white-space: nowrap;
   max-width: 350px;
   overflow-x: hidden;
@@ -713,7 +713,7 @@
 
 .filter-form .filter-form-title {
   font-weight: bold;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
   display: flex;
   gap: 1px;
   align-items: center;
@@ -748,8 +748,8 @@
 }
 
 .search-input {
-  padding: 10px;
-  margin-bottom: 10px;
+  padding: var(--space-sm);
+  margin-bottom: var(--space-sm);
 }
 
 @media (max-width: 600px) {
@@ -761,7 +761,7 @@
 
   .filter-form {
     width: 100vw;
-    padding: 15px;
+    padding: var(--space-md);
     border-radius: 0;
     box-shadow: none;
     top: 37px;
@@ -802,7 +802,7 @@
   .form-container .filter-validate {
     width: fit-content;
     margin-left: auto;
-    margin-top: 10px;
+    margin-top: var(--space-sm);
   }
 
   .filter-manager-popin-container,
@@ -882,7 +882,7 @@
 .mcs-container div .slider_input {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 15px;
+  margin-bottom: var(--space-md);
 }
 
 .mcs-container div .slider_input .max_input {
@@ -906,7 +906,7 @@
 .no_filtered_photos {
   font-weight: 700;
   color: #e80;
-  padding: 30px;
+  padding: var(--space-xl);
   text-align: center;
 }
 
@@ -951,7 +951,7 @@
   top: 50%;
   transform: translate(-50%, -48%);
   text-align: left;
-  padding: 30px;
+  padding: var(--space-xl);
   width: 400px;
 }
 
@@ -973,7 +973,7 @@
   max-height: 400px;
   height: 100%;
   width: 500px;
-  gap: 20px;
+  gap: var(--space-lg);
 }
 
 .quick-search-content {
@@ -981,7 +981,7 @@
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-lg);
 }
 
 /* Color rules for new selectors not present in the structural section above.

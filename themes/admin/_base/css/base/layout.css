@@ -54,10 +54,10 @@ body {
 #headActions {
   float: right;
   line-height: 50px;
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 }
 #headActions a {
-  margin-left: 5px;
+  margin-left: var(--space-xs);
 }
 
 a {
@@ -247,7 +247,7 @@ form.properties span.property {
 
 #configContent fieldset {
   border: none;
-  padding-left: 20px;
+  padding-left: var(--space-lg);
 }
 
 #configContent legend {
@@ -350,7 +350,7 @@ body {
 }
 
 #adminHome {
-  margin-top: 20px;
+  margin-top: var(--space-lg);
   line-height: 30px;
   width: 200px;
   margin-left: 6px;
@@ -382,7 +382,7 @@ a.admin-main:hover {
   float: right;
   margin: 0;
   padding: 0;
-  margin-right: 15px;
+  margin-right: var(--space-md);
 }
 
 .HelpActions a {

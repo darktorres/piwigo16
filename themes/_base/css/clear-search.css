@@ -92,8 +92,8 @@
 }
 
 .search-input {
-  padding: 10px;
-  margin-bottom: 10px;
+  padding: var(--space-sm);
+  margin-bottom: var(--space-sm);
 }
 
 .search-input::placeholder {

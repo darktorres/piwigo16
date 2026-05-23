@@ -13,11 +13,11 @@
 /* Search bar */
 
 .search-input {
-  padding: 10px;
+  padding: var(--space-sm);
   box-shadow: 0 2px #00000024;
   border: none;
   background-color: #fafafa;
-  padding-left: 30px;
+  padding-left: var(--space-xl);
   width: 200px;
   margin: 4px;
 }
@@ -52,7 +52,7 @@
   transform: translateY(0);
   font-size: 18px;
   margin-left: 215px;
-  margin-top: 10px;
+  margin-top: var(--space-sm);
 }
 
 .search-cancel:hover {
@@ -121,7 +121,7 @@
   border-radius: var(--radius-xl);
   background-color: #777;
   font-size: var(--font-size-lg);
-  margin-left: 10px;
+  margin-left: var(--space-sm);
   font-weight: 700;
   position: absolute;
   transform: translateY(3px);
@@ -155,7 +155,7 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  margin: 5px;
+  margin: var(--space-xs);
 }
 
 .pagination-arrow.rigth {
@@ -174,7 +174,7 @@
 }
 
 .pagination-item-container > * {
-  margin: 5px;
+  margin: var(--space-xs);
 }
 
 .pagination-item-container span {
@@ -234,11 +234,11 @@
   position: fixed;
   right: 0;
   top: 0;
-  margin: 10px;
+  margin: var(--space-sm);
   z-index: 1000;
   background-color: #ffbd4d;
   color: #fff;
-  padding: 20px;
+  padding: var(--space-lg);
   font-weight: bold;
   border-radius: 34px;
   transform: translateY(calc(-100% - 10px));

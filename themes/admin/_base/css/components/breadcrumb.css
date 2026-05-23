@@ -16,7 +16,7 @@
   position: relative;
 }
 .breadcrumb-item .link-path {
-  margin-right: 15px;
+  margin-right: var(--space-md);
 }
 .breadcrumb-item:hover .icon-cancel-circled {
   color: #000;

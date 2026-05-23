@@ -5,7 +5,7 @@
 
 .dtBar div {
   display: inline;
-  padding-right: 5px;
+  padding-right: var(--space-xs);
 }
 
 .rating-user-submit-row {

@@ -12,7 +12,7 @@
 }
 
 .calendarCalBar {
-  margin: 10px;
+  margin: var(--space-sm);
 }
 
 .calCalHead {
@@ -29,7 +29,7 @@
 table.calMonth {
   border: 0;
   border-collapse: collapse;
-  margin-bottom: 10px; /* <-IE ignores this */
+  margin-bottom: var(--space-sm); /* <-IE ignores this */
 }
 
 td.calDayCellFull,
@@ -41,7 +41,7 @@ td.calDayCellEmpty {
 }
 
 .calForeDate {
-  padding-left: 5px;
+  padding-left: var(--space-xs);
   padding-top: 1px;
   z-index: 3;
   position: absolute;
@@ -68,7 +68,7 @@ td.calDayCellEmpty {
 .thumbnailCategory {
   display: block;
   padding: 2px 0 0 2px;
-  margin: 5px;
+  margin: var(--space-xs);
 }
 
 .thumbnailCategory .description {

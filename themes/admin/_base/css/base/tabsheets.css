@@ -10,7 +10,7 @@
 .tabsheet {
   display: table;
   white-space: nowrap;
-  padding-left: 10px;
+  padding-left: var(--space-sm);
   margin: 0;
   width: auto;
   list-style-type: none;

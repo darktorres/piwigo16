@@ -108,7 +108,7 @@
   margin-right: 9px;
 }
 .content dt {
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
   font-style: italic;
   font-size: 110%;
 }
@@ -163,7 +163,7 @@ ul.thumbnails li.rank-of-image {
 }
 
 ul.thumbnails span.wrap1 {
-  margin: 5px;
+  margin: var(--space-xs);
   display: table-cell;
   display: inline-table;
   display: inline-block; /* Why 3 display option ??? */
@@ -265,9 +265,9 @@ table.languages tr td {
 
 /* Slider */
 .slider-bar-wrapper {
-  padding-left: 10px;
-  margin-top: 20px;
-  margin-bottom: 30px;
+  padding-left: var(--space-sm);
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-xl);
 }
 
 .slider-bar-wrapper .slider-bar-container {

@@ -9,14 +9,14 @@
   top: 40px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-sm);
   z-index: 9999;
 }
 
 .toast {
   display: flex;
-  gap: 5px;
-  padding: 10px;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
   border-radius: var(--radius-sm);
   align-items: center;
   font-size: var(--font-size-base);

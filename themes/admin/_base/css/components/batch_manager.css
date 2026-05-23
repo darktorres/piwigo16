@@ -2,5 +2,5 @@
   margin-bottom: 11px;
 }
 #errorFilter {
-  margin-left: 10px;
+  margin-left: var(--space-sm);
 }

@@ -45,7 +45,7 @@
   width: 100%;
   height: 99%;
   background-color: var(--admin-bg-elevated);
-  padding: 20px;
+  padding: var(--space-lg);
 }
 
 .desc-modal-footer {
@@ -59,7 +59,7 @@
 }
 
 .desc-modal-footer span {
-  margin-right: 5px;
+  margin-right: var(--space-xs);
 }
 
 .bg-modal {
@@ -93,7 +93,7 @@
   top: 50%;
   transform: translate(-50%, -48%);
   text-align: left;
-  padding: 30px;
+  padding: var(--space-xl);
   width: 400px;
 }
 
@@ -226,7 +226,7 @@
 }
 
 .cat-modify-ariane::before {
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 }
 
 .cat-modify-actions {
@@ -241,7 +241,7 @@
   position: relative;
   width: 24px;
   height: 24px;
-  padding: 5px;
+  padding: var(--space-xs);
   color: #757575;
   overflow: visible;
 }
@@ -275,7 +275,7 @@
 
 .cat-modify-actions .toggle-comment-option {
   font-size: var(--font-size-sm);
-  padding: 5px;
+  padding: var(--space-xs);
   width: 20px;
   height: 24px;
   z-index: 20;
@@ -330,7 +330,7 @@
   grid-area: info;
   display: grid;
   grid-auto-flow: column;
-  gap: 10px;
+  gap: var(--space-sm);
   grid-auto-columns: minmax(0, 1fr);
 }
 
@@ -382,7 +382,7 @@
   height: 100%;
   bottom: 0;
   left: 0;
-  padding: 15px;
+  padding: var(--space-md);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -402,7 +402,7 @@
   color: #3c3c3c;
   transform: translateY(5px);
   transition: 0.3s ease-in-out;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 
 .cat-modify-representative:hover .cat-modify-representative-actions a {
@@ -418,14 +418,14 @@
   display: flex;
   flex-direction: column;
   align-items: start;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 
 .cat-modify-input-container label {
   color: #a4a4a4;
   font-weight: bold;
   font-size: var(--font-size-md);
-  margin-bottom: 5px;
+  margin-bottom: var(--space-xs);
 }
 
 .cat-modify-input-container textarea,
@@ -455,7 +455,7 @@
   cursor: pointer;
   box-sizing: border-box;
   text-align: initial;
-  padding-right: 30px;
+  padding-right: var(--space-xl);
 }
 
 .cat-modify-input-container #cat-parent::before {
@@ -467,7 +467,7 @@
 
 .cat-modify-switch-container {
   display: flex;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
   flex-wrap: wrap;
 }
 
@@ -541,7 +541,7 @@
 }
 
 .cat-delete-modes div {
-  margin-top: 5px;
+  margin-top: var(--space-xs);
   display: flex;
   align-items: flex-start;
 }
@@ -551,7 +551,7 @@
 }
 
 .savebar-footer-block {
-  margin-right: 15px;
+  margin-right: var(--space-md);
   align-self: center;
   display: flex;
   align-items: center;

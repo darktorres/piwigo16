@@ -67,5 +67,5 @@
   margin: 0;
 }
 .quick-search-section {
-  padding-top: 30px;
+  padding-top: var(--space-xl);
 }

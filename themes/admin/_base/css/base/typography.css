@@ -22,7 +22,7 @@
 }
 .themeName {
   font-size: var(--font-size-md);
-  margin: 10px;
+  margin: var(--space-sm);
   position: relative;
   text-transform: capitalize;
   font-weight: bold;
@@ -54,7 +54,7 @@
   display: inline-block;
   text-align: center;
   padding: 0 10px 8px;
-  margin-right: 10px;
+  margin-right: var(--space-sm);
   transition: 0.4s ease;
 }
 .showInfo-dropdown-header {
@@ -76,7 +76,7 @@
   color: #fff;
   text-decoration: none;
   display: block;
-  margin-top: 5px;
+  margin-top: var(--space-xs);
   border-radius: 0 0 10px 10px;
   font-weight: bold;
 }
@@ -95,7 +95,7 @@
 }
 .themeActions span,
 .themeActions a {
-  padding: 10px;
+  padding: var(--space-sm);
   margin: 0 10px 10px;
   font-weight: bold;
   font-size: var(--font-size-xs);
@@ -107,7 +107,7 @@
 }
 
 .themeActions .pluginUnavailableAction {
-  padding: 10px;
+  padding: var(--space-sm);
   margin: 0 10px 10px;
   font-weight: bold;
   font-size: var(--font-size-xs);
@@ -141,7 +141,7 @@
   text-align: left;
   border-bottom: 1px solid #444;
   letter-spacing: 1px;
-  margin: 5px;
+  margin: var(--space-xs);
 }
 .themeBoxes {
   min-height: 0;
@@ -151,7 +151,7 @@
 h1 {
   background-color: #f3f3f3;
   margin: 0;
-  padding: 20px;
+  padding: var(--space-lg);
   text-align: left;
   font-weight: normal;
   color: #333;
@@ -196,7 +196,7 @@ legend {
 
 .content dl,
 dd {
-  margin: 5px;
+  margin: var(--space-xs);
 }
 
 textarea {
@@ -240,16 +240,16 @@ input[type="text"].large {
 
 #helpContent p {
   text-align: left;
-  margin-left: 10px;
+  margin-left: var(--space-sm);
 }
 #helpContent li,
 #ftpPage li {
-  margin-top: 10px;
+  margin-top: var(--space-sm);
 }
 #helpContent p.nextStepLink {
   text-align: center;
   font-weight: bold;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 /**

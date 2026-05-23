@@ -1,7 +1,7 @@
 /* User comments */
 #comments {
-  padding-left: 5px;
-  padding-right: 5px;
+  padding-left: var(--space-xs);
+  padding-right: var(--space-xs);
 }
 
 .commentsList {

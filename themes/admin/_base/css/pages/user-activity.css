@@ -4,7 +4,7 @@
 .activity-select {
   height: 50%;
   text-align: left;
-  margin-right: 20px;
+  margin-right: var(--space-lg);
 }
 
 .activity-filter-container {
@@ -18,7 +18,7 @@
   padding: 5px 10px;
   background: #eaeaea;
   border-radius: 50px;
-  margin: 5px;
+  margin: var(--space-xs);
   white-space: nowrap;
 }
 
@@ -32,7 +32,7 @@
 
   align-items: center;
 
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 
 .line .detail-item {
@@ -105,7 +105,7 @@
 
   color: #9e9e9e;
 
-  padding-bottom: 5px;
+  padding-bottom: var(--space-xs);
 }
 
 .tab-title div:first-child {
@@ -176,7 +176,7 @@
 }
 
 .action-infos span {
-  margin-right: 5px;
+  margin-right: var(--space-xs);
 }
 
 .date-section .date-day {
@@ -197,7 +197,7 @@
 
   border-radius: 50%;
 
-  margin-right: 10px;
+  margin-right: var(--space-sm);
 
   display: flex;
 
@@ -232,7 +232,7 @@ div:has(> .activity-header) {
 .user-selecter,
 .action-selecter {
   width: 230px;
-  margin-top: 10px;
+  margin-top: var(--space-sm);
 }
 
 .actions-filters {
@@ -256,14 +256,14 @@ div:has(> .activity-header) {
   margin-left: 14px;
   justify-content: center;
   cursor: pointer;
-  padding: 10px;
+  padding: var(--space-sm);
   text-align: center;
   font-weight: bold;
   width: 70px;
 }
 
 .activity-more-filters.extend-padding {
-  padding-bottom: 10px;
+  padding-bottom: var(--space-sm);
 }
 
 .activity-more-filters,
@@ -281,7 +281,7 @@ div:has(> .activity-header) {
 }
 
 .activity-period-info {
-  margin-bottom: 30px;
+  margin-bottom: var(--space-xl);
   font-weight: bold;
 }
 
@@ -303,14 +303,14 @@ div:has(> .activity-header) {
 }
 
 .activity-filter-container .icon-cancel {
-  margin-left: 5px;
+  margin-left: var(--space-xs);
 }
 
 .activity-date-selecter {
   display: block;
   height: 25.5px;
   width: 130px;
-  margin-top: 10px;
+  margin-top: var(--space-sm);
   font-size: var(--font-size-xs);
   font-weight: bold;
 }

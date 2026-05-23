@@ -180,6 +180,17 @@ h2:lang(en) {
   text-transform: capitalize;
 }
 
+/* Muted text on body-level elements (both themes agree on #777). */
+body,
+h3,
+dt,
+.throw,
+.content,
+label,
+legend {
+  color: var(--admin-text-muted);
+}
+
 #pluginsMenuSeparator {
   width: 80%;
   margin: 5px auto;

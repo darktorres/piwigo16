@@ -11,15 +11,6 @@
 }
 
 /* text color */
-body,
-h3,
-dt,
-.throw,
-.content,
-label,
-legend {
-  color: #777;
-}
 
 option[disabled] {
   background-color: #999;

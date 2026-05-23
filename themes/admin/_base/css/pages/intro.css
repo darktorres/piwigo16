@@ -1,9 +1,65 @@
-.eiw .messages ul li {
-  list-style-type: none !important;
+/* Dashboard / Intro page — base + per-page additions consolidated */
+
+.intro-page-container {
+  display: grid;
+  grid-template-columns: 48% 48%;
 }
 
-.eiw .messages .eiw-icon {
-  margin-right: 10px !important;
+.stat-boxes {
+  text-align: center;
+}
+
+.stat-box {
+  display: inline-block;
+  width: 150px;
+  margin: 10px 10px 40px;
+  color: #3b3b3b;
+  text-align: center;
+}
+
+div.stat-box {
+  cursor: help;
+}
+
+.stat-box i {
+  display: inline-block;
+  border-radius: 50%;
+  font-size: 30px;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+.stat-box .number,
+.stat-box .caption {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.stat-box .number {
+  font-size: 29px;
+}
+
+a.stat-box:hover {
+  text-decoration: none;
+  color: #777;
+}
+
+.chart-title {
+  font-size: 18px;
+  text-align: left;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #3b3b3b;
+  position: relative;
+}
+
+.chart-title-infos {
+  font-size: 14px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
 }
 
 /* Activity chart cells use CSS custom properties so the runtime-computed
@@ -12,6 +68,10 @@
    payload (covered by CSP style-src-attr) instead of arbitrary
    inline declarations. */
 .activity-chart {
+  font-weight: bold;
+  font-size: 14px;
+  display: grid;
+  grid-template-columns: repeat(8, 5vw);
   grid-template-rows: repeat(var(--chart-rows), 5vw);
 }
 
@@ -30,4 +90,349 @@
 
 .storage-chart > span[data-type^="storage-"] {
   width: var(--storage-w);
+}
+
+.activity-chart .row-legend,
+.activity-chart .col-legend {
+  position: relative;
+}
+
+.activity-chart .row-legend {
+  display: flex;
+}
+
+.activity-chart .row-legend div {
+  margin: auto;
+  white-space: nowrap;
+}
+
+.activity-chart .col-legend {
+  line-height: 5vw;
+}
+
+.activity-chart .row-legend::after {
+  content: "";
+  border-top: 2px solid #000;
+  opacity: 0.05;
+  position: absolute;
+  width: 700%;
+  transform: translate(6vw, 2.5vw);
+}
+
+.activity-chart .col-legend .line-vertical {
+  border-left: 2px solid #000;
+  opacity: 0.05;
+  position: absolute;
+  height: 250%;
+  left: 50%;
+  bottom: 100%;
+}
+
+.activity-chart span {
+  display: flex;
+  overflow: visible;
+  position: relative;
+}
+
+.activity-chart span div {
+  height: 0;
+  width: 0;
+  background-color: #ff5252;
+  opacity: 0.8;
+  display: block;
+  border-radius: 100%;
+  z-index: 100;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: ease 0.2s;
+}
+
+.intro-charts .tooltip {
+  position: absolute;
+  display: none;
+  z-index: 102;
+  font-size: 12px;
+  font-weight: normal;
+  background-color: #fff;
+  padding: 10px;
+  box-shadow: 0 0 5px #acacac;
+  border-radius: 10px;
+  margin: 0;
+  transition: ease 0.2s;
+}
+
+.intro-charts .tooltip .tooltip-header {
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.intro-charts .tooltip .tooltip-header span {
+  margin: 0 5px;
+}
+
+.intro-charts .tooltip .tooltip-title {
+  font-weight: bold;
+  color: #3b3b3b;
+}
+
+.intro-charts .tooltip .tooltip-date {
+  font-style: italic;
+}
+
+.intro-charts .tooltip span::before {
+  width: 1.2em;
+  font-size: 15px;
+}
+
+.intro-charts .tooltip .tooltip-details {
+  display: flex;
+  align-items: flex-start;
+}
+
+.intro-charts .tooltip .tooltip-details-cont {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0 3px;
+}
+
+.intro-charts .tooltip .tooltip-details-title {
+  font-weight: bold;
+  padding: 0 5px;
+  margin-bottom: 8px;
+  border-radius: 15px;
+  background: none !important; /* keep: overrides any inherited background */
+}
+
+.intro-charts .tooltip .tooltip-detail {
+  margin: 1px;
+  padding-left: calc(50% - 20px);
+}
+
+.activity-chart .tooltip {
+  left: 50%;
+  top: 45%;
+}
+
+.intro-charts .tooltip span {
+  display: inline;
+  white-space: nowrap;
+}
+
+.activity-chart span div:hover {
+  padding: 0.5vw;
+}
+
+.activity-chart span div:hover + .tooltip,
+.intro-charts .tooltip:hover {
+  display: inline-grid;
+  opacity: 1;
+}
+
+.activity-chart #week-1-legend ~ span div {
+  background-color: #2883c3;
+}
+
+.activity-chart #week-2-legend ~ span div {
+  background-color: #896af3;
+}
+
+.activity-chart #week-3-legend ~ span div {
+  background-color: #6ece5e;
+}
+
+.activity-chart #week-4-legend ~ span div {
+  background-color: #ffa744;
+}
+
+.storage-chart {
+  border-radius: 5px;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  height: 30px;
+  display: flex;
+  background-color: #e8e8e8;
+}
+
+.storage-tooltips {
+  position: relative;
+}
+
+.storage-tooltips p {
+  margin: 0;
+}
+
+.storage-tooltips .tooltip::after {
+  content: none;
+}
+
+.storage-tooltips .tooltip-arrow,
+.activity-chart .tooltip-arrow {
+  content: " ";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #fff;
+}
+
+.storage-tooltips .tooltip-arrow.bottom {
+  top: 100%;
+  border-color: #fff transparent transparent;
+}
+
+.storage-tooltips .separated {
+  display: block !important; /* keep: forces block on dynamically-inserted element */
+  width: 100%;
+  height: 1px;
+  background: #ccc;
+}
+
+.storage-tooltips .tooltip {
+  min-width: 265px;
+  max-width: 400px;
+  padding: 15px 20px;
+}
+
+.storage-tooltips .tooltip-header {
+  display: grid !important; /* keep: overrides flex from .intro-charts .tooltip .tooltip-header */
+  grid-template-columns: 1fr auto 1fr;
+}
+
+.storage-tooltips .tooltip-title {
+  grid-column: 1;
+  text-align: start;
+  margin: 0 !important; /* keep: resets inherited tooltip margin */
+}
+
+.storage-tooltips .tooltip-size {
+  grid-column: 2;
+  text-align: center;
+  margin: 0 !important; /* keep: resets inherited tooltip margin */
+}
+
+.storage-tooltips .tooltip-files {
+  grid-column: 3;
+  text-align: end;
+  margin: 0 !important; /* keep: resets inherited tooltip margin */
+  font-size: 12px;
+  font-style: italic;
+  align-self: self-end;
+}
+
+.storage-tooltips .tooltip-details {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.storage-tooltips .tooltip-details-cont {
+  width: 33%;
+  align-items: center !important; /* keep: overrides .intro-charts .tooltip-details-cont flex-start */
+  margin: 0 !important; /* keep */
+  margin-top: 10px !important; /* keep */
+  margin-bottom: 5px !important; /* keep */
+}
+
+.storage-tooltips .tooltip-details-ext,
+.tooltip-details-size,
+.tooltip-details-files {
+  flex: 1;
+}
+
+.tooltip-details-ext,
+.tooltip-details-size {
+  font-size: 14px;
+}
+.tooltip-details-files {
+  font-size: 12px;
+  font-style: italic;
+}
+
+.storage-chart span {
+  opacity: 0.7;
+  transition: ease 0.2s;
+}
+
+.storage-chart span p {
+  font-weight: bold;
+  font-size: 16px;
+  color: #000;
+  opacity: 0;
+  line-height: 0;
+  transition: ease 0.2s;
+  white-space: nowrap;
+}
+
+.storage-chart span:hover {
+  opacity: 1;
+}
+
+.storage-chart span:hover .tooltip {
+  opacity: 1;
+  display: block;
+}
+
+.storage-chart span:hover p {
+  opacity: 0.4;
+}
+
+.storage-chart-legend {
+  display: flex;
+}
+
+.storage-chart-legend div {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.storage-chart-legend div span {
+  width: 15px;
+  height: 15px;
+  display: block;
+  margin: 5px;
+  opacity: 0.7;
+}
+
+.storage-chart span:nth-child(1),
+.storage-chart-legend div:nth-child(1) span {
+  background-color: #ffa744;
+}
+
+.storage-chart span:nth-child(2),
+.storage-chart-legend div:nth-child(2) span {
+  background-color: #6ece5e;
+}
+
+.storage-chart span:nth-child(3),
+.storage-chart-legend div:nth-child(3) span {
+  background-color: #896af3;
+}
+
+.storage-chart span:nth-child(4),
+.storage-chart-legend div:nth-child(4) span {
+  background-color: #2883c3;
+}
+
+.storage-chart span:nth-child(5),
+.storage-chart-legend div:nth-child(5) span {
+  background-color: #ff5252;
+}
+
+/* Per-page additions */
+
+.eiw .messages ul li {
+  list-style-type: none !important; /* keep: overrides global list-style on .messages li */
+}
+
+.eiw .messages .eiw-icon {
+  margin-right: 10px !important; /* keep: overrides .eiw-icon default margin */
 }

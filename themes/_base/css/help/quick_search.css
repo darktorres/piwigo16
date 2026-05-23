@@ -57,12 +57,12 @@
 }
 
 .dark.quick-search-items p {
-  color: #ccc;
+  color: var(--color-text);
 }
 .dark .quick-search-item-example {
-  background-color: #333;
+  background-color: var(--color-bg-panel);
 }
 
 .dark .quick-search-item {
-  border-left: 4px solid #333;
+  border-left: 4px solid var(--color-bg-panel);
 }

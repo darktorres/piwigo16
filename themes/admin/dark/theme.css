@@ -1353,18 +1353,6 @@ li.plupload_delete a.remove-format:hover {
   color: #666;
 }
 
-.pluginTypeFilter {
-  display: flex;
-  flex-direction: row;
-
-  position: absolute;
-
-  left: 225px;
-  z-index: 2;
-
-  transform: translateY(13px);
-}
-
 .tab-filters label,
 .pluginTypeFilter label {
   display: flex;

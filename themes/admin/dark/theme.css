@@ -103,11 +103,6 @@ h1 .bc-albums {
   margin: 2px;
 }
 
-.content dl,
-dd {
-  margin: 5px;
-}
-
 ul.thumbnails span.wrap2 {
   background-color: #333;
 }
@@ -133,10 +128,6 @@ textarea:focus {
   color: #999;
 }
 
-textarea {
-  cursor: text;
-  font-size: 13px;
-}
 .tagSelection li.tagSelected {
   background-color: #aaa;
 }
@@ -162,9 +153,6 @@ input.bigbutton:hover {
   padding-top: 10px;
   font-weight: bold;
   color: #9e9e9e;
-}
-label {
-  cursor: pointer;
 }
 .menuLi {
   background: #333;

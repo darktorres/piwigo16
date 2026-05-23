@@ -191,6 +191,20 @@ legend {
   color: var(--admin-text-muted);
 }
 
+.content dl,
+dd {
+  margin: 5px;
+}
+
+textarea {
+  cursor: text;
+  font-size: 13px;
+}
+
+label {
+  cursor: pointer;
+}
+
 #pluginsMenuSeparator {
   width: 80%;
   margin: 5px auto;

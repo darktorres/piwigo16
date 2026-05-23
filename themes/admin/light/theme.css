@@ -106,19 +106,10 @@ h3,
   margin-bottom: 10px;
 }
 
-.content dl,
-dd {
-  margin: 5px;
-}
-
 ul.thumbnails span.wrap2 {
   background-color: transparent;
 }
 
-textarea {
-  cursor: text;
-  font-size: 13px;
-}
 .tagSelection li.tagSelected {
   background-color: #dbe8f3;
 }
@@ -135,9 +126,6 @@ ul.thumbnails input {
   line-height: 26px;
   padding-top: 10px;
   font-weight: bold;
-}
-label {
-  cursor: pointer;
 }
 .menuLi {
   background: #f3f3f3;

@@ -293,19 +293,6 @@ ul.thumbnails li.rank-of-image {
   color: #999;
 }
 
-#batchManagerGlobal .thumbSelected {
-  background-color: transparent ;
-}
-
-#batchManagerGlobal .thumbSelected .wrap2 {
-  background-color: transparent ;
-}
-
-#batchManagerGlobal #selectedMessage {
-  color: #ffa646;
-  font-weight: bold;
-}
-
 #batchManagerGlobal #applyFilter,
 #batchManagerGlobal .addFilter-button,
 .buttonSecondary {

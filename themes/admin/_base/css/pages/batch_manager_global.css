@@ -54,9 +54,15 @@
   display: flex;
 }
 #batchManagerGlobal #selectedMessage {
+  color: var(--admin-accent-soft);
+  font-weight: bold;
   padding: 5px;
   border-radius: 5px;
   float: right;
+}
+
+#batchManagerGlobal .thumbSelected {
+  background-color: transparent;
 }
 #batchManagerGlobal #applyOnDetails {
   text-align: center;

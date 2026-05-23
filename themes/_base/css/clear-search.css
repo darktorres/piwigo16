@@ -1,114 +1,42 @@
-/* Search default clear colors */
-.filter .filter-icon {
-  color: #474747;
+/* Search clear (light) mode — overrides the :root defaults in search.css.
+   Structural rules unique to this mode (not present in dark-search.css) are
+   also kept here. Shared color rules live in search.css via var(). */
+:root {
+  /* These are the same as the defaults in search.css; explicit here for clarity. */
+  --search-filter-icon: #474747;
+  --search-popin-container-bg: #fff;
+  --search-popin-close: #fff;
+  --search-popin-title: #f70;
+  --search-checked-border: #777;
+  --search-checked-bg: #777;
+  --search-checked-color: #fff;
+  --search-filter-btn-fg: #fff;
+  --search-filter-btn-hover-bg: #f70;
+  --search-cancel-bg: #e8e8ea;
+  --search-cancel-color: #777;
+  --search-cancel-hover-bg: #dadada;
+  --search-form-bg: #fff;
+  --search-form-color: #000;
+  --search-word-bg: #eee;
+  --search-word-color: #444;
+  --search-alt-row-bg: #f3f3f3;
+  --search-checked-icon: #f70;
+  --search-badge-bg: #f70;
+  --search-selected-option-bg: #fff5e8;
+  --search-head-btn2-bg: #fafafa;
+  --search-head-btn2-hover-bg: #eee;
+  --search-head-btn2-hover-color: #555;
+  --search-album-popin-bg: #fff;
+  --search-close-popin: #fff;
+  --search-clear-all: #c4c4c4;
+  --search-clear-all-clickable: #f70;
+  --search-form-title: #f70;
+  --search-selectize-bg: #eee;
+  --search-selectize-color: #444;
+  --search-selectize-active: #ccc;
 }
 
-.filter-manager-popin,
-.tags-found-popin,
-.albums-found-popin {
-  background-color: rgb(0, 0, 0, 0.7);
-}
-
-.filter-manager-popin-container,
-.tags-found-popin-container,
-.albums-found-popin-container {
-  background: #fff;
-}
-
-.filter-manager-close,
-.tags-found-close,
-.albums-found-close {
-  color: #fff;
-}
-
-.filter-manager-popin .mcs-popin-title,
-.tags-found-popin .mcs-popin-title,
-.albums-found-popin .mcs-popin-title,
-.quick-search-headers .mcs-popin-title {
-  color: #f70;
-}
-
-.mcs-popin-desc {
-  color: #777;
-}
-
-.tags-found-container .tag-item,
-.albums-found-container .album-item {
-  background: #f4ab4f;
-  color: #525252;
-}
-
-.tags-found-container .tag-item a,
-.albums-found-container .album-item a {
-  color: inherit;
-}
-
-.filter-manager-popin label span {
-  border: 1px solid #777;
-}
-
-.filter-manager-popin :checked + span {
-  border: 1px solid #777;
-  background: #777;
-  color: #fff;
-}
-
-.filter-manager,
-.filter-validate {
-  background: #f70b;
-  color: #fff;
-}
-
-.filter-manager:hover,
-.filter-validate:hover {
-  background: #f70;
-}
-
-.filter-cancel {
-  background: #e8e8ea;
-  color: #777;
-}
-
-.filter-cancel:hover {
-  background: #dadada;
-}
-
-.mcs-container .filter {
-  border: 1px solid #888;
-}
-
-.filter-form {
-  background: #fff;
-  box-shadow: 0 5px 10px 0 rgb(0, 0, 0, 0.2);
-  color: #000;
-}
-
-.filter-actions {
-  color: #aaa;
-}
-
-.filter-actions > *:hover {
-  color: #777;
-}
-
-.mcs-container .filter-filled {
-  background: #ffeacf;
-  border: 1px solid #f70 !important;
-  color: #f70 !important;
-}
-
-.mcs-container .filter-filled .filter-icon {
-  color: #f70 !important;
-}
-
-.word-help {
-  color: #888;
-}
-
-#word-search {
-  background: #eee;
-  color: #444;
-}
+/* Structural rules unique to clear mode (not present in dark-search.css) */
 
 #expert-search {
   background: #eee;
@@ -124,16 +52,6 @@
   background-color: #fff;
 }
 
-.filetypes-option:nth-child(odd),
-.added_by-option:nth-child(odd),
-.preset_posted_date .date_posted-option:nth-child(odd) label,
-.preset_posted_date .date_posted-option:nth-child(odd) i,
-.custom_posted_date .date_posted-option:nth-child(odd) .year_input label,
-.custom_posted_date .date_posted-option:nth-child(odd) .year_input i,
-.custom_posted_date .months_container .date_posted-option:nth-child(even) .month_input label,
-.custom_posted_date .months_container .date_posted-option:nth-child(even) .month_input i,
-.custom_posted_date .days_container .date_posted-option:nth-child(odd) label,
-.custom_posted_date .days_container .date_posted-option:nth-child(odd) i,
 .preset_created_date .date_created-option:nth-child(odd) label,
 .preset_created_date .date_created-option:nth-child(odd) i,
 .custom_created_date .date_created-option:nth-child(odd) .year_input label,
@@ -141,10 +59,8 @@
 .custom_created_date .months_container .date_created-option:nth-child(even) .month_input label,
 .custom_created_date .months_container .date_created-option:nth-child(even) .month_input i,
 .custom_created_date .days_container .date_created-option:nth-child(odd) label,
-.custom_created_date .days_container .date_created-option:nth-child(odd) i,
-.ratios-option:nth-child(odd),
-.ratings-option:nth-child(odd) {
-  background: #f3f3f3;
+.custom_created_date .days_container .date_created-option:nth-child(odd) i {
+  background: var(--search-alt-row-bg);
 }
 
 .date_posted-option label .checked-icon.grey-icon,
@@ -152,158 +68,30 @@
   color: #777;
 }
 
-.filetypes-option label .checked-icon,
-.added_by-option label .checked-icon,
-.date_posted-option label .checked-icon,
-.date_created-option label .checked-icon,
-.ratios-option label .checked-icon,
-.ratings-option label .checked-icon {
-  color: #f70;
+.date_created-option label .checked-icon {
+  color: var(--search-checked-icon);
 }
 
-.filetypes-option label .ext-badge,
-.added_by-option label .added_by-badge,
-.date_posted-badge,
-.date_created-badge,
-.ratios-option label .ratio-badge,
-.ratings-option label .ratings-badge {
-  background: #f70;
+.date_created-badge {
+  background: var(--search-badge-bg);
   color: #fff;
 }
 
-.ratios-option.disabled label .ratio-badge,
-.filetypes-option.disabled label .ext-badge,
-.ratings-option.disabled label .ratings-badge {
-  background-color: #888;
-}
-
-.ratios-option.disabled label .ratio-name,
-.filetypes-option.disabled label .ext-name,
-.date_posted-option.disabled label .date-period,
-.date_created-option.disabled label .date-period,
-.ratings-option.disabled label .ratings-name {
-  color: #888;
-}
-
-.filetypes-option input:checked + label,
-.ratios-option input:checked + label,
-.ratings-option input:checked + label,
-.preset_posted_date .date_posted-option input:checked + label,
-.custom_posted_date .selected input:checked,
 .preset_created_date .date_created-option input:checked + label,
 .custom_created_date .selected input:checked {
-  background: #fff5e8;
+  background: var(--search-selected-option-bg);
 }
 
-.head-button-2 {
-  color: #777;
-  background: #fafafa;
-  box-shadow: 0 2px #00000024;
+/* Different border style from dark (1px vs 2px) */
+.mcs-container .filter {
+  border: 1px solid #888;
 }
 
-.head-button-2:hover {
-  background: #eee;
-  color: #555 !important;
-}
-
-.breadcrumb-item {
-  background-color: #f4ab4f;
-}
-
-.breadcrumb-item:hover .icon-cancel-circled {
-  color: #000;
-}
-
-.breadcrumb-item.add-item {
-  color: #777;
-  transition: 0.3s;
-}
-
-.breadcrumb-item a:hover {
-  color: #3a3a3a;
-}
-
-.breadcrumb-item .icon-cancel-circled:hover {
-  color: #f70;
-}
-
-.linkedAlbumPopInContainer {
-  background-color: #fff;
-}
-
-.ClosePopIn {
-  color: #fff;
-}
-
-.ClosePopIn:hover {
-  color: #fff;
-}
-
-.search-result-item {
-  background-color: #fafafa;
-  box-shadow: 0 2px #00000024;
-  color: #777;
-}
-
-.clear-all {
-  color: #c4c4c4;
-}
-
-.clear-all.clickable {
-  color: #f70;
-}
-
-.mcs-no-result .text span:first-child {
-  color: #f70;
-}
-
-.mcs-no-result .text span:last-child {
-  color: #6e6e6e;
-}
-
-.filter-form .filter-form-title {
-  color: #f70;
-}
-
-.filter-tag-form .selectize-input,
-.filter-author-form .selectize-input,
-.filter-added_by-form .selectize-input {
-  background: #eee;
-}
-
-.filter-tag-form .selectize-input input,
-.filter-author-form .selectize-input input,
-.filter-added_by-form .selectize-input input {
-  background: transparent !important;
-  color: #444 !important;
-}
-
-.filter-tag-form .selectize-input input::placeholder,
-.filter-author-form .selectize-input input::placeholder,
-.filter-added_by-form .selectize-input input::placeholder {
-  color: #444;
-}
-
-.filter-tag-form .selectize-control.multi .selectize-input > div,
-.filter-tag-form .selectize-control.multi .selectize-input [data-value].active,
-.filter-author-form .selectize-control.multi .selectize-input > div,
-.filter-author-form .selectize-control.multi .selectize-input [data-value].active,
-.filter-added_by-form .selectize-control.multi .selectize-input > div,
-.filter-added_by-form .selectize-control.multi .selectize-input [data-value].active {
-  background: #ffa835;
-  color: #000;
-}
-
-.filter-tag-form .selectize-dropdown,
-.filter-author-form .selectize-dropdown,
-.filter-added_by-form .selectize-dropdown {
-  background: #eee;
-}
-
-.filter-tag-form .selectize-dropdown .option.active,
-.filter-author-form .selectize-dropdown .option.active,
-.filter-added_by-form .selectize-dropdown .option.active {
-  background: #ccc;
+/* Different border behavior from dark (has border vs border: none in dark) */
+.mcs-container .filter-filled {
+  background: #ffeacf;
+  border: 1px solid #f70 !important; /* keep: child-theme load-order specificity */
+  color: #f70 !important; /* keep: child-theme load-order specificity */
 }
 
 .search-input {
@@ -313,16 +101,6 @@
 
 .search-input::placeholder {
   color: #ccc;
-}
-
-.filter-tag-form .selectize-control.multi .selectize-input > div .remove,
-.filter-author-form .selectize-control.multi .selectize-input > div .remove,
-.filter-added_by-form .selectize-control.multi .selectize-input > div .remove {
-  color: #000;
-}
-
-.and-more {
-  color: #777;
 }
 
 @media (max-width: 600px) {

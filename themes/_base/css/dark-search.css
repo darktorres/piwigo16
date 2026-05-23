@@ -1,110 +1,41 @@
-/* Search */
-.filter .filter-icon {
-  color: #aeaeae;
+/* Search dark mode — overrides the :root defaults in search.css.
+   Structural rules unique to dark mode (not present in clear-search.css) are
+   also kept here. Shared color rules live in search.css via var(). */
+:root {
+  --search-filter-icon: #aeaeae;
+  --search-popin-container-bg: #333;
+  --search-popin-close: #777;
+  --search-popin-title: #f70b;
+  --search-checked-border: #555;
+  --search-checked-bg: #555;
+  --search-checked-color: #ccc;
+  --search-filter-btn-fg: #ffeacf;
+  --search-filter-btn-hover-bg: #f70b;
+  --search-cancel-bg: #555;
+  --search-cancel-color: #ccc;
+  --search-cancel-hover-bg: #444;
+  --search-form-bg: #333;
+  --search-form-color: #bbb;
+  --search-word-bg: #777;
+  --search-word-color: #eee;
+  --search-alt-row-bg: #444;
+  --search-checked-icon: #fff;
+  --search-badge-bg: #f70b;
+  --search-selected-option-bg: rgb(244, 171, 79, 0.17);
+  --search-head-btn2-bg: #222;
+  --search-head-btn2-hover-bg: #000;
+  --search-head-btn2-hover-color: #777;
+  --search-album-popin-bg: #555;
+  --search-close-popin: #777;
+  --search-clear-all: #777;
+  --search-clear-all-clickable: #f70b;
+  --search-form-title: #f70b;
+  --search-selectize-bg: #555;
+  --search-selectize-color: #ccc;
+  --search-selectize-active: #555;
 }
 
-.filter-manager-popin,
-.tags-found-popin,
-.albums-found-popin {
-  background-color: rgb(0, 0, 0, 0.7);
-}
-
-.filter-manager-popin-container,
-.tags-found-popin-container,
-.albums-found-popin-container {
-  background: #333;
-}
-
-.filter-manager-close,
-.tags-found-close,
-.albums-found-close {
-  color: #777;
-}
-
-.filter-manager-popin .mcs-popin-title,
-.tags-found-popin .mcs-popin-title,
-.albums-found-popin .mcs-popin-title,
-.quick-search-headers .mcs-popin-title {
-  color: #f70b;
-}
-
-.mcs-popin-desc {
-  color: #777;
-}
-
-.tags-found-container .tag-item,
-.albums-found-container .album-item {
-  background: #f4ab4f;
-  color: #525252;
-}
-
-.tags-found-container .tag-item a,
-.albums-found-container .album-item a {
-  color: inherit;
-}
-
-.filter-manager-popin label span {
-  border: 1px solid #777;
-}
-
-.filter-manager-popin :checked + span {
-  border: 1px solid #555;
-  background: #555;
-  color: #ccc;
-}
-
-.filter-manager,
-.filter-validate {
-  background: #f70b;
-  color: #ffeacf;
-}
-
-.filter-manager:hover,
-.filter-validate:hover {
-  background: #f70b;
-}
-
-.filter-cancel {
-  background: #555;
-  color: #ccc;
-}
-
-.filter-cancel:hover {
-  background: #444;
-}
-
-.mcs-container .filter {
-  border: 2px solid #444;
-  color: #aeaeae;
-}
-
-.filter-form {
-  background: #333;
-  box-shadow: 0 5px 10px 0 rgb(0, 0, 0, 0.2);
-  color: #bbb;
-}
-
-.filter-actions {
-  color: #aaa;
-}
-
-.filter-actions > *:hover {
-  color: #777;
-}
-
-.mcs-container .filter-filled {
-  background: #f70b;
-  border: none !important;
-  color: #ffeacf !important;
-}
-
-.mcs-container .filter-filled .filter-icon {
-  color: #ffeacf !important;
-}
-
-.word-help {
-  color: #888;
-}
+/* Structural rules unique to dark mode (not present in clear-search.css) */
 
 .help-popin-search {
   color: #ccc;
@@ -114,176 +45,20 @@
   color: #fff;
 }
 
-#word-search {
-  background: #777;
-  color: #eee;
+/* Different border style from clear (2px + color property vs 1px) */
+.mcs-container .filter {
+  border: 2px solid #444;
+  color: #aeaeae;
 }
 
-.filetypes-option:nth-child(odd),
-.added_by-option:nth-child(odd),
-.preset_posted_date .date_posted-option:nth-child(odd) label,
-.preset_posted_date .date_posted-option:nth-child(odd) i,
-.custom_posted_date .date_posted-option:nth-child(odd) .year_input label,
-.custom_posted_date .date_posted-option:nth-child(odd) .year_input i,
-.custom_posted_date .date_posted-option:nth-child(even) .month_input label,
-.custom_posted_date .date_posted-option:nth-child(even) .month_input i,
-.custom_posted_date .days_container .date_posted-option:nth-child(odd) label,
-.custom_posted_date .days_container .date_posted-option:nth-child(odd) i,
-.ratios-option:nth-child(odd),
-.ratings-option:nth-child(odd) {
-  background: #444;
-}
-
-.filetypes-option label .checked-icon,
-.added_by-option label .checked-icon,
-.date_posted-option label .checked-icon,
-.ratios-option label .checked-icon,
-.ratings-option label .checked-icon {
-  color: #fff;
-}
-
-.filetypes-option label .ext-badge,
-.added_by-option label .added_by-badge,
-.date_posted-badge,
-.ratios-option label .ratio-badge,
-.ratings-option label .ratings-badge {
+/* Different border behavior from clear (border: none vs 1px solid) */
+.mcs-container .filter-filled {
   background: #f70b;
-  color: #fff;
+  border: none !important; /* keep: overrides inherited border on this state */
+  color: #ffeacf !important; /* keep: overrides .filter-icon color inheritance */
 }
 
-.ratios-option.disabled label .ratio-badge,
-.filetypes-option.disabled label .ext-badge,
-.ratings-option.disabled label .ratings-badge {
-  background-color: #888;
-}
-
-.ratios-option.disabled label .ratio-name,
-.filetypes-option.disabled label .ext-name,
-.date_posted-option.disabled label .date-period,
-.date_created-option.disabled label .date-period,
-.ratings-option.disabled label .ratings-name {
-  color: #888;
-}
-
-.added_by-option input:checked + label,
-.filetypes-option input:checked + label,
-.date_posted-option .selected label,
-.date_posted-option .selected .accordion-toggle,
-.ratios-option input:checked + label,
-.ratings-option input:checked + label {
-  background: rgb(244, 171, 79, 0.17);
-}
-
-.head-button-2 {
-  color: #777;
-  background: #222;
-  box-shadow: 0 2px #00000024;
-}
-
-.head-button-2:hover {
-  background: #000;
-  color: #777 !important;
-}
-
-.breadcrumb-item {
-  background-color: #f4ab4f;
-}
-
-.breadcrumb-item:hover .icon-cancel-circled {
-  color: #000;
-}
-
-.breadcrumb-item.add-item {
-  color: #777;
-}
-
-.breadcrumb-item a:hover {
-  color: #3a3a3a;
-}
-
-.breadcrumb-item .icon-cancel-circled:hover {
-  color: #f70b;
-}
-
-.linkedAlbumPopInContainer {
-  background-color: #555;
-}
-
-.ClosePopIn {
-  color: #777;
-}
-
-.search-result-item {
-  background-color: #fafafa;
-  box-shadow: 0 2px #00000024;
-  color: #777;
-}
-
-.clear-all {
-  color: #777;
-}
-
-.clear-all.clickable {
-  color: #f70b;
-}
-
-.ClosePopIn:hover {
-  color: #fff;
-}
-
-.mcs-no-result .text span:first-child {
-  color: #f70b;
-}
-
-.mcs-no-result .text span:last-child {
-  color: #6e6e6e;
-}
-
-.filter-form .filter-form-title {
-  color: #f70b;
-}
-
-.filter-tag-form .selectize-input,
-.filter-author-form .selectize-input,
-.filter-added_by-form .selectize-input {
-  background: #555;
-}
-
-.filter-tag-form .selectize-input input,
-.filter-author-form .selectize-input input,
-.filter-added_by-form .selectize-input input {
-  color: #ccc;
-  background: #555;
-}
-
-.filter-tag-form .selectize-input input::placeholder,
-.filter-author-form .selectize-input input::placeholder,
-.filter-added_by-form .selectize-input input::placeholder {
-  color: #ccc;
-}
-
-.filter-tag-form .selectize-control.multi .selectize-input > div,
-.filter-tag-form .selectize-control.multi .selectize-input [data-value].active,
-.filter-author-form .selectize-control.multi .selectize-input > div,
-.filter-author-form .selectize-control.multi .selectize-input [data-value].active,
-.filter-added_by-form .selectize-control.multi .selectize-input > div,
-.filter-added_by-form .selectize-control.multi .selectize-input [data-value].active {
-  background: #ffa835;
-  color: #000;
-}
-
-.filter-tag-form .selectize-dropdown,
-.filter-author-form .selectize-dropdown,
-.filter-added_by-form .selectize-dropdown {
-  background: #555;
-}
-
-.filter-tag-form .selectize-dropdown .option.active,
-.filter-author-form .selectize-dropdown .option.active,
-.filter-added_by-form .selectize-dropdown .option.active {
-  background: #555;
-}
-
+/* Only in dark — additional selectize dropdown content background */
 .filter-tag-form .selectize-dropdown .selectize-dropdown-content {
   background-color: #444;
 }
@@ -296,19 +71,9 @@
   color: #ccc;
 }
 
-.filter-tag-form .selectize-control.multi .selectize-input > div .remove,
-.filter-author-form .selectize-control.multi .selectize-input > div .remove,
-.filter-added_by-form .selectize-control.multi .selectize-input > div .remove {
-  color: #000;
-}
-
 .breadcrumb-item .link-path,
 .pwg-icon-cancel::before {
   color: #000;
-}
-
-.and-more {
-  color: #777;
 }
 
 .modal-content {
@@ -318,16 +83,16 @@
 @media (max-width: 600px) {
   .filter-form {
     width: 100vw;
-    border-top: 1px solid #444 !important;
-    border-bottom: 1px solid #444 !important;
+    border-top: 1px solid #444 !important; /* keep: overrides border-top from clear-search.css */
+    border-bottom: 1px solid #444 !important; /* keep: overrides border-bottom */
   }
 
   .arrow-border {
     fill: transparent;
-    stroke: #444 !important;
+    stroke: #444 !important; /* keep: overrides SVG stroke from clear-search.css */
   }
 
   .arrow-fill {
-    fill: #333 !important;
+    fill: #333 !important; /* keep: overrides fill from clear-search.css */
   }
 }

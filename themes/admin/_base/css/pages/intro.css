@@ -470,9 +470,9 @@ a.stat-box:hover {
 .storage-tooltips .tooltip-details-cont {
   width: 33%;
   align-items: center !important; /* keep: overrides .intro-charts .tooltip-details-cont flex-start */
-  margin: 0 !important; /* keep */
-  margin-top: 10px !important; /* keep */
-  margin-bottom: 5px !important; /* keep */
+  margin: 0; /* keep */
+  margin-top: 10px; /* keep */
+  margin-bottom: 5px; /* keep */
 }
 
 .storage-tooltips .tooltip-details-ext,

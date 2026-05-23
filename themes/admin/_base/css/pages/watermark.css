@@ -141,7 +141,7 @@ input[type="text"].dError {
 }
 
 .group-rename form {
-  margin: 0 !important;
+  margin: 0;
 }
 
 .Group-name span:hover {
@@ -186,8 +186,8 @@ input[type="text"].dError {
 
 #addGroupNameInput {
   color: #353535;
-  background-color: #f3f3f3 !important;
-  border: none !important;
+  background-color: #f3f3f3;
+  border: none;
   margin-top: 15px;
 }
 

@@ -173,7 +173,7 @@
 
 .breadcrumb-item .icon-cancel-circled,
 .breadcrumb-item .help-item {
-  margin-left: auto !important;
+  margin-left: auto;
   cursor: pointer;
   position: absolute;
   right: 10px;
@@ -224,7 +224,7 @@
 
 .hasDatepicker,
 .elem-type-select {
-  background: #fff !important;
+  background: #fff;
 }
 
 .selectable-filter label {
@@ -232,7 +232,7 @@
 }
 
 .selectable-filter .elem-type-select {
-  margin-top: 5px !important;
+  margin-top: 5px;
 }
 
 .filter-title,
@@ -251,7 +251,7 @@
 
 .search-result-item .notClickable {
   opacity: 0.3;
-  color: #000 !important;
+  color: #000;
 }
 
 .promote-apps {
@@ -449,11 +449,11 @@
 }
 
 #usr-list-user:hover #icon-usr-list-user {
-  display: block !important;
+  display: block !important /* keep: JS-toggled visibility */;
 }
 
 #usr-list-registered:hover #icon-usr-list-registered {
-  display: block !important;
+  display: block !important /* keep: JS-toggled visibility */;
 }
 
 /* Per-page additions */
@@ -473,7 +473,7 @@
 }
 
 .hide {
-  display: none !important;
+  display: none !important /* keep: JS-toggled visibility */;
 }
 
 .tab-title div {
@@ -498,7 +498,7 @@
   max-width: 340px;
 }
 .tab-title .action-title {
-  min-width: 298px !important;
+  min-width: 298px;
 }
 
 .tab-title .date-title,
@@ -723,7 +723,7 @@ div:has(> .activity-header) {
 }
 
 .cancel-icon {
-  margin: 0 0 0 10px !important;
+  margin: 0 0 0 10px;
 
   cursor: pointer;
 }

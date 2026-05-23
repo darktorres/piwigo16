@@ -92,12 +92,12 @@
   padding: 0 5px;
   box-shadow: 0 2px #00000024;
   border: none;
-  background-color: #fafafa !important;
+  background-color: #fafafa;
   width: 200px;
 }
 
 .comments-search:hover {
-  background-color: #f0f0f0 !important;
+  background-color: #f0f0f0;
 }
 
 .comments-search-icon,
@@ -112,7 +112,7 @@
 
 .comments-search input {
   all: unset;
-  background-color: transparent !important;
+  background-color: transparent;
   width: 100%;
   height: 100%;
   line-height: 18px;
@@ -151,8 +151,8 @@
 }
 
 .comments-filters-date {
-  height: 33px !important;
-  padding: 0 5px !important;
+  height: 33px;
+  padding: 0 5px;
 }
 
 .comments-list {
@@ -179,7 +179,7 @@
 }
 
 .comment-validated {
-  border-left: 6px solid #999 !important;
+  border-left: 6px solid #999;
 }
 
 .comment-content {
@@ -307,7 +307,7 @@
 }
 
 .comments-no-selection {
-  margin: 0 30px !important;
+  margin: 0 30px;
 }
 
 .comments-selected-item {
@@ -333,7 +333,7 @@
 }
 
 .comments-modal {
-  width: 700px !important;
+  width: 700px;
 }
 
 .comments-modal p {

@@ -6,7 +6,7 @@
   box-shadow: 5px 5px 5px rgb(0, 0, 0, 0.2);
   background-color: #fafafa;
   padding: 0;
-  margin: 1.5em !important;
+  margin: 1.5em;
   border-radius: 4px;
 }
 
@@ -151,7 +151,7 @@
   border-radius: 2px;
   padding: 0 7px;
   border: 1px solid #d3d3d3;
-  background-color: #fff !important;
+  background-color: #fff;
   flex: 1;
 }
 
@@ -198,7 +198,7 @@
 .full-line-info-box input,
 .half-line-info-box input,
 .description-box {
-  outline: none !important;
+  outline: none;
 }
 
 .privacy-label-container {
@@ -279,7 +279,7 @@
   justify-content: left;
   align-items: center;
   padding: 0;
-  margin: 1.5em !important;
+  margin: 1.5em;
 }
 
 .validation-container {
@@ -306,10 +306,10 @@
 .count-badge {
   display: inline-block;
   text-align: center;
-  border-radius: 100px !important;
-  padding: 3px 9px !important;
-  background-color: #686868 !important;
-  color: #fff !important;
+  border-radius: 100px;
+  padding: 3px 9px;
+  background-color: #686868;
+  color: #fff;
   margin-left: 5px;
 }
 
@@ -326,13 +326,13 @@
 
 /* .selectize-input.items.not-full.has-options,
 .selectize-input.items.not-full.has-options.focus.input-active.dropdown-active,
-.selectize-input.items.not-full, 
+.selectize-input.items.not-full,
 .selectize-input.items.full{
   border: 1px solid #D3D3D3 !important;
 } */
 
 .breadcrumb-item {
-  margin: 5px 0 !important;
+  margin: 5px 0;
 }
 
 /* Pagination row layout (rendered above and below the photo list). */

@@ -165,8 +165,8 @@
 }
 
 .search-result-path.not-rtl {
-  direction: ltr !important;
-  text-overflow: unset !important;
+  direction: ltr;
+  text-overflow: unset;
 }
 
 .search-result-path-name {

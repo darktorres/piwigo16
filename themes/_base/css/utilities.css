@@ -14,11 +14,11 @@
   --z-modal: 1000;
 }
 
-/* HTML5 hidden attribute — needs !important to win over class rules
+/* HTML5 hidden attribute — needs to win over class rules
    like .foo { display: flex } that would otherwise override the UA
    stylesheet's [hidden] { display: none } at higher specificity. */
 [hidden] {
-  display: none !important;
+  display: none !important /* keep: JS-toggled visibility */;
 }
 
 /* Atomic utility classes used across templates instead of inline style="". */

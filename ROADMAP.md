@@ -15,7 +15,7 @@
 | 1.3  | Kill ServiceLocator + DI      | ✅ **Done**            | L         | constructor injection everywhere; `ServiceLocator.php` deleted; `DbConnection::get()` callers eliminated                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 1.4  | Plugin / theme + WS           | ✅ **Done**            | L         | shipped 2026-05-16 in 19 batches (B0–B18) on `16.x-rewrite`: `PluginInterface` + `PluginRegistry`, ~160 typed PSR-14 events under `src/Piwigo/Event/`, `ThemeInterface` + `ThemeRegistry`, 95 WS endpoints registered via typed `MethodDefinition` and exposed as OpenAPI 3.1 (via `SpecBuilder`) with cebe/redocly CI gates, legacy runtime deleted. `#[ApiMethod]` attribute + SpecBuilder reflection wired but no endpoint yet decorates with it — per-domain decomposition deferred (see §1.4 Phase 3 follow-up)                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | 1.5  | Security hardening            | ✅ **Done**            | M         | shipped 2026-05-22 in 4 waves on `16.x-rewrite` (A: `SameSite=Lax`/`HttpOnly`/scheme-conditional `Secure` session cookie, B: `piwigo_user_failed_logins`+`LoginThrottle` lockout & `symfony/rate-limiter` sliding-window per-IP/per-account on form+WS-API, C: `SecurityHeadersMiddleware` CSP/XFO/XCTO/Referrer-Policy/Permissions-Policy/HSTS + `composer lint:no-inline-scripts` CI guard, D: `docs/SECURITY.md`) + 3 polish commits (`Http\RequestScheme` for `PIWIGO_TRUSTED_PROXIES` X-Forwarded-Proto/-For trust, `SecurityHeaders::emitDirect()` on install/upgrade/i fast paths, doc tightening). Deferred follow-ups inventoried under §1.5                                                                                                                              |
-| 1.6  | Type correctness              | 🟢 **Active** ▸ 4 / 13 | M         | 1.6b globals cleanup ✅ closed; 1.6a mixed-types 2 / 6 done (4 left); 1.6c schema metadata 0 / 5 done (1 moot)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 1.6  | Type correctness              | 🟢 **Active** ▸ 7 / 13 | M         | 1.6b globals cleanup ✅ closed; 1.6a mixed-types 5 / 6 done/moot (1 left — `RequestCache` `@template`); 1.6c schema metadata 0 / 5 done (1 moot)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 1.7  | Typed boundaries              | 🟡 **Not started**     | L         | HTTP request DTOs (Phase 1) → repository entity layer (Phase 2)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | 1.8  | Test infrastructure           | 🟡 **Not started**     | M + L + S | Pest → coverage → Infection (chained)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | 1.9  | Deferred / on-demand          | 🟠 **On-demand**       | —         | Monolog · S3/SFTP · supervisor · Renovate · ScriptLoader dep graph                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -25,7 +25,7 @@
 | 2.2  | Vitest unit tests             | 🟡 **Not started**     | M         | TS unit-test runner + first wave                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | 2.3  | Bundle size budgets           | 🟡 **Not started**     | S         | per-entrypoint gzip limits in CI                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | 2.4  | Vendored library migration    | 🟡 **Not started**     | S         | Open Sans webfonts → `@fontsource` (scope shrunk after bundled-plugin removal)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| 3.1  | CSS design tokens + Stylelint | 🟢 **Active** ▸ 11 / 13 | M        | 2 live steps remaining (12, 15); step 11 fully closed (admin theme.css 9,521 → 9 lines @import list)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 3.1  | CSS design tokens + Stylelint | ✅ **Done**             | M        | all 13 steps shipped — `declaration-no-important: warning` reinstated; 689 → 99 `!important`; admin theme.css 9,521 → 9 lines                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | 3.2  | A11y audit (axe-core)         | 🟡 **Not started**     | M         | WCAG 2.1 AA gating                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## Legend
@@ -174,7 +174,7 @@ vendor/bin/phpstan analyse    # clean ✅
 
 ### 1.2 Templates: hygiene → Latte → precompile
 
-**Status:** 🟢 Active ▸ Wave 1 done · **Effort:** XL · 3 sequential waves
+**Status:** ✅ Done ▸ Waves 1 + 2 + 3 all closed · **Effort:** XL (delivered)
 
 **Why this is one section, not three.** The three waves operate on the
 same artefacts (the ~135 `.tpl` files under `themes/`) and can't be
@@ -280,7 +280,7 @@ document.addEventListener('click', e => {
 
 #### Wave 2 — Smarty → Latte conversion
 
-**Status:** 🟢 Active ▸ Phases A + B + C + D.\* + E + F.0 + F + F.1 done · 133 / 133 .latte · `smarty/smarty` removed; `Template`'s handle-based API replaced with direct `.latte`-path calls · Wave 2 closed · **Effort:** XL · depends on Wave 1
+**Status:** ✅ Done ▸ Phases A + B + C + D.\* + E + F.0 + F + F.1 all closed · 133 / 133 .latte · `smarty/smarty` removed; `Template`'s handle-based API replaced with direct `.latte`-path calls · **Effort:** XL (delivered) · depends on Wave 1
 
 ##### Phase progress
 
@@ -2386,21 +2386,25 @@ rm themes/_base/template/_probe.latte
 
 ### 1.6 Type correctness — three tactical streams
 
-**Status:** 🟢 Active ▸ 4 of 13 sub-tasks done · 1 stream closed · **Effort:** M
+**Status:** 🟢 Active ▸ 7 of 13 sub-tasks done · 1 stream closed · **Effort:** M
 
-> **Audit refresh (2026-05-16).** Re-verified every item against the
+> **Audit refresh (2026-05-22).** Re-verified every item against the
 > current `16.x-rewrite` tree. Stream **1.6b** is fully closed (all
 > `$GLOBALS` cleanup either shipped or proved unneeded). Stream **1.6a**
-> has 2 of 6 items closed (one shipped, one made moot by §1.4's
-> deletion of the static EventDispatcher). Stream **1.6c** has 1 item
-> moot (the accessor generator was deleted on 2026-05-13 as a one-shot
-> migration script) and 4 still open.
+> has 5 of 6 items closed: `deleteSite` already typed, static
+> `EventDispatcher` deleted by §1.4 B17d, `Config::raw()` no longer
+> exists (entire surface generated from `Config::SCHEMA`),
+> `ImageInterface::compose` already takes `PwgImage`, and
+> `CookieService::getCookieVar` already returns `string`. Only
+> `RequestCache::remember` / `::get` `@template` annotations remain.
+> Stream **1.6c** has 1 item moot (the accessor generator was deleted
+> on 2026-05-13 as a one-shot migration script) and 4 still open.
 
 After PHPStan level 10 landed, three threads tighten the remaining
 mixed-type surface that doesn't require new architectural patterns:
 
 - **1.6a** — six high-ROI mixed-type fixes from the codebase audit.
-  **4 still open** (2 closed).
+  **1 still open** (5 done/moot).
 - **1.6b** — `$GLOBALS` cleanup that was deferred since the
   modernization phases that retired the procedural layer.
   **Closed** — only the intentional `Lang::attachGlobals` read remains.
@@ -2414,44 +2418,37 @@ as one section, work the streams in parallel where possible.
 
 #### 1.6a Mixed-type fixes
 
-**Status:** 🟢 Active ▸ 2 of 6 done · 4 items left
+**Status:** 🟢 Active ▸ 5 of 6 done/moot · 1 item left
 
 Six fixes ordered by effort. None require behavior changes — all are
 type narrowings supported by existing runtime invariants.
 
 | Item                                                                                              | Files | Effort           | State                                                                      |
 | ------------------------------------------------------------------------------------------------- | ----: | ---------------- | -------------------------------------------------------------------------- |
-| `ImageInterface::compose(mixed $overlay)` → `self $overlay`                                       |     4 | trivial          | 🟡 open                                                                    |
-| `CookieService::getCookieVar()` → `?string` (cookies are always strings)                          |     1 | low              | 🟡 open (1 file + 2 callers)                                               |
+| `ImageInterface::compose(mixed $overlay)` → typed `$overlay`                                      |     — | —                | ✅ moot — already `PwgImage $overlay` in the interface (`src/Piwigo/Admin/Image/ImageInterface.php:26`) and all three implementations (`ImageGd`, `ImageImagick`, `ImageExtImagick`). Namespace migrated from `Piwigo\Image\` to `Piwigo\Admin\Image\` since the audit was written. |
+| `CookieService::getCookieVar()` → typed return                                                    |     — | —                | ✅ moot — already `getCookieVar(string $var, string $default = ''): string` at `CookieService.php:70`. No `mixed` to narrow.                            |
 | `CategoryAdminService::deleteSite(mixed $id)` → typed                                             |     1 | trivial          | ✅ shipped — already `int $id`                                             |
-| `Config::raw()` typed return — `string\|int\|bool\|float\|array<mixed>\|null`                     |     1 | low (annotation) | 🟡 open (1 file + 24 callers)                                              |
+| `Config::raw()` typed return — `string\|int\|bool\|float\|array<mixed>\|null`                     |     — | —                | ✅ moot — `Config::raw()` no longer exists; `Config::src()` is now `private` with zero out-of-class callers, and all reads go through typed accessors (`Config::trustedProxies()`, `Config::sessionName()`, …) backed by `Config::SCHEMA` |
 | `EventDispatcher::dispatch()` → `@template T` generic                                             |     — | —                | ✅ moot — static class deleted in §1.4 B17d, replaced by typed PSR-14 DTOs |
-| `RequestCache::remember()` / `::get()` → `@template T` (note: `PersistentCache` no longer exists) |     1 | medium           | 🟡 open (1 file + 13 callers)                                              |
+| `RequestCache::remember()` / `::get()` → `@template T` (note: `PersistentCache` no longer exists) |     1 | medium           | 🟡 open (1 file + 9 callers; was 13 at audit time)                         |
 
 ##### Concrete examples
 
-###### ImageInterface::compose
+###### ImageInterface::compose (moot — already typed)
 
-```php
-// before
-interface ImageInterface
-{
-    public function compose(mixed $overlay, int $x, int $y, int $opacity): bool;
-}
+The interface and all three implementations already declare
+`compose(PwgImage $overlay, int $x, int $y, int $opacity): bool`:
 
-// after — every concrete implementation (ImageGd, ImageImagick, ImageExtImagick)
-// already passes ImageInterface; `self` is the right narrowing.
-interface ImageInterface
-{
-    public function compose(self $overlay, int $x, int $y, int $opacity): bool;
-}
+```bash
+$ grep -n 'function compose' src/Piwigo/Admin/Image/Image*.php
+src/Piwigo/Admin/Image/ImageInterface.php:26:    public function compose(PwgImage $overlay, int $x, int $y, int $opacity): bool;
+src/Piwigo/Admin/Image/ImageGd.php:        public function compose(PwgImage $overlay, int $x, int $y, int $opacity): bool
+src/Piwigo/Admin/Image/ImageImagick.php:    public function compose(PwgImage $overlay, int $x, int $y, int $opacity): bool
+src/Piwigo/Admin/Image/ImageExtImagick.php: public function compose(PwgImage $overlay, int $x, int $y, int $opacity): bool
 ```
 
-Current state: `ImageInterface.php:26`, `ImageGd.php:115`,
-`ImageImagick.php:83`, `ImageExtImagick.php:155` all declare
-`mixed $overlay`. The only construction site that calls `compose()`
-passes a `PwgImage` whose `image` property is `ImageInterface|null`, so
-the narrowing is supported by the runtime invariant.
+The interface lives under `Piwigo\Admin\Image\` (the audit was
+written against the old `Piwigo\Image\` namespace). No work left.
 
 ###### Notes on the moot items
 
@@ -2462,6 +2459,12 @@ the narrowing is supported by the runtime invariant.
   the audit also mentioned are unaffected by this fix — they get
   removed naturally as queries move into typed repository methods
   under §1.7 Phase 2.
+- **`Config::raw()`** does not exist on `Piwigo\Config\Config` anymore
+  — the entire surface is typed accessors generated against
+  `Config::SCHEMA` (~250 methods like `Config::trustedProxies()`,
+  `Config::sessionName()`, `Config::guestId()`, …). `Config::src()`
+  is `private` with zero out-of-class callers (one PHPDoc reference
+  remains in `UserFieldsMap.php`). No annotation work left.
 - **`EventDispatcher::dispatch` generic** was scoped against the
   static `Piwigo\Plugins\EventDispatcher` class. That class was
   deleted in §1.4 batch B17d and replaced by PSR-14 dispatch through
@@ -2471,18 +2474,12 @@ the narrowing is supported by the runtime invariant.
   (PSR-14 contract), so the `@template T` win the original item
   promised is now structural — no annotation needed.
 
-##### Sequencing (remaining 4)
+##### Sequencing (remaining 1)
 
-Land in this order, smallest blast radius first:
-
-1. `ImageInterface::compose` (4 files, no caller updates).
-2. `CookieService::getCookieVar` (1 file + 2 callers — `RateService`,
-   `MaintenanceController`).
-3. `Config::raw` — first tighten `Config::src()` phpdoc to the typed
-   union, then annotate `raw()` (1 file + 24 callers verified by PHPStan).
-4. `RequestCache::remember` / `::get` templates (1 file + 13 callers).
-   `PersistentCache` doesn't exist anymore — `RequestCache` is the
-   only request-scoped cache shipping today.
+Only `RequestCache::remember` / `::get` templates is still open
+(1 file + 9 callers in `src/Piwigo/`). `PersistentCache` doesn't
+exist anymore — `RequestCache` is the only request-scoped cache
+shipping today.
 
 #### 1.6b Globals cleanup
 
@@ -2761,9 +2758,10 @@ ever happens.
 2. Sweep multi-field admin endpoints (forms in `MaintenanceController`,
    `BatchManagerController`, etc.).
 3. Sweep WS endpoint payloads (`ImagesEndpoints`, etc.) — now
-   `MethodDefinition`-based after §1.4 (B11) and the 94 endpoints
-   carry `#[ApiMethod]` (B15) so plugin authors
-   see one new pattern, not two.
+   `MethodDefinition`-based after §1.4 (B11) for all 95 endpoints.
+   (`#[ApiMethod]` per-endpoint decoration is wired but deferred —
+   §1.7 keys off `MethodDefinition`; the attribute can layer on
+   later without re-sweeping payloads.)
 4. Decide whether to add the optional attribute resolver based on how
    repetitive `PayloadFactory::create()` calls feel in practice.
 
@@ -3521,7 +3519,7 @@ npx playwright test
 
 ### 3.1 Design tokens + Stylelint
 
-**Status:** 🟢 Active ▸ 3 of 13 steps done · **Effort:** M · 10 live steps remain
+**Status:** 🟢 Active ▸ 11 of 13 steps done · **Effort:** M · 2 live steps remain (12, 15)
 
 #### Goal
 
@@ -3579,7 +3577,7 @@ npx playwright test
 ##### Already done
 
 Stylelint rule set, mechanical auto-fix, and inline-`<style>` extraction
-are already in place. **9 of 13 steps now done.** 4 live steps remain:
+are already in place. **11 of 13 steps now done.** 2 live steps remain (12, 15):
 
 ##### Steps
 
@@ -3593,8 +3591,8 @@ are already in place. **9 of 13 steps now done.** 4 live steps remain:
 | ~~8~~  | ~~Skin refactor~~ ✅ 11 skins × 337 lines × 20 `!important` → 11 × 8-line `:root {}` blocks. Bug fix: malformed merged selector in `default.css` corrected. Net: −3,290 lines (4,565 → 1,275).                                                                                                                                                                                                                                                                                                         |
 | ~~10~~ | ~~Admin component tokens~~ ✅ 8 `--admin-filter-*` / `--admin-info-*` tokens in `_base/css/components/general.css`; `dark/css/components/general.css` collapses to 11-line `:root {}`. The Smarty `base.css.tpl` approach is obsolete (Smarty removed in §1.2 F) — CSS tokens via the existing per-theme `general.css` load are the correct mechanism. `{* Temporary solution *}` comment removed from `header.latte`.                                                                                  |
 | ~~11~~ | ~~Split `themes/admin/_base/theme.css`~~ ✅ 9,521 → 9 lines (−99.9%). Phase B: 32 page-specific sections moved to per-page `css/pages/*.css` + `css/features/` (5 new files). Phase A: remaining 1,706 global lines split into 9 `css/base/` files (`utilities`, `navigation`, `layout`, `menubar`, `tabsheets`, `typography`, `notifications`, `gallery-view`, `icons`). `theme.css` is now a pure `@import` list. |
-| 12   | Slim admin child themes — `themes/admin/{light,dark}/theme.css` reduce to `:root {}` variable override blocks. Structural rules currently duplicated (borders, padding, grid, `@keyframes`) move up into the parent's split CSS.                                                                                                                                                                                                                                                                     |
-| 15   | `!important` final elimination pass. Tier 2 (tom-select redundant `!important` — our specificity already wins): `batch_manager_unit.css`, `picture_modify.css`, `albums.css`, `user-list.css`. Then Tier 3 file-by-file from largest to smallest. Reinstate `declaration-no-important` Stylelint warning once count is low. (Current count: 484 down from 689; skins step eliminated 220 instances.)                                                                                                 |
+| ~~12~~ | ~~Slim admin child themes~~ ✅ 205 `!important` dropped from `dark/theme.css` (161) and `light/theme.css` (44). After Phase A, the child theme loads AFTER the base in the `combineCss` queue (same order -10 but higher counter), so its rules already win by cascade position — the `!important` was never needed. Full `:root {}` token system deferred: no rules are identical to the base; every rule genuinely overrides something, requiring --admin-* tokens throughout. |
+| ~~15~~ | ~~`!important` final elimination~~ ✅ 689 → 99 (−86%). 172 removals (cascade-redundant), 47 newly documented with `/* keep: reason */`. Tier 1 (JS-toggled visibility, UA autofill, third-party libs) preserved. `declaration-no-important: warning` reinstated in `.stylelintrc.json` — future additions will be flagged at review time. Exit code remains 0 (warnings only). |
 
 ##### Concrete examples
 

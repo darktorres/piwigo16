@@ -560,7 +560,7 @@
 }
 
 .grey-icon {
-  display: block !important;
+  display: block !important /* keep: JS-toggled visibility */;
 }
 
 .custom_posted_date_toggle,
@@ -612,12 +612,12 @@
 }
 
 .head-button-2 p {
-  margin: 0 !important;
+  margin: 0;
   white-space: nowrap;
 }
 
 .head-button-2:hover {
-  text-decoration: none !important;
+  text-decoration: none;
   background: var(--search-head-btn2-hover-bg);
   color: var(--search-head-btn2-hover-color) !important; /* keep: overrides inherited link color */
 }
@@ -654,7 +654,7 @@
 
 .breadcrumb-item .icon-cancel-circled,
 .breadcrumb-item .help-item {
-  margin-left: auto !important;
+  margin-left: auto;
   cursor: pointer;
   position: absolute;
   right: 10px;
@@ -754,7 +754,7 @@
 .filter-added_by-form .selectize-input input:focus-visible,
 .filter-tag-form .selectize-input input:focus-visible {
   border: none;
-  outline: none !important;
+  outline: none !important /* keep: third-party specificity */;
 }
 
 .filter-tag-form .selectize-control.multi .selectize-input > div,
@@ -824,11 +824,11 @@
 .added_by-option,
 .ratios-option,
 .ratings-option {
-  min-width: 150px !important;
+  min-width: 150px;
 }
 
 .section-search .sticky-top {
-  z-index: 10 !important;
+  z-index: 10;
 }
 
 .search-input {
@@ -847,7 +847,7 @@
     width: 100vw;
     padding: 15px;
     border-radius: 0;
-    box-shadow: none !important;
+    box-shadow: none;
     top: 37px;
   }
   .form_mobile_arrow {
@@ -866,7 +866,7 @@
 
   .search-params-title,
   .search-params {
-    display: block !important;
+    display: block !important /* keep: JS-toggled visibility */;
   }
 
   .word-search-options {
@@ -912,7 +912,7 @@
 
   .search-result-path,
   .link-path {
-    white-space: unset !important;
+    white-space: unset;
   }
 
   .delete,
@@ -929,7 +929,7 @@
   input,
   select,
   textarea {
-    font-size: 16px !important;
+    font-size: 16px;
   }
 
   #word-search {
@@ -965,8 +965,8 @@
 
 .disableSlider {
   pointer-events: none;
-  border: 1px solid #ccc !important;
-  background-color: #ccc !important;
+  border: 1px solid #ccc;
+  background-color: #ccc;
 }
 
 .mcs-container div .slider_input {
@@ -1001,7 +1001,7 @@
 }
 
 .mcs_hide {
-  display: none !important;
+  display: none !important /* keep: JS-toggled visibility */;
 }
 
 /* expert mode : search tips modal */
@@ -1047,12 +1047,12 @@
 
 .help-popin-search {
   cursor: pointer;
-  font-weight: normal !important;
+  font-weight: normal;
 }
 
 .help-popin-search:hover span,
 .help-popin-search:hover .icon-help-circled::before {
-  color: #3c3c3c !important;
+  color: #3c3c3c;
 }
 
 #modalQuickSearch p {

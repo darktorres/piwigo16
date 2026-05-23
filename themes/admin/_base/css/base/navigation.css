@@ -7,7 +7,7 @@
 #update,
 #pendingComments,
 #action {
-  padding-bottom: 62px !important;
+  padding-bottom: 62px;
 }
 
 /* Search bar */
@@ -16,14 +16,14 @@
   padding: 10px;
   box-shadow: 0 2px #00000024;
   border: none;
-  background-color: #fafafa !important;
+  background-color: #fafafa;
   padding-left: 30px;
   width: 200px;
   margin: 4px;
 }
 
 .search-input:hover {
-  background-color: #f0f0f0 !important;
+  background-color: #f0f0f0;
 }
 
 .search-info {

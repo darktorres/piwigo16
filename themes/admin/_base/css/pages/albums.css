@@ -105,7 +105,7 @@
   align-items: center;
 }
 .move-cat-title-container:hover {
-  cursor: pointer !important;
+  cursor: pointer;
 }
 
 .move-cat-title-container .icon-pencil {
@@ -113,7 +113,7 @@
   font-size: 16px;
 }
 .move-cat-title-container:hover .icon-pencil {
-  display: flex !important;
+  display: flex !important /* keep: JS-toggled visibility */;
 }
 
 .move-cat-container .move-cat-toogler .icon-left-open {
@@ -196,7 +196,7 @@
 }
 
 .cat-move-order-popin .popin-title .icon-sort-name-up::before {
-  display: inline !important;
+  display: inline;
 }
 .cat-move-order-popin .popin-title .icon-sort-name-up,
 .cat-move-order-popin .popin-title-text {
@@ -265,15 +265,15 @@
 /* album-tree (vanilla TS) overrides */
 
 .pwgtree-common {
-  margin: 20px 0 !important;
+  margin: 20px 0;
 }
 
 ul.pwgtree-tree ul.pwgtree-common {
-  margin-left: 50px !important;
+  margin-left: 50px;
 }
 
 ul.pwgtree-tree .pwgtree-element {
-  cursor: move !important;
+  cursor: move;
 }
 
 .albumBlock {
@@ -303,8 +303,8 @@ ul.pwgtree-tree .pwgtree-element {
 }
 .afterUploadActions {
   text-align: center;
-  margin-bottom: 30px !important;
-  margin-top: 45px !important;
+  margin-bottom: 30px;
+  margin-top: 45px;
 }
 .afterUploadActions a {
   justify-content: center;
@@ -539,7 +539,7 @@ ul.pwgtree-tree .pwgtree-element {
 
 .AlbumViewSelector,
 .UserViewSelector {
-  background: #fafafa !important;
+  background: #fafafa;
 }
 
 .AlbumViewSelector input:checked + label,
@@ -577,7 +577,7 @@ ul.pwgtree-tree .pwgtree-element {
 .filters-grid {
   display: grid;
   grid-template-columns: 200px 150px 25px;
-  margin-bottom: 0 !important;
+  margin-bottom: 0;
 }
 .select-views {
   background-color: #f3f3f3;
@@ -607,7 +607,7 @@ ul.pwgtree-tree .pwgtree-element {
 .filter-manager-options-container {
   display: inline-block;
   font-size: 11px;
-  font-weight: normal !important;
+  font-weight: normal;
   border: 1px solid #777;
   border-radius: 20px;
   padding: 4px 10px;
@@ -846,7 +846,7 @@ input[name="position"] {
 .album-add-button-label p,
 .order-root-button-label p {
   white-space: nowrap;
-  margin: 0 !important;
+  margin: 0;
 }
 
 .badge-container {
@@ -855,10 +855,10 @@ input[name="position"] {
 }
 
 .badge-container i {
-  padding: 2px 6px 2px 4px !important;
-  border-radius: 10px !important;
-  font-size: 0.85em !important;
-  margin: 0 2px !important;
+  padding: 2px 6px 2px 4px;
+  border-radius: 10px;
+  font-size: 0.85em;
+  margin: 0 2px;
   font-weight: 700;
   font-style: normal;
 }
@@ -962,7 +962,7 @@ input[name="position"] {
   }
 
   ul.pwgtree-tree ul.pwgtree-common {
-    margin-left: 20px !important;
+    margin-left: 20px;
   }
 
   .move-cat-title-container {

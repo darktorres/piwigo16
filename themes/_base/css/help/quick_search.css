@@ -47,12 +47,12 @@
 }
 
 .quick-search-item-tip p {
-  color: #868686 !important;
+  color: #868686;
 }
 
 .quick-search-section {
   font-weight: bold;
-  margin: 10px 0 !important;
+  margin: 10px 0;
   font-size: 16px;
 }
 

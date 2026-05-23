@@ -96,18 +96,18 @@ div.error .jGrowl-popup-icon {
 }
 
 div.jGrowl div.jGrowl-notification div.jGrowl-message {
-  font-size: 1.2em !important;
+  font-size: 1.2em !important /* keep: third-party specificity */;
   margin: 0% 0% 0% 28%;
 }
 div.jGrowl div.jGrowl-notification div.jGrowl-header {
-  font-size: 1.2em !important;
-  font-weight: 800 !important;
+  font-size: 1.2em !important /* keep: third-party specificity */;
+  font-weight: 800 !important /* keep: third-party specificity */;
   margin: 5% 0% 2% 28%;
 }
 div.success div.jGrowl-close,
 div.error div.jGrowl-close {
-  font-size: 2em !important;
-  font-weight: 1000 !important;
+  font-size: 2em !important /* keep: third-party specificity */;
+  font-weight: 1000 !important /* keep: third-party specificity */;
   position: relative;
   top: -7px;
   right: 1px;
@@ -147,7 +147,7 @@ div.jGrowl div.jGrowl-notification {
 }
 
 .buttonSubmitLocal {
-  margin-left: 9px !important;
+  margin-left: 9px;
 }
 
 .infos li,

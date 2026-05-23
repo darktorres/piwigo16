@@ -123,10 +123,10 @@
 .tab-body-details p {
   display: inline;
   align-items: center;
-  border-radius: 3px !important;
-  padding: 4px !important;
-  padding-right: 8px !important;
-  margin-right: 5px !important;
+  border-radius: 3px;
+  padding: 4px;
+  padding-right: 8px;
+  margin-right: 5px;
   font-weight: normal;
 }
 @media (min-width: 1350px) {

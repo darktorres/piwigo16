@@ -213,9 +213,9 @@
 }
 
 .ValidationUserDissociated p {
-  margin: 0 !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 #UserList .FilterUserBlock .AmountOfUsersShown {
@@ -457,7 +457,7 @@ a.group_users {
 .guest-edit-user-tab-title .selected,
 .guest-edit-user-tab-title .selected:hover {
   color: #323232;
-  border-bottom: solid 4px #323232 !important;
+  border-bottom: solid 4px #323232;
 }
 
 .edit-user-icons .delete-user-button::before,
@@ -493,18 +493,18 @@ a.group_users {
 
 .password-choice-content .unavailable,
 .password-choice-content .unavailable:hover {
-  color: #cbcbcb !important;
+  color: #cbcbcb;
 }
 
 /* Per-page additions */
 .icon-help-circled {
-  color: #777 !important;
+  color: #777;
   cursor: help;
 }
 
 /* general */
 .no-flex-grow {
-  flex-grow: 0 !important;
+  flex-grow: 0;
 }
 
 #template {
@@ -656,7 +656,7 @@ a.group_users {
 }
 
 .user-container-initials .small {
-  font-size: 1em !important;
+  font-size: 1em;
   line-height: 30px;
 }
 
@@ -717,7 +717,7 @@ a.group_users {
 
 .user-header-registration,
 .user-container-registration {
-  width: 10% !important;
+  width: 10%;
   max-width: 700px;
   min-width: 130px;
   margin-left: auto;
@@ -1039,7 +1039,7 @@ a.group_users {
 
 #dropdown_mores_plugins .selected,
 #dropdown_mores_plugins .edit-user-tabsheet {
-  border-bottom: unset !important;
+  border-bottom: unset;
 }
 
 #dropdown_mores_plugins .edit-user-tabsheet {
@@ -1097,7 +1097,7 @@ a.group_users {
 
 .user-property-input-icon .user-property-input {
   background-color: transparent;
-  padding: 0 0 0 5px !important;
+  padding: 0 0 0 5px;
   font-size: 16px;
 }
 
@@ -1219,7 +1219,7 @@ a.group_users {
 }
 
 .user-property-initials .small {
-  font-size: 3em !important;
+  font-size: 3em;
 }
 
 .user-property-username {
@@ -1567,7 +1567,7 @@ a.group_users {
 
 .user-property-register,
 .user-property-last-visit {
-  font-size: 11px !important;
+  font-size: 11px;
   min-width: 80px;
 }
 
@@ -1642,7 +1642,7 @@ a.group_users {
 }
 
 .user-property-main-user-body .main-user-rewrite-footer span {
-  background-color: transparent !important;
+  background-color: transparent;
 }
 
 .user-property-main-user-body .main-user-proceed-desc,
@@ -1703,7 +1703,7 @@ a.group_users {
 }
 
 .user-property-group-container .selectize-input {
-  height: 70px !important;
+  height: 70px !important /* keep: third-party specificity */;
 }
 
 /* preferences */
@@ -1750,10 +1750,10 @@ a.group_users {
 
 /* plugins tabsheet */
 .edit-user-tabsheet-plugins {
-  width: 435px !important;
-  height: 480px !important;
-  margin-right: 15px !important;
-  margin-top: 29px !important;
+  width: 435px;
+  height: 480px;
+  margin-right: 15px;
+  margin-top: 29px;
 }
 /* update */
 
@@ -1850,7 +1850,7 @@ a.group_users {
 }
 
 .hide-user-property-password {
-  display: none !important;
+  display: none !important /* keep: JS-toggled visibility */;
 }
 
 .AddUserPopInContainer {
@@ -2323,7 +2323,7 @@ Advanced filter
 }
 
 .hide {
-  display: none !important;
+  display: none !important /* keep: JS-toggled visibility */;
 }
 
 .tileView .user-container-edit {
@@ -2360,7 +2360,7 @@ Advanced filter
 
   width: min-content;
 
-  margin: 20px 20px 0 0 !important;
+  margin: 20px 20px 0 0;
   border-radius: 25px;
 
   position: relative;
@@ -2370,7 +2370,7 @@ Advanced filter
 .compactView .user-container .user-container-email,
 .compactView .user-container .user-container-groups,
 .compactView .user-container .user-container-registration {
-  display: none !important;
+  display: none !important /* keep: JS-toggled visibility */;
 }
 
 .compactView .user-container-initials-wrapper {
@@ -2450,7 +2450,7 @@ Advanced filter
 }
 
 .selectize-input.items .item {
-  color: #000 !important;
+  color: #000 !important /* keep: third-party specificity */;
 }
 
 /* Selection mode */
@@ -2472,7 +2472,7 @@ Advanced filter
 }
 
 .selectable:hover .select-checkbox {
-  background-color: #ffa646 !important;
+  background-color: #ffa646;
 }
 
 .selectable .user-first-col:hover {

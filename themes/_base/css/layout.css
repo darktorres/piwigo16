@@ -129,7 +129,7 @@ form p {
 }
 
 /* Tag cloud font-size levels — each level is a discrete font-size step.
-   !important is needed because the public gallery may apply conflicting
+   is needed because the public gallery may apply conflicting
    inline or theme styles; these levels must always win their own cascade. */
 .tagLevel5 {
   font-size: 150% !important; /* keep: must override any cascade conflict */

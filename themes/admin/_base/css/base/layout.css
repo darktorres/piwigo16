@@ -276,7 +276,7 @@ ul.tagSelection {
 
 ul.tagSelection li {
   display: inline-block;
-  width: 150px !important;
+  width: 150px;
   overflow: hidden;
   white-space: nowrap;
 }

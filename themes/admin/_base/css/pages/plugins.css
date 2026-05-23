@@ -58,7 +58,7 @@
 }
 
 .advanced-filter-new-plugin .advanced-filter-container {
-  display: grid !important;
+  display: grid !important /* keep: JS-toggled visibility */;
   grid-template-columns: repeat(5, 20%);
 }
 
@@ -68,7 +68,7 @@
 }
 
 .advanced-filter-revision-date .advanced-filter-item-label {
-  display: inline !important;
+  display: inline;
 }
 
 .pluginFilter {
@@ -98,7 +98,7 @@
   .pluginBigBox {
     max-width: 100%;
     min-width: 100%;
-    margin-right: 0 !important;
+    margin-right: 0;
   }
 }
 
@@ -216,7 +216,7 @@
 }
 
 .buttonInstall {
-  margin-left: 0 !important;
+  margin-left: 0;
   margin-right: 5px;
 }
 
@@ -355,7 +355,7 @@
 }
 
 .pluginUpdateContainer {
-  margin-bottom: 5px !important;
+  margin-bottom: 5px;
 }
 
 .pluginUpdateContainer legend {
@@ -363,7 +363,7 @@
 }
 
 .pluginUpdateContainer .pluginActions {
-  margin-right: 0 !important;
+  margin-right: 0;
 }
 
 /* 
@@ -411,7 +411,7 @@
 
 .pluginUnavailableAction:hover {
   text-decoration: none;
-  color: #3c3c3c !important;
+  color: #3c3c3c;
   cursor: default;
 }
 
@@ -529,31 +529,31 @@
 }
 
 .pluginMiniBox.plugin-active .pluginActionsSmallIcons a span {
-  background: #ffc17e !important;
-  color: #3c3c3c !important;
+  background: #ffc17e;
+  color: #3c3c3c;
 }
 
 .pluginMiniBox.plugin-active .pluginActionsSmallIcons a span:hover {
-  background: #f70 !important;
-  color: #111 !important;
+  background: #f70;
+  color: #111;
 }
 
 .pluginMiniBox.plugin-inactive .pluginActionsSmallIcons a span {
-  background: #ececec !important;
-  color: #3c3c3c !important;
+  background: #ececec;
+  color: #3c3c3c;
 }
 
 .pluginMiniBox.plugin-inactive .pluginActionsSmallIcons a i {
-  background: #ececec !important;
-  color: #3c3c3c !important;
+  background: #ececec;
+  color: #3c3c3c;
   border-radius: 5px;
   padding: 2px;
   opacity: 0.7;
 }
 
 .pluginMiniBox.plugin-active .pluginActionsSmallIcons a i {
-  background: #ececec !important;
-  color: #3c3c3c !important;
+  background: #ececec;
+  color: #3c3c3c;
   border-radius: 5px;
   padding: 2px;
   opacity: 0.5;
@@ -772,7 +772,7 @@
 
 .unavailablePlugin:hover {
   cursor: default;
-  color: #7f7f7f !important;
+  color: #7f7f7f;
   opacity: 0.5;
 }
 
@@ -931,7 +931,7 @@
 
 .pluginContainer.line-form .pluginBox .pluginDesc {
   margin: auto 10px;
-  display: flex !important;
+  display: flex !important /* keep: JS-toggled visibility */;
   align-items: center;
 
   white-space: nowrap;

@@ -68,44 +68,44 @@
 
 .jconfirmDeleteConfirm,
 .jconfirmAlert {
-  padding-bottom: 0 !important;
-  color: #3c3c3c !important;
-  line-height: 28px !important;
+  padding-bottom: 0;
+  color: #3c3c3c;
+  line-height: 28px;
 }
 
 .jconfirmAlert {
-  margin-bottom: -2px !important;
+  margin-bottom: -2px;
 }
 
 .jconfirmDeleteConfirm ~ .jconfirm-content-pane,
 .jconfirmAlert ~ .jconfirm-content-pane {
-  /* height: 0px !important; */
-  margin: 0 !important;
+  /* height: 0px; */
+  margin: 0;
 }
 
 .jconfirmDeleteConfirm ~ .jconfirm-buttons button {
-  text-transform: none !important;
+  text-transform: none;
 }
 
 .jconfirmAlert .jconfirm-icon-c {
-  margin-bottom: 25px !important;
+  margin-bottom: 25px;
 }
 
 .jconfirmAlert .jconfirm-title {
-  font-size: 20px !important;
+  font-size: 20px;
 }
 
 .jconfirmAlert .jconfirm-icon-c i {
   border-radius: 60px;
   padding: 2px;
   font-size: 45px;
-  color: #0a0 !important;
-  background-color: #c2f5c2 !important;
+  color: #0a0;
+  background-color: #c2f5c2;
 }
 
 .jconfirmWarning .jconfirm-icon-c i {
-  color: #ffa744 !important;
-  background-color: #ffe9cf !important;
+  color: #ffa744;
+  background-color: #ffe9cf;
 }
 
 .jconfirm-title {
@@ -113,10 +113,10 @@
 }
 
 .jconfirm-buttons .btn {
-  text-transform: none !important;
+  text-transform: none;
 }
 .jconfirm.jconfirm-modern .jconfirm-box .jconfirm-buttons button {
-  border-radius: 0 !important;
+  border-radius: 0;
 }
 /* Group checkbox */
 

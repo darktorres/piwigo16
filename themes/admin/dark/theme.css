@@ -999,15 +999,9 @@ li.plupload_delete a.remove-format:hover {
   transition: 0.2s linear;
 }
 
-.cat-modify-info-card,
-.cat-modify-input-container input,
-.cat-modify-input-container textarea {
-  background: #333 ;
-  color: #c1c1c1 ;
-}
-
-.cat-modify-representative {
-  background-color: #333;
+.cat-modify-info-card {
+  background: #333;
+  color: #c1c1c1;
 }
 
 

@@ -366,7 +366,7 @@
 
 .cat-modify-representative {
   position: relative;
-  background: #f3f3f3;
+  background: var(--admin-bg-elevated);
   align-items: center;
   justify-content: center;
   display: flex;
@@ -433,8 +433,8 @@
   width: 100%;
   resize: none;
 
-  color: #353535;
-  background-color: #f3f3f3 !important; /* keep: overrides dark theme input bg */
+  color: var(--admin-text);
+  background-color: var(--admin-bg-elevated);
   border: none;
   box-sizing: border-box;
   padding: 8px 12px;

@@ -1,19 +1,268 @@
-/*
- *  Switch btn between views
- */
+/* Category List + Album Ordering — consolidated from _base/theme.css global and per-page additions */
+
+.categoryContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 0 20px;
+}
+
+.categoryBox,
+.addAlbum {
+  position: relative;
+  text-align: left;
+  height: 320px;
+  width: 220px;
+  margin: 15px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.albumIconLineHover {
+  background: #f98100 !important; /* keep: JS hover state */
+  color: #ffd7ad !important; /* keep: JS hover state */
+  transition: 0.5s ease;
+}
+
+.albumIcon {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.albumIcon span {
+  font-size: 19px;
+  width: 27px;
+  padding: 10px;
+  border-radius: 30px;
+}
+
+.albumTitle {
+  font-size: 16px;
+  padding: 0 15px;
+  font-weight: bold;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.albumInfos {
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  color: #a9a9a9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.albumInfos p {
+  margin: 0 20px;
+  text-align: right;
+}
+
+.albumActions {
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: auto;
+  width: 100%;
+  margin-bottom: auto;
+}
+
+.categoryBox:hover .albumActions {
+  display: flex;
+}
+
+.albumActions a:hover span {
+  color: #f70 !important; /* keep: hover override */
+}
+
+.albumActions a,
+.albumActions span {
+  margin: 5px;
+  font-size: 14px;
+  text-transform: capitalize;
+  font-weight: bold;
+  transition: 0.2s ease;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  color: #848484;
+}
+
+.albumActions a span,
+.albumActions span span {
+  margin: 10px;
+}
+.tile_cat .albumActions a span {
+  margin-left: 20px;
+}
+.tile_cat .albumActions .iconLegend {
+  margin-left: 0;
+}
+
+.albumActions a:first-child {
+  margin-left: 35px;
+}
+
+.albumActions a:last-child {
+  margin-right: 35px;
+}
+
+.addAlbum {
+  justify-content: center;
+  cursor: pointer;
+}
+
+.addAlbum.input-mode {
+  cursor: auto;
+}
+
+.addAlbum label {
+  border-radius: 5px 5px 0 0;
+  padding: 2px;
+  position: absolute;
+  left: 16px;
+  font-size: 14px;
+  color: #3c3c3c;
+}
+
+.addAlbumHead {
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: -10px;
+  transform: translateY(75px);
+  transition: 0.4s ease;
+  transition-delay: 0.4s;
+  padding: 0;
+}
+
+.addAlbumHead span {
+  font-size: 19px;
+  width: 27px;
+  height: 27px;
+  padding: 10px;
+  border-radius: 30px;
+  margin: 10px auto 15px;
+}
+
+.addAlbumHead p {
+  font-weight: 700;
+  margin: 0;
+}
+
+.addAlbum form {
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.4s ease;
+  transition-delay: 0s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.addAlbum form input {
+  padding: 10px;
+  display: inline-block;
+  max-width: 200px;
+  width: 75%;
+  margin: 0 10px;
+  font-size: 15px;
+  border: none;
+  border-radius: 5px;
+  color: #353535 !important; /* keep: overrides dark theme input color */
+  background-color: #f3f3f3 !important; /* keep: overrides dark theme input bg */
+}
+
+.tile_add.addAlbum form input::placeholder {
+  color: transparent !important; /* keep: hides placeholder in tile-add form */
+}
+
+.addAlbum form input::placeholder {
+  color: #353535 !important; /* keep: overrides dark theme placeholder */
+}
+
+.addAlbum button,
+.addAlbum a {
+  display: table;
+  margin: 10px auto;
+  font-weight: bold;
+}
+
+.addAlbum form button {
+  margin-bottom: 0;
+  height: 30px;
+}
+
+.addAlbum.input-mode .addAlbumHead {
+  transition-delay: 0s;
+  padding: 0;
+  transform: translateY(0) !important; /* keep: JS-driven state reset */
+  margin-top: 0;
+}
+
+.addAlbum.input-mode form {
+  display: flex;
+  opacity: 1;
+  pointer-events: all;
+  transition-delay: 0.4s;
+}
+
+/* menuOrdering */
+form#menuOrdering {
+  padding-left: 1em;
+  padding-right: 1em;
+}
+form#menuOrdering p {
+  text-align: left;
+  margin: 0 10px;
+}
+form#menuOrdering p span {
+  float: right;
+}
+form#menuOrdering input {
+  vertical-align: middle;
+  margin: 0 10px;
+}
+form#menuOrdering .menuAuthor {
+  margin: 5px 0 0 40px;
+}
+form#menuOrdering .menuSubmit {
+  margin: 20px 0;
+}
+
+ul.menuUl {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li.menuLi {
+  width: 100%;
+  padding: 12px 0;
+  margin-bottom: 5px;
+}
+
+/* View switcher */
 
 #tabsheet,
 .selectedAlbum {
-  margin: 0 0 10px !important;
+  margin: 0 0 10px !important; /* keep: overrides tabsheet default margin on this page */
 }
 
 .selectedAlbum {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-
   padding: 0 34px 0 22px;
-
   align-items: baseline;
 }
 
@@ -36,8 +285,6 @@
   white-space: nowrap;
 }
 
-/* Should be done with :first-child and :last-child but doesn't work */
-
 .AlbumViewSelector label span.firstIcon {
   border-radius: 7px 0 0 7px;
 }
@@ -51,7 +298,6 @@
 .icon-pause {
   padding: 10px;
   font-size: 19px;
-
   transition: 0.3s;
 }
 
@@ -63,95 +309,12 @@
   font-size: 14px;
 }
 
-.categoryContainer {
-  padding: 0 20px;
-}
-
-/*
- *  Tiles display
- */
-
-.tile_add.addAlbum form input::placeholder {
-  color: transparent !important;
-}
+/* Tiles display */
 
 .albumTop {
   display: flex;
   flex-direction: row;
-
   padding: 0 20px;
   height: 75px;
-
   align-items: baseline;
-}
-
-.categoryBox,
-.addAlbum {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-}
-
-.albumIcon span {
-  font-size: 19px;
-  width: 27px;
-  padding: 10px;
-  border-radius: 30px;
-}
-
-.albumInfos {
-  color: #a9a9a9;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.albumInfos p {
-  margin: 0 20px;
-  text-align: right;
-}
-
-.albumActions {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-
-  margin-top: auto;
-
-  width: 100%;
-  margin-bottom: auto;
-}
-
-.albumActions a:first-child {
-  margin-left: 35px;
-}
-
-.albumActions a:last-child {
-  margin-right: 35px;
-}
-
-.addAlbum form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.addAlbum form input {
-  border: none;
-  border-radius: 5px;
-
-  margin: 0 10px;
-
-  max-width: 200px;
-  width: 75%;
-}
-
-.addAlbum form button {
-  margin-bottom: 0;
-  height: 30px;
-}
-
-.addAlbumHead {
-  padding: 0;
 }

@@ -3,7 +3,6 @@
    also kept here. Shared color rules live in search.css via var(). */
 :root {
   --search-filter-icon: #aeaeae;
-  --search-popin-container-bg: #333;
   --search-popin-close: #777;
   --search-popin-title: #f70b;
   --search-checked-border: #555;
@@ -20,7 +19,6 @@
   --search-word-color: #eee;
   --search-alt-row-bg: #444;
   --search-checked-icon: #fff;
-  --search-badge-bg: #f70b;
   --search-selected-option-bg: rgb(244, 171, 79, 0.17);
   --search-head-btn2-bg: #222;
   --search-head-btn2-hover-bg: #000;
@@ -29,7 +27,6 @@
   --search-close-popin: #777;
   --search-clear-all: #777;
   --search-clear-all-clickable: #f70b;
-  --search-form-title: #f70b;
 }
 
 /* Structural rules unique to dark mode (not present in clear-search.css) */

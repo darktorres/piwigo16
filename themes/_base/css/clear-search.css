@@ -4,7 +4,6 @@
 :root {
   /* These are the same as the defaults in search.css; explicit here for clarity. */
   --search-filter-icon: #474747;
-  --search-popin-container-bg: #fff;
   --search-popin-close: #fff;
   --search-popin-title: #f70;
   --search-checked-border: #777;
@@ -21,7 +20,6 @@
   --search-word-color: #444;
   --search-alt-row-bg: #f3f3f3;
   --search-checked-icon: #f70;
-  --search-badge-bg: #f70;
   --search-selected-option-bg: #fff5e8;
   --search-head-btn2-bg: #fafafa;
   --search-head-btn2-hover-bg: #eee;
@@ -30,7 +28,6 @@
   --search-close-popin: #fff;
   --search-clear-all: #c4c4c4;
   --search-clear-all-clickable: #f70;
-  --search-form-title: #f70;
 }
 
 /* Structural rules unique to clear mode (not present in dark-search.css) */

@@ -175,12 +175,6 @@ form.filter fieldset li label {
   float: none;
 }
 
-form.filter fieldset ul.tagSelection label {
-  display: inline;
-  float: none;
-  margin-right: 0.5em; /* reduce from above */
-}
-
 /* cannot use FIELDSET>LABEL because of IE<=6 */
 form.filter fieldset label input,
 form.filter fieldset label select,

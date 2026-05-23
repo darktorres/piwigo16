@@ -3264,10 +3264,17 @@ campaign promotes counts against the same F5-k psalm-info gate.
     registration uses it (the 3 remaining callback registrations are
     intentional: 2 `reflection.*` self-introspection + 1 not-implemented
     stub).
-  - **F5-i** — Partial: `SearchRules` + `MalformedSearchRulesException`
-    + versioned `fromJson`/`toJson` foundation shipped; 15 typed filter
-    VOs + deep `SearchService`/`SearchFilterRenderer` adoption pending
-    (200+ mixed accesses; high-risk).
+  - **F5-i** — More shipped than F5-PENDING says: `SearchRules` +
+    `MalformedSearchRulesException` + versioned `fromJson`/`fromArray`
+    foundation shipped, AND **all 14 typed filter VOs + 2 enums** are
+    in tree (`src/Piwigo/Search/Rules/`: AddedBy, Allwords (+ field +
+    mode), Author, Cat, DateCreated, DatePosted (+ preset code),
+    Expert, FileSize, Filetypes, Height, Rating, Ratio, Tags, Width
+    = 18 files total). 2 plan-named classes still missing: `DateCustom`,
+    `MysqlDateRange`. F5-PENDING (and the F5 plan body) say "Remaining:
+    15 typed filter VOs + adoption inside SearchService" — the **filter
+    VOs are done; only the deep SearchService / SearchFilterRenderer
+    adoption (200+ mixed accesses) is left.**
   - **F5-j** — ✓ **COMPLETE**: `TelemetryPayload` 12-slot typed DTO;
     `sendInfos()` refactored from 200-line mutator into 50-line
     orchestrator + 12 narrow private helpers.
@@ -3293,7 +3300,8 @@ campaign promotes counts against the same F5-k psalm-info gate.
     F5-k psalm-info gate.
   - **F5-k** — acceptance gates: `psalm --show-info <50` (currently
     **1796**), `grep 'is_array(.* ?? null)' src/` count = 0 (currently
-    154), every `@psalm-suppress` / `@phpstan-ignore` has rationale
+    **153**, was 154 in F5-PENDING — slight drift), every
+    `@psalm-suppress` / `@phpstan-ignore` has rationale
     (28 sites need re-audit).
   Suggested order per F5-PENDING: F5-i → F5-h → F5-b → F5-c → residue.
 

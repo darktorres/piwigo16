@@ -33,3 +33,10 @@
 .UserViewSelector label span.lastIcon {
   border-radius: 0 7px 7px 0;
 }
+
+/* The layout-toggle button, conceptually paired with the view-selector.
+   Relocated from pages/cat-list.css, pages/user-list.css, pages/plugins.css
+   (identical in all three). */
+.switchLayout {
+  display: none;
+}

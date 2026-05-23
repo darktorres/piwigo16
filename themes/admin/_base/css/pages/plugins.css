@@ -671,19 +671,6 @@
   padding: 8px;
 }
 
-.icon-th-large,
-.icon-th-list,
-.icon-pause {
-  padding: 10px;
-  font-size: 19px;
-
-  transition: 0.3s;
-}
-
-.switchLayout {
-  display: none;
-}
-
 /***************************************  */
 
 .pluginActionsSmallIcons a,

@@ -153,3 +153,13 @@ li.plupload_delete a:hover {
   font-weight: bold;
 }
 
+/* view-selector icon defaults — relocated from pages/cat-list.css,
+   pages/user-list.css, pages/plugins.css (identical in all three). */
+.icon-th-large,
+.icon-th-list,
+.icon-pause {
+  padding: 10px;
+  font-size: 19px;
+  transition: 0.3s;
+}
+

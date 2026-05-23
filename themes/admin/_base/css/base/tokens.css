@@ -62,4 +62,36 @@
   --admin-chart-green: #6ece5e;
   --admin-chart-orange: #ffa744;
   --admin-chart-red: #ff5252;
+
+  /* Non-color design tokens (Step 6 — mirrored from
+     themes/_base/css/tokens.css). */
+
+  /* Spacing scale */
+  --space-xs: 5px;
+  --space-sm: 10px;
+  --space-md: 15px;
+  --space-lg: 20px;
+  --space-xl: 30px;
+
+  /* Font sizes */
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-md: 14px;
+  --font-size-base: 15px;
+  --font-size-lg: 16px;
+  --font-size-xl: 20px;
+
+  /* Line height */
+  --line-height-base: 1.5;
+
+  /* Border radius */
+  --radius-sm: 5px;
+  --radius-md: 10px;
+  --radius-lg: 15px;
+  --radius-xl: 20px;
+
+  /* Z-index */
+  --z-dropdown: 100;
+  --z-overlay: 500;
+  --z-modal: 1000;
 }

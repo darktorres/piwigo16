@@ -2687,6 +2687,25 @@ typed properties without `is_*` guards.
 > already chosen. This section is comparable in scope to §1.2
 > (templates) or §1.4 (plugins).
 
+> **§1.7 is a 2-of-5 slice of the broader F5 master plan**
+> (`.claude/plans/what-is-the-proper-magical-taco.md`, 506 lines,
+> titled "Ground-up Refactor: Eliminate `mixed` from the Domain").
+> The F5 plan identifies **5 boundaries** where `mixed` enters the
+> domain and requires a single-cast parser per boundary:
+>
+> | # | Boundary             | §1.7 coverage | Tracker             |
+> | - | -------------------- | ------------- | ------------------- |
+> | 1 | HTTP request         | **Phase 1 ✓** | F5-h (per-endpoint) |
+> | 2 | Stored JSON          | ✗ — out of §1.7 scope | F5-i — `SearchRules` deep adoption (foundation shipped; #1 Psalm-info hotspot pending) |
+> | 3 | DB rows              | **Phase 2 ✓** | F5-d/e (Entity + Projection patterns) + SQL-DTO-AUDIT |
+> | 4 | `$_SESSION`          | ✗ — out of §1.7 scope | F5-c — `Session.php` typed wrapper exists; `SessionService` → `SessionStore` rename pending |
+> | 5 | PSR-11 container     | ✗ — out of §1.7 scope | F5-b — `Container/*Factory.php` extraction from `config/container.php`'s 50+ inline closures |
+>
+> The end goal of the F5 plan is `psalm --show-info <50` (F5-k gate),
+> currently **1814** as of 2026-05-23. §1.7 contributes to that goal
+> via its 2 phases but doesn't deliver the gate alone — the other 3
+> boundaries need to close as well.
+
 #### Phase 1 — Request DTO layer (HTTP boundary)
 
 **Status:** 🟢 Active ▸ WS layer ~94/99 done · admin/web side open
@@ -2875,11 +2894,14 @@ classes** under `src/Piwigo/{Image,Category,Tag,Comment}/Entity/`
 (Image=4 entity classes including `Image`, `ImageIdFilename`,
 `ImageIdPathRepresentative`, `PathRepresentative`; Category=1; Tag=1;
 Comment=1), backed by **21 ValueObject classes** in
-`src/Piwigo/Common/ValueObject/`. Six repository methods return
-`?Image`/`?Category`/`?Tag` directly; nine `@return list<Image|Category|Tag>`
-annotations exist. `ImageRepository::findById(int): ?Image` is the
-canonical example — and is exactly what the original §1.7 draft
-proposed (with value-objects added).
+`src/Piwigo/Common/ValueObject/` (the F5 master plan inventories ~32
+target VOs across identifiers, shaped strings, temporals, and enums —
+shipped 21, remaining ~11 are mostly admin-side IDs and string-shape
+wrappers). Six repository methods return `?Image`/`?Category`/`?Tag`
+directly; nine `@return list<Image|Category|Tag>` annotations exist.
+`ImageRepository::findById(int): ?Image` is the canonical example —
+and is exactly what the original §1.7 draft proposed (with
+value-objects added).
 
 **Narrow Projection pattern** — query-specific subset, no identity,
 no value-objects. Used for listings, lookups, distinct queries,
@@ -3127,22 +3149,31 @@ when its time comes:
   execution against these IDs.
 - `docs/ARRAY-REFACTOR-AUDIT.md` + `-2.md` + `-3.md` + `-4.md` —
   earlier audit rounds; the round-4 doc is the one currently active.
-- `docs/F5-PENDING.md` — F5 series status doc (per the master plan
-  at `.claude/plans/what-is-the-proper-magical-taco.md`). Confirms
-  the F5 sub-codes I cite. Open work catalogued there:
+- `.claude/plans/what-is-the-proper-magical-taco.md` — F5 master plan
+  (506 lines, "Ground-up Refactor: Eliminate `mixed` from the Domain").
+  Defines all 11 F5 sub-codes (F5-a through F5-k), the 5-boundary
+  framing, and the value-object inventory (32 planned identifiers /
+  strings / temporal / enums — `ImageId`, `Email`, `MysqlDateTime`,
+  `UserStatus`, etc.; 21 shipped today).
+- `docs/F5-PENDING.md` — live status of the F5 series, audited against
+  the codebase (not git history). Open work as of 2026-05-23:
   - **F5-b** — extract 50+ inline `factory(static fn …)` closures
     from `config/container.php` into `src/Piwigo/Core/Container/*Factory.php`.
+    Boundary 5 (PSR-11). Out of §1.7 scope.
   - **F5-c** — rename `SessionService` → `SessionStore` (87 lines,
-    6 call sites; cosmetic).
+    6 call sites; cosmetic). `Session.php` typed wrapper itself is
+    shipped (boundary 4). Out of §1.7 scope.
   - **F5-h** — Result DTOs sparse (7 vs 83 Params); F5-PENDING lists
-    the same 11 zero-params endpoints I identified above as a low-hanging
-    chunk for 100% coverage.
+    the same 11 zero-params endpoints I identified above as a
+    low-hanging chunk for 100% coverage. **§1.7 Phase 1 territory.**
   - **F5-i** — `SearchRules` deep adoption (200+ mixed accesses;
     `SearchFilterRenderer` is the #1 Psalm-info hotspot at 67 issues).
+    Boundary 2 (Stored JSON). Out of §1.7 scope; load-bearing for the
+    F5-k psalm-info gate.
   - **F5-k** — acceptance gates: `psalm --show-info <50` (currently
-    1815/1877), `is_array(.* ?? null)` count = 0 (currently 154),
-    every `@psalm-suppress` / `@phpstan-ignore` has rationale (28
-    sites need re-audit).
+    **1814**), `grep 'is_array(.* ?? null)' src/` count = 0 (currently
+    154), every `@psalm-suppress` / `@phpstan-ignore` has rationale
+    (28 sites need re-audit).
   Suggested order per F5-PENDING: F5-i → F5-h → F5-b → F5-c → residue.
 
 #### Verification

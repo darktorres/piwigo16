@@ -41,6 +41,7 @@ enum ActivityAction: string
     case Logout                      = 'logout';
     case LoginFailureWrongPassword   = 'login_failure_wrong_password';
     case LoginFailureBeforeLogUser   = 'login_failure_before_log_user';
+    case LoginFailureLocked          = 'login_failure_locked';
     case ResetPasswordSuccess        = 'reset_password_success';
     case ResetPasswordFailureCode    = 'reset_password_failure_code';
     case ResetPasswordFailureTooMany = 'reset_password_failure_too_many';

@@ -30,6 +30,7 @@ use Piwigo\Asset\AssetService;
 use Piwigo\Auth\AuthKeyRepository;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Auth\LoginRateLimiterFactory;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Caddie\CaddieRepository;
@@ -126,10 +127,12 @@ use Piwigo\Theme\ThemeService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\AuthService;
+use Piwigo\Users\LoginThrottle;
 use Piwigo\Users\PermissionService;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\ProfileService;
 use Piwigo\Users\UserCaddieRepository;
+use Piwigo\Users\UserFailedLoginRepository;
 use Piwigo\Users\UserFavoriteRepository;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
@@ -221,7 +224,9 @@ return [
     PictureService::class  => factory(static fn (ImageRepository $r): PictureService => new PictureService($r)),
     RateService::class     => factory(static fn (RateRepository $rate, ImageRepository $img, CookieService $c, PermissionService $perm, EventDispatcherInterface $d): RateService => new RateService($rate, $img, $c, $perm, $d)),
     CommentService::class  => factory(static fn (CommentRepository $repo, LangService $lang, MailService $mail, PermissionService $perm, UrlGenerator $ug, UrlService $u, EphemeralKeyService $eks, EventDispatcherInterface $dispatcher): CommentService => new CommentService($repo, $lang, $mail, $perm, $ug, $u, $eks, $dispatcher)),
-    AuthService::class         => factory(static fn (UserRepository $u, AuthKeyRepository $ak, ActivityLogger $al, SessionService $sess, Session $session, UrlGenerator $ug, UrlService $us, DateService $d, LanguageService $lang, EventDispatcherInterface $dispatcher, Paths $paths): AuthService => new AuthService($u, $ak, $al, $sess, $session, $ug, $us, $d, $lang, $dispatcher, $paths)),
+    UserFailedLoginRepository::class => factory(static fn (Connection $conn): UserFailedLoginRepository => new UserFailedLoginRepository($conn, Config::dbPrefix())),
+    LoginThrottle::class       => factory(static fn (UserFailedLoginRepository $r): LoginThrottle => new LoginThrottle($r)),
+    AuthService::class         => factory(static fn (UserRepository $u, AuthKeyRepository $ak, ActivityLogger $al, SessionService $sess, Session $session, UrlGenerator $ug, UrlService $us, DateService $d, LanguageService $lang, EventDispatcherInterface $dispatcher, Paths $paths, LoginThrottle $throttle): AuthService => new AuthService($u, $ak, $al, $sess, $session, $ug, $us, $d, $lang, $dispatcher, $paths, $throttle)),
     PasswordService::class     => factory(static fn (AuthService $auth, MailService $mail, PermissionService $perm, PreferencesService $pref, Session $session, UrlGenerator $ug, UserRepository $u, UserService $us, ActivityLogger $al): PasswordService => new PasswordService($auth, $mail, $perm, $pref, $session, $ug, $u, $us, $al)),
     CalendarRepository::class  => factory(static fn (Connection $conn): CalendarRepository => new CalendarRepository($conn, Config::dbPrefix())),
     CalendarService::class     => factory(static fn (CalendarRepository $cr, CategoryService $cat, DebugCollector $dbg, PermissionService $perm, UrlService $us, CacheItemPoolInterface $pool, OrderByService $orderBy): CalendarService => new CalendarService($cr, $cat, $dbg, $perm, $us, $pool, $orderBy)),
@@ -369,6 +374,7 @@ return [
     SiteRepository::class         => factory(static fn (Connection $conn): SiteRepository => new SiteRepository($conn, Config::dbPrefix())),
     ActivityRepository::class     => factory(static fn (Connection $conn): ActivityRepository => new ActivityRepository($conn, Config::dbPrefix())),
     AuthKeyRepository::class      => factory(static fn (Connection $conn): AuthKeyRepository => new AuthKeyRepository($conn, Config::dbPrefix())),
+    LoginRateLimiterFactory::class => factory(static fn (CacheItemPoolInterface $pool): LoginRateLimiterFactory => new LoginRateLimiterFactory($pool)),
     FeedRepository::class         => factory(static fn (Connection $conn): FeedRepository => new FeedRepository($conn, Config::dbPrefix())),
     MessengerRepository::class    => factory(static fn (Connection $conn): MessengerRepository => new MessengerRepository($conn, Config::dbPrefix())),
 

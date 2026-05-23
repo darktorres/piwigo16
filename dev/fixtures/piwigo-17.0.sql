@@ -1228,6 +1228,24 @@ LOCK TABLES `piwigo_users` WRITE;
 INSERT INTO `piwigo_users` VALUES (1,'fixture_admin','$2y$12$3EJ/3ODmTpHBLc7Vr50MSe0vCZeftiHiofx0OcZ4V44hSRvFkDl7.','fixture_admin@example.test'),(2,'guest',NULL,NULL),(3,'regular_user','$2y$12$JXSbM2HC6X7E0eVX5bVdLujfwMnvi8p0.I0IeCtsk4Affetp.ypJu',NULL),(4,'power_user','$2y$12$Rf8MF/DquDqV6uAcOUcPPOC.r8qyqza4B3zPryepGgTo93bpCcenW',NULL);
 /*!40000 ALTER TABLE `piwigo_users` ENABLE KEYS */;
 UNLOCK TABLES;
+--
+-- Table structure for table `piwigo_user_failed_logins`
+-- (Tactical patch: appended manually for §1.5 Wave B. Folded into the
+-- regenerated fixture next time `REGENERATE_FIXTURE=1` is run.)
+--
+
+DROP TABLE IF EXISTS `piwigo_user_failed_logins`;
+CREATE TABLE `piwigo_user_failed_logins` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` mediumint(8) unsigned DEFAULT NULL,
+  `ip` varchar(45) NOT NULL,
+  `attempted_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_user_time` (`user_id`,`attempted_at`),
+  KEY `idx_ip_time` (`ip`,`attempted_at`),
+  CONSTRAINT `fk_user_failed_logins_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Piwigo\Auth\CookieService;
+use Piwigo\Auth\LoginRateLimiterFactory;
 use Piwigo\Config\Config;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -52,6 +53,7 @@ final readonly class IdentificationController implements ControllerInterface
         private UrlService $urlService,
         private LanguageService $languageService,
         private EventDispatcherInterface $dispatcher,
+        private LoginRateLimiterFactory $loginRateLimiters,
     ) {
     }
 
@@ -94,7 +96,12 @@ final readonly class IdentificationController implements ControllerInterface
                 $redirect_to  = $post_redirect !== null ? urldecode($post_redirect) : '';
                 $remember_me  = StringUtil::inputString('remember_me', null, $_POST) !== null && StringUtil::inputString('remember_me', null, $_POST) == 1;
                 $post_password = is_string($rawPassword = $_POST['password'] ?? null) ? $rawPassword : '';
-                if ($this->authService->tryLogUser($username, $post_password, $remember_me)) {
+                $ip = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
+                $ipAccepted = $this->loginRateLimiters->forIp($ip)->consume()->isAccepted();
+                $acctAccepted = $this->loginRateLimiters->forAccount($username)->consume()->isAccepted();
+                if (!$ipAccepted || !$acctAccepted) {
+                    PageState::current()->keyedErrors['login_form_error'] = Lang::t('Too many login attempts. Please try again later.');
+                } elseif ($this->authService->tryLogUser($username, $post_password, $remember_me)) {
                     $root_url = UrlService::getAbsoluteRootUrl();
                     $this->session->connectedWith = ConnectionType::PwgUi->value;
                     $this->redirectResponder->redirect(
@@ -102,6 +109,8 @@ final readonly class IdentificationController implements ControllerInterface
                         ? $this->urlService->getGalleryHomeUrl()
                         : substr($root_url, 0, strlen($root_url) - strlen(CookieService::cookiePath())) . $redirect_to
                     );
+                } elseif (PageState::current()->loginFailureReason === 'account_locked') {
+                    PageState::current()->keyedErrors['login_form_error'] = Lang::t('This account is temporarily locked due to repeated failed logins.');
                 } else {
                     PageState::current()->keyedErrors['login_form_error'] = Lang::t('Invalid username or password!');
                 }

@@ -54,6 +54,11 @@ final class PageState
     public string $executionUuid = '';
 
     public bool $authKeyInvalid = false;
+    /**
+     * Outcome tag the auth flow sets on a failed login (e.g. 'account_locked')
+     * so the calling controller can distinguish lockout from bad credentials.
+     */
+    public ?string $loginFailureReason = null;
     /** The id of the auth-key row used to authenticate this request, if any. */
     public ?int $authKeyId = null;
     /** @var array<string,mixed>|null */

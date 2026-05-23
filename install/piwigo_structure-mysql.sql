@@ -507,6 +507,21 @@ CREATE TABLE `piwigo_user_auth_keys` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
+-- Table structure for table `piwigo_user_failed_logins`
+--
+
+DROP TABLE IF EXISTS `piwigo_user_failed_logins`;
+CREATE TABLE `piwigo_user_failed_logins` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` mediumint(8) unsigned DEFAULT NULL,
+  `ip` varchar(45) NOT NULL,
+  `attempted_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_user_time` (`user_id`, `attempted_at`),
+  KEY `idx_ip_time` (`ip`, `attempted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
 -- Table structure for table `piwigo_user_cache`
 --
 
@@ -685,6 +700,9 @@ ALTER TABLE `piwigo_user_mail_notification`
 
 ALTER TABLE `piwigo_user_auth_keys`
   ADD CONSTRAINT `fk_user_auth_keys_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `piwigo_user_failed_logins`
+  ADD CONSTRAINT `fk_user_failed_logins_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users`(`id`) ON DELETE CASCADE;
 
 ALTER TABLE `piwigo_caddie`
   ADD CONSTRAINT `fk_caddie_user_id`    FOREIGN KEY (`user_id`)    REFERENCES `piwigo_users`(`id`)  ON DELETE CASCADE,

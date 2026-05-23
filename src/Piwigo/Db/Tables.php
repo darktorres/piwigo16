@@ -128,6 +128,10 @@ final class Tables
     {
         return Config::dbPrefix() . 'user_auth_keys';
     }
+    public static function userFailedLogins(): string
+    {
+        return Config::dbPrefix() . 'user_failed_logins';
+    }
     public static function userCache(): string
     {
         return Config::dbPrefix() . 'user_cache';

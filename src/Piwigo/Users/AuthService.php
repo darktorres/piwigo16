@@ -50,6 +50,7 @@ final readonly class AuthService
         private LanguageService $languageService,
         private EventDispatcherInterface $dispatcher,
         private Paths $paths,
+        private LoginThrottle $throttle,
     ) {
     }
 
@@ -209,6 +210,7 @@ final readonly class AuthService
         }
 
         $this->sessionService->gc(0);
+        $this->throttle->purgeExpired();
 
         $userFound = $this->findUserByUsernameOrEmail($username);
         $fakeUser  = $this->generateFakeUser();
@@ -217,7 +219,16 @@ final readonly class AuthService
         $ufIdRaw = $userFound !== null ? ($userFound['id'] ?? null) : null;
         $ufId = is_numeric($ufIdRaw) ? (int) $ufIdRaw : 0;
 
+        if ($ufId > 0 && $this->throttle->isLockedOut($ufId)) {
+            PageState::current()->loginFailureReason = 'account_locked';
+            $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $ufId, ActivityAction::LoginFailureLocked));
+            $this->dispatcher->dispatch(new LoginFailure(stripslashes($username)));
+            return false;
+        }
+
         if ($userFound === null || count($userFound) === 0 || 'guest' === $userFound['status'] || !$passwordVerify) {
+            $ip = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
+            $this->throttle->recordFailure($ufId > 0 ? $ufId : null, $ip);
             if ($userFound !== null && count($userFound) > 0 && !$passwordVerify) {
                 $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $ufId, ActivityAction::LoginFailureWrongPassword));
             }
@@ -245,6 +256,7 @@ final readonly class AuthService
         }
 
         $this->clearFakeUserCache();
+        $this->throttle->clearFailures($ufId);
         $this->dispatcher->dispatch(new LoginSuccess(stripslashes($username)));
         return true;
     }

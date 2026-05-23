@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws\Action\Pwg\Session;
 
+use Piwigo\Auth\LoginRateLimiterFactory;
+use Piwigo\Core\PageState;
 use Piwigo\Http\ApiKeyAuthRegistry;
 use Piwigo\Session\Session;
 use Piwigo\Users\AuthService;
@@ -23,6 +25,7 @@ final readonly class LoginHandler implements WsAction
     public function __construct(
         private AuthService $authService,
         private Session $session,
+        private LoginRateLimiterFactory $loginRateLimiters,
     ) {
     }
 
@@ -38,6 +41,11 @@ final readonly class LoginHandler implements WsAction
         } catch (WsParamException $e) {
             return new PwgError(999, $e->getMessage());
         }
+        $ip = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
+        if (!$this->loginRateLimiters->forIp($ip)->consume()->isAccepted()
+         || !$this->loginRateLimiters->forAccount($input->username)->consume()->isAccepted()) {
+            return new PwgError(429, 'Too many login attempts; please retry shortly');
+        }
         if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $input->username)) {
             if ($this->authService->authKeyLogin($input->username . ':' . $input->password)) {
                 $this->session->connectedWith = 'ws_session_login_api_key';
@@ -46,6 +54,9 @@ final readonly class LoginHandler implements WsAction
         } elseif ($this->authService->tryLogUser($input->username, $input->password, false)) {
             $this->session->connectedWith = 'ws_session_login';
             return true;
+        }
+        if (PageState::current()->loginFailureReason === 'account_locked') {
+            return new PwgError(429, 'Account temporarily locked due to repeated failed logins');
         }
         return new PwgError(999, 'Invalid username/password');
     }

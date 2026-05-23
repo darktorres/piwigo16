@@ -25,7 +25,7 @@
 }
 
 #UserList .group-name-block p {
-  color: #3c3c3c;
+  color: var(--admin-text);
   font-weight: 700;
   font-size: 15px;
   margin-left: 10px;

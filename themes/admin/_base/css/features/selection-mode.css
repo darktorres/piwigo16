@@ -123,6 +123,11 @@ input:checked + .slider.small::after {
   border-radius: 50%;
 }
 
+#selection-mode-block,
+.selection-mode {
+  background-color: var(--admin-bg-panel);
+}
+
 #selection-mode-block {
   display: none;
   position: absolute;

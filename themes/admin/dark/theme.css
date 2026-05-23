@@ -722,7 +722,6 @@ input:focus + .slider {
 
 #selection-mode-block,
 .selection-mode {
-  background-color: #232323;
   border-left: 1px solid #1a1a1a;
 }
 
@@ -805,10 +804,6 @@ input:focus + .slider {
 .CloseAddAlbum:hover,
 #CloseDeleteAlbum:hover {
   color: #ffa646;
-}
-
-#UserList .group-name-block p {
-  color: #9e9e9e;
 }
 
 .UsernameBlock {

@@ -44,7 +44,13 @@ final class SessionBootstrap
         }
 
         session_name(Config::sessionName());
-        session_set_cookie_params(0, CookieService::cookiePath());
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path'     => (string) CookieService::cookiePath(),
+            'samesite' => 'Lax',
+            'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+            'httponly' => true,
+        ]);
         register_shutdown_function(session_write_close(...));
     }
 }

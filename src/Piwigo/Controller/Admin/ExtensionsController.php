@@ -242,7 +242,7 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
             $tpl_plugin['STATE'] = isset($plugins->db_plugins_by_id[$plugin_id]) ? $plugins->db_plugins_by_id[$plugin_id]->state->value : PluginState::Inactive->value;
 
             $state = $tpl_plugin['STATE'];
-            if ($state === 'active' || $state === 'inactive' || $state === 'merged') {
+            if ($state === 'active' || $state === 'inactive') {
                 $count_types_plugins[$state]++;
             }
             $tpl_plugins[] = $tpl_plugin;

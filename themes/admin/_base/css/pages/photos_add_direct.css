@@ -76,7 +76,7 @@ a#showPermissions:hover {
 .big-progressbar .progressbar {
   height: 8px;
   min-width: 5px;
-  background: #ffbd4d;
+  background: var(--admin-accent-soft);
   border-radius: 5px 0 0 5px;
   background-size: 33px 25px;
 }
@@ -174,7 +174,7 @@ a#showPermissions:hover {
   margin-right: 0;
 }
 #albumCreationLoading {
-  background-color: #ffa744;
+  background-color: var(--admin-accent-soft);
   color: #3c3c3c;
   font-size: var(--font-size-xs);
   border: none;
@@ -479,7 +479,7 @@ a#showPermissions:hover {
   margin-bottom: 8px;
 }
 .pageNumberSelected {
-  background-color: #ffaf58;
+  background-color: var(--admin-accent-soft);
   border: none;
   border-radius: 0;
 }
@@ -539,8 +539,8 @@ a#showPermissions:hover {
 }
 
 #batchManagerGlobal li.thumbSelected .font-checkbox [class*="icon-check"] {
-  background-color: #fea744;
-  border: solid 2px #fea744;
+  background-color: var(--admin-accent-soft);
+  border: solid 2px var(--admin-accent-soft);
 }
 #batchManagerGlobal .thumbSelected span.icon-check {
   display: block;
@@ -559,7 +559,7 @@ a#showPermissions:hover {
 }
 #batchManagerGlobal ul.thumbnails .wrap2 .icon-pencil:hover,
 #batchManagerGlobal ul.thumbnails .wrap2 .icon-zoom-square:hover {
-  color: #fea744;
+  color: var(--admin-accent-soft);
 }
 #batchManagerGlobal .deleteDerivButtons a:hover,
 #batchManagerGlobal #checkActions a:hover {
@@ -652,7 +652,7 @@ a#showPermissions:hover {
 }
 
 .selected-associate-item:hover {
-  background: #ffd7ad;
+  background: var(--admin-move-cat-hover-bg);
 }
 
 .selected-associate-item .remove-associate {
@@ -828,7 +828,7 @@ a#showPermissions:hover {
   font-size: var(--font-size-base);
   font-weight: bold;
   max-width: 41.06%;
-  background-color: #f4ab4f;
+  background-color: var(--admin-accent-soft);
   color: #3c3c3c;
   text-align: center;
   white-space: nowrap;

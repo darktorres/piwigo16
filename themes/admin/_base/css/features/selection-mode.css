@@ -227,7 +227,7 @@ input:checked + .slider.small::after {
   font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 13px 40px;
-  background-color: #ffa744;
+  background-color: var(--admin-accent-soft);
   border: none;
   margin-top: 40px;
   cursor: pointer;

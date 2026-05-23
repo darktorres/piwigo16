@@ -571,7 +571,7 @@
   position: absolute;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(130deg, #f70 0%, #ffa744 100%);
+  background: linear-gradient(130deg, #f70 0%, var(--admin-accent-soft) 100%);
   right: -10px;
   top: 45px;
   width: max-content;

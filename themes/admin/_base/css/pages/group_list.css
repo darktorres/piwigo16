@@ -97,7 +97,7 @@
 }
 
 .jconfirmWarning .jconfirm-icon-c i {
-  color: #ffa744;
+  color: var(--admin-accent-soft);
   background-color: #ffe9cf;
 }
 
@@ -244,7 +244,7 @@
 }
 
 .groups button.submit {
-  background-color: #ffa744;
+  background-color: var(--admin-accent-soft);
   color: var(--admin-text);
   font-size: var(--font-size-xs);
   font-weight: 700;
@@ -297,8 +297,8 @@
 
 .groups .manage-users:hover,
 .groups .manage-permissions:hover {
-  background-color: #ffa744;
-  border: 1px solid #ffa744;
+  background-color: var(--admin-accent-soft);
+  border: 1px solid var(--admin-accent-soft);
   color: #3c3c3c;
   cursor: pointer;
 }
@@ -328,7 +328,7 @@
 
 .ConfirmDeleteButton,
 .ConfirmMergeButton {
-  background-color: #ffa744;
+  background-color: var(--admin-accent-soft);
 }
 
 #MergeOptionsBlock a {

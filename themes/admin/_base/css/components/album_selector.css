@@ -301,7 +301,7 @@
    results. Used wherever an album selector renders, so it lives
    alongside the album_selector component. */
 .search-result-item:hover {
-  background: #ffc17e;
+  background: var(--admin-accent-pale);
   color: #000;
   cursor: pointer;
 }

@@ -133,7 +133,7 @@ input[type="text"].dError {
 }
 
 .group-rename .validate {
-  background-color: #ffa744;
+  background-color: var(--admin-accent-soft);
 }
 
 .group-rename .icon-ok:hover {
@@ -146,7 +146,7 @@ input[type="text"].dError {
 }
 
 .Group-name span:hover {
-  color: #ffa744;
+  color: var(--admin-accent-soft);
   cursor: pointer;
 }
 

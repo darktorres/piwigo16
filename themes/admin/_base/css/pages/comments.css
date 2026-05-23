@@ -34,11 +34,11 @@
 }
 
 .comments-container.active .comment-content:hover {
-  background-color: #ffd9a7;
+  background-color: var(--admin-move-cat-hover-bg);
 }
 
 .comment.comment-selected .comment-content {
-  background-color: #ffd9a7;
+  background-color: var(--admin-move-cat-hover-bg);
 }
 
 .comments-container {
@@ -159,7 +159,7 @@
   align-items: stretch;
   box-shadow: rgb(0, 0, 0, 0.14) 0 2px 5px;
   border-radius: 4px;
-  border-left: 6px solid #ffc17e;
+  border-left: 6px solid var(--admin-accent-pale);
   /* width: 29.8em;
   height: 11.7em; */
   height: 150px;
@@ -269,7 +269,7 @@
 }
 
 .comment-validate {
-  background-color: #ffc17e;
+  background-color: var(--admin-accent-pale);
   color: #3c3c3c;
 }
 

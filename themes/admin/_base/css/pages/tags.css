@@ -53,7 +53,7 @@
 .tag-header #add-tag.input-mode .add-tag-container input {
   padding: 9px;
   margin-left: var(--space-sm);
-  border: solid 2px #ffa744;
+  border: solid 2px var(--admin-accent-soft);
   background: none;
   width: 100px;
 }
@@ -85,7 +85,7 @@
   display: block;
   margin: auto 5px;
   cursor: pointer;
-  background-color: #ffa744;
+  background-color: var(--admin-accent-soft);
   color: #3c3c3c;
   font-size: 17px;
   font-weight: 700;
@@ -159,7 +159,7 @@
 
 .tag-container.selection .tag-box[data-selected="1"] {
   opacity: 1;
-  background-color: #ffd7ad;
+  background-color: var(--admin-move-cat-hover-bg);
 }
 
 .tag-container .tag-box p {
@@ -471,7 +471,7 @@
   cursor: pointer;
   font-weight: bold;
   color: #3f3e40;
-  background-color: #ffa836;
+  background-color: var(--admin-accent-soft);
   padding: 10px 20px;
   font-size: 1em;
   margin: 0 15px;

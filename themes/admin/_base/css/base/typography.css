@@ -115,7 +115,7 @@
 }
 
 .themeActions a:nth-child(1) {
-  background-color: #ffc17e;
+  background-color: var(--admin-accent-pale);
   color: #493c21;
 }
 .themeActions a:nth-child(1):hover {

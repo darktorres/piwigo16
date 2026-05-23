@@ -20,9 +20,10 @@
   --admin-border: #ddd;
   --admin-border-strong: #aaa;
 
-  /* accents (same across themes — tokenized only for consistency) */
+  /* accents */
   --admin-accent: #f70;
   --admin-accent-soft: #ffa646;
+  --admin-accent-pale: #ffc17e;
 
   /* link color */
   --admin-link: #3a3a3a;

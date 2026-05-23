@@ -24,7 +24,7 @@
   display: block;
   width: 8px;
   height: 100%;
-  background-color: #f4ab4f;
+  background-color: var(--admin-accent-soft);
   position: absolute;
   left: -8px;
 }

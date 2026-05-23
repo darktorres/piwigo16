@@ -274,7 +274,7 @@
   background-color: #fafafa;
   padding: var(--space-md);
   position: relative;
-  border-left: solid 5px #ffc17e;
+  border-left: solid 5px var(--admin-accent-pale);
   border-top-right-radius: var(--radius-sm);
   border-bottom-right-radius: var(--radius-sm);
   /* border-right:solid 5px #fafafa; */
@@ -378,7 +378,7 @@
 }
 
 .pluginActionLevel1 {
-  background-color: #ffc17e;
+  background-color: var(--admin-accent-pale);
   font-weight: bold;
   padding: 2px 10px;
   border-radius: var(--radius-sm);
@@ -488,7 +488,7 @@
 
 .tab-filters input:checked + label,
 .pluginTypeFilter input:checked + label {
-  background: #ffa500;
+  background: var(--admin-accent-soft);
   color: #fff;
   box-shadow: 0 2px #d18800;
 }
@@ -513,7 +513,7 @@
 
 .pluginContainer.line .pluginBox:hover .pluginContent {
   transition: 0.4s;
-  background: #ffd7ad;
+  background: var(--admin-move-cat-hover-bg);
 }
 
 .pluginContainer.line-form .pluginBox:hover.plugin-inactive .slider {
@@ -522,7 +522,7 @@
 }
 
 .pluginMiniBox.plugin-active .pluginActionsSmallIcons a span {
-  background: #ffc17e;
+  background: var(--admin-accent-pale);
   color: #3c3c3c;
 }
 
@@ -674,7 +674,7 @@
   justify-content: center;
 
   padding: 5px 2px;
-  background: #ffc17e;
+  background: var(--admin-accent-pale);
   border-radius: var(--radius-sm);
 }
 

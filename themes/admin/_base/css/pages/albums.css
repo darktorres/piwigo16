@@ -847,12 +847,12 @@ input[name="position"] {
 }
 
 .pwgtree-moving .move-cat-container {
-  background-color: #ffd7ad;
+  background-color: var(--admin-move-cat-hover-bg);
 }
 
 .pwgtree-moving .move-cat-container .badge-container i,
 .pwgtree-moving .move-cat-container .node-icon {
-  color: #ffd7ad;
+  color: var(--admin-move-cat-hover-bg);
   background-color: #f98100;
 }
 

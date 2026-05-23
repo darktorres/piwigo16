@@ -27,7 +27,7 @@
 
 .albumIconLineHover {
   background: #f98100 !important; /* keep: JS hover state */
-  color: #ffd7ad !important; /* keep: JS hover state */
+  color: var(--admin-move-cat-hover-bg) !important; /* keep: JS hover state */
   transition: 0.5s ease;
 }
 

@@ -62,7 +62,7 @@
   cursor: pointer;
   padding: 8px 10px;
   font-weight: bold;
-  background-color: #ffa744;
+  background-color: var(--admin-accent-soft);
   color: #3c3c3c;
 }
 

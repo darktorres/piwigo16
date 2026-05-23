@@ -53,6 +53,7 @@
   --admin-move-cat-hover-bg: #232323;
   --admin-h1-bg: #565656;
   --admin-h1-fg: #c1c1c1;
+  --admin-accent-pale: #ffa646;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -495,8 +496,8 @@ input:focus + .slider {
 
 #selection-mode-block button:hover,
 #commentsSelection button:hover {
-  background-color: #ffa744;
-  border: 1px solid #ffa744;
+  background-color: var(--admin-accent-soft);
+  border: 1px solid var(--admin-accent-soft);
   color: #3c3c3c;
 }
 
@@ -611,7 +612,7 @@ table.qsearch_help_table td {
   color: #777;
 }
 .afterUploadActions a.secondary_button:hover {
-  background-color: #ffa744;
+  background-color: var(--admin-accent-soft);
   color: #3c3c3c;
 }
 
@@ -860,7 +861,7 @@ a#showPermissions {
 }
 
 .jconfirmWarning .jconfirm-icon-c i {
-  color: #ffa744 ;
+  color: var(--admin-accent-soft) ;
   background-color: #ffe9cf ;
 }
 
@@ -1112,7 +1113,7 @@ a#showPermissions {
 }
 
 .pluginBox.plugin-active .pluginActionsSmallIcons a span {
-  background: #ffa744 ;
+  background: var(--admin-accent-soft) ;
   color: #3c3c3c ;
 }
 

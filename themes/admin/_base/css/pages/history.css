@@ -48,12 +48,14 @@
 .history-filter {
   display: flex;
   flex-direction: row;
+  background: #f3f3f3;
 }
 
 .hasDatepicker {
   border: solid 1px #d4d4d4;
   padding: 5px 10px;
   max-width: 180px;
+  background: #fff;
 }
 
 .filter-part {
@@ -71,6 +73,7 @@
   border: solid 1px #d4d4d4;
   padding: 5px 10px;
   margin-bottom: 5px;
+  background: #fff;
 }
 
 .selectable-filter {
@@ -82,6 +85,11 @@
 
 .selectable-filter label {
   white-space: nowrap;
+  margin-bottom: 5px;
+}
+
+.selectable-filter .elem-type-select {
+  margin-top: 5px;
 }
 
 .filter-tags {
@@ -98,6 +106,14 @@
   margin: 10px 5px 0 0;
   white-space: nowrap;
   cursor: default;
+}
+
+.filter-title,
+.remove-filter,
+.filter-icon {
+  color: #777;
+  background: #fff;
+  padding: 5px 0;
 }
 
 .filter-title {
@@ -137,6 +153,17 @@
   align-items: center;
 
   margin-bottom: 10px;
+  background: #fafafa;
+}
+
+.search-line .date-section,
+.search-line .user-section,
+.search-line .type-section {
+  border-right: 1px solid #bbb;
+}
+
+.search-line .type-name a {
+  color: #a1a1a1;
 }
 
 .line-icon {
@@ -447,43 +474,3 @@
   }
 }
 
-/* Relocated from pages/user-activity.css — history search line and
-   filter chrome. Used by history.latte (per template grep). */
-.search-line {
-  background: #fafafa;
-}
-
-.search-line .date-section,
-.search-line .user-section,
-.search-line .type-section {
-  border-right: 1px solid #bbb;
-}
-
-.search-line .type-name a {
-  color: #a1a1a1;
-}
-
-.history-filter {
-  background: #f3f3f3;
-}
-
-.hasDatepicker,
-.elem-type-select {
-  background: #fff;
-}
-
-.selectable-filter label {
-  margin-bottom: 5px;
-}
-
-.selectable-filter .elem-type-select {
-  margin-top: 5px;
-}
-
-.filter-title,
-.remove-filter,
-.filter-icon {
-  color: #777;
-  background: #fff;
-  padding: 5px 0;
-}

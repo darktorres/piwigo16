@@ -803,10 +803,6 @@ input:focus + .slider {
   visibility: hidden;
 }
 
-.GuestUserListPopInContainer {
-  background-color: #444 ;
-}
-
 .AddUserSubmit,
 .update-user-button,
 .user-property-main-user-body .main-user-btn-validate {

@@ -1828,7 +1828,7 @@ a.group_users {
   top: 50%;
   transform: translate(-50%, -48%);
   text-align: left;
-  background-color: #fff;
+  background-color: var(--admin-popin-bg);
   padding: 30px;
   width: 745px;
   height: 635px;

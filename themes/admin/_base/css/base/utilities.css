@@ -274,6 +274,10 @@ table.languages tr td {
   height: 2px;
 }
 
+.slider-info {
+  color: var(--admin-accent);
+}
+
 /* .font-checkbox — checkbox-like labels (migrated from dark/light theme.css). */
 .font-checkbox.selected,
 .font-checkbox .icon-check {

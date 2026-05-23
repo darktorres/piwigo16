@@ -600,6 +600,7 @@ li.plupload_delete a:hover span {
   content: "\E819";
   display: none;
   animation: icon-check-animation 0.4s ease-out;
+  color: var(--admin-bm-icon-check-selected-fg);
 }
 
 @keyframes icon-check-animation {
@@ -631,6 +632,7 @@ li.plupload_delete a:hover span {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+  color: var(--admin-bm-icon-check-fg);
 }
 #batchManagerGlobal ul.thumbnails .wrap2 .icon-pencil:hover,
 #batchManagerGlobal ul.thumbnails .wrap2 .icon-zoom-square:hover {

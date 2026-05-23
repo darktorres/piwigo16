@@ -211,13 +211,8 @@ ul.thumbnails li.rank-of-image {
   background-color: #ddd;
 }
 
-/* Batch Manager */
-#batchManagerGlobal .thumbnails .font-checkbox [class*="icon-check"]::before {
-  color: #999;
-}
-
+/* Batch Manager — light-only display:block override (matches dark). */
 #batchManagerGlobal li.thumbSelected .font-checkbox [class*="icon-check"]::before {
-  color: #fff;
   display: block;
 }
 

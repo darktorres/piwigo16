@@ -85,6 +85,10 @@
   --admin-tooltip-arrow-color: #fff;
   --admin-tooltip-separator-bg: #ccc;
 
+  /* batch-manager thumbnail icon-check colors */
+  --admin-bm-icon-check-fg: #999;
+  --admin-bm-icon-check-selected-fg: #fff;
+
   /* disabled form controls */
   --admin-disabled-bg: #ececec;
   --admin-disabled-fg: #d5d5d5;

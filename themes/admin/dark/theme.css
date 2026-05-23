@@ -47,6 +47,8 @@
   --admin-chart-title-fg: #777;
   --admin-tooltip-arrow-color: #333;
   --admin-tooltip-separator-bg: #777;
+  --admin-bm-icon-check-fg: #777;
+  --admin-bm-icon-check-selected-fg: #3c3c3c;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -361,13 +363,9 @@ a.Piwigo:hover span.Piwigo {
 }
 
 
-/* Batch Manager */
-#batchManagerGlobal .thumbnails .font-checkbox [class*="icon-check"]::before {
-  color: #777;
-}
-
+/* Batch Manager — dark-only display:block override (base has display:none;
+   both children flip to block to actually show the selected check). */
 #batchManagerGlobal li.thumbSelected .font-checkbox [class*="icon-check"]::before {
-  color: #3c3c3c;
   display: block;
 }
 

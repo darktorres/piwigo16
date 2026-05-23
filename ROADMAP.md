@@ -2673,13 +2673,17 @@ typed properties without `is_*` guards.
 > **Status reconciliation (2026-05-23).** Both phases have partially
 > shipped under different names than the original §1.7 draft proposed:
 > the WS layer acquired `*Params` + `*Handler` per-endpoint classes
-> during §1.4 (~94/99 endpoints), and the repository layer grew 56
-> narrow `Projection/*` classes with `fromRow()` factories. The
-> remaining work — admin/web-side DTOs and the bare-`array` repo-return
-> sweep — is described below using the established in-tree patterns
-> instead of the original ROADMAP's wide-`*Entity` / Symfony-Serializer
-> framing. This section is comparable in scope to §1.2 (templates) or
-> §1.4 (plugins).
+> during §1.4 (~94/99 endpoints), and the repository layer grew **two
+> complementary** typed-row patterns: 7 wide `*/Entity/` classes
+> (Image=4, Category=1, Tag=1, Comment=1) supported by 21 value-object
+> types under `src/Piwigo/Common/ValueObject/`, plus 56 narrow
+> `*/Projection/` classes. The original §1.7 draft's `ImageEntity`
+> example was prescient — `Image/Entity/Image.php` exists and is
+> richer (value-object-typed) than the draft showed. The remaining
+> work — admin/web-side DTOs and the bare-`array` repo-return sweep —
+> is described below as the next step in patterns the codebase has
+> already chosen. This section is comparable in scope to §1.2
+> (templates) or §1.4 (plugins).
 
 #### Phase 1 — Request DTO layer (HTTP boundary)
 
@@ -2795,11 +2799,18 @@ like `CommentSubmitRequest` (the original draft snippet).
 
 Full Symfony HttpKernel adoption (PSR-7 → HttpFoundation, kernel
 events, standard ArgumentResolver pipeline, exception → response flow)
-is a separate architectural decision. Not in scope for §1.7. With §1.4
-shipped, the codebase has one event bus (Symfony EventDispatcher
-behind PSR-14); HttpKernel adoption would add a second (request
-lifecycle). Revisit when there's a concrete need. The DTOs from
-Phase 1 carry over unchanged if that adoption ever happens.
+is a separate architectural decision. Not in scope for §1.7.
+`symfony/http-kernel` is **not** currently a dependency (`grep
+http-kernel composer.json` returns nothing); adoption would add it.
+HttpKernel uses the existing Symfony EventDispatcher (same bus, no
+second bus added) but introduces a new request-lifecycle event suite
+(`kernel.request`, `kernel.response`, `kernel.exception`, …) and
+changes the request/response data structures (PSR-7 is in tree via
+`psr/http-message` + `psr/http-server-handler` + `psr/http-server-middleware`,
+used in 10+ files including `Core/Kernel.php`,
+`Http/MiddlewarePipeline.php`, `Http/ResponseEmitter.php`).
+Revisit when there's a concrete need. The DTOs from Phase 1 carry over
+unchanged if that adoption ever happens.
 
 ##### Migration order
 
@@ -2826,30 +2837,52 @@ Phase 1 carry over unchanged if that adoption ever happens.
 
 **Status:** 🟢 Active ▸ pattern in place · sweep open
 
-##### Done — narrow `Projection/*` pattern shipped
+##### Done — both `*/Entity/` and `*/Projection/` patterns shipped
 
-The repository layer adopted **narrow query-specific projections**
-rather than the wide-`*Entity` shape the original §1.7 draft proposed.
-As of 2026-05-23: **56 `Projection/*` classes** in tree across
-`src/Piwigo/{Image,Category,Tag,Users,Activity,Comment,Group,Notification,Rate,Auth}/Projection/`
+The repository layer uses **two complementary typed-row patterns**:
+
+**Wide Entity pattern** — one class per table, every column typed,
+value-objects (ImageId, RelPath, MysqlDateTime, Md5Sum, …) for
+column-level safety. Used for identity-based queries (`findById`,
+`findByPath`, `findByFilePattern`). As of 2026-05-23: **7 Entity
+classes** under `src/Piwigo/{Image,Category,Tag,Comment}/Entity/`
+(Image=4 entity classes including `Image`, `ImageIdFilename`,
+`ImageIdPathRepresentative`, `PathRepresentative`; Category=1; Tag=1;
+Comment=1), backed by **21 ValueObject classes** in
+`src/Piwigo/Common/ValueObject/`. Six repository methods return
+`?Image`/`?Category`/`?Tag` directly; nine `@return list<Image|Category|Tag>`
+annotations exist. `ImageRepository::findById(int): ?Image` is the
+canonical example — and is exactly what the original §1.7 draft
+proposed (with value-objects added).
+
+**Narrow Projection pattern** — query-specific subset, no identity,
+no value-objects. Used for listings, lookups, distinct queries,
+calendar/stats rollups. As of 2026-05-23: **56 `Projection/*` classes**
+across `src/Piwigo/{Image,Category,Tag,Users,Activity,Comment,Group,Notification,Rate,Auth}/Projection/`
 (per-namespace counts: Category=24, Users=6, Comment=5, Image=4, Tag=4,
-Activity=4, Notification=3, Rate=3, Group=2, Auth=1), backed by **64
-`public static function fromRow(array $row): self`** factories (the
-extra eight live outside `Projection/`, e.g. `src/Piwigo/Common/Dto/`,
-`src/Piwigo/Telemetry/TelemetryActivityGroup.php`).
+Activity=4, Notification=3, Rate=3, Group=2, Auth=1).
+
+Total of **64 row-factory functions** across both patterns (most
+named `fromRow`; one outlier `fromUserArray` on `Piwigo\Users\User`,
+which is a typed user wrapper at the namespace root rather than
+under `Entity/`). Eight factories live outside both `Entity/` and
+`Projection/` (`Common/Dto/UserGroupPair.php`,
+`Telemetry/TelemetryActivityGroup.php`, `Activity/ActivityRow.php`,
+plus the five inside `Entity/` directories that exceed the per-namespace
+entity directory count's documentary scope).
 
 Representative examples already in tree:
 
-- `src/Piwigo/Image/Projection/ImageDimension.php` —
-  `findDistinctDimensions()` row shape.
-- `src/Piwigo/Image/Projection/ImageSummaryRow.php` — sparse image row
-  for listing pages.
+- `src/Piwigo/Image/Entity/Image.php` — wide entity, 18+ value-object-typed
+  properties, `Image::fromRow($row)` factory.
+- `src/Piwigo/Image/Projection/ImageDimension.php` — narrow projection,
+  width+height only, used by `findDistinctDimensions()`.
 - `src/Piwigo/Category/Projection/CategoryNamePermalink.php` — the
   `(id, name, permalink)` projection used by admin pickers.
 
-This is the established pattern. New repository methods use it
-automatically; the open work is migrating the methods that pre-date
-the pattern.
+Both patterns are established. The open work is migrating the methods
+that pre-date them and picking which pattern fits each case (Entity
+for identity-based row reads; Projection for query-specific subsets).
 
 ##### Open — bare-`array` repo-return sweep
 
@@ -2979,8 +3012,11 @@ the removed-`is_*`-guards diff committed (see Verification below).
   ground for the Phase 2 sweep.
 - §1.6b — globals cleanup; ✅ closed 2026-05-16 via Wave A reference-
   bridge cleanup and the Phase 3 channel migration. It did **not**
-  depend on a typed `UserEntity` (the original §1.7 cross-ref to this
-  effect was stale and has been corrected).
+  block on a typed user wrapper specifically (the original §1.7 cross-ref
+  framed that as a prerequisite — corrected). A typed user wrapper
+  does exist: `Piwigo\Users\User` at `src/Piwigo/Users/User.php`
+  (uses `UserStatus` enum + has `fromUserArray()` factory), used
+  throughout `CurrentUser::get()`.
 - §1.4 — plugin/theme system shipped. The WS handler-class pattern
   (`WsAction` + `WsParams`) was delivered as part of §1.4's WS-method
   registration work, giving Phase 1 its WS-side win; the remaining
@@ -3010,10 +3046,14 @@ evidence per migration PR:
   `ImageRepository` consumer for Phase 2 — adapt to whatever the
   migrated repo exposes).
 - `composer test && composer lint` clean after each migration.
-- For Phase 2: `tools/openapi-dump.php` runs clean and
-  `composer test:parallel` passes — the WS spec generator reads
-  repository return types reflectively and can surface regressions
-  the unit suite misses.
+- For Phase 2: `composer test:parallel` passes — surfaces regressions
+  the regular unit suite misses.
+  ⚠ `tools/openapi-dump.php` is **broken on `16.x-rewrite` head as of
+  2026-05-23** (`Piwigo\Users\User::__construct()` TypeError at line
+  56 — passes `string` where `UserStatus` enum is expected). The script
+  is a useful Phase 2 evidence gate once fixed, but isn't usable today.
+  Don't add it to the per-migration checklist until the User-construction
+  bug is resolved (separate issue).
 
 ---
 

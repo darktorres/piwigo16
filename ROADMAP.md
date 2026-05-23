@@ -14,7 +14,7 @@
 | 1.2  | Templates pipeline            | ✅ **Done**            | XL        | waves 1+2+3 done — Smarty hygiene → 133/133 Latte conversion → deploy-time precompile (`composer precompile:templates`) + CI gate                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | 1.3  | Kill ServiceLocator + DI      | ✅ **Done**            | L         | constructor injection everywhere; `ServiceLocator.php` deleted; `DbConnection::get()` callers eliminated                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 1.4  | Plugin / theme + WS           | ✅ **Done**            | L         | shipped 2026-05-16 in 19 batches (B0–B18) on `16.x-rewrite`: `PluginInterface` + `PluginRegistry`, 153 typed PSR-14 events, `ThemeInterface` + `ThemeRegistry`, 94 `#[ApiMethod]`-decorated WS endpoints + cebe/redocly OpenAPI gates, legacy runtime deleted                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| 1.5  | Security hardening            | ✅ **Done**            | M         | shipped 2026-05-22 in 4 commits on `16.x-rewrite`: Wave A session cookie hardening (`SameSite=Lax` + `HttpOnly` + scheme-conditional `Secure`), Wave B brute-force lockout (`piwigo_user_failed_logins` + `LoginThrottle`) + sliding-window rate limiting via `symfony/rate-limiter` (per-IP 5/min, per-account 10/10min) on both form + WS-API, Wave C `SecurityHeadersMiddleware` (CSP, XFO, XCTO, Referrer-Policy, Permissions-Policy, HSTS-on-HTTPS) + `composer lint:no-inline-scripts` CI guard, Wave D `docs/SECURITY.md` (threat model + admin runbook + plugin-author reference)                                                                                                                              |
+| 1.5  | Security hardening            | ✅ **Done**            | M         | shipped 2026-05-22 in 4 waves on `16.x-rewrite` (A: `SameSite=Lax`/`HttpOnly`/scheme-conditional `Secure` session cookie, B: `piwigo_user_failed_logins`+`LoginThrottle` lockout & `symfony/rate-limiter` sliding-window per-IP/per-account on form+WS-API, C: `SecurityHeadersMiddleware` CSP/XFO/XCTO/Referrer-Policy/Permissions-Policy/HSTS + `composer lint:no-inline-scripts` CI guard, D: `docs/SECURITY.md`) + 3 polish commits (`Http\RequestScheme` for `PIWIGO_TRUSTED_PROXIES` X-Forwarded-Proto/-For trust, `SecurityHeaders::emitDirect()` on install/upgrade/i fast paths, doc tightening). Deferred follow-ups inventoried under §1.5                                                                                                                              |
 | 1.6  | Type correctness              | 🟢 **Active** ▸ 4 / 13 | M         | 1.6b globals cleanup ✅ closed; 1.6a mixed-types 2 / 6 done (4 left); 1.6c schema metadata 0 / 5 done (1 moot)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 1.7  | Typed boundaries              | 🟡 **Not started**     | L         | HTTP request DTOs (Phase 1) → repository entity layer (Phase 2)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | 1.8  | Test infrastructure           | 🟡 **Not started**     | M + L + S | Pest → coverage → Infection (chained)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
@@ -2019,7 +2019,31 @@ Verified by `composer lint:php` clean, `vendor/bin/phpstan analyse`
 clean, `vendor/bin/phpunit` 1272 tests / 17656 assertions green (up
 from 1259 / 16566 at the start of §1.5).
 
+**Polish landed 2026-05-22** (3 follow-up commits after the
+retrospective deep review):
+
+- `ceffd2257` — `Http\RequestScheme` helper gated on
+  `PIWIGO_TRUSTED_PROXIES` env var. Honours `X-Forwarded-Proto` for
+  the `Secure` cookie flag + HSTS emission and walks
+  `X-Forwarded-For` right-to-left for the per-IP rate-limit bucket.
+  Empty allow-list (the default) = forwarded headers ignored entirely.
+  9 unit tests including the spoof-rejection regression guard.
+- `644317b66` — extract `Http\SecurityHeaders` (single source of
+  truth for header shapes); reduce `SecurityHeadersMiddleware` to a
+  `foreach`; call `SecurityHeaders::emitDirect()` from each
+  short-circuit branch in `index.php` (`install`, `upgrade`,
+  `upgrade_feed`, `i/`) so the install + upgrade wizards now carry
+  CSP/XFO/XCTO/Referrer-Policy too. New `FastPathHeadersTest`
+  exercises `/index.php?/install` against live Apache.
+- `be409d2e3` — `docs/SECURITY.md` aligned with the polish work +
+  three new Known-gaps bullets (trusted-proxy handling, COOP/COEP/CORP,
+  CSP escape-hatch fragment-merge contract).
+
+Post-polish suite: 1282 tests / 17676 assertions green.
+
 #### Deferred follow-ups (carried forward, not blockers)
+
+**Config / UX gaps:**
 
 - **Configurable lockout / rate-limit thresholds.** Gated on §1.6c
   (config-schema metadata). Currently hardcoded in `LoginThrottle`
@@ -2031,11 +2055,77 @@ from 1259 / 16566 at the start of §1.5).
   — gated on a future "force HTTPS" config flag.
 - **CSP `report-uri` / `report-to`** — no reporting endpoint
   designed yet; revisit if production violations appear.
-- **Per-plugin CSP relaxation hook** — `PluginInterface::boot()`
-  surface to be added when the first plugin needs it.
+
+**§1.7-gated cleanups (typed HTTP DTO refactor):**
+
 - **Typed HTTP response for the WS rate-limit error.** Currently
-  `PwgError(429, …)`; typed `Response` body comes with §1.7
-  (typed boundaries / HTTP DTO Phase 1).
+  `PwgError(429, …)`; typed `Response` body comes with §1.7.
+- **Eliminate the `PageState::loginFailureReason` back-channel.**
+  `AuthException::accountLocked()` is defined but not yet thrown —
+  the locked-account branch in `IdentificationController` /
+  `LoginHandler` currently detects via the side-effect flag
+  `PageState::current()->loginFailureReason === 'account_locked'`.
+  When §1.7 promotes the WS / form login paths to throw-and-catch,
+  fold the named ctor in and delete the flag. (Review finding F5.)
+
+**CSP / headers — defer-until-needed:**
+
+- **Per-plugin CSP relaxation hook.** Currently
+  `SecurityHeadersMiddleware` uses `withHeader` (replace, not
+  append), so a controller or plugin middleware that sets its own
+  `Content-Security-Policy` is silently overwritten. Eventual
+  contract: inner code appends to a per-response CSP-fragment
+  attribute; outer middleware merges fragments into the final
+  header value. Surface lives on `PluginInterface::boot()` once the
+  first concrete plugin justifies designing it. (Review finding F7.)
+- **`Cross-Origin-*` response headers** (`Cross-Origin-Opener-Policy`,
+  `Cross-Origin-Resource-Policy`, `Cross-Origin-Embedder-Policy`).
+  Each one breaks a concrete UX flow — popup-window flows for COOP,
+  third-party hotlinking for CORP, etc. Defer until a concrete
+  deployment justifies the breakage. (Review finding N7.)
+- **`Permissions-Policy` long tail.** Currently only blocks
+  `geolocation` / `microphone` / `camera`. Could tighten to also
+  block `fullscreen`, `payment`, `usb`, `serial`, `bluetooth`,
+  `idle-detection`, `browsing-topics`, `interest-cohort`. Each one
+  has plausible plugin use cases though — keep permissive on UX APIs
+  by default. (Review finding N8.)
+- **Shape-enforce `style-src-attr`.** `style-src-attr 'unsafe-inline'`
+  was added for inline `style="--var:value"` CSS-variable bridges
+  but does NOT restrict inline styles to that shape — the browser
+  accepts any inline `style=""` attribute. Latte autoescaping is
+  the only line of defense, so `|noescape` near a style attribute
+  needs script-tag-level scrutiny. No standard CSP directive enforces
+  the `--var:value` shape; would require a custom build step or
+  CSP-Hashes per-template. Defer indefinitely unless a real bypass
+  surfaces. (Review finding F8.)
+
+**Intentional trade-offs documented for future re-evaluation:**
+
+- **Lockout fires only for known usernames.** `AuthService::pwgLogin`
+  gates the lockout check on `$ufId > 0`, so attempts against
+  non-existent accounts record with `user_id=NULL` and don't trip
+  the per-user lockout. Username enumeration is defended by the
+  per-IP rate limit instead. Re-evaluate if username enumeration
+  via login-timing or response-shape oracles becomes a concrete
+  attack. (Review finding F2.)
+- **`password_verify` runs even when the account is already locked.**
+  Pro: constant-time response so an attacker can't probe lock
+  state via timing. Con: each locked attempt costs ~100ms CPU, so
+  5 attempts/15min × N accounts is a real DoS surface. Re-evaluate
+  if DoS reports come in. (Review finding F3.)
+
+**Cleanup nits (drive-by when in the area):**
+
+- **`LoginFailureLocked` activity-log spam.** Each locked attempt
+  writes a row to `piwigo_activity`. An attacker hammering one
+  account floods the audit trail. Consider rate-limiting that log
+  write to once per (user, hour). Defer until a real install reports
+  log-volume problems. (Review finding N3.)
+- **Unused `idx_ip_time` index on `piwigo_user_failed_logins`.**
+  No query currently reads by IP. Cheap-but-dead; keep if a DB-backed
+  IP fallback is planned (vs. the current `symfony/cache`-backed
+  bucket), otherwise drop in a future schema cleanup pass. (Review
+  finding N2.)
 
 #### Wave A — Session cookie hardening + `SECURITY.md` skeleton
 

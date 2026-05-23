@@ -588,9 +588,6 @@ li.plupload_delete a.remove-format:hover {
   color: #474747;
 }
 
-#permitAction p {
-  background: #fff;
-}
 #addAlbumForm input[name="category_name"] {
   border: none ;
   margin-top: 5px ;

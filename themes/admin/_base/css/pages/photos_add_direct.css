@@ -403,6 +403,10 @@ li.plupload_delete a:hover span {
 #permitAction {
   display: flex;
 }
+
+#permitAction p {
+  background: var(--admin-bg-page);
+}
 #permitAction select {
   padding: 12px 10px;
   width: 280px;

@@ -38,13 +38,6 @@
   left: 50%;
   top: 37px;
 }
-#catOptionsSmall {
-  display: none;
-  position: absolute;
-  right: 80%;
-  bottom: 0%;
-}
-
 .is-default-token {
   display: block;
   z-index: 1;
@@ -352,25 +345,13 @@
 
 /* Group manager — base rules (migrated from dark/light theme.css).
    Identical values in both themes except where noted. */
-.groups .Group-name > p,
-.addGroupForm .addGroupFormTitle {
+.groups .Group-name > p {
   color: var(--admin-text);
   font-size: 1.2em;
 }
 
 .groups p.list_user {
   color: var(--admin-text);
-}
-
-.addUserButton:hover {
-  text-decoration: none;
-  color: var(--admin-text);
-  background-color: var(--admin-bg-elevated);
-}
-
-label > p.group_select {
-  color: var(--admin-text-strong);
-  background-color: #c2f5c2;
 }
 
 .groups .AddUser .icon-user-add::before {
@@ -387,9 +368,7 @@ label > p.group_select {
   border: 1px solid #d5d5d5;
 }
 
-.groups .GroupContainer,
-.groups .showCreateGroup,
-.groups .addGroupFormBlock {
+.groups .GroupContainer {
   font-size: 1.2em;
   background-color: var(--admin-bg-elevated);
 }

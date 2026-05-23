@@ -67,13 +67,6 @@
   justify-content: center;
 }
 
-.main-info-icon {
-  width: 40px;
-  height: 40px;
-  margin-bottom: var(--space-xs);
-  fill: #3c3c3c;
-}
-
 .main-info-title {
   color: #000;
   text-align: center;
@@ -116,13 +109,6 @@
 }
 
 .full-line-box {
-  flex: 0 0 calc(100% - 20px);
-  margin: 0 10px;
-  display: flex;
-  flex-direction: column;
-}
-
-.full-line-info-box {
   flex: 0 0 calc(100% - 20px);
   margin: 0 10px;
   display: flex;
@@ -261,13 +247,6 @@
   font-weight: bold;
   background-color: #f8d7dc;
   color: #eb3d33;
-}
-
-.badge-count {
-  padding: var(--space-sm);
-  border-radius: 100px;
-  background-color: #3c3c3c;
-  color: #fff;
 }
 
 .pagination-reload {

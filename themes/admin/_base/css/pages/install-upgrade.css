@@ -111,10 +111,6 @@ a:hover {
   color: #f70;
 }
 
-.sql_content {
-  color: #ff3363;
-}
-
 .errors {
   padding-bottom: var(--space-xs);
   color: #f55;

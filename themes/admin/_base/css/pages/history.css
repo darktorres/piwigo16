@@ -51,12 +51,6 @@
   background: #f3f3f3;
 }
 
-.hasDatepicker {
-  border: solid 1px #d4d4d4;
-  padding: 5px 10px;
-  max-width: 180px;
-  background: #fff;
-}
 
 .filter-part {
   display: flex;

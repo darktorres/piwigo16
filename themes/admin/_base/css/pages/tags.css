@@ -1,10 +1,5 @@
 /* Tag Manager (base — previously in _base/theme.css global) */
 /* Tag Manager */
-.warningDeletion {
-  display: none;
-  font-style: italic;
-}
-
 #debug {
   margin-left: 227px;
   font-size: var(--font-size-xs);
@@ -289,39 +284,9 @@
   }
 }
 
-.tag-container .tag-box .tag-rename {
-  display: none;
-}
-
-.tag-container .tag-box.edit-name .tag-rename {
-  display: flex;
-}
-
-.tag-container .tag-box .tag-rename .tag-name-editable {
-  text-align: left;
-  width: 100px;
-  color: #3c3c3c;
-  font-family: "Open Sans", "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
-  margin: 0;
-  background-color: #fff;
-  border: 1px solid #d5d5d5;
-  padding-left: 6px;
-}
-
-.tag-container .tag-box .tag-rename span:hover {
-  color: #ffa744;
-}
-
 .tag-pagination .selected {
   background: #ffa646;
   color: #000;
-}
-
-.tag-container .tag-box .tag-rename span {
-  padding: 2px 3px;
-  margin: auto;
-  cursor: pointer;
-  color: #3a3a3a;
 }
 
 .tag-selection .tag-selection-content {

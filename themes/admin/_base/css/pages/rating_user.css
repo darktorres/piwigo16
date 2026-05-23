@@ -1,13 +1,3 @@
-.dtBar {
-  text-align: left;
-  padding: 10px 0 10px 20px;
-}
-
-.dtBar div {
-  display: inline;
-  padding-right: var(--space-xs);
-}
-
 .rating-user-submit-row {
   margin: 10px 0 0;
 }

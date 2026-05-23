@@ -238,11 +238,6 @@ input[type="text"].dError {
   text-align: center;
 }
 
-.groups .addGroupFormTitle {
-  font-size: 1.2em;
-  font-weight: 700;
-  margin: 0;
-}
 
 form.properties .groups .GroupContainer,
 .groups form#update .groups ul {

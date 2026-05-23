@@ -42,7 +42,6 @@ CORPUS_GLOBS = [
 ALLOWLIST_PREFIXES = (
     # third-party widgets whose class names are emitted by the lib
     "jconfirm",
-    "plupload",
     "ts-",
     "tom-select",
     "flatpickr",

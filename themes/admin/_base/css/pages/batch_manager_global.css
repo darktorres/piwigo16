@@ -6,10 +6,6 @@
   text-align: left;
   padding: 0;
 }
-#batchManagerGlobal #action_del_tags ul.tagSelection {
-  margin: 0;
-  width: 620px;
-}
 #batchManagerGlobal #checkActions {
   text-align: left;
   margin: 0 0 20px;
@@ -119,9 +115,6 @@
 }
 #batchManagerGlobal .removeFilter span {
   display: none;
-}
-#batchManagerGlobal #applyFilterBlock {
-  width: 200px;
 }
 #batchManagerGlobal .useFilterCheckbox {
   display: none;

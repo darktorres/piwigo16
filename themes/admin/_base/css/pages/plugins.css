@@ -369,10 +369,6 @@
   text-align: center;
   display:block;
 } */
-.pluginEmptyInput {
-  width: 90px;
-}
-
 .pluginActionLevel1,
 .pluginActionLevel2,
 .pluginUnavailableAction {
@@ -586,15 +582,6 @@
 .showInactivePlugins {
   margin-bottom: 40px;
 }
-.showInactivePluginsInfo {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 18px;
-}
-.showInactivePluginsInfo > * {
-  margin: var(--space-xs);
-}
 .showInactivePlugins button {
   font-size: var(--font-size-lg);
 }
@@ -723,17 +710,6 @@
   box-shadow: 1px 1px 0 1px #e0e0e0;
   transition: 0.5s;
   position: relative;
-}
-
-.unavailablePlugin {
-  cursor: default;
-  opacity: 0.5;
-}
-
-.unavailablePlugin:hover {
-  cursor: default;
-  color: #7f7f7f;
-  opacity: 0.5;
 }
 
 .pluginDescCompact {

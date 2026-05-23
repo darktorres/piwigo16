@@ -273,17 +273,6 @@ ul.pwgtree-tree .pwgtree-element {
   cursor: move;
 }
 
-.albumBlock {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 10px 0;
-}
-.albumBlock .albumLineBlock {
-  display: block;
-  padding-left: 7px;
-  max-width: 45%;
-  height: 50px;
-}
 .showCreateAlbum {
   text-align: left;
   margin: 0 1em 25px 20px;
@@ -291,12 +280,6 @@ ul.pwgtree-tree .pwgtree-element {
 }
 .showCreateAlbum .userSeparator {
   margin: 0 5px;
-}
-#addAlbumOpen,
-#autoOrderOpen {
-  padding: 7px 15px;
-  font-weight: bold;
-  font-size: 11px;
 }
 .afterUploadActions {
   text-align: center;
@@ -816,23 +799,6 @@ input[name="position"] {
   margin-right: var(--space-xs);
 }
 
-.album-add-button-label,
-.order-root-button-label {
-  padding: var(--space-sm);
-  border-radius: var(--radius-sm);
-  font-weight: bold;
-  display: flex;
-  align-items: baseline;
-  cursor: pointer;
-  font-size: var(--font-size-sm);
-  height: 18px;
-}
-.album-add-button-label p,
-.order-root-button-label p {
-  white-space: nowrap;
-  margin: 0;
-}
-
 /* Relocated from pages/user-activity.css — AddAlbum/DeleteAlbum/
    RenameAlbum popin colors that didn't merge into an existing rule.
    The popin-container bg, cancel-bg/cancel-fg, DeleteSubmit bg+fg
@@ -843,15 +809,7 @@ input[name="position"] {
   color: var(--admin-text-strong);
 }
 
-.AddAlbumPopInContainer .AddAlbumLabel,
-.DeleteAlbumPopInContainer .DeleteAlbumLabel {
-  color: var(--admin-text);
-}
-
-.AddAlbumPopInContainer .AddAlbumInput,
 .AddAlbumPopInContainer .user-property-input,
-.DeleteAlbumPopInContainer .DeleteAlbumInput,
-.RenameAlbumPopInContainer .RenameAlbumInput,
 .RenameAlbumLabelUsername input {
   background-color: var(--admin-popin-input-bg);
   border: solid 2px var(--admin-popin-input-border);
@@ -923,10 +881,6 @@ input[name="position"] {
   pointer-events: all;
 }
 
-.last-update {
-  display: none;
-}
-
 .badge-container:hover .badge-dropdown {
   display: flex;
 }
@@ -969,10 +923,6 @@ input[name="position"] {
 }
 
 @media (max-width: 1415px) {
-  .badge-container .last-update {
-    display: none;
-  }
-
   .badge-container .nb-sub-photos {
     display: none;
   }

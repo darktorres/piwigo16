@@ -13,15 +13,6 @@
   margin-right: 6px;
 }
 
-.start-date,
-.end-date {
-  padding: 5px 10px;
-  background: #eaeaea;
-  border-radius: 50px;
-  margin: var(--space-xs);
-  white-space: nowrap;
-}
-
 .line {
   background: #fafafa;
   box-shadow: 0 2px 4px #00000024;
@@ -235,10 +226,6 @@ div:has(> .activity-header) {
   margin-top: var(--space-sm);
 }
 
-.actions-filters {
-  margin-left: 25%;
-}
-
 .user_activity_end_options {
   margin-left: auto;
   display: flex;
@@ -280,11 +267,6 @@ div:has(> .activity-header) {
   width: auto;
 }
 
-.activity-period-info {
-  margin-bottom: var(--space-xl);
-  font-weight: bold;
-}
-
 .additional-filters-section {
   margin-left: 5%;
 }
@@ -313,12 +295,6 @@ div:has(> .activity-header) {
   margin-top: var(--space-sm);
   font-size: var(--font-size-xs);
   font-weight: bold;
-}
-
-.cancel-icon {
-  margin: 0 0 0 10px;
-
-  cursor: pointer;
 }
 
 .loading {

@@ -276,12 +276,6 @@ a.group_users {
   left: 15px;
 }
 
-#userList .openUserDetails {
-  visibility: hidden;
-}
-#userList tr:hover .openUserDetails {
-  visibility: visible;
-}
 #userList .icon-cancel-circled {
   visibility: visible;
 }
@@ -290,33 +284,6 @@ a.group_users {
 }
 #userList_filter {
   margin-top: -20px;
-}
-
-.userProperties {
-  max-width: 730px;
-}
-.userProperty {
-  width: 340px;
-  float: left;
-  margin-bottom: var(--space-md);
-}
-.userActions {
-  float: right;
-  text-align: right;
-}
-
-.user_form_popin {
-  width: 750px;
-  height: 450px;
-  padding: var(--space-lg);
-}
-
-.userProperties form {
-  text-align: left;
-}
-
-.popinWait {
-  padding-top: 200px;
 }
 
 .preview-box.icon-zoom-in {
@@ -391,11 +358,6 @@ a.group_users {
   background: #ddd;
 }
 
-
-.user-property-column-title,
-.edit-username-title {
-  color: #353535;
-}
 
 .user-property-input {
   color: #353535;
@@ -909,16 +871,6 @@ a.group_users {
 }
 
 /* general pop in rules */
-.user-property-column-title {
-  font-weight: bold;
-  margin-bottom: var(--space-md);
-  font-size: 1.4em;
-}
-
-.user-property-column-title > p {
-  margin: 0;
-}
-
 .edit-user-tab-title {
   display: flex;
   /* justify-content: space-between; */
@@ -1156,17 +1108,6 @@ a.group_users {
   margin-bottom: 35px;
 }
 
-.user-property-password .icon-edit-pass {
-  margin-left: auto;
-  padding: var(--space-sm);
-  background-color: #ffa744;
-  color: #3c3c3c;
-}
-
-.user-property-password .icon-edit-pass:hover {
-  background-color: #f70;
-}
-
 .user-property-password-change,
 .user-property-main-user-change {
   display: none;
@@ -1371,6 +1312,7 @@ a.group_users {
 }
 
 .edit-username-title {
+  color: #353535;
   font-size: 1.4em;
   width: auto;
   max-width: 200px;
@@ -1643,8 +1585,7 @@ a.group_users {
   color: #3c3c3c;
 }
 
-.update-user-button:hover,
-.user-property-main-user-body .main-user-btn-rewrite:hover {
+.update-user-button:hover {
   background-color: #f70;
 }
 
@@ -1723,10 +1664,6 @@ a.group_users {
 
 #AddUser {
   display: none;
-}
-
-.hide-user-property-password {
-  display: none !important /* keep: JS-toggled visibility */;
 }
 
 .AddUserPopInContainer {
@@ -1940,10 +1877,6 @@ a.group_users {
 Advanced filter
 ---------------------- */
 
-.filter-div {
-  margin-left: 500px;
-}
-
 .advanced-filter-btn {
   position: absolute;
   right: 650px;
@@ -1958,10 +1891,6 @@ Advanced filter
   z-index: 2;
   right: 404px;
   top: -3px;
-}
-
-.extended-filter-btn {
-  height: 30px;
 }
 
 #advanced-filter-container {
@@ -2009,13 +1938,6 @@ Advanced filter
   flex-direction: column;
   justify-content: center;
   padding-right: var(--space-md);
-}
-
-.advanced-filter-label {
-  text-align: left;
-  display: block;
-  margin-bottom: var(--space-xs);
-  white-space: nowrap;
 }
 
 .advanced-filter-select {

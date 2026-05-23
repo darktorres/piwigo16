@@ -284,10 +284,6 @@ form#menuOrdering input {
 form#menuOrdering .menuAuthor {
   margin: 5px 0 0 40px;
 }
-form#menuOrdering .menuSubmit {
-  margin: 20px 0;
-}
-
 ul.menuUl {
   list-style: none;
   padding: 0;

@@ -127,9 +127,6 @@ ul.thumbnails input {
   padding-top: 10px;
   font-weight: bold;
 }
-.menuLi {
-  background: #f3f3f3;
-}
 .menuLi_hidden {
   background: #ccc ;
 }

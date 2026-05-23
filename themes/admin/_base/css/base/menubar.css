@@ -12,6 +12,10 @@
   margin-right: 0.5em;
 }
 
+.menuLi {
+  background: var(--admin-bg-elevated);
+}
+
 /* menubar is on all admin pages => No specific css file */
 #menubar {
   width: 205px;

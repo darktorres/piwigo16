@@ -89,6 +89,12 @@
   --admin-bm-icon-check-fg: #999;
   --admin-bm-icon-check-selected-fg: #fff;
 
+  /* big-progressbar (photos add page) */
+  --admin-big-progressbar-bg: #3c3c3c;
+
+  /* move-cat-container (album move) hover background */
+  --admin-move-cat-hover-bg: #ffd7ad;
+
   /* disabled form controls */
   --admin-disabled-bg: #ececec;
   --admin-disabled-fg: #d5d5d5;

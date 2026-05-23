@@ -49,6 +49,8 @@
   --admin-tooltip-separator-bg: #777;
   --admin-bm-icon-check-fg: #777;
   --admin-bm-icon-check-selected-fg: #3c3c3c;
+  --admin-big-progressbar-bg: #3c3939;
+  --admin-move-cat-hover-bg: #232323;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -395,31 +397,9 @@ a.Piwigo:hover span.Piwigo {
   color: #bfbfbf;
 }
 
-/* TokenInput (with Facebook style for ROMA) */
-ul.token-input-list {
-  border-color: #666 ;
-  background-color: #444 ;
-}
-ul.token-input-list li input {
-  background-color: #444 ;
-}
-li.token-input-token span {
-  color: #878787 ;
-}
-div.token-input-dropdown {
-  background-color: #eee ;
-  border-color: #666 ;
-}
-div.token-input-dropdown ul li {
-  background-color: #eee ;
-}
-div.token-input-dropdown ul li.token-input-selected-dropdown-item {
-  background-color: #ff7800 ;
-}
-
-.big-progressbar {
-  background: #3c3939;
-}
+/* TokenInput section deleted — the jQuery TokenInput widget was provided by
+   the user_tags plugin, which is no longer in-tree (v17 deprecates legacy
+   PEM plugins). Dead overrides removed. */
 
 /* Picture add */
 
@@ -435,11 +415,8 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
   color: #c1c1c1;
 }
 
-/* Album edit */
-.move-cat-container:hover {
-  background-color: #232323;
-}
-
+/* Album edit — dark-only structural rule: force icon-* opacity to 1 on hover
+   (base default is below 1 for the move-cat icon palette). */
 .move-cat-container:hover .icon-yellow,
 .move-cat-container:hover .icon-red,
 .move-cat-container:hover .icon-purple,
@@ -448,19 +425,11 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
   opacity: 1;
 }
 
+/* .move-cat-action a:hover deferred — needs new --admin-move-cat-action-hover
+   {fg,bg} tokens in a follow-up batch. */
 .move-cat-action a:hover {
   color: #777;
   background: #111;
-}
-
-.disabledToggle .move-cat-toogler {
-  color: #808080 ;
-  opacity: 0.5;
-  pointer-events: none;
-}
-.move-cat-container.disabledToggle:hover .move-cat-toogler {
-  opacity: 0.5;
-  pointer-events: none;
 }
 
 /* dark popin inputs suppress default focus outline (existing dark-only

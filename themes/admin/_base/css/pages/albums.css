@@ -14,7 +14,7 @@
 }
 
 .move-cat-container:hover {
-  background-color: #ffd7ad;
+  background-color: var(--admin-move-cat-hover-bg);
 }
 
 

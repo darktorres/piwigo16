@@ -98,6 +98,7 @@ a#showPermissions:hover {
   padding: 0;
   border-radius: var(--radius-lg);
   position: relative;
+  background: var(--admin-big-progressbar-bg);
   height: 8px;
 }
 

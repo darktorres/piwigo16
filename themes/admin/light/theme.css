@@ -462,9 +462,6 @@ input:focus + .slider {
   border-color: #ddd;
 }
 
-.big-progressbar {
-  background: #3c3c3c;
-}
 
 #watermarkPositionBox {
   border: 2px solid #ccc;

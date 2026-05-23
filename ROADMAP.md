@@ -874,7 +874,7 @@ critical path for §1.4, not just §1.3.
 
 #### Phase 1 — Plugins
 
-**Status:** 🟡 Not started
+**Status:** ✅ Done 2026-05-16 ▸ shipped in batches B0–B12 / B14 / B16–B18 on `16.x-rewrite` (see §1.4 parent summary above; per-batch detail preserved below for traceability)
 
 ##### `PluginInterface`
 
@@ -1712,7 +1712,7 @@ added alongside this section's first commit).
 
 #### Phase 2 — Themes
 
-**Status:** 🟡 Not started · depends on Phase 1
+**Status:** ✅ Done 2026-05-16 ▸ shipped in batches B13–B15 on `16.x-rewrite` (`ThemeInterface` + `ThemeRegistry`, declarative `theme.json`, inheritance via composition; see §1.4 parent summary above)
 
 ##### `ThemeInterface`
 
@@ -1904,7 +1904,7 @@ layout the other adopts.
 
 #### Phase 3 — WS API enrichment
 
-**Status:** 🟡 Not started · depends on Phase 1
+**Status:** ✅ Done 2026-05-16 ▸ 94 `#[ApiMethod]`-decorated WS endpoints + cebe/redocly OpenAPI gates (see §1.4 parent summary above)
 
 Once plugin handlers are reflection-accessible classes (which they
 become as part of Phase 1), two follow-ups land.

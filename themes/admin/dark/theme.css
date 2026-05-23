@@ -2018,12 +2018,6 @@ li.plupload_delete a.remove-format:hover {
   background-color: #f70;
 }
 
-.badge-dropdown {
-  background: #333;
-}
-.badge-dropdown::after {
-  border-color: transparent transparent #333;
-}
 
 .cat-modify-ariane a.icon-sitemap::after {
   background-color: #111;
@@ -2200,11 +2194,6 @@ li.plupload_delete a.remove-format:hover {
 
 .pictureIdLabel {
   color: #c1c1c1;
-}
-
-.badge-unsaved {
-  background-color: #fadda2;
-  color: #e18c32;
 }
 
 .badge-succes {

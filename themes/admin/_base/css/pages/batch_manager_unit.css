@@ -181,6 +181,10 @@
   width: 90%;
 }
 
+.calendar-input input {
+  background-color: transparent;
+}
+
 .full-line-description-box {
   flex: 0 0 calc(100% - 20px);
   min-height: 50px;

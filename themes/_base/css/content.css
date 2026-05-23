@@ -74,7 +74,7 @@
 /* Selectize */
 .selectize-dropdown [data-selectable],
 .selectize-dropdown .optgroup-header {
-  padding: 0 5px !important;
+  padding: 0 5px !important; /* keep: overrides selectize.js bundle's own padding */
 }
 
 /* Search-in-set button CSS — must live here (not search.css) because it is
@@ -138,7 +138,7 @@
   font-weight: 700;
   color: #fafafa;
   margin-left: 5px;
-  padding: 2px 5px !important;
+  padding: 2px 5px !important; /* keep: overrides .mcs-side-results > div padding */
   font-size: 10px;
   background: #777;
 }

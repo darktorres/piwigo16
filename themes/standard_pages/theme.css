@@ -5,7 +5,7 @@
 
 /* Color tokens for the standard_pages theme.
 
-   The first six tokens (--color-accent through --color-dark-header-link)
+   The first three tokens (--color-accent through --color-light-gradient)
    are overridden per skin in skins/*.css — they encode the brand color
    variations across the 11 skin variants.
 
@@ -17,10 +17,6 @@
   --color-accent: #f70;
   --color-btn-primary-fg: #fff;
   --color-light-gradient: linear-gradient(75.69deg, #ffeacf 7.64%, #fffaf3 77.87%);
-  --color-dark-link: #ffebd0;
-  --color-dark-link-hover: #f70;
-  --color-dark-header-link: #ffebd0;
-
   /* Surfaces — light mode */
   --color-surface: #fff;
   --color-surface-alt: #f8f8f8;
@@ -35,29 +31,12 @@
   /* Borders / dividers */
   --color-divider: #d8d8d8;
 
-  /* Surfaces — dark mode */
-  --color-dark-surface: #303030;
-  --color-dark-surface-alt: #3c3c3c;
-  --color-dark-surface-deepest: #202020;
-
-  /* Foreground — dark mode */
-  --color-dark-text: #d6d6d6;
-
   /* Status — light mode */
   --color-success-bg: #dbf6d7;
   --color-success-fg: #6dce5e;
   --color-info-bg: #bde5f8;
   --color-info-fg: #00529b;
   --color-error-fg: #eb3223;
-  --color-error-bg-dark: #be4949;
-  --color-error-fg-dark: #ffc8c8;
-
-  /* Status — dark mode */
-  --color-success-bg-dark: #4ea590;
-  --color-success-fg-dark: #aaf6e4;
-  --color-info-bg-dark: #4f71a4;
-  --color-info-fg-dark: #bad6ff;
-
   /* Disabled button background */
   --color-disabled-btn-bg: #aaa;
 
@@ -67,12 +46,57 @@
   /* Light .btn-secondary background */
   --color-btn-secondary-bg: #ececec;
 
-  /* Dark list/row backgrounds (used in the api key list table) */
-  --color-dark-list-head: #2a2a2a;
-  --color-dark-list-row-alt: #333;
-
   /* Accent variants */
   --color-accent-soft: #ffa646;
+
+  /* Link colors — light mode */
+  --color-link: var(--color-text);
+  --color-link-hover: var(--color-accent);
+  --color-header-link: var(--color-accent);
+
+  /* Additional surfaces */
+  --color-surface-deepest: #fff;
+  --color-list-head: var(--color-surface-input);
+  --color-list-row-alt: var(--color-surface-alt);
+
+  /* Close-modal foreground */
+  --color-close-modal: #fff;
+
+  /* Slider background */
+  --color-slider-bg: var(--color-surface-disabled);
+  --color-slider-thumb: #fff;
+
+  /* Revoked button */
+  --color-btn-revoked: #eb3223;
+
+  /* Page gradient */
+  --color-page-bg: var(--color-light-gradient);
+}
+
+.dark {
+  --color-surface: #3c3c3c;
+  --color-surface-alt: #333;
+  --color-surface-input: #303030;
+  --color-surface-disabled: var(--color-border-strong);
+  --color-surface-deepest: #202020;
+  --color-text: #d6d6d6;
+  --color-divider: #303030;
+  --color-link: #ffebd0;
+  --color-link-hover: #f70;
+  --color-header-link: #ffebd0;
+  --color-success-bg: #4ea590;
+  --color-success-fg: #aaf6e4;
+  --color-info-bg: #4f71a4;
+  --color-info-fg: #bad6ff;
+  --color-list-head: #2a2a2a;
+  --color-list-row-alt: #333;
+  --color-close-modal: var(--color-text);
+  --color-slider-bg: var(--color-text);
+  --color-slider-thumb: var(--color-border-strong);
+  --color-btn-revoked: #be4949;
+  --color-page-bg: linear-gradient(75.69deg, #1b1b1d 7.64%, #2f2f2f 77.87%);
+  --color-btn-secondary-bg: #202020;
+  --color-btn-secondary-fg: #fff;
 }
 
 html {
@@ -188,6 +212,8 @@ h1 i {
   padding: 5px 15px;
   margin-bottom: 25px;
   flex-wrap: nowrap;
+  background-color: var(--color-surface-input);
+  border: 1px solid var(--color-surface-input);
 }
 
 .input-container input,
@@ -390,6 +416,7 @@ a.btn-main {
 
 .gallery-icon-eye {
   cursor: pointer;
+  color: var(--color-text-muted);
 }
 
 #language-switch {
@@ -454,6 +481,9 @@ a.btn-main {
   padding: var(--space-md);
   margin-bottom: var(--space-md);
   font-weight: 700;
+  background-color: var(--color-success-bg);
+  color: var(--color-success-fg) !important; /* keep: must win over inherited color */
+  border-left: 4px solid var(--color-success-fg);
 }
 
 .error-message {
@@ -787,6 +817,7 @@ p.error-message,
   top: -40px;
   font-size: 30px;
   text-decoration: none;
+  color: var(--color-close-modal);
   cursor: pointer;
 }
 
@@ -867,7 +898,7 @@ label.switch {
   cursor: pointer;
   inset: 0;
   transition: 0.4s;
-  background-color: var(--color-surface-disabled);
+  background-color: var(--color-slider-bg);
 }
 
 .slider::before {
@@ -878,7 +909,7 @@ label.switch {
   left: 4px;
   bottom: 4px;
   transition: 0.4s;
-  background-color: var(--color-surface);
+  background-color: var(--color-slider-thumb);
 }
 
 input:checked + .slider::before {
@@ -959,271 +990,138 @@ input[type="radio"] {
 }
 
 .profile-section div.api-tab-line:nth-child(even) {
-  background-color: var(--color-dark-surface);
+  background-color: var(--color-surface-alt);
 }
 
 .profile-section #api_key_list .edit {
   border: 1px solid var(--color-accent);
 }
 
-/* Light mode */
-#theIdentificationPage .light,
-#theRegisterPage .light,
-#thePasswordPage .light,
-#theProfilePage .light {
-  background: var(--color-light-gradient);
+/* Page background — flips via .dark {} token override */
+#theIdentificationPage #mode,
+#theRegisterPage #mode,
+#thePasswordPage #mode,
+#theProfilePage #mode {
+  background: var(--color-page-bg);
 }
 
-.light #login-form,
-.light #register-form,
-.light #password-form,
-.light #lang-select #other-languages,
-.light .profile-section,
-.light .slider::before,
-.light .body-modal,
-.light [data-tooltip]:hover::after {
+/* Form / panel surfaces */
+#login-form,
+#register-form,
+#password-form,
+#lang-select #other-languages,
+.profile-section,
+.slider::before,
+.body-modal,
+[data-tooltip]:hover::after {
   background-color: var(--color-surface);
 }
 
-#theIdentificationPage .light a,
-#theRegisterPage .light a,
-#thePasswordPage .light a,
-#theProfilePage .light a:not(.close-modal),
-.light h1,
-.light .input-container input,
-.light .input-modal input,
-.light .input-container select,
-.light .input-container textarea,
-.light .secondary-links,
-.light .properties label,
-.light .profile-section label,
-.light .properties i,
-.light .profile-section i,
-.light #password-form p,
-.light .profile-section p,
-.light #lang-select #other-languages span,
-.light .btn-cancel,
-.light .btn-link {
+/* Links */
+#theIdentificationPage #mode a,
+#theRegisterPage #mode a,
+#thePasswordPage #mode a,
+#theProfilePage #mode a:not(.close-modal) {
+  color: var(--color-link);
+}
+
+#theIdentificationPage #mode a:hover,
+#theRegisterPage #mode a:hover,
+#thePasswordPage #mode a:hover,
+#theProfilePage #mode a:hover {
+  color: var(--color-link-hover);
+}
+
+/* Text color */
+h1,
+.input-container input,
+.input-modal input,
+.input-container select,
+.input-container textarea,
+.secondary-links,
+.properties label,
+.profile-section label,
+.properties i,
+.profile-section i,
+#password-form p,
+.profile-section p,
+#lang-select #other-languages span,
+.btn-cancel,
+.btn-link {
   color: var(--color-text);
 }
 
-#theIdentificationPage .light a:hover,
-#theRegisterPage .light a:hover,
-#thePasswordPage .light a:hover,
-#theProfilePage .light a:hover {
-  color: var(--color-accent);
+/* Header links */
+#header-options a,
+#header-options .toggle-mode,
+#selected-language-container {
+  color: var(--color-header-link);
 }
 
-.light #header-options a,
-.light #header-options .toggle-mode,
-.light #selected-language-container {
-  color: var(--color-accent);
+.api-list-head {
+  background-color: var(--color-list-head);
 }
 
-.light .input-container,
-.light .input-modal,
-.light .api-list-head {
-  background-color: var(--color-surface-input);
-  border: 1px solid var(--color-surface-input);
-}
-
-.light .input-container input:is(:-webkit-autofill, :autofill) {
-  box-shadow: 0 0 0 1000px #f0f0f0 inset !important; /* keep: override UA autofill bg */
+.input-container input:is(:-webkit-autofill, :autofill) {
+  box-shadow: 0 0 0 1000px var(--color-surface-input) inset !important; /* keep: override UA autofill bg */
   -webkit-text-fill-color: var(--color-text);
   color: var(--color-text);
 }
 
-.light #separator {
-  border-bottom: 1px solid var(--color-divider);
-}
-
-.light .gallery-icon-eye {
-  color: var(--color-text-muted);
-}
-
-.light .success-message {
-  background-color: var(--color-success-bg);
-  color: var(--color-success-fg) !important; /* keep: must win over inherited color */
-  border-left: 4px solid var(--color-success-fg);
-}
-
-.light .success-message i {
+.success-message i {
   color: var(--color-success-fg);
 }
 
-
-.light input:checked + .slider {
+input:checked + .slider {
   background-color: var(--color-accent-soft);
 }
 
-.light input:focus + .slider {
+input:focus + .slider {
   box-shadow: 0 0 1px var(--color-accent-soft);
 }
 
-.light .slider {
-  background-color: var(--color-surface-disabled);
+/* API list rows */
+.api-list-body > div:nth-child(4n + 1),
+.api-list-body > div:nth-child(4n + 2) {
+  background-color: var(--color-list-row-alt);
 }
 
-.light .api-list-body > div:nth-child(4n + 1),
-.light .api-list-body > div:nth-child(4n + 2) {
-  background-color: var(--color-surface-alt);
-}
-
-.light .api-tab-line p,
-.light .api-icon-action i,
-.light .keys p:not(.api-copy),
-.light .keys i,
-.light #api_key_list_expired .api-skull {
+/* Disabled text */
+.api-tab-line p,
+.api-icon-action i,
+.keys p:not(.api-copy),
+.keys i,
+#api_key_list_expired .api-skull {
   color: var(--color-text-disabled);
 }
 
-.light .close-modal {
-  color: #fff;
-}
-
+/* Date input color-scheme (can't be tokenized) */
 .light input[type="date"] {
   color-scheme: light;
 }
+.dark input[type="date"] {
+  color-scheme: dark;
+}
 
-.light input[type="date"]::-webkit-calendar-picker-indicator {
+input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0);
 }
 
-.light .btn-revoked {
-  background-color: #eb3223 !important; /* keep: must override .btn-main accent */
+/* Revoked button */
+.btn-revoked {
+  background-color: var(--color-btn-revoked) !important; /* keep: must override .btn-main accent */
 }
 
-/* Dark mode */
-#theIdentificationPage .dark,
-#theRegisterPage .dark,
-#thePasswordPage .dark,
-#theProfilePage .dark {
-  background: linear-gradient(75.69deg, #1b1b1d 7.64%, #2f2f2f 77.87%);
-}
-
-.dark #login-form,
-.dark #register-form,
-.dark #password-form,
-.dark .profile-section,
-.dark .body-modal {
-  background-color: var(--color-text);
-}
-
-#theIdentificationPage .dark a,
-#theRegisterPage .dark a,
-#thePasswordPage .dark a,
-#theProfilePage .dark a:not(.close-modal) {
-  color: var(--color-dark-link);
-}
-
-.dark h1,
-.dark .input-container input,
-.dark .input-modal input,
-.dark .input-container select,
-.dark .input-container textarea,
-.dark .secondary-links,
-.dark .properties label,
-.dark .profile-section label,
-.dark .properties i,
-.dark .profile-section i,
-.dark #password-form p,
-.dark .profile-section p,
-.dark #lang-select #other-languages span,
-.dark .btn-cancel,
-.dark .btn-link {
-  color: var(--color-dark-text);
-}
-
-#theIdentificationPage .dark a:hover,
-#theRegisterPage .dark a:hover,
-#thePasswordPage .dark a:hover,
-#theProfilePage .dark a:hover,
-.dark #lang-select #other-languages span {
-  color: var(--color-dark-link-hover);
-}
-
-.dark #header-options a,
-.dark #header-options .toggle-mode,
-.dark #selected-language-container {
-  color: var(--color-dark-header-link);
-}
-
-.dark .input-container,
-.dark .input-modal {
-  background-color: var(--color-dark-surface);
-  border: 1px solid var(--color-dark-surface);
-}
-
-.dark .input-container input:is(:-webkit-autofill, :autofill) {
-  box-shadow: 0 0 0 1000px #303030 inset !important; /* keep: override UA autofill bg */
-  -webkit-text-fill-color: var(--color-dark-text);
-  color: var(--color-dark-text);
-}
-
-.dark #separator {
-  border-bottom: 1px solid var(--color-dark-surface);
-}
-
-.dark .gallery-icon-eye {
-  color: var(--color-text-muted);
-}
-
-.dark #lang-select #other-languages,
-.dark .slider,
-.dark input:checked + .slider::before {
-  background-color: var(--color-text);
-}
-
-.dark .success-message {
-  background-color: var(--color-success-bg-dark);
-  color: var(--color-success-fg-dark) !important; /* keep: must win over inherited color */
-  border-left: 4px solid var(--color-success-fg-dark);
-}
-
-.dark .success-message i {
-  color: var(--color-success-fg-dark);
-}
-
-
+/* Dark-only overrides */
 .dark .btn-secondary {
-  background-color: #202020 !important; /* keep: must override .btn-secondary #ececec */
-  color: #fff !important; /* keep: must override .btn-secondary #3c3c3c */
-}
-
-.dark input:checked + .slider {
-  background-color: var(--color-accent-soft);
-}
-
-.dark .slider::before {
-  background-color: var(--color-border-strong);
-}
-
-.dark .api-list-head,
-.dark [data-tooltip]:hover::after {
-  background-color: var(--color-dark-list-head);
-}
-
-.dark .api-list-body > div:nth-child(4n + 1),
-.dark .api-list-body > div:nth-child(4n + 2) {
-  background-color: var(--color-dark-list-row-alt);
+  background-color: var(--color-btn-secondary-bg) !important; /* keep: must override .btn-secondary base */
+  color: var(--color-btn-secondary-fg) !important; /* keep: same */
 }
 
 .dark .icon-collapse {
   color: #fff !important; /* keep: must override inherited dark color */
 }
 
-.dark .close-modal {
-  color: var(--color-text);
-}
-
-.dark input[type="date"] {
-  color-scheme: dark;
-}
-
-.dark input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0);
-}
-
-.dark .btn-revoked {
-  background-color: #be4949 !important; /* keep: must override .btn-main accent */
+.dark #lang-select #other-languages {
+  background-color: var(--color-surface);
 }

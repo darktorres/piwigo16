@@ -7,6 +7,7 @@ namespace Piwigo\Ws\Action\Pwg\Session;
 use Piwigo\Auth\LoginRateLimiterFactory;
 use Piwigo\Core\PageState;
 use Piwigo\Http\ApiKeyAuthRegistry;
+use Piwigo\Http\RequestScheme;
 use Piwigo\Session\Session;
 use Piwigo\Users\AuthService;
 use Piwigo\Ws\PwgError;
@@ -41,8 +42,7 @@ final readonly class LoginHandler implements WsAction
         } catch (WsParamException $e) {
             return new PwgError(999, $e->getMessage());
         }
-        $ip = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
-        if (!$this->loginRateLimiters->forIp($ip)->consume()->isAccepted()
+        if (!$this->loginRateLimiters->forIp(RequestScheme::clientIp())->consume()->isAccepted()
          || !$this->loginRateLimiters->forAccount($input->username)->consume()->isAccepted()) {
             return new PwgError(429, 'Too many login attempts; please retry shortly');
         }

@@ -42,6 +42,11 @@ final class ConfigLoader
         'PIWIGO_DB_PASSWORD' => 'db_password',
         'PIWIGO_DB_BASE'     => 'db_base',
         'PIWIGO_DB_PREFIX'   => 'db_prefix',
+        // Comma-separated CIDR list of reverse proxies whose X-Forwarded-Proto
+        // / X-Forwarded-For headers should be honoured. Empty (default) means
+        // forwarded headers are ignored entirely — secure-by-default for
+        // direct deployments. See Piwigo\Http\RequestScheme.
+        'PIWIGO_TRUSTED_PROXIES' => 'trusted_proxies',
     ];
 
     /**

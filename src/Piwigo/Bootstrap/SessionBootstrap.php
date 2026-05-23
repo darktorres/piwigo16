@@ -9,6 +9,7 @@ use Piwigo\Config\Config;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Http\RequestScheme;
 use Piwigo\Session\SessionService;
 
 /**
@@ -48,7 +49,7 @@ final class SessionBootstrap
             'lifetime' => 0,
             'path'     => (string) CookieService::cookiePath(),
             'samesite' => 'Lax',
-            'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+            'secure'   => RequestScheme::isHttps(),
             'httponly' => true,
         ]);
         register_shutdown_function(session_write_close(...));

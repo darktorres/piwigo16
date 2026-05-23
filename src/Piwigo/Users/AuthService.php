@@ -28,6 +28,7 @@ use Piwigo\Event\User\TryLogUser;
 use Piwigo\Event\User\UserLogin;
 use Piwigo\Event\User\UserLogout;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\RequestScheme;
 use Piwigo\Language\LanguageService;
 use Piwigo\Session\ConnectionType;
 use Piwigo\Session\Session;
@@ -227,8 +228,7 @@ final readonly class AuthService
         }
 
         if ($userFound === null || count($userFound) === 0 || 'guest' === $userFound['status'] || !$passwordVerify) {
-            $ip = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
-            $this->throttle->recordFailure($ufId > 0 ? $ufId : null, $ip);
+            $this->throttle->recordFailure($ufId > 0 ? $ufId : null, RequestScheme::clientIp());
             if ($userFound !== null && count($userFound) > 0 && !$passwordVerify) {
                 $this->activityLogger->log(new ActivityEvent(ActivityObject::User, $ufId, ActivityAction::LoginFailureWrongPassword));
             }

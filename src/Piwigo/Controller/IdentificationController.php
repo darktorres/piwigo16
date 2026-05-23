@@ -15,6 +15,7 @@ use Piwigo\Event\Location\LocBeginIdentification;
 use Piwigo\Event\Location\LocEndIdentification;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\RedirectResponder;
+use Piwigo\Http\RequestScheme;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Lang\LangService;
 use Piwigo\Language\LanguageService;
@@ -96,8 +97,7 @@ final readonly class IdentificationController implements ControllerInterface
                 $redirect_to  = $post_redirect !== null ? urldecode($post_redirect) : '';
                 $remember_me  = StringUtil::inputString('remember_me', null, $_POST) !== null && StringUtil::inputString('remember_me', null, $_POST) == 1;
                 $post_password = is_string($rawPassword = $_POST['password'] ?? null) ? $rawPassword : '';
-                $ip = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
-                $ipAccepted = $this->loginRateLimiters->forIp($ip)->consume()->isAccepted();
+                $ipAccepted = $this->loginRateLimiters->forIp(RequestScheme::clientIp())->consume()->isAccepted();
                 $acctAccepted = $this->loginRateLimiters->forAccount($username)->consume()->isAccepted();
                 if (!$ipAccepted || !$acctAccepted) {
                     PageState::current()->keyedErrors['login_form_error'] = Lang::t('Too many login attempts. Please try again later.');

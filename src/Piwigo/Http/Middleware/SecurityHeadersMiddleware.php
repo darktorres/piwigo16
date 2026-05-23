@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Http\Middleware;
 
+use Piwigo\Http\RequestScheme;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -50,8 +51,7 @@ final readonly class SecurityHeadersMiddleware implements MiddlewareInterface
             ->withHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
             ->withHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
-        $https = $_SERVER['HTTPS'] ?? '';
-        if (is_string($https) && $https !== '' && $https !== 'off') {
+        if (RequestScheme::isHttps()) {
             $response = $response->withHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         }
 

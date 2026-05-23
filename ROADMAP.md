@@ -2781,6 +2781,17 @@ Serializer / Validator dependency — `fromArray()` is hand-rolled, and
 in attribute constraints. The WS-layer architectural choice is settled
 and not under review here.
 
+⚠ **Handler-interface divergence from the F5 master plan**: the plan
+proposed `handle(TypedParams): TypedResult|PwgError` (fully end-to-end
+typed). The actual `WsAction` interface shipped as
+`__invoke(array $params, PwgServer $server): mixed` (loose). The
+typed Params input still happens (each Handler calls
+`*Params::fromArray($params)` first), but the **interface doesn't
+require typed Results**, which is the structural reason WsResult
+adoption is only 7/95. Tightening the interface to typed Results is
+~F5-h follow-up work; it would let `PwgServer::invoke()` enforce the
+output contract too.
+
 **Also shipped on the async boundary: typed Messenger Job DTOs.** 6
 `final readonly` Job classes at `src/Piwigo/Job/{GenerateDerivative,
 BatchUpload,ReindexImages,RegenerateAllDerivatives,SendNotificationEmail,
@@ -2971,10 +2982,15 @@ case; spot-check the 9 Search/History rows when sweeping).
 Representative examples already in tree:
 
 - `src/Piwigo/Image/Entity/Image.php` — wide entity, 24 value-object-typed
-  properties, `Image::fromRow($row)` factory. Covered by
-  `tests/Unit/Image/Entity/ImageTest.php` (one of 5 Entity unit-test
-  files: Image, ImageIdFilename, Category, Tag, Comment — 26 tests, 142
-  assertions, all green at 2026-05-23).
+  properties (F5 plan named 17; actual shipped with 7 extras: `coi`,
+  `dateMetadataUpdate`, `ratingScore`, `addedBy`, `latitude`,
+  `longitude`, `lastModified`), `Image::fromRow($row)` factory, plus
+  derived behavior methods `aspectRatio(): ?float` and `isPortrait():
+  bool` (F5 plan also named `isOriginal()` and `withRotation()` — not
+  found in the entity; either implemented elsewhere or deferred).
+  Covered by `tests/Unit/Image/Entity/ImageTest.php` (one of 5 Entity
+  unit-test files: Image, ImageIdFilename, Category, Tag, Comment —
+  26 tests, 142 assertions, all green at 2026-05-23).
 - `src/Piwigo/Image/Projection/ImageDimension.php` — narrow projection,
   width+height only, used by `findDistinctDimensions()`.
 - `src/Piwigo/Category/Projection/CategoryNamePermalink.php` — the

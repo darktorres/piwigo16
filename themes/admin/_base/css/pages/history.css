@@ -48,7 +48,7 @@
 .history-filter {
   display: flex;
   flex-direction: row;
-  background: #f3f3f3;
+  background: var(--admin-bg-elevated);
 }
 
 
@@ -64,10 +64,10 @@
 }
 
 .elem-type-select {
-  border: solid 1px #d4d4d4;
+  border: solid 1px var(--admin-input-border);
   padding: 5px 10px;
   margin-bottom: var(--space-xs);
-  background: #fff;
+  background: var(--admin-bg-page);
 }
 
 .selectable-filter {
@@ -105,8 +105,8 @@
 .filter-title,
 .remove-filter,
 .filter-icon {
-  color: #777;
-  background: #fff;
+  color: var(--admin-text-muted);
+  background: var(--admin-bg-page);
   padding: 5px 0;
 }
 
@@ -147,13 +147,13 @@
   align-items: center;
 
   margin-bottom: var(--space-sm);
-  background: #fafafa;
+  background: var(--admin-bg-panel);
 }
 
 .search-line .date-section,
 .search-line .user-section,
 .search-line .type-section {
-  border-right: 1px solid #bbb;
+  border-right: 1px solid var(--admin-border);
 }
 
 .search-line .type-name a {

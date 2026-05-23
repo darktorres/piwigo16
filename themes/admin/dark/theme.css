@@ -821,53 +821,12 @@ a#showPermissions {
   background-color: #333 ;
 }
 
-.tag-header #add-tag.input-mode .add-tag-label {
-  background: transparent ;
-  box-shadow: none;
-  color: rgb(119, 119, 119) ;
-}
-
-.tag-container .tag-box p {
-  color: #aaa;
-}
-
-.tag-header #add-tag.input-mode .add-tag-container input:hover {
-  background-color: #222 ;
-}
-
-
-.tag-container.selection .tag-box[data-selected="1"] {
-  background-color: #f9852c ;
-  box-shadow: none;
-}
-
-.tag-container .tag-box[data-selected="1"] .select-checkbox,
-.delete-size-check[data-selected="1"] .select-checkbox {
-  background-color: #c76a23;
-  border-color: #c76a23;
-}
-
-.tag-select-message {
-  background: #0051a57d;
-  color: #bce5f7;
-}
-
-.tag-select-message a {
-  background-color: #bce5f7;
-  color: #0051a5;
-}
-
 /* .info-warning/.info-error pill colors now handled by tokens in
    dark/css/components/general.css; link color stays dark-only. */
 .info-warning a,
 .info-message a,
 .info-error a {
   color: #fff;
-}
-
-.tag-checkmark {
-  color: #aaf6e4 ;
-  background-color: #4ea590 ;
 }
 
 /* Album Move (and album search) */
@@ -1363,56 +1322,6 @@ a#showPermissions {
   box-sizing: border-box;
 }
 
-.line {
-  background: transparent;
-
-  display: flex;
-  flex-direction: row;
-
-  height: 40px;
-
-  align-items: center;
-
-  margin-bottom: 10px;
-  color: #bbb;
-}
-
-.line .detail-item {
-  background: #555;
-  margin: 0 10px 0 0;
-  padding: 3px 6px;
-  border-radius: 20px;
-
-  min-width: 50px;
-  max-width: 150px;
-
-  text-align: center;
-
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: default;
-
-  white-space: nowrap;
-}
-
-.download_csv {
-  height: 25px;
-  width: 30px;
-  background: #555;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  color: #b8b8b8;
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-.download_csv:hover {
-  background: #777;
-  color: #ddd;
-}
-
 .selectedAlbum .selectedAlbum-first {
   background-color: #333;
 }
@@ -1514,54 +1423,6 @@ a#showPermissions {
 }
 
 
-.search-line {
-  background: #333;
-  color: #a1a1a1;
-}
-
-.search-line .date-section,
-.search-line .user-section,
-.search-line .type-section {
-  border-right: 1px solid #252525;
-}
-
-.detail-item-1,
-.detail-item-2,
-.detail-item-3 {
-  background: #252525;
-}
-
-.history-filter {
-  background: #333 ;
-  color: #a1a1a1;
-  box-shadow: 0 2px 4px #00000024;
-}
-
-#start_unset,
-#end_unset {
-  color: #a1a1a1;
-  text-decoration: none;
-}
-
-#start_unset:hover,
-#end_unset:hover {
-  color: #ffa646 ;
-}
-
-.elem-type-select {
-  background: #252525 ;
-  border-color: transparent ;
-  color: #777;
-}
-
-.filter-title,
-.remove-filter,
-.filter-icon {
-  color: #777;
-  background: #252525;
-  padding: 5px 0;
-}
-
 .applicationCard {
   box-shadow: -1px 1px 2px #1a1a1a;
   background: #333;
@@ -1661,40 +1522,6 @@ a#showPermissions {
 .pwgtree-moving .move-cat-container .icon-blue,
 .pwgtree-moving .move-cat-container .icon-green {
   opacity: 0.6 ;
-}
-
-.comment-container {
-  background-color: #333;
-  border-color: #ffa646;
-}
-
-.comment-validated {
-  border-color: #232323 ;
-}
-
-.comment-author,
-.comment-date {
-  color: #aaa;
-}
-
-.comment-validate {
-  background-color: #ffa646;
-}
-
-.comment-delete {
-  background-color: #232323;
-}
-
-.comment-delete:hover {
-  background-color: #111;
-}
-
-.comment.comment-selected .comment-content {
-  background-color: #1b1b1b;
-}
-
-.comments-container.active .comment-content:hover {
-  background-color: #1b1b1b;
 }
 
 .buttonSecondary {
@@ -1798,14 +1625,6 @@ a#showPermissions {
 
 .comments-advanced-filter .advanced-filter-btn {
   box-shadow: 0 2px #333;
-}
-
-.comments-search {
-  background-color: #333 ;
-}
-
-.comments-search:hover {
-  background-color: #222 ;
 }
 
 .comments-search input:focus {

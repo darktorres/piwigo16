@@ -92,12 +92,12 @@
   padding: 0 5px;
   box-shadow: 0 2px #00000024;
   border: none;
-  background-color: #fafafa;
+  background-color: var(--admin-bg-panel);
   width: 200px;
 }
 
 .comments-search:hover {
-  background-color: #f0f0f0;
+  background-color: var(--admin-search-input-bg-hover);
 }
 
 .comments-search-icon,
@@ -153,7 +153,7 @@
 }
 
 .comment-container {
-  background-color: #fafafa;
+  background-color: var(--admin-bg-panel);
   display: flex;
   flex-direction: row;
   align-items: stretch;
@@ -168,7 +168,7 @@
 }
 
 .comment-validated {
-  border-left: 6px solid #999;
+  border-left: 6px solid var(--admin-border-strong);
 }
 
 .comment-content {
@@ -236,7 +236,7 @@
   align-items: center;
   gap: var(--space-xs);
   font-weight: 600;
-  color: #3c3c3c;
+  color: var(--admin-text);
   justify-content: end;
   font-size: var(--font-size-xs);
 }
@@ -270,21 +270,21 @@
 
 .comment-validate {
   background-color: var(--admin-accent-pale);
-  color: #3c3c3c;
+  color: var(--admin-text);
 }
 
 .comment-validate:hover {
-  background-color: #f70;
+  background-color: var(--admin-accent);
   color: #493c21;
 }
 
 .comment-delete {
-  background-color: #eee;
-  color: #3c3c3c;
+  background-color: var(--admin-stripe-even);
+  color: var(--admin-text);
 }
 
 .comment-delete:hover {
-  background-color: #e3e3e3;
+  background-color: var(--admin-bg-deepest);
 }
 
 .comments .user-pagination {

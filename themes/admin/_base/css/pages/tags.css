@@ -59,7 +59,7 @@
 }
 
 .tag-header #add-tag.input-mode .add-tag-container input:hover {
-  background-color: #f0f0f0;
+  background-color: var(--admin-search-input-bg-hover);
 }
 
 .tag-header #add-tag span.icon-cancel-circled {
@@ -330,22 +330,22 @@
 }
 
 .tag-select-message {
-  background: #bce5f7;
+  background: var(--admin-info-message-bg);
   height: 46px;
   justify-content: center;
   align-items: center;
   font-size: var(--font-size-md);
   display: none;
   margin: 10px 243px 10px 32px;
-  color: #0051a5;
+  color: var(--admin-info-message-fg);
   font-weight: 600;
 }
 
 .tag-select-message a {
   font-weight: bold;
   margin-left: 6px;
-  background-color: #0051a5;
-  color: #fff;
+  background-color: var(--admin-info-message-fg);
+  color: var(--admin-text-on-accent);
   padding: 0 4px;
 }
 
@@ -493,8 +493,8 @@
   border-radius: 50%;
   margin: 4px 5px 0 0;
   font-size: 80%;
-  background-color: #6dce5e;
-  color: #d6ffcf;
+  background-color: var(--admin-info-success-fg);
+  color: var(--admin-info-success-bg);
   z-index: 1;
 }
 

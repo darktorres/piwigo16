@@ -2745,6 +2745,19 @@ Serializer / Validator dependency — `fromArray()` is hand-rolled, and
 in attribute constraints. The WS-layer architectural choice is settled
 and not under review here.
 
+**Also shipped on the WS layer: typed responses via `WsResult`.** The
+interface at `src/Piwigo/Ws/WsResult.php` is the output counterpart to
+`WsParams` — each handler returning structured data returns a
+`*Result` instance whose `toArray()` produces the wire-format dict
+that `PwgServer` JSON-encodes. As of 2026-05-23: **7 `*Result`
+implementations** in tree (`Categories/MoveResult`,
+`Tags/{Add,Delete,Merge,Duplicate}Result`,
+`GetMissingDerivativesResult`, `Session/GetStatusResult`). So
+**7/94 handler endpoints have typed responses**; the remaining ~87
+still return `array<string, mixed>`. Extending `WsResult` to those
+handlers (plus to error envelopes, currently inline as `PwgError`) is
+listed in "Additional in-scope work" below.
+
 ##### Open — admin / web side
 
 Admin controllers and page renderers still read `$_POST` / `$_GET`
@@ -2894,7 +2907,10 @@ case; spot-check the 9 Search/History rows when sweeping).
 Representative examples already in tree:
 
 - `src/Piwigo/Image/Entity/Image.php` — wide entity, 24 value-object-typed
-  properties, `Image::fromRow($row)` factory.
+  properties, `Image::fromRow($row)` factory. Covered by
+  `tests/Unit/Image/Entity/ImageTest.php` (one of 5 Entity unit-test
+  files: Image, ImageIdFilename, Category, Tag, Comment — 26 tests, 142
+  assertions, all green at 2026-05-23).
 - `src/Piwigo/Image/Projection/ImageDimension.php` — narrow projection,
   width+height only, used by `findDistinctDimensions()`.
 - `src/Piwigo/Category/Projection/CategoryNamePermalink.php` — the
@@ -3037,10 +3053,14 @@ delegate further work to §1.7 beyond the HTTP-input + DB-row split
 above. Catalogued here for visibility — each is a separate sub-task
 when its time comes:
 
-- **Typed HTTP `Response` body for WS errors** — currently `PwgError(429, …)`
-  carries the rate-limit response inline; the typed-Response refactor
-  belongs to §1.7. Referenced from ROADMAP.md:2076 and
-  `docs/SECURITY.md:182, 235`.
+- **Typed HTTP `Response` body — partly shipped, fully open.** The
+  `WsResult` interface + 7 implementations cover 7/94 success-response
+  endpoints already (see Phase 1 "Done" above). The remaining work is
+  (a) migrating the other ~87 handlers from `array<string, mixed>`
+  returns to `WsResult` subclasses, and (b) extending the typed-response
+  pattern to error envelopes — currently `PwgError(429, …)` carries
+  the rate-limit error inline; that one specifically is referenced from
+  ROADMAP.md:2076 and `docs/SECURITY.md:182, 235`.
 - **Eliminate `PageState::loginFailureReason` back-channel** — when
   §1.7 promotes the WS / form login paths to a throw-and-catch flow,
   `AuthException::accountLocked()` (already defined but unthrown)
@@ -3083,12 +3103,23 @@ The repo runs PHPStan at level 10 with **no baseline file** and Psalm
 at errorLevel 2 with **no baseline file** (only two narrow
 `<issueHandlers>` suppressions in `psalm.xml`). The original §1.7 draft
 proposed "baseline diff per migration" as evidence; that workflow
-doesn't apply here — everything passes clean today. Replacement
-evidence per migration PR:
+doesn't apply here.
 
-- `composer analyse` (= phpstan + psalm) stays clean — any tightening
-  that introduced a regression would fail level-10 / errorLevel-2
-  immediately.
+**Current static-analysis state (2026-05-23):** PHPStan clean.
+Psalm reports **7 errors** in `composer analyse:psalm` (mostly
+`RedundantCast` / `NullReference` / `PossiblyFalseOperand` in
+SessionBootstrap, RedirectResponder, BatchManagerController:1331,
+PhotoController:421, and one test). These are pre-existing
+code-quality issues unrelated to §1.7 scope, but should be cleaned
+up before §1.7 migrations land so the per-PR signal is meaningful
+(otherwise "did this PR introduce errors" can't be cleanly answered).
+Tracked as a §1.7 prerequisite.
+
+Replacement evidence per migration PR:
+
+- `composer analyse` (= phpstan + psalm) — must not increase the
+  error count beyond the baseline-7 above. Any *new* error caused
+  by the migration must be fixed in-PR.
 - Diff inspection — the value of the migration is **removed defensive
   `is_string` / `is_numeric` / `is_array` guards at call sites** that
   the loose return type forced. Count those removals in the PR

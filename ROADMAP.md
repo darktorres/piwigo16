@@ -2727,12 +2727,19 @@ typed properties without `is_*` guards.
 with a hand-rolled `public static function fromArray(array $raw): self`
 factory. As of 2026-05-23: **94 `*Handler.php` + 83 `*Params.php` files**
 under `src/Piwigo/Ws/Action/Pwg/<Domain>/`. `grep -rn 'new
-MethodDefinition' src/Piwigo` returns **99 hits across 4 files**;
-of those, ~1 hit is a doc-comment example in `MethodDefinition.php`
-itself and the remaining ~98 are real registrations. Within
-`WsMethodRegistrar.php`'s body, **94 use `handlerClass:` and 4 use
-the legacy `callback:` path**. Of the 94 handler endpoints, 11 are
-zero-param and need no `*Params` companion (83 + 11 = 94).
+MethodDefinition' src/Piwigo` returns **99 hits across 4 files**; of
+those, **1 is a doc-comment example** in `MethodDefinition.php` itself
+and the remaining 98 are real registrations: **95 use `handlerClass:`**
+and **3 use the legacy `callback:` path** (`reflection.getMethodList`
++ `reflection.getMethodDetails` in `PwgServer.php` — both WS
+self-introspection, intentionally inline — plus
+`pwg.activity.downloadLog` in `WsMethodRegistrar.php`, a
+"Not implemented" stub). Of the 95 handler endpoints, 11 are
+zero-param and need no `*Params` companion (83 + 11 ≈ 95, give-or-take
+one-off shapes; see F5-PENDING for the exact list). One handler
+appears in count summaries but doesn't have a directly paired Params
+class (likely a multi-method handler or naming variance — within
+margin).
 Representative example:
 
 ```php
@@ -2887,6 +2894,16 @@ unchanged if that adoption ever happens.
 > but **0 endpoint classes currently carry it** as of 2026-05-23. Phase 1
 > doesn't depend on it — the attribute can layer onto WS endpoints
 > later under a §1.4 follow-on without re-sweeping any payloads.
+
+> **Phase 1 known blocker for further `pwg.extensions.*` cleanup**:
+> `there-is-a-plan-prancy-castle.md` (plugins/extensions modernization)
+> notes that 6 `pwg.extensions.*` WS handlers were "skipped during
+> F5-g/h because of these couplings" — the Plugins admin god-classes
+> (`Plugins.php` 726 lines / 14 methods / 4 public mutable arrays,
+> `Themes.php` 692 / 16, `Languages.php` 385 / 6) hold public mutable
+> arrays that those WS handlers reach into directly. Cleaning up the
+> last ~6 extensions handlers requires the plugins-admin refactor to
+> ship first.
 
 #### Phase 2 — Repository entity layer (DB boundary)
 
@@ -3169,12 +3186,20 @@ when its time comes:
     callers).
   - **Round 3** picked up adoption gaps + new DTO shapes from
     re-grep; status doc is the canonical "what's retired" record.
-  - **Round 4** is currently active with **18 items** across Tier 1
-    (named result DTOs: `RateStats`, `PartitionedDerivativeSizes`,
-    `DerivativeSettings`, `IgnoredExtensionLists`, `ImageFileInfo`,
-    `AvailableVersions`, `NotificationConfig`) and Tier 2 (input
-    DTOs: `NewCommentData`, `CommentUpdateData`, …). Tracked via
-    the `audit-4` commit prefix.
+  - **Round 4** has **18 IDs across 6 tiers** (Tier 1 named result
+    DTOs, Tier 2 input DTOs, Tier 3 result-union types, Tier 4
+    SlideshowParams VO, Tier 5 CategoryRepository inner shapes,
+    Tier 6 UploadService config spec). **Substantially closed as
+    of 2026-05-23**: two commits (`9a4c94c90 A1-A5/A7`, `0552664de
+    A6/Tier4-6/Tier3/B3-B4`) executed against most of the IDs;
+    verified ~25 of 30 proposed class names exist in tree (e.g.
+    `RateStats`, `PartitionedDerivativeSizes`, `DerivativeSettings`,
+    `IgnoredExtensionLists`, `ImageFileInfo`, `AvailableVersions`,
+    `NotificationConfig`, `NewCommentData`, `CommentUpdateData` —
+    all ✓). Remaining handful (e.g. `AdminListPage`, `ImageXmlAttributes`,
+    `PhysicalSyncableForSite`, `SharpenMatrix`, `UploadParamsDef`,
+    `VirtualCategory`) — likely B1/B2/C1-C3/D1-D4 IDs not covered by
+    the 2 commits above; needs a round-5 audit to confirm.
 
 This campaign overlaps §1.7 Phase 2 in spirit but covers more than
 SQL projections — admin services, config aggregates, derivative

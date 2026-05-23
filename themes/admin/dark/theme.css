@@ -1030,19 +1030,9 @@ table.qsearch_help_table td {
 .font-checkbox:hover {
   color: #ededed;
 }
-.font-checkbox:hover .icon-check-empty,
-.font-checkbox:hover .icon-check {
-  color: #f70;
-}
-.font-checkbox .icon-check {
-  color: #ffa646;
-}
 .with-border legend,
 .with-border strong {
   color: #c0c0c0;
-}
-.font-checkbox.selected {
-  color: #ffa646;
 }
 
 legend {

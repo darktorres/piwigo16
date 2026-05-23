@@ -661,17 +661,6 @@ form#categoryOrdering p.albumActions .userSeparator {
 .font-checkbox:hover {
   color: #3c3c3c;
 }
-.font-checkbox.selected {
-  color: #ffa646;
-}
-.font-checkbox:hover .icon-check-empty,
-.font-checkbox:hover .icon-check {
-  color: #f70;
-}
-.font-checkbox .icon-check {
-  color: #ffa646;
-}
-
 legend {
   color: #3c3c3c;
 }

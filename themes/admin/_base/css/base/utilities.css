@@ -274,3 +274,14 @@ table.languages tr td {
   height: 2px;
 }
 
+/* .font-checkbox — checkbox-like labels (migrated from dark/light theme.css). */
+.font-checkbox.selected,
+.font-checkbox .icon-check {
+  color: var(--admin-accent-soft);
+}
+
+.font-checkbox:hover .icon-check-empty,
+.font-checkbox:hover .icon-check {
+  color: var(--admin-accent);
+}
+

@@ -1,6 +1,6 @@
 /**
  * Content layout, navigation badges, and inline content components
- * (selectize, MCS search-in-set, action buttons, related tags).
+ * (MCS search-in-set, action buttons, related tags).
  */
 
 .contentWithMenu {
@@ -69,12 +69,6 @@
 
 .categoryActions li {
   display: inline;
-}
-
-/* Selectize */
-.selectize-dropdown [data-selectable],
-.selectize-dropdown .optgroup-header {
-  padding: 0 5px !important; /* keep: overrides selectize.js bundle's own padding */
 }
 
 /* Search-in-set button CSS — must live here (not search.css) because it is

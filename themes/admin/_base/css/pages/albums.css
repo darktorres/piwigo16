@@ -4,9 +4,6 @@
   text-align: left;
   padding: 1em;
 }
-#addAlbumForm .selectize-dropdown-content {
-  max-height: 170px;
-}
 #addAlbumForm input[name="category_name"] {
   width: 565px;
   padding: 8px;

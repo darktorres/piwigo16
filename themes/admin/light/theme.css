@@ -581,11 +581,6 @@ label > p.group_select {
   background-color: #fff;
 }
 
-.selectize-control.user-selecter.single .selectize-input,
-.selectize-control.action-selecter.single .selectize-input {
-  border-color: #d3d3d3 ;
-}
-
 /* Selection mode */
 
 .slider {
@@ -858,13 +853,6 @@ a#showPermissions:hover {
 .icon-plus.cboxElement:hover {
   background-color: #f2f2f2;
 }
-.selectize-control.single .selectize-input {
-  border: 2px solid #ffa646 ;
-  color: #3c3c3c;
-}
-.selectize-control.single .selectize-input:hover {
-  border-color: #fac17e ;
-}
 .plupload_filelist {
   scrollbar-color: #cbcbcb #fff ;
   background-color: #fff ;
@@ -930,12 +918,7 @@ li.plupload_delete a.remove-format:hover {
   border: 2px solid #7070704f ;
   outline: none ;
 }
-#filter_category .selectize-input.items.full.has-options.has-items,
-#filter_tags .selectize-input.items.not-full.has-options,
-#filter_tags .selectize-input.items.not-full,
-#filter_search input,
-#action_move .selectize-input.items.full.has-options.has-items,
-#action_dissociate .selectize-input.items.full.has-options.has-items {
+#filter_search input {
   border: 2px solid #7070704f ;
   background: #fff;
   color: #3c3c3cbd;

@@ -67,26 +67,15 @@
 }
 
 #picture-content input[type="text"],
-#picture-content textarea,
-#picture-content .selectize-input {
+#picture-content textarea {
   width: calc(100% - 15px);
   background-color: #f8f8f8;
   padding: 8px;
+  margin-top: 5px;
   border-radius: 4px;
   border-color: #ddd;
   transition: ease 0.2s;
   font-family: "Open Sans", "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
-}
-
-#picture-content .selectize-input {
-  width: 100%;
-  overflow-y: scroll;
-}
-
-#picture-content input[type="text"],
-#picture-content textarea,
-#picture-content .selectize-control {
-  margin-top: 5px;
 }
 
 #picture-content .date-input {

@@ -324,13 +324,6 @@
   border-radius: 20px;
 }
 
-/* .selectize-input.items.not-full.has-options,
-.selectize-input.items.not-full.has-options.focus.input-active.dropdown-active,
-.selectize-input.items.not-full,
-.selectize-input.items.full{
-  border: 1px solid #D3D3D3 !important;
-} */
-
 .breadcrumb-item {
   margin: 5px 0;
 }

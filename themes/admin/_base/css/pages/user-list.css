@@ -1693,19 +1693,6 @@ a.group_users {
   font-size: 11px;
 }
 
-.user-property-select > .selectize-input.items {
-  padding: 0;
-}
-
-.user-property-group .selectize-input.items {
-  background-color: #f3f3f3;
-  border: none;
-}
-
-.user-property-group-container .selectize-input {
-  height: 70px !important /* keep: third-party specificity */;
-}
-
 /* preferences */
 
 .preferencies-container {
@@ -1972,14 +1959,6 @@ a.group_users {
   text-align: start;
 }
 
-/* Selectize Inputs (groups) */
-
-#UserList .user-property-group .selectize-input,
-#GuestUserList .user-property-group .selectize-input,
-#AddUser .user-property-group .selectize-input {
-  overflow-y: scroll;
-}
-
 #UserList .item,
 #UserList .item.active,
 #GuestUserList .item,
@@ -2146,20 +2125,6 @@ Advanced filter
 .user-update-spinner {
   display: none;
   font-size: 25px;
-}
-
-.UserListPopInContainer .selectize-dropdown-content .option {
-  font-size: 0.9em;
-  margin-bottom: 5px;
-}
-
-.selectize-dropdown-content {
-  overflow-y: hidden;
-}
-
-.selectize-dropdown {
-  height: 100%;
-  overflow: hidden scroll;
 }
 
 #permitActionUserList #applyActionBlock {
@@ -2447,10 +2412,6 @@ Advanced filter
 
 .user-edit-icon {
   margin-right: 5px;
-}
-
-.selectize-input.items .item {
-  color: #000 !important /* keep: third-party specificity */;
 }
 
 /* Selection mode */

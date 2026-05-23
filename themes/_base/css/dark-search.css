@@ -30,9 +30,6 @@
   --search-clear-all: #777;
   --search-clear-all-clickable: #f70b;
   --search-form-title: #f70b;
-  --search-selectize-bg: #555;
-  --search-selectize-color: #ccc;
-  --search-selectize-active: #555;
 }
 
 /* Structural rules unique to dark mode (not present in clear-search.css) */
@@ -56,11 +53,6 @@
   background: #f70b;
   border: none !important; /* keep: overrides inherited border on this state */
   color: #ffeacf !important; /* keep: overrides .filter-icon color inheritance */
-}
-
-/* Only in dark — additional selectize dropdown content background */
-.filter-tag-form .selectize-dropdown .selectize-dropdown-content {
-  background-color: #444;
 }
 
 .search-input {

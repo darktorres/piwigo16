@@ -31,9 +31,6 @@
   --search-clear-all: #c4c4c4;
   --search-clear-all-clickable: #f70;
   --search-form-title: #f70;
-  --search-selectize-bg: #eee;
-  --search-selectize-color: #444;
-  --search-selectize-active: #ccc;
 }
 
 /* Structural rules unique to clear mode (not present in dark-search.css) */

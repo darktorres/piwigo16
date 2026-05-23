@@ -839,7 +839,7 @@ interface UsersCacheLike {
     storage: Record<string, string>;
 }
 
-let selectizeTs: TomSelect | null = null;
+let addUserTs: TomSelect | null = null;
 let usersCache: UsersCacheLike | null = null;
 let usersInGroup: CachedUser[] = [];
 const maxOffsetUserCont = 322;
@@ -858,7 +858,7 @@ associateUserInfoEl.innerHTML = "<p class='icon-ok'></p>";
 document.addEventListener('DOMContentLoaded', () => {
     const addUserSelect = qs<HTMLSelectElement>('.AddUserBlock select');
     if (addUserSelect) {
-        selectizeTs = new TomSelect(addUserSelect, {});
+        addUserTs = new TomSelect(addUserSelect, {});
     }
 
     let idSearch = '';
@@ -869,8 +869,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     updateUserSearch = function () {
-        if (selectizeTs === null) return;
-        selectizeTs.clear();
+        if (addUserTs === null) return;
+        addUserTs.clear();
         if (usersCache?.key === undefined) {
             usersCache = new UsersCache({
                 serverKey: cacheData.CACHE_KEYS.users,
@@ -881,17 +881,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const raw = usersCache.storage[usersCache.key ?? ''] ?? '{"data":[]}';
         const cachedData = (JSON.parse(raw) as { data: CachedUser[] }).data;
         cachedData.forEach((u) =>
-            selectizeTs!.addOption({ value: String(u.id), text: u.username })
+            addUserTs!.addOption({ value: String(u.id), text: u.username })
         );
         idSearch = document.getElementById('UserList')?.dataset['groupId'] ?? '';
         Object.values(
-            selectizeTs.options as Record<string, { value: string; text: string }>
+            addUserTs.options as Record<string, { value: string; text: string }>
         ).forEach((opt) => {
-            if (opt.text === 'guest') selectizeTs!.removeOption(opt.value);
+            if (opt.text === 'guest') addUserTs!.removeOption(opt.value);
         });
         qsa('.UsernameBlock').forEach((el) => {
             const uid = el.dataset['id'];
-            if (uid !== undefined && uid !== '') selectizeTs!.removeOption(uid);
+            if (uid !== undefined && uid !== '') addUserTs!.removeOption(uid);
         });
     };
 });
@@ -1006,7 +1006,7 @@ qs('.CloseUserList')?.addEventListener('click', () => hide(document.getElementBy
 
 qs('.AddUserBlock button')?.addEventListener('click', () => {
     const grp_id = document.getElementById('UserList')?.dataset['groupId'];
-    const id = selectizeTs?.getValue() ?? '';
+    const id = addUserTs?.getValue() ?? '';
     if (id === '' || grp_id === undefined) return;
 
     const ts: TS = newTemporaryState();

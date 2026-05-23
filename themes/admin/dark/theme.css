@@ -626,7 +626,6 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
 /* Picture edit */
 #picture-content input[type="text"],
 #picture-content textarea,
-#picture-content .selectize-input,
 #picture-content select {
   background-color: #444;
   border: 1px solid #666;
@@ -1208,13 +1207,6 @@ a#showPermissions:hover {
 .icon-plus.cboxElement:hover {
   border: 1px solid #aaa;
 }
-.selectize-control.single .selectize-input {
-  border: 2px solid #ffa646 ;
-  color: #d5d5d5;
-}
-.selectize-control.single .selectize-input:hover {
-  border-color: #f70 ;
-}
 .plupload_filelist {
   background-color: #444 ;
   scrollbar-color: #555 #444 ;
@@ -1370,12 +1362,7 @@ li.plupload_delete a.remove-format:hover {
 #addFilter:hover {
   color: #ebebeb;
 }
-#filter_category .selectize-input.items.full.has-options.has-items,
-#filter_tags .selectize-input.items.not-full.has-options,
-#filter_tags .selectize-input.items.not-full,
-#filter_search input,
-#action_move .selectize-input.items.full.has-options.has-items,
-#action_dissociate .selectize-input.items.full.has-options.has-items {
+#filter_search input {
   background-color: #444;
   color: #bfbfbf;
   border: 1px solid #666;
@@ -2109,10 +2096,6 @@ li.plupload_delete a.remove-format:hover {
   background-color: #333;
 }
 
-.user-property-group .selectize-input.items {
-  background-color: transparent;
-}
-
 .user-property-register-visit .icon-calendar {
   color: #c1c1c1;
 }
@@ -2227,11 +2210,6 @@ li.plupload_delete a.remove-format:hover {
 .activity-more-filters,
 .activity-more-filters-content {
   background-color: #343434 ;
-}
-
-.selectize-control.user-selecter.single .selectize-input,
-.selectize-control.action-selecter.single .selectize-input {
-  border-color: #555 ;
 }
 
 .activity-select-title {

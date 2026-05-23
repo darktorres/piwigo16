@@ -31,9 +31,6 @@
   --search-clear-all: #c4c4c4;
   --search-clear-all-clickable: #f70;
   --search-form-title: #f70;
-  --search-selectize-bg: #eee;
-  --search-selectize-color: #444;
-  --search-selectize-active: #ccc;
 }
 .filter-container {
   display: flex;
@@ -723,87 +720,6 @@
   color: var(--search-form-title);
 }
 
-.filter-tag-form .selectize-control,
-.filter-author-form .selectize-control,
-.filter-added_by-form .selectize-control {
-  margin-top: 10px;
-}
-
-.filter-tag-form .selectize-input,
-.filter-author-form .selectize-input,
-.filter-added_by-form .selectize-input {
-  border-radius: 5px;
-  padding: 5px;
-  width: 350px;
-  display: flex;
-  flex-flow: row wrap;
-  gap: 5px;
-  background: var(--search-selectize-bg);
-}
-
-.filter-tag-form .selectize-input input,
-.filter-author-form .selectize-input input,
-.filter-added_by-form .selectize-input input {
-  padding: 0;
-  height: 26px;
-  border: none;
-  background: transparent !important; /* keep: input inside selectize should be transparent */
-  color: var(--search-selectize-color) !important; /* keep: overrides inherited input color */
-}
-.filter-author-form .selectize-input input:focus-visible,
-.filter-added_by-form .selectize-input input:focus-visible,
-.filter-tag-form .selectize-input input:focus-visible {
-  border: none;
-  outline: none !important /* keep: third-party specificity */;
-}
-
-.filter-tag-form .selectize-control.multi .selectize-input > div,
-.filter-tag-form .selectize-control.multi .selectize-input [data-value].active,
-.filter-author-form .selectize-control.multi .selectize-input > div,
-.filter-author-form .selectize-control.multi .selectize-input [data-value].active,
-.filter-added_by-form .selectize-control.multi .selectize-input > div,
-.filter-added_by-form .selectize-control.multi .selectize-input [data-value].active {
-  padding: 2px 4px;
-  border-radius: 5px;
-  width: fit-content;
-  gap: 5px;
-  height: fit-content;
-  background: #ffa835;
-  color: #000;
-}
-
-.filter-tag-form .selectize-control.multi .selectize-input > div .remove,
-.filter-author-form .selectize-control.multi .selectize-input > div .remove,
-.filter-added_by-form .selectize-control.multi .selectize-input > div .remove {
-  text-decoration: none;
-  border: none;
-  margin: 0 0 0 10px;
-  color: #000;
-}
-
-.filter-tag-form .selectize-dropdown,
-.filter-author-form .selectize-dropdown,
-.filter-added_by-form .selectize-dropdown {
-  padding: 5px;
-  max-height: 200px;
-  overflow-y: scroll;
-  position: absolute;
-  background: var(--search-selectize-bg);
-}
-
-.filter-tag-form .selectize-dropdown .option,
-.filter-author-form .selectize-dropdown .option,
-.filter-added_by-form .selectize-dropdown .option {
-  padding: 0 5px;
-}
-
-.filter-tag-form .selectize-dropdown .option.active,
-.filter-author-form .selectize-dropdown .option.active,
-.filter-added_by-form .selectize-dropdown .option.active {
-  border-radius: 5px;
-  background: var(--search-selectize-active);
-}
-
 .filter-tag-form .form-container,
 .filter-author-form .form-container,
 .filter-added_by-form .form-container {
@@ -887,12 +803,6 @@
     width: fit-content;
     margin-left: auto;
     margin-top: 10px;
-  }
-
-  .filter-tag-form .selectize-input,
-  .filter-author-form .selectize-input,
-  .filter-added_by-form .selectize-input {
-    width: auto;
   }
 
   .filter-manager-popin-container,
@@ -1182,12 +1092,6 @@
   background-color: #fafafa;
   box-shadow: 0 2px #00000024;
   color: #777;
-}
-
-.filter-tag-form .selectize-input input::placeholder,
-.filter-author-form .selectize-input input::placeholder,
-.filter-added_by-form .selectize-input input::placeholder {
-  color: var(--search-selectize-color);
 }
 
 .and-more {

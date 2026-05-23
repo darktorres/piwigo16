@@ -87,11 +87,6 @@ input[type="reset"]:hover {
 #albumSelection {
   margin-right: 20px;
 }
-.selectize-control.single .selectize-input {
-  border-radius: 0;
-  font-weight: bold;
-  font-size: 12px;
-}
 .buttonLike {
   padding: 8px 10px;
   margin-left: 5px;

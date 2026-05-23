@@ -695,33 +695,6 @@ div:has(> .activity-header) {
   font-weight: bold;
 }
 
-/* Selectize */
-.selectize-control.single.user-selecter,
-.selectize-control.single.action-selecter {
-  height: 30px;
-}
-
-.selectize-control.single .selectize-input {
-  height: 30px;
-  padding: 0 10px;
-
-  display: flex;
-  align-items: center;
-  justify-content: left;
-}
-
-.selectize-input {
-  text-align: left;
-}
-
-.selectize-control.single .selectize-input input {
-  height: 30px;
-}
-
-.selectize-dropdown {
-  text-align: left;
-}
-
 .cancel-icon {
   margin: 0 0 0 10px;
 

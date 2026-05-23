@@ -15,7 +15,7 @@
 | 1.3  | Kill ServiceLocator + DI      | ✅ **Done**            | L         | constructor injection everywhere; `ServiceLocator.php` deleted; `DbConnection::get()` callers eliminated                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 1.4  | Plugin / theme + WS           | ✅ **Done**            | L         | shipped 2026-05-16 in 19 batches (B0–B18) on `16.x-rewrite`: `PluginInterface` + `PluginRegistry`, ~160 typed PSR-14 events under `src/Piwigo/Event/`, `ThemeInterface` + `ThemeRegistry`, 95 WS endpoints registered via typed `MethodDefinition` and exposed as OpenAPI 3.1 (via `SpecBuilder`) with cebe/redocly CI gates, legacy runtime deleted. `#[ApiMethod]` attribute + SpecBuilder reflection wired but no endpoint yet decorates with it — per-domain decomposition deferred (see §1.4 Phase 3 follow-up)                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | 1.5  | Security hardening            | ✅ **Done**            | M         | shipped 2026-05-22 in 4 waves on `16.x-rewrite` (A: `SameSite=Lax`/`HttpOnly`/scheme-conditional `Secure` session cookie, B: `piwigo_user_failed_logins`+`LoginThrottle` lockout & `symfony/rate-limiter` sliding-window per-IP/per-account on form+WS-API, C: `SecurityHeadersMiddleware` CSP/XFO/XCTO/Referrer-Policy/Permissions-Policy/HSTS + `composer lint:no-inline-scripts` CI guard, D: `docs/SECURITY.md`) + 3 polish commits (`Http\RequestScheme` for `PIWIGO_TRUSTED_PROXIES` X-Forwarded-Proto/-For trust, `SecurityHeaders::emitDirect()` on install/upgrade/i fast paths, doc tightening). Deferred follow-ups inventoried under §1.5                                                                                                                              |
-| 1.6  | Type correctness              | 🟢 **Active** ▸ 7 / 13 | M         | 1.6b globals cleanup ✅ closed; 1.6a mixed-types 5 / 6 done/moot (1 left — `RequestCache` `@template`); 1.6c schema metadata 0 / 5 done (1 moot)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 1.6  | Type correctness              | 🟢 **Active** ▸ 11 / 13 | M        | 1.6b closed; 1.6a ✅ closed (2026-05-23 — `RequestCache @template T` + imperative-cache refactor); 1.6c: `sensitive`+`dumpForLog` ✅, `required`+`MissingRequiredConfigException` ✅, plugin-Config template ✅ — only `description` field (1.6c(2), ~280 SCHEMA entries) remains                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | 1.7  | Typed boundaries              | 🟡 **Not started**     | L         | HTTP request DTOs (Phase 1) → repository entity layer (Phase 2)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | 1.8  | Test infrastructure           | 🟡 **Not started**     | M + L + S | Pest → coverage → Infection (chained)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | 1.9  | Deferred / on-demand          | 🟠 **On-demand**       | —         | Monolog · S3/SFTP · supervisor · Renovate · ScriptLoader dep graph                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -2389,19 +2389,16 @@ rm themes/_base/template/_probe.latte
 
 ### 1.6 Type correctness — three tactical streams
 
-**Status:** 🟢 Active ▸ 7 of 13 sub-tasks done · 1 stream closed · **Effort:** M
+**Status:** 🟢 Active ▸ 11 of 13 sub-tasks done · **Effort:** M
 
-> **Audit refresh (2026-05-22).** Re-verified every item against the
-> current `16.x-rewrite` tree. Stream **1.6b** is fully closed (all
-> `$GLOBALS` cleanup either shipped or proved unneeded). Stream **1.6a**
-> has 5 of 6 items closed: `deleteSite` already typed, static
-> `EventDispatcher` deleted by §1.4 B17d, `Config::raw()` no longer
-> exists (entire surface generated from `Config::SCHEMA`),
-> `ImageInterface::compose` already takes `PwgImage`, and
-> `CookieService::getCookieVar` already returns `string`. Only
-> `RequestCache::remember` / `::get` `@template` annotations remain.
-> Stream **1.6c** has 1 item moot (the accessor generator was deleted
-> on 2026-05-13 as a one-shot migration script) and 4 still open.
+> **Audit refresh (2026-05-23).** Streams 1.6a and 1.6b are fully closed.
+> Stream **1.6a** closed 2026-05-23: `@template T` on `RequestCache::remember()`,
+> widened `set()` to `mixed`, and refactored all three imperative
+> `has()+set()+get()` sites (HtmlService, MailService) to use `remember()`.
+> Stream **1.6b** closed 2026-05-16.
+> Stream **1.6c** has 3 of 5 items shipped (sensitive, required, plugin template)
+> and 1 moot (accessor generator deleted 2026-05-13). Only the `description`
+> field (~280 SCHEMA entries) remains open.
 
 After PHPStan level 10 landed, three threads tighten the remaining
 mixed-type surface that doesn't require new architectural patterns:
@@ -2421,7 +2418,7 @@ as one section, work the streams in parallel where possible.
 
 #### 1.6a Mixed-type fixes
 
-**Status:** 🟢 Active ▸ 5 of 6 done/moot · 1 item left
+**Status:** ✅ Closed 2026-05-23 ▸ all 6 items done/moot
 
 Six fixes ordered by effort. None require behavior changes — all are
 type narrowings supported by existing runtime invariants.
@@ -2433,7 +2430,7 @@ type narrowings supported by existing runtime invariants.
 | `CategoryAdminService::deleteSite(mixed $id)` → typed                                             |     1 | trivial          | ✅ shipped — already `int $id`                                             |
 | `Config::raw()` typed return — `string\|int\|bool\|float\|array<mixed>\|null`                     |     — | —                | ✅ moot — `Config::raw()` no longer exists; `Config::src()` is now `private` with zero out-of-class callers, and all reads go through typed accessors (`Config::trustedProxies()`, `Config::sessionName()`, …) backed by `Config::SCHEMA` |
 | `EventDispatcher::dispatch()` → `@template T` generic                                             |     — | —                | ✅ moot — static class deleted in §1.4 B17d, replaced by typed PSR-14 DTOs |
-| `RequestCache::remember()` / `::get()` → `@template T` (note: `PersistentCache` no longer exists) |     1 | medium           | 🟡 open (1 file + 9 callers; was 13 at audit time)                         |
+| `RequestCache::remember()` / `::get()` → `@template T` (note: `PersistentCache` no longer exists) |     7 | medium           | ✅ shipped 2026-05-23 — `@template T` on `remember()`, `set()` widened to `mixed`; imperative `has()+set()+get()` sites refactored to `remember()` in HtmlService (×2) and MailService |
 
 ##### Concrete examples
 
@@ -2521,7 +2518,7 @@ which is now complete on its own.
 
 #### 1.6c Config schema metadata
 
-**Status:** 🟢 Active ▸ 0 of 5 done · 1 moot · 4 items left
+**Status:** 🟢 Active ▸ 3 of 5 done · 1 moot · 1 item left
 
 Four `Config::SCHEMA` enhancements still deferred design surface. The
 fifth has been overtaken by events (see below). They're independent of
@@ -2529,10 +2526,11 @@ each other; pick whichever delivers value first.
 
 ##### `'required' => true` field + validation
 
-**Status:** 🟡 open. Confirmed: no SCHEMA entry today carries
-`'required'`; `ConfigLoader::applyDefaults()` (line 107) walks SCHEMA
-to seed defaults but never validates required keys; no
-`MissingRequiredConfigException` exists.
+**Status:** ✅ shipped 2026-05-23. `db_host`, `db_user`, `db_base`, `secret_key`
+marked `'required' => true` in `Config::SCHEMA`. `MissingRequiredConfigException`
+added (`src/Piwigo/Config/`). `ConfigLoader::validateRequired()` checks all
+required keys for non-empty values and is called from `CommonBootstrap` immediately
+after `ConfigService::loadConfFromDb()`.
 
 ```php
 // Config::SCHEMA additions
@@ -2552,8 +2550,10 @@ foreach (Config::SCHEMA as $key => $meta) {
 
 ##### `'description'` field → populated reference doc
 
-**Status:** 🟡 open. Confirmed: `grep "'description'"` against
-`Config.php` returns 0 hits.
+**Status:** 🟡 open — the only remaining 1.6c item. Confirmed: `grep "'description'"`
+against `Config.php` returns 0 hits (~277 SCHEMA entries, each needs a
+description string). Tackle as a dedicated session — pure SCHEMA annotation,
+zero runtime impact.
 
 ```php
 'gallery_title' => [
@@ -2569,8 +2569,10 @@ description column is empty for all ~280 keys today (277 as of 2026-05-22; drift
 
 ##### `'sensitive'` field + `Config::dumpForLog()`
 
-**Status:** 🟡 open. Confirmed: no `'sensitive'` entries in SCHEMA,
-no `Config::dumpForLog()` method exists.
+**Status:** ✅ shipped 2026-05-23. `db_password` and `smtp_password` marked
+`'sensitive' => true` in `Config::SCHEMA`. `Config::dumpForLog()` added in the
+hand-written accessor region — returns all config values with sensitive keys
+redacted to `'********'`. `'dumpForLog'` added to `SchemaIntegrityTest::ALLOW_LIST`.
 
 ```php
 'db_password' => [
@@ -2598,7 +2600,10 @@ Used in error-handler logging instead of `var_export($GLOBALS['conf'])`.
 
 ##### Namespace-prefix support — caller pattern over `ConfigStorage` feature
 
-**Status:** 🟡 open (reframed).
+**Status:** ✅ shipped 2026-05-23 (reference template). Pattern proven in
+`tests/Fixtures/Plugin/ExamplePlugin/Config.php`: static accessors call
+`Kernel::service(ConfigRepository::class)->findByParamPattern(PREFIX . '%')`
+to load prefixed rows — no ConfigRepository changes required. PHPStan-clean.
 
 The persistence facade in tree is `ConfigService` + `ConfigRepository`
 (under `src/Piwigo/Config/`) — `ConfigStorage` referenced in earlier

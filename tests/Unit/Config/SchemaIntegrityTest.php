@@ -35,6 +35,8 @@ final class SchemaIntegrityTest extends TestCase
         'defaultFiltersViews',
         // Path helpers (formerly PHP define()s in include/constants.php)
         'pluginsPath', 'themesPath', 'combinedDir', 'derivativeDir', 'usersTable',
+        // Diagnostic helper — redacts sensitive keys for safe log output
+        'dumpForLog',
     ];
 
     public function test_every_schema_method_exists(): void

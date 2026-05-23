@@ -84,9 +84,6 @@ input[type="reset"]:hover {
 .icon-plus.cboxElement:hover {
   box-shadow: 0 2px 4px rgb(0, 0, 0, 0.16);
 }
-#albumSelection {
-  margin-right: var(--space-lg);
-}
 .buttonLike {
   padding: 8px 10px;
   margin-left: var(--space-xs);

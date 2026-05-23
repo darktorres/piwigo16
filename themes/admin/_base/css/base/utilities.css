@@ -29,9 +29,6 @@
 .u-clear-both {
   clear: both;
 }
-.u-box-border {
-  box-sizing: border-box;
-}
 .u-m-0 {
   margin: 0;
 }
@@ -64,9 +61,6 @@
 }
 .u-w-30p {
   width: 30%;
-}
-.u-text-left {
-  text-align: left;
 }
 .u-fs-15 {
   font-size: var(--font-size-base);
@@ -154,16 +148,6 @@ ul.thumbnails li.rank-of-image {
   margin: 4px;
   overflow: hidden;
 }
-.clipwrapper {
-  position: relative;
-  width: 96px;
-  height: 96px;
-  margin: 3px;
-}
-.clip {
-  position: absolute;
-}
-
 ul.thumbnails span.wrap1 {
   margin: var(--space-xs);
   display: table-cell;
@@ -240,14 +224,6 @@ table.table2 tr.throw {
 
 .number {
   text-align: right;
-}
-
-table#dailyStats {
-  width: 60%;
-}
-
-table#detailedStats {
-  width: 99%;
 }
 
 /* Plugins, languages tables */

@@ -69,11 +69,6 @@
   color: var(--search-checked-icon);
 }
 
-.date_created-badge {
-  background: var(--search-badge-bg);
-  color: #fff;
-}
-
 .preset_created_date .date_created-option input:checked + label,
 .custom_created_date .selected input:checked {
   background: var(--search-selected-option-bg);

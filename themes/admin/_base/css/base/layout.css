@@ -110,10 +110,6 @@ form p.field {
   text-align: left;
 }
 
-form p.formButtons {
-  text-align: left;
-}
-
 form fieldset p {
   margin-top: 1em;
   margin-bottom: 0;
@@ -152,9 +148,6 @@ fieldset {
   border: none;
 }
 
-fieldset.with-border {
-  border: 2px solid var(--admin-border);
-}
 
 input[type="radio"],
 input[type="checkbox"] {
@@ -284,27 +277,6 @@ ul.actions {
 }
 ul.actions li {
   display: inline;
-}
-
-ul.tagSelection {
-  width: 99%;
-  margin: 1em 0;
-  padding: 0;
-}
-
-ul.tagSelection li {
-  display: inline-block;
-  width: 150px;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.tagSelection label {
-  padding-right: 12px;
-}
-
-.tagSelected label {
-  color: #000;
 }
 
 html,

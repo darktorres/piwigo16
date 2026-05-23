@@ -127,16 +127,6 @@
   font-size: var(--font-size-base);
 }
 
-.mcs-side-results .mcs-side-badge {
-  border-radius: 25px;
-  font-weight: 700;
-  color: #fafafa;
-  margin-left: var(--space-xs);
-  padding: 2px 5px !important; /* keep: overrides .mcs-side-results > div padding */
-  font-size: 10px;
-  background: #777;
-}
-
 .action-buttons {
   display: flex;
   align-items: start;
@@ -175,15 +165,6 @@ h3.related-tags-title {
 #selected-tags-container .selected-related-tag a.selected-related-tag-remove:hover {
   text-decoration: none;
   color: #000;
-}
-
-.related-tag-condition {
-  border-radius: var(--radius-sm);
-  margin: 2px 5px 0 15px;
-  font-weight: 900;
-  font-size: var(--font-size-xl);
-  padding: 0 5px;
-  color: #777;
 }
 
 #breadcrumb {

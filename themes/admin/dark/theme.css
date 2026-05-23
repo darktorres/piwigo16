@@ -28,10 +28,6 @@
 
 /* text color */
 
-option[disabled] {
-  background-color: #999;
-  color: #444;
-}
 .showInfo {
   color: #666;
 }

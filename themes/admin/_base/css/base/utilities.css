@@ -309,6 +309,11 @@ span:has(+ .filters-icon-check:disabled) {
   cursor: not-allowed;
 }
 
+option[disabled] {
+  background-color: var(--admin-disabled-bg);
+  color: var(--admin-disabled-fg);
+}
+
 /* DataTables (jQuery DataTables) — alternating stripes + active-sort cells. */
 table.dataTable tr.even {
   background-color: var(--admin-stripe-odd);

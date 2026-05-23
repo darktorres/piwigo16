@@ -24,9 +24,6 @@ h2 {
 th {
   color: #888;
 }
-option[disabled] {
-  background-color: #ccc;
-}
 input[type="text"],
 input[type="file"] {
   background-color: #ddd;

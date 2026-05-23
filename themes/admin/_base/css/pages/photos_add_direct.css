@@ -794,6 +794,12 @@ li.plupload_delete a:hover span {
   position: relative;
 }
 
+.upload-options,
+.upload-options-content,
+.options-open::after {
+  background-color: var(--admin-bg-elevated);
+}
+
 .upload-options-content {
   position: relative;
   font-weight: normal;

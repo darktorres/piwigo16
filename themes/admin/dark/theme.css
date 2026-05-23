@@ -506,12 +506,6 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
 
 /* Picture add */
 
-.upload-options,
-.upload-options-content,
-.options-open::after {
-  background-color: #343434;
-}
-
 .upload-options-content .switch .slider {
   background-color: #444;
 }

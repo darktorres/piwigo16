@@ -668,7 +668,6 @@ li.plupload_delete a.remove-format:hover {
 .upload-options,
 .upload-options-content,
 .options-open::after {
-  background-color: #f5f5f5;
   color: #777;
 }
 

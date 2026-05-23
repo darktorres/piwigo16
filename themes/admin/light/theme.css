@@ -27,11 +27,6 @@ th {
 option[disabled] {
   background-color: #ccc;
 }
-input[type="radio"],
-input[type="checkbox"] {
-  background-color: transparent;
-}
-
 input[type="text"],
 input[type="file"] {
   background-color: #ddd;
@@ -118,15 +113,6 @@ dd {
 
 ul.thumbnails span.wrap2 {
   background-color: transparent;
-}
-
-/* borders */
-fieldset {
-  border: none;
-}
-
-fieldset.with-border {
-  border: 2px solid #ddd;
 }
 
 textarea {

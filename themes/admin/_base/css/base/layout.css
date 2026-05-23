@@ -145,6 +145,16 @@ div.comment blockquote {
 fieldset {
   padding: 1em;
   margin: 1em;
+  border: none;
+}
+
+fieldset.with-border {
+  border: 2px solid var(--admin-border);
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  background-color: transparent;
 }
 
 form.filter fieldset ul {

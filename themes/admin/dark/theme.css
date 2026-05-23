@@ -16,11 +16,6 @@ option[disabled] {
   background-color: #999;
   color: #444;
 }
-input[type="radio"],
-input[type="checkbox"] {
-  background-color: transparent;
-}
-
 .showInfo {
   color: #666;
 }
@@ -121,10 +116,6 @@ td h3 {
   background-repeat: repeat-x;
 }
 /* borders */
-fieldset {
-  border: none;
-}
-
 input,
 select,
 textarea {

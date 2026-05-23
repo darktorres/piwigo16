@@ -61,6 +61,7 @@ final readonly class RedirectResponder
         // Flush session changes before exit() — PHP's finally blocks do not
         // run on exit(), so SessionMiddleware::persistInto() would be skipped
         // without this explicit call.
+        $_SESSION ??= [];
         $this->session->persistInto($_SESSION);
         header('Request-URI: ' . $url);
         header('Content-Location: ' . $url);
@@ -98,6 +99,7 @@ final readonly class RedirectResponder
         $tpl->parse('redirect.latte');
 
         PageTailRenderer::render();
+        $_SESSION ??= [];
         $this->session->persistInto($_SESSION);
         exit();
     }

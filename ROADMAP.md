@@ -3103,23 +3103,12 @@ The repo runs PHPStan at level 10 with **no baseline file** and Psalm
 at errorLevel 2 with **no baseline file** (only two narrow
 `<issueHandlers>` suppressions in `psalm.xml`). The original §1.7 draft
 proposed "baseline diff per migration" as evidence; that workflow
-doesn't apply here.
+doesn't apply here — both analyzers pass clean today (verified
+2026-05-23). Replacement evidence per migration PR:
 
-**Current static-analysis state (2026-05-23):** PHPStan clean.
-Psalm reports **7 errors** in `composer analyse:psalm` (mostly
-`RedundantCast` / `NullReference` / `PossiblyFalseOperand` in
-SessionBootstrap, RedirectResponder, BatchManagerController:1331,
-PhotoController:421, and one test). These are pre-existing
-code-quality issues unrelated to §1.7 scope, but should be cleaned
-up before §1.7 migrations land so the per-PR signal is meaningful
-(otherwise "did this PR introduce errors" can't be cleanly answered).
-Tracked as a §1.7 prerequisite.
-
-Replacement evidence per migration PR:
-
-- `composer analyse` (= phpstan + psalm) — must not increase the
-  error count beyond the baseline-7 above. Any *new* error caused
-  by the migration must be fixed in-PR.
+- `composer analyse` (= phpstan + psalm) stays clean — any tightening
+  that introduced a regression would fail level-10 / errorLevel-2
+  immediately.
 - Diff inspection — the value of the migration is **removed defensive
   `is_string` / `is_numeric` / `is_array` guards at call sites** that
   the loose return type forced. Count those removals in the PR

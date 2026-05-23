@@ -47,7 +47,7 @@ final class SessionBootstrap
         session_name(Config::sessionName());
         session_set_cookie_params([
             'lifetime' => 0,
-            'path'     => (string) CookieService::cookiePath(),
+            'path'     => CookieService::cookiePath(),
             'samesite' => 'Lax',
             'secure'   => RequestScheme::isHttps(),
             'httponly' => true,

@@ -90,7 +90,8 @@ final class CheckNoExecutableInlineScriptsTest extends TestCase
     /** @return array{0:int,1:string,2:string} */
     private function runLint(): array
     {
-        $stderrFile = sys_get_temp_dir() . '/inline-script-lint-stderr-' . getmypid();
+        $pid = getmypid();
+        $stderrFile = sys_get_temp_dir() . '/inline-script-lint-stderr-' . ($pid !== false ? $pid : 0);
         $cmd = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(self::SCRIPT) . ' ' . escapeshellarg($this->root) . ' 2>' . escapeshellarg($stderrFile);
         exec($cmd, $stdoutLines, $exit);
         $stderr = is_file($stderrFile) ? (string) file_get_contents($stderrFile) : '';

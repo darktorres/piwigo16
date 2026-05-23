@@ -1328,7 +1328,7 @@ final class BatchManagerController implements AdminSubControllerInterface
                     $url_img = $this->urlService->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => $catRow]);
                 } else {
                     foreach ($authorizeds as $category) {
-                        $catRow  = ($catNames[(int) $category] ?? null)?->toRow();
+                        $catRow  = ($catNames[$category] ?? null)?->toRow();
                         $url_img = $this->urlService->makePictureUrl(['image_id' => $row['id'], 'image_file' => $image_file, 'category' => $catRow]);
                         break;
                     }

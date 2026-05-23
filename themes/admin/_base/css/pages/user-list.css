@@ -1,3 +1,502 @@
+/* UserList Pop in (base — previously in _base/theme.css global) */
+/* UserList Pop in */
+
+.CloseUserList {
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  font-size: 30px;
+}
+
+.UserSearch {
+  width: 220px;
+  margin-top: 4px;
+}
+
+.group-name-block {
+  margin-bottom: 20px;
+}
+
+#UserList .group-name-block span,
+#UserList .group-name-block p,
+#UserList .group-name-block .UserNumberBadge {
+  display: inline-block;
+}
+
+#UserList .group-name-block p {
+  color: #3c3c3c;
+  font-weight: 700;
+  font-size: 15px;
+  margin-left: 10px;
+}
+
+#UserList .group-name-block span {
+  padding: 7px;
+  color: rgb(44, 132, 195);
+  background-color: #cde9fd;
+  border-radius: 25px;
+  font-size: 15px;
+}
+
+#UserList .group-name-block .UserNumberBadge {
+  padding: 3px 9px;
+  border-radius: 15px;
+  background-color: rgb(44, 132, 195);
+  color: #cde9fd;
+  font-size: 10px;
+  margin-left: 10px;
+  font-weight: 700;
+}
+
+#UserList .UserListAddFilterUsers {
+  position: relative;
+}
+
+#UserList .AddUserBlock {
+  padding: 10px 0;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+}
+
+#UserList .FilterUserBlock {
+  position: absolute;
+  right: 0;
+  top: 15px;
+  display: flex;
+}
+
+.FilterUserBlock .search-user {
+  position: relative;
+}
+
+.AddUserErrors,
+.update-user-fail,
+.AddAlbumErrors,
+.EditUserErrors,
+.update-password-fail,
+.icon-red-error {
+  background-color: #ffcfcf;
+  color: #ff5252;
+  border-left: solid 3px #f00;
+}
+
+#AddUserSuccess span {
+  color: #0a0;
+}
+
+.update-user-success,
+.update-password-success,
+.update-username-success,
+.border-green {
+  border-left: 2px solid #0f0;
+}
+#UserList .AddUserBlock p,
+#UserList .AddUserBlock select,
+#UserList .AddUserBlock button {
+  display: inline-block;
+  margin: 0 5px;
+}
+
+#UserList .AddUserBlock select {
+  padding: 11px 10px;
+}
+
+#UserList .AddUserBlock button {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 16px 10px;
+  border: none;
+  margin-top: 1px;
+}
+
+#UserList .AddUserBlock p {
+  font-size: 15px;
+  margin-left: 0;
+}
+
+#UserList .FilterUserBlock span,
+#UserList .FilterUserBlock p,
+#UserList .FilterUserBlock input {
+  display: inline-block;
+}
+
+#UserList .FilterUserBlock p {
+  font-size: 15px;
+  margin-right: 5px;
+}
+
+.UsersInGroupList {
+  text-align: center;
+}
+
+.UsernameBlock {
+  margin: 5px 10px;
+  display: inline-block;
+  margin-left: 0;
+  position: relative;
+  padding: 0 10px;
+  border-radius: 25px;
+}
+
+.UsernameBlock.success_message {
+  margin-right: 0;
+}
+
+.UsersInGroupListContainer {
+  max-height: 315px;
+}
+
+.UsersInGroupList p,
+.UsersInGroupList span {
+  display: inline-block;
+}
+
+.UsersInGroupList span {
+  border-radius: 25px;
+  padding: 3px;
+  font-size: 12px;
+}
+
+.UsersInGroupList .icon-cancel:hover {
+  cursor: pointer;
+}
+
+.Tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.Tooltip p.TooltipText {
+  visibility: hidden;
+  width: 157px;
+  background-color: #f3f3f3;
+  color: #3c3c3c;
+  text-align: left;
+  padding: 5px 10px;
+  border-radius: 10px;
+  border: 1px solid #3c3c3c;
+  font-weight: 700;
+  font-size: 10px;
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  transition: opacity 0.3s;
+  z-index: 101;
+}
+
+.Tooltip:hover p.TooltipText {
+  visibility: visible;
+}
+
+.ValidationUserAssociated {
+  display: inline-block;
+  font-size: 12px;
+  text-align: left;
+  padding: 4px 6px;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  margin-left: -5px;
+  margin-right: 10px;
+}
+
+.ValidationUserAssociated p {
+  margin: 0;
+}
+
+.ValidationUserDissociated {
+  display: inline-block;
+  text-align: left;
+  padding: 6px;
+  border-radius: 30px;
+  margin-left: 8px;
+}
+
+.ValidationUserDissociated p {
+  margin: 0 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+#UserList .FilterUserBlock .AmountOfUsersShown {
+  display: inline-block;
+  font-style: italic;
+}
+
+#UserList .FilterUserBlock .AmountOfUsersShown p {
+  font-size: 12px;
+}
+
+.LinkUserManager {
+  text-align: center;
+  padding: 40px;
+}
+
+.LinkUserManager a {
+  font-weight: 700;
+  padding: 13px 20px;
+}
+
+.AddUserSubmit:hover {
+  color: #3f3e40;
+  background-color: #f70;
+}
+
+/*******  */
+
+p.list_user {
+  text-align: center;
+  max-height: 200px;
+  overflow: auto;
+  margin: 0;
+}
+
+a.group_perm {
+  position: absolute;
+  bottom: 10px;
+  right: 15px;
+}
+a.group_users {
+  position: absolute;
+  bottom: 10px;
+  left: 15px;
+}
+
+#userList .openUserDetails {
+  visibility: hidden;
+}
+#userList tr:hover .openUserDetails {
+  visibility: visible;
+}
+#userList .icon-cancel-circled {
+  visibility: visible;
+}
+#userList_length {
+  float: none;
+}
+#userList_filter {
+  margin-top: -20px;
+}
+
+.userProperties {
+  max-width: 730px;
+}
+.userPropertiesContainer {
+  border-top: 1px solid #ddd;
+  margin-top: 1em;
+}
+.userPropertiesSet {
+  width: 350px;
+  float: left;
+  padding-top: 5px;
+}
+.userPropertiesSetTitle {
+  font-weight: bold;
+  margin-bottom: 1em;
+}
+.userPrefs {
+  border-left: 1px solid #ddd;
+  padding-left: 10px;
+}
+.userProperty {
+  width: 340px;
+  float: left;
+  margin-bottom: 15px;
+}
+.userActions {
+  float: right;
+  text-align: right;
+}
+
+.user_form_popin {
+  width: 750px;
+  height: 450px;
+  padding: 20px;
+}
+
+.userProperties form {
+  text-align: left;
+}
+
+.popinWait {
+  padding-top: 200px;
+}
+
+.preview-box.icon-zoom-in {
+  display: block;
+  position: relative;
+}
+
+.preview-box.icon-zoom-in::before {
+  opacity: 0;
+  position: absolute;
+  margin: -22px 0 0 -22px;
+  top: 50%;
+  left: 50%;
+  font-size: 50px;
+  line-height: 50px;
+  color: #fff;
+  z-index: 100;
+  text-shadow: 0 0 20px rgb(0, 0, 0, 0.4);
+  transition: opacity 200ms ease;
+}
+.preview-box.icon-zoom-in:hover::before {
+  opacity: 0.9;
+}
+.preview-box.icon-zoom-in img {
+  opacity: 1;
+  transition: opacity 200ms ease;
+  max-width: 100%;
+}
+
+.preview-box.icon-zoom-in img.svg-image {
+  height: 100%;
+  top: 50%;
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.preview-box.icon-zoom-in:hover img {
+  opacity: 0.5;
+}
+
+#GuestUserList .messages {
+  margin: 0 0 15px;
+}
+
+/* Selected container userManager (base — previously in _base/theme.css global) */
+/* Selected container in userManager */
+
+.user-container.container-selected .user-container-checkbox.user-list-checkbox .select-checkbox {
+  background-color: #ffa646;
+  border: solid #ffa646 2px;
+}
+
+.user-container.container-selected {
+  display: flex;
+  width: 100%;
+  height: 80px;
+  background-color: #ffd9a7;
+  font-weight: bold;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.user-container.container-selected .user-groups,
+.user-container.container-selected .registration-clock {
+  background-color: #fee7c8;
+  color: #ff7b00;
+}
+
+/****  */
+.group-bonus {
+  color: #000;
+  background: #ddd;
+}
+
+
+.thumbnailsActionsShow {
+  font-weight: bold;
+}
+
+#categoryNameError {
+  color: #f00;
+}
+
+#up_to_date {
+  text-align: left;
+  margin-left: 20px;
+}
+
+.badge-number-fs-128 {
+  font-size: 12.8px;
+}
+
+.picture-coi-intro {
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.user-property-column-title,
+.edit-username-title {
+  color: #353535;
+}
+
+.user-property-input {
+  color: #353535;
+  background-color: #f3f3f3;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 1.1em;
+  padding: 8px 16px;
+  border: none;
+}
+
+.user-property-label {
+  color: #a4a4a4;
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-bottom: 5px;
+}
+
+.user-property-input[type="text"] {
+  background-color: #f3f3f3;
+}
+
+.user-property-register-visit .icon-calendar {
+  color: #4c4c4c;
+}
+
+.edit-user-tab-title,
+.guest-edit-user-tab-title {
+  border-bottom: solid 1px #ddd;
+}
+
+.edit-user-tab-title .selected,
+.edit-user-tab-title .selected:hover,
+.guest-edit-user-tab-title .selected,
+.guest-edit-user-tab-title .selected:hover {
+  color: #323232;
+  border-bottom: solid 4px #323232 !important;
+}
+
+.edit-user-icons .delete-user-button::before,
+.princes-of-this-piwigo {
+  color: #777;
+}
+
+.edit-user-icons .icon-trash-1:hover::before,
+.king-of-this-piwigo {
+  color: #ffa646;
+}
+
+.royal-court-of-this-piwigo {
+  color: #dbdbdb;
+}
+
+.user-property-username-change-content,
+.user-property-password-change-content,
+.user-property-main-user-content {
+  background-color: #fff;
+}
+
+.update-container {
+  border-top: solid 1px #ddd;
+}
+
+.user-property-input.user-property-input-username:hover {
+  background-color: #f0f0f0;
+}
+.user-property-input.user-property-input-password:hover {
+  background-color: #f0f0f0;
+}
+
+.password-choice-content .unavailable,
+.password-choice-content .unavailable:hover {
+  color: #cbcbcb !important;
+}
+
+/* Per-page additions */
 .icon-help-circled {
   color: #777 !important;
   cursor: help;
@@ -62,6 +561,9 @@
 }
 
 #AddUserSuccess label {
+  background-color: #c2f5c2;
+  border-left: 2px solid #0f0;
+  color: #0a0;
   padding: 10px;
   cursor: default;
 }
@@ -333,6 +835,7 @@
 
 /* User Edit Pop-in */
 #UserList {
+  display: none;
   font-size: 1em;
 }
 
@@ -361,6 +864,7 @@
   display: flex;
   width: 745px;
   height: 630px;
+  background-color: #fff;
 }
 
 .summary-properties-update-container {
@@ -390,6 +894,7 @@
   overflow-x: auto;
   display: flex;
   flex-direction: column;
+  border-left: solid 1px #ddd;
 }
 
 .edit-user-slides,
@@ -466,6 +971,7 @@
 }
 .edit-user-tab-title p:hover,
 .guest-edit-user-tab-title p:hover {
+  border-color: #ddd;
   cursor: pointer;
 }
 
@@ -560,12 +1066,6 @@
   background-color: #00000012;
 }
 
-.user-property-label {
-  color: #a4a4a4;
-  font-weight: bold;
-  font-size: 1.1em;
-  margin-bottom: 5px;
-}
 
 #AddUser .user-property-label {
   margin-top: 0;
@@ -610,6 +1110,8 @@
 } */
 
 .user-property-button {
+  color: #353535;
+  background-color: #f3f3f3;
   margin-top: 0;
   font-size: 1.1em;
   margin-bottom: 15px;
@@ -628,6 +1130,8 @@
 }
 
 .user-property-select {
+  background-color: #f3f3f3;
+  color: #353535;
   box-sizing: border-box;
   appearance: none;
   border: none;
@@ -1194,6 +1698,7 @@
 }
 
 .user-property-group .selectize-input.items {
+  background-color: #f3f3f3;
   border: none;
 }
 
@@ -1531,6 +2036,7 @@
 }
 
 .user-action-select {
+  background: #fff;
   appearance: none;
   padding: 5px 10px;
   width: 100%;

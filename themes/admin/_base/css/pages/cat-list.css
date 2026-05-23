@@ -1,3 +1,52 @@
+/* Category Ordering (base — previously in _base/theme.css global) */
+/* Category Ordering */
+form#categoryOrdering p.albumTitle {
+  margin: 0;
+  margin-left: 5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+form#categoryOrdering p.albumTitle a {
+  font-size: 14px;
+  font-weight: 600;
+}
+form#categoryOrdering p.albumTitle i {
+  display: none;
+}
+form#categoryOrdering .categoryLi:hover p.albumActions {
+  visibility: visible;
+}
+form#categoryOrdering p.albumActions {
+  visibility: hidden;
+  margin: 0;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+form#categoryOrdering p.albumActions a {
+  margin-right: 0;
+  font-weight: bold;
+  height: 95%;
+  padding: 0 15px;
+  padding-top: 22px;
+}
+
+.actionTitle span {
+  text-transform: capitalize;
+}
+
+form#categoryOrdering p.albumActions a:hover {
+  text-decoration: none;
+}
+form#categoryOrdering p.albumActions .userSeparator {
+  margin: 0 5px;
+}
+
+
+/* Per-page additions */
 /* Category List + Album Ordering — consolidated from _base/theme.css global and per-page additions */
 
 .categoryContainer {

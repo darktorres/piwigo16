@@ -1,0 +1,231 @@
+/* Selection mode + content (base — previously in _base/theme.css global) */
+/* Selection mode */
+.format-mode-group-manager,
+.selection-mode-group-manager {
+  position: absolute;
+  right: 15px;
+  z-index: 11;
+}
+
+.switch {
+  margin: 0 10px 0 0;
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 24px;
+  vertical-align: middle;
+}
+
+.format-mode-group-manager p,
+.selection-mode-group-manager p {
+  display: inline-block;
+  padding: 0 5px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  transition: s;
+  transition: 1s;
+}
+
+.slider::before,
+.slider::after {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 6px;
+  bottom: 4px;
+  transition: 0.4s;
+}
+
+.slider::after {
+  content: "\E81D";
+  font-family: fontello, sans-serif;
+  font-size: 15px;
+  animation-name: spin;
+  animation-duration: 0.5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  opacity: 0;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+input:checked + .slider.small::before {
+  transform: translateX(12px);
+}
+
+input:checked + .slider::before,
+input:checked + .slider::after {
+  margin-left: 33px;
+}
+
+input:checked + .slider.small::before,
+input:checked + .slider.small::after {
+  margin-left: 0;
+}
+
+.slider.loading::before {
+  opacity: 0;
+}
+
+.slider.loading::after {
+  opacity: 1;
+}
+
+.notUsable input.disabled + .slider.activate_disabled::before {
+  animation: activate_disabled 0.4s linear;
+}
+
+@keyframes activate_disabled {
+  50% {
+    transform: translateX(5px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.notUsable input:checked + .slider.desactivate_disabled::before {
+  animation: desactivate_disabled 0.4s linear;
+}
+
+@keyframes desactivate_disabled {
+  50% {
+    transform: translateX(28px);
+  }
+  100% {
+    transform: translateX(33px);
+  }
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round::before {
+  border-radius: 50%;
+}
+
+#selection-mode-block {
+  display: none;
+  position: absolute;
+  right: 0;
+  width: 223px;
+  min-height: calc(100% - 171px);
+  top: 169.5px;
+  z-index: 10;
+}
+
+#selection-mode-block.show {
+  display: block;
+}
+
+.Selection-mode-content {
+  margin-top: 110px;
+}
+
+/* Selection mode content */
+
+#nothing-selected {
+  display: block;
+  margin: 10px;
+}
+
+.SelectionModeGroup {
+  display: none;
+  text-align: center;
+}
+
+.SelectionModeGroupList {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.SelectionModeGroupList div {
+  margin: 10px;
+  text-align: start;
+}
+
+.SelectionModeGroupList div div {
+  display: flex;
+}
+
+.SelectionModeGroupList a,
+.SelectionModeGroupList p {
+  display: inline-block;
+  margin: 0;
+}
+
+.SelectionModeGroupList p {
+  width: 85%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+#selection-mode-block button,
+#commentsSelection button {
+  display: block;
+  margin: 20px auto;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 13px 30px;
+  background-color: transparent;
+  width: 180px;
+}
+
+#selection-mode-block button:hover,
+#commentsSelection button:hover {
+  cursor: pointer;
+}
+
+#selection-mode-block button.unavailable {
+  opacity: 0.3;
+  background: none !important;
+  border: none !important;
+  cursor: auto;
+}
+
+#ConfirmGroupAction {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 20px;
+  display: none;
+}
+
+#ConfirmGroupAction p {
+  margin: 20px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.ConfirmDeleteButton {
+  display: block;
+  margin: 20px auto;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 13px 40px;
+  background-color: #ffa744;
+  border: none;
+  margin-top: 40px;
+  cursor: pointer;
+}
+
+

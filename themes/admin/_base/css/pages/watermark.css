@@ -1,0 +1,255 @@
+/* watermark configuration (base — previously in _base/theme.css global) */
+/* watermark configuration screen */
+#watermarkPositionBox {
+  width: 500px;
+  padding: 5px;
+}
+
+#watermarkPositionBox label {
+  font-weight: normal;
+  display: block;
+}
+
+#watermarkPositionBox label.middle {
+  margin: 50px;
+  text-align: center;
+}
+
+#watermarkPositionBox label.right {
+  float: right;
+}
+
+#positionCustomDetails {
+  margin-left: 20px;
+  display: none;
+}
+
+#positionCustomDetails label {
+  font-weight: normal;
+}
+
+input[type="text"].dError {
+  border-color: #ff7070;
+  background-color: #ffe5e5;
+}
+.dErrorDesc {
+  background-color: #f00;
+  color: #fff;
+  padding: 0 5px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: help;
+}
+
+#wImg {
+  max-height: 100px;
+  border: 2px solid #ccc;
+  margin-top: 5px;
+}
+#addWatermark {
+  display: none;
+}
+
+.adminMenubarCounter {
+  background-color: #666;
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 10px;
+  margin-left: 5px;
+}
+
+.content .groups form {
+  margin: 0;
+  margin-top: 115px;
+}
+
+.groups {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.group-manager {
+  margin-right: 224px;
+}
+
+.remove-item {
+  flex: 1;
+  animation: flexShrink 500ms ease forwards;
+}
+
+.groups .list_user #text {
+  width: 100%;
+}
+
+.groups .GroupContainer {
+  vertical-align: middle;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  height: 286px;
+  width: 220px;
+  margin: 15px;
+  border-radius: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.groupHeader {
+  width: 100%;
+}
+
+.groups .Group-name .Group-name-container p {
+  margin: auto;
+  padding: 2px;
+  text-align: center;
+  font-weight: 700;
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.Group-name-container {
+  position: relative;
+  display: inline-flex;
+  transform: translate(10px, 0);
+}
+
+.group-rename {
+  margin: 0;
+  position: absolute;
+  top: 0;
+  transform: translate(0, -8px);
+  display: none;
+  opacity: 1;
+}
+
+.group-rename span {
+  padding: 5px;
+  margin: auto;
+}
+
+.group-rename .validate {
+  background-color: #ffa744;
+}
+
+.group-rename .icon-ok:hover {
+  background-color: #f70;
+  color: #3c3c3c;
+}
+
+.group-rename form {
+  margin: 0 !important;
+}
+
+.Group-name span:hover {
+  color: #ffa744;
+  cursor: pointer;
+}
+
+.group-rename input {
+  text-align: left;
+  width: 130px;
+  margin: 4px;
+  font-weight: bold;
+  color: #3c3c3c;
+  font-family: "Open Sans", "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
+  margin-left: 9px;
+}
+
+.addGroupLabel {
+  margin: 0;
+  border-radius: 5px 5px 0 0;
+  padding: 2px;
+  position: absolute;
+  left: 11px;
+  top: -11px;
+  font-size: 14px;
+}
+
+.groups .icon-users-1 {
+  text-align: center;
+}
+
+.groups .group_number_users {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1em;
+  margin: 12px;
+}
+
+.groups input[type="text"] {
+  padding: 5px;
+}
+
+#addGroupNameInput {
+  color: #353535;
+  background-color: #f3f3f3 !important;
+  border: none !important;
+  margin-top: 15px;
+}
+
+#addGroupNameInput::placeholder {
+  color: #353535;
+}
+
+.groupIcon {
+  margin: 15px auto;
+}
+
+.groups .icon-users-1:first-child {
+  font-size: 19px;
+  width: 27px;
+  padding: 10px;
+  border-radius: 30px;
+  margin: auto;
+  transition: 0.4s ease;
+}
+
+.groupMessage {
+  display: none;
+  position: absolute;
+  min-height: 20px;
+  padding: 10px;
+  border-radius: 30px;
+  top: -17px;
+  font-size: 12px;
+  right: 52px;
+  width: 110px;
+  text-align: center;
+}
+
+.groupError {
+  z-index: 2;
+  display: none;
+  position: absolute;
+  color: #f22;
+  background-color: #ffd5dc;
+  min-height: 17px;
+  padding: 10px;
+  border-radius: 30px;
+  top: -17px;
+  font-size: 12px;
+  right: 29px;
+  width: 143px;
+  text-align: center;
+}
+
+.groups .addGroupFormTitle {
+  font-size: 1.2em;
+  font-weight: 700;
+  margin: 0;
+}
+
+form.properties .groups .GroupContainer,
+.groups form#update .groups ul {
+  margin-bottom: 15px;
+}
+
+#group-template {
+  display: none;
+}
+
+

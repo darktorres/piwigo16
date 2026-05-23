@@ -1,0 +1,614 @@
+/* Tag Manager (base — previously in _base/theme.css global) */
+/* Tag Manager */
+.warningDeletion {
+  display: none;
+  font-style: italic;
+}
+
+#debug {
+  margin-left: 227px;
+  font-size: 12px;
+}
+
+.tag-header {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  margin-left: 20px;
+  max-width: calc(100% - 530px);
+  overflow: hidden;
+  padding: 10px;
+}
+
+.tag-header #search-tag {
+  position: absolute;
+  right: 240px;
+}
+
+.tag-header #add-tag {
+  position: relative;
+  margin: 0;
+}
+
+.tag-header #add-tag.hide {
+  display: none;
+}
+
+.tag-header #add-tag.input-mode .add-tag-label {
+  background: none;
+  box-shadow: none;
+  cursor: auto;
+  padding: 0;
+  color: inherit;
+}
+
+.tag-header #add-tag.input-mode .add-tag-label::before {
+  display: none;
+}
+
+.tag-header #add-tag .add-tag-container {
+  display: none;
+}
+
+.tag-header #add-tag.input-mode .add-tag-container {
+  display: flex;
+  margin-right: 35px;
+}
+
+.tag-header #add-tag.input-mode .add-tag-container input {
+  padding: 9px;
+  margin-left: 10px;
+  border: solid 2px #ffa744;
+  background: none;
+  width: 100px;
+}
+
+.tag-header #add-tag.input-mode .add-tag-container input:hover {
+  background-color: #f0f0f0 !important;
+}
+
+.tag-header #add-tag span.icon-cancel-circled {
+  display: none;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translate(15px, -53%);
+  z-index: 2;
+  font-size: 22px !important;
+  cursor: pointer;
+}
+
+.tag-header #add-tag.input-mode .icon-cancel-circled {
+  display: block;
+}
+
+.tag-header #add-tag span.icon-cancel-circled:hover {
+  color: #f70;
+}
+
+.tag-header #add-tag.input-mode .icon-validate {
+  display: block;
+  margin: auto 5px;
+  cursor: pointer;
+  background-color: #ffa744;
+  color: #3c3c3c;
+  font-size: 17px;
+  font-weight: 700;
+  padding: 7px 5.5px;
+}
+
+.tag-header #add-tag span.icon-validate:hover {
+  background-color: #f70;
+  color: #000;
+  cursor: pointer;
+}
+
+.tag-header .selection-controller,
+.comments-selection-controller {
+  display: none;
+  align-items: baseline;
+  height: 38px;
+  color: #777;
+  font-weight: bold;
+}
+
+.tag-header .selection-controller.show,
+.comments-selection-controller.show {
+  display: flex;
+}
+
+.tag-header .selection-controller p {
+  margin-right: 10px;
+  color: #555;
+}
+
+.tag-header .selection-controller a,
+.comments-selection-controller .comments-selection-btn {
+  background-color: #f0f0f0;
+  padding: 10px;
+  color: #777;
+  font-weight: bold;
+  margin: 4px;
+  border-radius: 5px;
+}
+
+.tag-header .selection-controller a:hover,
+.comments-selection-controller .comments-selection-btn:hover {
+  background-color: #ddd;
+  color: #3a3a3a;
+  text-decoration: none;
+}
+
+.tag-container {
+  display: flex;
+  padding: 10px 25px;
+  flex-flow: wrap;
+  padding-right: 223px;
+}
+
+.tag-container .tag-box {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px 5px 15px;
+  background-color: #fafafa;
+  margin: 7px 5px;
+  box-shadow: 0 2px 1px #00000024;
+  border-radius: 18px;
+  position: relative;
+}
+
+.tag-container.selection .tag-box {
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.tag-container.selection .tag-box[data-selected="1"] {
+  opacity: 1;
+  background-color: #ffd7ad;
+}
+
+.tag-container .tag-box p {
+  white-space: nowrap;
+  margin: 0;
+}
+
+.tag-container .tag-box[data-selected="1"] p {
+  color: #333;
+}
+
+.tag-container .tag-box.edit-name p {
+  display: none;
+}
+
+.tag-container .tag-box .showOptions {
+  color: #aaa;
+}
+
+.tag-container .tag-box.edit-name .showOptions {
+  display: none;
+}
+
+.tag-container.selection .showOptions {
+  display: none;
+}
+
+.tag-container .tag-box .tag-dropdown-block {
+  display: none;
+  position: absolute;
+  top: 32px;
+  right: 0;
+  transform: translateX(calc(50% - 23px));
+}
+
+.tag-container .tag-box .tag-dropdown-block .tag-dropdown-header {
+  white-space: nowrap;
+  display: flex;
+  margin: auto;
+  justify-content: space-between;
+  color: #fff;
+  border-bottom: solid 1px #ffffff3d;
+  padding: 5px 10px;
+  min-width: 150px;
+}
+
+.tag-container .tag-box .tag-dropdown-header b {
+  font-weight: bold;
+  margin-right: 2px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.user-list-checkbox .select-checkbox,
+.tag-container .tag-box .select-checkbox,
+.delete-size-check .select-checkbox {
+  display: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 100%;
+  /* margin: 2px 0px; */
+  margin-left: 3.4px;
+  border: solid #ffa646 2px;
+}
+
+.delete-size-check .select-checkbox {
+  margin-left: 0;
+}
+
+.user-list-checkbox .select-checkbox {
+  display: inline-block;
+}
+
+.tag-container.selection .tag-box .select-checkbox,
+.delete-size-check .select-checkbox {
+  display: block;
+}
+
+.user-list-checkbox:hover .select-checkbox,
+.user-list-checkbox[data-selected="1"] .select-checkbox,
+.tag-container .tag-box:hover .select-checkbox,
+.tag-container .tag-box[data-selected="1"] .select-checkbox,
+.delete-size-check:hover .select-checkbox,
+.delete-size-check[data-selected="1"] .select-checkbox {
+  background-color: #ffa646;
+}
+
+.tag-container .tag-box .select-checkbox.show,
+.delete-size-check .select-checkbox.show {
+  display: block;
+}
+
+.user-list-checkbox .select-checkbox i,
+.tag-container .tag-box .select-checkbox i,
+.delete-size-check .select-checkbox i {
+  display: none;
+  font-size: 14px;
+  transform: translate(-10px, -3px);
+  position: absolute;
+  color: #fafafa;
+  animation-name: icon-check-tag-animation;
+  animation-duration: 0.4s;
+  animation-timing-function: ease-out;
+}
+
+.user-list-checkbox[data-selected="1"] .select-checkbox i,
+.tag-container .tag-box[data-selected="1"] .select-checkbox i,
+.delete-size-check[data-selected="1"] .select-checkbox i {
+  display: inline;
+}
+
+@keyframes icon-check-tag-animation {
+  0% {
+    transform: translate(-10px, -3px) scale(0);
+  }
+  75% {
+    transform: translate(-10px, -3px) scale(1.3);
+  }
+  100% {
+    transform: translate(-10px, -3px);
+  }
+}
+
+.tag-container .tag-box .tag-rename {
+  display: none;
+}
+
+.tag-container .tag-box.edit-name .tag-rename {
+  display: flex;
+}
+
+.tag-container .tag-box .tag-rename .tag-name-editable {
+  text-align: left;
+  width: 100px;
+  color: #3c3c3c;
+  font-family: "Open Sans", "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
+  margin: 0;
+  background-color: #fff;
+  border: 1px solid #d5d5d5;
+  padding-left: 6px;
+}
+
+.tag-container .tag-box .tag-rename span:hover {
+  color: #ffa744;
+}
+
+.tag-pagination .selected {
+  background: #ffa646;
+  color: #000;
+}
+
+.tag-container .tag-box .tag-rename span {
+  padding: 2px 3px;
+  margin: auto;
+  cursor: pointer;
+  color: #3a3a3a;
+}
+
+.tag-selection .tag-selection-content {
+  margin-top: 90px;
+  padding: 5px;
+}
+
+.tag-selection .tag-selection-content .selection-mode-tag {
+  display: none;
+}
+
+.selection-mode-tag .tag-list {
+  margin: 10px;
+  text-align: start;
+  font-weight: 700;
+  font-size: 15px;
+  overflow: hidden;
+  max-height: 160px;
+}
+
+.selection-mode-tag .tag-list p {
+  width: 85%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #a0a0a0;
+  margin: 0;
+}
+
+.selection-mode-tag .tag-list div {
+  display: flex;
+  margin: 10px;
+  text-align: start;
+}
+
+.selection-mode-tag .selection-other-tags,
+.comments-and-others {
+  color: #ffa646;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.tag-select-message {
+  background: #bce5f7;
+  height: 46px;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  display: none;
+  margin: 10px 243px 10px 32px;
+  color: #0051a5;
+  font-weight: 600;
+}
+
+.tag-select-message a {
+  font-weight: bold;
+  margin-left: 6px;
+  background-color: #0051a5;
+  color: #fff;
+  padding: 0 4px;
+}
+
+.tag-select-message a:hover {
+  color: #fff;
+  text-decoration: none;
+  background-color: #002e5f;
+}
+
+.tag-pagination {
+  margin: 0 20px;
+  display: flex;
+  margin-bottom: 20px;
+  margin-right: 223px;
+  padding: 0 15px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pageLoad {
+  display: none;
+  text-align: center;
+  margin-right: 223px;
+  position: absolute;
+  left: 50%;
+  z-index: 100;
+  transform: translateY(50px);
+}
+
+.pageLoad i {
+  font-size: 40px;
+  color: rgb(29, 29, 29, 0.226);
+}
+
+#RenameTag {
+  display: none;
+}
+
+.AddIconContainer {
+  margin-top: 5px;
+}
+
+.RenameTagPopIn {
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0, 0, 0, 0.7);
+}
+
+.RenameTagPopInContainer {
+  display: flex;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -48%);
+  text-align: left;
+  padding: 20px;
+  flex-direction: column;
+  border-radius: 15px;
+  align-items: center;
+  width: auto;
+  min-width: 270px;
+  max-width: 700px;
+}
+
+.RenameTagPopInContainer .ClosePopIn {
+  top: 15px;
+  right: 15px;
+  position: absolute;
+}
+
+.AddIcon {
+  border-radius: 9999px;
+  padding: 10px;
+  font-size: 2em;
+}
+.AddIconTitle {
+  font-size: 1.4em;
+  font-weight: bold;
+  text-align: center;
+  color: #000;
+  margin-bottom: 10px;
+  margin-top: 15px;
+}
+
+.RenameTagInputContainer {
+  width: 100%;
+}
+.tag-property-label {
+  color: #a4a4a4;
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-bottom: 5px;
+}
+.tag-property-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 1.1em;
+  padding: 8px 16px;
+  border: none;
+}
+
+.TagErrors {
+  visibility: hidden;
+  width: 100%;
+  padding: 5px;
+  border-left: solid 3px #f00;
+}
+
+.TagSubmitOptions {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.TagSubmit,
+.TagLoading {
+  cursor: pointer;
+  font-weight: bold;
+  color: #3f3e40;
+  background-color: #ffa836;
+  padding: 10px 20px;
+  font-size: 1em;
+  margin: 0 15px;
+}
+.TagLoading {
+  cursor: auto;
+  display: none;
+}
+.TagCancel {
+  cursor: pointer;
+  color: #a4a4a4;
+  padding: 10px 20px;
+  font-size: 1em;
+  font-weight: bold;
+}
+.tag-checkmark {
+  position: absolute;
+  padding: 1px;
+  border-radius: 50%;
+  margin: 4px 5px 0 0;
+  font-size: 80%;
+  background-color: #6dce5e;
+  color: #d6ffcf;
+  z-index: 1;
+}
+
+
+/* Merge Options (base — previously in _base/theme.css global) */
+/* Merge Options */
+
+#MergeOptionsBlock {
+  display: none;
+  position: relative;
+  margin-top: 40px;
+}
+
+#MergeOptionsBlock p {
+  margin: 20px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+#MergeOptionsBlock .ItalicTextInfo {
+  font-weight: 400;
+  font-style: italic;
+  margin-top: 0;
+  margin-bottom: 40px;
+}
+
+#MergeOptionsBlock a {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.MergeOptionsChoice {
+  display: block;
+  font-size: 15px;
+}
+
+.MergeOptionsChoice input {
+  margin: 0 5px;
+}
+
+/* Merge options Radio buttons */
+
+.MergeOptionsContainer input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.ConfirmMergeButton {
+  display: block;
+  margin: 20px auto;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 13px 40px;
+  border: none;
+  margin-top: 40px;
+}
+
+.MergeOptionsContainer {
+  display: block;
+  position: relative;
+  font-size: 15px;
+}
+.MergeOptionsContainer label,
+.MergeOptionsContainer select {
+  display: block;
+  margin: 10px auto;
+}
+
+.MergeOptionsContainer select,
+.MergeOptionsContainer option {
+  width: 182px;
+}
+
+.MergeOptionsContainer select {
+  padding: 10px 5px;
+  border: none;
+  background-color: #fff;
+  box-shadow: 0 0 2px #c5c5c5;
+  border-radius: 5px;
+}
+
+

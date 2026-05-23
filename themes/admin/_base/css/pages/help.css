@@ -1,3 +1,46 @@
+/* table in help (base — previously in _base/theme.css global) */
+/* table in help/quick_search.html */
+table.qsearch_help_table {
+  border-collapse: collapse;
+  text-align: left;
+  margin: 1em;
+}
+table.qsearch_help_table q {
+  font-family: Courier, monospace;
+  font-weight: bold;
+}
+table.qsearch_help_table q::before {
+  content: "'";
+  color: #008000;
+}
+table.qsearch_help_table q::after {
+  content: "'";
+  color: #008000;
+}
+table.qsearch_help_table td {
+  border: 1px solid #ccc;
+  padding: 5px;
+  vertical-align: top;
+}
+
+.font-checkbox [class*="icon-check"]::before {
+  line-height: 16px;
+  margin-right: 5px;
+  margin-left: 0;
+  font-size: 145%;
+}
+.font-checkbox .icon-check-empty {
+  position: relative;
+  left: -1px;
+}
+
+.font-checkbox input[type="checkbox"],
+.font-checkbox input[type="radio"] {
+  display: none;
+}
+
+
+/* Per-page additions */
 #helpContent.sync-disabled #helpSynchro {
   display: none;
 }

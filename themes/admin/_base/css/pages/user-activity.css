@@ -1,3 +1,462 @@
+/* Activity Tab (base — previously in _base/theme.css global) */
+/* Activity Tab in user manager */
+
+.activity-select {
+  height: 50%;
+  text-align: left;
+  margin-right: 20px;
+}
+
+.activity-filter-container {
+  border-radius: 20px;
+  padding: 4px 10px;
+  margin-right: 6px;
+}
+
+.start-date,
+.end-date {
+  padding: 5px 10px;
+  background: #eaeaea;
+  border-radius: 50px;
+  margin: 5px;
+  white-space: nowrap;
+}
+
+.line {
+  background: #fafafa;
+  box-shadow: 0 2px 4px #00000024;
+  display: flex;
+  flex-direction: row;
+
+  height: 40px;
+
+  align-items: center;
+
+  margin-bottom: 10px;
+}
+
+.line .detail-item {
+  background: #f0f0f0f0;
+  margin: 0 10px 0 0;
+  padding: 3px 6px;
+  border-radius: 20px;
+
+  max-width: 120px;
+
+  text-align: center;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+
+  white-space: nowrap;
+}
+
+.download_csv {
+  min-width: 35px;
+  background: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 15px;
+  margin-bottom: 3px;
+}
+
+.download_csv:hover {
+  background: #aaa;
+  color: #000;
+}
+
+.AddUserPopInContainer,
+.AddAlbumPopInContainer,
+.DeleteAlbumPopInContainer,
+.RenameAlbumPopInContainer {
+  background-color: #fff;
+}
+
+.AddUserPopInContainer .AddIconTitle,
+.AddAlbumPopInContainer .AddIconTitle,
+.DeleteAlbumPopInContainer .DeleteIconTitle,
+.RenameAlbumPopInContainer .RenameAlbumTitle {
+  color: #000;
+}
+
+.AddUserPopInContainer .AddUserLabel,
+.AddAlbumPopInContainer .AddAlbumLabel,
+.DeleteAlbumPopInContainer .DeleteAlbumLabel {
+  color: #3e3e3e;
+}
+
+.AddUserPopInContainer .AddUserInput,
+.AddAlbumPopInContainer .AddAlbumInput,
+.DeleteAlbumPopInContainer .DeleteAlbumInput,
+.RenameAlbumPopInContainer .RenameAlbumInput {
+  background-color: #fff;
+  border: solid 2px #d4d4d4;
+}
+
+.AddAlbumCancel,
+.RenameAlbumCancel {
+  color: #3f3e40;
+  background-color: #f3f3f3;
+}
+
+.AddAlbumCancel:hover,
+.RenameAlbumCancel:hover {
+  color: #3f3e40;
+  background-color: #dedede;
+}
+
+.AddAlbumSubmit,
+.RenameAlbumSubmit {
+  color: #3f3e40;
+  background-color: #ffa836;
+}
+
+.AddAlbumSubmit:hover,
+.RenameAlbumSubmit:hover {
+  color: #3f3e40;
+  background-color: #f70;
+}
+
+.DeleteAlbumSubmit {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+.site-url-path {
+  justify-content: flex-start;
+  display: flex;
+  width: max-content;
+  padding-left: 25px;
+}
+
+.site-url-path span {
+  margin-top: -10px;
+}
+
+.linked-albums-badge {
+  padding: 2px 6px;
+  border-radius: 50px;
+  font-size: 10px;
+  transition: 0.3s;
+}
+
+.linked-albums-badge.badge-red {
+  background: #f00;
+  color: #fff;
+}
+
+.breadcrumb-item {
+  margin: 0 10px 10px 12px;
+  padding: 7px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.breadcrumb-item .link-path {
+  margin-right: 15px;
+}
+.breadcrumb-item:hover .icon-cancel-circled {
+  color: #000;
+}
+
+.breadcrumb-item a {
+  padding: 0 5px;
+  font-weight: 400;
+}
+
+.breadcrumb-item .icon-cancel-circled,
+.breadcrumb-item .help-item {
+  margin-left: auto !important;
+  cursor: pointer;
+  position: absolute;
+  right: 10px;
+}
+
+.breadcrumb-item.add-item {
+  width: fit-content;
+  cursor: pointer;
+  color: #777;
+  transition: 0.3s;
+}
+
+.breadcrumb-item a:hover {
+  color: #3a3a3a;
+}
+
+.invisible-related-categories-select {
+  display: none;
+}
+
+.orphan-photo {
+  margin-left: 4px;
+  font-style: italic;
+}
+.search-line {
+  background: #fafafa;
+}
+
+.search-line .date-section,
+.search-line .user-section,
+.search-line .type-section {
+  border-right: 1px solid #bbb;
+}
+
+.detail-item-1,
+.detail-item-2,
+.detail-item-3 {
+  background: #f0f0f0f0;
+}
+
+.search-line .type-name a {
+  color: #a1a1a1;
+}
+
+.history-filter {
+  background: #f3f3f3;
+}
+
+.hasDatepicker,
+.elem-type-select {
+  background: #fff !important;
+}
+
+.selectable-filter label {
+  margin-bottom: 5px;
+}
+
+.selectable-filter .elem-type-select {
+  margin-top: 5px !important;
+}
+
+.filter-title,
+.remove-filter,
+.filter-icon {
+  color: #777;
+  background: #fff;
+  padding: 5px 0;
+}
+
+.search-result-item:hover {
+  background: #ffc17e;
+  color: #000;
+  cursor: pointer;
+}
+
+.search-result-item .notClickable {
+  opacity: 0.3;
+  color: #000 !important;
+}
+
+.promote-apps {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+
+  padding: 15px;
+  margin: 0 20px 15px;
+  border-radius: 5px;
+
+  background: #f5d8b0;
+  position: relative;
+
+  box-shadow: 0 5px 10px 5px rgb(0, 0, 0, 0.1);
+}
+
+.promote-newsletter {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+
+  border-radius: 5px;
+  margin: 0 20px 15px;
+
+  background: #f5d8b0;
+  position: relative;
+
+  box-shadow: 0 5px 10px 5px rgb(0, 0, 0, 0.1);
+}
+
+.promote-newsletter-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 2;
+
+  margin-left: 8.45%;
+  margin-right: 16.32%;
+}
+
+.promote-link {
+  color: #e18c32;
+  font-size: 15px;
+  margin-block: 3.5%;
+  font-weight: 700;
+}
+
+.promote-newsletter-title {
+  font-size: 24px;
+  font-weight: 700;
+  text-align: left;
+  margin-top: 3.5%;
+  margin-bottom: 1.75%;
+  color: #493c21;
+}
+
+.subscribe-newsletter {
+  font-size: 15px;
+  max-height: 17.5%;
+  display: flex;
+  gap: 4.64%;
+  margin-block: 1.75%;
+}
+
+.promote-image {
+  height: auto;
+  width: 25%;
+  object-fit: contain;
+}
+
+#newsletterSubscribeInput {
+  font-weight: 700;
+  background-color: #fff;
+  color: #000;
+  padding-inline: 4%;
+  padding-block: 2%;
+  border-radius: 2px;
+  border-width: 2px;
+  border-color: #d3d3d3;
+}
+
+.close-apps {
+  padding: 1px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: #bbb;
+  color: #000;
+  font-size: 19px;
+}
+.close-apps::before {
+  transform: translateY(-1px);
+}
+
+.dont-show-again {
+  position: absolute;
+  color: #333;
+  top: 5px;
+  right: 5px;
+  font-size: 25px;
+}
+
+.dont-show-again:hover,
+.close-apps:hover {
+  cursor: pointer;
+}
+
+.promote-content {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  flex: 2;
+}
+
+.promote-content .left-side {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+}
+.promote-content .right-side {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.promote-content .left-side img {
+  width: 170px;
+  margin-left: 25px;
+}
+
+.promote-text {
+  display: flex;
+  flex-direction: column;
+  font-size: 30px;
+  font-weight: 700;
+  color: #493c21;
+  justify-content: center;
+  flex: 2;
+}
+
+.promote-text span {
+  font-size: 35px;
+}
+.promote-text span:first-child {
+  margin-bottom: 5px;
+}
+.promote-text span:last-child {
+  margin-top: 5px;
+}
+
+.go-to-porg {
+  cursor: pointer;
+  padding: 7px 14px;
+  font-size: 15px;
+  font-weight: bold;
+  max-width: 41.06%;
+  background-color: #f4ab4f;
+  color: #3c3c3c;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.go-to-porg::before {
+  margin-right: 10px;
+}
+.go-to-porg:hover {
+  color: #3c3c3c;
+}
+
+.promote-content .right-side .promote-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.badge-dropdown {
+  background: linear-gradient(130deg, #fff 0%, #fff 100%);
+}
+
+.badge-dropdown::after {
+  border-color: transparent transparent #fff;
+}
+
+#usr-list-user,
+#usr-list-registered {
+  display: flex;
+}
+
+#usr-list-user:hover,
+#usr-list-registered:hover {
+  color: #f3a73b;
+  cursor: pointer;
+}
+
+#usr-list-user:hover #icon-usr-list-user {
+  display: block !important;
+}
+
+#usr-list-registered:hover #icon-usr-list-registered {
+  display: block !important;
+}
+
+/* Per-page additions */
 .container {
   padding: 0 30px;
 }

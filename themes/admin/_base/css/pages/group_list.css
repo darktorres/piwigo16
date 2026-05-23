@@ -1,0 +1,308 @@
+/* Group editor (base — previously in _base/theme.css global) */
+/* Edit group name */
+
+.groups .Group-name {
+  position: relative;
+  text-align: center;
+}
+
+#EditGroupName {
+  text-align: center;
+  display: none;
+}
+
+.groups .Group-name .icon-pencil {
+  opacity: 0;
+}
+
+.Group-name:hover .icon-pencil {
+  opacity: 1;
+}
+
+/* Options menu */
+
+.group-dropdown-options {
+  font-size: 20px;
+  position: absolute;
+  top: 10px;
+  right: 0;
+  padding: 5px;
+  cursor: pointer;
+}
+
+#GroupOptions {
+  display: none;
+  z-index: 1;
+  position: absolute;
+  transform: translateX(-50%);
+  left: 50%;
+  top: 37px;
+}
+#catOptionsSmall {
+  display: none;
+  position: absolute;
+  right: 80%;
+  bottom: 0%;
+}
+
+.is-default-token {
+  display: block;
+  z-index: 1;
+  position: absolute;
+  cursor: pointer;
+  right: 33px;
+  top: 4px;
+  padding: 11px 0;
+  font-size: 20px;
+  color: #777;
+  transition: 0.2s ease;
+}
+
+.is-default-token:hover {
+  transform: scale(1.2, 1.2);
+}
+
+.is-default-token.deactivate {
+  display: none;
+}
+
+.jconfirmDeleteConfirm,
+.jconfirmAlert {
+  padding-bottom: 0 !important;
+  color: #3c3c3c !important;
+  line-height: 28px !important;
+}
+
+.jconfirmAlert {
+  margin-bottom: -2px !important;
+}
+
+.jconfirmDeleteConfirm ~ .jconfirm-content-pane,
+.jconfirmAlert ~ .jconfirm-content-pane {
+  /* height: 0px !important; */
+  margin: 0 !important;
+}
+
+.jconfirmDeleteConfirm ~ .jconfirm-buttons button {
+  text-transform: none !important;
+}
+
+.jconfirmAlert .jconfirm-icon-c {
+  margin-bottom: 25px !important;
+}
+
+.jconfirmAlert .jconfirm-title {
+  font-size: 20px !important;
+}
+
+.jconfirmAlert .jconfirm-icon-c i {
+  border-radius: 60px;
+  padding: 2px;
+  font-size: 45px;
+  color: #0a0 !important;
+  background-color: #c2f5c2 !important;
+}
+
+.jconfirmWarning .jconfirm-icon-c i {
+  color: #ffa744 !important;
+  background-color: #ffe9cf !important;
+}
+
+.jconfirm-title {
+  line-height: 1.5em;
+}
+
+.jconfirm-buttons .btn {
+  text-transform: none !important;
+}
+.jconfirm.jconfirm-modern .jconfirm-box .jconfirm-buttons button {
+  border-radius: 0 !important;
+}
+/* Group checkbox */
+
+.Group-checkbox {
+  display: none;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+
+.Group-checkbox-label {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.groups .Group-checkbox input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.groups .group-checkmark {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 12px;
+  height: 25px;
+  width: 25px;
+  border-radius: 15px;
+  z-index: -1;
+}
+
+.groups .group-checkmark::after {
+  content: "";
+  position: absolute;
+  display: none;
+  animation: checkmark-appear 0.3s ease;
+}
+
+@keyframes checkmark-appear {
+  0% {
+    transform: rotate(45deg) scale(0);
+  }
+  75% {
+    transform: rotate(45deg) scale(1.5);
+  }
+  100% {
+    transform: rotate(45deg);
+  }
+}
+
+.groups .Group-checkbox input:checked ~ .group-checkmark::after {
+  display: block;
+}
+
+.groups .Group-checkbox .group-checkmark::after {
+  left: 9px;
+  top: 5px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+}
+
+/* Add group */
+
+.addGroupBlock {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: auto;
+  width: 100%;
+  padding: 100px 0;
+}
+
+.groups .icon-plus-circled {
+  font-size: 19px;
+  width: 27px;
+  height: 27px;
+  padding: 10px;
+  border-radius: 30px;
+  margin: 10px auto;
+}
+
+.groups #addGroup {
+  font-weight: 700;
+  width: 145px;
+  margin: auto;
+  text-align: center;
+}
+
+.groups #addGroupForm {
+  cursor: pointer;
+  position: relative;
+  order: -10000000000;
+}
+
+.groups #addGroupForm form {
+  display: none;
+}
+
+.groups fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.groups fieldset p {
+  text-align: center;
+}
+
+.addGroupFormLabelAndInput {
+  margin: 10px;
+  text-align: center;
+  margin-top: 18px;
+  position: relative;
+}
+
+.groups fieldset input[type="text"] {
+  margin: 10px;
+  padding: 10px;
+  display: inline-block;
+  width: 159px;
+}
+
+.groups button.submit {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 13px 20px;
+  border: none;
+  display: inline-block;
+}
+
+.groups #addGroupForm .actionButtons {
+  text-align: center;
+}
+
+.groups #addGroupForm .actionButtons a {
+  font-size: 12px;
+  border: none;
+  padding: 13px 9px;
+  font-weight: bold;
+  transition: all 125ms ease-out;
+}
+
+/* Group manager buttons */
+
+.groups .GroupManagerButtons {
+  text-align: center;
+  width: 190px;
+  height: 50px;
+  line-height: 50px;
+}
+
+.manage-permissions {
+  margin-bottom: 15px;
+}
+
+.groups .manage-users,
+.groups .manage-permissions {
+  font-size: 13px;
+  display: inline-block;
+}
+
+.groups .manage-users,
+.groups .manage-users:hover,
+.groups .manage-permissions,
+.groups .manage-permissions:hover {
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .GroupContainer .GroupManagerButtons {
+    display: none;
+  }
+
+  .GroupContainer:hover .GroupManagerButtons {
+    display: block;
+  }
+}
+
+

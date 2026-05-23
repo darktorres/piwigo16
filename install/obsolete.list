@@ -149,5 +149,7 @@ themes/admin/_base/fontello/css/fontello-ie7-codes.css
 themes/admin/_base/fontello/css/fontello-ie7.css
 themes/_base/vendor/fontello/css/gallery-icon-ie7-codes.css
 themes/_base/vendor/fontello/css/gallery-icon-ie7.css
+themes/_base/vendor/fontello/css/gallery-icon-codes.css
+themes/_base/vendor/fontello/css/gallery-icon-embedded.css
 themes/admin/_base/css/components/token-input.css
 obsolete.list

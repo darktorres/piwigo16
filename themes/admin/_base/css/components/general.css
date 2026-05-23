@@ -224,7 +224,7 @@ Info Framed
 
 .info-framed {
   display: flex;
-  border: #eee solid 2px;
+  border: var(--admin-border) solid 2px;
   padding: 20px;
   border-radius: 5px;
   margin: 0 10px;
@@ -240,7 +240,7 @@ a.info-framed:hover {
   font-size: 34px;
   margin-right: 20px;
   display: flex;
-  color: #3c3c3c;
+  color: var(--admin-text);
 }
 
 .info-framed-icon i {
@@ -258,7 +258,7 @@ a.info-framed:hover {
 }
 
 .info-framed-title {
-  color: #3c3c3c;
+  color: var(--admin-text);
   font-weight: bold;
 }
 

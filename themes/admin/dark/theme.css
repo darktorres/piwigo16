@@ -587,15 +587,6 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
   color: #c1c1c1;
 }
 
-.info-framed-title,
-.info-framed-icon {
-  color: #c1c1c1 ;
-}
-
-.info-framed {
-  border-color: #333 ;
-}
-
 /* Album edit */
 .move-cat-container:hover {
   background-color: #232323;

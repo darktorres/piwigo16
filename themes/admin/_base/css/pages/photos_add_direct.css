@@ -543,7 +543,7 @@ li.plupload_delete a:hover span {
   padding: 8px;
   padding-left: 35px;
   border-radius: 4px;
-  border-color: #ddd;
+  border: 1px solid var(--admin-input-border);
 }
 #set_date_creation {
   margin-top: 5px;

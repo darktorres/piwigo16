@@ -211,3 +211,28 @@
 .picture-modify-tomselect {
   width: calc(100% + 2px);
 }
+
+/* Relocated from pages/user-activity.css — linked-albums badge,
+   orphan-photo marker, invisible-related-categories-select.
+   Used by picture_modify.latte and batch_manager_unit.latte (shared
+   picture-modify chrome). */
+.linked-albums-badge {
+  padding: 2px 6px;
+  border-radius: 50px;
+  font-size: 10px;
+  transition: 0.3s;
+}
+
+.linked-albums-badge.badge-red {
+  background: #f00;
+  color: #fff;
+}
+
+.invisible-related-categories-select {
+  display: none;
+}
+
+.orphan-photo {
+  margin-left: 4px;
+  font-style: italic;
+}

@@ -962,6 +962,7 @@ input[name="position"] {
   transform: translateX(48%);
   box-shadow: 0 3px 3px 1px rgb(0, 0, 0, 0.2);
   padding: 10px 20px;
+  background: var(--admin-popin-bg);
 }
 
 .badge-dropdown::after {
@@ -972,6 +973,7 @@ input[name="position"] {
   transform: rotate(0);
   border-width: 5px;
   border-style: solid;
+  border-color: transparent transparent var(--admin-popin-bg);
 }
 
 .badge-dropdown span {

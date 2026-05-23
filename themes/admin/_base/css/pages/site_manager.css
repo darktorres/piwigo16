@@ -8,3 +8,16 @@
 #createSite p:first-of-type {
   margin-top: 0;
 }
+
+/* Relocated from pages/user-activity.css — site-update path display
+   (used by site_update.latte: `<div class="selectedAlbum site-url-path">`). */
+.site-url-path {
+  justify-content: flex-start;
+  display: flex;
+  width: max-content;
+  padding-left: 25px;
+}
+
+.site-url-path span {
+  margin-top: -10px;
+}

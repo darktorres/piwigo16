@@ -2605,3 +2605,24 @@ Advanced filter
 .notifications-tab-wip {
   margin: 0;
 }
+
+/* Relocated from pages/user-activity.css — Username / Registered
+   column-sort hover hints. Used by user_list.latte. */
+#usr-list-user,
+#usr-list-registered {
+  display: flex;
+}
+
+#usr-list-user:hover,
+#usr-list-registered:hover {
+  color: #f3a73b;
+  cursor: pointer;
+}
+
+#usr-list-user:hover #icon-usr-list-user {
+  display: block !important /* keep: JS-toggled visibility */;
+}
+
+#usr-list-registered:hover #icon-usr-list-registered {
+  display: block !important /* keep: JS-toggled visibility */;
+}

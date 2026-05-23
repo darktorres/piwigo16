@@ -32,19 +32,19 @@
 /* Structural rules unique to dark mode (not present in clear-search.css) */
 
 .help-popin-search {
-  color: #ccc;
+  color: var(--color-text);
 }
 
 .help-popin-search:hover {
-  color: #fff;
+  color: var(--color-text);
 }
 
 .search-input {
-  background: #555;
+  background: var(--color-border);
 }
 
 .search-input::placeholder {
-  color: #ccc;
+  color: var(--color-text);
 }
 
 .breadcrumb-item .link-path {
@@ -52,22 +52,22 @@
 }
 
 .modal-content {
-  background-color: #444;
+  background-color: var(--color-bg-elevated);
 }
 
 @media (max-width: 600px) {
   .filter-form {
     width: 100vw;
-    border-top: 1px solid #444 !important; /* keep: overrides border-top from clear-search.css */
-    border-bottom: 1px solid #444 !important; /* keep: overrides border-bottom */
+    border-top: 1px solid var(--color-bg-elevated) !important; /* keep: overrides border-top from clear-search.css */
+    border-bottom: 1px solid var(--color-bg-elevated) !important; /* keep: overrides border-bottom */
   }
 
   .arrow-border {
     fill: transparent;
-    stroke: #444 !important; /* keep: overrides SVG stroke from clear-search.css */
+    stroke: var(--color-bg-elevated) !important; /* keep: overrides SVG stroke from clear-search.css */
   }
 
   .arrow-fill {
-    fill: #333 !important; /* keep: overrides fill from clear-search.css */
+    fill: var(--color-bg-panel) !important; /* keep: overrides fill from clear-search.css */
   }
 }

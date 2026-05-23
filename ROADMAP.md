@@ -2691,11 +2691,14 @@ typed properties without `is_*` guards.
 (implementing `WsAction`) plus a `*Params` DTO (implementing `WsParams`)
 with a hand-rolled `public static function fromArray(array $raw): self`
 factory. As of 2026-05-23: **94 `*Handler.php` + 83 `*Params.php` files**
-under `src/Piwigo/Ws/Action/Pwg/<Domain>/`. Of the **99**
-`new MethodDefinition(...)` registrations, ~94 use the handler-class
-path (`handlerClass:`) and ~5 still use legacy callbacks; of the 94
-handler endpoints, 11 are zero-param and need no `*Params` companion
-(83 + 11 = 94). Representative example:
+under `src/Piwigo/Ws/Action/Pwg/<Domain>/`. `grep -rn 'new
+MethodDefinition' src/Piwigo` returns **99 hits across 4 files**;
+of those, ~1 hit is a doc-comment example in `MethodDefinition.php`
+itself and the remaining ~98 are real registrations. Within
+`WsMethodRegistrar.php`'s body, **94 use `handlerClass:` and 4 use
+the legacy `callback:` path**. Of the 94 handler endpoints, 11 are
+zero-param and need no `*Params` companion (83 + 11 = 94).
+Representative example:
 
 ```php
 // src/Piwigo/Ws/Action/Pwg/Images/AddCommentParams.php
@@ -2857,38 +2860,49 @@ Most carry a tight `@return list<TypedProjection>` or
 against — those call sites are already typed via PHPStan inference;
 the runtime declaration can't be tightened further because **PHP has no
 `list<T>` runtime type** (`list` is the destructuring keyword). The
-real sweep target is the minority of methods whose docblock is still
-`@return list<array<string, mixed>>` or `@return array<string, mixed>`
-or has no `@return` at all — at least 10 such methods across
-`HistoryRepository`, `SearchRepository`, `SiteRepository`,
-`ThemeRepository`, `ImageFormatRepository`, `TagRepository`. Each one
-needs a new Projection class.
+real sweep target is methods whose docblock is still
+`@return list<array<string, mixed>>` / `@return array<string, mixed>`
+(or has no `@return` at all): **31 such docblock occurrences across 18
+repository files** as of 2026-05-23. ⚠ Caveat: an unknown subset of
+these are **orphaned dead docblocks** — leftover `@return` annotations
+sitting above unrelated methods whose own docblock immediately follows
+(spot-checked in `Tag/TagRepository.php:192` and
+`Image/ImageRepository.php:316`, both orphans). The audit-first step
+must categorise each docblock as orphan / tuple-shape / real-attached.
 
-Concrete example of the tightening, using a real method in tree:
+Concrete example of the tightening, using a real attached method:
 
 ```php
-// Today — src/Piwigo/Tag/TagRepository.php:192
-/** @return list<array<string, mixed>> */
-public function findRawTagAdminRows(): array { /* fetchAllAssociative() pass-through */ }
-
-// After — caller receives typed projection; defensive guards at call sites drop
-/** @return list<TagAdminRow> */
-public function findRawTagAdminRows(): array
+// Today — src/Piwigo/Search/SearchRepository.php:159
+/**
+ * Date thresholds row (24h/7d/30d/3m/6m) for the "date_posted" widget.
+ *
+ * @return array<string, mixed>
+ */
+public function findDatePostedThresholds(): array
 {
-    return array_map(
-        TagAdminRow::fromRow(...),
-        $qb->executeQuery()->fetchAllAssociative(),
-    );
+    $rows = $this->conn->executeQuery(/* SELECT 5 date constants */)
+        ->fetchAllAssociative();
+    return $rows[0] ?? [];
 }
 
-// New file: src/Piwigo/Tag/Projection/TagAdminRow.php
-final readonly class TagAdminRow
+// After — caller receives typed projection; defensive `is_string` /
+// `is_numeric` guards at call sites drop
+public function findDatePostedThresholds(): ?DatePostedThresholds
+{
+    $rows = $this->conn->executeQuery(/* … */)->fetchAllAssociative();
+    return $rows === [] ? null : DatePostedThresholds::fromRow($rows[0]);
+}
+
+// New file: src/Piwigo/Search/Projection/DatePostedThresholds.php
+final readonly class DatePostedThresholds
 {
     public function __construct(
-        public int $id,
-        public string $name,
-        public string $urlName,
-        public int $counter,
+        public string $past24h,
+        public string $past7d,
+        public string $past30d,
+        public string $past3m,
+        public string $past6m,
     ) {}
 
     /** @param array<string, mixed> $row */
@@ -2918,11 +2932,17 @@ Before the sweep starts, bucket the 249 bare-`array` methods into:
   call per method.
 - **(c) Genuinely untyped** — `@return list<array<string, mixed>>`,
   `@return array<string, mixed>`, or no `@return` annotation. Work:
-  design and add a new Projection. These are the **only** methods that
-  meaningfully add to the Projection class count. Initial scan finds
-  at least 10 such methods across `HistoryRepository`, `SearchRepository`,
-  `SiteRepository`, `ThemeRepository`, `ImageFormatRepository`,
-  `TagRepository`.
+  design and add a new Projection. These are the **only** docblocks
+  that meaningfully add to the Projection class count. Initial scan
+  finds **31 such docblocks across 18 repository files** as of
+  2026-05-23 (`UserRepository` has 5 alone). The real method count is
+  lower — bucket (d) below explains why.
+- **(d) Orphaned dead docblocks** — `@return` annotations sitting
+  above an unrelated method whose own docblock immediately follows.
+  Confirmed in at least `Tag/TagRepository.php:192` and
+  `Image/ImageRepository.php:316`. Work: delete the dead docblock; no
+  Projection needed. These artificially inflate bucket (c)'s scan
+  count.
 
 This audit produces the **real** target count, replacing the original
 draft's fictional "21 entities" number. Output of the audit is a
@@ -2934,8 +2954,10 @@ follow-up sessions, one repository at a time.
 `fn (mixed $v)` lambdas at DB call sites: **291 occurrences across 95
 files** as of 2026-05-23 (drift from the original draft's 257). These
 get removed naturally as queries move into typed repository methods
-(`findIdsByCategory(): list<int>`, etc.) — no transitional helper API,
-but the count is a useful progress signal during the sweep.
+that return id-arrays (e.g. `: array` with `@return list<int>` so
+PHPStan infers the element type at call sites) — no transitional
+helper API, but the count is a useful progress signal during the
+sweep.
 
 ##### Migration order
 

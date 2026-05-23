@@ -2312,10 +2312,6 @@ li.plupload_delete a.remove-format:hover {
   background-color: #1b1b1b;
 }
 
-.filter-counter {
-  background-color: #ffa646 ;
-}
-
 .certification[data-certification="-1"] {
   background-image: url("images/certification/CertificationWarningDM.svg") ;
 }

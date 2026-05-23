@@ -1,0 +1,160 @@
+/* icons */
+fieldset#environment legend i[class*="icon-"] {
+  font-size: 14px;
+}
+
+#headActions a span {
+  display: none;
+}
+
+@media all and (min-width: 800px) {
+  #headActions a span {
+    display: inline;
+  }
+
+  #pwgHead .pwgHead-gallery-title {
+    width: calc(100% - 650px);
+  }
+
+  .admin-head-username {
+    display: inline;
+  }
+}
+
+.buttonLike,
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  font-size: 12px;
+  border: none;
+  padding: 13px 20px;
+  margin-left: 0;
+  font-weight: bold;
+  transition: all 125ms ease-out;
+  color: #493c21;
+  background-color: #ffa646;
+}
+
+.buttonLike:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+input[type="reset"]:hover {
+  cursor: pointer;
+  background-color: #f70;
+  text-decoration: none;
+  color: #493c21;
+}
+
+#cboxLoadedContent input[type="submit"] {
+  margin-bottom: 20px;
+  float: none;
+}
+
+#permissions,
+#uploadForm fieldset {
+  border: 0;
+}
+#permissions {
+  display: none !important;
+  margin-top: 35px;
+  margin-bottom: 20px;
+}
+#uploadForm fieldset:last-child {
+  margin-bottom: 20px;
+}
+
+.originalPicture .info-framed {
+  max-width: 400px;
+}
+
+.selectAlbum {
+  display: flex;
+}
+.selectAlbumSelector {
+  display: flex;
+  gap: 5px;
+}
+.icon-plus.cboxElement {
+  padding: 8px;
+  box-shadow: 0 1px 2px rgb(0, 0, 0, 0.16);
+  font-size: 15px;
+  margin-bottom: 8px;
+  transition: all 125ms ease-out;
+}
+.icon-plus.cboxElement:hover {
+  box-shadow: 0 2px 4px rgb(0, 0, 0, 0.16);
+}
+#albumSelection {
+  margin-right: 20px;
+}
+.selectize-control.single .selectize-input {
+  border-radius: 0;
+  font-weight: bold;
+  font-size: 12px;
+}
+.buttonLike {
+  padding: 8px 10px;
+  margin-left: 5px;
+}
+.changeUsername .buttonLike {
+  padding: 1px 10px;
+}
+.changePassword .buttonLike {
+  padding: 1px 10px;
+}
+.selectFilesButtonBlock {
+  display: flex;
+  margin-top: 10px;
+}
+.selectFilesinfo {
+  margin-left: 15px;
+  font-size: 90%;
+  color: #999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+#uploader {
+  margin-top: 25px;
+  font-weight: bold !important;
+}
+.plupload_filelist_header {
+  display: none;
+}
+.plupload_filelist {
+  scrollbar-width: thin !important;
+}
+.plupload_wrapper,
+.plupload_file_size {
+  font-weight: bold;
+}
+.plupload_filelist li {
+  background: none !important;
+  font-weight: bold;
+}
+li.plupload_delete a {
+  background: url("images/cancel.svg") !important;
+  background-size: cover !important;
+  width: 10px;
+  height: 10px;
+  margin-top: 3px;
+}
+li.plupload_delete a:hover {
+  background: url("images/cancelhover.svg") !important;
+  background-size: cover !important;
+}
+.plupload_file_status {
+  margin-right: 45px;
+}
+.plupload_file_size {
+  margin-right: 25px;
+}
+.plupload_total_file_size {
+  margin-right: -8px;
+}
+.plupload_total_status {
+  color: #707070 !important;
+  margin-right: -8px;
+  font-weight: bold;
+}
+

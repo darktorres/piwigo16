@@ -1,0 +1,251 @@
+/* Add padding bottom so nothing gets hidden by bottom save bar */
+#picture-content,
+#configContent,
+#menuOrdering,
+#categoryPermissions,
+#element_set_ranks,
+#update,
+#pendingComments,
+#action {
+  padding-bottom: 62px !important;
+}
+
+/* Search bar */
+
+.search-input {
+  padding: 10px;
+  box-shadow: 0 2px #00000024;
+  border: none;
+  background-color: #fafafa !important;
+  padding-left: 30px;
+  width: 200px;
+  margin: 4px;
+}
+
+.search-input:hover {
+  background-color: #f0f0f0 !important;
+}
+
+.search-info {
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translate(-100%, -50%);
+  font-style: italic;
+}
+
+.search-cancel {
+  display: none;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.4;
+  cursor: pointer;
+  position: absolute;
+  font-size: 18px;
+}
+
+.albumsFilter .search-cancel {
+  position: absolute;
+  top: auto;
+  right: auto;
+  transform: translateY(0);
+  font-size: 18px;
+  margin-left: 215px;
+  margin-top: 10px;
+}
+
+.search-cancel:hover {
+  opacity: 1;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  transform: translate(4px, -50%);
+  font-size: 18px;
+}
+
+.albumsFilter .search-icon {
+  position: absolute;
+  top: auto;
+  transform: translate(6px, 40%);
+  font-size: 18px;
+}
+
+/* Dropdown */
+
+.dropdown {
+  z-index: 100;
+  padding: 5px 0;
+  border-radius: 10px;
+  background: linear-gradient(130deg, #f70 0%, #ffa744 100%);
+  color: #fff;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.dropdown::after {
+  content: " ";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #f70;
+}
+
+#catOptionsSmall.dropdown::after {
+  content: " ";
+  position: absolute;
+  bottom: 15%;
+  left: 103%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #ffa33e;
+  transform: rotate(90deg);
+}
+
+.dropdown-content {
+  position: relative;
+}
+
+.dropdown-option:hover {
+  text-decoration: none;
+  color: #fff;
+  background-color: #00000012;
+}
+
+.badge-number {
+  border-radius: 20px;
+  background-color: #777;
+  font-size: 16px;
+  margin-left: 10px;
+  font-weight: 700;
+  position: absolute;
+  transform: translateY(3px);
+  text-align: center;
+  color: #ccc;
+  padding: 0 7px;
+}
+
+/* Pagination */
+.user-pagination {
+  margin: 0;
+  display: flex;
+  padding: 0;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.selected-pagination {
+  background: #ffa646;
+}
+
+.pagination-container {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-arrow {
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin: 5px;
+}
+
+.pagination-arrow.rigth {
+  transform: scale(-1, 1);
+}
+
+.pagination-arrow.unavailable {
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: none;
+}
+
+.pagination-item-container {
+  display: flex;
+  align-items: baseline;
+}
+
+.pagination-item-container > * {
+  margin: 5px;
+}
+
+.pagination-item-container span {
+  font-size: 20px;
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+.pagination-item-container a {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.pagination-item-container a.actual {
+  background-color: #ffa646;
+  border-radius: 15px;
+  pointer-events: none;
+  padding: 0 7px;
+  color: #493c21;
+}
+
+.pagination-per-page {
+  background-color: #fafafa;
+  border-radius: 10px;
+  display: flex;
+  font-size: 12px;
+  overflow: hidden;
+  font-weight: 700;
+  font-family: "Open Sans", "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
+  height: min-content;
+}
+
+.pagination-per-page * {
+  padding: 8px 9px;
+}
+
+.pagination-per-page span {
+  padding-left: 17px;
+  color: #bbb;
+  font-weight: bold;
+}
+
+.pagination-per-page a {
+  border: none;
+  color: #3a3a3a;
+}
+
+.pagination-per-page a:hover {
+  background-color: #ffd2a1;
+  color: #666;
+  text-decoration: none;
+}
+
+/* Waiting Message */
+
+.waiting-message {
+  position: fixed;
+  right: 0;
+  top: 0;
+  margin: 10px;
+  z-index: 1000;
+  background-color: #ffbd4d;
+  color: #fff;
+  padding: 20px;
+  font-weight: bold;
+  border-radius: 34px;
+  transform: translateY(calc(-100% - 10px));
+  transition: 0.5s ease;
+}
+
+.waiting-message.visible {
+  transform: translateY(80%);
+}
+

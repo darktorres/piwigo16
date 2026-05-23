@@ -13,7 +13,7 @@
 | 1.1  | Concrete bugs                 | ✅ **Done** ▸ 9 / 9    | —         | history pagination refactor shipped 2026-05-10 (6-query split + snapshot tests); cat-id gap closed without code change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | 1.2  | Templates pipeline            | ✅ **Done**            | XL        | waves 1+2+3 done — Smarty hygiene → 133/133 Latte conversion → deploy-time precompile (`composer precompile:templates`) + CI gate                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | 1.3  | Kill ServiceLocator + DI      | ✅ **Done**            | L         | constructor injection everywhere; `ServiceLocator.php` deleted; `DbConnection::get()` callers eliminated                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| 1.4  | Plugin / theme + WS           | ✅ **Done**            | L         | shipped 2026-05-16 in 19 batches (B0–B18) on `16.x-rewrite`: `PluginInterface` + `PluginRegistry`, 153 typed PSR-14 events, `ThemeInterface` + `ThemeRegistry`, 94 `#[ApiMethod]`-decorated WS endpoints + cebe/redocly OpenAPI gates, legacy runtime deleted                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 1.4  | Plugin / theme + WS           | ✅ **Done**            | L         | shipped 2026-05-16 in 19 batches (B0–B18) on `16.x-rewrite`: `PluginInterface` + `PluginRegistry`, ~160 typed PSR-14 events under `src/Piwigo/Event/`, `ThemeInterface` + `ThemeRegistry`, 95 WS endpoints registered via typed `MethodDefinition` and exposed as OpenAPI 3.1 (via `SpecBuilder`) with cebe/redocly CI gates, legacy runtime deleted. `#[ApiMethod]` attribute + SpecBuilder reflection wired but no endpoint yet decorates with it — per-domain decomposition deferred (see §1.4 Phase 3 follow-up)                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | 1.5  | Security hardening            | ✅ **Done**            | M         | shipped 2026-05-22 in 4 waves on `16.x-rewrite` (A: `SameSite=Lax`/`HttpOnly`/scheme-conditional `Secure` session cookie, B: `piwigo_user_failed_logins`+`LoginThrottle` lockout & `symfony/rate-limiter` sliding-window per-IP/per-account on form+WS-API, C: `SecurityHeadersMiddleware` CSP/XFO/XCTO/Referrer-Policy/Permissions-Policy/HSTS + `composer lint:no-inline-scripts` CI guard, D: `docs/SECURITY.md`) + 3 polish commits (`Http\RequestScheme` for `PIWIGO_TRUSTED_PROXIES` X-Forwarded-Proto/-For trust, `SecurityHeaders::emitDirect()` on install/upgrade/i fast paths, doc tightening). Deferred follow-ups inventoried under §1.5                                                                                                                              |
 | 1.6  | Type correctness              | 🟢 **Active** ▸ 4 / 13 | M         | 1.6b globals cleanup ✅ closed; 1.6a mixed-types 2 / 6 done (4 left); 1.6c schema metadata 0 / 5 done (1 moot)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 1.7  | Typed boundaries              | 🟡 **Not started**     | L         | HTTP request DTOs (Phase 1) → repository entity layer (Phase 2)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -50,8 +50,10 @@ Most sections are independent. The chains that aren't:
   being eliminated first. Both halves (bridge cleanup + renderer residuals)
   land together.
 - **1.7 typed boundaries.** §1.4 shipped first, so Phase 1 (HTTP request
-  DTOs) can now ride on `MethodDefinition` + the 94 `#[ApiMethod]`-decorated
-  WS endpoints rather than coordinating against an in-flight migration.
+  DTOs) can now ride on the 95 typed `MethodDefinition`-registered WS
+  endpoints rather than coordinating against an in-flight migration.
+  (`#[ApiMethod]` decoration of per-domain endpoint classes is wired
+  but deferred to a later §1.4 batch — Phase 1 doesn't need it.)
   Phase 2 (repository entity layer) closes out the globals work in §1.6b —
   `$user`, `$page` etc. become typed entity reads.
 - **1.8 test infrastructure.** Pest (1.8.1) lands first because it changes
@@ -781,14 +783,23 @@ grep -rn "DbConnection::get()" src/ tests/                              # → 0
 `16.x-rewrite` branch in 47 commits. **Effort:** L · 3 phases (delivered).
 
 **Delivered.** The full contract landed: `PluginInterface` +
-`PluginRegistry::bootActive()` + `plugin.json` schema (B7–B9), 153
-typed PSR-14 event DTOs + selective-mutability subscribers + 17 typed
-listeners (B1, B3–B6), `ThemeInterface` + `ThemeRegistry` +
-`TemplateResolver` with five bundled themes migrated to `theme.json`
-(B13–B14), 94 `#[ApiMethod]`-decorated WS endpoints + `SpecBuilder` +
-`/ws/openapi.json` + cebe-validated `SpecValidityTest` + redocly CI
-gate (B15–B16). Plus the legacy deletion pass (B17): ~2300 LOC of
-static `EventDispatcher`, `LoadedPluginRegistry`, `PluginService`,
+`PluginRegistry::bootActive()` + `plugin.json` schema (B7–B9), ~160
+typed PSR-14 event DTOs under `src/Piwigo/Event/**` (count rolls up
+as new events are added; 153 at B6 closure, 159 as of 2026-05-22) +
+selective-mutability subscribers + 17 typed listeners (B1, B3–B6),
+`ThemeInterface` + `ThemeRegistry` + `TemplateResolver` with five
+bundled themes migrated to `theme.json` (B13–B14), 95 WS endpoints
+registered via typed `MethodDefinition` in `WsMethodRegistrar` +
+`SpecBuilder` reflecting on those definitions to emit
+`/ws/openapi.json`, cebe-validated `SpecValidityTest` + redocly CI
+gate (B15–B16). The `#[ApiMethod]` attribute and SpecBuilder's
+`extractApiMethodAttribute` reflection are wired as infrastructure
+for a later per-domain shard-out of `WsMethodRegistrar` (currently a
+1413-LOC inline registration body — see comment at
+`src/Piwigo/Ws/WsMethodRegistrar.php:25-27`); no endpoint yet
+carries the attribute. Plus the legacy deletion pass (B17): ~2300
+LOC of static `EventDispatcher`, `LoadedPluginRegistry`,
+`PluginService`,
 `PluginMaintain`, `ThemeMaintain`, `tools/triggers_list.php`,
 frontend BC queues, and procedural plugin/theme stubs in
 `tools/phpstan-bootstrap.php` retired alongside their typed
@@ -1904,7 +1915,7 @@ layout the other adopts.
 
 #### Phase 3 — WS API enrichment
 
-**Status:** ✅ Done 2026-05-16 ▸ 94 `#[ApiMethod]`-decorated WS endpoints + cebe/redocly OpenAPI gates (see §1.4 parent summary above)
+**Status:** 🟢 Partially done 2026-05-16 ▸ CI-gate half shipped (95 WS endpoints typed via `MethodDefinition` + `SpecBuilder` → OpenAPI 3.1 at `/ws/openapi.json` + cebe-validated `SpecValidityTest` + redocly CI gate). The `#[ApiMethod]` attribute-decoration half is **deferred**: the attribute class at `src/Piwigo/Ws/OpenApi/ApiMethod.php` and SpecBuilder's `extractApiMethodAttribute` reflection are wired, but no endpoint method carries the attribute yet — `WsMethodRegistrar` still registers all 95 endpoints inline (see comment at `src/Piwigo/Ws/WsMethodRegistrar.php:25-27`). The two sub-tasks below split accordingly.
 
 Once plugin handlers are reflection-accessible classes (which they
 become as part of Phase 1), two follow-ups land.
@@ -2454,7 +2465,8 @@ the narrowing is supported by the runtime invariant.
 - **`EventDispatcher::dispatch` generic** was scoped against the
   static `Piwigo\Plugins\EventDispatcher` class. That class was
   deleted in §1.4 batch B17d and replaced by PSR-14 dispatch through
-  Symfony's `EventDispatcherInterface` with 153 typed event DTOs. The
+  Symfony's `EventDispatcherInterface` with ~160 typed event DTOs (159
+  as of 2026-05-22; rolls up as new events land). The
   dispatcher already returns the same instance the caller passed
   (PSR-14 contract), so the `@template T` win the original item
   promised is now structural — no annotation needed.
@@ -2842,8 +2854,10 @@ etc.). No transitional helper API.
 - §1.6b — globals cleanup closes once `UserRepository` returns a typed
   `UserEntity` and `CurrentUser::get()` exposes typed properties.
 - §1.4 — plugin/theme system shipped. Phase 1 DTOs can now lean on
-  `MethodDefinition` (registered via `WsMethodsRegistering`) and the
-  94 `#[ApiMethod]`-decorated endpoints for the request-payload sweep.
+  the 95 typed `MethodDefinition` registrations (via
+  `WsMethodsRegistering`) for the request-payload sweep. (`#[ApiMethod]`
+  per-domain decomposition is wired but deferred — Phase 1 DTOs key
+  off `MethodDefinition`, not the attribute.)
 - §1.8 (test infrastructure) — entity factories and DTO fixtures are
   good candidates for the early Pest/PHPUnit suite.
 

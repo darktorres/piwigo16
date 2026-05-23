@@ -41,7 +41,7 @@
   right: 0;
   top: 0;
   font-size: 18px;
-  z-index: 100;
+  z-index: var(--z-dropdown);
   background-color: #101010a0;
 }
 

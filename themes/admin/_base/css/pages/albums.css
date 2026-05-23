@@ -168,7 +168,7 @@
 
 .cat-move-order-popin {
   position: fixed;
-  z-index: 100;
+  z-index: var(--z-dropdown);
   left: 0;
   top: 0;
   width: 100%;
@@ -651,7 +651,7 @@ ul.pwgtree-tree .pwgtree-element {
 .DeleteAlbumPopIn,
 .RenameAlbumPopIn {
   position: fixed;
-  z-index: 100;
+  z-index: var(--z-dropdown);
   left: 0;
   top: 0;
   width: 100%;

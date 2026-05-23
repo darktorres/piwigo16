@@ -76,7 +76,7 @@
 /* Dropdown */
 
 .dropdown {
-  z-index: 100;
+  z-index: var(--z-dropdown);
   padding: 5px 0;
   border-radius: var(--radius-md);
   background: linear-gradient(130deg, #f70 0%, #ffa744 100%);

@@ -3,7 +3,7 @@
 #whats_new {
   display: none;
   position: fixed;
-  z-index: 100;
+  z-index: var(--z-dropdown);
   left: 0;
   top: 0;
   width: 100%;
@@ -277,7 +277,7 @@ a.stat-box:hover {
   opacity: 0.8;
   display: block;
   border-radius: 100%;
-  z-index: 100;
+  z-index: var(--z-dropdown);
   position: absolute;
   top: 50%;
   left: 50%;

@@ -720,7 +720,7 @@ p.error-message,
 .bg-modal {
   display: none;
   position: fixed;
-  z-index: 100;
+  z-index: var(--z-dropdown);
   left: 0;
   top: 0;
   width: 100%;

@@ -406,7 +406,7 @@
   margin-right: 223px;
   position: absolute;
   left: 50%;
-  z-index: 100;
+  z-index: var(--z-dropdown);
   transform: translateY(50px);
 }
 
@@ -425,7 +425,7 @@
 
 .RenameTagPopIn {
   position: fixed;
-  z-index: 100;
+  z-index: var(--z-dropdown);
   left: 0;
   top: 0;
   width: 100%;

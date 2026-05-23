@@ -566,22 +566,6 @@ final class Updates
         }
     }
 
-    public function processObsoleteList(string $file): void
-    {
-        if (file_exists($this->paths->root . $file)
-          and ($old_files = file($this->paths->root . $file, FILE_IGNORE_NEW_LINES)) !== false) {
-            $old_files[] = $file;
-            foreach ($old_files as $old_file) {
-                $path = $this->paths->root . $old_file;
-                if (is_file($path)) {
-                    Filesystem::tryUnlink($path);
-                } elseif (is_dir($path)) {
-                    $this->adminService->deltree($path, $this->paths->root . '_trash');
-                }
-            }
-        }
-    }
-
     public function upgradeTo(string $upgrade_to, int &$step, bool $check_current_version = true): ?string
     {
         $template = TemplateRegistry::current();
@@ -590,19 +574,14 @@ final class Updates
             $this->redirectResponder->redirect($this->urlGenerator->admin('updates'));
         }
 
-        $obsolete_list = null;
-
         if ($step == 2) {
             $code = AppInfo::branchFromVersion(AppInfo::VERSION).'.x_to_'.$upgrade_to;
             $dl_code = str_replace(['.', '_'], '', $code);
             $remove_path = $code;
-            // no longer try to delete files on a minor upgrade
-            // $obsolete_list = 'obsolete.list';
         } else {
             $code = $upgrade_to;
             $dl_code = $code;
             $remove_path = version_compare($code, '2.0.8', '>=') ? 'piwigo' : 'piwigo-'.$code;
-            $obsolete_list = $this->paths->root . 'install/obsolete.list';
         }
 
         if (empty(PageState::current()->errors)) {
@@ -658,10 +637,6 @@ final class Updates
                     }
 
                     if (empty($error)) {
-                        if (!empty($obsolete_list)) {
-                            $this->processObsoleteList($obsolete_list);
-                        }
-
                         $this->adminService->deltree($this->paths->root . Config::dataLocation() . 'update');
                         $this->userAdminService->invalidateUserCache(true);
                         $this->configService->confUpdateParam('piwigo_installed_version', $upgrade_to);

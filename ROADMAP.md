@@ -3297,9 +3297,16 @@ campaign promotes counts against the same F5-k psalm-info gate.
   - **F5-c** — rename `SessionService` → `SessionStore` (87 lines,
     6 call sites; cosmetic). `Session.php` typed wrapper itself is
     shipped (boundary 4). Out of §1.7 scope.
-  - **F5-h** — Result DTOs sparse (7 vs 83 Params); F5-PENDING lists
-    the same 11 zero-params endpoints I identified above as a
-    low-hanging chunk for 100% coverage. **§1.7 Phase 1 territory.**
+  - **F5-h Result DTOs** (scope-split from the master plan's
+    "F5-h": F5-PENDING expands the label to also cover Result DTO
+    adoption, which the master plan marks ✓ COMPLETE only for the
+    handler-class side). Result DTOs sparse: 7 vs 83 Params;
+    F5-PENDING lists the same 11 zero-params endpoints I identified
+    above as a low-hanging chunk for 100% coverage. **§1.7 Phase 1
+    territory.** Note the label collision: the master plan's "F5-h ✓
+    COMPLETE" (95/95 handlers migrated) and F5-PENDING's "F5-h Result
+    DTOs sparse" refer to different aspects of the same migration
+    code series.
   - **F5-i** — `SearchRules` deep adoption (200+ mixed accesses;
     `SearchFilterRenderer` is the #1 Psalm-info hotspot at 67 issues).
     Boundary 2 (Stored JSON). Out of §1.7 scope; load-bearing for the

@@ -70,65 +70,6 @@
   color: #000;
 }
 
-.AddUserPopInContainer,
-.AddAlbumPopInContainer,
-.DeleteAlbumPopInContainer,
-.RenameAlbumPopInContainer {
-  background-color: var(--admin-popin-bg);
-}
-
-.AddUserPopInContainer .AddIconTitle,
-.AddAlbumPopInContainer .AddIconTitle,
-.DeleteAlbumPopInContainer .DeleteIconTitle,
-.RenameAlbumPopInContainer .RenameAlbumTitle {
-  color: var(--admin-text-strong);
-}
-
-.AddUserPopInContainer .AddUserLabel,
-.AddAlbumPopInContainer .AddAlbumLabel,
-.DeleteAlbumPopInContainer .DeleteAlbumLabel {
-  color: var(--admin-text);
-}
-
-.AddUserPopInContainer .AddUserInput,
-.AddAlbumPopInContainer .AddAlbumInput,
-.AddAlbumPopInContainer .user-property-input,
-.DeleteAlbumPopInContainer .DeleteAlbumInput,
-.RenameAlbumPopInContainer .RenameAlbumInput,
-.RenameAlbumLabelUsername input {
-  background-color: var(--admin-popin-input-bg);
-  border: solid 2px var(--admin-popin-input-border);
-}
-
-.AddAlbumCancel,
-.RenameAlbumCancel {
-  color: var(--admin-text);
-  background-color: var(--admin-popin-cancel-bg);
-}
-
-.AddAlbumCancel:hover,
-.RenameAlbumCancel:hover {
-  color: var(--admin-text);
-  background-color: var(--admin-popin-cancel-bg-hover);
-}
-
-.AddAlbumSubmit,
-.RenameAlbumSubmit {
-  color: var(--admin-text);
-  background-color: var(--admin-accent-soft);
-}
-
-.AddAlbumSubmit:hover,
-.RenameAlbumSubmit:hover {
-  color: var(--admin-text);
-  background-color: var(--admin-accent);
-}
-
-.DeleteAlbumSubmit {
-  background-color: var(--admin-danger);
-  color: var(--admin-text-on-accent);
-}
-
 .site-url-path {
   justify-content: flex-start;
   display: flex;

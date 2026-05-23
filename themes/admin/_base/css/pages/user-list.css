@@ -1866,6 +1866,7 @@ a.group_users {
   align-items: center;
   width: 350px;
   max-height: 85vh;
+  background-color: var(--admin-popin-bg);
 }
 
 .AddUserScrollableContent {
@@ -1970,6 +1971,22 @@ a.group_users {
 .AddUserResult {
   padding: 10px;
   text-align: start;
+}
+
+/* Relocated from pages/user-activity.css — AddUser popin colors.
+   The popin-container bg was merged inline into the structural
+   .AddUserPopInContainer rule above. */
+.AddUserPopInContainer .AddIconTitle {
+  color: var(--admin-text-strong);
+}
+
+.AddUserPopInContainer .AddUserLabel {
+  color: var(--admin-text);
+}
+
+.AddUserPopInContainer .AddUserInput {
+  background-color: var(--admin-popin-input-bg);
+  border: solid 2px var(--admin-popin-input-border);
 }
 
 #UserList .item,

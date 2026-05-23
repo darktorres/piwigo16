@@ -693,6 +693,7 @@ ul.pwgtree-tree .pwgtree-element {
   border-radius: 15px;
   align-items: center;
   width: 270px;
+  background-color: var(--admin-popin-bg);
 }
 .DeleteAlbumPopInContainer {
   width: 40%;
@@ -730,6 +731,8 @@ ul.pwgtree-tree .pwgtree-element {
 .DeleteAlbumSubmit {
   border-radius: 4px;
   transition: 0.1s;
+  background-color: var(--admin-danger);
+  color: var(--admin-text-on-accent);
 }
 
 .AddAlbumCancel,
@@ -737,6 +740,8 @@ ul.pwgtree-tree .pwgtree-element {
   font-weight: bold;
   cursor: pointer;
   font-size: 1em;
+  color: var(--admin-text);
+  background-color: var(--admin-popin-cancel-bg);
 }
 
 .CloseAddAlbum,
@@ -845,6 +850,48 @@ input[name="position"] {
 .order-root-button-label p {
   white-space: nowrap;
   margin: 0;
+}
+
+/* Relocated from pages/user-activity.css — AddAlbum/DeleteAlbum/
+   RenameAlbum popin colors that didn't merge into an existing rule.
+   The popin-container bg, cancel-bg/cancel-fg, DeleteSubmit bg+fg
+   were merged inline into existing structural rules above. */
+.AddAlbumPopInContainer .AddIconTitle,
+.DeleteAlbumPopInContainer .DeleteIconTitle,
+.RenameAlbumPopInContainer .RenameAlbumTitle {
+  color: var(--admin-text-strong);
+}
+
+.AddAlbumPopInContainer .AddAlbumLabel,
+.DeleteAlbumPopInContainer .DeleteAlbumLabel {
+  color: var(--admin-text);
+}
+
+.AddAlbumPopInContainer .AddAlbumInput,
+.AddAlbumPopInContainer .user-property-input,
+.DeleteAlbumPopInContainer .DeleteAlbumInput,
+.RenameAlbumPopInContainer .RenameAlbumInput,
+.RenameAlbumLabelUsername input {
+  background-color: var(--admin-popin-input-bg);
+  border: solid 2px var(--admin-popin-input-border);
+}
+
+.AddAlbumCancel:hover,
+.RenameAlbumCancel:hover {
+  color: var(--admin-text);
+  background-color: var(--admin-popin-cancel-bg-hover);
+}
+
+.AddAlbumSubmit,
+.RenameAlbumSubmit {
+  color: var(--admin-text);
+  background-color: var(--admin-accent-soft);
+}
+
+.AddAlbumSubmit:hover,
+.RenameAlbumSubmit:hover {
+  color: var(--admin-text);
+  background-color: var(--admin-accent);
 }
 
 .badge-container {

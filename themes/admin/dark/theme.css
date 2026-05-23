@@ -1033,15 +1033,6 @@ table.qsearch_help_table td {
   border-color: #555;
 }
 
-.afterUploadActions a {
-  color: #3c3c3c;
-  font-weight: bold;
-  background-color: #ffa646;
-}
-.afterUploadActions a:hover {
-  text-decoration: none;
-  background-color: #f70;
-}
 .afterUploadActions a.secondary_button {
   background-color: #333;
   color: #777;

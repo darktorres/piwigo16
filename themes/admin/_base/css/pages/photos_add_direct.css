@@ -301,6 +301,19 @@ li.plupload_delete a:hover span {
   background: var(--admin-bg-page);
 }
 
+/* After-upload action buttons (identical in both themes for the
+   primary state; secondary_button stays in children — asymmetric). */
+.afterUploadActions a {
+  color: #3c3c3c;
+  font-weight: bold;
+  background-color: var(--admin-accent-soft);
+}
+
+.afterUploadActions a:hover {
+  text-decoration: none;
+  background-color: var(--admin-accent);
+}
+
 .permitActionListButton .actionButtons {
   display: flex;
   flex-direction: column;

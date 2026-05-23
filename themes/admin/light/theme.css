@@ -675,15 +675,6 @@ form#categoryOrdering p.albumActions .userSeparator {
   border: 1px solid #aaa;
   text-decoration: none;
 }
-.afterUploadActions a {
-  color: #3c3c3c;
-  font-weight: bold;
-  background-color: #ffa646;
-}
-.afterUploadActions a:hover {
-  text-decoration: none;
-  background-color: #f70;
-}
 .afterUploadActions a.secondary_button {
   background-color: #ececec;
 }

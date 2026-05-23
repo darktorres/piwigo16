@@ -294,3 +294,19 @@
   text-align: start;
   padding: 10px;
 }
+
+/* Relocated from pages/user-activity.css — .search-result-item is
+   the row template that album_selector.ts inserts (and that
+   picture_modify.ts / cat_modify.ts query) for category search
+   results. Used wherever an album selector renders, so it lives
+   alongside the album_selector component. */
+.search-result-item:hover {
+  background: #ffc17e;
+  color: #000;
+  cursor: pointer;
+}
+
+.search-result-item .notClickable {
+  opacity: 0.3;
+  color: #000;
+}

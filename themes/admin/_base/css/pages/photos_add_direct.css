@@ -908,6 +908,24 @@ li.plupload_delete a.remove-format:hover {
 
 /* Relocated from pages/user-activity.css — "promote to Piwigo.org"
    marketing block. Used by photos_add_direct.latte. */
+/* Relocated from pages/user-activity.css — "promote photo
+   management apps" tile rendered from photos_add_direct.latte:
+   <div class="promote-apps">. */
+.promote-apps {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+
+  padding: 15px;
+  margin: 0 20px 15px;
+  border-radius: 5px;
+
+  background: #f5d8b0;
+  position: relative;
+
+  box-shadow: 0 5px 10px 5px rgb(0, 0, 0, 0.1);
+}
+
 .promote-content {
   display: flex;
   flex-direction: row;

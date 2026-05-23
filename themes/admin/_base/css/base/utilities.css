@@ -331,3 +331,18 @@ table.dataTable thead th,
 table.dataTable.no-footer {
   border-color: var(--admin-border);
 }
+
+/* Relocated from pages/user-activity.css — "dismiss" link rendered
+   both by photos_add_direct.latte and intro_tooltips.ts on the
+   promote-newsletter tooltip. Shared dismissable-link utility. */
+.dont-show-again {
+  position: absolute;
+  color: #333;
+  top: 5px;
+  right: 5px;
+  font-size: 25px;
+}
+
+.dont-show-again:hover {
+  cursor: pointer;
+}

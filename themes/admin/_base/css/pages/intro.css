@@ -573,3 +573,70 @@ a.stat-box:hover {
 .eiw .messages .eiw-icon {
   margin-right: 10px !important; /* keep: overrides .eiw-icon default margin */
 }
+
+/* Relocated from pages/user-activity.css — newsletter promo block
+   created by intro_tooltips.ts (.promote-newsletter container). */
+.promote-newsletter {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+
+  border-radius: 5px;
+  margin: 0 20px 15px;
+
+  background: #f5d8b0;
+  position: relative;
+
+  box-shadow: 0 5px 10px 5px rgb(0, 0, 0, 0.1);
+}
+
+.promote-newsletter-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 2;
+
+  margin-left: 8.45%;
+  margin-right: 16.32%;
+}
+
+.promote-link {
+  color: #e18c32;
+  font-size: 15px;
+  margin-block: 3.5%;
+  font-weight: 700;
+}
+
+.promote-newsletter-title {
+  font-size: 24px;
+  font-weight: 700;
+  text-align: left;
+  margin-top: 3.5%;
+  margin-bottom: 1.75%;
+  color: #493c21;
+}
+
+.subscribe-newsletter {
+  font-size: 15px;
+  max-height: 17.5%;
+  display: flex;
+  gap: 4.64%;
+  margin-block: 1.75%;
+}
+
+.promote-image {
+  height: auto;
+  width: 25%;
+  object-fit: contain;
+}
+
+#newsletterSubscribeInput {
+  font-weight: 700;
+  background-color: #fff;
+  color: #000;
+  padding-inline: 4%;
+  padding-block: 2%;
+  border-radius: 2px;
+  border-width: 2px;
+  border-color: #d3d3d3;
+}

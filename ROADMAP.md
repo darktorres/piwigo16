@@ -2702,7 +2702,7 @@ typed properties without `is_*` guards.
 > | 5 | PSR-11 container     | ✗ — out of §1.7 scope | F5-b — `Container/*Factory.php` extraction from `config/container.php`'s 50+ inline closures |
 >
 > The end goal of the F5 plan is `psalm --show-info <50` (F5-k gate),
-> currently **1814** as of 2026-05-23. §1.7 contributes to that goal
+> currently **1796** as of 2026-05-23 (was 1814 earlier today; dropped 18 from the Psalm-error fixes in commit `dd15d9bf4`). §1.7 contributes to that goal
 > via its 2 phases but doesn't deliver the gate alone — the other 3
 > boundaries need to close as well.
 >

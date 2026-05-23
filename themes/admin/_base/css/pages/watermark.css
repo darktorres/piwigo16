@@ -37,7 +37,7 @@ input[type="text"].dError {
   background-color: #f00;
   color: #fff;
   padding: 0 5px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   font-weight: bold;
   cursor: help;
 }
@@ -55,7 +55,7 @@ input[type="text"].dError {
   background-color: #666;
   color: #fff;
   padding: 1px 5px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   margin-left: 5px;
 }
 
@@ -92,7 +92,7 @@ input[type="text"].dError {
   height: 286px;
   width: 220px;
   margin: 15px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   align-items: center;
   justify-content: space-between;
 }

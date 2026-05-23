@@ -97,7 +97,7 @@ td {
   margin-top: 3px;
   background-color: #3c3c3c;
   border: 2px solid #555;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   padding: 2px 6px;
   box-sizing: border-box;
 }
@@ -117,7 +117,7 @@ td {
   background-color: #ffa646;
   color: #493c21;
   padding: 5px 14px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 

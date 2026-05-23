@@ -63,7 +63,7 @@
   text-align: left;
   padding: 20px;
   flex-direction: column;
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   align-items: center;
   width: 400px;
   background: var(--search-popin-container-bg);
@@ -121,7 +121,7 @@
 .tags-found-container .tag-item,
 .albums-found-container .album-item {
   padding: 3px 6px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   max-width: 150px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -161,13 +161,13 @@
 }
 
 .filter-manager-popin label span {
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   padding: 5px 10px;
   border: 1px solid var(--search-checked-border);
 }
 
 .filter-manager-popin :checked + span {
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   padding: 5px 10px;
   border: 1px solid var(--search-checked-border);
   background: var(--search-checked-bg);
@@ -197,7 +197,7 @@
 .filter-validate {
   transition: 0.3s;
   cursor: pointer;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-size: 15px;
   font-weight: 600;
   padding: 4px 10px;
@@ -209,7 +209,7 @@
 .filter-cancel {
   transition: 0.3s;
   cursor: pointer;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-size: 15px;
   font-weight: 600;
   padding: 4px 10px;
@@ -224,7 +224,7 @@
 .mcs-container .filter {
   font-size: 15px;
   position: relative;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   padding: 3px 6px;
   cursor: pointer;
   display: none;
@@ -247,7 +247,7 @@
   position: absolute;
   z-index: 5;
   padding: 20px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   top: 35px;
   left: 0;
   cursor: default;
@@ -299,7 +299,7 @@
   margin: 0 0 10px;
   width: -moz-available;
   width: -webkit-fill-available;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   background: var(--search-word-bg);
   color: var(--search-word-color);
 }
@@ -451,14 +451,14 @@
 .preset_posted_date .date_posted-option label .date_posted-badge,
 .preset_created_date .date_created-option label .date_created-badge {
   margin-left: auto;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 0 5px;
   font-weight: 600;
 }
 
 .custom_posted_date .date_posted-option label .date_posted-badge,
 .custom_created_date .date_created-option label .date_created-badge {
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 0 5px;
   font-weight: 600;
 }
@@ -591,7 +591,7 @@
 .head-button-2 {
   position: relative;
   padding: 5px 12px 5px 8px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-weight: bold;
   display: flex;
   align-items: baseline;
@@ -622,7 +622,7 @@
 .breadcrumb-item {
   margin: 0 10px 5px 0;
   padding: 4px 8px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-weight: bold;
   display: flex;
   align-items: center;
@@ -946,7 +946,7 @@
   flex-direction: column;
   background-color: #fff;
   position: absolute;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   left: 50%;
   top: 50%;
   transform: translate(-50%, -48%);

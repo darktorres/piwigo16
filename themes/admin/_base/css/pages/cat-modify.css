@@ -15,7 +15,7 @@
 
 .desc-modal-content {
   position: absolute;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background-color: #fff;
   margin: auto;
   width: 75vw;
@@ -88,7 +88,7 @@
   flex-direction: column;
   background-color: #fff;
   position: absolute;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   left: 50%;
   top: 50%;
   transform: translate(-50%, -48%);
@@ -450,7 +450,7 @@
   font-size: 1.1em;
   background: #fafafa;
   box-shadow: 0 2px #00000024;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-weight: 400;
   cursor: pointer;
   box-sizing: border-box;
@@ -500,7 +500,7 @@
 }
 
 .savebar-footer-block .badge {
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   padding: 5px 10px;
   font-size: 12px;
   font-weight: 700;
@@ -576,7 +576,7 @@
   right: -10px;
   top: 45px;
   width: max-content;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 .comment-option span,
@@ -606,15 +606,15 @@
 .comment-option span:hover:first-child {
   color: #fff;
   background-color: #00000012;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
 }
 
 .comment-option span:hover:last-child {
   color: #fff;
   background-color: #00000012;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
 }
 
 .cat-modify-footer .spinner {

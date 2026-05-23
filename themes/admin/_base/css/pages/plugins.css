@@ -225,7 +225,7 @@
 }
 
 .plugin-version {
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   color: var(--admin-text-on-accent);
   padding: 0 5px;
   background: var(--admin-accent);
@@ -275,10 +275,10 @@
   padding: 15px;
   position: relative;
   border-left: solid 5px #ffc17e;
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
+  border-top-right-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
   /* border-right:solid 5px #fafafa; */
-  /* border-radius: 5px; */
+  /* border-radius: var(--radius-sm); */
 }
 
 .pluginName {
@@ -338,7 +338,7 @@
 
 .pluginTags > span {
   background-color: #e0e0e0;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 3px 10px;
   margin-right: 5px;
   margin-bottom: 5px;
@@ -385,7 +385,7 @@
   background-color: #ffc17e;
   font-weight: bold;
   padding: 2px 10px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 
 .pluginActionLevel1:hover {
@@ -403,7 +403,7 @@
   font-size: 12px;
   padding: 2px 10px;
   background-color: #dddd;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 
 .pluginUnavailableAction:hover {
@@ -423,7 +423,7 @@
 }
 
 .plugin-inactive .pluginBox {
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 
 .plugin-inactive .pluginContent .pluginActionLevel1 {
@@ -484,7 +484,7 @@
 .tab-filters label .filter-badge,
 .pluginTypeFilter label .filter-badge {
   font-weight: normal;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   text-align: center;
   padding: 0 7px;
   margin-left: 10px;
@@ -543,7 +543,7 @@
 .pluginMiniBox.plugin-inactive .pluginActionsSmallIcons a i {
   background: #ececec;
   color: #3c3c3c;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   padding: 2px;
   opacity: 0.7;
 }
@@ -551,7 +551,7 @@
 .pluginMiniBox.plugin-active .pluginActionsSmallIcons a i {
   background: #ececec;
   color: #3c3c3c;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   padding: 2px;
   opacity: 0.5;
 }
@@ -609,7 +609,7 @@
   width: 200px;
   height: 40px;
   margin: 5px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 .languageName {
@@ -688,7 +688,7 @@
 
   padding: 5px 2px;
   background: #ffc17e;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 
 .pluginBox.active .pluginActionsSmallIcons a span:hover {
@@ -698,7 +698,7 @@
 
   padding: 5px 2px;
   background: var(--admin-accent);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 
 .pluginBox.inactive .pluginActionsSmallIcons a span {
@@ -708,7 +708,7 @@
 
   padding: 5px 2px;
   background: #e0e0e0;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 
 .pluginActionsSmallIcons a:hover {
@@ -718,8 +718,8 @@
 .pluginBox {
   display: flex;
   margin: 0 15px 15px 0;
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
+  border-top-right-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
   box-shadow: 1px 1px 0 1px #e0e0e0;
   transition: 0.5s;
   position: relative;
@@ -975,7 +975,7 @@
 .cache-size-value {
   background: #ddd;
   padding: 1px 8px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-weight: bold;
 }
 
@@ -993,7 +993,7 @@
 .multiple-compiledTemplate-sizes {
   background: #ddd;
   padding: 1px 8px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-size: 10px;
   font-weight: bold;
   color: #777;

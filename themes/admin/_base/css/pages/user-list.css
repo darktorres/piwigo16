@@ -41,7 +41,7 @@
 
 #UserList .group-name-block .UserNumberBadge {
   padding: 3px 9px;
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   background-color: rgb(44, 132, 195);
   color: #cde9fd;
   font-size: 10px;
@@ -188,7 +188,7 @@
   color: #3c3c3c;
   text-align: left;
   padding: 5px 10px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: 1px solid #3c3c3c;
   font-weight: 700;
   font-size: 10px;
@@ -208,8 +208,8 @@
   font-size: 12px;
   text-align: left;
   padding: 4px 6px;
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
+  border-top-right-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
   margin-left: -5px;
   margin-right: 10px;
 }
@@ -392,7 +392,7 @@ a.group_users {
   height: 80px;
   background-color: #ffd9a7;
   font-weight: bold;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   margin-bottom: 20px;
 }
 
@@ -628,7 +628,7 @@ a.group_users {
   height: 50px;
 
   font-weight: bold;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   margin-bottom: 10px;
   transition: background-color 500ms linear;
   box-shadow: 0 2px 2px #00000024;
@@ -846,7 +846,7 @@ a.group_users {
 
 .UserListPopInContainer {
   background-color: var(--admin-bg-page);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   position: absolute;
   left: 50%;
   top: 50%;
@@ -1009,7 +1009,7 @@ a.group_users {
   right: 20px;
   background: linear-gradient(130deg, #f70 0%, #ffa744 100%);
   color: #fff;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 .dropdown-mores-plugins::after {
@@ -1242,7 +1242,7 @@ a.group_users {
   transform: translate(-50%, -48%);
   text-align: left;
   padding: 40px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   width: 280px;
 }
 
@@ -1289,7 +1289,7 @@ a.group_users {
   transform: translate(-50%, -48%);
   text-align: left;
   padding: 40px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   width: 280px;
 }
 
@@ -1574,7 +1574,7 @@ a.group_users {
   transform: translate(-50%, -50%);
   text-align: left;
   padding: 30px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   width: 300px;
   display: flex;
   flex-direction: column;
@@ -1811,7 +1811,7 @@ a.group_users {
   width: 745px;
   height: 635px;
   flex-direction: column;
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
 }
 
 .unavailable {
@@ -1840,7 +1840,7 @@ a.group_users {
   text-align: left;
   padding: 20px;
   flex-direction: column;
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   align-items: center;
   width: 350px;
   max-height: 85vh;
@@ -1977,15 +1977,15 @@ a.group_users {
   background-color: #ffa646;
   border-color: transparent;
 
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
 }
 
 #UserList .item .remove,
 #GuestUserList .item .remove,
 #AddUser .item .remove {
   background-color: transparent;
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
+  border-top-right-radius: var(--radius-xl);
+  border-bottom-right-radius: var(--radius-xl);
 
   border-left: 1px solid transparent;
 }
@@ -2167,7 +2167,7 @@ Advanced filter
 .UserViewSelector {
   padding: 6px 0;
   margin-right: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 
   position: absolute;
   z-index: 2;

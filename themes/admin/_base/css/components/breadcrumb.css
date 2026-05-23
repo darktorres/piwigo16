@@ -9,7 +9,7 @@
 .breadcrumb-item {
   margin: 0 10px 10px 12px;
   padding: 7px 10px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-weight: bold;
   display: flex;
   align-items: center;

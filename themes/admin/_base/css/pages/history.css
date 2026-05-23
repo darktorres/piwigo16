@@ -221,7 +221,7 @@
 .detail-item {
   margin: 0 10px 0 0;
   padding: 4px 8px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 
   max-width: 130px;
   height: 20px;
@@ -339,7 +339,7 @@
   left: 20px;
   top: -80%;
   width: max-content;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 .img-option span,
@@ -368,15 +368,15 @@
 .img-option a:hover:first-child {
   color: #fff;
   background-color: #00000012;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
 }
 
 .img-option a:hover:last-child {
   color: #fff;
   background-color: #00000012;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
 }
 
 .type-icon img {
@@ -422,7 +422,7 @@
 
 .summary-user-item {
   padding: 3px 6px;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   margin-left: 5px;
   cursor: pointer;
 }

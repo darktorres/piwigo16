@@ -128,7 +128,7 @@ div.jGrowl div.jGrowl-notification {
   font-size: 1em;
 
   display: none;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 
 .metasync-success {
@@ -142,7 +142,7 @@ div.jGrowl div.jGrowl-notification {
   background-color: #0a0;
   color: #fff;
   padding: 1px 5px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   margin-left: 5px;
 }
 

@@ -9,6 +9,6 @@
 .adminOnlyIcon {
   background-color: #ddd;
   padding: 2px 5px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-size: 90%;
 }

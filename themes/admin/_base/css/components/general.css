@@ -26,7 +26,7 @@ or
 .head-button-2 {
   position: relative;
   padding: 10px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-weight: bold;
   display: flex;
   align-items: baseline;
@@ -226,7 +226,7 @@ Info Framed
   display: flex;
   border: var(--admin-border) solid 2px;
   padding: 20px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   margin: 0 10px;
   align-items: center;
 }
@@ -277,7 +277,7 @@ Info
 .info-error {
   height: 35px;
   overflow: hidden;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   display: flex;
   padding: 0 10px 0 0;
   font-weight: bold;

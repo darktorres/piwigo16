@@ -205,7 +205,7 @@
   background-color: #ffa646;
   border-color: transparent;
   color: #000;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
 }
 
 .picture-modify-tomselect {

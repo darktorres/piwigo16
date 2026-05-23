@@ -58,7 +58,7 @@
   align-items: center;
   box-shadow: 0 2px 3px #00000024;
   background-color: #fafafa;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   color: #777;
   padding: 5px 10px;
   padding-left: 28px;
@@ -134,7 +134,7 @@
   top: 50%;
   width: 100%;
   height: 100%;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   transform: translate(50%, -50%);
   align-items: center;
   flex-direction: row-reverse;
@@ -180,7 +180,7 @@
 
 .cat-move-order-popin .order-popin-container {
   background-color: #f3f3f3;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   display: block;
   width: 25%;
   position: absolute;
@@ -404,7 +404,7 @@ ul.pwgtree-tree .pwgtree-element {
 .search-album-elem,
 .search-album-ghost div {
   height: 64px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   margin: 10px 20px;
   overflow: hidden;
 }
@@ -426,7 +426,7 @@ ul.pwgtree-tree .pwgtree-element {
 .search-album-elem {
   box-shadow: 0 2px 3px #00000024;
   background-color: #fafafa;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   color: #777;
   padding-left: 20px;
   display: flex;
@@ -587,7 +587,7 @@ ul.pwgtree-tree .pwgtree-element {
   font-size: 11px;
   font-weight: normal;
   border: 1px solid #777;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   padding: 4px 10px;
   cursor: pointer;
   margin-right: 7.5px;
@@ -619,7 +619,7 @@ ul.pwgtree-tree .pwgtree-element {
   transform: translate(-50%, -50%);
   animation: ripples 0.8s ease-out 0.3s;
   opacity: 0;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 
 .pwgtree-element {
@@ -671,7 +671,7 @@ ul.pwgtree-tree .pwgtree-element {
   text-align: left;
   padding: 20px;
   flex-direction: column;
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   align-items: center;
   width: 270px;
   background-color: var(--admin-popin-bg);
@@ -819,7 +819,7 @@ input[name="position"] {
 .album-add-button-label,
 .order-root-button-label {
   padding: 10px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-weight: bold;
   display: flex;
   align-items: baseline;
@@ -882,7 +882,7 @@ input[name="position"] {
 
 .badge-container i {
   padding: 2px 6px 2px 4px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   font-size: 0.85em;
   margin: 0 2px;
   font-weight: 700;
@@ -938,7 +938,7 @@ input[name="position"] {
   right: 50%;
   top: 30px;
   width: max-content;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   z-index: 10;
   transform: translateX(48%);
   box-shadow: 0 3px 3px 1px rgb(0, 0, 0, 0.2);

@@ -78,7 +78,7 @@
 .dropdown {
   z-index: 100;
   padding: 5px 0;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: linear-gradient(130deg, #f70 0%, #ffa744 100%);
   color: #fff;
   -moz-osx-font-smoothing: grayscale;
@@ -118,7 +118,7 @@
 }
 
 .badge-number {
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   background-color: #777;
   font-size: 16px;
   margin-left: 10px;
@@ -190,7 +190,7 @@
 
 .pagination-item-container a.actual {
   background-color: #ffa646;
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   pointer-events: none;
   padding: 0 7px;
   color: #493c21;
@@ -198,7 +198,7 @@
 
 .pagination-per-page {
   background-color: #fafafa;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   display: flex;
   font-size: 12px;
   overflow: hidden;

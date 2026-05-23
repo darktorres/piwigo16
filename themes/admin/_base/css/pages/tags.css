@@ -129,7 +129,7 @@
   color: #777;
   font-weight: bold;
   margin: 4px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 
 .tag-header .selection-controller a:hover,
@@ -444,7 +444,7 @@
   text-align: left;
   padding: 20px;
   flex-direction: column;
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   align-items: center;
   width: auto;
   min-width: 270px;
@@ -609,7 +609,7 @@
   border: none;
   background-color: #fff;
   box-shadow: 0 0 2px #c5c5c5;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 
 

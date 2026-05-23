@@ -4,7 +4,7 @@
 }
 
 .stat-data-selector {
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   display: flex;
   overflow: hidden;
   font-weight: bold;

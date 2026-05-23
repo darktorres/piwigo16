@@ -96,7 +96,7 @@ a#showPermissions:hover {
   width: 100%;
   max-width: 90%;
   padding: 0;
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   position: relative;
   height: 8px;
 }
@@ -353,7 +353,7 @@ li.plupload_delete a:hover span {
   color: #777;
   font-weight: bold;
   margin: 4px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 #checkActions a:hover {
   background-color: #ddd;
@@ -671,7 +671,7 @@ li.plupload_delete a:hover span {
 }
 #progressBar_pbImage {
   width: 300px;
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   height: 8px;
   margin-top: 5px;
   background-size: cover;
@@ -731,7 +731,7 @@ li.plupload_delete a:hover span {
   box-shadow: 0 2px #00000024;
   margin-top: 5px;
   padding: 7px 10px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-weight: bold;
   display: flex;
   align-items: center;
@@ -918,7 +918,7 @@ li.plupload_delete a.remove-format:hover {
 
   padding: 15px;
   margin: 0 20px 15px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 
   background: #f5d8b0;
   position: relative;

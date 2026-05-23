@@ -63,7 +63,7 @@ form#categoryOrdering p.albumActions .userSeparator {
   height: 320px;
   width: 220px;
   margin: 15px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -226,7 +226,7 @@ form#categoryOrdering p.albumActions .userSeparator {
   margin: 0 10px;
   font-size: 15px;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   color: #353535 !important; /* keep: overrides dark theme input color */
   background-color: #f3f3f3 !important; /* keep: overrides dark theme input bg */
 }
@@ -322,7 +322,7 @@ li.menuLi {
 .AlbumViewSelector {
   padding: 7px 0;
   margin-right: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 .AlbumViewSelector span {

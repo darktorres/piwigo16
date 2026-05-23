@@ -178,7 +178,7 @@ h3.related-tags-title {
 }
 
 .related-tag-condition {
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   margin: 2px 5px 0 15px;
   font-weight: 900;
   font-size: 20px;

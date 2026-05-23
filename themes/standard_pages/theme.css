@@ -65,7 +65,7 @@ html {
 #register-form,
 #password-form,
 .profile-section {
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   max-width: 400px;
   width: 75%;
   margin: 0 auto;
@@ -353,7 +353,7 @@ a.btn-main {
 
 #lang-select #other-languages {
   display: none;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   padding: 15px;
   box-shadow: 0 0 10px rgb(0, 0, 0, 0.15);
   margin-right: 11px;
@@ -436,7 +436,7 @@ p.error-message,
 .error_block {
   display: flex;
   background-color: #be4949;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   color: #ffc8c8;
   padding: 15px;
   position: relative;
@@ -742,7 +742,7 @@ p.error-message,
   display: flex;
   flex-direction: column;
   position: absolute;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   left: 50%;
   top: 50%;
   transform: translate(-50%, -48%);
@@ -852,7 +852,7 @@ input:checked + .slider::after {
   content: attr(data-tooltip);
   animation: fadeIn 100ms cubic-bezier(0.42, 0, 0.62, 1.32) forwards;
   animation-delay: 100ms;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   max-width: 100%;
   text-align: center;
   font-size: 12px;

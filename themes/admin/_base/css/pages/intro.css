@@ -20,7 +20,7 @@
   transform: translate(-50%, -50%);
   text-align: left;
   padding: 30px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   max-height: 90%;
 }
 
@@ -122,7 +122,7 @@
 }
 
 #whats_new_notification {
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   top: 2px;
   position: absolute;
   right: 42px;
@@ -294,7 +294,7 @@ a.stat-box:hover {
   background-color: var(--admin-popin-bg);
   padding: 10px;
   box-shadow: 0 0 5px #acacac;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   margin: 0;
   transition: ease 0.2s;
 }
@@ -341,7 +341,7 @@ a.stat-box:hover {
   font-weight: bold;
   padding: 0 5px;
   margin-bottom: 8px;
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   background: none !important; /* keep: overrides any inherited background */
 }
 
@@ -387,7 +387,7 @@ a.stat-box:hover {
 }
 
 .storage-chart {
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   width: 100%;
   overflow: hidden;
   position: relative;
@@ -581,7 +581,7 @@ a.stat-box:hover {
   flex-direction: column;
   justify-content: flex-end;
 
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   margin: 0 20px 15px;
 
   background: #f5d8b0;

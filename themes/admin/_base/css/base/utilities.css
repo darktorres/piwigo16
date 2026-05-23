@@ -332,6 +332,12 @@ table.dataTable.no-footer {
   border-color: var(--admin-border);
 }
 
+/* Relocated from pages/user-list.css — bold label utility shared
+   across user_list / tags / comments templates. */
+.thumbnailsActionsShow {
+  font-weight: bold;
+}
+
 /* Relocated from pages/user-activity.css — "dismiss" link rendered
    both by photos_add_direct.latte and intro_tooltips.ts on the
    promote-newsletter tooltip. Shared dismissable-link utility. */

@@ -1842,12 +1842,6 @@ li.plupload_delete a.remove-format:hover {
   color: #777;
 }
 
-.user-property-username-change-content,
-.user-property-password-change-content,
-.user-property-main-user-content {
-  background-color: #444;
-}
-
 .edit-password-success-reset-link,
 .user-property-input-icon {
   background-color: #505050 ;

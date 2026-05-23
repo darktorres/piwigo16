@@ -491,7 +491,7 @@ a.group_users {
 .user-property-username-change-content,
 .user-property-password-change-content,
 .user-property-main-user-content {
-  background-color: #fff;
+  background-color: var(--admin-bg-page);
 }
 
 .update-container {

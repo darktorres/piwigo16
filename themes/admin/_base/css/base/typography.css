@@ -183,6 +183,23 @@ label {
 
 legend {
   color: var(--admin-text);
+  text-align: left;
+  font-weight: bold;
+  font-size: var(--font-size-md);
+  margin: 10px 0;
+  padding: 0;
+}
+
+legend span {
+  padding: 4px;
+  border-radius: 100%;
+  margin-right: 6px;
+  font-size: var(--font-size-lg);
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  border: none;
 }
 
 .content dl,

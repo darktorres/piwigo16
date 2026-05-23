@@ -31,6 +31,12 @@
   --admin-h2-fg: #ccc;
   --admin-text-info: #666;
   --admin-text-info-hover: #999;
+  --admin-search-input-bg: #333;
+  --admin-search-input-bg-hover: #222;
+  --admin-pagination-bg: #555;
+  --admin-pagination-span-fg: #c1c1c1;
+  --admin-pagination-link-hover-bg: #888;
+  --admin-pagination-link-hover-fg: #444;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -170,34 +176,10 @@ a.Piwigo:hover span.Piwigo {
   background: #555;
 }
 
-/* Filter */
-
-.search-input {
-  background-color: #333 ;
-}
-
-.search-input:hover {
-  background-color: #222 ;
-}
-
-/* Pagination */
-
-.pagination-per-page {
-  background-color: #555;
-}
-
-.pagination-per-page span {
-  color: #c1c1c1;
-}
-
-.pagination-per-page a:hover {
-  background-color: #888;
-  color: #444;
-}
-
+/* .selected-pagination color stays here; base has no light counterpart yet
+   (see §3.1.bis cleanup batch). */
 .selected-pagination {
-  background: #ffa646 ;
-  color: #444 ;
+  color: #444;
 }
 
 

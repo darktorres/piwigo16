@@ -16,14 +16,14 @@
   padding: var(--space-sm);
   box-shadow: 0 2px #00000024;
   border: none;
-  background-color: #fafafa;
+  background-color: var(--admin-search-input-bg);
   padding-left: var(--space-xl);
   width: 200px;
   margin: 4px;
 }
 
 .search-input:hover {
-  background-color: #f0f0f0;
+  background-color: var(--admin-search-input-bg-hover);
 }
 
 .search-info {
@@ -197,7 +197,7 @@
 }
 
 .pagination-per-page {
-  background-color: #fafafa;
+  background-color: var(--admin-pagination-bg);
   border-radius: var(--radius-md);
   display: flex;
   font-size: var(--font-size-xs);
@@ -213,7 +213,7 @@
 
 .pagination-per-page span {
   padding-left: 17px;
-  color: #bbb;
+  color: var(--admin-pagination-span-fg);
   font-weight: bold;
 }
 
@@ -223,8 +223,8 @@
 }
 
 .pagination-per-page a:hover {
-  background-color: #ffd2a1;
-  color: #666;
+  background-color: var(--admin-pagination-link-hover-bg);
+  color: var(--admin-pagination-link-hover-fg);
   text-decoration: none;
 }
 

@@ -59,6 +59,16 @@
   --admin-text-info: #999;
   --admin-text-info-hover: #333;
 
+  /* search input (admin chrome) */
+  --admin-search-input-bg: #fafafa;
+  --admin-search-input-bg-hover: #f0f0f0;
+
+  /* pagination per-page control */
+  --admin-pagination-bg: #fafafa;
+  --admin-pagination-span-fg: #bbb;
+  --admin-pagination-link-hover-bg: #ffd2a1;
+  --admin-pagination-link-hover-fg: #666;
+
   /* disabled form controls */
   --admin-disabled-bg: #ececec;
   --admin-disabled-fg: #d5d5d5;

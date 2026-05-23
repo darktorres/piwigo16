@@ -1,9 +1,44 @@
-/* Non-color design tokens (Step 6 of ROADMAP-CSS §1).
-   Same names + values mirrored in themes/admin/_base/css/base/tokens.css.
+/* Design tokens for the public gallery.
+   Non-color tokens are mirrored in themes/admin/_base/css/base/tokens.css.
+   Color tokens default to the dark colorscheme (the gallery's default);
+   override in a future [data-theme=light] block if a light mode is added.
    Loaded via the @import chain in themes/_base/theme.css. */
 
 :root {
-  /* Spacing scale */
+  /* ── Color: brand / accent ───────────────────────────── */
+  --color-accent: #f70;
+  --color-accent-soft: #ffa646;
+  --color-accent-text: #493c21;
+
+  /* ── Color: surfaces ─────────────────────────────────── */
+  --color-bg-page: #1b1b1b;
+  --color-bg-panel: #2c2c2c;
+  --color-bg-input: #3c3c3c;
+  --color-bg-elevated: #444;
+
+  /* ── Color: foreground ───────────────────────────────── */
+  --color-text: #c1c1c1;
+  --color-text-muted: #777;
+  --color-text-disabled: #666;
+
+  /* ── Color: borders ──────────────────────────────────── */
+  --color-border: #555;
+  --color-border-accent: #f70;
+
+  /* ── Color: links ────────────────────────────────────── */
+  --color-link: var(--color-accent-soft);
+  --color-link-hover: var(--color-accent);
+  --color-link-border: #858460;
+
+  /* ── Color: status ───────────────────────────────────── */
+  --color-error-bg: #3a1a1a;
+  --color-error-fg: #f77;
+  --color-error-border: #f22;
+  --color-info-bg: #1a3a1a;
+  --color-info-fg: #7ecf7e;
+  --color-message-bg: #2c2c1a;
+
+  /* ── Spacing scale ───────────────────────────────────── */
   --space-xs: 5px;
   --space-sm: 10px;
   --space-md: 15px;

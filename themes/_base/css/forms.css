@@ -3,21 +3,24 @@
  * These are overridden by css/colors.css for the dark public-gallery theme.
  */
 
-/* Tables & forms */
+/* Tables & forms — light-fallback colors consumed via tokens;
+   dark overrides in colors.css set the same tokens to dark values
+   (but tokens.css defaults are already dark, so these light values
+   only matter if a future [data-theme=light] override is added). */
 input[type="text"],
 input[type="password"],
 input[type="button"],
 input[type="submit"],
 input[type="reset"],
 input[type="file"] {
-  color: #000;
-  background-color: #d3d3d3; /* lightgrey */
+  color: var(--color-text);
+  background-color: var(--color-bg-input);
 }
 
 select,
 textarea {
-  color: #000;
-  background-color: #d3d3d3; /* lightgrey */
+  color: var(--color-text);
+  background-color: var(--color-bg-input);
 }
 
 .content.messages {

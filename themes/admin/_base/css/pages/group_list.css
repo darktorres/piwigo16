@@ -4,6 +4,7 @@
 .groups .Group-name {
   position: relative;
   text-align: center;
+  color: var(--admin-text);
 }
 
 #EditGroupName {
@@ -145,6 +146,7 @@
   width: 25px;
   border-radius: var(--radius-lg);
   z-index: -1;
+  border: 2px solid var(--admin-accent-soft);
 }
 
 .groups .group-checkmark::after {

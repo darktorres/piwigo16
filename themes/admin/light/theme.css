@@ -99,13 +99,6 @@ a:focus {
   -moz-outline-width: 0;
 }
 
-.themeBox {
-  background-color: #fafafa;
-  box-shadow: 0 0 5px #acacac;
-}
-.themeName {
-  color: #000;
-}
 .themeActions span {
   background-color: #ddd;
 }
@@ -134,16 +127,6 @@ a:focus {
 
 .AlbumViewSelector {
   background: #fafafa;
-}
-.pluginName {
-  color: #111;
-}
-
-.languageBox {
-  background-color: #ddd;
-}
-.languageName {
-  color: #000;
 }
 .languageDefault {
   background-color: #dbe8f3;
@@ -255,10 +238,6 @@ p.albumTitle img {
 }
 
 /* Selection mode */
-
-.slider {
-  background-color: #e0e0e0;
-}
 
 .slider::before {
   background-color: #fff;
@@ -539,15 +518,6 @@ a#showPermissions {
 
 .cat-move-order-popin input[name="recursiveAutoOrder"] {
   background-color: #d9d9d9;
-}
-
-
-#whats_new_popin {
-  background-color: #fff;
-}
-
-.close_whats_new {
-  color: #fff;
 }
 
 

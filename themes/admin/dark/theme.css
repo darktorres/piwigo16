@@ -191,9 +191,6 @@ a.Piwigo:hover span.Piwigo {
   opacity: 1;
 }
 
-.themeName {
-  color: #ccc;
-}
 .themeSelect {
   background-color: #333;
   box-shadow: none;
@@ -239,21 +236,12 @@ a.Piwigo:hover span.Piwigo {
   background-color: #1b1b1b;
 }
 
-.pluginName {
-  color: #aaa;
-}
 /* .pluginActionLevel1 {color: #333;} */
 .pluginActionLevel2 {
   color: #bbb;
 }
 .pluginFilter input {
   border-color: #c1c1c1;
-}
-.languageBox {
-  background-color: #333;
-}
-.languageName {
-  color: #ccc;
 }
 .languageDefault {
   background-color: #555;
@@ -384,17 +372,6 @@ a.Piwigo:hover span.Piwigo {
   color: #bbb;
 }
 
-/* Edit group name */
-
-.groups .Group-name {
-  color: #777;
-}
-
-.groups .Group-name .Group-name-container p:focus {
-  border: 1px solid #303030 ;
-  background-color: #1a1a1a;
-}
-
 /* Add Group */
 
 /* Group Options */
@@ -427,10 +404,6 @@ a.Piwigo:hover span.Piwigo {
 }
 
 /* Selection mode */
-
-.slider {
-  background-color: #333;
-}
 
 .slider::before,
 .slider::after {
@@ -489,20 +462,6 @@ input:checked + .slider::after {
 .MergeOptionsContainer select {
   background-color: #1a1a1a;
   box-shadow: 0 0 2px #c5c5c5;
-}
-
-/* Group checkbox */
-
-.groups .group-checkmark {
-  border: 2px solid #c76a23;
-}
-
-.groups .Group-checkbox:hover input ~ .group-checkmark {
-  background-color: #c76a23;
-}
-
-.groups .Group-checkbox input:checked ~ .group-checkmark {
-  background-color: #c76a23;
 }
 
 .groups .Group-checkbox .group-checkmark::after {
@@ -1004,11 +963,6 @@ a#showPermissions {
 /* Popin Album Selector */
 .linkedAlbumPopInContainer .ClosePopIn {
   color: #444;
-}
-
-.themeBox {
-  background-color: #232323;
-  box-shadow: 0 0 5px #333;
 }
 
 .pluginActionLevel1,
@@ -1838,14 +1792,6 @@ a#showPermissions {
 
 .first-letter-capitalize::first-letter {
   text-transform: uppercase;
-}
-
-#whats_new_popin {
-  background-color: #3c3c3c;
-}
-
-.close_whats_new {
-  color: #3c3c3c;
 }
 
 #whats_new button {

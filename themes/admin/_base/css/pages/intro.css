@@ -22,6 +22,7 @@
   padding: var(--space-xl);
   border-radius: var(--radius-md);
   max-height: 90%;
+  background-color: var(--admin-bg-page);
 }
 
 .close_whats_new {
@@ -30,6 +31,7 @@
   top: -40px;
   font-size: 30px;
   transition: all 125ms ease-out;
+  color: var(--admin-text-on-accent);
 }
 
 #whats_new h3 {

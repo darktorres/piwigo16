@@ -288,6 +288,7 @@
 .pluginName {
   font-size: var(--font-size-md);
   font-weight: bold;
+  color: var(--admin-text);
 }
 
 .pluginName span {
@@ -602,10 +603,12 @@
   margin: var(--space-xs);
   border-radius: var(--radius-sm);
   overflow: hidden;
+  background-color: var(--admin-bg-elevated);
 }
 .languageName {
   font-size: 1.1em;
   margin: 5px 0;
+  color: var(--admin-text-strong);
 }
 .languageActions {
   display: table-row;

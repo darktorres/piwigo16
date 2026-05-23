@@ -73,7 +73,7 @@
   padding: 8px;
   margin-top: 5px;
   border-radius: 4px;
-  border-color: #ddd;
+  border: 1px solid var(--admin-input-border);
   transition: ease 0.2s;
   font-family: "Open Sans", "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
 }

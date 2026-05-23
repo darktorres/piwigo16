@@ -20,6 +20,7 @@
   --admin-popin-cancel-bg-hover: #1b1b1b;
   --admin-danger: #be4949;
   --admin-danger-hover: #6c2d2d;
+  --admin-input-border: #474747;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -521,7 +522,6 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
 #picture-content textarea,
 #picture-content select {
   background-color: #444;
-  border: 1px solid #666;
   color: #c1c1c1;
 }
 
@@ -2196,7 +2196,6 @@ li.plupload_delete a.remove-format:hover {
 .full-line-tag-box select,
 .calendar-input,
 .description-box {
-  border: 1px solid #474747;
   background-color: #333 ;
   color: #757575;
 }

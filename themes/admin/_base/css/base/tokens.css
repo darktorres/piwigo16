@@ -48,4 +48,7 @@
   /* destructive action (danger) */
   --admin-danger: #e74c3c;
   --admin-danger-hover: #c0392b;
+
+  /* form input border (batch manager unit, picture modify, etc.) */
+  --admin-input-border: #d3d3d3;
 }

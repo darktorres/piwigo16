@@ -3519,7 +3519,7 @@ npx playwright test
 
 ### 3.1 Design tokens + Stylelint
 
-**Status:** 🟢 Active ▸ 11 of 13 steps done · **Effort:** M · 2 live steps remain (12, 15)
+**Status:** ✅ Done ▸ all 13 steps shipped · **Effort:** M (delivered) · `declaration-no-important: warning` reinstated; 689 → 99 `!important` (−86%)
 
 #### Goal
 
@@ -3577,7 +3577,7 @@ npx playwright test
 ##### Already done
 
 Stylelint rule set, mechanical auto-fix, and inline-`<style>` extraction
-are already in place. **11 of 13 steps now done.** 2 live steps remain (12, 15):
+are already in place. **All 13 steps done** (steps 12 + 15 shipped 2026-05-22 in `fb33fcc31`):
 
 ##### Steps
 

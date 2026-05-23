@@ -143,4 +143,11 @@ themes/_base/vendor/fontello/font/fontello.woff
 themes/_base/vendor/fontello/font/fontello.woff2
 admin/cat_search.php
 themes/admin/_base/template/cat_search.tpl
+themes/admin/_base/fontello/css/fontello-codes.css
+themes/admin/_base/fontello/css/fontello-embedded.css
+themes/admin/_base/fontello/css/fontello-ie7-codes.css
+themes/admin/_base/fontello/css/fontello-ie7.css
+themes/_base/vendor/fontello/css/gallery-icon-ie7-codes.css
+themes/_base/vendor/fontello/css/gallery-icon-ie7.css
+themes/admin/_base/css/components/token-input.css
 obsolete.list

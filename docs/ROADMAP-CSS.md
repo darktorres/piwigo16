@@ -232,35 +232,58 @@ Replace `themes/_base/css/{search,clear-search,dark-search}.css` with a single `
 
 Each colorscheme supplies its `--search-*` variable set in its theme `:root` block. Drop the `{combine_css path="themes/_base/css/{$themeconf.colorscheme}-search.css"}` load in `themes/_base/template/include/search_filters.inc.tpl:3`. Net savings: ~500 lines.
 
-**Step 6 — Non-color design tokens at theme root.**
-Add a single `:root {}` token block at the top of `themes/_base/theme.css` (or its post-split `colors.css` / new `tokens.css`) and `themes/admin/_base/theme.css`:
+**Step 6 — Non-color design tokens at theme root.** ✅ Done
+(`3f0ae055d`, `9e9f01310`, `d01a55d98`, `5eb73cd4b`, `351f5449d`,
+`5480ad8b2`).
 
-```css
-:root {
-  --space-xs: 5px;
-  --space-sm: 10px;
-  --space-md: 15px;
-  --space-lg: 20px;
-  --space-xl: 30px;
-  --font-size-sm: 13px;
-  --font-size-base: 15px;
-  --font-size-lg: 20px;
-  --line-height-base: 1.5;
-  --radius-sm: 5px;
-  --radius-md: 10px;
-  --z-dropdown: 100;
-  --z-overlay: 500;
-  --z-modal: 1000;
-  --bp-sm: 576px;
-  --bp-md: 800px;
-  --bp-lg: 1100px;
-}
-```
+Shipped token set (lives in both `themes/_base/css/tokens.css` and
+`themes/admin/_base/css/base/tokens.css`):
 
-Replace hardcoded values throughout. Canonical breakpoints: `sm=576px md=800px lg=1100px` — adopt project-wide, add `/* Breakpoints: sm=576px md=800px lg=1100px */` header in every file that uses media queries.
+  - Spacing scale: `--space-xs` (5) / sm (10) / md (15) / lg (20) / xl (30)
+  - Font sizes: `--font-size-xs` (12) / sm (13) / md (14) / base (15) / lg (16) / xl (20)
+  - Line height: `--line-height-base` (1.5)
+  - Border radius: `--radius-sm` (5) / md (10) / lg (15) / xl (20)
+  - Z-index: `--z-dropdown` (100) / overlay (500) / modal (1000)
 
-**Step 7 — Color tokens for `themes/standard_pages/`.**
-Emit a `:root {}` color block at the top of `themes/standard_pages/theme.css` covering all hardcoded colors currently in the parent (accent, border, button bg/fg, focus ring, modal divider, etc.). Replace direct color literals in the parent with `var(--color-*)`.
+Migrations applied: border-radius (33 files, 138 declarations),
+font-size (38 files, ~218 declarations), padding/margin/gap with all
+12 longhand variants (57 files, 623 declarations), z-index: 100 (11
+files, 18 declarations).
+
+Deviations from the original spec:
+  - Added `--font-size-md` (14px) and `--font-size-lg` (16px) — actual
+    usage frequency demanded them (each ~50 occurrences).
+  - Added `--radius-lg` (15px) and `--radius-xl` (20px) — same reason.
+  - `--bp-*` breakpoint tokens NOT introduced. CSS `@media`
+    expressions can't substitute `var()` values, so the tokens would
+    be defined-only. Actual breakpoints don't cluster around the
+    canonical 576/800/1100 either; component-level breakpoints stay
+    as literals.
+  - `--line-height-base` defined but no current `line-height: 1.5`
+    callsites to migrate; available for future use.
+
+**Step 7 — Color tokens for `themes/standard_pages/`.** ✅ Done
+(`38beb8ced`).
+
+Extended the standard_pages `:root` block from 6 to 28 tokens.
+Migrated 57 of 59 hardcoded color literals in
+`themes/standard_pages/theme.css` to `var(--color-*)` references.
+
+Token groups (mirrored from the commit message):
+  - Surfaces & text (light + dark mode)
+  - Status (success/info/error in light + dark variants)
+  - Borders, dividers, accent variants
+  - Disabled / secondary button states
+
+The original 6 per-skin tokens (`--color-accent`,
+`--color-btn-primary-fg`, `--color-light-gradient`, `--color-dark-link`,
+`--color-dark-link-hover`, `--color-dark-header-link`) keep their
+per-skin override behavior — the 11 skin files continue to override
+only these. The 22 new tokens are constants across skins today; they
+sit in `:root` as named centralization points so future overrides are
+cheap. Two one-off literals stay hardcoded (a single 1-use muted
+color in the api section and one `color: #fff` on a light-mode close
+button).
 
 **Step 8 — Refactor `themes/standard_pages/skins/*.css` (eliminates ~220 `!important`).**
 With the token system in place each skin's only job is to override variable values. Transform each from ~337 lines of element-level overrides to a single `:root {}` block:

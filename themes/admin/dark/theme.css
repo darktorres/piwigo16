@@ -23,6 +23,11 @@
   --admin-input-border: #474747;
   --admin-disabled-bg: #666;
   --admin-disabled-fg: #555;
+  --admin-chart-blue: #4f71a4;
+  --admin-chart-purple: #4e5aa3;
+  --admin-chart-green: #50a48f;
+  --admin-chart-orange: #d47f44;
+  --admin-chart-red: #bc4b4a;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -318,35 +323,13 @@ a.stat-box:hover {
   border: none ;
 }
 
+/* charts: dark forces opacity 1 on the default-color cells (which
+   sit on top of the dark .storage-chart bg #1c1c1c, needing full
+   opacity for contrast). */
 .activity-chart span div,
 .storage-chart span:nth-child(5),
 .storage-chart-legend div:nth-child(5) span {
-  background-color: #bc4b4a;
   opacity: 1;
-}
-
-.activity-chart #week-1-legend ~ span div,
-.storage-chart span:nth-child(4),
-.storage-chart-legend div:nth-child(4) span {
-  background-color: #4f71a4;
-}
-
-.activity-chart #week-2-legend ~ span div,
-.storage-chart span:nth-child(3),
-.storage-chart-legend div:nth-child(3) span {
-  background-color: #4e5aa3;
-}
-
-.activity-chart #week-3-legend ~ span div,
-.storage-chart span:nth-child(2),
-.storage-chart-legend div:nth-child(2) span {
-  background-color: #50a48f;
-}
-
-.activity-chart #week-4-legend ~ span div,
-.storage-chart span:nth-child(1),
-.storage-chart-legend div:nth-child(1) span {
-  background-color: #d47f44;
 }
 
 .themeName {

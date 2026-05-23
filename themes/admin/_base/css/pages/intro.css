@@ -273,7 +273,7 @@ a.stat-box:hover {
 .activity-chart span div {
   height: 0;
   width: 0;
-  background-color: #ff5252;
+  background-color: var(--admin-chart-red);
   opacity: 0.8;
   display: block;
   border-radius: 100%;
@@ -370,19 +370,19 @@ a.stat-box:hover {
 }
 
 .activity-chart #week-1-legend ~ span div {
-  background-color: #2883c3;
+  background-color: var(--admin-chart-blue);
 }
 
 .activity-chart #week-2-legend ~ span div {
-  background-color: #896af3;
+  background-color: var(--admin-chart-purple);
 }
 
 .activity-chart #week-3-legend ~ span div {
-  background-color: #6ece5e;
+  background-color: var(--admin-chart-green);
 }
 
 .activity-chart #week-4-legend ~ span div {
-  background-color: #ffa744;
+  background-color: var(--admin-chart-orange);
 }
 
 .storage-chart {
@@ -540,27 +540,27 @@ a.stat-box:hover {
 
 .storage-chart span:nth-child(1),
 .storage-chart-legend div:nth-child(1) span {
-  background-color: #ffa744;
+  background-color: var(--admin-chart-orange);
 }
 
 .storage-chart span:nth-child(2),
 .storage-chart-legend div:nth-child(2) span {
-  background-color: #6ece5e;
+  background-color: var(--admin-chart-green);
 }
 
 .storage-chart span:nth-child(3),
 .storage-chart-legend div:nth-child(3) span {
-  background-color: #896af3;
+  background-color: var(--admin-chart-purple);
 }
 
 .storage-chart span:nth-child(4),
 .storage-chart-legend div:nth-child(4) span {
-  background-color: #2883c3;
+  background-color: var(--admin-chart-blue);
 }
 
 .storage-chart span:nth-child(5),
 .storage-chart-legend div:nth-child(5) span {
-  background-color: #ff5252;
+  background-color: var(--admin-chart-red);
 }
 
 /* Per-page additions */

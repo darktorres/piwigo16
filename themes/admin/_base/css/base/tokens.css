@@ -55,4 +55,11 @@
   /* disabled form controls */
   --admin-disabled-bg: #ececec;
   --admin-disabled-fg: #d5d5d5;
+
+  /* chart palette (activity-chart, storage-chart — categorical) */
+  --admin-chart-blue: #2883c3;
+  --admin-chart-purple: #896af3;
+  --admin-chart-green: #6ece5e;
+  --admin-chart-orange: #ffa744;
+  --admin-chart-red: #ff5252;
 }

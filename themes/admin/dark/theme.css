@@ -16,6 +16,10 @@
   --admin-popin-bg: #333;
   --admin-popin-input-bg: #252525;
   --admin-popin-input-border: #252525;
+  --admin-popin-cancel-bg: #252525;
+  --admin-popin-cancel-bg-hover: #1b1b1b;
+  --admin-danger: #be4949;
+  --admin-danger-hover: #6c2d2d;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -557,31 +561,6 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
 .RenameAlbumPopInContainer .RenameAlbumInput,
 .RenameAlbumLabelUsername input {
   outline: none;
-}
-
-.AddAlbumCancel,
-.RenameAlbumCancel {
-  color: #777;
-  background-color: #252525;
-}
-
-.AddAlbumCancel:hover,
-.RenameAlbumCancel:hover {
-  background-color: #1b1b1b;
-  color: #777;
-}
-.AddAlbumSubmit {
-  color: #493c21;
-  background-color: #ffa646;
-}
-
-.RenameAlbumSubmit {
-  color: #3f3e40;
-  background-color: #ffa646;
-}
-.AddAlbumSubmit:hover,
-.RenameAlbumSubmit:hover {
-  background-color: #f70;
 }
 
 /* Cat modify */
@@ -1193,18 +1172,15 @@ li.plupload_delete a.remove-format:hover {
   background-color: #777 ;
 }
 
-.jconfirm .jconfirm-box .jconfirm-buttons button.btn-red,
-.DeleteAlbumSubmit {
-  background-color: #be4949 ;
+.jconfirm .jconfirm-box .jconfirm-buttons button.btn-red {
+  background-color: var(--admin-danger);
 }
 
-.jconfirm .jconfirm-box.jconfirm-type-red,
-.DeleteAlbumPopInContainer {
-  border-top: 7px solid #be4949 ;
+.jconfirm .jconfirm-box.jconfirm-type-red {
+  border-top: 7px solid var(--admin-danger);
 }
-.jconfirm .jconfirm-box .jconfirm-buttons button.btn-red:hover,
-.DeleteAlbumSubmit:hover {
-  background: #6c2d2d ;
+.jconfirm .jconfirm-box .jconfirm-buttons button.btn-red:hover {
+  background: var(--admin-danger-hover);
 }
 
 .jconfirm.jconfirm-modern .jconfirm-box .jconfirm-buttons button + button {

@@ -102,31 +102,31 @@
 
 .AddAlbumCancel,
 .RenameAlbumCancel {
-  color: #3f3e40;
-  background-color: #f3f3f3;
+  color: var(--admin-text);
+  background-color: var(--admin-popin-cancel-bg);
 }
 
 .AddAlbumCancel:hover,
 .RenameAlbumCancel:hover {
-  color: #3f3e40;
-  background-color: #dedede;
+  color: var(--admin-text);
+  background-color: var(--admin-popin-cancel-bg-hover);
 }
 
 .AddAlbumSubmit,
 .RenameAlbumSubmit {
-  color: #3f3e40;
-  background-color: #ffa836;
+  color: var(--admin-text);
+  background-color: var(--admin-accent-soft);
 }
 
 .AddAlbumSubmit:hover,
 .RenameAlbumSubmit:hover {
-  color: #3f3e40;
-  background-color: #f70;
+  color: var(--admin-text);
+  background-color: var(--admin-accent);
 }
 
 .DeleteAlbumSubmit {
-  background-color: #e74c3c;
-  color: #fff;
+  background-color: var(--admin-danger);
+  color: var(--admin-text-on-accent);
 }
 
 .site-url-path {

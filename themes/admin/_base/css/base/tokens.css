@@ -40,4 +40,12 @@
   --admin-popin-bg: #fff;
   --admin-popin-input-bg: #fff;
   --admin-popin-input-border: #d4d4d4;
+
+  /* popin cancel button (neutral secondary action) */
+  --admin-popin-cancel-bg: #f3f3f3;
+  --admin-popin-cancel-bg-hover: #dedede;
+
+  /* destructive action (danger) */
+  --admin-danger: #e74c3c;
+  --admin-danger-hover: #c0392b;
 }

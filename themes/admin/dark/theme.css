@@ -669,22 +669,6 @@ a#showPermissions {
 .icon-plus.cboxElement:hover {
   border: 1px solid #aaa;
 }
-.plupload_filelist {
-  background-color: #444 ;
-  scrollbar-color: #555 #444 ;
-}
-.plupload_filelist li {
-  border-bottom: 1px solid #343434 ;
-  color: #a5a5a5 ;
-}
-.plupload_filelist_footer {
-  background-color: #3c3939 ;
-  border: 0 ;
-  color: #a5a5a5 ;
-}
-li.plupload_delete a.remove-format:hover {
-  color: #c0c0c0;
-}
 
 #cboxTitle {
   color: #7f7f7f ;
@@ -701,10 +685,6 @@ li.plupload_delete a.remove-format:hover {
   color: #777 ;
 }
 
-#uploadForm li.plupload_droptext {
-  background-color: #343434 ;
-  color: #777 ;
-}
 .selectAlbumFirst {
   background: #343434 ;
 }

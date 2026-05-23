@@ -1,31 +1,4 @@
 /* Upload Form (base — previously in _base/theme.css global) */
-/* Upload Form */
-.plupload_header {
-  display: none;
-}
-#uploadForm .plupload_container {
-  padding: 0;
-}
-#uploadForm .plupload_scroll .plupload_filelist {
-  height: 250px;
-  overflow-y: hidden;
-}
-#uploadForm li.plupload_droptext {
-  line-height: 230px;
-  font-size: 2em;
-}
-
-#uploadBoxes .file {
-  margin-bottom: var(--space-xs);
-  text-align: left;
-}
-#uploadBoxes {
-  margin-top: var(--space-lg);
-}
-#addUploadBox {
-  margin-bottom: 2em;
-}
-
 p.uploadInfo {
   text-align: left;
 }
@@ -42,13 +15,6 @@ p#uploadWarnings {
   font-size: 90%;
   color: #999;
 }
-p#uploadModeInfos {
-  text-align: left;
-  margin-top: 1em;
-  font-size: 90%;
-  color: #999;
-}
-
 #photosAddContent p.showFieldset {
   text-align: left;
   display: none !important /* keep: JS-toggled visibility */;
@@ -64,10 +30,6 @@ a#showPermissions:hover {
   text-decoration: none;
 }
 
-#uploadForm .plupload_buttons,
-#uploadForm .plupload_progress {
-  display: none !important /* keep: JS-toggled visibility */;
-}
 #uploadForm #startUpload {
   margin: 5px 0 15px 25px;
   padding: 8px 10px;
@@ -285,27 +247,6 @@ a#showPermissions:hover {
   margin-left: 13px;
   font-size: var(--font-size-base);
 }
-.plupload_filelist_footer {
-  display: none;
-}
-
-/* plupload delete-button (migrated from dark/light theme.css —
-   icons identical; span background tracks page bg in each theme). */
-li.plupload_delete a {
-  background: url("images/cancel.svg");
-  background-size: cover;
-}
-
-li.plupload_delete a:hover {
-  background: url("images/cancelhover.svg");
-  background-size: cover;
-}
-
-li.plupload_delete a span,
-li.plupload_delete a:hover span {
-  background: var(--admin-bg-page);
-}
-
 /* After-upload action buttons (identical in both themes for the
    primary state; secondary_button stays in children — asymmetric). */
 .afterUploadActions a {
@@ -397,10 +338,6 @@ li.plupload_delete a:hover span {
   margin-top: var(--space-lg);
   margin-left: 13px;
 }
-.filter_search_input {
-  padding: 10px 0;
-  width: 300px;
-}
 #permitAction {
   display: flex;
 }
@@ -460,7 +397,6 @@ li.plupload_delete a:hover span {
 #filter_level::before,
 .permitActionListButton div::before,
 #action_level::after,
-.pictureLevels::before,
 .user-property-select-container::before,
 .sort-by .select-container::before {
   content: "\e835";
@@ -473,10 +409,6 @@ li.plupload_delete a:hover span {
 .permitActionListButton div::before {
   margin-left: 250px;
   margin-top: 11px;
-}
-.pictureLevels::before {
-  margin-left: 216px;
-  margin-top: var(--space-sm);
 }
 .permitActionListButton div.hidden::after {
   display: none;
@@ -517,7 +449,6 @@ li.plupload_delete a:hover span {
 #applyFilter,
 #addFilter,
 #filterList select,
-.pictureLevels select,
 #permitAction select,
 .sort-by select {
   font-family: "Open Sans", "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
@@ -672,23 +603,11 @@ li.plupload_delete a:hover span {
   margin-top: 2.9px;
   margin-right: 7px;
 }
-#progressBar_pbImage {
-  width: 300px;
-  border-radius: var(--radius-lg);
-  height: 8px;
-  margin-top: var(--space-xs);
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-color: #f5f5f5;
-}
 #regenerationMsg {
   width: 360px;
 }
 #progressBar {
   display: flex;
-}
-#progressBar_pbText {
-  margin-left: var(--space-md);
 }
 #filter_search .icon-help-circled::before {
   margin-right: var(--space-xs);
@@ -757,23 +676,8 @@ li.plupload_delete a:hover span {
 
 /* Per-page additions */
 /* Add photos, direct mode (base — previously in _base/theme.css global) */
-#uploadBoxes p {
-  margin: 0;
-  margin-bottom: 2px;
-  padding: 0;
-}
-
 #batchLink {
   text-align: center;
-}
-
-.category_selection {
-  min-height: 65px;
-  margin-top: var(--space-xs);
-}
-
-.category_selection table {
-  margin: 0;
 }
 
 #photosAddContent {
@@ -839,53 +743,6 @@ li.plupload_delete a:hover span {
 .rotate-element {
   display: inline-block;
   transform: rotate(90deg);
-}
-
-#uploadFormSettings input[type="text"] {
-  text-align: right;
-}
-
-#uploadFormSettings th {
-  width: 50%;
-}
-
-.plupload_file_name span:not(.icon-eye) {
-  max-width: 180px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  display: inline-block;
-  overflow: hidden;
-}
-
-.plupload_file_name a {
-  margin-left: var(--space-xs);
-  position: relative;
-  bottom: 3px;
-}
-
-.plupload_file_name + a {
-  margin-left: 15%;
-}
-
-.update-warning {
-  margin-right: var(--space-xs);
-  color: #ed5f59;
-  text-decoration: underline;
-}
-
-.update-warning:hover {
-  color: #be4949;
-}
-
-li.plupload_delete a.remove-format {
-  margin-left: var(--space-xs);
-  background: none !important; /* keep: removes inherited button background from these link-styled elements */
-  color: #a4a4a4;
-}
-
-li.plupload_delete a.remove-format:hover {
-  background: none !important; /* keep: same reason as above */
-  text-decoration: none;
 }
 
 /* Per-page additions */

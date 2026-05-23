@@ -113,45 +113,6 @@ input[type="reset"]:hover {
   margin-top: 25px;
   font-weight: bold;
 }
-.plupload_filelist_header {
-  display: none;
-}
-.plupload_filelist {
-  scrollbar-width: thin !important /* keep: third-party specificity */;
-}
-.plupload_wrapper,
-.plupload_file_size {
-  font-weight: bold;
-}
-.plupload_filelist li {
-  background: none !important /* keep: third-party specificity */;
-  font-weight: bold;
-}
-li.plupload_delete a {
-  background: url("images/cancel.svg") !important /* keep: third-party specificity */;
-  background-size: cover !important /* keep: third-party specificity */;
-  width: 10px;
-  height: 10px;
-  margin-top: 3px;
-}
-li.plupload_delete a:hover {
-  background: url("images/cancelhover.svg") !important /* keep: third-party specificity */;
-  background-size: cover !important /* keep: third-party specificity */;
-}
-.plupload_file_status {
-  margin-right: 45px;
-}
-.plupload_file_size {
-  margin-right: 25px;
-}
-.plupload_total_file_size {
-  margin-right: -8px;
-}
-.plupload_total_status {
-  color: #707070 !important /* keep: third-party specificity */;
-  margin-right: -8px;
-  font-weight: bold;
-}
 
 /* view-selector icon defaults — relocated from pages/cat-list.css,
    pages/user-list.css, pages/plugins.css (identical in all three). */

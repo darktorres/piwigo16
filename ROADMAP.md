@@ -3237,8 +3237,10 @@ campaign promotes counts against the same F5-k psalm-info gate.
     6 short of the plan's "~10 enums" target).
   - **F5-b** — `resolve()` helper shipped (`src/Piwigo/Core/resolve.php`);
     factory classes still open per F5-PENDING.
-  - **F5-c** — `Session` VO shipped; `$_SESSION[` access now only in
-    `Session.php` + `FlashBag.php` (gate met); `SessionStore` rename open.
+  - **F5-c** — `Session` VO shipped; **`$_SESSION[` confinement gate
+    verified met 2026-05-23**: `grep -rln '\$_SESSION\[' src/Piwigo |
+    grep -vE 'Session\.php|FlashBag\.php'` returns nothing.
+    `SessionStore` rename still open (cosmetic).
   - **F5-d** — ✓ **substantially COMPLETE**: `Image` entity + 12 of
     14 enumerated sub-steps shipped (the plan claims "F5-d/1 through
     F5-d/14 all shipped" but its own bullet list only enumerates
@@ -3285,9 +3287,13 @@ campaign promotes counts against the same F5-k psalm-info gate.
     inception).
 - `docs/F5-PENDING.md` — live status of the F5 series, audited against
   the codebase (not git history). Open work as of 2026-05-23:
-  - **F5-b** — extract 50+ inline `factory(static fn …)` closures
-    from `config/container.php` into `src/Piwigo/Core/Container/*Factory.php`.
-    Boundary 5 (PSR-11). Out of §1.7 scope.
+  - **F5-b** — extract inline `factory(static fn …)` closures from
+    `config/container.php` into `src/Piwigo/Core/Container/*Factory.php`.
+    Boundary 5 (PSR-11). Out of §1.7 scope. ⚠ **Closure count drifted
+    up: F5-PENDING reports "50+", today is 118** (`grep -c 'factory(static fn'
+    config/container.php`). The `Core/Container/` directory still doesn't
+    exist — every planned Factory class is open work. F5-PENDING is
+    stale on the count.
   - **F5-c** — rename `SessionService` → `SessionStore` (87 lines,
     6 call sites; cosmetic). `Session.php` typed wrapper itself is
     shipped (boundary 4). Out of §1.7 scope.

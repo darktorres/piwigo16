@@ -20,6 +20,7 @@
             <directory>tests/Integration/Repository</directory>
             <directory>tests/Integration/Job</directory>
             <file>tests/Integration/ContainerSmokeTest.php</file>
+            <file>tests/Integration/FastPathHeadersTest.php</file>
             <file>tests/Integration/HistorySearchTest.php</file>
             <file>tests/Integration/WsApiTest.php</file>
         </testsuite>

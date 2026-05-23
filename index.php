@@ -15,6 +15,7 @@ use Piwigo\Core\LoggerRegistry;
 use Piwigo\Core\Paths;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
+use Piwigo\Http\SecurityHeaders;
 
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
@@ -42,6 +43,7 @@ if (str_starts_with($_qs, 'i/')) {
     ]);
     LoggerRegistry::set($logger);
     Kernel::bootMinimal($paths);
+    SecurityHeaders::emitDirect();
     Kernel::service(ImageDerivativeController::class)(RequestFactory::fromGlobals());
     exit;
 }
@@ -49,6 +51,7 @@ if (str_starts_with($_qs, 'i/')) {
 if (str_starts_with($_qs, 'install')) {
     // Install wizard — no DB yet; bypass the full boot pipeline.
     ConfigLoader::applyDefaults();
+    SecurityHeaders::emitDirect();
     (new InstallController($paths))(RequestFactory::fromGlobals());
     exit;
 }
@@ -59,6 +62,7 @@ if (str_starts_with($_qs, 'upgrade_feed')) {
     ConfigLoader::loadEnv($paths->root);
     ConfigLoader::applyEnvOverrides();
     Kernel::boot($paths);
+    SecurityHeaders::emitDirect();
     Kernel::service(UpgradeFeedController::class)(RequestFactory::fromGlobals());
     exit;
 }
@@ -72,6 +76,7 @@ if (str_starts_with($_qs, 'upgrade')) {
     ConfigLoader::loadEnv($paths->root);
     ConfigLoader::applyEnvOverrides();
     Kernel::boot($paths);
+    SecurityHeaders::emitDirect();
     Kernel::service(UpgradeController::class)(RequestFactory::fromGlobals());
     exit;
 }

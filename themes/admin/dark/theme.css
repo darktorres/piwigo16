@@ -937,9 +937,6 @@ table.qsearch_help_table td {
   color: #c0c0c0;
 }
 
-legend {
-  color: #c1c1c1;
-}
 a#showPermissions {
   color: #d6d6d6;
   border: 1px solid #d6d6d6;
@@ -969,12 +966,6 @@ li.plupload_delete a.remove-format:hover {
   color: #c0c0c0;
 }
 
-.addAlbumEmpty {
-  color: #c1c1c1;
-}
-.buttonSeparator {
-  color: #c1c1c1;
-}
 #cboxTitle {
   color: #7f7f7f ;
 }
@@ -2097,9 +2088,6 @@ li.plupload_delete a.remove-format:hover {
   color: #ae5d1e;
 }
 
-.linkedAlbumPopInContainer {
-  background-color: #444;
-}
 .AddIconTitle,
 .limitReached {
   color: #ccc;

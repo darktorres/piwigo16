@@ -173,6 +173,7 @@ a#showPermissions:hover {
 }
 
 .addAlbumEmpty {
+  color: var(--admin-text);
   text-align: center;
   position: absolute;
   top: 45%;
@@ -206,6 +207,7 @@ a#showPermissions:hover {
   padding: 20px;
 }
 .buttonSeparator {
+  color: var(--admin-text);
   font-weight: bold;
   text-transform: uppercase;
 }

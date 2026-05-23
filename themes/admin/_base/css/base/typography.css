@@ -186,9 +186,12 @@ h3,
 dt,
 .throw,
 .content,
-label,
-legend {
+label {
   color: var(--admin-text-muted);
+}
+
+legend {
+  color: var(--admin-text);
 }
 
 .content dl,

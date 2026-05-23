@@ -16,7 +16,7 @@
 | 1.4  | Plugin / theme + WS           | ✅ **Done**            | L         | shipped 2026-05-16 in 19 batches (B0–B18) on `16.x-rewrite`: `PluginInterface` + `PluginRegistry`, ~160 typed PSR-14 events under `src/Piwigo/Event/`, `ThemeInterface` + `ThemeRegistry`, 95 WS endpoints registered via typed `MethodDefinition` and exposed as OpenAPI 3.1 (via `SpecBuilder`) with cebe/redocly CI gates, legacy runtime deleted. `#[ApiMethod]` attribute + SpecBuilder reflection wired but no endpoint yet decorates with it — per-domain decomposition deferred (see §1.4 Phase 3 follow-up)                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | 1.5  | Security hardening            | ✅ **Done**            | M         | shipped 2026-05-22 in 4 waves on `16.x-rewrite` (A: `SameSite=Lax`/`HttpOnly`/scheme-conditional `Secure` session cookie, B: `piwigo_user_failed_logins`+`LoginThrottle` lockout & `symfony/rate-limiter` sliding-window per-IP/per-account on form+WS-API, C: `SecurityHeadersMiddleware` CSP/XFO/XCTO/Referrer-Policy/Permissions-Policy/HSTS + `composer lint:no-inline-scripts` CI guard, D: `docs/SECURITY.md`) + 3 polish commits (`Http\RequestScheme` for `PIWIGO_TRUSTED_PROXIES` X-Forwarded-Proto/-For trust, `SecurityHeaders::emitDirect()` on install/upgrade/i fast paths, doc tightening). Deferred follow-ups inventoried under §1.5                                                                                                                              |
 | 1.6  | Type correctness              | ✅ **Closed** ▸ 13 / 13 | M        | 1.6b closed; 1.6a ✅ closed (2026-05-23 — `RequestCache @template T` + imperative-cache refactor); 1.6c ✅ closed (2026-05-23): `sensitive`+`dumpForLog`, `required`+`MissingRequiredConfigException`, plugin-Config template, and `'description'` field on all 277 SCHEMA entries                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| 1.7  | Typed boundaries              | 🟡 **Not started**     | L         | HTTP request DTOs (Phase 1) → repository entity layer (Phase 2)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 1.7  | Typed boundaries              | 🟢 **Active** ▸ partly shipped under different names | L         | Phase 1: ~94/99 WS endpoints already use `WsAction`+`WsParams` (per §1.4 F5-h) — admin/web-side DTOs still open. Phase 2: ~55 narrow `Projection/*` classes already in tree — 249/646 bare-`array` repo returns + 291 `fn(mixed)` lambdas still to tighten.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | 1.8  | Test infrastructure           | 🟡 **Not started**     | M + L + S | Pest → coverage → Infection (chained)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | 1.9  | Deferred / on-demand          | 🟠 **On-demand**       | —         | Monolog · S3/SFTP · supervisor · Renovate · ScriptLoader dep graph                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | 1.10 | `PHPWG_ROOT_PATH` elimination | ✅ **Done**            | L         | shipped 2026-05-17 in 13 commits + 1 fix on `16.x-rewrite`: `Piwigo\Core\Paths` value object replaces the legacy global string, threaded through DI from `Paths::fromIndex(__FILE__)` in `index.php` → `Container::build($paths)` → service constructors; 195 reads across 72 files migrated; URL-context callers cleaned up (see [#33](docs/ROADMAP-PHP.md#33--eliminate-phpwg_root_path-global-replace-with-typed-paths))                                                                                                                                                                                                                                                                                      |
@@ -2661,7 +2661,7 @@ its current shape." The `SchemaIntegrityTest` line stays load-bearing.
 
 ### 1.7 Typed boundaries — HTTP input and DB rows
 
-**Status:** 🟡 Not started · **Effort:** L · 2 phases
+**Status:** 🟢 Active · **Effort:** L · 2 phases (both partly shipped)
 
 The codebase has two boundaries where untyped data crosses into the
 domain: HTTP input (`$_POST`/`$_GET` is `array<string, mixed>`) and DB
@@ -2670,223 +2670,283 @@ solved by the same architectural pattern: a single-cast factory at the
 boundary that produces a typed object, and business logic that consumes
 typed properties without `is_*` guards.
 
-This section was extracted from §1.6 because it's no longer tactical
-type tightening — it introduces new patterns, new vocabulary, and (for
-HTTP) new dependencies. It's comparable in scope to §1.2 (templates) or
-§1.4 (plugins).
+> **Status reconciliation (2026-05-23).** Both phases have partially
+> shipped under different names than the original §1.7 draft proposed:
+> the WS layer acquired `*Params` + `*Handler` per-endpoint classes via
+> §1.4 F5-h (~94/99 endpoints), and the repository layer grew ~55
+> narrow `Projection/*` classes with `fromRow()` factories. The
+> remaining work — admin/web-side DTOs and the bare-`array` repo-return
+> sweep — is described below using the established in-tree patterns
+> instead of the original ROADMAP's wide-`*Entity` / Symfony-Serializer
+> framing. This section is comparable in scope to §1.2 (templates) or
+> §1.4 (plugins).
 
 #### Phase 1 — Request DTO layer (HTTP boundary)
 
-**Status:** 🟡 Not started · ~30–50 DTOs · adds `symfony/serializer` + `symfony/validator`
+**Status:** 🟢 Active ▸ WS layer ~94/99 done · admin/web side open
 
-Per-action Request DTO classes with typed properties.
-`symfony/serializer` denormalizes `$_POST + $_GET` (or PSR-7 parsed
-body) into the DTO; `symfony/validator` runs attribute-based
-constraints. A small `PayloadFactory` glues them together — no
-HttpKernel required.
+##### Done — WS layer per-endpoint DTOs
+
+§1.4 F5-h shipped the per-endpoint pattern: each WS method has a
+`*Handler` (implementing `WsAction`) plus a `*Params` DTO (implementing
+`WsParams`) with a hand-rolled `public static function fromArray(array
+$raw): self` factory. As of 2026-05-23: **83 `*Params.php` + 94
+`*Handler.php` files** under `src/Piwigo/Ws/Action/Pwg/<Domain>/`,
+backing ~94 of the **99** `new MethodDefinition(...)` registrations
+(handful of legacy callback registrations remain). Representative
+example:
 
 ```php
-final readonly class CommentSubmitRequest
+// src/Piwigo/Ws/Action/Pwg/Images/AddCommentParams.php
+final readonly class AddCommentParams implements WsParams
 {
     public function __construct(
-        #[Assert\NotBlank]
-        #[Assert\Length(max: 5000)]
+        public int $imageId,
+        public string $author,
         public string $content,
-
-        #[Assert\Length(max: 100)]
-        public ?string $author,
-
-        #[Assert\Email]
-        public ?string $email,
-
-        #[Assert\Url]
-        public ?string $website,
-
-        #[Assert\NotBlank]
         public string $key,
     ) {}
-}
 
-final class PayloadFactory
-{
-    public function __construct(
-        private readonly DenormalizerInterface $serializer,
-        private readonly ValidatorInterface    $validator,
-    ) {}
-
-    /**
-     * @template T of object
-     * @param class-string<T> $class
-     * @param array<string, mixed> $source
-     * @return T
-     */
-    public function create(string $class, array $source): object
+    /** @param array<int|string, mixed> $raw */
+    #[\Override]
+    public static function fromArray(array $raw): self
     {
-        $payload = $this->serializer->denormalize($source, $class);
-        $violations = $this->validator->validate($payload);
-        if (count($violations) > 0) {
-            throw new InvalidPayloadException($violations);
-        }
-        return $payload;
+        $authorIn  = $raw['author']  ?? null;
+        $contentIn = $raw['content'] ?? null;
+        $keyIn     = $raw['key']     ?? null;
+        return new self(
+            imageId: is_numeric($raw['image_id'] ?? null) ? (int) $raw['image_id'] : 0,
+            author:  trim(is_string($authorIn) ? $authorIn : ''),
+            content: trim(is_string($contentIn) ? $contentIn : ''),
+            key:     is_string($keyIn) ? $keyIn : '',
+        );
     }
 }
 
-// Controller usage
-$req = $this->payloads->create(CommentSubmitRequest::class, $_POST + $_GET);
-$this->comments->submit($req);
+// AddCommentHandler::__invoke()
+$input = AddCommentParams::fromArray($params);
 ```
 
-##### Hybrid scope
+This is the same architectural shape the original §1.7 draft called for
+("typed object built at the boundary; business logic consumes typed
+properties"), with two deliberate differences: (a) no Symfony
+Serializer / Validator dependency — `fromArray()` is hand-rolled, and
+(b) validation lives inside the factory (defensive casts) rather than
+in attribute constraints. The WS-layer architectural choice is settled
+and not under review here.
 
-DTOs only for multi-field endpoints (admin forms, comment submission,
-picture upload, maintenance, batch manager). Keep `StringUtil::input*`
-for one-shot reads (`?image_id=42`) where a DTO is ceremony.
+##### Open — admin / web side
 
-Realistic estimate: 30–50 DTOs covering ~80% of the raw `$_POST` /
-`$_GET` reads — ~760 reads across ~55 files as of 2026-05-22 (was
-626 / 45 at the original audit; surface drifts up as new admin
-endpoints land). The long tail stays on the `StringUtil::input*`
-helpers.
+Admin controllers and page renderers still read `$_POST` / `$_GET`
+directly. As of 2026-05-23: **758 raw `$_POST` / `$_GET` reads across
+54 files** (was 626 / 45 at the original audit; surface drifts up as
+new admin endpoints land). The WS layer doesn't contribute to this
+count — handlers receive the params map from `PwgServer`, not the
+superglobals — so virtually all 758 reads are on the web/admin side.
 
-##### Optional follow-on: attribute auto-resolution
+Target classes for the sweep (representative, not exhaustive):
 
-A ~30-line ArgumentResolver in the existing dispatcher reads a
-`#[MapRequestPayload]` attribute on the controller signature and calls
-`PayloadFactory::create()` automatically. Pure ergonomics — same DTOs,
-same Serializer + Validator. Zero new dependencies.
+- `src/Piwigo/Controller/Admin/MaintenanceController.php`
+- `src/Piwigo/Controller/Admin/BatchManagerController.php`
+- `src/Piwigo/Controller/PictureController.php`
+- `src/Piwigo/Picture/PictureCommentRenderer.php` — multi-field comment
+  submission; the original §1.7 draft's `CommentSubmitRequest`
+  proof-of-pattern target still applies here (the WS equivalent
+  `AddCommentParams` already proves the shape).
+- The upload / maintenance / admin form controllers under
+  `src/Piwigo/Controller/Admin/` more generally.
+
+Keep `StringUtil::inputInt/inputString/inputBool` for one-shot reads
+(`?image_id=42`) where a DTO is ceremony. Realistic estimate (carried
+from original draft, still applicable): 30–50 web-side DTOs cover most
+multi-field admin / submission endpoints; the long tail stays on
+`StringUtil::input*`.
+
+##### Open architectural choice
+
+For the web-side sweep, two viable patterns:
+
+- **(a) Extend `WsParams::fromArray()`** to the web layer (with a
+  sibling marker interface or just freestanding `*Request` classes).
+  No new dependencies. Matches what already ships in the WS layer.
+- **(b) Adopt `symfony/serializer + symfony/validator`** for the web
+  layer only. Brings attribute-based validation (`#[Assert\Email]`,
+  `#[Assert\Length(max: 5000)]`, etc.), which is genuinely nicer for
+  admin forms with many constraints. Adds two dependencies that the
+  WS layer doesn't need.
+
+The original ROADMAP picked (b) without knowing (a) was already
+shipping in the WS layer. **Recommend defaulting to (a)** for
+consistency unless validator attributes prove worth the deps for
+admin forms specifically. Make this decision before the
+proof-of-pattern PR — it determines whether
+`PictureCommentRenderer` migration looks like `AddCommentParams` or
+like `CommentSubmitRequest` (the original draft snippet).
 
 ##### Deferred — HttpKernel adoption
 
 Full Symfony HttpKernel adoption (PSR-7 → HttpFoundation, kernel
 events, standard ArgumentResolver pipeline, exception → response flow)
 is a separate architectural decision. Not in scope for §1.7. With §1.4
-shipped, the codebase now has one event bus (Symfony EventDispatcher
+shipped, the codebase has one event bus (Symfony EventDispatcher
 behind PSR-14); HttpKernel adoption would add a second (request
-lifecycle). Revisit when there's a concrete need. The DTOs and
-`PayloadFactory` from Phase 1 carry over unchanged if that adoption
-ever happens.
+lifecycle). Revisit when there's a concrete need. The DTOs from
+Phase 1 carry over unchanged if that adoption ever happens.
 
 ##### Migration order
 
-1. Land `PayloadFactory` + first DTO (probably `CommentSubmitRequest`
-   in `PictureCommentRenderer`) as proof-of-pattern.
-2. Sweep multi-field admin endpoints (forms in `MaintenanceController`,
+1. Decide architectural pattern (a) vs (b) above.
+2. Land first web-side DTO + (if pattern b) `PayloadFactory` glue as
+   proof-of-pattern. `PictureCommentRenderer` is the natural first
+   target — the WS sibling `AddCommentParams` already exists for
+   cross-reference.
+3. Sweep multi-field admin endpoints (`MaintenanceController`,
    `BatchManagerController`, etc.).
-3. Sweep WS endpoint payloads (`ImagesEndpoints`, etc.) — now
-   `MethodDefinition`-based after §1.4 (B11) for all 95 endpoints.
-   (`#[ApiMethod]` per-endpoint decoration is wired but deferred —
-   §1.7 keys off `MethodDefinition`; the attribute can layer on
-   later without re-sweeping payloads.)
-4. Decide whether to add the optional attribute resolver based on how
-   repetitive `PayloadFactory::create()` calls feel in practice.
+4. *(If pattern b is chosen)* Optional follow-on: a ~30-line
+   ArgumentResolver in the dispatcher that reads `#[MapRequestPayload]`
+   on the controller signature and calls `PayloadFactory::create()`
+   automatically. Pure ergonomics, same dependencies. Decide based on
+   how repetitive explicit `create()` calls feel.
+
+> The `#[ApiMethod]` per-endpoint decoration is defined
+> (`src/Piwigo/Ws/OpenApi/ApiMethod.php`) and consumed by `SpecBuilder`,
+> but **0 endpoint classes currently carry it** as of 2026-05-23. Phase 1
+> doesn't depend on it — the attribute can layer onto WS endpoints
+> later under a §1.4 follow-on without re-sweeping any payloads.
 
 #### Phase 2 — Repository entity layer (DB boundary)
 
-**Status:** 🟡 Not started · 21 entities
+**Status:** 🟢 Active ▸ pattern in place · sweep open
 
-Every repository method returns a typed `*Entity` object instead of
-`array<string, mixed>`. `fromRow()` is the one place in the codebase
-where `is_scalar`/`is_numeric` guards appear — at the DB boundary —
-and nowhere else.
+##### Done — narrow `Projection/*` pattern shipped
+
+The repository layer adopted **narrow query-specific projections**
+rather than the wide-`*Entity` shape the original §1.7 draft proposed.
+As of 2026-05-23: **~55 `Projection/*` classes** in tree across
+`src/Piwigo/{Image,Category,Tag,User,Activity,Comment,Group,Notification,Rate,Auth,Telemetry}/Projection/`,
+backed by **64 `public static function fromRow(array $row): self`**
+factories (also covers `src/Piwigo/Common/Dto/`).
+
+Representative examples already in tree:
+
+- `src/Piwigo/Image/Projection/ImageDimension.php` —
+  `findDistinctDimensions()` row shape.
+- `src/Piwigo/Image/Projection/ImageSummaryRow.php` — sparse image row
+  for listing pages.
+- `src/Piwigo/Category/Projection/CategoryNamePermalink.php` — the
+  `(id, name, permalink)` projection used by admin pickers.
+
+This is the established pattern. New repository methods use it
+automatically; the open work is migrating the methods that pre-date
+the pattern.
+
+##### Open — bare-`array` repo-return sweep
+
+Of **646 public methods** across `src/Piwigo/**/*Repository.php`,
+**249 still return bare `array`** (`: array$` without a typed wrapper).
+Most carry a tight `@return list<TypedProjection>` or
+`@return list<array{key: type, …}>` docblock that PHPStan validates
+against — so the call sites are mostly typed already — but the runtime
+declared return type stays loose and call sites still need defensive
+narrowing in some places. The sweep tightens runtime declarations to
+match docblocks; only a minority of methods need a *new* Projection
+class.
+
+Concrete example of the tightening, using a method already in tree:
 
 ```php
-final readonly class ImageEntity
+// Today — src/Piwigo/Image/ImageRepository.php
+/** @return list<ImageDimension> */
+public function findDistinctDimensions(): array { … }
+
+// After — return type tightened, no docblock needed
+public function findDistinctDimensions(): list
 {
-    public function __construct(
-        public int     $id,
-        public string  $file,
-        public int     $hit,
-        public ?float  $ratingScore,
-        public ?string $dateAvailable,
-        public int     $width,
-        public int     $height,
-        public int     $filesize,
-        // … all columns
-    ) {}
-
-    /** @param array<string, mixed> $row */
-    public static function fromRow(array $row): self
-    {
-        return new self(
-            id:            (int)   ($row['id']            ?? 0),
-            file:          is_string($row['file']   ?? null) ? $row['file']   : '',
-            hit:           is_numeric($row['hit']   ?? null) ? (int) $row['hit']   : 0,
-            ratingScore:   is_numeric($row['rating_score'] ?? null) ? (float) $row['rating_score'] : null,
-            dateAvailable: is_string($row['date_available'] ?? null) ? $row['date_available'] : null,
-            width:         is_numeric($row['width']  ?? null) ? (int) $row['width']  : 0,
-            height:        is_numeric($row['height'] ?? null) ? (int) $row['height'] : 0,
-            filesize:      is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0,
-        );
-    }
+    return array_map(
+        ImageDimension::fromRow(...),
+        $qb->executeQuery()->fetchAllAssociative(),
+    );
 }
-
-final class ImageRepository extends AbstractRepository
-{
-    public function findById(int $id): ?ImageEntity
-    {
-        $row = $this->conn->createQueryBuilder()
-            ->select('*')->from($this->table('images'))
-            ->where('id = :id')->setParameter('id', $id)
-            ->executeQuery()->fetchAssociative();
-        return $row !== false ? ImageEntity::fromRow($row) : null;
-    }
-
-    /** @return list<ImageEntity> */
-    public function findByIds(array $ids): array
-    {
-        // …
-        return array_map(ImageEntity::fromRow(...), $rows);
-    }
-}
-
-// Caller — accesses typed properties, no guards needed
-// (ServiceLocator was deleted in §1.3; callers receive ImageRepository
-// via constructor injection on real controllers/services.)
-$image = $this->imageRepository->findById($id);
-if ($image === null) { /* not found */ }
-Lang::t('Visited %d times', $image->hit);          // int, no is_numeric guard
-Lang::t('%s', $image->file);                        // string, no is_string guard
-Lang::t('%d Kb', $image->filesize);                 // int, no is_numeric guard
 ```
+
+`ImageDimension` is already in `src/Piwigo/Image/Projection/`. The
+work is a single-file PR per repository: tighten return types, drop
+now-redundant `@return` annotations, baseline diff committed.
+
+##### Audit-first
+
+Before the sweep starts, bucket the 249 bare-`array` methods into:
+
+- **(a) Already tight** — docblock is `@return list<NamedProjection>`
+  or `@return list<int>` etc. Work: just retype the runtime
+  declaration. No new class.
+- **(b) Tuple-shape** — docblock is
+  `@return list<array{registration_month: int, registration_year: int}>`.
+  Work: optionally promote to a named Projection (nicer call sites,
+  more files); or leave the array-shape annotation. Judgment call.
+- **(c) Genuinely untyped** — docblock is
+  `@return list<array<string, mixed>>` or no `@return` annotation.
+  Work: design and add a new Projection. These are the only methods
+  that meaningfully add to the Projection class count.
+
+This audit produces the **real** target count, replacing the original
+draft's fictional "21 entities" number. Output of the audit is a
+revised Phase 2 task list; the migration itself runs as multiple
+follow-up sessions, one repository at a time.
+
+##### Companion: the mixed-lambda cleanup
+
+`fn (mixed $v)` lambdas at DB call sites: **291 occurrences across 95
+files** as of 2026-05-23 (drift from the original draft's 257). These
+get removed naturally as queries move into typed repository methods
+(`findIdsByCategory(): list<int>`, etc.) — no transitional helper API,
+but the count is a useful progress signal during the sweep.
 
 ##### Migration order
 
-One entity per table, repository-by-repository. Start with
-`ImageRepository` since its row shape touches the most callers
-(`CategoryDefaultRenderer`, `PictureController`, `BatchManagerController`,
-photo-admin pages). Each migration is a single PR: entity class,
-repository methods returning typed entities, callers updated to access
-typed properties, baseline diff committed.
+One repository at a time. `ImageRepository` remains the natural
+starter because its rows touch the most callers (`CategoryDefaultRenderer`,
+`PictureController`, `BatchManagerController`, the photo-admin pages).
+Each migration is a single PR: tightened return types, new Projection
+classes when needed, callers updated to access typed properties (where
+the old return type forced defensive guards), baseline diff committed.
 
-The 257 `fn (mixed $v)` lambdas at DB call sites get removed naturally
-as queries move into typed repository methods (`findIdsByCategory(): list<int>`,
-etc.). No transitional helper API.
+> **ServiceLocator** was deleted in §1.3 — callers receive their
+> repositories via constructor injection. Confirmed
+> 2026-05-23 (`find src -name 'ServiceLocator.php'` returns nothing,
+> grep for `ServiceLocator::` in `src/` returns nothing).
 
 #### Cross-references
 
-- §1.6a — tactical type tightening; lands first because it has no
-  blockers.
-- §1.6b — globals cleanup closes once `UserRepository` returns a typed
-  `UserEntity` and `CurrentUser::get()` exposes typed properties.
-- §1.4 — plugin/theme system shipped. Phase 1 DTOs can now lean on
-  the 95 typed `MethodDefinition` registrations (via
-  `WsMethodsRegistering`) for the request-payload sweep. (`#[ApiMethod]`
-  per-domain decomposition is wired but deferred — Phase 1 DTOs key
-  off `MethodDefinition`, not the attribute.)
-- §1.8 (test infrastructure) — entity factories and DTO fixtures are
-  good candidates for the early Pest/PHPUnit suite.
+- §1.6a — tactical type tightening; ✅ closed 2026-05-23. Cleared the
+  ground for the Phase 2 sweep.
+- §1.6b — globals cleanup; ✅ closed 2026-05-16 via Wave A reference-
+  bridge cleanup and the Phase 3 channel migration. It did **not**
+  depend on a typed `UserEntity` (the original §1.7 cross-ref to this
+  effect was stale and has been corrected).
+- §1.4 — plugin/theme system shipped. WS handler-class migration
+  (F5-h) gave Phase 1 its WS-side win; the remaining web-side sweep
+  is independent. `#[ApiMethod]` decoration is wired but undecorated
+  on endpoint classes — orthogonal to §1.7.
+- §1.8 (test infrastructure) — Projection fixtures and web-side DTO
+  factories are good candidates for the early Pest/PHPUnit suite.
 
 #### Verification
 
-Per phase:
+Per migration PR:
 
-- PHPStan/Psalm baseline diff per DTO or per repository; removed
-  baseline lines are direct evidence.
+- PHPStan / Psalm baseline diff — removed baseline lines are direct
+  evidence the tightening was real.
 - Snapshot test of one full request path through the new boundary
-  (e.g., comment submission round-trip for Phase 1; a typed
-  `ImageRepository::findById()` consumer for Phase 2).
+  (e.g. comment submission round-trip for Phase 1; a typed
+  `ImageRepository::findById()` consumer for Phase 2 — adapt to
+  whatever the migrated repo exposes).
 - `composer analyse && composer test && composer lint` clean after
   each migration.
+- For Phase 2: `tools/openapi-dump.php` runs clean and
+  `composer test:parallel` passes — the WS spec generator reads
+  repository return types reflectively and can surface regressions
+  the unit suite misses.
 
 ---
 

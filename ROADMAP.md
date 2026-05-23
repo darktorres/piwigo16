@@ -3227,7 +3227,7 @@ campaign promotes counts against the same F5-k psalm-info gate.
     Boundary 2 (Stored JSON). Out of §1.7 scope; load-bearing for the
     F5-k psalm-info gate.
   - **F5-k** — acceptance gates: `psalm --show-info <50` (currently
-    **1814**), `grep 'is_array(.* ?? null)' src/` count = 0 (currently
+    **1796**), `grep 'is_array(.* ?? null)' src/` count = 0 (currently
     154), every `@psalm-suppress` / `@phpstan-ignore` has rationale
     (28 sites need re-audit).
   Suggested order per F5-PENDING: F5-i → F5-h → F5-b → F5-c → residue.
@@ -3242,12 +3242,12 @@ doesn't apply for errors. Errors-only state (2026-05-23): PHPStan
 clean, Psalm clean (fixed in commit `dd15d9bf4` as a §1.7 prerequisite).
 
 **Info-level signal exists separately.** `psalm --show-info` reports
-**1815 informational issues** today; the F5-k acceptance gate in
+**1796 informational issues** today; the F5-k acceptance gate in
 `docs/F5-PENDING.md` targets `<50`. Top hotspots:
 `SearchFilterRenderer.php` (67), `CategoryRepository.php` (57),
 `SectionInitializer.php` (56), `TelemetryService.php` (55) — the
 SearchRenderer one alone is load-bearing for F5-i (deep `SearchRules`
-adoption). §1.7 migrations should not increase the 1815 count and
+adoption). §1.7 migrations should not increase the 1796 count and
 should opportunistically reduce it.
 
 Replacement evidence per migration PR:

@@ -79,10 +79,6 @@ ul.thumbnails span.wrap2 {
   background-color: transparent;
 }
 
-.tagSelection li.tagSelected {
-  background-color: #dbe8f3;
-}
-
 ul.thumbnails input {
   color: #666;
   font-size: 10px;
@@ -229,10 +225,6 @@ ul.thumbnails li.rank-of-image {
   font-weight: bold;
 }
 
-.selectedComment {
-  background-color: #c2f5c2;
-}
-
 #pwgMain {
   padding-left: 0;
 }
@@ -245,14 +237,11 @@ p.albumTitle img {
   margin-bottom: -3px;
 }
 
-.groups .GroupContainer,
-.groups .showCreateGroup,
-.groups .addGroupFormBlock {
+.groups .GroupContainer {
   box-shadow: 0 2px 5px #00000024;
 }
 
-.groups #addGroupForm:hover #addGroup,
-.groups .addGroupFormTitle {
+.groups #addGroupForm:hover #addGroup {
   color: #3c3c3c;
   text-decoration: none;
 }
@@ -422,20 +411,6 @@ input:focus + .slider {
   color: #444;
 }
 
-form#categoryOrdering p.albumTitle a {
-  color: #5b5b5b;
-}
-form#categoryOrdering p.albumActions a {
-  border-left: 1px solid #d6d6d6;
-  background-color: #e8e8e8;
-}
-form#categoryOrdering p.albumActions a:hover {
-  background-color: #ffa844;
-  color: #3a3a3a;
-}
-form#categoryOrdering p.albumActions .userSeparator {
-  border: 1px solid #e1e1e1;
-}
 .afterUploadActions a.secondary_button {
   background-color: #ececec;
 }

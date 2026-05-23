@@ -82,10 +82,6 @@ h1 {
   background-color: #565656;
   color: #c1c1c1;
 }
-h1 .bc-albums {
-  background-color: #333;
-}
-
 #tabsheet {
   background-color: #565656;
 }
@@ -133,9 +129,6 @@ textarea:focus {
   color: #999;
 }
 
-.tagSelection li.tagSelected {
-  background-color: #aaa;
-}
 ul.thumbnails input {
   color: #999;
   font-size: 10px;
@@ -385,29 +378,14 @@ a.Piwigo:hover span.Piwigo {
   outline: none;
 }
 
-/* Cat modify */
-
-.selectedComment {
-  background-color: #555;
-  color: #fff;
-}
-
 .groups .Group-name > p {
   color: #ccc;
   font-size: 1.2em;
   background-color: #111;
 }
 
-.groups .GroupContainer,
-.groups .showCreateGroup,
-.groups .addGroupFormBlock {
+.groups .GroupContainer {
   box-shadow: -1px 1px 2px #1a1a1a;
-}
-
-.groups .showCreateGroup:hover #addGroup,
-.groups .addGroupFormTitle {
-  color: #c0c0c0;
-  text-decoration: none;
 }
 
 .groups .group_number_users {
@@ -1000,16 +978,6 @@ a#showPermissions {
   border-color: #c76a23;
 }
 
-.tag-container .tag-box .tag-rename .tag-name-editable {
-  background-color: #666;
-  color: #fff;
-  border-color: #333;
-}
-
-.tag-container .tag-box .tag-rename span {
-  color: #d9d9d9;
-}
-
 .tag-select-message {
   background: #0051a57d;
   color: #bce5f7;
@@ -1419,7 +1387,6 @@ a#showPermissions {
 }
 
 
-.user-property-column-title,
 .edit-username-title {
   color: #c1c1c1;
 }
@@ -1520,10 +1487,6 @@ a#showPermissions {
 }
 
 /* Activity Tab in user manager */
-
-.activity-select-title {
-  color: #bbb;
-}
 
 .activity-date-selecter {
   background-color: #555;

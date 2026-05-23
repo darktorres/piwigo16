@@ -22,9 +22,6 @@
   cursor: pointer;
 }
 
-.pwg-icon-home {
-  background-position: -26px 0;
-}
 .pwg-icon-camera {
   background-position: -52px 0;
 }
@@ -75,9 +72,6 @@
 .pwg-icon-sizes {
   background-position: -78px -52px;
 }
-.pwg-icon-menu {
-  background-position: -130px -52px;
-}
 .pwg-icon-category-view-normal {
   background-position: -156px -52px;
 }
@@ -91,14 +85,8 @@
 .pwg-icon-caddie-add {
   background-position: -26px -78px;
 }
-.pwg-icon-caddie-del {
-  background-position: -52px -78px;
-}
 .pwg-icon-favorite {
   background-position: -78px -78px;
-}
-.pwg-icon-favorite-add {
-  background-position: -104px -78px;
 }
 .pwg-icon-favorite-del {
   background-position: -130px -78px;
@@ -135,9 +123,6 @@
 .pwg-icon-pause {
   background-position: -52px -130px;
 }
-.pwg-icon-stop {
-  background-position: -78px -130px;
-}
 .pwg-icon-clock-plus {
   background-position: -104px -130px;
 }
@@ -151,9 +136,3 @@
   background-position: -182px -130px;
 }
 
-.pwg-icon-map {
-  background-position: 0 -156px;
-}
-.pwg-icon-globe {
-  background-position: -26px -156px;
-}

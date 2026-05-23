@@ -17,8 +17,23 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 CSS_GLOBS = [
+    # admin base layer
     "themes/admin/_base/css/**/*.css",
+    "themes/admin/_base/theme.css",
+    "themes/admin/_base/print.css",
+    "themes/admin/_base/js/**/*.css",
+    # admin child themes
+    "themes/admin/dark/**/*.css",
+    "themes/admin/light/**/*.css",
+    # frontend base layer
     "themes/_base/css/**/*.css",
+    "themes/_base/theme.css",
+    "themes/_base/print.css",
+    "themes/_base/iconset.css",
+    # standard_pages (login/register/profile/etc)
+    "themes/standard_pages/**/*.css",
+    # ws.htm tester
+    "tools/ws/*.css",
 ]
 
 CORPUS_GLOBS = [
@@ -27,6 +42,7 @@ CORPUS_GLOBS = [
     "themes/**/*.js",
     "themes/**/*.ts",
     "themes/**/*.html",
+    "themes/**/*.htm",
     "src/**/*.php",
     "include/**/*.php",
     "admin/**/*.php",
@@ -34,9 +50,12 @@ CORPUS_GLOBS = [
     "tools/**/*.js",
     "tools/**/*.ts",
     "tools/**/*.html",
+    "tools/**/*.htm",
     "tools/**/*.latte",
     "language/**/*.html",
     "*.php",
+    "*.htm",
+    "*.html",
 ]
 
 ALLOWLIST_PREFIXES = (
@@ -65,6 +84,8 @@ ALLOWLIST_EXACT = {
     # DataTables generates id-suffixed elements: <id>_length, <id>_filter, etc.
     "userList_length", "userList_filter", "userList_paginate",
     "userList_info", "userList_processing",
+    # jconfirm buttons — generated at runtime by the library
+    "btn-default", "btn-red",
 }
 
 AT_RULE_SKIP_BODY = {"keyframes", "font-face", "page", "property",

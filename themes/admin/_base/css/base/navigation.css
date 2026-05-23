@@ -44,16 +44,6 @@
   font-size: 18px;
 }
 
-.albumsFilter .search-cancel {
-  position: absolute;
-  top: auto;
-  right: auto;
-  transform: translateY(0);
-  font-size: 18px;
-  margin-left: 215px;
-  margin-top: var(--space-sm);
-}
-
 .search-cancel:hover {
   opacity: 1;
 }
@@ -65,12 +55,6 @@
   font-size: 18px;
 }
 
-.albumsFilter .search-icon {
-  position: absolute;
-  top: auto;
-  transform: translate(6px, 40%);
-  font-size: 18px;
-}
 
 /* Dropdown */
 

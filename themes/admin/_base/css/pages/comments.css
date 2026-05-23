@@ -119,17 +119,6 @@
   text-align: start;
 }
 
-.advanced-filter-dates-max .advanced-filter-select-container::before,
-.advanced-filter-dates-min .advanced-filter-select-container::before {
-  content: "";
-}
-
-.advanced-filter-dates-max .advanced-filter-select,
-.advanced-filter-dates-min .advanced-filter-select {
-  padding: 0 10px;
-  height: 32px;
-}
-
 .comments-advanced-filters .advanced-filter-select {
   min-width: 150px;
   appearance: none;

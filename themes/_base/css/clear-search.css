@@ -74,18 +74,6 @@
   background: var(--search-selected-option-bg);
 }
 
-/* Different border style from dark (1px vs 2px) */
-.mcs-container .filter {
-  border: 1px solid #888;
-}
-
-/* Different border behavior from dark (has border vs border: none in dark) */
-.mcs-container .filter-filled {
-  background: #ffeacf;
-  border: 1px solid #f70 !important; /* keep: child-theme load-order specificity */
-  color: #f70 !important; /* keep: child-theme load-order specificity */
-}
-
 .search-input {
   padding: var(--space-sm);
   margin-bottom: var(--space-sm);

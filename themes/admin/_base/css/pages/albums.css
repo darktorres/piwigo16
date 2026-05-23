@@ -8,11 +8,6 @@
   width: 565px;
   padding: 8px;
 }
-#formCreateAlbum input[name="virtual_name"] {
-  width: 300px;
-  border-radius: 3px;
-}
-
 .move-cat-container:hover {
   background-color: var(--admin-move-cat-hover-bg);
 }
@@ -293,16 +288,6 @@ ul.pwgtree-tree .pwgtree-element {
   font-size: var(--font-size-md);
   padding: 10px 12px;
 }
-#autoOrder p,
-#createAlbum p {
-  text-align: left;
-  margin: 0 0 1em;
-}
-#autoOrder p.actionButtons,
-#createAlbum p.actionButtons {
-  margin-bottom: 0;
-}
-
 #ftpPage p {
   text-align: left;
   margin: 1em;

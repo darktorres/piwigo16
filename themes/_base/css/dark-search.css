@@ -42,19 +42,6 @@
   color: #fff;
 }
 
-/* Different border style from clear (2px + color property vs 1px) */
-.mcs-container .filter {
-  border: 2px solid #444;
-  color: #aeaeae;
-}
-
-/* Different border behavior from clear (border: none vs 1px solid) */
-.mcs-container .filter-filled {
-  background: #f70b;
-  border: none !important; /* keep: overrides inherited border on this state */
-  color: #ffeacf !important; /* keep: overrides .filter-icon color inheritance */
-}
-
 .search-input {
   background: #555;
 }

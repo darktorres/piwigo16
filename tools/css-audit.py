@@ -127,24 +127,36 @@ def extract_selectors(css: str):
 
 
 def extract_target_idents(selector_text: str):
-    """For a comma-separated selector list, yield the set of (class|id)
-    identifiers on the rightmost target element of each group."""
+    """For a comma-separated selector list, yield (group_sel, ids, classes,
+    chain_idents) per group.
+
+    `ids`/`classes` are the identifiers on the rightmost target element
+    only. `chain_idents` is every class/id appearing anywhere in the
+    selector chain — if ANY of those is missing from the source corpus,
+    the rule's element never exists (a live rightmost with a dead
+    parent never matches)."""
     results = []
     for sel in selector_text.split(","):
         sel = sel.strip()
         if not sel:
             continue
-        # split on combinators outside brackets
-        # rough but workable
         parts = re.split(r"(?<!\\)[\s>+~]+", sel)
         rightmost = parts[-1] if parts else sel
-        # drop pseudo-classes/elements
         rightmost = re.sub(r"::?[a-zA-Z-]+(\([^)]*\))?", "", rightmost)
-        # drop attribute selectors
         rightmost = re.sub(r"\[[^\]]*\]", "", rightmost)
         ids = re.findall(r"#([a-zA-Z_][\w-]*)", rightmost)
         classes = re.findall(r"\.([a-zA-Z_][\w-]*)", rightmost)
-        results.append((sel, sorted(set(ids)), sorted(set(classes))))
+
+        # full-chain idents — strip pseudo + attribute syntax from the
+        # entire selector then extract every class/id
+        chain = re.sub(r"::?[a-zA-Z-]+(\([^)]*\))?", "", sel)
+        chain = re.sub(r"\[[^\]]*\]", "", chain)
+        chain_ids = re.findall(r"#([a-zA-Z_][\w-]*)", chain)
+        chain_classes = re.findall(r"\.([a-zA-Z_][\w-]*)", chain)
+        chain_idents = sorted(set(chain_ids + chain_classes))
+
+        results.append((sel, sorted(set(ids)), sorted(set(classes)),
+                        chain_idents))
     return results
 
 
@@ -184,14 +196,26 @@ def main():
         rel = cf.relative_to(ROOT).as_posix()
         text = cf.read_text(encoding="utf-8", errors="replace")
         for sel_text, line_no in extract_selectors(text):
-            for group_sel, ids, classes in extract_target_idents(sel_text):
+            for group_sel, ids, classes, chain in extract_target_idents(sel_text):
                 total_selectors += 1
                 idents = ids + classes
                 if not idents:
-                    continue  # tag-only / :root / *
+                    # tag-only rightmost — still flag if any chain ident is dead
+                    if not chain:
+                        continue
+                    if any(is_allowlisted(i) for i in chain):
+                        continue
+                    if all(i in corpus for i in chain):
+                        continue
+                    dead_by_file.setdefault(rel, []).append((line_no, group_sel))
+                    continue
                 if any(is_allowlisted(i) for i in idents):
                     continue
-                if any(i in corpus for i in idents):
+                # rightmost is dead OR any chain ident is dead → rule never matches
+                rightmost_dead = not any(i in corpus for i in idents)
+                chain_break = any(i not in corpus and not is_allowlisted(i)
+                                  for i in chain if i not in idents)
+                if not (rightmost_dead or chain_break):
                     continue
                 dead_by_file.setdefault(rel, []).append((line_no, group_sel))
 

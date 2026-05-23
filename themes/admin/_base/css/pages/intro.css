@@ -370,22 +370,6 @@ a.stat-box:hover {
   opacity: 1;
 }
 
-.activity-chart #week-1-legend ~ span div {
-  background-color: var(--admin-chart-blue);
-}
-
-.activity-chart #week-2-legend ~ span div {
-  background-color: var(--admin-chart-purple);
-}
-
-.activity-chart #week-3-legend ~ span div {
-  background-color: var(--admin-chart-green);
-}
-
-.activity-chart #week-4-legend ~ span div {
-  background-color: var(--admin-chart-orange);
-}
-
 .storage-chart {
   border-radius: var(--radius-sm);
   width: 100%;

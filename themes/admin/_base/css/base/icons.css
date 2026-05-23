@@ -88,12 +88,6 @@ input[type="reset"]:hover {
   padding: 8px 10px;
   margin-left: var(--space-xs);
 }
-.changeUsername .buttonLike {
-  padding: 1px 10px;
-}
-.changePassword .buttonLike {
-  padding: 1px 10px;
-}
 .selectFilesButtonBlock {
   display: flex;
   margin-top: var(--space-sm);

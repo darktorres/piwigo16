@@ -130,7 +130,6 @@
   flex-direction: column;
 }
 
-.full-line-info-box input,
 .half-line-info-box input,
 .half-line-info-box select {
   display: flex;
@@ -185,7 +184,6 @@
   border: 1px solid var(--admin-input-border);
   background: #fff;
 }
-.full-line-info-box input,
 .half-line-info-box input,
 .description-box {
   outline: none;

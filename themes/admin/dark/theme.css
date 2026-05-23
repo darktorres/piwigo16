@@ -685,6 +685,7 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {
 .groups .manage-permissions {
   border: 1px solid #777;
   background-color: transparent;
+  color: #777;
 }
 
 /* UserList Pop in */
@@ -792,22 +793,6 @@ input:focus + .slider {
   border-width: 0 3px 3px 0;
 }
 
-/* Group manager buttons */
-
-.groups .manage-users,
-.groups .manage-users:hover,
-.groups .manage-permissions,
-.groups .manage-permissions:hover {
-  color: #777;
-}
-
-.groups .manage-users:hover,
-.groups .manage-permissions:hover {
-  background-color: #ffa744;
-  border: 1px solid #ffa744;
-  cursor: pointer;
-  color: #3c3c3c;
-}
 
 /* UserList Pop in */
 

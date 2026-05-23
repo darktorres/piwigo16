@@ -362,13 +362,6 @@ p.albumTitle img {
   background-color: transparent;
 }
 
-.groups .manage-users:hover,
-.groups .manage-permissions:hover {
-  background-color: #ffa744;
-  border: 1px solid #ffa744;
-  cursor: pointer;
-}
-
 /* UserList Pop in */
 
 .LinkUserManager {
@@ -459,15 +452,6 @@ input:focus + .slider {
 
 .groups .Group-checkbox input:checked ~ .group-checkmark {
   background-color: #ffa646;
-}
-
-/* Group manager buttons */
-
-.groups .manage-users,
-.groups .manage-users:hover,
-.groups .manage-permissions,
-.groups .manage-permissions:hover {
-  color: #3c3c3c;
 }
 
 /* UserList Pop in */

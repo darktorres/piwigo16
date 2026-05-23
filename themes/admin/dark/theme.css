@@ -1135,7 +1135,6 @@ li.plupload_delete a.remove-format:hover {
 .cat-modify-footer,
 .savebar-footer {
   border-color: rgb(0, 0, 0, 0.2);
-  background: #444;
 }
 
 .cat-modify-actions a:hover .cat-modify-actions .toggle-comment-option:hover {

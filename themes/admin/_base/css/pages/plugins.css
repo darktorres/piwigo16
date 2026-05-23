@@ -230,15 +230,15 @@
 
 .plugin-version {
   border-radius: 5px;
-  color: #fff;
+  color: var(--admin-text-on-accent);
   padding: 0 5px;
-  background: #f70;
+  background: var(--admin-accent);
   font-weight: bold;
 }
 
 .plugin-version-old {
-  color: rgb(59, 59, 59);
-  background: #ddd;
+  color: var(--admin-text);
+  background: var(--admin-border);
 }
 
 .plugin-revision-info {

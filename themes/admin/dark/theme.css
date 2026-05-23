@@ -1495,16 +1495,6 @@ li.plupload_delete a.remove-format:hover {
   color: #999;
 }
 
-.plugin-version {
-  background-color: #ffa646;
-  color: #493c21;
-}
-
-.plugin-version-old {
-  background-color: #555;
-  color: #bbb;
-}
-
 .addAlbum label {
   color: #aaa;
   margin: -5px 0;

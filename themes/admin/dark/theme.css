@@ -664,10 +664,6 @@ input:focus + .slider {
   color: #fddaba ;
 }
 
-.BlackFont {
-  color: #000 ;
-}
-
 #checkActions a:hover {
   background-color: #1b1b1b;
   color: #777;

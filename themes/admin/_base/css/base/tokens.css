@@ -29,4 +29,8 @@
 
   /* form input background */
   --admin-input-bg: #fff;
+
+  /* alternating row stripes (.row1/.row2/.throw/table.dataTable) */
+  --admin-stripe-odd: #ddd;
+  --admin-stripe-even: #eee;
 }

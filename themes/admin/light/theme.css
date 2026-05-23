@@ -77,13 +77,8 @@ textarea {
 
 /* #the_page { margin: 0; padding: 0; z-index: 1; top:0px; */
 /* padding-top: 0; min-height: 100%; width:100%; position:absolute; left:0px; } */
-h3,
-.throw,
-.row1 {
+h3 {
   background-color: #ddd;
-}
-.row2 {
-  background-color: #eee;
 }
 
 .content h4 {

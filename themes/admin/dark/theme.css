@@ -9,6 +9,8 @@
   --admin-border-strong: #666;
   --admin-link: #777;
   --admin-input-bg: #2c2c2c;
+  --admin-stripe-odd: #111;
+  --admin-stripe-even: #222;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
@@ -40,13 +42,8 @@ h2 {
 /* #the_page { margin: 0; padding: 0; z-index: 1; top:0px; */
 /* padding-top: 0; min-height: 100%; width:100%; position:absolute; left:0px; } */
 h3,
-.row2,
 .content {
   background-color: #222;
-}
-.throw,
-.row1 {
-  background-color: #111;
 }
 .throw em {
   font-style: normal;

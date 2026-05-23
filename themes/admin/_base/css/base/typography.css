@@ -225,6 +225,14 @@ input[type="text"].large {
   width: 317px;
 }
 
+.throw,
+.row1 {
+  background-color: var(--admin-stripe-odd);
+}
+.row2 {
+  background-color: var(--admin-stripe-even);
+}
+
 #pluginsMenuSeparator {
   width: 80%;
   margin: 5px auto;

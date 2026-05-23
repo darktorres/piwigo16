@@ -33,6 +33,7 @@
 }
 
 #whats_new h3 {
+  color: var(--admin-text);
   font-size: 19px;
   font-weight: 700;
   line-height: 25.87px;

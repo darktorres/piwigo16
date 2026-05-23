@@ -2862,18 +2862,16 @@ across `src/Piwigo/{Image,Category,Tag,Users,Activity,Comment,Group,Notification
 (per-namespace counts: Category=24, Users=6, Comment=5, Image=4, Tag=4,
 Activity=4, Notification=3, Rate=3, Group=2, Auth=1).
 
-Total of **64 row-factory functions** across both patterns (most
-named `fromRow`; one outlier `fromUserArray` on `Piwigo\Users\User`,
-which is a typed user wrapper at the namespace root rather than
-under `Entity/`). Eight factories live outside both `Entity/` and
-`Projection/` (`Common/Dto/UserGroupPair.php`,
-`Telemetry/TelemetryActivityGroup.php`, `Activity/ActivityRow.php`,
-plus the five inside `Entity/` directories that exceed the per-namespace
-entity directory count's documentary scope).
+Total of **64 `function fromRow` factories** across the tree
+(54 in `Projection/`, 7 in `Entity/`, 3 outside both:
+`Common/Dto/UserGroupPair.php`, `Telemetry/TelemetryActivityGroup.php`,
+`Activity/ActivityRow.php`). One outlier outside the 64: `Piwigo\Users\User`
+at namespace root uses `fromUserArray()` instead of `fromRow()` — same
+shape, different naming.
 
 Representative examples already in tree:
 
-- `src/Piwigo/Image/Entity/Image.php` — wide entity, 18+ value-object-typed
+- `src/Piwigo/Image/Entity/Image.php` — wide entity, 24 value-object-typed
   properties, `Image::fromRow($row)` factory.
 - `src/Piwigo/Image/Projection/ImageDimension.php` — narrow projection,
   width+height only, used by `findDistinctDimensions()`.
@@ -3005,6 +3003,33 @@ the removed-`is_*`-guards diff committed (see Verification below).
 > repositories via constructor injection. Confirmed
 > 2026-05-23 (`find src -name 'ServiceLocator.php'` returns nothing,
 > grep for `ServiceLocator::` in `src/` returns nothing).
+
+#### Additional in-scope work (referenced from other ROADMAP sections)
+
+Other sections of this ROADMAP and `docs/SECURITY.md` explicitly
+delegate further work to §1.7 beyond the HTTP-input + DB-row split
+above. Catalogued here for visibility — each is a separate sub-task
+when its time comes:
+
+- **Typed HTTP `Response` body for WS errors** — currently `PwgError(429, …)`
+  carries the rate-limit response inline; the typed-Response refactor
+  belongs to §1.7. Referenced from ROADMAP.md:2076 and
+  `docs/SECURITY.md:182, 235`.
+- **Eliminate `PageState::loginFailureReason` back-channel** — when
+  §1.7 promotes the WS / form login paths to a throw-and-catch flow,
+  `AuthException::accountLocked()` (already defined but unthrown)
+  replaces the current side-effect flag. Referenced from
+  ROADMAP.md:2078–2083 (Review finding F5).
+- **`AuthService` result-DTO** — the lockout-vs-bad-credentials
+  signal is currently surfaced via `AuthService::getLastFailureReason()`;
+  restructuring to an explicit result-DTO belongs to §1.7. Referenced
+  from ROADMAP.md:2240–2243.
+- **`UserEntity` design follow-up** — §1.6b's relationship note
+  (ROADMAP.md:2517) refers to "`UserEntity`'s design," but the typed
+  user wrapper actually shipped as `Piwigo\Users\User` at namespace
+  root (not under `Users/Entity/`). The §1.6b reference is to a
+  hypothetical class name, not a real one; the real `User` wrapper
+  exists and works.
 
 #### Cross-references
 

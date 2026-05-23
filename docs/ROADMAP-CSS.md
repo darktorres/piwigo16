@@ -297,8 +297,48 @@ Each `themeconf.inc.php` for `light` and `dark` defines its `$admin_skin` array.
 
 **Step 11 — Split `themes/admin/_base/theme.css`** (9,635 lines) along its 60+ `/* name.css */` section markers into the target layout in the directory tree above. `themes/admin/_base/theme.css` becomes an `@import` list. Note: file grew from 8,375 to 9,635 lines because Step 16 (inline-style extraction) added utility classes (`.u-*`) here; those should land in a `base/utilities.css` during the split.
 
-**Step 12 — Slim admin child themes.**
-With `var(--admin-*)` in place, `themes/admin/light/theme.css` (1,234 lines) and `themes/admin/dark/theme.css` (2,837 lines) reduce to `:root {}` variable override blocks. Structural rules currently duplicated in both (borders, padding, grid, `@keyframes`) move up into the parent's split CSS. Same treatment for `themes/admin/dark/css/components/general.css` — content moves into the parent. (`themes/admin/light/` has no `css/` subdirectory; only its `theme.css` needs slimming.)
+**Step 12 — Slim admin child themes.** ✅ Substantially done — §3.1 close-out.
+
+Original goal: `themes/admin/light/theme.css` (1,234 lines) and
+`themes/admin/dark/theme.css` (2,837 lines) reduce to `:root {}`
+variable override blocks. Same treatment for
+`themes/admin/dark/css/components/general.css` (content moves into the
+parent).
+
+Status after the §3.1 close-out:
+
+| file | start | now | Δ |
+|---|---:|---:|---:|
+| `themes/admin/dark/theme.css` | 2,773 | 2,245 | -528 (-19%) |
+| `themes/admin/light/theme.css` | 1,204 | 835 | -369 (-31%) |
+| `themes/admin/_base/css/base/tokens.css` | 26 | 65 | +39 (12 → 33 tokens) |
+
+Both child files still carry more than a pure `:root {}` block. The
+remaining ~3,080 lines of overrides fall into three categories
+documented in [docs/ADMIN-CSS-AUDIT.md](ADMIN-CSS-AUDIT.md):
+
+1. **Genuine one-off colors** — page-specific overrides with no
+   cluster pattern (e.g. `.cache-size-value`,
+   `.princes-of-this-piwigo`, `.detail-item-1/2/3`). Tokenizing each
+   would introduce ~120 narrow single-use tokens — renames, not
+   theming.
+2. **Third-party widget overrides** — jconfirm, token-input,
+   pluginTypeFilter chrome. These widgets have their own internal
+   theming structure; integrating them into the admin token system
+   would require creating widget-specific component CSS files.
+3. **Asymmetric prop sets** — rules that legitimately set a
+   different property in dark vs. light for the same element.
+
+The 33-token palette covers: surfaces, foreground, borders,
+accents, link, input-bg, row-stripes (×4), popin bg/input/cancel
+(×3 + cancel hover), danger pair, input-border, disabled pair,
+chart palette (×5). New tokens added incrementally per batch —
+each token has a clear semantic role, none are pre-allocated.
+
+`themes/admin/dark/css/components/general.css` was reformed during
+the Step 11 split — admin/_base now owns the general.css structure
+with `--admin-filter-*` / `--admin-info-*` tokens. Dark/light
+no longer carry parallel general.css copies.
 
 **Step 13 — (deleted; plugin CSS quick-wins; the named plugins — GDThumb, AdminTools, language_switch — are no longer in the tree).**
 

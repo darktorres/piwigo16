@@ -119,14 +119,8 @@ textarea {
   cursor: text;
   font-size: 13px;
 }
-.tagSelection label {
-  padding-right: 12px;
-}
 .tagSelection li.tagSelected {
   background-color: #dbe8f3;
-}
-.tagSelected label {
-  color: #000;
 }
 
 ul.thumbnails input {

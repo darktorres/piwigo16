@@ -299,6 +299,14 @@ ul.tagSelection li {
   white-space: nowrap;
 }
 
+.tagSelection label {
+  padding-right: 12px;
+}
+
+.tagSelected label {
+  color: #000;
+}
+
 html,
 body {
   height: 100%;

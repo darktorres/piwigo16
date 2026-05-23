@@ -2690,12 +2690,12 @@ typed properties without `is_*` guards.
 §1.4 shipped the per-endpoint pattern: each WS method has a `*Handler`
 (implementing `WsAction`) plus a `*Params` DTO (implementing `WsParams`)
 with a hand-rolled `public static function fromArray(array $raw): self`
-factory. As of 2026-05-23: **83 `*Params.php` + 94 `*Handler.php` files**
-under `src/Piwigo/Ws/Action/Pwg/<Domain>/`, backing ~94 of the **99**
-`new MethodDefinition(...)` registrations (a handful of legacy callback
-registrations remain — `grep -rn 'new MethodDefinition' src/Piwigo | wc -l`
-= 99; `find src/Piwigo/Ws/Action -name '*Handler.php' | wc -l` = 94).
-Representative example:
+factory. As of 2026-05-23: **94 `*Handler.php` + 83 `*Params.php` files**
+under `src/Piwigo/Ws/Action/Pwg/<Domain>/`. Of the **99**
+`new MethodDefinition(...)` registrations, ~94 use the handler-class
+path (`handlerClass:`) and ~5 still use legacy callbacks; of the 94
+handler endpoints, 11 are zero-param and need no `*Params` companion
+(83 + 11 = 94). Representative example:
 
 ```php
 // src/Piwigo/Ws/Action/Pwg/Images/AddCommentParams.php
@@ -2741,9 +2741,13 @@ and not under review here.
 Admin controllers and page renderers still read `$_POST` / `$_GET`
 directly. As of 2026-05-23: **758 raw `$_POST` / `$_GET` reads across
 54 files** (was 626 / 45 at the original audit; surface drifts up as
-new admin endpoints land). The WS layer doesn't contribute to this
-count — handlers receive the params map from `PwgServer`, not the
-superglobals — so virtually all 758 reads are on the web/admin side.
+new admin endpoints land). The WS *handler* layer doesn't contribute —
+handlers receive the params map from `PwgServer::invoke()`, not the
+superglobals — but the WS *protocol* layer does: `PwgServer.php`,
+`Ws/Protocol/PwgRestRequestHandler.php` (the transport that picks
+`$_POST` vs `$_GET` based on HTTP method), and one stray mutation in
+`Action/Pwg/Permissions/AddHandler.php`. So ~3 files in `Ws/` and ~51
+on the web/admin side account for the 758 reads.
 
 Target classes for the sweep (representative, not exhaustive):
 
@@ -2824,9 +2828,12 @@ Phase 1 carry over unchanged if that adoption ever happens.
 The repository layer adopted **narrow query-specific projections**
 rather than the wide-`*Entity` shape the original §1.7 draft proposed.
 As of 2026-05-23: **56 `Projection/*` classes** in tree across
-`src/Piwigo/{Image,Category,Tag,User,Activity,Comment,Group,Notification,Rate,Auth,Telemetry}/Projection/`,
-backed by **64 `public static function fromRow(array $row): self`**
-factories (also covers `src/Piwigo/Common/Dto/`).
+`src/Piwigo/{Image,Category,Tag,Users,Activity,Comment,Group,Notification,Rate,Auth}/Projection/`
+(per-namespace counts: Category=24, Users=6, Comment=5, Image=4, Tag=4,
+Activity=4, Notification=3, Rate=3, Group=2, Auth=1), backed by **64
+`public static function fromRow(array $row): self`** factories (the
+extra eight live outside `Projection/`, e.g. `src/Piwigo/Common/Dto/`,
+`src/Piwigo/Telemetry/TelemetryActivityGroup.php`).
 
 Representative examples already in tree:
 
@@ -2847,50 +2854,75 @@ Of **646 public methods** across `src/Piwigo/**/*Repository.php`,
 **249 still return bare `array`** (`: array$` without a typed wrapper).
 Most carry a tight `@return list<TypedProjection>` or
 `@return list<array{key: type, …}>` docblock that PHPStan validates
-against — so the call sites are mostly typed already — but the runtime
-declared return type stays loose and call sites still need defensive
-narrowing in some places. The sweep tightens runtime declarations to
-match docblocks; only a minority of methods need a *new* Projection
-class.
+against — those call sites are already typed via PHPStan inference;
+the runtime declaration can't be tightened further because **PHP has no
+`list<T>` runtime type** (`list` is the destructuring keyword). The
+real sweep target is the minority of methods whose docblock is still
+`@return list<array<string, mixed>>` or `@return array<string, mixed>`
+or has no `@return` at all — at least 10 such methods across
+`HistoryRepository`, `SearchRepository`, `SiteRepository`,
+`ThemeRepository`, `ImageFormatRepository`, `TagRepository`. Each one
+needs a new Projection class.
 
-Concrete example of the tightening, using a method already in tree:
+Concrete example of the tightening, using a real method in tree:
 
 ```php
-// Today — src/Piwigo/Image/ImageRepository.php
-/** @return list<ImageDimension> */
-public function findDistinctDimensions(): array { … }
+// Today — src/Piwigo/Tag/TagRepository.php:192
+/** @return list<array<string, mixed>> */
+public function findRawTagAdminRows(): array { /* fetchAllAssociative() pass-through */ }
 
-// After — return type tightened, no docblock needed
-public function findDistinctDimensions(): list
+// After — caller receives typed projection; defensive guards at call sites drop
+/** @return list<TagAdminRow> */
+public function findRawTagAdminRows(): array
 {
     return array_map(
-        ImageDimension::fromRow(...),
+        TagAdminRow::fromRow(...),
         $qb->executeQuery()->fetchAllAssociative(),
     );
 }
+
+// New file: src/Piwigo/Tag/Projection/TagAdminRow.php
+final readonly class TagAdminRow
+{
+    public function __construct(
+        public int $id,
+        public string $name,
+        public string $urlName,
+        public int $counter,
+    ) {}
+
+    /** @param array<string, mixed> $row */
+    public static function fromRow(array $row): self { /* defensive casts */ }
+}
 ```
 
-`ImageDimension` is already in `src/Piwigo/Image/Projection/`. The
-work is a single-file PR per repository: tighten return types, drop
-now-redundant `@return` annotations, removed-`is_*`-guards diff in
-the PR description (see Verification below — there's no static-analysis
+The work is a single-file PR per migrated method: new Projection class
+when needed, repository method's docblock + `array_map` updated, callers
+updated to access typed properties, removed-`is_*`-guards diff in the
+PR description (see Verification below — there's no static-analysis
 baseline file to diff against).
 
 ##### Audit-first
 
 Before the sweep starts, bucket the 249 bare-`array` methods into:
 
-- **(a) Already tight** — docblock is `@return list<NamedProjection>`
-  or `@return list<int>` etc. Work: just retype the runtime
-  declaration. No new class.
-- **(b) Tuple-shape** — docblock is
-  `@return list<array{registration_month: int, registration_year: int}>`.
+- **(a) Already tight via docblock** — `@return list<NamedProjection>`
+  or `@return list<int>` etc. PHPStan already infers the element type
+  at call sites; the runtime declaration can't tighten further (no
+  `list<T>` runtime type). Work: hunt for any defensive `is_*` guards
+  at callers that are now redundant and drop them. No repo-side change.
+- **(b) Tuple-shape** — `@return list<array{registration_month: int,
+  registration_year: int}>` (real example, `UserRepository:136`).
   Work: optionally promote to a named Projection (nicer call sites,
-  more files); or leave the array-shape annotation. Judgment call.
-- **(c) Genuinely untyped** — docblock is
-  `@return list<array<string, mixed>>` or no `@return` annotation.
-  Work: design and add a new Projection. These are the only methods
-  that meaningfully add to the Projection class count.
+  more files); or leave the array-shape annotation in place. Judgment
+  call per method.
+- **(c) Genuinely untyped** — `@return list<array<string, mixed>>`,
+  `@return array<string, mixed>`, or no `@return` annotation. Work:
+  design and add a new Projection. These are the **only** methods that
+  meaningfully add to the Projection class count. Initial scan finds
+  at least 10 such methods across `HistoryRepository`, `SearchRepository`,
+  `SiteRepository`, `ThemeRepository`, `ImageFormatRepository`,
+  `TagRepository`.
 
 This audit produces the **real** target count, replacing the original
 draft's fictional "21 entities" number. Output of the audit is a

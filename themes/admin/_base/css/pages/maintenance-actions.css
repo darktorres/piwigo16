@@ -1,4 +1,5 @@
 #label-delete-size-checkbox {
+  color: var(--admin-text);
   font-weight: bold;
   white-space: nowrap;
 }
@@ -43,6 +44,7 @@
   margin-left: 8px;
 }
 .delete-size-check .picture-deletion-size {
+  color: var(--admin-text);
   font-size: 14px;
   margin-left: 5px;
   padding-top: 2px;

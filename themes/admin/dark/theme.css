@@ -1901,14 +1901,6 @@ li.plupload_delete a.remove-format:hover {
   color: #c1c1c1;
 }
 
-.cache-lastCalculated-value,
-.cache-lastCalculated-text,
-.cache-size-text,
-.picture-deletion-size,
-#label-delete-size-checkbox {
-  color: #c1c1c1;
-}
-
 /* Activity Tab in user manager */
 
 .activity-more-filters,

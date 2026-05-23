@@ -5,11 +5,13 @@
 
 .cache-size-text,
 .cache-size-value {
+  color: var(--admin-text);
   font-size: 13px;
 }
 
 .cache-lastCalculated-text,
 .cache-lastCalculated-value {
+  color: var(--admin-text);
   font-size: 10px;
 }
 

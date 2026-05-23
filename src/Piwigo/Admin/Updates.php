@@ -43,10 +43,6 @@ final class Updates
     public array $default_themes = [];
     /** @var string[] */
     public array $default_languages = [];
-    /** @var array<mixed> */
-    public array $merged_extensions = [];
-    public string $merged_extension_url = 'http://piwigo.org/download/merged_extensions.txt';
-
     public function __construct(
         public Plugins $plugins,
         public Themes $themes,
@@ -542,25 +538,9 @@ final class Updates
             foreach ($this->getFsByType($typeEnum) as $ext_id => $ext) {
                 if (isset($ext['extension']) and $id == $ext['extension']
                   and !in_array($ext_id, $defaultList)
-                  and !in_array($ext['extension'], $this->merged_extensions)) {
+                ) {
                     $this->missing[$type][] = $ext;
                     break;
-                }
-            }
-        }
-    }
-
-    public function getMergedExtensions(string $version): void
-    {
-        $result = '';
-        if ($this->adminService->fetchRemote($this->merged_extension_url, $result) && is_string($result)) {
-            $rows = explode("\n", $result);
-            foreach ($rows as $row) {
-                if (preg_match('/^(\d+\.\d+): *(.*)$/', $row, $match)) {
-                    if (version_compare($version, $match[1], '>=')) {
-                        $extensions = explode(',', trim($match[2]));
-                        $this->merged_extensions = array_merge($this->merged_extensions, $extensions);
-                    }
                 }
             }
         }

@@ -202,10 +202,8 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         }
 
         $plugins->sortFsPlugins('name');
-        $merged_extensions    = $plugins->getMergedExtensions();
-        $merged_plugins       = false;
         $tpl_plugins          = [];
-        $count_types_plugins  = ['active' => 0, 'inactive' => 0, 'missing' => 0, 'merged' => 0];
+        $count_types_plugins  = ['active' => 0, 'inactive' => 0, 'missing' => 0];
 
         // Snapshot the cached map once; if any installed plugin's version no
         // longer matches the cached entry, the cache is stale — invalidate
@@ -243,14 +241,6 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
 
             $tpl_plugin['STATE'] = isset($plugins->db_plugins_by_id[$plugin_id]) ? $plugins->db_plugins_by_id[$plugin_id]->state->value : PluginState::Inactive->value;
 
-            $fsExtId = $fs_plugin['extension'] ?? null;
-            if (isset($fsExtId) && (is_string($fsExtId) || is_int($fsExtId)) && isset($merged_extensions[$fsExtId])) {
-                $this->pluginRepository->updateState($plugin_id, 'inactive');
-                $tpl_plugin['STATE'] = 'merged';
-                $tpl_plugin['DESC']  = Lang::t('THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW.');
-                $merged_plugins      = true;
-            }
-
             $state = $tpl_plugin['STATE'];
             if ($state === 'active' || $state === 'inactive' || $state === 'merged') {
                 $count_types_plugins[$state]++;
@@ -260,10 +250,6 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
 
         $tpl->append('plugin_states', 'active');
         $tpl->append('plugin_states', 'inactive');
-        if ($merged_plugins) {
-            $tpl->append('plugin_states', 'merged');
-        }
-
         $missing_plugin_ids = array_diff(array_keys($plugins->db_plugins_by_id), array_keys($plugins->fs_plugins));
         if (count($missing_plugin_ids) > 0) {
             foreach ($missing_plugin_ids as $plugin_id) {
@@ -1085,7 +1071,6 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
                 $rawUpgradeTo3 = $_POST['upgrade_to'];
                 $updatedVersion = Kernel::service(Updates::class)->upgradeTo(is_string($rawUpgradeTo3) ? $rawUpgradeTo3 : '', $step);
             }
-            $updates->getMergedExtensions($upgrade_to);
             $updates->getServerExtensions($upgrade_to);
             $tpl->assign('missing', $updates->missing);
         }

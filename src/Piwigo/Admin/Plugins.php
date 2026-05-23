@@ -620,12 +620,6 @@ final class Plugins
         }
     }
 
-    /** @return array<string, string> */
-    public function getMergedExtensions(string $version = AppInfo::VERSION): array
-    {
-        return [];
-    }
-
     /**
      * Sort functions
      */

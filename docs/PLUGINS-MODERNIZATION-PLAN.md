@@ -94,7 +94,7 @@ final readonly class PemPluginCatalog {
 ```
 
 - Wraps Symfony `HttpClient` (already a dep).
-- Replaces `Plugins::getVersionsToCheck`, `getServerPlugins`, `getMergedExtensions`, `getIncompatiblePlugins`, `invalidateIncompatibleCache`, `extractPluginFiles`.
+- Replaces `Plugins::getVersionsToCheck`, `getServerPlugins`, `getIncompatiblePlugins`, `invalidateIncompatibleCache`, `extractPluginFiles`.
 - Compatibility cache moves to `CacheItemPoolInterface` with TTL — drop the session/file-cache hybrid.
 
 ### D. Filesystem scanning is its own service

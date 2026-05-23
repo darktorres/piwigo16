@@ -184,5 +184,13 @@ themes/admin/_base/fonts/open-sans/fonts/Semibold/OpenSans-Semibold.ttf
 themes/admin/_base/fonts/open-sans/fonts/SemiboldItalic/OpenSans-SemiboldItalic.eot
 themes/admin/_base/fonts/open-sans/fonts/SemiboldItalic/OpenSans-SemiboldItalic.svg
 themes/admin/_base/fonts/open-sans/fonts/SemiboldItalic/OpenSans-SemiboldItalic.ttf
+themes/admin/_base/fonts/open-sans/README.md
+themes/admin/_base/fonts/open-sans/bower.json
+themes/admin/_base/fonts/open-sans/index.html
+themes/admin/_base/fonts/open-sans/open-sans.less
+themes/admin/_base/fonts/open-sans/open-sans.scss
+themes/admin/_base/fonts/open-sans/sass
+themes/admin/_base/fonts/open-sans/fonts/DESCRIPTION.en_us.html
+themes/admin/_base/fonts/open-sans/fonts/METADATA.pb
 themes/admin/_base/css/components/token-input.css
 obsolete.list

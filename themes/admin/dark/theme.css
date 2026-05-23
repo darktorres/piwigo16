@@ -28,20 +28,10 @@
   --admin-chart-green: #50a48f;
   --admin-chart-orange: #d47f44;
   --admin-chart-red: #bc4b4a;
+  --admin-h2-fg: #ccc;
+  --admin-text-info: #666;
+  --admin-text-info-hover: #999;
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
-}
-
-/* text color */
-
-.showInfo {
-  color: #666;
-}
-.showInfo:hover {
-  color: #999;
-}
-
-h2 {
-  color: #ccc;
 }
 
 .header_notes {

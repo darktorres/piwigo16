@@ -175,6 +175,7 @@ h2 {
   letter-spacing: 1px;
   font-weight: bold;
   display: none;
+  color: var(--admin-h2-fg);
 }
 h2:lang(en) {
   text-transform: capitalize;

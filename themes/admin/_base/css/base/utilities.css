@@ -91,9 +91,11 @@
   line-height: 15px;
   display: flex;
   align-items: center;
+  color: var(--admin-text-info);
 }
 .showInfo:hover {
   text-decoration: none;
+  color: var(--admin-text-info-hover);
 }
 /* .Content  is on every pages so it is common and it will no longer be a specific css */
 .content h2 {

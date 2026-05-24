@@ -14,30 +14,30 @@
 .gcBorder2   { border-color: #666666; }            used for widgets borders
 .gcBorderInput { border-color:#777777; }           used for inputs
 */
-/* text color */
+/* Light-exclusive — form elements (no base rule for these) */
 
 th {
-  color: #888;
+  color: #888; /* keep: light-exclusive */
 }
 input[type="text"],
 input[type="file"] {
-  background-color: #ddd;
+  background-color: #ddd; /* keep: light-exclusive */
 }
 
 select,
 textarea {
-  background-color: #ddd;
+  background-color: #ddd; /* keep: light-exclusive */
 }
 
 input:focus,
 select:focus,
 textarea:focus {
-  background-color: #eee;
+  background-color: #eee; /* keep: light focus bg; dark adds outline (Bucket X) */
   color: #666;
 }
 
 #copyright {
-  color: #777;
+  color: #777; /* keep: light-exclusive copyright styling */
   margin: 5px auto 0 240px;
   text-align: center;
   padding-bottom: 15px;
@@ -55,11 +55,11 @@ textarea:focus {
 /* #the_page { margin: 0; padding: 0; z-index: 1; top:0px; */
 /* padding-top: 0; min-height: 100%; width:100%; position:absolute; left:0px; } */
 h3 {
-  background-color: #ddd;
+  background-color: #ddd; /* keep: light heading bg; dark has #222 (Bucket X — no base bg rule) */
 }
 
 .content h4 {
-  color: #aaa;
+  color: #aaa; /* keep: light has color; dark omits it. Different margin syntax (Bucket X) */
   font-size: 14px;
   text-align: center;
   padding: 3px;
@@ -69,13 +69,13 @@ h3 {
 
 
 .throw {
-  font-size: 120%;
+  font-size: 120%; /* keep: dark adds color; light omits it (Bucket X) */
   line-height: 26px;
   padding-top: 10px;
   font-weight: bold;
 }
 table.table2 {
-  border: 2px solid #ddd;
+  border: 2px solid var(--admin-border); /* keep: light-exclusive table border */
 }
 
 *,
@@ -85,43 +85,36 @@ input:active,
 a:active,
 input:focus,
 a:focus {
-  outline: none;
+  outline: none; /* keep: light-exclusive UA focus reset; dark comments this out (Bucket X) */
   -moz-outline-width: 0;
 }
 
 .themeActions span {
-  background-color: #ddd;
+  background-color: #ddd; /* keep: light bg; dark adds color (Bucket X) */
 }
 .themeSelect {
-  background-color: #fafafa;
+  background-color: #fafafa; /* keep: light bg; dark adds box-shadow:none (Bucket X) */
 }
 
 
 #pwgHead,
 #footer {
-  background-color: #333;
+  background-color: #333; /* keep: light-exclusive; overrides base #3c3c3c */
   color: #ccc;
 }
 
-#pwgHead a,
-#footer a {
-  color: #ccc;
-}
-#pwgHead a:hover,
-#footer a:hover {
-  color: #fff;
-}
+
 
 .languageDefault {
-  background-color: #dbe8f3;
+  background-color: #dbe8f3; /* keep: light blue tint; dark adds color (Bucket X) */
 }
 
 ul.thumbnails li.rank-of-image {
-  background-color: #ddd;
+  background-color: var(--admin-border); /* keep: light uses #ddd vs base --admin-bg-elevated (#f3f3f3) */
 }
 
 #batchManagerGlobal ul.thumbnails li:hover .wrap2 {
-  background-color: transparent;
+  background-color: transparent; /* keep: light: transparent bg + muted text; dark: bright text only (Bucket X) */
   color: #999;
 }
 
@@ -149,7 +142,7 @@ ul.thumbnails li.rank-of-image {
 }
 
 #pwgMain {
-  padding-left: 0;
+  padding-left: 0; /* keep: light-specific layout tweak (Bucket X) */
 }
 
 .buttonLike i {
@@ -180,7 +173,7 @@ p.albumTitle img {
 /* Activity Tab in user manager */
 
 .activity-date-selecter {
-  background-color: #f9f9f9;
+  background-color: #f9f9f9; /* keep: light has border; dark omits it (Bucket X) */
   color: #3c3c3c;
   border: 2px solid #d3d3d3;
 }
@@ -192,12 +185,12 @@ p.albumTitle img {
 }
 
 .GroupBackgroudSelected {
-  background-color: #ffd7ad ;
+  background-color: #ffd7ad; /* keep: light bg only; dark adds box-shadow:none (Bucket X) */
 }
 
 .OrangeIcon {
-  background-color: #f98100 ;
-  color: #ffe4c7 ;
+  background-color: #f98100; /* keep: light bg/color; dark adds border-color (Bucket X) */
+  color: #ffe4c7;
 }
 
 
@@ -205,12 +198,12 @@ p.albumTitle img {
 
 #selection-mode-block button,
 #commentsSelection button {
-  border: 1px solid #e7e7e7;
+  border: 1px solid #e7e7e7; /* keep: dark adds color (Bucket X) */
 }
 
 #selection-mode-block button:hover,
 #commentsSelection button:hover {
-  background-color: var(--admin-accent-soft);
+  background-color: var(--admin-accent-soft); /* keep: dark adds color (Bucket X) */
   border: 1px solid var(--admin-accent-soft);
 }
 
@@ -220,33 +213,33 @@ p.albumTitle img {
 /* ------ */
 
 .userSeparator {
-  visibility: hidden;
+  visibility: hidden; /* keep: dark adds color; both hide element (Bucket X) */
 }
 
 
 
 #watermarkPositionBox {
-  border: 2px solid #ccc;
+  border: 2px solid #ccc; /* keep: light overrides base bg AND adds border (Bucket X) */
   background-color: #e5e5e5;
 }
 
 .afterUploadActions a.secondary_button {
-  background-color: #ececec;
+  background-color: #ececec; /* keep: light bg only; dark adds color (Bucket X) */
 }
 .afterUploadActions a.secondary_button:hover {
-  background-color: #ffa646;
+  background-color: #ffa646; /* keep: light bg only; dark adds color (Bucket X) */
 }
 
 .icon-plus.cboxElement {
-  background-color: #f6f6f6;
+  background-color: #f6f6f6; /* keep: light sets bg; dark sets border+color (Bucket X) */
 }
 .icon-plus.cboxElement:hover {
-  background-color: #f2f2f2;
+  background-color: #f2f2f2; /* keep: light sets bg; dark sets border (Bucket X) */
 }
 
 #addAlbumForm input[name="category_name"] {
-  border: none ;
-  margin-top: 5px ;
+  border: none; /* keep: light-specific form reset (Bucket X) */
+  margin-top: 5px;
 }
 #addAlbumForm input[name="category_name"]:focus {
   background-color: #ddd;
@@ -254,29 +247,29 @@ p.albumTitle img {
 #filterList select,
 #permitAction select,
 .sort-by select {
-  background-color: #fff;
+  background-color: #fff; /* keep: light-exclusive filter select styling */
   color: #4e4e4e;
-  border: 2px solid #7070704f ;
-  outline: none ;
+  border: 2px solid #7070704f;
+  outline: none;
 }
 #filter_search input {
-  border: 2px solid #7070704f ;
+  border: 2px solid #7070704f; /* keep: light border+bg+color; dark has different combo (Bucket X) */
   background: #fff;
   color: #3c3c3cbd;
 }
 #action_move a:last-child {
-  background: #fff;
+  background: #fff; /* keep: light: border+shadow; dark: bg+color (Bucket X) */
   border: 1px solid #787777a6;
   box-shadow: none;
 }
 #forbidAction,
 .selectionEmptyBlock,
 .noFilter {
-  background-color: #f3f3f3;
+  background-color: #f3f3f3; /* keep: light bg only; dark adds color (Bucket X) */
 }
 #filter_dimension .slider-choice,
 #filter_filesize .slider-choice {
-  background-color: #eee;
+  background-color: #eee; /* keep: light has bg+color; dark has bg only (Bucket X) */
   color: #777;
 }
 
@@ -284,7 +277,7 @@ p.albumTitle img {
   background-color: #eee;
 }
 .pageNumberSelected {
-  color: #fff ;
+  color: #fff; /* keep: light color+weight; dark adds background (Bucket X) */
   font-weight: bold;
 }
 
@@ -294,12 +287,12 @@ p.albumTitle img {
 
 /* Category List */
 .categoryContainer {
-  margin: 0;
+  margin: 0; /* keep: light-specific structural margin reset (Bucket X) */
 }
 
 .addAlbum form input {
-  background-color: #fff;
-  border: 1px solid #d5d5d5;
+  background-color: var(--admin-input-bg); /* keep: light-exclusive form input styling */
+  border: 1px solid var(--admin-input-border);
 }
 
 .albumInfos {
@@ -307,18 +300,20 @@ p.albumTitle img {
 }
 
 .albumActions a {
-  color: #848484;
+  color: #848484; /* keep: light sets color; dark sets text-decoration (Bucket X) */
 }
 
 .albumActions a:hover {
-  color: #ffa646;
+  color: #ffa646; /* keep: light-exclusive accent hover */
   text-decoration: none;
 }
 
 .albumActions > span {
-  color: #c6c6c6;
+  color: #c6c6c6; /* keep: light-exclusive separator color */
 }
 
+/* keep: icon badge palette — light uses pastel bg + vivid fg;
+   dark inverts to vivid bg + pastel fg (Bucket X) */
 .icon-red {
   background-color: #ffcfcf;
   color: #ff5252;
@@ -350,19 +345,17 @@ p.albumTitle img {
 }
 
 .applicationCard {
-  box-shadow: 0 0 4px 4px #dbdbdb;
+  box-shadow: 0 0 4px 4px #dbdbdb; /* keep: light shadow only; dark adds background (Bucket X) */
 }
 
-.applicationCard .applicationName {
-  color: #000;
-}
+
 
 .linked-albums-badge {
-  background: #dbdbdb;
+  background: #dbdbdb; /* keep: light bg only; dark adds color (Bucket X) */
 }
 
 .breadcrumb-item {
-  background-color: #fafafa;
+  background-color: #fafafa; /* keep: light bg+shadow; dark adds color (Bucket X) */
   box-shadow: 0 2px #00000024;
 }
 .search-result-item {
@@ -387,11 +380,11 @@ p.albumTitle img {
 
 
 .cat-modify-footer-see-out.disabled {
-  background-color: #ececec;
+  background-color: #ececec; /* keep: both themes set bg+color (Bucket X) */
   color: #b8b8b8;
 }
 
 .select-views {
-  background-color: #f3f3f3;
+  background-color: #f3f3f3; /* keep: light bg only; dark adds border+color (Bucket X) */
 }
 

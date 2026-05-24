@@ -136,8 +136,9 @@ final class ScriptLoader
     }
 
     /**
-     * Checks dependencies among Scripts.
-     * Checks that if B depends on A, then B->load_mode >= A->load_mode in order to respect execution order.
+     * If B depends on A and A has a higher load_mode, pull A up to B's level
+     * so the dependency is satisfied (e.g. a header script depending on a
+     * footer script promotes the dependency to header).
      *
      * @param Script[] $scripts
      */
@@ -153,10 +154,6 @@ final class ScriptLoader
                     }
                     if ($scripts[$precedent]->load_mode > $load) {
                         $scripts[$precedent]->load_mode = $load;
-                        $changed = true;
-                    }
-                    if ($load == 2 && $scripts[$precedent]->load_mode == 2) {// predecessor of an async script must be footer to guarantee execution order
-                        $scripts[$precedent]->load_mode = 1;
                         $changed = true;
                     }
                 }

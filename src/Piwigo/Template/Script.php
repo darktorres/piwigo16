@@ -12,7 +12,7 @@ final class Script extends Combinable
     public ?int $order = null;
 
     /**
-     * @param int $load_mode 0, 1, or 2
+     * @param int $load_mode 0 = header, 1 = footer
      * @param string $path
      * @param string[] $precedents
      */

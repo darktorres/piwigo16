@@ -409,9 +409,8 @@ final class Template
                 $content = [];
                 foreach ($scripts as $script) {
                     $src = self::makeScriptSrc($script);
-                    $type = self::isModuleScript($script) ? 'module' : 'text/javascript';
                     $content[] =
-                        '<script type="' . $type . '" src="'
+                        '<script type="module" src="'
                         . (is_string($src) ? $src : '')
                         .'"></script>';
                 }
@@ -479,11 +478,6 @@ final class Template
         Kernel::service(EventDispatcherInterface::class)->dispatch($scriptEvent);
         $ret = $scriptEvent->ret;
         return UrlService::embellishUrl($ret);
-    }
-
-    private static function isModuleScript(Combinable $script): bool
-    {
-        return str_starts_with($script->path, 'dist/');
     }
 
     /**

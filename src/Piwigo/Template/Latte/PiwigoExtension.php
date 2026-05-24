@@ -282,8 +282,7 @@ final class PiwigoExtension extends Extension
     ): void {
         $loadMode = match ($load) {
             'header' => 0,
-            'footer' => 1,
-            'async' => 2,
+            'footer', 'async' => 1,
             default => throw new \ValueError("combineScript: invalid 'load' parameter: $load"),
         };
         $requireList = is_string($require)
@@ -339,16 +338,10 @@ final class PiwigoExtension extends Extension
 
         foreach ($scripts as $script) {
             $src = self::makeScriptSrc($script);
-            $type = self::isModuleScript($script) ? 'module' : 'text/javascript';
-            $content[] = '<script type="' . $type . '" src="' . $src . '"></script>';
+            $content[] = '<script type="module" src="' . $src . '"></script>';
         }
 
         return new Html(implode("\n", $content));
-    }
-
-    private static function isModuleScript(Combinable $script): bool
-    {
-        return str_starts_with($script->path, 'dist/');
     }
 
     private static function makeScriptSrc(Combinable $script): string

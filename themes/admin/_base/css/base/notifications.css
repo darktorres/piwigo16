@@ -158,7 +158,7 @@
 }
 
 .header_notes {
-  border: 1px solid #666;
+  border: 1px solid var(--admin-border-strong);
   background: transparent url("../../icon/note.png") no-repeat right top;
   font-weight: bold;
   margin: 14px 24px 14px 14px;

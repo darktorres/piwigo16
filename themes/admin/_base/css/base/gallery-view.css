@@ -57,7 +57,7 @@
   opacity: 1;
 }
 .see-out.disabled p {
-  background-color: #ececec;
-  color: #b8b8b8;
+  background-color: var(--admin-disabled-bg);
+  color: var(--admin-disabled-fg);
 }
 

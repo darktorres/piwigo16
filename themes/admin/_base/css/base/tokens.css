@@ -130,6 +130,12 @@
   /* secondary button / link border (showPermissions-style) */
   --admin-btn-secondary-border: #d6d6d6;
 
+  /* brand wordmark (a.Piwigo) — different hue per theme */
+  --admin-piwigo-brand: #0cc;
+
+  /* close-modal icon (×) on dark overlay */
+  --admin-close-modal: #fff;
+
   /* Non-color design tokens (Step 6 — mirrored from
      themes/_base/css/tokens.css). */
 

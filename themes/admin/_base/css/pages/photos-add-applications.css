@@ -24,7 +24,7 @@
 }
 
 .applicationCard .applicationName {
-  color: var(--admin-text);
+  color: var(--admin-text-strong);
   font-size: var(--font-size-base);
   font-weight: bold;
   margin: 20px 0 10px;

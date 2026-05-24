@@ -10,7 +10,7 @@
 
 .AlbumViewSelector,
 .UserViewSelector {
-  background: #fafafa;
+  background: var(--admin-bg-panel);
 }
 
 .AlbumViewSelector input:checked + label,

@@ -75,7 +75,7 @@
 }
 
 .close-modal {
-  color: #fff;
+  color: var(--admin-close-modal);
   position: absolute;
   right: -40px;
   top: -40px;

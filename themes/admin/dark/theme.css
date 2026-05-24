@@ -71,6 +71,13 @@
   --admin-success-border: #aaf6e4;
 
   /* --admin-btn-secondary-border: #d6d6d6 — same as light, no override */
+
+  /* brand wordmark */
+  --admin-piwigo-brand: #f33;
+
+  /* close-modal icon */
+  --admin-close-modal: #444;
+
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 

@@ -91,7 +91,7 @@ final class ScriptLoaderTest extends TestCase
     public function test_add_without_manifest_registers_original_path(): void
     {
         $loader = new ScriptLoader();
-        $loader->add('jquery', 0, [], 'themes/_base/js/jquery.min.js');
+        $loader->add('jquery', 'themes/_base/js/jquery.min.js');
         $scripts = $this->getRegisteredScripts($loader);
         self::assertArrayHasKey('jquery', $scripts);
         self::assertSame('themes/_base/js/jquery.min.js', $scripts['jquery']->path);
@@ -104,26 +104,10 @@ final class ScriptLoaderTest extends TestCase
         ]);
 
         $loader = new ScriptLoader();
-        $loader->add('common', 1, [], 'themes/admin/_base/js/common.js');
+        $loader->add('common', 'themes/admin/_base/js/common.js');
         $scripts = $this->getRegisteredScripts($loader);
         self::assertArrayHasKey('common', $scripts);
         self::assertSame('dist/assets/common-XYZ789.js', $scripts['common']->path);
-    }
-
-    public function test_add_with_manifest_preserves_require_list(): void
-    {
-        $this->writeManifest([
-            'common' => ['file' => 'assets/common-abc.js', 'imports' => [], 'css' => []],
-        ]);
-
-        $loader = new ScriptLoader();
-        $loader->add('common', 1, ['jquery', 'jquery.ui'], 'themes/admin/_base/js/common.js');
-        $scripts = $this->getRegisteredScripts($loader);
-        // Manifest resolves the dist path, but the caller-supplied require list is
-        // preserved — legacy plugins and other Vite entries are not encoded as
-        // manifest chunk imports and still need to load separately.
-        self::assertSame('dist/assets/common-abc.js', $scripts['common']->path);
-        self::assertSame(['jquery', 'jquery.ui'], $scripts['common']->precedents);
     }
 
     public function test_add_unknown_manifest_key_falls_back_to_original_path(): void
@@ -133,7 +117,7 @@ final class ScriptLoaderTest extends TestCase
         ]);
 
         $loader = new ScriptLoader();
-        $loader->add('jquery', 0, [], 'themes/_base/js/jquery.min.js');
+        $loader->add('jquery', 'themes/_base/js/jquery.min.js');
         $scripts = $this->getRegisteredScripts($loader);
         self::assertSame('themes/_base/js/jquery.min.js', $scripts['jquery']->path);
     }
@@ -155,7 +139,10 @@ final class ScriptLoaderTest extends TestCase
     /** @return array<string, Script> */
     private function getRegisteredScripts(ScriptLoader $loader): array
     {
-        return $loader->getAll();
+        $ref = new ReflectionClass(ScriptLoader::class);
+        $prop = $ref->getProperty('registered_scripts');
+        /** @var array<string, Script> */
+        return $prop->getValue($loader);
     }
 
     private function resetManifestCache(): void

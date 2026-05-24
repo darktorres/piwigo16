@@ -215,18 +215,12 @@ final class LatteEngineTest extends TestCase
 
         PiwigoExtension::combineScript(
             id: 'tags',
-            load: 'footer',
             path: 'themes/admin/_base/js/tags.js',
         );
 
-        // ScriptLoader::add runs the path through Vite's manifest, so we
-        // assert that the entry registered (under its id) and its path
-        // ends with `.js` — the Vite-rewrite shape is opaque here, the
-        // Piwigo-side guarantee is that the script is registered with
-        // the requested id.
-        $scripts = $tpl->scriptLoader->getAll();
-        self::assertArrayHasKey('tags', $scripts);
-        self::assertStringEndsWith('.js', $scripts['tags']->path);
+        $scripts = $tpl->scriptLoader->getScripts();
+        self::assertNotEmpty($scripts);
+        self::assertStringEndsWith('.js', $scripts[0]->path);
     }
 
     public function test_phase_b3_combine_css_writes_to_registered_template(): void
@@ -255,16 +249,6 @@ final class LatteEngineTest extends TestCase
             ["<link rel='preload' href='/foo.js'>", "<meta name='x' content='y'>"],
             $tpl->html_head_elements,
             'whitespace-only content must be skipped to mirror Template::blockHtmlHead',
-        );
-    }
-
-    public function test_phase_b3_get_combined_scripts_header_returns_marker(): void
-    {
-        $this->stageTemplateWithLoaders();
-
-        self::assertSame(
-            Template::COMBINED_SCRIPTS_TAG,
-            (string) PiwigoExtension::getCombinedScripts(load: 'header'),
         );
     }
 

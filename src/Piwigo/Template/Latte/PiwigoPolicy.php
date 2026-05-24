@@ -124,6 +124,7 @@ final class PiwigoPolicy extends SecurityPolicy
         ]);
         $policy->allowFunctions([
             ...self::PLUGIN_FUNCTIONS,
+            'viteEntry', 'cssLink',
             'combineScript', 'getCombinedScripts',
             'combineCss', 'getCombinedCss',
             'htmlHead',

@@ -6,24 +6,22 @@ namespace Piwigo\Template\Latte;
 
 use Latte\Extension;
 use Latte\Runtime\Html;
+use Piwigo\Asset\ViteManifest;
 use Piwigo\Common\Enum\UserStatus;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Event\Template\CombinedScript;
 use Piwigo\Http\DeviceDetectionService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
-use Piwigo\Template\Combinable;
 use Piwigo\Template\ScriptLoader;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\PermissionService;
-use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Piwigo Latte template API.
@@ -113,6 +111,8 @@ final class PiwigoExtension extends Extension
     public function getFunctions(): array
     {
         return [
+            'viteEntry' => self::viteEntry(...),
+            'cssLink' => self::cssLink(...),
             'combineScript' => self::combineScript(...),
             'getCombinedScripts' => self::getCombinedScripts(...),
             'combineCss' => self::combineCss(...),
@@ -267,36 +267,49 @@ final class PiwigoExtension extends Extension
         return number_format($number, $decimals, $decimalSeparator, $thousandsSeparator);
     }
 
-    // ---- Phase B.3: stateful asset-pipeline functions --------------------
+    // ---- Asset helpers -------------------------------------------------------
 
-    /**
-     * @param list<string>|string $require comma-separated string from the
-     *     converter or list<string> from a hand-written Latte template.
-     */
+    /** @var array<string, true> */
+    private static array $seenEntries = [];
+
+    public static function viteEntry(string $id): Html
+    {
+        if (isset(self::$seenEntries[$id])) {
+            return new Html('');
+        }
+        self::$seenEntries[$id] = true;
+
+        $entry = ViteManifest::entry($id);
+        if ($entry === null) {
+            return new Html('');
+        }
+
+        $root = UrlService::getRootUrl();
+        $tags = [];
+
+        foreach ($entry['css'] as $cssPath) {
+            $tags[] = '<link rel="stylesheet" href="' . $root . 'dist/' . $cssPath . '">';
+        }
+        $tags[] = '<script type="module" src="' . $root . 'dist/' . $entry['file'] . '"></script>';
+
+        return new Html(implode("\n", $tags));
+    }
+
+    public static function cssLink(string $path): Html
+    {
+        $href = UrlService::getRootUrl() . $path . '?v' . AppInfo::VERSION;
+        return new Html('<link rel="stylesheet" href="' . $href . '">');
+    }
+
+    // ---- Legacy asset-pipeline (to be removed in Phase 4) ----------------
+
     public static function combineScript(
         string $id,
-        string $load = 'header',
         ?string $path = null,
-        array|string $require = [],
         string|int $version = 0,
     ): void {
-        $loadMode = match ($load) {
-            'header' => 0,
-            'footer', 'async' => 1,
-            default => throw new \ValueError("combineScript: invalid 'load' parameter: $load"),
-        };
-        $requireList = is_string($require)
-            ? ($require === '' ? [] : explode(',', $require))
-            : $require;
-
         $tpl = TemplateRegistry::current();
-        $tpl->scriptLoader->add(
-            $id,
-            $loadMode,
-            $requireList,
-            $path,
-            $version,
-        );
+        $tpl->scriptLoader->add($id, $path, $version);
 
         // Auto-register stylesheets bundled into this entry by Vite.
         // Mirrors Template::funcCombineScript — without this, side-effect
@@ -319,58 +332,21 @@ final class PiwigoExtension extends Extension
     }
 
     /**
-     * Returns the marker the ScriptLoader rewrites to <script> tags at
-     * flush time for the header pass; for the footer pass, returns the
-     * already-serialised <script> markup. Mirrors Template::funcGetCombinedScripts.
-     *
      * Returns `Latte\Runtime\Html` so the HTML payload propagates through
      * Latte's auto-escape without needing `|noescape` at every call site.
      */
-    public static function getCombinedScripts(string $load = 'header'): Html
+    public static function getCombinedScripts(): Html
     {
-        if ($load === 'header') {
-            return new Html(Template::COMBINED_SCRIPTS_TAG);
-        }
-
         $tpl = TemplateRegistry::current();
-        $scripts = $tpl->scriptLoader->getFooterScripts();
+        $scripts = $tpl->scriptLoader->getScripts();
+        $root = UrlService::getRootUrl();
         $content = [];
 
         foreach ($scripts as $script) {
-            $src = self::makeScriptSrc($script);
-            $content[] = '<script type="module" src="' . $src . '"></script>';
+            $content[] = '<script type="module" src="' . $root . $script->path . '"></script>';
         }
 
         return new Html(implode("\n", $content));
-    }
-
-    private static function makeScriptSrc(Combinable $script): string
-    {
-        if ($script->isRemote()) {
-            $src = $script->path;
-        } else {
-            $src = UrlService::getRootUrl() . $script->path;
-            // Vite manifest filenames already carry a content hash, so the
-            // ?v= query string is redundant for dist/ paths; keep it for
-            // legacy/plugin-supplied paths.
-            if (!str_starts_with($script->path, 'dist/')) {
-                $src .= '?v' . ($script->version !== 0 && $script->version !== '' ? $script->version : AppInfo::VERSION);
-            }
-        }
-        // The CombinedScript event lets plugins rewrite the URL (e.g. CDN
-        // routing); the listener mutates $event->ret which we read back here.
-        $scriptEvent = new CombinedScript($src, $script);
-        Kernel::service(EventDispatcherInterface::class)->dispatch($scriptEvent);
-        $src = $scriptEvent->ret;
-        $embellished = UrlService::embellishUrl($src);
-        // embellishUrl returns string|array, keyed by input shape
-        // (string→string, array→array). We always pass a string in,
-        // so the array branch is unreachable — guard explicitly so
-        // the static return type stays `string`.
-        if (is_array($embellished)) {
-            return $src;
-        }
-        return $embellished;
     }
 
     public static function combineCss(

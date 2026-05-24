@@ -1,33 +1,35 @@
-/* Search CSS. Structural rules are here; color tokens are defined below and
-   overridden per colorscheme in {colorscheme}-search.css (loaded after this). */
-
-/* Default (clear/light) color tokens — overridden by dark-search.css */
+/* Search CSS — single-file, dark colorscheme. */
 :root {
-  --search-filter-icon: #474747;
-  --search-popin-close: #fff;
-  --search-popin-title: #f70;
-  --search-checked-border: #777;
-  --search-checked-bg: #777;
-  --search-checked-color: #fff;
-  --search-filter-btn-fg: #fff;
-  --search-filter-btn-hover-bg: #f70;
-  --search-cancel-bg: #e8e8ea;
-  --search-cancel-color: #777;
-  --search-cancel-hover-bg: #dadada;
-  --search-form-bg: #fff;
-  --search-form-color: #000;
-  --search-word-bg: #eee;
-  --search-word-color: #444;
-  --search-alt-row-bg: #f3f3f3;
-  --search-checked-icon: #f70;
-  --search-selected-option-bg: #fff5e8;
-  --search-head-btn2-bg: #fafafa;
-  --search-head-btn2-hover-bg: #eee;
-  --search-head-btn2-hover-color: #555;
-  --search-album-popin-bg: #fff;
-  --search-close-popin: #fff;
-  --search-clear-all: #c4c4c4;
-  --search-clear-all-clickable: #f70;
+  --search-filter-icon: #aeaeae;
+  --search-popin-close: #777;
+  --search-popin-title: #f70b;
+  --search-checked-border: #555;
+  --search-checked-bg: #555;
+  --search-checked-color: #ccc;
+  --search-filter-btn-fg: #ffeacf;
+  --search-filter-btn-hover-bg: #f70b;
+  --search-cancel-bg: #555;
+  --search-cancel-color: #ccc;
+  --search-cancel-hover-bg: #444;
+  --search-form-bg: #333;
+  --search-form-color: #bbb;
+  --search-word-bg: #777;
+  --search-word-color: #eee;
+  --search-alt-row-bg: #444;
+  --search-checked-icon: #fff;
+  --search-selected-option-bg: rgb(244, 171, 79, 0.17);
+  --search-head-btn2-bg: #222;
+  --search-head-btn2-hover-bg: #000;
+  --search-head-btn2-hover-color: #777;
+  --search-album-popin-bg: #555;
+  --search-close-popin: #777;
+  --search-clear-all: #777;
+  --search-clear-all-clickable: #f70b;
+  --search-placeholder: var(--color-text);
+  --search-input-bg: var(--color-border);
+  --search-modal-bg: var(--color-bg-elevated);
+  --search-mobile-border: var(--color-bg-elevated);
+  --search-mobile-arrow-fill: var(--color-bg-panel);
 }
 .filter-container {
   display: flex;
@@ -467,6 +469,7 @@
   overflow-x: hidden;
   direction: rtl;
   text-overflow: ellipsis;
+  color: #000;
 }
 
 .breadcrumb-item .remove-item {
@@ -551,6 +554,11 @@
 .search-input {
   padding: var(--space-sm);
   margin-bottom: var(--space-sm);
+  background: var(--search-input-bg);
+}
+
+.search-input::placeholder {
+  color: var(--search-placeholder);
 }
 
 @media (max-width: 600px) {
@@ -566,6 +574,8 @@
     border-radius: 0;
     box-shadow: none;
     top: 37px;
+    border-top: 1px solid var(--search-mobile-border);
+    border-bottom: 1px solid var(--search-mobile-border);
   }
   .form_mobile_arrow {
     position: absolute;
@@ -574,6 +584,12 @@
 
   .arrow-border {
     stroke-width: 1.5px;
+    fill: transparent;
+    stroke: var(--search-mobile-border);
+  }
+
+  .arrow-fill {
+    fill: var(--search-mobile-arrow-fill);
   }
 
   .filter-actions {
@@ -680,7 +696,7 @@
 .modal-content {
   display: flex;
   flex-direction: column;
-  background-color: #fff;
+  background-color: var(--search-modal-bg);
   position: absolute;
   border-radius: var(--radius-md);
   left: 50%;
@@ -694,11 +710,13 @@
 .help-popin-search {
   cursor: pointer;
   font-weight: normal;
+  color: var(--color-text);
 }
 
+.help-popin-search:hover,
 .help-popin-search:hover span,
 .help-popin-search:hover .icon-help-circled::before {
-  color: #3c3c3c;
+  color: var(--color-text);
 }
 
 #modalQuickSearch p {
@@ -720,8 +738,7 @@
   gap: var(--space-lg);
 }
 
-/* Color rules for new selectors not present in the structural section above.
-   Selectors from clear-search.css / dark-search.css that use tokens. */
+/* Color rules */
 
 .filter .filter-icon {
   color: var(--search-filter-icon);
@@ -750,6 +767,14 @@
 .custom_posted_date .date_posted-option:nth-child(even) .month_input i,
 .custom_posted_date .days_container .date_posted-option:nth-child(odd) label,
 .custom_posted_date .days_container .date_posted-option:nth-child(odd) i,
+.preset_created_date .date_created-option:nth-child(odd) label,
+.preset_created_date .date_created-option:nth-child(odd) i,
+.custom_created_date .date_created-option:nth-child(odd) .year_input label,
+.custom_created_date .date_created-option:nth-child(odd) .year_input i,
+.custom_created_date .months_container .date_created-option:nth-child(even) .month_input label,
+.custom_created_date .months_container .date_created-option:nth-child(even) .month_input i,
+.custom_created_date .days_container .date_created-option:nth-child(odd) label,
+.custom_created_date .days_container .date_created-option:nth-child(odd) i,
 .ratios-option:nth-child(odd),
 .ratings-option:nth-child(odd) {
   background: var(--search-alt-row-bg);
@@ -758,6 +783,7 @@
 .filetypes-option label .checked-icon,
 .added_by-option label .checked-icon,
 .date_posted-option label .checked-icon,
+.date_created-option label .checked-icon,
 .ratios-option label .checked-icon,
 .ratings-option label .checked-icon {
   color: var(--search-checked-icon);
@@ -774,6 +800,8 @@
 .date_posted-option .selected label,
 .date_posted-option .selected .accordion-toggle,
 .date_posted-option input:checked + label,
+.preset_created_date .date_created-option input:checked + label,
+.custom_created_date .selected input:checked,
 .ratios-option input:checked + label,
 .ratings-option input:checked + label {
   background: var(--search-selected-option-bg);

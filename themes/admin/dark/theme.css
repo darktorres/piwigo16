@@ -218,13 +218,10 @@ a.Piwigo:hover span.Piwigo {
 }
 
 .pluginBox,
-.pluginContent,
 .groups .GroupContainer {
   background-color: #333;
   color: #999;
-  border-right-color: #333;
   box-shadow: none;
-  border-left: none;
 }
 .pluginContainer.line-form .pluginBox:hover .pluginContent {
   background: #1e1e1d;
@@ -234,9 +231,6 @@ a.Piwigo:hover span.Piwigo {
 }
 
 /* .pluginActionLevel1 {color: #333;} */
-.pluginActionLevel2 {
-  color: #bbb;
-}
 .pluginFilter input {
   border-color: #c1c1c1;
 }
@@ -688,19 +682,6 @@ a#showPermissions {
   color: #fff;
 }
 
-.AddPluginSuccess label,
-.DeactivatePluginSuccess label,
-.RestorePluginSuccess label {
-  color: var(--admin-info-success-fg);
-  background-color: var(--admin-info-success-bg);
-}
-
-.AddPluginSuccess span,
-.RestorePluginSuccess span,
-.DeactivatePluginSuccess span {
-  color: var(--admin-info-success-fg);
-}
-
 /* Popin Jconfirm */
 
 .jconfirm .jconfirm-box {
@@ -824,33 +805,8 @@ a#showPermissions {
   color: #777;
 }
 
-.pluginContent {
-  border-left: solid 5px #ffa646;
-}
-
 .dropdown-option-content a {
   color: #3a3a3a;
-}
-
-.pluginUnavailableAction {
-  background-color: #888;
-  color: #666;
-}
-
-.tab-filters label,
-.pluginTypeFilter label {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-
-  width: auto;
-  height: 30px;
-  padding: 0 10px;
-
-  color: #c1c1c1;
-  background: #555;
-  box-shadow: 0 2px #0006;
 }
 
 .tab-filters label:hover,
@@ -858,38 +814,14 @@ a#showPermissions {
   background: #1b1b1b;
 }
 
-.tab-filters input:checked + label,
-.pluginTypeFilter input:checked + label {
-  background: #ffa646;
-  color: #444;
-  box-shadow: 0 2px #925f00;
-}
-
 .tab-filters input:checked:hover + label,
 .pluginTypeFilter input:checked:hover + label {
   background: #ffc17e;
 }
 
-.tab-filters input:checked + label .filter-badge,
-.pluginTypeFilter input:checked + label .filter-badge {
-  background-color: #d18800;
-  color: #444;
-}
-
-.tab-filters input + label .filter-badge,
-.pluginTypeFilter input + label .filter-badge {
-  background-color: #3f3f3f;
-  color: #bababa;
-}
-
 .pluginBox.plugin-active .pluginActionsSmallIcons a span {
   background: var(--admin-accent-soft) ;
   color: #3c3c3c ;
-}
-
-.pluginContainer.line .pluginBox:hover .pluginContent {
-  transition: 0.4s;
-  background: #333;
 }
 
 .pluginContainer.line .pluginBox:hover.plugin-inactive .slider {
@@ -920,28 +852,6 @@ a#showPermissions {
 .pluginContainer.line .pluginBox.plugin-inactive:hover .pluginUnavailableAction {
   color: #3c3c3c ;
   background: #dddd ;
-}
-
-.pluginBox.active .pluginActionsSmallIcons a span {
-  background: #ffa500;
-  color: #3c3c3c;
-}
-
-.pluginBox.active .pluginActionsSmallIcons a span:hover {
-  color: #111;
-}
-
-.PluginActionError span {
-  color: #ffd5dc;
-}
-
-.PluginActionError label {
-  background-color: #f22;
-  color: #ffd5dc;
-}
-
-.pluginTags > span {
-  background-color: #444;
 }
 
 .pluginLink {

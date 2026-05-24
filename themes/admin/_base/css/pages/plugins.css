@@ -275,10 +275,10 @@
 .pluginContent {
   width: 100%;
   text-align: left;
-  background-color: #fafafa;
+  background-color: var(--admin-bg-panel);
   padding: var(--space-md);
   position: relative;
-  border-left: solid 5px var(--admin-accent-pale);
+  border-left: solid 5px var(--admin-accent-soft);
   border-top-right-radius: var(--radius-sm);
   border-bottom-right-radius: var(--radius-sm);
   /* border-right:solid 5px #fafafa; */
@@ -342,7 +342,7 @@
 }
 
 .pluginTags > span {
-  background-color: #e0e0e0;
+  background-color: var(--admin-border);
   border-radius: var(--radius-md);
   padding: 3px 10px;
   margin-right: var(--space-xs);
@@ -377,7 +377,7 @@
 .pluginActionLevel1,
 .pluginActionLevel2,
 .pluginUnavailableAction {
-  color: #3c3c3c;
+  color: var(--admin-text);
   margin: 0;
   font-weight: 700;
 }
@@ -403,13 +403,13 @@
   opacity: 0.5;
   font-size: var(--font-size-xs);
   padding: 2px 10px;
-  background-color: #dddd;
+  background-color: var(--admin-bg-deepest);
   border-radius: var(--radius-sm);
 }
 
 .pluginUnavailableAction:hover {
   text-decoration: none;
-  color: #3c3c3c;
+  color: var(--admin-text);
   cursor: default;
 }
 
@@ -476,8 +476,8 @@
   height: 30px;
   padding: 0 10px;
 
-  color: #898989;
-  background: #f3f3f3;
+  color: var(--admin-text-muted);
+  background: var(--admin-bg-elevated);
   box-shadow: 0 2px #00000024;
   font-weight: 600;
 }
@@ -494,20 +494,20 @@
 .tab-filters input:checked + label,
 .pluginTypeFilter input:checked + label {
   background: var(--admin-accent-soft);
-  color: #fff;
+  color: #3c3c3c;
   box-shadow: 0 2px #d18800;
 }
 
 .tab-filters input:checked + label .filter-badge,
 .pluginTypeFilter input:checked + label .filter-badge {
   background-color: #d18800;
-  color: #ffe5b6;
+  color: #3c3c3c;
 }
 
 .tab-filters input + label .filter-badge,
 .pluginTypeFilter input + label .filter-badge {
-  background-color: #dbdbdb;
-  color: #8c8c8c;
+  background-color: var(--admin-border);
+  color: var(--admin-text);
 }
 
 .nbPluginsSearch {
@@ -518,7 +518,7 @@
 
 .pluginContainer.line .pluginBox:hover .pluginContent {
   transition: 0.4s;
-  background: var(--admin-move-cat-hover-bg);
+  background: var(--admin-bg-elevated);
 }
 
 .pluginContainer.line-form .pluginBox:hover.plugin-inactive .slider {
@@ -681,7 +681,8 @@
   justify-content: center;
 
   padding: 5px 2px;
-  background: var(--admin-accent-pale);
+  background: var(--admin-accent-soft);
+  color: #3c3c3c;
   border-radius: var(--radius-sm);
 }
 
@@ -692,6 +693,7 @@
 
   padding: 5px 2px;
   background: var(--admin-accent);
+  color: #111;
   border-radius: var(--radius-sm);
 }
 
@@ -814,12 +816,12 @@
 }
 
 .PluginActionError span {
-  color: rgb(170, 0, 0);
+  color: var(--admin-info-error-fg);
 }
 
 .PluginActionError label {
-  background-color: #f5c2c2;
-  color: rgb(170, 0, 0);
+  background-color: var(--admin-info-error-bg);
+  color: var(--admin-info-error-fg);
   padding: var(--space-sm);
   cursor: default;
   border-radius: 30px;

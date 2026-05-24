@@ -115,6 +115,21 @@
   --admin-chart-orange: #ffa744;
   --admin-chart-red: #ff5252;
 
+  /* selection-mode side panel */
+  --admin-selection-mode-fg: #a0a0a0;
+  --admin-selection-border: #e6e6e6;   /* left border of the side panel */
+
+  /* inline tooltip (TooltipText) — inverted in dark */
+  --admin-tooltip-bg: #f3f3f3;
+  --admin-tooltip-fg: #3c3c3c;
+  --admin-tooltip-border: #3c3c3c;
+
+  /* success indicator border (.UsernameBlock.success_message) */
+  --admin-success-border: #c2f5c2;
+
+  /* secondary button / link border (showPermissions-style) */
+  --admin-btn-secondary-border: #d6d6d6;
+
   /* Non-color design tokens (Step 6 — mirrored from
      themes/_base/css/tokens.css). */
 

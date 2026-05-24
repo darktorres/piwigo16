@@ -24,6 +24,9 @@ a#showPermissions {
   font-size: 11px;
   font-weight: bold;
   margin-left: 35px;
+  color: var(--admin-text);
+  border: 1px solid var(--admin-btn-secondary-border);
+  background-color: var(--admin-bg-panel);
 }
 a#showPermissions:hover {
   border-color: #a5a5a5;
@@ -485,6 +488,8 @@ a#showPermissions:hover {
   padding: 12px 10px;
   border: 1px solid #787777a6;
   margin-bottom: 8px;
+  background-color: var(--admin-bg-page);
+  color: var(--admin-text);
 }
 .pageNumberSelected {
   background-color: var(--admin-accent-soft);

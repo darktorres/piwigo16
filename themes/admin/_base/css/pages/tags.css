@@ -572,7 +572,7 @@
 .MergeOptionsContainer select {
   padding: 10px 5px;
   border: none;
-  background-color: #fff;
+  background-color: var(--admin-input-bg);
   box-shadow: 0 0 2px #c5c5c5;
   border-radius: var(--radius-sm);
 }

@@ -11,6 +11,8 @@
   border-radius: var(--radius-xl);
   padding: 4px 10px;
   margin-right: 6px;
+  background-color: var(--admin-bg-page);
+  color: var(--admin-text-muted);
 }
 
 .line {

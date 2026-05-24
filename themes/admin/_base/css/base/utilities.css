@@ -178,6 +178,11 @@ ul.thumbnails input {
   position: absolute;
   left: 2px;
   top: 2px;
+  font-size: 10px;
+  margin: 0;
+  background-color: var(--admin-form-bg);
+  color: var(--admin-form-fg);
+  text-align: center;
 }
 ul.thumbnails .levelIndicatorF {
   display: block;
@@ -262,6 +267,11 @@ table.languages tr td {
 .font-checkbox.selected,
 .font-checkbox .icon-check {
   color: var(--admin-accent-soft);
+}
+
+/* Show the check icon inside a selected thumbnail (both themes need display:block). */
+#batchManagerGlobal li.thumbSelected .font-checkbox [class*="icon-check"]::before {
+  display: block;
 }
 
 .font-checkbox:hover {

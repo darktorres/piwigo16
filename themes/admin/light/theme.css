@@ -68,13 +68,6 @@ h3 {
 }
 
 
-ul.thumbnails input {
-  color: #666;
-  font-size: 10px;
-  margin: 0;
-  background-color: #bbb;
-  text-align: center;
-}
 .throw {
   font-size: 120%;
   line-height: 26px;
@@ -127,11 +120,6 @@ ul.thumbnails li.rank-of-image {
   background-color: #ddd;
 }
 
-/* Batch Manager — light-only display:block override (matches dark). */
-#batchManagerGlobal li.thumbSelected .font-checkbox [class*="icon-check"]::before {
-  display: block;
-}
-
 #batchManagerGlobal ul.thumbnails li:hover .wrap2 {
   background-color: transparent;
   color: #999;
@@ -173,7 +161,7 @@ p.albumTitle img {
 }
 
 .groups .GroupContainer {
-  box-shadow: 0 2px 5px #00000024;
+  box-shadow: 0 2px 5px #00000024; /* keep: light uses diffuse drop shadow; dark uses tighter inset shadow (Bucket X) */
 }
 
 .groups #addGroupForm:hover #addGroup {
@@ -197,20 +185,10 @@ p.albumTitle img {
   border: 2px solid #d3d3d3;
 }
 
-.activity-filter-container {
-  color: #777;
-  background-color: #fff;
-}
-
 /* Selection mode */
 
 .slider::before {
   background-color: #fff; /* keep: light slider knob is white; no dark counterpart */
-}
-
-#selection-mode-block,
-.selection-mode {
-  border-left: 1px solid #e6e6e6;
 }
 
 .GroupBackgroudSelected {
@@ -225,10 +203,6 @@ p.albumTitle img {
 
 /* Selection mode content */
 
-.SelectionModeGroupList {
-  color: #a0a0a0;
-}
-
 #selection-mode-block button,
 #commentsSelection button {
   border: 1px solid #e7e7e7;
@@ -240,23 +214,7 @@ p.albumTitle img {
   border: 1px solid var(--admin-accent-soft);
 }
 
-.MergeOptionsContainer select {
-  background-color: #fff;
-  box-shadow: 0 0 2px #c5c5c5;
-}
-
 /* UserList Pop in */
-
-
-.UsernameBlock.success_message {
-  border: 2px solid #c2f5c2;
-}
-
-.Tooltip p.TooltipText {
-  background-color: #f3f3f3;
-  color: #3c3c3c;
-  border: 1px solid #3c3c3c;
-}
 
 
 /* ------ */
@@ -272,10 +230,6 @@ p.albumTitle img {
   background-color: #e5e5e5;
 }
 
-#watermarkPositionBox label {
-  color: #444;
-}
-
 .afterUploadActions a.secondary_button {
   background-color: #ececec;
 }
@@ -283,11 +237,6 @@ p.albumTitle img {
   background-color: #ffa646;
 }
 
-a#showPermissions {
-  color: #5b5b5b;
-  border: 1px solid #d6d6d6;
-  background-color: #fafafa;
-}
 .icon-plus.cboxElement {
   background-color: #f6f6f6;
 }
@@ -324,11 +273,6 @@ a#showPermissions {
 .selectionEmptyBlock,
 .noFilter {
   background-color: #f3f3f3;
-}
-#action_title .large,
-#action_author .large {
-  background-color: #fff;
-  color: #4e4e4e;
 }
 #filter_dimension .slider-choice,
 #filter_filesize .slider-choice {
@@ -422,12 +366,8 @@ a#showPermissions {
   box-shadow: 0 2px #00000024;
 }
 .search-result-item {
-  background-color: #fafafa;
-  box-shadow: 0 2px #00000024;
-  color: #777;
+  box-shadow: 0 2px #00000024; /* keep: light-specific shadow opacity; dark uses #00000070 */
 }
-
-
 
 
 .move-cat-container:hover .badge-container i,

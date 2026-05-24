@@ -156,6 +156,7 @@
 
 .UsernameBlock.success_message {
   margin-right: 0;
+  border: 2px solid var(--admin-success-border);
 }
 
 .UsersInGroupListContainer {
@@ -185,12 +186,12 @@
 .Tooltip p.TooltipText {
   visibility: hidden;
   width: 157px;
-  background-color: #f3f3f3;
-  color: #3c3c3c;
+  background-color: var(--admin-tooltip-bg);
+  color: var(--admin-tooltip-fg);
   text-align: left;
   padding: 5px 10px;
   border-radius: var(--radius-md);
-  border: 1px solid #3c3c3c;
+  border: 1px solid var(--admin-tooltip-border);
   font-weight: 700;
   font-size: 10px;
   position: absolute;

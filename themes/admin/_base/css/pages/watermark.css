@@ -9,6 +9,7 @@
 #watermarkPositionBox label {
   font-weight: normal;
   display: block;
+  color: var(--admin-text);
 }
 
 #watermarkPositionBox label.middle {

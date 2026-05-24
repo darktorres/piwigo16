@@ -132,6 +132,7 @@ input:focus + .slider {
 #selection-mode-block,
 .selection-mode {
   background-color: var(--admin-bg-panel);
+  border-left: 1px solid var(--admin-selection-border);
 }
 
 #selection-mode-block {
@@ -167,6 +168,7 @@ input:focus + .slider {
 .SelectionModeGroupList {
   font-weight: 700;
   font-size: var(--font-size-base);
+  color: var(--admin-selection-mode-fg);
 }
 
 .SelectionModeGroupList div {

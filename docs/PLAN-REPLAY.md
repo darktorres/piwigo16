@@ -482,6 +482,57 @@ rewrites via 30+ regex passes. Known residues that require manual fix:
 The converter explicitly surfaces residues in the output rather than
 silently corrupting templates.
 
+#### Column-level schema migration (46 type changes)
+
+**10 enum→tinyint** (boolean columns):
+- `categories.commentable`, `categories.visible`, `comments.validated`,
+  `groups.is_default`, `user_cache.need_update`, `user_infos.enabled_high`,
+  `user_infos.expand`, `user_infos.last_visit_from_history`,
+  `user_infos.show_nb_comments`, `user_infos.show_nb_hits`,
+  `user_mail_notification.enabled`
+
+**4 text→JSON** (serialized data normalization):
+- `config.value`: `text` → `json DEFAULT NULL`
+- `search.rules`: `text` → `json DEFAULT NULL`
+- `user_cache.forbidden_categories`: `mediumtext` → `JSON DEFAULT NULL`
+- `user_cache.image_access_list`: `mediumtext` → `JSON DEFAULT NULL`
+- `user_infos.preferences`: `TEXT` → `json DEFAULT NULL`
+
+**9 binary→utf8mb4_bin** (charset normalization):
+- `categories.permalink`, `images.file`, `old_permalinks.permalink`,
+  `plugins.id`, `sessions.id`, `tags.url_name`, `user_feed.id`,
+  `user_mail_notification.check_key`, `users.username`
+
+**7 default changes** (1970-01-01 → NULL):
+- `comments.date`, `history.date`, `images.date_available`,
+  `old_permalinks.date_deleted`, `rate.date`, `sessions.expiration`,
+  `upgrade.applied`, `user_infos.registration_date`
+
+**6 TIMESTAMP NOT NULL** additions, **3 unsigned** fixes, **1 new column**
+(`history_summary.summary_id` AUTO_INCREMENT), **0 columns removed**.
+
+#### Smarty converter residue rate
+
+**94% clean** — 127 of 135 templates convert without residues.
+
+8 templates need manual fix:
+- `intro.tpl`, `search_filters.inc.tpl`, `mainpage_categories.tpl`,
+  `month_calendar.tpl`, `picture_content.tpl` — multi-arg pipe in `{if}`
+- `plugins_installed.tpl`, `updates_pwg.tpl` — `{counter}` tag
+- `picture_nav_buttons.tpl` — `|window` unknown modifier
+
+#### Psalm issue count
+
+**1787 issues** (0 errors, 1787 info-level), 98.1% type inference coverage.
+Psalm can auto-fix 21 (MissingParamType). Analysis takes 20s / 613MB.
+
+#### E2E Playwright test status
+
+**51 passed, 3 skipped, 0 failed** (2.4 minutes against live server).
+15 spec files covering: install, gallery smoke, admin smoke, album CRUD,
+photo upload, settings, console cleanliness, auth/remember-me, search,
+tags, user management, admin extended smoke, album tree, fixture regeneration.
+
 ### Verified claims (correct)
 
 - origin/16.x: 947 PHP, 333 JS, 140 TPL, 83 CSS ✓

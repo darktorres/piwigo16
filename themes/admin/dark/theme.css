@@ -93,7 +93,7 @@
 /* padding-top: 0; min-height: 100%; width:100%; position:absolute; left:0px; } */
 h3,
 .content {
-  background-color: #222;
+  background-color: var(--admin-bg-panel);
 }
 .throw em {
   font-style: normal;
@@ -125,9 +125,9 @@ td h3 {
 input:focus,
 select:focus,
 textarea:focus {
-  outline: #ffa646 solid 1px;
-  background-color: #444;
-  color: #999;
+  outline: var(--admin-accent-soft) solid 1px;
+  background-color: var(--admin-bg-page);
+  color: #999; /* keep: dark-specific focus text */
 }
 
 input[type="submit"]:hover,
@@ -146,12 +146,12 @@ a.Piwigo {
   font-size: 11px;
   font-weight: normal;
   letter-spacing: 0;
-  color: #f33;
+  color: var(--admin-piwigo-brand);
   text-decoration: none;
   border: 0;
 }
 a.Piwigo:hover span.Piwigo {
-  border-bottom: 1px solid #ff3363;
+  border-bottom: 1px solid #ff3363; /* keep: dark hover variant of brand color */
 }
 
 /* RADU - I comment this because it makes FF form controls activation very slow)
@@ -165,8 +165,8 @@ a.Piwigo:hover span.Piwigo {
 }
 
 .font-checkbox .adminOnlyIcon {
-  color: #bbb;
-  background: #555;
+  color: #bbb; /* keep: dark-specific icon text */
+  background: var(--admin-border);
 }
 
 
@@ -198,7 +198,7 @@ a.Piwigo:hover span.Piwigo {
 }
 
 .themeSelect {
-  background-color: #333;
+  background-color: var(--admin-bg-elevated);
   box-shadow: none;
 }
 .themeSelect.themeDefault {
@@ -213,8 +213,8 @@ a.Piwigo:hover span.Piwigo {
   border-bottom: none;
 }
 .themeActions span {
-  background-color: #555;
-  color: #bbb;
+  background-color: var(--admin-border);
+  color: #bbb; /* keep: dark-specific theme action text */
 }
 .showInfo-dropdown-header a {
   color: #3a3a3a;
@@ -228,20 +228,20 @@ a.Piwigo:hover span.Piwigo {
 
 .pluginBox,
 .groups .GroupContainer {
-  background-color: #333;
-  color: #999;
+  background-color: var(--admin-bg-elevated);
+  color: #999; /* keep: dark-specific card text */
   box-shadow: none;
 }
 .pluginContainer.line-form .pluginBox:hover .pluginContent {
   background: #1e1e1d;
 }
 .groups #addGroupForm:hover {
-  background-color: #1b1b1b;
+  background-color: var(--admin-bg-deepest);
 }
 
 /* .pluginActionLevel1 {color: #333;} */
 .pluginFilter input {
-  border-color: #c1c1c1;
+  border-color: var(--admin-text);
 }
 .languageDefault {
   background-color: #555;
@@ -251,8 +251,8 @@ a.Piwigo:hover span.Piwigo {
   color: #333 ;
 }
 .GroupContainer .group_name-editable {
-  background-color: #323232 ;
-  border: 1px solid #666 ;
+  background-color: #323232; /* keep: dark-specific group edit bg */
+  border: 1px solid var(--admin-border-strong);
 }
 .GroupContainer .group-rename .icon-ok {
   color: #222;
@@ -264,7 +264,7 @@ a.Piwigo:hover span.Piwigo {
 }
 
 #batchManagerGlobal .thumbSelected .wrap2 {
-  background-color: #555 ;
+  background-color: var(--admin-border);
 }
 
 #batchManagerGlobal #applyFilter {
@@ -273,7 +273,7 @@ a.Piwigo:hover span.Piwigo {
 }
 
 #batchManagerGlobal #applyFilter:hover {
-  background-color: #1b1b1b;
+  background-color: var(--admin-bg-deepest);
   cursor: pointer ;
 }
 
@@ -284,15 +284,15 @@ a.Piwigo:hover span.Piwigo {
 /* Picture add */
 
 .upload-options-content .switch .slider {
-  background-color: #444;
+  background-color: var(--admin-bg-page);
 }
 
 /* Picture edit */
 #picture-content input[type="text"],
 #picture-content textarea,
 #picture-content select {
-  background-color: #444;
-  color: #c1c1c1;
+  background-color: var(--admin-bg-page);
+  color: var(--admin-text);
 }
 
 /* Album edit — dark-only structural rule: force icon-* opacity to 1 on hover
@@ -343,12 +343,12 @@ a.Piwigo:hover span.Piwigo {
 
 .slider::before,
 .slider::after {
-  background-color: #777;
+  background-color: var(--admin-text-muted);
 }
 
 input:checked + .slider::before,
 input:checked + .slider::after {
-  background-color: #333;
+  background-color: var(--admin-bg-elevated);
 }
 
 .GroupBackgroudSelected {
@@ -384,7 +384,7 @@ input:checked + .slider::after {
 /* UserList Pop in */
 
 .close-modal {
-  color: #444;
+  color: var(--admin-close-modal);
 }
 
 .CloseUserList:hover,
@@ -459,7 +459,7 @@ a#showPermissions {
 }
 
 .cat-modify-actions a:hover .cat-modify-actions .toggle-comment-option:hover {
-  color: #fff ;
+  color: var(--admin-text-strong);
 }
 
 .cat-modify-input-container #cat-parent {
@@ -480,22 +480,22 @@ a#showPermissions {
 #addFilter,
 #filterList select,
 .sort-by select {
-  background-color: #444;
-  color: #bfbfbf;
+  background-color: var(--admin-bg-page);
+  color: #bfbfbf; /* keep: dark-specific filter text */
 }
 
 #addFilter:hover {
   color: #ebebeb;
 }
 #filter_search input {
-  background-color: #444;
-  color: #bfbfbf;
-  border: 1px solid #666;
+  background-color: var(--admin-bg-page);
+  color: #bfbfbf; /* keep: dark-specific filter text */
+  border: 1px solid var(--admin-border-strong);
   box-shadow: none;
 }
 
 .pagination-item-container a:hover {
-  color: #ffa646;
+  color: var(--admin-accent-soft);
 }
 #action_move a:last-child {
   color: #c0c0c0;
@@ -519,7 +519,7 @@ a#showPermissions {
 }
 #addFilter optgroup,
 #batchManagerGlobal option[disabled] {
-  background-color: #555;
+  background-color: var(--admin-border);
 }
 .pageNumberSelected {
   background-color: #b4b4b4;
@@ -536,36 +536,36 @@ a#showPermissions {
 
 .errors li,
 .infos li {
-  color: #fff;
+  color: var(--admin-text-strong);
 }
 
 .errors a {
-  background-color: #6b3030;
+  background-color: #6b3030; /* keep: dark error-link pill */
   padding: 2px 7px;
-  color: #fff;
+  color: var(--admin-text-strong);
 }
 
 .infos a {
-  background-color: #28554a;
+  background-color: #28554a; /* keep: dark info-link pill */
   padding: 2px 7px;
-  color: #fff;
+  color: var(--admin-text-strong);
 }
 
 .warnings a {
-  background-color: #734627;
+  background-color: #734627; /* keep: dark warning-link pill */
   padding: 2px 7px;
-  color: #fff;
+  color: var(--admin-text-strong);
 }
 
 /* Popin Jconfirm */
 
 .jconfirm .jconfirm-box {
-  background-color: #333 ;
+  background-color: var(--admin-bg-elevated);
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-default {
-  color: #777 ;
-  background-color: #222 ;
+  color: var(--admin-text-muted);
+  background-color: var(--admin-bg-panel);
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-default:hover {
@@ -585,16 +585,16 @@ a#showPermissions {
 }
 
 .jconfirm.jconfirm-modern .jconfirm-box .jconfirm-buttons button + button {
-  background-color: #2e2e2e;
-  color: #777;
+  background-color: #2e2e2e; /* keep: mid-gray between panel/elevated */
+  color: var(--admin-text-muted);
 }
 
 .jconfirm.jconfirm-modern .jconfirm-box .jconfirm-buttons button + button:hover {
-  background-color: #1b1b1b;
+  background-color: var(--admin-bg-deepest);
 }
 
 .jconfirm .jconfirm-box.loading::before {
-  background: #333 ;
+  background: var(--admin-bg-elevated);
 }
 
 /* Tag Manager */
@@ -602,7 +602,7 @@ a#showPermissions {
 .tag-box,
 .tag-header .selection-controller a,
 .comments-selection-controller .comments-selection-btn {
-  background-color: #333 ;
+  background-color: var(--admin-bg-elevated);
 }
 
 /* .info-warning/.info-error pill colors now handled by tokens in
@@ -610,13 +610,13 @@ a#showPermissions {
 .info-warning a,
 .info-message a,
 .info-error a {
-  color: #fff;
+  color: var(--admin-text-strong);
 }
 
 /* Album Move (and album search) */
 .move-cat-container,
 .search-album-elem {
-  background-color: #333;
+  background-color: var(--admin-bg-elevated);
   box-shadow: none;
 }
 
@@ -666,18 +666,18 @@ a#showPermissions {
 
 .pluginActionLevel1,
 .themeActions a:nth-child(1) {
-  background-color: #ffa646;
+  background-color: var(--admin-accent-soft);
 }
 
 .themeActions a:nth-child(2),
 .plugin-inactive .pluginContent .pluginActionLevel1 {
-  background-color: #2e2e2e;
-  color: #777;
+  background-color: #2e2e2e; /* keep: mid-gray between panel/elevated */
+  color: var(--admin-text-muted);
 }
 
 .themeActions a:nth-child(2):hover {
-  background-color: #1b1b1b;
-  color: #777;
+  background-color: var(--admin-bg-deepest);
+  color: var(--admin-text-muted);
 }
 
 .dropdown-option-content a {
@@ -686,12 +686,12 @@ a#showPermissions {
 
 .tab-filters label:hover,
 .pluginTypeFilter label:hover {
-  background: #1b1b1b;
+  background: var(--admin-bg-deepest);
 }
 
 .tab-filters input:checked:hover + label,
 .pluginTypeFilter input:checked:hover + label {
-  background: #ffc17e;
+  background: var(--admin-accent-pale);
 }
 
 .pluginBox.plugin-active .pluginActionsSmallIcons a span {
@@ -701,12 +701,12 @@ a#showPermissions {
 
 .pluginContainer.line .pluginBox:hover.plugin-inactive .slider {
   transition: 0.4s;
-  background: #444;
+  background: var(--admin-bg-page);
 }
 
 .pluginContainer .pluginBox.plugin-inactive .slider {
   transition: 0.4s;
-  background: #444;
+  background: var(--admin-bg-page);
 }
 
 .pluginContainer.line .pluginBox:hover .pluginContent .pluginActions a {
@@ -717,7 +717,7 @@ a#showPermissions {
 .pluginContainer.line .pluginBox.inactive:hover .pluginContent .pluginActions a {
   background: transparent;
   opacity: 1;
-  color: #777;
+  color: var(--admin-text-muted);
 }
 
 .pluginContainer.line .pluginBox:hover .pluginUnavailableAction {
@@ -742,17 +742,17 @@ a#showPermissions {
 
 .AlbumViewSelector,
 .UserViewSelector {
-  background: #555 ;
+  background: var(--admin-border);
 }
 
 .AlbumViewSelector label span {
-  background: #555;
+  background: var(--admin-border);
 }
 
 .AlbumViewSelector input:checked + label .icon-th-large,
 .AlbumViewSelector input:checked + label .icon-th-list,
 .AlbumViewSelector input:checked + label .icon-pause {
-  color: #444;
+  color: var(--admin-bg-page);
 }
 
 .UserViewSelector input:checked + label .icon-th-large,
@@ -768,27 +768,27 @@ a#showPermissions {
   background-color: transparent;
 }
 .user-first-col:hover .select-checkbox {
-  border: solid #ffa646 2px ;
-  background-color: #ffa646 ;
+  border: solid var(--admin-accent-soft) 2px ;
+  background-color: var(--admin-accent-soft);
 }
 .user-first-col .select-checkbox {
-  border: solid #ffa646 2px ;
+  border: solid var(--admin-accent-soft) 2px ;
   background-color: transparent ;
 }
 
 /* Selected container in userManager */
 
 .user-container:hover {
-  background-color: #232323;
+  background-color: var(--admin-move-cat-hover-bg);
 }
 
 .user-container.container-selected .user-container-username {
-  color: #777;
+  color: var(--admin-text-muted);
 }
 
 .user-container.container-selected .user-container-status,
 .user-container.container-selected .user-container-registration-date-since {
-  color: #777 ;
+  color: var(--admin-text-muted);
 }
 
 /* keep: dark uses a deeper burnt-orange for selected-group badges (#c76a23)
@@ -806,8 +806,8 @@ a#showPermissions {
 
 .advanced-filter-btn,
 .advanced-filter {
-  background-color: #2e2e2e;
-  color: #777;
+  background-color: #2e2e2e; /* keep: mid-gray between panel/elevated */
+  color: var(--admin-text-muted);
 }
 
 .user-action-select {
@@ -815,11 +815,11 @@ a#showPermissions {
 }
 
 .user-property-button a {
-  color: #c1c1c1;
+  color: var(--admin-text);
 }
 
 .user-property-button a:hover {
-  color: #f70;
+  color: var(--admin-accent);
 }
 
 .edit-password-success-reset-link,
@@ -830,12 +830,12 @@ a#showPermissions {
 
 .edit-password-success-ok .icon-button,
 .user-property-main-user-close .icon-button {
-  background-color: #333 ;
+  background-color: var(--admin-bg-elevated);
 }
 
 .edit-password-success-ok .icon-button:hover,
 .user-property-main-user-close .icon-button:hover {
-  color: #c1c1c1 ;
+  color: var(--admin-text);
 }
 
 .main-user-proceed,
@@ -861,8 +861,8 @@ a#showPermissions {
 .multiple-pictures-sizes,
 .multiple-compiledTemplate-sizes,
 .cache-size-value {
-  background: #555;
-  color: #c1c1c1;
+  background: var(--admin-border);
+  color: var(--admin-text);
 }
 
 /* Activity Tab in user manager */
@@ -887,11 +887,11 @@ a#showPermissions {
 }
 
 .selectedAlbum .selectedAlbum-first {
-  background-color: #333;
+  background-color: var(--admin-bg-elevated);
 }
 
 .selectedAlbum span a {
-  color: #777 ;
+  color: var(--admin-text-muted);
 }
 .selectedAlbum span:first-child {
   background-color: #343434 ;
@@ -912,7 +912,7 @@ a#showPermissions {
 }
 
 .AddUserPopInContainer .AddUserLabel {
-  color: #777; /* keep: dark uses muted label; base uses --admin-text */
+  color: var(--admin-text-muted); /* keep: dark uses muted label; base uses --admin-text */
 }
 
 .AddUserPopInContainer .AddUserInput {
@@ -935,7 +935,7 @@ a#showPermissions {
   color: #777;
 }
 .breadcrumb-item:hover {
-  background: #ffc17e;
+  background: var(--admin-accent-pale);
 }
 
 .breadcrumb-item:hover .link-path a {
@@ -957,18 +957,18 @@ a#showPermissions {
 }
 
 .search-result-item .icon-plus-circled {
-  color: #777;
+  color: var(--admin-text-muted);
 }
 
 
 .applicationCard {
-  box-shadow: -1px 1px 2px #1a1a1a;
-  background: #333;
+  box-shadow: -1px 1px 2px #1a1a1a; /* keep: dark-specific tight shadow */
+  background: var(--admin-bg-elevated);
 }
 
 .breadcrumb-item.add-item:hover {
-  color: #777;
-  background-color: #222;
+  color: var(--admin-text-muted);
+  background-color: var(--admin-bg-panel);
 }
 
 .breadcrumb-item.add-item.highlight {
@@ -978,7 +978,7 @@ a#showPermissions {
 }
 
 .breadcrumb-item.add-item.highlight:hover {
-  background-color: #f70;
+  background-color: var(--admin-accent);
 }
 
 .cat-modify-footer-see-out,
@@ -999,40 +999,40 @@ a#showPermissions {
 }
 
 .see-out.disabled p {
-  background-color: #5d5d5d ;
-  color: #373737 ;
+  background-color: var(--admin-disabled-bg);
+  color: var(--admin-disabled-fg);
 }
 
 /* album-tree (vanilla TS) overrides */
 
 .pwgtree-moving .move-cat-container .badge-container i.icon-green,
 .pwgtree-moving .move-cat-container .node-icon.icon-green {
-  background: #50a48f;
+  background: var(--admin-chart-green);
   color: #a9f6e3;
 }
 
 .pwgtree-moving .move-cat-container .badge-container i.icon-blue,
 .pwgtree-moving .move-cat-container .node-icon.icon-blue {
-  background: #50a48f;
-  color: #a9f6e3;
+  background: var(--admin-chart-blue);
+  color: #9fbef1;
 }
 
 .pwgtree-moving .move-cat-container .badge-container i.icon-purple,
 .pwgtree-moving .move-cat-container .node-icon.icon-purple {
-  background: #4e5aa3;
+  background: var(--admin-chart-purple);
   color: #a1adf6;
 }
 
 .pwgtree-moving .move-cat-container .badge-container i.icon-red,
 .pwgtree-moving .move-cat-container .node-icon.icon-red {
   color: #fec6c7;
-  background: #bc4b4a;
+  background: var(--admin-chart-red);
 }
 
 .pwgtree-moving .move-cat-container .badge-container i.icon-yellow,
 .pwgtree-moving .move-cat-container .node-icon.icon-yellow {
   color: #fedac0;
-  background: #d47f44;
+  background: var(--admin-chart-orange);
 }
 
 .pwgtree-moving .move-cat-container .icon-yellow,
@@ -1047,12 +1047,12 @@ a#showPermissions {
 /* Batch manager, unit mode */
 
 .elementEdit {
-  background-color: #555;
+  background-color: var(--admin-border);
 }
 
 .main-info-block {
-  border: 1px solid #333;
-  background: #333;
+  border: 1px solid var(--admin-bg-elevated);
+  background: var(--admin-bg-elevated);
 }
 
 .media-box {
@@ -1064,8 +1064,8 @@ a#showPermissions {
 .full-line-tag-box select,
 .calendar-input,
 .description-box {
-  background-color: #333 ;
-  color: #757575;
+  background-color: var(--admin-bg-elevated);
+  color: #757575; /* keep: dark-specific muted input text */
 }
 
 .half-line-info-box,
@@ -1076,7 +1076,7 @@ a#showPermissions {
 }
 
 .pictureIdLabel {
-  color: #c1c1c1;
+  color: var(--admin-text);
 }
 
 
@@ -1090,7 +1090,7 @@ a#showPermissions {
 }
 
 #whats_new button:hover {
-  background-color: #1b1b1b;
+  background-color: var(--admin-bg-deepest);
 }
 
 .certification[data-certification="-1"] {
@@ -1099,9 +1099,9 @@ a#showPermissions {
 
 /* Filters options */
 .select-views {
-  background-color: #444;
-  color: #898888;
-  border: 1px solid #666;
+  background-color: var(--admin-bg-page);
+  color: #898888; /* keep: dark-specific text shade */
+  border: 1px solid var(--admin-border-strong);
 }
 
 .comments-advanced-filter .advanced-filter-btn {

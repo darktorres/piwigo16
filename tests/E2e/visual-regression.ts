@@ -30,6 +30,7 @@ const ROUTES: ReadonlyArray<{ name: string; path: string; baselinePath?: string;
     { name: 'nbm', path: '/index.php?/nbm', needsAuth: false },
     { name: 'popuphelp', path: '/index.php?/popuphelp&page=search', needsAuth: false },
     { name: 'random', path: '/index.php?/random', needsAuth: false },
+    { name: 'tags-filtered', path: '/index.php?/tags/1-landscape', baselinePath: '/index.php?/tags/1-nature', needsAuth: false },
 
     // ── Frontend (auth required) ─────────────────────────────────────────
     { name: 'favorites', path: '/index.php?/favorites', needsAuth: true },
@@ -54,6 +55,7 @@ const ROUTES: ReadonlyArray<{ name: string; path: string; baselinePath?: string;
     { name: 'admin-photos-add-ftp', path: '/index.php?/admin&page=photos_add&section=ftp', needsAuth: true },
     { name: 'admin-photos-add-apps', path: '/index.php?/admin&page=photos_add&section=applications', needsAuth: true },
     { name: 'admin-photo-editor', path: '/index.php?/admin&page=photo&image_id=1', needsAuth: true },
+    { name: 'admin-picture-coi', path: '/index.php?/admin&page=picture_coi&image_id=1', needsAuth: true },
     { name: 'admin-batch', path: '/index.php?/admin&page=batch_manager', needsAuth: true },
     { name: 'admin-batch-global', path: '/index.php?/admin&page=batch_manager_global', needsAuth: true },
     { name: 'admin-element-ranks', path: '/index.php?/admin&page=element_set_ranks&cat_id=1', needsAuth: true },
@@ -63,6 +65,8 @@ const ROUTES: ReadonlyArray<{ name: string; path: string; baselinePath?: string;
     { name: 'admin-users', path: '/index.php?/admin&page=user_list', needsAuth: true },
     { name: 'admin-user-activity', path: '/index.php?/admin&page=user_activity', needsAuth: true },
     { name: 'admin-groups', path: '/index.php?/admin&page=group_list', needsAuth: true },
+    { name: 'admin-group-perm', path: '/index.php?/admin&page=group_perm&group_id=1', needsAuth: true },
+    { name: 'admin-user-perm', path: '/index.php?/admin&page=user_perm&user_id=1', needsAuth: true },
 
     // ── Admin — Extensions ───────────────────────────────────────────────
     { name: 'admin-plugins', path: '/index.php?/admin&page=plugins_installed', needsAuth: true },
@@ -134,7 +138,7 @@ async function capture(): Promise<void> {
             const routePath = (IS_BASELINE && route.baselinePath) ? route.baselinePath : route.path;
             const resp = await page.goto(url(routePath), {
                 waitUntil: 'networkidle',
-                timeout: 15_000,
+                timeout: 5_000,
             });
             if (!resp) {
                 await browser.close();

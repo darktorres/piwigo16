@@ -354,8 +354,8 @@ a.group_users {
 
 /****  */
 .group-bonus {
-  color: #000;
-  background: #ddd;
+  color: var(--admin-text);
+  background: var(--admin-bg-elevated);
 }
 
 

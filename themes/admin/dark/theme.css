@@ -244,13 +244,6 @@ a.Piwigo:hover span.Piwigo {
   background-color: #555;
   color: #aaa;
 }
-.groupError {
-  color: #ffd5dc;
-  background-color: #f22;
-}
-.group-rename input {
-  color: #999;
-}
 .GroupBackgroudSelected .Group-name {
   color: #333 ;
 }
@@ -340,39 +333,12 @@ a.Piwigo:hover span.Piwigo {
   outline: none;
 }
 
-.groups .Group-name > p {
-  color: #ccc;
-  font-size: 1.2em;
-  background-color: #111;
-}
-
 .groups .GroupContainer {
   box-shadow: -1px 1px 2px #1a1a1a;
 }
 
-#addGroupNameInput {
-  color: #999;
-  background-color: #252525 ;
-  border: none ;
-  outline: none;
-}
-
 #addGroupClose:hover {
   color: #ededed;
-}
-
-#addGroupNameInput::placeholder {
-  color: #bbb;
-}
-
-/* Add Group */
-
-/* Group Options */
-
-#GroupOptions {
-  background-color: #5c5c5c;
-  box-shadow: -1px 1px 2px #393939;
-  color: #c0c0c0;
 }
 
 /* Group manager buttons */
@@ -424,10 +390,6 @@ input:checked + .slider::after {
   border-color: #ae5d1e ;
 }
 
-.OrangeFont {
-  color: #fddaba ;
-}
-
 #checkActions a:hover {
   background-color: #1b1b1b;
   color: #777;
@@ -457,12 +419,6 @@ input:checked + .slider::after {
   box-shadow: 0 0 2px #c5c5c5;
 }
 
-.groups .Group-checkbox .group-checkmark::after {
-  border: solid #ebebeb;
-  border-width: 0 3px 3px 0;
-}
-
-
 /* UserList Pop in */
 
 .close-modal {
@@ -485,17 +441,6 @@ input:checked + .slider::after {
   color: #f3f3f3;
   background-color: #3c3c3c;
   border: 1px solid #f3f3f3;
-}
-
-.ValidationUserAssociated,
-.ValidationUserDissociated {
-  background-color: #4ea590;
-  color: #1b3a33;
-}
-
-.ValidationUserAssociated p,
-.ValidationUserDissociated p {
-  color: #1b3a33 ;
 }
 
 #UserList .group-name-block .UserNumberBadge {
@@ -760,20 +705,6 @@ a#showPermissions {
 
 .jconfirm .jconfirm-box {
   background-color: #333 ;
-}
-
-.jconfirm-title {
-  color: #777 ;
-}
-
-.jconfirmAlert .jconfirm-icon-c i {
-  color: #c2f5c2 ;
-  background-color: #0a0 ;
-}
-
-.jconfirmWarning .jconfirm-icon-c i {
-  color: var(--admin-accent-soft) ;
-  background-color: #ffe9cf ;
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-default {
@@ -1135,13 +1066,6 @@ a#showPermissions {
 
 .user-groups {
   padding: 6px 15px ;
-}
-
-/****  */
-
-.group-bonus {
-  color: #ddd;
-  background: transparent;
 }
 
 .advanced-filter-btn,

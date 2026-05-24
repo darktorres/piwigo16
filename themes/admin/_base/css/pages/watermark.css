@@ -155,7 +155,7 @@ input[type="text"].dError {
   width: 130px;
   margin: 4px;
   font-weight: bold;
-  color: #3c3c3c;
+  color: var(--admin-text);
   font-family: "Open Sans", "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
   margin-left: 9px;
 }
@@ -187,14 +187,14 @@ input[type="text"].dError {
 }
 
 #addGroupNameInput {
-  color: #353535;
-  background-color: #f3f3f3;
+  color: var(--admin-text);
+  background-color: var(--admin-bg-elevated);
   border: none;
   margin-top: var(--space-md);
 }
 
 #addGroupNameInput::placeholder {
-  color: #353535;
+  color: var(--admin-text-muted);
 }
 
 .groupIcon {

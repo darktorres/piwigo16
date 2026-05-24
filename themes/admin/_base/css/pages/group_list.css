@@ -38,6 +38,9 @@
   transform: translateX(-50%);
   left: 50%;
   top: 37px;
+  background-color: var(--admin-bg-elevated);
+  box-shadow: -1px 1px 2px var(--admin-bg-deepest);
+  color: var(--admin-text);
 }
 .is-default-token {
   display: block;
@@ -104,6 +107,7 @@
 
 .jconfirm-title {
   line-height: 1.5em;
+  color: var(--admin-text-muted);
 }
 
 .jconfirm-buttons .btn {
@@ -177,7 +181,7 @@
   top: 5px;
   width: 5px;
   height: 10px;
-  border: solid #fff;
+  border: solid var(--admin-text-on-accent);
   border-width: 0 3px 3px 0;
   transform: rotate(45deg);
 }
@@ -350,6 +354,7 @@
 .groups .Group-name > p {
   color: var(--admin-text);
   font-size: 1.2em;
+  background-color: var(--admin-bg-deepest);
 }
 
 .groups p.list_user {

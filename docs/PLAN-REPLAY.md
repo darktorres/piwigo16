@@ -47,428 +47,90 @@ need Vitest. But E2E browser tests move from Playwright → Pest Browser.
 
 ## Dependency graph
 
-Traced from actual `use` statements in the final codebase. Arrows mean "requires"
-(X → Y means X depends on Y being in place). Phase numbers in parentheses.
-
-### Layer 0 — Tooling (P0)
-
-No code dependencies. Establishes the test harness and CI gates that
-everything else runs against.
+Traced from actual `use` statements in the final codebase. 14 phases (P0-P13),
+down from 22 after merging phases that share the same concern and touch the
+same files.
 
 ```
-P0 Pest + Vitest + Pint + PHPStan L0 + Rector + CI
- │
- └──→ all subsequent phases depend on P0 gates being green
-```
-
-### Layer 1 — PHP foundation (P1 → P2 → P3 → P4 → P5, strictly sequential)
-
-Each layer depends on the previous. Cannot be parallelized.
-
-```
-P1 Composer + vendor migration
- │  WHY first: autoloader required for PSR-4; Smarty/PHPMailer must come
- │  from Composer before we can delete include/smarty/, include/phpmailer/
- │
- └─→ P2 Rector + PHPStan L0→L5
-      │  WHY after P1: Rector needs Composer autoload to resolve classes.
-      │  PHPStan needs typed signatures Rector introduces.
-      │
-      └─→ P3 PSR-4 namespace migration (62 classes → src/Piwigo/)
-           │  WHY after P2: classes must already have strict_types + type
-           │  declarations so PHPStan continues to pass after the move.
-           │  PSR-4 autoload needs composer.json from P1.
-           │
-           └─→ P4 Kernel + DI container + middleware pipeline
-                │  WHY after P3: Kernel.php imports Container.php (P4b),
-                │  Container uses Paths (in src/ from P3). Middleware
-                │  pipeline references Session, Auth, Routing — all need
-                │  PSR-4 namespacing.
+P0 Tooling ──→ P1 Composer + Rector + PHPStan L5
                 │
-                │  Internal order (cannot be reordered):
-                │  P4a Kernel + boot skeleton
-                │   └─→ P4b DI container (Container imports Paths)
-                │        └─→ P4c Middleware pipeline (imports container services)
-                │             └─→ P4d Entry point consolidation (routes through middleware)
-                │
-                └─→ P5 Config + DB layer + typed facades
-                     │  WHY after P4: Config depends on Kernel (for service
-                     │  resolution), Paths (for file locations). ConfigService
-                     │  depends on DbConnection (DBAL). Typed facades
-                     │  (PageState, CurrentUser, Lang) are wired via container
-                     │  from P4b.
+                └─→ P2 PSR-4 (62 classes → src/Piwigo/)
                      │
-                     │  Internal order:
-                     │  P5a Config (Config → Kernel, Paths, Enums)
-                     │   ├─→ P5b DB layer (ConfigService → DbConnection;
-                     │   │    repositories need Config for table prefix)
-                     │   └─→ P5c Typed facades (PageState, CurrentUser, Lang
-                     │        all need Config for defaults; Lang needs
-                     │        LangService which needs Paths for .po files)
-                     │
-                     └──→ [P6, P7, P8 branch here — see Layer 2]
+                     └─→ P3 Kernel + DI + middleware + routing
+                          │
+                          └─→ P4 Config + DB + facades + constants
+                               │
+                     ┌─────────┴──────────────────────────┐
+                     │                                     │
+                     ↓                                     ↓
+                P4.5 Frontend tooling (parallel)      P5 Service migration
+                 │   Vite + TS + ESLint + any→0        │  + legacy deletion
+                 │   + webfont swap                    │  include/ → src/
+                 │                                     │  admin/ → src/
+                 │   SYNC: P4.5b must finish           │  ServiceLocator kill
+                 │   before P8 (footer_script           │  $GLOBALS cleanup
+                 │   extraction before Latte)           │
+                 │                                     │
+                 ├──────────┐                          │
+                 ↓          ↓                          ↓
+            P7 CSS +    P6 WS endpoints ←─────────────┘
+            Tailwind    + OpenAPI
+                 │          │
+                 └────┬─────┘
+                      ↓
+                 P8 Templates + assets
+                 │   (Smarty → Latte + ViteManifest)
+                 │
+                 └─→ P9 Plugin/Theme contracts
+                 │   + god-class decomposition
+                 │   + 7 bundled extensions
+                 │
+                 ├─→ P10 Security hardening
+                 │
+                 ├─→ P11 Type correctness + mixed elimination
+                 │   (§1.6 + full §1.7: VOs, Entities, DTOs,
+                 │    WsResult, Request DTOs, SearchRules,
+                 │    repo returns, factory classes)
+                 │
+                 └─→ P12 Quality gates
+                      (mutation, a11y, bundle budgets, coverage ≥40%)
+                      │
+                      └─→ P13 Repository restructure
+                           (web-root isolation, themes/ → resources/)
 ```
 
-### Layer 2 — Service migration (P6 + P7, sequential; P5.5 parallel)
+### Detailed dependency rationale
 
-```
-P5 ──→ P6 Service layer migration (include/ → src/)
- │      │  WHY after P5: every migrated service needs constructor-injected
- │      │  Config, Connection, repositories from P5. container.php grows
- │      │  with each domain (194 touches in the original). Functions like
- │      │  url_is_remote() become UrlService methods that need UrlGenerator
- │      │  which needs Paths + Config.
- │      │
- │      │  Internal dependency order (by service graph):
- │      │
- │      │  P6a — include/ domains (each deletes its source file):
- │      │   Tier 1 (no service deps, only Config/DB):
- │      │    ├ URL (UrlService → Config, Paths)
- │      │    ├ Cookie (CookieService → Config)
- │      │    ├ Session (SessionService → Config, SessionRepository)
- │      │    └ HTML (HtmlService → Config, Lang)
- │      │   Tier 2 (depend on Tier 1):
- │      │    ├ Filter (FilterMiddleware → CategoryService, Config, Session)
- │      │    ├ User (UserService → AuthService, PermissionService → Config, SessionService, DB)
- │      │    ├ Tag (TagService → TagRepository → DB)
- │      │    ├ Comment (CommentService → Config, UserService)
- │      │    └ Rate (RateService → Config, DB)
- │      │   Tier 3 (depend on Tier 1+2):
- │      │    ├ Mail (MailService → Config, UserService, Lang, HtmlService)
- │      │    ├ Category (CategoryService → CategoryRepository, Config, PermissionService)
- │      │    ├ Search (SearchService → CategoryService, TagService, Config, DB)
- │      │    ├ Image (ImageRepository, DerivativePipeline → Config, Paths, StorageRegistry)
- │      │    ├ Calendar (CalendarService → CategoryService, ImageRepository)
- │      │    ├ Notification (NotificationService → MailService, UserService)
- │      │    └ Metadata (MetadataService → Config, ImageRepository)
- │      │   Tier 4 (depend on Tier 1-3):
- │      │    ├ Page (PageHeaderRenderer → Config, Lang, Template, UrlGenerator,
- │      │    │       PermissionService, DeviceDetectionService)
- │      │    ├ Page (PageTailRenderer → Config, Template, DebugCollector)
- │      │    ├ Menu (MenubarRenderer → Config, CategoryService, TagService,
- │      │    │       UrlGenerator, PermissionService, SearchFilterRenderer)
- │      │    └ Plugin (PluginService → Config, Paths, DB)
- │      │
- │      │  P6b — admin/ migration (each deletes its source file):
- │      │   Depends on P6a Tier 1-4 because admin services import from
- │      │   every domain (BatchManagerController alone imports from
- │      │   Activity, Admin, Cache, Category, Comment, Config, Core,
- │      │   Event, Image, Tag, Users — 15+ namespaces).
- │      │   Internal order: Upload → Albums → Users → Config → Extensions →
- │      │   BatchManager → History → Maintenance → Misc
- │      │
- │      │  P6c — ServiceLocator kill + $GLOBALS cleanup
- │      │   WHY last in P6: can only delete ServiceLocator after ALL
- │      │   services use constructor injection. Can only remove $GLOBALS
- │      │   bridges after all callers use typed facades.
- │      │
- │      │  P6d — Delete include/ and admin/ directories
- │      │   WHY last: proves migration is complete
- │      │
- │      └─→ P7 Constants retirement
- │           WHY after P6: Paths value object replaces PHPWG_ROOT_PATH
- │           across 195 reads in 72 files — those files must already be
- │           in src/ (from P6). PemUrlResolver replaces PEM_URL define —
- │           needs DI container. Tables class replaces PREFIX_TABLE —
- │           needs Config.
- │
- ├──→ P5.5 Frontend tooling (PARALLEL to P6/P7)
- │     │  WHY parallel: touches themes/*/js/ files, NOT src/Piwigo/.
- │     │  No PHP service dependencies. Only needs P3 (PSR-4) done
- │     │  because vite.config.ts references the project structure.
- │     │
- │     │  Internal order (strictly sequential):
- │     │  P5.5a Vite + TypeScript setup
- │     │   │  WHY first: TS compiler needed before any .ts file exists
- │     │   └─→ P5.5b ESLint + Prettier + Stylelint
- │     │        │  WHY after 5.5a: ESLint config uses typescript-eslint
- │     │        │  which needs tsconfig.json from 5.5a
- │     │        └─→ P5.5c Inline JS extraction (footer_script → modules)
- │     │             │  WHY after 5.5b: extracted .ts modules must pass
- │     │             │  ESLint. Also needs Vite entries from 5.5a.
- │     │             └─→ P5.5d any reduction (478 → 0)
- │     │                  WHY after 5.5c: window.* bridge elimination in
- │     │                  5.5c creates the getPageData<T> typed helper
- │     │                  that replaces (window as any).* casts
- │     │
- │     │  SYNC POINT with PHP track:
- │     │  P5.5c needs template files to still have {footer_script} blocks
- │     │  to extract from. If Latte migration (P10) runs first, those
- │     │  blocks are already gone. So P5.5c MUST complete before P10.
- │     │
- │     └──→ [feeds into P9, P10, P11]
-```
+**P1 → P2 → P3 → P4 (strictly sequential):**
+Composer autoload needed for PSR-4. PSR-4 needed for Kernel/Container.
+Kernel/Container needed for Config/DB/facades. Constants retirement
+folded into P4 because `Paths` depends on Config + DI (same files).
 
-### Layer 3 — Templates + Assets + CSS (P8-P11 + P19, P20)
+**P4 branches into P4.5 (parallel) and P5 (sequential):**
+P4.5 touches `themes/*/js/`, P5 touches `src/Piwigo/`. No file overlap.
+P4.5b (inline JS extraction) must complete before P8 (Latte conversion
+needs `{footer_script}` blocks to still exist for extraction).
 
-```
-P6 + P7 ──→ P8 WS typed endpoints
- │            │  WHY after P6: WS endpoints (95 handlers) import from
- │            │  nearly every domain service. PwgServer depends on Config,
- │            │  Session, PermissionService, UrlService, HtmlService,
- │            │  EventDispatcher. WsMethodRegistrar depends on Config,
- │            │  ImageStdParams, CurrentUser, PermissionService.
- │            │  Also: legacy include/ws_functions/*.php must be deleted
- │            │  in P6 before typed handlers can take over.
- │            │
- │            └──→ [feeds into P12, P14]
- │
-P5.5 + P6 ──→ P9 CSS modernization
- │              │  WHY after P5.5: Stylelint config from P5.5b needed.
- │              │  Vite entries from P5.5a needed for CSS imports.
- │              │  WHY after P6: some CSS files reference template structure
- │              │  (class names from renderers). Service layer must be stable
- │              │  so page structure doesn't shift under the CSS.
- │              │
- │              │  Internal order:
- │              │  1. Delete orphans (no deps)
- │              │  2. Split monoliths (no deps, just file reorganization)
- │              │  3─4. Design tokens (depends on split files existing)
- │              │  5─7. Skin/child theme refactor (depends on tokens existing)
- │              │  8. !important elimination (depends on tokens + specificity
- │              │     from steps 3-7 resolving cascade battles)
- │              │  9. Inline <style> extraction (depends on split target files
- │              │     existing from step 2)
- │              │  10. Search CSS collapse (independent, can go anywhere)
- │              │
- │              └──→ [feeds into P10, P19]
- │
-P5.5c + P6 + P9 ──→ P10 Template migration (Smarty → Latte)
- │                    │  WHY after P5.5c: Latte templates call {viteEntry()}
- │                    │  and {cssLink()} — Vite entries must exist.
- │                    │  {footer_script} blocks must already be extracted to
- │                    │  .ts modules (P5.5c) before converting .tpl → .latte,
- │                    │  otherwise the conversion loses the JS.
- │                    │  WHY after P6: Latte PiwigoExtension.php depends on
- │                    │  ViteManifest, UrlGenerator, PermissionService, Lang,
- │                    │  Translator, DeviceDetectionService — all from P5/P6.
- │                    │  Template.php depends on Config, Kernel, Paths, Lang,
- │                    │  HtmlService, UrlGenerator.
- │                    │  WHY after P9: Latte {cssLink("path")} calls reference
- │                    │  the split CSS file paths (e.g. css/pages/albums.css)
- │                    │  that only exist after P9 step 2.
- │                    │
- │                    │  Internal order:
- │                    │  1. Latte engine + PiwigoExtension wiring
- │                    │  2. Smarty → Latte converter tool
- │                    │  3. Admin templates (80 files, largest batch)
- │                    │  4. Frontend templates (35 files)
- │                    │  5. Standard pages (18 files)
- │                    │  6. Precompile pipeline + CI gate
- │                    │  7. Delete Smarty dependency
- │                    │
- │                    └──→ [feeds into P11, P12, P19]
- │
-P10 ──→ P11 Asset pipeline (ViteManifest)
- │       │  WHY after P10: ViteManifest.php is called from PiwigoExtension
- │       │  which is wired during Latte migration. The {=viteEntry('id')}
- │       │  calls in .latte files (P10) are what trigger ViteManifest
- │       │  lookups. Legacy {combine_script}/{combine_css} must be gone
- │       │  (converted in P10) before the old asset pipeline can be deleted.
- │       │
- │       └──→ [feeds into P12, P19, P20]
- │
-P11 ──→ P20 Vendored frontend libs
- │        │  WHY after P11: @fontsource packages are loaded via Vite
- │        │  imports. Asset pipeline must be in place.
- │        │  NOTE: scope is just webfonts now. Low effort, low risk.
- │        │  PLACED HERE because it's a leaf off the asset pipeline —
- │        │  nothing downstream depends on it.
- │        │
- │        └──→ [leaf — no downstream deps]
- │
-P9 + P10 + P11 ──→ P19 Tailwind CSS v4 (admin panel)
-                     │  WHY after P9: existing --admin-* tokens (93 of them
-                     │  from P9 step 4) are referenced via @theme inline.
-                     │  Split CSS files from P9 step 2 are what gets replaced.
-                     │  WHY after P10: Tailwind scans .latte files for class
-                     │  names — templates must be in final Latte form.
-                     │  WHY after P11: Tailwind CSS is imported from TS entries
-                     │  via Vite — asset pipeline must be final.
-                     │  NOTE: This is a REWRITE of admin CSS, not a migration.
-                     │  P9's hand-written CSS gets replaced by Tailwind utilities.
-                     │  P9 is still required because its token system becomes the
-                     │  Tailwind @theme foundation.
-                     │  PLACED HERE because it's a frontend concern — the last
-                     │  CSS work, consuming everything from Layer 3.
-                     │
-                     └──→ [leaf — no downstream deps]
-```
+**P5 → P6 + P7 (service layer feeds WS + CSS):**
+WS endpoints import from every domain service (P5). CSS references
+template structure from renderers (P5). Both need the service layer stable.
 
-### Layer 4 — Contracts + security + types (P12-P18)
+**P7 + P8 need each other's outputs:**
+Latte `{cssLink("path")}` references split CSS file paths from P7.
+Tailwind scans `.latte` files from P8. Solution: P7 steps 1-5 (tokens)
+before P8, P7 steps 6-8 (Tailwind) after P8.
 
-```
-P8 + P10 + P11 ──→ P12 Plugin / Theme / WS contracts (§1.4)
- │                   │  WHY after P8: typed WS endpoints must exist for
- │                   │  MethodDefinition registration. OpenAPI SpecBuilder
- │                   │  reflects on typed endpoint classes.
- │                   │  WHY after P10: PluginRegistry.php depends on
- │                   │  LangService (for plugin language loading).
- │                   │  ThemeRegistry depends on event system for
- │                   │  ThemeChanged event. Template engine must be Latte
- │                   │  (plugins register Latte template dirs, not Smarty).
- │                   │  WHY after P11: plugins need ViteManifest for their
- │                   │  own asset loading.
- │                   │
- │                   │  Internal order:
- │                   │  1. PSR-14 event classes (160, standalone data classes)
- │                   │  2. EventDispatcher integration (needs events from step 1)
- │                   │  3. PluginInterface + PluginRegistry (needs events + LangService)
- │                   │  4. ThemeInterface + ThemeRegistry (needs events)
- │                   │  5. OpenAPI SpecBuilder (needs MethodDefinition from P8)
- │                   │  6. Delete legacy event functions (all callers migrated)
- │                   │
- │                   └──→ P13, P14, P17, P22
- │
-P4c + P6c ──→ P13 Security hardening (§1.5)
- │              │  WHY after P4c: SecurityHeadersMiddleware is part of the
- │              │  PSR-15 pipeline (P4c). Middleware ordering matters:
- │              │  security headers wrap the full response.
- │              │  WHY after P6c: LoginThrottle depends on
- │              │  UserFailedLoginRepository (P6a), AuthService (P6a),
- │              │  symfony/rate-limiter. CsrfMiddleware depends on
- │              │  CsrfService which needs Session (P6a).
- │              │  NOTE: P13 CAN run before P10/P11/P12 if needed — it
- │              │  only depends on the middleware pipeline and auth services,
- │              │  not templates or plugins. Placed here for logical grouping.
- │              │
- │              └──→ [feeds into P21]
- │
-P12 ──→ P17 Plugins/extensions god-class decomposition
- │        │  WHY after P12: needs PluginRegistry + ThemeRegistry stable.
- │        │  The decomposition splits Plugins.php/Themes.php/Languages.php
- │        │  which are tightly coupled to the extension lifecycle from P12.
- │        │  The 10 consumers (Updates, InstallService, TelemetryService,
- │        │  ExtensionsController, etc.) reach into public mutable arrays
- │        │  on these classes — must be encapsulated.
- │        │  PLACED HERE because it's a direct child of P12 — the plugin
- │        │  contracts must be stable before decomposing the admin classes
- │        │  that manage them.
- │        │
- │        └──→ [leaf — no downstream deps]
- │
-P6 + P8 ──→ P14 Type correctness (§1.6 + done portion of §1.7)
- │            │  WHY after P6: Config schema metadata (sensitive, required,
- │            │  description) needs the Config service stable. RequestCache
- │            │  generics need the cache system. VOs and Enums slot into
- │            │  existing service signatures.
- │            │  WHY after P8: WS Params DTOs (83 of them) already exist
- │            │  from P8. Entity/Projection patterns reference repository
- │            │  return types from P6.
- │            │
- │            └──→ P16
- │
-P14 ──→ P16 Deep mixed elimination (§1.7 remaining)
- │        │  WHY after P14: builds on the VO/Entity/Enum foundation from
- │        │  P14. Cannot type WsResult DTOs without the value objects.
- │        │  Cannot type repo returns without Entity/Projection patterns.
- │        │  PLACED HERE (not in a separate layer) because it's the direct
- │        │  continuation of P14's type work — same concern, same files,
- │        │  same patterns, just deeper.
- │        │
- │        │  Internal dependency order:
- │        │  1. SessionStore rename (trivial, unblocks F5-c gate)
- │        │  2. Remaining VOs + Enums (4+6, unblocks downstream typing)
- │        │  3. WsResult DTOs (88 endpoints, needs VO types from step 2)
- │        │  4. Web/admin Request DTOs (30-50, same pattern as WsParams)
- │        │  5. Container Factory classes (118 closures → typed factories)
- │        │  6. Bare-array repo returns (249 methods, needs Entity/Projection
- │        │     types from P14 step 4)
- │        │  7. SearchRules deep adoption (SearchService + SearchFilterRenderer,
- │        │     needs repo types from step 6)
- │        │  8. is_array(.* ?? null) elimination (154 instances, mechanical
- │        │     once types from steps 3-7 propagate)
- │        │  9. Typed error responses (PwgError → enum + i18n key)
- │        │
- │        └──→ P18
- │
-P16 (steps 1-3) ──→ P18 OpenAPI #[ApiMethod] decoration
- │                    │  WHY after P16 steps 1-3: SpecBuilder reflection
- │                    │  needs WsResult DTOs (from P16 step 3) to populate
- │                    │  responseClass in the attribute. Without Result types,
- │                    │  the attribute has nothing to point at.
- │                    │  PLACED HERE because it's a direct child of the WS
- │                    │  typing work — once Result DTOs exist, the attribute
- │                    │  can reference them.
- │                    │
- │                    └──→ [leaf — no downstream deps]
- │
-P12 + P14 + P16 ──→ P15 Mutation testing + quality gates
-                      WHY after P14/P16: mutation testing and coverage
-                      targets are meaningful only after the type system is
-                      substantially complete. Measuring MSI against untyped
-                      code produces misleading baselines.
-                      WHY after P12: a11y testing needs plugin system stable
-                      (plugin-injected UI must be accessible too).
-                      Bundle size budgets need the final Vite build (P11).
-                      A11y testing needs the final Latte templates (P10) + CSS (P9).
-                      NOTE: code coverage MEASUREMENT is active since P0.
-                      P15 is about adding mutation testing, a11y, bundle
-                      budgets, and raising the coverage threshold to ≥40%.
-```
+**P8 → P9 (templates before plugin contracts):**
+Plugins register Latte template dirs, not Smarty. ThemeRegistry fires
+`ThemeChanged` event. Template engine must be Latte.
 
-### Layer 5 — Structural + extensions (P21, P22)
+**P9 → P10, P11, P12 (independent leaves off plugin contracts):**
+Security (P10) only needs middleware + auth (from P5), placed here for
+logical grouping. Type correctness (P11) needs WS endpoints (P6) + repos (P5).
+Quality gates (P12) need everything substantially complete.
 
-```
-P12 + P13 + all tests green ──→ P21 Repository restructure (STRUCTURE-PLAN)
- │                                │  WHY LAST among structural changes:
- │                                │  - Moves EVERY directory (src/, themes/,
- │                                │    language/, install/, tests/, tools/)
- │                                │  - Updates EVERY config file (composer.json,
- │                                │    phpstan.neon, vite.config.ts, phpunit.xml.dist,
- │                                │    rector.php, pint.json, eslint.config.ts,
- │                                │    playwright.config.ts)
- │                                │  - Needs ALL tests passing to catch breakage
- │                                │  - Needs plugin system (P12) stable because
- │                                │    theme discovery paths change
- │                                │  - Needs security (P13) because web-root
- │                                │    isolation is a security feature
- │                                │  - P16-P20 do NOT block P21 — they change file
- │                                │    contents, not file locations. P21 can run
- │                                │    before, after, or interleaved with them.
- │                                │    But running P21 after is safer: fewer moving
- │                                │    parts during the restructure.
- │                                │
- │                                │  Internal order (each step leaves tree green):
- │                                │  Steps 1-4: var/ migration (runtime data)
- │                                │  Step 5-7: dev files + docs consolidation
- │                                │  Step 8: namespace rename (PluginConfig)
- │                                │  Step 9: themes/ → resources/ (BIGGEST step,
- │                                │    touches vite.config.ts, Template.php,
- │                                │    ViteManifest.php, all themeconf.inc.php)
- │                                │  Steps 10-12: moves (types, SQL, language)
- │                                │  Step 13: public shim + setup script
- │                                │  Step 14: meta files
- │                                │
- │                                └──→ P22
- │
-P12 + P21 ──→ P22 Bundled extensions migration
-               WHY after P12: needs PluginInterface contracts.
-               WHY after P21: if repo restructure moves plugins/ into a
-               new location, migration must target the final paths.
-               NOTE: can run before P21 if we accept re-pathing later.
-```
-
-### Summary: critical path (longest sequential chain)
-
-```
-P0 → P1 → P2 → P3 → P4 → P5 → P6 → P7 → P8 → P10 → P11 → P12 → P21 → P22
-                                  ↑                      │
-                            P5.5 (parallel)──→ P9        ├──→ P17 (leaf)
-                                                         │
-                                         P14 → P16 → P18 (leaf)
-                                                │
-                                                └──→ P15
-                                                
-                                         P13 (parallel to P10-P12)
-                                         P19 (leaf off P9+P10+P11)
-                                         P20 (leaf off P11)
-```
-
-Minimum sequential depth: **14 phases** on the critical path (P0–P22).
-Parallelizable: P5.5/P9 alongside P6-P8. P13 alongside P10-P12.
-P14→P16→P18 chain runs alongside P12→P17 and P12→P21→P22.
-P19, P20 are independent leaves once their Layer 3 prerequisites are met.
+**P13 last:** Moves every directory, updates every config file. Needs all
+tests passing to catch breakage.
 
 ---
 
@@ -528,16 +190,11 @@ or being gated by a static analysis tool.
    - `.editorconfig`
    - Gate: CI green
 
-6. **Dev fixtures**
+6. **Dev fixtures + coverage ratchet**
    - `dev/fixtures/piwigo-16.x.sql` — baseline DB snapshot
    - `dev/fixtures/README.md`
-
-7. **Coverage ratchet file**
-   - `.coverage-baseline` (or equivalent) — committed file recording the
-     current minimum coverage %. Updated after each phase. CI fails if
-     coverage drops below this number.
-   - Starting value: 0% (bare `origin/16.x` has no tests)
-   - Convention: each phase's final commit bumps the baseline to the new floor
+   - `.coverage-baseline` — committed file recording current minimum coverage %.
+     CI fails if coverage drops below. Starting at 0%, bumped after each phase.
 
 **Test count after P0:** ~5 PHP unit, 3 browser, 1 TS unit, arch rules.
 **Coverage:** tooling operational, baseline at 0%, ratchet enforced from P1 onward.
@@ -545,9 +202,10 @@ All gates green.
 
 ---
 
-### P1 — Composer + vendored lib migration
+### P1 — Composer + Rector + PHPStan (PHP modernization)
 
-**Replays:** Commits that moved vendored PHP libs to Composer packages.
+**Merges old P1 + P2.** Both are "modernize the raw legacy PHP before restructuring."
+Same files, same concern, one pass.
 
 **What happens:**
 - Remove vendored `include/smarty/`, `include/phpmailer/`, `include/emogrifier.class.php`,
@@ -556,526 +214,312 @@ All gates green.
   `include/base32.class.php`
 - `composer require` their packagist equivalents
 - Add `require 'vendor/autoload.php'` in `include/common.inc.php`
-- Remove `include/php_compat/` shims
-- Remove `include/dblayer/functions_mysql.inc.php` (MySQL4 layer)
+- Remove `include/php_compat/` shims, `include/dblayer/functions_mysql.inc.php`
 - Migrate password hashing to `password_hash()` / bcrypt
+- Apply Rector PHP 8.0-8.5 sets
+- Pint format pass, add `declare(strict_types=1)` to all first-party files
+- Push PHPStan from L0 → L5 incrementally
 
-**Tests alongside:**
-- Browser E2E: gallery + admin still load after each swap
-- Unit: password hashing round-trip test
+**Tests:** Browser E2E after each vendor swap + Rector pass. Password hashing unit test.
+Arch test: no vendored lib dirs exist.
 
-**Arch test added:** no `include/smarty`, `include/phpmailer` etc. directories exist
-
-**Gate:** Pest unit + browser green. Pint clean. PHPStan L0 clean.
-
----
-
-### P2 — Rector + PHPStan level push
-
-**Replays:** Phase 1 steps 3-6 (Rector PHP 8.0-8.5), Phase 7 (PHPStan L0 → L5).
-
-**What happens:**
-- Apply Rector PHP 8.0 set (match expressions, named args, property promotion, etc.)
-- Apply Rector PHP 8.1-8.5 sets (enums, readonly, fibers typing)
-- Pint format pass
-- Add `declare(strict_types=1)` to all first-party files
-- Push PHPStan from L0 → L5 incrementally (fix errors at each level)
-
-**Tests alongside:**
-- Browser E2E: still loads after each Rector pass
-- Each PHPStan level is itself a test — errors must hit zero before proceeding
-
-**Gate:** PHPStan L5 clean. Rector dry-run clean. Browser green.
+**Gate:** PHPStan L5 clean. Rector dry-run clean. Pint clean. Browser green.
 
 ---
 
-### P3 — PSR-4 namespace migration
-
-**Replays:** Phase 3 (62 class moves to `src/Piwigo/`).
+### P2 — PSR-4 namespace migration
 
 **What happens:**
 - Create `src/Piwigo/` directory tree
 - PSR-4 autoload config in `composer.json`
 - Move all 62 first-party classes from `include/*.class.php` → namespaced classes
 - Update all `require`/`include` references
-- Procedural files (`include/functions_*.inc.php`) stay for now — they can't be
-  autoloaded until they're converted to classes
 
-**Tests alongside:**
-- Unit test for each moved class that has testable logic
-- Browser E2E: gallery + admin load
-- Arch test: all classes in `src/Piwigo/` have `declare(strict_types=1)` and a namespace
+**Tests:** Unit test for each moved class with testable logic. Browser E2E.
+Arch test: all classes in `src/Piwigo/` have `declare(strict_types=1)`.
 
 **Gate:** `composer dump-autoload --strict-psr`. PHPStan clean. Browser green.
 
 ---
 
-### P4 — Core kernel + DI + boot sequence
+### P3 — Core kernel + DI + boot sequence
 
-**Replays:** Phase 4 (Kernel, Container, CommonBootstrap, entry point consolidation).
-
-**What happens, in sub-phases:**
-
-#### P4a — Kernel + boot skeleton
-- `src/Piwigo/Core/Kernel.php`
-- `src/Piwigo/Bootstrap/CommonBootstrap.php` (wraps `common.inc.php` logic)
-- `src/Piwigo/Http/RequestFactory.php`, `ResponseEmitter.php`
+#### P3a — Kernel + boot skeleton
+- `Kernel.php`, `CommonBootstrap.php`, `RequestFactory.php`, `ResponseEmitter.php`
 - `index.php` becomes single entry point
 - **Tests:** `KernelBootTest.php`, `ContainerSmokeTest.php`
 
-#### P4b — DI container
-- `src/Piwigo/Bootstrap/Container.php` (PHP-DI wiring)
-- `config/container.php` — initial service definitions
-- **Tests:** `ContainerDefinitionsTest.php` — every service resolves
+#### P3b — DI container
+- `Container.php`, `config/container.php`
+- **Tests:** `ContainerDefinitionsTest.php`
 
-#### P4c — PSR-15 middleware pipeline
-- `src/Piwigo/Http/Middleware/` — all 8 middleware classes
-- `src/Piwigo/Http/MiddlewarePipeline.php`
-- `config/routes.php`
-- **Tests:** Middleware unit tests. `FastPathHeadersTest.php`.
-
-#### P4d — Entry point consolidation
-- Legacy entry points (`i.php`, `action.php`, `ws.php`, etc.) → routed through
-  `index.php`
-- **Tests:** Browser E2E: every legacy URL still works. Integration: fast-path
-  headers correct.
+#### P3c — PSR-15 middleware + routing
+- All 8 middleware classes, `MiddlewarePipeline.php`, `config/routes.php`
+- Legacy entry points (`i.php`, `action.php`, `ws.php`, etc.) routed through `index.php`
+- **Tests:** Middleware unit tests, `FastPathHeadersTest.php`, browser E2E for legacy URLs
 
 **Gate:** PHPStan raise to L6-7. All services resolve. Browser green.
 
 ---
 
-### P5 — Config + DB + typed facades
+### P4 — Config + DB + typed facades
 
-**Replays:** Phase 4 Wave B/C (Config), Phase 5 steps 5-14 (Config schema), DB tasks.
+#### P4a — Config service
+- `Config.php` with SCHEMA, `ConfigService.php`, `ConfigLoader.php`,
+  `tools/build-config-accessors.php`
+- Replace `$conf['key']` reads with typed accessors
+- **Tests:** `ConfigTest.php`, `ConfigRepositoryTest.php`, accessor sync CI
 
-**What happens, in sub-phases:**
+#### P4b — Database layer
+- Doctrine DBAL Connection, `Dml.php`, first repositories
+- **Tests:** Repository integration tests
 
-#### P5a — Config service
-- `src/Piwigo/Config/Config.php` — typed facade with SCHEMA
-- `src/Piwigo/Config/ConfigService.php` — DB-backed CRUD
-- `src/Piwigo/Config/ConfigLoader.php` — `.env` loading
-- `tools/build-config-accessors.php` — code generator
-- Replace `$conf['key']` reads with typed accessors (the largest single sweep)
-- **Tests:** `ConfigTest.php` (every SCHEMA entry), `ConfigRepositoryTest.php`,
-  accessor sync check
+#### P4c — Typed facades + constants retirement
+- `PageState.php`, `CurrentUser.php`, `Lang.php` + `LangService.php` + `Translator.php`
+- `Paths.php` value object (replaces `PHPWG_ROOT_PATH`, 195 reads in 72 files)
+- Replace all remaining `define()` constants with typed alternatives
+- **Tests:** `PageStateTest.php`, `LangTest.php`, `PathsTest.php`, `PemUrlResolverTest.php`
+- Arch test: no `define()` in src/, no `PHPWG_ROOT_PATH` in src/
 
-#### P5b — Database layer
-- Doctrine DBAL `Connection` factory
-- `src/Piwigo/Db/Dml.php` — query helpers
-- First repositories: `ConfigRepository`, `SessionRepository`
-- **Tests:** Repository integration tests (need MySQL service)
-
-#### P5c — Typed facades
-- `src/Piwigo/Core/PageState.php`
-- `src/Piwigo/Users/CurrentUser.php`
-- `src/Piwigo/Lang/Lang.php`, `LangService.php`, `Translator.php`
-- Reference bridges to `$GLOBALS` (these are TEMPORARY — tracked for later removal)
-- **Tests:** `PageStateTest.php`, `LangTest.php`, `InstallSentinelTest.php`
+**Why constants are here, not separate:** `Paths` depends on `Config` and DI container
+(both from P4a/P4b). The files being patched for `PHPWG_ROOT_PATH` are the same
+service files being created in P4a-b. One pass, not two.
 
 **Gate:** PHPStan raise to L8+. Config accessor sync CI. All tests green.
 
 ---
 
-### P5.5 — Frontend tooling (parallel track begins)
+### P4.5 — Frontend tooling (parallel track)
 
-**Replays:** Phase 5 (JS → TS), ESLint/Prettier/Stylelint setup.
-
-**Can run in parallel with P6-P7 because it touches different files** (themes/js vs
+**Can run in parallel with P5 because it touches different files** (themes/js vs
 src/Piwigo).
 
-#### P5.5a — Vite + TypeScript
-- `vite.config.ts` with entry points
-- `tsconfig.json`
-- Convert all 38 authored JS files to `.ts`
-- **Tests:** `npm run build`, `npm run typecheck`
+#### P4.5a — Vite + TypeScript + linting
+- `vite.config.ts`, `tsconfig.json`, `eslint.config.ts`, `.prettierrc.json`,
+  `.stylelintrc.json`
+- Convert all 38 authored JS files to `.ts`, fix all lint errors
+- CI jobs for lint/format/typecheck
+- **Tests:** `npm run build`, `npm run typecheck`, lint gates
 
-#### P5.5b — ESLint + Prettier + Stylelint
-- `eslint.config.ts`, `.prettierrc.json`, `.stylelintrc.json`
-- Fix all lint errors
-- CI jobs: `npm run lint`, `npm run format:check`, `npm run lint:css`
-- **Tests:** CI gates (lint IS the test)
+#### P4.5b — Inline JS extraction + `any` reduction
+- `{footer_script}` blocks → `.ts` modules, `data-*` bridges, `getPageData<T>()`
+- Window globals declaration files, per-file `any` elimination (478 → 0)
+- Open Sans webfonts → `@fontsource` (tiny, same Vite pipeline)
+- **Tests:** Vitest for `getPageData`. ESLint `no-explicit-any: error`. Browser E2E.
 
-#### P5.5c — Inline JS extraction
-- `{footer_script}` blocks → `.ts` modules
-- `data-*` attribute bridges
-- `getPageData<T>()` helper
-- **Tests:** Vitest: `getPageData.test.ts`. Browser E2E: all admin pages load
-  without JS errors.
+**Why merged:** P5.5a-d were 4 sub-phases of one concern (frontend tooling).
+ESLint setup without TS files to lint is pointless. `any` reduction can't happen
+until TS files exist. Inline JS extraction needs Vite entries. One pipeline.
 
-#### P5.5d — `any` reduction (478 → 0)
-- Window globals declaration files
-- Per-file `any` elimination
-- **Tests:** ESLint `no-explicit-any: error` enforced. `npm run typecheck` clean.
-
-**Gate:** TS clean, ESLint clean, Stylelint clean, Vite builds, E2E green.
+**Gate:** TS clean, ESLint clean, Stylelint clean, Vite builds, zero `any`, E2E green.
 
 ---
 
-### P6 — Service layer migration
+### P5 — Service layer migration + legacy deletion
 
-**Replays:** The massive incremental migration of procedural code to typed services.
-This is where `include/functions.inc.php` got its 97 modifications and
-`config/container.php` got its 194.
+**The largest phase.** Merges old P6+P7 — same concern (procedural → typed services),
+same files (`include/functions.inc.php`, `config/container.php`), and constants
+retirement was already folded into P4.
 
-**Strategy:** Instead of 97 incremental touches, group by domain:
+**Strategy:** Group by domain, each domain deletes its source file in the same commit.
 
-#### P6a — Include → src migration (by domain)
+#### P5a — Include → src (by domain, 4 tiers)
 
-Each domain is one commit group. The reference implementation on `16.x-rewrite` shows
-the final state of each file.
+Tier 1 (no service deps): URL, Cookie, Session, HTML
+Tier 2 (depend on Tier 1): Filter, User, Tag, Comment, Rate
+Tier 3 (depend on 1+2): Mail, Category, Search, Image, Calendar, Notification, Metadata
+Tier 4 (depend on 1-3): Page renderers, Menu, Plugin
 
-| Domain | include/ files consumed | src/Piwigo/ classes created | Tests |
-|--------|------------------------|-----------------------------|-------|
-| URL | `functions_url.inc.php` | `Url/UrlService.php`, `Url/UrlGenerator.php` | URL generation unit tests |
-| User | `functions_user.inc.php`, `user.inc.php` | `Users/UserService.php`, `Users/UserRepository.php` | User CRUD integration tests |
-| Category | `functions_category.inc.php`, `category_*.inc.php` | `Category/CategoryRepository.php`, `Category/*Renderer.php` | Category tree unit tests |
-| Image | `functions_picture.inc.php`, `derivative*.inc.php` | `Image/ImageRepository.php`, `Image/DerivativePipeline.php` | Image metadata unit tests |
-| Search | `functions_search.inc.php`, `search_filters.inc.php` | `Search/SearchService.php`, `Search/SearchFilterRenderer.php` | Search query unit tests |
-| Tag | `functions_tag.inc.php`, `selected_tags.inc.php` | `Tag/TagRepository.php`, `Tag/SelectedTagsRenderer.php` | Tag CRUD integration tests |
-| Comment | `functions_comment.inc.php`, `picture_comment.inc.php` | `Comment/CommentRepository.php`, `Comment/*Renderer.php` | Comment unit tests |
-| Mail | `functions_mail.inc.php` | `Mail/MailService.php` | Mail construction unit test |
-| Session | `functions_session.inc.php`, `pwgsession*.class.php` | `Session/PwgSession.php`, `Session/SessionRepository.php` | Session integration tests |
-| Filter | `filter.inc.php`, `functions_filter.inc.php` | `Filter/FilterMiddleware.php` | Filter unit tests |
-| HTML | `functions_html.inc.php` | `Html/HtmlService.php` | HTML helper unit tests |
-| Rate | `functions_rate.inc.php`, `picture_rate.inc.php` | `Rate/RateService.php`, `Rate/*Renderer.php` | Rate unit tests |
-| Notification | `functions_notification.inc.php` | `Notification/*Service.php` | Notification unit tests |
-| Calendar | `functions_calendar.inc.php`, `calendar_*.class.php` | `Calendar/*Calendar.php` | Calendar rendering unit tests |
-| Cookie | `functions_cookie.inc.php` | `Session/CookieService.php` | Cookie unit tests |
-| Metadata | `functions_metadata.inc.php` | `Metadata/MetadataService.php` | Metadata unit tests |
-| Page | `page_header.php`, `page_tail.php`, `no_photo_yet.inc.php`, `menubar.inc.php` | `Page/*Renderer.php`, `Menu/MenubarRenderer.php` | Renderer unit tests |
-| Plugin | `functions_plugins.inc.php` | `Plugin/PluginService.php` | Plugin loading tests |
+**After each domain:** that domain's `include/` file is DELETED.
 
-**After each domain migration:** that domain's `include/` files are DELETED. No zombie
-delegation files. The arch test enforces: `include/<file>.php` does not exist.
+#### P5b — Admin migration
 
-#### P6b — Admin migration
+Upload → Albums → Users → Config → Extensions → BatchManager → History →
+Maintenance → Misc. Each deletes its `admin/*.php` source.
 
-| Admin domain | admin/ files consumed | src/Piwigo/Admin/ classes created | Tests |
-|-------------|----------------------|----------------------------------|-------|
-| Upload | `photos_add_direct*.php` | `Upload/UploadService.php`, `Upload/DirectPreparer.php` | Upload integration test |
-| BatchManager | `batch_manager*.php` | `Controller/Admin/BatchManagerController.php` | Batch operation tests |
-| Albums | `albums.php`, `cat_*.php` | `Controller/Admin/AlbumController.php`, `Album/*Service.php` | Album CRUD integration |
-| Users | `user_list.php`, `user_perm.php` | `Controller/Admin/UserController.php` | User management tests |
-| Configuration | `configuration.php` | `Controller/Admin/ConfigurationController.php`, `Config/*Processor.php` | Config round-trip tests |
-| Extensions | `plugins*.php`, `themes*.php`, `languages*.php` | `Controller/Admin/ExtensionsController.php` | Extension listing tests |
-| Maintenance | `maintenance*.php` | `Controller/Admin/MaintenanceController.php` | Maintenance action tests |
-| History | `history.php` | `Controller/Admin/HistoryController.php` | History query tests |
-| Misc | remaining admin pages | respective controllers | Smoke tests |
+#### P5c — Cleanup
 
-#### P6c — ServiceLocator elimination + `$GLOBALS` cleanup
+- Delete `ServiceLocator.php`, retire `$GLOBALS` bridges
+- Delete remaining root entry points (`about.php`, `comments.php`, etc.)
+- Delete `include/` and `admin/` directories entirely
+- Arch tests: no `ServiceLocator`, no `$GLOBALS`, no `include/`, no `admin/`
 
-- Delete `ServiceLocator.php` — all callers already use constructor injection from P6a/b
-- Retire `$GLOBALS['conf']`, `$GLOBALS['user']`, `$GLOBALS['page']`, `$GLOBALS['lang']`
-  reference bridges
-- **Tests:** Arch tests: no `ServiceLocator` in src/. No `$GLOBALS` in src/ (except
-  explicitly allowed files, which should be zero by this point).
+**Tests per domain:** Unit tests for every service created. Integration tests for
+repositories. Browser E2E for every route after each domain batch.
 
-#### P6d — Root entry point deletion
-
-- Delete `about.php`, `comments.php`, `search.php`, `picture.php`, `tags.php`,
-  `identification.php`, `register.php`, `password.php`, etc.
-- All routed through `index.php` → controllers
-- Delete `include/` directory entirely
-- Delete `admin/` directory entirely
-- **Tests:** Browser E2E for every major route. Integration tests for every controller.
-
-**Gate:** PHPStan L10 clean (raise during this phase). Zero `include/` files. Zero
-`admin/` files. Browser E2E green for all routes. Every namespace has tests.
+**Gate:** PHPStan L10 clean. Zero `include/` files. Zero `admin/` files.
+Browser E2E green. Every namespace has tests.
 
 ---
 
-### P7 — Constants retirement
+### P6 — WS typed endpoints + OpenAPI
 
-**Replays:** §1.10 (`PHPWG_ROOT_PATH` → `Paths`) and §1.11 (all `define()` calls).
+**Merges old P8 + P18.** Both are "type the WS layer." `#[ApiMethod]` decoration
+is just finishing what `MethodDefinition` starts — same files, same concern.
 
-- `src/Piwigo/Core/Paths.php` value object
-- Thread through DI
-- Replace 195 reads across 72 files
-- Replace all remaining `define()` constants with typed alternatives
-- **Tests:** `PathsTest.php`, `PemUrlResolverTest.php`.
-  Arch test: no `define()` in src/, no `PHPWG_ROOT_PATH` in src/.
-
-**Gate:** PHPStan L10. Arch tests green.
-
----
-
-### P8 — WS typed endpoints
-
-**Replays:** WS refactoring commits (concentrated around commits 1580-1680).
-
-- `src/Piwigo/Ws/PwgServer.php` — typed server
-- `MethodDefinition`, `ParamDefinition` value objects
+- `PwgServer.php`, `MethodDefinition`, `ParamDefinition` value objects
 - `WsMethodRegistrar.php` — register all 95 endpoints
-- `src/Piwigo/Ws/Method/*Endpoints.php` — 9 endpoint classes
-- **Tests:** `WsApiTest.php` — integration test hitting all 95 endpoints with at
-  least one smoke call each. Parameter validation tests for typed params.
+- 9 `*Endpoints.php` classes → individual `*Handler.php` classes
+- `#[ApiMethod]` attribute on all 95 handlers
+- `SpecBuilder` → OpenAPI 3.1 spec generation reading attributes
 
-**Gate:** All 95 endpoints respond. Integration tests green.
+**Tests:** `WsApiTest.php` — integration test for all 95 endpoints. OpenAPI spec
+validation (cebe/redocly). Parameter validation tests.
+
+**Gate:** All 95 endpoints respond. OpenAPI validates. Integration tests green.
 
 ---
 
-### P9 — CSS modernization
+### P7 — CSS modernization + Tailwind
 
-**Replays:** The concentrated CSS work (especially commits 1800-1980).
+**Merges old P9 + P19.** P9 builds the token foundation that P19 consumes. Running
+them as separate phases means touching every admin CSS file twice. One pass: build
+the token system, then replace hand-written rules with Tailwind utilities.
 
-**Executed as one coherent pass** (it was mostly concentrated anyway):
+1. Delete orphan CSS
+2. Split theme monoliths (9635 → 51 files admin, 1305 → 10 files frontend)
+3. Design tokens (93 admin, 42 frontend)
+4. Skin/child theme refactor, `!important` elimination (689 → 51)
+5. Inline `<style>` extraction, search CSS collapse
+6. Install `@tailwindcss/vite`, create `tailwind.css` with `@theme inline`
+   referencing `--admin-*` tokens
+7. Migrate admin CSS from hand-written rules to Tailwind utilities
+8. `@source` for `.latte` scanning, Stylelint config for Tailwind v4
 
-1. Delete orphan CSS (`fix-khtml.css`, `fix-ie5-ie6.css`, `fix-ie7.css`)
-2. Split `themes/admin/_base/theme.css` (9635 lines → 51 files)
-3. Split `themes/_base/theme.css` (1305 lines → 10 files)
-4. Design tokens — CSS custom properties for colors, spacing, font-size, radius, z-index
-5. Admin token system (93 `--admin-*` tokens)
-6. Frontend tokens (42 tokens)
-7. Standard pages skin refactor (skins → `:root {}` overrides)
-8. Admin child theme slim-down (dark −60%, light −70%)
-9. `!important` elimination (689 → 51)
-10. Inline `<style>` extraction → `css/pages/*.css`
-11. Search CSS collapse
-
-**Tests per sub-step:**
-- Stylelint clean after each commit
-- Browser E2E: screenshot all major routes before and after (visual regression)
-- Arch assertion: `!important` count matches expectation
-- `wc -l themes/admin/_base/theme.css` → 12
+**Tests:** Stylelint clean. Visual regression screenshots. Browser E2E.
+`wc -l themes/admin/_base/theme.css` → 12.
 
 **Gate:** Stylelint 0 errors. Theme files at target sizes. E2E green.
 
+**NOTE:** Steps 6-8 (Tailwind) depend on Latte templates (P8) existing for class
+scanning. If P8 isn't done yet, do steps 1-5 now and steps 6-8 after P8.
+
 ---
 
-### P10 — Template migration (Smarty → Latte)
+### P8 — Template migration + asset pipeline (Smarty → Latte → ViteManifest)
 
-**Replays:** §1.2 (waves 1+2+3, 133 template conversions).
+**Merges old P10 + P11.** ViteManifest is wired INTO the Latte engine via
+`PiwigoExtension`. The `{=viteEntry()}` and `{=cssLink()}` calls are Latte
+functions. Converting templates and wiring their asset helpers is one concern.
 
-**Depends on:** P6 (services must be stable — templates call service methods), P5.5
-(Vite entries must exist for `{viteEntry()}` calls), P9 (CSS files must be in final
-locations for `{cssLink()}`).
+**Depends on:** P5 (services stable), P4.5 (Vite entries exist), P7 steps 1-5
+(CSS files in final locations).
 
-1. Add Latte engine to Composer
-2. Wire `LatteEngine` factory in `Template.php`
+1. Add Latte engine, wire `PiwigoExtension` (which includes ViteManifest)
+2. `ViteManifest.php` — reads `dist/manifest.json`
 3. Build Smarty → Latte converter tool
-4. Convert admin templates (largest set, ~80 files)
-5. Convert frontend templates (~35 files)
-6. Convert standard pages templates (~18 files)
-7. Precompile pipeline: `composer precompile:templates` + CI gate
-8. Delete Smarty dependency
+4. Convert admin templates (80 files)
+5. Convert frontend + standard pages templates (53 files)
+6. Precompile pipeline + CI gate
+7. Delete Smarty dependency + legacy asset pipeline (`CombineService`, etc.)
 
-**Tests per wave:**
-- `composer lint:latte` — syntax validation
-- `composer precompile:templates` — compile-time errors
-- Browser E2E: every route renders correctly
-- Visual regression screenshots before/after each wave
+**Tests:** `ViteManifestTest.php`, `AssetServiceTest.php`, `composer lint:latte`,
+`composer precompile:templates`, visual regression, browser E2E every route.
 
-**Gate:** Zero `.tpl` files. Latte lint + precompile clean. All E2E green.
+**Gate:** Zero `.tpl` files. All assets from `dist/assets/`. Latte lint + precompile
+clean. E2E green.
 
 ---
 
-### P11 — Asset pipeline (ViteManifest)
+### P9 — Plugin / Theme contracts + bundled extensions + decomposition
 
-**Replays:** ViteManifest service + template helper migration.
+**Merges old P12 + P17 + P22.** All three are "the plugin/theme system":
+- P12: define the contracts (`PluginInterface`, events, registry)
+- P17: decompose the admin god-classes that manage plugins
+- P22: migrate the 7 bundled extensions as proof the contracts work
 
-1. `src/Piwigo/Asset/ViteManifest.php`
-2. `viteEntry()` and `cssLink()` Latte helpers
-3. Migrate all templates to use `{viteEntry()}` / `{cssLink()}`
-4. Delete legacy asset pipeline (`CombineService`, etc.)
+Shipping PluginInterface without decomposing the god-classes that manage plugins
+leaves the admin layer broken. Shipping contracts without migrating at least the
+bundled extensions means no proof they work. One phase.
 
-**Tests:** `ViteManifestTest.php`, `AssetServiceTest.php`. Browser E2E: all pages
-load hashed `dist/` URLs.
+**Depends on:** P5 (service layer), P6 (WS endpoints), P8 (Latte templates).
 
-**Gate:** All assets served from `dist/assets/` with content hashes.
-
----
-
-### P12 — Plugin / Theme / WS contracts (§1.4)
-
-**Replays:** The §1.4 work (concentrated around commits 1320-1400).
-
-**Depends on:** P6 (service layer), P8 (WS endpoints), P10 (templates).
-
-1. PSR-14 event system — ~160 typed event classes under `src/Piwigo/Event/`
-2. `PluginInterface` + `PluginRegistry` + `PluginMigrationRunner`
-3. Bundled plugin migration (5 plugins)
+1. PSR-14 event system — ~160 typed event classes
+2. EventDispatcher integration
+3. `PluginInterface` + `PluginRegistry` + `PluginMigrationRunner`
 4. `ThemeInterface` + `ThemeRegistry`
-5. OpenAPI 3.1 spec generation (`SpecBuilder`)
-6. Delete legacy `add_event_handler()` / `trigger_notify()` / `trigger_change()`
+5. Decompose `Plugins.php` (726 lines) → `PluginScanner`, `PluginLifecycle`, `PemCatalog`
+6. Decompose `Themes.php` (692 lines) + `Languages.php` (385 lines) — same pattern
+7. Fix WS handler Demeter violations (10 consumers)
+8. Migrate 7 bundled extensions (1 commit each):
+   AdminTools, LocalFilesEditor, TakeATour, language_switch,
+   elegant, modus, smartpocket
+9. OpenAPI SpecBuilder
+10. Delete legacy event functions
 
 **Tests:**
-- `PluginRegistryTest.php`, `PluginSchemaTest.php`, `PluginRegistryMigrationsTest.php`,
-  `PluginRegistryLanguagesTest.php`
-- `EventSymmetryTest.php` — every event has a matching dispatch site
+- `PluginRegistryTest.php`, `PluginSchemaTest.php`, `EventSymmetryTest.php`
+- Unit tests for each decomposed service
+- Plugin install/activate/deactivate/delete lifecycle integration tests
+- Browser E2E: each bundled extension's main feature works
 - Arch test: all event classes are readonly
-- OpenAPI spec validation (cebe/redocly)
-- Browser E2E: plugin load/unload works
+- OpenAPI spec validation
 
-**Gate:** All 160 events dispatch. Plugin lifecycle works. OpenAPI validates.
+**Gate:** All 160 events dispatch. Plugin lifecycle works. All 7 extensions functional.
 
 ---
 
-### P13 — Security hardening (§1.5)
-
-**Replays:** §1.5 waves A-D.
+### P10 — Security hardening
 
 1. Session cookie hardening (`SameSite=Lax`, `HttpOnly`, `Secure`)
-2. Rate limiting + login throttle (`LoginThrottle`, `symfony/rate-limiter`)
-3. Security headers middleware (CSP, XFO, XCTO, Referrer-Policy, Permissions-Policy, HSTS)
+2. Rate limiting + login throttle
+3. Security headers middleware (CSP, XFO, XCTO, etc.)
 4. `docs/SECURITY.md`
 
-**Tests:**
-- Integration: cookie attribute assertions, rate limit engagement/reset,
-  header presence on responses
-- Browser E2E: login/logout cookie behavior (existing spec 08 equivalent)
-- `composer lint:no-inline-scripts` CI guard
+**Tests:** Integration: cookie attributes, rate limit, header presence.
+Browser E2E: login/logout. `composer lint:no-inline-scripts`.
 
 **Gate:** All security headers present. Rate limit tests pass. E2E green.
 
 ---
 
-### P14 — Type correctness (§1.6 + §1.7)
+### P11 — Type correctness + mixed elimination (§1.6 + §1.7 complete)
 
-**Replays:** Config schema enhancements, RequestCache generics, mixed elimination.
+**Merges old P14 + P16.** Both are "eliminate mixed from the domain." P14 was the
+"already done" portion and P16 the "remaining." Artificial split — same concern,
+same patterns, same files. One phase, ordered by dependency depth.
 
-1. Config: `sensitive` + `dumpForLog`, `required` + `MissingRequiredConfigException`,
-   `description` on all 277 SCHEMA entries
+1. Config schema metadata (`sensitive`, `required`, `description`)
 2. `RequestCache` with `@template T`
-3. ValueObjects + Enums (~25 VOs, ~10 Enums)
-4. Entity + Projection patterns (7 Entity, 73 projection shapes)
-5. Session VO
-6. Request DTOs (typed wrappers for `$_POST`/`$_GET`)
-7. Psalm as secondary gate
+3. ValueObjects (~25) + Enums (~10) — all of them, not split across two phases
+4. Entity + Projection patterns (7 Entity, 73 projections)
+5. Session VO + `SessionStore` rename
+6. WsResult DTOs (88 endpoints)
+7. Web/admin Request DTOs (30-50)
+8. Container Factory classes (118 closures → typed factories)
+9. Bare-array repo returns (249 methods → typed)
+10. SearchRules deep adoption (SearchService + SearchFilterRenderer)
+11. `is_array(.* ?? null)` elimination (154 → 0)
+12. Typed error responses (PwgError → enum + i18n key)
+13. Psalm as secondary CI gate
 
-**Tests:** Each VO/Entity/DTO gets a construction + validation unit test.
+**Tests:** Each VO/Entity/DTO/Result gets construction + validation tests.
+Integration tests for every search filter combination.
 
-**Gate:** PHPStan L10. Psalm level 2 as CI gate.
-
----
-
-### P15 — Mutation testing + bundle budgets + a11y + coverage target
-
-**Coverage measurement and ratcheting are active since P0.** By this point the
-ratchet should be at ≥40% (each phase from P1-P14 bumped it). P15 adds the
-remaining quality gates.
-
-1. **Coverage target enforcement** — raise ratchet to ≥40% line coverage on
-   `src/Piwigo/` (should already be met; this locks it). Verify every namespace
-   has ≥1 test file (the 15 zero-coverage namespaces from the original branch
-   should all be covered by now).
-2. **Mutation testing:** `vendor/bin/pest --mutate` targeting high-value services
-   (Config, SearchService, PermissionService, RateService, BatchManager).
-   MSI ≥60%, covered-MSI ≥75%. Run on push to main only (slow).
-3. **Type coverage:** `pest --type-coverage --min=95`
-4. **Bundle size budgets:** `size-limit` per Vite entry point, set at +10%
-   above current sizes
-5. **A11y:** Pest Browser `assertNoAccessibilityIssues()` or equivalent axe-core
-   integration, WCAG 2.1 AA gate on all page-level tests
-
-**Gate:** All quality gates green. Coverage ≥40%. MSI ≥60%. Bundle budgets enforced.
+**Gate:** PHPStan L10. `psalm --show-info` < 50.
+`grep -rn 'is_array(.* ?? null)' src/` → 0.
 
 ---
 
-### P16 — §1.7 remaining: deep mixed elimination
+### P12 — Quality gates
 
-**NEW work not yet done on `16.x-rewrite`.** Currently 1796 psalm --show-info issues,
-target <50.
+**Coverage measurement is active since P0.** P12 raises thresholds and adds
+the remaining quality tools now that the codebase is substantially complete.
 
-1. **WsResult DTOs** — 88 of 95 endpoints still return `array<string, mixed>`.
-   Tighten `WsAction` to `__invoke(...): WsResult|PwgError`. Add `*Result.php` per
-   endpoint.
-   - **Tests:** Each Result DTO gets a `toArray()` round-trip test.
+1. Coverage ratchet ≥40% on `src/Piwigo/`. Verify every namespace has ≥1 test.
+2. Mutation testing: `pest --mutate`, MSI ≥60%, covered-MSI ≥75%
+3. Type coverage: `pest --type-coverage --min=95`
+4. Bundle size budgets: `size-limit` per Vite entry point
+5. A11y: axe-core in browser tests, WCAG 2.1 AA gate
 
-2. **Web/admin Request DTOs** — 758 raw `$_POST`/`$_GET` reads across 54 files.
-   30-50 `final readonly class XxxRequest` DTOs with `fromArray()` factories
-   (same pattern as WS `*Params`).
-   - **Tests:** Each Request DTO gets construction + validation tests.
-
-3. **SearchRules deep adoption** — `SearchService` (47 psalm issues) and
-   `SearchFilterRenderer` (67 psalm issues, #1 hotspot). Rewrite both to consume
-   `SearchRules` end-to-end.
-   - **Tests:** Integration tests for every filter combination (allwords, tags,
-     dates, ratios, ratings, dimensions, expert, added_by, filetypes).
-
-4. **Container Factory classes** — Extract 118 inline `factory(static fn ...)` closures
-   from `config/container.php` into `src/Piwigo/Core/Container/<Name>Factory.php`.
-   - **Tests:** Container smoke test already covers resolution; add factory-specific
-     unit tests for complex wiring.
-
-5. **Bare-array repo returns** — 249 of 646 public repository methods return untyped
-   arrays. Tracked in `docs/SQL-DTO-AUDIT.md` + `ARRAY-REFACTOR-AUDIT-{1..4}.md`.
-   Return typed Projection/Entity classes instead.
-   - **Tests:** Each converted method gets a return-type assertion.
-
-6. **Remaining VOs + Enums** — ~4 ValueObjects + ~6 Enums to close F5-a.
-
-7. **SessionStore rename** — `SessionService.php` → `SessionStore.php` (6 call sites).
-
-8. **`is_array(.* ?? null)` elimination** — 154 instances → 0.
-
-9. **Typed error responses** — `PwgError` message strings → typed error-code enum +
-   i18n translation key.
-
-**Gate:** `psalm --show-info` < 50. `grep -rn 'is_array(.* ?? null)' src/` → 0.
+**Gate:** All quality gates green.
 
 ---
 
-### P17 — Plugins/extensions module modernization
+### P13 — Repository restructure (STRUCTURE-PLAN)
 
-**NEW work not yet done on `16.x-rewrite`.** Decompose the three god-classes.
-
-- `Plugins.php` (726 lines) → `PluginScanner`, `PluginLifecycle`, `PemCatalog`
-- `Themes.php` (692 lines) → same pattern
-- `Languages.php` (385 lines) → same pattern
-- Eliminate public mutable arrays (`$plugins->fs_plugins`, `$plugins->db_plugins_by_id`)
-- Fix WS handler Demeter violations (10 consumers reaching into public arrays)
-- `Plugins::performAction(): mixed` → typed return
-
-**Tests:** Unit tests for each extracted service. Integration tests for plugin
-install/activate/deactivate/delete lifecycle.
-
----
-
-### P18 — OpenAPI `#[ApiMethod]` decoration
-
-**NEW work not yet done on `16.x-rewrite`.** The attribute class exists at
-`src/Piwigo/Ws/OpenApi/ApiMethod.php` and `SpecBuilder` reflection is wired, but
-no endpoint method carries the attribute yet.
-
-- Decorate all 95 endpoint handler methods with `#[ApiMethod]`
-- `SpecBuilder` reads `summary`, `responseClass`, `tags` from attribute
-- Per-domain decomposition of endpoint classes
-
-**Tests:** OpenAPI spec structural test. `SpecValidityTest` already exists.
-
----
-
-### P19 — Tailwind CSS v4 (admin panel)
-
-**NEW work not yet done on `16.x-rewrite`.** Plan exists at `docs/PLAN-TAILWIND.md`.
-
-- Install `@tailwindcss/vite`
-- Create `tailwind.css` entry with `@theme inline` referencing existing `--admin-*` tokens
-- `@source` directive for `.latte` template scanning
-- Migrate admin CSS from hand-written rules to utility classes
-- Stylelint config update for Tailwind v4 directives
-- Scope: admin panel only (gallery frontend has separate CSS architecture)
-
-**Tests:** Stylelint clean. Visual regression screenshots before/after. Browser E2E
-for all admin pages.
-
----
-
-### P20 — Vendored frontend library migration
-
-**Partially from existing §2.4 + §2.6.**
-
-- Open Sans webfonts → `@fontsource/open-sans` / `@fontsource-variable/open-sans`
-- (Scope shrunk after bundled-plugin removal — video.js, Leaflet, CodeMirror no
-  longer in tree)
-
-**Tests:** `npm run build` succeeds. Font rendering in browser E2E.
-
----
-
-### P21 — Repository restructure (STRUCTURE-PLAN)
-
-**Not yet done on `16.x-rewrite`.** Full plan at `docs/STRUCTURE-PLAN.md`.
+**Last phase.** Full plan at `docs/STRUCTURE-PLAN.md`. Needs everything stable
+because it moves every directory and updates every config file.
 
 14-step filesystem reorganization:
 1. `_data/` → `var/`
@@ -1083,72 +527,28 @@ for all admin pages.
 3. Permission-checked original-file controller
 4. Rewrite originals URLs to `?/p/<id>`
 5. `dev/fixtures/` → `tests/Fixtures/`
-6. `build/` cleanup
-7. Docs consolidation
-8. `src/Piwigo/Plugins/` → `src/Piwigo/PluginConfig/` rename
-9. `themes/` dissolution → `resources/` (biggest single change)
-10. TS types out of `src/`
-11. Install SQL move
-12. `language/` → `resources/lang/`
-13. Public shim + setup script
-14. Meta files + STRUCTURE.md rewrite
+6. `build/` cleanup, docs consolidation
+7. `src/Piwigo/Plugins/` → `src/Piwigo/PluginConfig/` rename
+8. `themes/` dissolution → `resources/` (biggest step)
+9. TS types out of `src/`, install SQL move, `language/` → `resources/lang/`
+10. Public shim + setup script
+11. Meta files + STRUCTURE.md rewrite
 
-**Web-root isolation:** Only `public/` (generated by setup) is HTTP-reachable.
-`vendor/`, `src/`, `config/`, `var/` all outside the web root. Private albums
-become actually private (originals served via PHP permission check, not Apache
-direct).
+**Web-root isolation:** Only `public/` is HTTP-reachable.
 
-**Tests per step:** Full test suite after every step. Any red = stop and fix.
-Browser E2E including install + upgrade flows. Visual regression.
+**Tests per step:** Full test suite. Any red = stop. Browser E2E + visual regression.
 
-**Gate:** `setup.sh` produces working installation. Direct HTTP access to
-`vendor/`, `src/`, `var/` returns 404.
-
----
-
-### P22 — Bundled extensions migration
-
-**Not yet done on `16.x-rewrite`.** Plan at `docs/BUNDLED-EXTENSIONS-MIGRATION-PLAN.md`.
-
-Upstream Piwigo ships 7 bundled extensions (4 plugins + 3 themes) via sibling
-repos — they are NOT in `origin/16.x` itself:
-
-| Kind | id | Source |
-|------|----|--------|
-| plugin | AdminTools | `piwigo16-plugins/AdminTools_16.3.0/` |
-| plugin | LocalFilesEditor | `piwigo16-plugins/LocalFilesEditor_16.3.0/` |
-| plugin | TakeATour | `piwigo16-plugins/TakeATour_16.3.0/` |
-| plugin | language_switch | `piwigo16-plugins/language_switch_16.3.0/` |
-| theme | elegant | `piwigo16-themes/elegant_16.3.0/` |
-| theme | modus | `piwigo16-themes/modus_16.3.0.1/` |
-| theme | smartpocket | `piwigo16-themes/smartpocket_16.3.0/` |
-
-These are pulled into the rewrite and rewritten against the v17 contracts
-(`PluginInterface` + `plugin.json`, `ThemeInterface` + `theme.json`, PSR-14
-events). The legacy procedural surfaces they target (`add_event_handler`,
-`pwg_query`, `l10n()`, `$conf`, `themeconf.inc.php`) are all gone after P12.
-
-One commit per extension (7 total). Each rewrite includes:
-- `plugin.json` / `theme.json` manifest
-- `src/Plugin.php` implementing `PluginInterface` / `ThemeInterface`
-- Smarty `.tpl` → Latte `.latte`
-- `.lang.php` → `.po`
-- JS → TS via Vite entries
-- Vendored 3rd-party JS replaced via npm (CodeMirror v2 → `@codemirror/*`, etc.)
-
-**Tests:** Plugin activation/deactivation E2E. Feature-specific tests per plugin.
-Browser E2E: each plugin's main feature works end-to-end.
+**Gate:** `setup.sh` produces working installation. `vendor/`, `src/`, `var/` not
+HTTP-accessible.
 
 ---
 
 ### Deferred / on-demand (not phased)
 
-These trigger only when a deployment or audit demands — no scheduled effort:
-
-- **Monolog:** Swap logger backend when structured logging / external aggregation needed
-- **S3/SFTP adapters:** Wire in `config/storage.php` when disk pressure / multi-server
-- **Supervisor/systemd:** Package worker daemon config when async queue goes live
-- **Renovate:** Port dev-dep auto-merge if dependency churn warrants
+- **Monolog:** Swap logger backend when structured logging needed
+- **S3/SFTP adapters:** Wire in `config/storage.php` when disk pressure
+- **Supervisor/systemd:** Package worker daemon config
+- **Renovate:** Port dev-dep auto-merge if churn warrants
 
 ---
 
@@ -1156,16 +556,19 @@ These trigger only when a deployment or audit demands — no scheduled effort:
 
 | Aspect | `16.x-rewrite` (original) | `16.x-v2` (replay) |
 |--------|--------------------------|---------------------|
+| Phases | 22 artificially separated phases | 14 phases (merged by concern) |
 | Test framework | PHPUnit + Playwright (separate) | Pest 4 (unified: unit + browser + arch + mutate) |
 | TS unit tests | None | Vitest |
 | Commit style | 27 era-switches per 100 commits | One concern per phase |
-| Coverage | Unmeasured (15 namespaces at zero) | Measured, ratcheted, every namespace tested |
+| Coverage | Unmeasured (15 namespaces at zero) | Measured from P0, ratcheted, every namespace tested |
 | Mutation testing | None | pest-plugin-mutate |
-| `include/` deletion | Incremental (97 modifications over months) | By domain (URL, User, Category, etc.), each deleted same commit as migration |
-| PHPStan | Pushed L0→L10 in one burst (commits 300-340) | Raised gradually per phase as code quality supports it |
-| CSS | Interleaved throughout | One concentrated phase (P9) |
-| Latte | Two separated waves (commits 380-440, 980-1080) | One concentrated phase (P10) after all deps stable |
-| Plugin contracts | Mixed with WS refactoring | Separate phase (P12) after WS endpoints (P8) |
+| `include/` deletion | Incremental (97 modifications over months) | By domain, each deleted same commit as migration (P5) |
+| PHPStan | Pushed L0→L10 in one burst (commits 300-340) | L5 in P1, raised through P4-P5, L10 by end of P5 |
+| CSS + Tailwind | CSS interleaved throughout, Tailwind not started | One phase: tokens → Tailwind (P7) |
+| Latte + ViteManifest | Two Latte waves + separate ViteManifest | One phase: Latte + asset pipeline together (P8) |
+| Plugin contracts | Mixed with WS refactoring | Contracts + god-class decomposition + bundled extensions together (P9) |
+| Type correctness | §1.6 done, §1.7 partially done, split across phases | One phase: all VOs/Entities/DTOs/Results/repos (P11) |
+| OpenAPI | SpecBuilder separate from endpoints | WS endpoints + `#[ApiMethod]` + OpenAPI together (P6) |
 
 ---
 
@@ -1190,45 +593,25 @@ only the services that exist at each point.
 
 ## Estimated effort
 
-### Replay of existing work (P0-P15)
-
 | Phase | Effort | Notes |
 |-------|--------|-------|
-| P0 Tooling | 2-3 days | Framework setup + initial E2E |
-| P1 Composer | 1-2 days | Mechanical vendor swaps |
-| P2 Rector/PHPStan | 2-3 days | Automated transforms + manual L5 fixes |
-| P3 PSR-4 | 2-3 days | 62 class moves + test writing |
-| P4 Kernel/DI/boot | 4-5 days | Core architecture, careful |
-| P5 Config/DB/facades | 5-7 days | Config SCHEMA alone is large |
-| P5.5 Frontend tooling | 3-4 days | Parallel track |
-| P6 Service migration | 10-14 days | Largest phase — 17 domains + admin |
-| P7 Constants | 1-2 days | Mechanical |
-| P8 WS endpoints | 3-4 days | 95 endpoints + tests |
-| P9 CSS | 5-7 days | 11 sub-steps |
-| P10 Templates | 5-7 days | 133 conversions |
-| P11 Asset pipeline | 2-3 days | |
-| P12 Contracts | 5-7 days | 160 events + plugin system |
-| P13 Security | 2-3 days | |
-| P14 Type correctness | 5-7 days | VOs, DTOs, entities (done portion of §1.6/§1.7) |
-| P15 Quality gates | 2-3 days | Baselines + CI |
+| P0 Tooling | 2-3 days | Pest + Vitest + CI + coverage |
+| P1 Composer + Rector + PHPStan | 3-4 days | Vendor swaps + Rector + L0→L5 |
+| P2 PSR-4 | 2-3 days | 62 class moves + test writing |
+| P3 Kernel/DI/boot | 4-5 days | Core architecture |
+| P4 Config/DB/facades/constants | 5-7 days | Config SCHEMA + Paths + DI wiring |
+| P4.5 Frontend tooling | 3-5 days | Parallel: Vite + TS + lint + any→0 + webfonts |
+| P5 Service migration | 10-14 days | 17 domains + admin + ServiceLocator kill |
+| P6 WS endpoints + OpenAPI | 4-6 days | 95 endpoints + #[ApiMethod] + SpecBuilder |
+| P7 CSS + Tailwind | 3-5 weeks | Tokens + splitting + Tailwind rewrite (admin) |
+| P8 Templates + assets | 5-7 days | 133 Latte conversions + ViteManifest |
+| P9 Plugins + extensions | 2-3 weeks | Events + registries + 3 god-classes + 7 extensions |
+| P10 Security | 2-3 days | Cookies + rate limit + headers |
+| P11 Type correctness | 4-7 weeks | Full §1.6 + §1.7 in one pass |
+| P12 Quality gates | 2-3 days | Mutation, a11y, bundle budgets |
+| P13 Repo restructure | 2-3 weeks | 14 steps + web-root isolation |
 
-**Subtotal replay: ~10-14 weeks**
-
-### New/pending work (P16-P22)
-
-| Phase | Effort | Notes |
-|-------|--------|-------|
-| P16 Deep mixed elimination | 3-5 weeks | 88 Result DTOs, 30-50 Request DTOs, SearchRules, 249 repo returns |
-| P17 Extensions decomposition | 1-2 weeks | 3 god-classes → ~9 focused services |
-| P18 OpenAPI #[ApiMethod] | 3-5 days | 95 endpoint decorations |
-| P19 Tailwind CSS v4 | 2-3 weeks | Admin panel CSS rewrite |
-| P20 Vendored frontend libs | 1-2 days | Scope shrunk to webfonts |
-| P21 Repo restructure | 2-3 weeks | 14 steps, most complex is themes → resources |
-| P22 Bundled extensions | 1 week | Plugin contract migration |
-
-**Subtotal new work: ~10-14 weeks**
-
-**Grand total: ~20-28 weeks** of focused work (replay + new).
+**Total: ~20-28 weeks** of focused work.
 
 ---
 

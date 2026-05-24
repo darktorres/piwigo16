@@ -255,6 +255,7 @@ table.languages tr td {
 
 .slider-info {
   color: var(--admin-accent);
+  font-weight: bold;
 }
 
 /* .font-checkbox — checkbox-like labels (migrated from dark/light theme.css). */

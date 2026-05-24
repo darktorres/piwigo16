@@ -160,10 +160,6 @@ ul.thumbnails li.rank-of-image {
   text-decoration: none;
 }
 
-.slider-info {
-  font-weight: bold;
-}
-
 #pwgMain {
   padding-left: 0;
 }
@@ -209,11 +205,7 @@ p.albumTitle img {
 /* Selection mode */
 
 .slider::before {
-  background-color: #fff;
-}
-
-.slider::after {
-  color: #fff;
+  background-color: #fff; /* keep: light slider knob is white; no dark counterpart */
 }
 
 #selection-mode-block,
@@ -255,10 +247,6 @@ p.albumTitle img {
 
 /* UserList Pop in */
 
-
-.UsernameBlock {
-  background-color: #f9f9f9;
-}
 
 .UsernameBlock.success_message {
   border: 2px solid #c2f5c2;

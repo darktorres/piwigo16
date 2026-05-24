@@ -52,6 +52,7 @@
   content: "\E81D";
   font-family: fontello, sans-serif;
   font-size: var(--font-size-base);
+  color: var(--admin-text-on-accent);
   animation-name: spin;
   animation-duration: 0.5s;
   animation-iteration-count: infinite;

@@ -199,7 +199,7 @@ P5 ──→ P6 Service layer migration (include/ → src/)
  │     └──→ [feeds into P9, P10, P11]
 ```
 
-### Layer 3 — Templates + Assets + CSS (P8-P11, mostly sequential)
+### Layer 3 — Templates + Assets + CSS (P8-P11 + P19, P20)
 
 ```
 P6 + P7 ──→ P8 WS typed endpoints
@@ -211,7 +211,7 @@ P6 + P7 ──→ P8 WS typed endpoints
  │            │  Also: legacy include/ws_functions/*.php must be deleted
  │            │  in P6 before typed handlers can take over.
  │            │
- │            └──→ [feeds into P12]
+ │            └──→ [feeds into P12, P14]
  │
 P5.5 + P6 ──→ P9 CSS modernization
  │              │  WHY after P5.5: Stylelint config from P5.5b needed.
@@ -231,7 +231,7 @@ P5.5 + P6 ──→ P9 CSS modernization
  │              │     existing from step 2)
  │              │  10. Search CSS collapse (independent, can go anywhere)
  │              │
- │              └──→ [feeds into P10]
+ │              └──→ [feeds into P10, P19]
  │
 P5.5c + P6 + P9 ──→ P10 Template migration (Smarty → Latte)
  │                    │  WHY after P5.5c: Latte templates call {viteEntry()}
@@ -257,19 +257,45 @@ P5.5c + P6 + P9 ──→ P10 Template migration (Smarty → Latte)
  │                    │  6. Precompile pipeline + CI gate
  │                    │  7. Delete Smarty dependency
  │                    │
- │                    └──→ [feeds into P11, P12]
+ │                    └──→ [feeds into P11, P12, P19]
  │
 P10 ──→ P11 Asset pipeline (ViteManifest)
-         │  WHY after P10: ViteManifest.php is called from PiwigoExtension
-         │  which is wired during Latte migration. The {=viteEntry('id')}
-         │  calls in .latte files (P10) are what trigger ViteManifest
-         │  lookups. Legacy {combine_script}/{combine_css} must be gone
-         │  (converted in P10) before the old asset pipeline can be deleted.
-         │
-         └──→ [P11 completion means asset pipeline is fully modern]
+ │       │  WHY after P10: ViteManifest.php is called from PiwigoExtension
+ │       │  which is wired during Latte migration. The {=viteEntry('id')}
+ │       │  calls in .latte files (P10) are what trigger ViteManifest
+ │       │  lookups. Legacy {combine_script}/{combine_css} must be gone
+ │       │  (converted in P10) before the old asset pipeline can be deleted.
+ │       │
+ │       └──→ [feeds into P12, P19, P20]
+ │
+P11 ──→ P20 Vendored frontend libs
+ │        │  WHY after P11: @fontsource packages are loaded via Vite
+ │        │  imports. Asset pipeline must be in place.
+ │        │  NOTE: scope is just webfonts now. Low effort, low risk.
+ │        │  PLACED HERE because it's a leaf off the asset pipeline —
+ │        │  nothing downstream depends on it.
+ │        │
+ │        └──→ [leaf — no downstream deps]
+ │
+P9 + P10 + P11 ──→ P19 Tailwind CSS v4 (admin panel)
+                     │  WHY after P9: existing --admin-* tokens (93 of them
+                     │  from P9 step 4) are referenced via @theme inline.
+                     │  Split CSS files from P9 step 2 are what gets replaced.
+                     │  WHY after P10: Tailwind scans .latte files for class
+                     │  names — templates must be in final Latte form.
+                     │  WHY after P11: Tailwind CSS is imported from TS entries
+                     │  via Vite — asset pipeline must be final.
+                     │  NOTE: This is a REWRITE of admin CSS, not a migration.
+                     │  P9's hand-written CSS gets replaced by Tailwind utilities.
+                     │  P9 is still required because its token system becomes the
+                     │  Tailwind @theme foundation.
+                     │  PLACED HERE because it's a frontend concern — the last
+                     │  CSS work, consuming everything from Layer 3.
+                     │
+                     └──→ [leaf — no downstream deps]
 ```
 
-### Layer 4 — Contracts + security + types (P12-P15, mostly sequential)
+### Layer 4 — Contracts + security + types (P12-P18)
 
 ```
 P8 + P10 + P11 ──→ P12 Plugin / Theme / WS contracts (§1.4)
@@ -289,11 +315,10 @@ P8 + P10 + P11 ──→ P12 Plugin / Theme / WS contracts (§1.4)
  │                   │  2. EventDispatcher integration (needs events from step 1)
  │                   │  3. PluginInterface + PluginRegistry (needs events + LangService)
  │                   │  4. ThemeInterface + ThemeRegistry (needs events)
- │                   │  5. Bundled plugin migration (needs PluginInterface from step 3)
- │                   │  6. OpenAPI SpecBuilder (needs MethodDefinition from P8)
- │                   │  7. Delete legacy event functions (all callers migrated)
+ │                   │  5. OpenAPI SpecBuilder (needs MethodDefinition from P8)
+ │                   │  6. Delete legacy event functions (all callers migrated)
  │                   │
- │                   └──→ P13, P14, P22
+ │                   └──→ P13, P14, P17, P22
  │
 P4c + P6c ──→ P13 Security hardening (§1.5)
  │              │  WHY after P4c: SecurityHeadersMiddleware is part of the
@@ -307,7 +332,20 @@ P4c + P6c ──→ P13 Security hardening (§1.5)
  │              │  only depends on the middleware pipeline and auth services,
  │              │  not templates or plugins. Placed here for logical grouping.
  │              │
- │              └──→ [independent, no downstream deps]
+ │              └──→ [feeds into P21]
+ │
+P12 ──→ P17 Plugins/extensions god-class decomposition
+ │        │  WHY after P12: needs PluginRegistry + ThemeRegistry stable.
+ │        │  The decomposition splits Plugins.php/Themes.php/Languages.php
+ │        │  which are tightly coupled to the extension lifecycle from P12.
+ │        │  The 10 consumers (Updates, InstallService, TelemetryService,
+ │        │  ExtensionsController, etc.) reach into public mutable arrays
+ │        │  on these classes — must be encapsulated.
+ │        │  PLACED HERE because it's a direct child of P12 — the plugin
+ │        │  contracts must be stable before decomposing the admin classes
+ │        │  that manage them.
+ │        │
+ │        └──→ [leaf — no downstream deps]
  │
 P6 + P8 ──→ P14 Type correctness (§1.6 + done portion of §1.7)
  │            │  WHY after P6: Config schema metadata (sensitive, required,
@@ -318,79 +356,60 @@ P6 + P8 ──→ P14 Type correctness (§1.6 + done portion of §1.7)
  │            │  from P8. Entity/Projection patterns reference repository
  │            │  return types from P6.
  │            │
- │            └──→ P16 (deep mixed elimination builds on P14 foundation)
+ │            └──→ P16
  │
-P14 ──→ P15 Coverage + mutation + quality gates
-          WHY after P14: coverage and mutation testing are meaningful
-          only after the full codebase exists. Measuring coverage on a
-          half-migrated codebase produces misleading baselines.
-          Bundle size budgets need the final Vite build (P11).
-          A11y testing needs the final Latte templates (P10) + CSS (P9).
-```
-
-### Layer 5 — New work (P16-P22)
-
-```
-P14 + P15 ──→ P16 Deep mixed elimination (§1.7 remaining)
- │              │  WHY after P14: builds on the VO/Entity/Enum foundation.
- │              │  WHY after P15: coverage gates catch regressions in the
- │              │  large-scale type changes (88 Result DTOs, 249 repo
- │              │  returns, 758 $_POST/$_GET reads).
- │              │
- │              │  Internal dependency order:
- │              │  1. SessionStore rename (trivial, unblocks F5-c gate)
- │              │  2. Remaining VOs + Enums (4+6, unblocks downstream typing)
- │              │  3. WsResult DTOs (88 endpoints, needs VO types from step 2)
- │              │  4. Web/admin Request DTOs (30-50, same pattern as WsParams)
- │              │  5. Container Factory classes (118 closures → typed factories)
- │              │  6. Bare-array repo returns (249 methods, needs Entity/Projection
- │              │     types from P14 step 4)
- │              │  7. SearchRules deep adoption (SearchService + SearchFilterRenderer,
- │              │     needs repo types from step 6)
- │              │  8. is_array(.* ?? null) elimination (154 instances, mechanical
- │              │     once types from steps 3-7 propagate)
- │              │  9. Typed error responses (PwgError → enum + i18n key)
- │              │
- │              └──→ P17, P18 can start once steps 1-3 are done
- │
-P12 ──→ P17 Plugins/extensions god-class decomposition
- │        │  WHY after P12: needs PluginRegistry + ThemeRegistry stable.
- │        │  The decomposition splits Plugins.php/Themes.php/Languages.php
- │        │  which are tightly coupled to the extension lifecycle from P12.
- │        │  The 10 consumers (Updates, InstallService, TelemetryService,
- │        │  ExtensionsController, etc.) reach into public mutable arrays
- │        │  on these classes — must be encapsulated.
+P14 ──→ P16 Deep mixed elimination (§1.7 remaining)
+ │        │  WHY after P14: builds on the VO/Entity/Enum foundation from
+ │        │  P14. Cannot type WsResult DTOs without the value objects.
+ │        │  Cannot type repo returns without Entity/Projection patterns.
+ │        │  PLACED HERE (not in a separate layer) because it's the direct
+ │        │  continuation of P14's type work — same concern, same files,
+ │        │  same patterns, just deeper.
  │        │
- │        └──→ [independent, no downstream deps]
+ │        │  Internal dependency order:
+ │        │  1. SessionStore rename (trivial, unblocks F5-c gate)
+ │        │  2. Remaining VOs + Enums (4+6, unblocks downstream typing)
+ │        │  3. WsResult DTOs (88 endpoints, needs VO types from step 2)
+ │        │  4. Web/admin Request DTOs (30-50, same pattern as WsParams)
+ │        │  5. Container Factory classes (118 closures → typed factories)
+ │        │  6. Bare-array repo returns (249 methods, needs Entity/Projection
+ │        │     types from P14 step 4)
+ │        │  7. SearchRules deep adoption (SearchService + SearchFilterRenderer,
+ │        │     needs repo types from step 6)
+ │        │  8. is_array(.* ?? null) elimination (154 instances, mechanical
+ │        │     once types from steps 3-7 propagate)
+ │        │  9. Typed error responses (PwgError → enum + i18n key)
+ │        │
+ │        └──→ P18
  │
 P16 (steps 1-3) ──→ P18 OpenAPI #[ApiMethod] decoration
  │                    │  WHY after P16 steps 1-3: SpecBuilder reflection
  │                    │  needs WsResult DTOs (from P16 step 3) to populate
  │                    │  responseClass in the attribute. Without Result types,
  │                    │  the attribute has nothing to point at.
+ │                    │  PLACED HERE because it's a direct child of the WS
+ │                    │  typing work — once Result DTOs exist, the attribute
+ │                    │  can reference them.
  │                    │
- │                    └──→ [independent, no downstream deps]
+ │                    └──→ [leaf — no downstream deps]
  │
-P9 + P10 + P11 ──→ P19 Tailwind CSS v4 (admin panel)
- │                   │  WHY after P9: existing --admin-* tokens (93 of them
- │                   │  from P9 step 4) are referenced via @theme inline.
- │                   │  Split CSS files from P9 step 2 are what gets replaced.
- │                   │  WHY after P10: Tailwind scans .latte files for class
- │                   │  names — templates must be in final Latte form.
- │                   │  WHY after P11: Tailwind CSS is imported from TS entries
- │                   │  via Vite — asset pipeline must be final.
- │                   │  NOTE: This is a REWRITE of admin CSS, not a migration.
- │                   │  P9's hand-written CSS gets replaced by Tailwind utilities.
- │                   │  P9 is still required because its token system becomes the
- │                   │  Tailwind @theme foundation.
- │                   │
- │                   └──→ [independent, no downstream deps]
- │
-P11 ──→ P20 Vendored frontend libs
- │        WHY after P11: @fontsource packages are loaded via Vite imports.
- │        Asset pipeline must be in place.
- │        NOTE: scope is just webfonts now. Low effort, low risk.
- │
+P12 + P14 + P16 ──→ P15 Mutation testing + quality gates
+                      WHY after P14/P16: mutation testing and coverage
+                      targets are meaningful only after the type system is
+                      substantially complete. Measuring MSI against untyped
+                      code produces misleading baselines.
+                      WHY after P12: a11y testing needs plugin system stable
+                      (plugin-injected UI must be accessible too).
+                      Bundle size budgets need the final Vite build (P11).
+                      A11y testing needs the final Latte templates (P10) + CSS (P9).
+                      NOTE: code coverage MEASUREMENT is active since P0.
+                      P15 is about adding mutation testing, a11y, bundle
+                      budgets, and raising the coverage threshold to ≥40%.
+```
+
+### Layer 5 — Structural + extensions (P21, P22)
+
+```
 P12 + P13 + all tests green ──→ P21 Repository restructure (STRUCTURE-PLAN)
  │                                │  WHY LAST among structural changes:
  │                                │  - Moves EVERY directory (src/, themes/,
@@ -404,6 +423,11 @@ P12 + P13 + all tests green ──→ P21 Repository restructure (STRUCTURE-PLAN
  │                                │    theme discovery paths change
  │                                │  - Needs security (P13) because web-root
  │                                │    isolation is a security feature
+ │                                │  - P16-P20 do NOT block P21 — they change file
+ │                                │    contents, not file locations. P21 can run
+ │                                │    before, after, or interleaved with them.
+ │                                │    But running P21 after is safer: fewer moving
+ │                                │    parts during the restructure.
  │                                │
  │                                │  Internal order (each step leaves tree green):
  │                                │  Steps 1-4: var/ migration (runtime data)
@@ -428,14 +452,23 @@ P12 + P21 ──→ P22 Bundled extensions migration
 ### Summary: critical path (longest sequential chain)
 
 ```
-P0 → P1 → P2 → P3 → P4 → P5 → P6 → P7 → P8 → P10 → P11 → P12 → P21
-                                  ↑
-                            P5.5 (parallel)──→ P9 (parallel to P8)
+P0 → P1 → P2 → P3 → P4 → P5 → P6 → P7 → P8 → P10 → P11 → P12 → P21 → P22
+                                  ↑                      │
+                            P5.5 (parallel)──→ P9        ├──→ P17 (leaf)
+                                                         │
+                                         P14 → P16 → P18 (leaf)
+                                                │
+                                                └──→ P15
+                                                
+                                         P13 (parallel to P10-P12)
+                                         P19 (leaf off P9+P10+P11)
+                                         P20 (leaf off P11)
 ```
 
-Minimum sequential depth: **13 phases** on the critical path.
+Minimum sequential depth: **14 phases** on the critical path (P0–P22).
 Parallelizable: P5.5/P9 alongside P6-P8. P13 alongside P10-P12.
-P17/P18/P19/P20 are independent leaves once their prerequisites are met.
+P14→P16→P18 chain runs alongside P12→P17 and P12→P21→P22.
+P19, P20 are independent leaves once their Layer 3 prerequisites are met.
 
 ---
 

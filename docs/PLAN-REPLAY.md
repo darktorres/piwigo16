@@ -7,8 +7,8 @@ vendored Smarty/PHPMailer in `include/`, 947 PHP files, 333 JS files, 140 `.tpl`
 templates. Zero CI, zero static analysis, zero test coverage.
 
 `16.x-rewrite` is 2023 commits ahead: 894 PHP source files under `src/Piwigo/`
-(53 namespaces), Latte templates, TypeScript + Vite, PHPStan L10 clean, 1122 unit
-tests. But the commit history has an average of 27 era-switches per 100 commits —
+(53 namespaces), 133 Latte templates, 82 authored TS files, PHPStan L10 clean,
+1281 tests (899 methods × data providers). But the commit history has an average of 27 era-switches per 100 commits —
 CSS interleaved with Latte interleaved with WS refactoring interleaved with PHPStan
 fixes. Core files like `config/container.php` (194 touches) and
 `include/functions.inc.php` (97 touches) were modified continuously across the
@@ -16,6 +16,89 @@ entire timeline.
 
 **Goal:** New branch `16.x-v2` from `origin/16.x`. Replay in clean phases.
 Tests accompany each phase. Every commit green.
+
+---
+
+## Pre-implementation audit (2026-05-24)
+
+Deep analysis of every claim in this plan against the actual codebase state.
+All numbers verified by grep/find on both `origin/16.x` and `16.x-rewrite` (HEAD).
+
+### Factual corrections needed
+
+| # | Plan claim | Actual value | Severity | Fix |
+|---|-----------|-------------|----------|-----|
+| 1 | "1122 unit tests" | 1281 tests (899 methods × data providers) | Moderate | Update to 1281 |
+| 2 | "62 classes → src/Piwigo/" (P3) | 75 class declarations in origin/16.x; ~51 first-party after removing vendored. The "62" was actually the admin page count. | **Major** | Rewrite P3 scope: it's not "move 62 classes" — it's extracting classes from procedural files, splitting multi-class files, AND creating new classes for procedural logic |
+| 3 | "195 reads in 72 files" for PHPWG_ROOT_PATH (P7) | **885 usages across 282 files** in origin/16.x | **Major** | P7 effort is 4.5× larger. Update from "1-2 days" to "4-5 days" minimum |
+| 4 | "~160 events" (P12) | 157 event classes | Trivial | Update to 157 |
+| 5 | "277 SCHEMA entries" (P5a) | 271 Config SCHEMA entries | Minor | Update to 271 |
+| 6 | "80 admin + 35 frontend + 18 standard" templates (P10) | **70 admin + 56 frontend + 7 standard** = 133 | **Major** | Rewrite P10 wave sizes. Frontend is 1.6× bigger than planned, standard pages is 2.5× smaller |
+| 7 | "69 Vite entry points" | 68 entries in vite.config.ts | Trivial | Update |
+| 8 | "admin theme.css 9635 lines" (P9) | 8603 lines (admin/themes/default/theme.css in origin/16.x) | Minor | Update |
+| 9 | "!important 689 → 51" (P9) | origin/16.x has **720**; current rewrite has **4** (not 51) | Moderate | Update baseline to 720, target to 4 |
+| 10 | "118 factory closures" in container (P16) | 127 closures in config/container.php | Minor | Update to 127 |
+| 11 | "15 namespaces with zero coverage" | **24 namespaces** with no tests (out of 53) | Moderate | Update — testing gap is 60% larger |
+| 12 | "~25 VOs" + "~10 Enums" (P14) | 21 VOs + 31 Enums **already built** on rewrite | Moderate | P14 scope for VOs/Enums is replay, not creation. Plan implies new work |
+| 13 | "7 Entity, 73 projection shapes" (P14) | 0 Entity + 0 Projection types exist | OK — this IS new work |
+| 14 | WS "9 endpoint classes" (P8) | **94 individual Handler files** (1 per method) + 83 Params + 7 Results across 12 domains | **Major** | Wrong architecture described. Rewrite P8 to match actual Handler-per-method pattern |
+| 15 | 95 WS endpoints | 95 registrations, 94 handler files (1 mismatch) | Minor | Investigate the 1 registration without a handler |
+
+### Missing from the plan
+
+| # | Missing item | Impact | Where it belongs |
+|---|-------------|--------|-----------------|
+| 1 | **18 namespaces omitted from P6a domain table**: Activity, Auth, Caddie, Common, Core, Csrf, Exception, Feed, Group, History, Job, Listener, Permalink, Routing, Section, Site, Storage, Telemetry, Validation | **Major** | P6a — these all get migrated too |
+| 2 | **Admin theme consolidation**: origin/16.x has 3 admin themes (clear/default/roma) under `admin/themes/`, rewrite consolidated to `themes/admin/{_base,dark,light}` | Moderate | P9 or P10 — structural change not mentioned |
+| 3 | **Symfony Messenger / Job system**: 14 files under `src/Piwigo/Job/` (BatchUpload, GenerateDerivative, RegenerateAll, ReindexImages, SendNotificationEmail) + `config/messenger.php` | Moderate | P5 or P6 — async job infrastructure |
+| 4 | **Flysystem StorageRegistry** + `config/storage.php`: Disk abstraction layer | Minor | P5 — infrastructure |
+| 5 | **16 Listener/Subscriber classes** under `src/Piwigo/Listener/` | Minor | P12 — event system |
+| 6 | **21 frontend controllers** (P6b only lists 9 admin controllers): About, Action, Comments, Feed, Gallery, Identification, ImageDerivative, Install, Nbm, Notification, Password, Picture, Popuphelp, Profile, QSearch, Register, Search, Tags, Upgrade, UpgradeFeed, Ws | Moderate | P6a/P6b — need an explicit step |
+| 7 | **Upgrade script removal**: 23 `install/upgrade_*.php` scripts deleted. How does upgrade work now? Doctrine Migrations dep exists but no migration files. | **Major** | P4 or P5 — upgrade path undefined |
+| 8 | **template-extension/ directory**: Sample template overrides in origin/16.x | Minor | Needs explicit deletion or migration |
+| 9 | **doc/ directory**: README translations (ca, en, fr) | Trivial | P21 or delete |
+| 10 | **local/ directory**: Config override structure (`local/config/`, `local/css/`, `local/language/`) | Minor | Must survive across phases |
+| 11 | **Doctrine DBAL migrations**: `doctrine/migrations` ^3.9 is in require but no migration files exist — SQL lives in `install/piwigo_structure-mysql.sql` + `install/config.sql` | Moderate | Clarify: does the replay use Doctrine migrations or keep SQL files? |
+| 12 | **tools/ directory**: 20+ development tools (latte-lint, smarty-to-latte, css-audit, measure-nesting, openapi-dump, plugin-lint, phpstan extensions, etc.) | Minor | P0-P2 — some tools must be built before the code they lint |
+| 13 | **Custom PHPStan rules**: 6 custom rules in `tools/phpstan/` + Latte engine resolver | Minor | P0 or P2 — needed for PHPStan to work |
+
+### Structural risks
+
+1. **P3 is not a "move" — it's a rewrite.** Origin/16.x has 30+ procedural `include/functions_*.inc.php` files. These cannot be autoloaded or namespaced. They must be *converted* to classes first. The plan describes P3 as a namespace move, but the real work is converting procedural code to OOP.
+
+2. **PHPStan level progression may not work incrementally.** The current rewrite is at L10. The plan proposes going L0→L5→L6→L7→L8→L10 across phases. But the code patterns (VOs, readonly classes, strict typing) were designed FOR L10. Applying a half-migrated codebase at intermediate levels may surface different errors than the final code — making intermediate green states harder than expected.
+
+3. **`config/container.php` cannot be cherry-picked even by domain.** Each P6a domain adds service definitions that reference services from OTHER domains (circular cross-references). The container must grow in a specific order that respects resolution order, not just "URL first, User second."
+
+4. **CSS split is already done on rewrite branch.** Current `themes/admin/_base/theme.css` is 15 lines (import hub). 54 CSS files exist. The plan describes the split as future work (P9) but it was already implemented. Replay must reproduce this structure, not rediscover it.
+
+5. **Pest Browser is v4.3.1 and pre-v1 quality.** The plan replaces Playwright with Pest Browser, but the current E2E suite (27 test files, 15 specs) was written for Playwright. Pest Browser's gaps (no multi-tab, no network interception, no dialog handling) may prevent porting some tests. Consider keeping Playwright alongside Pest for the E2E suite.
+
+6. **The plan has no Vitest** in P0's commit list despite listing it in the "Test framework" section. Vitest + happy-dom must be in P0's npm setup.
+
+7. **Current CI is already 11 jobs.** P0 describes creating CI from scratch but the reference implementation (`.github/workflows/ci.yml`) already has: style, phpstan, latte, precompile, unit, audit, build, rector, integration, e2e, ts. P0 must reproduce all of these, not the simplified 6-job description in the plan.
+
+### Verified claims (correct)
+
+- origin/16.x: 947 PHP, 333 JS, 140 TPL, 83 CSS ✓
+- 53 namespaces under src/Piwigo/ ✓
+- 894 PHP files in src/ ✓
+- 133 non-test Latte templates (136 total, 3 in test fixtures) ✓
+- 82 authored TS files in themes/ (115 total including tests/config) ✓
+- 8 middleware classes ✓
+- No include/ or admin/ directories on rewrite ✓
+- ServiceLocator: 0 usages in src/ ✓
+- $GLOBALS: 6 remaining (all in Lang.php bridge + comments) ✓
+- PHPWG_ROOT_PATH: effectively eliminated (5 remaining = comments only) ✓
+- PHPStan level 10 on rewrite ✓
+- 37 repositories, 47 services ✓
+- 12 WS domains ✓
+- 83 WS Params files ✓
+- No plugins bundled in origin/16.x (only `plugins/index.php`) ✓
+- Smarty vendored: 173 files ✓
+- define() in constants.php: 52 ✓
+- Admin PHP pages in origin/16.x: 62 ✓
+- install/ upgrade scripts: 23 ✓
 
 ---
 
@@ -54,7 +137,7 @@ same files.
 ```
 P0 Tooling ──→ P1 Composer + Rector + PHPStan L5
                 │
-                └─→ P2 PSR-4 (62 classes → src/Piwigo/)
+                └─→ P2 PSR-4 (~51 first-party classes → src/Piwigo/)
                      │
                      └─→ P3 Kernel + DI + middleware + routing
                           │
@@ -247,8 +330,16 @@ All other baselines unchanged or improved.
 **What happens:**
 - Create `src/Piwigo/` directory tree
 - PSR-4 autoload config in `composer.json`
-- Move all 62 first-party classes from `include/*.class.php` → namespaced classes
+- Extract classes from ~51 first-party class declarations across include/ and
+  admin/include/ (16 `.class.php` files in include/, 8 in admin/include/, plus
+  inline classes in `functions_search.inc.php` (7 classes), `ws_core.inc.php` (4),
+  `ws_protocols/*.php` (5), `block.class.php` (3), `template.class.php` (5),
+  `functions_plugins.inc.php` (2))
+- Split multi-class files into one-class-per-file
+- Namespace all extracted classes under `Piwigo\`
 - Update all `require`/`include` references
+- Procedural files (`include/functions_*.inc.php`) stay for now — they can't be
+  autoloaded until they're converted to classes in P5
 
 **Tests:** Unit test for each moved class with testable logic. Browser E2E.
 Arch test: all classes in `src/Piwigo/` have `declare(strict_types=1)`.
@@ -291,8 +382,9 @@ Arch test: all classes in `src/Piwigo/` have `declare(strict_types=1)`.
 
 #### P4c — Typed facades + constants retirement
 - `PageState.php`, `CurrentUser.php`, `Lang.php` + `LangService.php` + `Translator.php`
-- `Paths.php` value object (replaces `PHPWG_ROOT_PATH`, 195 reads in 72 files)
-- Replace all remaining `define()` constants with typed alternatives
+- `Paths.php` value object (replaces `PHPWG_ROOT_PATH`, **885 usages across 282 files**)
+- Replace all 52 `define()` constants from `include/constants.php` with typed
+  alternatives (`Tables` class, `AppInfo`, `Paths`, `Config` accessors)
 - **Tests:** `PageStateTest.php`, `LangTest.php`, `PathsTest.php`, `PemUrlResolverTest.php`
 - Arch test: no `define()` in src/, no `PHPWG_ROOT_PATH` in src/
 
@@ -345,6 +437,18 @@ Tier 2 (depend on Tier 1): Filter, User, Tag, Comment, Rate
 Tier 3 (depend on 1+2): Mail, Category, Search, Image, Calendar, Notification, Metadata
 Tier 4 (depend on 1-3): Page renderers, Menu, Plugin
 
+**⚠ AUDIT NOTE:** The tiers above list 17+1 (Plugin) include/ domains but the final
+rewrite has **35+ namespaces** under src/Piwigo/. Missing from these tiers:
+Activity (ActivityRepository, ActivityLogger), Auth (CookieService, PasswordService,
+EphemeralKeyService, AuthKeyRepository), Caddie (CaddieRepository), Common (21 VOs +
+4 Enums + DTOs), Core (Kernel, Paths, Lang, PageState, AppInfo, etc.), Csrf
+(CsrfService), Exception, Feed (FeedHelper, FeedRepository, PiwigoFeedCreator),
+Group (GroupRepository), History (HistoryRepository), Job (5 jobs + 5 handlers +
+MessengerFactory), Listener (16 subscribers), Permalink (PermalinkService,
+PermalinkRepository), Routing (Router, RouteResult), Section, Site (SiteRepository),
+Storage (StorageRegistry), Telemetry (TelemetryService + 5 DTOs), Validation.
+These must either be folded into existing Tier 1-4 groups or added as explicit rows.
+
 **After each domain:** that domain's `include/` file is DELETED.
 
 #### P5b — Admin migration
@@ -352,10 +456,21 @@ Tier 4 (depend on 1-3): Page renderers, Menu, Plugin
 Upload → Albums → Users → Config → Extensions → BatchManager → History →
 Maintenance → Misc. Each deletes its `admin/*.php` source.
 
+**⚠ AUDIT NOTE:** P5b only lists 9 admin controller groups, but the final rewrite has
+**21 non-admin controllers** that are not accounted for: About, Action, Comments, Feed,
+Gallery, Identification, ImageDerivative, Install, Nbm, Notification, Password,
+Picture, Popuphelp, Profile, QSearch, Register, Search, Tags, Upgrade, UpgradeFeed,
+Ws. These must be part of P5a (they consume include/ procedural code) or a new step
+between P5a and P5c.
+
 #### P5c — Cleanup
 
 - Delete `ServiceLocator.php`, retire `$GLOBALS` bridges
-- Delete remaining root entry points (`about.php`, `comments.php`, etc.)
+- Delete all 23 root entry points (`about.php`, `comments.php`, `search.php`,
+  `picture.php`, `tags.php`, `identification.php`, `register.php`, `password.php`,
+  `feed.php`, `i.php`, `action.php`, `ws.php`, `qsearch.php`, `random.php`,
+  `profile.php`, `popuphelp.php`, `notification.php`, `nbm.php`, `admin.php`,
+  `install.php`, `upgrade.php`, `upgrade_feed.php`)
 - Delete `include/` and `admin/` directories entirely
 - Arch tests: no `ServiceLocator`, no `$GLOBALS`, no `include/`, no `admin/`
 
@@ -373,9 +488,19 @@ Browser E2E green. Every namespace has tests.
 is just finishing what `MethodDefinition` starts — same files, same concern.
 
 - `PwgServer.php`, `MethodDefinition`, `ParamDefinition` value objects
-- `WsMethodRegistrar.php` — register all 95 endpoints
-- 9 `*Endpoints.php` classes → individual `*Handler.php` classes
-- `#[ApiMethod]` attribute on all 95 handlers
+- `WsMethodRegistrar.php` — register all 95 methods (event-driven via
+  `WsMethodsRegistering`)
+- `src/Piwigo/Ws/Action/Pwg/{Domain}/{Name}Handler.php` — **94 individual handler
+  files** (one per WS method), organized across 12 domains (Activity, Categories,
+  Comments, Extensions, Groups, History, Images, Permissions, Rates, Session,
+  Tags, Users) + 5 top-level handlers
+- 83 `*Params.php` typed parameter DTOs alongside the handlers
+- 7 `*Result.php` typed result DTOs (remaining 87 endpoints return untyped arrays
+  — addressed in P11)
+- Supporting infrastructure: `WsAction`, `WsHelper`, `WsParams`, `WsResult`,
+  `WsError`, `WsType`, `PwgError`, `PwgNamedArray`, `PwgNamedStruct`, encoders
+  (`PwgJsonEncoder`, `PwgRestEncoder`, `PwgXmlWriter`), `PwgRestRequestHandler`
+- `#[ApiMethod]` attribute on all 94 handlers
 - `SpecBuilder` → OpenAPI 3.1 spec generation reading attributes
 
 **Tests:** `WsApiTest.php` — integration test for all 95 endpoints. OpenAPI spec
@@ -391,10 +516,14 @@ validation (cebe/redocly). Parameter validation tests.
 them as separate phases means touching every admin CSS file twice. One pass: build
 the token system, then replace hand-written rules with Tailwind utilities.
 
+**⚠ AUDIT NOTE:** origin/16.x has 3 admin themes: `admin/themes/{clear,default,roma}`
+(316 files total). The rewrite consolidated them into `themes/admin/{_base,dark,light}`.
+This structural change must happen here or as a prerequisite step.
+
 1. Delete orphan CSS
-2. Split theme monoliths (9635 → 51 files admin, 1305 → 10 files frontend)
+2. Split theme monoliths (8603 → 54 files admin, 1004 → 22 files frontend)
 3. Design tokens (93 admin, 42 frontend)
-4. Skin/child theme refactor, `!important` elimination (689 → 51)
+4. Skin/child theme refactor, `!important` elimination (720 → 4)
 5. Inline `<style>` extraction, search CSS collapse
 6. Install `@tailwindcss/vite`, create `tailwind.css` with `@theme inline`
    referencing `--admin-*` tokens
@@ -402,7 +531,7 @@ the token system, then replace hand-written rules with Tailwind utilities.
 8. `@source` for `.latte` scanning, Stylelint config for Tailwind v4
 
 **Tests:** Stylelint clean. Visual regression screenshots. Browser E2E.
-`wc -l themes/admin/_base/theme.css` → 12.
+`wc -l themes/admin/_base/theme.css` → 15 (import hub).
 
 **Gate:** Stylelint 0 errors. Theme files at target sizes. E2E green.
 
@@ -423,8 +552,9 @@ functions. Converting templates and wiring their asset helpers is one concern.
 1. Add Latte engine, wire `PiwigoExtension` (which includes ViteManifest)
 2. `ViteManifest.php` — reads `dist/manifest.json`
 3. Build Smarty → Latte converter tool
-4. Convert admin templates (80 files)
-5. Convert frontend + standard pages templates (53 files)
+4. Convert admin templates (70 files)
+5. Convert frontend templates (56 files — includes mail templates)
+6. Convert standard pages templates (7 files)
 6. Precompile pipeline + CI gate
 7. Delete Smarty dependency + legacy asset pipeline (`CombineService`, etc.)
 
@@ -496,15 +626,17 @@ same patterns, same files. One phase, ordered by dependency depth.
 
 1. Config schema metadata (`sensitive`, `required`, `description`)
 2. `RequestCache` with `@template T`
-3. ValueObjects (~25) + Enums (~10) — all of them, not split across two phases
-4. Entity + Projection patterns (7 Entity, 73 projections)
+3. ValueObjects (replay 21 VOs from `Common/ValueObject/`) + Enums (replay
+   31 Enums already built on rewrite — these are replay, not new creation)
+4. Entity + Projection patterns (new work: 7 Entity, 73 projection shapes —
+   none exist on the rewrite branch yet)
 5. Session VO + `SessionStore` rename
-6. WsResult DTOs (88 endpoints)
-7. Web/admin Request DTOs (30-50)
-8. Container Factory classes (118 closures → typed factories)
+6. WsResult DTOs (87 of 94 handlers still return untyped arrays)
+7. Web/admin Request DTOs (796 raw `$_POST`/`$_GET`/`$_REQUEST`/`$_FILES` reads)
+8. Container Factory classes (127 closures in 392 LOC → typed factories)
 9. Bare-array repo returns (249 methods → typed)
 10. SearchRules deep adoption (SearchService + SearchFilterRenderer)
-11. `is_array(.* ?? null)` elimination (154 → 0)
+11. `is_array(.* ?? null)` elimination (152 → 0)
 12. Typed error responses (PwgError → enum + i18n key)
 13. Psalm as secondary CI gate
 
@@ -513,6 +645,7 @@ Integration tests for every search filter combination.
 
 **Gate:** PHPStan L10. `psalm --show-info` < 50.
 `grep -rn 'is_array(.* ?? null)' src/` → 0.
+`grep -rn '\$_POST\|\$_GET\|\$_REQUEST\|\$_FILES' src/` → 0.
 
 ---
 
@@ -612,12 +745,12 @@ only the services that exist at each point.
 |-------|--------|-------|
 | P0 Tooling | 2-3 days | Pest + Vitest + CI + coverage |
 | P1 Composer + Rector + PHPStan | 3-4 days | Vendor swaps + Rector + L0→L5 |
-| P2 PSR-4 | 2-3 days | 62 class moves + test writing |
+| P2 PSR-4 | 3-5 days | ~51 class extractions (multi-class splits, procedural→OOP) + test writing |
 | P3 Kernel/DI/boot | 4-5 days | Core architecture |
-| P4 Config/DB/facades/constants | 5-7 days | Config SCHEMA + Paths + DI wiring |
+| P4 Config/DB/facades/constants | 7-10 days | Config SCHEMA + Paths (885 usages in 282 files!) + DI wiring |
 | P4.5 Frontend tooling | 3-5 days | Parallel: Vite + TS + lint + any→0 + webfonts |
-| P5 Service migration | 10-14 days | 17 domains + admin + ServiceLocator kill |
-| P6 WS endpoints + OpenAPI | 4-6 days | 95 endpoints + #[ApiMethod] + SpecBuilder |
+| P5 Service migration | 12-18 days | 35+ namespaces (not 17) + admin + 21 frontend controllers + ServiceLocator kill |
+| P6 WS endpoints + OpenAPI | 5-8 days | 94 handlers + 83 Params + encoders + #[ApiMethod] + SpecBuilder |
 | P7 CSS + Tailwind | 3-5 weeks | Tokens + splitting + Tailwind rewrite (admin) |
 | P8 Templates + assets | 5-7 days | 133 Latte conversions + ViteManifest |
 | P9 Plugins + extensions | 2-3 weeks | Events + registries + 3 god-classes + 7 extensions |
@@ -626,7 +759,7 @@ only the services that exist at each point.
 | P12 Quality gates | 2-3 days | Mutation, a11y, bundle budgets |
 | P13 Repo restructure | 2-3 weeks | 14 steps + web-root isolation |
 
-**Total: ~20-28 weeks** of focused work.
+**Total: ~22-32 weeks** of focused work (adjusted after pre-implementation audit).
 
 ---
 

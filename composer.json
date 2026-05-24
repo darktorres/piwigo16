@@ -105,7 +105,7 @@
   "scripts-descriptions": {
     "lint": "Run all PHP/Latte lints (pint --test + latte-lint)",
     "lint:latte": "Validate .latte templates with PiwigoExtension registered",
-    "lint:no-inline-scripts": "Fail the build if any .latte <script> tag is executable (CSP-aligned)",
+    "lint:no-inline-scripts": "Fail the build if any .latte/.php <script> tag is executable (CSP-aligned)",
     "lint:php": "Check PHP code style with Pint (no fixes)",
     "analyse": "Run static analysis (phpstan + psalm)",
     "analyse:phpstan": "Run PHPStan",

@@ -78,6 +78,7 @@ final readonly class WsController implements ControllerInterface
             if (!headers_sent()) {
                 header('Content-Type: text/html; charset=utf-8');
             }
+            $specUrlAttr = htmlspecialchars($specUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             echo '<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -87,17 +88,9 @@ final readonly class WsController implements ControllerInterface
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
 </head>
 <body>
-  <div id="swagger-ui"></div>
+  <div id="swagger-ui" data-spec-url="' . $specUrlAttr . '"></div>
   <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
-  <script>
-    SwaggerUIBundle({
-      url: ' . (($je = json_encode($specUrl)) !== false ? $je : '""') . ',
-      dom_id: \'#swagger-ui\',
-      presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
-      layout: \'BaseLayout\',
-      deepLinking: true,
-    });
-  </script>
+  <script src="dev/swagger-init.js" defer></script>
 </body>
 </html>';
             exit;

@@ -343,25 +343,13 @@ final class PiwigoExtension extends Extension
             $content[] = '<script type="' . $type . '" src="' . $src . '"></script>';
         }
 
-        if (count($tpl->scriptLoader->inline_scripts) > 0) {
-            $content[] = '<script type="module">';
-            foreach ($tpl->scriptLoader->inline_scripts as $inline) {
-                $content[] = $inline;
+        foreach ($scripts[1] as $script) {
+            $src = self::makeScriptSrc($script);
+            if (self::isModuleScript($script)) {
+                $content[] = '<script type="module" src="' . $src . '"></script>';
+            } else {
+                $content[] = '<script async src="' . $src . '"></script>';
             }
-            $content[] = '</script>';
-        }
-
-        if (count($scripts[1]) > 0) {
-            $content[] = '<script type="text/javascript">';
-            $content[] = "(function() {\nvar s,after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length-1];";
-            foreach ($scripts[1] as $script) {
-                $src = self::makeScriptSrc($script);
-                $stype = self::isModuleScript($script) ? 'module' : 'text/javascript';
-                $content[] = "s=document.createElement('script'); s.type='{$stype}'; s.async=true; s.src='{$src}';";
-                $content[] = 'after = after.parentNode.insertBefore(s, after);';
-            }
-            $content[] = '})();';
-            $content[] = '</script>';
         }
 
         return new Html(implode("\n", $content));

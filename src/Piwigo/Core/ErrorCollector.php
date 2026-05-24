@@ -5,20 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * Redirect PHP errors/warnings away from the response body into the browser's
- * DevTools console (for HTML pages) or DevTools Network → Response Headers
- * (for non-HTML responses such as JSON/XML/binary).
+ * Redirect PHP errors/warnings away from the response body into DevTools
+ * Network → Response Headers (X-PHP-Error-N) and Apache's error log.
  *
- * Mechanism:
- *  - ob_start() with an output-buffer callback intercepts the complete HTML
- *    before it is sent to the client. The callback injects a <script> block
- *    just before </body> so console.warn() / console.error() fire in DevTools.
- *  - For non-HTML responses that contain no </body> tag, the callback leaves
- *    the output unchanged. Errors emitted as X-PHP-Error-N response headers
- *    during the error handler (before headers are committed) remain visible
- *    in DevTools → Network → Response Headers.
- *  - Errors are also passed to error_log() so Apache's error log stays the
- *    authoritative server-side record.
+ * Errors are also passed to error_log() so Apache's error log stays the
+ * authoritative server-side record.
  */
 final class ErrorCollector
 {
@@ -37,13 +28,6 @@ final class ErrorCollector
         // Never write errors inline — they corrupt non-HTML responses.
         ini_set('display_errors', '0');
         ini_set('display_startup_errors', '0');
-
-        // The ob_start callback intercepts the full output right before it is
-        // sent and injects <script>console.*</script> into HTML pages.
-        // No ob_get_level() guard — PHP's output_buffering INI may already have
-        // created a level-1 buffer, which would prevent our callback from being
-        // registered. We always add our own level so the callback fires.
-        ob_start(self::injectConsoleScript(...));
 
         set_error_handler(static function (int $errno, string $errstr, string $errfile, int $errline): bool {
             // Respect the @ error-suppression operator.
@@ -82,46 +66,6 @@ final class ErrorCollector
                 error_log("PHP {$label}: {$last['message']} in {$last['file']} on line {$last['line']}");
             }
         });
-    }
-
-    /**
-     * ob_start() callback — called with the full buffered output right before
-     * it is sent to the client. Injects a <script> block before </body> for
-     * HTML responses; returns other responses unchanged.
-     */
-    public static function injectConsoleScript(string $output): string
-    {
-        if (empty(self::$collected)) {
-            return $output;
-        }
-
-        // Only inject into HTML — presence of </body> is the reliable signal.
-        $bodyPos = strripos($output, '</body>');
-        if ($bodyPos === false) {
-            return $output;
-        }
-
-        $lines = '';
-        foreach (self::$collected as $msg) {
-            $level = match (true) {
-                str_contains($msg, '[ERROR]')      => 'error',
-                str_contains($msg, '[WARNING]'),
-                str_contains($msg, '[DEPRECATED]') => 'warn',
-                default                            => 'info',
-            };
-            $jsonMsg = json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            $lines .= "console.{$level}(" . ($jsonMsg !== false ? $jsonMsg : '""') . ");\n";
-        }
-
-        $count  = count(self::$collected);
-        $script = "<script>\n"
-            . "/* PHP {$count} error(s) — see also X-PHP-Error-N response headers */\n"
-            . "console.group('PHP ({$count})');\n"
-            . $lines
-            . "console.groupEnd();\n"
-            . '</script>';
-
-        return substr($output, 0, $bodyPos) . $script . substr($output, $bodyPos);
     }
 
     public static function isActive(): bool

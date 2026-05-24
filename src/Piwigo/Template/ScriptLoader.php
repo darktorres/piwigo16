@@ -16,8 +16,6 @@ final class ScriptLoader
 {
     /** @var array<string, Script> */
     private array $registered_scripts = [];
-    /** @var string[] */
-    public array $inline_scripts = [];
 
     private bool $did_head = false;
     /** @var array */
@@ -33,7 +31,6 @@ final class ScriptLoader
     public function clear(): void
     {
         $this->registered_scripts = [];
-        $this->inline_scripts = [];
         $this->head_done_scripts = [];
         $this->did_head = $this->did_footer = false;
     }
@@ -49,29 +46,6 @@ final class ScriptLoader
     public function getAll(): array
     {
         return $this->registered_scripts;
-    }
-
-    /**
-     * @param string[] $require
-     */
-    /** @param string[] $require */
-    public function addInline(string $code, array $require): void
-    {
-        if ($this->did_footer) {
-            throw new \LogicException('Attempt to add inline script but the footer has been written');
-        }
-        if (!empty($require)) {
-            foreach ($require as $id) {
-                if (!isset($this->registered_scripts[$id])) {
-                    HtmlService::fatalError("inline script not found require $id");
-                }
-                $s = $this->registered_scripts[$id];
-                if ($s->load_mode == 2) {
-                    $s->load_mode = 1;
-                } // until now the implementation does not allow executing inline script depending on another async script
-            }
-        }
-        $this->inline_scripts[] = $code;
     }
 
     /**

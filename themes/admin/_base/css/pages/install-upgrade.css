@@ -1,7 +1,21 @@
+/* Install/upgrade page — permanently dark regardless of active admin theme.
+   Force admin tokens to their dark equivalents so the page looks consistent. */
+:root {
+  --admin-bg-page: #1b1b1b;
+  --admin-bg-panel: #2c2c2c;
+  --admin-bg-elevated: #3c3c3c;
+  --admin-text: #c1c1c1;
+  --admin-text-muted: #888;
+  --admin-border: #555;
+  --admin-border-strong: #444;
+  --admin-accent-soft: #ffa646;
+  --admin-accent: #f70;
+}
+
 body {
   font-size: var(--font-size-xs);
-  background-color: #1b1b1b;
-  color: #c1c1c1;
+  background-color: var(--admin-bg-page);
+  color: var(--admin-text);
 }
 
 #content {
@@ -22,21 +36,21 @@ body {
 
 fieldset {
   margin-top: var(--space-lg);
-  background-color: #2c2c2c;
-  border: 1px solid #444;
+  background-color: var(--admin-bg-panel);
+  border: 1px solid var(--admin-border-strong);
 }
 
 legend {
   font-weight: bold;
   letter-spacing: 2px;
-  color: #c1c1c1;
+  color: var(--admin-text);
 }
 
 .content h2 {
   display: block;
   font-size: var(--font-size-xl);
   text-align: center;
-  color: #c1c1c1;
+  color: var(--admin-text);
 }
 
 table.table2 {
@@ -47,7 +61,7 @@ table.table2 {
 table.table2 td {
   text-align: left;
   padding: 5px 2px;
-  color: #c1c1c1;
+  color: var(--admin-text);
 }
 
 table.table2 td.fieldname {
@@ -57,7 +71,7 @@ table.table2 td.fieldname {
 table.table2 td.fielddesc {
   padding-left: var(--space-sm);
   font-style: italic;
-  color: #888;
+  color: var(--admin-text-muted);
 }
 
 input[type="submit"],
@@ -67,7 +81,7 @@ a.bigButton {
   font-weight: bold;
   letter-spacing: 2px;
   border: none;
-  background-color: #ffa646;
+  background-color: var(--admin-accent-soft);
   color: #493c21;
   padding: 5px 14px;
   border-radius: var(--radius-sm);
@@ -77,38 +91,38 @@ a.bigButton {
 input[type="submit"]:hover,
 input[type="button"]:hover,
 a.bigButton:hover {
-  background-color: #f70;
+  background-color: var(--admin-accent);
   color: #493c21;
 }
 
 input[type="text"],
 input[type="password"],
 select {
-  background-color: #3c3c3c;
-  border: 2px solid #555;
+  background-color: var(--admin-bg-elevated);
+  border: 2px solid var(--admin-border);
   border-radius: var(--radius-sm);
   padding: 2px 6px;
-  color: #c1c1c1;
+  color: var(--admin-text);
 }
 
 input[type="text"]:focus,
 input[type="password"]:focus,
 select:focus {
-  background-color: #444;
-  border: 2px solid #f70;
+  background-color: var(--admin-border-strong);
+  border: 2px solid var(--admin-accent);
   outline: none;
 }
 
 input[type="checkbox"] {
-  accent-color: #ffa646;
+  accent-color: var(--admin-accent-soft);
 }
 
 a {
-  color: #ffa646;
+  color: var(--admin-accent-soft);
 }
 
 a:hover {
-  color: #f70;
+  color: var(--admin-accent);
 }
 
 .errors {
@@ -125,7 +139,7 @@ a:hover {
 }
 
 .install-help-text {
-  color: #888;
+  color: var(--admin-text-muted);
   text-align: center;
 }
 

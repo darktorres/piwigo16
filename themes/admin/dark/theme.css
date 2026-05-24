@@ -269,14 +269,6 @@ a.Piwigo:hover span.Piwigo {
   cursor: pointer ;
 }
 
-#batchManagerGlobal #filterList li {
-  background-color: #3c3c3c;
-}
-
-#batchManagerGlobal legend {
-  color: #bfbfbf;
-}
-
 /* TokenInput section deleted — the jQuery TokenInput widget was provided by
    the user_tags plugin, which is no longer in-tree (v17 deprecates legacy
    PEM plugins). Dead overrides removed. */
@@ -339,18 +331,6 @@ a.Piwigo:hover span.Piwigo {
   color: #777;
 }
 
-/* UserList Pop in */
-
-.LinkUserManager a {
-  background-color: #2e2e2e;
-  color: #777;
-}
-
-.LinkUserManager a:hover {
-  background-color: #1b1b1b;
-  color: #777;
-}
-
 /* Selection mode */
 
 .slider::before,
@@ -377,11 +357,6 @@ input:checked + .slider::after {
   background-color: #ae5d1e ;
   color: #faa96b ;
   border-color: #ae5d1e ;
-}
-
-#checkActions a:hover {
-  background-color: #1b1b1b;
-  color: #777;
 }
 
 /* Selection mode content */
@@ -459,10 +434,6 @@ input:checked + .slider::after {
 
 
 
-table.qsearch_help_table td {
-  border-color: #444;
-}
-
 #watermarkPositionBox label {
   color: #aaa;
 }
@@ -500,18 +471,6 @@ a#showPermissions {
 #cboxTitle {
   color: #7f7f7f ;
 }
-#addAlbumForm {
-  color: #999;
-}
-.addAlbum form input {
-  color: #777 ;
-  background-color: #252525 ;
-  border: none ;
-}
-.addAlbum form input::placeholder {
-  color: #777 ;
-}
-
 .categoryBox.line_cat:hover {
   background: #f9852c ;
   color: #333 ;
@@ -557,15 +516,6 @@ a#showPermissions {
   border-color: #ae5d1e ;
 }
 
-#checkActions a,
-.deleteDerivButtons a {
-  background-color: #393939;
-}
-#checkActions a:hover,
-.deleteDerivButtons a:hover {
-  background-color: #1b1b1b ;
-  color: #777 ;
-}
 #addFilter,
 #filterList select,
 #permitAction select,
@@ -831,8 +781,8 @@ a#showPermissions {
   color: #999;
 }
 
+/* keep: structural dark-only offset (base has no margin on this element). */
 .addAlbum label {
-  color: #aaa;
   margin: -5px 0;
 }
 
@@ -1036,16 +986,6 @@ a#showPermissions {
   border: solid 2px #151515;
 }
 
-#AddUserSuccess span {
-  color: var(--admin-info-success-fg);
-}
-
-#AddUserSuccess label {
-  background-color: var(--admin-info-success-bg);
-  border-left: 2px solid var(--admin-info-success-fg);
-  color: var(--admin-info-success-fg);
-}
-
 .update-container .close-update-button:hover {
   color: #ededed;
 }
@@ -1206,19 +1146,6 @@ a#showPermissions {
 .main-info-block {
   border: 1px solid #333;
   background: #333;
-}
-
-.main-info-desc {
-  color: #777;
-}
-
-.main-info-title {
-  color: #c1c1c1;
-}
-
-.bottom-save-bar {
-  background-color: #444;
-  border-top: 1px solid #666;
 }
 
 .media-box {

@@ -31,7 +31,7 @@
 
 #batchManagerGlobal legend {
   font-size: var(--font-size-md);
-  color: #444;
+  color: var(--admin-text);
   margin: 10px 0;
   padding: 0;
 }
@@ -81,7 +81,7 @@
 }
 #batchManagerGlobal #filterList li {
   list-style-type: none;
-  background-color: #fafafa;
+  background-color: var(--admin-bg-elevated);
   padding: var(--space-sm);
   margin: 0 10px 10px 0;
   box-shadow: 0 2px 1px #00000024;

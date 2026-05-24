@@ -3,6 +3,7 @@
 #addAlbumForm {
   text-align: left;
   padding: 1em;
+  color: var(--admin-text-muted);
 }
 #addAlbumForm input[name="category_name"] {
   width: 565px;

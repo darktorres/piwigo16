@@ -294,8 +294,8 @@ a#showPermissions:hover {
   border-radius: var(--radius-sm);
 }
 #checkActions a:hover {
-  background-color: #ddd;
-  color: #3a3a3a;
+  background-color: var(--admin-bg-deepest);
+  color: var(--admin-text-muted);
   text-decoration: none;
 }
 #checkActions span {
@@ -568,8 +568,8 @@ a#showPermissions:hover {
 }
 #batchManagerGlobal .deleteDerivButtons a:hover,
 #batchManagerGlobal #checkActions a:hover {
-  background-color: #ddd;
-  color: #3a3a3a;
+  background-color: var(--admin-bg-deepest);
+  color: var(--admin-text-muted);
   text-decoration: none;
 }
 

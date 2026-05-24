@@ -18,7 +18,7 @@ table.qsearch_help_table q::after {
   color: #008000;
 }
 table.qsearch_help_table td {
-  border: 1px solid #ccc;
+  border: 1px solid var(--admin-border);
   padding: var(--space-xs);
   vertical-align: top;
 }

@@ -68,7 +68,7 @@
 }
 
 .main-info-title {
-  color: #000;
+  color: var(--admin-text);
   text-align: center;
   font-size: var(--font-size-xs);
   font-weight: 700;
@@ -78,7 +78,7 @@
 }
 
 .main-info-desc {
-  color: #777;
+  color: var(--admin-text-muted);
   text-align: center;
   font-family: "Open Sans", sans-serif;
   font-size: var(--font-size-xs);
@@ -207,11 +207,11 @@
   bottom: 0;
   right: 0;
   width: calc(100% - 205px);
-  background-color: #fff;
+  background-color: var(--admin-bg-page);
   justify-content: flex-end;
   align-items: center;
   z-index: 101;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--admin-border);
 }
 
 .action-save-global {

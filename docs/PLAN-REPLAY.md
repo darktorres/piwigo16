@@ -215,6 +215,72 @@ need hand-fix.
   `InstallController` → `piwigo_structure-mysql.sql` + `config.sql`. Upgrades from
   existing installations are not handled — this must be addressed in the plan.
 
+#### Language format migration (.lang.php → .po)
+
+**NOT mentioned in the plan.** The entire language system was converted from PHP
+arrays (`$lang['key'] = 'value'`) to GNU gettext PO format:
+
+- **324 .lang.php files** across 72 languages → **322 .po files**
+- `gettext/gettext` ^5.7 + `gettext/translator` ^1.2 added as Composer deps
+- All `$lang['key']` refs → `Lang::t('key')` (1053 calls in src/)
+- LangService reads `.po` via `Gettext\Loader\PoLoader`
+- LangService retains `.lang.php` fallback for parent-language detection only
+- Converter tools exist: `tools/i18n/php-to-po.php`, `convert-all.php`
+- 699 `|translate` calls in templates need the filter registered in Latte
+- This migration belongs in P5 (Config/DB phase) alongside LangService, or as
+  a standalone phase between P4 and P5
+
+#### Serialized PHP data → normalized tables
+
+Three config values store `serialize()`d PHP in origin's `piwigo_config` table:
+- `extents_for_templates` → `a:0:{}` → removed entirely
+- `show_nb_*` → `a:11:{...}` → JSON or individual columns
+- `updates_ignored` → `a:3:{...}` → normalized to `piwigo_extension_ignored_updates`
+- Derivative params blob → normalized to `piwigo_derivative_settings` + `piwigo_derivative_size`
+
+#### Event system mapping
+
+- 6 legacy events intentionally removed (asset pipeline hooks: `combined_css`,
+  `combined_css_postfilter`, `combined_script`, `functions_history_included`,
+  `functions_mail_included`, `get_history`)
+- 15 new PSR-14 events added with no legacy ancestor
+- All other ~120 events have 1:1 mapping (trigger_notify/trigger_change → class)
+
+#### Include file cross-dependencies
+
+The procedural files have **minimal cross-dependencies** — only 2:
+- `functions_comment.inc.php` → `functions_mail.inc.php`
+- `functions_user.inc.php` → `functions_mail.inc.php`
+
+This means **Mail must migrate before Comment and User** in P5 tiers, but
+otherwise the migration order is unconstrained.
+
+#### Container coupling analysis
+
+129 service definitions, all using `factory()` closures (only 1 `autowire`).
+Highest DI fanout (non-controller files):
+- `UserService` — imports from 21 namespaces
+- `SectionInitializer` — 17 namespaces
+- `SearchService` — 15 namespaces
+- `HtmlService` — 15 namespaces
+- `CommonBootstrap` — 15 namespaces
+
+These are the files that cannot be migrated early — they depend on almost
+everything else being in place first.
+
+#### Runtime environment requirements
+
+- **PHP 8.5** (composer.json `^8.5`, current: 8.5.4)
+- **Node.js 24** (current: 24.15.0, no `.nvmrc` / `engines` field)
+- **TypeScript 6.0.3**
+- **MySQL 8.4** (CI uses `mysql:8.4` image)
+- **pcov NOT installed** — must install for code coverage (P0 blocker)
+- **ext-intl NOT installed** — some Symfony components may need it
+- **ext-sockets installed** — Pest Browser compatible
+- **Pest 4 requires PHP ^8.4** — compatible
+- **Pest 4 requires PHPUnit ^13** — compatible with existing 13.1.11
+- **amphp/amp already installed** — no conflict with Pest Browser deps
+
 ### Verified claims (correct)
 
 - origin/16.x: 947 PHP, 333 JS, 140 TPL, 83 CSS ✓

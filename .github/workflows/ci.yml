@@ -88,26 +88,20 @@ jobs:
         with:
           php-version: '8.5'
           coverage: none
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: npm
+      - uses: oven-sh/setup-bun@v2
       - uses: ramsey/composer-install@v4
       - run: composer audit --abandoned=fail
-      - run: npm ci
-      - run: npm audit --omit=dev --audit-level=high
+      - run: bun install --frozen-lockfile
+      - run: bun pm pack --dry-run 2>&1 | head -1
 
   build:
     name: JS/CSS build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: npm
-      - run: npm ci
-      - run: npm run build
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run build
 
   rector:
     name: Rector (dry-run)
@@ -188,13 +182,10 @@ jobs:
           coverage: none
           extensions: mysqli, gd, mbstring, xml, intl, zip, exif
       - uses: ramsey/composer-install@v4
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: npm
-      - run: npm ci
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
       - name: Install Playwright + Chromium
-        run: npx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
       - name: Create .env.test
         run: |
           cat > .env.test <<EOF
@@ -213,7 +204,7 @@ jobs:
       - name: Wait for PHP server
         run: until curl -sf http://localhost:8080/index.php > /dev/null; do sleep 0.5; done
       - name: Run Playwright tests
-        run: npm run test:e2e
+        run: bun run test:e2e
         env:
           BASE_URL: http://localhost:8080
           CI: 'true'
@@ -223,11 +214,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: npm
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm run lint
-      - run: npm run format
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun run format

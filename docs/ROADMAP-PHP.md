@@ -925,7 +925,7 @@ Adopt PHP 8.1–8.5 language features where they tighten invariants without chan
    - `GraphicsLibrary: string` — `'auto'`, `'imagick'`, `'ext_imagick'`, `'gd'` (from `Config` typed getter).
    - `DerivativeSize: string` — `'small'`, `'medium'`, `'large'`, `'thumb'`, `'xsmall'`, `'xxsmall'`.
 
-3. **Match expressions.** Replace exhaustive `switch ($x) { case A: return 1; case B: return 2; default: throw }` blocks with `match`. Focus on `src/Piwigo/Template/ScriptLoader.php` and `src/Piwigo/Ws/` protocol dispatchers.
+3. **Match expressions.** Replace exhaustive `switch ($x) { case A: return 1; case B: return 2; default: throw }` blocks with `match`. Focus on `src/Piwigo/Ws/` protocol dispatchers.
 
 4. **Rector sweep.** After manual candidates are done, run Rector with `->withPhpSets(php85: true)` in dry-run mode — accept only the readonly and match rewrites; reject any that change public API.
 
@@ -2689,7 +2689,7 @@ Three problems with keeping it:
 | 4     | `Container::build(Paths $paths, …)` + `Kernel::boot/bootMinimal(?Paths $paths = null)` + `CommonBootstrap::run(Paths $paths)`.                                                                                                                                                                     |
 | 4.5   | URL-root cleanup: `UrlService::getRootUrl` simplified; `HtmlService` drops the no-op `./` prefix; `CookieService::cookiePath` deletes the dead `str_starts_with('../')` branch; `SectionInitializer` sets `root_path=''` directly. Net –18 LOC.                                                    |
 | 5     | 31 test/tool files migrated to inline `dirname(__DIR__, N)`. `InstallSentinel` refactored to take `Paths` explicitly (it ran pre-Kernel-boot in `CommonBootstrap`, so a service-locator dependency wouldn't have worked). `MessengerFactory::build(Connection, Paths $paths)`.                     |
-| 6     | Final fallbacks removed from `ScriptLoader`, `LatteEngine::default`, `LatteEngine::sandboxed`. Tests boot `Kernel(Paths::fromRoot(...))` in `setUp`. `define('PHPWG_ROOT_PATH', ...)` deleted from `index.php`, `tests/bootstrap.php`, `tools/phpstan-bootstrap.php`, `tools/psalm-stubs.phpstub`. |
+| 6     | Final fallbacks removed from `LatteEngine::default`, `LatteEngine::sandboxed`. Tests boot `Kernel(Paths::fromRoot(...))` in `setUp`. `define('PHPWG_ROOT_PATH', ...)` deleted from `index.php`, `tests/bootstrap.php`, `tools/phpstan-bootstrap.php`, `tools/psalm-stubs.phpstub`. |
 
 ### End state in `index.php`
 

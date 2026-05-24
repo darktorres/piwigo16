@@ -173,13 +173,12 @@ is written by `build/piwigo-manifest-plugin.ts` — a custom format that maps ea
 id to `{file, imports, css}`. It is not the same file as Vite's own
 `.vite/manifest.json`.
 
-### ScriptLoader integration
+### Vite manifest integration
 
-`Piwigo\Template\ScriptLoader::add()` consults `dist/manifest.json` when a
-`{combine_script id="..."}` Smarty tag is processed. If the id is in the manifest,
-the loader emits the hashed URL and clears the require list (Vite handles import
-order). If the manifest is absent (fresh clone, no build), it falls back to the legacy
-file-concatenation path — the gallery still works without a build step.
+`Piwigo\Asset\ViteManifest` reads `dist/manifest.json` (keyed by entry name).
+Templates call `{=viteEntry('albums')}` to emit the `<script type="module">` and
+any associated `<link rel="stylesheet">` tags with content-hashed URLs. Standalone
+CSS files not managed by Vite use `{=cssLink("path")}` with a `?v` cache buster.
 
 ### Dev workflow
 

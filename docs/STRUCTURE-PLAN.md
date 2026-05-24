@@ -307,8 +307,8 @@ Files updated:
   `local/config/paths.json`).
 - `src/Piwigo/Template/Template.php` — Smarty template-dir search list.
 - `src/Piwigo/Theme/Themes.php` — theme discovery.
-- `src/Piwigo/Template/{ScriptLoader,CssLoader}.php` — asset path resolution
-  (read from `<public>/dist/manifest.json`).
+- `src/Piwigo/Asset/ViteManifest.php` — asset path resolution
+  (reads `<public>/dist/manifest.json`).
 - Every `themeconf.inc.php` referencing `template/` paths.
 
 ### Step 10 — Move TS types out of src/
@@ -364,7 +364,7 @@ Files updated:
 | `playwright.config.ts`                                            | base URL, fixture paths                                                             |
 | `src/Piwigo/Config/Config.php`                                    | `dataLocation()`, `galleriesPath()`, `uploadPath()`, `publicPath()`, `sourcePath()` |
 | `src/Piwigo/Bootstrap/HttpEntry.php` (new)                        | replaces logic in root `index.php`                                                  |
-| `src/Piwigo/Template/{Template,ScriptLoader,CssLoader}.php`       | template + asset roots                                                              |
+| `src/Piwigo/Template/Template.php`, `src/Piwigo/Asset/ViteManifest.php` | template + asset roots                                                         |
 | `src/Piwigo/Theme/Themes.php`                                     | theme discovery roots                                                               |
 | `src/Piwigo/Lang/LangLoader.php`, `Admin/Languages.php`           | `resources/lang/`                                                                   |
 | `src/Piwigo/Controller/{InstallController,UpgradeController}.php` | `resources/install-sql/`                                                            |

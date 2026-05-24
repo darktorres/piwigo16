@@ -194,7 +194,7 @@ template/JS before moving:
 | R.13 | `.badge-number-fs-128` (rendered by `batch_manager_global.latte`) | user-list.css → batch_manager_global.css |
 | R.14 | `.thumbnailsActionsShow` (used by user_list / tags / comments templates) | user-list.css → `base/utilities.css` |
 | R.15 | `#up_to_date` (rendered by `updates_ext.latte`, which loads `plugins.css`) | user-list.css → plugins.css. `#template` + `#the_king` verified as user-list-correct and left in place. |
-| R.16 | `.picture-coi-intro` (rendered by `picture_coi.latte` — previously had no `combineCss(...)` loader at all) | user-list.css → new `pages/picture_coi.css` + `combineCss(...)` added to the template (rule now actually loads on the page) |
+| R.16 | `.picture-coi-intro` (rendered by `picture_coi.latte` — previously had no CSS loader at all) | user-list.css → new `pages/picture_coi.css` imported from `picture_coi.ts` via Vite |
 
 Net file-size change across the pass:
 

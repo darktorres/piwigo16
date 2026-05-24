@@ -18,7 +18,7 @@
 | 1.6  | Type correctness              | ✅ **Closed** ▸ 13 / 13 | M        | 1.6b closed; 1.6a ✅ closed (2026-05-23 — `RequestCache @template T` + imperative-cache refactor); 1.6c ✅ closed (2026-05-23): `sensitive`+`dumpForLog`, `required`+`MissingRequiredConfigException`, plugin-Config template, and `'description'` field on all 277 SCHEMA entries                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | 1.7  | Typed boundaries (eliminate `mixed` from the domain) | 🟢 **Active** ▸ 5 boundaries opened, 3 substantially shipped | L         | Full mixed-elimination effort across 5 boundaries (HTTP request, Stored JSON, DB rows, `$_SESSION`, PSR-11 container). Shipped: WS handler+Params layer (95/95), Entity+Projection patterns (7 Entity + 73 projection-shape), `Session` VO + gate met, TelemetryPayload + SearchRules foundation, `resolve()` helper, 21 of ~25 ValueObjects, 4 of ~10 Enums. Open: WsResult tightening (7/95), 30-50 web/admin Request DTOs (758 raw `$_POST`/`$_GET` reads), F5-i SearchService/Renderer deep adoption, F5-b 118 inline factory closures, 249 bare-`array` repo returns (audit-tracked), typed error responses, AuthService result-DTO, Plugins-admin coupling, F5-c SessionStore rename, ~4 VOs + ~6 Enums to close F5-a, HttpKernel adoption (longer horizon). Goal: `psalm --show-info <50` (F5-k gate; currently **1796**, −245 net from 2,041 baseline). |
 | 1.8  | Test infrastructure           | 🟡 **Not started**     | M + L + S | Pest → coverage → Infection (chained)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| 1.9  | Deferred / on-demand          | 🟠 **On-demand**       | —         | Monolog · S3/SFTP · supervisor · Renovate · ScriptLoader dep graph                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 1.9  | Deferred / on-demand          | 🟠 **On-demand**       | —         | Monolog · S3/SFTP · supervisor · Renovate                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | 1.10 | `PHPWG_ROOT_PATH` elimination | ✅ **Done**            | L         | shipped 2026-05-17 in 13 commits + 1 fix on `16.x-rewrite`: `Piwigo\Core\Paths` value object replaces the legacy global string, threaded through DI from `Paths::fromIndex(__FILE__)` in `index.php` → `Container::build($paths)` → service constructors; 195 reads across 72 files migrated; URL-context callers cleaned up (see [#33](docs/ROADMAP-PHP.md#33--eliminate-phpwg_root_path-global-replace-with-typed-paths))                                                                                                                                                                                                                                                                                      |
 | 1.11 | Runtime `define()` retirement | ✅ **Done**            | M         | shipped 2026-05-18 in 7 commits + 1 follow-up on `16.x-rewrite`: all 12 surviving runtime `define()` constants retired — `PHPWG_DOMAIN` + `PWG_HELP` deleted as dead code, `PWG_LOCAL_DIR` → `Paths::$local`, `PREFIX_TABLE` + `UPGRADES_PATH` → `Tables::upgrade()` + `RequestContextRegistry`, `PWG_API_KEY_REQUEST` → `ApiKeyAuthRegistry`, `PEM_URL` → typed `PemUrlResolver` service, `PHPWG_URL` → `AppInfo::PROJECT_URL` placeholder, plus trivial moves for `BUTTONS_RANK_NEUTRAL` / `DEFAULT_PREFIX_TABLE` / `PHOTOS_ADD_BASE_URL`. Final invariant: `grep -rn 'define(' src/ index.php config/ tools/` returns only doc-comment hits explaining what each legacy `define()` was replaced with — zero live calls (see [#34](docs/ROADMAP-PHP.md#34--retire-the-remaining-define-constants)) |
 | 2.1  | TS `any` reduction            | ✅ **Done**            | M         | 478 → 0; `no-explicit-any: error` enforced; `npm run typecheck` + `lint:js` clean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -372,7 +372,7 @@ small and matched Latte's preferred extension-as-namespace pattern.
 | `\|sprintf`, `\|urlencode`, `\|intval`, `\|file_exists`, `\|constant`, `\|json_encode`, `\|json_decode`, `\|htmlspecialchars`, `\|stripslashes`, `\|in_array`, `\|ucfirst`, `\|trim`, `\|md5`, `\|strtolower`, `\|is_null`, `\|is_file`, `\|strpos`, `\|sizeOf` | filters dispatched directly to PHP first-class-callable functions                                                                                                                                                                                                                                                                                                                  | ✅ Phase B.1                                                                |
 | `\|implode`, `\|str_replace`, `\|str_ireplace`, `\|preg_match`, `\|strstr`, `\|stristr`, `\|array_key_exists`                                                                                                                                                   | **deliberately omitted** — Smarty pipes the value first, but PHP wants `$glue`/`$search`/`$pattern` first; PHP 8's deprecation of swapped args makes the legacy form a TypeError. Verified zero pipe usage in `themes/` + `plugins/`; templates using these in Latte call them as expressions: `{=implode(',', $arr)}`.                                                            | ✅ Phase B.1 (intentional non-port)                                         |
 | `\|explode`, `\|ternary`, `\|url_is_remote`, `\|is_admin`, `\|is_classic_user`, `\|get_device`, `\|get_gallery_home_url`, `\|get_extent`                                                                                                                        | one-line wrappers in `PiwigoExtension` delegating to existing services (`UrlService`, `PermissionService`, `Util`, `UrlGenerator`)                                                                                                                                                                                                                                                 | ✅ Phase B.2 + B.3 (get_extent)                                             |
-| `{combine_script}`, `{get_combined_scripts}`, `{combine_css}`, `{get_combined_css}`, `{define_derivative}`                                                                                                                                                      | functions in `PiwigoExtension::getFunctions()`, called via `{do combineScript(...)}` (void) or `{var $x = defineDerivative(...)}` (returns); delegate to `TemplateRegistry::current()`'s `scriptLoader` / `cssLoader` so a `.latte` template's combine_script accumulates into the same bundle a `.tpl` template's would                                                           | ✅ Phase B.3                                                                |
+| `{combine_script}`, `{get_combined_scripts}`, `{combine_css}`, `{get_combined_css}`, `{define_derivative}`                                                                                                                                                      | Originally ported as `combineScript`/`combineCss`/`getCombinedScripts`/`getCombinedCss` in Phase B.3. Later replaced by `viteEntry(id)` + `cssLink(path)` backed by `ViteManifest`; the entire registry pipeline (`ScriptLoader`, `CssLoader`, `Combinable`, `Script`, `Css`) was deleted. `defineDerivative` remains.                                                              | ✅ Phase B.3 → superseded                                                   |
 | `{html_head}`, `{html_style}`, `{footer_script}` blocks                                                                                                                                                                                                         | functions in `PiwigoExtension::getFunctions()`, called as `{capture $x}…{/capture}{do htmlHead($x)}`; `htmlStyle` writes through `Template::appendHtmlStyle()` (added in Phase B.3 — the buffer is private and shared between the two engines)                                                                                                                                     | ✅ Phase B.3                                                                |
 | `prefilter_white_space` filter                                                                                                                                                                                                                                  | **deliberately omitted** — Smarty-specific source rewrite; Latte handles whitespace differently and provides `{spaceless}` for explicit zones. Revisit only if profiling shows need.                                                                                                                                                                                               | ✅ Phase B.4 (intentional non-port, documented in PiwigoExtension docblock) |
 | `postfilterLanguage` filter                                                                                                                                                                                                                                     | **deliberately omitted** — Smarty constant-folds `<?php echo 'literal'?>` after `Lang::t('key')` resolution in `compiledTemplateCacheLanguage` mode. Latte equivalent would be a NodeVisitor compiler pass that rewrites `{=$x\|translate}`to a literal when`$x` is a string-literal expression and language caching is enabled. Defer until profiling justifies the optimization. | ✅ Phase B.4 (intentional non-port, documented)                             |
@@ -382,12 +382,11 @@ counting `'name' =>` entries in `PiwigoExtension::getFilters()` — the
 original 27 dropped a few that turned out to be unused by any
 template after the conversion pass).
 
-**Functions shipped:** 10 (`combineScript`, `combineCss`, `derivative`,
-`footerScript`, `getCombinedCss`, `getCombinedScripts`, `htmlHead`,
-`htmlOptions`, `htmlRadios`, `math`, `url_is_remote`, `l10n` — the
-original 8 grew by `htmlOptions` / `htmlRadios` / `math` during the
-D.admin iteration to absorb three Smarty plugins). Count from
-`PiwigoExtension::getFunctions()`.
+**Functions shipped:** 10 (`viteEntry`, `cssLink`, `derivative`,
+`htmlHead`, `htmlOptions`, `htmlRadios`, `math`, `url_is_remote`,
+`l10n` — the original asset functions `combineScript`/`combineCss`/
+`getCombinedScripts`/`getCombinedCss`/`footerScript` were replaced by
+`viteEntry`/`cssLink`). Count from `PiwigoExtension::getFunctions()`.
 
 ##### Latte partials and page-context DTOs
 
@@ -3688,39 +3687,12 @@ is fine for the cadence we see (a handful of PRs/week, all reviewable in
 minutes). If churn grows or the team scales, port the auto-merge
 workflow from the original Renovate spec.
 
-#### Drop ScriptLoader dependency machinery
+#### ~~Drop ScriptLoader dependency machinery~~ ✅ Done
 
-**Trigger:** next asset-pipeline change that touches `ScriptLoader::add()`
-or `getFooterScripts()`, or when adding an entry whose declaration order
-is non-obvious.
-
-Follow-up to commit `9dcc8b15b` (concat-era cleanup). With every JS entry
-now a Vite manifest entry, `<script type="module">` execution is
-document-ordered, so the `require:` / `precedents` /
-`computeScriptTopologicalOrder` / `checkLoadDep` plumbing in
-`src/Piwigo/Template/ScriptLoader.php` is largely redundant. Its one
-load-bearing job is the rule "predecessor of an `async` script must be
-`footer`," which has 2 callers today
-(`themes/_base/template/picture.latte` rating chain;
-`themes/admin/_base/template/batch_manager_global.latte`). The other 13
-`require:` uses are `footer` → `footer` chains where the Latte template
-already declares the predecessor lexically first.
-
-To remove:
-
-1. Audit all 15 `require:`-using `.latte` templates; confirm the
-   predecessor's `combineScript()` precedes the dependent's lexically.
-   Reorder where needed.
-2. Convert the 2 async-with-`require:` cases to plain `footer`, or split
-   the chain so the predecessor stays in `footer` and the dependent's
-   `async` doesn't need to wait.
-3. Drop the `require:` parameter from `combineScript()` /
-   `ScriptLoader::add()`, the `precedents` field on `Script`, and
-   `computeScriptTopologicalOrder` / `checkLoadDep`.
-4. Reduce `cmpByModeAndOrder` to a `load_mode` + `id` sort.
-
-Net delta: another ~80 lines off `ScriptLoader.php` plus one named arg
-gone from the public asset-pipeline surface.
+Superseded: the entire `ScriptLoader`/`CssLoader`/`Combinable` pipeline
+was deleted and replaced with `ViteManifest` + `viteEntry()`/`cssLink()`.
+CSS is imported from JS entries via Vite; templates call `{=viteEntry('id')}`
+directly. No registry, no dependency tracking, no footer aggregation.
 
 ---
 

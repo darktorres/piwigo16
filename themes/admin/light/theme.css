@@ -24,7 +24,7 @@ textarea:focus {
   color: #777; /* keep: light-exclusive copyright styling */
   margin: 5px auto 0 240px;
   text-align: center;
-  padding-bottom: 15px;
+  padding-bottom: var(--space-md);
 }
 /* keep: light has top:70px; dark omits it (Bucket X) */
 .header_notes {
@@ -42,18 +42,18 @@ h3 {
 
 .content h4 {
   color: #aaa; /* keep: light has color; dark omits it. Different margin syntax (Bucket X) */
-  font-size: 14px;
+  font-size: var(--font-size-md);
   text-align: center;
   padding: 3px;
   margin-top: 0;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 
 
 .throw {
   font-size: 120%; /* keep: dark adds color; light omits it (Bucket X) */
   line-height: 26px;
-  padding-top: 10px;
+  padding-top: var(--space-sm);
   font-weight: bold;
 }
 table.table2 {
@@ -129,7 +129,7 @@ ul.thumbnails li.rank-of-image {
 }
 
 .buttonLike i {
-  font-size: 14px; /* keep: light-exclusive structural */
+  font-size: var(--font-size-md); /* keep: light-exclusive structural */
 }
 
 p.albumTitle img {
@@ -222,7 +222,7 @@ p.albumTitle img {
 
 #addAlbumForm input[name="category_name"] {
   border: none; /* keep: light-specific form reset (Bucket X) */
-  margin-top: 5px;
+  margin-top: var(--space-xs);
 }
 #addAlbumForm input[name="category_name"]:focus {
   background-color: #ddd;

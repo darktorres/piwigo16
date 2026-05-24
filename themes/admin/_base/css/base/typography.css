@@ -108,7 +108,7 @@
   font-size: var(--font-size-xs);
 }
 .themeActions span {
-  font-size: 11px;
+  font-size: var(--font-size-xxs);
   background-color: #ddd;
   opacity: 0.5;
 }
@@ -162,7 +162,7 @@ h1 {
   text-align: left;
   font-weight: normal;
   color: var(--admin-h1-fg);
-  font-size: 22px;
+  font-size: var(--font-size-xxl);
 }
 h1 .image-id {
   font-weight: 100;

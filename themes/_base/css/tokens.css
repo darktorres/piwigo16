@@ -46,12 +46,14 @@
   --space-xl: 30px;
 
   /* Font sizes */
+  --font-size-xxs: 11px;
   --font-size-xs: 12px;
   --font-size-sm: 13px;
   --font-size-md: 14px;
   --font-size-base: 15px;
   --font-size-lg: 16px;
   --font-size-xl: 20px;
+  --font-size-xxl: 22px;
 
   /* Line height */
   --line-height-base: 1.5;

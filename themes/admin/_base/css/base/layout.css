@@ -72,7 +72,7 @@ a:active {
 }
 a.Piwigo {
   font-family: verdana, arial, helvetica, sans-serif;
-  font-size: 11px;
+  font-size: var(--font-size-xxs);
   font-weight: normal;
   letter-spacing: 0;
   color: var(--admin-piwigo-brand);
@@ -383,6 +383,6 @@ a.admin-main:hover {
   text-indent: 0;
 }
 .HelpActions .icon-help-circled::before {
-  font-size: 22px;
+  font-size: var(--font-size-xxl);
 }
 

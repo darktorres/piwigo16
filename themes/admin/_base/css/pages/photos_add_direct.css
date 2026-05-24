@@ -21,7 +21,7 @@ p#uploadWarnings {
 }
 a#showPermissions {
   padding: 5px 10px;
-  font-size: 11px;
+  font-size: var(--font-size-xxs);
   font-weight: bold;
   margin-left: 35px;
   color: var(--admin-text);

@@ -1407,7 +1407,7 @@ a.group_users {
 
 .user-property-register,
 .user-property-last-visit {
-  font-size: 11px;
+  font-size: var(--font-size-xxs);
   min-width: 80px;
 }
 
@@ -1526,11 +1526,11 @@ a.group_users {
 }
 
 .properties-container .select-checkbox i {
-  font-size: 22px;
+  font-size: var(--font-size-xxl);
 }
 
 .user-property-group-text {
-  font-size: 11px;
+  font-size: var(--font-size-xxs);
 }
 
 /* preferences */
@@ -2065,11 +2065,11 @@ Advanced filter
 
 .tileView .group-primary {
   max-width: 45%;
-  font-size: 11px;
+  font-size: var(--font-size-xxs);
 }
 
 .tileView .group-bonus {
-  font-size: 11px;
+  font-size: var(--font-size-xxs);
 }
 
 .tileView .user-groups {

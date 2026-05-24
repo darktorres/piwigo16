@@ -571,7 +571,7 @@
   vertical-align: top;
 }
 .deactivate_all {
-  font-size: 11px;
+  font-size: var(--font-size-xxs);
   margin-top: -5px;
   margin-bottom: var(--space-xs);
   font-weight: bold;

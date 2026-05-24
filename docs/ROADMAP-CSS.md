@@ -6,7 +6,7 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
 
 ## #1 — CSS design tokens + Stylelint
 
-**Status:** In progress &nbsp;|&nbsp; **Size:** M
+**Status:** Done &nbsp;|&nbsp; **Size:** M
 
 ### Goal
 
@@ -16,44 +16,35 @@ CSS / theme modernization work. See [MODERNIZATION.md](MODERNIZATION.md) for arc
 - Admin child themes (`light`, `dark`) reduced to `:root {}` variable override blocks.
 - `themes/standard_pages/skins/*.css` refactored from hundreds of element overrides to single `:root {}` blocks.
 
-### Current state
+### Final state
 
-- `themes/admin/_base/theme.css`: **9,561 lines**, still monolithic (60+ `/* name.css */` section markers baked in). Grew from 8,375 because inline-style extraction (Step 16) added utility classes here.
-- `themes/admin/dark/theme.css`: **2,805 lines** — duplicates parent section headers and carries far more than color overrides.
-- `themes/admin/light/theme.css`: **1,226 lines** — same problem.
-- `themes/_base/theme.css`: **1,241 lines**, unsplit (currently just `@import "iconset.css"` + bulk content).
-- `themes/_base/fix-khtml.css`: **15 lines**, orphan — zero references anywhere in the repo.
-- `themes/_base/fix-ie5-ie6.css`, `fix-ie7.css`: referenced only from `<!--[if lt IE 7]>` / `<!--[if IE 7]>` conditional comments in `themes/_base/local_head.tpl`. IE conditionals are dead in modern browsers — both files are de facto orphans.
-- `themes/admin/_base/template/install.tpl:17` and `upgrade.tpl:18` reference a non-existent `themes/admin/_base/fix-ie7.css` (broken link, also IE-only).
-- `themes/_base/css/clear-search.css` + `dark-search.css`: **344 + 333 lines** — color-only variants duplicating `search.css` structure.
-- `themes/standard_pages/skins/*.css`: **11 skin files** (cadmium, cobalt, default, fuchsia, green, lime, purple, red, sienna, silver, teal), each ~337 lines, each with **20 `!important` instances** — fight specificity with the parent theme; same anti-pattern modus had.
-- **~689 `!important` declarations** across first-party CSS:
-  - `themes/admin/dark/theme.css`: 162
-  - `themes/admin/_base/theme.css`: 150
-  - `themes/admin/light/theme.css`: 45
-  - `themes/admin/_base/css/**`: ~71 (pages/components combined)
-  - `themes/standard_pages/`: ~235 (theme + 11 skins)
-  - `themes/_base/theme.css`: 10, `print.css`: 1
-  - Roughly half justified (child-theme load order, JS-toggled visibility); the rest disappear when the token system lands.
-- Stylelint coverage and rules are correctly configured (commit `ba17576e8`). Current state: **0 errors, 0 warnings** — the 328-error backlog from the tightened config (`color-named`, `no-duplicate-selectors`, unit/zero-length, single-line declarations) was cleared in `81ddf3d63`.
-- `declaration-no-important` was tried as a warning then dropped (commit `9a482db86`) — too noisy until the token system reduces the genuine count.
-- Zero CSS custom properties anywhere in project CSS (one-off `var(--col-w)` style hooks for inline-extracted dynamic blocks aside).
-- No canonical breakpoints — `576px`, `640px`, `800px`, `1100px` used inconsistently.
+- `themes/admin/_base/theme.css`: **12 lines** — thin `@import` list of 51 split files.
+- `themes/admin/dark/theme.css`: **1,127 lines** (down from 2,837 — −60%).
+- `themes/admin/light/theme.css`: **374 lines** (down from 1,234 — −70%).
+- `themes/_base/theme.css`: **11 lines** — thin `@import` list.
+- Orphan files deleted: `fix-khtml.css`, `fix-ie5-ie6.css`, `fix-ie7.css`.
+- `clear-search.css` + `dark-search.css` collapsed into `search.css`.
+- `themes/standard_pages/skins/*.css`: 11 skin files, each ~11 lines, 0 `!important`.
+- **51 `!important` declarations** remain in theme CSS (+ 3 in `tools/ws/`), all justified and documented with `/* keep: reason */`.
+- Stylelint: **0 errors, 53 warnings** (`declaration-no-important` reinstated as warning).
+- **~2,040 `var(--*)` references** across 93 CSS files.
+- **93 admin tokens** (`--admin-*`) + **42 frontend tokens** (colors, spacing, font-size, radius, z-index).
+- Breakpoints remain as component-level literals (CSS `@media` can't use `var()`).
 
 ### File inventory (in scope)
 
 **Frontend themes:**
 
-- `themes/_base/theme.css`, `css/search.css`, `css/clear-search.css`, `css/dark-search.css`, plus small per-page CSS (`thumbnails.css`, `month_calendar.css`, `mainpage_categories.css`, `comment_list.css`, `redirect.css`, `no-photo-yet.css`)
+- `themes/_base/theme.css` (11-line `@import` list), `css/search.css`, plus per-page CSS (`thumbnails.css`, `month_calendar.css`, `mainpage_categories.css`, `comment_list.css`, `redirect.css`, `no-photo-yet.css`)
 - `themes/standard_pages/theme.css` + 11 skin files in `skins/`
 
 **Admin themes:**
 
-- `themes/admin/_base/theme.css`, `css/components/{general,album_selector,batch_manager,flatpickr}.css`, `css/pages/*.css` (28 files)
+- `themes/admin/_base/theme.css` (12-line `@import` list), `css/base/*.css`, `css/components/*.css`, `css/pages/*.css`, `css/features/*.css` (51 files total)
 - `themes/admin/light/theme.css`
 - `themes/admin/dark/theme.css`, `css/components/general.css`
 
-**Out of scope (vendor / ignored by Stylelint):** `node_modules/**`, `dist/**`, `_data/**`, `vendor/**`, `plugins/**`, `tests/**`, fontello files, open-sans files, `themes/_base/js/plugins/**`, `themes/_base/vendor/fontello/**`, `themes/elegant/admin/**` (path retained in ignoreFiles for safety even though theme is gone), `themes/admin/_base/{fontello,fonts}/**`, `**/*.min.css`.
+**Out of scope (vendor / ignored by Stylelint):** `node_modules/**`, `dist/**`, `_data/**`, `vendor/**`, `plugins/**`, `tests/**`, fontello files, open-sans files, `themes/_base/js/plugins/**`, `themes/_base/vendor/fontello/**`, `themes/admin/_base/{fontello,fonts}/**`, `**/*.min.css`.
 
 ### Inline `<style>` block inventory ✅ Extracted
 
@@ -204,33 +195,25 @@ Execute in this order (risk-free first):
 **Step 2 — Mechanical auto-fix.** ✅ Done (`2914b89cf`, `afbe58226`, `148afd4fc`, `fc8b343be`, `81ddf3d63`).
 Multiple `stylelint --fix` passes eliminated auto-fixable formatting errors. The 328-error residual from the tightened config (`color-named`, `no-duplicate-selectors`, disallowed units, zero-length suffixes, single-line declarations) was cleared by hand in `81ddf3d63`: named colors → hex equivalents, `ch`/`pt`/`svh`/`turn` → allowed units, duplicate selectors merged into their latest occurrence (preserving cascade winner semantics).
 
-**Step 3 — Delete orphans.**
+**Step 3 — Delete orphans.** ✅ Done.
+`fix-khtml.css`, `fix-ie5-ie6.css`, `fix-ie7.css` removed along with
+their IE conditional-comment references in templates.
 
-```bash
-git rm themes/_base/fix-khtml.css
-git rm themes/_base/fix-ie5-ie6.css themes/_base/fix-ie7.css
-# Drop the IE conditional-comment block in themes/_base/local_head.tpl
-# Drop the broken themes/admin/_base/fix-ie7.css <link> in install.tpl + upgrade.tpl
-```
+**Step 4 — Split `themes/_base/theme.css`.** ✅ Done.
+`themes/_base/theme.css` is now 11 lines — a thin `@import` list of
+per-concern files (`tokens.css`, `utilities.css`, `menubar.css`,
+`content.css`, `calendar.css`, `gallery.css`, `picture.css`,
+`layout.css`, `forms.css`, `colors.css`).
 
-IE conditional comments are inert in modern browsers; the install/upgrade `<link>` already points to a non-existent file. All four references are dead.
-
-**Step 4 — Split `themes/_base/theme.css`** (1,305 lines) along its section markers into the per-concern files listed in the target layout above. `themes/_base/theme.css` becomes an `@import` list. `themes/_base/template/header.tpl` is unchanged — it still loads `theme.css`.
-
-**Step 5 — Collapse search CSS variants.**
-Replace `themes/_base/css/{search,clear-search,dark-search}.css` with a single `search.css` using `--search-*` CSS variables:
-
-```css
-/* search.css — variable-driven */
-.filter .filter-icon {
-  color: var(--search-icon);
-}
-.filter-manager-popin {
-  background-color: var(--search-popin-bg);
-}
-```
-
-Each colorscheme supplies its `--search-*` variable set in its theme `:root` block. Drop the `{combine_css path="themes/_base/css/{$themeconf.colorscheme}-search.css"}` load in `themes/_base/template/include/search_filters.inc.tpl:3`. Net savings: ~500 lines.
+**Step 5 — Collapse search CSS variants.** ✅ Done (`5727a1d86`).
+Merged `clear-search.css` (98 lines) and `dark-search.css` (73 lines)
+into `search.css`. No theme set `colorscheme: 'clear'`, so dark tokens
+became the only set. The `{=cssLink(...colorscheme-search.css)}` load
+in `search_filters.inc.latte` was removed. Eliminated 4 `!important`
+declarations that existed solely to override the clear variant.
+Date-created alternating-row/checked/selected rules (previously
+clear-only) were merged into the shared selector lists so they now
+work in dark mode too.
 
 **Step 6 — Non-color design tokens at theme root.** ✅ Done
 (`3f0ae055d`, `9e9f01310`, `d01a55d98`, `5eb73cd4b`, `351f5449d`,
@@ -240,7 +223,7 @@ Shipped token set (lives in both `themes/_base/css/tokens.css` and
 `themes/admin/_base/css/base/tokens.css`):
 
   - Spacing scale: `--space-xs` (5) / sm (10) / md (15) / lg (20) / xl (30)
-  - Font sizes: `--font-size-xs` (12) / sm (13) / md (14) / base (15) / lg (16) / xl (20)
+  - Font sizes: `--font-size-xxs` (11) / xs (12) / sm (13) / md (14) / base (15) / lg (16) / xl (20) / xxl (22)
   - Line height: `--line-height-base` (1.5)
   - Border radius: `--radius-sm` (5) / md (10) / lg (15) / xl (20)
   - Z-index: `--z-dropdown` (100) / overlay (500) / modal (1000)
@@ -253,12 +236,12 @@ files, 18 declarations).
 Deviations from the original spec:
   - Added `--font-size-md` (14px) and `--font-size-lg` (16px) — actual
     usage frequency demanded them (each ~50 occurrences).
+  - Added `--font-size-xxs` (11px) and `--font-size-xxl` (22px) in
+    Phase 8 — 14 and 5 call-sites respectively.
   - Added `--radius-lg` (15px) and `--radius-xl` (20px) — same reason.
   - `--bp-*` breakpoint tokens NOT introduced. CSS `@media`
     expressions can't substitute `var()` values, so the tokens would
-    be defined-only. Actual breakpoints don't cluster around the
-    canonical 576/800/1100 either; component-level breakpoints stay
-    as literals.
+    be defined-only. 18 unique breakpoints are all component-specific.
   - `--line-height-base` defined but no current `line-height: 1.5`
     callsites to migrate; available for future use.
 
@@ -285,118 +268,76 @@ cheap. Two one-off literals stay hardcoded (a single 1-use muted
 color in the api section and one `color: #fff` on a light-mode close
 button).
 
-**Step 8 — Refactor `themes/standard_pages/skins/*.css` (eliminates ~220 `!important`).**
-With the token system in place each skin's only job is to override variable values. Transform each from ~337 lines of element-level overrides to a single `:root {}` block:
-
-```css
-/* default.css — before: 333 lines, 20× !important */
-/* default.css — after:  ~30 lines, 0× !important */
-:root {
-  --color-accent: #f70;
-  --color-button-secondary-bg: #ececec;
-  --color-button-secondary-fg: #3c3c3c;
-  --color-divider: #d8d8d8;
-  /* … */
-}
-```
-
-The `!important` in skin files exists solely because they fight specificity with `themes/standard_pages/theme.css`. Once both use the same variable names, there is nothing to fight.
+**Step 8 — Refactor `themes/standard_pages/skins/*.css`.** ✅ Done.
+Each of the 11 skin files is now ~11 lines — a `:root {}` block
+overriding accent/button/link tokens. 0 `!important` across all skins
+(down from ~220). Total skin CSS: 122 lines.
 
 **Step 9 — (deleted; was modus split — modus is no longer in the codebase).**
 
-**Step 10 — Introduce CSS design tokens in admin parent.**
-Create `themes/admin/_base/css/base.css.tpl` (Smarty-templated):
+**Step 10 — Admin CSS design tokens.** ✅ Done (static approach).
+Superseded the original Smarty-templated plan. Tokens live in
+`themes/admin/_base/css/base/tokens.css` (93 `--admin-*` definitions)
+with dark `:root {}` overrides in `themes/admin/dark/theme.css` (67
+overrides). No Smarty `.css.tpl` needed — static CSS custom properties
+handle theming directly.
 
-```smarty
-:root {
-  --admin-bg:      {$admin_skin.page.backgroundColor};
-  --admin-fg:      {$admin_skin.page.color};
-  --admin-accent:  {$admin_skin.accent};
-  --admin-border:  {$admin_skin.border};
-}
-```
+**Step 11 — Split `themes/admin/_base/theme.css`.** ✅ Done.
+`themes/admin/_base/theme.css` is now 12 lines — a thin `@import` list.
+The 9,635-line monolith was split into 51 files across `base/`,
+`components/`, `pages/`, and `features/` subdirectories.
 
-Each `themeconf.inc.php` for `light` and `dark` defines its `$admin_skin` array. `themes/admin/_base/template/header.tpl` loads `base.css.tpl` with `template=true` before the split CSS. Removes the current `{combine_css path="themes/admin/`$theme.id`/css/components/general.css" order=-9} {* Temporary solution *}` workaround in `header.tpl:24`.
+**Step 12 — Slim admin child themes.** ✅ Done.
 
-**Step 11 — Split `themes/admin/_base/theme.css`** (9,635 lines) along its 60+ `/* name.css */` section markers into the target layout in the directory tree above. `themes/admin/_base/theme.css` becomes an `@import` list. Note: file grew from 8,375 to 9,635 lines because Step 16 (inline-style extraction) added utility classes (`.u-*`) here; those should land in a `base/utilities.css` during the split.
+Final state:
 
-**Step 12 — Slim admin child themes.** ✅ Substantially done — §3.1 close-out.
-
-Original goal: `themes/admin/light/theme.css` (1,234 lines) and
-`themes/admin/dark/theme.css` (2,837 lines) reduce to `:root {}`
-variable override blocks. Same treatment for
-`themes/admin/dark/css/components/general.css` (content moves into the
-parent).
-
-Status after the §3.1 close-out + R.0-R.16 relocation passes:
-
-| file | start | now | Δ |
+| file | start | final | Δ |
 |---|---:|---:|---:|
-| `themes/admin/dark/theme.css` | 2,773 | 2,229 | -544 (-20%) |
-| `themes/admin/light/theme.css` | 1,204 | 835 | -369 (-31%) |
-| `themes/admin/_base/css/base/tokens.css` | 26 | 65 | +39 (12 → 33 tokens) |
-| `themes/admin/_base/css/pages/user-activity.css` (dumping ground 1) | 713 | 331 | -382 (-54%) |
-| `themes/admin/_base/css/pages/user-list.css` (dumping ground 2) | 2,628 | 2,583 | -45 (-1.7%) |
-| `themes/admin/_base/css/pages/plugins.css` | 1,122 | 1,088 | -34 (-3%) |
+| `themes/admin/dark/theme.css` | 2,837 | 1,127 | -1,710 (-60%) |
+| `themes/admin/light/theme.css` | 1,234 | 374 | -860 (-70%) |
+| `themes/admin/_base/css/base/tokens.css` | 26 | 93 tokens | +67 |
 
-Two relocation passes consolidated misplaced base-file rules. The
-second pass also dedup'd the `.AlbumViewSelector` / `.UserViewSelector`
-chrome (4 file copies → 1 shared `components/view-selector.css`) and
-the `.icon-th-*` / `.switchLayout` triplicates (3 copies → 1 each).
-
-Both child files still carry more than a pure `:root {}` block. The
-remaining ~3,080 lines of overrides fall into three categories
-documented in [docs/ADMIN-CSS-AUDIT.md](ADMIN-CSS-AUDIT.md):
-
-1. **Genuine one-off colors** — page-specific overrides with no
-   cluster pattern (e.g. `.cache-size-value`,
-   `.princes-of-this-piwigo`, `.detail-item-1/2/3`). Tokenizing each
-   would introduce ~120 narrow single-use tokens — renames, not
-   theming.
-2. **Third-party widget overrides** — jconfirm, token-input,
-   pluginTypeFilter chrome. These widgets have their own internal
-   theming structure; integrating them into the admin token system
-   would require creating widget-specific component CSS files.
-3. **Asymmetric prop sets** — rules that legitimately set a
-   different property in dark vs. light for the same element.
-
-The 33-token palette covers: surfaces, foreground, borders,
-accents, link, input-bg, row-stripes (×4), popin bg/input/cancel
-(×3 + cancel hover), danger pair, input-border, disabled pair,
-chart palette (×5). New tokens added incrementally per batch —
-each token has a clear semantic role, none are pre-allocated.
+Both child files carry a `:root {}` token override block plus
+selector-level overrides that fall into three documented categories:
+(1) genuine one-off colors, (2) third-party widget overrides,
+(3) asymmetric prop sets (Bucket X). Every remaining selector has a
+`/* keep: reason */` comment. The 93-token admin palette covers
+surfaces, foreground, borders, accents, links, inputs, row stripes,
+popin chrome, danger, disabled, chart colors, brand, and close-modal.
 
 `themes/admin/dark/css/components/general.css` was reformed during
 the Step 11 split — admin/_base now owns the general.css structure
-with `--admin-filter-*` / `--admin-info-*` tokens. Dark/light
-no longer carry parallel general.css copies.
+with `--admin-filter-*` / `--admin-info-*` tokens.
 
 **Step 13 — (deleted; plugin CSS quick-wins; the named plugins — GDThumb, AdminTools, language_switch — are no longer in the tree).**
 
 **Step 14 — (deleted; TakeATour relocation; plugin no longer in the tree).**
 
-**Step 15 — `!important` final elimination pass.**
-Work through Tier 2 (tom-select: `batch_manager_unit.css`, `picture_modify.css`, `albums.css`, `user-list.css`) then Tier 3 file-by-file from largest to smallest. After each file: `bunx stylelint --fix <file>` + browser smoke-test of that admin page. Keep all Tier 1 instances; add `/* reason */` comment to any that are missing one. Once the count is low enough, reinstate `declaration-no-important` as a Stylelint warning (it was dropped in `9a482db86`).
+**Step 15 — `!important` final elimination pass.** ✅ Done.
+`declaration-no-important` reinstated as a Stylelint warning. 51
+`!important` declarations remain across theme CSS (+ 3 in
+`tools/ws/ws.css` for TipTip overrides = 53 total warnings, 0 errors).
+Every instance has a `/* keep: reason */` comment. Breakdown:
+  - JS-toggled visibility (`display: none/block/flex/grid`): 13
+  - UA/autofill overrides: 5
+  - Child-theme/variant specificity: 6
+  - Internal cascade overrides (tooltips, inherited styles): ~15
+  - Font-size language scale: 5
+  - Button state overrides: 5
+  - TipTip widget override (tools/ws): 3
 
 **Step 16 — Extract static inline `<style>` blocks.** ✅ Done.
 Every static template's CSS moved to `css/pages/<name>.css`, replaced with `{combine_css path="themes/admin/_base/css/pages/<name>.css"}`. `install.tpl` and `upgrade.tpl` share `install-upgrade.css`. Plus the dynamic blocks (`thumbnails`, `mainpage_categories`, `comment_list`, `month_calendar`, `batch_manager_global` first block) migrated via CSS custom properties on the wrapping element. See `PLAN-inline-assets-extraction.md`.
 
-### Verification
-
-After each step:
-
-1. `bun run lint:css` (alias for `bunx stylelint "**/*.css"`) — error/warning count decreasing.
-2. Visual smoke-test on the admin pages touched: dashboard, each sidebar section, toggle clear/roma via the head button, gallery index/category/picture, search popin (light + dark), at least 3 `standard_pages` skins.
-3. Network tab: confirm same or fewer CSS requests (the `{combine_css}` combiner bundles source files; more source files must not multiply requests).
-4. Diff `_data/combined/t*.css` before and after — concatenated output should be byte-for-byte similar modulo ordering.
+### Verification (final state)
 
 ```bash
-bun run lint:css                                            # zero errors
-git ls-files | grep -E "fix-(khtml|ie5-ie6|ie7)"            # empty (after Step 3)
-git ls-files | grep -E "clear-search|dark-search"           # empty (after Step 5)
-wc -l themes/admin/_base/theme.css                        # ≤ 30 (just @imports, after Step 11)
-wc -l themes/_base/theme.css                              # ≤ 15 (just @imports, after Step 4)
-grep -rn "!important" themes/standard_pages/skins/          # empty (after Step 8)
+bun run lint:css                                            # 0 errors, 53 warnings ✓
+git ls-files | grep -E "fix-(khtml|ie5-ie6|ie7)"            # empty ✓
+git ls-files | grep -E "clear-search|dark-search"           # empty ✓
+wc -l themes/admin/_base/theme.css                          # 12 ✓
+wc -l themes/_base/theme.css                                # 11 ✓
+grep -rn "!important" themes/standard_pages/skins/          # empty ✓
 ```
 
 ---

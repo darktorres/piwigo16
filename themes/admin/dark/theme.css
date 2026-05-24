@@ -155,11 +155,6 @@ a.Piwigo:hover span.Piwigo {
   background: #555;
 }
 
-/* .selected-pagination color stays here; base has no light counterpart yet
-   (see §3.1.bis cleanup batch). */
-.selected-pagination {
-  color: #444;
-}
 
 
 .filters-icon-check:disabled {
@@ -449,10 +444,6 @@ input:checked + .slider::after {
   color: #4c4c4c;
 }
 
-.user-property-main-user-content-header .main-user-icon {
-  background-color: #be4949 ;
-  color: #ffc8c8 ;
-}
 
 .userSeparator {
   color: #666;
@@ -466,9 +457,6 @@ input:checked + .slider::after {
   background-color: #ffa646;
 }
 
-.AddUserSubmit:hover {
-  background-color: #f70;
-}
 
 
 table.qsearch_help_table td {
@@ -637,24 +625,9 @@ a#showPermissions {
   font-weight: bold;
 }
 
-.help-popin-search:hover span,
-.help-popin-search:hover .icon-help-circled::before {
-  color: #ededed ;
-}
-
-.selected-associate-item {
-  background-color: #333;
-  box-shadow: 0 2px #000a;
-  color: #777;
-}
-
 .selected-associate-item:hover {
   background: #f9852c;
   color: #000;
-}
-
-.selected-associate-item .remove-associate:hover {
-  color: #ae5d1e;
 }
 
 /* Notification sub-selectors (link/list dark overrides — tokens handle the box) */
@@ -863,10 +836,6 @@ a#showPermissions {
   margin: -5px 0;
 }
 
-.popin-title {
-  color: #999;
-}
-
 /* Album view selector css */
 
 .AlbumViewSelector,
@@ -896,28 +865,6 @@ a#showPermissions {
   color: #493c21;
 }
 
-.icon-th-large,
-.icon-th-list,
-.icon-pause {
-  color: #c1c1c1;
-}
-
-.head-button-1 {
-  color: #444 ;
-}
-
-.head-button-1:hover {
-  color: #444 ;
-}
-
-.head-button-2 {
-  background-color: #333 ;
-  box-shadow: 0 2px #0000007a ;
-}
-
-.head-button-2:hover {
-  background-color: #222 ;
-}
 
 
 .user-first-col:hover {
@@ -939,23 +886,8 @@ a#showPermissions {
 
 /* Selected container in userManager */
 
-.user-container.container-selected .user-container-checkbox.user-list-checkbox .select-checkbox {
-  border: solid #ffa646 2px ;
-  background-color: #ffa646 ;
-}
-
 .user-container:hover {
   background-color: #232323;
-}
-
-.user-container.container-selected {
-  display: flex;
-  width: 100%;
-  height: 80px;
-  background-color: #1b1b1b;
-  font-weight: bold;
-  border-radius: 10px;
-  margin-bottom: 20px;
 }
 
 .user-container.container-selected .user-container-username {
@@ -967,6 +899,8 @@ a#showPermissions {
   color: #777 ;
 }
 
+/* keep: dark uses a deeper burnt-orange for selected-group badges (#c76a23)
+   that has no equivalent in the accent token palette (#ffa646). */
 .user-container.container-selected .user-groups,
 .user-container.container-selected .registration-clock {
   background-color: #c76a23;
@@ -984,64 +918,16 @@ a#showPermissions {
   color: #777;
 }
 
-.advanced-filter-close {
-  color: #777;
-}
-
 .user-action-select {
   background: transparent;
 }
 
-.user-property-select {
-  background-color: #333;
-  color: #c1c1c1;
-}
-
-
-.edit-username-title {
-  color: #c1c1c1;
-}
-
-.user-property-button {
-  color: #c1c1c1;
-  background-color: #333;
-}
-
 .user-property-button a {
   color: #c1c1c1;
-  /* text-decoration: none; */
 }
 
 .user-property-button a:hover {
   color: #f70;
-  /* text-decoration: none; */
-}
-
-.user-property-input {
-  color: #c1c1c1;
-  background-color: #333;
-}
-
-.user-property-input[type="text"] {
-  background-color: #333;
-}
-
-.user-property-register-visit .icon-calendar {
-  color: #c1c1c1;
-}
-
-.edit-user-tab-title p:hover,
-.guest-edit-user-tab-title p:hover {
-  border-color: #323232;
-}
-
-.edit-user-icons .delete-user-button::before,
-.princes-of-this-piwigo {
-  color: #c1c1c1;
-}
-
-.royal-court-of-this-piwigo {
-  color: #777;
 }
 
 .edit-password-success-reset-link,
@@ -1064,16 +950,6 @@ a#showPermissions {
 .main-user-rewrite,
 .main-user-validate {
   color: #a4a4a4 ;
-}
-
-.update-container {
-  border-top: solid 1px #333;
-}
-
-
-.password-choice-content .unavailable,
-.password-choice-content .unavailable:hover {
-  color: #777 ;
 }
 
 .password-choice-content .head-button-2,
@@ -1172,13 +1048,6 @@ a#showPermissions {
 
 .update-container .close-update-button:hover {
   color: #ededed;
-}
-
-.update-user-success,
-.update-password-success,
-.update-username-success,
-.border-green {
-  border-left: 2px solid #a9f6e3;
 }
 
 .linked-albums-badge {
@@ -1376,15 +1245,6 @@ a#showPermissions {
   color: #c1c1c1;
 }
 
-.badge-succes {
-  background-color: #aaf6e4;
-  color: #4ea590;
-}
-
-.badge-error {
-  background-color: #be4949;
-  color: #ffc8c8;
-}
 
 .first-letter-capitalize::first-letter {
   text-transform: uppercase;

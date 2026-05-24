@@ -45,8 +45,8 @@ or
 }
 
 .head-button-1 {
-  color: #fff;
-  background: #ffa646;
+  color: #3c3c3c;
+  background: var(--admin-accent-soft);
   box-shadow: 0 2px #bb7932;
 }
 
@@ -57,20 +57,21 @@ or
 }
 
 .head-button-1:hover {
-  background: #f70;
+  background: var(--admin-accent);
   text-decoration: none;
-  color: #fff;
+  color: #3c3c3c;
   transition: all 125ms ease-out;
 }
 
 .head-button-2 {
-  background: #fafafa;
+  background: var(--admin-bg-panel);
   box-shadow: 0 2px #00000024;
 }
 
 .head-button-2:hover {
   text-decoration: none;
   color: inherit;
+  background: var(--admin-bg-deepest);
 }
 
 /* -------------

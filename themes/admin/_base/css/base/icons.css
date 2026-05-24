@@ -113,5 +113,6 @@ input[type="reset"]:hover {
   padding: var(--space-sm);
   font-size: 19px;
   transition: 0.3s;
+  color: var(--admin-text);
 }
 

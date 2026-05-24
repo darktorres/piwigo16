@@ -91,7 +91,7 @@
 .update-password-success,
 .update-username-success,
 .border-green {
-  border-left: 2px solid #0f0;
+  border-left: 2px solid var(--admin-info-success-fg);
 }
 #UserList .AddUserBlock p,
 #UserList .AddUserBlock select,
@@ -332,15 +332,15 @@ a.group_users {
 /* Selected container in userManager */
 
 .user-container.container-selected .user-container-checkbox.user-list-checkbox .select-checkbox {
-  background-color: #ffa646;
-  border: solid #ffa646 2px;
+  background-color: var(--admin-accent-soft);
+  border: solid var(--admin-accent-soft) 2px;
 }
 
 .user-container.container-selected {
   display: flex;
   width: 100%;
   height: 80px;
-  background-color: var(--admin-move-cat-hover-bg);
+  background-color: var(--admin-bg-deepest);
   font-weight: bold;
   border-radius: var(--radius-md);
   margin-bottom: var(--space-lg);
@@ -348,8 +348,8 @@ a.group_users {
 
 .user-container.container-selected .user-groups,
 .user-container.container-selected .registration-clock {
-  background-color: #fee7c8;
-  color: #ff7b00;
+  background-color: var(--admin-accent-pale);
+  color: var(--admin-accent);
 }
 
 /****  */
@@ -360,8 +360,8 @@ a.group_users {
 
 
 .user-property-input {
-  color: #353535;
-  background-color: #f3f3f3;
+  color: var(--admin-text);
+  background-color: var(--admin-bg-elevated);
   width: 100%;
   box-sizing: border-box;
   font-size: 1.1em;
@@ -377,11 +377,11 @@ a.group_users {
 }
 
 .user-property-input[type="text"] {
-  background-color: #f3f3f3;
+  background-color: var(--admin-bg-elevated);
 }
 
 .user-property-register-visit .icon-calendar {
-  color: #4c4c4c;
+  color: var(--admin-text);
 }
 
 .edit-user-tab-title,
@@ -399,7 +399,7 @@ a.group_users {
 
 .edit-user-icons .delete-user-button::before,
 .princes-of-this-piwigo {
-  color: #777;
+  color: var(--admin-text);
 }
 
 .edit-user-icons .icon-trash-1:hover::before,
@@ -408,7 +408,7 @@ a.group_users {
 }
 
 .royal-court-of-this-piwigo {
-  color: #dbdbdb;
+  color: var(--admin-border);
 }
 
 .user-property-username-change-content,
@@ -418,7 +418,7 @@ a.group_users {
 }
 
 .update-container {
-  border-top: solid 1px #ddd;
+  border-top: solid 1px var(--admin-border);
 }
 
 .user-property-input.user-property-input-username:hover,
@@ -428,7 +428,7 @@ a.group_users {
 
 .password-choice-content .unavailable,
 .password-choice-content .unavailable:hover {
-  color: #cbcbcb;
+  color: var(--admin-text-muted);
 }
 
 /* Per-page additions */
@@ -897,7 +897,7 @@ a.group_users {
 }
 .edit-user-tab-title p:hover,
 .guest-edit-user-tab-title p:hover {
-  border-color: #ddd;
+  border-color: var(--admin-border);
   cursor: pointer;
 }
 
@@ -951,8 +951,8 @@ a.group_users {
 } */
 
 .user-property-button {
-  color: #353535;
-  background-color: #f3f3f3;
+  color: var(--admin-text);
+  background-color: var(--admin-bg-elevated);
   margin-top: 0;
   font-size: 1.1em;
   margin-bottom: var(--space-md);
@@ -971,8 +971,8 @@ a.group_users {
 }
 
 .user-property-select {
-  background-color: #f3f3f3;
-  color: #353535;
+  background-color: var(--admin-bg-elevated);
+  color: var(--admin-text);
   box-sizing: border-box;
   appearance: none;
   border: none;
@@ -1312,7 +1312,7 @@ a.group_users {
 }
 
 .edit-username-title {
-  color: #353535;
+  color: var(--admin-text);
   font-size: 1.4em;
   width: auto;
   max-width: 200px;
@@ -1436,8 +1436,8 @@ a.group_users {
   justify-content: center;
   align-items: center;
   align-self: center;
-  background-color: #ffecf0;
-  color: #ff0155;
+  background-color: var(--admin-info-error-bg);
+  color: var(--admin-info-error-fg);
 }
 
 .user-property-main-user-content-header .main-user-icon::before {
@@ -1858,7 +1858,7 @@ a.group_users {
 }
 
 .user-action-select {
-  background: #fff;
+  background: var(--admin-bg-page);
   appearance: none;
   padding: 5px 10px;
   width: 100%;
@@ -1946,7 +1946,7 @@ Advanced filter
 
 .advanced-filter-close {
   font-size: 1.8em;
-  color: #c5c5c5;
+  color: var(--admin-text-muted);
   cursor: pointer;
 }
 

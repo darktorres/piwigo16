@@ -645,8 +645,9 @@ a#showPermissions:hover {
   margin-bottom: var(--space-sm);
 }
 .selected-associate-item {
-  background-color: #fafafa;
+  background-color: var(--admin-bg-panel);
   box-shadow: 0 2px #00000024;
+  color: var(--admin-text);
   margin-top: var(--space-xs);
   padding: 7px 10px;
   border-radius: var(--radius-sm);
@@ -661,12 +662,12 @@ a#showPermissions:hover {
 }
 
 .selected-associate-item .remove-associate {
-  color: #000;
+  color: var(--admin-text);
 }
 
 .selected-associate-item .remove-associate:hover {
   cursor: pointer;
-  color: #f70;
+  color: var(--admin-accent);
 }
 
 

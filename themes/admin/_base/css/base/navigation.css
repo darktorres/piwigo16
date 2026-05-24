@@ -123,7 +123,8 @@
 }
 
 .selected-pagination {
-  background: #ffa646;
+  background: var(--admin-accent-soft);
+  color: #3c3c3c;
 }
 
 .pagination-container {

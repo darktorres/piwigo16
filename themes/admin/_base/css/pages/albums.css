@@ -245,7 +245,7 @@
   font-weight: bold;
   font-size: var(--font-size-base);
   margin-bottom: var(--space-md);
-  color: #3c3c3c;
+  color: var(--admin-text);
   white-space: nowrap;
 }
 

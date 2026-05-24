@@ -204,7 +204,7 @@
 
 .help-popin-search:hover span,
 .help-popin-search:hover .icon-help-circled::before {
-  color: #3c3c3c;
+  color: var(--admin-text);
 }
 
 #modalQuickSearch p {

@@ -1,12 +1,15 @@
-@import "css/base/tokens.css";
+@layer base;
+
+@import "css/base/tokens.css" layer(base);
+@import "css/base/navigation.css" layer(base);
+@import "css/base/layout.css" layer(base);
+@import "css/base/menubar.css" layer(base);
+@import "css/base/tabsheets.css" layer(base);
+@import "css/base/typography.css" layer(base);
+@import "css/base/notifications.css" layer(base);
+@import "css/base/gallery-view.css" layer(base);
+@import "css/base/icons.css" layer(base);
+@import "css/components/breadcrumb.css" layer(base);
+@import "css/components/view-selector.css" layer(base);
+
 @import "css/base/utilities.css";
-@import "css/base/navigation.css";
-@import "css/base/layout.css";
-@import "css/base/menubar.css";
-@import "css/base/tabsheets.css";
-@import "css/base/typography.css";
-@import "css/base/notifications.css";
-@import "css/base/gallery-view.css";
-@import "css/base/icons.css";
-@import "css/components/breadcrumb.css";
-@import "css/components/view-selector.css";

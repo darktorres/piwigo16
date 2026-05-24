@@ -2097,9 +2097,6 @@ Advanced filter
   max-height: 40px;
 }
 
-.hide {
-  display: none !important /* keep: JS-toggled visibility */;
-}
 
 .tileView .user-container-edit {
   color: transparent;
@@ -2145,7 +2142,7 @@ Advanced filter
 .compactView .user-container .user-container-email,
 .compactView .user-container .user-container-groups,
 .compactView .user-container .user-container-registration {
-  display: none !important /* keep: JS-toggled visibility */;
+  display: none;
 }
 
 .compactView .user-container-initials-wrapper {
@@ -2400,9 +2397,9 @@ Advanced filter
 }
 
 #usr-list-user:hover #icon-usr-list-user {
-  display: block !important /* keep: JS-toggled visibility */;
+  display: block;
 }
 
 #usr-list-registered:hover #icon-usr-list-registered {
-  display: block !important /* keep: JS-toggled visibility */;
+  display: block;
 }

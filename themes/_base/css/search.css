@@ -388,8 +388,8 @@
   display: none;
 }
 
-.grey-icon {
-  display: block !important /* keep: JS-toggled visibility */;
+label .checked-icon.grey-icon {
+  display: block;
 }
 
 .custom_posted_date_toggle,
@@ -448,7 +448,7 @@
 .head-button-2:hover {
   text-decoration: none;
   background: var(--search-head-btn2-hover-bg);
-  color: var(--search-head-btn2-hover-color) !important; /* keep: overrides inherited link color */
+  color: var(--search-head-btn2-hover-color);
 }
 
 .breadcrumb-item {
@@ -597,8 +597,8 @@
     right: 15px;
   }
 
-  .search-params {
-    display: block !important /* keep: JS-toggled visibility */;
+  .filter-form .search-params {
+    display: block;
   }
 
   .word-search-options {

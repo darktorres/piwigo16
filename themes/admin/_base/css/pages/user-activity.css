@@ -85,9 +85,6 @@
   flex-direction: row;
 }
 
-.hide {
-  display: none !important /* keep: JS-toggled visibility */;
-}
 
 .tab-title div {
   text-align: left;

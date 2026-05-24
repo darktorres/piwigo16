@@ -55,7 +55,7 @@ input[type="reset"]:hover {
   border: 0;
 }
 #permissions {
-  display: none !important /* keep: JS-toggled visibility */;
+  display: none;
   margin-top: 35px;
   margin-bottom: var(--space-lg);
 }

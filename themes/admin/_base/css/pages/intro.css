@@ -206,7 +206,7 @@ a.stat-box:hover {
   padding: 0 5px;
   margin-bottom: 8px;
   border-radius: var(--radius-lg);
-  background: none !important; /* keep: overrides any inherited background */
+  background: none;
 }
 
 .intro-charts .tooltip .tooltip-detail {
@@ -273,8 +273,8 @@ a.stat-box:hover {
   border-color: var(--admin-tooltip-arrow-color) transparent transparent;
 }
 
-.storage-tooltips .separated {
-  display: block !important; /* keep: forces block on dynamically-inserted element */
+.storage-tooltips .tooltip .separated {
+  display: block;
   width: 100%;
   height: 1px;
   background: var(--admin-tooltip-separator-bg);
@@ -286,27 +286,27 @@ a.stat-box:hover {
   padding: 15px 20px;
 }
 
-.storage-tooltips .tooltip-header {
-  display: grid !important; /* keep: overrides flex from .intro-charts .tooltip .tooltip-header */
+.storage-tooltips .tooltip .tooltip-header {
+  display: grid;
   grid-template-columns: 1fr auto 1fr;
 }
 
-.storage-tooltips .tooltip-title {
+.storage-tooltips .tooltip .tooltip-header .tooltip-title {
   grid-column: 1;
   text-align: start;
-  margin: 0 !important; /* keep: resets inherited tooltip margin */
+  margin: 0;
 }
 
-.storage-tooltips .tooltip-size {
+.storage-tooltips .tooltip .tooltip-header .tooltip-size {
   grid-column: 2;
   text-align: center;
-  margin: 0 !important; /* keep: resets inherited tooltip margin */
+  margin: 0;
 }
 
-.storage-tooltips .tooltip-files {
+.storage-tooltips .tooltip .tooltip-header .tooltip-files {
   grid-column: 3;
   text-align: end;
-  margin: 0 !important; /* keep: resets inherited tooltip margin */
+  margin: 0;
   font-size: var(--font-size-xs);
   font-style: italic;
   align-self: self-end;
@@ -317,9 +317,9 @@ a.stat-box:hover {
   justify-content: center;
 }
 
-.storage-tooltips .tooltip-details-cont {
+.storage-tooltips .tooltip .tooltip-details-cont {
   width: 33%;
-  align-items: center !important; /* keep: overrides .intro-charts .tooltip-details-cont flex-start */
+  align-items: center;
   margin: 0; /* keep */
   margin-top: var(--space-sm); /* keep */
   margin-bottom: var(--space-xs); /* keep */
@@ -415,11 +415,11 @@ a.stat-box:hover {
 /* Per-page additions */
 
 .eiw .messages ul li {
-  list-style-type: none !important; /* keep: overrides global list-style on .messages li */
+  list-style-type: none;
 }
 
 .eiw .messages .eiw-icon {
-  margin-right: 10px !important; /* keep: overrides .eiw-icon default margin */
+  margin-right: 10px;
 }
 
 /* Relocated from pages/user-activity.css — newsletter promo block

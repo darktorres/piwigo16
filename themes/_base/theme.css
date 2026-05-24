@@ -1,11 +1,14 @@
-@import "iconset.css";
-@import "css/tokens.css";
+@layer base;
+
+@import "iconset.css" layer(base);
+@import "css/tokens.css" layer(base);
+@import "css/menubar.css" layer(base);
+@import "css/content.css" layer(base);
+@import "css/calendar.css" layer(base);
+@import "css/gallery.css" layer(base);
+@import "css/picture.css" layer(base);
+@import "css/layout.css" layer(base);
+@import "css/forms.css" layer(base);
+@import "css/colors.css" layer(base);
+
 @import "css/utilities.css";
-@import "css/menubar.css";
-@import "css/content.css";
-@import "css/calendar.css";
-@import "css/gallery.css";
-@import "css/picture.css";
-@import "css/layout.css";
-@import "css/forms.css";
-@import "css/colors.css";

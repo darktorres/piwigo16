@@ -15,10 +15,10 @@
 }
 
 /* HTML5 hidden attribute — needs to win over class rules
-   like .foo { display: flex } that would otherwise override the UA
-   stylesheet's [hidden] { display: none } at higher specificity. */
+   like .foo { display: flex } — unlayered utilities always beat
+   @layer base rules regardless of specificity. */
 [hidden] {
-  display: none !important /* keep: JS-toggled visibility */;
+  display: none;
 }
 
 /* Atomic utility classes used across templates instead of inline style="". */

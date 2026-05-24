@@ -58,7 +58,7 @@
 }
 
 .advanced-filter-new-plugin .advanced-filter-container {
-  display: grid !important /* keep: JS-toggled visibility */;
+  display: grid;
   grid-template-columns: repeat(5, 20%);
 }
 
@@ -876,7 +876,7 @@
 
 .pluginContainer.line-form .pluginBox .pluginDesc {
   margin: auto 10px;
-  display: flex !important /* keep: JS-toggled visibility */;
+  display: flex;
   align-items: center;
 
   white-space: nowrap;

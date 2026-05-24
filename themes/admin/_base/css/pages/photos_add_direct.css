@@ -17,7 +17,7 @@ p#uploadWarnings {
 }
 #photosAddContent p.showFieldset {
   text-align: left;
-  display: none !important /* keep: JS-toggled visibility */;
+  display: none;
 }
 a#showPermissions {
   padding: 5px 10px;

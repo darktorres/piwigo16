@@ -21,9 +21,6 @@
   flex-direction: row;
 }
 
-.hide {
-  display: none !important /* keep: JS-toggled visibility */;
-}
 
 .noResults {
   font-size: var(--font-size-md);

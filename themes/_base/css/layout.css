@@ -132,19 +132,19 @@ form p {
    is needed because the public gallery may apply conflicting
    inline or theme styles; these levels must always win their own cascade. */
 .tagLevel5 {
-  font-size: 150% !important; /* keep: must override any cascade conflict */
+  font-size: 150%;
 }
 .tagLevel4 {
-  font-size: 140% !important; /* keep: must override any cascade conflict */
+  font-size: 140%;
 }
 .tagLevel3 {
-  font-size: 120% !important; /* keep: must override any cascade conflict */
+  font-size: 120%;
 }
 .tagLevel2 {
-  font-size: 100% !important; /* keep: must override any cascade conflict */
+  font-size: 100%;
 }
 .tagLevel1 {
-  font-size: 90% !important; /* keep: must override any cascade conflict */
+  font-size: 90%;
 }
 
 /* Popup help page */

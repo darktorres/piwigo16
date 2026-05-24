@@ -28,8 +28,8 @@
 }
 
 .albumIconLineHover {
-  background: #f98100 !important; /* keep: JS hover state */
-  color: var(--admin-move-cat-hover-bg) !important; /* keep: JS hover state */
+  background: #f98100;
+  color: var(--admin-move-cat-hover-bg);
   transition: 0.5s ease;
 }
 
@@ -88,7 +88,7 @@
 }
 
 .albumActions a:hover span {
-  color: var(--admin-accent) !important; /* keep: hover override */
+  color: var(--admin-accent);
 }
 
 .albumActions a,
@@ -187,16 +187,16 @@
   font-size: var(--font-size-base);
   border: none;
   border-radius: var(--radius-sm);
-  color: #353535 !important; /* keep: overrides dark theme input color */
-  background-color: #f3f3f3 !important; /* keep: overrides dark theme input bg */
+  color: #353535;
+  background-color: #f3f3f3;
 }
 
 .tile_add.addAlbum form input::placeholder {
-  color: transparent !important; /* keep: hides placeholder in tile-add form */
+  color: transparent;
 }
 
 .addAlbum form input::placeholder {
-  color: #353535 !important; /* keep: overrides dark theme placeholder */
+  color: #353535;
 }
 
 .addAlbum button,
@@ -214,7 +214,7 @@
 .addAlbum.input-mode .addAlbumHead {
   transition-delay: 0s;
   padding: 0;
-  transform: translateY(0) !important; /* keep: JS-driven state reset */
+  transform: translateY(0);
   margin-top: 0;
 }
 
@@ -260,7 +260,7 @@ li.menuLi {
 
 #tabsheet,
 .selectedAlbum {
-  margin: 0 0 10px !important; /* keep: overrides tabsheet default margin on this page */
+  margin: 0 0 10px;
 }
 
 .selectedAlbum {

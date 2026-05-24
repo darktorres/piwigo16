@@ -106,7 +106,7 @@
   font-size: var(--font-size-lg);
 }
 .move-cat-title-container:hover .icon-pencil {
-  display: flex !important /* keep: JS-toggled visibility */;
+  display: flex;
 }
 
 .move-cat-container .move-cat-toogler .icon-left-open {

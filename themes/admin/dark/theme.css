@@ -81,6 +81,7 @@
   /* --admin-text-muted, --admin-accent, --admin-accent-soft inherit base */
 }
 
+/* keep: light has top:70px; dark omits it (Bucket X) */
 .header_notes {
   background: transparent url("../default/icon/note.png") no-repeat right top;
   border: none;
@@ -89,26 +90,28 @@
   right: 0;
   width: 550px;
 }
-/* #the_page { margin: 0; padding: 0; z-index: 1; top:0px; */
-/* padding-top: 0; min-height: 100%; width:100%; position:absolute; left:0px; } */
+
+/* Dark-exclusive — headings + content bg (no base bg rule; light has #ddd) */
 h3,
 .content {
   background-color: var(--admin-bg-panel);
 }
 .throw em {
-  font-style: normal;
+  font-style: normal; /* keep: dark-exclusive */
   color: #ededed;
 }
 
+/* keep: dark wants transparent hover; base has #222 */
 #menubar li:hover {
   background-color: transparent;
 }
 
-/* Dark tabsheet: lighter font-weight than base's bold */
+/* keep: dark lightens base bold (Bucket X — structural) */
 .tabsheet a {
   font-weight: normal;
 }
 
+/* keep: light has color; dark omits it. Different margin syntax (Bucket X) */
 .content h4 {
   font-size: 14px;
   text-align: left;
@@ -116,12 +119,13 @@ h3,
   margin: 2px;
 }
 
-
-/* .throw, */
+/* keep: dark-exclusive structural */
 td h3 {
   background-image: url("images/fillet.png");
   background-repeat: repeat-x;
 }
+
+/* keep: dark adds outline; light has different bg/color (Bucket X) */
 input:focus,
 select:focus,
 textarea:focus {
@@ -130,10 +134,13 @@ textarea:focus {
   color: #999; /* keep: dark-specific focus text */
 }
 
+/* keep: dark-exclusive — cursor */
 input[type="submit"]:hover,
 input[type="reset"]:hover {
   cursor: pointer;
 }
+
+/* keep: dark adds color; light omits it (Bucket X) */
 .throw {
   font-size: 120%;
   line-height: 26px;
@@ -141,8 +148,10 @@ input[type="reset"]:hover {
   font-weight: bold;
   color: #9e9e9e;
 }
+
+/* keep: dark overrides all typographic properties (Bucket X — structural) */
 a.Piwigo {
-  font-family: verdana, arial, helvetica, sans-serif ;
+  font-family: verdana, arial, helvetica, sans-serif;
   font-size: 11px;
   font-weight: normal;
   letter-spacing: 0;
@@ -154,10 +163,10 @@ a.Piwigo:hover span.Piwigo {
   border-bottom: 1px solid #ff3363; /* keep: dark hover variant of brand color */
 }
 
-/* RADU - I comment this because it makes FF form controls activation very slow)
-*, *:focus, *:active, input:active, a:active, input:focus, a:focus { outline: none; -moz-outline-width: 0px; }
-*/
+/* RADU — light has this active; dark comments it out (Bucket X) */
+/* *, *:focus, *:active, input:active, a:active, input:focus, a:focus { outline: none; -moz-outline-width: 0px; } */
 
+/* Dark-exclusive — admin shell */
 #adminHome a,
 #menubar li a,
 #menubar dt {
@@ -197,29 +206,31 @@ a.Piwigo:hover span.Piwigo {
   opacity: 1;
 }
 
+/* Dark-exclusive — plugin/theme manager */
 .themeSelect {
-  background-color: var(--admin-bg-elevated);
+  background-color: var(--admin-bg-elevated); /* keep: light bg only; dark adds shadow:none (Bucket X) */
   box-shadow: none;
 }
 .themeSelect.themeDefault {
-  background-color: #f9bf80;
+  background-color: #f9bf80; /* keep: dark-specific muted accent for selected theme */
 }
 .themeSelect.themeDefault a,
 .themeSelect.themeDefault span,
 .themeSelect.themeDefault .themeName {
-  color: #333;
+  color: #333; /* keep: dark text on accent bg */
 }
 .themeActions a {
-  border-bottom: none;
+  border-bottom: none; /* keep: dark-exclusive structural */
 }
 .themeActions span {
   background-color: var(--admin-border);
   color: #bbb; /* keep: dark-specific theme action text */
 }
 .showInfo-dropdown-header a {
-  color: #3a3a3a;
+  color: #3a3a3a; /* keep: dark-exclusive — dropdown on bright bg */
 }
 
+/* keep: dark-exclusive — help/ftp page text */
 #helpContent,
 #ftpPage,
 #ftpPage legend {
@@ -233,7 +244,7 @@ a.Piwigo:hover span.Piwigo {
   box-shadow: none;
 }
 .pluginContainer.line-form .pluginBox:hover .pluginContent {
-  background: #1e1e1d;
+  background: #1e1e1d; /* keep: dark-exclusive near-black hover */
 }
 .groups #addGroupForm:hover {
   background-color: var(--admin-bg-deepest);
@@ -244,23 +255,25 @@ a.Piwigo:hover span.Piwigo {
   border-color: var(--admin-text);
 }
 .languageDefault {
-  background-color: #555;
+  background-color: #555; /* keep: light bg only; dark adds color (Bucket X) */
   color: #aaa;
 }
+
+/* Dark-exclusive — group manager */
 .GroupBackgroudSelected .Group-name {
-  color: #333 ;
+  color: #333; /* keep: dark text on orange bg */
 }
 .GroupContainer .group_name-editable {
   background-color: #323232; /* keep: dark-specific group edit bg */
   border: 1px solid var(--admin-border-strong);
 }
 .GroupContainer .group-rename .icon-ok {
-  color: #222;
+  color: #222; /* keep: dark text on accent bg */
 }
 
-
+/* Dark-exclusive — batch manager */
 #batchManagerGlobal ul.thumbnails li:hover .wrap2 {
-  color: #fff;
+  color: #fff; /* keep: dark bright text; light: transparent bg + muted text (Bucket X) */
 }
 
 #batchManagerGlobal .thumbSelected .wrap2 {
@@ -268,7 +281,7 @@ a.Piwigo:hover span.Piwigo {
 }
 
 #batchManagerGlobal #applyFilter {
-  color: #bfbfbf;
+  color: #bfbfbf; /* keep: dark-exclusive filter button */
   background-color: #3c3c3c;
 }
 
@@ -330,8 +343,7 @@ a.Piwigo:hover span.Piwigo {
   color: #ededed;
 }
 
-/* Group manager buttons */
-
+/* keep: dark adds color; light has border+bg only (Bucket X) */
 .groups .manage-users,
 .groups .manage-permissions {
   border: 1px solid #777;
@@ -352,27 +364,27 @@ input:checked + .slider::after {
 }
 
 .GroupBackgroudSelected {
-  background-color: #f9852c ;
-  box-shadow: none ;
+  background-color: #f9852c; /* keep: light bg only; dark adds shadow:none (Bucket X) */
+  box-shadow: none;
 }
 
 .OrangeIcon {
-  background-color: #ae5d1e ;
-  color: #faa96b ;
-  border-color: #ae5d1e ;
+  background-color: #ae5d1e; /* keep: light bg/color; dark adds border-color (Bucket X) */
+  color: #faa96b;
+  border-color: #ae5d1e;
 }
 
 /* Selection mode content */
 
 #selection-mode-block button,
 #commentsSelection button {
-  border: 1px solid #e7e7e7;
+  border: 1px solid #e7e7e7; /* keep: dark adds color; light has border only (Bucket X) */
   color: #c0c0c0;
 }
 
 #selection-mode-block button:hover,
 #commentsSelection button:hover {
-  background-color: var(--admin-accent-soft);
+  background-color: var(--admin-accent-soft); /* keep: dark adds color; light omits it (Bucket X) */
   border: 1px solid var(--admin-accent-soft);
   color: #3c3c3c;
 }
@@ -381,12 +393,13 @@ input:checked + .slider::after {
   background-color: var(--admin-bg-deepest); /* keep: dark uses deepest surface (#1b1b1b) vs base's --admin-input-bg (#2c2c2c) */
 }
 
-/* UserList Pop in */
+/* Dark-exclusive — popin/modal */
 
 .close-modal {
   color: var(--admin-close-modal);
 }
 
+/* keep: dark-exclusive — popin close/username hover */
 .CloseUserList:hover,
 .CloseAddAlbum:hover,
 
@@ -395,12 +408,13 @@ input:checked + .slider::after {
   color: #9e9e9e;
 }
 
+/* keep: dark grays out the blue badge — no matching token */
 #UserList .group-name-block .UserNumberBadge {
   background-color: #777;
   color: #ccc;
 }
 .userSeparator {
-  color: #666;
+  color: #666; /* keep: dark adds color; both hide element (Bucket X) */
   visibility: hidden;
 }
 
@@ -417,16 +431,16 @@ input:checked + .slider::after {
 }
 
 .afterUploadActions a.secondary_button {
-  background-color: #333;
+  background-color: #333; /* keep: light bg only; dark adds color (Bucket X) */
   color: #777;
 }
 .afterUploadActions a.secondary_button:hover {
-  background-color: var(--admin-accent-soft);
+  background-color: var(--admin-accent-soft); /* keep: light bg only; dark adds color (Bucket X) */
   color: #3c3c3c;
 }
 
 .font-checkbox {
-  color: #898888;
+  color: #898888; /* keep: dark-exclusive checkbox text */
 }
 
 a#showPermissions {
@@ -434,16 +448,18 @@ a#showPermissions {
   background-color: var(--admin-bg-page); /* keep: #414141 → --admin-bg-page #444 */
 }
 .icon-plus.cboxElement {
-  border: 1px solid #777;
+  border: 1px solid #777; /* keep: light sets bg; dark sets border+color (Bucket X) */
   color: #c0c0c0;
 }
 .icon-plus.cboxElement:hover {
-  border: 1px solid #aaa;
+  border: 1px solid #aaa; /* keep: light sets bg; dark sets border (Bucket X) */
 }
 
 #cboxTitle {
-  color: #7f7f7f ;
+  color: #7f7f7f; /* keep: dark-exclusive */
 }
+
+/* Dark-exclusive — album/category hover */
 .categoryBox.line_cat:hover {
   background: #f9852c ;
   color: #333 ;
@@ -467,14 +483,14 @@ a#showPermissions {
 }
 
 .albumActions a {
-  text-decoration: none;
+  text-decoration: none; /* keep: light sets color; dark sets text-decoration (Bucket X) */
 }
 
 .albumIconLineHover {
-  background: #ae5d1e ;
-  color: #ffa96b ;
+  background: #ae5d1e; /* keep: dark burnt-orange hover (base uses #f98100 !important) */
+  color: #ffa96b;
   transition: 0.5s ease;
-  border-color: #ae5d1e ;
+  border-color: #ae5d1e;
 }
 
 #addFilter,
@@ -485,7 +501,7 @@ a#showPermissions {
 }
 
 #addFilter:hover {
-  color: #ebebeb;
+  color: #ebebeb; /* keep: dark-exclusive hover */
 }
 #filter_search input {
   background-color: var(--admin-bg-page);
@@ -498,17 +514,17 @@ a#showPermissions {
   color: var(--admin-accent-soft);
 }
 #action_move a:last-child {
-  color: #c0c0c0;
+  color: #c0c0c0; /* keep: light: border+shadow; dark: bg+color (Bucket X) */
   background-color: #464646;
 }
 #filter_dimension .slider-choice,
 #filter_filesize .slider-choice {
-  background-color: #393939;
+  background-color: #393939; /* keep: light has bg+color; dark has bg only (Bucket X) */
 }
 #forbidAction,
 .selectionEmptyBlock,
 .noFilter {
-  background-color: #5a5757;
+  background-color: #5a5757; /* keep: light bg only; dark adds color (Bucket X) */
   color: #c1c1c1;
 }
 
@@ -522,13 +538,13 @@ a#showPermissions {
   background-color: var(--admin-border);
 }
 .pageNumberSelected {
-  background-color: #b4b4b4;
-  color: #777 ;
+  background-color: #b4b4b4; /* keep: light has color+weight; dark adds background (Bucket X) */
+  color: #777;
   font-weight: bold;
 }
 
 .selected-associate-item:hover {
-  background: #f9852c;
+  background: #f9852c; /* keep: dark accent hover */
   color: #000;
 }
 
@@ -569,8 +585,8 @@ a#showPermissions {
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-default:hover {
-  color: #222 ;
-  background-color: #777 ;
+  color: #222; /* keep: inverted hover — bg/fg swap */
+  background-color: #777;
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-red {
@@ -621,8 +637,8 @@ a#showPermissions {
 }
 
 
-/* Icon colors */
-
+/* keep: icon badge palette — dark uses vivid bg + pastel fg;
+   light inverts to pastel bg + vivid fg (Bucket X) */
 .icon-red {
   color: #fec6c7;
   background: #bc4b4a;
@@ -643,6 +659,7 @@ a#showPermissions {
   color: #9fbef1;
 }
 
+/* keep: dark-exclusive — full blue variant */
 .icon-blue-full {
   background-color: #4e71a5;
   border: 0;
@@ -659,7 +676,7 @@ a#showPermissions {
   background: #888;
 }
 
-/* Popin Album Selector */
+/* keep: dark-exclusive — popin close icon on dark overlay */
 .linkedAlbumPopInContainer .ClosePopIn {
   color: #444;
 }
@@ -681,7 +698,7 @@ a#showPermissions {
 }
 
 .dropdown-option-content a {
-  color: #3a3a3a;
+  color: #3a3a3a; /* keep: dark-exclusive — dropdown text on bright bg */
 }
 
 .tab-filters label:hover,
@@ -725,12 +742,12 @@ a#showPermissions {
 }
 
 .pluginContainer.line .pluginBox.plugin-inactive:hover .pluginUnavailableAction {
-  color: #3c3c3c ;
-  background: #dddd ;
+  color: #3c3c3c; /* keep: dark-exclusive */
+  background: #dddd;
 }
 
 .pluginLink {
-  color: #999;
+  color: #999; /* keep: dark-exclusive */
 }
 
 /* keep: structural dark-only offset (base has no margin on this element). */
@@ -758,11 +775,11 @@ a#showPermissions {
 .UserViewSelector input:checked + label .icon-th-large,
 .UserViewSelector input:checked + label .icon-th-list,
 .UserViewSelector input:checked + label .icon-pause {
-  color: #493c21;
+  color: #493c21; /* keep: dark warm text on orange */
 }
 
-
-
+/* Dark-exclusive — user manager */
+/* keep: dark adds box-sizing; light doesn't need it (Bucket X — structural) */
 .user-first-col:hover {
   box-sizing: border-box;
   background-color: transparent;
@@ -801,7 +818,7 @@ a#showPermissions {
 }
 
 .user-groups {
-  padding: 6px 15px ;
+  padding: 6px 15px; /* keep: dark tightens padding (Bucket X — structural) */
 }
 
 .advanced-filter-btn,
@@ -811,7 +828,7 @@ a#showPermissions {
 }
 
 .user-action-select {
-  background: transparent;
+  background: transparent; /* keep: dark-exclusive */
 }
 
 .user-property-button a {
@@ -824,8 +841,8 @@ a#showPermissions {
 
 .edit-password-success-reset-link,
 .user-property-input-icon {
-  background-color: #505050 ;
-  color: #999 ;
+  background-color: #505050; /* keep: dark-exclusive */
+  color: #999;
 }
 
 .edit-password-success-ok .icon-button,
@@ -841,19 +858,21 @@ a#showPermissions {
 .main-user-proceed,
 .main-user-rewrite,
 .main-user-validate {
-  color: #a4a4a4 ;
+  color: #a4a4a4; /* keep: dark-exclusive */
 }
 
 .password-choice-content .head-button-2,
 .password-choice-content .head-button-2:hover {
-  color: #cbcbcb;
+  color: #cbcbcb; /* keep: dark-exclusive */
 }
 
+/* keep: dark shrinks initials (Bucket X — structural) */
 .lineView .user-container-initials-wrapper > span {
-  height: 31px ;
-  width: 31px ;
+  height: 31px;
+  width: 31px;
 }
 
+/* keep: dark forces full opacity for contrast on dark bg */
 .storage-chart span {
   opacity: 1;
 }
@@ -868,7 +887,7 @@ a#showPermissions {
 /* Activity Tab in user manager */
 
 .activity-date-selecter {
-  background-color: #555;
+  background-color: #555; /* keep: light has border; dark omits it (Bucket X) */
   color: #d5d5d5;
 }
 
@@ -878,11 +897,10 @@ a#showPermissions {
 }
 
 
-/* Strange why this is different from light mode */
+/* keep: dark-exclusive — different initials size (structural) */
 .compactView .user-container-initials-wrapper > span {
-  height: 40px ;
-  width: 40px ;
-
+  height: 40px;
+  width: 40px;
   box-sizing: border-box;
 }
 
@@ -894,7 +912,7 @@ a#showPermissions {
   color: var(--admin-text-muted);
 }
 .selectedAlbum span:first-child {
-  background-color: #343434 ;
+  background-color: #343434; /* keep: near #333 but not exact */
 }
 
 .AddUserErrors,
@@ -921,14 +939,15 @@ a#showPermissions {
 }
 
 .update-container .close-update-button:hover {
-  color: #ededed;
+  color: #ededed; /* keep: dark-exclusive */
 }
 
 .linked-albums-badge {
-  background: #777;
+  background: #777; /* keep: light bg only; dark adds color (Bucket X) */
   color: #333;
 }
 
+/* keep: light bg+shadow; dark adds color (Bucket X) */
 .breadcrumb-item {
   background-color: #333;
   box-shadow: 0 2px #0000007a;
@@ -939,11 +958,11 @@ a#showPermissions {
 }
 
 .breadcrumb-item:hover .link-path a {
-  color: #333;
+  color: #333; /* keep: dark text on bright hover bg */
 }
 
 .breadcrumb-item .icon-cancel-circled:hover {
-  color: #ae5d1e;
+  color: #ae5d1e; /* keep: dark burnt orange — no token */
 }
 
 .AddIconTitle,
@@ -972,15 +991,16 @@ a#showPermissions {
 }
 
 .breadcrumb-item.add-item.highlight {
-  background: #f7a43c;
+  background: #f7a43c; /* keep: complex dark accent highlight — 3 unique values */
   box-shadow: 0 2px #af7200;
-  color: #493c21 ;
+  color: #493c21;
 }
 
 .breadcrumb-item.add-item.highlight:hover {
   background-color: var(--admin-accent);
 }
 
+/* keep: dark secondary buttons use mid-gray (#2e2e2e) — no exact token */
 .cat-modify-footer-see-out,
 .savebar-see-out,
 .buttonSecond {
@@ -989,12 +1009,12 @@ a#showPermissions {
 }
 
 .cat-modify-footer-see-out:focus {
-  border: 2px solid #777;
+  border: 2px solid #777; /* keep: dark focus ring differs from base accent */
   background: #1b1b1b;
 }
 
 .cat-modify-footer-see-out.disabled {
-  background: #5d5d5d;
+  background: #5d5d5d; /* keep: both themes set bg+color (Bucket X) */
   color: #373737;
 }
 
@@ -1056,7 +1076,7 @@ a#showPermissions {
 }
 
 .media-box {
-  background-color: #1c1c1c;
+  background-color: #1c1c1c; /* keep: image preview area — intentionally near-black */
 }
 
 .half-line-info-box input,
@@ -1072,7 +1092,7 @@ a#showPermissions {
 .calendar-box,
 .full-line-description-box,
 .full-line-tag-box {
-  color: #a4a4a4;
+  color: #a4a4a4; /* keep: dark-exclusive label text */
 }
 
 .pictureIdLabel {
@@ -1081,11 +1101,12 @@ a#showPermissions {
 
 
 .first-letter-capitalize::first-letter {
-  text-transform: uppercase;
+  text-transform: uppercase; /* keep: dark-exclusive structural */
 }
 
+/* Dark-exclusive — dashboard */
 #whats_new button {
-  background-color: #2e2e2e;
+  background-color: #2e2e2e; /* keep: mid-gray (#2e2e2e) — no exact token */
   color: #777;
 }
 
@@ -1094,7 +1115,7 @@ a#showPermissions {
 }
 
 .certification[data-certification="-1"] {
-  background-image: url("images/certification/CertificationWarningDM.svg") ;
+  background-image: url("images/certification/CertificationWarningDM.svg"); /* keep: dark SVG variant */
 }
 
 /* Filters options */
@@ -1105,9 +1126,9 @@ a#showPermissions {
 }
 
 .comments-advanced-filter .advanced-filter-btn {
-  box-shadow: 0 2px #333;
+  box-shadow: 0 2px #333; /* keep: dark-exclusive shadow */
 }
 
 .comments-search input:focus {
-  outline: none;
+  outline: none; /* keep: dark-exclusive — suppress focus ring */
 }

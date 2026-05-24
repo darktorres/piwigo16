@@ -44,7 +44,7 @@ input[type="text"].dError {
 
 #wImg {
   max-height: 100px;
-  border: 2px solid #ccc;
+  border: 2px solid var(--admin-border);
   margin-top: var(--space-xs);
 }
 #addWatermark {

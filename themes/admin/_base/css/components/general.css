@@ -195,7 +195,7 @@ Advanced filter Select
   font-size: var(--font-size-md);
   position: absolute;
   font-family: fontello, sans-serif;
-  color: #6e6e6e;
+  color: var(--admin-text-muted);
   pointer-events: none;
 }
 

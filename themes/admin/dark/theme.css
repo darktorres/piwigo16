@@ -411,15 +411,6 @@ input:checked + .slider::after {
   background-color: #777;
   color: #ccc;
 }
-.advanced-filter-select {
-  border: 1px solid transparent;
-}
-
-.advanced-filter-select-container::before {
-  color: #4c4c4c;
-}
-
-
 .userSeparator {
   color: #666;
   visibility: hidden;
@@ -428,18 +419,13 @@ input:checked + .slider::after {
 .AddUserSubmit,
 .update-user-button,
 .user-property-main-user-body .main-user-btn-validate {
-  color: #493c21 ;
-  background-color: #ffa646;
+  color: #493c21 ; /* keep: dark uses warmer dark text on orange vs base #3c3c3c */
 }
 
 
 
 #watermarkPositionBox label {
-  color: #aaa;
-}
-
-#wImg {
-  border-color: #555;
+  color: #aaa; /* keep: dark adds label color; base has none */
 }
 
 .afterUploadActions a.secondary_button {
@@ -485,21 +471,12 @@ a#showPermissions {
   transition: 0.2s linear;
 }
 
-.cat-modify-info-card {
-  background: #333;
-  color: #c1c1c1;
-}
-
 .cat-modify-actions a:hover .cat-modify-actions .toggle-comment-option:hover {
   color: #fff ;
 }
 
-.cat-modify-actions a::after,
-.cat-modify-actions .toggle-comment-option::after,
-
 .cat-modify-input-container #cat-parent {
-  background: #333;
-  box-shadow: 0 2px #0000007a ;
+  box-shadow: 0 2px #0000007a; /* keep: heavier shadow contrast in dark */
 }
 
 .albumActions a {

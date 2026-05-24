@@ -288,7 +288,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: #f0f0f0;
+  background-color: var(--admin-bg-elevated);
   width: 0;
   height: 0;
   border-radius: 100%;
@@ -335,7 +335,7 @@
 }
 
 .cat-modify-infos .cat-modify-info-card {
-  background: #fafafa;
+  background: var(--admin-bg-elevated);
   padding: 5px 10px;
   display: grid;
   grid-template-rows: repeat(3, 33%);
@@ -448,7 +448,7 @@
   padding: 8px 12px;
   font-family: inherit;
   font-size: 1.1em;
-  background: #fafafa;
+  background: var(--admin-bg-elevated);
   box-shadow: 0 2px #00000024;
   border-radius: var(--radius-sm);
   font-weight: 400;

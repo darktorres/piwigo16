@@ -586,7 +586,7 @@ a#showPermissions:hover {
   text-align: center;
   font-weight: 600;
   padding: 25px 0;
-  background-color: #f3f3f3;
+  background-color: var(--admin-bg-elevated);
 }
 .selectionEmptyBlock {
   text-align: center;

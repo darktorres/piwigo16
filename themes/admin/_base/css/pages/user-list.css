@@ -1587,7 +1587,7 @@ a.group_users {
   padding: 10px 20px;
   font-size: 1.1em;
   font-weight: bold;
-  background-color: #ffa646;
+  background-color: var(--admin-accent-soft);
   color: #3c3c3c;
 }
 
@@ -1769,7 +1769,7 @@ a.group_users {
   cursor: pointer;
   font-weight: bold;
   color: #3f3e40;
-  background-color: #ffa646;
+  background-color: var(--admin-accent-soft);
   padding: var(--space-sm);
   margin-top: var(--space-xs);
   font-size: 1em;

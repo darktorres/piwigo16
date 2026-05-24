@@ -15,11 +15,11 @@ use Piwigo\Core\Paths;
  */
 final class ViteManifest
 {
-    /** @var array<string, mixed>|false|null */
+    /** @var array<string, array<string, mixed>>|false|null */
     private static array|false|null $cache = null;
 
     /**
-     * @return array<string, mixed>|null
+     * @return array<string, array<string, mixed>>|null
      */
     public static function read(): ?array
     {
@@ -32,8 +32,13 @@ final class ViteManifest
             return null;
         }
         $decoded = json_decode((string) file_get_contents($f), true);
-        self::$cache = is_array($decoded) ? $decoded : false;
-        return self::$cache !== false ? self::$cache : null;
+        if (!is_array($decoded)) {
+            self::$cache = false;
+            return null;
+        }
+        /** @var array<string, array<string, mixed>> $decoded */
+        self::$cache = $decoded;
+        return $decoded;
     }
 
     /**
@@ -50,7 +55,8 @@ final class ViteManifest
             return null;
         }
         $css = [];
-        foreach ($entry['css'] ?? [] as $cssPath) {
+        $cssList = is_array($entry['css'] ?? null) ? $entry['css'] : [];
+        foreach ($cssList as $cssPath) {
             if (is_string($cssPath) && $cssPath !== '') {
                 $css[] = $cssPath;
             }

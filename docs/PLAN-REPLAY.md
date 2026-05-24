@@ -136,76 +136,87 @@ tests passing to catch breakage.
 
 ## Phase breakdown
 
-### P0 — Tooling foundation (on bare `origin/16.x`)
+### P0 — All dev tooling + CI (on bare `origin/16.x`)
 
-**Creates:** `composer.json`, `package.json`, Pest, Pest Browser, CI, Pint, PHPStan,
-Rector, Vitest, `.editorconfig`, `.gitignore` extensions.
+**Install every tool up front.** Most will report hundreds or thousands of issues
+against the legacy codebase — that's expected. Each tool records its baseline issue
+count. CI enforces ratchets: issue counts can only go down, never up. No phase is
+blocked waiting for a tool to become "ready."
 
-**The rule from here forward:** no code change lands without an accompanying test
-or being gated by a static analysis tool.
+**The rule from here forward:** no code change lands without all CI gates green
+(i.e. no regressions from the committed baselines).
 
-#### Commits:
+#### PHP tooling
 
-1. **Composer init + Pest + Pest plugins + coverage**
-   - `composer.json`: PHP 8.5, `pestphp/pest` ^4, `pest-plugin-arch` ^4,
-     `pest-plugin-mutate` ^4, `pest-plugin-type-coverage` ^4,
-     `pest-plugin-browser` ^4
-   - `phpunit.xml.dist` (Pest uses it) with `<coverage>` filter on `include/`,
-     `admin/`, and later `src/Piwigo/`
-   - `tests/Pest.php` (Pest config)
-   - `tests/bootstrap.php`
-   - `tests/Unit/SmokeTest.php`
-   - `tests/Arch/StructuralTest.php` — first arch rules (will grow per phase)
-   - `.gitignore` for `vendor/`, `.phpunit.cache/`, `coverage/`
-   - Configure `pcov` as the coverage driver (faster than Xdebug for CI):
-     `composer require --dev pcov/clobber` or rely on php.ini `extension=pcov`
-   - `composer.json` scripts: `"test:coverage": "pest --coverage-html=coverage/"`
-   - Establish baseline coverage % against `origin/16.x` codebase (will be near 0%)
-   - Gate: `vendor/bin/pest --testsuite Unit` green
-   - Gate: `vendor/bin/pest --coverage --min=0` runs without error (proves
-     coverage tooling works; threshold raised per phase)
+- `composer.json`: PHP 8.5
+- **Pest 4** + plugins: `pest` ^4, `pest-plugin-arch` ^4, `pest-plugin-mutate` ^4,
+  `pest-plugin-type-coverage` ^4, `pest-plugin-browser` ^4
+- **pcov** for code coverage (`composer require --dev pcov/clobber`)
+- **Pint** (`pint.json`) — run `vendor/bin/pint`, commit the formatted result,
+  baseline is now 0 errors
+- **PHPStan** (`phpstan.neon`, `tools/phpstan-bootstrap.php`) — start at level 0,
+  record baseline error count. CI: `vendor/bin/phpstan analyse` must not exceed
+  baseline. Ratchet down as phases fix errors.
+- **Rector** (`rector.php`) — `vendor/bin/rector --dry-run` records pending
+  transformations as baseline. CI fails if new transformations appear.
+- **Psalm** (`psalm.xml`) — install, run `psalm --show-info`, record baseline
+  count (will be high — thousands). CI: count must not increase.
+- `phpunit.xml.dist` with `<coverage>` filter on `include/`, `admin/`, `src/Piwigo/`
+- `tests/Pest.php`, `tests/bootstrap.php`
+- `tests/Unit/SmokeTest.php` — trivial passing test
+- `tests/Arch/StructuralTest.php` — first arch rules (grow per phase)
 
-2. **Node + Vitest + Pest Browser deps**
-   - `package.json`: `vitest`, `@vitest/coverage-v8`, `happy-dom`
-   - `vitest.config.ts`
-   - `tests/js/smoke.test.ts`
-   - Gate: `npm run test:unit` green
+#### Frontend tooling
 
-3. **Pest Browser E2E setup**
-   - `tests/Browser/InstallTest.php` — fresh install flow
-   - `tests/Browser/SmokeGalleryTest.php` — gallery home loads
-   - `tests/Browser/SmokeAdminTest.php` — admin dashboard loads
-   - `.env.test` template
-   - Gate: `vendor/bin/pest --testsuite Browser` green (against PHP built-in server)
+- `package.json`: all dev deps installed now, baselined against legacy JS
+- **Vite** + `vite.config.ts` — configure but don't convert files yet. `npm run build`
+  may fail on legacy JS; record as known state.
+- **TypeScript** + `tsconfig.json` — `allowJs: true`, `checkJs: false` initially.
+  `npm run typecheck` baseline (will be 0 errors if only checking `.ts` files,
+  which don't exist yet — that's fine).
+- **ESLint** + `eslint.config.ts` — run against legacy JS, record baseline error
+  count. CI: must not increase.
+- **Prettier** + `.prettierrc.json` — format, commit result, baseline is 0.
+- **Stylelint** + `.stylelintrc.json` — run against legacy CSS, record baseline.
+  CI: must not increase.
+- **Vitest** + `vitest.config.ts` + `@vitest/coverage-v8` + `happy-dom`
+- `tests/js/smoke.test.ts`
 
-4. **Pint + Rector + PHPStan (level 0)**
-   - `pint.json`, `rector.php`, `phpstan.neon`
-   - `tools/phpstan-bootstrap.php`
-   - Gate: `vendor/bin/pint --test`, `vendor/bin/phpstan analyse`, `vendor/bin/rector --dry-run`
+#### Browser E2E
 
-5. **GitHub Actions CI**
-   - `.github/workflows/ci.yml`: pest-unit (with `--coverage-clover`),
-     pest-browser, pint, phpstan, rector, vitest, audit
-   - Coverage artifact upload (HTML report) on every CI run
-   - `.editorconfig`
-   - Gate: CI green
+- `tests/Browser/InstallTest.php` — fresh install flow
+- `tests/Browser/SmokeGalleryTest.php` — gallery home loads
+- `tests/Browser/SmokeAdminTest.php` — admin dashboard loads
+- `.env.test` template
 
-6. **Dev fixtures + coverage ratchet**
-   - `dev/fixtures/piwigo-16.x.sql` — baseline DB snapshot
-   - `dev/fixtures/README.md`
-   - `.coverage-baseline` — committed file recording current minimum coverage %.
-     CI fails if coverage drops below. Starting at 0%, bumped after each phase.
+#### CI + baselines
+
+- `.github/workflows/ci.yml` — all jobs from day one:
+  pest-unit, pest-browser, pint, phpstan, psalm (baseline), rector,
+  eslint (baseline), stylelint (baseline), vitest, coverage, audit
+- `.editorconfig`
+- `.coverage-baseline` — committed coverage floor (starts at 0%)
+- `.phpstan-baseline.neon` — committed PHPStan baseline (known errors)
+- `psalm-baseline.xml` — committed Psalm baseline
+- `.eslint-baseline.json` or equivalent — committed ESLint error count
+- `.stylelint-baseline` — committed Stylelint error count
+- Convention: each phase's final commit tightens one or more baselines
+
+#### Dev fixtures
+
+- `dev/fixtures/piwigo-16.x.sql` — baseline DB snapshot
+- `dev/fixtures/README.md`
 
 **Test count after P0:** ~5 PHP unit, 3 browser, 1 TS unit, arch rules.
-**Coverage:** tooling operational, baseline at 0%, ratchet enforced from P1 onward.
-All gates green.
+**Baselines recorded:** PHPStan (level 0 errors), Psalm (info count), ESLint
+(error count), Stylelint (error count), coverage (0%), Rector (pending transforms).
+All CI gates green against their baselines.
 
 ---
 
 ### P1 — Composer + Rector + PHPStan (PHP modernization)
 
-**Merges old P1 + P2.** Both are "modernize the raw legacy PHP before restructuring."
-Same files, same concern, one pass.
+**All tools already installed and baselined from P0.** This phase uses them.
 
 **What happens:**
 - Remove vendored `include/smarty/`, `include/phpmailer/`, `include/emogrifier.class.php`,
@@ -216,14 +227,18 @@ Same files, same concern, one pass.
 - Add `require 'vendor/autoload.php'` in `include/common.inc.php`
 - Remove `include/php_compat/` shims, `include/dblayer/functions_mysql.inc.php`
 - Migrate password hashing to `password_hash()` / bcrypt
-- Apply Rector PHP 8.0-8.5 sets
+- Apply Rector PHP 8.0-8.5 sets (tightens Rector baseline to 0 pending)
 - Pint format pass, add `declare(strict_types=1)` to all first-party files
-- Push PHPStan from L0 → L5 incrementally
+- Push PHPStan from L0 → L5, tightening `.phpstan-baseline.neon` at each level
 
 **Tests:** Browser E2E after each vendor swap + Rector pass. Password hashing unit test.
 Arch test: no vendored lib dirs exist.
 
+**Baselines tightened:** PHPStan (L5, fewer known errors), Rector (0 pending),
+Psalm (count drops from strict_types + type declarations).
+
 **Gate:** PHPStan L5 clean. Rector dry-run clean. Pint clean. Browser green.
+All other baselines unchanged or improved.
 
 ---
 
@@ -294,12 +309,12 @@ service files being created in P4a-b. One pass, not two.
 **Can run in parallel with P5 because it touches different files** (themes/js vs
 src/Piwigo).
 
-#### P4.5a — Vite + TypeScript + linting
-- `vite.config.ts`, `tsconfig.json`, `eslint.config.ts`, `.prettierrc.json`,
-  `.stylelintrc.json`
-- Convert all 38 authored JS files to `.ts`, fix all lint errors
-- CI jobs for lint/format/typecheck
-- **Tests:** `npm run build`, `npm run typecheck`, lint gates
+#### P4.5a — Vite + TypeScript conversion
+**Vite, TS, ESLint, Prettier, Stylelint already installed and baselined in P0.**
+- Configure Vite entry points for the project structure
+- Convert all 38 authored JS files to `.ts`
+- Fix lint errors (tightens ESLint + Stylelint baselines toward 0)
+- **Tests:** `npm run build`, `npm run typecheck`, lint baselines tightened
 
 #### P4.5b — Inline JS extraction + `any` reduction
 - `{footer_script}` blocks → `.ts` modules, `data-*` bridges, `getPageData<T>()`

@@ -96,21 +96,18 @@ final class SmartyToLatteConverterTest extends TestCase
         );
     }
 
-    public function test_combine_script_named_args(): void
+    public function test_combine_script_converts_to_vite_entry(): void
     {
         self::assertSame(
-            "{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}",
+            "{=viteEntry('common')}",
             $this->converter()->convert("{combine_script id='common' load='footer' path='themes/admin/_base/js/common.js'}"),
         );
     }
 
-    public function test_combine_css_named_args(): void
+    public function test_combine_css_converts_to_css_link(): void
     {
-        // Quote style is preserved — double-quoted Smarty input stays
-        // double-quoted in the Latte output. Templates that prefer
-        // single-quoted Latte source should be authored that way.
         self::assertSame(
-            '{do combineCss(path: "themes/_base/print.css", order: -10)}',
+            '{=cssLink("themes/_base/print.css")}',
             $this->converter()->convert('{combine_css path="themes/_base/print.css" order=-10}'),
         );
     }
@@ -219,17 +216,17 @@ final class SmartyToLatteConverterTest extends TestCase
         self::assertSame($latte, $this->converter()->convert($smarty));
     }
 
-    public function test_footer_script_block_no_args(): void
+    public function test_footer_script_block_is_stripped(): void
     {
         $smarty = '{footer_script}init();{/footer_script}';
-        $latte = '{capture $_pwgFooter1}init();{/capture}{do footerScript($_pwgFooter1)}';
+        $latte = '{* footer_script block removed — move to a Vite entry module *}';
         self::assertSame($latte, $this->converter()->convert($smarty));
     }
 
-    public function test_footer_script_block_with_require(): void
+    public function test_footer_script_block_with_require_is_stripped(): void
     {
         $smarty = "{footer_script require='common'}init();{/footer_script}";
-        $latte = "{capture \$_pwgFooter1}init();{/capture}{do footerScript(\$_pwgFooter1, require: 'common')}";
+        $latte = '{* footer_script block removed — move to a Vite entry module *}';
         self::assertSame($latte, $this->converter()->convert($smarty));
     }
 
@@ -336,10 +333,10 @@ final class SmartyToLatteConverterTest extends TestCase
         self::assertSame($latte, $this->converter()->convert($smarty));
     }
 
-    public function test_get_combined_css_to_function_call(): void
+    public function test_get_combined_css_is_removed(): void
     {
         self::assertSame(
-            '{=getCombinedCss()}',
+            '',
             $this->converter()->convert('{get_combined_css}'),
         );
     }
@@ -421,20 +418,10 @@ final class SmartyToLatteConverterTest extends TestCase
         );
     }
 
-    public function test_get_combined_scripts_with_args(): void
+    public function test_get_combined_scripts_is_removed(): void
     {
-        self::assertSame(
-            "{=getCombinedScripts(load: 'footer')}",
-            $this->converter()->convert("{get_combined_scripts load='footer'}"),
-        );
-    }
-
-    public function test_get_combined_scripts_no_args(): void
-    {
-        self::assertSame(
-            '{=getCombinedScripts()}',
-            $this->converter()->convert('{get_combined_scripts}'),
-        );
+        self::assertSame('', $this->converter()->convert("{get_combined_scripts load='footer'}"));
+        self::assertSame('', $this->converter()->convert('{get_combined_scripts}'));
     }
 
     public function test_strip_to_spaceless(): void
@@ -566,12 +553,9 @@ final class SmartyToLatteConverterTest extends TestCase
 
     public function test_backtick_string_interpolation(): void
     {
-        // Smarty's backtick var-in-string only fires inside tag bodies,
-        // not in surrounding HTML text. Lands as PHP `.` concat because
-        // Latte's `~` concat is rejected inside function-call args.
         self::assertSame(
-            '{do combineCss(path: "themes/admin/" . $theme[\'id\'] . "/theme.css")}',
-            $this->converter()->convert('{do combineCss(path: "themes/admin/`$theme[\'id\']`/theme.css")}'),
+            '{do someFunc(path: "themes/admin/" . $theme[\'id\'] . "/theme.css")}',
+            $this->converter()->convert('{do someFunc(path: "themes/admin/`$theme[\'id\']`/theme.css")}'),
         );
     }
 
@@ -644,13 +628,8 @@ final class SmartyToLatteConverterTest extends TestCase
 
     public function test_combine_css_path_with_nested_print(): void
     {
-        // Path values that interpolate a Smarty var (e.g. theme color)
-        // contain `{...}` inside the outer combine_css `{...}` tag. The
-        // rule's regex must allow one level of nested braces, otherwise it
-        // truncates after the first inner `}` and produces broken output
-        // like `path: "…{$x['k'])}-…"`.
         self::assertSame(
-            '{do combineCss(path: "themes/_base/css/{$themeconf[\'colorscheme\']}-search.css", order: -100)}',
+            '{=cssLink("themes/_base/css/{$themeconf[\'colorscheme\']}-search.css")}',
             $this->converter()->convert(
                 '{combine_css path="themes/_base/css/{$themeconf.colorscheme}-search.css" order=-100}'
             ),

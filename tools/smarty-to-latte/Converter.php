@@ -463,20 +463,15 @@ final class Converter
     }
 
     /**
-     * `{get_combined_css}` → `{=getCombinedCss()}` and
-     * `{get_combined_scripts load='X'}` → `{=getCombinedScripts(load: 'X')}`.
-     * Smarty registered them as compiler/function plugins; Latte calls
-     * the same functions in PiwigoExtension::getFunctions().
+     * `{get_combined_css}` and `{get_combined_scripts ...}` are removed —
+     * assets are now emitted inline by viteEntry()/cssLink().
      */
     private function rewriteGetCombinedCssTag(string $source): string
     {
-        $source = str_replace('{get_combined_css}', '{=getCombinedCss()}', $source);
-        return preg_replace_callback(
-            '/\{get_combined_scripts(?:\s+([^}]+))?\}/',
-            function (array $m): string {
-                $args = isset($m[1]) ? $this->parseSmartyArgs($m[1]) : '';
-                return '{=getCombinedScripts(' . $args . ')}';
-            },
+        $source = str_replace('{get_combined_css}', '', $source);
+        return preg_replace(
+            '/\{get_combined_scripts(?:\s+[^}]*)?\}/',
+            '',
             $source,
         ) ?? $source;
     }
@@ -573,27 +568,33 @@ final class Converter
     }
 
     /**
-     * `{combine_script id='x' load='y' path='z' [require='r'] [version=v]}`
-     * → `{do combineScript(id: 'x', load: 'y', path: 'z'[, require: 'r'][, version: v])}`
+     * `{combine_script id='x' load='y' path='z' ...}` → `{=viteEntry('x')}`
      */
     private function rewriteCombineScript(string $source): string
     {
         return preg_replace_callback(
             '/\{combine_script\s+((?:[^{}]|\{[^{}]*\})+)\}/',
-            fn (array $m): string => '{do combineScript(' . $this->parseSmartyArgs($m[1]) . ')}',
+            function (array $m): string {
+                $args = $this->parseSmartyArgsAsArray($m[1]);
+                $id = $args['id'] ?? "''";
+                return '{=viteEntry(' . $id . ')}';
+            },
             $source,
         ) ?? $source;
     }
 
     /**
-     * `{combine_css path='x' [id='y'] [version=v] [order=o]}`
-     * → `{do combineCss(path: 'x'[, id: 'y'][, version: v][, order: o])}`
+     * `{combine_css path='x' ...}` → `{=cssLink("x")}`
      */
     private function rewriteCombineCss(string $source): string
     {
         return preg_replace_callback(
             '/\{combine_css\s+((?:[^{}]|\{[^{}]*\})+)\}/',
-            fn (array $m): string => '{do combineCss(' . $this->parseSmartyArgs($m[1]) . ')}',
+            function (array $m): string {
+                $args = $this->parseSmartyArgsAsArray($m[1]);
+                $path = $args['path'] ?? "''";
+                return '{=cssLink(' . $path . ')}';
+            },
             $source,
         ) ?? $source;
     }
@@ -1246,26 +1247,15 @@ final class Converter
     }
 
     /**
-     * `{footer_script [require='r']}…{/footer_script}` →
-     *   `{capture $_pwgFooter<N>}…{/capture}{do footerScript($_pwgFooter<N>[, require: 'r'])}`
+     * `{footer_script ...}…{/footer_script}` — inline script blocks are
+     * no longer supported (CSP script-src 'self'). Strip them; the
+     * equivalent logic should be in a Vite entry module.
      */
     private function rewriteFooterScriptBlock(string $source): string
     {
-        $i = 0;
-        return preg_replace_callback(
+        return preg_replace(
             '/\{footer_script(\s+[^}]*)?\}(.*?)\{\/footer_script\}/s',
-            function (array $m) use (&$i): string {
-                $i++;
-                $var = '_pwgFooter' . $i;
-                $argHead = '';
-                if (isset($m[1]) && trim($m[1]) !== '') {
-                    $extras = $this->parseSmartyArgs(trim($m[1]));
-                    if ($extras !== '') {
-                        $argHead = ', ' . $extras;
-                    }
-                }
-                return "{capture \${$var}}{$m[2]}{/capture}{do footerScript(\${$var}{$argHead})}";
-            },
+            '{* footer_script block removed — move to a Vite entry module *}',
             $source,
         ) ?? $source;
     }

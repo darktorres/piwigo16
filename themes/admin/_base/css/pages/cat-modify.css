@@ -16,7 +16,7 @@
 .desc-modal-content {
   position: absolute;
   border-radius: var(--radius-md);
-  background-color: #fff;
+  background-color: var(--admin-modal-bg);
   margin: auto;
   width: 75vw;
   height: 75vh;
@@ -86,7 +86,7 @@
 .new-album-modal-content {
   display: flex;
   flex-direction: column;
-  background-color: #fff;
+  background-color: var(--admin-modal-bg);
   position: absolute;
   border-radius: var(--radius-md);
   left: 50%;

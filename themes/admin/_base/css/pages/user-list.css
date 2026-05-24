@@ -1685,7 +1685,7 @@ a.group_users {
   align-items: center;
   width: 350px;
   max-height: 85vh;
-  background-color: var(--admin-popin-bg);
+  background-color: var(--admin-modal-bg);
 }
 
 .AddUserScrollableContent {
@@ -1796,7 +1796,7 @@ a.group_users {
    The popin-container bg was merged inline into the structural
    .AddUserPopInContainer rule above. */
 .AddUserPopInContainer .AddIconTitle {
-  color: var(--admin-text-strong);
+  color: var(--admin-text);
 }
 
 .AddUserPopInContainer .AddUserLabel {

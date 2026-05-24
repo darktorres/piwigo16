@@ -13,6 +13,7 @@
   --admin-stripe-even: #222;
   --admin-stripe-odd-active: #181818;
   --admin-stripe-even-active: #282828;
+  --admin-modal-bg: #444;
   --admin-popin-bg: #333;
   --admin-popin-input-bg: #252525;
   --admin-popin-input-border: #252525;
@@ -920,24 +921,16 @@ a#showPermissions {
   border-left: solid 3px var(--admin-info-error-fg);
 }
 
-.AddUserPopInContainer {
-  background-color: #444;
-}
-
 .AddUserSubmitContainer .AddUserCancel:hover {
-  color: #ededed;
-}
-
-.AddUserPopInContainer .AddIconTitle {
-  color: #c1c1c1;
+  color: #ededed; /* keep: dark hover color for cancel; base has none */
 }
 
 .AddUserPopInContainer .AddUserLabel {
-  color: #777;
+  color: #777; /* keep: dark uses muted label; base uses --admin-text */
 }
 
 .AddUserPopInContainer .AddUserInput {
-  background-color: #333;
+  background-color: #333; /* keep: dark modal input bg differs from --admin-popin-input-bg (#252525) */
   border: solid 2px #151515;
 }
 
@@ -1065,12 +1058,6 @@ a#showPermissions {
   opacity: 0.6 ;
 }
 
-/* Cat modify description modal */
-.modal-content,
-.desc-modal-content,
-.new-album-modal-content {
-  background-color: #444;
-}
 
 /* Batch manager, unit mode */
 

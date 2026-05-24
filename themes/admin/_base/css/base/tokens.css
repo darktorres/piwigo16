@@ -38,7 +38,8 @@
   --admin-stripe-even-active: #ddd;
 
   /* popin (modal dialog) surface + input tokens */
-  --admin-popin-bg: #fff;
+  --admin-modal-bg: #fff;      /* full-screen modal dialogs */
+  --admin-popin-bg: #fff;      /* small tooltips / badge dropdowns */
   --admin-popin-input-bg: #fff;
   --admin-popin-input-border: #d4d4d4;
 

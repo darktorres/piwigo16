@@ -24,6 +24,12 @@ const ROUTES: ReadonlyArray<{ name: string; path: string; baselinePath?: string;
     { name: 'search', path: '/index.php?/search', needsAuth: false },
     { name: 'comments', path: '/index.php?/comments', needsAuth: false },
     { name: 'notification', path: '/index.php?/notification', needsAuth: false },
+    { name: 'category-1', path: '/index.php?/category/1', needsAuth: false },
+    { name: 'category-2', path: '/index.php?/category/2', needsAuth: false },
+    { name: 'picture-1', path: '/index.php?/picture/1/category/1', needsAuth: false },
+    { name: 'nbm', path: '/index.php?/nbm', needsAuth: false },
+    { name: 'popuphelp', path: '/index.php?/popuphelp&page=search', needsAuth: false },
+    { name: 'random', path: '/index.php?/random', needsAuth: false },
 
     // ── Frontend (auth required) ─────────────────────────────────────────
     { name: 'favorites', path: '/index.php?/favorites', needsAuth: true },
@@ -38,15 +44,20 @@ const ROUTES: ReadonlyArray<{ name: string; path: string; baselinePath?: string;
     { name: 'admin-intro', path: '/index.php?/admin&page=intro', needsAuth: true },
     { name: 'admin-albums', path: '/index.php?/admin&page=albums', needsAuth: true },
     { name: 'admin-album', path: '/index.php?/admin&page=album&cat_id=1', needsAuth: true },
+    { name: 'admin-album-perms', path: '/index.php?/admin&page=album&cat_id=1&tab=permissions', needsAuth: true },
     { name: 'admin-cat-list', path: '/index.php?/admin&page=cat_list', needsAuth: true },
     { name: 'admin-cat-options', path: '/index.php?/admin&page=cat_options', needsAuth: true },
     { name: 'admin-album-notif', path: '/index.php?/admin&page=album_notification&cat_id=1', needsAuth: true },
 
     // ── Admin — Photos ───────────────────────────────────────────────────
     { name: 'admin-photos-add', path: '/index.php?/admin&page=photos_add', needsAuth: true },
+    { name: 'admin-photos-add-ftp', path: '/index.php?/admin&page=photos_add&section=ftp', needsAuth: true },
+    { name: 'admin-photos-add-apps', path: '/index.php?/admin&page=photos_add&section=applications', needsAuth: true },
+    { name: 'admin-photo-editor', path: '/index.php?/admin&page=photo&image_id=1', needsAuth: true },
     { name: 'admin-batch', path: '/index.php?/admin&page=batch_manager', needsAuth: true },
     { name: 'admin-batch-global', path: '/index.php?/admin&page=batch_manager_global', needsAuth: true },
     { name: 'admin-element-ranks', path: '/index.php?/admin&page=element_set_ranks&cat_id=1', needsAuth: true },
+    { name: 'admin-queue', path: '/index.php?/admin&page=queue', needsAuth: true },
 
     // ── Admin — Users ────────────────────────────────────────────────────
     { name: 'admin-users', path: '/index.php?/admin&page=user_list', needsAuth: true },
@@ -64,6 +75,7 @@ const ROUTES: ReadonlyArray<{ name: string; path: string; baselinePath?: string;
     { name: 'admin-updates', path: '/index.php?/admin&page=updates', needsAuth: true },
     { name: 'admin-updates-ext', path: '/index.php?/admin&page=updates_ext', needsAuth: true },
     { name: 'admin-updates-pwg', path: '/index.php?/admin&page=updates_pwg', needsAuth: true },
+    { name: 'admin-extend-tpl', path: '/index.php?/admin&page=extend_for_templates', needsAuth: true },
 
     // ── Admin — Configuration ────────────────────────────────────────────
     { name: 'admin-config', path: '/index.php?/admin&page=configuration', needsAuth: true },
@@ -75,6 +87,7 @@ const ROUTES: ReadonlyArray<{ name: string; path: string; baselinePath?: string;
     { name: 'admin-history', path: '/index.php?/admin&page=history', needsAuth: true },
     { name: 'admin-stats', path: '/index.php?/admin&page=stats', needsAuth: true },
     { name: 'admin-site-manager', path: '/index.php?/admin&page=site_manager', needsAuth: true },
+    { name: 'admin-site-update', path: '/index.php?/admin&page=site_update&site=1', needsAuth: true },
 
     // ── Admin — Misc ─────────────────────────────────────────────────────
     { name: 'admin-dashboard', path: '/index.php?/admin', needsAuth: true },

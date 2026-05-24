@@ -55,6 +55,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: center;
+  color: var(--admin-text);
 }
 
 .albumInfos {
@@ -164,6 +165,7 @@
 .addAlbumHead p {
   font-weight: 700;
   margin: 0;
+  color: var(--admin-text);
 }
 
 .addAlbum form {

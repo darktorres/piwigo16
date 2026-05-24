@@ -99,9 +99,6 @@ a:focus {
 .themeActions span {
   background-color: #ddd;
 }
-#themesContent h3 {
-  border-bottom: 1px solid #aaa;
-}
 .themeSelect {
   background-color: #fafafa;
 }
@@ -122,9 +119,6 @@ a:focus {
   color: #fff;
 }
 
-.AlbumViewSelector {
-  background: #fafafa;
-}
 .languageDefault {
   background-color: #dbe8f3;
 }
@@ -191,30 +185,12 @@ p.albumTitle img {
   text-decoration: none;
 }
 
-.addGroupLabel {
-  color: #3c3c3c;
-}
-
-/* Edit group name */
-
-.groups .Group-name {
-  color: #3c3c3c;
-}
-
-/* Add Group */
-
 /* Group manager buttons */
 
 .groups .manage-users,
 .groups .manage-permissions {
-  border: 1px solid #e7e7e7;
-  background-color: transparent;
-}
-
-/* UserList Pop in */
-
-.LinkUserManager {
-  color: #3c3c3c;
+  border: 1px solid #e7e7e7; /* keep: light adds visible border; dark has none */
+  background-color: transparent; /* keep: light-only reset */
 }
 
 /* Activity Tab in user manager */
@@ -275,12 +251,6 @@ p.albumTitle img {
 .MergeOptionsContainer select {
   background-color: #fff;
   box-shadow: 0 0 2px #c5c5c5;
-}
-
-/* Group checkbox */
-
-.groups .group-checkmark {
-  border: 2px solid #ffa646;
 }
 
 /* UserList Pop in */
@@ -390,21 +360,9 @@ a#showPermissions {
   color: #777;
 }
 
-/* Picture add */
-
-.upload-options,
-.upload-options-content,
-.options-open::after {
-  color: #777;
-}
-
 /* Category List */
 .categoryContainer {
   margin: 0;
-}
-
-.addAlbumHead p {
-  color: #3c3c3c;
 }
 
 .addAlbum form input {
@@ -412,12 +370,8 @@ a#showPermissions {
   border: 1px solid #d5d5d5;
 }
 
-.albumTitle {
-  color: #3c3c3c;
-}
-
 .albumInfos {
-  color: #d5d5d5;
+  color: #d5d5d5; /* keep: light uses paler color (#d5d5d5) vs base #a9a9a9 */
 }
 
 .albumActions a {
@@ -479,10 +433,6 @@ a#showPermissions {
   background-color: #fafafa;
   box-shadow: 0 2px #00000024;
 }
-.AddIconTitle {
-  color: #000;
-}
-
 .search-result-item {
   background-color: #fafafa;
   box-shadow: 0 2px #00000024;

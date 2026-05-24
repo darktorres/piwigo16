@@ -710,6 +710,7 @@ a#showPermissions:hover {
 .upload-options-content,
 .options-open::after {
   background-color: var(--admin-bg-elevated);
+  color: var(--admin-text-muted);
 }
 
 .upload-options-content {

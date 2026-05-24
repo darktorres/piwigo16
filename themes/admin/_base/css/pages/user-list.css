@@ -244,6 +244,7 @@
 .LinkUserManager {
   text-align: center;
   padding: 40px;
+  color: var(--admin-text);
 }
 
 .LinkUserManager a {
@@ -1739,6 +1740,7 @@ a.group_users {
   margin-bottom: var(--space-lg);
   margin-top: var(--space-md);
   text-align: center;
+  color: var(--admin-text-strong);
 }
 
 .AddUserInputContainer {

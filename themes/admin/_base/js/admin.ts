@@ -1,5 +1,6 @@
 import '../fontello/css/fontello.css';
 import '../fontello/css/animation.css';
+import '../css/components/whats_new.css';
 
 interface AccordionOptions {
     header: string;

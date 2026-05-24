@@ -78,6 +78,143 @@ All numbers verified by grep/find on both `origin/16.x` and `16.x-rewrite` (HEAD
 
 7. **Current CI is already 11 jobs.** P0 describes creating CI from scratch but the reference implementation (`.github/workflows/ci.yml`) already has: style, phpstan, latte, precompile, unit, audit, build, rector, integration, e2e, ts. P0 must reproduce all of these, not the simplified 6-job description in the plan.
 
+### Deep structural analysis (origin/16.x baseline)
+
+#### Database schema
+
+- **MyISAM → InnoDB**: ALL 34 tables in origin/16.x use `ENGINE=MyISAM` with no
+  explicit charset. Rewrite uses `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci`. No FULLTEXT indexes exist so migration is safe,
+  but this is a schema-level change that must happen early (P1 or P4).
+- **7 new tables** added by rewrite: `derivative_settings`, `derivative_size`,
+  `extension_ignored_updates`, `integrity_ignored_anomalies`, `plugin_migrations`,
+  `search_filter_view`, `user_failed_logins`
+- **enum('true','false') → tinyint(1)**: origin has 17 enum columns, rewrite has 7.
+  10 boolean-string enums were converted to tinyint(1). 9 `binary` attributes removed.
+- **Column type changes** throughout (mediumint → int, varchar sizes, etc.)
+- Upgrade from origin schema to rewrite schema must be handled explicitly.
+
+#### Procedural function inventory
+
+**664 total procedural functions** across include/ and admin/include/ — this is the
+real scope of P5 (service migration):
+
+| File | Functions | Target namespace |
+|------|-----------|-----------------|
+| `admin/include/functions.php` | 79 | Admin/* services |
+| `include/functions_user.inc.php` | 62 | Users/* |
+| `include/dblayer/functions_mysqli.inc.php` | 45 | Db/* |
+| `include/functions.inc.php` | 78 | Core/*, Url/*, Html/*, etc. |
+| `include/functions_html.inc.php` | 23 | Html/* |
+| `include/functions_mail.inc.php` | 22 | Mail/* |
+| `include/functions_url.inc.php` | 21 | Url/* |
+| `admin/include/functions_upload.inc.php` | 21 | Upload/* |
+| `include/functions_notification.inc.php` | 18 | Notification/* |
+| `include/functions_search.inc.php` | 17 | Search/* |
+| `include/functions_category.inc.php` | 17 | Category/* |
+| `admin/include/functions_notification_by_mail.inc.php` | 15 | Notification/* |
+| `include/functions_session.inc.php` | 12 | Session/* |
+| `include/functions_plugins.inc.php` | 10 | Plugin/* |
+| `include/functions_tag.inc.php` | 9 | Tag/* |
+| `admin/include/functions_upgrade.php` | 9 | Admin/* |
+| `include/functions_comment.inc.php` | 8 | Comment/* |
+| `admin/include/functions_metadata.php` | 7 | Metadata/* |
+| `admin/include/functions_history.inc.php` | 6 | History/* |
+| `include/functions_picture.inc.php` | 6 | Image/* |
+| `include/functions_metadata.inc.php` | 5 | Metadata/* |
+| Others (12 files) | ≤4 each | Various |
+
+#### Config key evolution
+
+- **189 keys** in origin/16.x `config_default.inc.php`
+- **271 keys** in rewrite's Config::SCHEMA
+- **96 new keys** added (many were previously DB-only in `config.sql`)
+- **14 keys removed**: `anti-flood_time`, `debug_l10n`, `default_filters_views`,
+  `derivatives_strip_metadata_threshold`, `external_authentification`,
+  `metadata_keyword_separator_regex`, `password_hash`, `password_verify`,
+  `php_extension_in_urls`, `question_mark_in_urls`, `tag_url_style`,
+  `template_combine_files`, `checksum_compute_blocksize`, `comments_page_nb_comments`
+
+#### Boot sequence (origin/16.x → rewrite)
+
+Origin boot (`common.inc.php`):
+1. `config_default.inc.php` → set `$conf` defaults
+2. `local/config/config.inc.php` → overrides
+3. `local/config/database.inc.php` → DB credentials
+4. `dblayer/functions_mysqli.inc.php` → DB functions (45 procedural)
+5. `constants.php` → 52 defines
+6. `functions.inc.php` → 78 utility functions
+7. `template.class.php` → Smarty wrapper
+8. `cache.class.php`, `Logger.class.php`
+9. `user.inc.php` → session + permissions
+10. `filter.inc.php` → content filtering
+
+Rewrite boot (`index.php`):
+1. `vendor/autoload.php` → Composer PSR-4
+2. `Paths::fromIndex()` → root path resolution
+3. Fast-paths for `?i/` (derivatives), `?install`, `?upgrade_feed`, `?upgrade`
+4. `CommonBootstrap::run()` → ConfigLoader + Kernel::boot + DI + middleware
+
+**Global variables** beyond `$conf/$user/$page/$lang`: `$filter`, `$template`,
+`$logger`, `$persistent_cache`, `$theme`, `$header_msgs`, `$header_notes`, `$dbnow`
+
+#### jQuery elimination
+
+- **2752 jQuery references** in origin/16.x → **0** on rewrite
+- **jQuery UI** (35 files + 107 i18n) → removed entirely
+- **20+ jQuery plugins** → replaced by 15 npm packages:
+  - colorbox → glightbox
+  - plupload → @uppy/core + dashboard + xhr-upload
+  - jQuery UI datepicker → flatpickr
+  - selectize → tom-select
+  - datatables (kept, non-jQuery version: datatables.net ^2.3.8)
+  - chart.js (kept, standalone)
+  - tipTip → tippy.js
+  - jgrowl → native toaster
+  - tokeninput → tom-select
+  - Jcrop → native
+  - cluetip → tippy.js
+  - progressbar → native CSS
+  - ajaxmanager → removed
+  - sort → native
+  - piecon → kept (themes/_base/js/plugins/piecon.ts)
+  - underscore → removed (native Array methods)
+  - moment → dayjs
+  - nouislider (new, replaces jQuery UI slider)
+  - js-cookie (new, replaces manual cookie handling)
+  - @popperjs/core (new, positioning library)
+
+#### Smarty template syntax scope
+
+| Pattern | Count | Latte equivalent |
+|---------|-------|-----------------|
+| `{if }` | 1117 | `{if }` (same) |
+| `{foreach}` | 194 | `{foreach $x as $y}` (syntax change) |
+| `{\|translate}` | 883 | `{\|translate}` (same via filter) |
+| `{\|escape}` | 214 | Auto-escaped by Latte (remove) |
+| `{combine_script}` | 179 | `{=viteEntry('name')}` |
+| `{combine_css}` | 88 | `{=cssLink('path')}` |
+| `{footer_script}` | 80 | Extract to `.ts` module |
+| `{include}` | 71 | `{include 'file.latte'}` |
+| `{assign}` | 43 | `{var $x = y}` |
+| `{html_style}` | 15 | Extract to `.css` file |
+| Other modifiers | ~50 | Mapped in PiwigoExtension (27 filters, 9 functions) |
+
+A `tools/smarty-to-latte/Converter.php` exists on the rewrite branch with 30+
+regex-based rewrite passes. It handles the mechanical conversions; complex patterns
+need hand-fix.
+
+#### Upgrade mechanism
+
+- Origin: `upgrade.php` discovers `install/upgrade_X.Y.Z.php` scripts by version.
+  23 scripts exist (1.3.0 → 15.0.0).
+- Rewrite: All upgrade scripts deleted. `UpgradeController` exists but handles
+  DB version checks + plugin deactivation only. `doctrine/migrations` is a dep
+  but used ONLY for plugin migrations (`PluginMigrationRunner`), NOT core schema.
+- **Core schema upgrades are undefined** in the rewrite. Fresh installs use
+  `InstallController` → `piwigo_structure-mysql.sql` + `config.sql`. Upgrades from
+  existing installations are not handled — this must be addressed in the plan.
+
 ### Verified claims (correct)
 
 - origin/16.x: 947 PHP, 333 JS, 140 TPL, 83 CSS ✓

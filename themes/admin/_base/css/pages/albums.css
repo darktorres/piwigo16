@@ -113,7 +113,7 @@
 }
 .move-cat-container .move-cat-toogler {
   display: flex;
-  color: #f70;
+  color: var(--admin-accent);
   margin-left: var(--space-xs);
   align-items: center;
   cursor: pointer;
@@ -174,7 +174,7 @@
 }
 
 .cat-move-order-popin .order-popin-container {
-  background-color: #f3f3f3;
+  background-color: var(--admin-bg-elevated);
   border-radius: var(--radius-md);
   display: block;
   width: 25%;
@@ -200,7 +200,7 @@
 
 .cat-move-order-popin .album-name {
   font-size: var(--font-size-md);
-  color: #3c3c3c;
+  color: var(--admin-text);
   font-weight: 600;
   text-align: center;
 }
@@ -382,16 +382,16 @@ ul.pwgtree-tree .pwgtree-element {
 }
 
 .search-album-ghost div {
-  background: #f3f3f3;
-  background-image: linear-gradient(90deg, #eee, rgb(250, 250, 250));
+  background: var(--admin-bg-elevated);
+  background-image: linear-gradient(90deg, var(--admin-stripe-even), var(--admin-bg-panel));
   background-attachment: fixed;
 }
 .search-album-ghost span {
   text-align: center;
   font-weight: 600;
   padding: 90px 0;
-  background-color: #f3f3f3;
-  color: #c1c1c1;
+  background-color: var(--admin-bg-elevated);
+  color: var(--admin-text);
   margin: 1em;
 }
 

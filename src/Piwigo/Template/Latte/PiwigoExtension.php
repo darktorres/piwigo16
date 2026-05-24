@@ -337,19 +337,10 @@ final class PiwigoExtension extends Extension
         $scripts = $tpl->scriptLoader->getFooterScripts();
         $content = [];
 
-        foreach ($scripts[0] as $script) {
+        foreach ($scripts as $script) {
             $src = self::makeScriptSrc($script);
             $type = self::isModuleScript($script) ? 'module' : 'text/javascript';
             $content[] = '<script type="' . $type . '" src="' . $src . '"></script>';
-        }
-
-        foreach ($scripts[1] as $script) {
-            $src = self::makeScriptSrc($script);
-            if (self::isModuleScript($script)) {
-                $content[] = '<script type="module" src="' . $src . '"></script>';
-            } else {
-                $content[] = '<script async src="' . $src . '"></script>';
-            }
         }
 
         return new Html(implode("\n", $content));

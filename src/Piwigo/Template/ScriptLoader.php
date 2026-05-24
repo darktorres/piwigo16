@@ -111,9 +111,7 @@ final class ScriptLoader
     }
 
     /**
-     * Returns combined scripts loaded in footer.
-     *
-     * @return array{0: Combinable[], 1: Combinable[]}
+     * @return Combinable[]
      */
     public function getFooterScripts(): array
     {
@@ -134,11 +132,7 @@ final class ScriptLoader
 
         uasort($todo, self::cmpByModeAndOrder(...));
 
-        $result = [ [], [] ];
-        foreach ($todo as $id => $script) {
-            $result[$script->load_mode - 1][$id] = $script;
-        }
-        return [ array_values($result[0]), array_values($result[1]) ];
+        return array_values($todo);
     }
 
     /**

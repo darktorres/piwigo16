@@ -1,3 +1,6 @@
+import '../fontello/css/fontello.css';
+import '../fontello/css/animation.css';
+
 interface AccordionOptions {
     header: string;
     content: string;

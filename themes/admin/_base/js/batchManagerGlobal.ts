@@ -1,3 +1,4 @@
+import '../css/pages/batch_manager_global.css';
 import GLightbox from 'glightbox';
 import 'glightbox/dist/css/glightbox.css';
 import tippy from 'tippy.js';

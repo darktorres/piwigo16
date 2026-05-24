@@ -1,3 +1,5 @@
+import '../css/pages/batch_manager_unit.css';
+import '../css/features/selection-mode.css';
 import { getPageData } from './page-data';
 import { AlbumSelector } from './album_selector';
 import { TagsCache, CategoriesCache } from './LocalStorageCache';

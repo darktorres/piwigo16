@@ -1,3 +1,4 @@
+import '../css/pages/plugins.css';
 import TomSelect from 'tom-select';
 import 'tom-select/dist/css/tom-select.default.css';
 import noUiSlider from 'nouislider';

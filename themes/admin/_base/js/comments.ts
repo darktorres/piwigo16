@@ -1,3 +1,4 @@
+import '../css/pages/comments.css';
 import { getPageData } from './page-data';
 import { config } from './config';
 

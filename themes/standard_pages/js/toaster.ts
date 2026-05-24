@@ -1,3 +1,5 @@
+import '../css/toaster.css';
+
 interface ToasterInfo {
     text: string;
     icon: 'success' | 'error';

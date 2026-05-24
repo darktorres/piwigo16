@@ -1,3 +1,4 @@
+import '../css/pages/plugins.css';
 import { getPageData } from './page-data';
 import { config } from './config';
 

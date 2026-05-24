@@ -1,3 +1,4 @@
+import '../css/pages/cat-list.css';
 import Cookies from 'js-cookie';
 
 const qsa = <T extends HTMLElement = HTMLElement>(

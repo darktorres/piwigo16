@@ -1,3 +1,4 @@
+import '../css/pages/tags.css';
 import Cookies from 'js-cookie';
 import { getPageData } from './page-data';
 import { config } from './config';

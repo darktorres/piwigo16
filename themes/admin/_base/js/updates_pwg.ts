@@ -1,3 +1,4 @@
+import '../css/pages/updates-pwg.css';
 import { getPageData } from './page-data';
 
 interface UpdatesPwgPageData {

@@ -1,3 +1,4 @@
+import '../css/pages/stats.css';
 import { Chart, registerables } from 'chart.js';
 import type { ChartConfiguration, ChartDataset } from 'chart.js';
 import 'chartjs-adapter-dayjs-4';

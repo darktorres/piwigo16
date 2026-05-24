@@ -1,3 +1,4 @@
+import '../css/pages/permalinks.css';
 import { getPageData } from './page-data';
 
 interface PermalinksPageData {

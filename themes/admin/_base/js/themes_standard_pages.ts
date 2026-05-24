@@ -1,3 +1,5 @@
+import '../css/pages/themes_standard_pages.css';
+
 document.querySelectorAll<HTMLImageElement>('.std_pgs_mini_previews img').forEach((img) => {
     img.addEventListener('click', () => {
         document.querySelectorAll<HTMLImageElement>('.std_pgs_mini_previews img').forEach((i) => {

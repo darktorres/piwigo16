@@ -1,3 +1,4 @@
+import '../css/pages/user-activity.css';
 import TomSelect from 'tom-select';
 import { getPageData } from './page-data';
 import { UsersCache } from './LocalStorageCache';

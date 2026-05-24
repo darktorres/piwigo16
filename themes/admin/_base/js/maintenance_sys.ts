@@ -1,3 +1,5 @@
+import '../css/pages/maintenance-sys.css';
+
 interface ActivityLine {
     id: string | number;
     username: string;

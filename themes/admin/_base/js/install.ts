@@ -1,3 +1,5 @@
+import '../css/pages/install-upgrade.css';
+
 document.querySelectorAll<HTMLAnchorElement>('a.externalLink').forEach((el) => {
     el.addEventListener('click', (e) => {
         e.preventDefault();

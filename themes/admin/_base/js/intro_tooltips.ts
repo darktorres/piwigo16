@@ -1,3 +1,4 @@
+import '../css/pages/intro.css';
 import { getPageData } from './page-data';
 import { config } from './config';
 

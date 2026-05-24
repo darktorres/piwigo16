@@ -1,3 +1,4 @@
+import '../css/pages/maintenance-env.css';
 import { getPageData } from './page-data';
 import { config } from './config';
 

@@ -1,3 +1,4 @@
+import '../css/pages/plugins.css';
 import GLightbox from 'glightbox';
 import 'glightbox/dist/css/glightbox.css';
 import { getPageData } from './page-data';

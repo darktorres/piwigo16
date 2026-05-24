@@ -1,3 +1,4 @@
+import '../css/pages/history.css';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { getPageData } from './page-data';

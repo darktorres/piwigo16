@@ -1,3 +1,4 @@
+import '../css/pages/picture_modify.css';
 import { AlbumSelector } from './album_selector';
 import { TagsCache, CategoriesCache } from './LocalStorageCache';
 import { getPageData } from './page-data';

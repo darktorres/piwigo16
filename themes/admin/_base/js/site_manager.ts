@@ -1,3 +1,4 @@
+import '../css/pages/site_manager.css';
 import { getPageData } from './page-data';
 
 interface SiteManagerPageData {

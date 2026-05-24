@@ -1,3 +1,4 @@
+import '../css/pages/albums.css';
 import { mount, type AlbumTree, type TreeNode, type MoveInfo, type NodeData } from './album-tree';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';

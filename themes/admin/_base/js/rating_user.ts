@@ -1,3 +1,4 @@
+import '../css/pages/rating_user.css';
 import DataTable from 'datatables.net';
 import 'datatables.net-dt/css/dataTables.dataTables.css';
 import { getPageData } from './page-data';

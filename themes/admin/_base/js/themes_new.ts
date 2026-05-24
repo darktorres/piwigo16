@@ -1,3 +1,5 @@
+import '../css/pages/plugins.css';
+
 document.querySelectorAll<HTMLImageElement>('img[data-fallback-src]').forEach((img) => {
     const applyFallback = (): void => {
         const fallback = img.getAttribute('data-fallback-src');

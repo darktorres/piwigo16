@@ -1,3 +1,5 @@
+import '../css/pages/menubar.css';
+
 document.querySelectorAll<HTMLElement>('.menuPos').forEach((el) => {
     el.style.display = 'none';
 });

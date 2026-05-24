@@ -1,3 +1,4 @@
+import '../css/pages/rating.css';
 import { CategoriesCache } from './LocalStorageCache';
 import { getPageData } from './page-data';
 

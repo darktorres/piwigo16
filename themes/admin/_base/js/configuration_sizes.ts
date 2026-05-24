@@ -1,3 +1,4 @@
+import '../css/pages/configuration_sizes.css';
 import { getPageData } from './page-data';
 
 interface ConfigurationSizesPageData {

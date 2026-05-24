@@ -1,3 +1,5 @@
+import '../css/pages/picture_coi.css';
+
 document.addEventListener('DOMContentLoaded', () => {
     const imgEl = document.getElementById('jcrop') as HTMLImageElement | null;
     if (!imgEl) return;

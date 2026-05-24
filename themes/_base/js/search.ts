@@ -1,3 +1,4 @@
+import '../css/search.css';
 import TomSelect from 'tom-select';
 
 ['authors', 'tags', 'categories'].forEach((id) => {

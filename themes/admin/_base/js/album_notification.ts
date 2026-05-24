@@ -1,3 +1,5 @@
+import '../css/pages/album_notification.css';
+
 function checkWhoOptions(): void {
     const checked = document.querySelector<HTMLInputElement>('input[name=who]:checked');
     const option = checked?.value ?? '';

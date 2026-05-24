@@ -1,3 +1,4 @@
+import '../css/pages/watermark.css';
 import { getPageData } from './page-data';
 
 interface ConfigurationWatermarkPageData {

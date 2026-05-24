@@ -1,3 +1,4 @@
+import '../vendor/fontello/css/gallery-icon.css';
 import { config } from './config';
 
 function phpWGOpenWindow(theURL: string, winName: string, features: string): void {

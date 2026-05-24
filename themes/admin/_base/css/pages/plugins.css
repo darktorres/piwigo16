@@ -537,12 +537,12 @@
 }
 
 .pluginMiniBox.plugin-inactive .pluginActionsSmallIcons a span {
-  background: #ececec;
+  background: var(--admin-bg-deepest);
   color: var(--admin-text);
 }
 
 .pluginMiniBox.plugin-inactive .pluginActionsSmallIcons a i {
-  background: #ececec;
+  background: var(--admin-bg-deepest);
   color: var(--admin-text);
   border-radius: var(--radius-sm);
   padding: 2px;
@@ -550,7 +550,7 @@
 }
 
 .pluginMiniBox.plugin-active .pluginActionsSmallIcons a i {
-  background: #ececec;
+  background: var(--admin-bg-deepest);
   color: var(--admin-text);
   border-radius: var(--radius-sm);
   padding: 2px;

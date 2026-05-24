@@ -130,7 +130,7 @@
 .tag-header .selection-controller a:hover,
 .comments-selection-controller .comments-selection-btn:hover {
   background-color: #ddd;
-  color: #3a3a3a;
+  color: var(--admin-link);
   text-decoration: none;
 }
 
@@ -145,7 +145,7 @@
   display: inline-flex;
   align-items: center;
   padding: 5px 10px 5px 15px;
-  background-color: #fafafa;
+  background-color: var(--admin-bg-panel);
   margin: 7px 5px;
   box-shadow: 0 2px 1px #00000024;
   border-radius: 18px;

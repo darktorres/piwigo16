@@ -513,7 +513,7 @@ a.group_users {
 }
 
 #AddUserSuccess .edit-now {
-  color: #3a3a3a;
+  color: var(--admin-link);
   cursor: pointer;
   margin-left: var(--space-sm);
 }
@@ -1264,7 +1264,7 @@ a.group_users {
 .user-property-main-user-close .icon-button:hover,
 #AddUserSuccessContainer .icon-button:hover {
   background-color: #ddd;
-  color: #3a3a3a;
+  color: var(--admin-link);
 }
 
 .edit-password-success-ok .icon-button::before,

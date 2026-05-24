@@ -133,7 +133,7 @@
 }
 
 .themeActions a:nth-child(2) {
-  background-color: #ececec;
+  background-color: var(--admin-bg-deepest);
   color: var(--admin-text);
 }
 .themeActions a:nth-child(2):hover {

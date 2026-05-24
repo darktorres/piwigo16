@@ -14,7 +14,3 @@
   color: var(--admin-text);
   font-size: 10px;
 }
-
-.badge-number {
-  color: var(--admin-text-on-accent);
-}

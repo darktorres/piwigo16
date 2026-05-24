@@ -1,0 +1,91 @@
+.cat-modify-footer,
+.savebar-footer {
+  background: var(--admin-bg-page);
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--admin-border);
+  padding: 12px;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1;
+  align-items: center;
+}
+
+.cat-modify-footer-see-out,
+.savebar-see-out,
+.buttonSecond {
+  display: flex;
+  padding: 9px 10px;
+  font-size: var(--font-size-xs);
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  border: none;
+  cursor: pointer;
+  background-color: var(--admin-bg-deepest);
+  color: var(--admin-text);
+}
+
+.savebar-footer-block .badge {
+  border-radius: var(--radius-lg);
+  padding: 5px 10px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  display: block;
+  height: auto;
+}
+
+.cat-modify-footer-see-out:hover,
+.savebar-see-out:hover {
+  background-color: var(--admin-bg-deepest);
+  color: var(--admin-text-muted);
+  text-decoration: none;
+}
+
+.cat-modify-footer-see-out:focus {
+  border: 2px solid var(--admin-accent-soft);
+  background: var(--admin-bg-deepest);
+}
+
+.buttonSecondary {
+  background-color: var(--admin-bg-deepest);
+  color: var(--admin-text);
+}
+
+.buttonSecondary:hover {
+  background-color: var(--admin-border-strong);
+  color: var(--admin-text);
+}
+
+.cat-modify-footer-start,
+.savebar-footer-start {
+  margin-left: 230px;
+}
+
+.cat-modify-footer-end,
+.savebar-footer-end {
+  display: flex;
+}
+
+.cat-modify-footer-see-out.disabled,
+.savebar-see-out.disabled {
+  cursor: not-allowed;
+}
+
+.cat-modify-footer-see-out.disabled:focus,
+.savebar-see-out.disabled:focus {
+  border: none;
+}
+
+.savebar-footer-block {
+  margin-right: var(--space-md);
+  align-self: center;
+  display: flex;
+  align-items: center;
+}
+
+.badge-number {
+  color: var(--admin-text-on-accent);
+}

@@ -64,7 +64,6 @@
   border-radius: var(--radius-md);
   background: linear-gradient(130deg, var(--admin-accent) 0%, var(--admin-accent-soft) 100%);
   color: var(--admin-text-on-accent);
-  -moz-osx-font-smoothing: grayscale;
 }
 
 .dropdown::after {

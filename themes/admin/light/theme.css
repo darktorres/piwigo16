@@ -68,7 +68,6 @@ a:active,
 input:focus,
 a:focus {
   outline: none; /* keep: light-exclusive UA focus reset; dark comments this out (Bucket X) */
-  -moz-outline-width: 0;
 }
 
 .themeActions span {

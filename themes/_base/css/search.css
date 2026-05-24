@@ -197,8 +197,7 @@
 
 #word-search {
   margin: 0 0 10px;
-  width: -moz-available;
-  width: -webkit-fill-available;
+  width: stretch;
   border-radius: var(--radius-sm);
   background: var(--search-word-bg);
   color: var(--search-word-color);

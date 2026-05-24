@@ -451,17 +451,24 @@ or being gated by a static analysis tool.
 
 #### Commits:
 
-1. **Composer init + Pest + Pest plugins**
+1. **Composer init + Pest + Pest plugins + coverage**
    - `composer.json`: PHP 8.5, `pestphp/pest` ^4, `pest-plugin-arch` ^4,
      `pest-plugin-mutate` ^4, `pest-plugin-type-coverage` ^4,
      `pest-plugin-browser` ^4
-   - `phpunit.xml.dist` (Pest uses it)
+   - `phpunit.xml.dist` (Pest uses it) with `<coverage>` filter on `include/`,
+     `admin/`, and later `src/Piwigo/`
    - `tests/Pest.php` (Pest config)
    - `tests/bootstrap.php`
    - `tests/Unit/SmokeTest.php`
    - `tests/Arch/StructuralTest.php` — first arch rules (will grow per phase)
-   - `.gitignore` for `vendor/`, `.phpunit.cache/`
+   - `.gitignore` for `vendor/`, `.phpunit.cache/`, `coverage/`
+   - Configure `pcov` as the coverage driver (faster than Xdebug for CI):
+     `composer require --dev pcov/clobber` or rely on php.ini `extension=pcov`
+   - `composer.json` scripts: `"test:coverage": "pest --coverage-html=coverage/"`
+   - Establish baseline coverage % against `origin/16.x` codebase (will be near 0%)
    - Gate: `vendor/bin/pest --testsuite Unit` green
+   - Gate: `vendor/bin/pest --coverage --min=0` runs without error (proves
+     coverage tooling works; threshold raised per phase)
 
 2. **Node + Vitest + Pest Browser deps**
    - `package.json`: `vitest`, `@vitest/coverage-v8`, `happy-dom`
@@ -482,8 +489,9 @@ or being gated by a static analysis tool.
    - Gate: `vendor/bin/pint --test`, `vendor/bin/phpstan analyse`, `vendor/bin/rector --dry-run`
 
 5. **GitHub Actions CI**
-   - `.github/workflows/ci.yml`: pest-unit, pest-browser, pint, phpstan, rector, vitest,
-     audit
+   - `.github/workflows/ci.yml`: pest-unit (with `--coverage-clover`),
+     pest-browser, pint, phpstan, rector, vitest, audit
+   - Coverage artifact upload (HTML report) on every CI run
    - `.editorconfig`
    - Gate: CI green
 
@@ -491,7 +499,16 @@ or being gated by a static analysis tool.
    - `dev/fixtures/piwigo-16.x.sql` — baseline DB snapshot
    - `dev/fixtures/README.md`
 
-**Test count after P0:** ~5 PHP unit, 3 browser, 1 TS unit, arch rules. All gates green.
+7. **Coverage ratchet file**
+   - `.coverage-baseline` (or equivalent) — committed file recording the
+     current minimum coverage %. Updated after each phase. CI fails if
+     coverage drops below this number.
+   - Starting value: 0% (bare `origin/16.x` has no tests)
+   - Convention: each phase's final commit bumps the baseline to the new floor
+
+**Test count after P0:** ~5 PHP unit, 3 browser, 1 TS unit, arch rules.
+**Coverage:** tooling operational, baseline at 0%, ratchet enforced from P1 onward.
+All gates green.
 
 ---
 
@@ -898,19 +915,26 @@ load hashed `dist/` URLs.
 
 ---
 
-### P15 — Coverage + mutation + bundle budgets
+### P15 — Mutation testing + bundle budgets + a11y + coverage target
 
-**After all features are in:** establish quality baselines.
+**Coverage measurement and ratcheting are active since P0.** By this point the
+ratchet should be at ≥40% (each phase from P1-P14 bumped it). P15 adds the
+remaining quality gates.
 
-1. Coverage measurement: `--coverage-clover` in CI, filter on `src/Piwigo/`
-2. Coverage ratchet: committed baseline, CI fails on regression
-3. Mutation testing: `vendor/bin/pest --mutate` targeting high-value services
-4. Type coverage: `pest --type-coverage --min=95`
-5. Bundle size budgets: `size-limit` per Vite entry point
-6. A11y: Pest Browser `assertNoAccessibilityIssues()` or equivalent axe-core
+1. **Coverage target enforcement** — raise ratchet to ≥40% line coverage on
+   `src/Piwigo/` (should already be met; this locks it). Verify every namespace
+   has ≥1 test file (the 15 zero-coverage namespaces from the original branch
+   should all be covered by now).
+2. **Mutation testing:** `vendor/bin/pest --mutate` targeting high-value services
+   (Config, SearchService, PermissionService, RateService, BatchManager).
+   MSI ≥60%, covered-MSI ≥75%. Run on push to main only (slow).
+3. **Type coverage:** `pest --type-coverage --min=95`
+4. **Bundle size budgets:** `size-limit` per Vite entry point, set at +10%
+   above current sizes
+5. **A11y:** Pest Browser `assertNoAccessibilityIssues()` or equivalent axe-core
    integration, WCAG 2.1 AA gate on all page-level tests
 
-**Gate:** All quality gates green. Baselines committed.
+**Gate:** All quality gates green. Coverage ≥40%. MSI ≥60%. Bundle budgets enforced.
 
 ---
 
@@ -1053,10 +1077,34 @@ Browser E2E including install + upgrade flows. Visual regression.
 
 **Not yet done on `16.x-rewrite`.** Plan at `docs/BUNDLED-EXTENSIONS-MIGRATION-PLAN.md`.
 
-Migrate the bundled extensions (AdminTools, LocalFilesEditor, etc.) to the new
-`PluginInterface` contracts from P12.
+Upstream Piwigo ships 7 bundled extensions (4 plugins + 3 themes) via sibling
+repos — they are NOT in `origin/16.x` itself:
+
+| Kind | id | Source |
+|------|----|--------|
+| plugin | AdminTools | `piwigo16-plugins/AdminTools_16.3.0/` |
+| plugin | LocalFilesEditor | `piwigo16-plugins/LocalFilesEditor_16.3.0/` |
+| plugin | TakeATour | `piwigo16-plugins/TakeATour_16.3.0/` |
+| plugin | language_switch | `piwigo16-plugins/language_switch_16.3.0/` |
+| theme | elegant | `piwigo16-themes/elegant_16.3.0/` |
+| theme | modus | `piwigo16-themes/modus_16.3.0.1/` |
+| theme | smartpocket | `piwigo16-themes/smartpocket_16.3.0/` |
+
+These are pulled into the rewrite and rewritten against the v17 contracts
+(`PluginInterface` + `plugin.json`, `ThemeInterface` + `theme.json`, PSR-14
+events). The legacy procedural surfaces they target (`add_event_handler`,
+`pwg_query`, `l10n()`, `$conf`, `themeconf.inc.php`) are all gone after P12.
+
+One commit per extension (7 total). Each rewrite includes:
+- `plugin.json` / `theme.json` manifest
+- `src/Plugin.php` implementing `PluginInterface` / `ThemeInterface`
+- Smarty `.tpl` → Latte `.latte`
+- `.lang.php` → `.po`
+- JS → TS via Vite entries
+- Vendored 3rd-party JS replaced via npm (CodeMirror v2 → `@codemirror/*`, etc.)
 
 **Tests:** Plugin activation/deactivation E2E. Feature-specific tests per plugin.
+Browser E2E: each plugin's main feature works end-to-end.
 
 ---
 

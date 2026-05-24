@@ -400,6 +400,67 @@ Url, Users, Validation, Ws.
 - Core: 7 bidirectional deps
 - Config: 5 bidirectional deps
 
+#### Function migration mapping
+
+Origin procedural functions were converted to class methods following camelCase:
+- `make_index_url()` → `UrlService::makeIndexUrl()`
+- `get_root_url()` → `UrlService::getRootUrl()`
+- `check_status()` → `PermissionService::checkStatus()`
+- `check_restrictions()` → `CategoryService::checkRestrictions()`
+- `load_language()` → `LangService::loadLanguage()`
+- `pwg_mail()` → `MailService::pwgMail()`
+- `redirect()` → `RedirectResponder`
+
+DB functions were replaced by Doctrine DBAL directly:
+- `pwg_query($sql)` → `$conn->executeQuery($sql, $params)`
+- `query2array($sql)` → `$conn->executeQuery($sql)->fetchAllAssociative()`
+- `mass_inserts()` → batch `$conn->insert()` loops
+- `pwg_db_real_escape_string()` → prepared statement `?` placeholders
+- `pwg_db_fetch_assoc()` → `$result->fetchAssociative()`
+
+165 raw SQL statements exist in src/ — repositories use DBAL's `executeQuery()`
+with hand-written SQL (NOT Doctrine QueryBuilder). Prepared statements everywhere.
+
+#### Repository pattern (projection DTOs)
+
+Repositories return typed Projection/Entity DTOs, not raw arrays:
+- CategoryRepository alone has **24 projection types** + 1 entity type
+- Each projection is a `final readonly class` with a `fromRow(array $row)` factory
+- This is the pattern P14 will spread to all 37 repositories (249 methods
+  still return untyped arrays)
+
+#### Template variable scope
+
+**245 unique template variables** are assigned across all src/ files. These are
+the contract between PHP controllers/renderers and Latte templates. Any Smarty→Latte
+conversion must preserve all 245 variable names (or the template breaks silently).
+
+#### Remaining procedural code in src/
+
+- Only **1 free function** left: `resolve()` in `Core/resolve.php`
+- Only **1 dynamic include**: `LanguageStack::loadLanguage()` includes .lang.php files
+- Everything else is class methods via PSR-4
+
+#### Session state scope
+
+15 session variables via `pwg_set_session_var()`: image_order, index_deriv,
+picture_deriv, filter_enabled, filter_categories, filter_visible_images,
+filter_visible_categories, filter_check_key, device, mobile_theme,
+comments_order, plugins_new_order, plugins_show_details, show_metadata,
+referer_image_id. All simple key-value — trivial to migrate.
+
+#### Persistent cache scope
+
+Only 14 cache get/set calls in origin. File-based `PersistentCache` → replaced by
+Symfony Cache (`CacheItemPoolInterface`). Trivial migration.
+
+#### Integration test status
+
+**153 integration tests pass** (13,712 assertions, 74s). Test suites:
+- `IntegrationParallel`: Repository tests, ContainerSmoke, FastPathHeaders,
+  HistorySearch, WsApi — parallelized with paratest worker-isolated databases
+- `IntegrationSerial`: InstallChain, UpgradeChain — serial (no prior install state)
+
 #### No external API calls or cron requirements
 
 - Origin makes **zero outbound HTTP calls** to third-party APIs (all URLs in

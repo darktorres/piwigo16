@@ -101,7 +101,7 @@ P0 Tooling ──→ P1 Composer + Rector + PHPStan L5
                      ↓                                     ↓
                 P4.5 Frontend tooling (parallel)      P5 Service migration
                  │   Vite + TS + ESLint + any→0        │  664 functions → classes
-                 │   + jQuery→npm + webfont swap        │  include/ + admin/ → src/
+                 │   + jQuery→bun + webfont swap        │  include/ + admin/ → src/
                  │                                     │
                  │   SYNC: P4.5b must finish           │
                  │   before P8 (footer_script           │
@@ -160,9 +160,10 @@ count. CI enforces ratchets: counts can only go down.
 - `phpunit.xml.dist`, `tests/Pest.php`, `tests/bootstrap.php`
 - `tests/Unit/SmokeTest.php`, `tests/Arch/StructuralTest.php`
 
-#### Frontend tooling
+#### Frontend tooling (bun + justfile)
 
-- `package.json`: all dev deps
+- **bun** as package manager (`bun.lock`), **justfile** as task runner
+- `package.json`: all dev deps installed via `bun install`
 - **Vite** + `vite.config.ts`, **TypeScript** + `tsconfig.json` (`allowJs: true`)
 - **ESLint** + `eslint.config.ts`, **Prettier**, **Stylelint** — baseline error counts
 - **Vitest** + `vitest.config.ts` + `@vitest/coverage-v8` + `happy-dom`
@@ -418,9 +419,9 @@ Can run in parallel with P5 — touches `themes/*/js/`, not `src/Piwigo/`.
 Vite, TS, ESLint, Prettier, Stylelint already installed and baselined in P0.
 - Configure Vite entry points for the project structure (68 entries)
 - Convert all 38 authored JS files to `.ts`
-- Swap jQuery plugins to npm replacements
+- Swap jQuery plugins to bun-managed packages
 - Fix lint errors (tightens ESLint + Stylelint baselines toward 0)
-- **Tests:** `npm run build`, `npm run typecheck`, lint baselines tightened
+- **Tests:** `just build`, `just typecheck`, lint baselines tightened
 
 #### P4.5b — Inline JS extraction + `any` reduction
 - `{footer_script}` blocks → `.ts` modules, `data-*` bridges, `getPageData<T>()`
@@ -894,7 +895,7 @@ each phase. Cannot be pulled from reference branch in bulk.
 | P2 PSR-4 | 3-5 days | ~51 class extractions + test writing |
 | P3 Kernel/DI/boot | 4-5 days | Core architecture + upgrade mechanism |
 | P4 Config/DB/facades/constants/lang | 7-10 days | 271 SCHEMA + 885 PHPWG_ROOT_PATH + 46 schema changes + .po migration |
-| P4.5 Frontend tooling | 3-5 days | Parallel: Vite + TS + jQuery→npm + any→0 + webfonts |
+| P4.5 Frontend tooling | 3-5 days | Parallel: Vite + TS + jQuery→bun + any→0 + webfonts |
 | P5 Service migration | 12-18 days | 664 functions, 35+ namespaces, 30 controllers, ServiceLocator kill |
 | P6 WS endpoints + OpenAPI | 5-8 days | 94 handlers + 83 Params + #[ApiMethod] + SpecBuilder |
 | P7 CSS + Tailwind | 3-5 weeks | Theme restructure + tokens + splitting + Tailwind |
@@ -919,8 +920,8 @@ vendor/bin/pint --test                             # PSR-12
 vendor/bin/phpstan analyse                         # Level 10, 0 errors
 vendor/bin/rector --dry-run                        # Clean
 composer lint:latte && composer precompile:templates
-npm run typecheck && npm run lint && npm run lint:css
-npm run build
-npm run test:unit -- --coverage                   # Vitest TS coverage
-npx size-limit                                    # Bundle budgets
+just typecheck && just lint-js && just lint-css
+just build
+bun run test:unit -- --coverage                   # Vitest TS coverage
+bunx size-limit                                   # Bundle budgets
 ```

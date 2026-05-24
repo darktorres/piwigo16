@@ -305,7 +305,9 @@ final class PiwigoExtension extends Extension
 
     public static function combineScript(
         string $id,
+        ?string $load = null,
         ?string $path = null,
+        array|string $require = [],
         string|int $version = 0,
     ): void {
         $tpl = TemplateRegistry::current();

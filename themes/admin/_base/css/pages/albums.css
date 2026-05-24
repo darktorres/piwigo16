@@ -517,7 +517,7 @@ ul.pwgtree-tree .pwgtree-element {
 }
 
 .user-first-col:hover .icon-pencil {
-  color: #000;
+  color: var(--admin-accent-soft);
 }
 .user-first-col:hover .select-checkbox {
   color: #000;

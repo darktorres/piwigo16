@@ -35,6 +35,7 @@
 .applicationCard .applicationDesc {
   text-align: left;
   padding-right: var(--space-md);
+  color: var(--admin-text);
 
   display: -webkit-box;
   -webkit-line-clamp: 6;

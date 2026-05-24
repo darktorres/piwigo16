@@ -345,6 +345,8 @@ a#showPermissions:hover {
   padding: 12px 10px;
   width: 280px;
   appearance: none;
+  background-color: var(--admin-bg-elevated);
+  color: var(--admin-text);
 }
 .permitActionItem select {
   margin-bottom: 25px;
@@ -467,7 +469,8 @@ a#showPermissions:hover {
   opacity: 0.6;
 }
 #set_date_creation input {
-  background-color: #f8f8f8;
+  background-color: var(--admin-bg-elevated);
+  color: var(--admin-text);
   padding: 8px;
   padding-left: 35px;
   border-radius: 4px;

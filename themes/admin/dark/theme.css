@@ -502,9 +502,6 @@ a#showPermissions {
   box-shadow: 0 2px #0000007a ;
 }
 
-.albumActions a:hover span {
-  color: #fff ;
-}
 .albumActions a {
   text-decoration: none;
 }
@@ -518,7 +515,6 @@ a#showPermissions {
 
 #addFilter,
 #filterList select,
-#permitAction select,
 .sort-by select {
   background-color: #444;
   color: #bfbfbf;
@@ -536,14 +532,6 @@ a#showPermissions {
 
 .pagination-item-container a:hover {
   color: #ffa646;
-}
-#permitAction select {
-  background: #3c3c3c;
-  color: #c0c0c0;
-}
-#set_date_creation input {
-  background: #3c3c3c;
-  color: #c0c0c0;
 }
 #action_move a:last-child {
   color: #c0c0c0;
@@ -797,12 +785,6 @@ a#showPermissions {
   background: #555;
 }
 
-.AlbumViewSelector input:checked + label,
-.UserViewSelector input:checked + label {
-  background: transparent;
-  color: #fff;
-}
-
 .AlbumViewSelector input:checked + label .icon-th-large,
 .AlbumViewSelector input:checked + label .icon-th-list,
 .AlbumViewSelector input:checked + label .icon-pause {
@@ -821,10 +803,6 @@ a#showPermissions {
   box-sizing: border-box;
   background-color: transparent;
 }
-.user-first-col:hover .icon-pencil {
-  color: #ffa646;
-}
-
 .user-first-col:hover .select-checkbox {
   border: solid #ffa646 2px ;
   background-color: #ffa646 ;
@@ -1033,10 +1011,6 @@ a#showPermissions {
   background: #333;
 }
 
-.applicationCard .applicationDesc {
-  color: #bbb;
-}
-
 .breadcrumb-item.add-item:hover {
   color: #777;
   background-color: #222;
@@ -1056,12 +1030,6 @@ a#showPermissions {
 .savebar-see-out,
 .buttonSecond {
   background-color: #2e2e2e;
-  color: #777;
-}
-
-.cat-modify-footer-see-out:hover,
-.savebar-see-out:hover {
-  background-color: #1b1b1b;
   color: #777;
 }
 
@@ -1118,16 +1086,6 @@ a#showPermissions {
 .pwgtree-moving .move-cat-container .icon-blue,
 .pwgtree-moving .move-cat-container .icon-green {
   opacity: 0.6 ;
-}
-
-.buttonSecondary {
-  color: #3c3c3c;
-  background-color: #232323;
-}
-
-.buttonSecondary:hover {
-  color: #3c3c3c;
-  background-color: #111;
 }
 
 /* Cat modify description modal */

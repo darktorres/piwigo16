@@ -512,6 +512,8 @@
 
 .cat-modify-footer-see-out:hover,
 .savebar-see-out:hover {
+  background-color: var(--admin-bg-deepest);
+  color: var(--admin-text-muted);
   text-decoration: none;
 }
 

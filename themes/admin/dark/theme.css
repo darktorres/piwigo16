@@ -250,7 +250,6 @@ a.Piwigo:hover span.Piwigo {
   background-color: var(--admin-bg-deepest);
 }
 
-/* .pluginActionLevel1 {color: #333;} */
 .pluginFilter input {
   border-color: var(--admin-text);
 }
@@ -290,11 +289,7 @@ a.Piwigo:hover span.Piwigo {
   cursor: pointer ;
 }
 
-/* TokenInput section deleted — the jQuery TokenInput widget was provided by
-   the user_tags plugin, which is no longer in-tree (v17 deprecates legacy
-   PEM plugins). Dead overrides removed. */
-
-/* Picture add */
+/* Dark-exclusive — picture add/edit */
 
 .upload-options-content .switch .slider {
   background-color: var(--admin-bg-page);
@@ -318,10 +313,9 @@ a.Piwigo:hover span.Piwigo {
   opacity: 1;
 }
 
-/* .move-cat-action a:hover deferred — needs new --admin-move-cat-action-hover
-   {fg,bg} tokens in a follow-up batch. */
+/* keep: dark-exclusive hover treatment — no exact token for #111 */
 .move-cat-action a:hover {
-  color: #777;
+  color: var(--admin-text-muted);
   background: #111;
 }
 
@@ -727,8 +721,7 @@ a#showPermissions {
 }
 
 .pluginContainer.line .pluginBox:hover .pluginContent .pluginActions a {
-  /* color: #ffffff; */
-  opacity: 1;
+  opacity: 1; /* keep: dark-exclusive — force visible on hover */
 }
 
 .pluginContainer.line .pluginBox.inactive:hover .pluginContent .pluginActions a {

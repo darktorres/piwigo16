@@ -32,7 +32,7 @@ input[type="reset"] {
   font-weight: bold;
   transition: all 125ms ease-out;
   color: #493c21;
-  background-color: #ffa646;
+  background-color: var(--admin-accent-soft);
 }
 
 .buttonLike:hover,
@@ -40,7 +40,7 @@ input[type="submit"]:hover,
 input[type="button"]:hover,
 input[type="reset"]:hover {
   cursor: pointer;
-  background-color: #f70;
+  background-color: var(--admin-accent);
   text-decoration: none;
   color: #493c21;
 }

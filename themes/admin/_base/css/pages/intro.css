@@ -492,7 +492,7 @@ a.stat-box:hover {
 .storage-chart span p {
   font-weight: bold;
   font-size: var(--font-size-lg);
-  color: #000;
+  color: var(--admin-text-strong);
   opacity: 0;
   line-height: 0;
   transition: ease 0.2s;
@@ -624,8 +624,8 @@ a.stat-box:hover {
 
 #newsletterSubscribeInput {
   font-weight: 700;
-  background-color: #fff;
-  color: #000;
+  background-color: var(--admin-input-bg);
+  color: var(--admin-text-strong);
   padding-inline: 4%;
   padding-block: 2%;
   border-radius: 2px;

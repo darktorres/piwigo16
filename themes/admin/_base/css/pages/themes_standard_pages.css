@@ -46,7 +46,7 @@
 
 .std_pgs_mini_previews img:hover,
 .std_pgs_mini_previews img.selected {
-  border: 4px solid #ffa646;
+  border: 4px solid var(--admin-accent-soft);
 }
 
 .use_existing_logo_container.hide,
@@ -82,7 +82,7 @@
 .custom_logo_preview {
   display: flex;
   align-items: center;
-  color: #777;
+  color: var(--admin-text-muted);
 }
 
 .custom_logo_preview img {

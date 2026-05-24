@@ -55,7 +55,7 @@
   box-shadow: 0 2px 3px #00000024;
   background-color: #fafafa;
   border-radius: var(--radius-sm);
-  color: #777;
+  color: var(--admin-text-muted);
   padding: 5px 10px;
   padding-left: 28px;
 }
@@ -157,7 +157,7 @@
 }
 
 .move-cat-action a:hover {
-  color: #000;
+  color: var(--admin-text-strong);
   text-decoration: none;
   background: #f98100;
 }
@@ -231,7 +231,7 @@
   right: -40px;
   top: -40px;
   font-size: 30px;
-  color: #fff;
+  color: var(--admin-text-on-accent);
 }
 
 .cat-move-order-popin input[name="recursiveAutoOrder"]:hover {
@@ -400,7 +400,7 @@ ul.pwgtree-tree .pwgtree-element {
   box-shadow: 0 2px 3px #00000024;
   background-color: #fafafa;
   border-radius: var(--radius-sm);
-  color: #777;
+  color: var(--admin-text-muted);
   padding-left: var(--space-lg);
   display: flex;
   align-items: center;
@@ -454,14 +454,14 @@ ul.pwgtree-tree .pwgtree-element {
   cursor: pointer;
   height: 100%;
   border-left: 1px solid #00000012;
-  background-color: #00000003;
+  background-color: var(--admin-text-strong)00003;
   text-align: center;
 }
 
 .search-album-action a:hover {
   color: #444;
   text-decoration: none;
-  background-color: #ffa646;
+  background-color: var(--admin-accent-soft);
 }
 
 .search-album-noresult {
@@ -494,7 +494,7 @@ ul.pwgtree-tree .pwgtree-element {
 
 #cancelUpload:hover {
   background-color: #ff9b32;
-  color: #fff;
+  color: var(--admin-text-on-accent);
   text-decoration: none;
 }
 
@@ -520,7 +520,7 @@ ul.pwgtree-tree .pwgtree-element {
   color: var(--admin-accent-soft);
 }
 .user-first-col:hover .select-checkbox {
-  color: #000;
+  color: var(--admin-text-strong);
 }
 
 /* Filters options (base — previously in _base/theme.css global) */
@@ -531,7 +531,7 @@ ul.pwgtree-tree .pwgtree-element {
   margin-bottom: 0;
 }
 .select-views {
-  background-color: #f3f3f3;
+  background-color: var(--admin-bg-elevated);
   font-size: 11px;
   border: none;
   height: 16px;
@@ -589,11 +589,11 @@ ul.pwgtree-tree .pwgtree-element {
 /* Per-page additions */
 .animateFocus {
   position: relative;
-  border-left: 4px solid #f70;
+  border-left: 4px solid var(--admin-accent);
 }
 
 .animateFocus .icon-grip-vertical-solid {
-  color: #f70;
+  color: var(--admin-accent);
 }
 
 .animateFocus::before {
@@ -615,11 +615,11 @@ ul.pwgtree-tree .pwgtree-element {
 
 @keyframes ripples {
   0% {
-    border: 0 solid #f70;
+    border: 0 solid var(--admin-accent);
     opacity: 0.7;
   }
   100% {
-    border: 20px solid #f70;
+    border: 20px solid var(--admin-accent);
     opacity: 0;
   }
 }
@@ -774,7 +774,7 @@ input[name="position"] {
 }
 .DeleteAlbumCancel {
   background-color: #ecf0f1;
-  color: #000;
+  color: var(--admin-text-strong);
   border-radius: 4px;
   transition: 0.1s;
 }

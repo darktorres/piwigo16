@@ -88,7 +88,7 @@
 }
 
 .albumActions a:hover span {
-  color: #f70 !important; /* keep: hover override */
+  color: var(--admin-accent) !important; /* keep: hover override */
 }
 
 .albumActions a,

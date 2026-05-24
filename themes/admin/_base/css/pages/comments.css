@@ -219,7 +219,7 @@
   bottom: 8px;
   width: 7%;
   height: 10%;
-  color: #ffa646;
+  color: var(--admin-accent-soft);
   font-size: 2em;
   background-color: #fafafa;
 }
@@ -307,7 +307,7 @@
 }
 
 .comment-paging-current {
-  color: #ffa646;
+  color: var(--admin-accent-soft);
 }
 
 .comments-reset-filters {

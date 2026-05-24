@@ -29,7 +29,7 @@
 }
 
 .stat-data-selector input:checked + label {
-  background-color: #ffa646;
+  background-color: var(--admin-accent-soft);
   color: var(--admin-bg-page);
   pointer-events: none;
 }
@@ -70,7 +70,7 @@
   left: -1000px;
   border: 1px solid #ff3363;
   visibility: hidden;
-  color: #000;
+  color: var(--admin-text-strong);
   text-decoration: none;
 }
 

@@ -136,7 +136,7 @@
   border-radius: 2px;
   padding: 0 7px;
   border: 1px solid var(--admin-input-border);
-  background-color: #fff;
+  background-color: var(--admin-input-bg);
   flex: 1;
 }
 
@@ -196,7 +196,7 @@
 }
 
 .privacy-label-container span {
-  color: #ffa646;
+  color: var(--admin-accent-soft);
   font-weight: bold;
 }
 
@@ -290,7 +290,7 @@
   border-radius: 100px;
   padding: 3px 9px;
   background-color: #686868;
-  color: #fff;
+  color: var(--admin-text-on-accent);
   margin-left: var(--space-xs);
 }
 
@@ -299,9 +299,9 @@
 #action_add_tags .item,
 #action_add_tags .item.active {
   background-image: none;
-  background-color: #ffa646;
+  background-color: var(--admin-accent-soft);
   border-color: transparent;
-  color: #000;
+  color: var(--admin-text-strong);
   border-radius: var(--radius-xl);
 }
 

@@ -30,14 +30,14 @@
     opacity 0.2s ease-in-out,
     transform 0.3s ease-in-out;
   background-color: var(--admin-accent-soft);
-  color: #3c3c3c;
+  color: var(--admin-text);
   padding: 8px 10px;
   font-style: normal;
   font-weight: 700;
   line-height: normal;
 }
 .see-out p:hover {
-  background-color: #f70;
+  background-color: var(--admin-accent);
 }
 .see-out:hover p {
   opacity: 1;

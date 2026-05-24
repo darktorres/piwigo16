@@ -5,7 +5,7 @@
 }
 
 .maintenance-action:hover {
-  color: #f70;
+  color: var(--admin-accent);
   text-decoration: none;
 }
 
@@ -63,12 +63,12 @@
   padding: 8px 10px;
   font-weight: bold;
   background-color: var(--admin-accent-soft);
-  color: #3c3c3c;
+  color: var(--admin-text);
 }
 
 .delete-sizes:hover {
-  background-color: #f70;
-  color: #3c3c3c;
+  background-color: var(--admin-accent);
+  color: var(--admin-text);
   text-decoration: none;
 }
 

@@ -16,5 +16,5 @@
 }
 
 .badge-number {
-  color: #fff;
+  color: var(--admin-text-on-accent);
 }

@@ -122,7 +122,7 @@ a#showPermissions:hover {
   background: linear-gradient(#0000, #000000b8);
 }
 #photosAddContent .Addedphotos .format-ext-name span {
-  color: #fff;
+  color: var(--admin-text-on-accent);
   font-size: var(--font-size-lg);
   font-weight: bold;
   text-transform: uppercase;
@@ -178,7 +178,7 @@ a#showPermissions:hover {
 }
 #albumCreationLoading {
   background-color: var(--admin-accent-soft);
-  color: #3c3c3c;
+  color: var(--admin-text);
   font-size: var(--font-size-xs);
   border: none;
   padding: 12.2px 28.4px;
@@ -221,7 +221,7 @@ a#showPermissions:hover {
 }
 
 .selectedAlbum #selectedAlbumNameFilter {
-  background-color: #fff;
+  background-color: var(--admin-input-bg);
   border: 2px solid #7070704f;
   border-radius: 0;
   width: 100%;
@@ -244,7 +244,7 @@ a#showPermissions:hover {
 /* After-upload action buttons (identical in both themes for the
    primary state; secondary_button stays in children — asymmetric). */
 .afterUploadActions a {
-  color: #3c3c3c;
+  color: var(--admin-text);
   font-weight: bold;
   background-color: var(--admin-accent-soft);
 }
@@ -291,7 +291,7 @@ a#showPermissions:hover {
 .deleteDerivButtons a {
   background-color: var(--admin-bg-elevated);
   padding: var(--space-sm);
-  color: #777;
+  color: var(--admin-text-muted);
   font-weight: bold;
   margin: 4px;
   border-radius: var(--radius-sm);
@@ -330,8 +330,8 @@ a#showPermissions:hover {
   padding: 0 10px;
 }
 #applyFilter.activated {
-  background-color: #ffa646;
-  color: #3c3c3c;
+  background-color: var(--admin-accent-soft);
+  color: var(--admin-text);
 }
 #removeFilters {
   margin-top: var(--space-lg);
@@ -615,7 +615,7 @@ a#showPermissions:hover {
 }
 #filter_search .icon-help-circled::before {
   margin-right: var(--space-xs);
-  color: #777;
+  color: var(--admin-text-muted);
 }
 .dimensionSlidersBlocks {
   display: flex;
@@ -844,7 +844,7 @@ a#showPermissions:hover {
   font-weight: bold;
   max-width: 41.06%;
   background-color: var(--admin-accent-soft);
-  color: #3c3c3c;
+  color: var(--admin-text);
   text-align: center;
   white-space: nowrap;
 }
@@ -853,7 +853,7 @@ a#showPermissions:hover {
   margin-right: var(--space-sm);
 }
 .go-to-porg:hover {
-  color: #3c3c3c;
+  color: var(--admin-text);
 }
 
 .promote-content .right-side .promote-text {

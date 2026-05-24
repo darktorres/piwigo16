@@ -78,7 +78,7 @@
 }
 
 .tag-header #add-tag span.icon-cancel-circled:hover {
-  color: #f70;
+  color: var(--admin-accent);
 }
 
 .tag-header #add-tag.input-mode .icon-validate {
@@ -86,15 +86,15 @@
   margin: auto 5px;
   cursor: pointer;
   background-color: var(--admin-accent-soft);
-  color: #3c3c3c;
+  color: var(--admin-text);
   font-size: 17px;
   font-weight: 700;
   padding: 7px 5.5px;
 }
 
 .tag-header #add-tag span.icon-validate:hover {
-  background-color: #f70;
-  color: #000;
+  background-color: var(--admin-accent);
+  color: var(--admin-text-strong);
   cursor: pointer;
 }
 
@@ -103,7 +103,7 @@
   display: none;
   align-items: baseline;
   height: 38px;
-  color: #777;
+  color: var(--admin-text-muted);
   font-weight: bold;
 }
 
@@ -121,7 +121,7 @@
 .comments-selection-controller .comments-selection-btn {
   background-color: #f0f0f0;
   padding: var(--space-sm);
-  color: #777;
+  color: var(--admin-text-muted);
   font-weight: bold;
   margin: 4px;
   border-radius: var(--radius-sm);
@@ -200,7 +200,7 @@
   display: flex;
   margin: auto;
   justify-content: space-between;
-  color: #fff;
+  color: var(--admin-text-on-accent);
   border-bottom: solid 1px #ffffff3d;
   padding: 5px 10px;
   min-width: 150px;
@@ -223,7 +223,7 @@
   border-radius: 100%;
   /* margin: 2px 0px; */
   margin-left: 3.4px;
-  border: solid #ffa646 2px;
+  border: solid var(--admin-accent-soft) 2px;
 }
 
 .delete-size-check .select-checkbox {
@@ -245,7 +245,7 @@
 .tag-container .tag-box[data-selected="1"] .select-checkbox,
 .delete-size-check:hover .select-checkbox,
 .delete-size-check[data-selected="1"] .select-checkbox {
-  background-color: #ffa646;
+  background-color: var(--admin-accent-soft);
 }
 
 .tag-container .tag-box .select-checkbox.show,
@@ -285,8 +285,8 @@
 }
 
 .tag-pagination .selected {
-  background: #ffa646;
-  color: #000;
+  background: var(--admin-accent-soft);
+  color: var(--admin-text-strong);
 }
 
 .tag-selection .tag-selection-content {
@@ -324,7 +324,7 @@
 
 .selection-mode-tag .selection-other-tags,
 .comments-and-others {
-  color: #ffa646;
+  color: var(--admin-accent-soft);
   font-weight: bold;
   font-size: var(--font-size-base);
 }
@@ -350,7 +350,7 @@
 }
 
 .tag-select-message a:hover {
-  color: #fff;
+  color: var(--admin-text-on-accent);
   text-decoration: none;
   background-color: #002e5f;
 }
@@ -431,7 +431,7 @@
   font-size: 1.4em;
   font-weight: bold;
   text-align: center;
-  color: #000;
+  color: var(--admin-text-strong);
   margin-bottom: var(--space-sm);
   margin-top: var(--space-md);
 }

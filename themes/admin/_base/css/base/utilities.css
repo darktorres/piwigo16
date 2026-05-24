@@ -190,7 +190,7 @@ ul.thumbnails .levelIndicatorF {
   bottom: 0;
   text-shadow: 0 0 1px #000;
   padding: 0 0 2px 5px;
-  color: #fff;
+  color: var(--admin-text-on-accent);
   font-weight: bold;
   z-index: 10;
 }

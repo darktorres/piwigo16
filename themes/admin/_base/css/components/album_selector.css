@@ -38,7 +38,7 @@
   right: -40px;
   top: -40px;
   font-size: 30px;
-  color: #fff;
+  color: var(--admin-text-on-accent);
 }
 
 .ClosePopIn:hover {
@@ -288,7 +288,7 @@
 }
 
 .linked-button-cancel:hover {
-  color: #000;
+  color: var(--admin-text-strong);
 }
 
 .AddAlbumErrors {
@@ -308,11 +308,11 @@
    alongside the album_selector component. */
 .search-result-item:hover {
   background: var(--admin-accent-pale);
-  color: #000;
+  color: var(--admin-text-strong);
   cursor: pointer;
 }
 
 .search-result-item .notClickable {
   opacity: 0.3;
-  color: #000;
+  color: var(--admin-text-strong);
 }

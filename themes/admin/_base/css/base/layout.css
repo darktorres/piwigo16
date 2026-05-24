@@ -23,7 +23,7 @@ body {
 
 #pwgHead .visit-gallery i {
   font-size: var(--font-size-md);
-  color: #777;
+  color: var(--admin-text-muted);
   margin-left: -20px;
 }
 
@@ -48,7 +48,7 @@ body {
   color: #ccc;
 }
 #pwgHead a:hover {
-  color: #fff;
+  color: var(--admin-text-on-accent);
 }
 
 #headActions {
@@ -334,7 +334,7 @@ body {
   color: #ccc;
 }
 #footer a:hover {
-  color: #fff;
+  color: var(--admin-text-on-accent);
 }
 
 #adminHome {
@@ -352,7 +352,7 @@ a.admin-main {
   text-decoration: none;
 }
 a.admin-main:hover {
-  color: #fff;
+  color: var(--admin-text-on-accent);
 }
 
 #piwigoInfos {

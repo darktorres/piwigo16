@@ -36,7 +36,7 @@ input[type="text"].dError {
 }
 .dErrorDesc {
   background-color: var(--admin-info-error-fg);
-  color: #fff;
+  color: var(--admin-text-on-accent);
   padding: 0 5px;
   border-radius: var(--radius-md);
   font-weight: bold;
@@ -54,7 +54,7 @@ input[type="text"].dError {
 
 .adminMenubarCounter {
   background-color: #666;
-  color: #fff;
+  color: var(--admin-text-on-accent);
   padding: 1px 5px;
   border-radius: var(--radius-md);
   margin-left: var(--space-xs);
@@ -138,8 +138,8 @@ input[type="text"].dError {
 }
 
 .group-rename .icon-ok:hover {
-  background-color: #f70;
-  color: #3c3c3c;
+  background-color: var(--admin-accent);
+  color: var(--admin-text);
 }
 
 .group-rename form {

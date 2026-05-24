@@ -108,7 +108,7 @@
 
 .flatpickr-current-month select:focus {
   outline: none;
-  border-bottom-color: #ffa646;
+  border-bottom-color: var(--admin-accent-soft);
 }
 
 /* Weekdays */
@@ -165,18 +165,18 @@
 }
 
 .flatpickr-day.today {
-  border-color: #ffa646;
+  border-color: var(--admin-accent-soft);
 }
 
 .flatpickr-day.selected {
-  background: #ffa646;
-  border-color: #ffa646;
-  color: #fff;
+  background: var(--admin-accent-soft);
+  border-color: var(--admin-accent-soft);
+  color: var(--admin-text-on-accent);
 }
 
 .flatpickr-day.selected:focus {
-  background: #f70;
-  border-color: #f70;
+  background: var(--admin-accent);
+  border-color: var(--admin-accent);
 }
 
 .flatpickr-day.inRange {

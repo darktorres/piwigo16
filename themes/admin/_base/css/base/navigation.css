@@ -62,8 +62,8 @@
   z-index: var(--z-dropdown);
   padding: 5px 0;
   border-radius: var(--radius-md);
-  background: linear-gradient(130deg, #f70 0%, var(--admin-accent-soft) 100%);
-  color: #fff;
+  background: linear-gradient(130deg, var(--admin-accent) 0%, var(--admin-accent-soft) 100%);
+  color: var(--admin-text-on-accent);
   -moz-osx-font-smoothing: grayscale;
 }
 
@@ -75,7 +75,7 @@
   transform: translateX(-50%);
   border-width: 5px;
   border-style: solid;
-  border-color: transparent transparent #f70;
+  border-color: transparent transparent var(--admin-accent);
 }
 
 #catOptionsSmall.dropdown::after {
@@ -96,13 +96,13 @@
 
 .dropdown-option:hover {
   text-decoration: none;
-  color: #fff;
-  background-color: #00000012;
+  color: var(--admin-text-on-accent);
+  background-color: var(--admin-text-strong)00012;
 }
 
 .badge-number {
   border-radius: var(--radius-xl);
-  background-color: #777;
+  background-color: var(--admin-text-muted);
   font-size: var(--font-size-lg);
   margin-left: var(--space-sm);
   font-weight: 700;
@@ -124,7 +124,7 @@
 
 .selected-pagination {
   background: var(--admin-accent-soft);
-  color: #3c3c3c;
+  color: var(--admin-text);
 }
 
 .pagination-container {
@@ -173,7 +173,7 @@
 }
 
 .pagination-item-container a.actual {
-  background-color: #ffa646;
+  background-color: var(--admin-accent-soft);
   border-radius: var(--radius-lg);
   pointer-events: none;
   padding: 0 7px;
@@ -221,7 +221,7 @@
   margin: var(--space-sm);
   z-index: 1000;
   background-color: var(--admin-accent-soft);
-  color: #fff;
+  color: var(--admin-text-on-accent);
   padding: var(--space-lg);
   font-weight: bold;
   border-radius: 34px;

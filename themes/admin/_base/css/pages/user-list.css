@@ -106,7 +106,7 @@
 
 #UserList .AddUserBlock button {
   background-color: var(--admin-accent-soft);
-  color: #3c3c3c;
+  color: var(--admin-text);
   font-size: var(--font-size-xs);
   font-weight: 700;
   padding: 16px 10px;
@@ -262,7 +262,7 @@
 
 .AddUserSubmit:hover {
   color: #3f3e40;
-  background-color: #f70;
+  background-color: var(--admin-accent);
 }
 
 /*******  */
@@ -308,7 +308,7 @@ a.group_users {
   left: 50%;
   font-size: 50px;
   line-height: 50px;
-  color: #fff;
+  color: var(--admin-text-on-accent);
   z-index: var(--z-dropdown);
   text-shadow: 0 0 20px rgb(0, 0, 0, 0.4);
   transition: opacity 200ms ease;
@@ -413,7 +413,7 @@ a.group_users {
 
 .edit-user-icons .icon-trash-1:hover::before,
 .king-of-this-piwigo {
-  color: #ffa646;
+  color: var(--admin-accent-soft);
 }
 
 .royal-court-of-this-piwigo {
@@ -442,7 +442,7 @@ a.group_users {
 
 /* Per-page additions */
 .icon-help-circled {
-  color: #777;
+  color: var(--admin-text-muted);
   cursor: help;
 }
 
@@ -686,7 +686,7 @@ a.group_users {
 }
 
 .user-container-checkbox.user-list-checkbox .select-checkbox {
-  background-color: #f3f3f3;
+  background-color: var(--admin-bg-elevated);
 }
 
 .user-container-checkbox.user-list-checkbox i {
@@ -703,7 +703,7 @@ a.group_users {
   font-size: 1.5em;
   border: 1px solid #e6e6e6;
   border-radius: 50%;
-  background-color: #f3f3f3;
+  background-color: var(--admin-bg-elevated);
   width: 27px;
 }
 
@@ -923,7 +923,7 @@ a.group_users {
 
 .user-property-label span,
 .dates-infos {
-  color: #ffa646;
+  color: var(--admin-accent-soft);
   font-weight: bold;
   margin-left: var(--space-xs);
 }
@@ -933,7 +933,7 @@ a.group_users {
   align-items: center;
   padding: var(--space-xs);
   color: #353535;
-  background-color: #f3f3f3;
+  background-color: var(--admin-bg-elevated);
 }
 
 .user-property-input-icon .icon-show-password {
@@ -942,7 +942,7 @@ a.group_users {
 }
 
 .user-property-input-icon .icon-show-password:hover {
-  color: #ffa646;
+  color: var(--admin-accent-soft);
 }
 
 .user-property-input-icon .user-property-input {
@@ -956,7 +956,7 @@ a.group_users {
 }
 
 /* .AddUserPopInContainer .user-property-input {
-  background-color: #F3F3F3;
+  background-color: var(--admin-bg-elevated);
 } */
 
 .user-property-button {
@@ -1183,7 +1183,7 @@ a.group_users {
   align-items: center;
   width: 100%;
   margin: 10px 0;
-  background-color: #f3f3f3;
+  background-color: var(--admin-bg-elevated);
 }
 
 .edit-password-success .edit-password-success-reset-link span,
@@ -1194,8 +1194,8 @@ a.group_users {
 
 .edit-password-success .edit-password-success-reset-link span:hover,
 .AddUserPasswordInputContainer span:hover {
-  color: #fff;
-  background-color: #f70;
+  color: var(--admin-text-on-accent);
+  background-color: var(--admin-accent);
 }
 
 #result_send_mail_copy {
@@ -1252,7 +1252,7 @@ a.group_users {
   font-weight: bold;
   cursor: pointer;
   background-color: #e8e8e8;
-  color: #777;
+  color: var(--admin-text-muted);
 }
 
 #AddUserSuccessContainer .icon-button {
@@ -1276,7 +1276,7 @@ a.group_users {
 
 .button-copy-pass {
   margin: auto;
-  color: #777;
+  color: var(--admin-text-muted);
   font-weight: bold;
 }
 
@@ -1289,7 +1289,7 @@ a.group_users {
 .EditUserGenPassword:hover,
 .EditUserGenPassword:active,
 .AddUserGenPassword span:hover {
-  color: #ffa646;
+  color: var(--admin-accent-soft);
 }
 
 .EditUserGenPassword span,
@@ -1358,7 +1358,7 @@ a.group_users {
   display: block;
   cursor: pointer;
   background-color: var(--admin-accent-soft);
-  color: #3c3c3c;
+  color: var(--admin-text);
   font-size: 1.1em;
   font-weight: 700;
   padding: 10px 20px;
@@ -1366,8 +1366,8 @@ a.group_users {
 
 .edit-username-validate:hover,
 .edit-password-validate:hover {
-  background-color: #f70;
-  color: #000;
+  background-color: var(--admin-accent);
+  color: var(--admin-text-strong);
   cursor: pointer;
 }
 
@@ -1381,7 +1381,7 @@ a.group_users {
 .edit-username-cancel:hover,
 .edit-password-cancel:hover,
 .user-property-main-user-cancel:hover {
-  color: #000;
+  color: var(--admin-text-strong);
 }
 
 .user-property-register-visit {
@@ -1591,16 +1591,16 @@ a.group_users {
   font-size: 1.1em;
   font-weight: bold;
   background-color: var(--admin-accent-soft);
-  color: #3c3c3c;
+  color: var(--admin-text);
 }
 
 .update-user-button:hover {
-  background-color: #f70;
+  background-color: var(--admin-accent);
 }
 
 .update-user-button.can-update {
   background-color: #ffc275;
-  color: #fff;
+  color: var(--admin-text-on-accent);
 }
 
 .close-update-button {
@@ -1819,7 +1819,7 @@ a.group_users {
 #AddUser .item,
 #AddUser .item.active {
   background-image: none;
-  background-color: #ffa646;
+  background-color: var(--admin-accent-soft);
   border-color: transparent;
 
   border-radius: var(--radius-xl);
@@ -1837,7 +1837,7 @@ a.group_users {
 #UserList .item .remove:hover,
 #GuestUserList .item .remove:hover,
 #AddUser .item .remove:hover {
-  background-color: #f70;
+  background-color: var(--admin-accent);
 }
 
 /* selection panel */
@@ -1862,7 +1862,7 @@ a.group_users {
 
 .selection-other-users {
   display: block;
-  color: #ffa646;
+  color: var(--admin-accent-soft);
   font-weight: bold;
   font-size: var(--font-size-base);
 }
@@ -2111,7 +2111,7 @@ Advanced filter
 }
 
 .tileView .user-container:hover .user-container-edit {
-  color: #777;
+  color: var(--admin-text-muted);
 }
 
 .tileView .user-container-username {
@@ -2239,16 +2239,16 @@ Advanced filter
   width: 25px;
   height: 25px;
 
-  border: solid #ffa646 2px;
+  border: solid var(--admin-accent-soft) 2px;
 }
 
 .selectable .select-checkbox i {
-  color: #fff;
+  color: var(--admin-text-on-accent);
   margin: 5px 0 0 13px;
 }
 
 .selectable:hover .select-checkbox {
-  background-color: #ffa646;
+  background-color: var(--admin-accent-soft);
 }
 
 .selectable .user-first-col:hover {
@@ -2297,7 +2297,7 @@ Advanced filter
 
   font-size: 10px;
   padding: 2px 6px;
-  color: #000;
+  color: var(--admin-text-strong);
 
   margin: 0 4px 0 7px;
   display: none;

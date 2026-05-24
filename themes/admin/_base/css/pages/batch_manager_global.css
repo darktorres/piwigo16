@@ -14,7 +14,7 @@
   display: none;
   position: absolute;
   top: 0;
-  color: #fff;
+  color: var(--admin-text-on-accent);
   width: 98%;
   justify-content: space-between;
   background-color: #313234;
@@ -44,7 +44,7 @@
 }
 
 #batchManagerGlobal ul.thumbnails div.actions a {
-  color: #fff;
+  color: var(--admin-text-on-accent);
 }
 #batchManagerGlobal ul.thumbnails span.wrap1:hover div.actions {
   display: flex;
@@ -63,7 +63,7 @@
 #batchManagerGlobal #applyOnDetails {
   text-align: center;
   margin-top: 8px;
-  color: #ffa646;
+  color: var(--admin-accent-soft);
   font-weight: bold;
 }
 #batchManagerGlobal .actionButtons {
@@ -105,10 +105,10 @@
   content: "\e822";
   margin-left: 6px;
   font-size: var(--font-size-lg);
-  color: #777;
+  color: var(--admin-text-muted);
 }
 #batchManagerGlobal a.removeFilter:hover::before {
-  color: #ffa646;
+  color: var(--admin-accent-soft);
 }
 #batchManagerGlobal a.removeFilter:hover {
   color: var(--admin-info-error-fg);
@@ -166,8 +166,8 @@
   z-index: var(--z-dropdown);
   padding: 5px 0;
   border-radius: 10px 10px 0 0;
-  background: linear-gradient(130deg, #f70 0%, var(--admin-accent-soft) 100%);
-  color: #fff;
+  background: linear-gradient(130deg, var(--admin-accent) 0%, var(--admin-accent-soft) 100%);
+  color: var(--admin-text-on-accent);
   position: absolute;
   bottom: 100%;
   overflow: hidden;
@@ -181,14 +181,14 @@
   padding: 5px 10px;
   font-size: var(--font-size-xs);
   padding-right: var(--space-md);
-  color: #fff;
+  color: var(--admin-text-on-accent);
   font-weight: 600;
   cursor: pointer;
 }
 
 .addFilter-dropdown a:hover {
   text-decoration: none;
-  color: #fff;
+  color: var(--admin-text-on-accent);
   background-color: rgb(0, 0, 0, 0.123);
 }
 
@@ -258,9 +258,9 @@
 #action_add_tags .item,
 #action_add_tags .item.active {
   background-image: none;
-  background-color: #ffa646;
+  background-color: var(--admin-accent-soft);
   border-color: transparent;
-  color: #000;
+  color: var(--admin-text-strong);
 
   border-radius: var(--radius-xl);
 }

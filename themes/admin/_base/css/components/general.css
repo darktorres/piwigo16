@@ -45,7 +45,7 @@ or
 }
 
 .head-button-1 {
-  color: #3c3c3c;
+  color: var(--admin-text);
   background: var(--admin-accent-soft);
   box-shadow: 0 2px #bb7932;
 }
@@ -59,7 +59,7 @@ or
 .head-button-1:hover {
   background: var(--admin-accent);
   text-decoration: none;
-  color: #3c3c3c;
+  color: var(--admin-text);
   transition: all 125ms ease-out;
 }
 
@@ -151,7 +151,7 @@ Advanced filter
 }
 
 .advanced-filter-close:hover {
-  color: #f70;
+  color: var(--admin-accent);
 }
 
 .advanced-filter-container {
@@ -334,7 +334,7 @@ Info
 .info-message a:hover,
 .info-warning a:hover,
 .info-error a:hover {
-  color: #fff;
+  color: var(--admin-text-on-accent);
 }
 
 @keyframes info-error-appear {

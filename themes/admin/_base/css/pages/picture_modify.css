@@ -100,7 +100,7 @@
 }
 
 #picture-content select {
-  background-color: #fff;
+  background-color: var(--admin-input-bg);
   color: #4e4e4e;
   border: 2px solid #7070704f;
   padding: 10px 18px;
@@ -166,7 +166,7 @@
 }
 
 .format-card-ext {
-  color: #fff;
+  color: var(--admin-text-on-accent);
   font-weight: bolder;
   font-size: 50px;
   z-index: 2;
@@ -183,13 +183,13 @@
 }
 
 .format-card-actions a {
-  color: #fff;
+  color: var(--admin-text-on-accent);
   font-size: 24px;
   margin: 0 10px;
 }
 
 .format-card-size {
-  color: #fff;
+  color: var(--admin-text-on-accent);
   margin-top: var(--space-xs);
   z-index: 2;
   font-size: var(--font-size-xl);
@@ -202,9 +202,9 @@
 .picture-modify-tomselect.ts-wrapper .ts-control > .item,
 .picture-modify-tomselect.ts-wrapper .ts-control > .item.active {
   background-image: none;
-  background-color: #ffa646;
+  background-color: var(--admin-accent-soft);
   border-color: transparent;
-  color: #000;
+  color: var(--admin-text-strong);
   border-radius: var(--radius-xl);
 }
 
@@ -225,7 +225,7 @@
 
 .linked-albums-badge.badge-red {
   background: var(--admin-info-error-fg);
-  color: #fff;
+  color: var(--admin-text-on-accent);
 }
 
 .invisible-related-categories-select {

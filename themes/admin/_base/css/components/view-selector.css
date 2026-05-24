@@ -16,7 +16,7 @@
 .AlbumViewSelector input:checked + label,
 .UserViewSelector input:checked + label {
   background: transparent;
-  color: #fff;
+  color: var(--admin-text-on-accent);
 }
 
 .AlbumViewSelector input:checked + label span,

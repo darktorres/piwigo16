@@ -45,11 +45,10 @@ final readonly class NoPhotoYetRenderer
 
         if (
             RequestContextRegistry::current() !== RequestContext::Admin
-            and StringUtil::scriptBasename() != 'identification'
-            and StringUtil::scriptBasename() != 'password'
-            and StringUtil::scriptBasename() != 'ws'
+            and !str_starts_with($_no_photo_yet_route, '/identification')
+            and !str_starts_with($_no_photo_yet_route, '/password')
             and !str_starts_with($_no_photo_yet_route, '/ws')
-            and StringUtil::scriptBasename() != 'popuphelp'
+            and !str_starts_with($_no_photo_yet_route, '/popuphelp')
             and ($this->permissionService->isAGuest() or $this->permissionService->isAdmin())
             and $this->session->noPhotoYet === null
         ) {

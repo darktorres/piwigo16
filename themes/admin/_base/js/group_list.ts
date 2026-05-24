@@ -881,15 +881,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const raw = usersCache.storage[usersCache.key ?? ''] ?? '{"data":[]}';
         const cachedData = (JSON.parse(raw) as { data: CachedUser[] }).data;
-        cachedData.forEach((u) =>
-            addUserTs!.addOption({ value: String(u.id), text: u.username })
-        );
+        cachedData.forEach((u) => addUserTs!.addOption({ value: String(u.id), text: u.username }));
         idSearch = document.getElementById('UserList')?.dataset['groupId'] ?? '';
-        Object.values(
-            addUserTs.options as Record<string, { value: string; text: string }>
-        ).forEach((opt) => {
-            if (opt.text === 'guest') addUserTs!.removeOption(opt.value);
-        });
+        Object.values(addUserTs.options as Record<string, { value: string; text: string }>).forEach(
+            (opt) => {
+                if (opt.text === 'guest') addUserTs!.removeOption(opt.value);
+            }
+        );
         qsa('.UsernameBlock').forEach((el) => {
             const uid = el.dataset['id'];
             if (uid !== undefined && uid !== '') addUserTs!.removeOption(uid);

@@ -282,9 +282,7 @@ function setSliderValue(el: HTMLElement | null | undefined, val: number) {
 }
 
 // Tom Select instances for groups
-const groupSelectEls = Array.from(
-    document.querySelectorAll<HTMLSelectElement>('[data-ts=groups]')
-);
+const groupSelectEls = Array.from(document.querySelectorAll<HTMLSelectElement>('[data-ts=groups]'));
 const tsOptions = {
     valueField: 'value',
     labelField: 'label',

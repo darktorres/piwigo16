@@ -101,7 +101,10 @@ type CachedSelect = HTMLSelectElement & {
 };
 
 export abstract class AbstractTomSelectCache extends LocalStorageCache<CacheItem[]> {
-    protected _attach(target: HTMLSelectElement | null, globalOptions: TomSelectAttachOptions): void {
+    protected _attach(
+        target: HTMLSelectElement | null,
+        globalOptions: TomSelectAttachOptions
+    ): void {
         if (target === null) return;
         (target as CachedSelect)._cache = this;
         this.get((data) => {

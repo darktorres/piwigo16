@@ -18,7 +18,6 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\LoggerRegistry;
-use Piwigo\Core\Paths;
 use Piwigo\Core\ZipExtractor;
 use Piwigo\Event\Lifecycle\PluginInstallErrors;
 use Piwigo\Html\HtmlService;
@@ -54,7 +53,6 @@ final class Plugins
         private readonly EventDispatcherInterface $dispatcher,
         private readonly PluginRegistry $pluginRegistry,
         private readonly PemUrlResolver $pemUrlResolver,
-        private readonly Paths $paths,
         private readonly CacheItemPoolInterface $pool,
     ) {
         $this->getFsPlugins();

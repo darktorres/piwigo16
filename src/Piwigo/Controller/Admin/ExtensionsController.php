@@ -41,7 +41,6 @@ use Piwigo\Exception\ValidationException;
 use Piwigo\Http\RedirectResponder;
 use Piwigo\Language\LanguageRepository;
 use Piwigo\Plugin\PluginRegistry;
-use Piwigo\Plugin\PluginRepository;
 use Piwigo\Plugin\PluginState;
 use Piwigo\Session\Session;
 use Piwigo\Storage\StorageRegistry;
@@ -75,7 +74,6 @@ final readonly class ExtensionsController implements AdminSubControllerInterface
         private Plugins $plugins,
         private PluginRegistry $pluginRegistry,
         private IgnoredUpdatesRepository $ignoredUpdates,
-        private PluginRepository $pluginRepository,
         private PreferencesService $preferencesService,
         private Session $session,
         private UrlGenerator $urlGenerator,

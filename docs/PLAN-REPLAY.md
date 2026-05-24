@@ -125,12 +125,14 @@ P0 Tooling ──→ P1 Composer + Rector + PHPStan L5
                  │
                  ├─→ P11 Type correctness + mixed elimination
                  │
-                 └─→ P12 Quality gates
+                 └─→ P12 Layer decoupling (break 49-ns SCC)
                       │
-                      └─→ P13 Repository restructure
+                      └─→ P13 Quality gates
+                           │
+                           └─→ P14 Repository restructure
 ```
 
-**Critical path:** P0 → P1 → P2 → P3 → P4 → P5 → P6 → P8 → P9 (13 sequential).
+**Critical path:** P0 → P1 → P2 → P3 → P4 → P5 → P6 → P8 → P9 → P12 → P14 (15 sequential).
 **Parallel:** P4.5 alongside P5-P6. P7 steps 1-5 alongside P6.
 
 ---
@@ -792,7 +794,71 @@ Integration tests for every search filter combination.
 
 ---
 
-### P12 — Quality gates
+### P12 — Layer decoupling (break the 49-namespace SCC)
+
+**Depends on:** P11 (types clean — interfaces need typed contracts to be useful).
+
+49 of 53 namespaces form one strongly connected component. The code works
+(PHP-DI lazy evaluation), but the architecture has no enforceable layers —
+every namespace can reach every other namespace.
+
+#### Target layer model
+
+| Layer | Namespaces | May depend on |
+|-------|-----------|---------------|
+| L0 Data | Common, Event, Exception | nothing |
+| L1 Infrastructure | Config, Core, Db, Lang, Storage, Session, Cache, Csrf, Routing, Validation | L0 |
+| L2 Domain | Activity, Auth, Caddie, Calendar, Category, Comment, Feed, Filter, Group, History, Image, Language, Mail, Metadata, Notification, Permalink, Permission, Picture, Plugin, Rate, Search, Section, Site, Tag, Telemetry, Theme, Url, Users | L0, L1 |
+| L3 Presentation | Html, Http, Menu, Page, Template, Asset, Listener | L0, L1, L2 |
+| L4 Integration | Admin, Bootstrap, Controller, Job, Ws | L0, L1, L2, L3 |
+
+#### Current violations: 55
+
+The two dominant patterns (40 of 55 violations):
+
+1. **Domain (L2) → Html/Template (L3)**: 25 violations. Domain services call
+   `HtmlService::renderTag()`, `Template::assign()`, or import Template types
+   directly. Fix: domain services return data; presentation layer renders it.
+   Introduce `Renderable` interface or DTO pattern at the boundary.
+
+2. **Everything → Admin (L4)**: 8 violations. Domain services import admin-layer
+   types (e.g. `Activity→Admin`, `Image→Admin`, `Users→Admin`). Fix: extract
+   shared types to L2 or L1, make Admin depend on them instead.
+
+Remaining 10 violations are infrastructure reaching up (Core→Bootstrap,
+Config→Image, Lang→Users, Session→Http, Event→Ws/Comment/Image) — each
+needs case-by-case interface extraction.
+
+#### Steps
+
+1. **Add arch test** measuring SCC size and layer violation count. Starts at
+   49/55. CI fails if either number increases. Ratchet down.
+2. **Extract Html/Template interfaces to L1/L2.** Create `HtmlRenderable` or
+   similar contracts that domain services depend on instead of concrete Html/
+   Template classes. This alone cuts ~25 violations.
+3. **Push Admin deps down.** For each L2→Admin edge, move the shared type to the
+   domain namespace. Admin imports from domain, not the reverse.
+4. **Fix infrastructure back-edges.** Core→Bootstrap (extract bootable interface),
+   Config→Image (move type), Lang→Users (extract user-locale interface),
+   Session→Http (extract request-context interface), Event→concrete types
+   (events should only reference L0/L1 types).
+5. **Enforce with `pest-plugin-arch` rules.** Layer boundary assertions:
+   `expect('Piwigo\Common')->toOnlyDependOn('nothing')`,
+   `expect('Piwigo\Config')->not->toUse('Piwigo\Html')`, etc.
+
+#### Realistic target
+
+The SCC won't fully dissolve — some domain-level cycles are inherent (User↔Category
+for permissions, Category↔Image for album contents). The goal is:
+- **SCC size ≤ 15** (down from 49) — the remaining cycle is the domain core
+- **Layer violations = 0** — no L2→L3, no L2→L4, no L1→L2+ deps
+- **Arch tests enforce the layering** — new violations fail CI
+
+**Gate:** `pest --filter=arch` green. SCC ≤ 15. Layer violations = 0.
+
+---
+
+### P13 — Quality gates
 
 Coverage measurement active since P0. This phase raises thresholds and adds
 remaining quality tools now that the codebase is substantially complete.
@@ -807,7 +873,7 @@ remaining quality tools now that the codebase is substantially complete.
 
 ---
 
-### P13 — Repository restructure (STRUCTURE-PLAN)
+### P14 — Repository restructure (STRUCTURE-PLAN)
 
 Last phase. Full plan at `docs/STRUCTURE-PLAN.md`. Needs everything stable
 because it moves every directory and updates every config file.
@@ -853,7 +919,7 @@ HTTP-accessible.
 
 | Aspect | `16.x-rewrite` (original) | `16.x-v2` (replay) |
 |--------|--------------------------|---------------------|
-| Phases | 22 artificially separated | 14 phases (merged by concern) |
+| Phases | 22 artificially separated | 15 phases (merged by concern) |
 | Test framework | PHPUnit + Playwright (separate) | Pest 4 (unified: unit + browser + arch + mutate) |
 | TS unit tests | None | Vitest |
 | Commit style | 27 era-switches per 100 commits | One concern per phase |
@@ -866,6 +932,7 @@ HTTP-accessible.
 | Plugin contracts | Mixed with WS refactoring | Contracts + decomposition + extensions together (P9) |
 | Type correctness | §1.6 done, §1.7 partial, split across phases | One phase: all VOs/Entities/DTOs/Results/repos (P11) |
 | OpenAPI | SpecBuilder separate from endpoints | WS endpoints + `#[ApiMethod]` + OpenAPI together (P6) |
+| Namespace coupling | 49-ns SCC, no layering | 5-layer architecture enforced by arch tests (P12) |
 
 ---
 
@@ -903,10 +970,11 @@ each phase. Cannot be pulled from reference branch in bulk.
 | P9 Plugins + extensions | 2-3 weeks | 157 events + registries + 3 god-classes + 7 extensions |
 | P10 Security | 2-3 days | Cookies + rate limit + headers |
 | P11 Type correctness | 4-7 weeks | Full §1.6 + §1.7: 249 repo methods + 87 WsResults + 796 raw reads |
-| P12 Quality gates | 2-3 days | Mutation, a11y, bundle budgets |
-| P13 Repo restructure | 2-3 weeks | 14 steps + web-root isolation |
+| P12 Layer decoupling | 2-3 weeks | 55 violations → 0, SCC 49 → ≤15, arch tests |
+| P13 Quality gates | 2-3 days | Mutation, a11y, bundle budgets |
+| P14 Repo restructure | 2-3 weeks | 14 steps + web-root isolation |
 
-**Total: ~22-32 weeks** of focused work.
+**Total: ~24-35 weeks** of focused work.
 
 ---
 

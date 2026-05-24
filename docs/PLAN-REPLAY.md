@@ -281,6 +281,82 @@ everything else being in place first.
 - **Pest 4 requires PHPUnit ^13** — compatible with existing 13.1.11
 - **amphp/amp already installed** — no conflict with Pest Browser deps
 
+#### Branch diff dimensions
+
+- **1549 files deleted** (origin files that get replaced)
+- **2271 files added** (new files on rewrite)
+- **104 files modified** (exist on both branches, changed in place — mostly language
+  help HTML, install SQL, theme skins, tools)
+- **208 files renamed** (with content changes)
+- Total: **4132 files changed, 527K insertions, 434K deletions**
+- 21 root config files must be created from scratch in P0 (composer.json,
+  package.json, tsconfig.json, vite.config.ts, eslint.config.ts, phpstan.neon,
+  pint.json, rector.php, psalm.xml, phpunit.xml.dist, .editorconfig, etc.)
+
+#### Current gate status (reference branch)
+
+| Gate | Status | Notes |
+|------|--------|-------|
+| PHPUnit (unit) | **PASS** | 1122 tests, 3937 assertions, 1.2s |
+| PHPStan L10 | **PASS** | 0 errors |
+| Pint (PSR-12) | **PASS** | |
+| TypeScript | **PASS** | tsc --noEmit clean |
+| Vite build | **PASS** | 68 entries, 541ms |
+| Stylelint | **PASS** | 7 warnings, 0 errors |
+| Rector | **DRIFT** | 94 files would change (2 cosmetic rules: arrow fn return types) |
+| ESLint | **FAIL** | 33 errors in `tests/E2e/visual-regression.ts` (26 prettier, 7 strict) |
+
+The ESLint failures are all in one recent test utility file. Rector drift is
+cosmetic type-hint additions. Both must be fixed before claiming "all gates green."
+
+#### PHP 8.5 compatibility of origin/16.x
+
+Origin code parses cleanly on PHP 8.5 (`php -l` passes). Runtime issues:
+- **Dynamic properties** (deprecated 8.2, still warning in 8.5): found in 14 classes
+  (template 63 assigns, image 27, check_integrity 15, tabsheet 15, Logger 13).
+  Vendored libs (feedcreator 93, jshrink 38) also affected.
+- **utf8_encode/decode** (removed 8.2): 4 references — will fatal
+- **addslashes on all input**: 7 refs in common.inc.php — works but unnecessary
+- **`functions_mysql.inc.php`**: 25 mysql_ calls — dead code (only mysqli used),
+  but the file is included by name via `$conf['dblayer']` config
+
+Origin/16.x will **not run cleanly** on PHP 8.5 without patching. P0 must either:
+1. Fix the 4 `utf8_encode/decode` calls and dynamic property warnings first, OR
+2. Start P1 (Composer + vendor migration) immediately to replace the vendored libs
+   that cause most warnings
+
+#### DB query migration scope
+
+- **1168 total DB calls** (pwg_query + pwg_db_*) across all origin files
+- **266 query2array()** calls (fetch-all pattern)
+- **139 mass_inserts/mass_updates/single_insert/single_update** calls
+- **45 DB wrapper functions** in functions_mysqli.inc.php → Doctrine DBAL
+- Key mappings: pwg_query→executeQuery, query2array→fetchAllAssociative,
+  pwg_db_real_escape→prepared statements, mass_inserts→batch INSERT
+
+#### Error handling migration scope
+
+- **206 die() calls** across origin → must become exceptions or HTTP responses
+- **34 trigger_error** calls → must become exceptions
+- **78 fatal_error/bad_request/access_denied/page_not_found** calls → HTTP status codes
+
+#### Theme system migration
+
+- `themeconf.inc.php` (PHP array) → `theme.json` (JSON, schema-validated)
+- Admin themes: `admin/themes/{clear,default,roma}/themeconf.inc.php` →
+  `themes/admin/{_base,dark,light}/theme.json`
+- Gallery themes: `themes/default/themeconf.inc.php` →
+  `themes/_base/theme.json`
+- ThemeRegistry reads `theme.json`, validates against JSON schema, resolves
+  parent chains
+
+#### Admin page dispatch
+
+Origin: `admin.php` reads `$_GET['page']` and does
+`include(PHPWG_ROOT_PATH.'admin/'.$page['page'].'.php')` — dynamic file inclusion.
+Rewrite: AdminController resolves `$page` to an `AdminSubControllerInterface` service
+from the DI container. 62 admin PHP files → 9 admin controllers.
+
 ### Verified claims (correct)
 
 - origin/16.x: 947 PHP, 333 JS, 140 TPL, 83 CSS ✓

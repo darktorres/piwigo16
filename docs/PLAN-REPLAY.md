@@ -357,6 +357,70 @@ Origin: `admin.php` reads `$_GET['page']` and does
 Rewrite: AdminController resolves `$page` to an `AdminSubControllerInterface` service
 from the DI container. 62 admin PHP files → 9 admin controllers.
 
+#### CRITICAL: Namespace dependency graph forms ONE giant cycle
+
+Tarjan's SCC analysis reveals **48 of 53 namespaces form a single strongly
+connected component**. The only namespaces outside the cycle are pure data
+types (Event, Common, Exception) and leaf consumers (Routing, Listener).
+
+The full SCC: Activity, Admin, Asset, Auth, Bootstrap, Cache, Caddie,
+Calendar, Category, Comment, Config, Controller, Core, Csrf, Db, Feed,
+Filter, Group, History, Html, Http, Image, Job, Lang, Language, Mail, Menu,
+Metadata, Notification, Page, Permalink, Permission, Picture, Plugin, Rate,
+Search, Section, Session, Site, Storage, Tag, Telemetry, Template, Theme,
+Url, Users, Validation, Ws.
+
+**Impact on P5 tier ordering:**
+- The plan's "Tier 1 (no deps) → Tier 2 → Tier 3 → Tier 4" is WRONG at the
+  namespace level. All namespaces are mutually reachable.
+- Example: URL depends on Config+Core+Auth+Category+Routing+Section+Tag+Users.
+  Users depends on URL. Category depends on URL. This is a cycle.
+- **The current code works** because PHP-DI evaluates factory closures lazily —
+  dependencies resolve at call time, not definition time. A factory can reference
+  a class from namespace B even if B's services aren't wired yet, as long as the
+  class file exists (PSR-4 autoload handles that).
+
+**What this means for the replay:**
+1. All 894 src/ files must exist (PSR-4 autoloadable) before container wiring
+   can reference them. This argues for creating ALL class stubs first, then
+   wiring container, then implementing methods.
+2. OR: build container entries incrementally, accepting that `get()` calls to
+   unwired services will fail until all entries are added. Tests can only run
+   per-namespace after the FULL container is populated.
+3. The plan's P5 domain ordering is better understood as a COMMIT grouping strategy
+   (which procedural files to convert in which order) rather than a dependency
+   isolation strategy. The tiers determine narrative order, not technical order.
+4. Integration tests that boot the Kernel (ContainerSmokeTest, WsApiTest) will
+   only pass after ALL P5 domains are complete.
+
+49 bidirectional dependencies exist. Highest fanout:
+- Users: 12 bidirectional deps (Activity, Admin, Auth, Category, Comment,
+  Config, Core, Html, Http, Lang, Section, Template, Url, Ws)
+- Html: 7 bidirectional deps
+- Core: 7 bidirectional deps
+- Config: 5 bidirectional deps
+
+#### No external API calls or cron requirements
+
+- Origin makes **zero outbound HTTP calls** to third-party APIs (all URLs in
+  code are in vendored library documentation/comments)
+- **nbm.php** (notification by mail) is the only cron-callable file — it's
+  now handled by Symfony Messenger async jobs on the rewrite
+- No CSS preprocessing pipeline (15 SCSS/LESS files are vendored font files)
+- No DB triggers or stored procedures
+- No build system in origin (no Grunt/Gulp/Webpack)
+
+#### Smarty-to-Latte converter limitations
+
+The converter (`tools/smarty-to-latte/Converter.php`) handles mechanical
+rewrites via 30+ regex passes. Known residues that require manual fix:
+- Multi-arg pipes inside `{if}` conditions
+- Unrecognized function argument patterns
+- `{counter}` tags beyond start/print
+- Complex `{assign}` with nested expressions
+The converter explicitly surfaces residues in the output rather than
+silently corrupting templates.
+
 ### Verified claims (correct)
 
 - origin/16.x: 947 PHP, 333 JS, 140 TPL, 83 CSS ✓

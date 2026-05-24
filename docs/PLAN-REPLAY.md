@@ -87,52 +87,47 @@ Pest 4 (v4.7.0) replaces both PHPUnit and Playwright as a single test harness:
 
 ## Dependency graph
 
-```
-P0 Tooling ──→ P1 Composer + Rector + PHPStan L5
-                │
-                └─→ P2 PSR-4 (~51 first-party classes → src/Piwigo/)
-                     │
-                     └─→ P3 Kernel + DI + middleware + routing
-                          │
-                          └─→ P4 Config + DB + facades + constants + language
-                               │
-                     ┌─────────┴──────────────────────────┐
-                     │                                     │
-                     ↓                                     ↓
-                P4.5 Frontend tooling (parallel)      P5 Service migration
-                 │   Vite + TS + ESLint + any→0        │  664 functions → classes
-                 │   + jQuery→bun + webfont swap        │  include/ + admin/ → src/
-                 │                                     │
-                 │   SYNC: P4.5b must finish           │
-                 │   before P8 (footer_script           │
-                 │   extraction before Latte)           │
-                 │                                     │
-                 ├──────────┐                          │
-                 ↓          ↓                          ↓
-            P7 CSS +    P6 WS endpoints ←─────────────┘
-            Tailwind    + OpenAPI
-                 │          │
-                 └────┬─────┘
-                      ↓
-                 P8 Templates + assets
-                 │   (Smarty → Latte + ViteManifest)
-                 │
-                 └─→ P9 Plugin/Theme contracts
-                 │   + god-class decomposition
-                 │   + 7 bundled extensions
-                 │
-                 ├─→ P10 Security hardening
-                 │
-                 ├─→ P11 Type correctness + mixed elimination
-                 │
-                 └─→ P12 Layer decoupling (break 49-ns SCC)
-                      │
-                      └─→ P13 Quality gates
-                           │
-                           └─→ P14 Repository restructure
+```mermaid
+graph TD
+    P0["P0 Tooling"]
+    P1["P1 Composer + Rector + PHPStan L5"]
+    P2["P2 PSR-4"]
+    P3["P3 Kernel + DI + middleware"]
+    P4["P4 Config + DB + facades + constants + language"]
+    P4_5["P4.5 Frontend tooling<br/><small>Vite + TS + jQuery→bun + any→0</small>"]
+    P5["P5 Service migration<br/><small>664 functions → classes</small>"]
+    P6["P6 WS endpoints + OpenAPI"]
+    P7["P7 CSS + Tailwind"]
+    P8["P8 Templates + assets<br/><small>Smarty → Latte + ViteManifest</small>"]
+    P9["P9 Plugin/Theme contracts<br/><small>+ god-class decomposition + 7 extensions</small>"]
+    P10["P10 Security hardening"]
+    P11["P11 Type correctness + mixed elimination"]
+    P12["P12 Layer decoupling<br/><small>break 49-ns SCC</small>"]
+    P13["P13 Quality gates"]
+    P14["P14 Repository restructure"]
+
+    P0 --> P1 --> P2 --> P3 --> P4
+    P4 --> P4_5
+    P4 --> P5
+    P4_5 --> P7
+    P4_5 --> P6
+    P4_5 -.->|P4.5b before P8| P8
+    P5 --> P6
+    P7 --> P8
+    P6 --> P8
+    P8 --> P9
+    P9 --> P10
+    P9 --> P11
+    P9 --> P12
+    P12 --> P13 --> P14
+
+    style P0 fill:#4a5568,color:#fff
+    style P5 fill:#c53030,color:#fff
+    style P12 fill:#c53030,color:#fff
+    style P14 fill:#c53030,color:#fff
 ```
 
-**Critical path:** P0 → P1 → P2 → P3 → P4 → P5 → P6 → P8 → P9 → P12 → P14 (15 sequential).
+**Critical path:** P0 → P1 → P2 → P3 → P4 → P5 → P6 → P8 → P9 → P12 → P14.
 **Parallel:** P4.5 alongside P5-P6. P7 steps 1-5 alongside P6.
 
 ---

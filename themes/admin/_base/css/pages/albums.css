@@ -273,14 +273,6 @@ ul.pwgtree-tree .pwgtree-element {
   cursor: move;
 }
 
-.showCreateAlbum {
-  text-align: left;
-  margin: 0 1em 25px 20px;
-  line-height: 22px;
-}
-.showCreateAlbum .userSeparator {
-  margin: 0 5px;
-}
 .afterUploadActions {
   text-align: center;
   margin-bottom: var(--space-xl);

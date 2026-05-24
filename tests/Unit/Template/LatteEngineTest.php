@@ -8,10 +8,8 @@ use Latte\Runtime\Html;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Core\Lang;
 use Piwigo\Lang\Translator;
-use Piwigo\Template\CssLoader;
 use Piwigo\Template\Latte\PiwigoExtension;
 use Piwigo\Template\LatteEngine;
-use Piwigo\Template\ScriptLoader;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 
@@ -201,45 +199,9 @@ final class LatteEngineTest extends TestCase
         );
     }
 
-    /**
-     * Phase B.3 smoke — the asset functions are stateful: they read and
-     * write through TemplateRegistry::current()'s ScriptLoader / CssLoader
-     * and the html_head_elements buffer. The tests below stage a
-     * reflection-constructed Template (skipping its Smarty-bootstrapping
-     * constructor) with fresh loaders, run the function, and assert the
-     * loader received the entry.
-     */
-    public function test_phase_b3_combine_script_writes_to_registered_template(): void
-    {
-        $tpl = $this->stageTemplateWithLoaders();
-
-        PiwigoExtension::combineScript(
-            id: 'tags',
-            path: 'themes/admin/_base/js/tags.js',
-        );
-
-        $scripts = $tpl->scriptLoader->getScripts();
-        self::assertNotEmpty($scripts);
-        self::assertStringEndsWith('.js', $scripts[0]->path);
-    }
-
-    public function test_phase_b3_combine_css_writes_to_registered_template(): void
-    {
-        $this->stageTemplateWithLoaders();
-
-        // CssLoader's registered_css is private and there's no public getter.
-        // The smoke we can run is: combineCss doesn't raise on a valid path,
-        // the auto-id branch (md5 of path when no id given) doesn't crash,
-        // and the order arg doesn't blow up CssLoader::add.
-        PiwigoExtension::combineCss(path: 'themes/_base/print.css', order: -10);
-        PiwigoExtension::combineCss(path: 'themes/admin/_base/explicit.css', id: 'explicit', order: 5);
-
-        $this->expectNotToPerformAssertions();
-    }
-
     public function test_phase_b3_html_head_appends_to_buffer(): void
     {
-        $tpl = $this->stageTemplateWithLoaders();
+        $tpl = $this->stageTemplate();
 
         PiwigoExtension::htmlHead("<link rel='preload' href='/foo.js'>");
         PiwigoExtension::htmlHead('   ');
@@ -262,7 +224,7 @@ final class LatteEngineTest extends TestCase
      */
     public function test_phase_b6_help_latte_fixture_renders_end_to_end(): void
     {
-        $this->stageTemplateWithLoaders();
+        $this->stageTemplate();
         Lang::loadArray(['Help' => 'Aide']);
 
         $engine = new LatteEngine($this->tempDir);
@@ -293,7 +255,7 @@ final class LatteEngineTest extends TestCase
      */
     public function test_phase_c_tabsheet_latte_round_trip(): void
     {
-        $this->stageTemplateWithLoaders();
+        $this->stageTemplate();
 
         $engine = new LatteEngine($this->tempDir);
         $output = $engine->render('themes/admin/_base/template/tabsheet.latte', [
@@ -316,7 +278,7 @@ final class LatteEngineTest extends TestCase
 
     public function test_phase_c_tabsheet_latte_skips_render_when_empty(): void
     {
-        $this->stageTemplateWithLoaders();
+        $this->stageTemplate();
 
         $engine = new LatteEngine($this->tempDir);
         $output = $engine->render('themes/admin/_base/template/tabsheet.latte', [
@@ -329,7 +291,7 @@ final class LatteEngineTest extends TestCase
 
     public function test_phase_b6_help_latte_drops_class_when_sync_enabled(): void
     {
-        $this->stageTemplateWithLoaders();
+        $this->stageTemplate();
 
         $engine = new LatteEngine($this->tempDir);
         $output = $engine->render('themes/admin/_base/template/help.latte', [
@@ -355,8 +317,6 @@ final class LatteEngineTest extends TestCase
         Lang::loadArray(['Help' => 'Aide']);
 
         $tpl = new \ReflectionClass(Template::class)->newInstanceWithoutConstructor();
-        $tpl->scriptLoader = new ScriptLoader();
-        $tpl->cssLoader = new CssLoader();
 
         $dirsProp = new \ReflectionProperty(Template::class, 'template_dirs');
         $dirsProp->setValue($tpl, [dirname(__DIR__, 3) . '/themes/admin/_base/template']);
@@ -408,16 +368,9 @@ final class LatteEngineTest extends TestCase
     }
 
 
-    /**
-     * Reflection-construct a Template with usable loaders but no Smarty
-     * bootstrap. Registers it as the current template; the tearDown
-     * calls TemplateRegistry::reset() to keep tests isolated.
-     */
-    private function stageTemplateWithLoaders(): Template
+    private function stageTemplate(): Template
     {
         $tpl = new \ReflectionClass(Template::class)->newInstanceWithoutConstructor();
-        $tpl->scriptLoader = new ScriptLoader();
-        $tpl->cssLoader = new CssLoader();
         TemplateRegistry::set($tpl);
 
         return $tpl;

@@ -7,24 +7,20 @@ namespace Piwigo\Template;
 use Latte\Runtime\Html;
 use Piwigo\Config\Config;
 use Piwigo\Config\ConfigService;
-use Piwigo\Core\AppInfo;
 use Piwigo\Core\Filesystem;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
-use Piwigo\Event\Template\CombinedCss;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
-use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Page-rendering coordinator: holds the per-request output buffer, the
- * JS/CSS asset registries, the registered template-variable bag, and
- * the theme search path. Renders `.latte` templates through
- * {@see LatteEngine::default()}.
+ * registered template-variable bag, and the theme search path. Renders
+ * `.latte` templates through {@see LatteEngine::default()}.
  *
  * After Phase F.1, the engine surface is direct: `parse($file)` /
  * `pparse($file)` / `assignVarFromTemplate($var, $file)` take the
@@ -49,14 +45,6 @@ final class Template
     /** @var string[] - Content to add before </head> tag */
     public array $html_head_elements = [];
 
-    /** @var ScriptLoader */
-    public $scriptLoader;
-
-    /** @const string */
-    public const string COMBINED_CSS_TAG = '<!-- COMBINED_CSS -->';
-    /** @var CssLoader */
-    public $cssLoader;
-
     /** @var array<int, list<mixed>> - Runtime buttons on picture page */
     public array $picture_buttons = [];
     /** @var array<int, list<mixed>> - Runtime buttons on index page */
@@ -71,9 +59,6 @@ final class Template
     public function __construct(string $root = '.', $theme = '', string $path = 'template')
     {
         $lang_info = Lang::langInfo();
-
-        $this->scriptLoader = new ScriptLoader();
-        $this->cssLoader = new CssLoader();
 
         if (!Config::has('data_dir_checked')) {
             $dir = Kernel::service(Paths::class)->root . Config::dataLocation();
@@ -399,30 +384,6 @@ final class Template
      */
     public function flush(): void
     {
-        $css = $this->cssLoader->getCss();
-
-        $content = [];
-        foreach ($css as $combi) {
-            $href = UrlService::embellishUrl(UrlService::getRootUrl().$combi->path);
-            if (!is_string($href)) {
-                $href = UrlService::getRootUrl().$combi->path;
-            }
-            if (!str_starts_with($combi->path, 'dist/')) {
-                $href .= '?v' . ($combi->version ?: AppInfo::VERSION);
-            }
-            // trigger the event for eventual use of a cdn
-            $cssEvent = new CombinedCss($href, $combi);
-            Kernel::service(EventDispatcherInterface::class)->dispatch($cssEvent);
-            $href = $cssEvent->href;
-            $content[] = '<link rel="stylesheet" type="text/css" href="'.$href.'">';
-        }
-        $this->output = str_replace(
-            self::COMBINED_CSS_TAG,
-            implode("\n", $content),
-            $this->output
-        );
-        $this->cssLoader->clear();
-
         if (count($this->html_head_elements) > 0) {
             $search = "\n</head>";
             $pos = strpos($this->output, $search);

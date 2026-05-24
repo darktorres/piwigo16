@@ -121,11 +121,9 @@ final class PiwigoPolicyTest extends TestCase
         self::assertTrue($policy->isFunctionAllowed('htmlRadios'));
         self::assertTrue($policy->isFunctionAllowed('url_is_remote'));
 
-        // Asset-pipeline functions mutate per-request layout state — deny.
+        // Asset functions emit tags owned by the core layout — deny.
         self::assertFalse($policy->isFunctionAllowed('viteEntry'));
         self::assertFalse($policy->isFunctionAllowed('cssLink'));
-        self::assertFalse($policy->isFunctionAllowed('combineScript'));
-        self::assertFalse($policy->isFunctionAllowed('combineCss'));
         self::assertFalse($policy->isFunctionAllowed('htmlHead'));
         // math() eval-evaluates a user-supplied expression — deny for
         // plugins even though regex-validated inside.
@@ -141,7 +139,6 @@ final class PiwigoPolicyTest extends TestCase
         self::assertTrue($policy->isFilterAllowed('stripslashes'));
         self::assertTrue($policy->isFunctionAllowed('viteEntry'));
         self::assertTrue($policy->isFunctionAllowed('cssLink'));
-        self::assertTrue($policy->isFunctionAllowed('combineScript'));
         self::assertTrue($policy->isFunctionAllowed('htmlHead'));
         self::assertTrue($policy->isFunctionAllowed('math'));
 
@@ -179,11 +176,11 @@ final class PiwigoPolicyTest extends TestCase
         $engine->renderFromString("{='/etc/passwd'|file_exists}");
     }
 
-    public function test_sandboxed_engine_blocks_asset_pipeline_function(): void
+    public function test_sandboxed_engine_blocks_asset_function(): void
     {
         $engine = new LatteEngine($this->tempDir, PiwigoPolicy::createPluginPolicy());
 
         $this->expectException(SecurityViolationException::class);
-        $engine->renderFromString("{do combineScript(id: 'x', load: 'footer', path: 'x.js')}");
+        $engine->renderFromString("{=viteEntry('x')}");
     }
 }

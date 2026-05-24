@@ -79,10 +79,9 @@ final class PiwigoPolicy extends SecurityPolicy
 
     /**
      * Functions safe for plugin templates: form-rendering helpers and
-     * read-only lookups. Excludes the asset-pipeline functions
-     * (`combineScript`, `combineCss`, `getCombinedScripts`,
-     * `getCombinedCss`, `htmlHead`) — those mutate per-request state
-     * owned by the core layout. Excludes `math()` because even though
+     * read-only lookups. Excludes the asset functions (`viteEntry`,
+     * `cssLink`, `htmlHead`) — those emit tags owned by the core
+     * layout. Excludes `math()` because even though
      * the implementation regex-validates against a function whitelist
      * before eval, exposing it to plugin templates needs a deliberate
      * decision.
@@ -106,8 +105,8 @@ final class PiwigoPolicy extends SecurityPolicy
 
     /**
      * Permissive policy for trusted core templates. Adds `do`, `include`,
-     * `extends`, `layout`, `embed`, `import`, plus the asset-pipeline
-     * functions and dangerous filters. The `php` tag remains disallowed
+     * `extends`, `layout`, `embed`, `import`, plus the asset functions
+     * and dangerous filters. The `php` tag remains disallowed
      * even for core — Latte expressions cover everything the templates
      * need.
      */
@@ -125,8 +124,6 @@ final class PiwigoPolicy extends SecurityPolicy
         $policy->allowFunctions([
             ...self::PLUGIN_FUNCTIONS,
             'viteEntry', 'cssLink',
-            'combineScript', 'getCombinedScripts',
-            'combineCss', 'getCombinedCss',
             'htmlHead',
             'math',
         ]);

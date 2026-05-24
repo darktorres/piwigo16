@@ -16,8 +16,6 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
-use Piwigo\Template\ScriptLoader;
-use Piwigo\Template\Template;
 use Piwigo\Template\TemplateRegistry;
 use Piwigo\Url\UrlGenerator;
 use Piwigo\Url\UrlService;
@@ -43,11 +41,9 @@ use Piwigo\Users\PermissionService;
  *    pipe-incompatible cases (`implode`, `str_replace`, `preg_match`,
  *    …) stay un-registered and templates call them inline via
  *    `{=implode(',', $arr)}`.
- *  - **Custom helpers + stateful asset functions** — small
- *    domain-specific filters (`is_admin`, `get_device`, `url_is_remote`,
- *    …) and the asset-pipeline functions (`combineScript`,
- *    `combineCss`, `derivative`, …) that delegate to
- *    [[TemplateRegistry::current()]].
+ *  - **Custom helpers + asset functions** — small domain-specific
+ *    filters (`is_admin`, `get_device`, `url_is_remote`, …) and
+ *    the Vite asset helpers (`viteEntry`, `cssLink`, `derivative`, …).
  *
  * When adding a new filter / function: register it here AND add it
  * to the matching `PiwigoPolicy::PLUGIN_FILTERS` / `PLUGIN_FUNCTIONS`
@@ -113,10 +109,6 @@ final class PiwigoExtension extends Extension
         return [
             'viteEntry' => self::viteEntry(...),
             'cssLink' => self::cssLink(...),
-            'combineScript' => self::combineScript(...),
-            'getCombinedScripts' => self::getCombinedScripts(...),
-            'combineCss' => self::combineCss(...),
-            'getCombinedCss' => self::getCombinedCss(...),
             'derivative' => self::derivative(...),
             'htmlHead' => self::htmlHead(...),
             'htmlOptions' => self::htmlOptions(...),
@@ -299,75 +291,6 @@ final class PiwigoExtension extends Extension
     {
         $href = UrlService::getRootUrl() . $path . '?v' . AppInfo::VERSION;
         return new Html('<link rel="stylesheet" href="' . $href . '">');
-    }
-
-    // ---- Legacy asset-pipeline (to be removed in Phase 4) ----------------
-
-    public static function combineScript(
-        string $id,
-        ?string $load = null,
-        ?string $path = null,
-        array|string $require = [],
-        string|int $version = 0,
-    ): void {
-        $tpl = TemplateRegistry::current();
-        $tpl->scriptLoader->add($id, $path, $version);
-
-        // Auto-register stylesheets bundled into this entry by Vite.
-        // Mirrors Template::funcCombineScript — without this, side-effect
-        // CSS imports like `import './tree.css'` never reach the page.
-        $manifest = ScriptLoader::getManifest();
-        $manifestEntry = ($manifest !== null && is_array($manifest[$id] ?? null)) ? $manifest[$id] : null;
-        if ($manifestEntry !== null) {
-            $cssList = is_array($manifestEntry['css'] ?? null) ? $manifestEntry['css'] : [];
-            foreach ($cssList as $i => $cssPath) {
-                $cssPathStr = is_scalar($cssPath) ? (string) $cssPath : '';
-                if ($cssPathStr !== '') {
-                    $tpl->cssLoader->add(
-                        $id . '-vite-css-' . $i,
-                        'dist/' . $cssPathStr,
-                        $version,
-                    );
-                }
-            }
-        }
-    }
-
-    /**
-     * Returns `Latte\Runtime\Html` so the HTML payload propagates through
-     * Latte's auto-escape without needing `|noescape` at every call site.
-     */
-    public static function getCombinedScripts(): Html
-    {
-        $tpl = TemplateRegistry::current();
-        $scripts = $tpl->scriptLoader->getScripts();
-        $root = UrlService::getRootUrl();
-        $content = [];
-
-        foreach ($scripts as $script) {
-            $content[] = '<script type="module" src="' . $root . $script->path . '"></script>';
-        }
-
-        return new Html(implode("\n", $content));
-    }
-
-    public static function combineCss(
-        string $path,
-        ?string $id = null,
-        string|int $version = 0,
-        int $order = 0,
-    ): void {
-        TemplateRegistry::current()->cssLoader->add(
-            $id ?? md5($path),
-            $path,
-            $version,
-            $order,
-        );
-    }
-
-    public static function getCombinedCss(): Html
-    {
-        return new Html(Template::COMBINED_CSS_TAG);
     }
 
     /**

@@ -74,11 +74,7 @@
 
 
 
-{do combineScript(id: 'admin_footer', load: 'footer', path: 'themes/admin/_base/js/admin_footer.js')}
-
-<!-- BEGIN get_combined -->
-{=getCombinedScripts(load: 'footer')}
-<!-- END get_combined -->
+{=viteEntry('admin_footer')}
 
 </body>
 </html>

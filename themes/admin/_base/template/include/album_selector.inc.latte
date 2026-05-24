@@ -1,10 +1,8 @@
 {if empty($inc_album_selector)}
 {capture $inc_album_selector}1{/capture}
-{if empty($load_mode)}{var $load_mode = 'footer'}{/if}
-{include 'colorbox.inc.latte', load_mode: $load_mode}
-{do combineCss(path: "themes/admin/_base/css/components/album_selector.css")}
-{do combineCss(path: "themes/_base/vendor/fontello/css/gallery-icon.css", order: -10)}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
+{include 'colorbox.inc.latte'}
+{=cssLink("themes/admin/_base/css/components/album_selector.css")}
+{=viteEntry('common')}
 <script id="pwg-album-selector-data" type="application/json">{$album_selector_page_data_json|noescape}</script>
 
 <div id="addLinkedAlbum" class="linkedAlbumPopIn">

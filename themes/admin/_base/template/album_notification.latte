@@ -1,7 +1,5 @@
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-{do combineScript(id: 'album_notification', load: 'footer', path: 'themes/admin/_base/js/album_notification.js')}
-
-{do combineCss(path: "themes/admin/_base/css/pages/album_notification.css")}
+{=viteEntry('common')}
+{=viteEntry('album_notification')}
 
 <form action="{$F_ACTION}" method="post" id="categoryNotify">
 <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">

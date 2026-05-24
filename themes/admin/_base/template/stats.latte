@@ -1,7 +1,6 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 
-{do combineCss(path: "themes/admin/_base/css/pages/stats.css")}
-{do combineScript(id: 'stats', load: 'footer', path: 'themes/admin/_base/js/stats.js')}
+{=viteEntry('stats')}
 
 <div class="stat-compare-mode">
   <label class="switch">

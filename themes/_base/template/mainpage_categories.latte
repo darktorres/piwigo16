@@ -1,10 +1,10 @@
-{do combineCss(path: "themes/_base/css/mainpage_categories.css")}
+{=cssLink("themes/_base/css/mainpage_categories.css")}
 <div class="loader"><img src="{$ROOT_URL}{$themeconf['img_dir']}/ajax_loader.gif"></div>
 <ul class="thumbnailCategories" style="--cat-illu-w:{$derivative_params->maxWidth()+5}px;--cat-desc-h:{$derivative_params->maxHeight()+5}px">
 {foreach $category_thumbnails as $cat}
 {var $derivative = derivative($derivative_params, $cat['representative']['src_image'])}
 {if !$derivative->isCached()}
-{do combineScript(id: 'thumbnails.loader', path: 'themes/_base/js/thumbnails.loader.js', load: 'footer')}
+{=viteEntry('thumbnails.loader')}
 {/if}
   <li class="{if (($iterator->getCounter() - 1)) % 2 != 0}odd{else}even{/if}">
 		<div class="thumbnailCategory">

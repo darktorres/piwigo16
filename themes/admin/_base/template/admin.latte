@@ -1,4 +1,4 @@
-{do combineScript(id: 'admin', load: 'footer', path: 'themes/admin/_base/js/admin.js')}
+{=viteEntry('admin')}
 
 <div id="menubar" data-active-menu="{$ACTIVE_MENU}">
   <div id="adminHome"><a href="{$U_ADMIN}" class="admin-main"><i class="icon-television"></i> {='Dashboard'|translate}</a></div>
@@ -91,7 +91,7 @@
   {/if}
   {if isset($U_HELP)}
   {include 'include/colorbox.inc.latte'}
-{do combineScript(id: 'admin_help_glightbox', load: 'footer', path: 'themes/admin/_base/js/admin_help_glightbox.js')}
+{=viteEntry('admin_help_glightbox')}
   <ul class="HelpActions">
     <li><a href="{$U_HELP}&amp;output=content_only" title="{='Help'|translate}" class="help-popin"><span class="icon-help-circled"></span></a></li>
   </ul>

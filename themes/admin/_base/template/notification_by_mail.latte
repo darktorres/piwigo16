@@ -1,6 +1,6 @@
 
 {include 'include/autosize.inc.latte'}
-{do combineScript(id: 'notification_by_mail', load: 'footer', path: 'themes/admin/_base/js/notification_by_mail.js')}
+{=viteEntry('notification_by_mail')}
 
 <form method="post" name="notification_by_mail" id="notification_by_mail" action="{$F_ACTION}">
   <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">

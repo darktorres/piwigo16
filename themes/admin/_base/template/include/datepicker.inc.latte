@@ -1,2 +1,1 @@
-{if empty($load_mode)}{var $load_mode = 'footer'}{/if}
-{do combineScript(id: 'datepicker', load: $load_mode, path: 'themes/admin/_base/js/datepicker.js')}
+{=viteEntry('datepicker')}

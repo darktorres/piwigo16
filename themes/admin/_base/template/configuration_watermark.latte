@@ -1,7 +1,6 @@
-{do combineCss(path: "themes/admin/_base/css/pages/watermark.css")}
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-{do combineScript(id: 'configuration_watermark', load: 'footer', require: 'common', path: 'themes/admin/_base/js/configuration_watermark.js')}
+{=viteEntry('common')}
+{=viteEntry('configuration_watermark')}
 
 <form method="post" action="{$F_ACTION}" class="properties" enctype="multipart/form-data">
 

@@ -1,7 +1,5 @@
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-{do combineScript(id: 'rating_admin', load: 'footer', require: 'common', path: 'themes/admin/_base/js/rating_admin.js')}
-
-{do combineCss(path: "themes/admin/_base/css/pages/rating.css")}
+{=viteEntry('common')}
+{=viteEntry('rating_admin')}
 
 <script id="pwg-rating-data" type="application/json">{$rating_page_data_json|noescape}</script>
 
@@ -84,6 +82,6 @@
 </tr>
 {/foreach}{*images*}
 </table>
-{do combineScript(id: 'core.scripts', load: 'async', path: 'themes/_base/js/scripts.js')}
+{=viteEntry('core.scripts')}
 
 {if !empty($navbar)}{include 'navigation_bar.latte'}{/if}

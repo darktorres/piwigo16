@@ -1,14 +1,10 @@
-{include 'include/datepicker.inc.latte', load_mode: 'async'}
-{include 'include/add_album.inc.latte', load_mode: 'async'}
+{include 'include/datepicker.inc.latte'}
+{include 'include/add_album.inc.latte'}
 
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-
-{do combineScript(id: 'batchManagerGlobal', load: 'async', require: 'datepicker,addAlbum', path: 'themes/admin/_base/js/batchManagerGlobal.js')}
+{=viteEntry('common')}
+{=viteEntry('batchManagerGlobal')}
 
 <script id="pwg-batch-manager-global-data" type="application/json">{$batch_manager_global_page_data_json|noescape}</script>
-
-
-{do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
 
 <div id="batchManagerGlobal">
   <form action="{$F_ACTION}" method="post">
@@ -266,4 +262,3 @@
 </div> <!-- #batchManagerGlobal -->
 {include 'include/album_selector.inc.latte'}
 
-{do combineCss(path: "themes/admin/_base/css/pages/batch_manager_global.css")}

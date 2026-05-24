@@ -4,10 +4,9 @@
   <p><a href="{$U_CONFIGURATION}">{='Enable user comments'|translate}</a></p>
 </div>
 {else}
-{do combineScript(id: "comments", load: "footer", path: "themes/admin/_base/js/comments.js")}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
+{=viteEntry('comments')}
+{=viteEntry('common')}
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
-{do combineCss(path: "themes/admin/_base/css/pages/comments.css")}
 <div class="comments" id="comments">
   <div class="comments-filters">
     <div class="comments-tabs-filters">

@@ -1,6 +1,5 @@
-{do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-{do combineScript(id: 'picture_formats', load: 'footer', path: 'themes/admin/_base/js/picture_formats.js')}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
+{=viteEntry('picture_formats')}
+{=viteEntry('common')}
 
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 

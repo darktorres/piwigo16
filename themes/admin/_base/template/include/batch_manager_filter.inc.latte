@@ -1,6 +1,6 @@
 <script id="pwg-filter-page-data" type="application/json">{$batch_filter_page_data_json|noescape}</script>
 
-{do combineScript(id: 'batchManagerFilter', load: 'footer', path: 'themes/admin/_base/js/batchManagerFilter.js')}
+{=viteEntry('batchManagerFilter')}
 <fieldset>
 <legend><span class='icon-filter icon-green'></span>{='Filter'|translate}</legend>
 <div class="filterBlock">
@@ -158,7 +158,7 @@
         <i class="icon-help-circled"></i>
         <span>{='Search tips'|translate}</span>
       </p>
-      {do combineScript(id: 'core.scripts', load: 'async', path: 'themes/_base/js/scripts.js')}
+      {=viteEntry('core.scripts')}
 {if (isset($no_search_results))}
 <div>{='No results for'|translate} :
 <em><strong>

@@ -1,14 +1,12 @@
 {var $can_upload = isset($ADD_TO_ALBUM) || isset($selected_category_name)}
 
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
+{=viteEntry('common')}
 {include 'include/colorbox.inc.latte'}
 {if !$DISPLAY_FORMATS}
   {include 'include/add_album.inc.latte'}
 {/if}
 
-{do combineScript(id: 'add_photo', load: 'footer', path: 'themes/admin/_base/js/photos_add_direct.js')}
-
-{do combineCss(path: "themes/admin/_base/css/pages/photos_add_direct.css")}
+{=viteEntry('add_photo')}
 
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 

@@ -2,11 +2,10 @@
 {include 'include/datepicker.inc.latte'}
 
 
-{do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)}
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 <script id="pwg-batch-manager-unit-data" type="application/json">{$batch_manager_unit_page_data_json|noescape}</script>
 
-{do combineScript(id: 'batchManagerUnit', load: 'footer', path: 'themes/admin/_base/js/batchManagerUnit.js')}
+{=viteEntry('batchManagerUnit')}
 <div id="batchManagerGlobal">
 	<div class="u-clear-both"></div>
 	{if isset($ELEMENT_IDS)}
@@ -254,5 +253,3 @@
 
 {include 'include/album_selector.inc.latte'}
 
-{do combineCss(path: "themes/admin/_base/css/pages/batch_manager_unit.css")}
-{do combineCss(path: "themes/admin/_base/css/features/selection-mode.css")}

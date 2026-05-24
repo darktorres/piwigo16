@@ -1,12 +1,12 @@
 
-{do combineScript(id: 'search', load: 'footer', path: 'themes/_base/js/search.js')}
+{=viteEntry('search')}
 
 {if isset($MENUBAR)}{$MENUBAR}{/if}
 <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
 
 	<div class="titrePage">
 		<ul class="categoryActions">
-			{do combineScript(id: 'core.scripts', load: 'async', path: 'themes/_base/js/scripts.js')}
+			{=viteEntry('core.scripts')}
 			<li><a href="{$U_HELP}" data-popuphelp title="{='Help'|translate}" class="pwg-state-default pwg-button">
 				<span class="pwg-icon pwg-icon-help"></span><span class="pwg-button-text">{='Help'|translate}</span>
 			</a></li>

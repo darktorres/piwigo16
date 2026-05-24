@@ -1,6 +1,5 @@
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-
-{do combineCss(path: "themes/admin/_base/css/pages/configuration_display.css")}
+{=viteEntry('common')}
+{=cssLink("themes/admin/_base/css/pages/configuration_display.css")}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

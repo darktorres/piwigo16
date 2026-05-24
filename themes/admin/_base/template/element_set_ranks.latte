@@ -1,5 +1,5 @@
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-{do combineScript(id: 'element_set_ranks', load: 'footer', path: 'themes/admin/_base/js/element_set_ranks.js')}
+{=viteEntry('common')}
+{=viteEntry('element_set_ranks')}
 
 <form action="{$F_ACTION}" method="post" id="element_set_ranks">
 {if !empty($thumbnails)}

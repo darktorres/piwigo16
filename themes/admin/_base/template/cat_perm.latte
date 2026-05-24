@@ -1,5 +1,5 @@
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-{do combineScript(id: 'cat_perm', load: 'footer', require: 'common', path: 'themes/admin/_base/js/cat_perm.js')}
+{=viteEntry('common')}
+{=viteEntry('cat_perm')}
 
 <script id="pwg-cat-perm-data" type="application/json">{$cat_perm_page_data_json|noescape}</script>
 

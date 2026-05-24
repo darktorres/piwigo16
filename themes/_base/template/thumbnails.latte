@@ -1,6 +1,5 @@
 {if !empty($thumbnails)}{spaceless}
 {*define_derivative name='derivative_params' width=160 height=90 crop=true*}
-{do combineCss(path: "themes/_base/css/thumbnails.css")}
 {var $thumbW = $derivative_params->maxWidth()+2}
 {var $thumbH = $derivative_params->maxHeight()+3}
 {if $derivative_params->maxWidth() > 600}{var $thumbLegendFs = '130%'}
@@ -9,7 +8,7 @@
 {foreach $thumbnails as $thumbnail}
 {var $derivative = derivative($derivative_params, $thumbnail['src_image'])}
 {if !$derivative->isCached()}
-{do combineScript(id: 'thumbnails.loader', path: 'themes/_base/js/thumbnails.loader.js', load: 'footer')}
+{=viteEntry('thumbnails.loader')}
 {/if}
 <li style="--thumb-w:{$thumbW}px;--thumb-h:{$thumbH}px;--thumb-legend-fs:{$thumbLegendFs}">
 	<span class="wrap1">

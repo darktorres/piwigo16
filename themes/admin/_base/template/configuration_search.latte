@@ -1,8 +1,6 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-{do combineScript(id: 'configuration_search', load: 'footer', require: 'common', path: 'themes/admin/_base/js/configuration_search.js')}
-
-{do combineCss(path: "themes/_base/vendor/fontello/css/gallery-icon.css", order: -10)}
+{=viteEntry('common')}
+{=viteEntry('configuration_search')}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

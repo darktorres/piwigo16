@@ -14,7 +14,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\StringUtil;
 use Piwigo\Event\Template\CombinedCss;
-use Piwigo\Event\Template\CombinedScript;
 use Piwigo\Html\HtmlService;
 use Piwigo\Lang\LangService;
 use Piwigo\Url\UrlGenerator;
@@ -50,8 +49,6 @@ final class Template
     /** @var string[] - Content to add before </head> tag */
     public array $html_head_elements = [];
 
-    /** @const string */
-    public const string COMBINED_SCRIPTS_TAG = '<!-- COMBINED_SCRIPTS -->';
     /** @var ScriptLoader */
     public $scriptLoader;
 
@@ -402,23 +399,6 @@ final class Template
      */
     public function flush(): void
     {
-        if (!$this->scriptLoader->didHead()) {
-            $pos = strpos($this->output, self::COMBINED_SCRIPTS_TAG);
-            if ($pos !== false) {
-                $scripts = $this->scriptLoader->getHeadScripts();
-                $content = [];
-                foreach ($scripts as $script) {
-                    $src = self::makeScriptSrc($script);
-                    $content[] =
-                        '<script type="module" src="'
-                        . (is_string($src) ? $src : '')
-                        .'"></script>';
-                }
-
-                $this->output = substr_replace($this->output, implode("\n", $content), $pos, strlen(self::COMBINED_SCRIPTS_TAG));
-            }
-        }
-
         $css = $this->cssLoader->getCss();
 
         $content = [];
@@ -455,29 +435,6 @@ final class Template
 
         echo $this->output;
         $this->output = '';
-    }
-
-    /**
-     * @return string|array<mixed>
-     */
-    private static function makeScriptSrc(Combinable $script): string|array
-    {
-        $ret = '';
-        if ($script->isRemote()) {
-            $ret = $script->path;
-        } else {
-            $ret = UrlService::getRootUrl().$script->path;
-            // Vite manifest filenames already carry a content hash; keep
-            // ?v= only for legacy/plugin-supplied paths.
-            if (!str_starts_with($script->path, 'dist/')) {
-                $ret .= '?v'. ($script->version ?: AppInfo::VERSION);
-            }
-        }
-        // trigger the event for eventual use of a cdn
-        $scriptEvent = new CombinedScript($ret, $script);
-        Kernel::service(EventDispatcherInterface::class)->dispatch($scriptEvent);
-        $ret = $scriptEvent->ret;
-        return UrlService::embellishUrl($ret);
     }
 
     /**

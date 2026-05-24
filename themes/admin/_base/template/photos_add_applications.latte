@@ -1,7 +1,5 @@
 {include 'include/colorbox.inc.latte'}
-{do combineScript(id: 'photos_add_applications_glightbox', load: 'footer', path: 'themes/admin/_base/js/photos_add_applications_glightbox.js')}
-
-{do combineCss(path: "themes/admin/_base/css/pages/photos-add-applications.css")}
+{=viteEntry('photos_add_applications_glightbox')}
 
 <div class="applicationContainer">
 

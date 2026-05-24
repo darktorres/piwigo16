@@ -1,6 +1,5 @@
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-
-{do combineScript(id: 'cat_list', load: 'footer', path: 'themes/admin/_base/js/cat_list.js')}
+{=viteEntry('common')}
+{=viteEntry('cat_list')}
 
 <div class="selectedAlbum cat-list-album-path">
   <span class="icon-sitemap selectedAlbum-first">{$CATEGORIES_NAV}</span>
@@ -60,4 +59,3 @@
     {/if}
 </div>
 
-{do combineCss(path: "themes/admin/_base/css/pages/cat-list.css")}

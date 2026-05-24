@@ -1,11 +1,9 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-{* tree.css is now bundled into albums.js via the album-tree module *}
-{do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
+{=viteEntry('common')}
 
-{do combineScript(id: 'cat_search', load: 'footer', path: 'themes/admin/_base/js/cat_search.js')}
-{do combineScript(id: 'albums', load: 'footer', path: 'themes/admin/_base/js/albums.js')}
+{=viteEntry('cat_search')}
+{=viteEntry('albums')}
 
 <div class="cat-move-order-popin">
   <div class="order-popin-container">
@@ -229,4 +227,3 @@
     </div>
   </div>
 </div>
-{do combineCss(path: "themes/admin/_base/css/pages/albums.css")}

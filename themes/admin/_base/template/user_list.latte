@@ -1,11 +1,9 @@
 
-{do combineScript(id: 'common', load: 'header', path: 'themes/admin/_base/js/common.js')}
-
-{do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
+{=viteEntry('common')}
 
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 
-{do combineScript(id: 'user_list', load: 'footer', path: 'themes/admin/_base/js/user_list.js')}
+{=viteEntry('user_list')}
 
 <div class="selection-mode-group-manager">
   <label class="switch">
@@ -1066,4 +1064,3 @@
   </div>
 </div>
 
-{do combineCss(path: "themes/admin/_base/css/pages/user-list.css")}

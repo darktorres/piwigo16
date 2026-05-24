@@ -1,5 +1,5 @@
 {if isset($comment_derivative_params)}
-{do combineCss(path: "themes/_base/css/comment_list.css")}
+{=cssLink("themes/_base/css/comment_list.css")}
 <div class="loader"><img src="{$ROOT_URL}{$themeconf['img_dir']}/ajax_loader.gif"></div>
 {/if}
 <ul class="commentsList"{if isset($comment_derivative_params)} style="--comment-illu-w:{$comment_derivative_params->maxWidth()+5}px;--comment-desc-h:{$comment_derivative_params->maxHeight()+5}px"{/if}>
@@ -12,7 +12,7 @@
 	{var $derivative = derivative($derivative_params, $comment['src_image'])}
 	{/if}
 	{if !$derivative->isCached()}
-  {do combineScript(id: 'thumbnails.loader', path: 'themes/_base/js/thumbnails.loader.js', load: 'footer')}
+  {=viteEntry('thumbnails.loader')}
   {/if}
 	<div class="illustration">
 		<a href="{$comment['U_PICTURE']}">

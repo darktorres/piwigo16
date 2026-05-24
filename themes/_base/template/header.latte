@@ -41,21 +41,15 @@
 {spaceless}
 {foreach $themes as $theme}
   {if $theme['load_css']}
-  {do combineCss(path: "themes/" . $theme['id'] . "/theme.css", order: -10)}
+  {=cssLink("themes/" . $theme['id'] . "/theme.css")}
   {/if}
   {if !empty($theme['local_head'])}
   {include $theme['local_head'], theme: $theme, load_css: $theme['load_css']}
   {/if}
 {/foreach}
 
-{do combineScript(id: "core.scripts", load: "footer", path: "themes/_base/js/scripts.js")}
+{=viteEntry("core.scripts")}
 {/spaceless}
-
-<!-- BEGIN get_combined -->
-{=getCombinedCss()}
-
-{=getCombinedScripts(load: 'header')}
-<!-- END get_combined -->
 
 {if !empty($head_elements)}
 {foreach $head_elements as $elt}

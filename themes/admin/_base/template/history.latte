@@ -3,12 +3,9 @@
 
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-{do combineScript(id: 'history', load: 'footer', path: 'themes/admin/_base/js/history.js', require: 'common,geoip')}
-{do combineScript(id: 'geoip', load: 'footer', path: 'themes/admin/_base/js/geoip.js')}
-
-{do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-{do combineCss(path: "themes/_base/vendor/fontello/css/gallery-icon.css", order: -10)}
+{=viteEntry('common')}
+{=viteEntry('history')}
+{=viteEntry('geoip')}
 
 <form class="filter" method="post" name="filter" action="">
 <fieldset class="history-filter">
@@ -186,4 +183,3 @@
 
 {if !empty($navbar) }{include 'navigation_bar.latte'}{/if}
 
-{do combineCss(path: "themes/admin/_base/css/pages/history.css")}

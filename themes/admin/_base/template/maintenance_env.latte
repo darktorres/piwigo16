@@ -1,7 +1,5 @@
-{do combineScript(id: 'ajax', load: 'footer', path: 'themes/admin/_base/js/maintenance.js')}
-{do combineScript(id: 'activated_plugin_list', load: 'footer', path: 'themes/admin/_base/js/maintenance_env.js')}
-{do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)}
- {* order 10 is required, see issue 1080 *}
+{=viteEntry('ajax')}
+{=viteEntry('activated_plugin_list')}
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 
 <fieldset id="environment">
@@ -43,4 +41,3 @@
   </ul>
 </fieldset>
 
-{do combineCss(path: "themes/admin/_base/css/pages/maintenance-env.css")}

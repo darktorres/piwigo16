@@ -1,6 +1,5 @@
 {if $isWebmaster == 1}
-    {do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-    {do combineScript(id: 'sys', load: 'footer', path: 'themes/admin/_base/js/maintenance_sys.js')}
+    {=viteEntry('sys')}
     <fieldset id="activities-system">
         <div class="tab-header">
             <div class="tab-object">
@@ -61,5 +60,4 @@
         <div id="tab-body-content"></div>
 
     </fieldset>
-    {do combineCss(path: "themes/admin/_base/css/pages/maintenance-sys.css")}
 {/if}

@@ -1,6 +1,5 @@
-{do combineCss(path: "themes/admin/_base/css/pages/plugins.css")}
 {include 'include/colorbox.inc.latte'}
-{do combineScript(id: 'themes_new', load: 'footer', path: 'themes/admin/_base/js/themes_new.js')}
+{=viteEntry('themes_new')}
 
 {if !empty($new_themes)}
 <div class="themeBoxes">

@@ -1,7 +1,5 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
-{do combineScript(id: 'intro_tooltips', load: 'footer', path: 'themes/admin/_base/js/intro_tooltips.js')}
-
-{do combineCss(path: "themes/admin/_base/css/pages/intro.css")}
+{=viteEntry('intro_tooltips')}
 
 <h2>{='Piwigo Administration'|translate}</h2>
 

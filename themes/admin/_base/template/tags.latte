@@ -1,9 +1,7 @@
-{do combineCss(path: "themes/admin/_base/css/pages/tags.css")}
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-{do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-{do combineScript(id: 'tags', load: 'footer', path: 'themes/admin/_base/js/tags.js')}
+{=viteEntry('common')}
+{=viteEntry('tags')}
 
 <meta http-equiv='cache-control' content='no-cache'>
 <meta http-equiv='expires' content='0'>

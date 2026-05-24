@@ -7,20 +7,13 @@
 <meta http-equiv="Content-Style-Type" content="text/css">
 <link rel="shortcut icon" type="image/x-icon" href="{$ROOT_URL}{$themeconf['icon_dir']}/favicon.ico">
 
-{=getCombinedCss()}
 {foreach $themes as $theme}
 {if $theme['load_css']}
-{do combineCss(path: "themes/admin/" . $theme['id'] . "/theme.css", order: -10)}
+{=cssLink("themes/admin/" . $theme['id'] . "/theme.css")}
 {/if}
 {/foreach}
 
-{do combineScript(id: 'install', load: 'footer', path: 'themes/admin/_base/js/install.js')}
-
-<!-- BEGIN get_combined_scripts -->
-{=getCombinedScripts(load: 'header')}
-<!-- END get_combined_scripts -->
-
-{do combineCss(path: "themes/admin/_base/css/pages/install-upgrade.css")}
+{=viteEntry('install')}
 <title>Piwigo {$RELEASE} - {='Upgrade'|translate}</title>
 </head>
 
@@ -116,9 +109,6 @@
 <div>{$L_UPGRADE_HELP}</div>
 </div> {* the_page *}
 
-<!-- BEGIN get_combined_scripts -->
-{=getCombinedScripts(load: 'footer')}
-<!-- END get_combined_scripts -->
 
 </body>
 </html>

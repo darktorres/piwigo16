@@ -1,9 +1,6 @@
-{if empty($load_mode)}{var $load_mode = 'footer'}{/if}
-{include 'colorbox.inc.latte', load_mode: $load_mode}
+{include 'colorbox.inc.latte'}
 
-{do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
-
-{do combineScript(id: 'addAlbum', load: $load_mode, path: 'themes/admin/_base/js/addAlbum.js')}
+{=viteEntry('addAlbum')}
 
 <div hidden>
   <div id="addAlbumForm">

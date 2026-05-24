@@ -1,4 +1,4 @@
-{do combineScript(id: 'core.switchbox', load: 'async', path: 'themes/_base/js/switchbox.js')}
+{=viteEntry('core.switchbox')}
 {if isset($MENUBAR)}{$MENUBAR}{/if}
 <div id="content"{if isset($MENUBAR)} class="contentWithMenu"{/if}>
 
@@ -32,7 +32,7 @@
   </a><br>
   {/foreach}
   {if isset($U_ORIGINAL)}
-    {do combineScript(id: 'core.scripts', load: 'async', path: 'themes/_base/js/scripts.js')}
+    {=viteEntry('core.scripts')}
   <a href="{$U_ORIGINAL}" data-window-open-name="original" data-window-open-features="scrollbars=yes,toolbar=no,status=no,resizable=yes" rel="nofollow noopener">{='Original'|translate}</a>
   {/if}
 </div>
@@ -236,8 +236,8 @@
 				<input type="submit" name="rate" value="{$mark}" class="rateButton" title="{$mark}">
 			{/if}
 			{/foreach}
-			{spaceless}{do combineScript(id: 'core.scripts', load: 'async', path: 'themes/_base/js/scripts.js')}
-			{do combineScript(id: 'rating', load: 'async', require: 'core.scripts', path: 'themes/_base/js/rating.js')}
+			{spaceless}{=viteEntry('core.scripts')}
+			{=viteEntry('rating')}
 			{/spaceless}
 			</div>
 			</form>

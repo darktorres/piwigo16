@@ -1,6 +1,5 @@
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-{do combineScript(id: 'cat_modify', load: 'footer', path: 'themes/admin/_base/js/cat_modify.js')}
-{do combineCss(path: "themes/admin/_base/fontello/css/animation.css", order: 10)} {* order 10 is required, see issue 1080 *}
+{=viteEntry('common')}
+{=viteEntry('cat_modify')}
 
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
 
@@ -172,4 +171,3 @@
   </div>
 </div>
 
-{do combineCss(path: "themes/admin/_base/css/pages/cat-modify.css")}

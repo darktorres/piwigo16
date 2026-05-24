@@ -1,5 +1,5 @@
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-{do combineScript(id: 'configuration_comments', load: 'footer', require: 'common', path: 'themes/admin/_base/js/configuration_comments.js')}
+{=viteEntry('common')}
+{=viteEntry('configuration_comments')}
 
 <form method="post" action="{$F_ACTION}" class="properties">
 

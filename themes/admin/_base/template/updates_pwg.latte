@@ -1,8 +1,5 @@
-{do combineCss(path: "themes/admin/_base/css/pages/plugins.css")}
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
-{do combineScript(id: 'updates_pwg', load: 'footer', path: 'themes/admin/_base/js/updates_pwg.js')}
-
-{do combineCss(path: "themes/admin/_base/css/pages/updates-pwg.css")}
+{=viteEntry('updates_pwg')}
 
 {if isset($MINOR_RELEASE_PHP_REQUIRED) and isset($MAJOR_RELEASE_PHP_REQUIRED)}
 <div class="warnings">

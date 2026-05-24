@@ -1,7 +1,6 @@
 <script id="pwg-page-data" type="application/json">{$page_data_json|noescape}</script>
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
-{do combineScript(id: 'site_manager', load: 'footer', require: 'common', path: 'themes/admin/_base/js/site_manager.js')}
-{do combineCss(path: "themes/admin/_base/css/pages/site_manager.css")}
+{=viteEntry('common')}
+{=viteEntry('site_manager')}
 
 {if !empty($remote_output)}
 <div class="remoteOutput">

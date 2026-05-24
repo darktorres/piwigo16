@@ -1,5 +1,4 @@
-{do combineCss(path: "themes/admin/_base/css/pages/themes_standard_pages.css")}
-{do combineScript(id: 'common', load: 'footer', path: 'themes/admin/_base/js/common.js')}
+{=viteEntry('common')}
 
 <section class="std_pgs">
   <form method="post" action="{$F_ACTION}" class="properties" enctype="multipart/form-data">
@@ -134,4 +133,4 @@
   </form>
 </section>
 
-{do combineScript(id: "themes_standard_pages", load: "footer", path: "themes/admin/_base/js/themes_standard_pages.js")}
+{=viteEntry('themes_standard_pages')}

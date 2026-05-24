@@ -64,7 +64,7 @@ Tests accompany each phase. Every commit green.
 | Stylelint | 0 errors, 7 warnings |
 | Psalm | 0 errors, 1787 info-level, 98.1% inference |
 | Rector | 94 cosmetic diffs (2 rules: arrow fn return types) |
-| ESLint | 33 errors in 1 file (`visual-regression.ts`) |
+| ESLint | 0 errors, 9 warnings (`no-console` in CLI script) |
 
 ---
 

@@ -1,0 +1,17 @@
+pre-commit:
+  commands:
+    ecs:
+      glob: "*.php"
+      run: vendor/bin/ecs check {staged_files}
+    eslint:
+      glob: "*.{ts,js}"
+      run: bunx eslint {staged_files}
+commit-msg:
+  commands:
+    commitlint:
+      run: bunx commitlint --edit {1}
+pre-push:
+  commands:
+    phpstan:
+      run: vendor/bin/phpstan analyse --no-progress
+

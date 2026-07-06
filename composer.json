@@ -1,0 +1,75 @@
+{
+  "name": "piwigo/piwigo",
+  "description": "Piwigo photo gallery — modernized",
+  "type": "project",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": "^8.5",
+    "ext-calendar": "*",
+    "ext-ctype": "*",
+    "ext-curl": "*",
+    "ext-dom": "*",
+    "ext-fileinfo": "*",
+    "ext-filter": "*",
+    "ext-gd": "*",
+    "ext-iconv": "*",
+    "ext-intl": "*",
+    "ext-libxml": "*",
+    "ext-mbstring": "*",
+    "ext-mysqli": "*",
+    "ext-openssl": "*",
+    "ext-session": "*",
+    "ext-simplexml": "*",
+    "ext-zlib": "*"
+  },
+  "suggest": {
+    "ext-exif": "Read EXIF metadata from JPEGs. All call sites guard with function_exists(); features that need EXIF degrade gracefully when the extension is absent.",
+    "ext-imagick": "Alternative graphics library to GD, selected at runtime when present.",
+    "ext-imap": "Optional email-address parsing helper for notification features."
+  },
+  "require-dev": {
+    "icanhazstring/composer-unused": "^0.9",
+    "maglnet/composer-require-checker": "^4.16",
+    "pestphp/pest": "^4.7",
+    "pestphp/pest-plugin-arch": "^4.0",
+    "pestphp/pest-plugin-browser": "^4.3",
+    "pestphp/pest-plugin-mutate": "^4.0",
+    "pestphp/pest-plugin-type-coverage": "^4.0",
+    "phpbench/phpbench": "^1.4",
+    "phpstan/phpstan": "^2.1",
+    "deptrac/deptrac": "^4.6",
+    "roave/security-advisories": "dev-latest",
+    "rector/rector": "^2.0",
+    "symfony/yaml": "^8.1",
+    "symplify/easy-coding-standard": "^13.1",
+    "vimeo/psalm": "^6.16"
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Piwigo\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "lint:php": "@php vendor/bin/ecs check",
+    "analyse:phpstan": "@php vendor/bin/phpstan analyse",
+    "analyse:psalm": "@php vendor/bin/psalm",
+    "analyse": [
+      "@analyse:phpstan",
+      "@analyse:psalm"
+    ],
+    "test": "@php vendor/bin/pest",
+    "plan-lint": "@php tools/plan-lint.php",
+    "require-checker": "@php vendor/bin/composer-require-checker check --config-file=composer-require-checker.json composer.json",
+    "unused": "@php vendor/bin/composer-unused --configuration=composer-unused.php",
+    "bench": "@php vendor/bin/phpbench run"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true,
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

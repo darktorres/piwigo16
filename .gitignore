@@ -1,3 +1,6 @@
+# Composer dependencies
+/vendor
+
 # Piwigo specific directories
 /_data
 /plugins/*

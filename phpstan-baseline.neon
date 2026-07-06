@@ -1,0 +1,601 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Array has 2 duplicate keys with value ''correction_error_fct'' \(''correction_error_fct'', ''correction_error_fct''\)\.$#'
+			identifier: array.duplicateKey
+			count: 1
+			path: admin/include/check_integrity.class.php
+
+		-
+			message: '#^Undefined variable\: \$f$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/include/image.class.php
+
+		-
+			message: '#^Call to function unset\(\) contains undefined variable \$v_header_list\.$#'
+			identifier: unset.variable
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Function PclError not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Function PclErrorCode not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Function PclErrorReset not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Function PclErrorString not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Undefined variable\: \$v_file$#'
+			identifier: variable.undefined
+			count: 2
+			path: admin/include/pclzip.lib.php
+
+		-
+			message: '#^Function plugin_activate not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Function plugin_deactivate not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Function plugin_install not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Function plugin_uninstall not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/plugins.class.php
+
+		-
+			message: '#^Function theme_activate not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Function theme_deactivate not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Function theme_delete not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: admin/include/themes.class.php
+
+		-
+			message: '#^Undefined variable\: \$base_url$#'
+			identifier: variable.undefined
+			count: 1
+			path: admin/notification_by_mail.php
+
+		-
+			message: '#^Class PhpCsFixer\\Fixer\\Alias\\RandomApiMigrationFixer not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: ecs.php
+
+		-
+			message: '#^Class PhpCsFixer\\Fixer\\Basic\\SingleLineEmptyBodyFixer not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: ecs.php
+
+		-
+			message: '#^Class PhpCsFixer\\Fixer\\Phpdoc\\GeneralPhpdocAnnotationRemoveFixer not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: ecs.php
+
+		-
+			message: '#^Class PhpCsFixer\\Fixer\\Strict\\DeclareStrictTypesFixer not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: ecs.php
+
+		-
+			message: '#^Class PhpCsFixer\\Fixer\\StringNotation\\NoTrailingWhitespaceInStringFixer not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: ecs.php
+
+		-
+			message: '#^Class PhpCsFixer\\Fixer\\Whitespace\\LineEndingFixer not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: ecs.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: i.php
+
+		-
+			message: '#^Function create_function not found\.$#'
+			identifier: function.notFound
+			count: 3
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function do_maintenance_all_tables\(\) should return none but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_affected_rows not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_close not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_connect not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_errno not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_error not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_fetch_array not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_fetch_assoc not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_fetch_object not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_fetch_row not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_free_result not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_get_server_info not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_insert_id not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_num_rows not found\.$#'
+			identifier: function.notFound
+			count: 2
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_query not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_real_escape_string not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_select_db not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Function mysql_set_charset not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/dblayer/functions_mysql.inc.php
+
+		-
+			message: '#^Method DerivativeImage\:\:get_scaled_size_htm\(\) should return string but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			message: '#^Method DerivativeImage\:\:get_size_css\(\) should return string but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			message: '#^Method DerivativeImage\:\:get_size_hr\(\) should return string but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			message: '#^Method DerivativeImage\:\:get_size_htm\(\) should return string but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: include/derivative.inc.php
+
+		-
+			message: '#^Access to an undefined property FeedCreator\:\:\$_timeout\.$#'
+			identifier: property.notFound
+			count: 1
+			path: include/feedcreator.class.php
+
+		-
+			message: '#^Access to an undefined property HtmlDescribable\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: include/feedcreator.class.php
+
+		-
+			message: '#^Access to an undefined property PIECreator01\:\:\$truncSize\.$#'
+			identifier: property.notFound
+			count: 1
+			path: include/feedcreator.class.php
+
+		-
+			message: '#^Function each not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/feedcreator.class.php
+
+		-
+			message: '#^Method FeedCreator\:\:createFeed\(\) should return string but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: include/feedcreator.class.php
+
+		-
+			message: '#^Static call to instance method FeedCreator\:\:iTrunc\(\)\.$#'
+			identifier: method.staticCall
+			count: 1
+			path: include/feedcreator.class.php
+
+		-
+			message: '#^Undefined variable\: \$comm$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/functions_comment.inc.php
+
+		-
+			message: '#^Undefined variable\: \$cached$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/functions_notification.inc.php
+
+		-
+			message: '#^Undefined variable\: \$res$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/functions_search.inc.php
+
+		-
+			message: '#^Undefined variable\: \$tag_counters$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/functions_tag.inc.php
+
+		-
+			message: '#^Function check_status\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: include/functions_user.inc.php
+
+		-
+			message: '#^Cannot unset property JShrink\\Minifier\:\:\$c because it might have hooks in a subclass\.$#'
+			identifier: unset.possiblyHookedProperty
+			count: 3
+			path: include/jshrink.class.php
+
+		-
+			message: '#^Cannot unset property JShrink\\Minifier\:\:\$input because it might have hooks in a subclass\.$#'
+			identifier: unset.possiblyHookedProperty
+			count: 1
+			path: include/jshrink.class.php
+
+		-
+			message: '#^Cannot unset property JShrink\\Minifier\:\:\$options because it might have hooks in a subclass\.$#'
+			identifier: unset.possiblyHookedProperty
+			count: 1
+			path: include/jshrink.class.php
+
+		-
+			message: '#^Deprecated in PHP 8\.4\: Parameter \#3 \$use_include_path \(int\) is implicitly nullable via default value null\.$#'
+			identifier: parameter.implicitlyNullable
+			count: 1
+			path: include/php_compat/gzopen.php
+
+		-
+			message: '#^Function gzopen64 not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: include/php_compat/gzopen.php
+
+		-
+			message: '#^Instantiated class League\\OAuth2\\Client\\Grant\\RefreshToken not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpmailer/OAuth.php
+
+		-
+			message: '#^Access to an undefined static property QRtools\:\:\$frames\.$#'
+			identifier: staticProperty.notFound
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Cannot unset property QRinputItem\:\:\$bstream because it might have hooks in a subclass\.$#'
+			identifier: unset.possiblyHookedProperty
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Class qrstr referenced with incorrect case\: QRstr\.$#'
+			identifier: class.nameCase
+			count: 7
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Instantiated class QRbitrtream not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Static call to instance method QRinput\:\:estimateBitsModeKanji\(\)\.$#'
+			identifier: method.staticCall
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Undefined variable\: \$ret$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Undefined variable\: \$run$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/phpqrcode.php
+
+		-
+			message: '#^Method Smarty\\Compiler\\Template\:\:compileTag2\(\) should return string but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: include/smarty/src/Compiler/Template.php
+
+		-
+			message: '#^Undefined variable\: \$all_empty$#'
+			identifier: variable.undefined
+			count: 3
+			path: include/smarty/src/FunctionHandler/HtmlSelectDate.php
+
+		-
+			message: '#^Undefined variable\: \$day_empty$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/smarty/src/FunctionHandler/HtmlSelectDate.php
+
+		-
+			message: '#^Undefined variable\: \$month_empty$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/smarty/src/FunctionHandler/HtmlSelectDate.php
+
+		-
+			message: '#^Undefined variable\: \$month_names$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/smarty/src/FunctionHandler/HtmlSelectDate.php
+
+		-
+			message: '#^Undefined variable\: \$year_empty$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/smarty/src/FunctionHandler/HtmlSelectDate.php
+
+		-
+			message: '#^Undefined variable\: \$_hour$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/smarty/src/FunctionHandler/HtmlSelectTime.php
+
+		-
+			message: '#^Undefined variable\: \$_hour12$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/smarty/src/FunctionHandler/HtmlSelectTime.php
+
+		-
+			message: '#^Undefined variable\: \$_html_meridian$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/smarty/src/FunctionHandler/HtmlSelectTime.php
+
+		-
+			message: '#^Undefined variable\: \$_minute$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/smarty/src/FunctionHandler/HtmlSelectTime.php
+
+		-
+			message: '#^Undefined variable\: \$_second$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/smarty/src/FunctionHandler/HtmlSelectTime.php
+
+		-
+			message: '#^Instantiated class Smarty\\Lexer\\Exception not found\.$#'
+			identifier: class.notFound
+			count: 12
+			path: include/smarty/src/Lexer/ConfigfileLexer.php
+
+		-
+			message: '#^Instantiated class Smarty\\Lexer\\Exception not found\.$#'
+			identifier: class.notFound
+			count: 10
+			path: include/smarty/src/Lexer/TemplateLexer.php
+
+		-
+			message: '#^Access to an undefined property Smarty\\Security\:\:\$smarty\.$#'
+			identifier: property.notFound
+			count: 5
+			path: include/smarty/src/Security.php
+
+		-
+			message: '#^Undefined variable\: \$content$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/smarty/src/Template.php
+
+		-
+			message: '#^Method Smarty\\Template\\Compiled\:\:render\(\) should return string but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: include/smarty/src/Template/Compiled.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: include/smarty/src/Template/Source.php
+
+		-
+			message: '#^Call to static method display_debug\(\) on an unknown class Smarty_Internal_Debug\.$#'
+			identifier: class.notFound
+			count: 1
+			path: include/template.class.php
+
+		-
+			message: '#^Undefined variable\: \$tmp$#'
+			identifier: variable.undefined
+			count: 2
+			path: include/template.class.php
+
+		-
+			message: '#^Undefined variable\: \$type$#'
+			identifier: variable.undefined
+			count: 1
+			path: include/ws_functions/pwg.images.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: install.php
+
+		-
+			message: '#^Cannot unset offset ''CHANGE_COLUMN'' on array\{tags\: non\-empty\-list\<non\-empty\-array\>, TITLE\?\: string\}\.$#'
+			identifier: unset.offset
+			count: 1
+			path: tags.php
+
+		-
+			message: '#^Instantiated class Github\\Client not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: tools/github_issues.php
+
+		-
+			message: '#^Path in require_once\(\) "\.\.//local/config/database\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: requireOnce.fileNotFound
+			count: 1
+			path: tools/test_piwigo.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: upgrade.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: upgrade.php
+
+		-
+			message: '#^Function my_error invoked with 1 parameter, 2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: upgrade_feed.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: upgrade_feed.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: upgrade_feed.php

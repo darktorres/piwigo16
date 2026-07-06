@@ -1,0 +1,16 @@
+includes:
+    - phpstan-baseline.neon
+
+parameters:
+    level: 0
+    paths:
+        - .
+    excludePaths:
+        analyseAndScan:
+            - vendor/*
+            # Historical numbered DB-migration snippets, not maintained code.
+            - install/db/*.php
+            # Translation data files (arrays of strings), not logic.
+            - language/*.php
+    bootstrapFiles:
+        - tools/phpstan-bootstrap.php

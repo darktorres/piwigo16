@@ -1,4 +1,10 @@
 <?php
+
+if (PHP_SAPI !== 'cli') {
+  http_response_code(403);
+  exit('This script can only be run from the command line.');
+}
+
 // A) requirements
 // 
 // curl -s http://getcomposer.org/installer | php

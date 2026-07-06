@@ -6,6 +6,11 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+if (PHP_SAPI !== 'cli') {
+  http_response_code(403);
+  exit('This script can only be run from the command line.');
+}
+
 define('PHPWG_ROOT_PATH', '../');
 
 //Add a Clone piwigo from github//

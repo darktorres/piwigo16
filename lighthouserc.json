@@ -1,0 +1,15 @@
+{
+  "ci": {
+    "collect": {
+      "url": ["http://127.0.0.1:8123/index.php"],
+      "numberOfRuns": 1,
+      "settings": {
+        "chromeFlags": "--headless --no-sandbox"
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": "./.lighthouseci"
+    }
+  }
+}

@@ -17,7 +17,7 @@ rises.
 `17.x-rewrite` hard-requires PHP 8.5, MySQL 9.7 (MariaDB 12.x / PostgreSQL 18 in the provider
 matrix), and Node 24. There is no lower-version floor and no capability-gating: a feature
 that needs a specific server version requires it outright, rather than degrading. MySQL 9.x
-is an *Innovation* (non-LTS) release line — an accepted risk, mitigated by pinning the exact
+is an _Innovation_ (non-LTS) release line — an accepted risk, mitigated by pinning the exact
 server version in Docker/compose and hedging provider lock-in via the MariaDB/PostgreSQL
 matrix (see the plan's risk register). Versions verified 2026-05-31; re-verify at each
 phase's execution time, since this is a fast-moving target.

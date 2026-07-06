@@ -19,7 +19,7 @@ There is no in-place upgrade from an existing upstream Piwigo install. Instead, 
 `bin/piwigo import:legacy` tool (see [ADR-0025](0025-legacy-import.md), and
 docs/PLAN-REPLAY.md's "Legacy import" adoption track, depending on P15 + P23) migrates an
 existing install's database and files into a fresh v17 install. Version-to-version upgrades
-*within* the v17 fork use Doctrine Migrations (P14).
+_within_ the v17 fork use Doctrine Migrations (P14).
 
 ## Consequences
 

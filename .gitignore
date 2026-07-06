@@ -1,6 +1,11 @@
 # Composer dependencies
 /vendor
 
+# JS dependencies + build output
+/node_modules
+/dist
+/.lighthouseci
+
 # Piwigo specific directories
 /_data
 /plugins/*

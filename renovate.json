@@ -1,0 +1,44 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "UTC",
+  "schedule": ["before 6am on monday"],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "minor and patch updates",
+      "automerge": false
+    },
+    {
+      "matchUpdateTypes": ["patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "groupName": null,
+      "automerge": false
+    },
+    {
+      "matchManagers": ["composer"],
+      "groupName": "composer minor and patch updates"
+    },
+    {
+      "matchManagers": ["npm"],
+      "groupName": "bun minor and patch updates"
+    },
+    {
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "groupName": "Docker base images"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions"
+    }
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on monday"]
+  }
+}

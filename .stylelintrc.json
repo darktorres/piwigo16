@@ -1,0 +1,40 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "custom-property-pattern": "^[a-z][a-z0-9-]*$",
+    "color-no-invalid-hex": true,
+    "color-hex-length": "short",
+    "color-named": "never",
+    "shorthand-property-no-redundant-values": true,
+    "declaration-block-no-redundant-longhand-properties": true,
+    "length-zero-no-unit": true,
+    "selector-no-vendor-prefix": [true, { "severity": "warning" }],
+    "no-descending-specificity": null,
+    "selector-class-pattern": null,
+    "selector-id-pattern": null,
+    "keyframes-name-pattern": null,
+    "no-duplicate-selectors": true,
+    "declaration-no-important": [true, { "severity": "warning" }],
+    "alpha-value-notation": "number",
+    "color-function-notation": null,
+    "hue-degree-notation": null,
+    "media-feature-range-notation": null,
+    "import-notation": null,
+    "value-keyword-case": null,
+    "comment-empty-line-before": null,
+    "rule-empty-line-before": null,
+    "declaration-empty-line-before": null,
+    "at-rule-empty-line-before": null
+  },
+  "ignoreFiles": [
+    "**/*.min.css",
+    "node_modules/**",
+    "dist/**",
+    "_data/**",
+    "vendor/**",
+    "themes/**",
+    "admin/themes/**",
+    "template-extension/**",
+    "tools/ws/**"
+  ]
+}

@@ -1,0 +1,33 @@
+# Composer dependencies
+vendor/
+
+# JS dependencies
+node_modules/
+dist/
+
+# Piwigo specific directories
+_data/
+
+# Legacy CSS — excluded until P30 (docs/PLAN-REPLAY.md's additive-only rule)
+themes/
+admin/themes/
+template-extension/
+tools/ws/
+
+# Bundled third-party libraries under include/
+include/smarty/
+include/minify/
+include/phpmailer/
+
+# Pre-existing project docs, not authored/reformatted in this phase
+README.md
+SECURITY.md
+docs/CONTRIBUTING.md
+docs/PLAN-REPLAY.md
+
+# Generated/vendored, not hand-formatted
+composer.lock
+bun.lock
+phpstan-baseline.neon
+psalm-baseline.xml
+eslint-suppressions.json

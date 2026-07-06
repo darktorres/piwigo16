@@ -13,7 +13,7 @@
 
 phases:
   - {id: P0,  tier: T2,    depends_on: [],      status: done, epoch: A}
-  - {id: P1,  tier: T2,    depends_on: [P0],    status: planned, epoch: A}
+  - {id: P1,  tier: T2,    depends_on: [P0],    status: done, epoch: A}
   - {id: P2,  tier: T2,    depends_on: [P1],    status: planned, epoch: A}
   - {id: P3,  tier: T2,    depends_on: [P2],    status: planned, epoch: A}
   - {id: P4,  tier: T2,    depends_on: [P3],    status: planned, epoch: A}

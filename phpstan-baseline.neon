@@ -139,6 +139,17 @@ parameters:
 			path: i.php
 
 		-
+			# Same as i.php above — install.php creates this file; ready.php's
+			# @include (docs/PLAN-REPLAY.md P4) mirrors common.inc.php's own
+			# identical line, which is a real, load-bearing pre-existing gap
+			# in this baseline (not introduced here) rather than evidence
+			# this suppression is wrong.
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: ready.php
+
+		-
 			message: '#^Function create_function not found\.$#'
 			identifier: function.notFound
 			count: 3

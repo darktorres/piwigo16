@@ -1,0 +1,16 @@
+.git/
+tests/
+docs/
+node_modules/
+_data/
+.env*
+*.md
+dev/
+vendor/
+dist/
+.github/
+.claude/
+.lighthouseci/
+local/
+upload/
+galleries/

@@ -1,0 +1,15 @@
+Piwigo has been deployed as {{ include "piwigo.fullname" . }}.
+
+{{- if .Values.ingress.enabled }}
+Visit: http://{{ .Values.ingress.host }}
+{{- else }}
+No Ingress is enabled (values.ingress.enabled=false). Port-forward to reach it:
+
+  kubectl port-forward svc/{{ include "piwigo.fullname" . }} 8080:{{ .Values.service.port }}
+  open http://localhost:8080
+{{- end }}
+
+Set the DB password via an existing Secret, never inline:
+  --set db.existingSecret=my-piwigo-db-secret
+
+See docs/DEPLOYMENT.md for the full deployment guide.

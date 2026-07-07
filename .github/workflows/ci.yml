@@ -661,3 +661,94 @@ jobs:
           subject-path: |
             sbom-composer.cdx.json
             sbom-npm.cdx.json
+
+  # ── Deployment: SEC-01 deny-rule verification (P4) ───────────────────────
+  # Additive to, not a replacement for, the php -S-based suites above — the
+  # only thing these two jobs test is that the shipped .htaccess/Caddyfile
+  # deny rules actually work on every server this project ships, which
+  # `php -S` can't exercise at all (it has no .htaccess support and isn't
+  # the container image). nginx isn't tested here — it's docs-only
+  # (docs/DEPLOYMENT.md), since this project doesn't ship an nginx image.
+
+  apache-deny-rules:
+    name: Apache .htaccess deny rules (SEC-01)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install Apache
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends apache2
+          sudo a2enmod rewrite
+      - name: Serve the checkout with the shipped .htaccess
+        run: |
+          cat <<VHOSTEOF | sudo tee /etc/apache2/sites-available/000-default.conf
+          <VirtualHost *:80>
+              DocumentRoot ${{ github.workspace }}
+              <Directory ${{ github.workspace }}>
+                  AllowOverride All
+                  Require all granted
+              </Directory>
+          </VirtualHost>
+          VHOSTEOF
+          sudo systemctl restart apache2
+          until curl -s -o /dev/null http://localhost/; do sleep 0.5; done
+      - name: Assert sensitive paths are denied
+        run: |
+          for path in tools/index.php install/config.sql tests/Fixtures/piwigo-16.x.sql; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost/${path}")
+            echo "GET /${path} -> ${status}"
+            if [ "${status}" != "403" ]; then
+              echo "::error::expected 403 for /${path}, got ${status}"
+              exit 1
+            fi
+          done
+      - name: Assert health/ready rewrite isn't caught by the deny rule
+        run: |
+          # No mod_php in this job (deny-rule verification doesn't need real
+          # PHP execution — the [F] rewrite fires before any handler runs);
+          # real /health, /ready execution is covered by the container job
+          # below and the php -S-based suites above. Just confirm the rewrite
+          # target isn't itself swept up by the /(config|tools|...)/deny match.
+          for path in health ready; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost/${path}")
+            echo "GET /${path} -> ${status}"
+            if [ "${status}" = "403" ]; then
+              echo "::error::deny rule incorrectly blocked /${path} (got 403)"
+              exit 1
+            fi
+          done
+
+  container-deny-rules:
+    name: Container deny rules (SEC-01)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Build the production image
+        run: docker build --target production -t piwigo:ci .
+      - name: Run the container
+        run: docker run -d --name piwigo-ci -p 8080:8080 piwigo:ci
+      - name: Wait for /health
+        run: |
+          for _ in $(seq 1 60); do
+            curl -sf http://localhost:8080/health > /dev/null && exit 0
+            sleep 1
+          done
+          echo "::error::container did not become healthy in time"
+          docker logs piwigo-ci
+          exit 1
+      - name: Assert sensitive paths are denied
+        run: |
+          for path in tools/index.php install/config.sql config/anything; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/${path}")
+            echo "GET /${path} -> ${status}"
+            if [ "${status}" != "403" ]; then
+              echo "::error::expected 403 for /${path}, got ${status}"
+              exit 1
+            fi
+          done
+      - name: Container logs
+        if: failure()
+        run: docker logs piwigo-ci

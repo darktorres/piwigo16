@@ -1,0 +1,96 @@
+# Local/staging orchestration for the image built by ./Dockerfile.
+# See docs/DEPLOYMENT.md. Not used by CI (CI builds/runs the image directly
+# — see .github/workflows/ci.yml's container-deny-rules job).
+
+services:
+  app:
+    build:
+      context: .
+      target: production
+    ports:
+      - "8080:80"
+    environment:
+      PIWIGO_DB_HOST: mysql
+      PIWIGO_DB_USER: piwigo
+      PIWIGO_DB_PASSWORD: piwigo
+      PIWIGO_DB_BASE: piwigo
+      PIWIGO_DB_PREFIX: piwigo_
+    volumes:
+      - piwigo_data:/app/_data
+      - piwigo_local:/app/local
+      - piwigo_galleries:/app/galleries
+      - piwigo_upload:/app/upload
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    read_only: true
+    tmpfs:
+      - /tmp
+      # Caddy's own ephemeral state (instance ID, storage-clean lock,
+      # autosave config) — unrelated to the app's own /app/_data volume
+      # above. auto_https is off so nothing here needs to survive a
+      # restart. uid/gid=33 (www-data) — a plain tmpfs mounts root-owned,
+      # which the non-root process can't write to (verified empirically).
+      - /data/caddy:uid=33,gid=33
+      - /config/caddy:uid=33,gid=33
+    cap_drop:
+      - ALL
+    # Verified empirically: FrankenPHP/Caddy wants CAP_NET_BIND_SERVICE at
+    # startup regardless of which port it ends up binding — not just for
+    # ports below 1024 as usual — so this narrow exception is unavoidable
+    # with this runtime, not a shortcut around the port-1024 rule.
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+  # mysql:9.7 --container-aware=ON (9.3+) auto-tunes InnoDB/thread-pool
+  # parameters from the container's cgroup limits — no manual tuning needed.
+  mysql:
+    image: mysql:9.7
+    command: --container-aware=ON
+    environment:
+      MYSQL_ROOT_PASSWORD: piwigo
+      MYSQL_DATABASE: piwigo
+      MYSQL_USER: piwigo
+      MYSQL_PASSWORD: piwigo
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppiwigo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Provisioned now, genuinely unused by the app until P11 wires in
+  # cache/session — not a gap, just ahead of its own dependency.
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+
+  # `docker compose --profile test run test` — runs the JS/TS Vitest suite
+  # (no DB needed). The PHP Integration/Contract/Browser/Visual suites need
+  # either a live DB+webserver or a browser/Chromium stack — see the `test`
+  # stage's comment in Dockerfile for why those stay on bare-metal CI.
+  test:
+    build:
+      context: .
+      target: test
+    profiles: ["test"]
+
+volumes:
+  mysql_data:
+  redis_data:
+  piwigo_data:
+  piwigo_local:
+  piwigo_galleries:
+  piwigo_upload:

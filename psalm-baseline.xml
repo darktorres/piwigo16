@@ -25054,6 +25054,21 @@
       <code><![CDATA[validate_mail_address($userdata['id'], $_POST['mail_address'])]]></code>
     </UndefinedFunction>
   </file>
+  <file src="ready.php">
+    <InvalidArrayOffset>
+      <code><![CDATA[$conf['db_base']]]></code>
+      <code><![CDATA[$conf['db_host']]]></code>
+      <code><![CDATA[$conf['db_password']]]></code>
+      <code><![CDATA[$conf['db_user']]]></code>
+    </InvalidArrayOffset>
+    <MissingFile>
+      <code><![CDATA[include PHPWG_ROOT_PATH . 'local/config/config.inc.php']]></code>
+    </MissingFile>
+    <UndefinedFunction>
+      <code><![CDATA[pwg_apply_env_to_conf($conf, $prefixeTable)]]></code>
+      <code><![CDATA[pwg_load_env_file(PHPWG_ROOT_PATH)]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="register.php">
     <InvalidArrayOffset>
       <code><![CDATA[$conf['allow_user_registration']]]></code>
@@ -25399,17 +25414,6 @@
       <code><![CDATA[\Github\Client]]></code>
     </UndefinedClass>
   </file>
-  <file src="tools/metadata.php">
-    <InvalidReturnStatement>
-      <code><![CDATA[$value]]></code>
-    </InvalidReturnStatement>
-    <InvalidReturnType>
-      <code><![CDATA[string]]></code>
-    </InvalidReturnType>
-    <MissingParamType>
-      <code><![CDATA[$value]]></code>
-    </MissingParamType>
-  </file>
   <file src="tools/test_piwigo.php">
     <InvalidScalarArgument>
       <code><![CDATA[$content]]></code>
@@ -25484,36 +25488,6 @@
     <UndefinedConstant>
       <code><![CDATA[PHPWG_INSTALLED]]></code>
     </UndefinedConstant>
-  </file>
-  <file src="tools/translation_analysis.php">
-    <DocblockTypeContradiction>
-      <code><![CDATA[$page['ref_compare'] == $language]]></code>
-    </DocblockTypeContradiction>
-    <InvalidOperand>
-      <code><![CDATA[$key]]></code>
-      <code><![CDATA[$language]]></code>
-      <code><![CDATA[$language]]></code>
-    </InvalidOperand>
-    <MissingParamType>
-      <code><![CDATA[$file]]></code>
-      <code><![CDATA[$file_list]]></code>
-      <code><![CDATA[$key]]></code>
-      <code><![CDATA[$language]]></code>
-    </MissingParamType>
-    <MissingReturnType>
-      <code><![CDATA[get_line_to_translate]]></code>
-      <code><![CDATA[load_metalang]]></code>
-    </MissingReturnType>
-    <PossiblyInvalidOperand>
-      <code><![CDATA[$print_key]]></code>
-      <code><![CDATA[$print_value]]></code>
-    </PossiblyInvalidOperand>
-    <TypeDoesNotContainType>
-      <code><![CDATA[$page['ref_compare'] == $language]]></code>
-    </TypeDoesNotContainType>
-    <UndefinedFunction>
-      <code><![CDATA[load_language($file.'.lang', '', array('language'=>$language, 'no_fallback'=>true))]]></code>
-    </UndefinedFunction>
   </file>
   <file src="tools/triggers_list.php">
     <InvalidArrayOffset>

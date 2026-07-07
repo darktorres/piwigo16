@@ -1,0 +1,25 @@
+{
+  "name": "Piwigo (17.x-rewrite)",
+  "dockerComposeFile": ["../docker-compose.yml", "docker-compose.yml"],
+  "service": "app",
+  "workspaceFolder": "/app",
+  "overrideCommand": false,
+  "shutdownAction": "stopCompose",
+  "remoteUser": "www-data",
+  "forwardPorts": [80],
+  "portsAttributes": {
+    "80": {
+      "label": "Piwigo (FrankenPHP)"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bmewburn.vscode-intelephense-client",
+        "recca0120.vscode-phpunit",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  }
+}

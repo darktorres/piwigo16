@@ -1,0 +1,11 @@
+# Dev-only override for ../docker-compose.yml's `app` service — the `dev`
+# Dockerfile stage has both PHP+extensions and bun/composer dev deps
+# (composer test:*, bun run test, intelephense), and the workspace is
+# bind-mounted for live editing instead of baked in at build time.
+
+services:
+  app:
+    build:
+      target: dev
+    volumes:
+      - ..:/app:cached

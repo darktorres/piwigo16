@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "piwigo.fullname" . }}
+  labels:
+    {{- include "piwigo.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "piwigo.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "piwigo.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+        seccompProfile:
+          type: {{ .Values.securityContext.seccompProfile.type }}
+      containers:
+        - name: {{ include "piwigo.name" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            readOnlyRootFilesystem: {{ .Values.securityContext.readOnlyRootFilesystem }}
+            allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+            capabilities:
+              drop:
+                {{- toYaml .Values.securityContext.capabilities.drop | nindent 16 }}
+              add:
+                {{- toYaml .Values.securityContext.capabilities.add | nindent 16 }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: PIWIGO_DB_HOST
+              value: {{ .Values.db.host | quote }}
+            - name: PIWIGO_DB_USER
+              value: {{ .Values.db.user | quote }}
+            - name: PIWIGO_DB_BASE
+              value: {{ .Values.db.base | quote }}
+            - name: PIWIGO_DB_PREFIX
+              value: {{ .Values.db.prefix | quote }}
+            {{- if .Values.db.existingSecret }}
+            - name: PIWIGO_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.existingSecret }}
+                  key: {{ .Values.db.existingSecretPasswordKey }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /app/_data
+            - name: local
+              mountPath: /app/local
+            - name: galleries
+              mountPath: /app/galleries
+            - name: upload
+              mountPath: /app/upload
+            - name: tmp
+              mountPath: /tmp
+            # Caddy's own ephemeral state — unrelated to the /app/_data
+            # volume above. auto_https is off so nothing here needs to
+            # survive a restart.
+            - name: caddy-data
+              mountPath: /data/caddy
+            - name: caddy-config
+              mountPath: /config/caddy
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "piwigo.fullname" . }}-data
+        - name: local
+          persistentVolumeClaim:
+            claimName: {{ include "piwigo.fullname" . }}-local
+        - name: galleries
+          persistentVolumeClaim:
+            claimName: {{ include "piwigo.fullname" . }}-galleries
+        - name: upload
+          persistentVolumeClaim:
+            claimName: {{ include "piwigo.fullname" . }}-upload
+        - name: tmp
+          emptyDir: {}
+        - name: caddy-data
+          emptyDir: {}
+        - name: caddy-config
+          emptyDir: {}

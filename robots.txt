@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /admin
+Disallow: /api
+Disallow: /config/
+Disallow: /tools/
+Disallow: /dev/
+Disallow: /install/
+Disallow: /src/
+Disallow: /tests/

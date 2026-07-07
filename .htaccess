@@ -1,0 +1,40 @@
+# See docs/PLAN-REPLAY.md P4 (SEC-01, SEC-04, SEC-05, SEC-06). Mirrors
+# docker/Caddyfile (FrankenPHP) — see docs/DEPLOYMENT.md for the nginx
+# equivalent. Not anchored to the root: REQUEST_URI includes any subdirectory
+# the app is mounted under (e.g. /piwigo17/...), so these match anywhere.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # SEC-01: deny directories that must never be served directly.
+    # install.php itself (the routed install entry point) stays reachable;
+    # only the install/ directory (SQL dumps, upgrade scripts) is denied.
+    RewriteCond %{REQUEST_URI} /(config|tools|dev|src|tests|install)/ [NC]
+    RewriteRule ^ - [F,L]
+
+    # Stable external contract for health/ready probes (Dockerfile
+    # HEALTHCHECK, compose, Helm) even though there's no real router yet —
+    # these currently resolve to the plain health.php/ready.php scripts.
+    RewriteRule ^health$ health.php [L]
+    RewriteRule ^ready$ ready.php [L]
+</IfModule>
+
+# SEC-05: Brotli compression (15-20% better than gzip for text assets).
+# Falls back to mod_deflate (gzip) for clients/servers without it.
+<IfModule mod_brotli.c>
+    AddOutputFilterByType BROTLI_COMPRESS text/html text/css text/javascript
+    AddOutputFilterByType BROTLI_COMPRESS application/javascript application/json
+    AddOutputFilterByType BROTLI_COMPRESS image/svg+xml
+</IfModule>
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/javascript
+    AddOutputFilterByType DEFLATE application/javascript application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# SEC-06: hashed Vite output (app.abc12345.js) never needs revalidation.
+<IfModule mod_headers.c>
+    <FilesMatch "\.[0-9a-f]{8}\.(js|css|woff2|avif|webp|png|jpg)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>

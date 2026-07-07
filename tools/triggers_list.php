@@ -1,4 +1,10 @@
 <?php
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('CLI only');
+}
+
 $core = array(
 array(
   'name' => 'allow_increment_element_hit_count',

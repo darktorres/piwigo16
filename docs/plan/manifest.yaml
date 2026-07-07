@@ -104,10 +104,10 @@ sec:
   - {id: SEC-47, phase: P28, threat: "Shared cache serves logged-in content to anon (or vice-versa)", verified_by: "Vary / Cache-Control header tests (P28)", status: planned}
   - {id: SEC-48, phase: P29, threat: "Stored XSS via uploaded SVG or HTML descriptions", verified_by: "upload-sanitization tests (P19/P29)", status: planned}
   - {id: SEC-49, phase: P31, threat: "Command / code injection", verified_by: "no-eval/exec grep gate + unit tests (P20/P31)", status: planned}
-  - {id: SEC-50, phase: P3,  threat: "Supply-chain compromise (malicious / CVE dependency)", verified_by: "CI audit + SBOM + Scorecard jobs (P3)", status: planned}
-  - {id: SEC-51, phase: P3,  threat: "Supply-chain compromise (malicious / CVE dependency)", verified_by: "CI audit + SBOM + Scorecard jobs (P3)", status: planned}
-  - {id: SEC-52, phase: P3,  threat: "Supply-chain compromise (malicious / CVE dependency)", verified_by: "CI audit + SBOM + Scorecard jobs (P3)", status: planned}
-  - {id: SEC-53, phase: P3,  threat: "Tampered build / unsigned release artifact", verified_by: "CI provenance + cosign-verify gates (P3)", status: planned}
+  - {id: SEC-50, phase: P3,  threat: "Supply-chain compromise (malicious / CVE dependency)", verified_by: "CI audit + SBOM + Scorecard jobs (P3)", status: done}
+  - {id: SEC-51, phase: P3,  threat: "Supply-chain compromise (malicious / CVE dependency)", verified_by: "CI audit + SBOM + Scorecard jobs (P3)", status: done}
+  - {id: SEC-52, phase: P3,  threat: "Supply-chain compromise (malicious / CVE dependency)", verified_by: "CI audit + SBOM + Scorecard jobs (P3)", status: done}
+  - {id: SEC-53, phase: P3,  threat: "Tampered build / unsigned release artifact", verified_by: "CI provenance + cosign-verify gates (P3)", status: done}
   - {id: SEC-54, phase: P4,  threat: "Tampered build / unsigned release artifact", verified_by: "CI provenance + cosign-verify gates (P3)", status: planned}
   - {id: SEC-55, phase: P28, threat: "Federated-identity attack (token replay, IdP spoof, code interception)", verified_by: "OIDC tests: PKCE, state/nonce, ID-token signature (P28)", status: planned}
   - {id: SEC-56, phase: P18, threat: "Privacy / data-subject abuse (mass export, erasure griefing)", verified_by: "data-subject endpoint tests: re-auth + rate limit (P18/P28)", status: planned}
@@ -118,7 +118,7 @@ sec:
   - {id: SEC-61, phase: P11, threat: "Realtime topic leak (private-album update pushed to an unauthorized subscriber)", verified_by: "Mercure JWT topic-authz tests (P11)", status: planned}
   - {id: SEC-62, phase: P28, threat: "Script injection / XSS execution", verified_by: "CSP-header + Trusted-Types integration tests + no-inline-scripts lint (P28)", status: planned}
   - {id: SEC-63, phase: P28, threat: "Clickjacking / cross-origin leakage / CORS overexposure", verified_by: "security-headers + Fetch-Metadata integration tests (P28)", status: planned}
-  - {id: SEC-64, phase: P3,  threat: "Supply-chain compromise (malicious / CVE dependency)", verified_by: "CI audit + SBOM + Scorecard jobs (P3)", status: planned}
+  - {id: SEC-64, phase: P3,  threat: "Supply-chain compromise (malicious / CVE dependency)", verified_by: "CI audit + SBOM + Scorecard jobs (P3)", status: done}
   - {id: SEC-65, phase: P26, threat: "DoS (zip bomb, unbounded API/queries)", verified_by: "zip-bomb unit test + rate-limit + idempotency-replay tests (P20/P26/P28)", status: planned}
 
 tiers: [T1, T2, T3]

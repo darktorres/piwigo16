@@ -1,0 +1,18 @@
+{{- range $name, $size := (dict "data" .Values.persistence.data "local" .Values.persistence.local "galleries" .Values.persistence.galleries "upload" .Values.persistence.upload) }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "piwigo.fullname" $ }}-{{ $name }}
+  labels:
+    {{- include "piwigo.labels" $ | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if $.Values.persistence.storageClassName }}
+  storageClassName: {{ $.Values.persistence.storageClassName }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ $size.size }}
+{{- end }}

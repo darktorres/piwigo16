@@ -1,0 +1,38 @@
+# FrankenPHP/Caddy config for the production image (docs/PLAN-REPLAY.md P4).
+# Mirrors the Apache .htaccess rules at the repo root + per-directory —
+# see docs/DEPLOYMENT.md for the nginx equivalent.
+#
+# Listens on :80 as the non-root www-data user — verified empirically that
+# Caddy/FrankenPHP wants CAP_NET_BIND_SERVICE at startup regardless of which
+# port it ends up binding, so trying to dodge that by listening on a high
+# port bought nothing. docker-compose.yml/Helm both do
+# cap_drop: [ALL] + cap_add: [NET_BIND_SERVICE] — a single narrow exception,
+# not the ~14-capability Docker default set and not root.
+
+{
+	auto_https off
+	admin off
+}
+
+:80 {
+	root * /app
+	encode zstd br gzip
+
+	# SEC-01: deny directories that must never be served directly.
+	# install.php itself (the routed install entry point) stays reachable;
+	# only the install/ directory (SQL dumps, upgrade scripts) is denied.
+	@denied path /config/* /tools/* /dev/* /src/* /tests/* /install/*
+	respond @denied 403
+
+	# SEC-06: hashed Vite output never needs revalidation.
+	@immutable path_regexp immutable \.[0-9a-f]{8}\.(js|css|woff2|avif|webp|png|jpg)$
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+	# Stable external contract for health/ready probes (Dockerfile
+	# HEALTHCHECK, compose, Helm) even though there's no real router yet —
+	# these currently resolve to the plain health.php/ready.php scripts.
+	rewrite /health /health.php
+	rewrite /ready /ready.php
+
+	php_server
+}

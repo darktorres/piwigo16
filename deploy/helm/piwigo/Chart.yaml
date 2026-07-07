@@ -1,0 +1,6 @@
+apiVersion: v2
+name: piwigo
+description: Piwigo photo gallery (17.x-rewrite) — FrankenPHP runtime image
+type: application
+version: 0.1.0
+appVersion: "17.0.0-dev"

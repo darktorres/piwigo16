@@ -100,7 +100,11 @@ if(isset($conf['show_php_errors']) && !empty($conf['show_php_errors']))
   @ini_set('error_reporting', $conf['show_php_errors']);
   if($conf['show_php_errors_on_frontend'])
   {
-    @ini_set('display_errors', true);
+    // Route errors to DevTools (X-PHP-Error-N response headers) instead of
+    // inline output, which corrupts JSON/XML/binary responses (see
+    // include/error_collector.inc.php).
+    include_once(PHPWG_ROOT_PATH . 'include/error_collector.inc.php');
+    pwg_error_collector_install();
   }
 }
 

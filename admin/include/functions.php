@@ -2476,6 +2476,24 @@ function fetchRemote($src, &$dest, $get_data=array(), $post_data=array(), $user_
   // Initialize $dest
   is_resource($dest) or $dest = '';
 
+  // Piwigo makes real self-requests back into this same app (e.g. forcing
+  // derivative-image generation right after upload, see
+  // add_uploaded_file() in functions_upload.inc.php). Test mode is detected
+  // per-request from the X-Piwigo-Env header (see pwg_test_mode_is_active()),
+  // so without forwarding it here, a self-request looks like a plain
+  // production hit and never picks up the test DB config. Only forward it
+  // for same-host requests, not genuinely external ones (piwigo.org etc).
+  $test_mode_header = null;
+  if (pwg_test_mode_is_active())
+  {
+    $header_value = pwg_test_mode_header();
+    $src_host = parse_url($src, PHP_URL_HOST);
+    if ($header_value !== null && $src_host !== null && $src_host === ($_SERVER['HTTP_HOST'] ?? null))
+    {
+      $test_mode_header = 'X-Piwigo-Env: '.$header_value;
+    }
+  }
+
   // Try curl to read remote file
   // TODO : remove all these @
   if (function_exists('curl_init') && function_exists('curl_exec'))
@@ -2496,6 +2514,10 @@ function fetchRemote($src, &$dest, $get_data=array(), $post_data=array(), $user_
     @curl_setopt($ch, CURLOPT_HEADER, 1);
     @curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
     @curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    if ($test_mode_header !== null)
+    {
+      @curl_setopt($ch, CURLOPT_HTTPHEADER, array($test_mode_header));
+    }
     if ($method == 'POST')
     {
       @curl_setopt($ch, CURLOPT_POST, 1);

@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "piwigo/ws/tags.getList",
+  "description": "pwg.tags.getList — returns only tags used by ≥1 image",
+  "type": "object",
+  "required": ["stat", "result"],
+  "additionalProperties": false,
+  "properties": {
+    "stat": { "const": "ok" },
+    "result": {
+      "type": "object",
+      "required": ["tags"],
+      "additionalProperties": false,
+      "properties": {
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "counter", "url"],
+            "additionalProperties": true,
+            "properties": {
+              "id":      { "type": "integer", "minimum": 1 },
+              "name":    { "type": "string", "minLength": 1 },
+              "counter": { "type": "integer", "minimum": 1 },
+              "url":     { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

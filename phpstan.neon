@@ -12,5 +12,7 @@ parameters:
             - install/db/*.php
             # Translation data files (arrays of strings), not logic.
             - language/*.php
+            # Runtime-compiled Smarty templates + combined JS/CSS cache, not source.
+            - _data/*
     bootstrapFiles:
         - tools/phpstan-bootstrap.php

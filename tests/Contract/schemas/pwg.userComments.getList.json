@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "piwigo/ws/userComments.getList",
+  "description": "pwg.userComments.getList — admin only",
+  "type": "object",
+  "required": ["stat", "result"],
+  "additionalProperties": false,
+  "properties": {
+    "stat": { "const": "ok" },
+    "result": {
+      "type": "object",
+      "required": ["summary", "comments", "filters", "paging"],
+      "additionalProperties": true,
+      "properties": {
+        "summary": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "all_comments": { "type": ["integer", "string", "null"] },
+            "validated":    { "type": ["integer", "string", "null"] },
+            "pending":      { "type": ["integer", "string", "null"] }
+          }
+        },
+        "comments": { "type": "array" },
+        "filters":  { "type": "object", "additionalProperties": true },
+        "paging": {
+          "type": "object",
+          "required": ["page", "per_page"],
+          "additionalProperties": true,
+          "properties": {
+            "page":        { "type": ["integer", "string"] },
+            "per_page":    { "type": ["integer", "string"] },
+            "total_pages": { "type": ["integer", "string"] }
+          }
+        }
+      }
+    }
+  }
+}

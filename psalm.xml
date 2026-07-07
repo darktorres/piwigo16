@@ -19,6 +19,8 @@
             <directory name="vendor"/>
             <directory name="install/db"/>
             <directory name="language"/>
+            <!-- Runtime-compiled Smarty templates + combined JS/CSS cache, not source. -->
+            <directory name="_data"/>
         </ignoreFiles>
     </projectFiles>
 </psalm>

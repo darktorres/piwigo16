@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "piwigo/ws/categories.calculateOrphans",
+  "description": "pwg.categories.calculateOrphans",
+  "type": "object",
+  "required": ["stat", "result"],
+  "additionalProperties": false,
+  "properties": {
+    "stat": { "const": "ok" },
+    "result": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "nb_images_associated_outside": { "type": ["integer", "string"] },
+          "nb_images_becoming_orphan":    { "type": ["integer", "string"] },
+          "nb_images_recursive":          { "type": ["integer", "string"] }
+        }
+      }
+    }
+  }
+}

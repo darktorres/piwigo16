@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "piwigo/ws/activity.getList",
+  "description": "pwg.activity.getList — admin only",
+  "type": "object",
+  "required": ["stat", "result"],
+  "additionalProperties": false,
+  "properties": {
+    "stat": { "const": "ok" },
+    "result": {
+      "type": "object",
+      "required": ["result_lines"],
+      "additionalProperties": true,
+      "properties": {
+        "result_lines": { "type": "array" },
+        "page_offset":  { "type": ["integer", "string"] },
+        "end_page":     { "type": "boolean" }
+      }
+    }
+  }
+}

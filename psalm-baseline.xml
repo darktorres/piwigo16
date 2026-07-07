@@ -2100,6 +2100,7 @@
       <code><![CDATA[$taglist_before]]></code>
       <code><![CDATA[$taglist_before]]></code>
       <code><![CDATA[$type]]></code>
+      <code><![CDATA[rand()]]></code>
     </InvalidArgument>
     <InvalidArrayAccess>
       <code><![CDATA[$returnarray[0]]]></code>
@@ -2190,6 +2191,7 @@
       <code><![CDATA[delete_categories]]></code>
       <code><![CDATA[delete_element_derivatives]]></code>
       <code><![CDATA[delete_groups]]></code>
+      <code><![CDATA[delete_groups]]></code>
       <code><![CDATA[delete_orphan_tags]]></code>
       <code><![CDATA[delete_site]]></code>
       <code><![CDATA[delete_tags]]></code>
@@ -2267,6 +2269,8 @@
       <code><![CDATA[filesize($path.'/'.$node)]]></code>
     </PossiblyFalseOperand>
     <PossiblyInvalidArgument>
+      <code><![CDATA[$content]]></code>
+      <code><![CDATA[$content]]></code>
       <code><![CDATA[$content]]></code>
       <code><![CDATA[$ids]]></code>
       <code><![CDATA[$ids]]></code>
@@ -3060,6 +3064,13 @@
     <FalsableReturnStatement>
       <code><![CDATA[false]]></code>
     </FalsableReturnStatement>
+    <InvalidArgument>
+      <code><![CDATA[$day]]></code>
+      <code><![CDATA[$month]]></code>
+      <code><![CDATA[$year]]></code>
+      <code><![CDATA[explode(" ", $vb)[2]]]></code>
+      <code><![CDATA[explode(" ", $vb)[3]]]></code>
+    </InvalidArgument>
     <InvalidFalsableReturnType>
       <code><![CDATA[array]]></code>
       <code><![CDATA[array]]></code>
@@ -4193,6 +4204,7 @@
     </ClassMustBeFinal>
     <InvalidArgument>
       <code><![CDATA[$v_file]]></code>
+      <code><![CDATA[0]]></code>
     </InvalidArgument>
     <InvalidArrayOffset>
       <code><![CDATA[$v_header_list[$i]['compressed_size']]]></code>
@@ -4316,6 +4328,7 @@
       <code><![CDATA[PclZipUtilCopyBlock]]></code>
       <code><![CDATA[PclZipUtilOptionText]]></code>
       <code><![CDATA[PclZipUtilPathInclusion]]></code>
+      <code><![CDATA[PclZipUtilPathReduction]]></code>
       <code><![CDATA[PclZipUtilPathReduction]]></code>
       <code><![CDATA[PclZipUtilRename]]></code>
       <code><![CDATA[PclZipUtilTranslateWinPath]]></code>
@@ -4845,6 +4858,9 @@
       <code><![CDATA[$plg_data]]></code>
       <code><![CDATA[$plg_data]]></code>
     </PossiblyFalseArgument>
+    <PossiblyInvalidArgument>
+      <code><![CDATA[$plugin]]></code>
+    </PossiblyInvalidArgument>
     <PossiblyUndefinedGlobalVariable>
       <code><![CDATA[$main_filepath]]></code>
     </PossiblyUndefinedGlobalVariable>
@@ -4957,6 +4973,7 @@
     </MissingParamType>
     <MissingPropertyType>
       <code><![CDATA[$name]]></code>
+      <code><![CDATA[$selected]]></code>
       <code><![CDATA[$selected]]></code>
       <code><![CDATA[$sheets]]></code>
       <code><![CDATA[$titlename]]></code>
@@ -5160,6 +5177,10 @@
     <ClassMustBeFinal>
       <code><![CDATA[updates]]></code>
     </ClassMustBeFinal>
+    <InvalidArgument>
+      <code><![CDATA[rand()]]></code>
+      <code><![CDATA[rand()]]></code>
+    </InvalidArgument>
     <InvalidArrayOffset>
       <code><![CDATA[$conf['secret_key']]]></code>
       <code><![CDATA[$conf['secret_key']]]></code>
@@ -8019,7 +8040,6 @@
     </InvalidOperand>
     <MissingFile>
       <code><![CDATA[include(PHPWG_ROOT_PATH. 'local/config/config.inc.php')]]></code>
-      <code><![CDATA[include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php')]]></code>
     </MissingFile>
     <MissingParamType>
       <code><![CDATA[$code]]></code>
@@ -8111,12 +8131,14 @@
     <UndefinedFunction>
       <code><![CDATA[embellish_url(get_absolute_root_url().$page['derivative_path'])]]></code>
       <code><![CDATA[get_absolute_root_url()]]></code>
+      <code><![CDATA[pwg_apply_env_to_conf($conf, $prefixeTable)]]></code>
       <code><![CDATA[pwg_db_check_charset()]]></code>
       <code><![CDATA[pwg_db_close()]]></code>
       <code><![CDATA[pwg_db_connect($conf['db_host'], $conf['db_user'],
                  $conf['db_password'], $conf['db_base'])]]></code>
       <code><![CDATA[pwg_db_fetch_assoc($result)]]></code>
       <code><![CDATA[pwg_db_fetch_assoc(pwg_query($query))]]></code>
+      <code><![CDATA[pwg_load_env_file(PHPWG_ROOT_PATH)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[single_update(
@@ -8125,11 +8147,6 @@
           array('id' => $row['id'])
           )]]></code>
     </UndefinedFunction>
-    <UndefinedGlobalVariable>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-      <code><![CDATA[$prefixeTable]]></code>
-    </UndefinedGlobalVariable>
     <UndefinedMagicMethod>
       <code><![CDATA[compose]]></code>
       <code><![CDATA[compose]]></code>
@@ -8242,6 +8259,10 @@
     <ClassMustBeFinal>
       <code><![CDATA[PwgBase32]]></code>
     </ClassMustBeFinal>
+    <InvalidArgument>
+      <code><![CDATA[base_convert($eightBits[$z], 2, 10)]]></code>
+      <code><![CDATA[ord($input[$i])]]></code>
+    </InvalidArgument>
     <InvalidReturnStatement>
       <code><![CDATA[""]]></code>
       <code><![CDATA[$base32]]></code>
@@ -8284,11 +8305,6 @@
     <InvalidArgument>
       <code><![CDATA[array('BlockManager', 'cmp_by_position')]]></code>
     </InvalidArgument>
-    <InvalidScalarArgument>
-      <code><![CDATA[$mb_conf]]></code>
-      <code><![CDATA[$mb_conf]]></code>
-      <code><![CDATA[$mb_conf]]></code>
-    </InvalidScalarArgument>
     <MissingParamType>
       <code><![CDATA[$a]]></code>
       <code><![CDATA[$b]]></code>
@@ -8309,6 +8325,11 @@
       <code><![CDATA[set_title]]></code>
       <code><![CDATA[sort_blocks]]></code>
     </MissingReturnType>
+    <PossiblyInvalidArgument>
+      <code><![CDATA[$mb_conf]]></code>
+      <code><![CDATA[$mb_conf]]></code>
+      <code><![CDATA[$mb_conf]]></code>
+    </PossiblyInvalidArgument>
     <PropertyNotSetInConstructor>
       <code><![CDATA[$_position]]></code>
       <code><![CDATA[$_title]]></code>
@@ -8872,6 +8893,7 @@
       <code><![CDATA[include(PHPWG_ROOT_PATH . 'include/cache.class.php')]]></code>
       <code><![CDATA[include(PHPWG_ROOT_PATH . 'include/config_default.inc.php')]]></code>
       <code><![CDATA[include(PHPWG_ROOT_PATH . 'include/constants.php')]]></code>
+      <code><![CDATA[include(PHPWG_ROOT_PATH . 'include/env.inc.php')]]></code>
       <code><![CDATA[include(PHPWG_ROOT_PATH . 'include/functions.inc.php')]]></code>
       <code><![CDATA[include(PHPWG_ROOT_PATH . 'include/template.class.php')]]></code>
       <code><![CDATA[include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$conf['dblayer'].'.inc.php')]]></code>
@@ -8879,7 +8901,6 @@
       <code><![CDATA[include(PHPWG_ROOT_PATH.'include/filter.inc.php')]]></code>
       <code><![CDATA[include(PHPWG_ROOT_PATH.'include/no_photo_yet.inc.php')]]></code>
       <code><![CDATA[include(PHPWG_ROOT_PATH.'include/user.inc.php')]]></code>
-      <code><![CDATA[include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php')]]></code>
       <code><![CDATA[include_once(PHPWG_ROOT_PATH . 'include/php_compat/'.$func.'.php')]]></code>
       <code><![CDATA[include_once(PHPWG_ROOT_PATH.'admin/include/functions_upgrade.php')]]></code>
     </UnresolvableInclude>
@@ -9362,6 +9383,7 @@
       <code><![CDATA[$coi]]></code>
       <code><![CDATA[min($idealCropPx, $maxCropPx)]]></code>
       <code><![CDATA[min($idealCropPx, $maxCropPx)]]></code>
+      <code><![CDATA[ord('a') + round($f*25)]]></code>
     </InvalidArgument>
     <InvalidDocblockParamName>
       <code><![CDATA[$x]]></code>
@@ -9536,6 +9558,7 @@
     </FalsableReturnStatement>
     <InvalidArgument>
       <code><![CDATA[$normalizedOriginalStyle]]></code>
+      <code><![CDATA[$selector == '']]></code>
     </InvalidArgument>
     <InvalidDocblock>
       <code><![CDATA[foreach ($nodesMatchingCssSelectors as $node) {
@@ -9657,6 +9680,16 @@
       <code><![CDATA[setAttribute]]></code>
     </UndefinedMethod>
   </file>
+  <file src="include/env.inc.php">
+    <UndefinedFunction>
+      <code><![CDATA[pwg_test_mode_env_file()]]></code>
+      <code><![CDATA[pwg_test_mode_header()]]></code>
+      <code><![CDATA[pwg_test_mode_header()]]></code>
+      <code><![CDATA[pwg_test_mode_header()]]></code>
+      <code><![CDATA[pwg_test_mode_is_active()]]></code>
+      <code><![CDATA[pwg_test_mode_is_active()]]></code>
+    </UndefinedFunction>
+  </file>
   <file src="include/feedcreator.class.php">
     <ClassMustBeFinal>
       <code><![CDATA[AtomCreator03]]></code>
@@ -9679,6 +9712,7 @@
     </DeprecatedClass>
     <InvalidArgument>
       <code><![CDATA["\r\n"]]></code>
+      <code><![CDATA["r"]]></code>
       <code><![CDATA[$itemDate->iso8601()]]></code>
       <code><![CDATA[$itemDate->iso8601()]]></code>
       <code><![CDATA[$itemDate->iso8601()]]></code>
@@ -9690,6 +9724,17 @@
       <code><![CDATA[$itemDate->iso8601()]]></code>
       <code><![CDATA[$itemDate->rfc822()]]></code>
       <code><![CDATA[$itemDate->unix()]]></code>
+      <code><![CDATA[$matches[1]]]></code>
+      <code><![CDATA[$matches[1]]]></code>
+      <code><![CDATA[$matches[2]]]></code>
+      <code><![CDATA[$matches[3]]]></code>
+      <code><![CDATA[$matches[3]]]></code>
+      <code><![CDATA[$matches[4]]]></code>
+      <code><![CDATA[$matches[4]]]></code>
+      <code><![CDATA[$matches[5]]]></code>
+      <code><![CDATA[$matches[5]]]></code>
+      <code><![CDATA[$matches[6]]]></code>
+      <code><![CDATA[$matches[6]]]></code>
       <code><![CDATA[$now->iso8601()]]></code>
       <code><![CDATA[$now->iso8601()]]></code>
       <code><![CDATA[$now->iso8601()]]></code>
@@ -10016,6 +10061,9 @@
       <code><![CDATA[$_SERVER[$value]]]></code>
       <code><![CDATA[$replace_chars]]></code>
       <code><![CDATA[$replace_chars]]></code>
+      <code><![CDATA[$ymdhms[0]]]></code>
+      <code><![CDATA[$ymdhms[1]]]></code>
+      <code><![CDATA[$ymdhms[2]]]></code>
     </InvalidArgument>
     <InvalidArrayOffset>
       <code><![CDATA[$conf['history_admin']]]></code>
@@ -10252,6 +10300,9 @@
       <code><![CDATA[$conf[$token_name.'_running']]]></code>
       <code><![CDATA[$conf[$token_name.'_running']]]></code>
       <code><![CDATA[$str]]></code>
+      <code><![CDATA[$ymdhms[3]]]></code>
+      <code><![CDATA[$ymdhms[4]]]></code>
+      <code><![CDATA[$ymdhms[5]]]></code>
     </PossiblyInvalidArgument>
     <PossiblyInvalidOperand>
       <code><![CDATA[$_GET['page']]]></code>
@@ -10414,6 +10465,7 @@
       <code><![CDATA[LOUNGE_TABLE]]></code>
       <code><![CDATA[PATTERN_ID]]></code>
       <code><![CDATA[PEM_URL]]></code>
+      <code><![CDATA[PHPWG_DEFAULT_LANGUAGE]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
@@ -12084,6 +12136,7 @@
     <InvalidArgument>
       <code><![CDATA[$cache_key]]></code>
       <code><![CDATA[$cache_key]]></code>
+      <code><![CDATA[$expression]]></code>
     </InvalidArgument>
     <InvalidArrayOffset>
       <code><![CDATA[$conf['rate']]]></code>
@@ -12873,6 +12926,7 @@
     </InvalidDocblockParamName>
     <InvalidFalsableReturnType>
       <code><![CDATA[array]]></code>
+      <code><![CDATA[string]]></code>
     </InvalidFalsableReturnType>
     <InvalidNullableReturnType>
       <code><![CDATA[string]]></code>
@@ -12943,6 +12997,8 @@
       <code><![CDATA[session_name()]]></code>
     </PossiblyFalseArgument>
     <PossiblyInvalidArgument>
+      <code><![CDATA[ini_get('session.cookie_httponly')]]></code>
+      <code><![CDATA[ini_get('session.cookie_secure')]]></code>
       <code><![CDATA[str_replace( " ", "",  $params['username'])]]></code>
     </PossiblyInvalidArgument>
     <PossiblyInvalidArrayOffset>
@@ -13042,6 +13098,8 @@
       <code><![CDATA[PHPWG_ROOT_PATH]]></code>
       <code><![CDATA[THEMES_TABLE]]></code>
       <code><![CDATA[THEMES_TABLE]]></code>
+      <code><![CDATA[USERS_TABLE]]></code>
+      <code><![CDATA[USERS_TABLE]]></code>
       <code><![CDATA[USERS_TABLE]]></code>
       <code><![CDATA[USERS_TABLE]]></code>
       <code><![CDATA[USERS_TABLE]]></code>
@@ -13552,6 +13610,7 @@
     </FalsableReturnStatement>
     <InvalidArgument>
       <code><![CDATA[$js]]></code>
+      <code><![CDATA[time()]]></code>
     </InvalidArgument>
     <InvalidLiteralArgument>
       <code><![CDATA['(,=:[!&|?']]></code>
@@ -14175,6 +14234,7 @@
       <code><![CDATA[registerPattern]]></code>
       <code><![CDATA[save]]></code>
       <code><![CDATA[str_replace_first]]></code>
+      <code><![CDATA[str_replace_first]]></code>
       <code><![CDATA[stripMultilineComments]]></code>
       <code><![CDATA[writeToFile]]></code>
     </MissingReturnType>
@@ -14394,6 +14454,9 @@
     <DirectConstructorCall>
       <code><![CDATA[self::__construct( $iteration_count_log2, $portable_hashes )]]></code>
     </DirectConstructorCall>
+    <InvalidArgument>
+      <code><![CDATA[rand()]]></code>
+    </InvalidArgument>
     <InvalidScalarArgument>
       <code><![CDATA[rand()]]></code>
     </InvalidScalarArgument>
@@ -14422,6 +14485,7 @@
     </MissingPropertyType>
     <MissingReturnType>
       <code><![CDATA[CheckPassword]]></code>
+      <code><![CDATA[HashPassword]]></code>
       <code><![CDATA[HashPassword]]></code>
       <code><![CDATA[PasswordHash]]></code>
       <code><![CDATA[crypt_private]]></code>
@@ -14505,6 +14569,9 @@
     <FalsableReturnStatement>
       <code><![CDATA[$result]]></code>
     </FalsableReturnStatement>
+    <InvalidArgument>
+      <code><![CDATA[$offset]]></code>
+    </InvalidArgument>
     <InvalidFalsableReturnType>
       <code><![CDATA[string]]></code>
     </InvalidFalsableReturnType>
@@ -14601,6 +14668,7 @@
       <code><![CDATA[$ext]]></code>
       <code><![CDATA[$filename]]></code>
       <code><![CDATA[$filename]]></code>
+      <code><![CDATA[$i]]></code>
       <code><![CDATA[$this->Debugoutput]]></code>
     </PossiblyInvalidArgument>
     <PossiblyInvalidCast>
@@ -14612,6 +14680,8 @@
       <code><![CDATA[$filename]]></code>
     </PossiblyInvalidOperand>
     <PossiblyNullArgument>
+      <code><![CDATA[$address]]></code>
+      <code><![CDATA[$address]]></code>
       <code><![CDATA[$encoded]]></code>
       <code><![CDATA[$message]]></code>
       <code><![CDATA[$message]]></code>
@@ -14778,6 +14848,9 @@
       <code><![CDATA[$this->smtp_conn]]></code>
       <code><![CDATA[preg_replace('/[\r\n]+/', '', $str)]]></code>
     </PossiblyNullArgument>
+    <RedundantCondition>
+      <code><![CDATA[is_resource($this->smtp_conn)]]></code>
+    </RedundantCondition>
     <RedundantConditionGivenDocblockType>
       <code><![CDATA[!empty($fields)]]></code>
       <code><![CDATA[empty($fields)]]></code>
@@ -15096,6 +15169,7 @@
       <code><![CDATA[$dataLength]]></code>
       <code><![CDATA[$dataLength]]></code>
       <code><![CDATA[$dataStr]]></code>
+      <code><![CDATA[$dataStr]]></code>
       <code><![CDATA[$datacode]]></code>
       <code><![CDATA[$dir]]></code>
       <code><![CDATA[$ecc]]></code>
@@ -15276,6 +15350,7 @@
       <code><![CDATA[text]]></code>
       <code><![CDATA[timeBenchmark]]></code>
       <code><![CDATA[toByte]]></code>
+      <code><![CDATA[toUpper]]></code>
       <code><![CDATA[toUpper]]></code>
       <code><![CDATA[unserial]]></code>
       <code><![CDATA[unserial]]></code>
@@ -15626,6 +15701,10 @@
       <code><![CDATA[$cache_key]]></code>
       <code><![CDATA[$cache_key]]></code>
     </InvalidArgument>
+    <InvalidArrayOffset>
+      <code><![CDATA[$added_by[$added_by_idx]]]></code>
+      <code><![CDATA[$added_by[$added_by_idx]]]></code>
+    </InvalidArrayOffset>
     <PossiblyNullArgument>
       <code><![CDATA[$search_items]]></code>
     </PossiblyNullArgument>
@@ -21064,6 +21143,14 @@
 			substr($string, 0, 4)
 		)]]></code>
     </FalsableReturnStatement>
+    <InvalidArgument>
+      <code><![CDATA[substr($string, 0, 4)]]></code>
+      <code><![CDATA[substr($string, 10, 2)]]></code>
+      <code><![CDATA[substr($string, 12, 2)]]></code>
+      <code><![CDATA[substr($string, 4, 2)]]></code>
+      <code><![CDATA[substr($string, 6, 2)]]></code>
+      <code><![CDATA[substr($string, 8, 2)]]></code>
+    </InvalidArgument>
     <InvalidFalsableReturnType>
       <code><![CDATA[int]]></code>
       <code><![CDATA[string]]></code>
@@ -21106,6 +21193,23 @@
       <code><![CDATA[$_tokens]]></code>
       <code><![CDATA[$tokens]]></code>
     </PossiblyFalseIterator>
+    <PossiblyInvalidArgument>
+      <code><![CDATA[$current_charset]]></code>
+      <code><![CDATA[$current_charset]]></code>
+      <code><![CDATA[$current_charset]]></code>
+      <code><![CDATA[$current_charset]]></code>
+      <code><![CDATA[$current_charset]]></code>
+      <code><![CDATA[$mb_reg_charset]]></code>
+      <code><![CDATA[$mb_reg_charset]]></code>
+      <code><![CDATA[$string]]></code>
+      <code><![CDATA[$string]]></code>
+      <code><![CDATA[$string]]></code>
+      <code><![CDATA[$string]]></code>
+      <code><![CDATA[$string]]></code>
+      <code><![CDATA[$string]]></code>
+      <code><![CDATA[$string]]></code>
+      <code><![CDATA[\Smarty\Smarty::$_CHARSET]]></code>
+    </PossiblyInvalidArgument>
     <PossiblyUndefinedVariable>
       <code><![CDATA[$c]]></code>
       <code><![CDATA[$c]]></code>
@@ -21305,6 +21409,7 @@
       <code><![CDATA[false]]></code>
     </PossiblyFalsePropertyAssignmentValue>
     <PossiblyInvalidArgument>
+      <code><![CDATA[$js]]></code>
       <code><![CDATA[$this->head_done_scripts]]></code>
       <code><![CDATA[isset($params['version']) ? $params['version'] : 0]]></code>
       <code><![CDATA[isset($params['version']) ? $params['version'] : 0]]></code>
@@ -23929,12 +24034,12 @@
     </RiskyTruthyFalsyComparison>
   </file>
   <file src="install.php">
+    <InvalidArgument>
+      <code><![CDATA[time()]]></code>
+    </InvalidArgument>
     <InvalidOperand>
       <code><![CDATA[filesize($filename)]]></code>
     </InvalidOperand>
-    <InvalidScalarArgument>
-      <code><![CDATA[time()]]></code>
-    </InvalidScalarArgument>
     <MissingFile>
       <code><![CDATA[include(PHPWG_ROOT_PATH. 'local/config/config.inc.php')]]></code>
     </MissingFile>
@@ -23945,8 +24050,6 @@
     <PossiblyFalseArgument>
       <code><![CDATA[$fh]]></code>
       <code><![CDATA[$fh]]></code>
-      <code><![CDATA[$fp]]></code>
-      <code><![CDATA[$fp]]></code>
     </PossiblyFalseArgument>
     <PossiblyFalseOperand>
       <code><![CDATA[filesize($filename)]]></code>
@@ -23958,6 +24061,7 @@
       <code><![CDATA[$prefixeTable]]></code>
       <code><![CDATA[$prefixeTable]]></code>
       <code><![CDATA[$prefixeTable]]></code>
+      <code><![CDATA[$v]]></code>
       <code><![CDATA[$v]]></code>
       <code><![CDATA[$v]]></code>
       <code><![CDATA[$v2]]></code>
@@ -23999,12 +24103,16 @@
       <code><![CDATA[empty($_POST['dbname'])]]></code>
       <code><![CDATA[empty($_POST['dbpasswd'])]]></code>
       <code><![CDATA[empty($_POST['dbuser'])]]></code>
+      <code><![CDATA[empty($_SERVER['HTTPS'])]]></code>
       <code><![CDATA[empty($admin_mail)]]></code>
       <code><![CDATA[empty($admin_pass1)]]></code>
     </RiskyTruthyFalsyComparison>
     <TypeDoesNotContainType>
       <code><![CDATA[is_array($_COOKIE[$k])]]></code>
     </TypeDoesNotContainType>
+    <UndefinedFunction>
+      <code><![CDATA[pwg_load_env_file(PHPWG_ROOT_PATH)]]></code>
+    </UndefinedFunction>
     <UnresolvableInclude>
       <code><![CDATA[include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$dblayer.'.inc.php')]]></code>
     </UnresolvableInclude>
@@ -24633,6 +24741,77 @@
       <code><![CDATA[$_GET['unsubscribe']]]></code>
     </PossiblyInvalidArgument>
   </file>
+  <file src="node_modules/flatted/php/flatted.php">
+    <ClassMustBeFinal>
+      <code><![CDATA[Flatted]]></code>
+      <code><![CDATA[FlattedString]]></code>
+    </ClassMustBeFinal>
+    <InvalidArgument>
+      <code><![CDATA['Flatted::asString']]></code>
+      <code><![CDATA['Flatted::wrap']]></code>
+      <code><![CDATA['Flatted::wrap']]></code>
+    </InvalidArgument>
+    <MissingClosureReturnType>
+      <code><![CDATA[function ($value) use(&$known, &$input) {]]></code>
+    </MissingClosureReturnType>
+    <MissingParamType>
+      <code><![CDATA[$assoc]]></code>
+      <code><![CDATA[$depth]]></code>
+      <code><![CDATA[$depth]]></code>
+      <code><![CDATA[$input]]></code>
+      <code><![CDATA[$input]]></code>
+      <code><![CDATA[$input]]></code>
+      <code><![CDATA[$input]]></code>
+      <code><![CDATA[$input]]></code>
+      <code><![CDATA[$json]]></code>
+      <code><![CDATA[$key]]></code>
+      <code><![CDATA[$keys]]></code>
+      <code><![CDATA[$known]]></code>
+      <code><![CDATA[$known]]></code>
+      <code><![CDATA[$known]]></code>
+      <code><![CDATA[$obj]]></code>
+      <code><![CDATA[$obj]]></code>
+      <code><![CDATA[$options]]></code>
+      <code><![CDATA[$options]]></code>
+      <code><![CDATA[$output]]></code>
+      <code><![CDATA[$output]]></code>
+      <code><![CDATA[$set]]></code>
+      <code><![CDATA[$set]]></code>
+      <code><![CDATA[$value]]></code>
+      <code><![CDATA[$value]]></code>
+      <code><![CDATA[$value]]></code>
+      <code><![CDATA[$value]]></code>
+      <code><![CDATA[$value]]></code>
+      <code><![CDATA[$value]]></code>
+      <code><![CDATA[$value]]></code>
+      <code><![CDATA[$value]]></code>
+      <code><![CDATA[$value]]></code>
+    </MissingParamType>
+    <MissingPropertyType>
+      <code><![CDATA[$value]]></code>
+      <code><![CDATA[$value->value]]></code>
+      <code><![CDATA[$value->value]]></code>
+    </MissingPropertyType>
+    <MissingReturnType>
+      <code><![CDATA[asString]]></code>
+      <code><![CDATA[index]]></code>
+      <code><![CDATA[keys]]></code>
+      <code><![CDATA[loop]]></code>
+      <code><![CDATA[parse]]></code>
+      <code><![CDATA[ref]]></code>
+      <code><![CDATA[relate]]></code>
+      <code><![CDATA[stringify]]></code>
+      <code><![CDATA[transform]]></code>
+      <code><![CDATA[wrap]]></code>
+    </MissingReturnType>
+    <UnsupportedReferenceUsage>
+      <code><![CDATA[$input[] = &$value]]></code>
+      <code><![CDATA[$known->key[] = &$value]]></code>
+      <code><![CDATA[$known->value[] = &$index]]></code>
+      <code><![CDATA[$output->$key = &$value]]></code>
+      <code><![CDATA[$set[] = &$value]]></code>
+    </UnsupportedReferenceUsage>
+  </file>
   <file src="notification.php">
     <UndefinedConstant>
       <code><![CDATA[USER_FEED_TABLE]]></code>
@@ -24971,6 +25150,21 @@
     <InternalMethod>
       <code><![CDATA[toBeTrue]]></code>
     </InternalMethod>
+  </file>
+  <file src="tests/Integration/IntegrationTestCase.php">
+    <PossiblyFalseArgument>
+      <code><![CDATA[getenv('PIWIGO_BASE_URL') !== false ? getenv('PIWIGO_BASE_URL') : '']]></code>
+    </PossiblyFalseArgument>
+    <PossiblyFalseOperand>
+      <code><![CDATA[$stderr]]></code>
+    </PossiblyFalseOperand>
+    <PossiblyFalsePropertyAssignmentValue>
+      <code><![CDATA[getenv('PIWIGO_DB_BASE') !== false ? getenv('PIWIGO_DB_BASE') : '']]></code>
+      <code><![CDATA[getenv('PIWIGO_DB_HOST') !== false ? getenv('PIWIGO_DB_HOST') : '127.0.0.1']]></code>
+      <code><![CDATA[getenv('PIWIGO_DB_PASSWORD') !== false ? getenv('PIWIGO_DB_PASSWORD') : '']]></code>
+      <code><![CDATA[getenv('PIWIGO_DB_PREFIX') !== false ? getenv('PIWIGO_DB_PREFIX') : 'piwigo_']]></code>
+      <code><![CDATA[getenv('PIWIGO_DB_USER') !== false ? getenv('PIWIGO_DB_USER') : '']]></code>
+    </PossiblyFalsePropertyAssignmentValue>
   </file>
   <file src="tests/Pest.php">
     <InternalMethod>

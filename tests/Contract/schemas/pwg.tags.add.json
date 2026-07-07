@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "piwigo/ws/tags.add",
+  "description": "pwg.tags.add — returns {info, id, name, url_name}",
+  "type": "object",
+  "required": ["stat", "result"],
+  "additionalProperties": false,
+  "properties": {
+    "stat": { "const": "ok" },
+    "result": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": true,
+      "properties": {
+        "id":       { "type": ["integer", "string"] },
+        "name":     { "type": "string", "minLength": 1 },
+        "url_name": { "type": "string" },
+        "info":     { "type": "string" }
+      }
+    }
+  }
+}

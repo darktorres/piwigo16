@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "piwigo/ws/session.getStatus",
+  "description": "pwg.session.getStatus — anonymous (guest) call",
+  "type": "object",
+  "required": ["stat", "result"],
+  "additionalProperties": false,
+  "properties": {
+    "stat": { "const": "ok" },
+    "result": {
+      "type": "object",
+      "required": ["username", "status", "theme", "language", "pwg_token", "charset", "current_datetime", "version"],
+      "additionalProperties": true,
+      "properties": {
+        "username":         { "type": "string", "minLength": 1 },
+        "status":           { "type": "string", "enum": ["webmaster", "admin", "normal", "generic", "guest"] },
+        "theme":            { "type": "string", "minLength": 1 },
+        "language":         { "type": "string", "minLength": 1 },
+        "pwg_token":        { "type": "string", "minLength": 1 },
+        "charset":          { "type": "string", "minLength": 1 },
+        "current_datetime": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$" },
+        "version":          { "type": "string", "minLength": 1 },
+        "available_sizes":  { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+      }
+    }
+  }
+}

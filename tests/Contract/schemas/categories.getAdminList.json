@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "piwigo/ws/categories.getAdminList",
+  "description": "pwg.categories.getAdminList — admin only",
+  "type": "object",
+  "required": ["stat", "result"],
+  "additionalProperties": false,
+  "properties": {
+    "stat": { "const": "ok" },
+    "result": {
+      "type": "object",
+      "required": ["categories"],
+      "additionalProperties": true,
+      "properties": {
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "nb_images", "uppercats", "global_rank", "status"],
+            "additionalProperties": true,
+            "properties": {
+              "id":           { "type": ["integer", "string"] },
+              "name":         { "type": "string" },
+              "nb_images":    { "type": ["integer", "string"] },
+              "uppercats":    { "type": "string", "pattern": "^\\d+(,\\d+)*$" },
+              "global_rank":  { "type": "string" },
+              "status":       { "type": "string", "enum": ["public", "private"] },
+              "dir":          { "type": ["string", "null"] },
+              "image_order":  { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,210 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Tests\Contract;
+
+use JsonSchema\Validator;
+use Piwigo\Tests\Integration\IntegrationTestCase;
+
+/**
+ * Base for WS API contract tests.
+ *
+ * Loads the fixture once per test process (static flag shared across all
+ * subclasses). Each test gets its own cookie jar so login state is isolated.
+ *
+ * Two entry points:
+ *   ws()      — anonymous call (guest session)
+ *   wsAdmin() — auto-logins as fixture_admin before the call
+ *
+ * assertMatchesSchema() validates the decoded response against a JSON Schema
+ * file in tests/Contract/schemas/<name>.json using justinrainbow/json-schema.
+ */
+abstract class ContractTestCase extends IntegrationTestCase
+{
+    /**
+     * Some legacy code paths (e.g. comment posting) read
+     * $_SERVER['HTTP_USER_AGENT'] unguarded — real HTTP clients always send
+     * one, so the test client does too rather than special-casing curl.
+     */
+    protected const string USER_AGENT = 'PiwigoContractTests/1.0';
+
+    private static bool $fixtureReady = false;
+
+    private string $cookieJar = '';
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        $this->setUpConnectionFromEnv();
+        $this->requireBaseUrl();
+
+        if (!self::$fixtureReady) {
+            $this->resetDatabase();
+            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-16.x.sql');
+            $this->markTestInstalled();
+            self::$fixtureReady = true;
+        }
+
+        $tmp = tempnam(sys_get_temp_dir(), 'pwg_ct_');
+        self::assertIsString($tmp);
+        $this->cookieJar = $tmp;
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        if ($this->cookieJar !== '' && file_exists($this->cookieJar)) {
+            unlink($this->cookieJar);
+        }
+    }
+
+    /** Returns the path to the per-test cookie jar (for raw curl calls). */
+    protected function cookieJar(): string
+    {
+        return $this->cookieJar;
+    }
+
+    /** Anonymous WS call (guest). */
+    protected function ws(string $method, array $params = []): array
+    {
+        return $this->callWs($method, $params);
+    }
+
+    /** Establishes an admin session on the current cookie jar via pwg.session.login. */
+    protected function loginAsAdmin(): void
+    {
+        $this->callWs('pwg.session.login', [
+            'username' => 'fixture_admin',
+            'password' => 'fixture_admin',
+        ]);
+    }
+
+    /**
+     * Establishes an admin session by POSTing to identification.php.
+     * This sets $_SESSION['connected_with'] = 'pwg_ui', which is required by
+     * methods that call connected_with_pwg_ui() (e.g. pwg.users.api_key.*).
+     *
+     * The page requires an existing session cookie before it will accept a POST,
+     * so we GET it first to seed the cookie jar, then POST the credentials.
+     */
+    protected function loginAsAdminViaUI(): void
+    {
+        $url = $this->baseUrl . '/identification.php';
+
+        // Step 1: GET the page so PHP starts a session and sets the cookie.
+        $ch = curl_init($url);
+        self::assertNotFalse($ch, 'curl_init failed');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_USERAGENT      => self::USER_AGENT,
+            CURLOPT_COOKIEJAR      => $this->cookieJar,
+            CURLOPT_COOKIEFILE     => $this->cookieJar,
+            CURLOPT_HTTPHEADER     => $this->testHeader(),
+        ]);
+        curl_exec($ch);
+        unset($ch);
+
+        // Step 2: POST credentials. identification.php checks $_POST['login']
+        // and requires the session cookie established in step 1.
+        $ch = curl_init($url);
+        self::assertNotFalse($ch, 'curl_init failed');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_USERAGENT      => self::USER_AGENT,
+            CURLOPT_POSTFIELDS     => http_build_query([
+                'login'    => '1',
+                'username' => 'fixture_admin',
+                'password' => 'fixture_admin',
+            ]),
+            CURLOPT_COOKIEJAR      => $this->cookieJar,
+            CURLOPT_COOKIEFILE     => $this->cookieJar,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_HTTPHEADER     => $this->testHeader(),
+        ]);
+
+        $body   = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        unset($ch);
+
+        self::assertIsString($body, 'identification.php returned no body');
+        self::assertSame(302, $status, sprintf('UI login failed — expected redirect, got HTTP %d: %s', $status, $body));
+    }
+
+    /** WS call authenticated as fixture_admin. */
+    protected function wsAdmin(string $method, array $params = []): array
+    {
+        $this->loginAsAdmin();
+
+        return $this->callWs($method, $params);
+    }
+
+    /**
+     * Returns the pwg_token for the current session.
+     * Must be called after loginAsAdmin() or wsAdmin().
+     */
+    protected function getPwgToken(): string
+    {
+        $status = $this->callWs('pwg.session.getStatus', []);
+        return (string) ($status['result']['pwg_token'] ?? '');
+    }
+
+    protected static function assertMatchesSchema(string $schemaName, array $data): void
+    {
+        $path = __DIR__ . '/schemas/' . $schemaName . '.json';
+        self::assertFileExists($path, 'Schema file missing: ' . $path);
+
+        $schema = json_decode((string) file_get_contents($path));
+        self::assertIsObject($schema, sprintf('Schema %s is not valid JSON', $schemaName));
+
+        // justinrainbow/json-schema requires stdClass, not array
+        $subject = json_decode((string) json_encode($data));
+
+        $validator = new Validator();
+        $validator->validate($subject, $schema);
+
+        if (!$validator->isValid()) {
+            $lines = array_map(
+                static fn (array $e): string => sprintf('  [%s] %s', $e['property'], $e['message']),
+                $validator->getErrors()
+            );
+            self::fail(
+                "Response does not match schema '{$schemaName}':\n" . implode("\n", $lines)
+            );
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    protected function callWs(string $method, array $params): array
+    {
+        $url = $this->baseUrl . '/ws.php?format=json';
+
+        $ch = curl_init($url);
+        self::assertNotFalse($ch, 'curl_init failed');
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_USERAGENT      => self::USER_AGENT,
+            CURLOPT_POSTFIELDS     => http_build_query(array_merge(['method' => $method], $params)),
+            CURLOPT_COOKIEJAR      => $this->cookieJar,
+            CURLOPT_COOKIEFILE     => $this->cookieJar,
+            CURLOPT_HTTPHEADER     => $this->testHeader(),
+        ]);
+
+        $body   = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        unset($ch); // curl_close() is deprecated in PHP 8.4+
+
+        self::assertIsString($body, sprintf('WS call to %s returned no body', $method));
+        self::assertLessThan(500, $status, sprintf('WS %s returned server error HTTP %d: %s', $method, $status, $body));
+
+        $decoded = json_decode($body, true);
+        self::assertIsArray($decoded, sprintf('WS %s response is not valid JSON (HTTP %d): %s', $method, $status, $body));
+
+        return $decoded;
+    }
+}

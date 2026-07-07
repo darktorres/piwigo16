@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "piwigo/ws/plugins.getList",
+  "description": "pwg.plugins.getList — admin only; result is an array",
+  "type": "object",
+  "required": ["stat", "result"],
+  "additionalProperties": false,
+  "properties": {
+    "stat": { "const": "ok" },
+    "result": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "state"],
+        "additionalProperties": true,
+        "properties": {
+          "id":      { "type": "string", "minLength": 1 },
+          "name":    { "type": "string" },
+          "version": { "type": "string" },
+          "state":   { "type": "string" }
+        }
+      }
+    }
+  }
+}

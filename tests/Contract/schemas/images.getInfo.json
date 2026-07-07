@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "piwigo/ws/images.getInfo",
+  "description": "pwg.images.getInfo",
+  "type": "object",
+  "required": ["stat", "result"],
+  "additionalProperties": false,
+  "properties": {
+    "stat": { "const": "ok" },
+    "result": {
+      "type": "object",
+      "required": ["id", "file", "name", "derivatives", "categories", "tags"],
+      "additionalProperties": true,
+      "properties": {
+        "id":               { "type": ["integer", "string"] },
+        "file":             { "type": "string", "minLength": 1 },
+        "name":             { "type": ["string", "null"] },
+        "comment":          { "type": ["string", "null"] },
+        "width":            { "type": ["integer", "string", "null"] },
+        "height":           { "type": ["integer", "string", "null"] },
+        "hit":              { "type": ["integer", "string"] },
+        "date_available":   { "type": "string" },
+        "date_creation":    { "type": ["string", "null"] },
+        "author":           { "type": ["string", "null"] },
+        "page_url":         { "type": "string", "minLength": 1 },
+        "element_url":      { "type": "string", "minLength": 1 },
+        "derivatives": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "derivative map keyed by size name (square, thumb, small, …)",
+          "minProperties": 1
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "url", "page_url"],
+            "additionalProperties": true,
+            "properties": {
+              "id":       { "type": ["integer", "string"] },
+              "url":      { "type": "string", "minLength": 1 },
+              "page_url": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "url"],
+            "additionalProperties": true,
+            "properties": {
+              "id":   { "type": ["integer", "string"] },
+              "name": { "type": "string", "minLength": 1 },
+              "url":  { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

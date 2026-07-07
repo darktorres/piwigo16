@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "piwigo/ws/groups.getList",
+  "description": "pwg.groups.getList — admin only",
+  "type": "object",
+  "required": ["stat", "result"],
+  "additionalProperties": false,
+  "properties": {
+    "stat": { "const": "ok" },
+    "result": {
+      "type": "object",
+      "required": ["paging", "groups"],
+      "additionalProperties": true,
+      "properties": {
+        "paging": {
+          "type": "object",
+          "required": ["page", "per_page", "count"],
+          "additionalProperties": true,
+          "properties": {
+            "page":     { "type": ["integer", "string"] },
+            "per_page": { "type": ["integer", "string"] },
+            "count":    { "type": ["integer", "string"] }
+          }
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name"],
+            "additionalProperties": true,
+            "properties": {
+              "id":         { "type": ["integer", "string"] },
+              "name":       { "type": "string", "minLength": 1 },
+              "is_default": { "type": ["string", "boolean"] },
+              "nb_users":   { "type": ["integer", "string"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

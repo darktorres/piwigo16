@@ -139,12 +139,6 @@ parameters:
 			path: i.php
 
 		-
-			message: '#^Path in include\(\) "\./local/config/database\.inc\.php" is not a file or it does not exist\.$#'
-			identifier: include.fileNotFound
-			count: 1
-			path: i.php
-
-		-
 			message: '#^Function create_function not found\.$#'
 			identifier: function.notFound
 			count: 3
@@ -599,3 +593,4 @@ parameters:
 			identifier: include.fileNotFound
 			count: 1
 			path: upgrade_feed.php
+

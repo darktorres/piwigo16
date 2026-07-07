@@ -2,4 +2,4 @@
 
 declare(strict_types=1);
 
-uses()->in('tests/Unit', 'tests/Arch');
+uses()->in('tests/Unit', 'tests/Arch', 'tests/Integration', 'tests/Contract', 'tests/Browser');

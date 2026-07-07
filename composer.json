@@ -20,7 +20,8 @@
     "ext-openssl": "*",
     "ext-session": "*",
     "ext-simplexml": "*",
-    "ext-zlib": "*"
+    "ext-zlib": "*",
+    "symfony/dotenv": "^8.1"
   },
   "suggest": {
     "ext-exif": "Read EXIF metadata from JPEGs. All call sites guard with function_exists(); features that need EXIF degrade gracefully when the extension is absent.",
@@ -28,7 +29,9 @@
     "ext-imap": "Optional email-address parsing helper for notification features."
   },
   "require-dev": {
+    "deptrac/deptrac": "^4.6",
     "icanhazstring/composer-unused": "^0.9",
+    "justinrainbow/json-schema": "^6.8",
     "maglnet/composer-require-checker": "^4.16",
     "pestphp/pest": "^4.7",
     "pestphp/pest-plugin-arch": "^4.0",
@@ -37,9 +40,8 @@
     "pestphp/pest-plugin-type-coverage": "^4.0",
     "phpbench/phpbench": "^1.4",
     "phpstan/phpstan": "^2.1",
-    "deptrac/deptrac": "^4.6",
-    "roave/security-advisories": "dev-latest",
     "rector/rector": "^2.0",
+    "roave/security-advisories": "dev-latest",
     "symfony/yaml": "^8.1",
     "symplify/easy-coding-standard": "^13.1",
     "vimeo/psalm": "^6.16"
@@ -57,7 +59,11 @@
       "@analyse:phpstan",
       "@analyse:psalm"
     ],
-    "test": "@php vendor/bin/pest",
+    "test": "@php vendor/bin/pest --testsuite Unit,Arch",
+    "test:integration": "@php vendor/bin/pest --testsuite Integration",
+    "test:contract": "@php vendor/bin/pest --testsuite Contract",
+    "test:browser": "@php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen",
+    "test:fixture-regen": "@php vendor/bin/pest --testsuite Browser --group=fixture-regen",
     "plan-lint": "@php tools/plan-lint.php",
     "require-checker": "@php vendor/bin/composer-require-checker check --config-file=composer-require-checker.json composer.json",
     "unused": "@php vendor/bin/composer-unused --configuration=composer-unused.php",

@@ -208,7 +208,7 @@ $week_number = array();
 $temp_data = array();
 
 $activity_last_weeks = array();
-$date = new DateTime();
+$date = pwg_now();
 
 //Get data from $nb_weeks last weeks
 while ($mondays < $nb_weeks)

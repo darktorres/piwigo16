@@ -5478,6 +5478,7 @@
       <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
       <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
       <code><![CDATA[pwg_db_fetch_row(pwg_query($query))]]></code>
+      <code><![CDATA[pwg_now()]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
@@ -9732,6 +9733,7 @@
       <code><![CDATA[pwg_test_mode_header()]]></code>
       <code><![CDATA[pwg_test_mode_is_active()]]></code>
       <code><![CDATA[pwg_test_mode_is_active()]]></code>
+      <code><![CDATA[pwg_test_mode_is_active()]]></code>
     </UndefinedFunction>
   </file>
   <file src="include/feedcreator.class.php">
@@ -10671,6 +10673,7 @@
       <code><![CDATA[pwg_get_session_var('device')]]></code>
       <code><![CDATA[pwg_get_session_var('mobile_theme')]]></code>
       <code><![CDATA[pwg_is_dbconf_writeable()]]></code>
+      <code><![CDATA[pwg_now()]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
       <code><![CDATA[pwg_query($query)]]></code>
@@ -25591,13 +25594,16 @@
     <InternalMethod>
       <code><![CDATA[group]]></code>
       <code><![CDATA[group]]></code>
+      <code><![CDATA[group]]></code>
     </InternalMethod>
     <InvalidScope>
       <code><![CDATA[$this]]></code>
       <code><![CDATA[$this]]></code>
       <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
     </InvalidScope>
     <UndefinedMagicMethod>
+      <code><![CDATA[assertScreenshotMatches]]></code>
       <code><![CDATA[assertScreenshotMatches]]></code>
       <code><![CDATA[assertScreenshotMatches]]></code>
     </UndefinedMagicMethod>

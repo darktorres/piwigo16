@@ -28,21 +28,34 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *     this very test performs — so it drifts on every run. Frozen to a
  *     fixed value via H::freezeImageHits() right before each screenshot
  *     that would otherwise show it (see the dedicated 'picture-1' test
- *     below), not excluded or tolerance-widened.
- *   - admin-photo-editor, the admin dashboard ('/admin.php'), admin-album
- *     ('page=album') and admin-users ('page=user_list') ARE excluded —
- *     all render server-computed wall-clock-relative content with no
- *     available freeze point this phase: the photo editor shows "posted
- *     N hours/days ago" (time_since(), computed from real time() at render
- *     time), the dashboard's "Activity peak" widget draws week-of-year
- *     labels into a Chart.js canvas from the current date, admin-album
- *     shows "Created/Modified N hours ago" for the album, and admin-users
- *     shows "Registered N hours ago" per user. None of this is template
- *     data that can be pinned the way the hit counter can; a real fix
- *     needs a mockable clock (later phase — P7-P12 kernel work introduces
- *     one). Documented exclusion, not a laundered diff. Found by actually
- *     re-running the suite and reading the expected/actual diff images
- *     (P3), not assumed from P2's original investigation.
+ *     below and the 'admin-photo-editor' test), not excluded or
+ *     tolerance-widened.
+ *   - admin-photo-editor, the admin dashboard, admin-album and admin-users
+ *     all render `time_since()`-based "N hours/days ago" text
+ *     (`include/functions.inc.php`) computed from a real `new DateTime()`
+ *     with no override hook — previously excluded here with a claim (never
+ *     verified against the code) that the dashboard's issue was a
+ *     client-side Chart.js canvas needing a full mockable-clock kernel
+ *     layer (P7-P12). Re-reading the actual code found that's wrong: the
+ *     dashboard's "Activity peak" widget (`admin/intro.php`) is plain
+ *     server-rendered Smarty from the same kind of `new DateTime()` call —
+ *     no canvas at all (a genuinely separate page, `admin/themes/default/
+ *     template/stats.tpl` + `stats.js`, does use Chart.js and was likely
+ *     conflated with the dashboard; it's not in this suite). Fixed with
+ *     `pwg_now()` (`include/env.inc.php`) — a small test-mode-overridable
+ *     "now" provider reading `PIWIGO_TEST_NOW`, wired into `time_since()`
+ *     and `admin/intro.php`'s activity-chart computation. Real behavior is
+ *     unaffected outside test mode.
+ *   - The dashboard ALSO makes two live calls to piwigo.org unrelated to
+ *     the clock: `get_piwigo_news()` (a real news-feed fetch) and
+ *     `pwg.extensions.checkUpdates` (a core/extension update check), both
+ *     enabled by default. `pwg_now()` does nothing for these — fixed
+ *     separately by disabling both config keys in the fixture itself
+ *     (`RegenerateFixtureTest.php`), a genuinely pre-existing gap:
+ *     `AdminSmokeTest`/`ConsoleCleanTest` already visit `/admin.php` and had
+ *     been silently making these live calls the whole time, unnoticed
+ *     because neither screenshot-compares and a failed fetch is swallowed
+ *     silently.
  *   - admin-history's "Search" tab loads its results panel via an async
  *     request (admin/themes/default/js/history.js) that can still be in
  *     flight when assertScreenshotMatches() fires despite its built-in
@@ -87,8 +100,12 @@ $routes = [
     'favorites'          => ['/index.php?/favorites', true],
     'profile'            => ['/profile.php', true],
 
+    // ── Admin — Dashboard ───────────────────────────────────────────────────
+    'admin-dashboard'    => ['/admin.php', true],
+
     // ── Admin — Albums ────────────────────────────────────────────────────
     'admin-albums'       => ['/admin.php?page=albums', true],
+    'admin-album'        => ['/admin.php?page=album&cat_id=1', true],
     'admin-album-perms'  => ['/admin.php?page=album&cat_id=1&tab=permissions', true],
     'admin-cat-options'  => ['/admin.php?page=cat_options', true],
 
@@ -97,6 +114,7 @@ $routes = [
     'admin-batch'        => ['/admin.php?page=batch_manager', true],
 
     // ── Admin — Users ─────────────────────────────────────────────────────
+    'admin-users'        => ['/admin.php?page=user_list', true],
     'admin-groups'       => ['/admin.php?page=group_list', true],
     'admin-group-perm'   => ['/admin.php?page=group_perm&group_id=1', true],
     'admin-user-perm'    => ['/admin.php?page=user_perm&user_id=1', true],
@@ -108,11 +126,6 @@ $routes = [
     'admin-tags'         => ['/admin.php?page=tags', true],
     'admin-comments'     => ['/admin.php?page=comments', true],
     'admin-permalinks'   => ['/admin.php?page=permalinks', true],
-
-    // admin-dashboard ('/admin.php'), admin-album ('page=album') and
-    // admin-users ('page=user_list') are deliberately NOT covered — see the
-    // class-level docblock for why each renders unfreezable wall-clock-
-    // relative content.
 ];
 
 foreach ($routes as $name => [$path, $needsAuth]) {
@@ -150,5 +163,15 @@ it('picture-1 matches its visual baseline', function (): void {
 
     $page = H::visitPwg($this, '/picture.php?/1/category/1');
     H::assertNoServerErrors($page, 'picture-1');
+    $page->assertScreenshotMatches();
+})->group('visual-regression');
+
+it('admin-photo-editor matches its visual baseline', function (): void {
+    // Same hit-counter freeze as picture-1 — the photo editor shows the same
+    // "Visited N times" text.
+    H::freezeImageHits(1, 5);
+
+    $page = H::loginAsAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=photo-1');
     $page->assertScreenshotMatches();
 })->group('visual-regression');

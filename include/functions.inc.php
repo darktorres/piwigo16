@@ -948,7 +948,7 @@ function time_since($original, $stop='minute', $format=null, $with_text=true, $w
     return l10n('N/A');
   }
 
-  $now = new DateTime();
+  $now = pwg_now();
   $diff = dateDiff($now, $date);
 
   $chunks = array(

@@ -88,6 +88,24 @@ function pwg_apply_env_to_conf(array &$conf, string &$prefixeTable): void
 }
 
 /**
+ * Returns "now" — real wall-clock time normally, or a fixed instant from
+ * PIWIGO_TEST_NOW when test mode is active and that var is set. Lets
+ * time_since()-based relative-time text (and similar "since" widgets) render
+ * deterministically in tests without a full mockable-clock/DI layer.
+ */
+function pwg_now(): \DateTime
+{
+    if (pwg_test_mode_is_active()) {
+        $frozen = getenv('PIWIGO_TEST_NOW');
+        if ($frozen !== false && $frozen !== '') {
+            return new \DateTime($frozen);
+        }
+    }
+
+    return new \DateTime();
+}
+
+/**
  * Loads the env file chosen by pwg_test_mode_env_file() from $root.
  * Uses symfony/dotenv with usePutenv() so existing getenv() call sites keep
  * working; process env vars set before this call (systemd EnvironmentFile,

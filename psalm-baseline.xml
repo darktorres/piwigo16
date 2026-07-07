@@ -25278,6 +25278,8 @@
     <UndefinedMagicMethod>
       <code><![CDATA[assertPresent]]></code>
       <code><![CDATA[fill]]></code>
+      <code><![CDATA[fill]]></code>
+      <code><![CDATA[value]]></code>
       <code><![CDATA[value]]></code>
     </UndefinedMagicMethod>
   </file>

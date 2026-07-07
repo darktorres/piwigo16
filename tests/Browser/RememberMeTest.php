@@ -31,8 +31,7 @@ it('login without remember-me does not set the remember cookie', function (): vo
 
 it('logout clears the session and returns to an anonymous view', function (): void {
     $page = H::loginAsAdmin($this);
-    $page = $page->navigate(H::baseUrl() . '/identification.php?act=logout');
-    H::assertNoServerErrors($page, 'logout flow');
+    $page = H::navigateOk($page, '/identification.php?act=logout');
 
     $status = H::wsCall($page, 'pwg.session.getStatus');
     expect($status['result']['status'])->toBe('guest');

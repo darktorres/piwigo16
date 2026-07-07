@@ -6,8 +6,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 it('gallery title setting round-trips through the $conf write path', function (): void {
     $page = H::loginAsAdmin($this);
-    $page = $page->navigate(H::baseUrl() . '/admin.php?page=configuration&section=main');
-    H::assertNoServerErrors($page, 'configuration page');
+    $page = H::navigateOk($page, '/admin.php?page=configuration&section=main');
     $page->assertPresent('input[name="gallery_title"]');
 
     $originalTitle = $page->value('input[name="gallery_title"]');
@@ -21,8 +20,7 @@ it('gallery title setting round-trips through the $conf write path', function ()
         ->click('submit');
 
     // Reload and verify the new value persisted.
-    $page = $page->navigate(H::baseUrl() . '/admin.php?page=configuration&section=main');
-    H::assertNoServerErrors($page, 'configuration page (after save)');
+    $page = H::navigateOk($page, '/admin.php?page=configuration&section=main');
     expect($page->value('input[name="gallery_title"]'))->toBe($newTitle);
 
     // Restore original.

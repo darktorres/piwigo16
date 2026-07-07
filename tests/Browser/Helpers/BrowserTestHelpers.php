@@ -7,7 +7,10 @@ namespace Piwigo\Tests\Browser\Helpers;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
+use Pest\Browser\Playwright\Page;
 use PHPUnit\Framework\ExpectationFailedException;
+use ReflectionMethod;
+use ReflectionProperty;
 
 /**
  * pest-plugin-browser resolves a visited/interacted-with page to one of
@@ -89,7 +92,12 @@ final class BrowserTestHelpers
      */
     public static function assertNoServerErrors(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $context = ''): void
     {
-        $html = $page->content();
+        // content() is a one-shot read, not a pollable condition — same
+        // reasoning as navigateUnwrapped(), and the same fix. Confirmed
+        // needed, not just theoretical: this exact call is where the photo
+        // editor page (heavier DOM than plain listing pages) kept failing
+        // with "Timeout 5000ms exceeded" even after navigate() was fixed.
+        $html = self::rawWebpage($page)->content();
         $hits = [];
         foreach (self::serverErrorPatterns() as $name => $pattern) {
             if (preg_match($pattern, $html) === 1) {
@@ -125,10 +133,109 @@ final class BrowserTestHelpers
         Webpage|PendingAwaitablePage|AwaitableWebpage $page,
         string $path
     ): Webpage|PendingAwaitablePage|AwaitableWebpage {
-        $page = $page->navigate(self::baseUrl() . $path);
+        self::rawWebpage($page)->navigate(self::baseUrl() . $path);
         self::assertNoServerErrors($page, $path);
 
         return $page;
+    }
+
+    /**
+     * Extracts the underlying Webpage, bypassing pest-plugin-browser's
+     * assertion-retry wrapper.
+     *
+     * AwaitableWebpage::__call() wraps every method call (except a
+     * hardcoded 2-item exclusion list) in Execution::waitForExpectation(),
+     * which retries the WHOLE call in a loop where each attempt gets a
+     * hardcoded 1-second native Playwright timeout
+     * (vendor/pestphp/pest-plugin-browser/src/Execution.php:140,
+     * Playwright::usingTimeout(1_000, ...) — a literal 1_000, never derived
+     * from the overall configured timeout). That's fine for polling
+     * assertions (e.g. "wait for this element to become visible"), but
+     * navigate() and content() are one-shot operations, not conditions to
+     * poll: retrying navigate() restarts the ENTIRE page load from scratch;
+     * retrying content() just re-fetches the same already-loaded DOM again
+     * — neither "waits longer," both just redo work that won't finish any
+     * faster the second time.
+     *
+     * This app's admin pages consistently take ~2-2.3s to fully load (5
+     * web-font requests + combined CSS/JS bundles) — confirmed via a real
+     * DEBUG=pw:api Playwright trace showing the same URL navigated to 2-3
+     * times in rapid succession (~0.85-1s apart) before a test failed with
+     * "Timeout {overall configured value}ms exceeded". Since every attempt
+     * is capped below the ~2s the page actually needs, every attempt is
+     * destined to fail and restart — confirmed empirically too: raising the
+     * overall timeout 5000ms -> 15000ms made failures worse, not better,
+     * since it just buys more doomed 1-second attempts. The photo editor
+     * page (heavier DOM than plain listing pages) hit the same ceiling on
+     * its content() call even after navigate() was fixed, confirming this
+     * isn't unique to navigation specifically — it's any one-shot operation
+     * wrapped in retry-until-true semantics. This is a real gap in
+     * pest-plugin-browser (no public API excludes a method from the
+     * retry-wrap), not an app performance problem.
+     *
+     * pest-plugin-browser's own first navigation of any test
+     * (PendingAwaitablePage::buildAwaitablePage()) already does a raw,
+     * unwrapped goto() for exactly this reason. AwaitableWebpage holds its
+     * Page in a private property with no public accessor, so this extracts
+     * it via reflection and returns a plain Webpage (no retry logic of its
+     * own — see Api/Concerns/InteractsWithToolbar.php) wrapping the SAME
+     * underlying Page, reaching the same already-existing unwrapped code
+     * path pest-plugin-browser's own internals use rather than inventing
+     * new behavior. That Page is mutated in place by goto(), so the
+     * original AwaitableWebpage remains valid and reflects any changes
+     * (e.g. a new URL) afterward.
+     *
+     * A PendingAwaitablePage (the type visitPwg()/gotoOk() actually return,
+     * before any method has been called on it) needs one extra step: its
+     * own __call() lazily builds an AwaitableWebpage on first access and
+     * forwards to it — so a plain instanceof AwaitableWebpage check misses
+     * it, and calling a method on it still hits the exact same retry-wrap
+     * one level down. Confirmed needed, not theoretical: this exact gap is
+     * why loginAsAdmin()'s very first assertNoServerErrors() call (on a
+     * still-unresolved PendingAwaitablePage fresh from visitPwg()) kept
+     * failing even after the AwaitableWebpage case was fixed. Force that
+     * resolution via reflection too (mirroring what __call() itself would
+     * do), caching the result back onto the same property so a later real
+     * call on the original $page reuses it rather than building another.
+     */
+    private static function rawWebpage(Webpage|PendingAwaitablePage|AwaitableWebpage $page): Webpage
+    {
+        if ($page instanceof Webpage) {
+            return $page;
+        }
+
+        if ($page instanceof PendingAwaitablePage) {
+            $pendingProperty = new ReflectionProperty(PendingAwaitablePage::class, 'waitablePage');
+            $waitablePage = $pendingProperty->getValue($page);
+
+            if (!$waitablePage instanceof AwaitableWebpage) {
+                $createMethod = new ReflectionMethod(PendingAwaitablePage::class, 'createAwaitablePage');
+                $waitablePage = $createMethod->invoke($page);
+
+                if (!$waitablePage instanceof AwaitableWebpage) {
+                    throw new ExpectationFailedException(
+                        'PendingAwaitablePage::createAwaitablePage() did not return an AwaitableWebpage — '
+                        . 'pest-plugin-browser may have changed its internal implementation.'
+                    );
+                }
+
+                $pendingProperty->setValue($page, $waitablePage);
+            }
+
+            $page = $waitablePage;
+        }
+
+        $property = new ReflectionProperty(AwaitableWebpage::class, 'page');
+        $rawPage = $property->getValue($page);
+
+        if (!$rawPage instanceof Page) {
+            throw new ExpectationFailedException(
+                'Could not extract the underlying Page from AwaitableWebpage — '
+                . 'pest-plugin-browser may have renamed/retyped its internal property.'
+            );
+        }
+
+        return new Webpage($rawPage, '');
     }
 
     /**

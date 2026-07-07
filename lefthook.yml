@@ -19,4 +19,12 @@ pre-push:
   commands:
     phpstan:
       run: vendor/bin/phpstan analyse --no-progress
+    # --no-cache: Psalm's file-storage cache skips re-scanning unchanged
+    # files, which silently stops re-reporting MissingClassConstType/
+    # InvalidDocblock (scan-time-only issues) after the first run — see
+    # ci.yml's psalm job comment for the exact source-level mechanism. A
+    # developer's warm local cache could otherwise let broken code through
+    # this gate.
+    psalm:
+      run: vendor/bin/psalm --no-progress --no-cache
 

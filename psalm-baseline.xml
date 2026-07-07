@@ -5333,13 +5333,6 @@
     </UndefinedConstant>
     <UndefinedFunction>
       <code><![CDATA[conf_delete_param('fs_quick_check_last_check')]]></code>
-      <code><![CDATA[conf_update_param(
-        'update_notify_last_notification',
-        array(
-          'version' => $new_versions_string,
-          'notified_on' => date('c'),
-          )
-        )]]></code>
       <code><![CDATA[conf_update_param('piwigo_installed_version', $upgrade_to)]]></code>
       <code><![CDATA[conf_update_param('update_notify_last_check', date('c'))]]></code>
       <code><![CDATA[conf_update_param('updates_ignored', pwg_db_real_escape_string(serialize($conf['updates_ignored'])))]]></code>
@@ -5357,10 +5350,6 @@
       <code><![CDATA[get_branch_from_version($last_version_number)]]></code>
       <code><![CDATA[get_branch_from_version($version)]]></code>
       <code><![CDATA[get_branch_from_version($version_number)]]></code>
-      <code><![CDATA[get_branch_from_version(('Official' === $env)
-        ? substr($build_version, 0, -1)
-        : PHPWG_VERSION
-      )]]></code>
       <code><![CDATA[get_branch_from_version(PHPWG_VERSION)]]></code>
       <code><![CDATA[get_branch_from_version(substr($last_version, 0, -1))]]></code>
       <code><![CDATA[get_branch_from_version(substr($version, 0, -1))]]></code>
@@ -5369,15 +5358,6 @@
       <code><![CDATA[get_root_url()]]></code>
       <code><![CDATA[get_root_url()]]></code>
       <code><![CDATA[invalidate_user_cache(true)]]></code>
-      <code><![CDATA[l10n(
-              'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
-              get_root_url().$conf['data_location'].'update/log_error.txt'
-              )]]></code>
-      <code><![CDATA[l10n(
-        'Time has come to update your Piwigo with version %s, go to %s',
-        $new_versions_string,
-        get_absolute_root_url().'admin.php?page=updates'
-        )]]></code>
       <code><![CDATA[l10n('An error has occured during upgrade.')]]></code>
       <code><![CDATA[l10n('Hello,')]]></code>
       <code><![CDATA[l10n('It only takes a few clicks.')]]></code>
@@ -5389,18 +5369,6 @@
       <code><![CDATA[pwg_activity('system', ACTIVITY_SYSTEM_CORE, 'update', array('from_version'=>PHPWG_VERSION, 'to_version'=>$upgrade_to))]]></code>
       <code><![CDATA[pwg_db_real_escape_string(serialize($conf['updates_ignored']))]]></code>
       <code><![CDATA[pwg_is_dbconf_writeable()]]></code>
-      <code><![CDATA[pwg_mail_admins(
-        array(
-          'subject' => l10n('Piwigo %s is available, please update', $new_versions_string),
-          'content' => $content,
-          'content_format' => 'text/plain',
-          ),
-        array(
-          'filename' => 'notification_admin',
-          ),
-        false, // do not exclude current user
-        true // only webmasters
-        )]]></code>
       <code><![CDATA[redirect(PHPWG_ROOT_PATH.'upgrade.php?now=')]]></code>
       <code><![CDATA[redirect(get_root_url().'admin.php?page=plugin-'.basename(dirname(__FILE__)))]]></code>
       <code><![CDATA[safe_unserialize($conf['update_notify_last_notification'])]]></code>
@@ -9795,24 +9763,7 @@
     <InvalidStaticInvocation>
       <code><![CDATA[FeedCreator::iTrunc(htmlspecialchars($this->rawFieldContent),$this->truncSize)]]></code>
     </InvalidStaticInvocation>
-    <MissingOverrideAttribute>
-      <code><![CDATA[function _generateFilename() {]]></code>
-      <code><![CDATA[function _generateFilename() {]]></code>
-      <code><![CDATA[function _generateFilename() {]]></code>
-      <code><![CDATA[function createFeed($format = "RSS0.91") {]]></code>
-      <code><![CDATA[function createFeed()]]></code>
-      <code><![CDATA[function createFeed() {]]></code>
-      <code><![CDATA[function createFeed() {]]></code>
-      <code><![CDATA[function createFeed() {]]></code>
-      <code><![CDATA[function createFeed() {]]></code>
-      <code><![CDATA[function createFeed() {]]></code>
-      <code><![CDATA[function createFeed() {]]></code>
-      <code><![CDATA[function createFeed() {]]></code>
-      <code><![CDATA[function createFeed() {]]></code>
-      <code><![CDATA[function outputFeed($format='RSS0.91') {]]></code>
-      <code><![CDATA[function saveFeed($format="RSS0.91", $filename="", $displayContents=true) {]]></code>
-      <code><![CDATA[function useCached($format="RSS0.91", $filename="", $timeout=3600) {]]></code>
-    </MissingOverrideAttribute>
+    <MissingOverrideAttribute/>
     <MissingParamType>
       <code><![CDATA[$dateString]]></code>
       <code><![CDATA[$displayContents]]></code>

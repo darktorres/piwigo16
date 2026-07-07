@@ -18,8 +18,19 @@ dev:
 
 # ─── Test ───────────────────────────────────────────────────────────────
 
+# Full local gate — mirrors CI + docs/DEVELOPMENT.md's documented suite
+# list. Needs a provisioned piwigo_test DB + Apache vhost + Chromium for
+# the DB-backed suites; each self-provisions its own DB state (see
+# docs/DEVELOPMENT.md's Tests section), so the dependency order below
+# doesn't matter functionally. ECS runs last, non-blocking (`-` prefix) —
+# just's prerequisite lists can't mark a step fallible, and this matches
+# ci.yml's ecs job + lefthook's pre-commit hook, both non-blocking until
+# P5's whole-codebase reformat.
+test: analyse require-checker unused test-php test-integration test-contract test-browser test-visual test-js
+    -composer lint:php
+
 # Run the JS/TS test suite (Vitest)
-test:
+test-js:
     bun run test
 
 # Run the PHP test suite (Pest)
@@ -50,6 +61,14 @@ test-fixture-regen:
 coverage:
     composer test:coverage
 
+# TypeScript type-check (no emit)
+typecheck:
+    bun run typecheck
+
+# PHPBench (0 subjects until P12 adds tests/Bench/*.php)
+bench:
+    composer bench
+
 # ─── Lint ───────────────────────────────────────────────────────────────
 
 # Run all linters (PHP + JS + CSS)
@@ -75,6 +94,10 @@ analyse:
 
 # ─── Dependency + plan hygiene ──────────────────────────────────────────
 
+# Undeclared-dependency check (composer-require-checker)
+require-checker:
+    composer require-checker
+
 # Composer + JS unused-dependency/file checks
 unused:
     composer unused
@@ -83,3 +106,24 @@ unused:
 # Validate docs/plan/manifest.yaml
 plan-lint:
     composer plan-lint
+
+# ─── Database ───────────────────────────────────────────────────────────
+
+# Reimport tests/Fixtures/piwigo-16.x.sql into piwigo_test
+db-fixture:
+    bash tools/reimport-fixture.sh
+
+# Drop and recreate piwigo_test empty (follow with `just db-fixture` to
+# reload the committed fixture). Reads credentials from .env.test, same
+# convention as tools/reimport-fixture.sh and tools/restore-drill.sh.
+db-reset:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    set -a
+    source .env.test
+    set +a
+    mysql_args=(-h"${PIWIGO_DB_HOST}" -u"${PIWIGO_DB_USER}")
+    if [ -n "${PIWIGO_DB_PASSWORD:-}" ]; then
+      mysql_args+=(-p"${PIWIGO_DB_PASSWORD}")
+    fi
+    mysql "${mysql_args[@]}" -e "DROP DATABASE IF EXISTS \`${PIWIGO_DB_BASE}\`; CREATE DATABASE \`${PIWIGO_DB_BASE}\`;"

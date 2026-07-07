@@ -21,8 +21,22 @@
 	# SEC-01: deny directories that must never be served directly.
 	# install.php itself (the routed install entry point) stays reachable;
 	# only the install/ directory (SQL dumps, upgrade scripts) is denied.
-	@denied path /config/* /tools/* /dev/* /src/* /tests/* /install/*
+	# vendor/ and deploy/ were found still 200-ing during the P4 audit —
+	# vendor/ is copied in explicitly via a cross-stage COPY --from=builder,
+	# so .dockerignore's own vendor/ entry (which only governs this stage's
+	# plain `COPY . .`) never applied to it. node_modules/docs/.git aren't
+	# actually present in this image (.dockerignore excludes them from the
+	# `COPY . .` and nothing cross-stage-copies them back in) but are denied
+	# here too, matching .htaccess, as a defense-in-depth guard against a
+	# future .dockerignore change silently reintroducing them.
+	@denied path /config/* /tools/* /dev/* /src/* /tests/* /install/* /vendor/* /node_modules/* /docs/* /deploy/* /.git/*
 	respond @denied 403
+
+	# SEC-01: deny direct access to sensitive root-level tooling configs and
+	# dependency manifests too — not just the directories above. Mirrors
+	# .htaccess's equivalent file-level rule.
+	@denied_files path /composer.json /composer.lock /package.json /bun.lock /phpstan.neon /psalm.xml /rector.php /ecs.php /knip.json /lefthook.yml /tsconfig.json /.stylelintrc.json /.prettierrc.json /lighthouserc.json /.size-limit.json /renovate.json /release-please-config.json /.release-please-manifest.json /eslint-suppressions.json /.editorconfig /.gitignore /.dockerignore /Dockerfile /docker-compose.yml /docker-compose.yaml /justfile /.env* /*.ts
+	respond @denied_files 403
 
 	# SEC-06: hashed Vite output never needs revalidation.
 	@immutable path_regexp immutable \.[0-9a-f]{8}\.(js|css|woff2|avif|webp|png|jpg)$

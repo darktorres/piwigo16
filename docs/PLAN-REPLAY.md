@@ -242,8 +242,8 @@ Branch: `17.x-rewrite` — based on `origin/16.x` @ `54bdc4e21`
 | ---------------------- | ----------------- | ------------------------------------------------------------------------------------ |
 | Pest unit + arch       | 3/3 passed        | SmokeTest, StructuralTest                                                            |
 | Pest integration       | 2/2 passed        | InstallChainTest, GallerySmokeTest                                                   |
-| Pest contract (WS API) | 93/93 passed      | 22 test classes, 23 JSON schemas; covers all testable WS methods                     |
-| Pest browser E2E       | 48/48 passed      | 15 files; visual-regression, 65+ baselines. Reference branch is 51/51 (3 skipped) — see note below |
+| Pest contract (WS API) | 93/93 passed      | 21 `Ws*Test` classes (+ 1 `ContractTestCase` base) covering all testable WS methods; 29 JSON schemas (flat under `tests/Contract/schemas/`, no `v1/` subdir — the WS API never gets a v2, it's removed outright at P26) |
+| Pest browser E2E       | 48/48 passed      | 15 files; visual-regression, 32 baselines (`tests/Browser/VisualRegressionTest.php`'s 30 routes + 2 explicit tests). Reference branch is 51/51 (3 skipped) — see note below |
 | PHPStan                | L0, 0 errors      | Full codebase scanned; baseline in `phpstan-baseline.neon`                           |
 | ECS                    | installed         | Configured, **not** applied; codebase reformat + ECS gate deferred to P5 (after the P2 harness)  |
 | Rector                 | dry-run recorded  | Pending count recorded; NO rules applied until P5                                    |
@@ -261,7 +261,7 @@ Branch: `17.x-rewrite` — based on `origin/16.x` @ `54bdc4e21`
 | commitlint             | 0 errors          | All commits follow conventional commit format                                        |
 | size-limit             | n/a until P24   | Placeholder config; real budgets set when Vite entries are real                       |
 | PHPBench               | n/a until P7      | Benchmark suite starts when kernel exists                                            |
-| `just test`            | **all suites**    | Verified: runs all 6 commands, counts match individual runs                          |
+| `just test`            | **all suites**    | Verified: chains `analyse` (PHPStan+Psalm), `require-checker`, `unused` (composer-unused+knip), every Pest suite (`test-php`/`-integration`/`-contract`/`-browser`/`-visual`), and `test-js` (Vitest) via the justfile's dependency list, with ECS non-blocking (last, `-` prefix) — counts match each recipe's individual run |
 
 > **E2E count reconciliation.** The reference branch reports **51/51 (3 skipped)**; the
 > `17.x` target is **48/48 (0 skipped)**. The 3 skipped specs need Pest-browser features
@@ -578,8 +578,11 @@ count. CI enforces ratchets: counts can only go down.
    `ecs --fix` is a code-modifying pass over ~500 legacy files and is deferred to P5 step 11,
    once the P2 regression harness exists to catch a mis-behaving fixer (see the additive-only
    foundation rule). ECS is therefore not yet a blocking gate. Config from rewrite branch:
-   `cleanCode`, `common`, `psr12`, `symplify` prepared sets + `DeclareStrictTypesFixer`,
-   `LineEndingFixer`, `RandomApiMigrationFixer`, `SingleLineEmptyBodyFixer`.
+   `cleanCode`, `common`, `psr12` prepared sets (the installed `symplify/easy-coding-standard`
+   ^13.1 marks the separate `symplify` prepared set `@deprecated` — "rules moved to the common
+   sets" — so passing `common: true` alone is the complete, non-deprecated equivalent) +
+   `DeclareStrictTypesFixer`, `LineEndingFixer`, `RandomApiMigrationFixer`,
+   `SingleLineEmptyBodyFixer`.
    Skip `DeclareStrictTypesFixer` until P5 (after vendor removal).
    Skip `GeneralPhpdocAnnotationRemoveFixer`, `LineLengthFixer`,
    `ParamReturnAndVarTagMalformsFixer` (too aggressive on legacy docblocks).
@@ -722,8 +725,9 @@ touching production:
 3. `local/.installed` / `local/.installed.test` — separate install sentinels
 4. `include/env.inc.php` — env loading bootstrap (loaded by `common.inc.php`)
 5. `IntegrationTestCase` base class — `setUpConnectionFromEnv()`,
-   `resetDatabaseFast($fixture)`, `testHeader()`, `markTestInstalled()`,
-   `requireBaseUrl()`
+   `resetDatabase()` + `loadFixture(string $path)` (a mysqldump-import pair, not
+   the DELETE+INSERT-SELECT design floated below — see that section's own
+   correction), `testHeader()`, `markTestInstalled()`, `requireBaseUrl()`
 
 #### Browser E2E + contract tests (part of P2)
 
@@ -788,9 +792,36 @@ contract tests against `/api/v1` replace them (and feed the typed client).
 3. Tools from the rewrite branch: only port tools needed before their consuming
    phase. Most land in their consuming phase (e.g., `smarty-to-latte` in P29,
    `plugin-lint` in P31). Tools ported in P0:
-   - `tools/phpstan-bootstrap.php` — PHPStan boot shim
-   - `tools/phpstan-latte-engine.php` — Latte resolver for PHPStan
-   - `tools/phpstan/` — 6 custom PHPStan rules
+   - `tools/phpstan-bootstrap.php` — PHPStan boot shim (empty for now; legacy
+     constants are all `define()`'d within analyzed files, so PHPStan already
+     sees them in the same run — grows as later phases need stubs)
+
+   **Not ported in P0, despite existing on the reference `16.x-rewrite` branch —
+   a P4 audit read that branch's `tools/phpstan/` directly and found every one of
+   these depends on infrastructure this replay branch doesn't have yet:**
+   - **Latte PHPStan integration** (`efabrica/phpstan-latte` + a `tools/phpstan-latte/`
+     vendored patch + `tools/phpstan-latte-engine.php` bootstrap) — needs actual
+     `.latte` templates to resolve against; this codebase is Smarty-only until P29.
+     Porting the resolver now would wire a compiler with nothing to compile.
+   - `StrictTypesRequiredRule` — its own docblock says "the global sweep already
+     landed; this rule keeps new files from regressing" — that sweep is P5's
+     `DeclareStrictTypesFixer` rollout (deliberately deferred past P0, see step 4
+     above); porting the rule before the sweep would flag every legacy file in
+     `src/`, `include/`, `admin/` that lacks `declare(strict_types=1)`.
+   - `NoErrorSuppressionRule` — its docblock says "Task #9 of the PHP
+     modernization roadmap eliminated all 263 `@` sites"; that elimination hasn't
+     happened on this branch, so the rule would flag every existing `@` site.
+   - `NoDynamicNewRule`, `NoGlobalInSrcRule`, `SerializeAllowedRule` — all scoped
+     to `src/`, which doesn't exist until P6's PSR-4 extraction. Genuinely inert
+     (zero matches) until then, so harmless to add early, but pointless too.
+   - `ConfigKeyExistsRule` — references `Piwigo\Config\Config::SCHEMA`, a typed
+     config service that doesn't exist yet (`docs/DEVELOPMENT.md`'s env-split
+     notes point at P13 unifying config loading) — adding it now would fail to
+     even resolve the class it checks against.
+
+   Port each once its own prerequisite phase lands, not before — porting early
+   would mean either a baseline-worthy flood of pre-emptive errors or a rule
+   checking a class that doesn't exist.
 
 ### P3 — CI pipeline
 
@@ -860,11 +891,17 @@ contract tests against `/api/v1` replace them (and feed the typed client).
   run on PHP 8.5 only (single canonical version). ECS + ESLint run once
   (formatting is version-independent). The matrix catches provider-specific
   SQL regressions early.
-- **Reusable workflows:** extract test/lint/build into reusable
+- **Reusable workflows (deferred to P15):** extract test/lint/build into reusable
   workflows (`.github/workflows/test.yml`, `lint.yml`, `build.yml`)
   called from the main `ci.yml` via `uses: ./.github/workflows/test.yml`.
   Keeps CI DRY as the matrix grows. Each reusable workflow accepts
-  inputs (PHP version, DB provider) and runs independently.
+  inputs (PHP version, DB provider) and runs independently. The entire
+  justification is "as the matrix grows" — today's matrix is PHP 8.5 ×
+  MySQL 9.7 × ubuntu-latest, i.e. no matrix at all yet (multi-provider lands
+  at P15, see the runtime-requirements table below). Extracting reusable
+  workflows now, before the duplication they'd solve actually exists, would
+  be premature abstraction over a single-configuration `ci.yml` — do this
+  once P15's matrix creates the real DRY problem, not before.
 
 #### `just test` verification (16.x-v2 lesson learned)
 
@@ -1004,10 +1041,20 @@ the container's cgroup limits.
    not just Apache.** Until P32 physically moves the web root to `public/`, every file is
    HTTP-reachable, so the deny ruleset is the *only* boundary for ~13 phases and must not be
    Apache-only. Ship, as first-class P0 artifacts:
-   - **Apache** `.htaccess` with `Require all denied` (Apache 2.4) for: `config/`, `tools/`,
-     `dev/`, `src/`, `tests/`, `install/` (except the routed install path). Also block direct
-     access to `composer.json`, `composer.lock`, `package.json`, `bun.lock`, `phpstan.neon`,
-     `psalm.xml`, `rector.php`, `ecs.php`, `*.ts` config files, `.env*`.
+   - **Apache** `.htaccess` (`mod_rewrite`-based — not `Require all denied`, so the same file
+     stays portable to whatever `REQUEST_URI` prefix a shared host mounts this under) denying:
+     `config/`, `tools/`, `dev/`, `src/`, `tests/`, `install/` (except the routed install path),
+     `vendor/`, `node_modules/`, `docs/`, `deploy/`, `.git/`. Also block direct access to
+     `composer.json`, `composer.lock`, `package.json`, `bun.lock`, `phpstan.neon`, `psalm.xml`,
+     `rector.php`, `ecs.php`, `knip.json`, `lefthook.yml`, `tsconfig.json`, `.stylelintrc.json`,
+     `.prettierrc.json`,
+     `lighthouserc.json`, `.size-limit.json`, `renovate.json`, `release-please-config.json`,
+     `.release-please-manifest.json`, `eslint-suppressions.json`, `.editorconfig`, `.gitignore`,
+     `.dockerignore`, `Dockerfile`, `docker-compose.yml`, `justfile`, `*.ts` config files,
+     `.env*`. (A P4 audit found `vendor/`/`docs/`/`deploy/` and every one of those config files
+     still serving `200` despite the directory list above already existing — `vendor/` in
+     particular is copied into the production image via an explicit
+     `COPY --from=builder`, so `.dockerignore` excluding it was never sufficient on its own.)
    - **FrankenPHP/Caddy** + **nginx** snippets denying the same set (the FrankenPHP image is the
      *recommended* runtime per ADR-0013, so its deny rules are not optional).
    - An **E2E deny test that runs against each supported server** (extends the `.htaccess` deny
@@ -1027,7 +1074,9 @@ the container's cgroup limits.
 
 4. **[SEC-04] Ship `robots.txt`.** Disallow: `/admin`, `/api`, `/config/`, `/tools/`,
    `/dev/`, `/install/`, `/src/`, `/tests/`.
-   Include `Sitemap: /sitemap-index.xml` (sitemap generated in P26).
+   No `Sitemap:` line until P26 actually generates `/sitemap-index.xml` — pointing
+   crawlers at a resource that 404s until then adds nothing; add the line in the
+   same commit that lands the sitemap.
 
 5. **[SEC-05] Brotli compression.** Apache `mod_brotli` provides 15-20% better
    compression than gzip for text assets (HTML, CSS, JS, JSON, SVG).
@@ -4716,7 +4765,12 @@ Integration tests (`tests/Integration/`) — one per repository, landing WITH do
 Integration test pattern (`IntegrationTestCase` base class):
 
 - Reads env from `.env.test`, connects to real MySQL
-- `resetDatabaseFast($fixture)` — template DB → fast DELETE+INSERT-SELECT reset
+- `resetDatabase()` + `loadFixture($path)` — drop/recreate + mysqldump-import
+  the committed fixture (P2's actual implementation; a template-DB fast-reset
+  was the original idea here but the dump-import approach, with
+  `settleDatabase()` polling after load to absorb a cold-InnoDB-buffer-pool
+  timeout, is what's proven reliable in practice — see `docs/DEVELOPMENT.md`'s
+  Tests section for the full reliability history)
 - `applyPendingMigrations()` — runs any Doctrine Migrations not yet applied
   to the test DB. The fixture SQL stays at P0 baseline; migrations bring it
   to the current schema. This means P17–P23's per-domain column-type migrations
@@ -5274,7 +5328,9 @@ database. Uses `<image:image>` sitemap extension for Google Images:
 - Respects `privacy_level` — only public images/albums included
 
 `SitemapController` generates on-the-fly (cached 1h in `general` pool).
-`robots.txt` references `Sitemap: /sitemap-index.xml` (added in P0).
+Add the `Sitemap: /sitemap-index.xml` line to `robots.txt` in this same commit —
+`robots.txt` itself shipped at P4 (SEC-04) without it, deliberately, since a
+`Sitemap:` line pointing at a 404 until now adds nothing.
 A photo gallery with millions of images needs sitemaps for SEO.
 
 **ETags for API responses:** `ETagMiddleware` (PSR-15) computes a weak

@@ -94,16 +94,34 @@ mounts).
 ## Sensitive-path deny rules (SEC-01)
 
 `config/`, `tools/`, `dev/`, `src/`, `tests/`, `install/` (the directory — `install.php`
-itself stays reachable, it's the routed install entry point) must never be served
-directly, on every supported front end. Shipped as:
+itself stays reachable, it's the routed install entry point), `vendor/`, `node_modules/`,
+`docs/`, `deploy/`, `.git/` must never be served directly, on every supported front end —
+nor must sensitive root-level tooling configs and dependency manifests: `composer.json`,
+`composer.lock`, `package.json`, `bun.lock`, `phpstan.neon`, `psalm.xml`, `rector.php`,
+`ecs.php`, `knip.json`, `lefthook.yml`, `tsconfig.json`, `.stylelintrc.json`, `.prettierrc.json`,
+`lighthouserc.json`, `.size-limit.json`, `renovate.json`, `release-please-config.json`,
+`.release-please-manifest.json`, `eslint-suppressions.json`, `.editorconfig`,
+`.gitignore`, `.dockerignore`, `Dockerfile`, `docker-compose.yml`, `justfile`, `.env*`,
+and any root `*.ts` config file. The directory list started narrower and the file list
+didn't exist at all until a P4 audit found `vendor/`, `docs/`, `deploy/`, and every one of
+those config files still returning `200` in the shipped image/Apache checkout —
+`vendor/` in particular is copied into the production image via an explicit
+`COPY --from=builder`, so excluding it from `.dockerignore` alone was never enough.
+Shipped as:
 
 - **Apache**: root `.htaccess` (`mod_rewrite`-based, portable to any `REQUEST_URI`
-  prefix a shared host might mount this under).
-- **FrankenPHP/Caddy**: `docker/Caddyfile` (baked into the production image).
+  prefix a shared host might mount this under) — one rule for the denied directories,
+  a second for the denied root files (matched by basename, not anchored to root).
+- **FrankenPHP/Caddy**: `docker/Caddyfile` (baked into the production image) — same
+  two-rule split via `@denied`/`@denied_files` matchers.
 - **nginx** (not a runtime this project ships an image for, but commonly fronting one):
 
   ```nginx
-  location ~ ^/(config|tools|dev|src|tests|install)/ {
+  location ~ ^/(config|tools|dev|src|tests|install|vendor|node_modules|docs|deploy|\.git)/ {
+      return 403;
+  }
+
+  location ~ ^/(composer\.(json|lock)|package\.json|bun\.lock|phpstan\.neon|psalm\.xml|rector\.php|ecs\.php|knip\.json|lefthook\.yml|tsconfig\.json|\.stylelintrc\.json|\.prettierrc\.json|lighthouserc\.json|\.size-limit\.json|renovate\.json|release-please-config\.json|\.release-please-manifest\.json|eslint-suppressions\.json|\.editorconfig|\.gitignore|\.dockerignore|Dockerfile|docker-compose\.ya?ml|justfile|\.env.*|[^/]+\.ts)$ {
       return 403;
   }
 

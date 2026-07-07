@@ -87,8 +87,12 @@ this one) — it doesn't exist yet. `tools/restore-drill.sh` proves the honest s
 available today: it restores the tracked `tests/Fixtures/piwigo-16.x.sql` mysqldump into
 a scratch DB (never `piwigo_test`/production) and asserts row counts + a schema smoke
 query, so the drill mechanism and assertions are already correct by the time P12 lands a
-real backup artifact to point them at. Run it with `.env.test` sourced, same convention
-as `tools/reimport-fixture.sh`:
+real backup artifact to point them at. Runs on every CI build (`.github/workflows/ci.yml`'s
+`restore-drill` job) — not just a documented manual command — so a schema change that
+breaks the restore path fails CI immediately instead of being discovered during a real
+incident. Also runnable locally with `.env.test` sourced, same convention as
+`tools/reimport-fixture.sh` (which `just db-fixture` wraps — this is a separate script,
+touching its own scratch DB, never `piwigo_test`):
 
 ```
 bash tools/restore-drill.sh

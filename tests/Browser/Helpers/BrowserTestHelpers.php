@@ -194,6 +194,29 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Pins piwigo_images.hit to a fixed value before a visual-regression
+     * screenshot. Viewing a photo (picture.php, the admin photo editor)
+     * increments this counter as a side effect of the very navigation the
+     * screenshot needs, so without this every VR run would drift the
+     * rendered "Visited N times" text by however many times each image was
+     * viewed since the baseline — freezing it here, not excluding the page
+     * or widening the diff tolerance.
+     */
+    public static function freezeImageHits(int $imageId, int $value): void
+    {
+        $db = new \mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+        $db->query(sprintf('UPDATE %simages SET hit = %d WHERE id = %d', $prefix, $value, $imageId));
+        $db->close();
+    }
+
+    /**
      * Generates a small solid-color JPEG (via GD) for upload tests. Caller
      * is responsible for unlink()-ing the returned path.
      */

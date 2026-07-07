@@ -10,6 +10,9 @@
 /dist
 /.lighthouseci
 
+# pest-plugin-browser auto-captures a screenshot here on assertion failure
+/tests/Browser/Screenshots
+
 # Piwigo specific directories
 /_data
 /plugins/*

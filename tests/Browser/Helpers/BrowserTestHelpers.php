@@ -185,6 +185,62 @@ final class BrowserTestHelpers
         return $decoded;
     }
 
+    /**
+     * Polls in-browser (via script(), which awaits the returned promise —
+     * see wsCall()) until $selector is absent or hidden, instead of racing a
+     * single check against an async request. Neither assertSee() nor
+     * assertMissing() retry (both are one-shot checks under the hood —
+     * confirmed by reading their implementations after both flaked on
+     * admin-history's async-loaded search results panel).
+     */
+    public static function waitUntilHidden(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $selector, float $timeoutSeconds = 5.0): void
+    {
+        $timeoutMs = (int) ($timeoutSeconds * 1000.0);
+        $js = <<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + {$timeoutMs};
+            const check = () => {
+                const el = document.querySelector('{$selector}');
+                if (el === null || el.offsetParent === null) {
+                    return resolve(true);
+                }
+                if (Date.now() > deadline) {
+                    return reject(new Error('Timed out waiting for {$selector} to hide'));
+                }
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS;
+
+        $page->script($js);
+    }
+
+    /**
+     * Deletes every row from piwigo_history before a visual-regression
+     * screenshot of admin.php?page=history. Its "Search" tab always filters
+     * to today's date server-side (admin/history.php has no start/end GET
+     * override), so it shows whatever real guest page-views the rest of
+     * this very test run already logged — a different set of timestamped
+     * rows every run. There's no way to pin that content via a URL param,
+     * so it's frozen the same way freezeImageHits() freezes the hit
+     * counter: mutate the narrow slice of DB state a screenshot depends on,
+     * right before taking it, rather than exclude the page or widen tolerance.
+     */
+    public static function truncateHistory(): void
+    {
+        $db = new \mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+        $db->query(sprintf('DELETE FROM %shistory', $prefix));
+        $db->close();
+    }
+
     /** Returns the pwg_token for the current session (must be logged in). */
     public static function pwgToken(Webpage|PendingAwaitablePage|AwaitableWebpage $page): string
     {

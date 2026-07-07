@@ -22,6 +22,23 @@ Writable at runtime, everything else is read-only: `_data/` (cache), `local/` (c
 install sentinel), `galleries/` (photo storage), `upload/` (incoming uploads). Mount all
 four as volumes.
 
+## Image signing (SEC-54)
+
+`.github/workflows/release-image.yml` builds the `production` target, pushes it to
+`ghcr.io/<repo>` (tagged with the release version and `latest`), and signs it with
+keyless `cosign` — no long-lived signing key; Fulcio/Rekor bind the signature to that
+workflow run's own GitHub Actions OIDC identity. It only runs on a published GitHub
+Release (release-please's output), never on every push, so an untrusted PR build can
+never get signed. Verify before deploying a pulled image — this is the actual
+deploy-time gate, not just a CI nicety:
+
+```
+cosign verify \
+  --certificate-identity-regexp "https://github.com/<owner>/<repo>/.github/workflows/release-image.yml@.*" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  ghcr.io/<owner>/<repo>:<tag>
+```
+
 ## Standalone
 
 ```

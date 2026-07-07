@@ -418,8 +418,9 @@ graph LR
 ### Threat model
 
 Top-down view: attacker goals mapped to the bottom-up `SEC-NN` items that mitigate them, so
-coverage gaps are visible. Every `SEC-NN` appears in at least one row (the one exception,
-SEC-05 Brotli, is a performance item, not a mitigation — intentionally absent). Mitigations
+coverage gaps are visible. Every `SEC-NN` appears in at least one row (the two exceptions,
+SEC-05 Brotli and SEC-06 `Cache-Control: immutable`, are performance items, not
+mitigations — intentionally absent). Mitigations
 that are *not* numbered items (nonce-based CSP, the PSR-18 SSRF guard, DB-level account
 locking, dual passwords) are shown in *italics*. The **Verified by** column names the
 gate/test that keeps each mitigation shipped.
@@ -446,9 +447,9 @@ gate/test that keeps each mitigation shipped.
 | Clickjacking / cross-origin leakage / CORS overexposure | SEC-39, SEC-43, SEC-46, SEC-63 (Fetch Metadata); *X-Frame-Options / frame-ancestors* | security-headers + Fetch-Metadata integration tests (P28) |
 | Sensitive files served over HTTP | SEC-01, SEC-02, SEC-03, SEC-04; *P32 isolation* | `.htaccess` deny E2E (P4); isolation gate (P32) |
 | Re-install / setup abuse | SEC-34 | install E2E (P22) |
-| Shared cache serves logged-in content to anon (or vice-versa) | SEC-06, SEC-47 | `Vary` / `Cache-Control` header tests (P28) |
+| Shared cache serves logged-in content to anon (or vice-versa) | SEC-47 | `Vary` / `Cache-Control` header tests (P28) |
 | Supply-chain compromise (malicious / CVE dependency) | SEC-50, SEC-51, SEC-52, SEC-64 (OpenSSF Scorecard); *roave/security-advisories, composer/bun audit, Renovate* | CI `audit` + SBOM + Scorecard jobs (P3) |
-| Tampered build / unsigned release artifact | SEC-53, SEC-54; *SLSA provenance* | CI provenance + cosign-verify gates (P3) |
+| Tampered build / unsigned release artifact | SEC-53, SEC-54; *SLSA provenance* | CI provenance (P3) + cosign keyless sign + verify gate (P4) |
 | Federated-identity attack (token replay, IdP spoof, code interception) | SEC-55 | OIDC tests: PKCE, state/nonce, ID-token signature (P28) |
 | Privacy / data-subject abuse (mass export, erasure griefing) | SEC-56 | data-subject endpoint tests: re-auth + rate limit (P18/P28) |
 | Audit-log tampering / repudiation | SEC-57 | append-only + hash-chain verification test (P15/P18) |

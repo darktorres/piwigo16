@@ -34,10 +34,13 @@ FROM dunglas/frankenphp:1-php8.5 AS production
 # The base image already ships ctype, curl, dom (+lexbor), fileinfo, filter,
 # iconv, mbstring, openssl, session, SimpleXML built in (verified via `php
 # -m`) — only these five are actually missing from composer.json's require
-# list, so only these get built here.
+# list, so only these get built here. No libvips-dev: P19's libvips backend
+# (jcupitt/vips) is pure FFI against the runtime .so, not a compiled
+# extension, so it needs no -dev headers here at all — add the plain
+# libvips runtime package (not -dev) + php-ffi when P19 actually lands it.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libicu-dev libzip-dev libwebp-dev libjpeg62-turbo-dev libpng-dev \
-        libxml2-dev libmagickwand-dev libvips-dev \
+        libxml2-dev libmagickwand-dev \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" calendar gd intl mysqli zip \
     && pecl install imagick redis apcu \

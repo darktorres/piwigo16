@@ -16,7 +16,7 @@ phases:
   - {id: P1,  tier: T2,    depends_on: [P0],    status: done, epoch: A}
   - {id: P2,  tier: T2,    depends_on: [P1],    status: done, epoch: A}
   - {id: P3,  tier: T2,    depends_on: [P2],    status: done, epoch: A}
-  - {id: P4,  tier: T2,    depends_on: [P3],    status: planned, epoch: A}
+  - {id: P4,  tier: T2,    depends_on: [P3],    status: done, epoch: A}
   - {id: P5,  tier: T2,    depends_on: [P0],    status: planned, epoch: B}
   - {id: P6,  tier: T2,    depends_on: [P5],    status: planned, epoch: B}
   - {id: P7,  tier: T2,    depends_on: [P6],    status: planned, epoch: C}
@@ -55,12 +55,12 @@ adoption:
   - {id: legacy-import, tier: T2, cuttable: false, depends_on: [P15, P23], status: planned}
 
 sec:
-  - {id: SEC-01, phase: P4,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: planned}
+  - {id: SEC-01, phase: P4,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: done}
   - {id: SEC-02, phase: P0,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: done}
   - {id: SEC-03, phase: P2,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: planned}
-  - {id: SEC-04, phase: P4,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: planned}
-  - {id: SEC-05, phase: P4,  threat: "n/a - performance item (Brotli), not a mitigation", verified_by: "n/a", status: planned}
-  - {id: SEC-06, phase: P4,  threat: "Shared cache serves logged-in content to anon (or vice-versa)", verified_by: "Vary / Cache-Control header tests (P28)", status: planned}
+  - {id: SEC-04, phase: P4,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: done}
+  - {id: SEC-05, phase: P4,  threat: "n/a - performance item (Brotli), not a mitigation", verified_by: "n/a", status: done}
+  - {id: SEC-06, phase: P4,  threat: "n/a - performance item (Cache-Control: immutable), not a mitigation", verified_by: "n/a", status: done}
   - {id: SEC-07, phase: P5,  threat: "Weak randomness in tokens", verified_by: "ECS RandomApiMigrationFixer + no-mt_rand grep (P5)", status: planned}
   - {id: SEC-08, phase: P5,  threat: "SQL injection", verified_by: "SearchService unit + REST contract tests (P19/P26)", status: planned}
   - {id: SEC-09, phase: P5,  threat: "Secrets leaking into stack traces / logs", verified_by: "inspection + logged-context unit test (P18)", status: planned}
@@ -108,7 +108,7 @@ sec:
   - {id: SEC-51, phase: P3,  threat: "Supply-chain compromise (malicious / CVE dependency)", verified_by: "CI audit + SBOM + Scorecard jobs (P3)", status: done}
   - {id: SEC-52, phase: P3,  threat: "Supply-chain compromise (malicious / CVE dependency)", verified_by: "CI audit + SBOM + Scorecard jobs (P3)", status: done}
   - {id: SEC-53, phase: P3,  threat: "Tampered build / unsigned release artifact", verified_by: "CI provenance + cosign-verify gates (P3)", status: done}
-  - {id: SEC-54, phase: P4,  threat: "Tampered build / unsigned release artifact", verified_by: "CI provenance + cosign-verify gates (P3)", status: planned}
+  - {id: SEC-54, phase: P4,  threat: "Tampered build / unsigned release artifact", verified_by: "cosign keyless sign + verify gate (P4)", status: done}
   - {id: SEC-55, phase: P28, threat: "Federated-identity attack (token replay, IdP spoof, code interception)", verified_by: "OIDC tests: PKCE, state/nonce, ID-token signature (P28)", status: planned}
   - {id: SEC-56, phase: P18, threat: "Privacy / data-subject abuse (mass export, erasure griefing)", verified_by: "data-subject endpoint tests: re-auth + rate limit (P18/P28)", status: planned}
   - {id: SEC-57, phase: P15, threat: "Audit-log tampering / repudiation", verified_by: "append-only + hash-chain verification test (P15/P18)", status: planned}

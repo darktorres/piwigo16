@@ -150,6 +150,32 @@ parameters:
 			path: ready.php
 
 		-
+			# Same pattern as i.php/ready.php above, found while auditing that
+			# gap (P4 follow-up): this file was never baselined for it at all.
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 2
+			path: admin/configuration.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 2
+			path: admin/user_list.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: include/common.inc.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: install/upgrade_1.5.0.php
+
+		-
 			message: '#^Function create_function not found\.$#'
 			identifier: function.notFound
 			count: 3

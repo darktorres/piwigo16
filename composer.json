@@ -21,6 +21,7 @@
     "ext-session": "*",
     "ext-simplexml": "*",
     "ext-zlib": "*",
+    "smarty/smarty": "^5",
     "symfony/dotenv": "^8.1"
   },
   "suggest": {

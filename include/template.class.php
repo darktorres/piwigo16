@@ -10,7 +10,6 @@
  * @package template
  */
 
-require_once( PHPWG_ROOT_PATH .'include/smarty/libs/Smarty.class.php');
 use Smarty\Smarty;
 
 /** default rank for buttons */

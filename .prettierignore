@@ -15,7 +15,6 @@ template-extension/
 tools/ws/
 
 # Bundled third-party libraries under include/
-include/smarty/
 include/minify/
 include/phpmailer/
 

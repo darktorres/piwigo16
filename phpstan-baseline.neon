@@ -1,6 +1,12 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 2
+			path: admin/configuration.php
+
+		-
 			message: '#^Array has 2 duplicate keys with value ''correction_error_fct'' \(''correction_error_fct'', ''correction_error_fct''\)\.$#'
 			identifier: array.duplicateKey
 			count: 1
@@ -97,6 +103,12 @@ parameters:
 			path: admin/notification_by_mail.php
 
 		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 2
+			path: admin/user_list.php
+
+		-
 			message: '#^Class PhpCsFixer\\Fixer\\Alias\\RandomApiMigrationFixer not found\.$#'
 			identifier: class.notFound
 			count: 1
@@ -139,41 +151,10 @@ parameters:
 			path: i.php
 
 		-
-			# Same as i.php above — install.php creates this file; ready.php's
-			# @include (docs/PLAN-REPLAY.md P4) mirrors common.inc.php's own
-			# identical line, which is a real, load-bearing pre-existing gap
-			# in this baseline (not introduced here) rather than evidence
-			# this suppression is wrong.
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
-			identifier: include.fileNotFound
-			count: 1
-			path: ready.php
-
-		-
-			# Same pattern as i.php/ready.php above, found while auditing that
-			# gap (P4 follow-up): this file was never baselined for it at all.
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
-			identifier: include.fileNotFound
-			count: 2
-			path: admin/configuration.php
-
-		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
-			identifier: include.fileNotFound
-			count: 2
-			path: admin/user_list.php
-
-		-
 			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
 			identifier: include.fileNotFound
 			count: 1
 			path: include/common.inc.php
-
-		-
-			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
-			identifier: include.fileNotFound
-			count: 1
-			path: install/upgrade_1.5.0.php
 
 		-
 			message: '#^Function create_function not found\.$#'
@@ -458,108 +439,6 @@ parameters:
 			path: include/phpqrcode.php
 
 		-
-			message: '#^Method Smarty\\Compiler\\Template\:\:compileTag2\(\) should return string but return statement is missing\.$#'
-			identifier: return.missing
-			count: 1
-			path: include/smarty/src/Compiler/Template.php
-
-		-
-			message: '#^Undefined variable\: \$all_empty$#'
-			identifier: variable.undefined
-			count: 3
-			path: include/smarty/src/FunctionHandler/HtmlSelectDate.php
-
-		-
-			message: '#^Undefined variable\: \$day_empty$#'
-			identifier: variable.undefined
-			count: 1
-			path: include/smarty/src/FunctionHandler/HtmlSelectDate.php
-
-		-
-			message: '#^Undefined variable\: \$month_empty$#'
-			identifier: variable.undefined
-			count: 1
-			path: include/smarty/src/FunctionHandler/HtmlSelectDate.php
-
-		-
-			message: '#^Undefined variable\: \$month_names$#'
-			identifier: variable.undefined
-			count: 1
-			path: include/smarty/src/FunctionHandler/HtmlSelectDate.php
-
-		-
-			message: '#^Undefined variable\: \$year_empty$#'
-			identifier: variable.undefined
-			count: 1
-			path: include/smarty/src/FunctionHandler/HtmlSelectDate.php
-
-		-
-			message: '#^Undefined variable\: \$_hour$#'
-			identifier: variable.undefined
-			count: 2
-			path: include/smarty/src/FunctionHandler/HtmlSelectTime.php
-
-		-
-			message: '#^Undefined variable\: \$_hour12$#'
-			identifier: variable.undefined
-			count: 1
-			path: include/smarty/src/FunctionHandler/HtmlSelectTime.php
-
-		-
-			message: '#^Undefined variable\: \$_html_meridian$#'
-			identifier: variable.undefined
-			count: 1
-			path: include/smarty/src/FunctionHandler/HtmlSelectTime.php
-
-		-
-			message: '#^Undefined variable\: \$_minute$#'
-			identifier: variable.undefined
-			count: 2
-			path: include/smarty/src/FunctionHandler/HtmlSelectTime.php
-
-		-
-			message: '#^Undefined variable\: \$_second$#'
-			identifier: variable.undefined
-			count: 2
-			path: include/smarty/src/FunctionHandler/HtmlSelectTime.php
-
-		-
-			message: '#^Instantiated class Smarty\\Lexer\\Exception not found\.$#'
-			identifier: class.notFound
-			count: 12
-			path: include/smarty/src/Lexer/ConfigfileLexer.php
-
-		-
-			message: '#^Instantiated class Smarty\\Lexer\\Exception not found\.$#'
-			identifier: class.notFound
-			count: 10
-			path: include/smarty/src/Lexer/TemplateLexer.php
-
-		-
-			message: '#^Access to an undefined property Smarty\\Security\:\:\$smarty\.$#'
-			identifier: property.notFound
-			count: 5
-			path: include/smarty/src/Security.php
-
-		-
-			message: '#^Undefined variable\: \$content$#'
-			identifier: variable.undefined
-			count: 1
-			path: include/smarty/src/Template.php
-
-		-
-			message: '#^Method Smarty\\Template\\Compiled\:\:render\(\) should return string but return statement is missing\.$#'
-			identifier: return.missing
-			count: 2
-			path: include/smarty/src/Template/Compiled.php
-
-		-
-			message: '#^Unsafe usage of new static\(\)\.$#'
-			identifier: new.static
-			count: 1
-			path: include/smarty/src/Template/Source.php
-
-		-
 			message: '#^Call to static method display_debug\(\) on an unknown class Smarty_Internal_Debug\.$#'
 			identifier: class.notFound
 			count: 1
@@ -582,6 +461,18 @@ parameters:
 			identifier: include.fileNotFound
 			count: 1
 			path: install.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: install/upgrade_1.5.0.php
+
+		-
+			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
+			identifier: include.fileNotFound
+			count: 1
+			path: ready.php
 
 		-
 			message: '#^Cannot unset offset ''CHANGE_COLUMN'' on array\{tags\: non\-empty\-list\<non\-empty\-array\>, TITLE\?\: string\}\.$#'

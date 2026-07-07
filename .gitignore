@@ -10,6 +10,14 @@
 /dist
 /.lighthouseci
 
+# SBOM output (P3, generated fresh each CI run — see composer.json's "sbom"
+# script and .github/workflows/ci.yml's sbom job). package-lock.json is never
+# used by this project (bun.lock is authoritative) — it's only ever a
+# throwaway snapshot the SBOM tooling needs since @cyclonedx/cyclonedx-npm
+# doesn't read bun.lock directly.
+/sbom-*.cdx.json
+/package-lock.json
+
 # pest-plugin-browser auto-captures a screenshot here on assertion failure
 /tests/Browser/Screenshots
 

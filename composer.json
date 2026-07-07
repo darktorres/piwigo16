@@ -29,6 +29,7 @@
     "ext-imap": "Optional email-address parsing helper for notification features."
   },
   "require-dev": {
+    "cyclonedx/cyclonedx-php-composer": "^6.2",
     "deptrac/deptrac": "^4.6",
     "icanhazstring/composer-unused": "^0.9",
     "justinrainbow/json-schema": "^6.8",
@@ -69,13 +70,15 @@
     "plan-lint": "@php tools/plan-lint.php",
     "require-checker": "@php vendor/bin/composer-require-checker check --config-file=composer-require-checker.json composer.json",
     "unused": "@php vendor/bin/composer-unused --configuration=composer-unused.php",
-    "bench": "@php vendor/bin/phpbench run"
+    "bench": "@php vendor/bin/phpbench run",
+    "sbom": "@composer CycloneDX:make-sbom --output-format=JSON --output-file=sbom-composer.cdx.json --spec-version=1.6 --output-reproducible"
   },
   "config": {
     "optimize-autoloader": true,
     "sort-packages": true,
     "allow-plugins": {
-      "pestphp/pest-plugin": true
+      "pestphp/pest-plugin": true,
+      "cyclonedx/cyclonedx-php-composer": true
     }
   },
   "minimum-stability": "dev",

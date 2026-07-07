@@ -1,0 +1,19 @@
+# OSV-Scanner config (SEC-52, .github/workflows/osv-scanner.yml).
+#
+# These three are transitive deps of @lhci/cli@0.15.1 (Lighthouse CI, a
+# dev-only CI tool never shipped to production) — verified no newer @lhci/cli
+# release exists and no fix is available upstream for the "tmp"/"uuid"
+# packages it pins. Matches the same three GHSAs ignored via `bun audit
+# --ignore=...` in .github/workflows/ci.yml's audit job — re-check both
+# places on every Renovate bump of @lhci/cli.
+[[IgnoredVulns]]
+id = "GHSA-52f5-9888-hmc6"
+reason = "Dev-only transitive dep of @lhci/cli, never shipped; no fixed release available."
+
+[[IgnoredVulns]]
+id = "GHSA-ph9p-34f9-6g65"
+reason = "Dev-only transitive dep of @lhci/cli, never shipped; no fixed release available."
+
+[[IgnoredVulns]]
+id = "GHSA-w5hq-g745-h8pq"
+reason = "Dev-only transitive dep of @lhci/cli, never shipped; no fixed release available."

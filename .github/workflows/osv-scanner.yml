@@ -1,0 +1,41 @@
+name: OSV-Scanner
+
+on:
+  push:
+    branches: ["17.x-rewrite"]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+  pull_request:
+    branches: ["17.x-rewrite"]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+  schedule:
+    # Weekly, independent of push activity — catches newly-published
+    # advisories against unchanged composer.lock/bun.lock.
+    - cron: "30 1 * * 6"
+
+permissions:
+  contents: read
+
+jobs:
+  # SEC-52: OSV-Scanner over composer.lock + bun.lock (both natively
+  # supported lockfile formats — verified against the tool's own docs
+  # before wiring this in, since @cyclonedx/cyclonedx-npm turned out NOT
+  # to support bun.lock and this needed to be checked separately).
+  scan-scheduled:
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@9a498708959aeaef5ef730655706c5a1df1edbc2 # v2.3.8
+
+  scan-pr:
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@9a498708959aeaef5ef730655706c5a1df1edbc2 # v2.3.8

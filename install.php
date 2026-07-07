@@ -333,6 +333,24 @@ if (isset($_POST['install']))
       }
     }
 
+    // Re-installing (e.g. tests/Browser/RegenerateFixtureTest.php) must not
+    // silently drop custom vars a previous write left in this same file
+    // (e.g. PIWIGO_TEST_NOW — see include/env.inc.php's pwg_now()). Preserve
+    // any line whose key isn't one this block itself manages.
+    $env_managed_keys = array('PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_BASE_URL');
+    if (is_file($env_file))
+    {
+      $existing_lines = @file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      foreach ($existing_lines !== false ? $existing_lines : array() as $existing_line)
+      {
+        $existing_key = strtok($existing_line, '=');
+        if ($existing_key !== false && !in_array($existing_key, $env_managed_keys, true))
+        {
+          $env_body .= $existing_line."\n";
+        }
+      }
+    }
+
     $env_tmp = $env_file.'.tmp.'.bin2hex(random_bytes(4));
     if (file_put_contents($env_tmp, $env_body) === false || !rename($env_tmp, $env_file))
     {

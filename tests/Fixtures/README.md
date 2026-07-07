@@ -16,7 +16,8 @@ test DB currently holds).
   `Guests`) with memberships
 - 5 comments (one unvalidated, to exercise moderation), 5 ratings, 3 favorites, a mail
   notification entry, an old permalink, and a few config tweaks (gallery title, comments
-  enabled, etc.)
+  enabled, `show_piwigo_latest_news`/`dashboard_check_for_updates` disabled so the admin
+  dashboard never makes a live call to piwigo.org from a test run, etc.)
 
 Uploaded photo files themselves land under `upload/` (gitignored, not part of this dump)
 — they're regenerated fresh every time the fixture is rebuilt, so don't assume a specific
@@ -39,3 +40,9 @@ not part of the normal day-to-day test loop, which just loads the file as commit
 Since it wipes `piwigo_test`, never point `PIWIGO_DB_BASE` in `.env.test` at a real
 database — `RegenerateFixtureTest` refuses to run at all if `PIWIGO_DB_BASE` is empty or
 literally `piwigo`, but any other name is fair game and will be dropped.
+
+After regenerating, bump `PIWIGO_TEST_NOW` (`.env.test`) forward to a date safely after
+whatever real timestamp this run baked in — `pwg_now()` (`include/env.inc.php`) freezes
+`time_since()`-based "N units ago" text to that fixed instant, and a `PIWIGO_TEST_NOW`
+left in the past relative to the fixture's own timestamps would render as "in the
+future" instead. Same idea as bumping a baseline alongside the file it protects.

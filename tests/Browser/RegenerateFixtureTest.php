@@ -66,7 +66,10 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         $this->resetDatabase();
         $this->removeTestStamp();
 
-        // 2. Drive install.php with fixture admin credentials.
+        // 2. Drive install.php with fixture admin credentials. install.php
+        // itself preserves any pre-existing custom line (e.g. PIWIGO_TEST_NOW
+        // — see include/env.inc.php's pwg_now()) when it rewrites .env.test,
+        // so nothing extra is needed here to keep it across a regen.
         $installBody = $this->postForm('install.php', [
             'install'       => '1',
             'dbhost'        => $this->dbHost,
@@ -167,19 +170,26 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // 8. Five comments across different users/photos (1 unvalidated).
         // Inserted directly — pwg.images.addComment requires commentable=true
         // on the parent album, which fresh albums don't have.
+        //
+        // date/validation_date/last_send/date_deleted/last_hit below all use
+        // $now (and rate.date uses $today) instead of raw SQL NOW()/CURDATE()
+        // -- those run on the MySQL server's real clock, invisible to
+        // pwg_now()'s PIWIGO_TEST_NOW freeze, so every regeneration produced
+        // a fresh, non-reproducible timestamp in the committed fixture.
+        $now = pwg_now()->format('Y-m-d H:i:s');
         $db->query(sprintf(
             "INSERT INTO %scomments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date) VALUES "
-            . "(%d, NOW(), 'fixture_admin', '127.0.0.1', 1, 'Fixture comment for integration tests.', 1, NOW()), "
-            . "(%d, NOW(), 'regular_user', '127.0.0.2', %d, 'Another perspective on this photo.', 1, NOW()), "
-            . "(%d, NOW(), 'power_user', '127.0.0.3', %d, 'Great composition and colors!', 1, NOW()), "
-            . "(%d, NOW(), 'power_user', '127.0.0.3', %d, 'I keep coming back to this one.', 1, NOW()), "
-            . "(%d, NOW(), 'fixture_admin', '127.0.0.1', 1, 'Pending comment for moderation.', 'false', NULL)",
+            . "(%d, '%s', 'fixture_admin', '127.0.0.1', 1, 'Fixture comment for integration tests.', 1, '%s'), "
+            . "(%d, '%s', 'regular_user', '127.0.0.2', %d, 'Another perspective on this photo.', 1, '%s'), "
+            . "(%d, '%s', 'power_user', '127.0.0.3', %d, 'Great composition and colors!', 1, '%s'), "
+            . "(%d, '%s', 'power_user', '127.0.0.3', %d, 'I keep coming back to this one.', 1, '%s'), "
+            . "(%d, '%s', 'fixture_admin', '127.0.0.1', 1, 'Pending comment for moderation.', 'false', NULL)",
             $this->dbPrefix,
-            $photoIds[0],
-            $photoIds[1], $userIds['regular_user'],
-            $photoIds[2], $userIds['power_user'],
-            $photoIds[0], $userIds['power_user'],
-            $photoIds[3]
+            $photoIds[0], $now, $now,
+            $photoIds[1], $now, $userIds['regular_user'], $now,
+            $photoIds[2], $now, $userIds['power_user'], $now,
+            $photoIds[0], $now, $userIds['power_user'], $now,
+            $photoIds[3], $now
         ));
 
         // 9. Three groups with user memberships.
@@ -207,16 +217,17 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         ));
 
         // 10. Five ratings across users/photos.
+        $today = pwg_now()->format('Y-m-d');
         $db->query(sprintf(
             "INSERT INTO %srate (user_id, element_id, anonymous_id, rate, date) VALUES "
-            . "(1,%d,'',5,CURDATE()), (%d,%d,'',4,CURDATE()), (%d,%d,'',3,CURDATE()), "
-            . "(1,%d,'',5,CURDATE()), (%d,%d,'',2,CURDATE())",
+            . "(1,%d,'',5,'%s'), (%d,%d,'',4,'%s'), (%d,%d,'',3,'%s'), "
+            . "(1,%d,'',5,'%s'), (%d,%d,'',2,'%s')",
             $this->dbPrefix,
-            $photoIds[0],
-            $userIds['regular_user'], $photoIds[0],
-            $userIds['power_user'], $photoIds[1],
-            $photoIds[2],
-            $userIds['regular_user'], $photoIds[3]
+            $photoIds[0], $today,
+            $userIds['regular_user'], $photoIds[0], $today,
+            $userIds['power_user'], $photoIds[1], $today,
+            $photoIds[2], $today,
+            $userIds['regular_user'], $photoIds[3], $today
         ));
         $db->query(sprintf(
             'UPDATE %simages SET rating_score = 4.50 WHERE id = %d',
@@ -251,34 +262,48 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // 12. Two mail notification entries.
         $db->query(sprintf(
             "INSERT INTO %suser_mail_notification (user_id, check_key, enabled, last_send) VALUES "
-            . "(1, 'abcdef1234567890', 'true', NOW()), (%d, 'ghijkl9876543210', 'false', NULL)",
+            . "(1, 'abcdef1234567890', 'true', '%s'), (%d, 'ghijkl9876543210', 'false', NULL)",
             $this->dbPrefix,
+            $now,
             $userIds['regular_user']
         ));
 
         // 13. One old permalink.
         $db->query(sprintf(
             "INSERT INTO %sold_permalinks (cat_id, permalink, date_deleted, last_hit, hit) VALUES "
-            . "(%d, 'old-sample-album', NOW(), NOW(), 42)",
+            . "(%d, 'old-sample-album', '%s', '%s', 42)",
             $this->dbPrefix,
-            $rootAlbumId
+            $rootAlbumId,
+            $now,
+            $now
         ));
 
         // 14. A few config tweaks (piwigo_config.value is a plain TEXT column
-        // in this schema — no JSON encoding needed).
+        // in this schema — no JSON encoding needed). show_piwigo_latest_news/
+        // dashboard_check_for_updates default to true (config_default.inc.php)
+        // and have no row from a fresh install, so this must be an upsert, not
+        // an UPDATE — matching conf_update_param()'s own real INSERT ... ON
+        // DUPLICATE KEY UPDATE pattern (piwigo_config.param is the PRIMARY
+        // KEY). Both gate live HTTP calls to piwigo.org from the admin
+        // dashboard (a real news-feed fetch and a core/extension update
+        // check) that have nothing to do with test-mode's frozen clock and
+        // must never fire from a test run.
         $configEntries = [
-            'gallery_title'       => 'Fixture Gallery',
-            'activate_comments'   => 'true',
-            'comments_validation' => 'true',
-            'nb_categories_page'  => '12',
-            'rate'                => 'true',
+            'gallery_title'                => 'Fixture Gallery',
+            'activate_comments'            => 'true',
+            'comments_validation'          => 'true',
+            'nb_categories_page'           => '12',
+            'rate'                         => 'true',
+            'show_piwigo_latest_news'      => 'false',
+            'dashboard_check_for_updates'  => 'false',
         ];
         foreach ($configEntries as $param => $value) {
             $db->query(sprintf(
-                "UPDATE %sconfig SET value='%s' WHERE param='%s'",
+                "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = '%s'",
                 $this->dbPrefix,
+                $db->real_escape_string($param),
                 $db->real_escape_string($value),
-                $db->real_escape_string($param)
+                $db->real_escape_string($value)
             ));
         }
         $db->close();

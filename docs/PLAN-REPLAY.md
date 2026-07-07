@@ -1174,9 +1174,16 @@ the previous.
 1. Fix 4 fatal `utf8_encode` calls (replace with `mb_convert_encoding`)
 2. Remove vendored Smarty (`include/smarty/`, 173 files) + `composer require smarty/smarty ^5` (Smarty stays as rendering engine until P29)
 3. Remove `include/phpmailer/` + `composer require symfony/mailer ^8 symfony/mime ^8`
-   ([ADR-0021] — replaces PHPMailer: async send on the existing Messenger bus,
-   DSN transports, testable; DKIM via Symfony Mime `DkimSigner`. `pelago/emogrifier`
-   stays as the CSS inliner, invoked at message build.)
+   ([ADR-0021] — replaces PHPMailer with `Symfony\Component\Mailer\Mailer` +
+   `Symfony\Component\Mime\Email`, DSN transports (SMTP and the existing
+   native/sendmail fallback), testable; DKIM via Symfony Mime `DkimSigner`.
+   P5 ships this **synchronously** — `symfony/messenger` isn't a P5 dependency
+   (it lands P7+ with the rest of the Symfony/Doctrine layer), so async send
+   on the Messenger bus is a later enhancement, not this phase's job.
+   `pelago/emogrifier` stays as the CSS inliner, invoked at message build —
+   note its v8 API is fluent/static (`Emogrifier::fromHtml()->inlineCss()->render()`),
+   a real call-site rewrite from the current `new Emogrifier($content)` usage,
+   not just a `composer require`.)
 4. Remove `include/emogrifier.class.php` + `composer require pelago/emogrifier ^8`
 5. Remove `include/phpqrcode.php` + `composer require endroid/qr-code ^6`
 6. Remove `include/mdetect.php` — **no replacement** ([ADR-0021]). User-Agent
@@ -1187,13 +1194,35 @@ the previous.
    native User-Agent Client Hints — `Sec-CH-UA-Mobile` / `Sec-CH-UA-Platform` /
    `Sec-CH-Viewport-Width`, requested via `Critical-CH` (header reads, no
    library). `mobiledetect/mobiledetectlib` is **not** added.
-7. Remove `include/jshrink.class.php`, `include/minify/`, `include/feedcreator.class.php`, `include/base32.class.php` (no replacements — Vite, FeedController, PwgBase32)
+7. Remove `include/jshrink.class.php`, `include/minify/`, `include/feedcreator.class.php`
+   (no replacements — Vite handles minification; `feedcreator.class.php`'s one
+   caller, root `feed.php`, gets a small first-party RSS/XML writer function
+   in its place — a real `FeedController` needs routing infrastructure that
+   doesn't exist before P9, so that extraction is later work, not P5's).
+   **`include/base32.class.php` is untouched by this step** — it already
+   declares a plain, first-party `PwgBase32` class (RFC 4648, no vendored
+   code), so there's nothing to replace; P6 moves it into `src/Piwigo/Auth/`
+   like every other first-party class once namespacing lands.
 8. `composer require symfony/http-client ^8.0 psr/http-client ^1.0` — replaces
    the 100-line `fetchRemote()` (curl → `file_get_contents` → `fsockopen` with
    manual redirect handling, proxy tunneling). `HttpClientService` wraps
    `Symfony\HttpClient` behind PSR-18 `ClientInterface`. Auto-retry, timeout,
    proxy support built-in. SSRF protection (SEC-23) applies to this service.
-9. Remove `include/passwordhash.class.php` + migrate to `password_hash()` / bcrypt (unit test included)
+9. Remove `include/passwordhash.class.php` + migrate `pwg_password_hash()`/
+   `pwg_password_verify()` to native `password_hash(PASSWORD_BCRYPT)`/
+   `password_verify()` (unit test included). **Not a bare swap** — the
+   current `pwg_password_verify()` has two legacy fallback tiers, not one:
+   phpass (`$P$`, this codebase's own current format) and a separate
+   MD5/`$conf['pass_convert']` tier bridging from *upstream* Piwigo's pre-2.5
+   format. Per `docs/adr/0002-clean-fork-no-inplace-upgrade.md` (no in-place
+   upgrade from upstream — that's the one-shot `import:legacy` tool's job,
+   P15/P23), the MD5/`pass_convert` tier is removed outright here, not carried
+   forward. The phpass tier stays and gets a verify-and-rehash-to-bcrypt path
+   (same pattern SEC-41/P28 reuses later for bcrypt→Argon2id) — every
+   password hashed before this step lands needs it to keep working. Chain:
+   bcrypt (new) → phpass (legacy, rehash-forward). Remove
+   `$conf['password_hash']`/`$conf['password_verify']`/`$conf['pass_convert']`
+   config-key overrides.
 10. Add `require 'vendor/autoload.php'` in `include/common.inc.php` + remove `include/php_compat/` shims + `include/dblayer/functions_mysql.inc.php`
 11. ECS format pass on entire codebase (one large commit — cosmetic only). **This is the first
     whole-codebase reformat** — deferred here from P0 so the P2 harness guards it; run the full
@@ -1281,10 +1310,14 @@ Two coupling hazards this phase must handle **in the same commit as the change t
   invalidates every pre-hashed login in the browser fixture — if the fixture still holds the old
   hashes, *every* login-dependent E2E test breaks at once, and the failure points at the tests
   rather than the cause. This rule generalises to P14/P15 (schema + seed data) and P28 (Argon2id).
-- **Test-mode KDF cost.** `PasswordService` must read its cost from `TestMode`: **cost-4 (and skip
-  rehash) in test mode**, production cost set separately. A production-strength bcrypt/Argon2 cost
-  (~1s/hash) exceeds the browser suite's per-action timeout and fails logins on *timing, not
-  logic*. Bake this in from step 9 — do not discover it via flaky timeouts.
+- **Test-mode KDF cost.** `pwg_password_hash()` must read its cost from
+  `pwg_test_mode_is_active()` (`include/env.inc.php`, added P3 — the existing
+  test-mode idiom this codebase already uses for `pwg_now()`; there's no
+  `PasswordService`/`TestMode` class pre-P6): **cost-4 (and skip rehash) in
+  test mode**, production cost set separately. A production-strength
+  bcrypt/Argon2 cost (~1s/hash) exceeds the browser suite's per-action timeout
+  and fails logins on *timing, not logic*. Bake this in from step 9 — do not
+  discover it via flaky timeouts.
 
 **Tests:** Browser E2E after each vendor swap. Password hashing unit test.
 Arch test: no vendored lib dirs exist. **Full test suite after each Rector
@@ -1329,31 +1362,43 @@ But the full `require` block is listed here because P5 produces the final
 | Vendored path | Packagist / native replacement |
 | --- | --- |
 | `include/smarty/` (173 files) | `smarty/smarty` ^5 (Smarty stays as rendering engine until P29; `latte/latte` ^3.1 also added for PHPStan Latte analysis tooling) |
-| `include/phpmailer/` | `symfony/mailer` ^8.0 + `symfony/mime` ^8.0 (async via Messenger; DKIM via `DkimSigner`) |
+| `include/phpmailer/` | `symfony/mailer` ^8.0 + `symfony/mime` ^8.0 (P5: synchronous send — `symfony/messenger` isn't a P5 dependency, so async-via-Messenger is a later enhancement; DKIM via `DkimSigner`) |
 | `include/emogrifier.class.php` | `pelago/emogrifier` ^8.0 |
 | `include/jshrink.class.php` | removed — Vite handles minification |
 | `include/minify/` | removed — Vite |
-| `include/passwordhash.class.php` | `password_hash()` / `password_verify()` native |
-| `include/feedcreator.class.php` | removed — custom RSS in `FeedController` |
+| `include/passwordhash.class.php` | `password_hash()` / `password_verify()` native (P5: stays procedural in `include/functions_user.inc.php`; `src/Piwigo/Auth/PasswordService.php` is the post-P6 extraction destination, not P5's) |
+| `include/feedcreator.class.php` | P5: a small first-party RSS/XML writer function used directly by `feed.php` (`src/` doesn't exist yet); extraction into a real `FeedController` is later work, once routing infrastructure exists (P9+) |
 | `include/phpqrcode.php` | `endroid/qr-code` ^6.0 |
 | `include/mdetect.php` | removed — native User-Agent Client Hints (`Sec-CH-UA-*`) + responsive CSS |
-| `fetchRemote()` (admin/include/functions.php) | `HttpClientService` (PSR-18 via `symfony/http-client`) |
-| `include/base32.class.php` | `src/Piwigo/Auth/PwgBase32.php` (inlined, no dep) |
+| `fetchRemote()` (admin/include/functions.php) | P5: a small plain-class wrapper in `include/` behind PSR-18 (`symfony/http-client`); `HttpClientService` under `src/Piwigo/` is the post-P6 destination |
+| `include/base32.class.php` | **untouched by P5** — already a plain, first-party `PwgBase32` class, not vendored; P6 moves it to `src/Piwigo/Auth/PwgBase32.php` like every other first-party class |
 | `include/php_compat/` | removed — PHP 8.5 native |
 | `include/dblayer/functions_mysql.inc.php` | removed — dead `mysql_*` calls |
 
-**Password hashing:** `src/Piwigo/Auth/PasswordService.php` wraps
-`password_hash(PASSWORD_BCRYPT)` / `password_verify()`. Replaces the vendored
-`include/passwordhash.class.php`. The old `$conf['password_hash']` /
-`$conf['password_verify']` config keys (callable overrides) are removed.
+**Password hashing:** P5 migrates `pwg_password_hash()`/`pwg_password_verify()`
+(`include/functions_user.inc.php`) to native `password_hash(PASSWORD_BCRYPT)`/
+`password_verify()`, staying procedural — `src/Piwigo/Auth/PasswordService.php`
+is the post-P6 extraction, not something P5 creates early (`src/` doesn't
+exist until P6). Replaces the vendored `include/passwordhash.class.php`. Chain
+is bcrypt (new) → phpass `$P$` (this codebase's own prior format, rehash-forward
+on verify) — the old MD5/`$conf['pass_convert']` legacy tier (bridging from
+*upstream* Piwigo's pre-2.5 format) is removed outright, per
+`docs/adr/0002-clean-fork-no-inplace-upgrade.md`'s no-in-place-upgrade stance,
+not carried forward. The `$conf['password_hash']`/`$conf['password_verify']`/
+`$conf['pass_convert']` config keys (callable overrides) are all removed.
 
 #### Security hardening (17.x-rewrite improvement over 16.x-rewrite)
 
 1. **[SEC-07] Replace all `mt_rand()` with `random_int()`** — Rector PHP 8.x sets
    include `RandomFunctionRector`. `mt_rand()` uses Mersenne Twister (predictable
-   seed). 3 call sites: `SectionInitializer` random redirect selection,
-   `PhotoController` random category, `StringUtil`. Also replace `array_rand()`
-   with `random_int(0, count($arr) - 1)` indexing.
+   seed). 2 first-party call sites (checked directly, pre-P6 procedural code —
+   not the `SectionInitializer`/`PhotoController`/`StringUtil` class names,
+   which are post-P6 extractions): `include/section_init.inc.php`'s random
+   redirect selection, `admin/picture_modify.php`'s random category. Also
+   replace `array_rand()` with `random_int(0, count($arr) - 1)` indexing. ECS's
+   `RandomApiMigrationFixer` (already in `ecs.php`) and Rector's PHP-set pass
+   sweep these plus any other bare `rand()` call sites mechanically — no
+   dedicated per-site work needed beyond confirming the fixer ran.
 
 2. **[SEC-08] Replace all loose `==` with `===`** — **NOT via Rector in P5.** The 16.x-v2
    branch proved that `StrictComparisonRector` on legacy code is unsafe (452
@@ -1365,11 +1410,15 @@ But the full `require` block is listed here because P5 produces the final
 3. **[SEC-09] `#[\SensitiveParameter]`** (PHP 8.2) — add to all function
     parameters that carry secrets: passwords, tokens, API keys, CSRF
     tokens. Stack traces (Sentry, error logs) show `[REDACTED]` instead
-    of plaintext values. Rector rule: `SensitiveParameterRector`.
-    Key targets: `PasswordService::hash($password)`,
-    `PasswordService::verify($password, $hash)`,
-    `register_user($login, $password, ...)`,
-    `CsrfService::check($token)`, `EphemeralKeyService::verify($key)`.
+    of plaintext values. Rector rule: `SensitiveParameterRector`. P5's actual
+    scope is the procedural functions it touches directly (no `src/` classes
+    exist yet — Finding 1's pattern applies here too): `pwg_password_hash($password)`,
+    `pwg_password_verify($password, $hash, ...)`
+    (`include/functions_user.inc.php`), `register_user($login, $password, ...)`
+    (same file, already exists procedurally, trivial attribute addition).
+    `CsrfService`/`EphemeralKeyService` are post-extraction class names for
+    functionality that isn't built yet (CSRF middleware is P9+) — out of scope
+    for P5, land with their own phases.
 
 ---
 
@@ -7614,7 +7663,7 @@ step (see [execution approach](#execution-approach)) writes a new ADR here **bef
 | 0004 | `DI\autowire()` by default; explicit factories only where needed | Accepted |
 | 0005 | Doctrine hybrid CQRS — DQL reads / NativeQuery / ORM writes | Accepted |
 | 0006 | Collation `utf8mb4_0900_ai_ci` (MySQL) / `utf8mb4_uca1400_ai_ci` (MariaDB) | Accepted |
-| 0007 | Derivative serving: X-Sendfile + lightweight auth (Option A) | Accepted (decided P3) |
+| 0007 | Derivative serving: X-Sendfile + lightweight auth (Option A) | Accepted (decided P7) |
 | 0008 | `bootMinimal` fast-path retained **+ mandatory album-visibility check before serving** (SEC-33): resolves current user + target album visibility, 403 on failure, full middleware pipeline still skipped | Accepted (decided P7) |
 | 0009 | OpenTelemetry-first observability; Sentry is one OTLP backend | Accepted |
 | 0010 | Surface-split frontend: public MPA + PE, admin server-shell + fat islands; no SPA | Accepted |
@@ -7633,6 +7682,18 @@ step (see [execution approach](#execution-approach)) writes a new ADR here **bef
 | 0023 | Web-component encapsulation: light DOM + CSS `@scope` by default; Declarative Shadow DOM only for genuinely self-contained widgets | Accepted |
 | 0024 | Color-managed image delivery: preserve/tag ICC, serve wide-gamut Display-P3 + HDR variants (sRGB fallback) + `Save-Data` adaptation | Accepted |
 | 0025 | One-way legacy import (`import:legacy`) for adoption — distinct from the (declined) in-place upgrade; clean-fork stance preserved | Accepted |
+
+**File-vs-table status (checked at P5, 2026-07-07):** only `docs/adr/0000-0003`
+exist as files; the rest of this table is design intent recorded up front, not
+yet materialized. Checked each row against what's *actually implemented* in
+committed code (not just planned) before assuming this is overdue debt — it
+isn't, for all but two: `0013` (FrankenPHP) is live in `docs/DEPLOYMENT.md`
+since P4 and was overdue until P5 backfilled it; `0021` (native-platform-first
+library policy) is written at P5 since this is the phase that materializes its
+PHP-side content. `0004-0006`, `0009-0012`, `0014-0020`, `0022-0025` describe
+decisions for phases that haven't landed yet (no Doctrine/DI/Sentry/frontend
+framework/etc. in the tree) — each gets its file when its phase lands, per
+this section's own "new ADRs added per phase" rule, not before.
 
 ---
 

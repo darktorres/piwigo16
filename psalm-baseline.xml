@@ -25151,6 +25151,228 @@
       <code><![CDATA[toBeTrue]]></code>
     </InternalMethod>
   </file>
+  <file src="tests/Browser/AdminExtendedSmokeTest.php">
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+    <UndefinedMagicMethod>
+      <code><![CDATA[assertNoJavaScriptErrors]]></code>
+      <code><![CDATA[assertNoJavaScriptErrors]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Browser/AdminSmokeTest.php">
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+    <UndefinedMagicMethod>
+      <code><![CDATA[assertNoJavaScriptErrors]]></code>
+      <code><![CDATA[assertNoJavaScriptErrors]]></code>
+      <code><![CDATA[assertSee]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Browser/AlbumCreateTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeGreaterThan]]></code>
+    </InternalMethod>
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+  </file>
+  <file src="tests/Browser/AlbumTreeTest.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+      <code><![CDATA[$page]]></code>
+    </ArgumentTypeCoercion>
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+    <UndefinedMagicMethod>
+      <code><![CDATA[assertPresent]]></code>
+      <code><![CDATA[assertPresent]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Browser/ConsoleCleanTest.php">
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+    <UndefinedMagicMethod>
+      <code><![CDATA[assertNoJavaScriptErrors]]></code>
+      <code><![CDATA[assertNoJavaScriptErrors]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Browser/GallerySmokeTest.php">
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+  </file>
+  <file src="tests/Browser/Helpers/BrowserTestHelpers.php">
+    <ArgumentTypeCoercion>
+      <code><![CDATA[$pattern]]></code>
+    </ArgumentTypeCoercion>
+    <PossiblyFalseArgument>
+      <code><![CDATA[$ch]]></code>
+      <code><![CDATA[$ch]]></code>
+      <code><![CDATA[$cookieJar]]></code>
+      <code><![CDATA[$cookieJar]]></code>
+      <code><![CDATA[$cookieJar]]></code>
+      <code><![CDATA[$cookieJar]]></code>
+      <code><![CDATA[$cookieJar]]></code>
+    </PossiblyFalseArgument>
+    <PossiblyFalseOperand>
+      <code><![CDATA[tempnam(sys_get_temp_dir(), 'pwg_browser_')]]></code>
+    </PossiblyFalseOperand>
+    <UndefinedMagicMethod>
+      <code><![CDATA[content]]></code>
+      <code><![CDATA[fill]]></code>
+      <code><![CDATA[navigate]]></code>
+      <code><![CDATA[script]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Browser/InstallTest.php">
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+    <UndefinedMagicMethod>
+      <code><![CDATA[assertPresent]]></code>
+      <code><![CDATA[assertPresent]]></code>
+      <code><![CDATA[assertPresent]]></code>
+      <code><![CDATA[assertPresent]]></code>
+      <code><![CDATA[assertSee]]></code>
+      <code><![CDATA[fill]]></code>
+      <code><![CDATA[markTestSkipped]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Browser/PhotoAlbumLifecycleTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeGreaterThan]]></code>
+      <code><![CDATA[toContain]]></code>
+    </InternalMethod>
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+    <UndefinedMagicMethod>
+      <code><![CDATA[toContain]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Browser/PhotoUploadApiTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeGreaterThan]]></code>
+      <code><![CDATA[toBeGreaterThan]]></code>
+      <code><![CDATA[toBeGreaterThan]]></code>
+      <code><![CDATA[toBeGreaterThanOrEqual]]></code>
+    </InternalMethod>
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+  </file>
+  <file src="tests/Browser/PhotoUploadPageTest.php">
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+    <UndefinedMagicMethod>
+      <code><![CDATA[assertNoJavaScriptErrors]]></code>
+      <code><![CDATA[assertNoJavaScriptErrors]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Browser/RememberMeTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+    </InternalMethod>
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+    <UndefinedMagicMethod>
+      <code><![CDATA[fill]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Browser/SearchTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toContain]]></code>
+    </InternalMethod>
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+  </file>
+  <file src="tests/Browser/SettingsRoundtripTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+    </InternalMethod>
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+    <UndefinedMagicMethod>
+      <code><![CDATA[assertPresent]]></code>
+      <code><![CDATA[fill]]></code>
+      <code><![CDATA[value]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Browser/TagCrudTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeGreaterThan]]></code>
+      <code><![CDATA[toContain]]></code>
+    </InternalMethod>
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+    <UndefinedMagicMethod>
+      <code><![CDATA[assertNoJavaScriptErrors]]></code>
+      <code><![CDATA[toContain]]></code>
+    </UndefinedMagicMethod>
+  </file>
+  <file src="tests/Browser/UserManagementTest.php">
+    <InternalMethod>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBe]]></code>
+      <code><![CDATA[toBeGreaterThan]]></code>
+      <code><![CDATA[toContain]]></code>
+    </InternalMethod>
+    <InvalidScope>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+      <code><![CDATA[$this]]></code>
+    </InvalidScope>
+    <UndefinedMagicMethod>
+      <code><![CDATA[assertNoJavaScriptErrors]]></code>
+      <code><![CDATA[assertNoJavaScriptErrors]]></code>
+      <code><![CDATA[toContain]]></code>
+    </UndefinedMagicMethod>
+  </file>
   <file src="tests/Integration/IntegrationTestCase.php">
     <PossiblyFalseArgument>
       <code><![CDATA[getenv('PIWIGO_BASE_URL') !== false ? getenv('PIWIGO_BASE_URL') : '']]></code>

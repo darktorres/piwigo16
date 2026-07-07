@@ -114,11 +114,11 @@ SELECT '.implode(',', $fields).'
   //Get link to doc
   if ('fr' == substr($user['language'], 0, 2))
   {
-    $help_link = "https://doc-fr.piwigo.org/les-utilisateurs/se-connecter-a-piwigo";
+    $help_link = "https://upstream.example.invalid/help/fr/";
   }
   else
   {
-    $help_link = "https://doc.piwigo.org/managing-users/log-in-to-piwigo";
+    $help_link = "https://upstream.example.invalid/help/";
   }
 
   $template->assign('HELP_LINK', $help_link);

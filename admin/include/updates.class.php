@@ -21,7 +21,7 @@ class updates
   var $default_themes = array();
   var $default_languages = array();
   var $merged_extensions = array();
-  var $merged_extension_url = 'http://piwigo.org/download/merged_extensions.txt';
+  var $merged_extension_url = 'https://upstream.example.invalid/merged_extensions.txt';
 
   function __construct($page='updates')
   {

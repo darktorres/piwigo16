@@ -8808,7 +8808,6 @@
       <code><![CDATA[$conf['session_gc_probability']]]></code>
       <code><![CDATA[$conf['show_php_errors_on_frontend']]]></code>
       <code><![CDATA[$conf['webmaster_id']]]></code>
-      <code><![CDATA[$user['language']]]></code>
     </EmptyArrayAccess>
     <InvalidArrayOffset>
       <code><![CDATA[$conf['allow_html_descriptions']]]></code>
@@ -25176,9 +25175,7 @@
       <code><![CDATA[tempnam(sys_get_temp_dir(), 'pwg_browser_')]]></code>
     </PossiblyFalseOperand>
     <UndefinedMagicMethod>
-      <code><![CDATA[content]]></code>
       <code><![CDATA[fill]]></code>
-      <code><![CDATA[navigate]]></code>
       <code><![CDATA[script]]></code>
       <code><![CDATA[script]]></code>
     </UndefinedMagicMethod>

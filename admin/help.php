@@ -51,14 +51,14 @@ if ('en_' == $language_prefix)
 {
   $page['messages'][] = sprintf(
     'Need help to use Piwigo? <a href="%s" target="_blank">Check the online documentation</a> !',
-    'https://doc.piwigo.org/'
+    'https://upstream.example.invalid/help/'
   );
 }
 elseif ('fr_' == $language_prefix)
 {
   $page['messages'][] = sprintf(
     'Besoin d\'aide pour utiliser Piwigo ? Consultez la <a href="%s" target="_blank">documentation en ligne</a> !',
-    'https://doc-fr.piwigo.org/'
+    'https://upstream.example.invalid/help/fr/'
   );
 }
 

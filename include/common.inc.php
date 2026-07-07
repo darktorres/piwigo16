@@ -213,19 +213,12 @@ check_lounge();
 
 include(PHPWG_ROOT_PATH.'include/user.inc.php');
 
-if (in_array( substr($user['language'],0,2), array('fr','it','de','es','pl','ru','nl','tr','da') ) )
-{
-  define('PHPWG_DOMAIN', substr($user['language'],0,2).'.piwigo.org');
-}
-elseif ('zh_CN' == $user['language']) {
-  define('PHPWG_DOMAIN', 'cn.piwigo.org');
-}
-elseif ('pt_BR' == $user['language']) {
-  define('PHPWG_DOMAIN', 'br.piwigo.org');
-}
-else {
-  define('PHPWG_DOMAIN', 'piwigo.org');
-}
+// This fork does not call back to the real piwigo.org — upstream.example.invalid
+// (.invalid TLD per RFC 2606, guaranteed not to resolve) stops it from sending
+// telemetry or fetching news/updates/merged-extension lists from the upstream
+// server, and makes any accidental outbound call fail fast (DNS failure) rather
+// than hang waiting on a real, possibly rate-limiting host.
+define('PHPWG_DOMAIN', 'upstream.example.invalid');
 define('PHPWG_URL', 'https://'.PHPWG_DOMAIN);
 
 if(isset($conf['alternative_pem_url']) and $conf['alternative_pem_url']!='')

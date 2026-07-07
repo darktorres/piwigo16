@@ -62,7 +62,7 @@
     "test": "@php vendor/bin/pest --testsuite Unit,Arch",
     "test:integration": "@php vendor/bin/pest --testsuite Integration",
     "test:contract": "@php vendor/bin/pest --testsuite Contract",
-    "test:browser": "@php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen,visual-regression",
+    "test:browser": "@php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression",
     "test:fixture-regen": "@php vendor/bin/pest --testsuite Browser --group=fixture-regen",
     "test:visual": "@php vendor/bin/pest --testsuite Browser --group=visual-regression",
     "plan-lint": "@php tools/plan-lint.php",

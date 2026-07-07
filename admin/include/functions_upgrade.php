@@ -219,8 +219,8 @@ SELECT status
 
   if (version_compare($current_release, '2.0', '<'))
   {
-    $username = utf8_decode($username);
-    $password = utf8_decode($password);
+    $username = mb_convert_encoding($username, 'ISO-8859-1', 'UTF-8');
+    $password = mb_convert_encoding($password, 'ISO-8859-1', 'UTF-8');
   }
 
   if (version_compare($current_release, '1.5', '<'))

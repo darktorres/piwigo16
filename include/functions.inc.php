@@ -1950,11 +1950,11 @@ function convert_charset($str, $source_charset, $dest_charset)
     return $str;
   if ($source_charset=='iso-8859-1' and $dest_charset=='utf-8')
   {
-    return utf8_encode($str);
+    return mb_convert_encoding($str, 'UTF-8', 'ISO-8859-1');
   }
   if ($source_charset=='utf-8' and $dest_charset=='iso-8859-1')
   {
-    return utf8_decode($str);
+    return mb_convert_encoding($str, 'ISO-8859-1', 'UTF-8');
   }
   if (function_exists('iconv'))
   {

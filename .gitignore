@@ -14,7 +14,8 @@
 /tests/Browser/Screenshots
 
 # Piwigo specific directories
-/_data
+/_data/*
+!/_data/.gitkeep
 /plugins/*
 !/plugins/index.php
 /themes/*

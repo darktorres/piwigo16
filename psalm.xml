@@ -17,6 +17,9 @@
         <directory name="."/>
         <ignoreFiles>
             <directory name="vendor"/>
+            <!-- JS dependency tree — some npm packages ship stray .php files
+                 (e.g. flatted's PHP port) that aren't part of this project. -->
+            <directory name="node_modules"/>
             <directory name="install/db"/>
             <directory name="language"/>
             <!-- Runtime-compiled Smarty templates + combined JS/CSS cache, not source. -->

@@ -834,7 +834,7 @@ contract tests against `/api/v1` replace them (and feed the typed client).
 | `pest` | `vendor/bin/pest` (unit + integration + arch + browser E2E) |
 | `ecs` | `vendor/bin/ecs --no-progress-bar` |
 | `phpstan` | `vendor/bin/phpstan analyse` |
-| `psalm` | `vendor/bin/psalm --no-cache` (with baseline) |
+| `psalm` | `vendor/bin/psalm` (with baseline) |
 | `rector` | `vendor/bin/rector --dry-run` |
 | `eslint` | `bunx eslint --max-warnings=0` (with suppressions baseline) |
 | `stylelint` | `bunx stylelint` (legacy paths excluded) |
@@ -914,7 +914,7 @@ The `just test` recipe MUST run these commands (in this order):
 ```bash
 vendor/bin/ecs --no-progress-bar         # formatting (ECS)
 vendor/bin/phpstan analyse               # static analysis (PHPStan)
-vendor/bin/psalm --no-cache              # static analysis (Psalm)
+vendor/bin/psalm                         # static analysis (Psalm)
 vendor/bin/composer-require-checker check # undeclared dependency check
 vendor/bin/composer-unused               # unused dependency check
 vendor/bin/pest --exclude-group=visual   # unit + integration + arch + browser E2E
@@ -7627,7 +7627,7 @@ vendor/bin/pest --mutate --min=60                  # Mutation score
 vendor/bin/pest --type-coverage --min=95           # Type coverage
 vendor/bin/ecs --no-progress-bar                   # ECS formatting
 vendor/bin/phpstan analyse                         # Level 10, 0 errors
-vendor/bin/psalm --no-cache                        # Psalm, 0 errors
+vendor/bin/psalm                                   # Psalm, 0 errors
 vendor/bin/rector --dry-run                        # Clean
 vendor/bin/deptrac --no-progress                   # Layer violations = 0
 vendor/bin/composer-require-checker check          # No undeclared deps

@@ -13,11 +13,19 @@ namespace Piwigo\Tests\Integration;
  */
 final class DatabaseConnectionTest extends IntegrationTestCase
 {
+    private static bool $fixtureReady = false;
+
     #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
         $this->setUpConnectionFromEnv();
+
+        if (!self::$fixtureReady) {
+            $this->resetDatabase();
+            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-16.x.sql');
+            self::$fixtureReady = true;
+        }
     }
 
     public function test_it_connects_to_the_test_database(): void

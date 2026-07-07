@@ -97,6 +97,34 @@ abstract class IntegrationTestCase extends TestCase
         fclose($pipes[2]);
         $exit = proc_close($proc);
         self::assertSame(0, $exit, 'mysql fixture load failed: ' . $stderr);
+
+        $this->settleDatabase();
+    }
+
+    /**
+     * A cold InnoDB buffer pool on a freshly (re)imported schema can make the
+     * very first heavy query slow enough to blow a browser-test assertion's
+     * timeout, even though the app itself has no bug (a bare curl to the same
+     * URL was instant while a Playwright assertion timed out at 5s
+     * immediately after a reimport). Poll a real table — not a no-op
+     * `SELECT 1` — until it's readable.
+     */
+    private function settleDatabase(): void
+    {
+        $deadline = microtime(true) + 30.0;
+        while (microtime(true) < $deadline) {
+            $db = $this->newMysqli($this->dbName);
+            if ($db->connect_errno === 0) {
+                $result = $db->query(sprintf('SELECT COUNT(*) FROM `%simages`', $this->dbPrefix));
+                if ($result !== false) {
+                    $db->close();
+                    return;
+                }
+            }
+            $db->close();
+            usleep(100_000);
+        }
+        self::fail('Test database did not become queryable within 30s after fixture load.');
     }
 
     protected function markTestInstalled(): void

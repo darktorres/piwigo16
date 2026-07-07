@@ -385,7 +385,9 @@ jobs:
           extensions: ${{ env.PHP_EXTENSIONS }}
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
       - name: Provision piwigo_test from the committed fixture
-        run: mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+        run: |
+          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env.test
         run: |
           cat > .env.test <<'ENVEOF'
@@ -424,7 +426,9 @@ jobs:
           extensions: ${{ env.PHP_EXTENSIONS }}
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
       - name: Provision piwigo_test from the committed fixture
-        run: mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+        run: |
+          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env.test
         run: |
           cat > .env.test <<'ENVEOF'
@@ -476,7 +480,9 @@ jobs:
       - name: Install Playwright + Chromium
         run: bunx playwright install --with-deps chromium
       - name: Provision piwigo_test from the committed fixture
-        run: mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+        run: |
+          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env.test
         run: |
           cat > .env.test <<'ENVEOF'
@@ -528,7 +534,9 @@ jobs:
       - name: Install Playwright + Chromium
         run: bunx playwright install --with-deps chromium
       - name: Provision piwigo_test from the committed fixture
-        run: mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+        run: |
+          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env.test
         run: |
           cat > .env.test <<'ENVEOF'
@@ -587,7 +595,9 @@ jobs:
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
       - name: Provision piwigo_test from the committed fixture
-        run: mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+        run: |
+          mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env (non-test — lighthouserc.json hits the plain URL)
         run: |
           cat > .env <<'ENVEOF'

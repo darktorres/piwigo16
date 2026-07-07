@@ -64,9 +64,15 @@
     "test:coverage": "@php vendor/bin/pest --testsuite Unit,Arch --coverage --min=0.1",
     "test:integration": "@php vendor/bin/pest --testsuite Integration",
     "test:contract": "@php vendor/bin/pest --testsuite Contract",
-    "test:browser": "@php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression",
-    "test:fixture-regen": "@php vendor/bin/pest --testsuite Browser --group=fixture-regen",
-    "test:visual": "@php vendor/bin/pest --testsuite Browser --group=visual-regression",
+    "test:browser": [
+      "bash tools/reimport-fixture.sh",
+      "bash tools/pest-cleanup.sh --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression"
+    ],
+    "test:fixture-regen": "bash tools/pest-cleanup.sh --testsuite Browser --group=fixture-regen",
+    "test:visual": [
+      "bash tools/reimport-fixture.sh",
+      "bash tools/pest-cleanup.sh --testsuite Browser --group=visual-regression"
+    ],
     "plan-lint": "@php tools/plan-lint.php",
     "require-checker": "@php vendor/bin/composer-require-checker check --config-file=composer-require-checker.json composer.json",
     "unused": "@php vendor/bin/composer-unused --configuration=composer-unused.php",
@@ -76,6 +82,7 @@
   "config": {
     "optimize-autoloader": true,
     "sort-packages": true,
+    "process-timeout": 0,
     "allow-plugins": {
       "pestphp/pest-plugin": true,
       "cyclonedx/cyclonedx-php-composer": true

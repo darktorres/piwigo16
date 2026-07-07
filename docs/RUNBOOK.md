@@ -32,8 +32,13 @@ composer test:visual                             # run separately — see docs/D
 ```
 
 `test:fixture-regen` is destructive to `piwigo_test` (never production) and only needs
-rerunning when the fixture itself must change — day-to-day `test:contract`/`test:browser`
-runs reuse the committed `tests/Fixtures/piwigo-16.x.sql` dump as-is.
+rerunning when the fixture itself must change. `test:integration`/`test:contract`/
+`test:browser`/`test:visual` don't need it re-run first — each reimports the committed
+`tests/Fixtures/piwigo-16.x.sql` dump itself before its tests start (`test:integration`
+via `DatabaseConnectionTest::setUp()`; `test:contract` via `ContractTestCase::setUp()`;
+`test:browser`/`test:visual` via `tools/reimport-fixture.sh`), so they're self-contained
+regardless of what a previous run left the DB looking like — even a fully dropped
+`piwigo_test` database.
 
 ## CI (P3)
 

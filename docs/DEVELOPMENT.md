@@ -275,29 +275,63 @@ offset" deprecation that got printed straight into the WS JSON response body —
 corrupting it for every real client, not just this test. Fixed at the source
 (null-check before indexing), not routed around.
 
-**Run `composer test:visual` only against a freshly-reloaded fixture**, never right
-after `composer test:browser` — the CRUD-mutating flows it runs (`AlbumCreateTest`,
-`TagCrudTest`, `UserManagementTest`, ...) drift the sidebar's live counts exactly as the
-class docblock warns, and chaining the two without reimporting
-`tests/Fixtures/piwigo-16.x.sql` in between produces a wave of false diffs across nearly
-every page.
+**`composer test:integration`/`test:contract`/`test:browser`/`test:visual` all
+self-provision a pristine DB before running now** — none of them depend on run order or
+on `test:fixture-regen` having been run first. `test:browser`/`test:visual` reimport
+`tests/Fixtures/piwigo-16.x.sql` themselves via `tools/reimport-fixture.sh` (prepended
+as a first `composer.json` step); `test:contract` (`ContractTestCase::setUp()`) and
+`test:integration` (`DatabaseConnectionTest::setUp()`, mirroring the same
+static-flag-guarded `resetDatabase()`+`loadFixture()` pattern) do it in PHP directly,
+since those are PHPUnit-class-based suites with a natural setup hook — confirmed by
+dropping `piwigo_test` entirely and running each suite standalone. This is no longer
+something to remember: the CRUD-mutating flows `test:browser` runs (`AlbumCreateTest`,
+`TagCrudTest`, `UserManagementTest`, ...) used to drift the sidebar's live counts if
+`test:visual` ran right after without a manual reimport in between, producing a wave of
+false diffs across nearly every page. `test:fixture-regen` is untouched — it already
+wipes/reinstalls the DB
+itself, so a prior reimport would just be immediately discarded.
 
-**Two more non-obvious reliability gotchas**, found while regenerating baselines:
+**Three more non-obvious reliability gotchas**, found while regenerating baselines —
+all three are now fixed in the tooling itself, not just documented workarounds:
 
 - pest-plugin-browser's own `playwright run-server` subprocess is **not cleaned up**
-  when the Pest CLI process exits. Across a long session with many browser-test
-  invocations these accumulate — 83 orphaned processes were observed consuming 6.4 GB
-  of RAM in one session, which in turn causes screenshot comparisons to fail with a
-  generic "missing image" placeholder (no real pixelmatch diff — expected/actual are
-  pixel-identical on inspection) rather than a true content difference. Check for and
-  kill them (`pkill -f "playwright run-server"`) before trusting a run of failures as
-  real; always confirm via an isolated re-run before concluding transience, never
-  dismiss a failure on sight.
+  when the Pest CLI process exits — a known, currently-unmerged upstream bug
+  (`pestphp/pest-plugin-browser#169`): it spawns the server via a shell command line,
+  and its own `stop()` sends `SIGTERM` to that shell, which doesn't forward it to the
+  `node` grandchild, so the server is orphaned on essentially every run. Across a long
+  session with many browser-test invocations these accumulate — 83 orphaned processes
+  were observed consuming 6.4 GB of RAM in one session, which in turn causes screenshot
+  comparisons to fail with a generic "missing image" placeholder (no real pixelmatch
+  diff — expected/actual are pixel-identical on inspection) rather than a true content
+  difference. Fixed with `tools/pest-cleanup.sh`, a wrapper `test:browser`/
+  `test:fixture-regen`/`test:visual` now route through: it snapshots which
+  `playwright run-server` PIDs exist before Pest runs and force-kills only the ones
+  that appeared during that run and are still alive on exit (normal completion,
+  PHP fatal error, or external SIGINT/SIGTERM — it backgrounds the pest process and
+  explicitly forwards those signals to it, then cleans up via a trap on the wrapper's
+  own exit). Independent of whether the upstream bug ever gets fixed.
 - Reimporting the fixture DB immediately before running browser tests, with no
   settling time, can itself cause the same class of transient timeout on the very next
-  test (observed consistently across several attempts, resolved by simply running a
-  cheap query like `SELECT COUNT(*) FROM piwigo_images` against the freshly-imported DB
-  before starting Pest — apparently enough to let MySQL/PHP's connection pool settle).
+  test — most likely a cold InnoDB buffer pool on the freshly-recreated schema, since
+  this app has no persistent DB connections or Apache/PHP-FPM pooling layer to blame
+  instead. Fixed with `IntegrationTestCase::settleDatabase()`, called at the end of
+  `loadFixture()`: polls a real table (`SELECT COUNT(*) FROM {prefix}images`, not a
+  no-op `SELECT 1`) for up to 30s before returning control to the caller. This is the
+  choke point `ContractTestCase::setUp()` already goes through. The 5 raw
+  `mysql < fixture.sql` steps in `ci.yml` (which don't go through PHP at all) got the
+  equivalent fix directly: an `until mysql ... SELECT COUNT(*) FROM piwigo_images; do
+  sleep 0.5; done` line after each, reusing the same idiom already used there for the
+  PHP-server-ready checks.
+- Composer's own script runner has a **default 300-second process timeout**,
+  independent of test correctness — it force-killed an otherwise-healthy, still-passing
+  `test:browser` run partway through simply because the full suite legitimately takes
+  longer than 300s under load. Fixed with `"process-timeout": 0` in `composer.json`'s
+  `config` block; CI's own per-job `timeout-minutes` remains the real outer bound, same
+  as it already was for everything else.
+
+Always confirm a browser-test failure via an isolated re-run before concluding it's
+real or attributing it to one of the above — never dismiss (or accept) a failure on
+sight.
 
 ## CI (P3)
 

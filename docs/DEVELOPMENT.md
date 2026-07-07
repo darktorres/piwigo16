@@ -39,6 +39,8 @@ around the `composer`/`bun` commands below.
 | `composer unused`          | Composer-unused against `composer-unused.php`                                 |
 | `composer bench`           | PHPBench (`tests/Bench/` is empty until P12)                                  |
 | `composer plan-lint`       | Validates `docs/plan/manifest.yaml` (tier/depends_on presence, acyclic graph) |
+| `composer test:coverage`   | Pest `Unit`+`Arch` with pcov coverage (`--min=0.1`, see CI section below)     |
+| `composer sbom`            | CycloneDX SBOM for Composer deps (`sbom-composer.cdx.json`, gitignored)       |
 | `bun run build`            | Vite build (`build/noop.ts` placeholder entry until P24)                      |
 | `bun run dev`              | Vite dev server                                                               |
 | `bun run test`             | Vitest (TS unit tests — Pest can't execute these)                             |
@@ -225,3 +227,121 @@ for the full reasoning): `piwigo_images.hit` ("Visited N times") is pinned via
 `admin-photo-editor` and the admin dashboard (`/admin.php`) are excluded — both render
 wall-clock-relative content (`time_since()`, a Chart.js canvas keyed to the current date)
 with no freeze point available before a mockable clock exists (later kernel-layer work).
+
+**P3 follow-up, found while wiring this suite into CI** (re-running it for real surfaces
+what a one-off P2 run didn't): `admin-album` and `admin-users` render the same class of
+unfreezable `time_since()` content ("Created/Modified/Registered N hours ago") and are now
+excluded too, for the same reason and with the same discipline — confirmed by extracting
+and reading the actual expected/actual diff images (`tests/Browser/Screenshots/ImageDiffView/*.html`,
+gitignored) rather than assuming.
+
+`admin-history` failed differently, and investigating it surfaced a real, previously-
+unnoticed **production bug**, not just a test-harness gap: `pwg.history.search`
+(`include/ws_functions/pwg.php`) indexed two arrays with a possibly-`null`
+`$line['category_id']`, tripping a PHP 8.5 "Using null as an array offset" deprecation
+that got printed straight into the WS JSON response body — corrupting it for every real
+client, not just this test. jQuery's `dataType: "JSON"` ajax call couldn't parse the
+result, silently fell into its `error:` handler, and the page's loading spinner never
+hid — a genuine bug, fixed at the source (null-check before indexing), not routed around.
+With that fixed, the Search tab's default (today, unfiltered) view legitimately started
+showing whatever real guest page-views the rest of the run had already logged (no
+start/end GET override exists to pin a fixed empty range), so
+`BrowserTestHelpers::truncateHistory()` wipes `piwigo_history` right before this one
+screenshot — the same freeze-a-narrow-DB-slice approach as `freezeImageHits()`, not an
+exclusion. `waitUntilHidden()` (polls in-browser via `script()`) replaces the instinct to
+reach for `assertSee()`/`assertMissing()` here — neither actually retries (both are
+one-shot checks under the hood, confirmed by reading their implementations after both
+flaked on this exact page).
+
+Also: **run `composer test:visual` only against a freshly-reloaded fixture**, never
+right after `composer test:browser` — the CRUD-mutating flows it runs
+(`AlbumCreateTest`, `TagCrudTest`, `UserManagementTest`, ...) drift the sidebar's live
+counts exactly as the class docblock warns, and chaining the two without reimporting
+`tests/Fixtures/piwigo-16.x.sql` in between produces a wave of false diffs across nearly
+every page. Separately, a handful of individual screenshots (`gallery-home`, `tags`,
+`register`, ...) can flake under heavy local resource contention (many sequential
+browser contexts) with a distinctive signature — the diff view falls back to a generic
+"missing image" placeholder rather than a real pixelmatch diff, and expected/actual are
+pixel-identical on inspection — always confirmed via isolated re-run before concluding
+transience, never dismissed on sight.
+
+## CI (P3)
+
+`.github/workflows/ci.yml` runs on every push/PR (docs-only changes excluded via
+`paths-ignore`). Every gate from the tables above gets its own job, translated to what's
+actually runnable today rather than the plan doc's prose verbatim (its script names and
+thresholds don't all match this repo 1:1 — see below):
+
+| Job | Command | Status |
+| --- | --- | --- |
+| `pest` | `composer test` | blocking |
+| `ecs` | `composer lint:php` | **non-blocking** until P5 (matches `lefthook.yml`) |
+| `phpstan` / `psalm` | `analyse --no-progress` / `--no-cache` | blocking |
+| `rector` | `--dry-run` | **non-blocking** until P5 |
+| `eslint` / `stylelint` / `vitest` | `bun run lint:js` / `lint:css` / `test` | blocking |
+| `coverage` | `composer test:coverage` (`--min=0.1`) | blocking at the measured 0.2% baseline floor |
+| `audit` | `composer audit` + `bun audit --ignore=...` | blocking — see below for the 3 documented ignores |
+| `deptrac` | guarded on `hashFiles('deptrac.yaml')` | no-op until P6 |
+| `require-checker` / `composer-unused` / `knip` | as `composer`/`bun run` scripts | blocking |
+| `actionlint` | `reviewdog/action-actionlint` | blocking, self-validates every workflow file |
+| `phpbench` | `--report=aggregate`, uploaded as an artifact | blocking (passes trivially with 0 subjects until P12) |
+| `size-limit` | `bun run build && bun run size-limit` | blocking (real placeholder budget) |
+| `k6-load` | guarded on `hashFiles('tests/Load/**')` | no-op + non-blocking until P29 |
+| `test-file-inventory` | `find tests/<Dir> -name '*Test.php'` per suite | blocking — catches a testsuite silently running 0 tests (see below) |
+| `integration` / `contract` / `browser` / `visual-regression` | the matching `composer test:*` script | blocking, against an ephemeral `mysql:9.7` service container + `php -S`, fixture imported fresh each run |
+| `lighthouse` | `bunx lhci autorun` | collect/upload only — no `assert` block until P10 |
+| `commitlint` | event-appropriate commit range | blocking |
+| `sbom` | `composer sbom` + `cyclonedx-npm`, `actions/attest-build-provenance` | blocking (SEC-50, SEC-53) |
+
+Separate workflow files: `osv-scanner.yml` (SEC-52, weekly + push/PR, Google's reusable
+workflows) and `scorecard.yml` (SEC-64, weekly + push) run independently of `ci.yml`.
+`release-please.yml` wires up the P1-landed config, targeting `17.x-rewrite` explicitly
+— this repo's actual GitHub default branch, `16.x-rewrite`, is an unrelated earlier
+rewrite lineage, so "push to main" (the plan doc's phrasing) doesn't apply literally.
+
+**Non-obvious gotchas, verified rather than assumed:**
+
+- `tests/Integration/` had **zero** concrete `*Test.php` files until this phase — only
+  the shared `IntegrationTestCase` base class. `composer test:integration` silently
+  exited non-zero ("No tests found") since P2. `DatabaseConnectionTest.php` restores the
+  smoke test P2's own plan called for but never actually landed. The `test-file-inventory`
+  job exists specifically to catch this class of regression on disk, cheaply, without
+  re-running every suite.
+- **`--exclude-group=fixture-regen,visual-regression` (one flag, comma-joined) silently
+  did not exclude `fixture-regen`** — reproduced directly (`--filter=RegenerateFixtureTest`
+  still matched and ran it, wiping `piwigo_test` and overwriting the committed fixture
+  mid-suite, corrupting state for every test that ran after it alphabetically). Fixed by
+  passing the flag twice (`--exclude-group=fixture-regen --exclude-group=visual-regression`
+  — verified this form actually excludes both) in `composer.json`'s `test:browser` script.
+  This had been silently broken since P2; every prior `composer test:browser` run had been
+  destructively regenerating the fixture without anyone noticing, since the resulting
+  fixture content is shape-compatible (same row counts, different timestamps/IDs) so nothing
+  failed loudly except by the accident of alphabetical test ordering.
+- `bun audit` and OSV-Scanner (`osv-scanner.toml`) both need to ignore the same 3 GHSAs
+  (`GHSA-52f5-9888-hmc6`, `GHSA-ph9p-34f9-6g65`, `GHSA-w5hq-g745-h8pq`) — transitive
+  `tmp`/`uuid` pins inside `@lhci/cli@0.15.1` (latest, dev-only, never shipped), no fixed
+  release available upstream. Re-check both places on every Renovate bump of `@lhci/cli`.
+- `composer audit --abandoned=fail` fails today: `phpbench/phpbench` (dev-only) requires
+  `doctrine/annotations`, which Composer flags abandoned with no replacement. CI runs
+  plain `composer audit` (still reports it, just doesn't escalate a transitive dev-only
+  dependency we don't control to a hard failure).
+- `@cyclonedx/cyclonedx-npm` doesn't read `bun.lock` — it needs an npm-format lockfile.
+  The `sbom` job runs real `npm install --package-lock-only --ignore-scripts` first (a
+  throwaway snapshot, gitignored, never committed — `bun.lock` stays authoritative).
+- **`psalm.xml`/`phpstan.neon` never excluded `node_modules`** before this phase — some
+  npm packages ship stray `.php` files (e.g. `flatted`'s PHP port), and Psalm's stricter
+  analysis flagged them plus drifted the baseline enough that `psalm-baseline.xml` no
+  longer matched a genuinely clean checkout (verified via an isolated `git worktree`,
+  independent of any change in this phase). Fixed by excluding `node_modules` in both
+  configs and regenerating `psalm-baseline.xml` fresh, then re-verifying "No errors
+  found!" is stable across repeated runs — not just fixed once and assumed to hold.
+- `_data/` is fully gitignored and only appears at runtime (`mkgetdir()` calls scattered
+  through `template.class.php`/`cache.class.php`/`Logger.class.php`) — but `psalm.xml`'s
+  `ignoreFiles` needs the directory to literally **exist** to resolve that config path at
+  all, or Psalm fails immediately with a config-parse error before analysis even starts.
+  A committed `_data/.gitkeep` (gitignore switched to `/_data/*` + `!/_data/.gitkeep`,
+  matching the existing `/local/*` pattern) guarantees this on every fresh checkout,
+  including CI.
+- CI uses PHP's built-in server (`php -S`), not Apache — this app has no `.htaccess` or
+  `RewriteRule` dependency yet (every tested route is `?page=`-style query strings, not
+  pretty URLs), confirmed by reading the full route list before deciding this.

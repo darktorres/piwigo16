@@ -34,3 +34,18 @@ composer test:visual                             # run separately — see docs/D
 `test:fixture-regen` is destructive to `piwigo_test` (never production) and only needs
 rerunning when the fixture itself must change — day-to-day `test:contract`/`test:browser`
 runs reuse the committed `tests/Fixtures/piwigo-16.x.sql` dump as-is.
+
+## CI (P3)
+
+`.github/workflows/ci.yml` runs the full gate set above on every push/PR — see
+`docs/DEVELOPMENT.md`'s CI section for the job list and what's guarded vs. live today.
+Unlike local dev, CI provisions its own ephemeral `piwigo_test` per run (a `mysql:9.7`
+service container, fixture imported fresh via `mysql < tests/Fixtures/piwigo-16.x.sql`)
+and serves the checkout via PHP's built-in server (`php -S`) rather than Apache — this
+app has no `.htaccess`/pretty-URL dependency yet, so this is a faithful, lower-setup
+substitute; P4 revisits this once the containerized image exists.
+
+`.github/workflows/osv-scanner.yml` and `scorecard.yml` are supply-chain jobs (SEC-52,
+SEC-64) independent of the main pipeline — weekly-scheduled in addition to push/PR.
+`release-please.yml` targets `17.x-rewrite` explicitly (this repo's actual GitHub
+default branch, `16.x-rewrite`, is an unrelated earlier rewrite lineage).

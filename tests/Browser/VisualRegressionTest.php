@@ -81,6 +81,18 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *     H::truncateHistory() wipes piwigo_history right before this one
  *     screenshot, the same freeze-a-narrow-DB-slice approach as
  *     freezeImageHits(), not an exclusion.
+ *   - admin-tags races the same way, for a different reason:
+ *     admin/themes/default/js/tags.js restores a "per page" cookie on
+ *     document.ready by simulating a click on the matching pagination
+ *     link, which drives a purely client-side (no network call) ~1.8s
+ *     .pageLoad fade-in/fade-out + tag-box fade sequence. This had always
+ *     run on every load of this page; it surfaced here (not as a
+ *     pre-existing failure) once BrowserTestHelpers::navigateOk()/
+ *     assertNoServerErrors() stopped going through pest-plugin-browser's
+ *     assertion-retry wrapper (see that class's docblock) — the old
+ *     wrapped calls incidentally spent longer than 1.8s per navigation,
+ *     which had been masking this race. Fixed the same way as
+ *     admin-history: H::waitUntilHidden($page, '.pageLoad').
  */
 $routes = [
     // ── Gallery (anonymous) ──────────────────────────────────────────────
@@ -150,6 +162,15 @@ foreach ($routes as $name => [$path, $needsAuth]) {
 
         if ($name === 'admin-history') {
             H::waitUntilHidden($page, '.loading');
+        }
+
+        if ($name === 'admin-tags') {
+            // admin/themes/default/js/tags.js fires an automatic pagination
+            // click on document.ready (restoring the "per page" cookie),
+            // which drives a purely client-side ~1.8s .pageLoad fade-in/
+            // fade-out + tag-box fade sequence — no network call involved,
+            // but still a genuine race against assertScreenshotMatches().
+            H::waitUntilHidden($page, '.pageLoad');
         }
 
         $page->assertScreenshotMatches();

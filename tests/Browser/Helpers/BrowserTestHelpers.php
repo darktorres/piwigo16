@@ -93,10 +93,10 @@ final class BrowserTestHelpers
     public static function assertNoServerErrors(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $context = ''): void
     {
         // content() is a one-shot read, not a pollable condition — same
-        // reasoning as navigateUnwrapped(), and the same fix. Confirmed
-        // needed, not just theoretical: this exact call is where the photo
-        // editor page (heavier DOM than plain listing pages) kept failing
-        // with "Timeout 5000ms exceeded" even after navigate() was fixed.
+        // reasoning as rawWebpage(), and the same fix. Confirmed needed, not
+        // just theoretical: this exact call is where the photo editor page
+        // (heavier DOM than plain listing pages) kept failing with "Timeout
+        // 5000ms exceeded" even after navigate() was fixed.
         $html = self::rawWebpage($page)->content();
         $hits = [];
         foreach (self::serverErrorPatterns() as $name => $pattern) {

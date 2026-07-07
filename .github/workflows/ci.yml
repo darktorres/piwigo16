@@ -1,0 +1,653 @@
+name: CI
+
+on:
+  push:
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+  pull_request:
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+
+permissions:
+  contents: read
+
+env:
+  PHP_EXTENSIONS: calendar,ctype,curl,dom,fileinfo,filter,gd,iconv,intl,libxml,mbstring,mysqli,openssl,session,simplexml,zlib
+
+jobs:
+  # ── PHP: lint / static analysis ─────────────────────────────────────────
+
+  pest:
+    name: Pest (unit + arch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - run: composer test
+
+  ecs:
+    name: ECS (style, non-blocking until P5)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      # ECS checks whole files, not diffs, so pre-existing legacy violations
+      # would block unrelated commits — not a real gate until P5 applies --fix
+      # (see docs/PLAN-REPLAY.md P0 step 4 and lefthook.yml's matching `|| true`).
+      - run: composer lint:php
+        continue-on-error: true
+
+  phpstan:
+    name: PHPStan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - run: vendor/bin/phpstan analyse --no-progress
+
+  psalm:
+    name: Psalm
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - run: vendor/bin/psalm --no-cache
+
+  rector:
+    name: Rector (dry-run, non-blocking)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      # Not applied until P5 — see docs/PLAN-REPLAY.md's Rector strategy.
+      - run: vendor/bin/rector --dry-run
+        continue-on-error: true
+
+  coverage:
+    name: Code coverage (pcov)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: pcov
+          extensions: ${{ env.PHP_EXTENSIONS }},pcov
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      # 0.1 is a ratchet floor just under the measured 0.2% Unit+Arch baseline
+      # (~500 legacy files are un-namespaced and untouched by these suites) —
+      # expected to climb sharply from P5 onward.
+      - run: composer test:coverage
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      # No --abandoned=fail: phpbench/phpbench (dev-only benchmarking tool,
+      # never shipped) requires doctrine/annotations ^2.0, which Composer
+      # flags abandoned with no replacement. Still reported in the log below,
+      # just not escalated to a failure for a transitive dev-only dependency
+      # we don't control.
+      - run: composer audit
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - run: bun install --frozen-lockfile
+      # @lhci/cli@0.15.1 (latest, dev-only Lighthouse CLI, never shipped) pins
+      # vulnerable tmp/uuid ranges with no fixed release available upstream —
+      # re-check these on every Renovate bump of @lhci/cli.
+      - run: |
+          bun audit \
+            --ignore=GHSA-52f5-9888-hmc6 \
+            --ignore=GHSA-ph9p-34f9-6g65 \
+            --ignore=GHSA-w5hq-g745-h8pq
+
+  deptrac:
+    name: Deptrac (from P6)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      # deptrac.yaml lands in P6 once PSR-4 namespaces exist — no-op until then.
+      - if: hashFiles('deptrac.yaml') != ''
+        run: vendor/bin/deptrac analyse --no-progress
+
+  require-checker:
+    name: composer-require-checker
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - run: composer require-checker
+
+  composer-unused:
+    name: composer-unused
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - run: composer unused
+
+  phpbench:
+    name: PHPBench
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      # Runs cleanly with 0 subjects until P12 adds tests/Bench/*.php.
+      - run: vendor/bin/phpbench run --report=aggregate | tee phpbench-report.txt
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: phpbench-report
+          path: phpbench-report.txt
+          retention-days: 30
+
+  plan-lint:
+    name: plan-lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - run: composer plan-lint
+
+  # ── JS/TS/CSS ────────────────────────────────────────────────────────────
+
+  vitest:
+    name: Vitest (TS unit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - run: bun run test
+
+  eslint:
+    name: ESLint (baseline)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - run: bun run lint:js
+
+  stylelint:
+    name: Stylelint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - run: bun run lint:css
+
+  knip:
+    name: knip
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - run: bun run knip
+
+  size-limit:
+    name: size-limit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun run size-limit
+
+  k6-load:
+    name: k6 load (from P29)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      # tests/Load/*.js doesn't exist until P29 — non-blocking (warning) per
+      # docs/PLAN-REPLAY.md, no-op until then.
+      - if: hashFiles('tests/Load/**') != ''
+        run: echo "k6 load surface not present yet (P29)"
+
+  commitlint:
+    name: commitlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - run: bun install --frozen-lockfile
+      - if: github.event_name == 'pull_request'
+        run: bunx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+      - if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
+        run: bunx commitlint --from ${{ github.event.before }} --to ${{ github.sha }} --verbose
+      - if: github.event_name == 'push' && github.event.before == '0000000000000000000000000000000000000000'
+        run: bunx commitlint --from ${{ github.sha }}~1 --to ${{ github.sha }} --verbose
+
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: reviewdog/action-actionlint@6fb7acc99f4a1008869fa8a0f09cfca740837d9d # v1.72.0
+        with:
+          fail_level: error
+
+  test-file-inventory:
+    name: Test file inventory (P0 "just test" lesson)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      # Every wired-up testsuite directory must contain at least one real
+      # *Test.php file. Catches the exact failure the 16.x-v2 lesson describes:
+      # a testsuite silently running 0 tests (Pest exits 0 on a --filter that
+      # matches nothing inside a non-empty suite, so file presence is the only
+      # reliable signal). tests/Integration/ hit exactly this until this phase
+      # added DatabaseConnectionTest.php.
+      - run: |
+          set -euo pipefail
+          for dir in Unit Arch Integration Contract Browser; do
+            count=$(find "tests/$dir" -maxdepth 1 -name '*Test.php' | wc -l)
+            echo "tests/$dir: $count Test.php file(s)"
+            if [ "$count" -eq 0 ]; then
+              echo "::error::tests/$dir has no *Test.php files — its testsuite would silently run 0 tests"
+              exit 1
+            fi
+          done
+
+  # ── DB-backed suites ─────────────────────────────────────────────────────
+
+  integration:
+    name: Pest (integration)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      mysql:
+        image: mysql:9.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: piwigo_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1" --health-interval=10s
+          --health-timeout=5s --health-retries=5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - name: Provision piwigo_test from the committed fixture
+        run: mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+      - name: Write .env.test
+        run: |
+          cat > .env.test <<'ENVEOF'
+          PIWIGO_DB_HOST=127.0.0.1
+          PIWIGO_DB_PORT=3306
+          PIWIGO_DB_USER=root
+          PIWIGO_DB_PASSWORD=root
+          PIWIGO_DB_BASE=piwigo_test
+          PIWIGO_DB_PREFIX=piwigo_
+          PIWIGO_BASE_URL=http://localhost:8080
+          ENVEOF
+      - run: mkdir -p local && touch local/.installed.test
+      - run: composer test:integration
+
+  contract:
+    name: Pest (WS contract)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      mysql:
+        image: mysql:9.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: piwigo_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1" --health-interval=10s
+          --health-timeout=5s --health-retries=5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - name: Provision piwigo_test from the committed fixture
+        run: mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+      - name: Write .env.test
+        run: |
+          cat > .env.test <<'ENVEOF'
+          PIWIGO_DB_HOST=127.0.0.1
+          PIWIGO_DB_PORT=3306
+          PIWIGO_DB_USER=root
+          PIWIGO_DB_PASSWORD=root
+          PIWIGO_DB_BASE=piwigo_test
+          PIWIGO_DB_PREFIX=piwigo_
+          PIWIGO_BASE_URL=http://localhost:8080
+          ENVEOF
+      - run: mkdir -p local && touch local/.installed.test
+      - name: Start PHP built-in server
+        run: |
+          php -S localhost:8080 -t . > /tmp/php-server.log 2>&1 &
+          until curl -sf http://localhost:8080/index.php > /dev/null; do sleep 0.5; done
+      - run: composer test:contract
+
+  browser:
+    name: Pest (browser E2E)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:9.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: piwigo_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1" --health-interval=10s
+          --health-timeout=5s --health-retries=5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - name: Install Playwright + Chromium
+        run: bunx playwright install --with-deps chromium
+      - name: Provision piwigo_test from the committed fixture
+        run: mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+      - name: Write .env.test
+        run: |
+          cat > .env.test <<'ENVEOF'
+          PIWIGO_DB_HOST=127.0.0.1
+          PIWIGO_DB_PORT=3306
+          PIWIGO_DB_USER=root
+          PIWIGO_DB_PASSWORD=root
+          PIWIGO_DB_BASE=piwigo_test
+          PIWIGO_DB_PREFIX=piwigo_
+          PIWIGO_BASE_URL=http://localhost:8080
+          ENVEOF
+      - run: mkdir -p local && touch local/.installed.test
+      - name: Start PHP built-in server
+        run: |
+          php -S localhost:8080 -t . > /tmp/php-server.log 2>&1 &
+          until curl -sf http://localhost:8080/index.php > /dev/null; do sleep 0.5; done
+      - run: composer test:browser
+
+  visual-regression:
+    name: Visual regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:9.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: piwigo_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1" --health-interval=10s
+          --health-timeout=5s --health-retries=5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - name: Install Playwright + Chromium
+        run: bunx playwright install --with-deps chromium
+      - name: Provision piwigo_test from the committed fixture
+        run: mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+      - name: Write .env.test
+        run: |
+          cat > .env.test <<'ENVEOF'
+          PIWIGO_DB_HOST=127.0.0.1
+          PIWIGO_DB_PORT=3306
+          PIWIGO_DB_USER=root
+          PIWIGO_DB_PASSWORD=root
+          PIWIGO_DB_BASE=piwigo_test
+          PIWIGO_DB_PREFIX=piwigo_
+          PIWIGO_BASE_URL=http://localhost:8080
+          ENVEOF
+      - run: mkdir -p local && touch local/.installed.test
+      - name: Start PHP built-in server
+        run: |
+          php -S localhost:8080 -t . > /tmp/php-server.log 2>&1 &
+          until curl -sf http://localhost:8080/index.php > /dev/null; do sleep 0.5; done
+      # Run in isolation from the mutating browser suite — bundling drifts
+      # menu/album counts and produces false positives (see standing VR memory).
+      - run: composer test:visual
+      - name: Upload snapshot diffs on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: visual-regression-diffs
+          path: tests/.pest/snapshots/**
+          retention-days: 7
+
+  lighthouse:
+    name: Lighthouse CI (collect only, budgets from P10)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:9.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: piwigo_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1" --health-interval=10s
+          --health-timeout=5s --health-retries=5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - name: Provision piwigo_test from the committed fixture
+        run: mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-16.x.sql
+      - name: Write .env (non-test — lighthouserc.json hits the plain URL)
+        run: |
+          cat > .env <<'ENVEOF'
+          PIWIGO_DB_HOST=127.0.0.1
+          PIWIGO_DB_PORT=3306
+          PIWIGO_DB_USER=root
+          PIWIGO_DB_PASSWORD=root
+          PIWIGO_DB_BASE=piwigo_test
+          PIWIGO_DB_PREFIX=piwigo_
+          ENVEOF
+      - run: mkdir -p local && touch local/.installed
+      - name: Start PHP built-in server
+        run: |
+          php -S 127.0.0.1:8123 -t . > /tmp/php-server.log 2>&1 &
+          until curl -sf http://127.0.0.1:8123/index.php > /dev/null; do sleep 0.5; done
+      # lighthouserc.json has no `assert` block yet (P10 adds real budgets) —
+      # collect + upload-to-filesystem only, cannot fail on scores today.
+      - run: bunx lhci autorun
+
+  # ── Supply chain (SEC-50, SEC-53) ────────────────────────────────────────
+
+  sbom:
+    name: SBOM + build provenance
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.5"
+          coverage: none
+          extensions: ${{ env.PHP_EXTENSIONS }}
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      - run: composer sbom
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "24"
+      - run: bun install --frozen-lockfile
+      # @cyclonedx/cyclonedx-npm doesn't read bun.lock directly (verified) —
+      # it needs a real npm-format lockfile. package-lock.json here is a
+      # throwaway snapshot for SBOM purposes only, never committed (bun.lock
+      # stays authoritative for installs).
+      - run: npm install --package-lock-only --ignore-scripts
+      - run: bunx cyclonedx-npm --package-lock-only --output-format JSON --output-file sbom-npm.cdx.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sbom
+          path: |
+            sbom-composer.cdx.json
+            sbom-npm.cdx.json
+          retention-days: 90
+      # SEC-53: SLSA build provenance binding these SBOM artifacts to the
+      # commit/builder/inputs that produced them.
+      - uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: |
+            sbom-composer.cdx.json
+            sbom-npm.cdx.json

@@ -46,6 +46,10 @@ test-visual:
 test-fixture-regen:
     composer test:fixture-regen
 
+# Code coverage (pcov) — Unit+Arch only
+coverage:
+    composer test:coverage
+
 # ─── Lint ───────────────────────────────────────────────────────────────
 
 # Run all linters (PHP + JS + CSS)

@@ -209,7 +209,7 @@ deprecations; first-party code triggering a deprecation directly still fails the
 
 ### Visual regression
 
-`tests/Browser/VisualRegressionTest.php` — 30 screenshot baselines via
+`tests/Browser/VisualRegressionTest.php` — 32 screenshot baselines via
 `assertScreenshotMatches()` (Pest's native snapshot system, `tests/.pest/snapshots/`, not
 loose PNGs). **Must run in isolation**: `composer test:visual`, never bundled with the
 CRUD-mutating Browser tests (`AlbumCreateTest`, `TagCrudTest`, `UserManagementTest`, ...) —
@@ -221,49 +221,83 @@ Re-baseline after an intentional visual change (P29 templates, P30 CSS):
 vendor/bin/pest tests/Browser/VisualRegressionTest.php --update-snapshots
 ```
 
-Determinism fixes landed in the same commit as the baselines (see that commit's message
-for the full reasoning): `piwigo_images.hit` ("Visited N times") is pinned via
-`BrowserTestHelpers::freezeImageHits()` before the one screenshot that shows it;
-`admin-photo-editor` and the admin dashboard (`/admin.php`) are excluded — both render
-wall-clock-relative content (`time_since()`, a Chart.js canvas keyed to the current date)
-with no freeze point available before a mockable clock exists (later kernel-layer work).
+Determinism fixes landed in the same commit as the baselines they protect (see that
+commit's message for the full reasoning), not a later cleanup pass:
 
-**P3 follow-up, found while wiring this suite into CI** (re-running it for real surfaces
-what a one-off P2 run didn't): `admin-album` and `admin-users` render the same class of
-unfreezable `time_since()` content ("Created/Modified/Registered N hours ago") and are now
-excluded too, for the same reason and with the same discipline — confirmed by extracting
-and reading the actual expected/actual diff images (`tests/Browser/Screenshots/ImageDiffView/*.html`,
-gitignored) rather than assuming.
+- `piwigo_images.hit` ("Visited N times", shown on `picture.php` and the admin photo
+  editor) is pinned via `BrowserTestHelpers::freezeImageHits()` before each screenshot
+  that would otherwise show it.
+- `piwigo_history` is wiped via `BrowserTestHelpers::truncateHistory()` right before the
+  `admin-history` screenshot — its Search tab always filters to today (no start/end GET
+  override exists to pin a different range), so it would otherwise show whatever real
+  guest page-views the rest of the run had already logged.
+- **`pwg_now()`** (`include/env.inc.php`) freezes what `time_since()`
+  (`include/functions.inc.php`) and the admin dashboard's activity-chart computation
+  (`admin/intro.php`) treat as "now", via a `PIWIGO_TEST_NOW` env var read only in test
+  mode (zero behavior change in production — falls through to real `new DateTime()`
+  whenever the var is unset). This makes `admin-photo-editor`, `admin-dashboard`,
+  `admin-album`, and `admin-users` deterministic — all four were previously **excluded**
+  based on an inherited, never-verified claim that the dashboard's issue was a
+  client-side Chart.js canvas needing a full mockable-clock kernel layer (P7-P12).
+  Re-reading the actual code found that claim wrong: the dashboard's "Activity peak"
+  widget is plain server-rendered Smarty from the same kind of `new DateTime()` call as
+  everything else here — no canvas at all. (A genuinely separate page,
+  `admin/themes/default/template/stats.tpl` + `stats.js`, does use Chart.js and was
+  likely conflated with the dashboard; it isn't in this suite.)
+- The dashboard also made two live calls to piwigo.org unrelated to the clock —
+  `get_piwigo_news()` (a real news-feed fetch) and `pwg.extensions.checkUpdates` (a
+  core/extension update check) — both enabled by default
+  (`config_default.inc.php:806,810`). `pwg_now()` does nothing for these; fixed
+  separately by disabling both config keys in the fixture itself
+  (`tests/Browser/RegenerateFixtureTest.php`). This was a genuinely pre-existing gap:
+  `AdminSmokeTest`/`ConsoleCleanTest` already visit `/admin.php` and had been silently
+  making these live calls the whole time, unnoticed because neither screenshot-compares
+  and a failed fetch is swallowed silently (`fetchRemote()`'s curl calls are
+  `@`-suppressed).
+- `install.php`'s env-file rewrite now preserves any pre-existing custom line (like
+  `PIWIGO_TEST_NOW`) instead of silently dropping it — needed because
+  `tests/Browser/RegenerateFixtureTest.php` drives a real re-install every time the
+  fixture is regenerated, and `install.php` previously rewrote `.env.test` from scratch
+  with only the `PIWIGO_DB_*`/`PIWIGO_BASE_URL` keys it manages.
 
-`admin-history` failed differently, and investigating it surfaced a real, previously-
-unnoticed **production bug**, not just a test-harness gap: `pwg.history.search`
-(`include/ws_functions/pwg.php`) indexed two arrays with a possibly-`null`
-`$line['category_id']`, tripping a PHP 8.5 "Using null as an array offset" deprecation
-that got printed straight into the WS JSON response body — corrupting it for every real
-client, not just this test. jQuery's `dataType: "JSON"` ajax call couldn't parse the
-result, silently fell into its `error:` handler, and the page's loading spinner never
-hid — a genuine bug, fixed at the source (null-check before indexing), not routed around.
-With that fixed, the Search tab's default (today, unfiltered) view legitimately started
-showing whatever real guest page-views the rest of the run had already logged (no
-start/end GET override exists to pin a fixed empty range), so
-`BrowserTestHelpers::truncateHistory()` wipes `piwigo_history` right before this one
-screenshot — the same freeze-a-narrow-DB-slice approach as `freezeImageHits()`, not an
-exclusion. `waitUntilHidden()` (polls in-browser via `script()`) replaces the instinct to
-reach for `assertSee()`/`assertMissing()` here — neither actually retries (both are
-one-shot checks under the hood, confirmed by reading their implementations after both
-flaked on this exact page).
+`admin-history`'s "Search" tab also has a genuine timing race independent of the above:
+its results panel loads via async request
+(`admin/themes/default/js/history.js`) that can still be in flight when
+`assertScreenshotMatches()` fires despite its built-in networkidle/readyState waits.
+Fixed with `BrowserTestHelpers::waitUntilHidden()`, which polls in-browser (via
+`script()`) for the `.loading` spinner to actually disappear — neither `assertSee()` nor
+`assertMissing()` actually retry (both are one-shot checks under the hood, confirmed by
+reading pest-plugin-browser's own implementations after both flaked on this exact page).
+Investigating that race also surfaced a real, previously-unnoticed **production bug**:
+`pwg.history.search` (`include/ws_functions/pwg.php`) indexed two arrays with a
+possibly-`null` `$line['category_id']`, tripping a PHP 8.5 "Using null as an array
+offset" deprecation that got printed straight into the WS JSON response body —
+corrupting it for every real client, not just this test. Fixed at the source
+(null-check before indexing), not routed around.
 
-Also: **run `composer test:visual` only against a freshly-reloaded fixture**, never
-right after `composer test:browser` — the CRUD-mutating flows it runs
-(`AlbumCreateTest`, `TagCrudTest`, `UserManagementTest`, ...) drift the sidebar's live
-counts exactly as the class docblock warns, and chaining the two without reimporting
+**Run `composer test:visual` only against a freshly-reloaded fixture**, never right
+after `composer test:browser` — the CRUD-mutating flows it runs (`AlbumCreateTest`,
+`TagCrudTest`, `UserManagementTest`, ...) drift the sidebar's live counts exactly as the
+class docblock warns, and chaining the two without reimporting
 `tests/Fixtures/piwigo-16.x.sql` in between produces a wave of false diffs across nearly
-every page. Separately, a handful of individual screenshots (`gallery-home`, `tags`,
-`register`, ...) can flake under heavy local resource contention (many sequential
-browser contexts) with a distinctive signature — the diff view falls back to a generic
-"missing image" placeholder rather than a real pixelmatch diff, and expected/actual are
-pixel-identical on inspection — always confirmed via isolated re-run before concluding
-transience, never dismissed on sight.
+every page.
+
+**Two more non-obvious reliability gotchas**, found while regenerating baselines:
+
+- pest-plugin-browser's own `playwright run-server` subprocess is **not cleaned up**
+  when the Pest CLI process exits. Across a long session with many browser-test
+  invocations these accumulate — 83 orphaned processes were observed consuming 6.4 GB
+  of RAM in one session, which in turn causes screenshot comparisons to fail with a
+  generic "missing image" placeholder (no real pixelmatch diff — expected/actual are
+  pixel-identical on inspection) rather than a true content difference. Check for and
+  kill them (`pkill -f "playwright run-server"`) before trusting a run of failures as
+  real; always confirm via an isolated re-run before concluding transience, never
+  dismiss a failure on sight.
+- Reimporting the fixture DB immediately before running browser tests, with no
+  settling time, can itself cause the same class of transient timeout on the very next
+  test (observed consistently across several attempts, resolved by simply running a
+  cheap query like `SELECT COUNT(*) FROM piwigo_images` against the freshly-imported DB
+  before starting Pest — apparently enough to let MySQL/PHP's connection pool settle).
 
 ## CI (P3)
 

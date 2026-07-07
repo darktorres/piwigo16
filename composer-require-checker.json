@@ -12,6 +12,7 @@
     "Symplify\\EasyCodingStandard\\ValueObject\\Option",
     "Rector\\Config\\RectorConfig",
     "ComposerUnused\\ComposerUnused\\Configuration\\PatternFilter",
+    "ComposerUnused\\ComposerUnused\\Configuration\\NamedFilter",
     "Symfony\\Component\\Yaml\\Yaml",
 
     "exif_read_data",

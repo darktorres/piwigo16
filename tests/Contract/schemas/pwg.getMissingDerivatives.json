@@ -12,7 +12,7 @@
       "required": ["urls"],
       "additionalProperties": true,
       "properties": {
-        "urls":      { "type": "array" },
+        "urls": { "type": "array" },
         "next_page": { "type": ["integer", "string"] }
       }
     }

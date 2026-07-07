@@ -14,8 +14,8 @@
         "additionalProperties": true,
         "properties": {
           "nb_images_associated_outside": { "type": ["integer", "string"] },
-          "nb_images_becoming_orphan":    { "type": ["integer", "string"] },
-          "nb_images_recursive":          { "type": ["integer", "string"] }
+          "nb_images_becoming_orphan": { "type": ["integer", "string"] },
+          "nb_images_recursive": { "type": ["integer", "string"] }
         }
       }
     }

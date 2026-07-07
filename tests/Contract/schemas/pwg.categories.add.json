@@ -12,7 +12,7 @@
       "required": ["id"],
       "additionalProperties": true,
       "properties": {
-        "id":   { "type": ["integer", "string"] },
+        "id": { "type": ["integer", "string"] },
         "info": { "type": "string" }
       }
     }

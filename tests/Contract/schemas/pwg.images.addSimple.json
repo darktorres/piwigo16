@@ -13,7 +13,7 @@
       "additionalProperties": true,
       "properties": {
         "image_id": { "type": ["integer", "string"] },
-        "url":      { "type": "string", "minLength": 1 }
+        "url": { "type": "string", "minLength": 1 }
       }
     }
   }

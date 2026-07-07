@@ -16,7 +16,7 @@
             "required": ["auth_key", "apikey_name"],
             "additionalProperties": true,
             "properties": {
-              "auth_key":    { "type": "string" },
+              "auth_key": { "type": "string" },
               "apikey_name": { "type": "string" },
               "apikey_secret": { "type": "string" }
             }

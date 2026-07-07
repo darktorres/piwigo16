@@ -14,10 +14,10 @@
         "required": ["id", "name", "state"],
         "additionalProperties": true,
         "properties": {
-          "id":      { "type": "string", "minLength": 1 },
-          "name":    { "type": "string" },
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string" },
           "version": { "type": "string" },
-          "state":   { "type": "string" }
+          "state": { "type": "string" }
         }
       }
     }

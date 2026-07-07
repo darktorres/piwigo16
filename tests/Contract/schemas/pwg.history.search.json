@@ -12,7 +12,7 @@
       "required": ["lines"],
       "additionalProperties": true,
       "properties": {
-        "lines":   { "type": "array" },
+        "lines": { "type": "array" },
         "maxPage": { "type": ["integer", "string"] }
       }
     }

@@ -16,17 +16,24 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["id", "name", "nb_images", "total_nb_images", "nb_categories", "url"],
+            "required": [
+              "id",
+              "name",
+              "nb_images",
+              "total_nb_images",
+              "nb_categories",
+              "url"
+            ],
             "additionalProperties": true,
             "properties": {
-              "id":                { "type": ["integer", "string"] },
-              "name":              { "type": "string" },
-              "nb_images":         { "type": ["integer", "string"] },
-              "total_nb_images":   { "type": ["integer", "string"] },
-              "nb_categories":     { "type": ["integer", "string"] },
-              "url":               { "type": "string", "minLength": 1 },
-              "status":            { "type": "string", "enum": ["public", "private"] },
-              "id_uppercat":       { "type": ["integer", "string", "null"] }
+              "id": { "type": ["integer", "string"] },
+              "name": { "type": "string" },
+              "nb_images": { "type": ["integer", "string"] },
+              "total_nb_images": { "type": ["integer", "string"] },
+              "nb_categories": { "type": ["integer", "string"] },
+              "url": { "type": "string", "minLength": 1 },
+              "status": { "type": "string", "enum": ["public", "private"] },
+              "id_uppercat": { "type": ["integer", "string", "null"] }
             }
           }
         }

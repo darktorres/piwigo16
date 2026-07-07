@@ -17,19 +17,19 @@
           "additionalProperties": true,
           "properties": {
             "all_comments": { "type": ["integer", "string", "null"] },
-            "validated":    { "type": ["integer", "string", "null"] },
-            "pending":      { "type": ["integer", "string", "null"] }
+            "validated": { "type": ["integer", "string", "null"] },
+            "pending": { "type": ["integer", "string", "null"] }
           }
         },
         "comments": { "type": "array" },
-        "filters":  { "type": "object", "additionalProperties": true },
+        "filters": { "type": "object", "additionalProperties": true },
         "paging": {
           "type": "object",
           "required": ["page", "per_page"],
           "additionalProperties": true,
           "properties": {
-            "page":        { "type": ["integer", "string"] },
-            "per_page":    { "type": ["integer", "string"] },
+            "page": { "type": ["integer", "string"] },
+            "per_page": { "type": ["integer", "string"] },
             "total_pages": { "type": ["integer", "string"] }
           }
         }

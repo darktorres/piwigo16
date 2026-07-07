@@ -13,7 +13,7 @@
       "additionalProperties": true,
       "properties": {
         "new_ariane_string": { "type": "string" },
-        "updated_cats":      { "type": "array" }
+        "updated_cats": { "type": "array" }
       }
     }
   }

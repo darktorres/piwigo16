@@ -19,10 +19,10 @@
             "required": ["id", "name", "counter", "url"],
             "additionalProperties": true,
             "properties": {
-              "id":      { "type": "integer", "minimum": 1 },
-              "name":    { "type": "string", "minLength": 1 },
+              "id": { "type": "integer", "minimum": 1 },
+              "name": { "type": "string", "minLength": 1 },
               "counter": { "type": "integer", "minimum": 1 },
-              "url":     { "type": "string", "minLength": 1 }
+              "url": { "type": "string", "minLength": 1 }
             }
           }
         }

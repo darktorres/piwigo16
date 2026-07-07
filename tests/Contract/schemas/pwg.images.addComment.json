@@ -17,7 +17,7 @@
           "required": ["id"],
           "additionalProperties": true,
           "properties": {
-            "id":         { "type": ["integer", "string"] },
+            "id": { "type": ["integer", "string"] },
             "validation": { "type": "boolean" }
           }
         }

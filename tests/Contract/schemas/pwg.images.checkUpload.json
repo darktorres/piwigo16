@@ -13,7 +13,7 @@
       "additionalProperties": true,
       "properties": {
         "ready_for_upload": { "type": "boolean" },
-        "message":          { "type": ["string", "null"] }
+        "message": { "type": ["string", "null"] }
       }
     }
   }

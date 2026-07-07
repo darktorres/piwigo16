@@ -13,8 +13,8 @@
       "additionalProperties": true,
       "properties": {
         "result_lines": { "type": "array" },
-        "page_offset":  { "type": ["integer", "string"] },
-        "end_page":     { "type": "boolean" }
+        "page_offset": { "type": ["integer", "string"] },
+        "end_page": { "type": "boolean" }
       }
     }
   }

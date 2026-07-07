@@ -19,9 +19,9 @@
             "required": ["id"],
             "additionalProperties": true,
             "properties": {
-              "id":             { "type": ["integer", "string"] },
-              "groups":         { "type": "array" },
-              "users":          { "type": "array" },
+              "id": { "type": ["integer", "string"] },
+              "groups": { "type": "array" },
+              "users": { "type": "array" },
               "users_indirect": { "type": "array" }
             }
           }

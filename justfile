@@ -26,6 +26,26 @@ test:
 test-php:
     composer test
 
+# Integration tests (needs .env.test + a running piwigo_test DB)
+test-integration:
+    composer test:integration
+
+# WS API contract tests (needs .env.test + the fixture loaded)
+test-contract:
+    composer test:contract
+
+# Browser E2E flows via pest-plugin-browser (needs .env.test + Apache + Chromium)
+test-browser:
+    composer test:browser
+
+# Visual regression baselines — run in isolation, see docs/DEVELOPMENT.md
+test-visual:
+    composer test:visual
+
+# Rebuild tests/Fixtures/piwigo-16.x.sql (destructive to piwigo_test)
+test-fixture-regen:
+    composer test:fixture-regen
+
 # ─── Lint ───────────────────────────────────────────────────────────────
 
 # Run all linters (PHP + JS + CSS)

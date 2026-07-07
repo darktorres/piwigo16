@@ -7,16 +7,20 @@ This doc covers what's set up so far; it grows with each phase.
 
 - PHP 8.5 (`ext-calendar`, `ext-ctype`, `ext-curl`, `ext-dom`, `ext-fileinfo`,
   `ext-filter`, `ext-gd`, `ext-iconv`, `ext-intl`, `ext-libxml`, `ext-mbstring`,
-  `ext-mysqli`, `ext-openssl`, `ext-session`, `ext-simplexml`, `ext-zlib`; `pcov` for
-  coverage)
+  `ext-mysqli`, `ext-openssl`, `ext-session`, `ext-simplexml`, `ext-sockets`,
+  `ext-zlib`; `pcov` for coverage)
 - Composer 2.x
 - Node 24, bun, [`just`](https://github.com/casey/just)
+- MySQL (or MariaDB/PostgreSQL — see the provider matrix) + a webserver serving this
+  checkout, for anything beyond `composer test` (Integration/Contract/Browser)
 
 ## Setup
 
 ```
 composer install
 bun install
+node_modules/.bin/playwright install chromium
+cp .env.example .env.test   # fill in the .env.test block; see docs/DEVELOPMENT.md#tests
 ```
 
 `just` runs recipes across both stacks (`just --list` to see them all) — thin wrappers
@@ -26,7 +30,7 @@ around the `composer`/`bun` commands below.
 
 | Command                    | What it does                                                                  |
 | -------------------------- | ----------------------------------------------------------------------------- |
-| `composer test`            | Run Pest (`Unit` + `Arch` suites so far)                                      |
+| `composer test`            | Pest `Unit`+`Arch` (fast, no DB/webserver — see Tests below for the rest)     |
 | `composer analyse:phpstan` | PHPStan against `phpstan-baseline.neon`                                       |
 | `composer analyse:psalm`   | Psalm against `psalm-baseline.xml`                                            |
 | `composer analyse`         | Both of the above                                                             |
@@ -51,9 +55,10 @@ issues (`phpstan-baseline.neon`, `psalm-baseline.xml`, `composer-require-checker
 `symbol-whitelist`). CI enforces that these can only shrink, never grow — a new commit
 may not introduce a new, unbaselined issue.
 
-`vendor/bin/ecs check` (no `--fix`) reports **571** legacy style violations as of P0 —
-recorded, not yet gated. The whole-codebase ECS reformat is deferred to P5 step 11, once
-the P2 regression harness exists to catch a misbehaving fixer (see
+`vendor/bin/ecs check` (no `--fix`) reports **572** legacy style violations as of P2 (571
+at P0; +1 from the small env-loading edits to `common.inc.php`/`install.php`/`i.php`) —
+recorded, not yet gated. The whole-codebase ECS reformat is deferred to P5 step 11, now
+that the P2 regression harness this note used to be waiting on actually exists (see
 `docs/PLAN-REPLAY.md`'s "additive-only foundation" rule).
 
 `vendor/bin/rector process --dry-run` (`rector.php`, `php85: true` set) reports **321
@@ -131,6 +136,92 @@ package is the entirety of this phase's scope for it.
 
 ## Tests
 
-Only `tests/Unit` and `tests/Arch` are wired into `phpunit.xml.dist` so far
-(`composer test`). `tests/Integration`, `tests/Contract`, and browser E2E land in P2
-once their env/fixture infrastructure exists.
+| Command                       | What it does                                                          |
+| ----------------------------- | --------------------------------------------------------------------- |
+| `composer test`               | Pest `Unit`+`Arch` — fast, no DB/webserver needed                     |
+| `composer test:integration`   | Pest `Integration` — needs `.env.test` + `piwigo_test` DB             |
+| `composer test:contract`      | Pest `Contract` — WS API contract tests against the committed fixture |
+| `composer test:browser`       | Pest `Browser` — E2E flows via `pest-plugin-browser` (Chromium)       |
+| `composer test:visual`        | Visual regression only — **run in isolation**, see below              |
+| `composer test:fixture-regen` | Rebuilds `tests/Fixtures/piwigo-16.x.sql` from a fresh install + seed |
+
+### Env split (P2)
+
+Tests run against a throw-away `piwigo_test` database, never production. Copy
+`.env.example`'s `.env.test` block to a real `.env.test` (gitignored) and fill in
+credentials — dev default is `root`/`1234`@`127.0.0.1`/`piwigo_test`, matching this
+repo's local MySQL. `PIWIGO_BASE_URL` must point at a running Apache vhost serving this
+checkout (e.g. `http://localhost/piwigo17`) — Integration/Contract/Browser tests all make
+real HTTP requests, not just anything in-process.
+
+The mechanism (`include/env.inc.php`, wired into `common.inc.php`/`install.php`/`i.php`):
+an `X-Piwigo-Env: test` header, honored only from loopback, switches the runtime to read
+`.env.test` and gate on `local/.installed.test` instead of `.env`/`local/.installed`.
+`tests/bootstrap.php` sets this header for the whole Pest CLI process; Browser tests set
+it per-context via Playwright's `extraHTTPHeaders` (see
+`tests/Browser/Helpers/BrowserTestHelpers.php`). `symfony/dotenv` loads the file;
+existing process env vars always win (never overridden). install.php still writes a
+legacy `local/config/database.inc.php` shim in **prod** mode only, so `upgrade.php` and a
+few other not-yet-migrated scripts keep working (P13 unifies config loading properly).
+
+### Fixture
+
+`tests/Fixtures/piwigo-16.x.sql` is a committed dump — a fresh install (`fixture_admin`/
+`fixture_admin`) plus seed content (2 albums, 5 photos, 3 tags, 5 comments, 3 groups, 2
+extra users, ratings/favorites/a permalink/some config tweaks). Contract and most Browser
+tests load this same file rather than reseeding per run.
+
+To rebuild it: `composer test:fixture-regen` (tagged `fixture-regen`, excluded from
+`test:browser` — it wipes `piwigo_test` and overwrites the committed fixture, so it's
+opt-in, not a regression test). Uploaded photos land under `upload/` (gitignored) and
+must exist on disk for image-dependent pages/tests to render — running this once per
+environment (fresh clone, CI image) is expected, not automatic per test run.
+
+### Contract tests (WS API)
+
+`tests/Contract/ContractTestCase` drives `ws.php` over curl with its own cookie jar per
+test, validating responses against JSON Schema files in `tests/Contract/schemas/`
+(`justinrainbow/json-schema`). 21 `Ws*Test` classes cover the WS methods actually
+registered in `ws.php` — ported method-by-method against the real registry, not assumed.
+These lock the legacy WS response shapes while P2-P23 refactor the internals; P26 removes
+the WS API and retires them for REST contract tests against `/api/v1`.
+
+### Browser tests (E2E)
+
+15 flows in `tests/Browser/` via `pestphp/pest-plugin-browser` (Chromium; no standalone
+Playwright config). `tests/Browser/Helpers/BrowserTestHelpers.php` centralizes the
+patterns every flow needs: `visitPwg()`/`loginAsAdmin()` (test-mode header via
+`extraHTTPHeaders`, since the plugin has no dedicated per-request header API),
+`navigateOk()` (continues in the same browser context so the session cookie survives —
+calling `visit()` again starts a fresh one), `wsCall()` (drives the WS API through that
+session via a same-origin `fetch()` POST run in the page — several WS methods reject
+GET), and `uploadPhotoViaApi()` (a fresh curl-based login for the actual multipart
+upload, since the admin upload UI is a JS/plupload widget with no plain
+`<input type="file">` fallback to automate reliably).
+
+`phpunit.xml.dist`'s `<source ignoreIndirectDeprecations="true">` exists because
+`pest-plugin-browser`'s own retry/polling internals trip a PHP 8.4+
+`ReflectionProperty::setValue()` deprecation on every `assertMissing()`/`assertVisible()`
+retry — matches PHPUnit's own documented default config for vendor-internal
+deprecations; first-party code triggering a deprecation directly still fails the suite.
+
+### Visual regression
+
+`tests/Browser/VisualRegressionTest.php` — 30 screenshot baselines via
+`assertScreenshotMatches()` (Pest's native snapshot system, `tests/.pest/snapshots/`, not
+loose PNGs). **Must run in isolation**: `composer test:visual`, never bundled with the
+CRUD-mutating Browser tests (`AlbumCreateTest`, `TagCrudTest`, `UserManagementTest`, ...) —
+those drift the sidebar's live "N Albums/Photos/Users" counts, producing false diffs.
+
+Re-baseline after an intentional visual change (P29 templates, P30 CSS):
+
+```
+vendor/bin/pest tests/Browser/VisualRegressionTest.php --update-snapshots
+```
+
+Determinism fixes landed in the same commit as the baselines (see that commit's message
+for the full reasoning): `piwigo_images.hit` ("Visited N times") is pinned via
+`BrowserTestHelpers::freezeImageHits()` before the one screenshot that shows it;
+`admin-photo-editor` and the admin dashboard (`/admin.php`) are excluded — both render
+wall-clock-relative content (`time_since()`, a Chart.js canvas keyed to the current date)
+with no freeze point available before a mockable clock exists (later kernel-layer work).

@@ -20,12 +20,15 @@
             "required": ["id", "username"],
             "additionalProperties": true,
             "properties": {
-              "id":       { "type": ["integer", "string"] },
+              "id": { "type": ["integer", "string"] },
               "username": { "type": "string", "minLength": 1 },
-              "email":    { "type": ["string", "null"] },
-              "status":   { "type": "string", "enum": ["webmaster", "admin", "normal", "generic", "guest"] },
-              "level":    { "type": ["integer", "string"] },
-              "groups":   { "type": "array" }
+              "email": { "type": ["string", "null"] },
+              "status": {
+                "type": "string",
+                "enum": ["webmaster", "admin", "normal", "generic", "guest"]
+              },
+              "level": { "type": ["integer", "string"] },
+              "groups": { "type": "array" }
             }
           }
         }

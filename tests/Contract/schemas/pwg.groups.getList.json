@@ -17,9 +17,9 @@
           "required": ["page", "per_page", "count"],
           "additionalProperties": true,
           "properties": {
-            "page":     { "type": ["integer", "string"] },
+            "page": { "type": ["integer", "string"] },
             "per_page": { "type": ["integer", "string"] },
-            "count":    { "type": ["integer", "string"] }
+            "count": { "type": ["integer", "string"] }
           }
         },
         "groups": {
@@ -29,10 +29,10 @@
             "required": ["id", "name"],
             "additionalProperties": true,
             "properties": {
-              "id":         { "type": ["integer", "string"] },
-              "name":       { "type": "string", "minLength": 1 },
+              "id": { "type": ["integer", "string"] },
+              "name": { "type": "string", "minLength": 1 },
               "is_default": { "type": ["string", "boolean"] },
-              "nb_users":   { "type": ["integer", "string"] }
+              "nb_users": { "type": ["integer", "string"] }
             }
           }
         }

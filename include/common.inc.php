@@ -81,12 +81,18 @@ include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
 
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
-@include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php');
-if (!defined('PHPWG_INSTALLED'))
+include(PHPWG_ROOT_PATH . 'include/env.inc.php');
+pwg_load_env_file(PHPWG_ROOT_PATH);
+$prefixeTable = '';
+pwg_apply_env_to_conf($conf, $prefixeTable);
+
+if (!file_exists(PHPWG_ROOT_PATH.PWG_LOCAL_DIR.pwg_test_mode_installed_stamp()))
 {
   header('Location: install.php');
   exit;
 }
+defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);
+
 include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$conf['dblayer'].'.inc.php');
 
 if(isset($conf['show_php_errors']) && !empty($conf['show_php_errors']))

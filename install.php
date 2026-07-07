@@ -9,6 +9,9 @@
 //----------------------------------------------------------- include
 define('PHPWG_ROOT_PATH','./');
 
+include(PHPWG_ROOT_PATH . 'include/env.inc.php');
+pwg_load_env_file(PHPWG_ROOT_PATH);
+
 // @set_magic_quotes_runtime(0); // Disable magic_quotes_runtime
 //
 // addslashes to vars if magic_quotes_gpc is off this is a security
@@ -154,14 +157,11 @@ $infos = array();
 $errors = array();
 
 $config_file = PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php';
-if (@file_exists($config_file))
+
+// Is Piwigo already installed ?
+if (file_exists(PHPWG_ROOT_PATH.PWG_LOCAL_DIR.pwg_test_mode_installed_stamp()))
 {
-  include($config_file);
-  // Is Piwigo already installed ?
-  if (defined("PHPWG_INSTALLED"))
-  {
-    die('Piwigo is already installed');
-  }
+  die('Piwigo is already installed');
 }
 
 include(PHPWG_ROOT_PATH . 'include/constants.php');
@@ -304,7 +304,47 @@ if (isset($_POST['install']))
   if ( count( $errors ) == 0 )
   {
     $step = 2;
-    $file_content = '<?php
+
+    define('PHPWG_INSTALLED', true);
+    define('PWG_CHARSET', 'utf-8');
+    define('DB_CHARSET', 'utf8');
+    define('DB_COLLATE', '');
+
+    // Write .env (or .env.test in test mode) with DB credentials — atomic rename.
+    $env_file = PHPWG_ROOT_PATH . pwg_test_mode_env_file();
+    // Strip line-breaks to prevent .env injection via crafted POST values.
+    $env_vals = array_map(
+      function($v) { return str_replace(array("\n", "\r", "\0"), '', $v); },
+      array($dbhost, $dbuser, $dbpasswd, $dbname, $prefixeTable)
+      );
+    $env_body = 'PIWIGO_DB_HOST='.$env_vals[0]."\n".'PIWIGO_DB_USER='.$env_vals[1]."\n"
+              .'PIWIGO_DB_PASSWORD='.$env_vals[2]."\n".'PIWIGO_DB_BASE='.$env_vals[3]."\n"
+              .'PIWIGO_DB_PREFIX='.$env_vals[4]."\n";
+    // In test mode, also record the base URL so e2e runners know where to connect.
+    if (pwg_test_mode_is_active())
+    {
+      $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+      $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+      $script = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '';
+      $base_url = rtrim($scheme.'://'.$host.dirname($script), '/');
+      if ($base_url !== '')
+      {
+        $env_body .= 'PIWIGO_BASE_URL='.$base_url."\n";
+      }
+    }
+
+    $env_tmp = $env_file.'.tmp.'.bin2hex(random_bytes(4));
+    if (file_put_contents($env_tmp, $env_body) === false || !rename($env_tmp, $env_file))
+    {
+      @unlink($env_tmp);
+      $errors[] = 'Could not write '.$env_file.' — check filesystem permissions.';
+    }
+
+    // Also write legacy database.inc.php in prod mode so upgrade.php and other
+    // not-yet-migrated scripts keep working (see docs/PLAN-REPLAY.md P13).
+    if (!pwg_test_mode_is_active() && count($errors) == 0)
+    {
+      $file_content = '<?php
 $conf[\'dblayer\'] = \''.$dblayer.'\';
 $conf[\'db_base\'] = \''.$dbname.'\';
 $conf[\'db_user\'] = \''.$dbuser.'\';
@@ -320,28 +360,38 @@ define(\'DB_COLLATE\', \'\');
 
 ?'.'>';
 
-    @umask(0111);
-    // writing the configuration file
-    if ( !($fp = @fopen( $config_file, 'w' )))
-    {
-      // make sure nobody can list files of _data directory
-      secure_directory(PHPWG_ROOT_PATH.$conf['data_location']);
-      
-      $tmp_filename = md5(uniqid(time()));
-      $fh = @fopen( PHPWG_ROOT_PATH.$conf['data_location'] . 'pwg_' . $tmp_filename, 'w' );
-      @fputs($fh, $file_content, strlen($file_content));
-      @fclose($fh);
+      @umask(0111);
+      // writing the configuration file
+      if ( !($fp = @fopen( $config_file, 'w' )))
+      {
+        // make sure nobody can list files of _data directory
+        secure_directory(PHPWG_ROOT_PATH.$conf['data_location']);
 
-      $template->assign(
-        array(
-          'config_creation_failed' => true,
-          'config_url' => 'install.php?dl='.$tmp_filename,
-          'config_file_content' => $file_content,
-          )
-        );
+        $tmp_filename = md5(uniqid(time()));
+        $fh = @fopen( PHPWG_ROOT_PATH.$conf['data_location'] . 'pwg_' . $tmp_filename, 'w' );
+        @fputs($fh, $file_content, strlen($file_content));
+        @fclose($fh);
+
+        $template->assign(
+          array(
+            'config_creation_failed' => true,
+            'config_url' => 'install.php?dl='.$tmp_filename,
+            'config_file_content' => $file_content,
+            )
+          );
+      }
+      else
+      {
+        @fputs($fp, $file_content, strlen($file_content));
+        @fclose($fp);
+      }
     }
-    @fputs($fp, $file_content, strlen($file_content));
-    @fclose($fp);
+
+    // Create install sentinel stamp file.
+    if (count($errors) == 0)
+    {
+      touch(PHPWG_ROOT_PATH.PWG_LOCAL_DIR.pwg_test_mode_installed_stamp());
+    }
 
     // tables creation, based on piwigo_structure.sql
     execute_sqlfile(

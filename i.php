@@ -15,7 +15,10 @@ include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $conf['data_location'].'i/');
 
-@include(PHPWG_ROOT_PATH.PWG_LOCAL_DIR .'config/database.inc.php');
+include(PHPWG_ROOT_PATH . 'include/env.inc.php');
+pwg_load_env_file(PHPWG_ROOT_PATH);
+$prefixeTable = '';
+pwg_apply_env_to_conf($conf, $prefixeTable);
 
 include(PHPWG_ROOT_PATH . 'include/Logger.class.php');
 

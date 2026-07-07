@@ -1,3 +1,7 @@
+# Environment files (see .env.example)
+/.env
+/.env.test
+
 # Composer dependencies
 /vendor
 

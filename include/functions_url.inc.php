@@ -95,7 +95,7 @@ function add_url_params($url, $params, $arg_separator = '&amp;')
         foreach ($params as $param => $val) {
             if ($is_first) {
                 $is_first = false;
-                $url .= (!str_contains($url, '?')) ? '?' : $arg_separator;
+                $url .= (! str_contains($url, '?')) ? '?' : $arg_separator;
             } else {
                 $url .= $arg_separator;
             }
@@ -443,10 +443,10 @@ function parse_section_url($tokens, &$next_token)
                 $maybe_permalinks = [];
                 $current_token = $next_token;
                 while (isset($tokens[$current_token])
-                    and !str_starts_with($tokens[$current_token], 'created-')
-                    and !str_starts_with($tokens[$current_token], 'posted-')
-                    and !str_starts_with($tokens[$next_token], 'start-')
-                    and !str_starts_with($tokens[$next_token], 'startcat-')
+                    and ! str_starts_with($tokens[$current_token], 'created-')
+                    and ! str_starts_with($tokens[$current_token], 'posted-')
+                    and ! str_starts_with($tokens[$next_token], 'start-')
+                    and ! str_starts_with($tokens[$next_token], 'startcat-')
                     and $tokens[$current_token] != 'flat') {
                     if (empty($maybe_permalinks)) {
                         $maybe_permalinks[] = $tokens[$current_token];

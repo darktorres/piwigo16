@@ -126,7 +126,10 @@ function default_picture_content($content, $element_info)
         if (array_key_exists((string) $_COOKIE['picture_deriv'], ImageStdParams::get_defined_type_map())) {
             pwg_set_session_var('picture_deriv', $_COOKIE['picture_deriv']);
         }
-        setcookie('picture_deriv', false, ['expires' => 0, 'path' => cookie_path()]);
+        setcookie('picture_deriv', false, [
+            'expires' => 0,
+            'path' => cookie_path(),
+        ]);
     }
     $deriv_type = pwg_get_session_var('picture_deriv', $conf['derivative_default_size']);
     $selected_derivative = $element_info['derivatives'][$deriv_type];
@@ -914,7 +917,7 @@ $template->assign('ELEMENT_CONTENT', $element_content);
 if (isset($picture['next'])
     and $picture['next']['src_image']->is_original()
     and $template->get_template_vars('U_PREFETCH') == null
-    and !str_contains((string) @$_SERVER['HTTP_USER_AGENT'], 'Chrome/')) {
+    and ! str_contains((string) @$_SERVER['HTTP_USER_AGENT'], 'Chrome/')) {
     $template->assign(
         'U_PREFETCH',
         $picture['next']['derivatives'][pwg_get_session_var('picture_deriv', $conf['derivative_default_size'])]->get_url()

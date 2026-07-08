@@ -42,8 +42,10 @@ class PwgError
 
     private $_codeText;
 
-    public function __construct($code, $codeText)
-    {
+    public function __construct(
+        $code,
+        $codeText
+    ) {
         if ($code >= 400 and $code < 600) {
             set_status_header($code, $codeText);
         }
@@ -80,8 +82,11 @@ class PwgNamedArray
      * @param array $xmlAttributes of sub-item attributes that will be encoded as
      *      xml attributes instead of xml child elements
      */
-    public function __construct(public $_content, public $_itemName, $xmlAttributes = [])
-    {
+    public function __construct(
+        public $_content,
+        public $_itemName,
+        $xmlAttributes = []
+    ) {
         $this->_xmlAttributes = array_flip($xmlAttributes);
     }
 }
@@ -104,8 +109,11 @@ class PwgNamedStruct
      *    encoded as xml attributes (if null - automatically prefer xml attributes
      *    whenever possible)
      */
-    public function __construct(public $_content, $xmlAttributes = null, $xmlElements = null)
-    {
+    public function __construct(
+        public $_content,
+        $xmlAttributes = null,
+        $xmlElements = null
+    ) {
         if (isset($xmlAttributes)) {
             $this->_xmlAttributes = array_flip($xmlAttributes);
         } else {
@@ -546,7 +554,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     {
         $methods = array_filter(
             $service->_methods,
-            fn($m) => empty($m['options']['hidden']) || ! $m['options']['hidden']
+            fn ($m) => empty($m['options']['hidden']) || ! $m['options']['hidden']
         );
         return [
             'methods' => new PwgNamedArray(array_keys($methods), 'method'),

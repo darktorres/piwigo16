@@ -657,7 +657,7 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
 
     $datas = [];
 
-    $cat_map_callback = (fn($m) => $cat_map[$m[1]]['rank']);
+    $cat_map_callback = (fn ($m) => $cat_map[$m[1]]['rank']);
 
     foreach ($cat_map as $id => $cat) {
         $new_global_rank = preg_replace_callback(
@@ -1015,7 +1015,7 @@ SELECT id, uppercats, site_id
     $categories = query2array($query);
 
     // filling $cat_fulldirs
-    $cat_dirs_callback = (fn($m) => $cat_dirs[$m[1]]);
+    $cat_dirs_callback = (fn ($m) => $cat_dirs[$m[1]]);
 
     $cat_fulldirs = [];
     foreach ($categories as $category) {
@@ -1035,7 +1035,6 @@ SELECT id, uppercats, site_id
 
 /**
  * Returns an array with all file system files according to $conf['file_ext']
- *
  *
  * @param string $path
  * @param bool $recursive
@@ -2317,7 +2316,7 @@ function fetchRemote($src, &$dest, $get_data = [], $post_data = [], $user_agent 
     // Initialization
     $method = empty($post_data) ? 'GET' : 'POST';
     if (! empty($get_data)) {
-        $src .= !str_contains($src, '?') ? '?' : '&';
+        $src .= ! str_contains($src, '?') ? '?' : '&';
         $src .= http_build_query($get_data, '', '&');
     }
 

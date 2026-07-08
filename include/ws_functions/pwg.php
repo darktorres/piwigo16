@@ -387,7 +387,7 @@ function ws_session_getStatus($params, &$service)
 
     // Piwigo Remote Sync does not support receiving the available sizes
     $piwigo_remote_sync_agent = 'Apache-HttpClient/';
-    if (! isset($_SERVER['HTTP_USER_AGENT']) or !str_starts_with((string) $_SERVER['HTTP_USER_AGENT'], $piwigo_remote_sync_agent)) {
+    if (! isset($_SERVER['HTTP_USER_AGENT']) or ! str_starts_with((string) $_SERVER['HTTP_USER_AGENT'], $piwigo_remote_sync_agent)) {
         $res['available_sizes'] = array_keys(ImageStdParams::get_defined_type_map());
     }
 
@@ -960,7 +960,7 @@ SELECT
         if (isset($line['tag_ids'])) {
             $tag_names = preg_replace_callback(
                 '/(\d+)/',
-                fn($m) => $name_of_tag[$m[1]] ?? $m[1],
+                fn ($m) => $name_of_tag[$m[1]] ?? $m[1],
                 (string) $line['tag_ids']
             );
             $tag_ids = $line['tag_ids'];

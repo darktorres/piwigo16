@@ -87,8 +87,11 @@ class Template
      * @var string
      * @var string
      */
-    public function __construct($root = '.', $theme = '', $path = 'template')
-    {
+    public function __construct(
+        $root = '.',
+        $theme = '',
+        $path = 'template'
+    ) {
         global $conf, $lang_info;
 
         // \Smarty\Exception::$escape = false;
@@ -1290,8 +1293,11 @@ class Combinable
      * @param string $path
      * @param string $version
      */
-    public function __construct(public $id, $path, public $version = 0)
-    {
+    public function __construct(
+        public $id,
+        $path,
+        public $version = 0
+    ) {
         $this->set_path($path);
         $this->is_template = false;
     }
@@ -1332,8 +1338,13 @@ final class Script extends Combinable
      * @param string $version
      * @param array $precedents
      */
-    public function __construct(public $load_mode, $id, $path, $version = 0, public $precedents = [])
-    {
+    public function __construct(
+        public $load_mode,
+        $id,
+        $path,
+        $version = 0,
+        public $precedents = []
+    ) {
         parent::__construct($id, $path, $version);
         $this->extra = [];
     }
@@ -1350,8 +1361,12 @@ final class Css extends Combinable
      * @param string $version
      * @param int $order
      */
-    public function __construct($id, $path, $version = 0, public $order = 0)
-    {
+    public function __construct(
+        $id,
+        $path,
+        $version = 0,
+        public $order = 0
+    ) {
         parent::__construct($id, $path, $version);
     }
 }
@@ -1792,8 +1807,10 @@ final class FileCombiner
      * @param string $type 'js' or 'css'
      * @param Combinable[] $combinables
      */
-    public function __construct(private $type, private $combinables = [])
-    {
+    public function __construct(
+        private $type,
+        private $combinables = []
+    ) {
         $this->is_css = $this->type == 'css';
     }
 
@@ -1999,7 +2016,7 @@ final class FileCombiner
         if (preg_match_all($PATTERN_URL, $css, $matches, PREG_SET_ORDER)) {
             $search = $replace = [];
             foreach ($matches as $match) {
-                if (! url_is_remote($match[1]) && $match[1][0] != '/' && !str_contains($match[1], 'data:image/')) {
+                if (! url_is_remote($match[1]) && $match[1][0] != '/' && ! str_contains($match[1], 'data:image/')) {
                     $relative = $dir . "/{$match[1]}";
                     $search[] = $match[0];
                     $replace[] = 'url(' . embellish_url(get_absolute_root_url(false) . $relative) . ')';

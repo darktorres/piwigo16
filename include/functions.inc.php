@@ -1989,7 +1989,7 @@ function create_navigation_bar($url, $nb_element, $start, $nb_element_page, $cle
 
     $navbar = [];
     $pages_around = $conf['paginate_pages_around'];
-    $start_str = $clean_url ? '/' . $param_name . '-' : (!str_contains($url, '?') ? '?' : '&amp;') . $param_name . '=';
+    $start_str = $clean_url ? '/' . $param_name . '-' : (! str_contains($url, '?') ? '?' : '&amp;') . $param_name . '=';
 
     if (! isset($start) or ! is_numeric($start) or (is_numeric($start) and $start < 0)) {
         $start = 0;
@@ -2242,7 +2242,7 @@ function url_check_format($url)
         return false;
     }
 
-    if (!str_starts_with($url, 'http://') and !str_starts_with($url, 'https://')) {
+    if (! str_starts_with($url, 'http://') and ! str_starts_with($url, 'https://')) {
         return false;
     }
 
@@ -2316,7 +2316,7 @@ SELECT COUNT(DISTINCT(com.id))
  */
 function safe_version_compare($a, $b, $op = null)
 {
-    $replace_chars = (fn($m) => ord(strtolower((string) $m[1])[0]));
+    $replace_chars = (fn ($m) => ord(strtolower((string) $m[1])[0]));
 
     // add dot before groups of letters (version_compare does the same thing)
     $a = preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $a);

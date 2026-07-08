@@ -2083,7 +2083,7 @@ SELECT
     }
 
     // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example
-    usort($conf['format_ext'], fn($a, $b) => strlen((string) $b) - strlen((string) $a));
+    usort($conf['format_ext'], fn ($a, $b) => strlen((string) $b) - strlen((string) $a));
 
     $query = '
 SELECT

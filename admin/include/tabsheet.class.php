@@ -19,8 +19,10 @@ class tabsheet
       $name is the tabsheet's name inside the template .tpl file
       $titlename in the template is affected by $titlename value
     */
-    public function __construct(public $name = 'TABSHEET', public $titlename = 'TABSHEET_TITLE')
-    {
+    public function __construct(
+        public $name = 'TABSHEET',
+        public $titlename = 'TABSHEET_TITLE'
+    ) {
         $this->sheets = [];
         $this->uniqid = null;
         $this->selected = '';

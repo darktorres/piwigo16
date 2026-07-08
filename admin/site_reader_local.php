@@ -10,8 +10,9 @@
 // provides data for site synchronization from the local file system
 class LocalSiteReader
 {
-    public function __construct(public $site_url)
-    {
+    public function __construct(
+        public $site_url
+    ) {
         global $conf;
         if (! isset($conf['flip_file_ext'])) {
             $conf['flip_file_ext'] = array_flip($conf['file_ext']);

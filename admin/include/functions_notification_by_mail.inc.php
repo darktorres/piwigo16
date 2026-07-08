@@ -66,7 +66,7 @@ function check_sendmail_timeout()
  */
 function quote_check_key_list($check_key_list = [])
 {
-    return array_map(fn($s) => '\'' . $s . '\'', $check_key_list);
+    return array_map(fn ($s) => '\'' . $s . '\'', $check_key_list);
 }
 
 /*

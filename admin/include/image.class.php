@@ -47,8 +47,10 @@ class pwg_image
 
     public static $ext_imagick_version = '';
 
-    public function __construct(public $source_filepath, $library = null)
-    {
+    public function __construct(
+        public $source_filepath,
+        $library = null
+    ) {
         global $conf;
 
         trigger_notify('load_image_library', [&$this]);
@@ -211,7 +213,7 @@ class pwg_image
         switch (true) {
             case ! is_string($buf):
             case strlen($buf) < 25:
-            case !str_starts_with($buf, 'RIFF'):
+            case ! str_starts_with($buf, 'RIFF'):
             case substr($buf, 8, 4) != 'WEBP':
             case substr($buf, 12, 3) != 'VP8':
                 throw new Exception('webp_info(): not a valid webp image');
@@ -430,8 +432,9 @@ class image_imagick implements imageInterface
 {
     public $image;
 
-    public function __construct($source_filepath)
-    {
+    public function __construct(
+        $source_filepath
+    ) {
         // A bug cause that Imagick class can not be extended
         $this->image = new Imagick($source_filepath);
     }
@@ -530,8 +533,9 @@ class image_ext_imagick implements imageInterface
 
     public $commands = [];
 
-    public function __construct(public $source_filepath)
-    {
+    public function __construct(
+        public $source_filepath
+    ) {
         global $conf;
         $this->imagickdir = $conf['ext_imagick_dir'];
 
@@ -715,8 +719,9 @@ class image_gd implements imageInterface
 
     public $quality = 95;
 
-    public function __construct($source_filepath)
-    {
+    public function __construct(
+        $source_filepath
+    ) {
         $gd_info = gd_info();
         $extension = strtolower(get_extension($source_filepath));
 
@@ -837,7 +842,5 @@ class image_gd implements imageInterface
         }
     }
 
-    public function destroy()
-    {
-    }
+    public function destroy() {}
 }

@@ -20,9 +20,9 @@ class PluginMaintain
     /**
      * @param string $plugin_id
      */
-    public function __construct(protected $plugin_id)
-    {
-    }
+    public function __construct(
+        protected $plugin_id
+    ) {}
 
     /**
      * @param string $plugin_version
@@ -66,9 +66,9 @@ class ThemeMaintain
     /**
      * @param string $theme_id
      */
-    public function __construct(protected $theme_id)
-    {
-    }
+    public function __construct(
+        protected $theme_id
+    ) {}
 
     /**
      * @param string $theme_version

@@ -62,7 +62,8 @@ class PwgTOTP
     {
         $otp_url = self::getOtpAuthUrl($secret);
 
-        return new Builder(data: $otp_url)->build()
+        return new Builder(data: $otp_url)
+            ->build()
             ->getDataUri();
     }
 

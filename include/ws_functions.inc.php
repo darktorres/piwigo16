@@ -20,7 +20,7 @@ function ws_isInvokeAllowed($res, $methodName, $params)
     }
 
     if (! is_autorize_status(ACCESS_GUEST) and
-        !str_starts_with((string) $methodName, 'pwg.session.')) {
+        ! str_starts_with((string) $methodName, 'pwg.session.')) {
         return new PwgError(401, 'Access denied');
     }
 

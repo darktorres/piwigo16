@@ -93,7 +93,7 @@ function get_remote_addr_session_hash()
         return '';
     }
 
-    if (!str_contains((string) $_SERVER['REMOTE_ADDR'], ':')) {// ipv4
+    if (! str_contains((string) $_SERVER['REMOTE_ADDR'], ':')) {// ipv4
         return vsprintf(
             '%02X%02X',
             explode('.', (string) $_SERVER['REMOTE_ADDR'])

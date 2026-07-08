@@ -25,9 +25,9 @@ class BlockManager
     /**
      * @param string $id
      */
-    public function __construct(protected $id)
-    {
-    }
+    public function __construct(
+        protected $id
+    ) {}
 
     /**
      * Triggers a notice that allows plugins of menu blocks to register the blocks.
@@ -190,9 +190,11 @@ class RegisteredBlock
      * @param string $name
      * @param string $owner
      */
-    public function __construct(protected $id, protected $name, protected $owner)
-    {
-    }
+    public function __construct(
+        protected $id,
+        protected $name,
+        protected $owner
+    ) {}
 
     /**
      * @return string
@@ -254,9 +256,9 @@ class DisplayBlock
     /**
      * @param RegisteredBlock $_registeredBlock
      */
-    public function __construct(protected $_registeredBlock)
-    {
-    }
+    public function __construct(
+        protected $_registeredBlock
+    ) {}
 
     /**
      * @return RegisteredBlock

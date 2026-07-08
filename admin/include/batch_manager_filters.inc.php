@@ -61,7 +61,7 @@ function UC_name_compare($a, $b)
 $prefilters = trigger_change('get_batch_manager_prefilters', $prefilters);
 
 // Sort prefilters by localized name.
-usort($prefilters, fn($a, $b) => strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME'])));
+usort($prefilters, fn ($a, $b) => strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME'])));
 
 $template->assign(
     [

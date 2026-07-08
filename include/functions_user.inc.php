@@ -974,7 +974,9 @@ function log_user($user_id, $remember_me)
 
         // We unset the lang cookie, if user has changed their language using interface we don't want to keep setting it back
         // to what was chosen using standard pages lang switch
-        setcookie('lang', '', ['expires' => time() - 3600]);
+        setcookie('lang', '', [
+            'expires' => time() - 3600,
+        ]);
     }
 
     if ($remember_me and $conf['authorize_remembering']) {
@@ -985,11 +987,21 @@ function log_user($user_id, $remember_me)
             setcookie(
                 $conf['remember_me_name'],
                 $cookie,
-                ['expires' => time() + $conf['remember_me_length'], 'path' => cookie_path(), 'domain' => ini_get('session.cookie_domain'), 'secure' => ini_get('session.cookie_secure'), 'httponly' => ini_get('session.cookie_httponly')]
+                [
+                    'expires' => time() + $conf['remember_me_length'],
+                    'path' => cookie_path(),
+                    'domain' => ini_get('session.cookie_domain'),
+                    'secure' => ini_get('session.cookie_secure'),
+                    'httponly' => ini_get('session.cookie_httponly'),
+                ]
             );
         }
     } else { // make sure we clean any remember me ...
-        setcookie($conf['remember_me_name'], '', ['expires' => 0, 'path' => cookie_path(), 'domain' => ini_get('session.cookie_domain')]);
+        setcookie($conf['remember_me_name'], '', [
+            'expires' => 0,
+            'path' => cookie_path(),
+            'domain' => ini_get('session.cookie_domain'),
+        ]);
     }
     if (session_id() != '') { // we regenerate the session for security reasons
         // see http://www.acros.si/papers/session_fixation.pdf
@@ -1032,7 +1044,11 @@ function auto_login()
                 return true;
             }
         }
-        setcookie($conf['remember_me_name'], '', ['expires' => 0, 'path' => cookie_path(), 'domain' => ini_get('session.cookie_domain')]);
+        setcookie($conf['remember_me_name'], '', [
+            'expires' => 0,
+            'path' => cookie_path(),
+            'domain' => ini_get('session.cookie_domain'),
+        ]);
     }
     return false;
 }
@@ -1377,9 +1393,17 @@ function logout_user()
     setcookie(
         session_name(),
         '',
-        ['expires' => 0, 'path' => ini_get('session.cookie_path'), 'domain' => ini_get('session.cookie_domain')]
+        [
+            'expires' => 0,
+            'path' => ini_get('session.cookie_path'),
+            'domain' => ini_get('session.cookie_domain'),
+        ]
     );
-    setcookie($conf['remember_me_name'], '', ['expires' => 0, 'path' => cookie_path(), 'domain' => ini_get('session.cookie_domain')]);
+    setcookie($conf['remember_me_name'], '', [
+        'expires' => 0,
+        'path' => cookie_path(),
+        'domain' => ini_get('session.cookie_domain'),
+    ]);
 }
 
 /**

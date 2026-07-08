@@ -91,7 +91,7 @@ function format_email($name, $email)
         $cvt_name = '"' . addcslashes($cvt_name, '"') . '" ';
     }
 
-    if (!str_contains($cvt_email, '<')) {
+    if (! str_contains($cvt_email, '<')) {
         return $cvt_name . '<' . $cvt_email . '>';
     } else {
         return $cvt_name . $cvt_email;

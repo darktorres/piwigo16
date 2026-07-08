@@ -429,9 +429,9 @@ if (! $need_generate) {
 
 include_once PHPWG_ROOT_PATH . 'admin/include/image.class.php';
 $page['coi'] = null;
-if (!str_contains($page['src_location'], '/pwg_representative/')
-    && !str_contains($page['src_location'], 'themes/')
-    && !str_contains($page['src_location'], 'plugins/')) {
+if (! str_contains($page['src_location'], '/pwg_representative/')
+    && ! str_contains($page['src_location'], 'themes/')
+    && ! str_contains($page['src_location'], 'plugins/')) {
     try {
         $query = '
 SELECT *

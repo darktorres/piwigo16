@@ -763,9 +763,12 @@ define('QST_BREAK', 0x20);
  */
 class QSearchScope
 {
-    public function __construct(public $id, public $aliases, public $nullable = false, public $is_text = true)
-    {
-    }
+    public function __construct(
+        public $id,
+        public $aliases,
+        public $nullable = false,
+        public $is_text = true
+    ) {}
 
     public function parse($token)
     {
@@ -783,8 +786,12 @@ class QSearchScope
 
 class QNumericRangeScope extends QSearchScope
 {
-    public function __construct($id, $aliases, $nullable = false, private $epsilon = 0)
-    {
+    public function __construct(
+        $id,
+        $aliases,
+        $nullable = false,
+        private $epsilon = 0
+    ) {
         parent::__construct($id, $aliases, $nullable, false);
     }
 
@@ -879,8 +886,11 @@ class QNumericRangeScope extends QSearchScope
 
 class QDateRangeScope extends QSearchScope
 {
-    public function __construct($id, $aliases, $nullable = false)
-    {
+    public function __construct(
+        $id,
+        $aliases,
+        $nullable = false
+    ) {
         parent::__construct($id, $aliases, $nullable, false);
     }
 
@@ -974,9 +984,11 @@ class QSingleToken implements \Stringable
 
     public $idx;
 
-    public function __construct(public $term, public $modifier, public $scope)
-    {
-    }
+    public function __construct(
+        public $term,
+        public $modifier,
+        public $scope
+    ) {}
 
     public function __toString(): string
     {
@@ -1282,8 +1294,10 @@ class QExpression extends QMultiToken
 
     public $stoken_modifiers = [];
 
-    public function __construct($q, $scopes)
-    {
+    public function __construct(
+        $q,
+        $scopes
+    ) {
         foreach ($scopes as $scope) {
             $this->scopes[$scope->id] = $scope;
             foreach ($scope->aliases as $alias) {

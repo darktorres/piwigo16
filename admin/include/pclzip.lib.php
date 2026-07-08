@@ -211,8 +211,9 @@ class PclZip
     //   Note that no real action is taken, if the archive does not exist it is not
     //   created. Use create() for that.
     // --------------------------------------------------------------------------------
-    public function __construct(public $zipname)
-    {
+    public function __construct(
+        public $zipname
+    ) {
 
         // ----- Tests the zlib
         if (! function_exists('gzopen')) {
@@ -782,7 +783,7 @@ class PclZip
                 }
                 if (isset($v_options[PCLZIP_OPT_ADD_PATH])) {
                     // ----- Check for '/' in last path char
-                    if ((strlen($v_path) > 0) && (!str_ends_with($v_path, '/'))) {
+                    if ((strlen($v_path) > 0) && (! str_ends_with($v_path, '/'))) {
                         $v_path .= '/';
                     }
                     $v_path .= $v_options[PCLZIP_OPT_ADD_PATH];
@@ -946,7 +947,7 @@ class PclZip
                 }
                 if (isset($v_options[PCLZIP_OPT_ADD_PATH])) {
                     // ----- Check for '/' in last path char
-                    if ((strlen($v_path) > 0) && (!str_ends_with($v_path, '/'))) {
+                    if ((strlen($v_path) > 0) && (! str_ends_with($v_path, '/'))) {
                         $v_path .= '/';
                     }
                     $v_path .= $v_options[PCLZIP_OPT_ADD_PATH];
@@ -2946,7 +2947,7 @@ class PclZip
             }
             // ----- Look for partial path remove
             elseif ($p_remove_dir != '') {
-                if (!str_ends_with((string) $p_remove_dir, '/')) {
+                if (! str_ends_with((string) $p_remove_dir, '/')) {
                     $p_remove_dir .= '/';
                 }
 
@@ -2954,10 +2955,10 @@ class PclZip
                     || (str_starts_with((string) $p_remove_dir, './'))) {
 
                     if ((str_starts_with((string) $p_filename, './'))
-                        && (!str_starts_with((string) $p_remove_dir, './'))) {
+                        && (! str_starts_with((string) $p_remove_dir, './'))) {
                         $p_remove_dir = './' . $p_remove_dir;
                     }
-                    if ((!str_starts_with((string) $p_filename, './'))
+                    if ((! str_starts_with((string) $p_filename, './'))
                         && (str_starts_with((string) $p_remove_dir, './'))) {
                         $p_remove_dir = substr((string) $p_remove_dir, 2);
                     }
@@ -3283,8 +3284,8 @@ class PclZip
 
         // ----- Check the path
         if (($p_path == '')
-            || ((!str_starts_with((string) $p_path, '/'))
-                && (!str_starts_with((string) $p_path, '../'))
+            || ((! str_starts_with((string) $p_path, '/'))
+                && (! str_starts_with((string) $p_path, '../'))
                 && (substr((string) $p_path, 1, 2) != ':/'))) {
             $p_path = './' . $p_path;
         }
@@ -3298,7 +3299,7 @@ class PclZip
         }
 
         // ----- Look for path to remove format (should end by /)
-        if (($p_remove_path != '') && (!str_ends_with((string) $p_remove_path, '/'))) {
+        if (($p_remove_path != '') && (! str_ends_with((string) $p_remove_path, '/'))) {
             $p_remove_path .= '/';
         }
         $p_remove_path_size = strlen((string) $p_remove_path);

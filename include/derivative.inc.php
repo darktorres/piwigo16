@@ -48,8 +48,9 @@ final class SrcImage
     /**
      * @param array $infos assoc array of data from images table
      */
-    public function __construct($infos)
-    {
+    public function __construct(
+        $infos
+    ) {
         global $conf;
 
         $this->id = $infos['id'];
@@ -190,8 +191,10 @@ final class DerivativeImage
      *    or a DerivativeParams object
      * @param SrcImage $src_image the source image of this derivative
      */
-    public function __construct($type, public SrcImage $src_image)
-    {
+    public function __construct(
+        $type,
+        public SrcImage $src_image
+    ) {
         if (is_string($type)) {
             $this->params = ImageStdParams::get_by_type($type);
         } else {

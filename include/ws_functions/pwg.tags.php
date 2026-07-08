@@ -17,7 +17,7 @@ function ws_tags_getList($params, &$service)
 {
     $tags = get_available_tags();
     if ($params['sort_by_counter']) {
-        usort($tags, fn($a, $b) => -$a['counter'] + $b['counter']);
+        usort($tags, fn ($a, $b) => -$a['counter'] + $b['counter']);
     } else {
         usort($tags, tag_alpha_compare(...));
     }

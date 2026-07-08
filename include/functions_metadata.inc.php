@@ -124,7 +124,7 @@ function get_exif_data($filename, $map)
 
         // configured fields
         foreach ($map as $key => $field) {
-            if (!str_contains((string) $field, ';')) {
+            if (! str_contains((string) $field, ';')) {
                 if (isset($exif[$field])) {
                     $result[$key] = $exif[$field];
                 }

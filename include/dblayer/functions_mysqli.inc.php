@@ -345,9 +345,9 @@ CREATE TABLE ' . $temporary_tablename . '
         mass_inserts($temporary_tablename, $all_fields, $datas);
 
         if ($flags & MASS_UPDATES_SKIP_EMPTY) {
-            $func_set = (fn($s) => "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})");
+            $func_set = (fn ($s) => "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})");
         } else {
-            $func_set = (fn($s) => "t1.{$s} = t2.{$s}");
+            $func_set = (fn ($s) => "t1.{$s} = t2.{$s}");
         }
 
         // update of table by joining with temporary table
@@ -362,7 +362,7 @@ UPDATE ' . protect_column_name($tablename) . ' AS t1, ' . $temporary_tablename .
           implode(
               "\n    AND ",
               array_map(
-                  fn($s) => "t1.{$s} = t2.{$s}",
+                  fn ($s) => "t1.{$s} = t2.{$s}",
                   $dbfields['primary']
               )
           );

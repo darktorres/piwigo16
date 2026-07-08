@@ -648,7 +648,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
                                     // make sure the obsolete file is withing the extension directory, prevent traversal path
                                     $realpath = realpath($path);
-                                    if ($realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
+                                    if ($realpath === false or ! str_starts_with($realpath, $extract_path_realpath)) {
                                         continue;
                                     }
 

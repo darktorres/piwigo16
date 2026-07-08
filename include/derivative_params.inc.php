@@ -85,8 +85,9 @@ final class ImageRect
     /**
      * @param int[] $l width and height
      */
-    public function __construct($l)
-    {
+    public function __construct(
+        $l
+    ) {
         $this->l = $this->t = 0;
         $this->r = $l[0];
         $this->b = $l[1];
@@ -181,9 +182,11 @@ final class SizingParams
      *    expressed as a factor of the input width/height
      * @param int[] $min_size - (used only if _$max_crop_ !=0) two element array of output dimensions (width, height)
      */
-    public function __construct(public $ideal_size, public $max_crop = 0, public $min_size = null)
-    {
-    }
+    public function __construct(
+        public $ideal_size,
+        public $max_crop = 0,
+        public $min_size = null
+    ) {}
 
     /**
      * Returns a simple SizingParams object.
@@ -310,16 +313,17 @@ final class DerivativeParams
     /**
      * @param SizingParams $sizing
      */
-    public function __construct(public $sizing)
-    {
-    }
+    public function __construct(
+        public $sizing
+    ) {}
 
-    /**
-     * @return array
-     */
     public function __serialize(): array
     {
-        return ['last_mod_time' => $this->last_mod_time, 'sizing' => $this->sizing, 'sharpen' => $this->sharpen];
+        return [
+            'last_mod_time' => $this->last_mod_time,
+            'sizing' => $this->sizing,
+            'sharpen' => $this->sharpen,
+        ];
     }
 
     /**

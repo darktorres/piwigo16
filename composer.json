@@ -21,6 +21,7 @@
     "ext-session": "*",
     "ext-simplexml": "*",
     "ext-zlib": "*",
+    "endroid/qr-code": "^6",
     "pelago/emogrifier": "^8",
     "smarty/smarty": "^5",
     "symfony/dotenv": "^8.1",

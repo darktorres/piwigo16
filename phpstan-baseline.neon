@@ -391,48 +391,6 @@ parameters:
 			path: include/php_compat/gzopen.php
 
 		-
-			message: '#^Access to an undefined static property QRtools\:\:\$frames\.$#'
-			identifier: staticProperty.notFound
-			count: 1
-			path: include/phpqrcode.php
-
-		-
-			message: '#^Cannot unset property QRinputItem\:\:\$bstream because it might have hooks in a subclass\.$#'
-			identifier: unset.possiblyHookedProperty
-			count: 1
-			path: include/phpqrcode.php
-
-		-
-			message: '#^Class qrstr referenced with incorrect case\: QRstr\.$#'
-			identifier: class.nameCase
-			count: 7
-			path: include/phpqrcode.php
-
-		-
-			message: '#^Instantiated class QRbitrtream not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: include/phpqrcode.php
-
-		-
-			message: '#^Static call to instance method QRinput\:\:estimateBitsModeKanji\(\)\.$#'
-			identifier: method.staticCall
-			count: 1
-			path: include/phpqrcode.php
-
-		-
-			message: '#^Undefined variable\: \$ret$#'
-			identifier: variable.undefined
-			count: 1
-			path: include/phpqrcode.php
-
-		-
-			message: '#^Undefined variable\: \$run$#'
-			identifier: variable.undefined
-			count: 1
-			path: include/phpqrcode.php
-
-		-
 			message: '#^Call to static method display_debug\(\) on an unknown class Smarty_Internal_Debug\.$#'
 			identifier: class.notFound
 			count: 1

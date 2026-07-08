@@ -25,7 +25,7 @@ DELETE FROM ' . CADDIE_TABLE . '
     pwg_query($query);
 
     $inserts = [];
-    foreach (array_unique(explode(',', $_GET['batch'])) as $image_id) {
+    foreach (array_unique(explode(',', (string) $_GET['batch'])) as $image_id) {
         $inserts[] = [
             'user_id' => $user['id'],
             'element_id' => $image_id,
@@ -63,7 +63,7 @@ SELECT COUNT(*)
     [$nb_images] = pwg_db_fetch_row(pwg_query($query));
 
     // To see the mobile app promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
-    $template->assign('PROMOTE_MOBILE_APPS', (strtotime($register_date) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30));
+    $template->assign('PROMOTE_MOBILE_APPS', (strtotime((string) $register_date) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30));
 } else {
     $template->assign('PROMOTE_MOBILE_APPS', false);
 }
@@ -104,14 +104,14 @@ SELECT *
 
             foreach ($formats as $format) {
                 $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], $format['filesize'] / 1024);
-                $formats_exts[] = strtolower($format['ext']);
+                $formats_exts[] = strtolower((string) $format['ext']);
             }
 
             $formats_original_info['formats'] = l10n('Formats: %s', implode(', ', $format_strings));
             $formats_ext_info = json_encode($formats_exts);
         }
 
-        $extTab = explode('.', $formats_original_info['file']);
+        $extTab = explode('.', (string) $formats_original_info['file']);
 
         $formats_original_info['ext'] = l10n('%s file type', strtoupper(end($extTab)));
 

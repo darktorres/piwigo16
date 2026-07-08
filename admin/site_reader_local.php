@@ -10,11 +10,8 @@
 // provides data for site synchronization from the local file system
 class LocalSiteReader
 {
-    public $site_url;
-
-    public function __construct($url)
+    public function __construct(public $site_url)
     {
-        $this->site_url = $url;
         global $conf;
         if (! isset($conf['flip_file_ext'])) {
             $conf['flip_file_ext'] = array_flip($conf['file_ext']);
@@ -119,12 +116,12 @@ class LocalSiteReader
         global $conf;
         $data = [];
 
-        $filename = basename($file);
+        $filename = basename((string) $file);
         $extension = get_extension($filename);
 
         $representative_ext = null;
         if (! isset($conf['flip_picture_ext'][$extension])) {
-            $dirname = dirname($file);
+            $dirname = dirname((string) $file);
             $filename_wo_ext = get_filename_wo_extension($filename);
             $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
         }

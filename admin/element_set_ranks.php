@@ -140,7 +140,7 @@ $navigation = get_cat_display_name_cache(
 
 $template->assign(
     [
-        'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
+        'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
         'F_ACTION' => $base_url . get_query_string_diff([]),
     ]
 );

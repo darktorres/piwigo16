@@ -210,7 +210,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
     $inserts = [];
     // new categories are the directories not present yet in the database
     foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
-        $dir = basename($fulldir);
+        $dir = basename((string) $fulldir);
         if (preg_match($conf['sync_chars_regex'], $dir)) {
             $insert = [
                 'id' => $next_id++,
@@ -222,8 +222,8 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 'visible' => boolean_to_string($conf['newcat_default_visible']),
             ];
 
-            if (isset($db_fulldirs[dirname($fulldir)])) {
-                $parent = $db_fulldirs[dirname($fulldir)];
+            if (isset($db_fulldirs[dirname((string) $fulldir)])) {
+                $parent = $db_fulldirs[dirname((string) $fulldir)];
 
                 $insert['id_uppercat'] = $parent;
                 $insert['uppercats'] =
@@ -253,7 +253,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             $db_categories[$insert['id']] =
               [
                   'id' => $insert['id'],
-                  'parent' => (isset($parent)) ? $parent : null,
+                  'parent' => $parent ?? null,
                   'status' => $insert['status'],
                   'visible' => $insert['visible'],
                   'uppercats' => $insert['uppercats'],
@@ -385,8 +385,8 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             'info' => l10n('deleted'),
         ];
 
-        if (substr_compare($fulldir, '../', 0, 3) == 0) {
-            $fulldir = substr($fulldir, 3);
+        if (substr_compare((string) $fulldir, '../', 0, 3) == 0) {
+            $fulldir = substr((string) $fulldir, 3);
         }
         $to_delete_derivative_dirs[] = PHPWG_ROOT_PATH . PWG_DERIVATIVE_DIR . $fulldir;
     }
@@ -451,11 +451,11 @@ SELECT id, path
     foreach (array_diff(array_keys($fs), $db_elements) as $path) {
         $insert = [];
         // storage category must exist
-        $dirname = dirname($path);
+        $dirname = dirname((string) $path);
         if (! isset($db_fulldirs[$dirname])) {
             continue;
         }
-        $filename = basename($path);
+        $filename = basename((string) $path);
         if (! preg_match($conf['sync_chars_regex'], $filename)) {
             $errors[] = [
                 'path' => $path,

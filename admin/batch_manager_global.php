@@ -52,7 +52,7 @@ if (isset($_POST['nb_photos_deleted'])) {
     // check_input_parameter('whole_set', $_POST, false, '/^\d+(,\d+)*$/');
     //
     // Instead, let's break the input parameter into pieces and check pieces one by one.
-    $collection = explode(',', $_POST['whole_set']);
+    $collection = explode(',', (string) $_POST['whole_set']);
 
     foreach ($collection as $id) {
         if (! preg_match('/^\d+$/', $id)) {

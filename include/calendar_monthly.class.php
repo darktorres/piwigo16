@@ -18,6 +18,7 @@ class CalendarMonthly extends CalendarBase
      * Initialize the calendar.
      * @param string $inner_sql
      */
+    #[\Override]
     public function initialize($inner_sql)
     {
         parent::initialize($inner_sql);
@@ -207,8 +208,8 @@ class CalendarMonthly extends CalendarBase
         $result = pwg_query($query);
         $items = [];
         while ($row = pwg_db_fetch_assoc($result)) {
-            $y = substr($row['period'], 0, 4);
-            $m = (int) substr($row['period'], 4, 2);
+            $y = substr((string) $row['period'], 0, 4);
+            $m = (int) substr((string) $row['period'], 4, 2);
             if (! isset($items[$y])) {
                 $items[$y] = [
                     'nb_images' => 0,
@@ -274,8 +275,8 @@ class CalendarMonthly extends CalendarBase
         $result = pwg_query($query);
         $items = [];
         while ($row = pwg_db_fetch_assoc($result)) {
-            $m = (int) substr($row['period'], 0, 2);
-            $d = substr($row['period'], 2, 2);
+            $m = (int) substr((string) $row['period'], 0, 2);
+            $d = substr((string) $row['period'], 2, 2);
             if (! isset($items[$m])) {
                 $items[$m] = [
                     'nb_images' => 0,

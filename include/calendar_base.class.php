@@ -296,11 +296,11 @@ GROUP BY period';
         $current = implode('-', $page['chronology_date']);
         $upper_items = query2array($query, null, 'period');
 
-        usort($upper_items, 'version_compare');
+        usort($upper_items, version_compare(...));
         $upper_items_rank = array_flip($upper_items);
         if (! isset($upper_items_rank[$current])) {
             $upper_items[] = $current; // just in case (external link)
-            usort($upper_items, 'version_compare');
+            usort($upper_items, version_compare(...));
             $upper_items_rank = array_flip($upper_items);
         }
         $current_rank = $upper_items_rank[$current];
@@ -309,7 +309,7 @@ GROUP BY period';
 
         if ($current_rank > 0) { // has previous
             $prev = $upper_items[$current_rank - 1];
-            $chronology_date = explode('-', $prev);
+            $chronology_date = explode('-', (string) $prev);
             $tpl_var['previous'] =
               [
                   'LABEL' => $this->get_date_nice_name($prev),
@@ -324,7 +324,7 @@ GROUP BY period';
 
         if ($current_rank < count($upper_items) - 1) { // has next
             $next = $upper_items[$current_rank + 1];
-            $chronology_date = explode('-', $next);
+            $chronology_date = explode('-', (string) $next);
             $tpl_var['next'] =
               [
                   'LABEL' => $this->get_date_nice_name($next),

@@ -105,7 +105,7 @@ class Inflector_en
     {
         $res = [];
 
-        $lword = strtolower($word);
+        $lword = strtolower((string) $word);
 
         $rc = @$this->exceptions[$lword];
         if (isset($rc)) {
@@ -117,10 +117,10 @@ class Inflector_en
 
         self::run($this->pluralizers, $word, $res);
         self::run($this->singularizers, $word, $res);
-        if (strlen($word) > 4) {
+        if (strlen((string) $word) > 4) {
             self::run($this->er2ing, $word, $res);
         }
-        if (strlen($word) > 5) {
+        if (strlen((string) $word) > 5) {
             $rc = self::run($this->ing2er, $word, $res);
             if ($rc !== false) {
                 self::run($this->pluralizers, $rc, $res);
@@ -132,7 +132,7 @@ class Inflector_en
     private static function run($rules, $word, &$res)
     {
         foreach ($rules as $rule => $replacement) {
-            $rc = preg_replace($rule . 'i', $replacement, $word, -1, $count);
+            $rc = preg_replace($rule . 'i', (string) $replacement, (string) $word, -1, $count);
             if ($count) {
                 if ($rc !== $word) {
                     $res[] = $rc;

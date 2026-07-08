@@ -29,7 +29,7 @@ function initPHP5()
     }
 
     foreach ($hosting as $hostname => $rule) {
-        if (preg_match('!' . preg_quote($hostname) . '$!', $my_hostname)) {
+        if (preg_match('!' . preg_quote((string) $hostname) . '$!', $my_hostname)) {
             if (false !== ($fh = @fopen($htaccess, 'ab'))) {
                 fwrite($fh, "\n" . $rule);
                 fclose($fh);
@@ -44,7 +44,7 @@ function openPage()
 {
     global $script;
 
-    $title = 'Piwigo ' . PHPWG_VERSION . ' - ' . l10n(ucwords($script));
+    $title = 'Piwigo ' . PHPWG_VERSION . ' - ' . l10n(ucwords((string) $script));
 
     header('Content-Type: text/html; charset=UTF-8');
 

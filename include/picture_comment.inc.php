@@ -27,10 +27,10 @@ if ($page['show_comments'] and isset($_POST['content'])) {
     }
 
     $comm = [
-        'author' => empty(@$_POST['author']) ? '' : trim(@$_POST['author']),
-        'content' => empty(@$_POST['content']) ? '' : trim($_POST['content']),
-        'website_url' => empty(@$_POST['website_url']) ? '' : trim(@$_POST['website_url']),
-        'email' => empty(@$_POST['email']) ? '' : trim(@$_POST['email']),
+        'author' => empty(@$_POST['author']) ? '' : trim((string) @$_POST['author']),
+        'content' => empty(@$_POST['content']) ? '' : trim((string) $_POST['content']),
+        'website_url' => empty(@$_POST['website_url']) ? '' : trim((string) @$_POST['website_url']),
+        'email' => empty(@$_POST['email']) ? '' : trim((string) @$_POST['email']),
         'image_id' => $page['image_id'],
     ];
 
@@ -105,7 +105,7 @@ SELECT
 
     if ($row['nb_comments'] > 0) {
         // comments order (get, session, conf)
-        if (! empty($_GET['comments_order']) && in_array(strtoupper($_GET['comments_order']), ['ASC', 'DESC'])) {
+        if (! empty($_GET['comments_order']) && in_array(strtoupper((string) $_GET['comments_order']), ['ASC', 'DESC'])) {
             pwg_set_session_var('comments_order', $_GET['comments_order']);
         }
         $comments_order = pwg_get_session_var('comments_order', $conf['comments_order']);
@@ -232,7 +232,7 @@ SELECT
 
         if (@$comment_action == 'reject') {
             foreach (['content', 'author', 'website_url', 'email'] as $k) {
-                $tpl_var[strtoupper($k)] = isset($_POST[$k]) ? htmlspecialchars(stripslashes(@$_POST[$k])) : '';
+                $tpl_var[strtoupper($k)] = isset($_POST[$k]) ? htmlspecialchars(stripslashes((string) @$_POST[$k])) : '';
             }
         }
         $template->assign('comment_add', $tpl_var);

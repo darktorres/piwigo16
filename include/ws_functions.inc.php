@@ -15,12 +15,12 @@ function ws_isInvokeAllowed($res, $methodName, $params)
 {
     global $conf;
 
-    if (strpos($methodName, 'reflection.') === 0) { // OK for reflection
+    if (str_starts_with((string) $methodName, 'reflection.')) { // OK for reflection
         return $res;
     }
 
     if (! is_autorize_status(ACCESS_GUEST) and
-        strpos($methodName, 'pwg.session.') !== 0) {
+        !str_starts_with((string) $methodName, 'pwg.session.')) {
         return new PwgError(401, 'Access denied');
     }
 
@@ -90,7 +90,7 @@ function ws_std_image_sql_order($params, $tbl_name = '')
     $matches = [];
     preg_match_all(
         '/([a-z_]+) *(?:(asc|desc)(?:ending)?)? *(?:, *|$)/i',
-        $params['order'],
+        (string) $params['order'],
         $matches
     );
     for ($i = 0; $i < count($matches[1]); $i++) {

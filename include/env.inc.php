@@ -120,6 +120,6 @@ function pwg_load_env_file(string $root): void
         return;
     }
 
-    (new Dotenv())->usePutenv()
+    new Dotenv()->usePutenv()
         ->load($file);
 }

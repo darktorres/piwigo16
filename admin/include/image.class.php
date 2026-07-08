@@ -45,14 +45,11 @@ class pwg_image
 
     public $library = '';
 
-    public $source_filepath = '';
-
     public static $ext_imagick_version = '';
 
-    public function __construct($source_filepath, $library = null)
+    public function __construct(public $source_filepath, $library = null)
     {
         global $conf;
-        $this->source_filepath = $source_filepath;
 
         trigger_notify('load_image_library', [&$this]);
 
@@ -60,7 +57,7 @@ class pwg_image
             return; // A plugin may have load its own library
         }
 
-        $extension = strtolower(get_extension($source_filepath));
+        $extension = strtolower(get_extension($this->source_filepath));
 
         if (! in_array($extension, $conf['picture_ext'])) {
             die('[Image] unsupported file extension');
@@ -71,7 +68,7 @@ class pwg_image
         }
 
         $class = 'image_' . $this->library;
-        $this->image = new $class($source_filepath);
+        $this->image = new $class($this->source_filepath);
     }
 
     // Unknow methods will be redirected to image object
@@ -214,7 +211,7 @@ class pwg_image
         switch (true) {
             case ! is_string($buf):
             case strlen($buf) < 25:
-            case substr($buf, 0, 4) != 'RIFF':
+            case !str_starts_with($buf, 'RIFF'):
             case substr($buf, 8, 4) != 'WEBP':
             case substr($buf, 12, 3) != 'VP8':
                 throw new Exception('webp_info(): not a valid webp image');
@@ -310,7 +307,7 @@ class pwg_image
             [-1,   -1,    -1],
         ];
 
-        $norm = array_sum(array_map('array_sum', $matrix));
+        $norm = array_sum(array_map(array_sum(...), $matrix));
 
         for ($i = 0; $i < 3; $i++) {
             for ($j = 0; $j < 3; $j++) {
@@ -390,7 +387,7 @@ class pwg_image
         }
 
         // Choose image library
-        switch (strtolower($library)) {
+        switch (strtolower((string) $library)) {
             case 'auto':
             case 'ext_imagick':
                 if ($extension != 'gif' and self::is_ext_imagick()) {
@@ -525,8 +522,6 @@ class image_ext_imagick implements imageInterface
 {
     public $imagickdir = '';
 
-    public $source_filepath = '';
-
     public $width = '';
 
     public $height = '';
@@ -535,18 +530,17 @@ class image_ext_imagick implements imageInterface
 
     public $commands = [];
 
-    public function __construct($source_filepath)
+    public function __construct(public $source_filepath)
     {
         global $conf;
-        $this->source_filepath = $source_filepath;
         $this->imagickdir = $conf['ext_imagick_dir'];
 
-        if (strpos(@$_SERVER['SCRIPT_FILENAME'], '/kunden/') === 0) {  // 1and1
+        if (str_starts_with((string) @$_SERVER['SCRIPT_FILENAME'], '/kunden/')) {  // 1and1
             @putenv('MAGICK_THREAD_LIMIT=1');
         }
 
-        if (strtolower(get_extension($source_filepath)) == 'webp') {
-            $webp_info = pwg_image::webp_info($source_filepath);
+        if (strtolower(get_extension($this->source_filepath)) == 'webp') {
+            $webp_info = pwg_image::webp_info($this->source_filepath);
 
             if ($webp_info['has-animation']) {
                 $this->is_animated_webp = true;
@@ -555,12 +549,12 @@ class image_ext_imagick implements imageInterface
                 // frame, such as "400x300400x300400x300" (3 frames of 400x300), as a big
                 // string, impossible to parse :-/ So let's use the PHP embedded function
                 // getimagesize here.
-                [$this->width, $this->height] = getimagesize($source_filepath);
+                [$this->width, $this->height] = getimagesize($this->source_filepath);
                 return;
             }
         }
 
-        $command = $this->imagickdir . 'identify -format "%wx%h" "' . realpath($source_filepath) . '"';
+        $command = $this->imagickdir . 'identify -format "%wx%h" "' . realpath($this->source_filepath) . '"';
         @exec($command, $returnarray);
         if (! is_array($returnarray) or empty($returnarray[0]) or ! preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
             die("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));
@@ -696,7 +690,7 @@ class image_ext_imagick implements imageInterface
                 $exec .= ' ' . $params;
             }
         }
-        $dest = pathinfo($destination_filepath);
+        $dest = pathinfo((string) $destination_filepath);
         $exec .= ' "' . realpath($dest['dirname']) . '/' . $dest['basename'] . '" 2>&1';
         $logger->debug($exec, 'i.php');
         @exec($exec, $returnarray);
@@ -760,10 +754,8 @@ class image_gd implements imageInterface
         $result = imagecopymerge($dest, $this->image, 0, 0, $x, $y, $width, $height, 100);
 
         if ($result !== false) {
-            imagedestroy($this->image);
             $this->image = $dest;
         } else {
-            imagedestroy($dest);
         }
         return $result;
     }
@@ -776,7 +768,6 @@ class image_gd implements imageInterface
     public function rotate($rotation)
     {
         $dest = imagerotate($this->image, $rotation, 0);
-        imagedestroy($this->image);
         $this->image = $dest;
         return true;
     }
@@ -800,10 +791,8 @@ class image_gd implements imageInterface
         $result = imagecopyresampled($dest, $this->image, 0, 0, 0, 0, $width, $height, $this->get_width(), $this->get_height());
 
         if ($result !== false) {
-            imagedestroy($this->image);
             $this->image = $dest;
         } else {
-            imagedestroy($dest);
         }
         return $result;
     }
@@ -832,7 +821,6 @@ class image_gd implements imageInterface
         // Place the source image in the destination image
         imagecopy($cut, $ioverlay, 0, 0, 0, 0, $ow, $oh);
         imagecopymerge($this->image, $cut, $x, $y, 0, 0, $ow, $oh, $opacity);
-        imagedestroy($cut);
         return true;
     }
 
@@ -851,6 +839,5 @@ class image_gd implements imageInterface
 
     public function destroy()
     {
-        imagedestroy($this->image);
     }
 }

@@ -47,7 +47,7 @@ if ($conf['update_notify_check_period'] > 0) {
             $updates = new updates();
             $updates->notify_piwigo_new_versions();
 
-            pwg_unique_exec_ends('check_for_updates', $exec_id);
+            pwg_unique_exec_ends('check_for_updates');
         }
     }
 }
@@ -87,7 +87,7 @@ if (! empty($conf['mobile_theme']) && (get_device() != 'desktop' || mobile_theme
     $template->assign(
         'TOGGLE_MOBILE_THEME_URL',
         add_url_params(
-            htmlspecialchars($_SERVER['REQUEST_URI']),
+            htmlspecialchars((string) $_SERVER['REQUEST_URI']),
             [
                 'mobile' => mobile_theme() ? 'false' : 'true',
             ]

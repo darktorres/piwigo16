@@ -83,7 +83,7 @@ SELECT id, file, path, representative_ext
                     ],
                 ]
             ),
-            'CPL_CONTENT' => empty($_POST['mail_content']) ? '' : stripslashes($_POST['mail_content']),
+            'CPL_CONTENT' => empty($_POST['mail_content']) ? '' : stripslashes((string) $_POST['mail_content']),
         ],
     ];
 

@@ -117,7 +117,7 @@ SELECT
         $sessions_to_delete = [];
 
         foreach ($sessions as $session) {
-            if (preg_match('/pwg_uid\|i:(\d+);/', $session['data'], $matches)) {
+            if (preg_match('/pwg_uid\|i:(\d+);/', (string) $session['data'], $matches)) {
                 if (! isset($all_user_ids[$matches[1]])) {
                     $sessions_to_delete[] = $session['id'];
                 }
@@ -189,7 +189,7 @@ DELETE
         if ($types_str == 'all') {
             clear_derivative_cache($_GET['type']);
         } else {
-            $types = explode('_', $types_str);
+            $types = explode('_', (string) $types_str);
             foreach ($types as $type_to_clear) {
                 clear_derivative_cache($type_to_clear);
             }

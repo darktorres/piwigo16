@@ -66,7 +66,6 @@ if (isset($_POST['submit']) and ! empty($_POST) and is_webmaster()) {
 if (isset($_FILES['std_pgs_logo']) and ! empty($_FILES['std_pgs_logo']['tmp_name'])) {
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $mime_type = finfo_file($finfo, $_FILES['std_pgs_logo']['tmp_name']);
-    finfo_close($finfo);
 
     // Allowed MIME types
     $allowed_mimes = [
@@ -86,7 +85,7 @@ if (isset($_FILES['std_pgs_logo']) and ! empty($_FILES['std_pgs_logo']['tmp_name
     } else {
         $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'logo';
         if (mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
-            $pathinfo = pathinfo($_FILES['std_pgs_logo']['name']);
+            $pathinfo = pathinfo((string) $_FILES['std_pgs_logo']['name']);
 
             $file_path = $upload_dir . '/' . str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];
 

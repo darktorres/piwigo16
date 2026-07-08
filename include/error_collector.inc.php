@@ -34,8 +34,8 @@ function pwg_error_collector_install(): void
     @ini_set('display_errors', '0');
     @ini_set('display_startup_errors', '0');
 
-    set_error_handler('pwg_error_collector_handle_error');
-    register_shutdown_function('pwg_error_collector_flush');
+    set_error_handler(pwg_error_collector_handle_error(...));
+    register_shutdown_function(pwg_error_collector_flush(...));
 }
 
 function pwg_error_collector_is_active(): bool

@@ -207,22 +207,13 @@ function ws_extensions_update($params, $service)
     global $template;
     $template->delete_compiled_templates();
 
-    switch ($upgrade_status) {
-        case 'ok':
-            return l10n('%s has been successfully updated.', $extension_name);
-
-        case 'temp_path_error':
-            return new PwgError(null, l10n('Can\'t create temporary file.'));
-
-        case 'dl_archive_error':
-            return new PwgError(null, l10n('Can\'t download archive.'));
-
-        case 'archive_error':
-            return new PwgError(null, l10n('Can\'t read or extract archive.'));
-
-        default:
-            return new PwgError(null, l10n('An error occured during extraction (%s).', $upgrade_status));
-    }
+    return match ($upgrade_status) {
+        'ok' => l10n('%s has been successfully updated.', $extension_name),
+        'temp_path_error' => new PwgError(null, l10n('Can\'t create temporary file.')),
+        'dl_archive_error' => new PwgError(null, l10n('Can\'t download archive.')),
+        'archive_error' => new PwgError(null, l10n('Can\'t read or extract archive.')),
+        default => new PwgError(null, l10n('An error occured during extraction (%s).', $upgrade_status)),
+    };
 }
 
 /**

@@ -127,7 +127,6 @@ function install_piwigo($option)
     $err = curl_errno($ch);
     $errmsg = curl_error($ch);
     $response = curl_getinfo($ch);
-    curl_close($ch);
 
     sleep(2);
 
@@ -170,7 +169,6 @@ function log_user($option, $cookies)
     $err = curl_errno($ch);
     $errmsg = curl_error($ch);
     $response = curl_getinfo($ch);
-    curl_close($ch);
 
     // Gets information about the current session
     $data = [
@@ -194,7 +192,6 @@ function log_user($option, $cookies)
     $err = curl_errno($ch);
     $errmsg = curl_error($ch);
     $response = curl_getinfo($ch);
-    curl_close($ch);
 
     $result = json_decode($content, true);
     if ($result['stat'] == 'ok') {
@@ -234,7 +231,6 @@ function create_album($option, $cookies)
     $err = curl_errno($ch);
     $errmsg = curl_error($ch);
     $response = curl_getinfo($ch);
-    curl_close($ch);
 
     $result = json_decode($content, true);
     if ($result['stat'] == 'ok') {

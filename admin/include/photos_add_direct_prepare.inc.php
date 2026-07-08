@@ -64,7 +64,7 @@ $template->assign(
 
 $unique_exts = array_unique(
     array_map(
-        'strtolower',
+        strtolower(...),
         $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext']
     )
 );

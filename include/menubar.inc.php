@@ -27,7 +27,7 @@ function initialize_menu()
     $menu->prepare_display();
 
     if (@$page['section'] == 'search' and isset($page['qsearch_details'])) {
-        $template->assign('QUERY_SEARCH', htmlspecialchars($page['qsearch_details']['q']));
+        $template->assign('QUERY_SEARCH', htmlspecialchars((string) $page['qsearch_details']['q']));
     }
 
     // --------------------------------------------------------------- external links
@@ -129,7 +129,7 @@ function initialize_menu()
     $block = $menu->get_block('mbTags');
     if ($block != null and script_basename() != 'picture') {
         $tags = get_available_tags();
-        usort($tags, 'tags_counter_compare');
+        usort($tags, tags_counter_compare(...));
         $tags = array_slice($tags, 0, $conf['menubar_tag_cloud_items_number']);
         foreach ($tags as $tag) {
             $block->data[] = array_merge(
@@ -290,7 +290,7 @@ function initialize_menu()
             $template->assign('U_REGISTER', get_root_url() . 'register.php');
         }
     } else {
-        $template->assign('USERNAME', stripslashes($user['username']));
+        $template->assign('USERNAME', stripslashes((string) $user['username']));
         if (is_autorize_status(ACCESS_CLASSIC)) {
             $template->assign('U_PROFILE', get_root_url() . 'profile.php');
         }

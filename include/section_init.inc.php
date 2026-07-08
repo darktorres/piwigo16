@@ -49,14 +49,14 @@ if ($conf['question_mark_in_urls'] == false and
     $page['root_path'] = PHPWG_ROOT_PATH;
 }
 
-if (strncmp($page['root_path'], './', 2) == 0) {
+if (str_starts_with($page['root_path'], './')) {
     $page['root_path'] = substr($page['root_path'], 2);
 }
 
 $page['section_url'] = $rewritten;
 
 // deleting first "/" if displayed
-$tokens = explode('/', ltrim($rewritten, '/'));
+$tokens = explode('/', ltrim((string) $rewritten, '/'));
 // $tokens = array(
 //   0 => category,
 //   1 => 12-foo,
@@ -114,7 +114,7 @@ if (! isset($page['section'])) {
                     }
                 }
                 if (! empty($random_index_redirect)) {
-                    redirect($random_index_redirect[mt_rand(0, count($random_index_redirect) - 1)]);
+                    redirect($random_index_redirect[random_int(0, count($random_index_redirect) - 1)]);
                 }
             }
             $page['is_homepage'] = true;
@@ -194,7 +194,7 @@ if ($page['section'] == 'categories') {
                     $page['category']['comment'],
                     'main_page_category_description'
                 ),
-                'title' => get_cat_display_name($page['category']['upper_names'], '', false),
+                'title' => get_cat_display_name($page['category']['upper_names'], ''),
             ]
         );
     } else {

@@ -79,7 +79,7 @@ SELECT galleries_url
 
 function get_min_local_dir($local_dir)
 {
-    $full_dir = explode('/', $local_dir);
+    $full_dir = explode('/', (string) $local_dir);
     if (count($full_dir) <= 3) {
         return $local_dir;
     } else {
@@ -136,7 +136,7 @@ $navigation = get_cat_display_name_cache(
 );
 
 // Parent navigation path
-$uppercats_array = explode(',', $category['uppercats']);
+$uppercats_array = explode(',', (string) $category['uppercats']);
 if (count($uppercats_array) > 1) {
     array_pop($uppercats_array);
     $parent_navigation = get_cat_display_name_cache(
@@ -163,12 +163,12 @@ $page['warnings'][] = l10n('This album is currently locked, visible only to admi
 
 $template->assign(
     [
-        'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
-        'CATEGORIES_PARENT_NAV' => preg_replace('# {2,}#', ' ', preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $parent_navigation)),
+        'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
+        'CATEGORIES_PARENT_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $parent_navigation)),
         'PARENT_CAT_ID' => ! empty($category['id_uppercat']) ? $category['id_uppercat'] : 0,
         'CAT_ID' => $category['id'],
-        'CAT_NAME' => @htmlspecialchars($category['name']),
-        'CAT_COMMENT' => @htmlspecialchars($category['comment']),
+        'CAT_NAME' => @htmlspecialchars((string) $category['name']),
+        'CAT_COMMENT' => @htmlspecialchars((string) $category['comment']),
         'IS_VISIBLE' => boolean_to_string($category['visible']),
         'CAT_ADMIN_ACCESS' => cat_admin_access($category['id']),
 
@@ -310,13 +310,13 @@ $template->assign([
 
 if (! $category['is_virtual']) {
     $category['cat_full_dir'] = get_complete_dir($_GET['cat_id']);
-    $category_full_dir = preg_replace('/\/$/', '', $category['cat_full_dir']);
+    $category_full_dir = preg_replace('/\/$/', '', (string) $category['cat_full_dir']);
     $template->assign(
         [
             'CAT_FULL_DIR' => $category_full_dir,
         ]
     );
-    $template->assign('CAT_DIR_NAME', basename($category_full_dir));
+    $template->assign('CAT_DIR_NAME', basename((string) $category_full_dir));
     $template->assign('CAT_MIN_DIR', get_min_local_dir($category_full_dir));
 
     if ($conf['enable_synchronization']) {

@@ -59,21 +59,21 @@ function pwg_generate_rss2_feed($channel, $items)
     $feed = '<?xml version="1.0" encoding="' . $channel['encoding'] . '"?>' . "\n";
     $feed .= "<rss version=\"2.0\">\n";
     $feed .= "  <channel>\n";
-    $feed .= '    <title>' . htmlspecialchars($channel['title']) . "</title>\n";
-    $feed .= '    <link>' . htmlspecialchars($channel['link']) . "</link>\n";
+    $feed .= '    <title>' . htmlspecialchars((string) $channel['title']) . "</title>\n";
+    $feed .= '    <link>' . htmlspecialchars((string) $channel['link']) . "</link>\n";
     $feed .= "    <description></description>\n";
-    $feed .= '    <lastBuildDate>' . (new DateTimeImmutable())->format(DATE_RFC2822) . "</lastBuildDate>\n";
+    $feed .= '    <lastBuildDate>' . new DateTimeImmutable()->format(DATE_RFC2822) . "</lastBuildDate>\n";
 
     foreach ($items as $item) {
         $feed .= "    <item>\n";
-        $feed .= '      <title>' . htmlspecialchars(strip_tags($item['title'])) . "</title>\n";
-        $feed .= '      <link>' . htmlspecialchars($item['link']) . "</link>\n";
-        $feed .= '      <description>' . (! empty($item['html']) ? '<![CDATA[' . $item['description'] . ']]>' : htmlspecialchars($item['description'])) . "</description>\n";
+        $feed .= '      <title>' . htmlspecialchars(strip_tags((string) $item['title'])) . "</title>\n";
+        $feed .= '      <link>' . htmlspecialchars((string) $item['link']) . "</link>\n";
+        $feed .= '      <description>' . (! empty($item['html']) ? '<![CDATA[' . $item['description'] . ']]>' : htmlspecialchars((string) $item['description'])) . "</description>\n";
         if (! empty($item['author'])) {
-            $feed .= '      <author>' . htmlspecialchars($item['author']) . "</author>\n";
+            $feed .= '      <author>' . htmlspecialchars((string) $item['author']) . "</author>\n";
         }
         if (! empty($item['date'])) {
-            $feed .= '      <pubDate>' . (new DateTimeImmutable($item['date']))->format(DATE_RFC2822) . "</pubDate>\n";
+            $feed .= '      <pubDate>' . new DateTimeImmutable($item['date'])->format(DATE_RFC2822) . "</pubDate>\n";
         }
         $feed .= '      <guid isPermaLink="false">' . htmlspecialchars($item['guid'] !== '' ? $item['guid'] : $item['link']) . "</guid>\n";
         $feed .= "    </item>\n";
@@ -123,7 +123,7 @@ check_status(ACCESS_GUEST);
 set_make_full_url();
 
 $rss_encoding = get_pwg_charset();
-$rss_title = $conf['gallery_title'] . ' (as ' . stripslashes($user['username']) . ')';
+$rss_title = $conf['gallery_title'] . ' (as ' . stripslashes((string) $user['username']) . ')';
 $rss_link = get_gallery_home_url();
 $rss_items = [];
 
@@ -183,7 +183,7 @@ foreach ($dates as $date_detail) { // for each recent post date we create a feed
             'chronology_field' => 'posted',
             'chronology_style' => 'monthly',
             'chronology_view' => 'calendar',
-            'chronology_date' => explode('-', substr($date, 0, 10)),
+            'chronology_date' => explode('-', substr((string) $date, 0, 10)),
         ]
     );
 

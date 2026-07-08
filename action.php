@@ -16,38 +16,24 @@ check_status(ACCESS_GUEST);
 
 function guess_mime_type($ext)
 {
-    switch (strtolower($ext)) {
-        case 'jpe': case 'jpeg':
-        case 'jpg': $ctype = 'image/jpeg';
-            break;
-        case 'png': $ctype = 'image/png';
-            break;
-        case 'gif': $ctype = 'image/gif';
-            break;
-        case 'webp': $ctype = 'image/webp';
-            break;
-        case 'tiff':
-        case 'tif': $ctype = 'image/tiff';
-            break;
-        case 'txt': $ctype = 'text/plain';
-            break;
-        case 'html':
-        case 'htm': $ctype = 'text/html';
-            break;
-        case 'xml': $ctype = 'text/xml';
-            break;
-        case 'pdf': $ctype = 'application/pdf';
-            break;
-        case 'zip': $ctype = 'application/zip';
-            break;
-        case 'ogg': $ctype = 'application/ogg';
-            break;
-        default: $ctype = 'application/octet-stream';
-    }
+    $ctype = match (strtolower((string) $ext)) {
+        'jpe', 'jpeg', 'jpg' => 'image/jpeg',
+        'png' => 'image/png',
+        'gif' => 'image/gif',
+        'webp' => 'image/webp',
+        'tiff', 'tif' => 'image/tiff',
+        'txt' => 'text/plain',
+        'html', 'htm' => 'text/html',
+        'xml' => 'text/xml',
+        'pdf' => 'application/pdf',
+        'zip' => 'application/zip',
+        'ogg' => 'application/ogg',
+        default => 'application/octet-stream',
+    };
     return $ctype;
 }
 
-function do_error($code, $str)
+function do_error($code, $str): never
 {
     set_status_header($code);
     echo $str;
@@ -193,7 +179,7 @@ if (! isset($ctype)) { // give it a guess
 $http_headers[] = 'Content-Type: ' . $ctype;
 
 if (isset($_GET['download'])) {
-    $http_headers[] = 'Content-Disposition: attachment; filename="' . htmlspecialchars_decode($element_info['file']) . '";';
+    $http_headers[] = 'Content-Disposition: attachment; filename="' . htmlspecialchars_decode((string) $element_info['file']) . '";';
     $http_headers[] = 'Content-Transfer-Encoding: binary';
 } else {
     $http_headers[] = 'Content-Disposition: inline; filename="'

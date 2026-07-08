@@ -580,7 +580,7 @@ function get_title_recent_post_date($date_detail)
 
     $title = l10n_dec('%d new photo', '%d new photos', $date_detail['nb_elements']);
 
-    if (preg_match('/^\d+-(\d+)-(\d+) /', $date_detail['date_available'], $matches)) {
+    if (preg_match('/^\d+-(\d+)-(\d+) /', (string) $date_detail['date_available'], $matches)) {
         $title .= ' (' . $lang['month'][(int) $matches[1]] . ' ' . $matches[2] . ')';
     }
 

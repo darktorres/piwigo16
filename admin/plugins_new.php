@@ -77,7 +77,7 @@ if (isset($_GET['installstatus'])) {
             break;
 
         default:
-            $page['errors'][] = l10n('An error occured during extraction (%s).', htmlspecialchars($_GET['installstatus']));
+            $page['errors'][] = l10n('An error occured during extraction (%s).', htmlspecialchars((string) $_GET['installstatus']));
             $page['errors'][] = l10n('Please check "plugins" folder and sub-folders permissions (CHMOD).');
     }
 }
@@ -118,7 +118,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
     }
 
     foreach ($plugins->server_plugins as $plugin) {
-        $ext_desc = trim($plugin['extension_description'], " \n\r");
+        $ext_desc = trim((string) $plugin['extension_description'], " \n\r");
         [$small_desc] = explode("\n", wordwrap($ext_desc, 200));
 
         $url_auto_install = htmlentities($base_url)
@@ -162,7 +162,7 @@ if ($plugins->get_server_plugins(true, $beta_test)) {
             'SMALL_DESC' => trim($small_desc, " \r\n"),
             'BIG_DESC' => $ext_desc,
             'VERSION' => $plugin['revision_name'],
-            'REVISION_DATE' => preg_replace('/[^0-9]/', '', strtotime($plugin['revision_date'])),
+            'REVISION_DATE' => preg_replace('/[^0-9]/', '', strtotime((string) $plugin['revision_date'])),
             'REVISION_FORMATED_DATE' => format_date($plugin['revision_date'], ['day', 'month', 'year']) . ', ' . time_since($plugin['revision_date'], 'day'),
             'AUTHOR' => $plugin['author_name'],
             'DOWNLOADS' => $plugin['extension_nb_downloads'],

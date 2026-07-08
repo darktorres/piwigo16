@@ -69,7 +69,7 @@ if (
 
         // logger
         global $logger;
-        $logger->info('[api_key][pkid=' . explode(':', $auth_header)[0] . '][method=' . $_REQUEST['method'] . ']');
+        $logger->info('[api_key][pkid=' . explode(':', (string) $auth_header)[0] . '][method=' . $_REQUEST['method'] . ']');
     }
 }
 
@@ -103,7 +103,7 @@ if (defined('IN_ADMIN') and IN_ADMIN) {
 } elseif (
     isset($_REQUEST['method'])
     and isset($_SERVER['HTTP_REFERER'])
-    and preg_match('/\/admin\.php\?page=/', $_SERVER['HTTP_REFERER'])
+    and preg_match('/\/admin\.php\?page=/', (string) $_SERVER['HTTP_REFERER'])
 ) {
     $page['user_use_cache'] = false;
 }

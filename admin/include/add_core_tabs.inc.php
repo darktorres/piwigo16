@@ -7,7 +7,7 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-add_event_handler('tabsheet_before_select', 'add_core_tabs', 0);
+add_event_handler('tabsheet_before_select', 'add_core_tabs');
 
 function add_core_tabs($sheets, $tab_id)
 {

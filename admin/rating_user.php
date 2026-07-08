@@ -198,7 +198,7 @@ function consensus_dev_compare($a, $b)
 
 function last_rate_compare($a, $b)
 {
-    return -strcmp($a['last_date'], $b['last_date']);
+    return -strcmp((string) $a['last_date'], (string) $b['last_date']);
 }
 
 $order_by_index = 4;

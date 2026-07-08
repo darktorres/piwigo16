@@ -18,16 +18,10 @@ define('EVENT_HANDLER_PRIORITY_NEUTRAL', 50);
 class PluginMaintain
 {
     /**
-     * @var string
+     * @param string $plugin_id
      */
-    protected $plugin_id;
-
-    /**
-     * @param string $id
-     */
-    public function __construct($id)
+    public function __construct(protected $plugin_id)
     {
-        $this->plugin_id = $id;
     }
 
     /**
@@ -70,16 +64,10 @@ class PluginMaintain
 class ThemeMaintain
 {
     /**
-     * @var string
+     * @param string $theme_id
      */
-    protected $theme_id;
-
-    /**
-     * @param string $id
-     */
-    public function __construct($id)
+    public function __construct(protected $theme_id)
     {
-        $this->theme_id = $id;
     }
 
     /**
@@ -292,10 +280,7 @@ function set_plugin_data($plugin_id, &$data)
 function &get_plugin_data($plugin_id)
 {
     global $pwg_loaded_plugins;
-    if (isset($pwg_loaded_plugins[$plugin_id]['plugin_data'])) {
-        return $pwg_loaded_plugins[$plugin_id]['plugin_data'];
-    }
-    return null;
+    return $pwg_loaded_plugins[$plugin_id]['plugin_data'] ?? null;
 }
 
 /**

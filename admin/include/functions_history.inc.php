@@ -211,9 +211,9 @@ SELECT
 
     while ($row = pwg_db_fetch_assoc($result)) {
         $time_keys = [
-            substr($row['date'], 0, 4), // yyyy
-            substr($row['date'], 0, 7), // yyyy-mm
-            substr($row['date'], 0, 10), // yyyy-mm-dd
+            substr((string) $row['date'], 0, 4), // yyyy
+            substr((string) $row['date'], 0, 7), // yyyy-mm
+            substr((string) $row['date'], 0, 10), // yyyy-mm-dd
             sprintf(
                 '%s-%02u',
                 $row['date'],

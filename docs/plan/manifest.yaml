@@ -61,9 +61,9 @@ sec:
   - {id: SEC-04, phase: P4,  threat: "Sensitive files served over HTTP", verified_by: ".htaccess deny E2E (P4); isolation gate (P32)", status: done}
   - {id: SEC-05, phase: P4,  threat: "n/a - performance item (Brotli), not a mitigation", verified_by: "n/a", status: done}
   - {id: SEC-06, phase: P4,  threat: "n/a - performance item (Cache-Control: immutable), not a mitigation", verified_by: "n/a", status: done}
-  - {id: SEC-07, phase: P5,  threat: "Weak randomness in tokens", verified_by: "ECS RandomApiMigrationFixer + no-mt_rand grep (P5)", status: planned}
+  - {id: SEC-07, phase: P5,  threat: "Weak randomness in tokens", verified_by: "ECS RandomApiMigrationFixer + no-mt_rand grep (P5)", status: done}
   - {id: SEC-08, phase: P5,  threat: "SQL injection", verified_by: "SearchService unit + REST contract tests (P19/P26)", status: planned}
-  - {id: SEC-09, phase: P5,  threat: "Secrets leaking into stack traces / logs", verified_by: "inspection + logged-context unit test (P18)", status: planned}
+  - {id: SEC-09, phase: P5,  threat: "Secrets leaking into stack traces / logs", verified_by: "inspection + logged-context unit test (P18)", status: done}
   - {id: SEC-10, phase: P9,  threat: "Missing input validation (mass assignment, type confusion)", verified_by: "Request-DTO validation tests (P27)", status: planned}
   - {id: SEC-11, phase: P9,  threat: "CSRF on state-changing actions", verified_by: "CSRF middleware integration tests (P9/P28)", status: planned}
   - {id: SEC-12, phase: P9,  threat: "CSRF on state-changing actions", verified_by: "CSRF middleware integration tests (P9/P28)", status: planned}

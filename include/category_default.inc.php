@@ -35,7 +35,7 @@ SELECT *
         $pictures[] = $row;
     }
 
-    usort($pictures, 'rank_compare');
+    usort($pictures, rank_compare(...));
     unset($rank_of);
 }
 

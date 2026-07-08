@@ -113,7 +113,7 @@ function set_cat_permalink($cat_id, $permalink, $save)
     global $page, $cache;
 
     $sanitized_permalink = preg_replace('#[^a-zA-Z0-9_/-]#', '', $permalink);
-    $sanitized_permalink = trim($sanitized_permalink, '/');
+    $sanitized_permalink = trim((string) $sanitized_permalink, '/');
     $sanitized_permalink = str_replace('//', '/', $sanitized_permalink);
     if ($sanitized_permalink != $permalink
         or preg_match('#^(\d)+(-.*)?$#', $permalink)) {

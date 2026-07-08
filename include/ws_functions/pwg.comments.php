@@ -129,7 +129,7 @@ SELECT
         if (empty($row['author_id']) or $row['author_id'] == $conf['guest_id']) {
             $author_name = $row['author'];
         } else {
-            $author_name = stripslashes($row['username'] ?? $row['author'] ?? l10n('guest'));
+            $author_name = stripslashes((string) ($row['username'] ?? $row['author'] ?? l10n('guest')));
         }
 
         $list[] = [

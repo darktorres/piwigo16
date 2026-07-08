@@ -18,7 +18,7 @@ if (! get_filter_page_value('cancel')) {
     if (isset($_GET['filter'])) {
         $filter['matches'] = [];
         $filter['enabled'] =
-          preg_match('/^start-recent-(\d+)$/', $_GET['filter'], $filter['matches']) === 1;
+          preg_match('/^start-recent-(\d+)$/', (string) $_GET['filter'], $filter['matches']) === 1;
     } else {
         $filter['enabled'] = pwg_get_session_var('filter_enabled', false);
     }

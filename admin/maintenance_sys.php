@@ -317,7 +317,7 @@ if (is_webmaster()) {
 
             // Format our data before send
             // This data will be manipulate by maintenance_sys.js
-            [$date, $hour] = explode(' ', $rows['occured_on']);
+            [$date, $hour] = explode(' ', (string) $rows['occured_on']);
             $data[] = [
                 'major_infos' => $major_infos,
                 'id' => $rows['activity_id'],

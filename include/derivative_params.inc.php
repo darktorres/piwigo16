@@ -176,31 +176,13 @@ final class ImageRect
 final class SizingParams
 {
     /**
-     * @var int[]
-     */
-    public $ideal_size;
-
-    /**
-     * @var float
-     */
-    public $max_crop;
-
-    /**
-     * @var int[]
-     */
-    public $min_size;
-
-    /**
      * @param int[] $ideal_size - two element array of maximum output dimensions (width, height)
      * @param float $max_crop - from 0=no cropping to 1= max cropping (100% of width/height);
      *    expressed as a factor of the input width/height
      * @param int[] $min_size - (used only if _$max_crop_ !=0) two element array of output dimensions (width, height)
      */
-    public function __construct($ideal_size, $max_crop = 0, $min_size = null)
+    public function __construct(public $ideal_size, public $max_crop = 0, public $min_size = null)
     {
-        $this->ideal_size = $ideal_size;
-        $this->max_crop = $max_crop;
-        $this->min_size = $min_size;
     }
 
     /**
@@ -306,11 +288,6 @@ final class SizingParams
 final class DerivativeParams
 {
     /**
-     * @var SizingParams
-     */
-    public $sizing;
-
-    /**
      * @var string among IMG_*
      */
     public $type = IMG_CUSTOM;
@@ -333,17 +310,16 @@ final class DerivativeParams
     /**
      * @param SizingParams $sizing
      */
-    public function __construct($sizing)
+    public function __construct(public $sizing)
     {
-        $this->sizing = $sizing;
     }
 
     /**
      * @return array
      */
-    public function __sleep()
+    public function __serialize(): array
     {
-        return ['last_mod_time', 'sizing', 'sharpen'];
+        return ['last_mod_time' => $this->last_mod_time, 'sizing' => $this->sizing, 'sharpen' => $this->sharpen];
     }
 
     /**

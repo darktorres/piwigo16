@@ -170,13 +170,13 @@ if (isset($_POST['submitFilter'])) {
 // filters from url
 elseif (isset($_GET['filter'])) {
     if (! is_array($_GET['filter'])) {
-        $_GET['filter'] = explode(',', $_GET['filter']);
+        $_GET['filter'] = explode(',', (string) $_GET['filter']);
     }
 
     $_SESSION['bulk_manager_filter'] = [];
 
     foreach ($_GET['filter'] as $filter) {
-        [$type, $value] = explode('-', $filter, 2);
+        [$type, $value] = explode('-', (string) $filter, 2);
 
         switch ($type) {
             case 'prefilter':
@@ -419,7 +419,7 @@ SELECT
             $ids = [];
 
             foreach ($array_of_ids_string as $ids_string) {
-                $ids_string = rtrim($ids_string, ',');
+                $ids_string = rtrim((string) $ids_string, ',');
                 $ids = array_merge($ids, explode(',', $ids_string));
             }
 
@@ -552,13 +552,13 @@ SELECT id
 }
 
 if (isset($_SESSION['bulk_manager_filter']['search']) &&
-    strlen($_SESSION['bulk_manager_filter']['search']['q'])) {
+    strlen((string) $_SESSION['bulk_manager_filter']['search']['q'])) {
     include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
     $res = get_quick_search_results_no_cache($_SESSION['bulk_manager_filter']['search']['q'], [
         'permissions' => false,
     ]);
     if (! empty($res['items']) && ! empty($res['qs']['unmatched_terms'])) {
-        $template->assign('no_search_results', array_map('htmlspecialchars', $res['qs']['unmatched_terms']));
+        $template->assign('no_search_results', array_map(htmlspecialchars(...), $res['qs']['unmatched_terms']));
     }
     $filter_sets[] = $res['items'];
 }

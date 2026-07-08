@@ -56,7 +56,7 @@ SELECT
         $row['details'] = str_replace('`groups`', 'groups', $row['details']);
         $row['details'] = str_replace('`rank`', 'rank', $row['details']);
 
-        [$date, $hour] = explode(' ', $row['occured_on']);
+        [$date, $hour] = explode(' ', (string) $row['occured_on']);
 
         $output_lines[] = [
             'username' => $row['username'],
@@ -164,8 +164,8 @@ SELECT
 $template->assign(
     'ACTIVITY_DATES',
     [
-        'min' => empty($min_date) ? '' : substr($min_date, 0, 10),
-        'max' => empty($max_date) ? '' : substr($max_date, 0, 10),
+        'min' => empty($min_date) ? '' : substr((string) $min_date, 0, 10),
+        'max' => empty($max_date) ? '' : substr((string) $max_date, 0, 10),
     ]
 );
 

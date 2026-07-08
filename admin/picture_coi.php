@@ -20,7 +20,7 @@ check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
 if (isset($_POST['submit'])) {
     $query = 'UPDATE ' . IMAGES_TABLE;
-    if (strlen($_POST['l']) == 0) {
+    if (strlen((string) $_POST['l']) == 0) {
         $query .= ' SET coi=NULL';
     } else {
         $coi = fraction_to_char($_POST['l'])

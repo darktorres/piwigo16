@@ -88,7 +88,7 @@ if (isset($_GET['installstatus'])) {
         default:
             $page['errors'][] = l10n(
                 'An error occured during extraction (%s).',
-                htmlspecialchars($_GET['installstatus'])
+                htmlspecialchars((string) $_GET['installstatus'])
             );
     }
 }

@@ -352,7 +352,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
             }
 
             // IMPORTANT SECURITY !
-            $plugin = array_map('htmlspecialchars', $plugin);
+            $plugin = array_map(htmlspecialchars(...), $plugin);
             $this->fs_plugins[$plugin_id] = $plugin;
 
             return $plugin;
@@ -368,16 +368,16 @@ DELETE FROM ' . PLUGINS_TABLE . '
     {
         switch ($order) {
             case 'name':
-                uasort($this->fs_plugins, 'name_compare');
+                uasort($this->fs_plugins, name_compare(...));
                 break;
             case 'status':
                 $this->sort_plugins_by_state();
                 break;
             case 'author':
-                uasort($this->fs_plugins, [$this, 'plugin_author_compare']);
+                uasort($this->fs_plugins, $this->plugin_author_compare(...));
                 break;
             case 'id':
-                uksort($this->fs_plugins, 'strcasecmp');
+                uksort($this->fs_plugins, strcasecmp(...));
                 break;
         }
     }
@@ -462,7 +462,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
             'format' => 'php',
             'last_revision_only' => 'true',
             'version' => implode(',', $versions_to_check),
-            'lang' => substr($user['language'], 0, 2),
+            'lang' => substr((string) $user['language'], 0, 2),
             'get_nb_downloads' => 'true',
         ];
 
@@ -558,16 +558,16 @@ DELETE FROM ' . PLUGINS_TABLE . '
                 krsort($this->server_plugins);
                 break;
             case 'revision':
-                usort($this->server_plugins, [$this, 'extension_revision_compare']);
+                usort($this->server_plugins, $this->extension_revision_compare(...));
                 break;
             case 'name':
-                uasort($this->server_plugins, [$this, 'extension_name_compare']);
+                uasort($this->server_plugins, $this->extension_name_compare(...));
                 break;
             case 'author':
-                uasort($this->server_plugins, [$this, 'extension_author_compare']);
+                uasort($this->server_plugins, $this->extension_author_compare(...));
                 break;
             case 'downloads':
-                usort($this->server_plugins, [$this, 'extension_downloads_compare']);
+                usort($this->server_plugins, $this->extension_downloads_compare(...));
                 break;
         }
     }
@@ -596,9 +596,9 @@ DELETE FROM ' . PLUGINS_TABLE . '
                 if ($list = $zip->listContent()) {
                     foreach ($list as $file) {
                         // we search main.inc.php in archive
-                        if (basename($file['filename']) == 'main.inc.php'
+                        if (basename((string) $file['filename']) == 'main.inc.php'
                           and (! isset($main_filepath)
-                          or strlen($file['filename']) < strlen($main_filepath))) {
+                          or strlen((string) $file['filename']) < strlen($main_filepath))) {
                             $main_filepath = $file['filename'];
                         }
                     }
@@ -648,7 +648,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
                                     // make sure the obsolete file is withing the extension directory, prevent traversal path
                                     $realpath = realpath($path);
-                                    if ($realpath === false or strpos($realpath, $extract_path_realpath) !== 0) {
+                                    if ($realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
                                         continue;
                                     }
 
@@ -710,12 +710,12 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
     public function extension_name_compare($a, $b)
     {
-        return strcmp(strtolower($a['extension_name']), strtolower($b['extension_name']));
+        return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
     }
 
     public function extension_author_compare($a, $b)
     {
-        $r = strcasecmp($a['author_name'], $b['author_name']);
+        $r = strcasecmp((string) $a['author_name'], (string) $b['author_name']);
         if ($r == 0) {
             return $this->extension_name_compare($a, $b);
         } else {
@@ -725,7 +725,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
     public function plugin_author_compare($a, $b)
     {
-        $r = strcasecmp($a['author'], $b['author']);
+        $r = strcasecmp((string) $a['author'], (string) $b['author']);
         if ($r == 0) {
             return name_compare($a, $b);
         } else {
@@ -744,7 +744,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
     public function sort_plugins_by_state()
     {
-        uasort($this->fs_plugins, 'name_compare');
+        uasort($this->fs_plugins, name_compare(...));
 
         $active_plugins = [];
         $inactive_plugins = [];

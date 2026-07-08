@@ -103,7 +103,7 @@ class Logger
             return;
         }
 
-        $this->options['directory'] = rtrim($this->options['directory'], '\\/') . DIRECTORY_SEPARATOR;
+        $this->options['directory'] = rtrim((string) $this->options['directory'], '\\/') . DIRECTORY_SEPARATOR;
 
         if ($this->options['filename'] == null) {
             $this->options['filename'] = 'log_' . date('Y-m-d') . '.txt';
@@ -403,26 +403,17 @@ class Logger
      */
     public static function levelToCode($level)
     {
-        switch ($level) {
-            case self::EMERGENCY:
-                return 'EMERGENCY';
-            case self::ALERT:
-                return 'ALERT';
-            case self::CRITICAL:
-                return 'CRITICAL';
-            case self::NOTICE:
-                return 'NOTICE';
-            case self::INFO:
-                return 'INFO';
-            case self::WARNING:
-                return 'WARNING';
-            case self::DEBUG:
-                return 'DEBUG';
-            case self::ERROR:
-                return 'ERROR';
-            default:
-                throw new RuntimeException('Unknown severity level ' . $level);
-        }
+        return match ($level) {
+            self::EMERGENCY => 'EMERGENCY',
+            self::ALERT => 'ALERT',
+            self::CRITICAL => 'CRITICAL',
+            self::NOTICE => 'NOTICE',
+            self::INFO => 'INFO',
+            self::WARNING => 'WARNING',
+            self::DEBUG => 'DEBUG',
+            self::ERROR => 'ERROR',
+            default => throw new RuntimeException('Unknown severity level ' . $level),
+        };
     }
 
     /**
@@ -433,25 +424,16 @@ class Logger
      */
     public static function codeToLevel($code)
     {
-        switch (strtoupper($code)) {
-            case 'EMERGENCY':
-                return self::EMERGENCY;
-            case 'ALERT':
-                return self::ALERT;
-            case 'CRITICAL':
-                return self::CRITICAL;
-            case 'NOTICE':
-                return self::NOTICE;
-            case 'INFO':
-                return self::INFO;
-            case 'WARNING':
-                return self::WARNING;
-            case 'DEBUG':
-                return self::DEBUG;
-            case 'ERROR':
-                return self::ERROR;
-            default:
-                throw new RuntimeException('Unknown severity code ' . $code);
-        }
+        return match (strtoupper($code)) {
+            'EMERGENCY' => self::EMERGENCY,
+            'ALERT' => self::ALERT,
+            'CRITICAL' => self::CRITICAL,
+            'NOTICE' => self::NOTICE,
+            'INFO' => self::INFO,
+            'WARNING' => self::WARNING,
+            'DEBUG' => self::DEBUG,
+            'ERROR' => self::ERROR,
+            default => throw new RuntimeException('Unknown severity code ' . $code),
+        };
     }
 }

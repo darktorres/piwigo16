@@ -13,11 +13,6 @@
 class BlockManager
 {
     /**
-     * @var string
-     */
-    protected $id;
-
-    /**
      * @var RegisteredBlock[]
      */
     protected $registered_blocks = [];
@@ -30,9 +25,8 @@ class BlockManager
     /**
      * @param string $id
      */
-    public function __construct($id)
+    public function __construct(protected $id)
     {
-        $this->id = $id;
     }
 
     /**
@@ -130,10 +124,7 @@ class BlockManager
      */
     public function get_block($block_id)
     {
-        if (isset($this->display_blocks[$block_id])) {
-            return $this->display_blocks[$block_id];
-        }
-        return null;
+        return $this->display_blocks[$block_id] ?? null;
     }
 
     /**
@@ -195,30 +186,12 @@ class BlockManager
 class RegisteredBlock
 {
     /**
-     * @var string
-     */
-    protected $id;
-
-    /**
-     * @var string
-     */
-    protected $name;
-
-    /**
-     * @var string
-     */
-    protected $owner;
-
-    /**
      * @param string $id
      * @param string $name
      * @param string $owner
      */
-    public function __construct($id, $name, $owner)
+    public function __construct(protected $id, protected $name, protected $owner)
     {
-        $this->id = $id;
-        $this->name = $name;
-        $this->owner = $owner;
     }
 
     /**
@@ -252,11 +225,6 @@ class RegisteredBlock
 class DisplayBlock
 {
     /**
-     * @var RegisteredBlock
-     */
-    protected $_registeredBlock;
-
-    /**
      * @var int
      */
     protected $_position;
@@ -284,11 +252,10 @@ class DisplayBlock
     public $id;
 
     /**
-     * @param RegisteredBlock $block
+     * @param RegisteredBlock $_registeredBlock
      */
-    public function __construct($block)
+    public function __construct(protected $_registeredBlock)
     {
-        $this->_registeredBlock = $block;
     }
 
     /**

@@ -82,7 +82,7 @@ if (count($orphan_tag_names) > 0) {
     $orphan_tag_names_array .= implode(
         '" ,"',
         array_map(
-            'htmlentities',
+            htmlentities(...),
             $orphan_tag_names,
             array_fill(0, count($orphan_tag_names), ENT_QUOTES)
         )
@@ -139,7 +139,7 @@ while ($tag = pwg_db_fetch_assoc($result)) {
     }
     $all_tags[] = $tag;
 }
-usort($all_tags, 'tag_alpha_compare');
+usort($all_tags, tag_alpha_compare(...));
 
 $template->assign(
     [

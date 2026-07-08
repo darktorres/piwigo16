@@ -305,7 +305,7 @@ DELETE FROM ' . RATE_TABLE . '
         $query .= ' AND element_id=' . $params['image_id'];
     }
 
-    $changes = pwg_db_changes(pwg_query($query));
+    $changes = pwg_db_changes();
     if ($changes) {
         include_once PHPWG_ROOT_PATH . 'include/functions_rate.inc.php';
         update_rating_score();
@@ -326,7 +326,7 @@ function ws_session_login($params, &$service)
         return new PwgError(401, 'Cannot use this method with an api key');
     }
 
-    if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['username'])) {
+    if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', (string) $params['username'])) {
         $secret = pwg_db_real_escape_string($params['password']);
         $authenticate = auth_key_login($params['username'] . ':' . $secret);
         if ($authenticate) {
@@ -366,7 +366,7 @@ function ws_session_getStatus($params, &$service)
 {
     global $user, $conf;
 
-    $res['username'] = is_a_guest() ? 'guest' : stripslashes($user['username']);
+    $res['username'] = is_a_guest() ? 'guest' : stripslashes((string) $user['username']);
     foreach (['status', 'theme', 'language'] as $k) {
         $res[$k] = $user[$k];
     }
@@ -380,14 +380,14 @@ function ws_session_getStatus($params, &$service)
     $res['connected_with'] = $_SESSION['connected_with'] ?? null;
 
     // Piwigo Remote Sync does not support receiving the new (version 14) output "save_visits"
-    if (isset($_SERVER['HTTP_USER_AGENT']) and preg_match('/^PiwigoRemoteSync/', $_SERVER['HTTP_USER_AGENT'])) {
+    if (isset($_SERVER['HTTP_USER_AGENT']) and preg_match('/^PiwigoRemoteSync/', (string) $_SERVER['HTTP_USER_AGENT'])) {
         unset($res['save_visits']);
         unset($res['connected_with']);
     }
 
     // Piwigo Remote Sync does not support receiving the available sizes
     $piwigo_remote_sync_agent = 'Apache-HttpClient/';
-    if (! isset($_SERVER['HTTP_USER_AGENT']) or substr($_SERVER['HTTP_USER_AGENT'], 0, strlen($piwigo_remote_sync_agent)) !== $piwigo_remote_sync_agent) {
+    if (! isset($_SERVER['HTTP_USER_AGENT']) or !str_starts_with((string) $_SERVER['HTTP_USER_AGENT'], $piwigo_remote_sync_agent)) {
         $res['available_sizes'] = array_keys(ImageStdParams::get_defined_type_map());
     }
 
@@ -396,7 +396,7 @@ function ws_session_getStatus($params, &$service)
             ',',
             array_unique(
                 array_map(
-                    'strtolower',
+                    strtolower(...),
                     $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext']
                 )
             )
@@ -537,7 +537,7 @@ SELECT
                         $detailsType = 'script';
                     }
 
-                    [$date, $hour] = explode(' ', $row['occured_on']);
+                    [$date, $hour] = explode(' ', (string) $row['occured_on']);
                     // New line
                     $output_lines[] = [
                         'id' => $line_id,
@@ -625,8 +625,8 @@ function ws_history_log($params, &$service)
         ];
     }
 
-    if (! empty($params['tags_string']) and preg_match('/^\d+(,\d+)*$/', $params['tags_string'])) {
-        $page['tag_ids'] = explode(',', $params['tags_string']);
+    if (! empty($params['tags_string']) and preg_match('/^\d+(,\d+)*$/', (string) $params['tags_string'])) {
+        $page['tag_ids'] = explode(',', (string) $params['tags_string']);
     }
 
     // when visiting a photo (which is currently, in version 14, the only event registered
@@ -754,7 +754,7 @@ function ws_history_search($param, &$service)
 
         pwg_query($query);
 
-        $search_id = pwg_db_insert_id(SEARCH_TABLE);
+        $search_id = pwg_db_insert_id();
 
         // Remove redirect for ajax //
         // redirect(
@@ -776,7 +776,7 @@ SELECT rules
 
     /* TODO - no need to get a huge number of rows from db (should take only what needed for display + SQL_CALC_FOUND_ROWS */
     $data = trigger_change('get_history', [], $page['search'], $types);
-    usort($data, 'history_compare');
+    usort($data, history_compare(...));
 
     $page['nb_lines'] = count($data);
 
@@ -853,7 +853,7 @@ SELECT ' . $conf['user_fields']['id'] . ' AS id
 
         $username_of = [];
         while ($row = pwg_db_fetch_assoc($result)) {
-            $username_of[$row['id']] = stripslashes($row['username']);
+            $username_of[$row['id']] = stripslashes((string) $row['username']);
         }
     }
 
@@ -960,8 +960,8 @@ SELECT
         if (isset($line['tag_ids'])) {
             $tag_names = preg_replace_callback(
                 '/(\d+)/',
-                function ($m) use ($name_of_tag) { return $name_of_tag[$m[1]] ?? $m[1]; },
-                $line['tag_ids']
+                fn($m) => $name_of_tag[$m[1]] ?? $m[1],
+                (string) $line['tag_ids']
             );
             $tag_ids = $line['tag_ids'];
         }
@@ -1042,7 +1042,7 @@ SELECT
                 'FULL_CATEGORY_PATH' => $line['category_id'] !== null && isset($full_cat_path[$line['category_id']]) ? strip_tags($full_cat_path[$line['category_id']]) : l10n('Root') . $line['category_id'],
                 'CATEGORY' => $line['category_id'] !== null && isset($name_of_category[$line['category_id']]) ? $name_of_category[$line['category_id']] : l10n('Root') . $line['category_id'],
                 'SEARCH_ID' => $line['search_id'] ?? null,
-                'TAGS' => explode(',', $tag_names),
+                'TAGS' => explode(',', (string) $tag_names),
                 'TAGIDS' => explode(',', $tag_ids),
                 'SEARCH_DETAILS' => $search_detail,
             ]

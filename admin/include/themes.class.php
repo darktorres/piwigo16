@@ -401,7 +401,7 @@ SELECT
                     }
 
                     // IMPORTANT SECURITY !
-                    $theme = array_map('htmlspecialchars', $theme);
+                    $theme = array_map(htmlspecialchars(...), $theme);
                     $this->fs_themes[$file] = $theme;
                 }
             }
@@ -416,16 +416,16 @@ SELECT
     {
         switch ($order) {
             case 'name':
-                uasort($this->fs_themes, 'name_compare');
+                uasort($this->fs_themes, name_compare(...));
                 break;
             case 'status':
                 $this->sort_themes_by_state();
                 break;
             case 'author':
-                uasort($this->fs_themes, [$this, 'theme_author_compare']);
+                uasort($this->fs_themes, $this->theme_author_compare(...));
                 break;
             case 'id':
-                uksort($this->fs_themes, 'strcasecmp');
+                uksort($this->fs_themes, strcasecmp(...));
                 break;
         }
     }
@@ -452,7 +452,7 @@ SELECT
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
-                if (strpos($pem_version['name'], $branch) === 0) {
+                if (str_starts_with((string) $pem_version['name'], $branch)) {
                     $versions_to_check[] = $pem_version['id'];
                 }
             }
@@ -476,7 +476,7 @@ SELECT
             [
                 'last_revision_only' => 'true',
                 'version' => implode(',', $versions_to_check),
-                'lang' => substr($user['language'], 0, 2),
+                'lang' => substr((string) $user['language'], 0, 2),
                 'get_nb_downloads' => 'true',
             ]
         );
@@ -511,16 +511,16 @@ SELECT
                 krsort($this->server_themes);
                 break;
             case 'revision':
-                usort($this->server_themes, [$this, 'extension_revision_compare']);
+                usort($this->server_themes, $this->extension_revision_compare(...));
                 break;
             case 'name':
-                uasort($this->server_themes, [$this, 'extension_name_compare']);
+                uasort($this->server_themes, $this->extension_name_compare(...));
                 break;
             case 'author':
-                uasort($this->server_themes, [$this, 'extension_author_compare']);
+                uasort($this->server_themes, $this->extension_author_compare(...));
                 break;
             case 'downloads':
-                usort($this->server_themes, [$this, 'extension_downloads_compare']);
+                usort($this->server_themes, $this->extension_downloads_compare(...));
                 break;
         }
     }
@@ -550,9 +550,9 @@ SELECT
                 if ($list = $zip->listContent()) {
                     foreach ($list as $file) {
                         // we search main.inc.php in archive
-                        if (basename($file['filename']) == 'themeconf.inc.php'
+                        if (basename((string) $file['filename']) == 'themeconf.inc.php'
                           and (! isset($main_filepath)
-                          or strlen($file['filename']) < strlen($main_filepath))) {
+                          or strlen((string) $file['filename']) < strlen($main_filepath))) {
                             $main_filepath = $file['filename'];
                         }
                     }
@@ -605,7 +605,7 @@ SELECT
 
                                     // make sure the obsolete file is withing the extension directory, prevent traversal path
                                     $realpath = realpath($path);
-                                    if ($realpath === false or strpos($realpath, $extract_path_realpath) !== 0) {
+                                    if ($realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
                                         continue;
                                     }
 
@@ -652,12 +652,12 @@ SELECT
 
     public function extension_name_compare($a, $b)
     {
-        return strcmp(strtolower($a['extension_name']), strtolower($b['extension_name']));
+        return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
     }
 
     public function extension_author_compare($a, $b)
     {
-        $r = strcasecmp($a['author_name'], $b['author_name']);
+        $r = strcasecmp((string) $a['author_name'], (string) $b['author_name']);
         if ($r == 0) {
             return $this->extension_name_compare($a, $b);
         } else {
@@ -667,7 +667,7 @@ SELECT
 
     public function theme_author_compare($a, $b)
     {
-        $r = strcasecmp($a['author'], $b['author']);
+        $r = strcasecmp((string) $a['author'], (string) $b['author']);
         if ($r == 0) {
             return name_compare($a, $b);
         } else {
@@ -686,7 +686,7 @@ SELECT
 
     public function sort_themes_by_state()
     {
-        uasort($this->fs_themes, 'name_compare');
+        uasort($this->fs_themes, name_compare(...));
 
         $active_themes = [];
         $inactive_themes = [];

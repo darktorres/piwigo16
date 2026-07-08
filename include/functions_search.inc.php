@@ -10,9 +10,9 @@
 function get_search_id_pattern($candidate)
 {
     $clause_pattern = null;
-    if (preg_match('/^psk-\d{8}-[a-z0-9]{10}$/i', $candidate)) {
+    if (preg_match('/^psk-\d{8}-[a-z0-9]{10}$/i', (string) $candidate)) {
         $clause_pattern = 'search_uuid = \'%s\'';
-    } elseif (preg_match('/^\d+$/', $candidate)) {
+    } elseif (preg_match('/^\d+$/', (string) $candidate)) {
         $clause_pattern = 'id = %u';
     }
 
@@ -403,20 +403,20 @@ SELECT
                 // ... and also, no need to search for images of 2023-10-16 if 2023-10 is already requested
                 $begin = $end = null;
 
-                $ymd = substr($custom_date, 0, 1);
+                $ymd = substr((string) $custom_date, 0, 1);
                 if ($ymd == 'y') {
-                    $year = substr($custom_date, 1);
+                    $year = substr((string) $custom_date, 1);
                     $begin = $year . '-01-01 00:00:00';
                     $end = $year . '-12-31 23:59:59';
                 } elseif ($ymd == 'm') {
-                    [$year, $month] = explode('-', substr($custom_date, 1));
+                    [$year, $month] = explode('-', substr((string) $custom_date, 1));
 
                     if (! isset($custom_dates['y' . $year])) {
                         $begin = $year . '-' . $month . '-01 00:00:00';
                         $end = $year . '-' . $month . '-' . cal_days_in_month(CAL_GREGORIAN, (int) $month, (int) $year) . ' 23:59:59';
                     }
                 } elseif ($ymd == 'd') {
-                    [$year, $month, $day] = explode('-', substr($custom_date, 1));
+                    [$year, $month, $day] = explode('-', substr((string) $custom_date, 1));
 
                     if (! isset($custom_dates['y' . $year]) and ! isset($custom_dates['m' . $year . '-' . $month])) {
                         $begin = $year . '-' . $month . '-' . $day . ' 00:00:00';
@@ -472,20 +472,20 @@ SELECT
                 // ... and also, no need to search for images of 2023-10-16 if 2023-10 is already requested
                 $begin = $end = null;
 
-                $ymd = substr($custom_date, 0, 1);
+                $ymd = substr((string) $custom_date, 0, 1);
                 if ($ymd == 'y') {
-                    $year = substr($custom_date, 1);
+                    $year = substr((string) $custom_date, 1);
                     $begin = $year . '-01-01 00:00:00';
                     $end = $year . '-12-31 23:59:59';
                 } elseif ($ymd == 'm') {
-                    [$year, $month] = explode('-', substr($custom_date, 1));
+                    [$year, $month] = explode('-', substr((string) $custom_date, 1));
 
                     if (! isset($custom_dates['y' . $year])) {
                         $begin = $year . '-' . $month . '-01 00:00:00';
                         $end = $year . '-' . $month . '-' . cal_days_in_month(CAL_GREGORIAN, (int) $month, (int) $year) . ' 23:59:59';
                     }
                 } elseif ($ymd == 'd') {
-                    [$year, $month, $day] = explode('-', substr($custom_date, 1));
+                    [$year, $month, $day] = explode('-', substr((string) $custom_date, 1));
 
                     if (! isset($custom_dates['y' . $year]) and ! isset($custom_dates['m' . $year . '-' . $month])) {
                         $begin = $year . '-' . $month . '-' . $day . ' 00:00:00';
@@ -763,25 +763,13 @@ define('QST_BREAK', 0x20);
  */
 class QSearchScope
 {
-    public $id;
-
-    public $aliases;
-
-    public $is_text;
-
-    public $nullable;
-
-    public function __construct($id, $aliases, $nullable = false, $is_text = true)
+    public function __construct(public $id, public $aliases, public $nullable = false, public $is_text = true)
     {
-        $this->id = $id;
-        $this->aliases = $aliases;
-        $this->is_text = $is_text;
-        $this->nullable = $nullable;
     }
 
     public function parse($token)
     {
-        if (! $this->nullable && strlen($token->term) == 0) {
+        if (! $this->nullable && strlen((string) $token->term) == 0) {
             return false;
         }
         return true;
@@ -795,26 +783,24 @@ class QSearchScope
 
 class QNumericRangeScope extends QSearchScope
 {
-    private $epsilon;
-
-    public function __construct($id, $aliases, $nullable = false, $epsilon = 0)
+    public function __construct($id, $aliases, $nullable = false, private $epsilon = 0)
     {
         parent::__construct($id, $aliases, $nullable, false);
-        $this->epsilon = $epsilon;
     }
 
+    #[\Override]
     public function parse($token)
     {
         $str = $token->term;
         $strict = [0, 0];
         $range_requested = true;
-        if (($pos = strpos($str, '..')) !== false) {
-            $range = [substr($str, 0, $pos), substr($str, $pos + 2)];
+        if (($pos = strpos((string) $str, '..')) !== false) {
+            $range = [substr((string) $str, 0, $pos), substr((string) $str, $pos + 2)];
         } elseif (@$str[0] == '>') {// ratio:>1
-            $range = [substr($str, 1), ''];
+            $range = [substr((string) $str, 1), ''];
             $strict[0] = 1;
         } elseif (@$str[0] == '<') { // size:<5mp
-            $range = ['', substr($str, 1)];
+            $range = ['', substr((string) $str, 1)];
             $strict[1] = 1;
         } elseif (($token->modifier & QST_WILDCARD_BEGIN)) {
             $range = ['', $str];
@@ -826,9 +812,9 @@ class QNumericRangeScope extends QSearchScope
         }
 
         foreach ($range as $i => &$val) {
-            if (preg_match('#^(-?[0-9.]+)/([0-9.]+)$#i', $val, $matches)) {
+            if (preg_match('#^(-?[0-9.]+)/([0-9.]+)$#i', (string) $val, $matches)) {
                 $val = floatval($matches[1] / $matches[2]);
-            } elseif (preg_match('/^(-?[0-9.]+)([km])?/i', $val, $matches)) {
+            } elseif (preg_match('/^(-?[0-9.]+)([km])?/i', (string) $val, $matches)) {
                 $val = floatval($matches[1]);
                 if (isset($matches[2])) {
                     $mult = 1;
@@ -841,7 +827,7 @@ class QNumericRangeScope extends QSearchScope
                     if ($i && ! $range_requested) {// round up the upper limit if possible - e.g 6k goes up to 6999, but 6.12k goes only up to 6129
                         if (($dot_pos = strpos($matches[1], '.')) !== false) {
                             $requested_precision = strlen($matches[1]) - $dot_pos - 1;
-                            $mult /= pow(10, $requested_precision);
+                            $mult /= 10 ** $requested_precision;
                         }
                         if ($mult > 1) {
                             $val += $mult - 1;
@@ -898,17 +884,18 @@ class QDateRangeScope extends QSearchScope
         parent::__construct($id, $aliases, $nullable, false);
     }
 
+    #[\Override]
     public function parse($token)
     {
         $str = $token->term;
         $strict = [0, 0];
-        if (($pos = strpos($str, '..')) !== false) {
-            $range = [substr($str, 0, $pos), substr($str, $pos + 2)];
+        if (($pos = strpos((string) $str, '..')) !== false) {
+            $range = [substr((string) $str, 0, $pos), substr((string) $str, $pos + 2)];
         } elseif (@$str[0] == '>') {
-            $range = [substr($str, 1), ''];
+            $range = [substr((string) $str, 1), ''];
             $strict[0] = 1;
         } elseif (@$str[0] == '<') {
-            $range = ['', substr($str, 1)];
+            $range = ['', substr((string) $str, 1)];
             $strict[1] = 1;
         } elseif (($token->modifier & QST_WILDCARD_BEGIN)) {
             $range = ['', $str];
@@ -919,7 +906,7 @@ class QDateRangeScope extends QSearchScope
         }
 
         foreach ($range as $i => &$val) {
-            if (preg_match('/([0-9]{4})-?((?:1[0-2])|(?:0?[1-9]))?-?((?:(?:[1-3][0-9])|(?:0?[1-9])))?/', $val, $matches)) {
+            if (preg_match('/([0-9]{4})-?((?:1[0-2])|(?:0?[1-9]))?-?((?:(?:[1-3][0-9])|(?:0?[1-9])))?/', (string) $val, $matches)) {
                 array_shift($matches);
                 if (! isset($matches[1])) {
                     $matches[1] = ($i ^ $strict[$i]) ? 12 : 1;
@@ -931,7 +918,7 @@ class QDateRangeScope extends QSearchScope
                 if ($i ^ $strict[$i]) {
                     $val .= ' 23:59:59';
                 }
-            } elseif (strlen($val)) {
+            } elseif (strlen((string) $val)) {
                 return false;
             }
         }
@@ -977,30 +964,21 @@ class QDateRangeScope extends QSearchScope
 /**
  * Represents a single word or quoted phrase to be searched.
  */
-class QSingleToken
+class QSingleToken implements \Stringable
 {
-    public $is_single = true;
-
-    public $modifier;
-
-    public $term; /* the actual word/phrase string */
+    public $is_single = true; /* the actual word/phrase string */
 
     public $variants = [];
-
-    public $scope;
 
     public $scope_data;
 
     public $idx;
 
-    public function __construct($term, $modifier, $scope)
+    public function __construct(public $term, public $modifier, public $scope)
     {
-        $this->term = $term;
-        $this->modifier = $modifier;
-        $this->scope = $scope;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         $s = '';
         if (isset($this->scope)) {
@@ -1026,7 +1004,7 @@ class QSingleToken
 /**
  * Represents an expression of several words or sub expressions to be searched.
  */
-class QMultiToken
+class QMultiToken implements \Stringable
 {
     public $is_single = false;
 
@@ -1034,7 +1012,7 @@ class QMultiToken
 
     public $tokens = []; // the actual array of QSingleToken or QMultiToken
 
-    public function __toString()
+    public function __toString(): string
     {
         $s = '';
         for ($i = 0; $i < count($this->tokens); $i++) {
@@ -1061,7 +1039,7 @@ class QMultiToken
 
     private function push(&$token, &$modifier, &$scope)
     {
-        if (strlen($token) || (isset($scope) && $scope->nullable)) {
+        if (strlen((string) $token) || (isset($scope) && $scope->nullable)) {
             if (isset($scope)) {
                 $modifier |= QST_BREAK;
             }
@@ -1090,7 +1068,7 @@ class QMultiToken
             if (($crt_modifier & QST_QUOTED) == 0) {
                 switch ($ch) {
                     case '(':
-                        if (strlen($crt_token)) {
+                        if (strlen((string) $crt_token)) {
                             $this->push($crt_token, $crt_modifier, $crt_scope);
                         }
                         $sub = new self();
@@ -1110,7 +1088,7 @@ class QMultiToken
                         }
                         break;
                     case ':':
-                        $scope = @$root->scopes[strtolower($crt_token)];
+                        $scope = @$root->scopes[strtolower((string) $crt_token)];
                         if (! isset($scope) || isset($crt_scope)) { // white space
                             $this->push($crt_token, $crt_modifier, $crt_scope);
                         } else {
@@ -1119,20 +1097,20 @@ class QMultiToken
                         }
                         break;
                     case '"':
-                        if (strlen($crt_token)) {
+                        if (strlen((string) $crt_token)) {
                             $this->push($crt_token, $crt_modifier, $crt_scope);
                         }
                         $crt_modifier |= QST_QUOTED;
                         break;
                     case '-':
-                        if (strlen($crt_token) || isset($crt_scope)) {
+                        if (strlen((string) $crt_token) || isset($crt_scope)) {
                             $crt_token .= $ch;
                         } else {
                             $crt_modifier |= QST_NOT;
                         }
                         break;
                     case '*':
-                        if (strlen($crt_token)) {
+                        if (strlen((string) $crt_token)) {
                             $crt_token .= $ch;
                         } // wildcard end later
                         else {
@@ -1144,7 +1122,7 @@ class QMultiToken
                             $crt_token .= $ch;
                             break;
                         }
-                        if (strlen($crt_token) && preg_match('/[0-9]/', substr($crt_token, -1))
+                        if (strlen((string) $crt_token) && preg_match('/[0-9]/', substr((string) $crt_token, -1))
                           && $qi + 1 < strlen($q) && preg_match('/[0-9]/', $q[$qi + 1])) {// dot between digits is not a separator e.g. F2.8
                             $crt_token .= $ch;
                             break;
@@ -1153,7 +1131,7 @@ class QMultiToken
                         // no break
                     default:
                         if (! $crt_scope || ! $crt_scope->process_char($ch, $crt_token)) {
-                            if (strpos(' ,.;!?', $ch) !== false) { // white space
+                            if (str_contains(' ,.;!?', $ch)) { // white space
                                 $this->push($crt_token, $crt_modifier, $crt_scope);
                             } else {
                                 $crt_token .= $ch;
@@ -1181,31 +1159,31 @@ class QMultiToken
             $remove = false;
             if ($token->is_single) {
                 if (($token->modifier & QST_QUOTED) == 0
-                  && substr($token->term, -1) == '*') {
-                    $token->term = rtrim($token->term, '*');
+                  && str_ends_with((string) $token->term, '*')) {
+                    $token->term = rtrim((string) $token->term, '*');
                     $token->modifier |= QST_WILDCARD_END;
                 }
 
                 if (! isset($token->scope)
                   && ($token->modifier & (QST_QUOTED | QST_WILDCARD)) == 0) {
-                    if (strtolower($token->term) == 'not') {
+                    if (strtolower((string) $token->term) == 'not') {
                         if ($i + 1 < count($this->tokens)) {
                             $this->tokens[$i + 1]->modifier |= QST_NOT;
                         }
                         $token->term = '';
                     }
-                    if (strtolower($token->term) == 'or') {
+                    if (strtolower((string) $token->term) == 'or') {
                         if ($i + 1 < count($this->tokens)) {
                             $this->tokens[$i + 1]->modifier |= QST_OR;
                         }
                         $token->term = '';
                     }
-                    if (strtolower($token->term) == 'and') {
+                    if (strtolower((string) $token->term) == 'and') {
                         $token->term = '';
                     }
                 }
 
-                if (! strlen($token->term)
+                if (! strlen((string) $token->term)
                   && (! isset($token->scope) || ! $token->scope->nullable)) {
                     $remove = true;
                 }
@@ -1373,7 +1351,7 @@ function qsearch_get_text_token_search_sql($token, $fields)
     $variants = array_merge([$token->term], $token->variants);
     $fts = [];
     foreach ($variants as $variant) {
-        $use_ft = mb_strlen($variant) > 3;
+        $use_ft = mb_strlen((string) $variant) > 3;
         if ($token->modifier & QST_WILDCARD_BEGIN) {
             $use_ft = false;
         }
@@ -1383,8 +1361,8 @@ function qsearch_get_text_token_search_sql($token, $fields)
 
         if ($use_ft) {
             $max = max(array_map(
-                'mb_strlen',
-                preg_split('/[' . preg_quote('-\'!"#$%&()*+,./:;<=>?@[\]^`{|}~', '/') . ']+/', $variant)
+                mb_strlen(...),
+                preg_split('/[' . preg_quote('-\'!"#$%&()*+,./:;<=>?@[\]^`{|}~', '/') . ']+/', (string) $variant)
             ));
             if ($max < 4) {
                 $use_ft = false;
@@ -1405,7 +1383,7 @@ function qsearch_get_text_token_search_sql($token, $fields)
             $pre = ($token->modifier & QST_WILDCARD_BEGIN) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:<:]]');
             $post = ($token->modifier & QST_WILDCARD_END) ? '' : ($page['use_regexp_ICU'] ? '\\\\b' : '[[:>:]]');
             foreach ($fields as $field) {
-                $clauses[] = $field . ' REGEXP \'' . $pre . addslashes(preg_quote($variant)) . $post . '\'';
+                $clauses[] = $field . ' REGEXP \'' . $pre . addslashes(preg_quote((string) $variant)) . $post . '\'';
             }
         } else {
             $ft = $variant;
@@ -1436,7 +1414,7 @@ function qsearch_get_images(QExpression $expr, QResults $qsr)
         $scope_id = isset($token->scope) ? $token->scope->id : 'photo';
         $clauses = [];
 
-        $like = addslashes($token->term);
+        $like = addslashes((string) $token->term);
         $like = str_replace(['%', '_'], ['\\%', '\\_'], $like); // escape LIKE specials %_
         $file_like = 'CONVERT(file, CHAR) LIKE \'%' . $like . '%\'';
 
@@ -1450,7 +1428,7 @@ function qsearch_get_images(QExpression $expr, QResults $qsr)
                 $clauses[] = $file_like;
                 break;
             case 'author':
-                if (strlen($token->term)) {
+                if (strlen((string) $token->term)) {
                     $clauses = array_merge($clauses, qsearch_get_text_token_search_sql($token, ['author']));
                 } elseif ($token->modifier & QST_WILDCARD) {
                     $clauses[] = 'author IS NOT NULL';
@@ -1524,7 +1502,7 @@ WHERE (' . implode("\n OR ", $clauses) . ')';
 
     // check adjacent short words
     for ($i = 0; $i < count($expr->stokens) - 1; $i++) {
-        if ((strlen($expr->stokens[$i]->term) <= 3 || strlen($expr->stokens[$i + 1]->term) <= 3)
+        if ((strlen((string) $expr->stokens[$i]->term) <= 3 || strlen((string) $expr->stokens[$i + 1]->term) <= 3)
           && (($expr->stoken_modifiers[$i] & (QST_QUOTED | QST_WILDCARD)) == 0)
           && (($expr->stoken_modifiers[$i + 1] & (QST_BREAK | QST_QUOTED | QST_WILDCARD)) == 0)) {
             $common = array_intersect($token_tag_ids[$i], $token_tag_ids[$i + 1]);
@@ -1549,7 +1527,7 @@ SELECT image_id FROM ' . IMAGE_TAG_TABLE . '
             if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $tag_ids);
             } else {
-                if (strlen($token->term) > 2 || count($expr->stokens) == 1 || isset($token->scope) || ($token->modifier & (QST_WILDCARD | QST_QUOTED))) {// add tag ids to list only if the word is not too short (such as de / la /les ...)
+                if (strlen((string) $token->term) > 2 || count($expr->stokens) == 1 || isset($token->scope) || ($token->modifier & (QST_WILDCARD | QST_QUOTED))) {// add tag ids to list only if the word is not too short (such as de / la /les ...)
                     $positive_ids = array_merge($positive_ids, $tag_ids);
                 }
             }
@@ -1563,7 +1541,7 @@ SELECT image_id FROM ' . IMAGE_TAG_TABLE . '
     }
 
     $all_tags = array_intersect_key($all_tags, array_flip(array_diff($positive_ids, $not_ids)));
-    usort($all_tags, 'tag_alpha_compare');
+    usort($all_tags, tag_alpha_compare(...));
     foreach ($all_tags as &$tag) {
         $tag['name'] = trigger_change('render_tag_name', $tag['name'], $tag);
     }
@@ -1603,7 +1581,7 @@ SELECT
 
     // check adjacent short words
     for ($i = 0; $i < count($expr->stokens) - 1; $i++) {
-        if ((strlen($expr->stokens[$i]->term) <= 3 || strlen($expr->stokens[$i + 1]->term) <= 3)
+        if ((strlen((string) $expr->stokens[$i]->term) <= 3 || strlen((string) $expr->stokens[$i + 1]->term) <= 3)
           && (($expr->stoken_modifiers[$i] & (QST_QUOTED | QST_WILDCARD)) == 0)
           && (($expr->stoken_modifiers[$i + 1] & (QST_BREAK | QST_QUOTED | QST_WILDCARD)) == 0)) {
             $common = array_intersect($token_cat_ids[$i], $token_cat_ids[$i + 1]);
@@ -1639,7 +1617,7 @@ SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . '
             if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $cat_ids);
             } else {
-                if (strlen($token->term) > 2 || count($expr->stokens) == 1 || isset($token->scope) || ($token->modifier & (QST_WILDCARD | QST_QUOTED))) {// add cat ids to list only if the word is not too short (such as de / la /les ...)
+                if (strlen((string) $token->term) > 2 || count($expr->stokens) == 1 || isset($token->scope) || ($token->modifier & (QST_WILDCARD | QST_QUOTED))) {// add cat ids to list only if the word is not too short (such as de / la /les ...)
                     $positive_ids = array_merge($positive_ids, $cat_ids);
                 }
             }
@@ -1653,7 +1631,7 @@ SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . '
     }
 
     $all_cats = array_intersect_key($all_cats, array_flip(array_diff($positive_ids, $not_ids)));
-    usort($all_cats, 'tag_alpha_compare');
+    usort($all_cats, tag_alpha_compare(...));
     foreach ($all_cats as &$cat) {
         $cat['name'] = trigger_change('render_category_name', $cat['name'], $cat);
     }
@@ -1756,7 +1734,7 @@ function get_quick_search_results_no_cache($q, $options)
 {
     global $conf;
 
-    $q = trim(stripslashes($q));
+    $q = trim(stripslashes((string) $q));
     $search_results =
       [
           'items' => [],
@@ -1806,9 +1784,9 @@ function get_quick_search_results_no_cache($q, $options)
             if (isset($token->scope) && ! $token->scope->is_text) {
                 continue;
             }
-            if (strlen($token->term) > 2
+            if (strlen((string) $token->term) > 2
               && ($token->modifier & (QST_QUOTED | QST_WILDCARD)) == 0
-              && strcspn($token->term, '\'0123456789') == strlen($token->term)) {
+              && strcspn((string) $token->term, '\'0123456789') == strlen((string) $token->term)) {
                 $token->variants = array_unique(array_diff($inflector->get_variants($token->term), [$token->term]));
             }
         }
@@ -1833,7 +1811,7 @@ function get_quick_search_results_no_cache($q, $options)
     $debug[] = "<!--\nparsed: " . htmlspecialchars($expression);
     $debug[] = count($expression->stokens) . ' tokens';
     for ($i = 0; $i < count($expression->stokens); $i++) {
-        $debug[] = htmlspecialchars($expression->stokens[$i]) . ': ' . count($qsr->tag_ids[$i]) . ' tags, ' . count($qsr->tag_iids[$i]) . ' tiids, ' . count($qsr->images_iids[$i]) . ' iiids, ' . count($qsr->iids[$i]) . ' iids'
+        $debug[] = htmlspecialchars((string) $expression->stokens[$i]) . ': ' . count($qsr->tag_ids[$i]) . ' tags, ' . count($qsr->tag_iids[$i]) . ' tiids, ' . count($qsr->images_iids[$i]) . ' iiids, ' . count($qsr->iids[$i]) . ' iids'
           . ' modifier:' . dechex($expression->stoken_modifiers[$i])
           . (! empty($expression->stokens[$i]->variants) ? ' variants: ' . htmlspecialchars(implode(', ', $expression->stokens[$i]->variants)) : '');
     }

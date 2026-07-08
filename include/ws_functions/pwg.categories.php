@@ -347,7 +347,7 @@ SELECT SQL_CALC_FOUND_ROWS
             $row['name_raw'] = $row['name'];
 
             $row['name'] = strip_tags(
-                trigger_change(
+                (string) trigger_change(
                     'render_category_name',
                     $row['name'],
                     'ws_categories_getList'
@@ -425,7 +425,7 @@ SELECT representative_picture_id
 
         $cats[] = $row;
     }
-    usort($cats, 'global_rank_compare');
+    usort($cats, global_rank_compare(...));
 
     // management of the album thumbnail -- starts here
     if (count($categories) > 0) {
@@ -547,7 +547,7 @@ function ws_categories_getAdminList($params, &$service)
     if (! isset($params['additional_output'])) {
         $params['additional_output'] = '';
     }
-    $params['additional_output'] = array_map('trim', explode(',', $params['additional_output']));
+    $params['additional_output'] = array_map(trim(...), explode(',', (string) $params['additional_output']));
 
     $query = '
 SELECT category_id, COUNT(*) AS counter
@@ -604,7 +604,7 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
         $row['name_raw'] = $row['name'];
 
         $row['name'] = strip_tags(
-            trigger_change(
+            (string) trigger_change(
                 'render_category_name',
                 $row['name'],
                 'ws_categories_getAdminList'
@@ -656,7 +656,7 @@ SELECT
         $limit_reached = true;
     }
 
-    usort($cats, 'global_rank_compare');
+    usort($cats, global_rank_compare(...));
     return [
         'categories' => new PwgNamedArray(
             $cats,
@@ -700,11 +700,11 @@ function ws_categories_add($params, &$service)
     }
 
     if (! empty($params['comment'])) {
-        $options['comment'] = (! $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags($params['comment']) : $params['comment'];
+        $options['comment'] = (! $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags((string) $params['comment']) : $params['comment'];
     }
 
     $creation_output = create_virtual_category(
-        (! $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
+        (! $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags((string) $params['name']) : $params['name'],
         $params['parent'],
         $options
     );
@@ -760,7 +760,7 @@ SELECT id
             return new PwgError(WS_ERR_INVALID_PARAM, 'you need to provide all sub-category ids for a given category');
         }
     } else {
-        $params['category_id'] = implode($params['category_id']);
+        $params['category_id'] = implode('', $params['category_id']);
 
         $query = '
 SELECT id
@@ -841,7 +841,7 @@ SELECT *
     ];
 
     foreach (['visible', 'commentable'] as $param_name) {
-        if (isset($params[$param_name]) and ! preg_match('/^(true|false)$/i', $params[$param_name])) {
+        if (isset($params[$param_name]) and ! preg_match('/^(true|false)$/i', (string) $params[$param_name])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid param ' . $param_name . ' : ' . $params[$param_name]);
         }
     }
@@ -857,7 +857,7 @@ SELECT *
     foreach ($info_columns as $key) {
         if (isset($params[$key])) {
             $perform_update = true;
-            $update[$key] = (! $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags($params[$key]) : $params[$key];
+            $update[$key] = (! $conf['allow_html_descriptions'] or ! isset($params['pwg_token'])) ? strip_tags((string) $params[$key]) : $params[$key];
         }
     }
 
@@ -1065,12 +1065,12 @@ function ws_categories_delete($params, &$service)
     if (! is_array($params['category_id'])) {
         $params['category_id'] = preg_split(
             '/[\s,;\|]/',
-            $params['category_id'],
+            (string) $params['category_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
         );
     }
-    $params['category_id'] = array_map('intval', $params['category_id']);
+    $params['category_id'] = array_map(intval(...), $params['category_id']);
 
     $category_ids = [];
     foreach ($params['category_id'] as $category_id) {
@@ -1119,12 +1119,12 @@ function ws_categories_move($params, &$service)
     if (! is_array($params['category_id'])) {
         $params['category_id'] = preg_split(
             '/[\s,;\|]/',
-            $params['category_id'],
+            (string) $params['category_id'],
             -1,
             PREG_SPLIT_NO_EMPTY
         );
     }
-    $params['category_id'] = array_map('intval', $params['category_id']);
+    $params['category_id'] = array_map(intval(...), $params['category_id']);
 
     $category_ids = [];
     foreach ($params['category_id'] as $category_id) {
@@ -1149,12 +1149,12 @@ SELECT id, name, dir, uppercats
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
         $categories_in_db[$row['id']] = $row;
-        $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $row['uppercats']), 0, -1));
+        $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', (string) $row['uppercats']), 0, -1));
 
         // we break on error at first physical category detected
         if (! empty($row['dir'])) {
             $row['name'] = strip_tags(
-                trigger_change(
+                (string) trigger_change(
                     'render_category_name',
                     $row['name'],
                     'ws_categories_move'
@@ -1216,7 +1216,7 @@ SELECT id, name, dir, uppercats
             $row['uppercats'],
             'admin.php?page=album-'
         );
-        $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $row['uppercats']), 0, -1));
+        $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', (string) $row['uppercats']), 0, -1));
     }
 
     $query = '

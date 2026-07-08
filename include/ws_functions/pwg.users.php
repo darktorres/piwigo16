@@ -30,13 +30,13 @@ function ws_users_getList($params, &$service)
 {
     global $conf;
 
-    if (! preg_match(PATTERN_ORDER, $params['order'])) {
+    if (! preg_match(PATTERN_ORDER, (string) $params['order'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter order');
     }
 
     // Insensitive case sort order
     if (isset($params['order'])) {
-        if (strpos($params['order'], 'username') !== false) {
+        if (str_contains((string) $params['order'], 'username')) {
             $params['order'] = str_ireplace('username', 'LOWER(username)', $params['order']);
         }
     }
@@ -70,11 +70,11 @@ function ws_users_getList($params, &$service)
     }
 
     if (! empty($params['min_register'])) {
-        if (! preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $params['min_register'])) {
+        if (! preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', (string) $params['min_register'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter min_register');
         }
 
-        $date_tokens = explode('-', $params['min_register']);
+        $date_tokens = explode('-', (string) $params['min_register']);
         $min_register_year = $date_tokens[0];
         $min_register_month = $date_tokens[1] ?? 1;
         $min_register_day = $date_tokens[2] ?? 1;
@@ -83,11 +83,11 @@ function ws_users_getList($params, &$service)
     }
 
     if (! empty($params['max_register'])) {
-        if (! preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $params['max_register'])) {
+        if (! preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', (string) $params['max_register'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid input parameter max_register');
         }
 
-        $max_date_tokens = explode('-', $params['max_register']);
+        $max_date_tokens = explode('-', (string) $params['max_register']);
         $max_register_year = $max_date_tokens[0];
         $max_register_month = $max_date_tokens[1] ?? 12;
         $max_register_day = $max_date_tokens[2] ?? date('t', strtotime($max_register_year . '-' . $max_register_month . '-1'));
@@ -129,7 +129,7 @@ function ws_users_getList($params, &$service)
     ];
 
     if ($params['display'] != 'none') {
-        $params['display'] = array_map('trim', explode(',', $params['display']));
+        $params['display'] = array_map(trim(...), explode(',', (string) $params['display']));
 
         if (in_array('all', $params['display'])) {
             $params['display'] = [
@@ -605,16 +605,16 @@ function ws_users_preferences_set($params, &$service)
 {
     global $user;
 
-    if (! preg_match('/^[a-zA-Z0-9_-]+$/', $params['param'])) {
+    if (! preg_match('/^[a-zA-Z0-9_-]+$/', (string) $params['param'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid param name #' . $params['param'] . '#');
     }
 
-    $value = stripslashes($params['value']);
+    $value = stripslashes((string) $params['value']);
     if ($params['is_json']) {
         $value = json_decode($value, true);
     }
 
-    userprefs_update_param($params['param'], $value, true);
+    userprefs_update_param($params['param'], $value);
 
     return $user['preferences'];
 }
@@ -892,7 +892,7 @@ function ws_create_api_key($params, &$service)
         return new PwgError(400, 'Invalid duration max days is 999999');
     }
 
-    if (strlen($params['key_name']) > 100) {
+    if (strlen((string) $params['key_name']) > 100) {
         return new PwgError(400, 'Key name is too long');
     }
 
@@ -924,7 +924,7 @@ function ws_revoke_api_key($params, &$service)
         return new PwgError(403, l10n('Invalid security token'));
     }
 
-    if (! preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['pkid'])) {
+    if (! preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', (string) $params['pkid'])) {
         return new PwgError(403, l10n('Invalid pkid format'));
     }
 
@@ -961,7 +961,7 @@ function ws_edit_api_key($params, &$service)
         return new PwgError(403, l10n('Invalid security token'));
     }
 
-    if (! preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['pkid'])) {
+    if (! preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', (string) $params['pkid'])) {
         return new PwgError(403, l10n('Invalid pkid format'));
     }
 

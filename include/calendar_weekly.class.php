@@ -18,6 +18,7 @@ class CalendarWeekly extends CalendarBase
      * Initialize the calendar
      * @param string $inner_sql
      */
+    #[\Override]
     public function initialize($inner_sql)
     {
         parent::initialize($inner_sql);

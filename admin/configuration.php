@@ -218,7 +218,7 @@ if (isset($_POST['submit'])) {
 
             // the number of comments per page must be an integer between 5 and 50
             // included
-            if (! preg_match($int_pattern, $_POST['nb_comment_page'])
+            if (! preg_match($int_pattern, (string) $_POST['nb_comment_page'])
                  or $_POST['nb_comment_page'] < 5
                  or $_POST['nb_comment_page'] > 50) {
                 $page['errors'][] = l10n('The number of comments a page must be between 5 and 50 included.');
@@ -235,7 +235,7 @@ if (isset($_POST['submit'])) {
 
         case 'display':
 
-            if (! preg_match($int_pattern, $_POST['nb_categories_page'])
+            if (! preg_match($int_pattern, (string) $_POST['nb_categories_page'])
                   or $_POST['nb_categories_page'] < 4) {
                 $page['errors'][] = l10n('The number of albums a page must be above 4.');
             }
@@ -367,7 +367,7 @@ switch ($page['section']) {
             $template->assign('ORDER_BY_IS_CUSTOM', true);
         } else {
             $out = [];
-            $order_by = trim($conf['order_by_inside_category']);
+            $order_by = trim((string) $conf['order_by_inside_category']);
             $order_by = str_replace('ORDER BY ', false, $order_by);
             $order_by = explode(', ', $order_by);
         }
@@ -375,8 +375,8 @@ switch ($page['section']) {
         $template->assign(
             'main',
             [
-                'CONF_GALLERY_TITLE' => htmlspecialchars($conf['gallery_title']),
-                'CONF_PAGE_BANNER' => htmlspecialchars($conf['page_banner']),
+                'CONF_GALLERY_TITLE' => htmlspecialchars((string) $conf['gallery_title']),
+                'CONF_PAGE_BANNER' => htmlspecialchars((string) $conf['page_banner']),
                 'week_starts_on_options' => [
                     'sunday' => $lang['day'][0],
                     'monday' => $lang['day'][1],
@@ -388,7 +388,7 @@ switch ($page['section']) {
                 'order_by_options' => $sort_fields,
                 'email_admin_on_new_user' => $conf['email_admin_on_new_user'] != 'none',
                 'email_admin_on_new_user_filter' => in_array($conf['email_admin_on_new_user'], ['none', 'all']) ? 'all' : 'group',
-                'email_admin_on_new_user_filter_group' => preg_match('/^group:(\d+)$/', $conf['email_admin_on_new_user'], $matches) ? $matches[1] : -1,
+                'email_admin_on_new_user_filter_group' => preg_match('/^group:(\d+)$/', (string) $conf['email_admin_on_new_user'], $matches) ? $matches[1] : -1,
             ]
         );
 

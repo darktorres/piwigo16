@@ -17,9 +17,9 @@ function ws_tags_getList($params, &$service)
 {
     $tags = get_available_tags();
     if ($params['sort_by_counter']) {
-        usort($tags, function ($a, $b) {  return -$a['counter'] + $b['counter']; });
+        usort($tags, fn($a, $b) => -$a['counter'] + $b['counter']);
     } else {
-        usort($tags, 'tag_alpha_compare');
+        usort($tags, tag_alpha_compare(...));
     }
 
     for ($i = 0; $i < count($tags); $i++) {
@@ -118,7 +118,7 @@ SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
 
         while ($row = pwg_db_fetch_assoc($result)) {
             $row['image_id'] = (int) $row['image_id'];
-            $image_tag_map[$row['image_id']] = explode(',', $row['tag_ids']);
+            $image_tag_map[$row['image_id']] = explode(',', (string) $row['tag_ids']);
         }
     }
 
@@ -148,7 +148,7 @@ SELECT *
                 $image[$k] = $row[$k];
             }
 
-            $image['name'] = strip_tags(trigger_change('render_element_name', $image['name'], __FUNCTION__));
+            $image['name'] = strip_tags((string) trigger_change('render_element_name', $image['name'], __FUNCTION__));
             $image['comment'] = trigger_change('render_element_description', $image['comment'], __FUNCTION__);
 
             $image = array_merge($image, ws_std_get_urls($row));
@@ -181,7 +181,7 @@ SELECT *
             $images[] = $image;
         }
 
-        usort($images, 'rank_compare');
+        usort($images, rank_compare(...));
         unset($rank_of);
     }
 
@@ -276,7 +276,7 @@ function ws_tags_rename($params, &$service)
     }
 
     $tag_id = $params['tag_id'];
-    $tag_name = strip_tags(stripslashes($params['new_name']));
+    $tag_name = strip_tags(stripslashes((string) $params['new_name']));
 
     // does the tag exist ?
     $query = '
@@ -375,7 +375,7 @@ SELECT COUNT(*)
             'url_name' => trigger_change('render_tag_url', $copy_name),
         ]
     );
-    $destination_tag_id = pwg_db_insert_id(TAGS_TABLE);
+    $destination_tag_id = pwg_db_insert_id();
 
     pwg_activity('tag', $destination_tag_id, 'add', [
         'action' => 'duplicate',

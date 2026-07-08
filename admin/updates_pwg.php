@@ -38,7 +38,7 @@ if ($ct_env === 'Official') {
     // Remove optional ? on [a-z]? since it will only be available on piwigo 16.3
     // Docker images started to use letter suffix in 16.2
     check_input_parameter('to', $_GET, false, '/^\d+\.\d+\.\d+[a-z]?$/');
-    $upgrade_to = isset($_GET['to']) ? preg_replace('/[a-z]$/', '', $_GET['to']) : '';
+    $upgrade_to = isset($_GET['to']) ? preg_replace('/[a-z]$/', '', (string) $_GET['to']) : '';
 } else {
     check_input_parameter('to', $_GET, false, '/^\d+\.\d+\.\d+$/');
     $upgrade_to = $_GET['to'] ?? '';

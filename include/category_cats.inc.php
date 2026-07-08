@@ -147,7 +147,7 @@ SELECT
 }
 
 if ($page['section'] == 'recent_cats') {
-    usort($categories, 'global_rank_compare');
+    usort($categories, global_rank_compare(...));
 }
 
 if (count($categories) > 0) {
@@ -266,7 +266,7 @@ if (count($categories) > 0) {
         $tpl_var = array_merge($category, [
             'ID' => $category['id'] /* obsolete */,
             'representative' => $representative_infos,
-            'TN_ALT' => strip_tags($category['name']),
+            'TN_ALT' => strip_tags((string) $category['name']),
 
             'URL' => make_index_url(
                 [

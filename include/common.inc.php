@@ -25,20 +25,20 @@ $t2 = microtime(true);
 if (! function_exists('get_magic_quotes_gpc') or ! @get_magic_quotes_gpc()) {
     function sanitize_mysql_kv(&$v, $k)
     {
-        $v = addslashes($v);
+        $v = addslashes((string) $v);
     }
     if (is_array($_GET)) {
-        array_walk_recursive($_GET, 'sanitize_mysql_kv');
+        array_walk_recursive($_GET, sanitize_mysql_kv(...));
     }
     if (is_array($_POST)) {
-        array_walk_recursive($_POST, 'sanitize_mysql_kv');
+        array_walk_recursive($_POST, sanitize_mysql_kv(...));
     }
     if (is_array($_COOKIE)) {
-        array_walk_recursive($_COOKIE, 'sanitize_mysql_kv');
+        array_walk_recursive($_COOKIE, sanitize_mysql_kv(...));
     }
 }
 if (! empty($_SERVER['PATH_INFO'])) {
-    $_SERVER['PATH_INFO'] = addslashes($_SERVER['PATH_INFO']);
+    $_SERVER['PATH_INFO'] = addslashes((string) $_SERVER['PATH_INFO']);
 }
 
 //
@@ -167,8 +167,8 @@ if (! isset($conf['last_major_update'])) {
 // 2022-02-25 due to escape on "rank" (becoming a mysql keyword in version 8), the $conf['order_by'] might
 // use a "rank", even if admin/configuration.php should have removed it. We must remove it.
 // TODO remove this data update as soon as 2025 arrives
-if (preg_match('/(, )?`rank` ASC/', $conf['order_by'])) {
-    $order_by = preg_replace('/(, )?`rank` ASC/', '', $conf['order_by']);
+if (preg_match('/(, )?`rank` ASC/', (string) $conf['order_by'])) {
+    $order_by = preg_replace('/(, )?`rank` ASC/', '', (string) $conf['order_by']);
     if ($order_by == 'ORDER BY ') {
         $order_by = 'ORDER BY id ASC';
     }
@@ -318,7 +318,7 @@ if (! $conf['allow_html_descriptions']) {
 add_event_handler('render_comment_content', 'render_comment_content');
 add_event_handler('render_comment_author', 'strip_tags');
 add_event_handler('render_tag_url', 'str2url');
-add_event_handler('blockmanager_register_blocks', 'register_default_menubar_blocks', EVENT_HANDLER_PRIORITY_NEUTRAL - 1);
+add_event_handler('blockmanager_register_blocks', 'register_default_menubar_blocks');
 if (! empty($conf['original_url_protection'])) {
     add_event_handler('get_element_url', 'get_element_url_protection_handler');
     add_event_handler('get_src_image_url', 'get_src_image_url_protection_handler');

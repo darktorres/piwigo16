@@ -26,7 +26,7 @@ function get_sync_iptc_data($file)
 
     foreach ($iptc as $pwg_key => $value) {
         if (in_array($pwg_key, ['date_creation', 'date_available'])) {
-            if (preg_match('/(\d{4})(\d{2})(\d{2})/', $value, $matches)) {
+            if (preg_match('/(\d{4})(\d{2})(\d{2})/', (string) $value, $matches)) {
                 $year = $matches[1];
                 $month = $matches[2];
                 $day = $matches[3];
@@ -47,7 +47,7 @@ function get_sync_iptc_data($file)
     }
 
     foreach ($iptc as $pwg_key => $value) {
-        $iptc[$pwg_key] = addslashes($iptc[$pwg_key]);
+        $iptc[$pwg_key] = addslashes((string) $iptc[$pwg_key]);
     }
 
     return $iptc;
@@ -67,12 +67,12 @@ function get_sync_exif_data($file)
 
     foreach ($exif as $pwg_key => $value) {
         if (in_array($pwg_key, ['date_creation', 'date_available'])) {
-            if (preg_match('/^(\d{4}).(\d{2}).(\d{2}) (\d{2}).(\d{2}).(\d{2})/', $value, $matches)) {
+            if (preg_match('/^(\d{4}).(\d{2}).(\d{2}) (\d{2}).(\d{2}).(\d{2})/', (string) $value, $matches)) {
                 $exif[$pwg_key] = $matches[1] . '-' . $matches[2] . '-' . $matches[3] . ' ' . $matches[4] . ':' . $matches[5] . ':' . $matches[6];
                 if ($exif[$pwg_key] == '0000-00-00 00:00:00') {
                     $exif[$pwg_key] = null;
                 }
-            } elseif (preg_match('/^(\d{4}).(\d{2}).(\d{2})/', $value, $matches)) {
+            } elseif (preg_match('/^(\d{4}).(\d{2}).(\d{2})/', (string) $value, $matches)) {
                 $exif[$pwg_key] = $matches[1] . '-' . $matches[2] . '-' . $matches[3];
             } else {
                 unset($exif[$pwg_key]);
@@ -89,7 +89,7 @@ function get_sync_exif_data($file)
             continue;
         }
 
-        $exif[$pwg_key] = addslashes($exif[$pwg_key]);
+        $exif[$pwg_key] = addslashes((string) $exif[$pwg_key]);
     }
 
     return $exif;
@@ -367,14 +367,14 @@ function metadata_normalize_keywords_string($keywords_string)
     // new lines are always considered as keyword separators
     $keywords_string = str_replace(["\r\n", "\n", "\r"], ',', $keywords_string);
     $keywords_string = preg_replace('/,+/', ',', $keywords_string);
-    $keywords_string = preg_replace('/^,+|,+$/', '', $keywords_string);
+    $keywords_string = preg_replace('/^,+|,+$/', '', (string) $keywords_string);
 
     $keywords_string = implode(
         ',',
         array_unique(
             explode(
                 ',',
-                $keywords_string
+                (string) $keywords_string
             )
         )
     );

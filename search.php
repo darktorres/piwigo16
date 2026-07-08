@@ -109,7 +109,7 @@ if (count(get_available_tags()) > 0) {
     $tag_ids = [];
     if (isset($_GET['tag_id'])) {
         check_input_parameter('tag_id', $_GET, false, '/^\d+(,\d+)*$/');
-        $tag_ids = explode(',', $_GET['tag_id']);
+        $tag_ids = explode(',', (string) $_GET['tag_id']);
     }
 
     if (count($tag_ids) > 0 or in_array('tags', $fields)) {

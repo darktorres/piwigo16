@@ -30,7 +30,7 @@ function xmlrpc_encode($data)
             } else {
                 $return = '<struct>' . "\n";
                 foreach ($data as $name => $value) {
-                    $name = htmlspecialchars($name);
+                    $name = htmlspecialchars((string) $name);
                     $return .= "  <member><name>{$name}</name><value>";
                     $return .= xmlrpc_encode($value) . "</value></member>\n";
                 }
@@ -46,7 +46,7 @@ class PwgXmlRpcEncoder extends PwgResponseEncoder
     {
         if ($response instanceof PwgError) {
             $code = $response->code();
-            $msg = htmlspecialchars($response->message());
+            $msg = htmlspecialchars((string) $response->message());
             $ret = <<<EOD
 <methodResponse>
   <fault>

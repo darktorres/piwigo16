@@ -65,7 +65,7 @@ if ($page['section'] == 'search' and isset($page['search_details'])) {
         $other_filters_items = get_items_for_filter('tags');
         if ($other_filters_items === false) {
             $filter_tags = get_available_tags();
-            usort($filter_tags, 'tag_alpha_compare');
+            usort($filter_tags, tag_alpha_compare(...));
         } else {
             $filter_tags = get_common_tags($other_filters_items, 0);
 
@@ -171,7 +171,7 @@ SELECT
                     }
                 }
 
-                [$date_without_time] = explode(' ', $row['date']);
+                [$date_without_time] = explode(' ', (string) $row['date']);
                 [$y, $m] = explode('-', $date_without_time);
 
                 @$list_of_dates[$y]['months'][$y . '-' . $m]['days'][$date_without_time]['count']++;
@@ -212,11 +212,11 @@ SELECT
             $date_posted['list_of_dates'][$y]['label'] = l10n('year %d', $y);
 
             foreach (array_keys($date_posted['list_of_dates'][$y]['months']) as $ym) {
-                [, $m] = explode('-', $ym);
+                [, $m] = explode('-', (string) $ym);
                 $date_posted['list_of_dates'][$y]['months'][$ym]['label'] = $lang['month'][(int) $m] . ' ' . $y;
 
                 foreach (array_keys($date_posted['list_of_dates'][$y]['months'][$ym]['days']) as $ymd) {
-                    [, , $d] = explode('-', $ymd);
+                    [, , $d] = explode('-', (string) $ymd);
                     $date_posted['list_of_dates'][$y]['months'][$ym]['days'][$ymd]['label'] = format_date($ymd);
                 }
             }
@@ -266,7 +266,7 @@ SELECT
                         }
                     }
 
-                    [$date_without_time] = explode(' ', $row['date']);
+                    [$date_without_time] = explode(' ', (string) $row['date']);
                     [$y, $m] = explode('-', $date_without_time);
 
                     @$list_of_dates[$y]['months'][$y . '-' . $m]['days'][$date_without_time]['count']++;
@@ -308,11 +308,11 @@ SELECT
             $date_created['list_of_dates'][$y]['label'] = l10n('year %d', $y);
 
             foreach (array_keys($date_created['list_of_dates'][$y]['months']) as $ym) {
-                [, $m] = explode('-', $ym);
+                [, $m] = explode('-', (string) $ym);
                 $date_created['list_of_dates'][$y]['months'][$ym]['label'] = $lang['month'][(int) $m] . ' ' . $y;
 
                 foreach (array_keys($date_created['list_of_dates'][$y]['months'][$ym]['days']) as $ymd) {
-                    [, , $d] = explode('-', $ymd);
+                    [, , $d] = explode('-', (string) $ymd);
                     $date_created['list_of_dates'][$y]['months'][$ym]['days'][$ymd]['label'] = format_date($ymd);
                 }
             }
@@ -735,7 +735,7 @@ SELECT
   WHERE id IN (' . implode(',', $cat_ids) . ')
 ;';
                 $cats = query2array($query);
-                usort($cats, 'name_compare');
+                usort($cats, name_compare(...));
                 $albums_found = [];
                 foreach ($cats as $cat) {
                     $single_link = false;
@@ -756,7 +756,7 @@ SELECT
 
             if (count($tag_ids) > 0) {
                 $tags = get_available_tags($tag_ids);
-                usort($tags, 'tag_alpha_compare');
+                usort($tags, tag_alpha_compare(...));
                 $tags_found = [];
                 foreach ($tags as $tag) {
                     $url = make_index_url(

@@ -139,12 +139,12 @@ function cmp($a, $b)
     }
 
     if ($a['STATE'] == $b['STATE']) {
-        return strcasecmp($a['NAME'], $b['NAME']);
+        return strcasecmp((string) $a['NAME'], (string) $b['NAME']);
     } else {
         return $s[$a['STATE']] >= $s[$b['STATE']] ? 1 : -1;
     }
 }
-usort($tpl_themes, 'cmp');
+usort($tpl_themes, cmp(...));
 
 $template->assign(
     [

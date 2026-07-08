@@ -33,10 +33,10 @@ function pwg_db_connect($host, $user, $password, $database)
     $port = null;
     $socket = null;
 
-    if (strpos($host, '/') === 0) {
+    if (str_starts_with($host, '/')) {
         $socket = $host;
         $host = null;
-    } elseif (strpos($host, ':') !== false) {
+    } elseif (str_contains($host, ':')) {
         [$host, $port] = explode(':', $host);
     }
 
@@ -56,7 +56,7 @@ function pwg_db_connect($host, $user, $password, $database)
     [$sql_mode_current] = pwg_db_fetch_row(pwg_query('SELECT @@SESSION.sql_mode'));
 
     // remove ONLY_FULL_GROUP_BY from the list
-    $sql_mode_altered = implode(',', array_diff(explode(',', $sql_mode_current), ['ONLY_FULL_GROUP_BY']));
+    $sql_mode_altered = implode(',', array_diff(explode(',', (string) $sql_mode_current), ['ONLY_FULL_GROUP_BY']));
 
     if ($sql_mode_altered != $sql_mode_current) {
         pwg_query("SET SESSION sql_mode='" . $sql_mode_altered . "'");
@@ -345,9 +345,9 @@ CREATE TABLE ' . $temporary_tablename . '
         mass_inserts($temporary_tablename, $all_fields, $datas);
 
         if ($flags & MASS_UPDATES_SKIP_EMPTY) {
-            $func_set = function ($s) { return "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})"; };
+            $func_set = (fn($s) => "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})");
         } else {
-            $func_set = function ($s) { return "t1.{$s} = t2.{$s}"; };
+            $func_set = (fn($s) => "t1.{$s} = t2.{$s}");
         }
 
         // update of table by joining with temporary table
@@ -362,7 +362,7 @@ UPDATE ' . protect_column_name($tablename) . ' AS t1, ' . $temporary_tablename .
           implode(
               "\n    AND ",
               array_map(
-                  function ($s) { return "t1.{$s} = t2.{$s}"; },
+                  fn($s) => "t1.{$s} = t2.{$s}",
                   $dbfields['primary']
               )
           );
@@ -461,7 +461,7 @@ function mass_inserts($table_name, $dbfields, $datas, $options = [])
             if ($first) {
                 $query = '
 INSERT ' . $ignore . ' INTO ' . protect_column_name($table_name) . '
-  (' . implode(',', array_map('protect_column_name', $dbfields)) . ')
+  (' . implode(',', array_map(protect_column_name(...), $dbfields)) . ')
   VALUES';
                 $first = false;
             } else {
@@ -506,7 +506,7 @@ function single_insert($table_name, $data, $options = [])
     if (count($data) != 0) {
         $query = '
 INSERT ' . $ignore . ' INTO ' . protect_column_name($table_name) . '
-  (' . implode(',', array_map('protect_column_name', array_keys($data))) . ')
+  (' . implode(',', array_map(protect_column_name(...), array_keys($data))) . ')
   VALUES';
 
         $query .= '(';
@@ -617,7 +617,7 @@ function get_enums($table, $field)
     while ($row = pwg_db_fetch_assoc($result)) {
         if ($row['Field'] == $field) {
             // parse enum('blue','green','black')
-            $options = explode(',', substr($row['Type'], 5, -1));
+            $options = explode(',', substr((string) $row['Type'], 5, -1));
             foreach ($options as $i => $option) {
                 $options[$i] = str_replace("'", '', $option);
             }
@@ -636,7 +636,7 @@ function get_enums($table, $field)
  */
 function get_boolean($input)
 {
-    if (strtolower($input) === 'false') {
+    if (strtolower((string) $input) === 'false') {
         return false;
     }
 

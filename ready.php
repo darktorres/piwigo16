@@ -27,11 +27,11 @@ header('Content-Type: text/plain');
 $host = $conf['db_host'] ?? '';
 $port = null;
 $socket = null;
-if (str_starts_with($host, '/')) {
+if (str_starts_with((string) $host, '/')) {
     $socket = $host;
     $host = null;
 } else {
-    $parts = explode(':', $host, 2);
+    $parts = explode(':', (string) $host, 2);
     $host = $parts[0];
     $port = isset($parts[1]) ? (int) $parts[1] : null;
 }

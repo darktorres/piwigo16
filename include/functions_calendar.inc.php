@@ -30,7 +30,7 @@ INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = image_id';
         if (isset($page['category'])) {
             $sub_ids = array_diff(
                 get_subcat_ids([$page['category']['id']]),
-                explode(',', $user['forbidden_categories'])
+                explode(',', (string) $user['forbidden_categories'])
             );
 
             if (empty($sub_ids)) {

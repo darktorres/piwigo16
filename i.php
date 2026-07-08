@@ -35,14 +35,14 @@ $logger = new Logger([
 function trigger_notify() {}
 function get_extension($filename)
 {
-    return substr(strrchr($filename, '.'), 1, strlen($filename));
+    return substr(strrchr((string) $filename, '.'), 1, strlen((string) $filename));
 }
 
 function mkgetdir($dir)
 {
     if (! is_dir($dir)) {
         global $conf;
-        if (substr(PHP_OS, 0, 3) == 'WIN') {
+        if (str_starts_with(PHP_OS, 'WIN')) {
             $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
         }
         $umask = umask(0);
@@ -71,7 +71,7 @@ function ierror($msg, $code)
             ob_clean();
         }
         // default url is on html format
-        $url = html_entity_decode($msg);
+        $url = html_entity_decode((string) $msg);
         $logger->debug($code . ' ' . $url, 'i.php', [
             'url' => $_SERVER['REQUEST_URI'],
         ]);
@@ -105,11 +105,11 @@ function time_step(&$step)
 
 function url_to_size($s)
 {
-    $pos = strpos($s, 'x');
+    $pos = strpos((string) $s, 'x');
     if ($pos === false) {
         return [(int) $s, (int) $s];
     }
-    return [(int) substr($s, 0, $pos), (int) substr($s, $pos + 1)];
+    return [(int) substr((string) $s, 0, $pos), (int) substr((string) $s, $pos + 1)];
 }
 
 function parse_custom_params($tokens)
@@ -123,10 +123,10 @@ function parse_custom_params($tokens)
 
     $token = array_shift($tokens);
     if ($token[0] == 's') {
-        $size = url_to_size(substr($token, 1));
+        $size = url_to_size(substr((string) $token, 1));
     } elseif ($token[0] == 'e') {
         $crop = 1;
-        $size = $min_size = url_to_size(substr($token, 1));
+        $size = $min_size = url_to_size(substr((string) $token, 1));
     } else {
         $size = url_to_size($token);
         if (count($tokens) < 2) {
@@ -154,10 +154,10 @@ function parse_request()
         $page['root_path'] = PHPWG_ROOT_PATH . str_repeat('../', $path_count - 1);
     } else {
         $req = $_SERVER['QUERY_STRING'];
-        if ($pos = strpos($req, '&')) {
-            $req = substr($req, 0, $pos);
+        if ($pos = strpos((string) $req, '&')) {
+            $req = substr((string) $req, 0, $pos);
         }
-        $req = rawurldecode($req);
+        $req = rawurldecode((string) $req);
         /*foreach (array_keys($_GET) as $keynum => $key)
         {
           $req = $key;
@@ -330,7 +330,7 @@ function send_derivative($expires)
     header('Connection: close');
 
     $ctype = 'application/octet-stream';
-    switch (strtolower($page['derivative_ext'])) {
+    switch (strtolower((string) $page['derivative_ext'])) {
         case '.jpe': case '.jpeg': case '.jpg': $ctype = 'image/jpeg';
             break;
         case '.png': $ctype = 'image/png';
@@ -418,7 +418,7 @@ if (isset($_GET['b'])) {
 
 if (! $need_generate) {
     if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])
-      and strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) == $derivative_mtime) {// send the last mod time of the file back
+      and strtotime((string) $_SERVER['HTTP_IF_MODIFIED_SINCE']) == $derivative_mtime) {// send the last mod time of the file back
         header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $derivative_mtime) . ' GMT', true, 304);
         header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 10 * 24 * 3600) . ' GMT', true, 304);
         exit;
@@ -429,9 +429,9 @@ if (! $need_generate) {
 
 include_once PHPWG_ROOT_PATH . 'admin/include/image.class.php';
 $page['coi'] = null;
-if (strpos($page['src_location'], '/pwg_representative/') === false
-    && strpos($page['src_location'], 'themes/') === false
-    && strpos($page['src_location'], 'plugins/') === false) {
+if (!str_contains($page['src_location'], '/pwg_representative/')
+    && !str_contains($page['src_location'], 'themes/')
+    && !str_contains($page['src_location'], 'plugins/')) {
     try {
         $query = '
 SELECT *

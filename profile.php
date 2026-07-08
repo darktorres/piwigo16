@@ -75,7 +75,7 @@ SELECT ' . implode(',', $fields) . '
 
     // Load language if cookie is set from login/register/password pages
     if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
-        if (! array_key_exists($_COOKIE['lang'], get_languages())) {
+        if (! array_key_exists((string) $_COOKIE['lang'], get_languages())) {
             fatal_error('[Hacking attempt] the input parameter "' . $_COOKIE['lang'] . '" is not valid');
         }
 
@@ -106,7 +106,7 @@ SELECT ' . implode(',', $fields) . '
     ]);
 
     // Get link to doc
-    if (substr($user['language'], 0, 2) == 'fr') {
+    if (str_starts_with((string) $user['language'], 'fr')) {
         $help_link = 'https://upstream.example.invalid/help/fr/';
     } else {
         $help_link = 'https://upstream.example.invalid/help/';
@@ -152,12 +152,12 @@ function save_profile_from_post($userdata, &$errors)
     if ($conf['allow_user_customization'] or defined('IN_ADMIN')) {
         $int_pattern = '/^\d+$/';
         if (empty($_POST['nb_image_page'])
-            or (! preg_match($int_pattern, $_POST['nb_image_page']))) {
+            or (! preg_match($int_pattern, (string) $_POST['nb_image_page']))) {
             $errors[] = l10n('The number of photos per page must be a not null scalar');
         }
 
         // periods must be integer values, they represents number of days
-        if (! preg_match($int_pattern, $_POST['recent_period'])
+        if (! preg_match($int_pattern, (string) $_POST['recent_period'])
             or $_POST['recent_period'] < 0) {
             $errors[] = l10n('Recent period must be a positive integer value');
         }
@@ -336,7 +336,7 @@ function load_profile_in_template($url_action, $url_redirect, $userdata, $templa
 
     $template->assign(
         [
-            $template_prefixe . 'USERNAME' => stripslashes($userdata['username']),
+            $template_prefixe . 'USERNAME' => stripslashes((string) $userdata['username']),
             $template_prefixe . 'EMAIL' => @$userdata['email'],
             $template_prefixe . 'ALLOW_USER_CUSTOMIZATION' => $conf['allow_user_customization'],
             $template_prefixe . 'ACTIVATE_COMMENTS' => $conf['activate_comments'],
@@ -368,7 +368,7 @@ function load_profile_in_template($url_action, $url_redirect, $userdata, $templa
 
     // api key expiration choice
     [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 DAY);'));
-    $template->assign('API_CURRENT_DATE', explode(' ', $dbnow)[0]);
+    $template->assign('API_CURRENT_DATE', explode(' ', (string) $dbnow)[0]);
 
     $duration = [];
     $display_duration = [];

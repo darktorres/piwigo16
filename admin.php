@@ -114,7 +114,7 @@ $change_theme_url .= 'change_theme=1';
 
 // ?page=plugin-community-pendings is an clean alias of
 // ?page=plugin&section=community/admin.php&tab=pendings
-if (isset($_GET['page']) and preg_match('/^plugin-([^-]*)(?:-(.*))?$/', $_GET['page'], $matches)) {
+if (isset($_GET['page']) and preg_match('/^plugin-([^-]*)(?:-(.*))?$/', (string) $_GET['page'], $matches)) {
     $_GET['page'] = 'plugin';
 
     if (preg_match('/^piwigo_(videojs|openstreetmap)$/', $matches[1])) {
@@ -129,7 +129,7 @@ if (isset($_GET['page']) and preg_match('/^plugin-([^-]*)(?:-(.*))?$/', $_GET['p
 
 // ?page=album-134-properties is an clean alias of
 // ?page=album&cat_id=134&tab=properties
-if (isset($_GET['page']) and preg_match('/^album-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)) {
+if (isset($_GET['page']) and preg_match('/^album-(\d+)(?:-(.*))?$/', (string) $_GET['page'], $matches)) {
     $_GET['page'] = 'album';
     $_GET['cat_id'] = $matches[1];
     if (isset($matches[2])) {
@@ -139,7 +139,7 @@ if (isset($_GET['page']) and preg_match('/^album-(\d+)(?:-(.*))?$/', $_GET['page
 
 // ?page=photo-1234-properties is an clean alias of
 // ?page=photo&image_id=1234&tab=properties
-if (isset($_GET['page']) and preg_match('/^photo-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)) {
+if (isset($_GET['page']) and preg_match('/^photo-(\d+)(?:-(.*))?$/', (string) $_GET['page'], $matches)) {
     $_GET['page'] = 'photo';
     $_GET['image_id'] = $matches[1];
     if (isset($matches[2])) {
@@ -148,7 +148,7 @@ if (isset($_GET['page']) and preg_match('/^photo-(\d+)(?:-(.*))?$/', $_GET['page
 }
 
 if (isset($_GET['page'])
-    and preg_match('/^[a-z_]*$/', $_GET['page'])
+    and preg_match('/^[a-z_]*$/', (string) $_GET['page'])
     and is_file(PHPWG_ROOT_PATH . 'admin/' . $_GET['page'] . '.php')) {
     $page['page'] = $_GET['page'];
 } else {
@@ -325,7 +325,7 @@ if (userprefs_get_param('show_whats_new_' . $whats_new_major_version, true) and 
             $userprefs_params_to_delete = [];
 
             foreach (array_keys($user['preferences']) as $pref_param) {
-                if (preg_match('/^whats_new_/', $pref_param)) {
+                if (preg_match('/^whats_new_/', (string) $pref_param)) {
                     $userprefs_params_to_delete[] = $pref_param;
                 }
             }
@@ -349,7 +349,7 @@ $whats_new_imgs = [
 
 // If last major update conf is less than a month old then display bell for whats new popin
 $display_bell = false;
-if (strtotime($conf['last_major_update']) > strtotime('1 month ago')) {
+if (strtotime((string) $conf['last_major_update']) > strtotime('1 month ago')) {
     $display_bell = true;
 }
 

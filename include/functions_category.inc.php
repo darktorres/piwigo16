@@ -12,7 +12,7 @@
  */
 function global_rank_compare($a, $b)
 {
-    return strnatcasecmp($a['global_rank'], $b['global_rank']);
+    return strnatcasecmp((string) $a['global_rank'], (string) $b['global_rank']);
 }
 
 /**
@@ -35,7 +35,7 @@ function check_restrictions($category_id)
 
     // $filter['visible_categories'] and $filter['visible_images']
     // are not used because it's not necessary (filter <> restriction)
-    if (in_array($category_id, explode(',', $user['forbidden_categories']))) {
+    if (in_array($category_id, explode(',', (string) $user['forbidden_categories']))) {
         access_denied();
     }
 }
@@ -116,7 +116,7 @@ WHERE ' . $where . '
                 'URL' => make_index_url([
                     'category' => $row,
                 ]),
-                'LEVEL' => substr_count($row['global_rank'], '.') + 1,
+                'LEVEL' => substr_count((string) $row['global_rank'], '.') + 1,
                 'SELECTED' => ($selected_category !== null && $selected_category['id'] == $row['id']) ? true : false,
                 'IS_UPPERCAT' => ($selected_category !== null && $selected_category['id_uppercat'] == $row['id']) ? true : false,
             ]
@@ -129,7 +129,7 @@ WHERE ' . $where . '
             $page['category']['count_categories'] = $row['count_categories'];
         }
     }
-    usort($cats, 'global_rank_compare');
+    usort($cats, global_rank_compare(...));
 
     // Update filtered data
     if (function_exists('update_cats_with_filtered_data')) {
@@ -165,7 +165,7 @@ SELECT *
         }
     }
 
-    $upper_ids = explode(',', $cat['uppercats']);
+    $upper_ids = explode(',', (string) $cat['uppercats']);
     if (count($upper_ids) == 1) {// no need to make a query for level 1
         $cat['upper_names'] = [
             [
@@ -247,11 +247,11 @@ function display_select_categories(
         } else {
             $option = str_repeat(
                 '&nbsp;',
-                (3 * substr_count($category['global_rank'], '.'))
+                (3 * substr_count((string) $category['global_rank'], '.'))
             );
             $option .= '- ';
             $option .= strip_tags(
-                trigger_change(
+                (string) trigger_change(
                     'render_category_name',
                     $category['name'],
                     'display_select_categories'
@@ -276,7 +276,7 @@ function display_select_cat_wrapper(
     $fullname = true
 ) {
     $categories = query2array($query);
-    usort($categories, 'global_rank_compare');
+    usort($categories, global_rank_compare(...));
     display_select_categories($categories, $selecteds, $blockname, $fullname);
 }
 
@@ -490,7 +490,7 @@ FROM ' . CATEGORIES_TABLE . ' as c
     // it is important to logically sort the albums because some operations
     // (like removal) rely on this logical order. Child album doesn't always
     // have a bigger id than its parent (if it was moved afterwards).
-    uasort($cats, 'global_rank_compare');
+    uasort($cats, global_rank_compare(...));
 
     foreach ($cats as $cat) {
         if (! isset($cat['id_uppercat'])) {
@@ -681,7 +681,7 @@ function get_related_categories_menu($items, $excluded_cat_ids = [])
     $cat_ids = [];
     // now we add the upper categories and useful values such as depth level and url
     foreach ($common_cats as $cat) {
-        foreach (explode(',', $cat['uppercats']) as $uppercat) {
+        foreach (explode(',', (string) $cat['uppercats']) as $uppercat) {
             @$cat_ids[$uppercat]++;
         }
     }
@@ -698,13 +698,13 @@ SELECT
   WHERE id IN (' . implode(',', array_keys($cat_ids)) . ')
 ;';
     $cats = query2array($query);
-    usort($cats, 'global_rank_compare');
+    usort($cats, global_rank_compare(...));
 
     $index_of_cat = [];
 
     foreach ($cats as $idx => $cat) {
         $index_of_cat[$cat['id']] = $idx;
-        $cats[$idx]['LEVEL'] = substr_count($cat['global_rank'], '.') + 1;
+        $cats[$idx]['LEVEL'] = substr_count((string) $cat['global_rank'], '.') + 1;
         $cats[$idx]['name'] = trigger_change('render_category_name', $cat['name'], $cat);
 
         // if the category is directly linked to the items, we add an URL + counter
@@ -733,7 +733,7 @@ SELECT
         //
         // Option 3 seems more appropriate here.
         if (! empty($cat['id_uppercat']) and @$cats[$idx]['count_images'] > 0) {
-            foreach (array_slice(explode(',', $cat['uppercats']), 0, -1) as $uppercat_id) {
+            foreach (array_slice(explode(',', (string) $cat['uppercats']), 0, -1) as $uppercat_id) {
                 @$cats[$index_of_cat[$uppercat_id]]['count_categories']++;
             }
         }

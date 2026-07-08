@@ -20,10 +20,10 @@ class PwgTOTP
         $key = PwgBase32::decode($secret);
 
         $msg = pack('N*', 0) . pack('N*', $timestamp); // hash_hmac need this form
-        $hash = hash_hmac('sha1', $msg, $key, true);
+        $hash = hash_hmac('sha1', $msg, (string) $key, true);
 
         // RFC 4226, section 5.3
-        $offset = ord(substr($hash, -1)) & 0x0F;
+        $offset = ord(substr($hash, -1)[0]) & 0x0F;
         $part = substr($hash, $offset, 4);
         $number = unpack('N', $part)[1] & 0x7FFFFFFF;
 
@@ -50,7 +50,7 @@ class PwgTOTP
     public static function getOtpAuthUrl($secret)
     {
         global $user;
-        $url = substr(get_absolute_root_url(), 0, -1);
+        $url = substr((string) get_absolute_root_url(), 0, -1);
         return 'otpauth://totp/' . $user['username'] . ':' . $url . '?secret=' . $secret . '&issuer=Piwigo&algorithm=sha1&digits=6&period=30';
     }
 
@@ -62,7 +62,7 @@ class PwgTOTP
     {
         $otp_url = self::getOtpAuthUrl($secret);
 
-        return (new Builder(data: $otp_url))->build()
+        return new Builder(data: $otp_url)->build()
             ->getDataUri();
     }
 

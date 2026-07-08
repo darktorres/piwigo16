@@ -60,7 +60,7 @@ SELECT id, keywords
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        foreach (preg_split('/[,]+/', $row['keywords']) as $keyword) {
+        foreach (preg_split('/[,]+/', (string) $row['keywords']) as $keyword) {
             if (! isset($tag_id[$keyword])) {
                 $tag_id[$keyword] = $current_id++;
             }

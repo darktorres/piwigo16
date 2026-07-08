@@ -70,7 +70,7 @@ SELECT ' . $conf['user_fields']['username'] . ' as username, ' . $conf['user_fie
 ;';
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
-    $users[$row['id']] = stripslashes($row['username']);
+    $users[$row['id']] = stripslashes((string) $row['username']);
 }
 
 $query = '
@@ -215,7 +215,7 @@ ORDER BY date DESC;';
         } else {
             $user_rate = '? ' . $row['user_id'];
         }
-        if (strlen($row['anonymous_id']) > 0) {
+        if (strlen((string) $row['anonymous_id']) > 0) {
             $user_rate .= '(' . $row['anonymous_id'] . ')';
         }
 

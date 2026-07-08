@@ -120,7 +120,7 @@ UPDATE ' . USER_INFOS_TABLE . '
         if (empty($target_charset)) {
             $target_charset = get_pwg_charset();
         }
-        $target_charset = strtolower($target_charset);
+        $target_charset = strtolower((string) $target_charset);
 
         $dir = opendir(PHPWG_ROOT_PATH . 'language');
         while ($file = readdir($dir)) {
@@ -163,13 +163,13 @@ UPDATE ' . USER_INFOS_TABLE . '
                     }
 
                     // IMPORTANT SECURITY !
-                    $language = array_map('htmlspecialchars', $language);
+                    $language = array_map(htmlspecialchars(...), $language);
                     $this->fs_languages[$file] = $language;
                 }
             }
         }
         closedir($dir);
-        @uasort($this->fs_languages, 'name_compare');
+        @uasort($this->fs_languages, name_compare(...));
     }
 
     public function get_db_languages()
@@ -208,7 +208,7 @@ UPDATE ' . USER_INFOS_TABLE . '
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
-                if (strpos($pem_version['name'], $branch) === 0) {
+                if (str_starts_with((string) $pem_version['name'], $branch)) {
                     $versions_to_check[] = $pem_version['id'];
                 }
             }
@@ -250,11 +250,11 @@ UPDATE ' . USER_INFOS_TABLE . '
                 return false;
             }
             foreach ($pem_languages as $language) {
-                if (preg_match('/^.*? \[[A-Z]{2}\]$/', $language['extension_name'])) {
+                if (preg_match('/^.*? \[[A-Z]{2}\]$/', (string) $language['extension_name'])) {
                     $this->server_languages[$language['extension_id']] = $language;
                 }
             }
-            @uasort($this->server_languages, [$this, 'extension_name_compare']);
+            @uasort($this->server_languages, $this->extension_name_compare(...));
             return true;
         }
         return false;
@@ -285,9 +285,9 @@ UPDATE ' . USER_INFOS_TABLE . '
                 if ($list = $zip->listContent()) {
                     foreach ($list as $file) {
                         // we search common.lang.php in archive
-                        if (basename($file['filename']) == 'common.lang.php'
+                        if (basename((string) $file['filename']) == 'common.lang.php'
                           and (! isset($main_filepath)
-                          or strlen($file['filename']) < strlen($main_filepath))) {
+                          or strlen((string) $file['filename']) < strlen($main_filepath))) {
                             $main_filepath = $file['filename'];
                         }
                     }
@@ -345,7 +345,7 @@ UPDATE ' . USER_INFOS_TABLE . '
 
                                         // make sure the obsolete file is withing the extension directory, prevent traversal path
                                         $realpath = realpath($path);
-                                        if ($realpath === false or strpos($realpath, $extract_path_realpath) !== 0) {
+                                        if ($realpath === false or !str_starts_with($realpath, $extract_path_realpath)) {
                                             continue;
                                         }
 
@@ -386,6 +386,6 @@ UPDATE ' . USER_INFOS_TABLE . '
      */
     public function extension_name_compare($a, $b)
     {
-        return strcmp(strtolower($a['extension_name']), strtolower($b['extension_name']));
+        return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
     }
 }

@@ -36,7 +36,7 @@ SELECT COUNT(rate) AS count
       AND user_id = ' . $user['id'];
 
             if (! is_autorize_status(ACCESS_CLASSIC)) {
-                $ip_components = explode('.', $_SERVER['REMOTE_ADDR']);
+                $ip_components = explode('.', (string) $_SERVER['REMOTE_ADDR']);
                 if (count($ip_components) > 3) {
                     array_pop($ip_components);
                 }

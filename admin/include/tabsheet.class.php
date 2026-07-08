@@ -13,22 +13,16 @@ class tabsheet
 
     public $uniqid;
 
-    public $name;
-
-    public $titlename;
-
     public $selected;
 
     /*
       $name is the tabsheet's name inside the template .tpl file
       $titlename in the template is affected by $titlename value
     */
-    public function __construct($name = 'TABSHEET', $titlename = 'TABSHEET_TITLE')
+    public function __construct(public $name = 'TABSHEET', public $titlename = 'TABSHEET_TITLE')
     {
         $this->sheets = [];
         $this->uniqid = null;
-        $this->name = $name;
-        $this->titlename = $titlename;
         $this->selected = '';
     }
 
@@ -77,7 +71,7 @@ class tabsheet
     public function select($name)
     {
         $this->sheets = trigger_change('tabsheet_before_select', $this->sheets, $this->uniqid);
-        if (! array_key_exists($name, $this->sheets)) {
+        if (! array_key_exists((string) $name, $this->sheets)) {
             $keys = array_keys($this->sheets);
             $name = $keys[0];
         }

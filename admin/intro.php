@@ -120,7 +120,7 @@ if ($conf['show_newsletter_subscription'] and userprefs_get_param('show_newslett
 
     // To see the newsletter promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
 
-    if (strtotime($register_date) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30) {
+    if (strtotime((string) $register_date) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30) {
         $template->assign(
             [
                 'EMAIL' => $user['email'],
@@ -240,7 +240,7 @@ if (! isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity
         }
         $day_nb = $day_date->format('N');
 
-        @$activity_last_weeks[$week][$day_nb]['details'][ucfirst($action['object'])][ucfirst($action['action'])] = $action['activity_counter'];
+        @$activity_last_weeks[$week][$day_nb]['details'][ucfirst((string) $action['object'])][ucfirst((string) $action['action'])] = $action['activity_counter'];
         @$activity_last_weeks[$week][$day_nb]['number'] += $action['activity_counter'];
         @$activity_last_weeks[$week][$day_nb]['date'] = format_date($day_date->getTimestamp());
     }
@@ -278,13 +278,10 @@ foreach ($activity_last_weeks as $week => $i) {
 // Function to sort days by number of activity
 function cmp_day($a, $b)
 {
-    if ($a['x'] == $b['x']) {
-        return 0;
-    }
-    return ($a['x'] < $b['x']) ? -1 : 1;
+    return $a['x'] <=> $b['x'];
 }
 
-usort($temp_data, 'cmp_day');
+usort($temp_data, cmp_day(...));
 
 // Get the percent difference
 $diff_x = [];
@@ -333,7 +330,7 @@ $template->assign('ACTIVITY_CHART_NUMBER_SIZES', $size);
 $day_labels = [];
 for ($i = 0; $i <= 6; $i++) {
     // first 3 letters of day name
-    $day_labels[] = mb_substr($lang['day'][($i + 1) % 7], 0, 3);
+    $day_labels[] = mb_substr((string) $lang['day'][($i + 1) % 7], 0, 3);
 }
 $template->assign('DAY_LABELS', $day_labels);
 
@@ -358,9 +355,9 @@ $file_extensions = query2array($query, 'ext');
 
 foreach ($file_extensions as $ext => $ext_details) {
     $type = null;
-    if (in_array(strtolower($ext), $conf['picture_ext'])) {
+    if (in_array(strtolower((string) $ext), $conf['picture_ext'])) {
         $type = 'Photos';
-    } elseif (in_array(strtolower($ext), $video_format)) {
+    } elseif (in_array(strtolower((string) $ext), $video_format)) {
         $type = 'Videos';
     } else {
         $type = 'Other';
@@ -369,7 +366,7 @@ foreach ($file_extensions as $ext => $ext_details) {
     @$data_storage[$type]['total']['filesize'] += $ext_details['filesize'];
     @$data_storage[$type]['total']['nb_files'] += $ext_details['ext_counter'];
 
-    @$data_storage[$type]['details'][strtoupper($ext)] = [
+    @$data_storage[$type]['details'][strtoupper((string) $ext)] = [
         'filesize' => $ext_details['filesize'],
         'nb_files' => $ext_details['ext_counter'],
     ];
@@ -392,7 +389,7 @@ foreach ($file_extensions as $ext => $ext_details) {
     @$data_storage[$type]['total']['filesize'] += $ext_details['filesize'];
     @$data_storage[$type]['total']['nb_files'] += $ext_details['ext_counter'];
 
-    @$data_storage[$type]['details'][strtoupper($ext)] = [
+    @$data_storage[$type]['details'][strtoupper((string) $ext)] = [
         'filesize' => $ext_details['filesize'],
         'nb_files' => $ext_details['ext_counter'],
     ];

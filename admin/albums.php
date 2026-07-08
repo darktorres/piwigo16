@@ -73,10 +73,10 @@ SELECT id
     $categories = [];
     $sort = [];
 
-    [$order_by_field, $order_by_asc] = explode(' ', $_POST['order']);
+    [$order_by_field, $order_by_asc] = explode(' ', (string) $_POST['order']);
 
     $order_by_date = false;
-    if (strpos($order_by_field, 'date_') === 0) {
+    if (str_starts_with($order_by_field, 'date_')) {
         $order_by_date = true;
 
         $ref_dates = get_categories_ref_date(
@@ -155,7 +155,7 @@ foreach ($allAlbum as $album) {
     $album['name'] = trigger_change('render_category_name', $album['name'], 'admin_cat_list');
     $album['lastmodified'] = time_since($album['lastmodified'], 'year');
 
-    $parents = explode(',', $album['uppercats']);
+    $parents = explode(',', (string) $album['uppercats']);
     $the_place = &$associatedTree[strval($parents[0])];
     for ($i = 1; $i < count($parents); $i++) {
         $the_place = &$the_place['children'][strval($parents[$i])];
@@ -168,15 +168,12 @@ foreach ($allAlbum as $album) {
 // of an album or change permissions, this variable is reset and not recalculated until
 // you open the gallery. As this situation doesn't occur each time you use the
 // administration, it's quite reliable but not as much as on gallery side.
-$is_forbidden = array_fill_keys(@explode(',', $user['forbidden_categories']), 1);
+$is_forbidden = array_fill_keys(@explode(',', (string) $user['forbidden_categories']), 1);
 
 // Make an ordered tree
 function cmpCat($a, $b)
 {
-    if ($a['rank'] == $b['rank']) {
-        return 0;
-    }
-    return ($a['rank'] < $b['rank']) ? -1 : 1;
+    return $a['rank'] <=> $b['rank'];
 }
 
 function assocToOrderedTree($assocT)
@@ -204,7 +201,7 @@ function assocToOrderedTree($assocT)
         }
         array_push($orderedTree, $orderedCat);
     }
-    usort($orderedTree, 'cmpCat');
+    usort($orderedTree, cmpCat(...));
     return $orderedTree;
 }
 

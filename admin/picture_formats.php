@@ -38,8 +38,8 @@ $formats = query2array($query);
 foreach ($formats as &$format) {
     $format['download_url'] = 'action.php?format=' . $format['format_id'] . '&amp;download';
 
-    $format['label'] = strtoupper($format['ext']);
-    $lang_key = 'format ' . strtoupper($format['ext']);
+    $format['label'] = strtoupper((string) $format['ext']);
+    $lang_key = 'format ' . strtoupper((string) $format['ext']);
     if (isset($lang[$lang_key])) {
         $format['label'] = $lang[$lang_key];
     }

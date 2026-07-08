@@ -807,7 +807,7 @@ $core = [
     [
         'name' => 'before_send_mail',
         'type' => 'trigger_change',
-        'vars' => ['bool', 'result', 'mixed', 'to', 'array', 'arguments', 'Symfony\Component\Mime\Email', 'mail'],
+        'vars' => ['bool', 'result', 'mixed', 'to', 'array', 'arguments', \Symfony\Component\Mime\Email::class, 'mail'],
         'files' => ['include\functions_mail.inc.php (pwg_mail)'],
     ],
     [
@@ -1023,7 +1023,7 @@ $core = [
             if (! $f) {
                 echo '<br>';
             } $f = 0;
-            echo preg_replace('#\((.+)\)#', '(<i>$1</i>)', $file);
+            echo preg_replace('#\((.+)\)#', '(<i>$1</i>)', (string) $file);
         }
         echo '
       </td>

@@ -549,7 +549,7 @@ function get_fs_directories($path, $recursive = true)
     global $conf;
 
     $dirs = [];
-    $path = rtrim($path, '/');
+    $path = rtrim((string) $path, '/');
 
     $exclude_folders = array_merge(
         $conf['sync_exclude_folders'],
@@ -657,7 +657,7 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
 
     $datas = [];
 
-    $cat_map_callback = function ($m) use ($cat_map) {  return $cat_map[$m[1]]['rank']; };
+    $cat_map_callback = (fn($m) => $cat_map[$m[1]]['rank']);
 
     foreach ($cat_map as $id => $cat) {
         $new_global_rank = preg_replace_callback(
@@ -806,13 +806,13 @@ SELECT
   WHERE id IN (' . implode(',', $categories) . ')
 ;';
         $all_categories = query2array($query);
-        usort($all_categories, 'global_rank_compare');
+        usort($all_categories, global_rank_compare(...));
 
         foreach ($all_categories as $cat) {
             $is_top = true;
 
             if (! empty($cat['id_uppercat'])) {
-                foreach (explode(',', $cat['uppercats']) as $id_uppercat) {
+                foreach (explode(',', (string) $cat['uppercats']) as $id_uppercat) {
                     if (isset($top_categories[$id_uppercat])) {
                         $is_top = false;
                         break;
@@ -912,7 +912,7 @@ SELECT uppercats
     while ($row = pwg_db_fetch_assoc($result)) {
         $uppercats = array_merge(
             $uppercats,
-            explode(',', $row['uppercats'])
+            explode(',', (string) $row['uppercats'])
         );
     }
     $uppercats = array_unique($uppercats);
@@ -1015,7 +1015,7 @@ SELECT id, uppercats, site_id
     $categories = query2array($query);
 
     // filling $cat_fulldirs
-    $cat_dirs_callback = function ($m) use ($cat_dirs) { return $cat_dirs[$m[1]]; };
+    $cat_dirs_callback = (fn($m) => $cat_dirs[$m[1]]);
 
     $cat_fulldirs = [];
     foreach ($categories as $category) {
@@ -1036,12 +1036,12 @@ SELECT id, uppercats, site_id
 /**
  * Returns an array with all file system files according to $conf['file_ext']
  *
- * @deprecated 2.4
  *
  * @param string $path
  * @param bool $recursive
  * @return array
  */
+#[\Deprecated(message: '2.4')]
 function get_fs($path, $recursive = true)
 {
     global $conf;
@@ -1435,7 +1435,7 @@ SELECT id, uppercats, global_rank, visible, status
 
     // we have then to add the virtual category
     single_insert(CATEGORIES_TABLE, $insert);
-    $inserted_id = pwg_db_insert_id(CATEGORIES_TABLE);
+    $inserted_id = pwg_db_insert_id();
 
     single_update(
         CATEGORIES_TABLE,
@@ -1645,7 +1645,7 @@ SELECT id
                     ]
                 );
 
-                $page['tag_id_from_tag_name_cache'][$tag_name] = pwg_db_insert_id(TAGS_TABLE);
+                $page['tag_id_from_tag_name_cache'][$tag_name] = pwg_db_insert_id();
 
                 invalidate_user_cache_nb_tags();
 
@@ -1832,7 +1832,7 @@ INSERT IGNORE
     pwg_query($query);
 
     [$empty_lounge_running] = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = "empty_lounge_running"'));
-    [$running_exec_id] = explode('-', $empty_lounge_running);
+    [$running_exec_id] = explode('-', (string) $empty_lounge_running);
 
     if ($running_exec_id != $exec_id) {
         $logger->debug(__FUNCTION__ . ', exec=' . $exec_id . ', skip');
@@ -2089,7 +2089,7 @@ function invalidate_user_cache($full = true)
 {
     global $persistent_cache, $logger;
 
-    if (isset($logger) and gettype($logger) == 'object' and get_class($logger) == 'Logger') {
+    if (isset($logger) and gettype($logger) == 'object' and $logger::class == 'Logger') {
         $logger->info(__FUNCTION__ . ' called');
     }
 
@@ -2239,7 +2239,7 @@ SELECT id
             ]
         );
 
-        $inserted_id = pwg_db_insert_id(TAGS_TABLE);
+        $inserted_id = pwg_db_insert_id();
 
         return [
             'info' => l10n('Tag "%s" was added', stripslashes($tag_name)),
@@ -2266,7 +2266,7 @@ function cat_admin_access($category_id)
 
     // $filter['visible_categories'] and $filter['visible_images']
     // are not used because it's not necessary (filter <> restriction)
-    if (in_array($category_id, @explode(',', $user['forbidden_categories']))) {
+    if (in_array($category_id, @explode(',', (string) $user['forbidden_categories']))) {
         return false;
     }
     return true;
@@ -2317,7 +2317,7 @@ function fetchRemote($src, &$dest, $get_data = [], $post_data = [], $user_agent 
     // Initialization
     $method = empty($post_data) ? 'GET' : 'POST';
     if (! empty($get_data)) {
-        $src .= strpos($src, '?') === false ? '?' : '&';
+        $src .= !str_contains($src, '?') ? '?' : '&';
         $src .= http_build_query($get_data, '', '&');
     }
 
@@ -2356,7 +2356,7 @@ function fetchRemote($src, &$dest, $get_data = [], $post_data = [], $user_agent 
     if (! empty($conf['use_proxy']) && ! empty($conf['proxy_server'])) {
         $proxy_url = $conf['proxy_server'];
         if (! empty($conf['proxy_auth'])) {
-            $proxy_url = preg_replace('#^(https?://)#', '$1' . $conf['proxy_auth'] . '@', $proxy_url);
+            $proxy_url = preg_replace('#^(https?://)#', '$1' . $conf['proxy_auth'] . '@', (string) $proxy_url);
         }
         $options['proxy'] = $proxy_url;
     }
@@ -2366,7 +2366,7 @@ function fetchRemote($src, &$dest, $get_data = [], $post_data = [], $user_agent 
             ->request($method, $src, $options);
         $content = $response->getContent(false);
         $status = $response->getStatusCode();
-    } catch (\Throwable $e) {
+    } catch (\Throwable) {
         return false;
     }
 
@@ -2409,7 +2409,7 @@ function delete_groups($group_ids)
         return false;
     }
 
-    if (preg_match('/^group:(\d+)$/', conf_get_param('email_admin_on_new_user', 'undefined'), $matches)) {
+    if (preg_match('/^group:(\d+)$/', (string) conf_get_param('email_admin_on_new_user', 'undefined'), $matches)) {
         foreach ($group_ids as $group_id) {
             if ($group_id == $matches[1]) {
                 conf_update_param('email_admin_on_new_user', 'all', true);
@@ -2480,7 +2480,7 @@ SELECT ' . $conf['user_fields']['username'] . '
         return false;
     }
 
-    return stripslashes($username);
+    return stripslashes((string) $username);
 }
 
 /**
@@ -2601,9 +2601,9 @@ function get_taglist($query, $only_user_language = true)
         }
     }
 
-    usort($taglist, 'tag_alpha_compare');
+    usort($taglist, tag_alpha_compare(...));
     if (count($altlist)) {
-        usort($altlist, 'tag_alpha_compare');
+        usort($altlist, tag_alpha_compare(...));
         $taglist = array_merge($taglist, $altlist);
     }
 
@@ -2839,10 +2839,10 @@ function delete_element_derivatives($infos, $type = 'all')
     if (! empty($infos['representative_ext'])) {
         $path = original_to_representative($path, $infos['representative_ext']);
     }
-    if (substr_compare($path, '../', 0, 3) == 0) {
-        $path = substr($path, 3);
+    if (substr_compare((string) $path, '../', 0, 3) == 0) {
+        $path = substr((string) $path, 3);
     }
-    $dot = strrpos($path, '.');
+    $dot = strrpos((string) $path, '.');
     if ($type == 'all') {
         $pattern = '-*';
     } else {
@@ -2949,7 +2949,7 @@ function get_admin_client_cache_keys($requested = [])
     }
 
     $keys = [
-        '_hash' => md5(get_absolute_root_url()),
+        '_hash' => md5((string) get_absolute_root_url()),
     ];
 
     foreach ($requested as $item) {
@@ -3404,7 +3404,7 @@ function get_graphics_library()
 
 function get_graphics_library_label()
 {
-    [$library_code, $library_version] = explode('/', get_graphics_library());
+    [$library_code, $library_version] = explode('/', (string) get_graphics_library());
 
     $label_for_lib = [
         'imagick' => 'ImageMagick',
@@ -3516,7 +3516,7 @@ SELECT
         $candidate = $users[0]['registration_date'];
     }
 
-    if (empty($candidate) or strtotime($candidate) < strtotime($piwigo_origins)) {
+    if (empty($candidate) or strtotime((string) $candidate) < strtotime($piwigo_origins)) {
         $query = '
 SELECT
     MIN(registration_date) AS min_registration_date
@@ -3529,7 +3529,7 @@ SELECT
         }
     }
 
-    if (empty($candidate) or strtotime($candidate) < strtotime($piwigo_origins)) {
+    if (empty($candidate) or strtotime((string) $candidate) < strtotime($piwigo_origins)) {
         // let's find another candidate
         $query = '
 SELECT

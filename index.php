@@ -43,7 +43,7 @@ if (isset($_GET['image_order'])) {
 }
 if (isset($_GET['display'])) {
     $page['meta_robots']['noindex'] = 1;
-    if (array_key_exists($_GET['display'], ImageStdParams::get_defined_type_map())) {
+    if (array_key_exists((string) $_GET['display'], ImageStdParams::get_defined_type_map())) {
         pwg_set_session_var('index_deriv', $_GET['display']);
     }
 }
@@ -207,9 +207,7 @@ if (empty($page['is_external'])) {
         }
 
         // We sort the array here because we want them sorted by counter and not alphabetically like before.
-        usort($related_tags, function ($a, $b) {
-            return $b['counter'] <=> $a['counter'];
-        });
+        usort($related_tags, fn($a, $b) => $b['counter'] <=> $a['counter']);
 
         include_once PHPWG_ROOT_PATH . 'include/selected_tags.inc.php';
 
@@ -246,7 +244,7 @@ if (empty($page['is_external'])) {
             (array) @$page['qsearch_details']['matching_cats']
         );
         if (count($cats)) {
-            usort($cats, 'name_compare');
+            usort($cats, name_compare(...));
             $hints = [];
             foreach ($cats as $cat) {
                 $hints[] = get_cat_display_name([$cat], '');
@@ -263,9 +261,9 @@ if (empty($page['is_external'])) {
         }
 
         if (empty($page['items'])) {
-            $template->append('no_search_results', htmlspecialchars($page['qsearch_details']['q']));
+            $template->append('no_search_results', htmlspecialchars((string) $page['qsearch_details']['q']));
         } elseif (! empty($page['qsearch_details']['unmatched_terms'])) {
-            $template->assign('no_search_results', array_map('htmlspecialchars', $page['qsearch_details']['unmatched_terms']));
+            $template->assign('no_search_results', array_map(htmlspecialchars(...), $page['qsearch_details']['unmatched_terms']));
         }
     }
 
@@ -278,7 +276,7 @@ if (empty($page['is_external'])) {
         $order_idx = pwg_get_session_var('image_order', 0);
 
         // get first order field and direction
-        $first_order = substr($conf['order_by'], 9);
+        $first_order = substr((string) $conf['order_by'], 9);
         if (($pos = strpos($first_order, ',')) !== false) {
             $first_order = substr($first_order, 0, $pos);
         }

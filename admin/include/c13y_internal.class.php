@@ -11,9 +11,9 @@ class c13y_internal
 {
     public function __construct()
     {
-        add_event_handler('list_check_integrity', [&$this, 'c13y_version']);
-        add_event_handler('list_check_integrity', [&$this, 'c13y_exif']);
-        add_event_handler('list_check_integrity', [&$this, 'c13y_user']);
+        add_event_handler('list_check_integrity', $this->c13y_version(...));
+        add_event_handler('list_check_integrity', $this->c13y_exif(...));
+        add_event_handler('list_check_integrity', $this->c13y_user(...));
     }
 
     /**

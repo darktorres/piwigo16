@@ -209,7 +209,7 @@ if (count($errors) == 0) {
             $template->append(
                 'sizes',
                 [
-                    $field => strip_tags($_POST[$field]), // strip_tags prevents from XSS attempt
+                    $field => strip_tags((string) $_POST[$field]), // strip_tags prevents from XSS attempt
                 ],
                 true
             );

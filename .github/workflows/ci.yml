@@ -74,19 +74,10 @@ jobs:
           restore-keys: ${{ runner.os }}-phpstan-
       - run: vendor/bin/phpstan analyse --no-progress
 
-  psalm:
-    name: Psalm
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
-        with:
-          php-version: "8.5"
-          coverage: none
-          extensions: ${{ env.PHP_EXTENSIONS }}
-      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
-      - run: vendor/bin/psalm
+  # Psalm is not gated in CI (see docs/adr/0026-pause-psalm-gating.md) —
+  # its global-function-resolution scanner doesn't hold up at this
+  # codebase's current scale/style (non-namespaced procedural legacy
+  # code); resumes once P6+ typed/namespaced refactoring lands.
 
   rector:
     name: Rector (dry-run, non-blocking)

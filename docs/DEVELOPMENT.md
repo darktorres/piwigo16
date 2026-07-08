@@ -344,7 +344,8 @@ thresholds don't all match this repo 1:1 — see below):
 | --- | --- | --- |
 | `pest` | `composer test` | blocking |
 | `ecs` | `composer lint:php` | **non-blocking** until P5 (matches `lefthook.yml`) |
-| `phpstan` / `psalm` | `analyse --no-progress` / (default) | blocking |
+| `phpstan` | `analyse --no-progress` | blocking |
+| `psalm` | `composer analyse:psalm` (manual only) | **not gated** from mid-P5 — see `docs/adr/0026-pause-psalm-gating.md` |
 | `rector` | `--dry-run` | **non-blocking** until P5 |
 | `eslint` / `stylelint` / `vitest` | `bun run lint:js` / `lint:css` / `test` | blocking |
 | `coverage` | `composer test:coverage` (`--min=0.1`) | blocking at the measured 0.2% baseline floor |

@@ -19,6 +19,6 @@ pre-push:
   commands:
     phpstan:
       run: vendor/bin/phpstan analyse --no-progress
-    psalm:
-      run: vendor/bin/psalm --no-progress
+    # Psalm is not gated here (see docs/adr/0026-pause-psalm-gating.md) —
+    # resumes once P6+ typed/namespaced refactoring lands.
 

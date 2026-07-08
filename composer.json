@@ -58,8 +58,7 @@
     "analyse:phpstan": "@php vendor/bin/phpstan analyse",
     "analyse:psalm": "@php vendor/bin/psalm",
     "analyse": [
-      "@analyse:phpstan",
-      "@analyse:psalm"
+      "@analyse:phpstan"
     ],
     "test": "@php vendor/bin/pest --testsuite Unit,Arch",
     "test:coverage": "@php vendor/bin/pest --testsuite Unit,Arch --coverage --min=0.1",

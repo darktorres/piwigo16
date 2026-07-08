@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -6,15 +7,13 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-if (!defined('PHPWG_ROOT_PATH'))
-{
-  die('Hacking attempt!');
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
 $upgrade_description = 'reduce sessions.id length to 50 chars';
 
-$query = 'ALTER TABLE `'.PREFIX_TABLE.'sessions` CHANGE `id` `id` varchar(50) binary NOT NULL default \'\';';
+$query = 'ALTER TABLE `' . PREFIX_TABLE . 'sessions` CHANGE `id` `id` varchar(50) binary NOT NULL default \'\';';
 pwg_query($query);
 
-echo "\n".$upgrade_description."\n";
-?>
+echo "\n" . $upgrade_description . "\n";

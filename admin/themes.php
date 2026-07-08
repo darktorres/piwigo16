@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -6,19 +7,19 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-if( !defined("PHPWG_ROOT_PATH") )
-{
-  die ("Hacking attempt!");
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
-include_once(PHPWG_ROOT_PATH.'admin/include/tabsheet.class.php');
+include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 
-$my_base_url = get_root_url().'admin.php?page=themes';
+$my_base_url = get_root_url() . 'admin.php?page=themes';
 
-if (isset($_GET['tab']))
-  $page['tab'] = $_GET['tab'];
-else
-  $page['tab'] = 'installed';
+if (isset($_GET['tab'])) {
+    $page['tab'] = $_GET['tab'];
+} else {
+    $page['tab'] = 'installed';
+}
 
 $tabsheet = new tabsheet();
 $tabsheet->set_id('themes');
@@ -26,11 +27,8 @@ $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
 if ($page['tab'] == 'update') {
-  include(PHPWG_ROOT_PATH.'admin/updates_ext.php');
-  $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
+    include PHPWG_ROOT_PATH . 'admin/updates_ext.php';
+    $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
+} else {
+    include PHPWG_ROOT_PATH . 'admin/themes_' . $page['tab'] . '.php';
 }
-else
-{
-  include(PHPWG_ROOT_PATH.'admin/themes_'.$page['tab'].'.php');
-}
-?>

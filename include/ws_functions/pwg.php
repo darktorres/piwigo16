@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -17,104 +18,88 @@
  */
 function ws_getMissingDerivatives($params, &$service)
 {
-  global $conf;
+    global $conf;
 
-  if (empty($params['types']))
-  {
-    $types = array_keys(ImageStdParams::get_defined_type_map());
-  }
-  else
-  {
-    $types = array_intersect(array_keys(ImageStdParams::get_defined_type_map()), $params['types']);
-    if (count($types)==0)
-    {
-      return new PwgError(WS_ERR_INVALID_PARAM, "Invalid types");
+    if (empty($params['types'])) {
+        $types = array_keys(ImageStdParams::get_defined_type_map());
+    } else {
+        $types = array_intersect(array_keys(ImageStdParams::get_defined_type_map()), $params['types']);
+        if (count($types) == 0) {
+            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid types');
+        }
     }
-  }
 
-  $max_urls = $params['max_urls'];
-  $query = 'SELECT MAX(id)+1, COUNT(*) FROM '. IMAGES_TABLE .';';
-  list($max_id, $image_count) = pwg_db_fetch_row(pwg_query($query));
+    $max_urls = $params['max_urls'];
+    $query = 'SELECT MAX(id)+1, COUNT(*) FROM ' . IMAGES_TABLE . ';';
+    [$max_id, $image_count] = pwg_db_fetch_row(pwg_query($query));
 
-  if (0 == $image_count)
-  {
-    return array();
-  }
+    if ($image_count == 0) {
+        return [];
+    }
 
-  $start_id = $params['prev_page'];
-  if ($start_id<=0)
-  {
-    $start_id = $max_id;
-  }
+    $start_id = $params['prev_page'];
+    if ($start_id <= 0) {
+        $start_id = $max_id;
+    }
 
-  $uid = '&b='.time();
+    $uid = '&b=' . time();
 
-  $conf['question_mark_in_urls'] = $conf['php_extension_in_urls'] = true;
-  $conf['derivative_url_style'] = 2; //script
+    $conf['question_mark_in_urls'] = $conf['php_extension_in_urls'] = true;
+    $conf['derivative_url_style'] = 2; // script
 
-  $qlimit = min(5000, ceil(max($image_count/500, $max_urls/count($types))));
-  $where_clauses = ws_std_image_sql_filter( $params, '' );
-  $where_clauses[] = 'id<start_id';
+    $qlimit = min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
+    $where_clauses = ws_std_image_sql_filter($params, '');
+    $where_clauses[] = 'id<start_id';
 
-  if (!empty($params['ids']))
-  {
-    $where_clauses[] = 'id IN ('.implode(',',$params['ids']).')';
-  }
+    if (! empty($params['ids'])) {
+        $where_clauses[] = 'id IN (' . implode(',', $params['ids']) . ')';
+    }
 
-  $query_model = '
+    $query_model = '
 SELECT id, path, representative_ext, width, height, rotation
-  FROM '. IMAGES_TABLE .'
-  WHERE '. implode(' AND ', $where_clauses) .'
+  FROM ' . IMAGES_TABLE . '
+  WHERE ' . implode(' AND ', $where_clauses) . '
   ORDER BY id DESC
-  LIMIT '. $qlimit .'
+  LIMIT ' . $qlimit . '
 ;';
 
-  $urls = array();
-  do
-  {
-    $result = pwg_query(str_replace('start_id', $start_id, $query_model));
-    $is_last = pwg_db_num_rows($result) < $qlimit;
+    $urls = [];
+    do {
+        $result = pwg_query(str_replace('start_id', $start_id, $query_model));
+        $is_last = pwg_db_num_rows($result) < $qlimit;
 
-    while ($row=pwg_db_fetch_assoc($result))
-    {
-      $start_id = $row['id'];
-      $src_image = new SrcImage($row);
-      if ($src_image->is_mimetype())
-      {
-        continue;
-      }
+        while ($row = pwg_db_fetch_assoc($result)) {
+            $start_id = $row['id'];
+            $src_image = new SrcImage($row);
+            if ($src_image->is_mimetype()) {
+                continue;
+            }
 
-      foreach($types as $type)
-      {
-        $derivative = new DerivativeImage($type, $src_image);
-        if ($type != $derivative->get_type())
-        {
-          continue;
+            foreach ($types as $type) {
+                $derivative = new DerivativeImage($type, $src_image);
+                if ($type != $derivative->get_type()) {
+                    continue;
+                }
+                if (@filemtime($derivative->get_path()) === false) {
+                    $urls[] = $derivative->get_url() . $uid;
+                }
+            }
+
+            if (count($urls) >= $max_urls and ! $is_last) {
+                break;
+            }
         }
-        if (@filemtime($derivative->get_path())===false)
-        {
-          $urls[] = $derivative->get_url().$uid;
+        if ($is_last) {
+            $start_id = 0;
         }
-      }
+    } while (count($urls) < $max_urls and $start_id);
 
-      if (count($urls)>=$max_urls and !$is_last)
-      {
-        break;
-      }
+    $ret = [];
+    if ($start_id) {
+        $ret['next_page'] = $start_id;
     }
-    if ($is_last)
-    {
-      $start_id = 0;
-    }
-  } while (count($urls)<$max_urls and $start_id);
-
-  $ret = array();
-  if ($start_id)
-  {
-    $ret['next_page'] = $start_id;
-  }
-  $ret['urls'] = $urls;
-  return $ret;
+    $ret['urls'] = $urls;
+    return $ret;
 }
 
 /**
@@ -124,7 +109,7 @@ SELECT id, path, representative_ext, width, height, rotation
  */
 function ws_getVersion($params, &$service)
 {
-  return PHPWG_VERSION;
+    return PHPWG_VERSION;
 }
 
 /**
@@ -134,64 +119,63 @@ function ws_getVersion($params, &$service)
  */
 function ws_getInfos($params, &$service)
 {
-  $infos['version'] = PHPWG_VERSION;
+    $infos['version'] = PHPWG_VERSION;
 
-  $query = 'SELECT COUNT(*) FROM '.IMAGES_TABLE.';';
-  list($infos['nb_elements']) = pwg_db_fetch_row(pwg_query($query));
+    $query = 'SELECT COUNT(*) FROM ' . IMAGES_TABLE . ';';
+    [$infos['nb_elements']] = pwg_db_fetch_row(pwg_query($query));
 
-  $query = 'SELECT COUNT(*) FROM '.CATEGORIES_TABLE.';';
-  list($infos['nb_categories']) = pwg_db_fetch_row(pwg_query($query));
+    $query = 'SELECT COUNT(*) FROM ' . CATEGORIES_TABLE . ';';
+    [$infos['nb_categories']] = pwg_db_fetch_row(pwg_query($query));
 
-  $query = 'SELECT COUNT(*) FROM '.CATEGORIES_TABLE.' WHERE dir IS NULL;';
-  list($infos['nb_virtual']) = pwg_db_fetch_row(pwg_query($query));
+    $query = 'SELECT COUNT(*) FROM ' . CATEGORIES_TABLE . ' WHERE dir IS NULL;';
+    [$infos['nb_virtual']] = pwg_db_fetch_row(pwg_query($query));
 
-  $query = 'SELECT COUNT(*) FROM '.CATEGORIES_TABLE.' WHERE dir IS NOT NULL;';
-  list($infos['nb_physical']) = pwg_db_fetch_row(pwg_query($query));
+    $query = 'SELECT COUNT(*) FROM ' . CATEGORIES_TABLE . ' WHERE dir IS NOT NULL;';
+    [$infos['nb_physical']] = pwg_db_fetch_row(pwg_query($query));
 
-  $query = 'SELECT COUNT(*) FROM '.IMAGE_CATEGORY_TABLE.';';
-  list($infos['nb_image_category']) = pwg_db_fetch_row(pwg_query($query));
+    $query = 'SELECT COUNT(*) FROM ' . IMAGE_CATEGORY_TABLE . ';';
+    [$infos['nb_image_category']] = pwg_db_fetch_row(pwg_query($query));
 
-  $query = 'SELECT COUNT(*) FROM '.TAGS_TABLE.';';
-  list($infos['nb_tags']) = pwg_db_fetch_row(pwg_query($query));
+    $query = 'SELECT COUNT(*) FROM ' . TAGS_TABLE . ';';
+    [$infos['nb_tags']] = pwg_db_fetch_row(pwg_query($query));
 
-  $query = 'SELECT COUNT(*) FROM '.IMAGE_TAG_TABLE.';';
-  list($infos['nb_image_tag']) = pwg_db_fetch_row(pwg_query($query));
+    $query = 'SELECT COUNT(*) FROM ' . IMAGE_TAG_TABLE . ';';
+    [$infos['nb_image_tag']] = pwg_db_fetch_row(pwg_query($query));
 
-  $query = 'SELECT COUNT(*) FROM '.USERS_TABLE.';';
-  list($infos['nb_users']) = pwg_db_fetch_row(pwg_query($query));
+    $query = 'SELECT COUNT(*) FROM ' . USERS_TABLE . ';';
+    [$infos['nb_users']] = pwg_db_fetch_row(pwg_query($query));
 
-  $query = 'SELECT COUNT(*) FROM `'.GROUPS_TABLE.'`;';
-  list($infos['nb_groups']) = pwg_db_fetch_row(pwg_query($query));
+    $query = 'SELECT COUNT(*) FROM `' . GROUPS_TABLE . '`;';
+    [$infos['nb_groups']] = pwg_db_fetch_row(pwg_query($query));
 
-  $query = 'SELECT COUNT(*) FROM '.COMMENTS_TABLE.';';
-  list($infos['nb_comments']) = pwg_db_fetch_row(pwg_query($query));
+    $query = 'SELECT COUNT(*) FROM ' . COMMENTS_TABLE . ';';
+    [$infos['nb_comments']] = pwg_db_fetch_row(pwg_query($query));
 
-  // first element
-  if ($infos['nb_elements'] > 0)
-  {
-    $query = 'SELECT MIN(date_available) FROM '.IMAGES_TABLE.';';
-    list($infos['first_date']) = pwg_db_fetch_row(pwg_query($query));
-  }
+    // first element
+    if ($infos['nb_elements'] > 0) {
+        $query = 'SELECT MIN(date_available) FROM ' . IMAGES_TABLE . ';';
+        [$infos['first_date']] = pwg_db_fetch_row(pwg_query($query));
+    }
 
-  // unvalidated comments
-  if ($infos['nb_comments'] > 0)
-  {
-    $query = 'SELECT COUNT(*) FROM '.COMMENTS_TABLE.' WHERE validated=\'false\';';
-    list($infos['nb_unvalidated_comments']) = pwg_db_fetch_row(pwg_query($query));
-  }
+    // unvalidated comments
+    if ($infos['nb_comments'] > 0) {
+        $query = 'SELECT COUNT(*) FROM ' . COMMENTS_TABLE . ' WHERE validated=\'false\';';
+        [$infos['nb_unvalidated_comments']] = pwg_db_fetch_row(pwg_query($query));
+    }
 
-  // Cache size
-  // TODO for real later
-  $infos['cache_size'] = 4242;
+    // Cache size
+    // TODO for real later
+    $infos['cache_size'] = 4242;
 
-  foreach ($infos as $name => $value)
-  {
-    $output[] = array(
-      'name' => $name,
-      'value' => $value,
-    );
-  }
-  return array('infos' => new PwgNamedArray($output, 'item'));
+    foreach ($infos as $name => $value) {
+        $output[] = [
+            'name' => $name,
+            'value' => $value,
+        ];
+    }
+    return [
+        'infos' => new PwgNamedArray($output, 'item'),
+    ];
 }
 
 /**
@@ -203,69 +187,65 @@ function ws_getInfos($params, &$service)
  */
 function ws_getCacheSize($params, &$service)
 {
-  global $conf;
+    global $conf;
 
-  // Cache size
-  $path_cache = $conf['data_location'];
-  $infos['cache_size'] = null;
-  if (function_exists('exec'))
-  {
-    @exec('du -sk '.$path_cache, $return_array_cache);
-    if (
-      is_array($return_array_cache)
-      and !empty($return_array_cache[0])
-      and preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
-    )
-    {
-      $infos['cache_size'] = $matches_cache[1] * 1024;
+    // Cache size
+    $path_cache = $conf['data_location'];
+    $infos['cache_size'] = null;
+    if (function_exists('exec')) {
+        @exec('du -sk ' . $path_cache, $return_array_cache);
+        if (
+            is_array($return_array_cache)
+            and ! empty($return_array_cache[0])
+            and preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
+        ) {
+            $infos['cache_size'] = $matches_cache[1] * 1024;
+        }
     }
-  }
 
-  include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-  // Multiples sizes size
-  $path_msizes = $conf['data_location'].'i';
-  $msizes = get_cache_size_derivatives($path_msizes);
+    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+    // Multiples sizes size
+    $path_msizes = $conf['data_location'] . 'i';
+    $msizes = get_cache_size_derivatives($path_msizes);
 
-  $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::get_defined_type_map()), 0);
-  $infos['msizes']['custom'] = 0;
-  $all = 0;
+    $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::get_defined_type_map()), 0);
+    $infos['msizes']['custom'] = 0;
+    $all = 0;
 
-  foreach(array_keys($infos['msizes']) as $size_type)
-  {
-    $infos['msizes'][$size_type] += @$msizes[derivative_to_url($size_type)];
-    $all += $infos['msizes'][$size_type];
-  }
-  $infos['msizes']['all'] = $all;
-
-  // Compiled templates size
-  $path_template_c = $conf['data_location'].'templates_c';
-  $infos['tsizes'] = null;
-  if (function_exists('exec'))
-  {
-    @exec('du -sk '.$path_template_c, $return_array_template_c);
-    if (
-      is_array($return_array_template_c)
-      and !empty($return_array_template_c[0])
-      and preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)
-    )
-    {
-      $infos['tsizes'] = $matches_template_c[1] * 1024;
+    foreach (array_keys($infos['msizes']) as $size_type) {
+        $infos['msizes'][$size_type] += @$msizes[derivative_to_url($size_type)];
+        $all += $infos['msizes'][$size_type];
     }
-  }
+    $infos['msizes']['all'] = $all;
 
-  $infos['last_date_calc'] = date("Y-m-d H:i:s");
+    // Compiled templates size
+    $path_template_c = $conf['data_location'] . 'templates_c';
+    $infos['tsizes'] = null;
+    if (function_exists('exec')) {
+        @exec('du -sk ' . $path_template_c, $return_array_template_c);
+        if (
+            is_array($return_array_template_c)
+            and ! empty($return_array_template_c[0])
+            and preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)
+        ) {
+            $infos['tsizes'] = $matches_template_c[1] * 1024;
+        }
+    }
 
-  foreach ($infos as $name => $value)
-  {
-    $output[] = array(
-      'name' => $name,
-      'value' => $value,
-    );
-  }
+    $infos['last_date_calc'] = date('Y-m-d H:i:s');
 
-  conf_update_param("cache_sizes", $output, true);
+    foreach ($infos as $name => $value) {
+        $output[] = [
+            'name' => $name,
+            'value' => $value,
+        ];
+    }
 
-  return array('infos' => new PwgNamedArray($output, 'item'));
+    conf_update_param('cache_sizes', $output, true);
+
+    return [
+        'infos' => new PwgNamedArray($output, 'item'),
+    ];
 }
 
 /**
@@ -276,35 +256,33 @@ function ws_getCacheSize($params, &$service)
  */
 function ws_caddie_add($params, &$service)
 {
-  global $user;
+    global $user;
 
-  $query = '
+    $query = '
 SELECT id
-  FROM '. IMAGES_TABLE .'
-      LEFT JOIN '. CADDIE_TABLE .'
-      ON id=element_id AND user_id='. $user['id'] .'
-  WHERE id IN ('. implode(',',$params['image_id']) .')
+  FROM ' . IMAGES_TABLE . '
+      LEFT JOIN ' . CADDIE_TABLE . '
+      ON id=element_id AND user_id=' . $user['id'] . '
+  WHERE id IN (' . implode(',', $params['image_id']) . ')
     AND element_id IS NULL
 ;';
-  $result = array_from_query($query, 'id');
+    $result = array_from_query($query, 'id');
 
-  $datas = array();
-  foreach ($result as $id)
-  {
-    $datas[] = array(
-      'element_id' => $id,
-      'user_id' => $user['id'],
-      );
-  }
-  if (count($datas))
-  {
-    mass_inserts(
-      CADDIE_TABLE,
-      array('element_id','user_id'),
-      $datas
-      );
-  }
-  return count($datas);
+    $datas = [];
+    foreach ($result as $id) {
+        $datas[] = [
+            'element_id' => $id,
+            'user_id' => $user['id'],
+        ];
+    }
+    if (count($datas)) {
+        mass_inserts(
+            CADDIE_TABLE,
+            ['element_id', 'user_id'],
+            $datas
+        );
+    }
+    return count($datas);
 }
 
 /**
@@ -316,26 +294,23 @@ SELECT id
  */
 function ws_rates_delete($params, &$service)
 {
-  $query = '
-DELETE FROM '. RATE_TABLE .'
-  WHERE user_id='. $params['user_id'];
+    $query = '
+DELETE FROM ' . RATE_TABLE . '
+  WHERE user_id=' . $params['user_id'];
 
-  if (!empty($params['anonymous_id']))
-  {
-    $query .= ' AND anonymous_id=\''.$params['anonymous_id'].'\'';
-  }
-  if (!empty($params['image_id']))
-  {
-    $query .= ' AND element_id='.$params['image_id'];
-  }
+    if (! empty($params['anonymous_id'])) {
+        $query .= ' AND anonymous_id=\'' . $params['anonymous_id'] . '\'';
+    }
+    if (! empty($params['image_id'])) {
+        $query .= ' AND element_id=' . $params['image_id'];
+    }
 
-  $changes = pwg_db_changes(pwg_query($query));
-  if ($changes)
-  {
-    include_once(PHPWG_ROOT_PATH.'include/functions_rate.inc.php');
-    update_rating_score();
-  }
-  return $changes;
+    $changes = pwg_db_changes(pwg_query($query));
+    if ($changes) {
+        include_once PHPWG_ROOT_PATH . 'include/functions_rate.inc.php';
+        update_rating_score();
+    }
+    return $changes;
 }
 
 /**
@@ -347,29 +322,23 @@ DELETE FROM '. RATE_TABLE .'
  */
 function ws_session_login($params, &$service)
 {
-  if (defined('PWG_API_KEY_REQUEST'))
-  {
-    return new PwgError(401, 'Cannot use this method with an api key');
-  }
-
-  if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['username']))
-  {
-    $secret = pwg_db_real_escape_string($params['password']);
-    $authenticate = auth_key_login($params['username'].':'.$secret);
-    if ($authenticate)
-    {
-      $_SESSION['connected_with'] = 'ws_session_login_api_key';
-      return true;
+    if (defined('PWG_API_KEY_REQUEST')) {
+        return new PwgError(401, 'Cannot use this method with an api key');
     }
-  }
-  else if (try_log_user($params['username'], $params['password'], false))
-  {
-    $_SESSION['connected_with'] = 'ws_session_login';
-    return true;
-  }
-  return new PwgError(999, 'Invalid username/password');
-}
 
+    if (preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['username'])) {
+        $secret = pwg_db_real_escape_string($params['password']);
+        $authenticate = auth_key_login($params['username'] . ':' . $secret);
+        if ($authenticate) {
+            $_SESSION['connected_with'] = 'ws_session_login_api_key';
+            return true;
+        }
+    } elseif (try_log_user($params['username'], $params['password'], false)) {
+        $_SESSION['connected_with'] = 'ws_session_login';
+        return true;
+    }
+    return new PwgError(999, 'Invalid username/password');
+}
 
 /**
  * API method
@@ -378,16 +347,14 @@ function ws_session_login($params, &$service)
  */
 function ws_session_logout($params, &$service)
 {
-  if (defined('PWG_API_KEY_REQUEST'))
-  {
-    return new PwgError(401, 'Cannot use this method with an api key');
-  }
+    if (defined('PWG_API_KEY_REQUEST')) {
+        return new PwgError(401, 'Cannot use this method with an api key');
+    }
 
-  if (!is_a_guest())
-  {
-    logout_user();
-  }
-  return true;
+    if (! is_a_guest()) {
+        logout_user();
+    }
+    return true;
 }
 
 /**
@@ -397,52 +364,48 @@ function ws_session_logout($params, &$service)
  */
 function ws_session_getStatus($params, &$service)
 {
-  global $user, $conf;
+    global $user, $conf;
 
-  $res['username'] = is_a_guest() ? 'guest' : stripslashes($user['username']);
-  foreach ( array('status', 'theme', 'language') as $k )
-  {
-    $res[$k] = $user[$k];
-  }
-  $res['pwg_token'] = get_pwg_token();
-  $res['charset'] = get_pwg_charset();
+    $res['username'] = is_a_guest() ? 'guest' : stripslashes($user['username']);
+    foreach (['status', 'theme', 'language'] as $k) {
+        $res[$k] = $user[$k];
+    }
+    $res['pwg_token'] = get_pwg_token();
+    $res['charset'] = get_pwg_charset();
 
-  list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
-  $res['current_datetime'] = $dbnow;
-  $res['version'] = PHPWG_VERSION;
-  $res['save_visits'] = do_log();
-  $res['connected_with'] = $_SESSION['connected_with'] ?? null;
+    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+    $res['current_datetime'] = $dbnow;
+    $res['version'] = PHPWG_VERSION;
+    $res['save_visits'] = do_log();
+    $res['connected_with'] = $_SESSION['connected_with'] ?? null;
 
-  // Piwigo Remote Sync does not support receiving the new (version 14) output "save_visits"
-  if (isset($_SERVER['HTTP_USER_AGENT']) and preg_match('/^PiwigoRemoteSync/', $_SERVER['HTTP_USER_AGENT']))
-  {
-    unset($res['save_visits']);
-    unset($res['connected_with']);
-  }
+    // Piwigo Remote Sync does not support receiving the new (version 14) output "save_visits"
+    if (isset($_SERVER['HTTP_USER_AGENT']) and preg_match('/^PiwigoRemoteSync/', $_SERVER['HTTP_USER_AGENT'])) {
+        unset($res['save_visits']);
+        unset($res['connected_with']);
+    }
 
-  // Piwigo Remote Sync does not support receiving the available sizes
-  $piwigo_remote_sync_agent = 'Apache-HttpClient/';
-  if (!isset($_SERVER['HTTP_USER_AGENT']) or substr($_SERVER['HTTP_USER_AGENT'], 0, strlen($piwigo_remote_sync_agent)) !== $piwigo_remote_sync_agent)
-  {
-    $res['available_sizes'] = array_keys(ImageStdParams::get_defined_type_map());
-  }
+    // Piwigo Remote Sync does not support receiving the available sizes
+    $piwigo_remote_sync_agent = 'Apache-HttpClient/';
+    if (! isset($_SERVER['HTTP_USER_AGENT']) or substr($_SERVER['HTTP_USER_AGENT'], 0, strlen($piwigo_remote_sync_agent)) !== $piwigo_remote_sync_agent) {
+        $res['available_sizes'] = array_keys(ImageStdParams::get_defined_type_map());
+    }
 
-  if (is_admin())
-  {
-    $res['upload_file_types'] = implode(
-      ',',
-      array_unique(
-        array_map(
-          'strtolower',
-          $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext']
-          )
-        )
-      );
+    if (is_admin()) {
+        $res['upload_file_types'] = implode(
+            ',',
+            array_unique(
+                array_map(
+                    'strtolower',
+                    $conf['upload_form_all_types'] ? $conf['file_ext'] : $conf['picture_ext']
+                )
+            )
+        );
 
-    $res['upload_form_chunk_size'] = $conf['upload_form_chunk_size'];
-  }
-  
-  return $res;
+        $res['upload_form_chunk_size'] = $conf['upload_form_chunk_size'];
+    }
+
+    return $res;
 }
 
 /**
@@ -452,91 +415,79 @@ function ws_session_getStatus($params, &$service)
  */
 function ws_getActivityList($param, &$service)
 {
-  global $conf;
+    global $conf;
 
-  foreach (array('date_min', 'date_max') as $datefield)
-  {
-    if (!empty($param[$datefield]) and !is_valid_mysql_datetime($param[$datefield]))
-    {
-      return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid '.$datefield);
+    foreach (['date_min', 'date_max'] as $datefield) {
+        if (! empty($param[$datefield]) and ! is_valid_mysql_datetime($param[$datefield])) {
+            return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid ' . $datefield);
+        }
     }
-  }
-  
-  $output_lines = array();
-  $current_key = '';
-  $page_size = 100; //We will fetch X lines in database =/= lines displayed due to line concatenation
-  //$page_offset = $param['page']*$page_size;
-  $page_offset = $param['offset'];
-  $nb_rows_to_fetch = 10000;
 
-  $user_ids = array();
+    $output_lines = [];
+    $current_key = '';
+    $page_size = 100; // We will fetch X lines in database =/= lines displayed due to line concatenation
+    // $page_offset = $param['page']*$page_size;
+    $page_offset = $param['offset'];
+    $nb_rows_to_fetch = 10000;
 
-  $line_id = 0;
+    $user_ids = [];
 
-  if (!empty($param['date_min'])) {
-    $min = date_format(date_create($param['date_min']), "Y-m-d H:i:s");
-    $max = date_format(date_create($param['date_max']), "Y-m-d 23:59:59");
-  }
+    $line_id = 0;
 
-  if (!empty($param['date_max'])) {
-    $max = date_format(date_create($param['date_max']), "Y-m-d 23:59:59");
-  }
+    if (! empty($param['date_min'])) {
+        $min = date_format(date_create($param['date_min']), 'Y-m-d H:i:s');
+        $max = date_format(date_create($param['date_max']), 'Y-m-d 23:59:59');
+    }
 
-  $where = 'WHERE object != \'system\'';
+    if (! empty($param['date_max'])) {
+        $max = date_format(date_create($param['date_max']), 'Y-m-d 23:59:59');
+    }
 
-  if (isset($param['uid']))
-  {
-    $where .= '
-    AND performed_by = '.$param['uid'];
-  }
+    $where = 'WHERE object != \'system\'';
 
-  if (isset($param['action']))
-  {
-    $where .= '
-    AND action = "'.pwg_db_real_escape_string($param['action']).'"';
-  }
+    if (isset($param['uid'])) {
+        $where .= '
+    AND performed_by = ' . $param['uid'];
+    }
 
-  if (isset($param['object']))
-  {
-    $where .= '
-    AND object = "'.pwg_db_real_escape_string($param['object']).'"';
-  }
+    if (isset($param['action'])) {
+        $where .= '
+    AND action = "' . pwg_db_real_escape_string($param['action']) . '"';
+    }
 
-  if (!empty($param['date_min']))
-  {
-    $where .= '
-    AND occured_on >= "'.$min.'"';
-  }
+    if (isset($param['object'])) {
+        $where .= '
+    AND object = "' . pwg_db_real_escape_string($param['object']) . '"';
+    }
 
-  if (!empty($param['date_max']))
-  {
-    $where .= '
-    AND occured_on <= "'.$max.'"';
-  }
+    if (! empty($param['date_min'])) {
+        $where .= '
+    AND occured_on >= "' . $min . '"';
+    }
 
-  if (!empty($param['id']))
-  {
-    $where .= '
-    AND object_id = '.$param['id'];
-  }
+    if (! empty($param['date_max'])) {
+        $where .= '
+    AND occured_on <= "' . $max . '"';
+    }
 
-  if ('none' == $conf['activity_display_connections'])
-  {
-    $where .= '
+    if (! empty($param['id'])) {
+        $where .= '
+    AND object_id = ' . $param['id'];
+    }
+
+    if ($conf['activity_display_connections'] == 'none') {
+        $where .= '
     AND action NOT IN (\'login\', \'logout\')';
-  }
-  elseif ('admins_only' == $conf['activity_display_connections'])
-  {
-    include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-    $where .= '
-    AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN ('.implode(',', get_admins()).'))';
-  }
+    } elseif ($conf['activity_display_connections'] == 'admins_only') {
+        include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+        $where .= '
+    AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN (' . implode(',', get_admins()) . '))';
+    }
 
-  $more_rows_available = true;
-  
-  while (count($output_lines) < $page_size and $more_rows_available)
-  {
-    $query = '
+    $more_rows_available = true;
+
+    while (count($output_lines) < $page_size and $more_rows_available) {
+        $query = '
 SELECT
     activity_id,
     performed_by,
@@ -548,129 +499,111 @@ SELECT
     occured_on,
     details,
     user_agent
-  FROM '.ACTIVITY_TABLE.'
-  '.$where.'
+  FROM ' . ACTIVITY_TABLE . '
+  ' . $where . '
   ORDER BY activity_id DESC
-  LIMIT '.$nb_rows_to_fetch.' OFFSET '.$page_offset.'
+  LIMIT ' . $nb_rows_to_fetch . ' OFFSET ' . $page_offset . '
 ;';
-    $rows = query2array($query);
+        $rows = query2array($query);
 
-    if (count($rows) < $nb_rows_to_fetch)
-    {
-      $more_rows_available = false;
+        if (count($rows) < $nb_rows_to_fetch) {
+            $more_rows_available = false;
+        }
+
+        foreach ($rows as $row) {
+            if (count($output_lines) < $page_size) {
+                $page_offset++;
+
+                $line_key = $row['session_idx'] . '~' . $row['object'] . '~' . $row['action'] . '~'; // idx~photo~add
+
+                if ($line_key === $current_key) {
+                    // I increment the counter of the previous line
+                    $output_lines[count($output_lines) - 1]['counter']++;
+                    $output_lines[count($output_lines) - 1]['object_id'][] = $row['object_id'];
+                } else {
+                    $row['details'] = str_replace('`groups`', 'groups', $row['details']);
+                    $row['details'] = str_replace('`rank`', 'rank', $row['details']);
+                    $details = @unserialize($row['details']);
+
+                    if (isset($row['user_agent'])) {
+                        $details['agent'] = $row['user_agent'];
+                    }
+
+                    if (isset($details['method'])) {
+                        $detailsType = 'method';
+                    }
+
+                    if (isset($details['script'])) {
+                        $detailsType = 'script';
+                    }
+
+                    [$date, $hour] = explode(' ', $row['occured_on']);
+                    // New line
+                    $output_lines[] = [
+                        'id' => $line_id,
+                        'object' => $row['object'],
+                        'object_id' => [$row['object_id']],
+                        'action' => $row['action'],
+                        'ip_address' => $row['ip_address'],
+                        'date' => format_date($date),
+                        'hour' => $hour,
+                        'user_id' => $row['performed_by'],
+                        'detailsType' => $detailsType,
+                        'details' => $details,
+                        'counter' => 1,
+                    ];
+
+                    $user_ids[$row['performed_by']] = 1;
+                    if ($row['object'] == 'user') {
+                        $user_ids[$row['object_id']] = 1;
+                    }
+
+                    $current_key = $line_key;
+                    $line_id++;
+                }
+            } else {
+                $more_rows_available = true;
+                break;
+            }
+        }
     }
 
-    foreach ($rows as $row)
-    {
-      if (count($output_lines) < $page_size)
-      {
-        $page_offset++;
-
-        $line_key = $row['session_idx'].'~'.$row['object'].'~'.$row['action'].'~'; // idx~photo~add
-  
-        if ($line_key === $current_key)
-        {
-          // I increment the counter of the previous line
-          $output_lines[count($output_lines)-1]['counter']++;
-          $output_lines[count($output_lines)-1]['object_id'][] = $row['object_id'];
-        }
-        else
-        {
-          $row['details'] = str_replace('`groups`', 'groups', $row['details']);
-          $row['details'] = str_replace('`rank`', 'rank', $row['details']);
-          $details = @unserialize($row['details']);
-
-          if (isset($row['user_agent']))
-          {
-            $details['agent'] = $row['user_agent'];
-          }
-
-          if (isset($details['method']))
-          {
-            $detailsType = 'method';
-          }
-       
-          if (isset($details['script']))
-          {
-            $detailsType = 'script';
-          }
-
-          list($date, $hour) = explode(' ', $row['occured_on']);
-          // New line
-          $output_lines[] = array(
-            'id' => $line_id,
-            'object' => $row['object'],
-            'object_id' => array($row['object_id']),
-            'action' => $row['action'],
-            'ip_address' => $row['ip_address'],
-            'date' => format_date($date),
-            'hour' => $hour,
-            'user_id' => $row['performed_by'],
-            'detailsType' => $detailsType,
-            'details' => $details,
-            'counter' => 1, 
-          );
-
-          $user_ids[ $row['performed_by'] ] = 1;
-          if ('user' == $row['object'])
-          {
-            $user_ids[ $row['object_id'] ] = 1;
-          }
-
-          $current_key = $line_key;
-          $line_id++;
-        }
-      }
-      else
-      {
-        $more_rows_available = true;
-        break;
-      }
-    }
-  }
-
-  $username_of = array();
-  $user_id_list = array();
-  if (count($user_ids) > 0)
-  {
-    $query = '
+    $username_of = [];
+    $user_id_list = [];
+    if (count($user_ids) > 0) {
+        $query = '
 SELECT
-    `'.$conf['user_fields']['id'].'` AS user_id,
-    `'.$conf['user_fields']['username'].'` AS username
-  FROM '.USERS_TABLE.'
-  WHERE `'.$conf['user_fields']['id'].'` IN ('.implode(',', array_keys($user_ids)).')
+    `' . $conf['user_fields']['id'] . '` AS user_id,
+    `' . $conf['user_fields']['username'] . '` AS username
+  FROM ' . USERS_TABLE . '
+  WHERE `' . $conf['user_fields']['id'] . '` IN (' . implode(',', array_keys($user_ids)) . ')
 ;';
-    $username_of = query2array($query, 'user_id', 'username');
-  }
-
-  foreach ($output_lines as $idx => $output_line)
-  {
-    if ('user' == $output_line['object'])
-    {
-      foreach ($output_line['object_id'] as $user_id)
-      {
-        @$output_lines[$idx]['details']['users'][] = isset($username_of[$user_id]) ? $username_of[$user_id] : 'user#'.$user_id;
-      }
-
-      if (isset($output_lines[$idx]['details']['users']))
-      {
-        $output_lines[$idx]['details']['users_string'] = implode(', ', $output_lines[$idx]['details']['users']);
-      }
+        $username_of = query2array($query, 'user_id', 'username');
     }
 
-    $output_lines[$idx]['username'] = 'user#'.$output_lines[$idx]['user_id'];
-    if (isset($username_of[ $output_lines[$idx]['user_id'] ]))
-    {
-      $output_lines[$idx]['username'] = $username_of[ $output_lines[$idx]['user_id'] ];
-    }
-  }
+    foreach ($output_lines as $idx => $output_line) {
+        if ($output_line['object'] == 'user') {
+            foreach ($output_line['object_id'] as $user_id) {
+                @$output_lines[$idx]['details']['users'][] = $username_of[$user_id] ?? 'user#' . $user_id;
+            }
 
-  return array(
-    'result_lines' => $output_lines,
-    'page_offset' => $page_offset,
-    'end_page' => !$more_rows_available,
-    'params' => $param
-  );
+            if (isset($output_lines[$idx]['details']['users'])) {
+                $output_lines[$idx]['details']['users_string'] = implode(', ', $output_lines[$idx]['details']['users']);
+            }
+        }
+
+        $output_lines[$idx]['username'] = 'user#' . $output_lines[$idx]['user_id'];
+        if (isset($username_of[$output_lines[$idx]['user_id']])) {
+            $output_lines[$idx]['username'] = $username_of[$output_lines[$idx]['user_id']];
+        }
+    }
+
+    return [
+        'result_lines' => $output_lines,
+        'page_offset' => $page_offset,
+        'end_page' => ! $more_rows_available,
+        'params' => $param,
+    ];
 }
 
 /**
@@ -680,38 +613,35 @@ SELECT
  */
 function ws_history_log($params, &$service)
 {
-  global $logger, $page;
+    global $logger, $page;
 
-  if (!empty($params['section']) and in_array($params['section'], get_enums(HISTORY_TABLE, 'section')))
-  {
-    $page['section'] = $params['section'];
-  }
+    if (! empty($params['section']) and in_array($params['section'], get_enums(HISTORY_TABLE, 'section'))) {
+        $page['section'] = $params['section'];
+    }
 
-  if (!empty($params['cat_id']))
-  {
-    $page['category'] = array('id' => $params['cat_id']);
-  }
+    if (! empty($params['cat_id'])) {
+        $page['category'] = [
+            'id' => $params['cat_id'],
+        ];
+    }
 
-  if (!empty($params['tags_string']) and preg_match('/^\d+(,\d+)*$/', $params['tags_string']))
-  {
-    $page['tag_ids'] = explode(',', $params['tags_string']);
-  }
+    if (! empty($params['tags_string']) and preg_match('/^\d+(,\d+)*$/', $params['tags_string'])) {
+        $page['tag_ids'] = explode(',', $params['tags_string']);
+    }
 
-  // when visiting a photo (which is currently, in version 14, the only event registered
-  // by pwg.history.log) we should also increment images.hit
-  if (!empty($params['image_id']))
-  {
-    include_once(PHPWG_ROOT_PATH.'include/functions_picture.inc.php');
-    increase_image_visit_counter($params['image_id']);
-  }
+    // when visiting a photo (which is currently, in version 14, the only event registered
+    // by pwg.history.log) we should also increment images.hit
+    if (! empty($params['image_id'])) {
+        include_once PHPWG_ROOT_PATH . 'include/functions_picture.inc.php';
+        increase_image_visit_counter($params['image_id']);
+    }
 
-  $image_type = 'picture';
-  if ($params['is_download'])
-  {
-    $image_type = 'high';
-  }
+    $image_type = 'picture';
+    if ($params['is_download']) {
+        $image_type = 'high';
+    }
 
-  pwg_log($params['image_id'], $image_type);
+    pwg_log($params['image_id'], $image_type);
 }
 
 /**
@@ -722,271 +652,238 @@ function ws_history_log($params, &$service)
 function ws_history_search($param, &$service)
 {
 
-  include_once(PHPWG_ROOT_PATH.'admin/include/functions.php');
-  include_once(PHPWG_ROOT_PATH.'admin/include/functions_history.inc.php');
+    include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
+    include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
 
-  global $conf;
+    global $conf;
 
-  if (isset($_GET['start']) and is_numeric($_GET['start']))
-  {
-    $page['start'] = $_GET['start'];
-  }
-  else
-  {
-    $page['start'] = 0;
-  }
+    if (isset($_GET['start']) and is_numeric($_GET['start'])) {
+        $page['start'] = $_GET['start'];
+    } else {
+        $page['start'] = 0;
+    }
 
-  $types = array_merge(array('none'), get_enums(HISTORY_TABLE, 'image_type'));
+    $types = array_merge(['none'], get_enums(HISTORY_TABLE, 'image_type'));
 
-  $display_thumbnails = array('no_display_thumbnail' => l10n('No display'),
-                              'display_thumbnail_classic' => l10n('Classic display'),
-                              'display_thumbnail_hoverbox' => l10n('Hoverbox display')
-    );
+    $display_thumbnails = [
+        'no_display_thumbnail' => l10n('No display'),
+        'display_thumbnail_classic' => l10n('Classic display'),
+        'display_thumbnail_hoverbox' => l10n('Hoverbox display'),
+    ];
 
-  // +-----------------------------------------------------------------------+
-  // | Build search criteria and redirect to results                         |
-  // +-----------------------------------------------------------------------+
+    // +-----------------------------------------------------------------------+
+    // | Build search criteria and redirect to results                         |
+    // +-----------------------------------------------------------------------+
 
-  $page['errors'] = array();
-  $search = array();
+    $page['errors'] = [];
+    $search = [];
 
-  // date start
-  if (!empty($param['start']))
-  {
-    check_input_parameter('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
-    $search['fields']['date-after'] = $param['start'];
-  }
+    // date start
+    if (! empty($param['start'])) {
+        check_input_parameter('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
+        $search['fields']['date-after'] = $param['start'];
+    }
 
-  // date end
-  if (!empty($param['end']))
-  {
-    check_input_parameter('end', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
-    $search['fields']['date-before'] = $param['end'];
-  }
+    // date end
+    if (! empty($param['end'])) {
+        check_input_parameter('end', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
+        $search['fields']['date-before'] = $param['end'];
+    }
 
-  // types
-  if (empty($param['types']))
-  {
-    $search['fields']['types'] = $types;
-  }
-  else
-  {
-    check_input_parameter('types', $param, true, '/^('.implode('|', $types).')$/');
-    $search['fields']['types'] = $param['types'];
-  }
+    // types
+    if (empty($param['types'])) {
+        $search['fields']['types'] = $types;
+    } else {
+        check_input_parameter('types', $param, true, '/^(' . implode('|', $types) . ')$/');
+        $search['fields']['types'] = $param['types'];
+    }
 
-  // user
-  $search['fields']['user'] = intval($param['user_id']);
+    // user
+    $search['fields']['user'] = intval($param['user_id']);
 
-  // image
-  if (!empty($param['image_id']))
-  {
-    $search['fields']['image_id'] = intval($param['image_id']);
-  }
+    // image
+    if (! empty($param['image_id'])) {
+        $search['fields']['image_id'] = intval($param['image_id']);
+    }
 
-  // filename
-  if (!empty($param['filename']))
-  {
-    $search['fields']['filename'] = str_replace(
-      '*',
-      '%',
-      pwg_db_real_escape_string($param['filename'])
-      );
-  }
+    // filename
+    if (! empty($param['filename'])) {
+        $search['fields']['filename'] = str_replace(
+            '*',
+            '%',
+            pwg_db_real_escape_string($param['filename'])
+        );
+    }
 
-  // ip
-  if (!empty($param['ip']))
-  {
-    $search['fields']['ip'] = str_replace(
-      '*',
-      '%',
-      pwg_db_real_escape_string($param['ip'])
-      );
-  }
+    // ip
+    if (! empty($param['ip'])) {
+        $search['fields']['ip'] = str_replace(
+            '*',
+            '%',
+            pwg_db_real_escape_string($param['ip'])
+        );
+    }
 
-  // thumbnails
-  check_input_parameter('display_thumbnail', $param, false, '/^('.implode('|', array_keys($display_thumbnails)).')$/');
+    // thumbnails
+    check_input_parameter('display_thumbnail', $param, false, '/^(' . implode('|', array_keys($display_thumbnails)) . ')$/');
 
-  $search['fields']['display_thumbnail'] = $param['display_thumbnail'];
-  // Display choise are also save to one cookie
-  if (!empty($param['display_thumbnail'])
-      and isset($display_thumbnails[$param['display_thumbnail']]))
-  {
-    $cookie_val = $param['display_thumbnail'];
-  }
-  else
-  {
-    $cookie_val = null;
-  }
+    $search['fields']['display_thumbnail'] = $param['display_thumbnail'];
+    // Display choise are also save to one cookie
+    if (! empty($param['display_thumbnail'])
+        and isset($display_thumbnails[$param['display_thumbnail']])) {
+        $cookie_val = $param['display_thumbnail'];
+    } else {
+        $cookie_val = null;
+    }
 
-  pwg_set_cookie_var('display_thumbnail', $cookie_val, strtotime('+1 month') );
+    pwg_set_cookie_var('display_thumbnail', $cookie_val, strtotime('+1 month'));
 
-  // TODO manage inconsistency of having $_POST['image_id'] and
-  // $_POST['filename'] simultaneously
+    // TODO manage inconsistency of having $_POST['image_id'] and
+    // $_POST['filename'] simultaneously
 
-  // store seach in database
-  if (!empty($search))
-  {
-    // register search rules in database, then they will be available on
-    // thumbnails page and picture page.
-    $query ='
-  INSERT INTO '.SEARCH_TABLE.'
+    // store seach in database
+    if (! empty($search)) {
+        // register search rules in database, then they will be available on
+        // thumbnails page and picture page.
+        $query = '
+  INSERT INTO ' . SEARCH_TABLE . '
   (rules)
   VALUES
-  (\''.pwg_db_real_escape_string(serialize($search)).'\')
+  (\'' . pwg_db_real_escape_string(serialize($search)) . '\')
   ;';
 
-    pwg_query($query);
+        pwg_query($query);
 
-    $search_id = pwg_db_insert_id(SEARCH_TABLE);
+        $search_id = pwg_db_insert_id(SEARCH_TABLE);
 
-    // Remove redirect for ajax //
-    // redirect(
-    //   PHPWG_ROOT_PATH.'admin.php?page=history&search_id='.$search_id
-    //   );
-  }
-  else
-  {
-    $page['errors'][] = l10n('Empty query. No criteria has been entered.');
-  }
-
-  // what are the lines to display in reality ?
-  $query = '
-SELECT rules
-  FROM '.SEARCH_TABLE.'
-  WHERE id = '.$search_id.'
-;';
-  list($serialized_rules) = pwg_db_fetch_row(pwg_query($query));
-
-  $page['search'] = unserialize($serialized_rules);
-
-
-  /*TODO - no need to get a huge number of rows from db (should take only what needed for display + SQL_CALC_FOUND_ROWS*/
-  $data = trigger_change('get_history', array(), $page['search'], $types);
-  usort($data, 'history_compare');
-
-  $page['nb_lines'] = count($data);
-
-  //Number of ids of each kind
-  $history_lines = array();
-  $user_ids = array();
-  $username_of = array();
-  $category_ids = array();
-  $image_ids = array();
-  $has_tags = false;
-  $search_ids = array();
-
-  foreach ($data as $row)
-  {
-    $user_ids[$row['user_id']] = 1;
-
-    if (isset($row['category_id']))
-    {
-      array_push($category_ids, $row['category_id'] );
+        // Remove redirect for ajax //
+        // redirect(
+        //   PHPWG_ROOT_PATH.'admin.php?page=history&search_id='.$search_id
+        //   );
+    } else {
+        $page['errors'][] = l10n('Empty query. No criteria has been entered.');
     }
 
-    if (isset($row['image_id']))
-    {
-      $image_ids[$row['image_id']] = 1;
-    }
-
-    if (isset($row['tag_ids']))
-    {
-      $has_tags = true;
-    }
-
-    if (isset($row['search_id']))
-    {
-      array_push($search_ids, $row['search_id']);
-    }
-
-    $history_lines[] = $row;
-  }
-
-  // prepare reference data (users, tags, categories...)
-  if (count($search_ids) > 0)
-  {
+    // what are the lines to display in reality ?
     $query = '
+SELECT rules
+  FROM ' . SEARCH_TABLE . '
+  WHERE id = ' . $search_id . '
+;';
+    [$serialized_rules] = pwg_db_fetch_row(pwg_query($query));
+
+    $page['search'] = unserialize($serialized_rules);
+
+    /* TODO - no need to get a huge number of rows from db (should take only what needed for display + SQL_CALC_FOUND_ROWS */
+    $data = trigger_change('get_history', [], $page['search'], $types);
+    usort($data, 'history_compare');
+
+    $page['nb_lines'] = count($data);
+
+    // Number of ids of each kind
+    $history_lines = [];
+    $user_ids = [];
+    $username_of = [];
+    $category_ids = [];
+    $image_ids = [];
+    $has_tags = false;
+    $search_ids = [];
+
+    foreach ($data as $row) {
+        $user_ids[$row['user_id']] = 1;
+
+        if (isset($row['category_id'])) {
+            array_push($category_ids, $row['category_id']);
+        }
+
+        if (isset($row['image_id'])) {
+            $image_ids[$row['image_id']] = 1;
+        }
+
+        if (isset($row['tag_ids'])) {
+            $has_tags = true;
+        }
+
+        if (isset($row['search_id'])) {
+            array_push($search_ids, $row['search_id']);
+        }
+
+        $history_lines[] = $row;
+    }
+
+    // prepare reference data (users, tags, categories...)
+    if (count($search_ids) > 0) {
+        $query = '
 SELECT
     id,
     rules
-  FROM '.SEARCH_TABLE.'
-  WHERE id IN ('.implode(',', $search_ids).')
+  FROM ' . SEARCH_TABLE . '
+  WHERE id IN (' . implode(',', $search_ids) . ')
 ;';
-    $search_details = query2array($query, 'id', 'rules');
-    
-    foreach ($search_details as $id_search => $rules_search)
-    {
-      $rules_search = safe_unserialize($rules_search)['fields'];
-      if (!empty($rules_search['tags']['words']))
-      {
-        $has_tags = true;
-      }
+        $search_details = query2array($query, 'id', 'rules');
 
-      if (!empty($rules_search['cat']['words']))
-      {
-        $category_ids = array_merge($category_ids, $rules_search['cat']['words']);
-      }
+        foreach ($search_details as $id_search => $rules_search) {
+            $rules_search = safe_unserialize($rules_search)['fields'];
+            if (! empty($rules_search['tags']['words'])) {
+                $has_tags = true;
+            }
 
-      if(!empty($rules_search['added_by']))
-      {
-        foreach ($rules_search['added_by'] as $key)
-        {
-          $user_ids[$key] = 1;
+            if (! empty($rules_search['cat']['words'])) {
+                $category_ids = array_merge($category_ids, $rules_search['cat']['words']);
+            }
+
+            if (! empty($rules_search['added_by'])) {
+                foreach ($rules_search['added_by'] as $key) {
+                    $user_ids[$key] = 1;
+                }
+            }
+
+            $search_details[$id_search] = $rules_search;
         }
-      }
-
-      $search_details[$id_search] = $rules_search;
     }
-  }
 
-  if (count($user_ids) > 0)
-  {
-    $query = '
-SELECT '.$conf['user_fields']['id'].' AS id
-     , '.$conf['user_fields']['username'].' AS username
-  FROM '.USERS_TABLE.'
-  WHERE id IN ('.implode(',', array_keys($user_ids)).')
+    if (count($user_ids) > 0) {
+        $query = '
+SELECT ' . $conf['user_fields']['id'] . ' AS id
+     , ' . $conf['user_fields']['username'] . ' AS username
+  FROM ' . USERS_TABLE . '
+  WHERE id IN (' . implode(',', array_keys($user_ids)) . ')
 ;';
-    $result = pwg_query($query);
+        $result = pwg_query($query);
 
-    $username_of = array();
-    while ($row = pwg_db_fetch_assoc($result))
-    {
-      $username_of[$row['id']] = stripslashes($row['username']);
+        $username_of = [];
+        while ($row = pwg_db_fetch_assoc($result)) {
+            $username_of[$row['id']] = stripslashes($row['username']);
+        }
     }
-  }
 
-  if (count($category_ids) > 0)
-  {
-    $query = '
+    if (count($category_ids) > 0) {
+        $query = '
 SELECT id, uppercats
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id IN ('.implode(',', array_values($category_ids)).')
+  FROM ' . CATEGORIES_TABLE . '
+  WHERE id IN (' . implode(',', array_values($category_ids)) . ')
 ;';
-    $uppercats_of = query2array($query, 'id', 'uppercats');
+        $uppercats_of = query2array($query, 'id', 'uppercats');
 
-    $full_cat_path = array();
-    $name_of_category = array();
+        $full_cat_path = [];
+        $name_of_category = [];
 
-    foreach ($uppercats_of as $category_id => $uppercats)
-    {
-      $full_cat_path[$category_id] = get_cat_display_name_cache(
-        $uppercats,
-        'admin.php?page=album-'
-      );
-      
-      $uppercats = explode(",", $uppercats);
-      $name_of_category[$category_id] = get_cat_display_name_cache(
-        end($uppercats),
-        'admin.php?page=album-'
-      );
+        foreach ($uppercats_of as $category_id => $uppercats) {
+            $full_cat_path[$category_id] = get_cat_display_name_cache(
+                $uppercats,
+                'admin.php?page=album-'
+            );
+
+            $uppercats = explode(',', $uppercats);
+            $name_of_category[$category_id] = get_cat_display_name_cache(
+                end($uppercats),
+                'admin.php?page=album-'
+            );
+        }
     }
-  }
 
-  if (count($image_ids) > 0)
-  {
-    $query = '
+    if (count($image_ids) > 0) {
+        $query = '
 SELECT
     id,
     IF(name IS NULL, file, name) AS label,
@@ -994,238 +891,218 @@ SELECT
     file,
     path,
     representative_ext
-  FROM '.IMAGES_TABLE.'
-  WHERE id IN ('.implode(',', array_keys($image_ids)).')
+  FROM ' . IMAGES_TABLE . '
+  WHERE id IN (' . implode(',', array_keys($image_ids)) . ')
 ;';
-    $image_infos = query2array($query, 'id');
-  }
+        $image_infos = query2array($query, 'id');
+    }
 
-  if ($has_tags > 0)
-  {
-    $query = '
+    if ($has_tags > 0) {
+        $query = '
 SELECT
     id,
     name, url_name
-  FROM '.TAGS_TABLE;
+  FROM ' . TAGS_TABLE;
 
-    global $name_of_tag; // used for preg_replace
-    $name_of_tag = array();
-    $result = pwg_query($query);
-    while ($row=pwg_db_fetch_assoc($result))
-    {
-      $name_of_tag[ $row['id'] ] = trigger_change("render_tag_name", $row["name"], $row);
-    }
-  }
-
-  $i = 0;
-  $first_line = $page['start'] + 1;
-  $last_line = $page['start'] + $conf['nb_logs_page'];
-
-  $summary['total_filesize'] = 0;
-  $summary['guests_IP'] = array();
-
-  $result = array();
-  $sorted_members = array();
-
-  foreach ($history_lines as $line)
-  {
-    if (isset($line['image_type']) and $line['image_type'] == 'high')
-    {
-      $summary['total_filesize'] += @intval($image_infos[$line['image_id']]['filesize']);
+        global $name_of_tag; // used for preg_replace
+        $name_of_tag = [];
+        $result = pwg_query($query);
+        while ($row = pwg_db_fetch_assoc($result)) {
+            $name_of_tag[$row['id']] = trigger_change('render_tag_name', $row['name'], $row);
+        }
     }
 
-    if ($line['user_id'] == $conf['guest_id'])
-    {
-      if (!isset($summary['guests_IP'][ $line['IP'] ]))
-      {
-        $summary['guests_IP'][ $line['IP'] ] = 0;
-      }
+    $i = 0;
+    $first_line = $page['start'] + 1;
+    $last_line = $page['start'] + $conf['nb_logs_page'];
 
-      $summary['guests_IP'][ $line['IP'] ]++;
-    }
+    $summary['total_filesize'] = 0;
+    $summary['guests_IP'] = [];
 
-    $i++;
+    $result = [];
+    $sorted_members = [];
 
-    if ($i <= $first_line and $i >= $last_line)
-    {
-      continue;
-    }
+    foreach ($history_lines as $line) {
+        if (isset($line['image_type']) and $line['image_type'] == 'high') {
+            $summary['total_filesize'] += @intval($image_infos[$line['image_id']]['filesize']);
+        }
 
-    $user_name = '#unknown';
-    $user_string = '';
-    if (isset($username_of[$line['user_id']]))
-    {
-      $user_name = $username_of[$line['user_id']];
-      $user_string.= $username_of[$line['user_id']];
-    }
-    else
-    {
-      $user_string.= $line['user_id'];
-    }
-    $user_string.= '&nbsp;<a href="';
-    $user_string.= PHPWG_ROOT_PATH.'admin.php?page=history';
-    $user_string.= '&amp;search_id='.$search_id;
-    $user_string.= '&amp;user_id='.$line['user_id'];
-    $user_string.= '">+</a>';
+        if ($line['user_id'] == $conf['guest_id']) {
+            if (! isset($summary['guests_IP'][$line['IP']])) {
+                $summary['guests_IP'][$line['IP']] = 0;
+            }
 
-    $tag_names = '';
-    $tag_ids = '';
-    if (isset($line['tag_ids']))
-    {
-      $tag_names = preg_replace_callback(
-        '/(\d+)/',
-        function($m) use ($name_of_tag) { return isset($name_of_tag[$m[1]]) ? $name_of_tag[$m[1]] : $m[1];} ,
-          $line['tag_ids']
-        );
-      $tag_ids = $line['tag_ids'];
-    }
+            $summary['guests_IP'][$line['IP']]++;
+        }
 
-    $image_string = '';
-    $image_title = '';
-    $image_edit_string = '';
-    $image_id = '';
-    $cat_name = '';
-    if (isset($line['image_id']))
-    {
-      $image_edit_string = PHPWG_ROOT_PATH.'admin.php?page=photo-'.$line['image_id'];
-      $picture_url = make_picture_url(
-        array(
-          'image_id' => $line['image_id'],
-          )
-        );
+        $i++;
 
-      if (isset($image_infos[$line['image_id']]))
-      {
-        $element = array(
-          'id' => $line['image_id'],
-          'file' => $image_infos[$line['image_id']]['file'],
-          'path' => $image_infos[$line['image_id']]['path'],
-          'representative_ext' => $image_infos[$line['image_id']]['representative_ext'],
-          );
-        $thumbnail_display = $page['search']['fields']['display_thumbnail'];
-      }
-      else
-      {
-        $thumbnail_display = 'no_display_thumbnail';
-      }
+        if ($i <= $first_line and $i >= $last_line) {
+            continue;
+        }
 
-      $image_title = '';
+        $user_name = '#unknown';
+        $user_string = '';
+        if (isset($username_of[$line['user_id']])) {
+            $user_name = $username_of[$line['user_id']];
+            $user_string .= $username_of[$line['user_id']];
+        } else {
+            $user_string .= $line['user_id'];
+        }
+        $user_string .= '&nbsp;<a href="';
+        $user_string .= PHPWG_ROOT_PATH . 'admin.php?page=history';
+        $user_string .= '&amp;search_id=' . $search_id;
+        $user_string .= '&amp;user_id=' . $line['user_id'];
+        $user_string .= '">+</a>';
 
-      if (isset($image_infos[$line['image_id']]['label']))
-      {
-        $image_title.= ' '.trigger_change('render_element_description', $image_infos[$line['image_id']]['label']);
-      }
-      else
-      {
+        $tag_names = '';
+        $tag_ids = '';
+        if (isset($line['tag_ids'])) {
+            $tag_names = preg_replace_callback(
+                '/(\d+)/',
+                function ($m) use ($name_of_tag) { return $name_of_tag[$m[1]] ?? $m[1]; },
+                $line['tag_ids']
+            );
+            $tag_ids = $line['tag_ids'];
+        }
+
+        $image_string = '';
+        $image_title = '';
         $image_edit_string = '';
-        $image_title.= ' unknown filename';
-      }
+        $image_id = '';
+        $cat_name = '';
+        if (isset($line['image_id'])) {
+            $image_edit_string = PHPWG_ROOT_PATH . 'admin.php?page=photo-' . $line['image_id'];
+            $picture_url = make_picture_url(
+                [
+                    'image_id' => $line['image_id'],
+                ]
+            );
 
-      $image_string = '';
-      $image_id = $line['image_id'];
+            if (isset($image_infos[$line['image_id']])) {
+                $element = [
+                    'id' => $line['image_id'],
+                    'file' => $image_infos[$line['image_id']]['file'],
+                    'path' => $image_infos[$line['image_id']]['path'],
+                    'representative_ext' => $image_infos[$line['image_id']]['representative_ext'],
+                ];
+                $thumbnail_display = $page['search']['fields']['display_thumbnail'];
+            } else {
+                $thumbnail_display = 'no_display_thumbnail';
+            }
 
-      $image_string =
-      '<span><img src="'.@DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $element)
-      .'" alt="'.$image_title.'" title="'.$image_title.'">';
+            $image_title = '';
+
+            if (isset($image_infos[$line['image_id']]['label'])) {
+                $image_title .= ' ' . trigger_change('render_element_description', $image_infos[$line['image_id']]['label']);
+            } else {
+                $image_edit_string = '';
+                $image_title .= ' unknown filename';
+            }
+
+            $image_string = '';
+            $image_id = $line['image_id'];
+
+            $image_string =
+            '<span><img src="' . @DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $element)
+            . '" alt="' . $image_title . '" title="' . $image_title . '">';
+        }
+
+        if (isset($line['search_id'])) {
+            $search_detail = [
+                'allwords' => ! empty($search_details[$line['search_id']]['allwords']['words']) ? $search_details[$line['search_id']]['allwords']['words'] : null,
+                'tags' => ! empty($search_details[$line['search_id']]['tags']['words']) ? array_intersect_key($name_of_tag, array_flip($search_details[$line['search_id']]['tags']['words'])) : null,
+                'date_posted' => ! empty($search_details[$line['search_id']]['date_posted']) ? $search_details[$line['search_id']]['date_posted'] : null,
+                'cat' => ! empty($search_details[$line['search_id']]['cat']['words']) ? array_intersect_key($name_of_category, array_flip($search_details[$line['search_id']]['cat']['words'])) : null,
+                'author' => ! empty($search_details[$line['search_id']]['author']['words']) ? $search_details[$line['search_id']]['author']['words'] : null,
+                'added_by' => ! empty($search_details[$line['search_id']]['added_by']) ? array_intersect_key($username_of, array_flip($search_details[$line['search_id']]['added_by'])) : null,
+                'filetypes' => ! empty($search_details[$line['search_id']]['filetypes']) ? $search_details[$line['search_id']]['filetypes'] : null,
+            ];
+        } else {
+            $search_detail = null;
+        }
+
+        @++$sorted_members[$user_name];
+
+        array_push(
+            $result,
+            [
+                'DATE' => format_date($line['date']),
+                'TIME' => $line['time'],
+                'USER' => $user_string,
+                'USERNAME' => $user_name,
+                'USERID' => $line['user_id'],
+                'IP' => $line['IP'],
+                'IMAGE' => $image_string,
+                'IMAGENAME' => $image_title,
+                'IMAGEID' => $image_id,
+                'EDIT_IMAGE' => $image_edit_string,
+                'TYPE' => $line['image_type'],
+                'SECTION' => $line['section'],
+                'FULL_CATEGORY_PATH' => $line['category_id'] !== null && isset($full_cat_path[$line['category_id']]) ? strip_tags($full_cat_path[$line['category_id']]) : l10n('Root') . $line['category_id'],
+                'CATEGORY' => $line['category_id'] !== null && isset($name_of_category[$line['category_id']]) ? $name_of_category[$line['category_id']] : l10n('Root') . $line['category_id'],
+                'SEARCH_ID' => $line['search_id'] ?? null,
+                'TAGS' => explode(',', $tag_names),
+                'TAGIDS' => explode(',', $tag_ids),
+                'SEARCH_DETAILS' => $search_detail,
+            ]
+        );
     }
 
-    if (isset($line['search_id']))
-    { 
-      $search_detail = array(
-        'allwords' => !empty($search_details[$line['search_id']]['allwords']['words']) ? $search_details[$line['search_id']]['allwords']['words'] : null,
-        'tags' => !empty($search_details[$line['search_id']]['tags']['words']) ? array_intersect_key($name_of_tag, array_flip($search_details[$line['search_id']]['tags']['words'])) : null,
-        'date_posted' => !empty($search_details[$line['search_id']]['date_posted']) ? $search_details[$line['search_id']]['date_posted'] : null,
-        'cat' => !empty($search_details[$line['search_id']]['cat']['words']) ? array_intersect_key($name_of_category, array_flip($search_details[$line['search_id']]['cat']['words'])) : null,
-        'author' => !empty($search_details[$line['search_id']]['author']['words']) ? $search_details[$line['search_id']]['author']['words'] : null,
-        'added_by' => !empty($search_details[$line['search_id']]['added_by']) ? array_intersect_key($username_of, array_flip($search_details[$line['search_id']]['added_by'])) : null,
-        'filetypes' => !empty($search_details[$line['search_id']]['filetypes']) ? $search_details[$line['search_id']]['filetypes'] : null,
-      );
-    }
-    else
-    {
-      $search_detail = null;
+    $max_page = ceil(count($result) / 300);
+    $result = array_reverse($result, true);
+    $result = array_slice($result, $param['pageNumber'] * 300, 300);
+
+    $summary['nb_guests'] = 0;
+    if (count(array_keys($summary['guests_IP'])) > 0) {
+        $summary['nb_guests'] = count(array_keys($summary['guests_IP']));
+
+        // we delete the "guest" from the $username_of hash so that it is
+        // avoided in next steps
+        unset($username_of[$conf['guest_id']]);
     }
 
-    @$sorted_members[$user_name] += 1;
+    $summary['nb_members'] = count($username_of);
 
-    array_push( 
-      $result,
-      array(
-        'DATE'       => format_date($line['date']),
-        'TIME'       => $line['time'],
-        'USER'       => $user_string,
-        'USERNAME'   => $user_name,
-        'USERID'     => $line['user_id'],
-        'IP'         => $line['IP'],
-        'IMAGE'      => $image_string,
-        'IMAGENAME'  => $image_title,
-        'IMAGEID'    => $image_id,
-        'EDIT_IMAGE' => $image_edit_string,
-        'TYPE'       => $line['image_type'],
-        'SECTION'    => $line['section'],
-        'FULL_CATEGORY_PATH'   => $line['category_id'] !== null && isset($full_cat_path[$line['category_id']]) ? strip_tags($full_cat_path[$line['category_id']]) : l10n('Root').$line['category_id'],
-        'CATEGORY'   => $line['category_id'] !== null && isset($name_of_category[$line['category_id']]) ? $name_of_category[$line['category_id']] : l10n('Root').$line['category_id'],
-        'SEARCH_ID'  => $line['search_id'] ?? null,
-        'TAGS'       => explode(",",$tag_names),
-        'TAGIDS'     => explode(",",$tag_ids),
-        'SEARCH_DETAILS'  => $search_detail,
-      )
-    );
-  }
+    $member_strings = [];
+    foreach ($username_of as $user_id => $user_name) {
+        $member_string = $user_name;
+        $member_strings[] = [
+            $member_string => $user_id,
+        ];
+    }
 
-  $max_page = ceil(count($result)/300);
-  $result = array_reverse($result, true);
-  $result = array_slice($result, $param['pageNumber']*300, 300);
+    arsort($sorted_members);
+    unset($sorted_members['guest']);
 
-  $summary['nb_guests'] = 0;
-  if (count(array_keys($summary['guests_IP'])) > 0)
-  {
-    $summary['nb_guests'] = count(array_keys($summary['guests_IP']));
+    $search_summary =
+    [
+        'NB_LINES' => l10n_dec(
+            '%d line filtered',
+            '%d lines filtered',
+            $page['nb_lines']
+        ),
+        'FILESIZE' => $summary['total_filesize'] != 0 ? ceil($summary['total_filesize'] / 1024) : 0,
+        'USERS' => l10n_dec(
+            '%d user',
+            '%d users',
+            $summary['nb_members'] + $summary['nb_guests']
+        ),
+        'MEMBERS' => $member_strings,
+        'SORTED_MEMBERS' => $sorted_members,
+        'GUESTS' => l10n_dec(
+            '%d guest',
+            '%d guests',
+            $summary['nb_guests']
+        ),
+    ];
 
-    // we delete the "guest" from the $username_of hash so that it is
-    // avoided in next steps
-    unset($username_of[ $conf['guest_id'] ]);
-  }
+    unset($name_of_tag);
 
-  $summary['nb_members'] = count($username_of);
-
-  $member_strings = array();
-  foreach ($username_of as $user_id => $user_name)
-  {
-    $member_string = $user_name;
-    $member_strings[] = array($member_string => $user_id);
-  }
-
-  arsort($sorted_members);
-  unset($sorted_members['guest']);
-
-  $search_summary = 
-  array(
-    'NB_LINES' => l10n_dec(
-      '%d line filtered', '%d lines filtered',
-      $page['nb_lines']
-      ),
-    'FILESIZE' => $summary['total_filesize'] != 0 ? ceil($summary['total_filesize']/1024) : 0,
-    'USERS' => l10n_dec(
-      '%d user', '%d users',
-      $summary['nb_members'] + $summary['nb_guests']
-      ),
-    'MEMBERS' => $member_strings,
-    'SORTED_MEMBERS' => $sorted_members,
-    'GUESTS' => l10n_dec(
-      '%d guest', '%d guests',
-      $summary['nb_guests']
-      ),
-    );
-
-  unset($name_of_tag);
-
-  return array(
-    'lines'   => $result,
-    'params'  => $param,
-    'maxPage' => ($max_page == 0) ? 1 : $max_page,
-    'summary' => $search_summary
-  );
+    return [
+        'lines' => $result,
+        'params' => $param,
+        'maxPage' => ($max_page == 0) ? 1 : $max_page,
+        'summary' => $search_summary,
+    ];
 }
-
-?>

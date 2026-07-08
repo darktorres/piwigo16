@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -6,16 +7,15 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-if (!defined('PHPWG_ROOT_PATH'))
-{
-  die('Hacking attempt!');
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
-$upgrade_description = 'add new email features : 
+$upgrade_description = 'add new email features :
 users can modify/delete their owns comments';
 
 $query = '
-INSERT INTO '.PREFIX_TABLE.'config (param,value,comment)
+INSERT INTO ' . PREFIX_TABLE . 'config (param,value,comment)
   VALUES (\'user_can_delete_comment\',\'false\',
     \'administrators can allow user delete their own comments\'),
   (\'user_can_edit_comment\',\'false\',
@@ -27,9 +27,7 @@ INSERT INTO '.PREFIX_TABLE.'config (param,value,comment)
 ;';
 pwg_query($query);
 
-echo
-"\n"
+echo "\n"
 . $upgrade_description
-."\n"
+. "\n"
 ;
-?>

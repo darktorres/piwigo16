@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 if (PHP_SAPI !== 'cli') {
-  http_response_code(403);
-  exit('This script can only be run from the command line.');
+    http_response_code(403);
+    exit('This script can only be run from the command line.');
 }
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -18,7 +18,6 @@ use Symfony\Component\Yaml\Yaml;
  * Full SEC-coverage cross-checking (prose checklist <-> manifest, verified_by
  * presence) is added once more phases exist to exercise it - not overbuilt here.
  */
-
 $manifestPath = __DIR__ . '/../docs/plan/manifest.yaml';
 $manifest = Yaml::parseFile($manifestPath);
 
@@ -26,7 +25,7 @@ $manifest = Yaml::parseFile($manifestPath);
 $errors = [];
 
 $phases = $manifest['phases'] ?? [];
-if (!is_array($phases) || $phases === []) {
+if (! is_array($phases) || $phases === []) {
     $errors[] = 'manifest has no phases[] entries';
 }
 
@@ -36,11 +35,11 @@ $dependsOn = [];
 foreach ($phases as $phase) {
     $id = $phase['id'] ?? '(unknown)';
 
-    if (!isset($phase['tier']) || $phase['tier'] === '') {
+    if (! isset($phase['tier']) || $phase['tier'] === '') {
         $errors[] = "phase {$id} is missing tier";
     }
 
-    if (!array_key_exists('depends_on', $phase) || !is_array($phase['depends_on'])) {
+    if (! array_key_exists('depends_on', $phase) || ! is_array($phase['depends_on'])) {
         $errors[] = "phase {$id} is missing depends_on";
         continue;
     }

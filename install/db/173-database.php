@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -6,15 +7,13 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-if (!defined('PHPWG_ROOT_PATH'))
-{
-  die('Hacking attempt!');
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
 $upgrade_description = 'increase history.IP length from VARCHAR(16) to CHAR(39), IPv6 compatible';
 
-$query = 'ALTER TABLE `'.PREFIX_TABLE.'history` CHANGE `IP` `IP` char(39) NOT NULL default \'\';';
+$query = 'ALTER TABLE `' . PREFIX_TABLE . 'history` CHANGE `IP` `IP` char(39) NOT NULL default \'\';';
 pwg_query($query);
 
-echo "\n".$upgrade_description."\n";
-?>
+echo "\n" . $upgrade_description . "\n";

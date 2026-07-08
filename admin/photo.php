@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -6,9 +7,8 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-if( !defined("PHPWG_ROOT_PATH") )
-{
-  die ("Hacking attempt!");
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
 // +-----------------------------------------------------------------------+
@@ -20,32 +20,30 @@ check_status(ACCESS_ADMINISTRATOR);
 check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
-$admin_photo_base_url = get_root_url().'admin.php?page=photo-'.$_GET['image_id'];
+$admin_photo_base_url = get_root_url() . 'admin.php?page=photo-' . $_GET['image_id'];
 
 // retrieving direct information about picture
 $page['image'] = get_image_infos($_GET['image_id'], true);
 
-if (isset($_GET['cat_id']))
-{
-  $query = '
+if (isset($_GET['cat_id'])) {
+    $query = '
 SELECT *
-  FROM '.CATEGORIES_TABLE.'
-  WHERE id = '.$_GET['cat_id'].'
+  FROM ' . CATEGORIES_TABLE . '
+  WHERE id = ' . $_GET['cat_id'] . '
 ;';
-  $category = pwg_db_fetch_assoc(pwg_query($query));
+    $category = pwg_db_fetch_assoc(pwg_query($query));
 }
 
 // +-----------------------------------------------------------------------+
 // | Tabs                                                                  |
 // +-----------------------------------------------------------------------+
 
-include_once(PHPWG_ROOT_PATH.'admin/include/tabsheet.class.php');
+include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 
 $page['tab'] = 'properties';
 
-if (isset($_GET['tab']))
-{
-  $page['tab'] = $_GET['tab'];
+if (isset($_GET['tab'])) {
+    $page['tab'] = $_GET['tab'];
 }
 
 $tabsheet = new tabsheet();
@@ -54,29 +52,21 @@ $tabsheet->select($page['tab']);
 $tabsheet->assign();
 
 $template->assign(
-  array(
-    'ADMIN_PAGE_TITLE' => l10n('Edit photo').' <span class="image-id">#'.$_GET['image_id'].'</span>',
-    )
-  );
+    [
+        'ADMIN_PAGE_TITLE' => l10n('Edit photo') . ' <span class="image-id">#' . $_GET['image_id'] . '</span>',
+    ]
+);
 
 // +-----------------------------------------------------------------------+
 // | Load the tab                                                          |
 // +-----------------------------------------------------------------------+
 
-if ('properties' == $page['tab'])
-{
-  include(PHPWG_ROOT_PATH.'admin/picture_modify.php');
+if ($page['tab'] == 'properties') {
+    include PHPWG_ROOT_PATH . 'admin/picture_modify.php';
+} elseif ($page['tab'] == 'coi') {
+    include PHPWG_ROOT_PATH . 'admin/picture_coi.php';
+} elseif ($page['tab'] == 'formats' && $conf['enable_formats']) {
+    include PHPWG_ROOT_PATH . 'admin/picture_formats.php';
+} else {
+    include PHPWG_ROOT_PATH . 'admin/photo_' . $page['tab'] . '.php';
 }
-elseif ('coi' == $page['tab'])
-{
-  include(PHPWG_ROOT_PATH.'admin/picture_coi.php');
-}
-elseif ('formats' == $page['tab'] && $conf['enable_formats'])
-{
-  include(PHPWG_ROOT_PATH.'admin/picture_formats.php');
-}
-else
-{
-  include(PHPWG_ROOT_PATH.'admin/photo_'.$page['tab'].'.php');
-}
-?>

@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -6,15 +7,14 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-if (!defined("PHPWG_ROOT_PATH"))
-{
-  die('Hacking attempt!');
+if (! defined('PHPWG_ROOT_PATH')) {
+    die('Hacking attempt!');
 }
 
 $upgrade_description = 'Add display configuration options.';
 
 $query = '
-INSERT INTO '.CONFIG_TABLE.' (param,value,comment)
+INSERT INTO ' . CONFIG_TABLE . ' (param,value,comment)
   VALUES
     ("menubar_filter_icon","true","Display filter icon"),
     ("index_sort_order_input","true","Display image order selection list"),
@@ -31,9 +31,7 @@ INSERT INTO '.CONFIG_TABLE.' (param,value,comment)
 
 pwg_query($query);
 
-echo
-"\n"
+echo "\n"
 . $upgrade_description
-."\n"
+. "\n"
 ;
-?>

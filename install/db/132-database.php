@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -14,8 +15,7 @@ global $prefixeTable;
 
 // we don't use USERS_TABLE because it might be an external table, here we
 // want to change to users table specific to Piwigo
-$query = 'ALTER TABLE '.$prefixeTable.'users CHANGE password password varchar(255) default NULL';
+$query = 'ALTER TABLE ' . $prefixeTable . 'users CHANGE password password varchar(255) default NULL';
 pwg_query($query);
 
-echo "\n".$upgrade_description."\n";
-?>
+echo "\n" . $upgrade_description . "\n";

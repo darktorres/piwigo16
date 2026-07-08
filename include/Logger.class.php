@@ -1,4 +1,5 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -10,467 +11,447 @@
  * Modified version of KLogger 0.2.0
  *
  * @author  Kenny Katzgrau <katzgrau@gmail.com>
- *
- * @package logger
  */
-
 class Logger
 {
-  /**
-   * Error severity, from low to high. From BSD syslog RFC, section 4.1.1
-   * @link http://www.faqs.org/rfcs/rfc3164.html
-   */
-  const EMERGENCY = 0;  // Emergency: system is unusable
-  const ALERT     = 1;  // Alert: action must be taken immediately
-  const CRITICAL  = 2;  // Critical: critical conditions
-  const ERROR     = 3;  // Error: error conditions
-  const WARNING   = 4;  // Warning: warning conditions
-  const NOTICE    = 5;  // Notice: normal but significant condition
-  const INFO      = 6;  // Informational: informational messages
-  const DEBUG     = 7;  // Debug: debug messages
+    /**
+     * Error severity, from low to high. From BSD syslog RFC, section 4.1.1
+     * @see http://www.faqs.org/rfcs/rfc3164.html
+     */
+    public const EMERGENCY = 0;  // Emergency: system is unusable
 
-  /**
-   * Custom "disable" level.
-   */
-  const OFF       = -1; // Log nothing at all
+    public const ALERT = 1;  // Alert: action must be taken immediately
 
-  /**
-   * Internal status codes.
-   */
-  const STATUS_LOG_OPEN  = 1;
-  const STATUS_OPEN_FAILED = 2;
-  const STATUS_LOG_CLOSED  = 3;
+    public const CRITICAL = 2;  // Critical: critical conditions
 
-  /**
-   * Disable archive purge.
-   */
-  const ARCHIVE_NO_PURGE = -1;
+    public const ERROR = 3;  // Error: error conditions
 
-  /**
-   * Standard messages produced by the class.
-   * @var array
-   */
-  private static $_messages = array(
-    'writefail'   => 'The file could not be written to. Check that appropriate permissions have been set.',
-    'opensuccess' => 'The log file was opened successfully.',
-    'openfail'  => 'The file could not be opened. Check permissions.',
-  );
+    public const WARNING = 4;  // Warning: warning conditions
 
-  /**
-   * Instance options.
-   * @var array
-   */
-  private $options = array(
-    'directory' => null, // Log files directory
-    'filename' => null, // Path to the log file
-    'globPattern' => 'log_*.txt', // Pattern to select all log files with glob()
-    'severity' => self::DEBUG, // Current minimum logging threshold
-    'dateFormat' => 'Y-m-d G:i:s', // Date format
-    'archiveDays' => self::ARCHIVE_NO_PURGE, // Number of files to keep
-    );
+    public const NOTICE = 5;  // Notice: normal but significant condition
 
-  /**
-   * Current status of the logger.
-   * @var integer
-   */
-  private $_logStatus = self::STATUS_LOG_CLOSED;
-  /**
-   * File handle for this instance's log file.
-   * @var resource
-   */
-  private $_fileHandle = null;
+    public const INFO = 6;  // Informational: informational messages
 
+    public const DEBUG = 7;  // Debug: debug messages
 
-  /**
-   * Class constructor.
-   *
-   * @param array $options
-   * @return void
-   */
-  public function __construct($options)
-  {
-    $this->options = array_merge($this->options, $options);
-    
-    if (is_string($this->options['severity']))
+    /**
+     * Custom "disable" level.
+     */
+    public const OFF = -1; // Log nothing at all
+
+    /**
+     * Internal status codes.
+     */
+    public const STATUS_LOG_OPEN = 1;
+
+    public const STATUS_OPEN_FAILED = 2;
+
+    public const STATUS_LOG_CLOSED = 3;
+
+    /**
+     * Disable archive purge.
+     */
+    public const ARCHIVE_NO_PURGE = -1;
+
+    /**
+     * Standard messages produced by the class.
+     * @var array
+     */
+    private static $_messages = [
+      'writefail' => 'The file could not be written to. Check that appropriate permissions have been set.',
+        'opensuccess' => 'The log file was opened successfully.',
+        'openfail' => 'The file could not be opened. Check permissions.',
+];
+
+    /**
+     * Instance options.
+     * @var array
+     */
+    private $options = [
+      'directory' => null, // Log files directory
+        'filename' => null, // Path to the log file
+        'globPattern' => 'log_*.txt', // Pattern to select all log files with glob()
+        'severity' => self::DEBUG, // Current minimum logging threshold
+        'dateFormat' => 'Y-m-d G:i:s', // Date format
+        'archiveDays' => self::ARCHIVE_NO_PURGE, // Number of files to keep
+];
+
+    /**
+     * Current status of the logger.
+     * @var int
+     */
+    private $_logStatus = self::STATUS_LOG_CLOSED;
+
+    /**
+     * File handle for this instance's log file.
+     * @var resource
+     */
+    private $_fileHandle;
+
+    /**
+     * @param array $options
+     */
+    public function __construct($options)
     {
-      $this->options['severity'] = self::codeToLevel($this->options['severity']);
+        $this->options = array_merge($this->options, $options);
+
+        if (is_string($this->options['severity'])) {
+            $this->options['severity'] = self::codeToLevel($this->options['severity']);
+        }
+
+        if ($this->options['severity'] === self::OFF) {
+            return;
+        }
+
+        $this->options['directory'] = rtrim($this->options['directory'], '\\/') . DIRECTORY_SEPARATOR;
+
+        if ($this->options['filename'] == null) {
+            $this->options['filename'] = 'log_' . date('Y-m-d') . '.txt';
+        }
+
+        $this->options['filePath'] = $this->options['directory'] . $this->options['filename'];
+
+        if ($this->options['archiveDays'] != self::ARCHIVE_NO_PURGE && mt_rand() % 97 == 0) {
+            $this->purge();
+        }
     }
 
-    if ($this->options['severity'] === self::OFF)
+    /**
+     * Open the log file if not already oppenned
+     */
+    private function open()
     {
-      return;
+        if ($this->status() == self::STATUS_LOG_CLOSED) {
+            if (! file_exists($this->options['directory'])) {
+                mkgetdir($this->options['directory'], MKGETDIR_DEFAULT | MKGETDIR_PROTECT_HTACCESS);
+            }
+
+            if (file_exists($this->options['filePath']) && ! is_writable($this->options['filePath'])) {
+                $this->_logStatus = self::STATUS_OPEN_FAILED;
+                throw new RuntimeException(self::$_messages['writefail']);
+                return;
+            }
+
+            if (($this->_fileHandle = fopen($this->options['filePath'], 'a')) != false) {
+                $this->_logStatus = self::STATUS_LOG_OPEN;
+            } else {
+                $this->_logStatus = self::STATUS_OPEN_FAILED;
+                throw new RuntimeException(self::$_messages['openfail']);
+            }
+        }
     }
 
-    $this->options['directory'] = rtrim($this->options['directory'], '\\/') . DIRECTORY_SEPARATOR;
-
-    if ($this->options['filename'] == null)
+    /**
+     * Class destructor.
+     */
+    public function __destruct()
     {
-      $this->options['filename'] = 'log_' . date('Y-m-d') . '.txt';
+        if ($this->_fileHandle) {
+            fclose($this->_fileHandle);
+        }
     }
 
-    $this->options['filePath'] = $this->options['directory'] . $this->options['filename'];
-
-    if ($this->options['archiveDays'] != self::ARCHIVE_NO_PURGE && rand() % 97 == 0)
+    /**
+     * Returns logger status.
+     *
+     * @return int
+     */
+    public function status()
     {
-      $this->purge();
+        return $this->_logStatus;
     }
-  }
-  
-  /**
-   * Open the log file if not already oppenned
-   */
-  private function open()
-  {
-    if ($this->status() == self::STATUS_LOG_CLOSED)
+
+    /**
+     * Returns logger severity threshold.
+     *
+     * @return int
+     */
+    public function severity()
     {
-      if (!file_exists($this->options['directory']))
-      {
-        mkgetdir($this->options['directory'], MKGETDIR_DEFAULT|MKGETDIR_PROTECT_HTACCESS);
-      }
-
-      if (file_exists($this->options['filePath']) && !is_writable($this->options['filePath']))
-      {
-        $this->_logStatus = self::STATUS_OPEN_FAILED;
-        throw new RuntimeException(self::$_messages['writefail']);
-        return;
-      }
-
-      if (($this->_fileHandle = fopen($this->options['filePath'], 'a')) != false)
-      {
-        $this->_logStatus = self::STATUS_LOG_OPEN;
-      }
-      else
-      {
-        $this->_logStatus = self::STATUS_OPEN_FAILED;
-        throw new RuntimeException(self::$_messages['openfail']);
-      }
+        return $this->options['severity'];
     }
-  }
 
-  /**
-   * Class destructor.
-   */
-  public function __destruct()
-  {
-    if ($this->_fileHandle)
+    /**
+     * Writes a $line to the log with a severity level of DEBUG.
+     *
+     * @param string $line
+     * @param string $cat
+     * @param array $args
+     */
+    public function debug($line, $cat = null, $args = [])
     {
-      fclose($this->_fileHandle);
+        $this->log(self::DEBUG, $line, $cat, $args);
     }
-  }
 
-  /**
-   * Returns logger status.
-   *
-   * @return int
-   */
-  public function status()
-  {
-    return $this->_logStatus;
-  }
-
-  /**
-   * Returns logger severity threshold.
-   *
-   * @return int
-   */
-  public function severity()
-  {
-    return $this->options['severity'];
-  }
-
-  /**
-   * Writes a $line to the log with a severity level of DEBUG.
-   *
-   * @param string $line
-   * @param string $cat
-   * @param array $args
-   */
-  public function debug($line, $cat = null, $args = array())
-  {
-    $this->log(self::DEBUG, $line, $cat, $args);
-  }
-
-  /**
-   * Writes a $line to the log with a severity level of INFO.
-   *
-   * @param string $line
-   * @param string $cat
-   * @param array $args
-   */
-  public function info($line, $cat = null, $args = array())
-  {
-    $this->log(self::INFO, $line, $cat, $args);
-  }
-
-  /**
-   * Writes a $line to the log with a severity level of NOTICE.
-   *
-   * @param string $line
-   * @param string $cat
-   * @param array $args
-   */
-  public function notice($line, $cat = null, $args = array())
-  {
-    $this->log(self::NOTICE, $line, $cat, $args);
-  }
-
-  /**
-   * Writes a $line to the log with a severity level of WARNING.
-   *
-   * @param string $line
-   * @param string $cat
-   * @param array $args
-   */
-  public function warn($line, $cat = null, $args = array())
-  {
-    $this->log(self::WARNING, $line, $cat, $args);
-  }
-
-  /**
-   * Writes a $line to the log with a severity level of ERROR.
-   *
-   * @param string $line
-   * @param string $cat
-   * @param array $args
-   */
-  public function error($line, $cat = null, $args = array())
-  {
-    $this->log(self::ERROR, $line, $cat, $args);
-  }
-
-  /**
-   * Writes a $line to the log with a severity level of ALERT.
-   *
-   * @param string $line
-   * @param string $cat
-   * @param array $args
-   */
-  public function alert($line, $cat = null, $args = array())
-  {
-    $this->log(self::ALERT, $line, $cat, $args);
-  }
-
-  /**
-   * Writes a $line to the log with a severity level of CRITICAL.
-   *
-   * @param string $line
-   * @param string $cat
-   * @param array $args
-   */
-  public function critical($line, $cat = null, $args = array())
-  {
-    $this->log(self::CRITICAL, $line, $cat, $args);
-  }
-
-  /**
-   * Writes a $line to the log with a severity level of EMERGENCY.
-   *
-   * @param string $line
-   * @param string $cat
-   * @param array $args
-   */
-  public function emergency($line, $cat = null, $args = array())
-  {
-    $this->log(self::EMERGENCY, $line, $cat, $args);
-  }
-
-  /**
-   * Writes a $line to the log with the given severity.
-   *
-   * @param integer $severity
-   * @param string $line
-   * @param string $cat
-   * @param array $args
-   */
-  public function log($severity, $message, $cat = null, $args = array())
-  {
-    if ($this->severity() >= $severity)
+    /**
+     * Writes a $line to the log with a severity level of INFO.
+     *
+     * @param string $line
+     * @param string $cat
+     * @param array $args
+     */
+    public function info($line, $cat = null, $args = [])
     {
-      if (is_array($cat))
-      {
-        $args = $cat;
-        $cat = null;
-      }
-      $line = $this->formatMessage($severity, $message, $cat, $args);
-      $this->write($line);
+        $this->log(self::INFO, $line, $cat, $args);
     }
-  }
 
-  /**
-   * Directly writes a line to the log without adding level and time.
-   *
-   * @param string $line
-   */
-  public function write($line)
-  {
-    $this->open();
-    if ($this->status() == self::STATUS_LOG_OPEN)
+    /**
+     * Writes a $line to the log with a severity level of NOTICE.
+     *
+     * @param string $line
+     * @param string $cat
+     * @param array $args
+     */
+    public function notice($line, $cat = null, $args = [])
     {
-      if (fwrite($this->_fileHandle, $line) === false)
-      {
-        throw new RuntimeException(self::$_messages['writefail']);
-      }
+        $this->log(self::NOTICE, $line, $cat, $args);
     }
-  }
 
-  /**
-   * Purges files matching 'globPattern' older than 'archiveDays'.
-   */
-  public function purge()
-  {
-    $files = glob($this->options['directory'] . $this->options['globPattern']);
-    $limit = time() - $this->options['archiveDays'] * 86400;
-
-    foreach ($files as $file)
+    /**
+     * Writes a $line to the log with a severity level of WARNING.
+     *
+     * @param string $line
+     * @param string $cat
+     * @param array $args
+     */
+    public function warn($line, $cat = null, $args = [])
     {
-      if (@filemtime($file) < $limit)
-      {
-        @unlink($file);
-      }
+        $this->log(self::WARNING, $line, $cat, $args);
     }
-  }
 
-  /**
-   * Formats the message for logging.
-   *
-   * @param  string $level
-   * @param  string $message
-   * @param  array  $context
-   * @return string
-   */
-  private function formatMessage($level, $message, $cat, $context)
-  {
-    global $page;
-
-    if (!empty($context))
+    /**
+     * Writes a $line to the log with a severity level of ERROR.
+     *
+     * @param string $line
+     * @param string $cat
+     * @param array $args
+     */
+    public function error($line, $cat = null, $args = [])
     {
-      $message.= "\n" . $this->indent($this->contextToString($context));
+        $this->log(self::ERROR, $line, $cat, $args);
     }
-    $line = "[" . $this->getTimestamp() . '][exec='.($page['execution_uuid']??'unkonwn')."]\t[" . self::levelToCode($level) . "]\t";
-    if ($cat != null)
+
+    /**
+     * Writes a $line to the log with a severity level of ALERT.
+     *
+     * @param string $line
+     * @param string $cat
+     * @param array $args
+     */
+    public function alert($line, $cat = null, $args = [])
     {
-      $line.= "[" . $cat . "]\t";
+        $this->log(self::ALERT, $line, $cat, $args);
     }
-    return $line . $message . "\n";
-  }
 
-  /**
-   * Gets the formatted Date/Time for the log entry.
-   *
-   * PHP DateTime is dumb, and you have to resort to trickery to get microseconds
-   * to work correctly, so here it is.
-   *
-   * @return string
-   */
-  private function getTimestamp()
-  {
-    $originalTime = microtime(true);
-    $micro = sprintf('%06d', ($originalTime - floor($originalTime)) * 1000000);
-    $date = new DateTime(date('Y-m-d H:i:s.'.$micro, intval($originalTime)));
-    return $date->format($this->options['dateFormat']);
-  }
-
-  /**
-   * Takes the given context and converts it to a string.
-   *
-   * @param  array $context
-   * @return string
-   */
-  private function contextToString($context)
-  {
-    $export = '';
-    foreach ($context as $key => $value)
+    /**
+     * Writes a $line to the log with a severity level of CRITICAL.
+     *
+     * @param string $line
+     * @param string $cat
+     * @param array $args
+     */
+    public function critical($line, $cat = null, $args = [])
     {
-      $export.= $key . ': ';
-      $export.= preg_replace(array(
-        '/=>\s+([a-zA-Z])/im',
-        '/array\(\s+\)/im',
-        '/^  |\G  /m'
-        ),
-        array(
-        '=> $1',
-        'array()',
-        '  '
-        ),
-        str_replace('array (', 'array(', var_export($value, true))
-        );
-      $export.= PHP_EOL;
+        $this->log(self::CRITICAL, $line, $cat, $args);
     }
-    return str_replace(array('\\\\', '\\\''), array('\\', '\''), rtrim($export));
-  }
 
-  /**
-   * Indents the given string with the given indent.
-   *
-   * @param  string $string The string to indent
-   * @param  string $indent What to use as the indent.
-   * @return string
-   */
-  private function indent($string, $indent = '  ')
-  {
-    return $indent . str_replace("\n", "\n" . $indent, $string);
-  }
-
-  /**
-   * Converts level constants to string name.
-   *
-   * @param int $level
-   * @return string
-   */
-  static function levelToCode($level)
-  {
-    switch ($level)
+    /**
+     * Writes a $line to the log with a severity level of EMERGENCY.
+     *
+     * @param string $line
+     * @param string $cat
+     * @param array $args
+     */
+    public function emergency($line, $cat = null, $args = [])
     {
-      case self::EMERGENCY:
-        return 'EMERGENCY';
-      case self::ALERT:
-        return 'ALERT';
-      case self::CRITICAL:
-        return 'CRITICAL';
-      case self::NOTICE:
-        return 'NOTICE';
-      case self::INFO:
-        return 'INFO';
-      case self::WARNING:
-        return 'WARNING';
-      case self::DEBUG:
-        return 'DEBUG';
-      case self::ERROR:
-        return 'ERROR';
-      default:
-        throw new RuntimeException('Unknown severity level ' . $level);
+        $this->log(self::EMERGENCY, $line, $cat, $args);
     }
-  }
 
-  /**
-   * Converts level names to constant.
-   *
-   * @param string $code
-   * @return int
-   */
-  static function codeToLevel($code)
-  {
-    switch (strtoupper($code))
+    /**
+     * Writes a $line to the log with the given severity.
+     *
+     * @param int $severity
+     * @param string $cat
+     * @param array $args
+     */
+    public function log($severity, $message, $cat = null, $args = [])
     {
-      case 'EMERGENCY':
-        return self::EMERGENCY;
-      case 'ALERT':
-        return self::ALERT;
-      case 'CRITICAL':
-        return self::CRITICAL;
-      case 'NOTICE':
-        return self::NOTICE;
-      case 'INFO':
-        return self::INFO;
-      case 'WARNING':
-        return self::WARNING;
-      case 'DEBUG':
-        return self::DEBUG;
-      case 'ERROR':
-        return self::ERROR;
-      default:
-        throw new RuntimeException('Unknown severity code ' . $code);
+        if ($this->severity() >= $severity) {
+            if (is_array($cat)) {
+                $args = $cat;
+                $cat = null;
+            }
+            $line = $this->formatMessage($severity, $message, $cat, $args);
+            $this->write($line);
+        }
     }
-  }
+
+    /**
+     * Directly writes a line to the log without adding level and time.
+     *
+     * @param string $line
+     */
+    public function write($line)
+    {
+        $this->open();
+        if ($this->status() == self::STATUS_LOG_OPEN) {
+            if (fwrite($this->_fileHandle, $line) === false) {
+                throw new RuntimeException(self::$_messages['writefail']);
+            }
+        }
+    }
+
+    /**
+     * Purges files matching 'globPattern' older than 'archiveDays'.
+     */
+    public function purge()
+    {
+        $files = glob($this->options['directory'] . $this->options['globPattern']);
+        $limit = time() - $this->options['archiveDays'] * 86400;
+
+        foreach ($files as $file) {
+            if (@filemtime($file) < $limit) {
+                @unlink($file);
+            }
+        }
+    }
+
+    /**
+     * Formats the message for logging.
+     *
+     * @param  string $level
+     * @param  string $message
+     * @param  array  $context
+     * @return string
+     */
+    private function formatMessage($level, $message, $cat, $context)
+    {
+        global $page;
+
+        if (! empty($context)) {
+            $message .= "\n" . $this->indent($this->contextToString($context));
+        }
+        $line = '[' . $this->getTimestamp() . '][exec=' . ($page['execution_uuid'] ?? 'unkonwn') . "]\t[" . self::levelToCode($level) . "]\t";
+        if ($cat != null) {
+            $line .= '[' . $cat . "]\t";
+        }
+        return $line . $message . "\n";
+    }
+
+    /**
+     * Gets the formatted Date/Time for the log entry.
+     *
+     * PHP DateTime is dumb, and you have to resort to trickery to get microseconds
+     * to work correctly, so here it is.
+     *
+     * @return string
+     */
+    private function getTimestamp()
+    {
+        $originalTime = microtime(true);
+        $micro = sprintf('%06d', ($originalTime - floor($originalTime)) * 1000000);
+        $date = new DateTime(date('Y-m-d H:i:s.' . $micro, intval($originalTime)));
+        return $date->format($this->options['dateFormat']);
+    }
+
+    /**
+     * Takes the given context and converts it to a string.
+     *
+     * @param  array $context
+     * @return string
+     */
+    private function contextToString($context)
+    {
+        $export = '';
+        foreach ($context as $key => $value) {
+            $export .= $key . ': ';
+            $export .= preg_replace(
+                [
+                    '/=>\s+([a-zA-Z])/im',
+                    '/array\(\s+\)/im',
+                    '/^  |\G  /m',
+                ],
+                [
+                    '=> $1',
+                    'array()',
+                    '  ',
+                ],
+                str_replace('array (', 'array(', var_export($value, true))
+            );
+            $export .= PHP_EOL;
+        }
+        return str_replace(['\\\\', '\\\''], ['\\', '\''], rtrim($export));
+    }
+
+    /**
+     * Indents the given string with the given indent.
+     *
+     * @param  string $string The string to indent
+     * @param  string $indent What to use as the indent.
+     * @return string
+     */
+    private function indent($string, $indent = '  ')
+    {
+        return $indent . str_replace("\n", "\n" . $indent, $string);
+    }
+
+    /**
+     * Converts level constants to string name.
+     *
+     * @param int $level
+     * @return string
+     */
+    public static function levelToCode($level)
+    {
+        switch ($level) {
+            case self::EMERGENCY:
+                return 'EMERGENCY';
+            case self::ALERT:
+                return 'ALERT';
+            case self::CRITICAL:
+                return 'CRITICAL';
+            case self::NOTICE:
+                return 'NOTICE';
+            case self::INFO:
+                return 'INFO';
+            case self::WARNING:
+                return 'WARNING';
+            case self::DEBUG:
+                return 'DEBUG';
+            case self::ERROR:
+                return 'ERROR';
+            default:
+                throw new RuntimeException('Unknown severity level ' . $level);
+        }
+    }
+
+    /**
+     * Converts level names to constant.
+     *
+     * @param string $code
+     * @return int
+     */
+    public static function codeToLevel($code)
+    {
+        switch (strtoupper($code)) {
+            case 'EMERGENCY':
+                return self::EMERGENCY;
+            case 'ALERT':
+                return self::ALERT;
+            case 'CRITICAL':
+                return self::CRITICAL;
+            case 'NOTICE':
+                return self::NOTICE;
+            case 'INFO':
+                return self::INFO;
+            case 'WARNING':
+                return self::WARNING;
+            case 'DEBUG':
+                return self::DEBUG;
+            case 'ERROR':
+                return self::ERROR;
+            default:
+                throw new RuntimeException('Unknown severity code ' . $code);
+        }
+    }
 }
-?>

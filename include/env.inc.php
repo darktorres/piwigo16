@@ -13,7 +13,7 @@ use Symfony\Component\Dotenv\Dotenv;
 function pwg_test_mode_header(): ?string
 {
     $header = $_SERVER['HTTP_X_PIWIGO_ENV'] ?? null;
-    if (!is_string($header) || preg_match('/^test(-w\d+)?$/', $header) !== 1) {
+    if (! is_string($header) || preg_match('/^test(-w\d+)?$/', $header) !== 1) {
         return null;
     }
 
@@ -84,7 +84,7 @@ function pwg_apply_env_to_conf(array &$conf, string &$prefixeTable): void
     }
 
     $conf['dblayer'] = 'mysqli';
-    $prefixeTable    = (($v = getenv('PIWIGO_DB_PREFIX')) !== false && $v !== '') ? $v : 'piwigo_';
+    $prefixeTable = (($v = getenv('PIWIGO_DB_PREFIX')) !== false && $v !== '') ? $v : 'piwigo_';
 }
 
 /**
@@ -116,9 +116,10 @@ function pwg_load_env_file(string $root): void
 {
     $root = rtrim($root, '/\\');
     $file = $root . DIRECTORY_SEPARATOR . pwg_test_mode_env_file();
-    if (!is_file($file)) {
+    if (! is_file($file)) {
         return;
     }
 
-    (new Dotenv())->usePutenv()->load($file);
+    (new Dotenv())->usePutenv()
+        ->load($file);
 }

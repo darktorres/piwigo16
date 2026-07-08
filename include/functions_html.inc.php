@@ -1,15 +1,11 @@
 <?php
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-
-/**
- * @package functions\html
- */
-
 
 /**
  * Generates breadcrumb from categories list.
@@ -22,57 +18,49 @@
  * @param string|null $url
  * @return string
  */
-function get_cat_display_name($cat_informations, $url='')
+function get_cat_display_name($cat_informations, $url = '')
 {
-  global $conf;
+    global $conf;
 
-  //$output = '<a href="'.get_absolute_root_url().$conf['home_page'].'">'.l10n('Home').'</a>';
-  $output = '';
-  $is_first=true;
+    // $output = '<a href="'.get_absolute_root_url().$conf['home_page'].'">'.l10n('Home').'</a>';
+    $output = '';
+    $is_first = true;
 
-  foreach ($cat_informations as $cat)
-  {
-    is_array($cat) or trigger_error(
-        'get_cat_display_name wrong type for category ', E_USER_WARNING
-      );
+    foreach ($cat_informations as $cat) {
+        is_array($cat) or trigger_error(
+            'get_cat_display_name wrong type for category ',
+            E_USER_WARNING
+        );
 
-    $cat['name'] = trigger_change(
-      'render_category_name',
-      $cat['name'],
-      'get_cat_display_name'
-      );
+        $cat['name'] = trigger_change(
+            'render_category_name',
+            $cat['name'],
+            'get_cat_display_name'
+        );
 
-    if ($is_first)
-    {
-      $is_first=false;
-    }
-    else
-    {
-      $output.= $conf['level_separator'];
-    }
+        if ($is_first) {
+            $is_first = false;
+        } else {
+            $output .= $conf['level_separator'];
+        }
 
-    if ( !isset($url) )
-    {
-      $output.= $cat['name'];
-    }
-    elseif ($url == '')
-    {
-      $output.= '<a href="'
-            .make_index_url(
-                array(
-                  'category' => $cat,
+        if (! isset($url)) {
+            $output .= $cat['name'];
+        } elseif ($url == '') {
+            $output .= '<a href="'
+                  . make_index_url(
+                      [
+                          'category' => $cat,
+                      ]
                   )
-              )
-            .'">';
-      $output.= $cat['name'].'</a>';
+                  . '">';
+            $output .= $cat['name'] . '</a>';
+        } else {
+            $output .= '<a href="' . PHPWG_ROOT_PATH . $url . $cat['id'] . '">';
+            $output .= $cat['name'] . '</a>';
+        }
     }
-    else
-    {
-      $output.= '<a href="'.PHPWG_ROOT_PATH.$url.$cat['id'].'">';
-      $output.= $cat['name'].'</a>';
-    }
-  }
-  return $output;
+    return $output;
 }
 
 /**
@@ -85,92 +73,79 @@ function get_cat_display_name($cat_informations, $url='')
  * @param string|null $link_class
  * @return string
  */
-function get_cat_display_name_cache($uppercats,
-                                    $url = '',
-                                    $single_link = false,
-                                    $link_class = null,
-                                    $auth_key=null)
-{
-  global $cache, $conf;
+function get_cat_display_name_cache(
+    $uppercats,
+    $url = '',
+    $single_link = false,
+    $link_class = null,
+    $auth_key = null
+) {
+    global $cache, $conf;
 
-  $add_url_params = array();
-  if (isset($auth_key))
-  {
-    $add_url_params['auth'] = $auth_key;
-  }
+    $add_url_params = [];
+    if (isset($auth_key)) {
+        $add_url_params['auth'] = $auth_key;
+    }
 
-  if (!isset($cache['cat_names']))
-  {
-    $query = '
+    if (! isset($cache['cat_names'])) {
+        $query = '
 SELECT id, name, permalink
-  FROM '.CATEGORIES_TABLE.'
+  FROM ' . CATEGORIES_TABLE . '
 ;';
-    $cache['cat_names'] = query2array($query, 'id');
-  }
-
-  $output = '';
-  if ($single_link)
-  {
-    $uppercats_array = explode(',', $uppercats);
-    $single_url = add_url_params(get_root_url().$url.array_pop($uppercats_array), $add_url_params);
-    $output.= '<a href="'.$single_url.'"';
-    if (isset($link_class))
-    {
-      $output.= ' class="'.$link_class.'"';
-    }
-    $output.= '>';
-  }
-  $is_first = true;
-  foreach (explode(',', $uppercats) as $category_id)
-  {
-    $cat = $cache['cat_names'][$category_id];
-
-    $cat['name'] = trigger_change(
-      'render_category_name',
-      $cat['name'],
-      'get_cat_display_name_cache'
-      );
-
-    if ($is_first)
-    {
-      $is_first = false;
-    }
-    else
-    {
-      $output.= '<span>'.$conf['level_separator'].'</span>';
+        $cache['cat_names'] = query2array($query, 'id');
     }
 
-    if ( !isset($url) or $single_link )
-    {
-      $output.= $cat['name'];
+    $output = '';
+    if ($single_link) {
+        $uppercats_array = explode(',', $uppercats);
+        $single_url = add_url_params(get_root_url() . $url . array_pop($uppercats_array), $add_url_params);
+        $output .= '<a href="' . $single_url . '"';
+        if (isset($link_class)) {
+            $output .= ' class="' . $link_class . '"';
+        }
+        $output .= '>';
     }
-    elseif ($url == '')
-    {
-      $output.= '
+    $is_first = true;
+    foreach (explode(',', $uppercats) as $category_id) {
+        $cat = $cache['cat_names'][$category_id];
+
+        $cat['name'] = trigger_change(
+            'render_category_name',
+            $cat['name'],
+            'get_cat_display_name_cache'
+        );
+
+        if ($is_first) {
+            $is_first = false;
+        } else {
+            $output .= '<span>' . $conf['level_separator'] . '</span>';
+        }
+
+        if (! isset($url) or $single_link) {
+            $output .= $cat['name'];
+        } elseif ($url == '') {
+            $output .= '
 <a href="'
-      .add_url_params(
-        make_index_url(
-          array(
-            'category' => $cat,
+            . add_url_params(
+                make_index_url(
+                    [
+                        'category' => $cat,
+                    ]
+                ),
+                $add_url_params
             )
-          ),
-        $add_url_params
-        )
-      .'">'.$cat['name'].'</a>';
+            . '">' . $cat['name'] . '</a>';
+        } else {
+            $output .= '
+<a href="' . PHPWG_ROOT_PATH . $url . $category_id . '">' . $cat['name'] . '</a>';
+        }
     }
-    else
-    {
-      $output.= '
-<a href="'.PHPWG_ROOT_PATH.$url.$category_id.'">'.$cat['name'].'</a>';
+
+    if ($single_link and isset($single_url)) {
+        $output .= '</a>';
     }
-  }
 
-  if ($single_link and isset($single_url))
-  {
-    $output.= '</a>';
-  }
-
-  return $output;
+    return $output;
 }
 
 /**
@@ -183,8 +158,8 @@ SELECT id, name, permalink
  */
 function get_cat_display_name_from_id($cat_id, $url = '')
 {
-  $cat_info = get_cat_info($cat_id);
-  return get_cat_display_name($cat_info['upper_names'], $url);
+    $cat_info = get_cat_info($cat_id);
+    return get_cat_display_name($cat_info['upper_names'], $url);
 }
 
 /**
@@ -200,40 +175,39 @@ function get_cat_display_name_from_id($cat_id, $url = '')
  */
 function render_comment_content($content)
 {
-  $content = htmlspecialchars($content);
-  $pattern = '/(https?:\/\/\S*)/';
-  $replacement = '<a href="$1" rel="nofollow">$1</a>';
-  $content = preg_replace($pattern, $replacement, $content);
+    $content = htmlspecialchars($content);
+    $pattern = '/(https?:\/\/\S*)/';
+    $replacement = '<a href="$1" rel="nofollow">$1</a>';
+    $content = preg_replace($pattern, $replacement, $content);
 
-  $content = nl2br($content);
+    $content = nl2br($content);
 
-  // replace _word_ by an underlined word
-  $pattern = '/\b_(\S*)_\b/';
-  $replacement = '<span style="text-decoration:underline;">$1</span>';
-  $content = preg_replace($pattern, $replacement, $content);
+    // replace _word_ by an underlined word
+    $pattern = '/\b_(\S*)_\b/';
+    $replacement = '<span style="text-decoration:underline;">$1</span>';
+    $content = preg_replace($pattern, $replacement, $content);
 
-  // replace *word* by a bolded word
-  $pattern = '/\b\*(\S*)\*\b/';
-  $replacement = '<span style="font-weight:bold;">$1</span>';
-  $content = preg_replace($pattern, $replacement, $content);
+    // replace *word* by a bolded word
+    $pattern = '/\b\*(\S*)\*\b/';
+    $replacement = '<span style="font-weight:bold;">$1</span>';
+    $content = preg_replace($pattern, $replacement, $content);
 
-  // replace /word/ by an italic word
-  $pattern = "/\/(\S*)\/(\s)/";
-  $replacement = '<span style="font-style:italic;">$1$2</span>';
-  $content = preg_replace($pattern, $replacement, $content);
+    // replace /word/ by an italic word
+    $pattern = "/\/(\S*)\/(\s)/";
+    $replacement = '<span style="font-style:italic;">$1$2</span>';
+    $content = preg_replace($pattern, $replacement, $content);
 
-  // TODO : add a trigger
+    // TODO : add a trigger
 
-  return $content;
+    return $content;
 }
-
 
 /**
  * Callback used for sorting by name.
  */
 function name_compare($a, $b)
 {
-  return strcmp(strtolower($a['name']), strtolower($b['name']));
+    return strcmp(strtolower($a['name']), strtolower($b['name']));
 }
 
 /**
@@ -241,17 +215,15 @@ function name_compare($a, $b)
  */
 function tag_alpha_compare($a, $b)
 {
-  global $cache;
+    global $cache;
 
-  foreach (array($a, $b) as $tag)
-  {
-    if (!isset($cache[__FUNCTION__][ $tag['name'] ]))
-    {
-      $cache[__FUNCTION__][ $tag['name'] ] = pwg_transliterate($tag['name']);
+    foreach ([$a, $b] as $tag) {
+        if (! isset($cache[__FUNCTION__][$tag['name']])) {
+            $cache[__FUNCTION__][$tag['name']] = pwg_transliterate($tag['name']);
+        }
     }
-  }
 
-  return strcmp($cache[__FUNCTION__][ $a['name'] ], $cache[__FUNCTION__][ $b['name'] ]);
+    return strcmp($cache[__FUNCTION__][$a['name']], $cache[__FUNCTION__][$b['name']]);
 }
 
 /**
@@ -259,27 +231,25 @@ function tag_alpha_compare($a, $b)
  */
 function access_denied()
 {
-  global $user, $conf;
+    global $user, $conf;
 
-  if ( isset($user) and !is_a_guest() )
-  {
-    set_status_header(401);
+    if (isset($user) and ! is_a_guest()) {
+        set_status_header(401);
 
-    echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        echo '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="shortcut icon" type="image/x-icon" href="themes/default/icon/favicon.ico">
 <div style="display: flex; justify-content: center;align-items: center;height: 100vh;margin: 0;color: #3C3C3C;font-family: \'Open Sans\', sans-serif;font-size: 20px;font-style: normal;font-weight: 600;line-height: normal;">
   <div style="text-align:center;">
     <img src="themes/default/icon/warning-triangle.svg" alt="warning-triangle" >
-    <p style="max-width: 400px; margin-top 20px;">'.l10n('You are not authorized to access the requested page').'</p>
-    <a href="'.make_index_url().'" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">'.l10n('Home').'</a>
+    <p style="max-width: 400px; margin-top 20px;">' . l10n('You are not authorized to access the requested page') . '</p>
+    <a href="' . make_index_url() . '" style="display: inline-block;padding: 10px 20px;margin: 10px;margin-top: 50px;border-radius: 7px;cursor: pointer;width: 150px;background-color: #F77000;color: #fff;text-decoration: none;border: 2px solid #F77000;">' . l10n('Home') . '</a>
   </div>
 </div>';
-    exit();
-  }
+        exit();
+    }
 
-  redirect_http(get_root_url().'identification.php?redirect='.urlencode(urlencode($_SERVER['REQUEST_URI'])));
+    redirect_http(get_root_url() . 'identification.php?redirect=' . urlencode(urlencode($_SERVER['REQUEST_URI'])));
 }
-
 
 /**
  * Exits the current script with 403 code.
@@ -288,16 +258,19 @@ function access_denied()
  * @param string $msg
  * @param string|null $alternate_url redirect to this url
  */
-function page_forbidden($msg, $alternate_url=null)
+function page_forbidden($msg, $alternate_url = null)
 {
-  set_status_header(403);
-  if ($alternate_url==null)
-    $alternate_url = make_index_url();
-  redirect_html( $alternate_url,
-    '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">'.l10n('Forbidden').'</h1><br>'
-.$msg.'</div>',
-    5 );
+    set_status_header(403);
+    if ($alternate_url == null) {
+        $alternate_url = make_index_url();
+    }
+    redirect_html(
+        $alternate_url,
+        '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
+<h1 style="text-align:left; font-size:36px;">' . l10n('Forbidden') . '</h1><br>'
+. $msg . '</div>',
+        5
+    );
 }
 
 /**
@@ -307,16 +280,19 @@ function page_forbidden($msg, $alternate_url=null)
  * @param string $msg
  * @param string|null $alternate_url redirect to this url
  */
-function bad_request($msg, $alternate_url=null)
+function bad_request($msg, $alternate_url = null)
 {
-  set_status_header(400);
-  if ($alternate_url==null)
-    $alternate_url = make_index_url();
-  redirect_html( $alternate_url,
-    '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">'.l10n('Bad request').'</h1><br>'
-.$msg.'</div>',
-    5 );
+    set_status_header(400);
+    if ($alternate_url == null) {
+        $alternate_url = make_index_url();
+    }
+    redirect_html(
+        $alternate_url,
+        '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
+<h1 style="text-align:left; font-size:36px;">' . l10n('Bad request') . '</h1><br>'
+. $msg . '</div>',
+        5
+    );
 }
 
 /**
@@ -326,16 +302,19 @@ function bad_request($msg, $alternate_url=null)
  * @param string $msg
  * @param string|null $alternate_url redirect to this url
  */
-function page_not_found($msg, $alternate_url=null)
+function page_not_found($msg, $alternate_url = null)
 {
-  set_status_header(404);
-  if ($alternate_url==null)
-    $alternate_url = make_index_url();
-  redirect_html( $alternate_url,
-    '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
-<h1 style="text-align:left; font-size:36px;">'.l10n('Page not found').'</h1><br>'
-.$msg.'</div>',
-    5 );
+    set_status_header(404);
+    if ($alternate_url == null) {
+        $alternate_url = make_index_url();
+    }
+    redirect_html(
+        $alternate_url,
+        '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">
+<h1 style="text-align:left; font-size:36px;">' . l10n('Page not found') . '</h1><br>'
+. $msg . '</div>',
+        5
+    );
 }
 
 /**
@@ -346,43 +325,39 @@ function page_not_found($msg, $alternate_url=null)
  * @param string|null $title
  * @param bool $show_trace
  */
-function fatal_error($msg, $title=null, $show_trace=true)
+function fatal_error($msg, $title = null, $show_trace = true)
 {
-  if (empty($title))
-  {
-    $title = l10n('Piwigo encountered a non recoverable error');
-  }
-
-  $btrace_msg = '';
-  if ($show_trace and function_exists('debug_backtrace'))
-  {
-    $bt = debug_backtrace();
-    for ($i=1; $i<count($bt); $i++)
-    {
-      $class = isset($bt[$i]['class']) ? (@$bt[$i]['class'].'::') : '';
-      $btrace_msg .= "#$i\t".$class.@$bt[$i]['function'].' '.@$bt[$i]['file']."(".@$bt[$i]['line'].")\n";
+    if (empty($title)) {
+        $title = l10n('Piwigo encountered a non recoverable error');
     }
-    $btrace_msg = trim($btrace_msg);
-    $msg .= "\n";
-  }
 
-  $display = "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
-<h1>$title</h1>
+    $btrace_msg = '';
+    if ($show_trace and function_exists('debug_backtrace')) {
+        $bt = debug_backtrace();
+        for ($i = 1; $i < count($bt); $i++) {
+            $class = isset($bt[$i]['class']) ? (@$bt[$i]['class'] . '::') : '';
+            $btrace_msg .= "#{$i}\t" . $class . @$bt[$i]['function'] . ' ' . @$bt[$i]['file'] . '(' . @$bt[$i]['line'] . ")\n";
+        }
+        $btrace_msg = trim($btrace_msg);
+        $msg .= "\n";
+    }
+
+    $display = "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+<h1>{$title}</h1>
 <pre style='font-size:larger;background:white;color:red;padding:1em;margin:0;clear:both;display:block;width:auto;height:auto;overflow:auto'>
-<b>$msg</b>
-$btrace_msg
+<b>{$msg}</b>
+{$btrace_msg}
 </pre>\n";
 
-  @set_status_header(500);
-  echo $display.str_repeat( ' ', 300); //IE6 doesn't error output if below a size
+    @set_status_header(500);
+    echo $display . str_repeat(' ', 300); // IE6 doesn't error output if below a size
 
-  if ( function_exists('ini_set') )
-  {// if possible turn off error display (we display it)
-    ini_set('display_errors', false);
-  }
-  error_reporting( E_ALL );
-  trigger_error( strip_tags($msg).$btrace_msg, E_USER_ERROR );
-  die(0); // just in case
+    if (function_exists('ini_set')) {// if possible turn off error display (we display it)
+        ini_set('display_errors', false);
+    }
+    error_reporting(E_ALL);
+    trigger_error(strip_tags($msg) . $btrace_msg, E_USER_ERROR);
+    die(0); // just in case
 }
 
 /**
@@ -392,12 +367,12 @@ $btrace_msg
  */
 function get_tags_content_title()
 {
-  global $page;
-  $title = '<a href="'.get_root_url().'tags.php" title="'.l10n('display available tags').'">'
-    . l10n( count($page['tags']) > 1 ? 'Tags' : 'Tag' )
-    . '</a> ';
+    global $page;
+    $title = '<a href="' . get_root_url() . 'tags.php" title="' . l10n('display available tags') . '">'
+      . l10n(count($page['tags']) > 1 ? 'Tags' : 'Tag')
+      . '</a> ';
 
-  return $title;
+    return $title;
 }
 
 /**
@@ -407,46 +382,43 @@ function get_tags_content_title()
  */
 function get_combined_categories_content_title()
 {
-  global $page;
+    global $page;
 
-  $title = l10n('Albums').' ';
+    $title = l10n('Albums') . ' ';
 
-  $is_first = true;
-  $all_categories = array_merge(array($page['category']), $page['combined_categories']);
-  foreach ($all_categories as $idx => $category)
-  {
-    $title.= $is_first ? '' : ' + ';
-    $is_first = false;
+    $is_first = true;
+    $all_categories = array_merge([$page['category']], $page['combined_categories']);
+    foreach ($all_categories as $idx => $category) {
+        $title .= $is_first ? '' : ' + ';
+        $is_first = false;
 
-    $title.= get_cat_display_name(array($category));
+        $title .= get_cat_display_name([$category]);
 
-    if (count($all_categories) > 1) // should be always the case
-    {
-      $other_cats = $all_categories;
-      unset($other_cats[$idx]);
+        if (count($all_categories) > 1) { // should be always the case
+            $other_cats = $all_categories;
+            unset($other_cats[$idx]);
 
-      $params = array(
-        'category' => array_shift($other_cats),
-        );
+            $params = [
+                'category' => array_shift($other_cats),
+            ];
 
-      if (count($other_cats) > 0)
-      {
-        $params['combined_categories'] = $other_cats;
-      }
-      $remove_url = make_index_url($params);
+            if (count($other_cats) > 0) {
+                $params['combined_categories'] = $other_cats;
+            }
+            $remove_url = make_index_url($params);
 
-      $title.=
-        '<a id="TagsGroupRemoveTag" href="'.$remove_url.'" style="border:none;" title="'
-        .l10n('remove this tag from the list')
-        .'"><img src="'
-          .get_root_url().get_themeconf('icon_dir').'/remove_s.png'
-        .'" alt="x" style="vertical-align:bottom;" >'
-        .'<span class="pwg-icon pwg-icon-close" ></span>'
-        .'</a>';
+            $title .=
+              '<a id="TagsGroupRemoveTag" href="' . $remove_url . '" style="border:none;" title="'
+              . l10n('remove this tag from the list')
+              . '"><img src="'
+                . get_root_url() . get_themeconf('icon_dir') . '/remove_s.png'
+              . '" alt="x" style="vertical-align:bottom;" >'
+              . '<span class="pwg-icon pwg-icon-close" ></span>'
+              . '</a>';
+        }
     }
-  }
 
-  return $title;
+    return $title;
 }
 
 /**
@@ -454,31 +426,41 @@ function get_combined_categories_content_title()
  * @param int $code
  * @param string $text for exotic http codes
  */
-function set_status_header($code, $text='')
+function set_status_header($code, $text = '')
 {
-  if (empty($text))
-  {
-    switch ($code)
-    {
-      case 200: $text='OK';break;
-      case 301: $text='Moved permanently';break;
-      case 302: $text='Moved temporarily';break;
-      case 304: $text='Not modified';break;
-      case 400: $text='Bad request';break;
-      case 401: $text='Authorization required';break;
-      case 403: $text='Forbidden';break;
-      case 404: $text='Not found';break;
-      case 500: $text='Server error';break;
-      case 501: $text='Not implemented';break;
-      case 503: $text='Service unavailable';break;
+    if (empty($text)) {
+        switch ($code) {
+            case 200: $text = 'OK';
+                break;
+            case 301: $text = 'Moved permanently';
+                break;
+            case 302: $text = 'Moved temporarily';
+                break;
+            case 304: $text = 'Not modified';
+                break;
+            case 400: $text = 'Bad request';
+                break;
+            case 401: $text = 'Authorization required';
+                break;
+            case 403: $text = 'Forbidden';
+                break;
+            case 404: $text = 'Not found';
+                break;
+            case 500: $text = 'Server error';
+                break;
+            case 501: $text = 'Not implemented';
+                break;
+            case 503: $text = 'Service unavailable';
+                break;
+        }
     }
-  }
-  $protocol = $_SERVER["SERVER_PROTOCOL"];
-  if ( ('HTTP/1.1' != $protocol) && ('HTTP/1.0' != $protocol) )
-    $protocol = 'HTTP/1.0';
+    $protocol = $_SERVER['SERVER_PROTOCOL'];
+    if (($protocol != 'HTTP/1.1') && ($protocol != 'HTTP/1.0')) {
+        $protocol = 'HTTP/1.0';
+    }
 
-  header( "$protocol $code $text", true, $code );
-  trigger_notify('set_status_header', $code, $text);
+    header("{$protocol} {$code} {$text}", true, $code);
+    trigger_notify('set_status_header', $code, $text);
 }
 
 /**
@@ -490,8 +472,8 @@ function set_status_header($code, $text='')
  */
 function render_category_literal_description($desc)
 {
-  !isset($desc) ? $desc = "" : false;
-  return strip_tags($desc, '<span><p><a><br><b><i><small><big><strong><em>');
+    ! isset($desc) ? $desc = '' : false;
+    return strip_tags($desc, '<span><p><a><br><b><i><small><big><strong><em>');
 }
 
 /**
@@ -502,22 +484,22 @@ function render_category_literal_description($desc)
  */
 function register_default_menubar_blocks($menu_ref_arr)
 {
-  $menu = & $menu_ref_arr[0];
-  if ($menu->get_id() != 'menubar')
-    return;
-  $menu->register_block( new RegisteredBlock( 'mbLinks', 'Links', 'piwigo'));
-  $menu->register_block( new RegisteredBlock( 'mbCategories', 'Albums', 'piwigo'));
-  $menu->register_block( new RegisteredBlock( 'mbTags', 'Tags', 'piwigo'));
-  $menu->register_block( new RegisteredBlock( 'mbSpecials', 'Specials', 'piwigo'));
-  $menu->register_block( new RegisteredBlock( 'mbMenu', 'Menu', 'piwigo'));
-  $menu->register_block( new RegisteredBlock( 'mbRelatedCategories', 'Related albums', 'piwigo') );
+    $menu = &$menu_ref_arr[0];
+    if ($menu->get_id() != 'menubar') {
+        return;
+    }
+    $menu->register_block(new RegisteredBlock('mbLinks', 'Links', 'piwigo'));
+    $menu->register_block(new RegisteredBlock('mbCategories', 'Albums', 'piwigo'));
+    $menu->register_block(new RegisteredBlock('mbTags', 'Tags', 'piwigo'));
+    $menu->register_block(new RegisteredBlock('mbSpecials', 'Specials', 'piwigo'));
+    $menu->register_block(new RegisteredBlock('mbMenu', 'Menu', 'piwigo'));
+    $menu->register_block(new RegisteredBlock('mbRelatedCategories', 'Related albums', 'piwigo'));
 
-  // We hide the quick identification menu on the identification page. It
-  // would be confusing.
-  if (script_basename() != 'identification')
-  {
-    $menu->register_block( new RegisteredBlock( 'mbIdentification', 'Identification', 'piwigo') );
-  }
+    // We hide the quick identification menu on the identification page. It
+    // would be confusing.
+    if (script_basename() != 'identification') {
+        $menu->register_block(new RegisteredBlock('mbIdentification', 'Identification', 'piwigo'));
+    }
 }
 
 /**
@@ -529,11 +511,10 @@ function register_default_menubar_blocks($menu_ref_arr)
  */
 function render_element_name($info)
 {
-  if (!empty($info['name']))
-  {
-    return trigger_change('render_element_name', $info['name'], $info);
-  }
-  return get_name_from_file($info['file']);
+    if (! empty($info['name'])) {
+        return trigger_change('render_element_name', $info['name'], $info);
+    }
+    return get_name_from_file($info['file']);
 }
 
 /**
@@ -543,13 +524,12 @@ function render_element_name($info)
  * @param string $param used to identify the trigger
  * @return string
  */
-function render_element_description($info, $param='')
+function render_element_description($info, $param = '')
 {
-  if (!empty($info['comment']))
-  {
-    return trigger_change('render_element_description', $info['comment'], $param);
-  }
-  return '';
+    if (! empty($info['comment'])) {
+        return trigger_change('render_element_description', $info['comment'], $param);
+    }
+    return '';
 }
 
 /**
@@ -560,42 +540,37 @@ function render_element_description($info, $param='')
  * @param string $comment
  * @return string
  */
-function get_thumbnail_title($info, $title, $comment='')
+function get_thumbnail_title($info, $title, $comment = '')
 {
-  global $conf, $user;
+    global $conf, $user;
 
-  $details = array();
+    $details = [];
 
-  if (!empty($info['hit']))
-  {
-    $details[] = l10n('%d visits', $info['hit']);
-  }
+    if (! empty($info['hit'])) {
+        $details[] = l10n('%d visits', $info['hit']);
+    }
 
-  if ($conf['rate'] and !empty($info['rating_score']))
-  {
-    $details[] = l10n('rating score %s', $info['rating_score']);
-  }
+    if ($conf['rate'] and ! empty($info['rating_score'])) {
+        $details[] = l10n('rating score %s', $info['rating_score']);
+    }
 
-  if (isset($info['nb_comments']) and $info['nb_comments'] != 0)
-  {
-    $details[] = l10n_dec('%d comment', '%d comments', $info['nb_comments']);
-  }
+    if (isset($info['nb_comments']) and $info['nb_comments'] != 0) {
+        $details[] = l10n_dec('%d comment', '%d comments', $info['nb_comments']);
+    }
 
-  if (count($details) > 0)
-  {
-    $title.= ' ('.implode(', ', $details).')';
-  }
+    if (count($details) > 0) {
+        $title .= ' (' . implode(', ', $details) . ')';
+    }
 
-  if (!empty($comment))
-  {
-    $comment = strip_tags($comment);
-    $title.= ' '.substr($comment, 0, 100).(strlen($comment) > 100 ? '...' : '');
-  }
+    if (! empty($comment)) {
+        $comment = strip_tags($comment);
+        $title .= ' ' . substr($comment, 0, 100) . (strlen($comment) > 100 ? '...' : '');
+    }
 
-  $title = htmlspecialchars(strip_tags($title));
-  $title = trigger_change('get_thumbnail_title', $title, $info);
+    $title = htmlspecialchars(strip_tags($title));
+    $title = trigger_change('get_thumbnail_title', $title, $info);
 
-  return $title;
+    return $title;
 }
 
 /**
@@ -607,7 +582,7 @@ function get_thumbnail_title($info, $title, $comment='')
  */
 function get_src_image_url_protection_handler($url, $src_image)
 {
-  return get_action_url($src_image->id, $src_image->is_original() ? 'e' : 'r', false);
+    return get_action_url($src_image->id, $src_image->is_original() ? 'e' : 'r', false);
 }
 
 /**
@@ -619,16 +594,14 @@ function get_src_image_url_protection_handler($url, $src_image)
  */
 function get_element_url_protection_handler($url, $infos)
 {
-  global $conf;
-  if ('images'==$conf['original_url_protection'])
-  {// protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
-    $ext = get_extension($infos['path']);
-    if (!in_array($ext, $conf['picture_ext']))
-    {
-      return $url;
+    global $conf;
+    if ($conf['original_url_protection'] == 'images') {// protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
+        $ext = get_extension($infos['path']);
+        if (! in_array($ext, $conf['picture_ext'])) {
+            return $url;
+        }
     }
-  }
-  return get_action_url($infos['id'], 'e', false);
+    return get_action_url($infos['id'], 'e', false);
 }
 
 /**
@@ -636,23 +609,19 @@ function get_element_url_protection_handler($url, $infos)
  */
 function flush_page_messages()
 {
-  global $template, $page;
-  if ($template->get_template_vars('page_refresh') === null)
-  {
-    foreach (array('errors','infos','warnings', 'messages') as $mode)
-    {
-      if (isset($_SESSION['page_'.$mode]))
-      {
-        $page[$mode] = array_merge($page[$mode], $_SESSION['page_'.$mode]);
-        unset($_SESSION['page_'.$mode]);
-      }
+    global $template, $page;
+    if ($template->get_template_vars('page_refresh') === null) {
+        foreach (['errors', 'infos', 'warnings', 'messages'] as $mode) {
+            if (isset($_SESSION['page_' . $mode])) {
+                $page[$mode] = array_merge($page[$mode], $_SESSION['page_' . $mode]);
+                unset($_SESSION['page_' . $mode]);
+            }
 
-      if (!empty($page[$mode]))
-      {
-        $template->assign($mode, $page[$mode]);
-      }
+            if (! empty($page[$mode])) {
+                $template->assign($mode, $page[$mode]);
+            }
+        }
     }
-  }
 }
 
 /**
@@ -662,12 +631,9 @@ function flush_page_messages()
  */
 function pwg_nl2br($string)
 {
-  if (empty($string))
-  {
-    return $string;
-  }
+    if (empty($string)) {
+        return $string;
+    }
 
-  return nl2br($string);
+    return nl2br($string);
 }
-
-?>

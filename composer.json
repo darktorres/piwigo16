@@ -21,6 +21,7 @@
     "ext-session": "*",
     "ext-simplexml": "*",
     "ext-zlib": "*",
+    "pelago/emogrifier": "^8",
     "smarty/smarty": "^5",
     "symfony/dotenv": "^8.1",
     "symfony/mailer": "^8",

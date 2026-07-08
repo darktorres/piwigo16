@@ -971,10 +971,14 @@ function pwg_send_mail($result, $to, $subject, $content, $headers)
  */
 function move_css_to_body($content)
 {
-  include_once(PHPWG_ROOT_PATH.'include/emogrifier.class.php');
-
-  $e = new Emogrifier($content);
-  return @$e->emogrify();
+  try
+  {
+    return \Pelago\Emogrifier\CssInliner::fromHtml($content)->inlineCss()->render();
+  }
+  catch (\Exception $e)
+  {
+    return $content;
+  }
 }
 
 /**

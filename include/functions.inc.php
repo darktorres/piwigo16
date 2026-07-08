@@ -2275,20 +2275,12 @@ function get_device()
 
   if (is_null($device))
   {
-    include_once(PHPWG_ROOT_PATH.'include/mdetect.php');
-    $uagent_obj = new uagent_info();
-    if ($uagent_obj->DetectSmartphone())
-    {
-      $device = 'mobile';
-    }
-    elseif ($uagent_obj->DetectTierTablet())
-    {
-      $device = 'tablet';
-    }
-    else
-    {
-      $device = 'desktop';
-    }
+    // No UA-sniffing library (removed, no replacement — see
+    // docs/adr/0021-native-platform-first-library-policy.md): the v17
+    // responsive CSS (P30) removes the need for a separate mobile theme
+    // via device detection. mobile_theme() still honors an explicit
+    // ?mobile=1/0 override independent of this default.
+    $device = 'desktop';
     pwg_set_session_var('device', $device);
   }
 

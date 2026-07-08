@@ -27,19 +27,19 @@ if (! isset($_GET['output']) or $_GET['output'] != 'content_only') {
     $title = l10n('Piwigo Help');
     $page['page_banner'] = '<h1>' . $title . '</h1>';
     $page['meta_robots'] = [
-      'noindex' => 1,
+        'noindex' => 1,
         'nofollow' => 1,
-];
+    ];
 
     // set required template variables to avoid "Undefined array key" with PHP 8
     $template->assign(
         [
-          'U_RETURN' => '',
+            'U_RETURN' => '',
             'USERNAME' => '',
             'U_FAQ' => '',
             'U_CHANGE_THEME' => '',
             'U_LOGOUT' => '',
-    ]
+        ]
     );
 
     include PHPWG_ROOT_PATH . 'include/page_header.php';
@@ -53,9 +53,9 @@ if (
         'help/' . $_GET['page'] . '.html',
         '',
         [
-          'force_fallback' => 'en_UK',
+            'force_fallback' => 'en_UK',
             'return' => true,
-    ]
+        ]
     );
 
     if ($help_content == false) {

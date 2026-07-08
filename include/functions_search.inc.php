@@ -98,10 +98,10 @@ function get_regular_search_results($search, $images_where = '')
 
     $forbidden = get_sql_condition_FandF(
         [
-          'forbidden_categories' => 'category_id',
+            'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'id',
-    ],
+        ],
         "\n  AND"
     );
 
@@ -816,9 +816,9 @@ class QNumericRangeScope extends QSearchScope
         } elseif (@$str[0] == '<') { // size:<5mp
             $range = ['', substr($str, 1)];
             $strict[1] = 1;
-        } elseif (($token->modifier&QST_WILDCARD_BEGIN)) {
+        } elseif (($token->modifier & QST_WILDCARD_BEGIN)) {
             $range = ['', $str];
-        } elseif (($token->modifier&QST_WILDCARD_END)) {
+        } elseif (($token->modifier & QST_WILDCARD_END)) {
             $range = [$str, ''];
         } else {
             $range = [$str, $str];
@@ -910,9 +910,9 @@ class QDateRangeScope extends QSearchScope
         } elseif (@$str[0] == '<') {
             $range = ['', substr($str, 1)];
             $strict[1] = 1;
-        } elseif (($token->modifier&QST_WILDCARD_BEGIN)) {
+        } elseif (($token->modifier & QST_WILDCARD_BEGIN)) {
             $range = ['', $str];
-        } elseif (($token->modifier&QST_WILDCARD_END)) {
+        } elseif (($token->modifier & QST_WILDCARD_END)) {
             $range = [$str, ''];
         } else {
             $range = [$str, $str];
@@ -1006,17 +1006,17 @@ class QSingleToken
         if (isset($this->scope)) {
             $s .= $this->scope->id . ':';
         }
-        if ($this->modifier&QST_WILDCARD_BEGIN) {
+        if ($this->modifier & QST_WILDCARD_BEGIN) {
             $s .= '*';
         }
-        if ($this->modifier&QST_QUOTED) {
+        if ($this->modifier & QST_QUOTED) {
             $s .= '"';
         }
         $s .= $this->term;
-        if ($this->modifier&QST_QUOTED) {
+        if ($this->modifier & QST_QUOTED) {
             $s .= '"';
         }
-        if ($this->modifier&QST_WILDCARD_END) {
+        if ($this->modifier & QST_WILDCARD_END) {
             $s .= '*';
         }
         return $s;
@@ -1042,10 +1042,10 @@ class QMultiToken
             if ($i) {
                 $s .= ' ';
             }
-            if ($modifier&QST_OR) {
+            if ($modifier & QST_OR) {
                 $s .= 'OR ';
             }
-            if ($modifier&QST_NOT) {
+            if ($modifier & QST_NOT) {
                 $s .= 'NOT ';
             }
             if (! ($this->tokens[$i]->is_single)) {
@@ -1374,10 +1374,10 @@ function qsearch_get_text_token_search_sql($token, $fields)
     $fts = [];
     foreach ($variants as $variant) {
         $use_ft = mb_strlen($variant) > 3;
-        if ($token->modifier&QST_WILDCARD_BEGIN) {
+        if ($token->modifier & QST_WILDCARD_BEGIN) {
             $use_ft = false;
         }
-        if ($token->modifier & (QST_QUOTED | QST_WILDCARD_END) == (QST_QUOTED|QST_WILDCARD_END)) {
+        if ($token->modifier & (QST_QUOTED | QST_WILDCARD_END) == (QST_QUOTED | QST_WILDCARD_END)) {
             $use_ft = false;
         }
 
@@ -1409,10 +1409,10 @@ function qsearch_get_text_token_search_sql($token, $fields)
             }
         } else {
             $ft = $variant;
-            if ($token->modifier&QST_QUOTED) {
+            if ($token->modifier & QST_QUOTED) {
                 $ft = '"' . $ft . '"';
             }
-            if ($token->modifier&QST_WILDCARD_END) {
+            if ($token->modifier & QST_WILDCARD_END) {
                 $ft .= '*';
             }
             $fts[] = $ft;
@@ -1452,7 +1452,7 @@ function qsearch_get_images(QExpression $expr, QResults $qsr)
             case 'author':
                 if (strlen($token->term)) {
                     $clauses = array_merge($clauses, qsearch_get_text_token_search_sql($token, ['author']));
-                } elseif ($token->modifier&QST_WILDCARD) {
+                } elseif ($token->modifier & QST_WILDCARD) {
                     $clauses[] = 'author IS NOT NULL';
                 } else {
                     $clauses[] = 'author IS NULL';
@@ -1546,7 +1546,7 @@ SELECT image_id FROM ' . IMAGE_TAG_TABLE . '
   WHERE tag_id IN (' . implode(',', $tag_ids) . ')
   GROUP BY image_id';
             $qsr->tag_iids[$i] = query2array($query, null, 'image_id');
-            if ($expr->stoken_modifiers[$i]&QST_NOT) {
+            if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $tag_ids);
             } else {
                 if (strlen($token->term) > 2 || count($expr->stokens) == 1 || isset($token->scope) || ($token->modifier & (QST_WILDCARD | QST_QUOTED))) {// add tag ids to list only if the word is not too short (such as de / la /les ...)
@@ -1636,7 +1636,7 @@ SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . '
   WHERE category_id IN (' . implode(',', $cat_ids) . ')
   GROUP BY image_id';
             $qsr->cat_iids[$i] = query2array($query, null, 'image_id');
-            if ($expr->stoken_modifiers[$i]&QST_NOT) {
+            if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $cat_ids);
             } else {
                 if (strlen($token->term) > 2 || count($expr->stokens) == 1 || isset($token->scope) || ($token->modifier & (QST_WILDCARD | QST_QUOTED))) {// add cat ids to list only if the word is not too short (such as de / la /les ...)
@@ -1685,7 +1685,7 @@ function qsearch_eval(QMultiToken $expr, QResults $qsr, &$qualifies, &$ignored_t
         }
 
         $modifier = $crt->modifier;
-        if ($modifier&QST_NOT) {
+        if ($modifier & QST_NOT) {
             $not_ids = array_unique(array_merge($not_ids, $crt_ids));
         } else {
             $ignored_terms = array_merge($ignored_terms, $crt_ignored_terms);

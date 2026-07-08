@@ -344,7 +344,7 @@ CREATE TABLE ' . $temporary_tablename . '
         pwg_query($query);
         mass_inserts($temporary_tablename, $all_fields, $datas);
 
-        if ($flags&MASS_UPDATES_SKIP_EMPTY) {
+        if ($flags & MASS_UPDATES_SKIP_EMPTY) {
             $func_set = function ($s) { return "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})"; };
         } else {
             $func_set = function ($s) { return "t1.{$s} = t2.{$s}"; };

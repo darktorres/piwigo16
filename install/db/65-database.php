@@ -14,11 +14,11 @@ if (! defined('PHPWG_ROOT_PATH')) {
 function upgrade65_change_table_to_blob($table, $field_definitions)
 {
     $types = [
-      'varchar' => 'varbinary',
+        'varchar' => 'varbinary',
         'text' => 'blob',
         'mediumtext' => 'mediumblob',
         'longtext' => 'longblob',
-];
+    ];
 
     $changes = [];
     foreach ($field_definitions as $row) {

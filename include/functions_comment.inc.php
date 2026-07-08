@@ -68,9 +68,9 @@ function insert_user_comment(&$comm, $key, &$infos)
     $comm = array_merge(
         $comm,
         [
-          'ip' => $_SERVER['REMOTE_ADDR'],
+            'ip' => $_SERVER['REMOTE_ADDR'],
             'agent' => $_SERVER['HTTP_USER_AGENT'],
-    ]
+        ]
     );
 
     $infos = [];

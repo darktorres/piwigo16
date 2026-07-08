@@ -14,10 +14,10 @@ class PwgSerialPhpEncoder extends PwgResponseEncoder
         if ($response instanceof PwgError) {
             return serialize(
                 [
-                  'stat' => 'fail',
+                    'stat' => 'fail',
                     'err' => $response->code(),
                     'message' => $response->message(),
-        ]
+                ]
             );
         }
         parent::flattenResponse($response);

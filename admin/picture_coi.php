@@ -60,11 +60,11 @@ $tpl_var = [
 
 if (! empty($row['coi'])) {
     $tpl_var['coi'] = [
-      'l' => char_to_fraction($row['coi'][0]),
+        'l' => char_to_fraction($row['coi'][0]),
         't' => char_to_fraction($row['coi'][1]),
         'r' => char_to_fraction($row['coi'][2]),
         'b' => char_to_fraction($row['coi'][3]),
-];
+    ];
 }
 
 foreach (ImageStdParams::get_defined_type_map() as $params) {

@@ -18,38 +18,38 @@ function get_upload_form_config()
 {
     // default configuration for upload
     $upload_form_config = [
-      'original_resize' => [
-          'default' => false,
+        'original_resize' => [
+            'default' => false,
             'can_be_null' => false,
-      ],
+        ],
 
         'original_resize_maxwidth' => [
-          'default' => 2000,
+            'default' => 2000,
             'min' => 500,
             'max' => 20000,
             'pattern' => '/^\d+$/',
             'can_be_null' => false,
             'error_message' => l10n('The original maximum width must be a number between %d and %d'),
-      ],
+        ],
 
         'original_resize_maxheight' => [
-          'default' => 2000,
+            'default' => 2000,
             'min' => 300,
             'max' => 20000,
             'pattern' => '/^\d+$/',
             'can_be_null' => false,
             'error_message' => l10n('The original maximum height must be a number between %d and %d'),
-      ],
+        ],
 
         'original_resize_quality' => [
-          'default' => 95,
+            'default' => 95,
             'min' => 50,
             'max' => 98,
             'pattern' => '/^\d+$/',
             'can_be_null' => false,
             'error_message' => l10n('The original image quality must be a number between %d and %d'),
-      ],
-];
+        ],
+    ];
 
     return $upload_form_config;
 }

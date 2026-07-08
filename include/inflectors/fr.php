@@ -18,10 +18,10 @@ class Inflector_fr
     public function __construct()
     {
         $tmp = [
-        'monsieur' => 'messieurs',
+            'monsieur' => 'messieurs',
             'madame' => 'mesdames',
             'mademoiselle' => 'mesdemoiselles',
-];
+        ];
 
         $this->exceptions = $tmp;
         foreach ($tmp as $k => $v) {

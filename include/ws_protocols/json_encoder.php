@@ -14,10 +14,10 @@ class PwgJsonEncoder extends PwgResponseEncoder
         if ($response instanceof PwgError) {
             return json_encode(
                 [
-                  'stat' => 'fail',
+                    'stat' => 'fail',
                     'err' => $response->code(),
                     'message' => $response->message(),
-        ]
+                ]
             );
         }
         parent::flattenResponse($response);

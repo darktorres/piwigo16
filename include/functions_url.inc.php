@@ -768,7 +768,7 @@ function get_query_string_diff($rejects = [], $escape = true)
  * returns true if the url is absolute (begins with http)
  *
  * @param string $url
- * @return boolean
+ * @return bool
  */
 function url_is_remote($url)
 {

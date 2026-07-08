@@ -20,10 +20,10 @@ function get_default_slideshow_params()
     global $conf;
 
     return [
-      'period' => $conf['slideshow_period'],
+        'period' => $conf['slideshow_period'],
         'repeat' => $conf['slideshow_repeat'],
         'play' => true,
-];
+    ];
 }
 
 /**

@@ -33,10 +33,10 @@ if ($page['section'] == 'search' and isset($page['search_details'])) {
 
     $page['search_details']['forbidden'] = get_sql_condition_FandF(
         [
-          'forbidden_categories' => 'category_id',
+            'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'id',
-    ],
+        ],
         "\n  AND"
     );
 

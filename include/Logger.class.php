@@ -58,23 +58,23 @@ class Logger
      * @var array
      */
     private static $_messages = [
-      'writefail' => 'The file could not be written to. Check that appropriate permissions have been set.',
+        'writefail' => 'The file could not be written to. Check that appropriate permissions have been set.',
         'opensuccess' => 'The log file was opened successfully.',
         'openfail' => 'The file could not be opened. Check permissions.',
-];
+    ];
 
     /**
      * Instance options.
      * @var array
      */
     private $options = [
-      'directory' => null, // Log files directory
+        'directory' => null, // Log files directory
         'filename' => null, // Path to the log file
         'globPattern' => 'log_*.txt', // Pattern to select all log files with glob()
         'severity' => self::DEBUG, // Current minimum logging threshold
         'dateFormat' => 'Y-m-d G:i:s', // Date format
         'archiveDays' => self::ARCHIVE_NO_PURGE, // Number of files to keep
-];
+    ];
 
     /**
      * Current status of the logger.

@@ -12,10 +12,10 @@
  */
 if ($conf['rate']) {
     $rate_summary = [
-      'count' => 0,
+        'count' => 0,
         'score' => $picture['current']['rating_score'],
         'average' => null,
-];
+    ];
     if ($rate_summary['score'] != null) {
         $query = '
 SELECT COUNT(rate) AS count

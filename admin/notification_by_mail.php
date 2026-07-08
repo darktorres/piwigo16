@@ -43,7 +43,6 @@ $must_repost = false;
  * Do timeout treatment in order to finish to send mails
  * @param $post_keyname: key of check_key post array
  * @param $check_key_treated: array of check_key treated
- * @return void
  */
 function do_timeout_treatment($post_keyname, $check_key_treated = [])
 {

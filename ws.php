@@ -33,47 +33,47 @@ function ws_addDefaultMethods($arr)
     $ws_functions_root = PHPWG_ROOT_PATH . 'include/ws_functions/';
 
     $f_params = [
-      'f_min_rate' => [
-          'default' => null,
+        'f_min_rate' => [
+            'default' => null,
             'type' => WS_TYPE_FLOAT,
-      ],
+        ],
         'f_max_rate' => [
-          'default' => null,
+            'default' => null,
             'type' => WS_TYPE_FLOAT,
-      ],
+        ],
         'f_min_hit' => [
-          'default' => null,
+            'default' => null,
             'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
-      ],
+        ],
         'f_max_hit' => [
-          'default' => null,
+            'default' => null,
             'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
-      ],
+        ],
         'f_min_ratio' => [
-          'default' => null,
+            'default' => null,
             'type' => WS_TYPE_FLOAT | WS_TYPE_POSITIVE,
-      ],
+        ],
         'f_max_ratio' => [
-          'default' => null,
+            'default' => null,
             'type' => WS_TYPE_FLOAT | WS_TYPE_POSITIVE,
-      ],
+        ],
         'f_max_level' => [
-          'default' => null,
+            'default' => null,
             'type' => WS_TYPE_INT | WS_TYPE_POSITIVE,
-      ],
+        ],
         'f_min_date_available' => [
-          'default' => null,
-      ],
+            'default' => null,
+        ],
         'f_max_date_available' => [
-          'default' => null,
-      ],
+            'default' => null,
+        ],
         'f_min_date_created' => [
-          'default' => null,
-      ],
+            'default' => null,
+        ],
         'f_max_date_created' => [
-          'default' => null,
-      ],
-];
+            'default' => null,
+        ],
+    ];
 
     $service->addMethod(
         'pwg.getVersion',

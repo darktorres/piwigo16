@@ -49,9 +49,9 @@ if (pwg_image::get_library() == 'gd') {
 if ($conf['original_resize']) {
     $template->assign(
         [
-          'original_resize_maxwidth' => $conf['original_resize_maxwidth'],
+            'original_resize_maxwidth' => $conf['original_resize_maxwidth'],
             'original_resize_maxheight' => $conf['original_resize_maxheight'],
-    ]
+        ]
     );
 }
 

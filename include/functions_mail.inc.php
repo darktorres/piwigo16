@@ -57,7 +57,7 @@ function get_mail_configuration()
     global $conf;
 
     $conf_mail = [
-      'send_bcc_mail_webmaster' => $conf['send_bcc_mail_webmaster'],
+        'send_bcc_mail_webmaster' => $conf['send_bcc_mail_webmaster'],
         'mail_allow_html' => $conf['mail_allow_html'],
         'mail_theme' => $conf['mail_theme'],
         'use_smtp' => ! empty($conf['smtp_host']),
@@ -67,7 +67,7 @@ function get_mail_configuration()
         'smtp_secure' => $conf['smtp_secure'],
         'email_webmaster' => get_mail_sender_email(),
         'name_webmaster' => get_mail_sender_name(),
-];
+    ];
 
     return $conf_mail;
 }

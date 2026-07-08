@@ -67,9 +67,9 @@ UPDATE ' . CATEGORIES_TABLE . '
     }
 
     pwg_activity('album', $_POST['cat_true'], 'edit', [
-      'section' => $_GET['section'],
+        'section' => $_GET['section'],
         'action' => 'falsify',
-]);
+    ]);
 } elseif (isset($_POST['trueify'])
          and isset($_POST['cat_false'])
          and count($_POST['cat_false']) > 0) {
@@ -104,9 +104,9 @@ UPDATE ' . CATEGORIES_TABLE . '
     }
 
     pwg_activity('album', $_POST['cat_false'], 'edit', [
-      'section' => $_GET['section'],
+        'section' => $_GET['section'],
         'action' => 'trueify',
-]);
+    ]);
 }
 
 // +-----------------------------------------------------------------------+

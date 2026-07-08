@@ -2109,9 +2109,9 @@ function get_pwg_token()
  * pattern. This should happen only during hacking attempts.
  * @param string $param_name
  * @param array $param_array
- * @param boolean $is_array
+ * @param bool $is_array
  * @param string $pattern
- * @param boolean $mandatory
+ * @param bool $mandatory
  */
 function check_input_parameter($param_name, $param_array, $is_array, $pattern, $mandatory = false)
 {

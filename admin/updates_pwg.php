@@ -32,9 +32,9 @@ $step = $_GET['step'] ?? 0;
 
 if ($ct_env === 'Official') {
     $template->assign([
-      'CONTAINER_VERSION' => $ct_build_version,
+        'CONTAINER_VERSION' => $ct_build_version,
         'DOCKER_UPDATE_GUIDE_URL' => PHPWG_URL . '/guide-update-docker',
-]);
+    ]);
     // Remove optional ? on [a-z]? since it will only be available on piwigo 16.3
     // Docker images started to use letter suffix in 16.2
     check_input_parameter('to', $_GET, false, '/^\d+\.\d+\.\d+[a-z]?$/');
@@ -126,25 +126,25 @@ $template->assign(
 if (isset($new_versions['minor'])) {
     $template->assign(
         [
-          'MINOR_VERSION' => $new_versions['minor'],
+            'MINOR_VERSION' => $new_versions['minor'],
             'MINOR_RELEASE_URL' => (
                 ($ct_env === 'Official')
             ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions['minor'])
             : PHPWG_URL . '/releases/' . $new_versions['minor']
             ),
-    ]
+        ]
     );
 }
 
 if (isset($new_versions['major'])) {
     $template->assign(
         [
-          'MAJOR_VERSION' => $new_versions['major'],
+            'MAJOR_VERSION' => $new_versions['major'],
             'MAJOR_RELEASE_URL' => PHPWG_URL . '/releases/' .
               (($ct_env === 'Official') ? substr($new_versions['major'], 0, -1) : $new_versions['major']),
             'MAJOR_DOCKER_RELEASE_URL' => 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions['major']),
             'MAJOR_VERSION_PWG' => preg_replace('/[a-z]$/', '', $new_versions['major']), // Remove container build ver
-    ]
+        ]
     );
 }
 

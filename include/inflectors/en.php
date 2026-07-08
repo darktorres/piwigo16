@@ -22,7 +22,7 @@ class Inflector_en
     public function __construct()
     {
         $tmp = [
-        'octopus' => 'octopuses',
+            'octopus' => 'octopuses',
             'virus' => 'viruses',
             'person' => 'people',
             'man' => 'men',
@@ -34,7 +34,7 @@ class Inflector_en
             'zombie' => 'zombies', // pl->sg exc.
             'serie' => 'series', // pl->sg exc.
             'movie' => 'movies', // pl->sg exc.
-];
+        ];
 
         $this->exceptions = $tmp;
         foreach ($tmp as $k => $v) {

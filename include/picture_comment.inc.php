@@ -27,12 +27,12 @@ if ($page['show_comments'] and isset($_POST['content'])) {
     }
 
     $comm = [
-      'author' => empty(@$_POST['author']) ? '' : trim(@$_POST['author']),
+        'author' => empty(@$_POST['author']) ? '' : trim(@$_POST['author']),
         'content' => empty(@$_POST['content']) ? '' : trim($_POST['content']),
         'website_url' => empty(@$_POST['website_url']) ? '' : trim(@$_POST['website_url']),
         'email' => empty(@$_POST['email']) ? '' : trim(@$_POST['email']),
         'image_id' => $page['image_id'],
-];
+    ];
 
     include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 

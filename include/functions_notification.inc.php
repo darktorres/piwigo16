@@ -14,13 +14,12 @@
  * @param string $prefix_condition
  * @param string $img_field
  * @param bool $force_one_condition
- * @return string
  */
 function get_std_sql_where_restrict_filter(
     $prefix_condition,
     $img_field = 'ic.image_id',
     $force_one_condition = false
-) {
+): string {
     return get_sql_condition_FandF(
         [
             'forbidden_categories' => 'ic.category_id',
@@ -306,9 +305,8 @@ function new_users($start = null, $end = null)
  *
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return bool
  */
-function news_exists($start = null, $end = null)
+function news_exists($start = null, $end = null): bool
 {
     return
             (nb_new_comments($start, $end) > 0) or
@@ -328,7 +326,7 @@ function news_exists($start = null, $end = null)
  * @param string $url
  * @param bool $add_url
  */
-function add_news_line(&$news, $count, $singular_key, $plural_key, $url = '', $add_url = false)
+function add_news_line(&$news, $count, $singular_key, $plural_key, $url = '', $add_url = false): void
 {
     if ($count > 0) {
         $line = l10n_dec($singular_key, $plural_key, $count);
@@ -351,9 +349,8 @@ function add_news_line(&$news, $count, $singular_key, $plural_key, $url = '', $a
  * @param string $end (mysql datetime format)
  * @param bool $exclude_img_cats if true, no info about new images/categories
  * @param bool $add_url add html link around news
- * @return array
  */
-function news($start = null, $end = null, $exclude_img_cats = false, $add_url = false, $auth_key = null)
+function news($start = null, $end = null, $exclude_img_cats = false, $add_url = false, $auth_key = null): array
 {
     $news = [];
 
@@ -490,10 +487,9 @@ SELECT
  * Same as get_recent_post_dates() but parameters as an indexed array.
  * @see get_recent_post_dates()
  *
- * @param array $args
  * @return array
  */
-function get_recent_post_dates_array($args)
+function get_recent_post_dates_array(array $args)
 {
     return get_recent_post_dates(
         (empty($args['max_dates']) ? 3 : $args['max_dates']),
@@ -507,9 +503,8 @@ function get_recent_post_dates_array($args)
  * @todo clean up HTML output, currently messy and invalid !
  *
  * @param array $date_detail returned value of get_recent_post_dates()
- * @return string
  */
-function get_html_description_recent_post_date($date_detail, $auth_key = null)
+function get_html_description_recent_post_date(array $date_detail, $auth_key = null): string
 {
     global $conf;
 
@@ -572,9 +567,8 @@ function get_html_description_recent_post_date($date_detail, $auth_key = null)
  * Returns title about recently published elements grouped by post date.
  *
  * @param array $date_detail returned value of get_recent_post_dates()
- * @return string
  */
-function get_title_recent_post_date($date_detail)
+function get_title_recent_post_date(array $date_detail): string
 {
     global $lang;
 

@@ -23,7 +23,7 @@ $t2 = microtime(true);
 // Since php 8 the function get_magic_quotes_gpc is also removed
 // but we stil want to sanitize user input variables.
 if (! function_exists('get_magic_quotes_gpc') or ! @get_magic_quotes_gpc()) {
-    function sanitize_mysql_kv(&$v, $k)
+    function sanitize_mysql_kv(&$v, $k): void
     {
         $v = addslashes((string) $v);
     }

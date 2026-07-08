@@ -12,10 +12,8 @@
  * - period
  * - repeat
  * - play
- *
- * @return array
  */
-function get_default_slideshow_params()
+function get_default_slideshow_params(): array
 {
     global $conf;
 
@@ -28,11 +26,8 @@ function get_default_slideshow_params()
 
 /**
  * Checks and corrects slideshow params
- *
- * @param array $params
- * @return array
  */
-function correct_slideshow_params($params = [])
+function correct_slideshow_params(array $params = []): array
 {
     global $conf;
 
@@ -49,9 +44,8 @@ function correct_slideshow_params($params = [])
  * Decodes slideshow string params into array
  *
  * @param string $encode_params
- * @return array
  */
-function decode_slideshow_params($encode_params = null)
+function decode_slideshow_params($encode_params = null): array
 {
     global $conf;
 
@@ -81,11 +75,8 @@ function decode_slideshow_params($encode_params = null)
 
 /**
  * Encodes slideshow array params into a string
- *
- * @param array $decode_params
- * @return string
  */
-function encode_slideshow_params($decode_params = [])
+function encode_slideshow_params(array $decode_params = []): string
 {
     global $conf;
 
@@ -108,7 +99,7 @@ function encode_slideshow_params($decode_params = [])
  * @since 14
  * @param int $image_id
  */
-function increase_image_visit_counter($image_id)
+function increase_image_visit_counter($image_id): void
 {
     // avoiding auto update of "lastmodified" field
     $query = '
@@ -126,7 +117,7 @@ UPDATE
  * @param string $pdfPath
  * @return int
  */
-function count_pdf_pages($pdfPath)
+function count_pdf_pages($pdfPath): int|false
 {
     $pdftext = file_get_contents($pdfPath);
     $num = preg_match_all("/\/Page\W/", $pdftext, $dummy);

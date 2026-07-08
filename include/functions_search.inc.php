@@ -7,7 +7,7 @@
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-function get_search_id_pattern($candidate)
+function get_search_id_pattern($candidate): ?string
 {
     $clause_pattern = null;
     if (preg_match('/^psk-\d{8}-[a-z0-9]{10}$/i', (string) $candidate)) {
@@ -68,7 +68,7 @@ SELECT *
  * @param int $search_id
  * @return array
  */
-function get_search_array($search_id)
+function get_search_array($search_id): mixed
 {
     global $user;
 
@@ -84,11 +84,9 @@ function get_search_array($search_id)
 /**
  * Returns the list of items corresponding to the advanced search array.
  *
- * @param array $search
  * @param string $images_where optional additional restriction on images table
- * @return array
  */
-function get_regular_search_results($search, $images_where = '')
+function get_regular_search_results(array $search, $images_where = ''): array
 {
     global $conf, $logger;
 
@@ -232,7 +230,7 @@ SELECT
         if (count($word_clauses) > 0) {
             array_walk(
                 $word_clauses,
-                function (&$s) { $s = '(' . $s . ')'; }
+                function (string &$s): void { $s = '(' . $s . ')'; }
             );
         }
 
@@ -687,10 +685,8 @@ SELECT
  * @since 15
  *
  * @param string $filter_name
- *
- * @return string
  */
-function get_clause_for_filter($filter_name)
+function get_clause_for_filter($filter_name): string
 {
     global $page;
 
@@ -770,7 +766,7 @@ class QSearchScope
         public $is_text = true
     ) {}
 
-    public function parse($token)
+    public function parse($token): bool
     {
         if (! $this->nullable && strlen((string) $token->term) == 0) {
             return false;
@@ -778,7 +774,7 @@ class QSearchScope
         return true;
     }
 
-    public function process_char(&$ch, &$crt_token)
+    public function process_char(&$ch, &$crt_token): bool
     {
         return false;
     }
@@ -796,7 +792,7 @@ class QNumericRangeScope extends QSearchScope
     }
 
     #[\Override]
-    public function parse($token)
+    public function parse($token): bool
     {
         $str = $token->term;
         $strict = [0, 0];
@@ -863,7 +859,7 @@ class QNumericRangeScope extends QSearchScope
         return true;
     }
 
-    public function get_sql($field, $token)
+    public function get_sql($field, $token): string
     {
         $clauses = [];
         if ($token->scope_data['range'][0] !== '') {
@@ -895,7 +891,7 @@ class QDateRangeScope extends QSearchScope
     }
 
     #[\Override]
-    public function parse($token)
+    public function parse($token): bool
     {
         $str = $token->term;
         $strict = [0, 0];
@@ -941,7 +937,7 @@ class QDateRangeScope extends QSearchScope
         return true;
     }
 
-    public function get_sql($field, $token)
+    public function get_sql($field, $token): string
     {
         $clauses = [];
         if ($token->scope_data[0] != '') {
@@ -1049,7 +1045,7 @@ class QMultiToken implements \Stringable
         return $s;
     }
 
-    private function push(&$token, &$modifier, &$scope)
+    private function push(&$token, &$modifier, &$scope): void
     {
         if (strlen((string) $token) || (isset($scope) && $scope->nullable)) {
             if (isset($scope)) {
@@ -1225,7 +1221,7 @@ class QMultiToken implements \Stringable
      * Applies recursively a search scope to all sub single tokens. We allow 'tag:(John Bill)' but we cannot evaluate
      * scopes on expressions so we rewrite as '(tag:John tag:Bill)'
      */
-    private function apply_scope(QSearchScope $scope)
+    private function apply_scope(QSearchScope $scope): void
     {
         for ($i = 0; $i < count($this->tokens); $i++) {
             if ($this->tokens[$i]->is_single) {
@@ -1238,7 +1234,7 @@ class QMultiToken implements \Stringable
         }
     }
 
-    private static function priority($modifier)
+    private static function priority($modifier): int
     {
         return $modifier & QST_OR ? 0 : 1;
     }
@@ -1311,7 +1307,7 @@ class QExpression extends QMultiToken
         $this->build_single_tokens($this, 0);
     }
 
-    private function build_single_tokens(QMultiToken $expr, $this_is_not)
+    private function build_single_tokens(QMultiToken $expr, int $this_is_not): void
     {
         for ($i = 0; $i < count($expr->tokens); $i++) {
             $token = $expr->tokens[$i];
@@ -1357,7 +1353,10 @@ class QResults
     public $iids;
 }
 
-function qsearch_get_text_token_search_sql($token, $fields)
+/**
+ * @return non-falsy-string[]
+ */
+function qsearch_get_text_token_search_sql($token, $fields): array
 {
     global $page;
 
@@ -1417,7 +1416,7 @@ function qsearch_get_text_token_search_sql($token, $fields)
     return $clauses;
 }
 
-function qsearch_get_images(QExpression $expr, QResults $qsr)
+function qsearch_get_images(QExpression $expr, QResults $qsr): void
 {
     $qsr->images_iids = array_fill(0, count($expr->stokens), []);
 
@@ -1490,7 +1489,7 @@ function qsearch_get_images(QExpression $expr, QResults $qsr)
     }
 }
 
-function qsearch_get_tags(QExpression $expr, QResults $qsr)
+function qsearch_get_tags(QExpression $expr, QResults $qsr): void
 {
     $token_tag_ids = $qsr->tag_iids = array_fill(0, count($expr->stokens), []);
     $all_tags = [];
@@ -1563,7 +1562,7 @@ SELECT image_id FROM ' . IMAGE_TAG_TABLE . '
     $qsr->tag_ids = $token_tag_ids;
 }
 
-function qsearch_get_categories(QExpression $expr, QResults $qsr)
+function qsearch_get_categories(QExpression $expr, QResults $qsr): void
 {
     global $user, $conf;
 
@@ -1718,7 +1717,7 @@ function qsearch_eval(QMultiToken $expr, QResults $qsr, &$qualifies, &$ignored_t
  * @param string $q
  * @return array
  */
-function get_quick_search_results($q, $options)
+function get_quick_search_results($q, array $options)
 {
     global $persistent_cache, $conf, $user;
 
@@ -1744,7 +1743,7 @@ function get_quick_search_results($q, $options)
 /**
  * @see get_quick_search_results but without result caching
  */
-function get_quick_search_results_no_cache($q, $options)
+function get_quick_search_results_no_cache($q, array $options)
 {
     global $conf;
 
@@ -1905,7 +1904,7 @@ function get_search_results($search_id, $super_order_by, $images_where = '')
     }
 }
 
-function split_allwords($raw_allwords)
+function split_allwords($raw_allwords): ?array
 {
     $words = null;
 
@@ -1951,7 +1950,7 @@ SELECT
     }
 }
 
-function save_search($rules, $forked_from = null)
+function save_search(array $rules, $forked_from = null): array
 {
     global $user;
 

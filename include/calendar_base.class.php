@@ -56,7 +56,7 @@ abstract class CalendarBase
      *
      * @param string $inner_sql
      */
-    public function initialize($inner_sql)
+    public function initialize($inner_sql): void
     {
         global $page;
         if ($page['chronology_field'] == 'posted') {
@@ -151,7 +151,7 @@ abstract class CalendarBase
      */
     protected function get_nav_bar_from_items(
         $date_components,
-        $items,
+        array $items,
         $show_any,
         $show_empty = false,
         $labels = null

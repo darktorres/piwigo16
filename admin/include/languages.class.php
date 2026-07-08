@@ -28,8 +28,9 @@ class languages
      * @param string $action - action
      * @param string $language_id - language id
      * @param array - errors
+     * @return list<('CANNOT ACTIVATE - LANGUAGE IS ALREADY ACTIVATED'|'CANNOT DEACTIVATE - LANGUAGE IS ALREADY DEACTIVATED'|'CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE'|'CANNOT DELETE - LANGUAGE DOES NOT EXIST'|'CANNOT DELETE - LANGUAGE IS ACTIVATED')>
      */
-    public function perform_action($action, $language_id)
+    public function perform_action($action, $language_id): array
     {
         global $conf;
 
@@ -115,7 +116,7 @@ UPDATE ' . USER_INFOS_TABLE . '
     /**
      *  Get languages defined in the language directory
      */
-    public function get_fs_languages($target_charset = null)
+    public function get_fs_languages($target_charset = null): void
     {
         if (empty($target_charset)) {
             $target_charset = get_pwg_charset();
@@ -172,7 +173,7 @@ UPDATE ' . USER_INFOS_TABLE . '
         @uasort($this->fs_languages, name_compare(...));
     }
 
-    public function get_db_languages()
+    public function get_db_languages(): void
     {
         $query = '
   SELECT id, name
@@ -189,7 +190,7 @@ UPDATE ' . USER_INFOS_TABLE . '
     /**
      * Retrieve PEM server datas to $server_languages
      */
-    public function get_server_languages($new = false)
+    public function get_server_languages($new = false): bool
     {
         global $user, $conf;
 
@@ -384,7 +385,7 @@ UPDATE ' . USER_INFOS_TABLE . '
     /**
      * Sort functions
      */
-    public function extension_name_compare($a, $b)
+    public function extension_name_compare(array $a, array $b): int
     {
         return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
     }

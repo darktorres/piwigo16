@@ -9,7 +9,7 @@
 
 class PwgRestRequestHandler extends PwgRequestHandler
 {
-    public function handleRequest(&$service)
+    public function handleRequest(&$service): void
     {
         $params = [];
 

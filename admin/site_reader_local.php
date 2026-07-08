@@ -27,7 +27,7 @@ class LocalSiteReader
      *
      * @return true on success, false otherwise
      */
-    public function open()
+    public function open(): bool
     {
         global $errors;
 
@@ -44,7 +44,10 @@ class LocalSiteReader
     }
 
     // retrieve file system sub-directories fulldirs
-    public function get_full_directories($basedir)
+    /**
+     * @return mixed[]
+     */
+    public function get_full_directories($basedir): array
     {
         $fs_fulldirs = get_fs_directories($basedir);
         return $fs_fulldirs;
@@ -56,7 +59,7 @@ class LocalSiteReader
      * @param string $path recurse in this directory
      * @return array like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
      */
-    public function get_elements($path)
+    public function get_elements($path): array
     {
         global $conf;
 
@@ -107,12 +110,12 @@ class LocalSiteReader
 
     // returns the name of the attributes that are supported for
     // files update/synchronization
-    public function get_update_attributes()
+    public function get_update_attributes(): array
     {
         return ['representative_ext'];
     }
 
-    public function get_element_update_attributes($file)
+    public function get_element_update_attributes($file): array
     {
         global $conf;
         $data = [];
@@ -133,7 +136,7 @@ class LocalSiteReader
 
     // returns the name of the attributes that are supported for
     // metadata update/synchronization according to configuration
-    public function get_metadata_attributes()
+    public function get_metadata_attributes(): array
     {
         return get_sync_metadata_attributes();
     }
@@ -158,7 +161,10 @@ class LocalSiteReader
         return null;
     }
 
-    public function get_formats($path, $filename_wo_ext)
+    /**
+     * @return float[]
+     */
+    public function get_formats($path, $filename_wo_ext): array
     {
         global $conf;
 

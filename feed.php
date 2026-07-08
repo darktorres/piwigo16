@@ -22,7 +22,7 @@ include_once PHPWG_ROOT_PATH . 'include/functions_notification.inc.php';
  * @param string $datetime mysql datetime format
  * @return int timestamp
  */
-function datetime_to_ts($datetime)
+function datetime_to_ts($datetime): int|false
 {
     return strtotime($datetime);
 }
@@ -36,7 +36,7 @@ function datetime_to_ts($datetime)
  * @param int $ts timestamp
  * @return string ISO 8601 date format
  */
-function ts_to_iso8601($ts)
+function ts_to_iso8601($ts): string
 {
     $tz = date('O', $ts);
     $tz = substr($tz, 0, -2) . ':' . substr($tz, -2);
@@ -52,9 +52,8 @@ function ts_to_iso8601($ts)
  * @param array $items each: title, link, description, html (bool -- wrap
  *        description in CDATA instead of escaping it), date (ISO 8601
  *        string), author, guid
- * @return string
  */
-function pwg_generate_rss2_feed($channel, $items)
+function pwg_generate_rss2_feed(array $channel, $items): string
 {
     $feed = '<?xml version="1.0" encoding="' . $channel['encoding'] . '"?>' . "\n";
     $feed .= "<rss version=\"2.0\">\n";

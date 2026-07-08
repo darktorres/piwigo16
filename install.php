@@ -234,7 +234,7 @@ if (isset($_POST['install'])) {
         $env_file = PHPWG_ROOT_PATH . pwg_test_mode_env_file();
         // Strip line-breaks to prevent .env injection via crafted POST values.
         $env_vals = array_map(
-            fn ($v) => str_replace(["\n", "\r", "\0"], '', $v),
+            fn ($v): string|array => str_replace(["\n", "\r", "\0"], '', $v),
             [$dbhost, $dbuser, $dbpasswd, $dbname, $prefixeTable]
         );
         $env_body = 'PIWIGO_DB_HOST=' . $env_vals[0] . "\n" . 'PIWIGO_DB_USER=' . $env_vals[1] . "\n"

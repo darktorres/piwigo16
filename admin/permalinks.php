@@ -6,7 +6,9 @@
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-
+/**
+ * @return mixed[]
+ */
 function parse_sort_variables(
     $sortable_by,
     $default_field,
@@ -14,7 +16,7 @@ function parse_sort_variables(
     $get_rejects,
     $template_var,
     $anchor = ''
-) {
+): array {
     global $template;
 
     $url_components = parse_url((string) $_SERVER['REQUEST_URI']);

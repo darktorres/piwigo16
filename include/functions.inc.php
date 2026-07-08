@@ -24,7 +24,7 @@ include_once PHPWG_ROOT_PATH . 'include/derivative.inc.php';
  *
  * @return int
  */
-function micro_seconds()
+function micro_seconds(): string
 {
     $t1 = explode(' ', microtime());
     $t2 = explode('.', $t1[0]);
@@ -36,10 +36,8 @@ function micro_seconds()
  * returns a float value coresponding to the number of seconds since
  * the unix epoch (1st January 1970) and the microseconds are precised
  * e.g. 1052343429.89276600
- *
- * @return float
  */
-function get_moment()
+function get_moment(): float
 {
     return microtime(true);
 }
@@ -52,7 +50,7 @@ function get_moment()
  * @param float $end
  * @return string "$TIME s"
  */
-function get_elapsed_time($start, $end)
+function get_elapsed_time($start, $end): string
 {
     return number_format($end - $start, 3, '.', ' ') . ' s';
 }
@@ -61,9 +59,8 @@ function get_elapsed_time($start, $end)
  * returns the part of the string after the last "."
  *
  * @param string $filename
- * @return string
  */
-function get_extension($filename)
+function get_extension($filename): string
 {
     return substr(strrchr($filename, '.'), 1, strlen($filename));
 }
@@ -99,9 +96,8 @@ define('MKGETDIR_DEFAULT', MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR
  *
  * @param string $dir
  * @param int $flags combination of MKGETDIR_xxx
- * @return bool
  */
-function mkgetdir($dir, $flags = MKGETDIR_DEFAULT)
+function mkgetdir($dir, $flags = MKGETDIR_DEFAULT): bool
 {
     if (! is_dir($dir)) {
         global $conf;
@@ -136,7 +132,7 @@ function mkgetdir($dir, $flags = MKGETDIR_DEFAULT)
  *
  * @return int *0* if _$str_ is ASCII, *1* if UTF-8, *-1* otherwise
  */
-function qualify_utf8($Str)
+function qualify_utf8($Str): int
 {
     $ret = 0;
     for ($i = 0; $i < strlen((string) $Str); $i++) {
@@ -433,7 +429,7 @@ if (function_exists('mb_strtolower') && defined('PWG_CHARSET')) {
  * @param string $str
  * @return string
  */
-function str2url($str)
+function str2url($str): string|array
 {
     $str = $safe = pwg_transliterate($str);
     $str = preg_replace('/[^\x80-\xffa-z0-9_\s\'\:\/\[\],-]/', '', $str);
@@ -452,7 +448,7 @@ function str2url($str)
  *
  * @return string[]
  */
-function get_languages()
+function get_languages(): array
 {
     $query = '
 SELECT id, name
@@ -503,9 +499,8 @@ function do_log($image_id = null, $image_type = null)
  *
  * @param int $image_id
  * @param string $image_type
- * @return bool
  */
-function pwg_log($image_id = null, $image_type = null, $format_id = null)
+function pwg_log($image_id = null, $image_type = null, $format_id = null): bool
 {
     global $conf, $user, $page;
 
@@ -624,7 +619,7 @@ INSERT INTO ' . HISTORY_TABLE . '
     return true;
 }
 
-function pwg_activity($object, $object_id, $action, $details = [])
+function pwg_activity($object, $object_id, $action, array $details = []): void
 {
     global $user;
 
@@ -1068,7 +1063,7 @@ function transform_date($original, $format_in, $format_out, $default = null)
  *
  * @param string $string
  */
-function pwg_debug($string)
+function pwg_debug($string): void
 {
     global $debug,$t2,$page;
 
@@ -1089,7 +1084,7 @@ function pwg_debug($string)
  *
  * @param string $url
  */
-function redirect_http($url)
+function redirect_http($url): void
 {
     if (ob_get_length() !== false) {
         ob_clean();
@@ -1111,7 +1106,7 @@ function redirect_http($url)
  * @param string $msg
  * @param int $refresh_time
  */
-function redirect_html($url, $msg = '', $refresh_time = 0)
+function redirect_html($url, $msg = '', $refresh_time = 0): void
 {
     global $user, $template, $lang_info, $conf, $lang, $t2, $page, $debug;
 
@@ -1163,7 +1158,7 @@ function redirect_html($url, $msg = '', $refresh_time = 0)
  * @param string $msg
  * @param int $refresh_time
  */
-function redirect($url, $msg = '', $refresh_time = 0)
+function redirect($url, $msg = '', $refresh_time = 0): void
 {
     global $conf;
 
@@ -1220,9 +1215,8 @@ SELECT
  * check if a theme is installed (directory exsists)
  *
  * @param string $theme_id
- * @return bool
  */
-function check_theme_installed($theme_id)
+function check_theme_installed($theme_id): bool
 {
     global $conf;
 
@@ -1234,9 +1228,8 @@ function check_theme_installed($theme_id)
  *
  * @param string $path
  * @param string $representative_ext
- * @return string
  */
-function original_to_representative($path, $representative_ext)
+function original_to_representative($path, $representative_ext): string
 {
     $pos = strrpos($path, '/');
     $path = substr_replace($path, 'pwg_representative/', $pos + 1, 0);
@@ -1249,9 +1242,8 @@ function original_to_representative($path, $representative_ext)
  *
  * @param string $path
  * @param string $format_ext
- * @return string
  */
-function original_to_format($path, $format_ext)
+function original_to_format($path, $format_ext): string
 {
     $pos = strrpos($path, '/');
     $path = substr_replace($path, 'pwg_format/', $pos + 1, 0);
@@ -1265,7 +1257,7 @@ function original_to_format($path, $format_ext)
  * @param array $element_info element information from db (at least 'path')
  * @return string
  */
-function get_element_path($element_info)
+function get_element_path(array $element_info)
 {
     $path = $element_info['path'];
     if (! url_is_remote($path)) {
@@ -1279,7 +1271,7 @@ function get_element_path($element_info)
  *
  * @param int[] $elements_id
  */
-function fill_caddie($elements_id)
+function fill_caddie($elements_id): void
 {
     global $user;
 
@@ -1313,7 +1305,7 @@ SELECT element_id
  * @param string $filename
  * @return string name
  */
-function get_name_from_file($filename)
+function get_name_from_file($filename): string
 {
     return str_replace('_', ' ', get_filename_wo_extension($filename));
 }
@@ -1352,9 +1344,8 @@ function l10n($key)
  * @param string $singular_key
  * @param string $plural_key
  * @param int $decimal
- * @return string
  */
-function l10n_dec($singular_key, $plural_key, $decimal)
+function l10n_dec($singular_key, $plural_key, $decimal): string
 {
     global $lang_info;
 
@@ -1377,7 +1368,7 @@ function l10n_dec($singular_key, $plural_key, $decimal)
  *   if args is a array, each values are used on sprintf
  * @return string
  */
-function get_l10n_args($key, $args = '')
+function get_l10n_args($key, $args = ''): array
 {
     if (is_array($args)) {
         $key_arg = array_merge([$key], $args);
@@ -1396,9 +1387,8 @@ function get_l10n_args($key, $args = '')
  *
  * @param array $key_args one l10n_args element or array of l10n_args elements
  * @param string $sep used when translated elements are concatened
- * @return string
  */
-function l10n_args($key_args, $sep = "\n")
+function l10n_args($key_args, $sep = "\n"): string
 {
     if (is_array($key_args)) {
         foreach ($key_args as $key => $element) {
@@ -1459,7 +1449,7 @@ SELECT ' . $conf['user_fields']['email'] . '
  *
  * @param string $condition SQL condition
  */
-function load_conf_from_db($condition = '', $die_on_condition_with_no_result = true)
+function load_conf_from_db($condition = '', $die_on_condition_with_no_result = true): void
 {
     global $conf;
 
@@ -1492,10 +1482,8 @@ SELECT param, value
  * Is the config table currentable writeable?
  *
  * @since 14
- *
- * @return bool
  */
-function pwg_is_dbconf_writeable()
+function pwg_is_dbconf_writeable(): bool
 {
     [$param, $value] = ['pwg_is_dbconf_writeable_' . generate_key(12), date('c') . ' ' . generate_key(20)];
 
@@ -1519,7 +1507,7 @@ function pwg_is_dbconf_writeable()
  * @param callable $parser function to apply to the value before save in database
  * (eg: serialize, json_encode) will not be applied to *$conf* if *$parser* is *true*
  */
-function conf_update_param($param, $value, $updateGlobal = false, $parser = null)
+function conf_update_param($param, $value, $updateGlobal = false, $parser = null): void
 {
     if ($parser != null) {
         $dbValue = call_user_func($parser, $value);
@@ -1550,7 +1538,7 @@ INSERT INTO
  *
  * @param string|string[] $params
  */
-function conf_delete_param($params)
+function conf_delete_param($params): void
 {
     global $conf;
 
@@ -1627,7 +1615,7 @@ function safe_json_decode($value)
  */
 function prepend_append_array_items($array, $prepend_str, $append_str)
 {
-    array_walk($array, function (&$value, $key) use ($prepend_str, $append_str) { $value = "{$prepend_str}{$value}{$append_str}"; });
+    array_walk($array, function (&$value, $key) use ($prepend_str, $append_str): void { $value = "{$prepend_str}{$value}{$append_str}"; });
     return $array;
 }
 
@@ -1638,10 +1626,9 @@ function prepend_append_array_items($array, $prepend_str, $append_str)
  * @param string $query
  * @param string $keyname
  * @param string $valuename
- * @return array
  */
 #[\Deprecated(message: '2.6')]
-function simple_hash_from_query($query, $keyname, $valuename)
+function simple_hash_from_query($query, $keyname, $valuename): array
 {
     return query2array($query, $keyname, $valuename);
 }
@@ -1652,10 +1639,9 @@ function simple_hash_from_query($query, $keyname, $valuename)
  *
  * @param string $query
  * @param string $keyname
- * @return array
  */
 #[\Deprecated(message: '2.6')]
-function hash_from_query($query, $keyname)
+function hash_from_query($query, $keyname): array
 {
     return query2array($query, $keyname);
 }
@@ -1667,10 +1653,9 @@ function hash_from_query($query, $keyname)
  *
  * @param string $query
  * @param string $fieldname
- * @return array
  */
 #[\Deprecated(message: '2.6')]
-function array_from_query($query, $fieldname = false)
+function array_from_query($query, $fieldname = false): array
 {
     if ($fieldname === false) {
         return query2array($query);
@@ -1682,10 +1667,8 @@ function array_from_query($query, $fieldname = false)
 /**
  * Return the basename of the current script.
  * The lowercase case filename of the current script without extension
- *
- * @return string
  */
-function script_basename()
+function script_basename(): string
 {
     global $conf;
 
@@ -1728,9 +1711,8 @@ function get_filter_page_value($value_name)
 
 /**
  * return the character set used by Piwigo
- * @return string
  */
-function get_pwg_charset()
+function get_pwg_charset(): string
 {
     $pwg_charset = 'utf-8';
     if (defined('PWG_CHARSET')) {
@@ -1777,9 +1759,8 @@ function get_parent_language($lang_id = null)
  *     @option bool|string force_fallback - force pre-loading of another language
  *        default language if *true* or specified language
  *     @option bool local - if true load file from local directory
- * @return bool|string
  */
-function load_language($filename, $dirname = '', $options = [])
+function load_language($filename, $dirname = '', array $options = []): string|bool
 {
     global $user, $language_files;
 
@@ -1920,7 +1901,7 @@ function convert_charset($str, $source_charset, $dest_charset)
  *
  * @param string $dir
  */
-function secure_directory($dir)
+function secure_directory($dir): void
 {
     $file = $dir . '/index.htm';
     if (! file_exists($file)) {
@@ -1933,9 +1914,8 @@ function secure_directory($dir)
  *
  * @param int $valid_after_seconds - key validity start time from now
  * @param string $aditionnal_data_to_hash
- * @return string
  */
-function get_ephemeral_key($valid_after_seconds, $aditionnal_data_to_hash = '')
+function get_ephemeral_key($valid_after_seconds, $aditionnal_data_to_hash = ''): string
 {
     global $conf;
     $time = round(microtime(true), 1);
@@ -1952,21 +1932,20 @@ function get_ephemeral_key($valid_after_seconds, $aditionnal_data_to_hash = '')
  *
  * @param string $key
  * @param string $aditionnal_data_to_hash
- * @return bool
  */
-function verify_ephemeral_key($key, $aditionnal_data_to_hash = '')
+function verify_ephemeral_key($key, $aditionnal_data_to_hash = ''): bool
 {
     global $conf;
     $time = microtime(true);
-    $key = explode(':', @$key);
-    if (count($key) != 3
-        or $key[0] > $time - (float) $key[1] // page must have been retrieved more than X sec ago
-        or $key[0] < $time - 3600 // 60 minutes expiration
+    $key_parts = explode(':', (string) $key);
+    if (count($key_parts) != 3
+        or $key_parts[0] > $time - (float) $key_parts[1] // page must have been retrieved more than X sec ago
+        or $key_parts[0] < $time - 3600 // 60 minutes expiration
         or hash_hmac(
             'md5',
-            $key[0] . substr((string) $_SERVER['REMOTE_ADDR'], 0, 5) . $key[1] . $aditionnal_data_to_hash,
+            $key_parts[0] . substr((string) $_SERVER['REMOTE_ADDR'], 0, 5) . $key_parts[1] . $aditionnal_data_to_hash,
             (string) $conf['secret_key']
-        ) != $key[2]
+        ) != $key_parts[2]
     ) {
         return false;
     }
@@ -1981,9 +1960,8 @@ function verify_ephemeral_key($key, $aditionnal_data_to_hash = '')
  * @param int $nb_element_page
  * @param bool $clean_url
  * @param string $param_name
- * @return array
  */
-function create_navigation_bar($url, $nb_element, $start, $nb_element_page, $clean_url = false, $param_name = 'start')
+function create_navigation_bar($url, $nb_element, $start, $nb_element_page, $clean_url = false, $param_name = 'start'): array
 {
     global $conf;
 
@@ -2038,7 +2016,7 @@ function create_navigation_bar($url, $nb_element, $start, $nb_element_page, $cle
  * @param bool $is_child_date
  * @return array
  */
-function get_icon($date, $is_child_date = false)
+function get_icon($date, $is_child_date = false): false|array
 {
     global $cache, $user;
 
@@ -2077,7 +2055,7 @@ function get_icon($date, $is_child_date = false)
  * if pwg_token is empty action doesn't require token
  * else pwg_token is compare to server token
  */
-function check_pwg_token()
+function check_pwg_token(): void
 {
     if (! empty($_REQUEST['pwg_token'])) {
         if (get_pwg_token() != $_REQUEST['pwg_token']) {
@@ -2090,10 +2068,8 @@ function check_pwg_token()
 
 /**
  * get pwg_token used to prevent csrf attacks
- *
- * @return string
  */
-function get_pwg_token()
+function get_pwg_token(): string
 {
     global $conf;
 
@@ -2104,12 +2080,11 @@ function get_pwg_token()
  * breaks the script execution if the given value doesn't match the given
  * pattern. This should happen only during hacking attempts.
  * @param string $param_name
- * @param array $param_array
  * @param bool $is_array
  * @param string $pattern
  * @param bool $mandatory
  */
-function check_input_parameter($param_name, $param_array, $is_array, $pattern, $mandatory = false)
+function check_input_parameter($param_name, array $param_array, $is_array, $pattern, $mandatory = false)
 {
     $param_value = null;
     if (isset($param_array[$param_name])) {
@@ -2146,7 +2121,7 @@ function check_input_parameter($param_name, $param_array, $is_array, $pattern, $
  *
  * @return string[]
  */
-function get_privacy_level_options()
+function get_privacy_level_options(): array
 {
     global $conf;
 
@@ -2170,9 +2145,8 @@ function get_privacy_level_options()
  * return the branch from the version. For example version 11.1.2 is on branch 11
  *
  * @param string $version
- * @return string
  */
-function get_branch_from_version($version)
+function get_branch_from_version($version): string
 {
     // the algorithm is a bit complicated to just retrieve the first digits before
     // the first ".". It's because before version 11.0.0, we used to take the 2 first
@@ -2253,9 +2227,8 @@ function url_check_format($url)
  * check email format
  *
  * @param string $mail_address
- * @return bool
  */
-function email_check_format($mail_address)
+function email_check_format($mail_address): bool
 {
     return filter_var($mail_address, FILTER_VALIDATE_EMAIL) !== false;
 }
@@ -2314,9 +2287,9 @@ SELECT COUNT(DISTINCT(com.id))
  * @param string $b
  * @param string $op
  */
-function safe_version_compare($a, $b, $op = null)
+function safe_version_compare($a, $b, $op = null): int|bool
 {
-    $replace_chars = (fn ($m) => ord(strtolower((string) $m[1])[0]));
+    $replace_chars = (fn ($m): int => ord(strtolower((string) $m[1])[0]));
 
     // add dot before groups of letters (version_compare does the same thing)
     $a = preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $a);
@@ -2338,7 +2311,7 @@ function safe_version_compare($a, $b, $op = null)
  *
  * @since 12
  */
-function check_lounge()
+function check_lounge(): void
 {
     global $conf;
 
@@ -2380,7 +2353,7 @@ SELECT
  *
  * @since 15
  */
-function send_piwigo_infos()
+function send_piwigo_infos(): void
 {
     global $logger, $conf;
 
@@ -2797,7 +2770,7 @@ SELECT
     $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] executed in ' . get_elapsed_time($start_time, get_moment()));
 }
 
-function send_piwigo_infos_retry_later($wait_time)
+function send_piwigo_infos_retry_later($wait_time): void
 {
     global $conf, $logger;
 
@@ -2809,7 +2782,7 @@ function send_piwigo_infos_retry_later($wait_time)
     $logger->info('[' . __FUNCTION__ . '] new send_piwigo_infos_last_notice=' . $conf['send_piwigo_infos_last_notice']);
 }
 
-function pwg_unique_exec_begins($token_name, $timeout = 60)
+function pwg_unique_exec_begins($token_name, $timeout = 60): false|string
 {
     global $conf, $logger;
 
@@ -2844,7 +2817,7 @@ INSERT IGNORE
     return $exec_id;
 }
 
-function pwg_unique_exec_is_running($token_name)
+function pwg_unique_exec_is_running($token_name): bool
 {
     $query = '
 SELECT
@@ -2857,7 +2830,7 @@ SELECT
     return $counter > 0;
 }
 
-function pwg_unique_exec_ends($token_name)
+function pwg_unique_exec_ends($token_name): void
 {
     global $logger;
 
@@ -2880,7 +2853,7 @@ function pwg_unique_exec_ends($token_name)
  *
  * @return array(string, ?string)
  */
-function get_container_info()
+function get_container_info(): array
 {
     // Check if OS is Linux and PHP doesn't restrict opening files
     if ((strtoupper(substr(PHP_OS, 0, 5)) === 'LINUX' and empty(ini_get('open_basedir')))) {
@@ -2932,9 +2905,8 @@ function get_container_info()
  * Possible values : YYYY-MM-DD HH-MM-SS or YYYY-MM-DD
  *
  * @since 16.3
- * @return bool
  */
-function is_valid_mysql_datetime(string $datetime)
+function is_valid_mysql_datetime(string $datetime): bool
 {
     // first we check the full date+time
     $format = 'Y-m-d H:i:s';

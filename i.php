@@ -32,13 +32,13 @@ $logger = new Logger([
     'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf['db_password']) . '.txt',
 ]);
 
-function trigger_notify() {}
-function get_extension($filename)
+function trigger_notify(): void {}
+function get_extension($filename): string
 {
     return substr(strrchr((string) $filename, '.'), 1, strlen((string) $filename));
 }
 
-function mkgetdir($dir)
+function mkgetdir($dir): bool
 {
     if (! is_dir($dir)) {
         global $conf;
@@ -63,7 +63,7 @@ function mkgetdir($dir)
 
 // end fast bootstrap
 
-function ierror($msg, $code)
+function ierror($msg, $code): void
 {
     global $logger;
     if ($code == 301 || $code == 302) {
@@ -96,14 +96,14 @@ function ierror($msg, $code)
     exit;
 }
 
-function time_step(&$step)
+function time_step(&$step): int
 {
     $tmp = $step;
     $step = microtime(true);
     return intval(1000 * ($step - $tmp));
 }
 
-function url_to_size($s)
+function url_to_size($s): array
 {
     $pos = strpos((string) $s, 'x');
     if ($pos === false) {
@@ -112,7 +112,7 @@ function url_to_size($s)
     return [(int) substr((string) $s, 0, $pos), (int) substr((string) $s, $pos + 1)];
 }
 
-function parse_custom_params($tokens)
+function parse_custom_params($tokens): \DerivativeParams
 {
     if (count($tokens) < 1) {
         ierror('Empty array while parsing Sizing', 400);
@@ -142,7 +142,7 @@ function parse_custom_params($tokens)
     return new DerivativeParams(new SizingParams($size, $crop, $min_size));
 }
 
-function parse_request()
+function parse_request(): void
 {
     global $conf, $page;
 
@@ -234,7 +234,7 @@ function parse_request()
     $page['src_url'] = $page['root_path'] . $page['src_location'];
 }
 
-function try_switch_source(DerivativeParams $params, $original_mtime)
+function try_switch_source(DerivativeParams $params, $original_mtime): bool
 {
     global $page;
     if (! isset($page['original_size'])) {
@@ -307,7 +307,7 @@ function try_switch_source(DerivativeParams $params, $original_mtime)
     return false;
 }
 
-function send_derivative($expires)
+function send_derivative($expires): void
 {
     global $page;
 

@@ -28,7 +28,7 @@ if (
  * It's a copy of function find_available_feed_id
  * @return string nbm identifier
  */
-function find_available_check_key()
+function find_available_check_key(): string
 {
     while (true) {
         $key = generate_key(16);
@@ -64,9 +64,9 @@ function check_sendmail_timeout()
  * Add quote to all elements of check_key_list
  * @return quoted check key list
  */
-function quote_check_key_list($check_key_list = [])
+function quote_check_key_list($check_key_list = []): array
 {
-    return array_map(fn ($s) => '\'' . $s . '\'', $check_key_list);
+    return array_map(fn ($s): string => '\'' . $s . '\'', $check_key_list);
 }
 
 /*
@@ -76,7 +76,10 @@ function quote_check_key_list($check_key_list = [])
  *
  * return array of users
  */
-function get_user_notifications($action, $check_key_list = [], $enabled_filter_value = '')
+/**
+ * @return mixed[]
+ */
+function get_user_notifications($action, $check_key_list = [], $enabled_filter_value = ''): array
 {
     global $conf;
 
@@ -148,7 +151,7 @@ order by';
  *
  * Return none
  */
-function begin_users_env_nbm($is_to_send_mail = false)
+function begin_users_env_nbm($is_to_send_mail = false): void
 {
     global $user, $lang, $lang_info, $conf, $env_nbm;
 
@@ -180,7 +183,7 @@ function begin_users_env_nbm($is_to_send_mail = false)
  *
  * Return none
  */
-function end_users_env_nbm()
+function end_users_env_nbm(): void
 {
     global $user, $lang, $lang_info, $env_nbm;
 
@@ -210,7 +213,7 @@ function end_users_env_nbm()
  *
  * Return none
  */
-function set_user_on_env_nbm(&$nbm_user, $is_action_send)
+function set_user_on_env_nbm(array &$nbm_user, $is_action_send): void
 {
     global $user, $lang, $lang_info, $env_nbm;
 
@@ -229,7 +232,7 @@ function set_user_on_env_nbm(&$nbm_user, $is_action_send)
  *
  * Return none
  */
-function unset_user_on_env_nbm()
+function unset_user_on_env_nbm(): void
 {
     global $env_nbm;
 
@@ -242,7 +245,7 @@ function unset_user_on_env_nbm()
  *
  * Return none
  */
-function inc_mail_sent_success($nbm_user)
+function inc_mail_sent_success(array $nbm_user): void
 {
     global $page, $env_nbm;
 
@@ -255,7 +258,7 @@ function inc_mail_sent_success($nbm_user)
  *
  * Return none
  */
-function inc_mail_sent_failed($nbm_user)
+function inc_mail_sent_failed(array $nbm_user): void
 {
     global $page, $env_nbm;
 
@@ -268,7 +271,7 @@ function inc_mail_sent_failed($nbm_user)
  *
  * Return none
  */
-function display_counter_info()
+function display_counter_info(): void
 {
     global $page, $env_nbm;
 
@@ -299,7 +302,7 @@ function display_counter_info()
     }
 }
 
-function assign_vars_nbm_mail_content($nbm_user)
+function assign_vars_nbm_mail_content(array $nbm_user): void
 {
     global $env_nbm;
 
@@ -330,7 +333,7 @@ function assign_vars_nbm_mail_content($nbm_user)
  * check_key list where action will be done
  * @return check_key list treated
  */
-function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_subscribe = false, $check_key_list = [])
+function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_subscribe = false, $check_key_list = []): array
 {
     global $conf, $page, $env_nbm, $conf;
 
@@ -469,7 +472,7 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
  * check_key list where action will be done
  * @return check_key list treated
  */
-function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = [])
+function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = []): array
 {
     return do_subscribe_unsubscribe_notification_by_mail($is_admin_request, false, $check_key_list);
 }
@@ -479,7 +482,7 @@ function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = [
  * check_key list where action will be done
  * @return check_key list treated
  */
-function subscribe_notification_by_mail($is_admin_request, $check_key_list = [])
+function subscribe_notification_by_mail($is_admin_request, $check_key_list = []): array
 {
     return do_subscribe_unsubscribe_notification_by_mail($is_admin_request, true, $check_key_list);
 }

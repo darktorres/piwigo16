@@ -44,7 +44,7 @@ $must_repost = false;
  * @param $post_keyname: key of check_key post array
  * @param $check_key_treated: array of check_key treated
  */
-function do_timeout_treatment($post_keyname, $check_key_treated = [])
+function do_timeout_treatment($post_keyname, $check_key_treated = []): void
 {
     global $env_nbm, $base_url, $page, $must_repost;
 
@@ -74,7 +74,7 @@ function do_timeout_treatment($post_keyname, $check_key_treated = [])
  * Get the authorized_status for each tab
  * return corresponding status
  */
-function get_tab_status($mode)
+function get_tab_status($mode): int
 {
     $result = ACCESS_WEBMASTER;
     $result = match ($mode) {
@@ -88,7 +88,7 @@ function get_tab_status($mode)
 /*
  * Inserting News users
  */
-function insert_new_data_user_mail_notification()
+function insert_new_data_user_mail_notification(): void
 {
     global $conf, $page, $env_nbm;
 
@@ -187,7 +187,10 @@ function render_global_customize_mail_content($customize_mail_content)
  * Return list of "selected" users for 'list_to_send'
  * Return list of "treated" check_key for 'send'
  */
-function do_action_send_mail_notification($action = 'list_to_send', $check_key_list = [], $customize_mail_content = '')
+/**
+ * @return mixed[]
+ */
+function do_action_send_mail_notification($action = 'list_to_send', $check_key_list = [], $customize_mail_content = ''): array
 {
     global $conf, $page, $user, $lang_info, $lang, $env_nbm;
     $return_list = [];

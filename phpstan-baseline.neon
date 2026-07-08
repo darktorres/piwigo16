@@ -205,12 +205,6 @@ parameters:
 			path: include/functions_tag.inc.php
 
 		-
-			message: '#^Function check_status\(\) should return int but return statement is missing\.$#'
-			identifier: return.missing
-			count: 2
-			path: include/functions_user.inc.php
-
-		-
 			message: '#^Call to static method display_debug\(\) on an unknown class Smarty_Internal_Debug\.$#'
 			identifier: class.notFound
 			count: 1

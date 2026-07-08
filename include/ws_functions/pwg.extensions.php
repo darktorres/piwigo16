@@ -6,13 +6,13 @@
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-
 /**
  * API method
  * Returns the list of all plugins
  * @param mixed[] $params
+ * @return array{id: mixed, name: mixed, version: mixed, state: mixed, description: mixed}[]
  */
-function ws_plugins_getList($params, $service)
+function ws_plugins_getList($params, $service): array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/plugins.class.php';
 
@@ -47,7 +47,7 @@ function ws_plugins_getList($params, $service)
  *    @option string plugin
  *    @option string pwg_token
  */
-function ws_plugins_performAction($params, $service)
+function ws_plugins_performAction(array $params, $service): \PwgError|true
 {
     global $template, $conf;
 
@@ -87,7 +87,7 @@ function ws_plugins_performAction($params, $service)
  *    @option string theme
  *    @option string pwg_token
  */
-function ws_themes_performAction($params, $service)
+function ws_themes_performAction(array $params, $service): \PwgError|true
 {
     global $template, $conf;
 
@@ -125,7 +125,7 @@ function ws_themes_performAction($params, $service)
  *    @option string pwg_token
  *    @option bool reactivate (optional - undocumented)
  */
-function ws_extensions_update($params, $service)
+function ws_extensions_update(array $params, $service)
 {
     global $conf;
 
@@ -225,7 +225,7 @@ function ws_extensions_update($params, $service)
  *    @option bool reset
  *    @option string pwg_token
  */
-function ws_extensions_ignoreupdate($params, $service)
+function ws_extensions_ignoreupdate(array $params, $service): \PwgError|true
 {
     global $conf;
 
@@ -278,7 +278,7 @@ function ws_extensions_ignoreupdate($params, $service)
  * Checks for updates (core and extensions)
  * @param mixed[] $params
  */
-function ws_extensions_checkupdates($params, $service)
+function ws_extensions_checkupdates($params, $service): array
 {
     global $conf;
 

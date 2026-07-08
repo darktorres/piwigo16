@@ -12,10 +12,8 @@
  * If Piwigo is installed on :
  * http://domain.org/meeting/gallery/
  * it will return : "/meeting/gallery"
- *
- * @return string
  */
-function cookie_path()
+function cookie_path(): ?string
 {
     if (isset($_SERVER['REDIRECT_SCRIPT_NAME']) and
          ! empty($_SERVER['REDIRECT_SCRIPT_NAME'])) {
@@ -67,9 +65,8 @@ function cookie_path()
  *
  * @param mixed $value
  * @param int|null $expire
- * @return bool
  */
-function pwg_set_cookie_var($var, $value, $expire = null)
+function pwg_set_cookie_var($var, $value, $expire = null): bool
 {
     if ($value == null or $expire === 0) {
         unset($_COOKIE['pwg_' . $var]);

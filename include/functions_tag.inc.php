@@ -37,7 +37,7 @@ function get_nb_available_tags()
  *
  * @return array [id, name, counter, url_name]
  */
-function get_available_tags($tag_ids = [])
+function get_available_tags($tag_ids = []): array
 {
     global $persistent_cache, $user;
 
@@ -113,7 +113,7 @@ SELECT *
  *
  * @return array [id, name, url_name]
  */
-function get_all_tags()
+function get_all_tags(): array
 {
     $query = '
 SELECT *
@@ -192,9 +192,8 @@ function add_level_to_tags($tags)
  * @param string $mode
  * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
  * @param string $order_by - optionally overwrite default photo order
- * @return array
  */
-function get_image_ids_for_tags($tag_ids, $mode = 'AND', $extra_images_where_sql = '', $order_by = '', $use_permissions = true)
+function get_image_ids_for_tags($tag_ids, $mode = 'AND', $extra_images_where_sql = '', $order_by = '', $use_permissions = true): array
 {
     global $conf;
     if (empty($tag_ids)) {
@@ -245,7 +244,7 @@ SELECT id
  * @param int[] $excluded_tag_ids
  * @return array [id, name, counter, url_name]
  */
-function get_common_tags($items, $max_tags, $excluded_tag_ids = [])
+function get_common_tags($items, $max_tags, $excluded_tag_ids = []): array
 {
     if (empty($items)) {
         return [];
@@ -287,7 +286,7 @@ SELECT t.*, count(*) AS counter
  * @param string[] $names
  * @return array [id, name, url_name]
  */
-function find_tags($ids = [], $url_names = [], $names = [])
+function find_tags($ids = [], $url_names = [], $names = []): array
 {
     $where_clauses = [];
     if (! empty($ids)) {
@@ -314,12 +313,12 @@ SELECT *
     return query2array($query);
 }
 
-function tags_id_compare($a, $b)
+function tags_id_compare(array $a, array $b): int
 {
     return ($a['id'] < $b['id']) ? -1 : 1;
 }
 
-function tags_counter_compare($a, $b)
+function tags_counter_compare(array $a, array $b): int
 {
     if ($a['counter'] == $b['counter']) {
         return tags_id_compare($a, $b);

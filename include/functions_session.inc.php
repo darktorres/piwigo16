@@ -41,9 +41,8 @@ if (isset($conf['session_save_handler'])
  * Characters used are a-z A-Z and numerical values.
  *
  * @param int $size
- * @return string
  */
-function generate_key($size)
+function generate_key($size): string
 {
     $bytes = random_bytes($size + 10);
 
@@ -65,7 +64,7 @@ function generate_key($size)
  * @param sring $name
  * @return true
  */
-function pwg_session_open($path, $name)
+function pwg_session_open($path, $name): bool
 {
     return true;
 }
@@ -75,17 +74,15 @@ function pwg_session_open($path, $name)
  *
  * @return true
  */
-function pwg_session_close()
+function pwg_session_close(): bool
 {
     return true;
 }
 
 /**
  * Returns a hash from current user IP
- *
- * @return string
  */
-function get_remote_addr_session_hash()
+function get_remote_addr_session_hash(): string
 {
     global $conf;
 
@@ -129,7 +126,7 @@ SELECT data
  * @param sring $data
  * @return true
  */
-function pwg_session_write($session_id, $data)
+function pwg_session_write($session_id, $data): bool
 {
     // when the request is authenticated via api_key (PWG_API_KEY_REQUEST),
     // you do not want the session to be written to the database (no user session persistence)
@@ -152,7 +149,7 @@ REPLACE INTO ' . SESSIONS_TABLE . '
  * @param string $session_id
  * @return true
  */
-function pwg_session_destroy($session_id)
+function pwg_session_destroy($session_id): bool
 {
     $query = '
 DELETE
@@ -168,7 +165,7 @@ DELETE
  *
  * @return true
  */
-function pwg_session_gc()
+function pwg_session_gc(): bool
 {
     global $conf;
 
@@ -187,9 +184,8 @@ DELETE
  *
  * @param string $var
  * @param mixed $value
- * @return bool
  */
-function pwg_set_session_var($var, $value)
+function pwg_set_session_var($var, $value): bool
 {
     if (! isset($_SESSION)) {
         return false;
@@ -214,9 +210,8 @@ function pwg_get_session_var($var, $default = null)
  * Deletes a persistent variable for the current session.
  *
  * @param string $var
- * @return bool
  */
-function pwg_unset_session_var($var)
+function pwg_unset_session_var($var): bool
 {
     if (! isset($_SESSION)) {
         return false;
@@ -231,7 +226,7 @@ function pwg_unset_session_var($var)
  * @since 2.8
  * @param int $user_id
  */
-function delete_user_sessions($user_id)
+function delete_user_sessions($user_id): void
 {
     $query = '
 DELETE

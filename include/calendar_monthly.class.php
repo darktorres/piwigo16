@@ -19,7 +19,7 @@ class CalendarMonthly extends CalendarBase
      * @param string $inner_sql
      */
     #[\Override]
-    public function initialize($inner_sql)
+    public function initialize($inner_sql): void
     {
         parent::initialize($inner_sql);
         global $lang;
@@ -44,7 +44,7 @@ class CalendarMonthly extends CalendarBase
      *
      * @return bool false indicates that thumbnails where not included
      */
-    public function generate_category_content()
+    public function generate_category_content(): bool
     {
         global $conf, $page;
 
@@ -101,9 +101,8 @@ class CalendarMonthly extends CalendarBase
      * Returns a sql WHERE subquery for the date field.
      *
      * @param int $max_levels (e.g. 2=only year and month)
-     * @return string
      */
-    public function get_date_where($max_levels = 3)
+    public function get_date_where($max_levels = 3): string
     {
         global $page;
 
@@ -155,7 +154,7 @@ class CalendarMonthly extends CalendarBase
      * @param int $month
      * @return int[]
      */
-    protected function get_all_days_in_month($year, $month)
+    protected function get_all_days_in_month($year, $month): int
     {
         $md = [
             1 => 31,
@@ -187,11 +186,8 @@ class CalendarMonthly extends CalendarBase
 
     /**
      * Build global calendar and assign the result in _$tpl_var_
-     *
-     * @param array $tpl_var
-     * @return bool
      */
-    protected function build_global_calendar(&$tpl_var)
+    protected function build_global_calendar(array &$tpl_var): bool
     {
         global $page;
 
@@ -255,11 +251,8 @@ class CalendarMonthly extends CalendarBase
 
     /**
      * Build year calendar and assign the result in _$tpl_var_
-     *
-     * @param array $tpl_var
-     * @return bool
      */
-    protected function build_year_calendar(&$tpl_var)
+    protected function build_year_calendar(array &$tpl_var): bool
     {
         global $page;
 
@@ -318,11 +311,8 @@ class CalendarMonthly extends CalendarBase
 
     /**
      * Build month calendar and assign the result in _$tpl_var_
-     *
-     * @param array $tpl_var
-     * @return bool
      */
-    protected function build_month_calendar(&$tpl_var)
+    protected function build_month_calendar(array &$tpl_var): bool
     {
         global $page, $lang, $conf;
 

@@ -12,7 +12,7 @@ defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
  */
 class PwgBase32
 {
-    private static $map = [
+    private static array $map = [
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', //  7
         'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', // 15
         'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', // 23
@@ -20,7 +20,7 @@ class PwgBase32
         '=',  // padding char
     ];
 
-    private static $flippedMap = [
+    private static array $flippedMap = [
         'A' => '0',
         'B' => '1',
         'C' => '2',
@@ -60,7 +60,7 @@ class PwgBase32
      *
      * @return base32 encoded string
      */
-    public static function encode($input, $padding = true)
+    public static function encode($input, $padding = true): string
     {
         if (empty($input)) {
             return '';

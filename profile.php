@@ -121,7 +121,7 @@ SELECT ' . implode(',', $fields) . '
 }
 
 // ------------------------------------------------------ update & customization
-function save_profile_from_post($userdata, &$errors)
+function save_profile_from_post(array $userdata, &$errors): bool
 {
     global $conf, $page;
     $errors = [];
@@ -320,9 +320,8 @@ function save_profile_from_post($userdata, &$errors)
  *
  * @param string $url_action
  * @param string $url_redirect
- * @param array $userdata
  */
-function load_profile_in_template($url_action, $url_redirect, $userdata, $template_prefixe = null)
+function load_profile_in_template($url_action, $url_redirect, array $userdata, $template_prefixe = null): void
 {
     global $template, $conf, $user;
 

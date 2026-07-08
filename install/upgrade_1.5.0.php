@@ -19,7 +19,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
  * replace old style #images.keywords by #tags. Requires a big data
  * migration.
  */
-function tag_replace_keywords()
+function tag_replace_keywords(): void
 {
     // code taken from upgrades 19 and 22
 

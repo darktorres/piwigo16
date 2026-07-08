@@ -21,7 +21,7 @@ class c13y_internal
      *
      * @param object $c13y
      */
-    public function c13y_version($c13y)
+    public function c13y_version($c13y): void
     {
         global $conf;
 
@@ -58,7 +58,7 @@ class c13y_internal
      *
      * @param object $c13y
      */
-    public function c13y_exif($c13y)
+    public function c13y_exif($c13y): void
     {
         global $conf;
 
@@ -81,7 +81,7 @@ class c13y_internal
      *
      * @param object $c13y
      */
-    public function c13y_user($c13y)
+    public function c13y_user($c13y): void
     {
         global $conf;
 

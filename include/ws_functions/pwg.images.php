@@ -17,7 +17,7 @@
  * @param string $categories_string - "cat_id[,rank];cat_id[,rank]"
  * @param bool $replace_mode - removes old associations
  */
-function ws_add_image_category_relations($image_id, $categories_string, $replace_mode = false)
+function ws_add_image_category_relations($image_id, $categories_string, $replace_mode = false): true|\PwgError
 {
     // let's add links between the image and the categories
     //
@@ -240,7 +240,7 @@ function merge_chunks($output_filepath, $original_sum, $type)
  * will be the biggest (we could remove the thumb, but let's use the same
  * algorithm)
  */
-function remove_chunks($original_sum, $type)
+function remove_chunks($original_sum, $type): void
 {
     global $conf;
 
@@ -275,7 +275,7 @@ function remove_chunks($original_sum, $type)
  *    @option string content
  *    @option string key
  */
-function ws_images_addComment($params, $service)
+function ws_images_addComment(array $params, $service): \PwgError|array
 {
     global $conf;
 
@@ -341,7 +341,7 @@ SELECT DISTINCT image_id
  *    @option int comments_page
  *    @option int comments_per_page
  */
-function ws_images_getInfo($params, $service)
+function ws_images_getInfo(array $params, $service): \PwgError|array
 {
     global $user, $conf;
 
@@ -581,7 +581,7 @@ SELECT id, date, author, content
  *    @option int image_id
  *    @option float rate
  */
-function ws_images_rate($params, $service)
+function ws_images_rate(array $params, $service)
 {
     $query = '
 SELECT DISTINCT id
@@ -620,7 +620,7 @@ SELECT DISTINCT id
  *    @option int page
  *    @option string order (optional)
  */
-function ws_images_search($params, $service)
+function ws_images_search(array $params, $service): array
 {
     include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
 
@@ -704,7 +704,7 @@ SELECT *
  * @param mixed[] $params
  *    @option string query
  */
-function ws_images_filteredSearch_create($params, $service)
+function ws_images_filteredSearch_create(array $params, $service): \PwgError|array
 {
     global $user, $conf;
 
@@ -975,7 +975,7 @@ function ws_images_filteredSearch_create($params, $service)
  *    @option int image_id
  *    @option int level
  */
-function ws_images_setPrivacyLevel($params, $service)
+function ws_images_setPrivacyLevel(array $params, $service)
 {
     global $conf;
 
@@ -1008,7 +1008,7 @@ UPDATE ' . IMAGES_TABLE . '
  *    @option int category_id
  *    @option int rank
  */
-function ws_images_setRank($params, $service)
+function ws_images_setRank(array $params, $service): array|\PwgError
 {
     if (count($params['image_id']) > 1) {
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -1116,7 +1116,7 @@ UPDATE ' . IMAGE_CATEGORY_TABLE . '
  *    @option string type = 'file'
  *    @option int position
  */
-function ws_images_add_chunk($params, $service)
+function ws_images_add_chunk(array $params, $service)
 {
     global $conf, $logger;
 
@@ -1169,7 +1169,7 @@ function ws_images_add_chunk($params, $service)
  *    @option string type = 'file'
  *    @option string sum
  */
-function ws_images_addFile($params, $service)
+function ws_images_addFile(array $params, $service)
 {
     global $conf, $logger;
 
@@ -1255,7 +1255,7 @@ SELECT
  *    @option bool check_uniqueness
  *    @option int image_id (optional)
  */
-function ws_images_add($params, $service)
+function ws_images_add(array $params, $service): \PwgError|array
 {
     global $conf, $user, $logger;
 
@@ -1404,7 +1404,7 @@ SELECT id, name, permalink
  *    @option string|string[] tags
  *    @option int image_id (optional)
  */
-function ws_images_addSimple($params, $service)
+function ws_images_addSimple(array $params, $service): \PwgError|array
 {
     global $conf, $logger;
 
@@ -1533,7 +1533,7 @@ SELECT id, name, permalink
  *    @option string|string[] tags
  *    @option int image_id (optional)
  */
-function ws_images_upload($params, $service)
+function ws_images_upload(array $params, $service)
 {
     global $conf;
 
@@ -1750,7 +1750,7 @@ SELECT
  *    @option string tag_ids (optional) - "tag_id,tag_id"
  *    @option int image_id (optional)
  */
-function ws_images_uploadAsync($params, &$service)
+function ws_images_uploadAsync(array $params, &$service)
 {
     global $conf, $user, $logger;
 
@@ -1992,8 +1992,9 @@ SELECT COUNT(*)
  * @param mixed[] $params
  *    @option string md5sum_list (optional)
  *    @option string filename_list (optional)
+ * @return mixed[]
  */
-function ws_images_exist($params, $service)
+function ws_images_exist(array $params, $service): array
 {
     global $conf, $logger;
 
@@ -2060,7 +2061,7 @@ SELECT id, file
  * @param mixed[] $params
  *    @option string filename_list
  */
-function ws_images_formats_searchImage($params, $service)
+function ws_images_formats_searchImage(array $params, $service)
 {
     global $conf, $logger;
 
@@ -2083,7 +2084,7 @@ SELECT
     }
 
     // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example
-    usort($conf['format_ext'], fn ($a, $b) => strlen((string) $b) - strlen((string) $a));
+    usort($conf['format_ext'], fn ($a, $b): int => strlen((string) $b) - strlen((string) $a));
 
     $query = '
 SELECT
@@ -2153,7 +2154,7 @@ SELECT
  *    @option int format_id
  *    @option string pwg_token
  */
-function ws_images_formats_delete($params, $service)
+function ws_images_formats_delete(array $params, $service): \PwgError|bool
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2257,7 +2258,7 @@ DELETE FROM ' . IMAGE_FORMAT_TABLE . '
  *    @option int image_id
  *    @option string file_sum
  */
-function ws_images_checkFiles($params, $service)
+function ws_images_checkFiles(array $params, $service): \PwgError|array
 {
     global $logger;
 
@@ -2322,7 +2323,7 @@ SELECT path
  *    @option string single_value_mode
  *    @option string multiple_value_mode
  */
-function ws_images_setInfo($params, $service)
+function ws_images_setInfo(array $params, $service)
 {
     global $conf;
 
@@ -2475,7 +2476,7 @@ SELECT *
  *    @option int|int[] image_id
  *    @option string pwg_token
  */
-function ws_images_delete($params, $service)
+function ws_images_delete(array $params, $service): \PwgError|int
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2529,7 +2530,7 @@ function ws_images_checkUpload($params, $service)
  * @since 12
  * @param mixed[] $params
  */
-function ws_images_emptyLounge($params, $service)
+function ws_images_emptyLounge($params, $service): array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -2546,7 +2547,7 @@ function ws_images_emptyLounge($params, $service)
  * @since 12
  * @param mixed[] $params
  */
-function ws_images_uploadCompleted($params, $service)
+function ws_images_uploadCompleted(array $params, $service): \PwgError|array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -2609,7 +2610,7 @@ SELECT
  * @param mixed[] $params
  *    @option int block_size
  */
-function ws_images_setMd5sum($params, $service)
+function ws_images_setMd5sum(array $params, $service): \PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2637,7 +2638,7 @@ function ws_images_setMd5sum($params, $service)
  * @param mixed[] $params
  *    @option int image_id
  */
-function ws_images_syncMetadata($params, $service)
+function ws_images_syncMetadata(array $params, $service): \PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2693,7 +2694,7 @@ SELECT id
  * @param mixed[] $params
  *    @option int block_size
  */
-function ws_images_deleteOrphans($params, $service)
+function ws_images_deleteOrphans(array $params, $service): \PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2722,7 +2723,7 @@ function ws_images_deleteOrphans($params, $service)
  *    @option string action
  *    @option string pwg_token
  */
-function ws_images_setCategory($params, $service)
+function ws_images_setCategory(array $params, $service)
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');

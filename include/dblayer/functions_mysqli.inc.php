@@ -26,7 +26,7 @@ define('DB_RANDOM_FUNCTION', 'RAND');
  *
  * @throws Exception
  */
-function pwg_db_connect($host, $user, $password, $database)
+function pwg_db_connect($host, $user, $password, $database): void
 {
     global $mysqli;
 
@@ -66,7 +66,7 @@ function pwg_db_connect($host, $user, $password, $database)
 /**
  * Set charset for database connection.
  */
-function pwg_db_check_charset()
+function pwg_db_check_charset(): void
 {
     global $mysqli;
 
@@ -80,7 +80,7 @@ function pwg_db_check_charset()
 /**
  * Check MySQL version. Can call fatal_error().
  */
-function pwg_db_check_version()
+function pwg_db_check_version(): void
 {
     $current_mysql = pwg_get_db_version();
     if (version_compare($current_mysql, REQUIRED_MYSQL_VERSION, '<')) {
@@ -254,7 +254,7 @@ define('MASS_UPDATES_SKIP_EMPTY', 1);
  * @param array $datas - indexed by column names
  * @param int $flags - if MASS_UPDATES_SKIP_EMPTY, empty values do not overwrite existing ones
  */
-function mass_updates($tablename, $dbfields, $datas, $flags = 0)
+function mass_updates($tablename, array $dbfields, $datas, $flags = 0): void
 {
     if (count($datas) == 0) {
         return;
@@ -345,9 +345,9 @@ CREATE TABLE ' . $temporary_tablename . '
         mass_inserts($temporary_tablename, $all_fields, $datas);
 
         if ($flags & MASS_UPDATES_SKIP_EMPTY) {
-            $func_set = (fn ($s) => "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})");
+            $func_set = (fn ($s): string => "t1.{$s} = IFNULL(t2.{$s}, t1.{$s})");
         } else {
-            $func_set = (fn ($s) => "t1.{$s} = t2.{$s}");
+            $func_set = (fn ($s): string => "t1.{$s} = t2.{$s}");
         }
 
         // update of table by joining with temporary table
@@ -362,7 +362,7 @@ UPDATE ' . protect_column_name($tablename) . ' AS t1, ' . $temporary_tablename .
           implode(
               "\n    AND ",
               array_map(
-                  fn ($s) => "t1.{$s} = t2.{$s}",
+                  fn ($s): string => "t1.{$s} = t2.{$s}",
                   $dbfields['primary']
               )
           );
@@ -380,7 +380,7 @@ UPDATE ' . protect_column_name($tablename) . ' AS t1, ' . $temporary_tablename .
  * @param array $where
  * @param int $flags - if MASS_UPDATES_SKIP_EMPTY, empty values do not overwrite existing ones
  */
-function single_update($tablename, $datas, $where, $flags = 0)
+function single_update($tablename, $datas, $where, $flags = 0): void
 {
     if (count($datas) == 0) {
         return;
@@ -437,7 +437,7 @@ UPDATE ' . protect_column_name($tablename) . '
  * @param array $options
  *    - boolean ignore - use "INSERT IGNORE"
  */
-function mass_inserts($table_name, $dbfields, $datas, $options = [])
+function mass_inserts($table_name, $dbfields, $datas, array $options = []): void
 {
     $ignore = '';
     if (isset($options['ignore']) and $options['ignore']) {
@@ -496,7 +496,7 @@ INSERT ' . $ignore . ' INTO ' . protect_column_name($table_name) . '
  * @param array $options
  *    - boolean ignore - use "INSERT IGNORE"
  */
-function single_insert($table_name, $data, $options = [])
+function single_insert($table_name, $data, array $options = []): void
 {
     $ignore = '';
     if (isset($options['ignore']) and $options['ignore']) {
@@ -542,7 +542,7 @@ function protect_column_name($column_name)
 /**
  * Do maintenance on all Piwigo tables
  */
-function do_maintenance_all_tables()
+function do_maintenance_all_tables(): void
 {
     global $prefixeTable, $page;
 
@@ -587,13 +587,13 @@ function do_maintenance_all_tables()
     }
 }
 
-function pwg_db_concat($array)
+function pwg_db_concat($array): string
 {
     $string = implode(',', $array);
     return 'CONCAT(' . $string . ')';
 }
 
-function pwg_db_concat_ws($array, $separator)
+function pwg_db_concat_ws($array, $separator): string
 {
     $string = implode(',', $array);
     return 'CONCAT_WS(\'' . $separator . '\',' . $string . ')';
@@ -659,7 +659,7 @@ function boolean_to_string($var)
     }
 }
 
-function pwg_db_get_recent_period_expression($period, $date = 'CURRENT_DATE')
+function pwg_db_get_recent_period_expression($period, $date = 'CURRENT_DATE'): string
 {
     if ($date != 'CURRENT_DATE') {
         $date = '\'' . $date . '\'';
@@ -677,37 +677,37 @@ SELECT ' . pwg_db_get_recent_period_expression($period);
     return $d;
 }
 
-function pwg_db_get_flood_period_expression($seconds)
+function pwg_db_get_flood_period_expression($seconds): string
 {
     return 'SUBDATE(NOW(), INTERVAL ' . $seconds . ' SECOND)';
 }
 
-function pwg_db_get_hour($date)
+function pwg_db_get_hour($date): string
 {
     return 'HOUR(' . $date . ')';
 }
 
-function pwg_db_get_date_YYYYMM($date)
+function pwg_db_get_date_YYYYMM($date): string
 {
     return 'DATE_FORMAT(' . $date . ', \'%Y%m\')';
 }
 
-function pwg_db_get_date_MMDD($date)
+function pwg_db_get_date_MMDD($date): string
 {
     return 'DATE_FORMAT(' . $date . ', \'%m%d\')';
 }
 
-function pwg_db_get_year($date)
+function pwg_db_get_year($date): string
 {
     return 'YEAR(' . $date . ')';
 }
 
-function pwg_db_get_month($date)
+function pwg_db_get_month($date): string
 {
     return 'MONTH(' . $date . ')';
 }
 
-function pwg_db_get_week($date, $mode = null)
+function pwg_db_get_week($date, $mode = null): string
 {
     if ($mode) {
         return 'WEEK(' . $date . ', ' . $mode . ')';
@@ -716,22 +716,22 @@ function pwg_db_get_week($date, $mode = null)
     }
 }
 
-function pwg_db_get_dayofmonth($date)
+function pwg_db_get_dayofmonth($date): string
 {
     return 'DAYOFMONTH(' . $date . ')';
 }
 
-function pwg_db_get_dayofweek($date)
+function pwg_db_get_dayofweek($date): string
 {
     return 'DAYOFWEEK(' . $date . ')';
 }
 
-function pwg_db_get_weekday($date)
+function pwg_db_get_weekday($date): string
 {
     return 'WEEKDAY(' . $date . ')';
 }
 
-function pwg_db_date_to_ts($date)
+function pwg_db_date_to_ts($date): string
 {
     return 'UNIX_TIMESTAMP(' . $date . ')';
 }
@@ -740,7 +740,7 @@ function pwg_db_date_to_ts($date)
  * Returns (or send to standard output) the message concerning the
  * error occured for the last mysql query.
  */
-function my_error($header, $die)
+function my_error($header, $die): void
 {
     global $mysqli;
 
@@ -788,9 +788,8 @@ function my_error($header, $die)
  * @param string $query
  * @param string $key_name
  * @param string $value_name
- * @return array
  */
-function query2array($query, $key_name = null, $value_name = null)
+function query2array($query, $key_name = null, $value_name = null): array
 {
     $result = pwg_query($query);
     $data = [];

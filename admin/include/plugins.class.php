@@ -103,7 +103,7 @@ class plugins
      * @param string $plugin_id - plugin id
      * @param array $options - errors
      */
-    public function perform_action($action, $plugin_id, $options = [])
+    public function perform_action($action, $plugin_id, array $options = [])
     {
         global $conf;
 
@@ -276,7 +276,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
     /**
      * Get plugins defined in the plugin directory
      */
-    public function get_fs_plugins()
+    public function get_fs_plugins(): void
     {
         $dir = opendir(PHPWG_PLUGINS_PATH);
         while ($file = readdir($dir)) {
@@ -292,9 +292,8 @@ DELETE FROM ' . PLUGINS_TABLE . '
     /**
      * Load metadata of a plugin in `fs_plugins` array
      * @from 2.7
-     * @return false|array
      */
-    public function get_fs_plugin($plugin_id)
+    public function get_fs_plugin($plugin_id): array|false
     {
         $path = PHPWG_PLUGINS_PATH . $plugin_id;
 
@@ -364,7 +363,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
     /**
      * Sort fs_plugins
      */
-    public function sort_fs_plugins($order = 'name')
+    public function sort_fs_plugins($order = 'name'): void
     {
         switch ($order) {
             case 'name':
@@ -384,7 +383,10 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
     // Retrieve PEM versions
     // Beta test : return last version on PEM if the current version isn't known or else return the current and the last version
-    public function get_versions_to_check($beta_test = false, $version = PHPWG_VERSION)
+    /**
+     * @return mixed[]
+     */
+    public function get_versions_to_check($beta_test = false, $version = PHPWG_VERSION): array
     {
         global $conf;
 
@@ -438,7 +440,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
      * Retrieve PEM server datas to $server_plugins
      * $beta_test parameter add plugins compatible with the previous version
      */
-    public function get_server_plugins($new = false, $beta_test = false)
+    public function get_server_plugins($new = false, $beta_test = false): bool
     {
         global $user, $conf;
 
@@ -551,7 +553,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
     /**
      * Sort $server_plugins
      */
-    public function sort_server_plugins($order = 'date')
+    public function sort_server_plugins($order = 'date'): void
     {
         switch ($order) {
             case 'date':
@@ -681,7 +683,10 @@ DELETE FROM ' . PLUGINS_TABLE . '
         return $status;
     }
 
-    public function get_merged_extensions($version = PHPWG_VERSION)
+    /**
+     * @return string[]
+     */
+    public function get_merged_extensions($version = PHPWG_VERSION): array
     {
         $file = PHPWG_ROOT_PATH . 'install/obsolete_extensions.list';
         $merged_extensions = [];
@@ -699,7 +704,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
     /**
      * Sort functions
      */
-    public function extension_revision_compare($a, $b)
+    public function extension_revision_compare(array $a, array $b): int
     {
         if ($a['revision_date'] < $b['revision_date']) {
             return 1;
@@ -708,12 +713,12 @@ DELETE FROM ' . PLUGINS_TABLE . '
         }
     }
 
-    public function extension_name_compare($a, $b)
+    public function extension_name_compare(array $a, array $b): int
     {
         return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
     }
 
-    public function extension_author_compare($a, $b)
+    public function extension_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author_name'], (string) $b['author_name']);
         if ($r == 0) {
@@ -723,7 +728,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
         }
     }
 
-    public function plugin_author_compare($a, $b)
+    public function plugin_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author'], (string) $b['author']);
         if ($r == 0) {
@@ -733,7 +738,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
         }
     }
 
-    public function extension_downloads_compare($a, $b)
+    public function extension_downloads_compare(array $a, array $b): int
     {
         if ($a['extension_nb_downloads'] < $b['extension_nb_downloads']) {
             return 1;
@@ -742,7 +747,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
         }
     }
 
-    public function sort_plugins_by_state()
+    public function sort_plugins_by_state(): void
     {
         uasort($this->fs_plugins, name_compare(...));
 

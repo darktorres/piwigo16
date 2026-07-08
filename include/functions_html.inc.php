@@ -16,9 +16,8 @@
  *
  * @param array $cat_informations
  * @param string|null $url
- * @return string
  */
-function get_cat_display_name($cat_informations, $url = '')
+function get_cat_display_name($cat_informations, $url = ''): string
 {
     global $conf;
 
@@ -71,7 +70,6 @@ function get_cat_display_name($cat_informations, $url = '')
  * @param string|null $url
  * @param bool $single_link
  * @param string|null $link_class
- * @return string
  */
 function get_cat_display_name_cache(
     $uppercats,
@@ -79,7 +77,7 @@ function get_cat_display_name_cache(
     $single_link = false,
     $link_class = null,
     $auth_key = null
-) {
+): string {
     global $cache, $conf;
 
     $add_url_params = [];
@@ -154,9 +152,8 @@ SELECT id, name, permalink
  *
  * @param int $cat_id
  * @param string|null $url
- * @return string
  */
-function get_cat_display_name_from_id($cat_id, $url = '')
+function get_cat_display_name_from_id($cat_id, $url = ''): string
 {
     $cat_info = get_cat_info($cat_id);
     return get_cat_display_name($cat_info['upper_names'], $url);
@@ -173,7 +170,7 @@ function get_cat_display_name_from_id($cat_id, $url = '')
  * @param string $content
  * @return string
  */
-function render_comment_content($content)
+function render_comment_content($content): string|array|null
 {
     $content = htmlspecialchars($content);
     $pattern = '/(https?:\/\/\S*)/';
@@ -205,7 +202,7 @@ function render_comment_content($content)
 /**
  * Callback used for sorting by name.
  */
-function name_compare($a, $b)
+function name_compare(array $a, array $b): int
 {
     return strcmp(strtolower((string) $a['name']), strtolower((string) $b['name']));
 }
@@ -213,7 +210,7 @@ function name_compare($a, $b)
 /**
  * Callback used for sorting by name (slug) with cache.
  */
-function tag_alpha_compare($a, $b)
+function tag_alpha_compare(array $a, array $b): int
 {
     global $cache;
 
@@ -229,7 +226,7 @@ function tag_alpha_compare($a, $b)
 /**
  * Exits the current script.
  */
-function access_denied()
+function access_denied(): void
 {
     global $user, $conf;
 
@@ -258,7 +255,7 @@ function access_denied()
  * @param string $msg
  * @param string|null $alternate_url redirect to this url
  */
-function page_forbidden($msg, $alternate_url = null)
+function page_forbidden($msg, $alternate_url = null): void
 {
     set_status_header(403);
     if ($alternate_url == null) {
@@ -280,7 +277,7 @@ function page_forbidden($msg, $alternate_url = null)
  * @param string $msg
  * @param string|null $alternate_url redirect to this url
  */
-function bad_request($msg, $alternate_url = null)
+function bad_request($msg, $alternate_url = null): void
 {
     set_status_header(400);
     if ($alternate_url == null) {
@@ -302,7 +299,7 @@ function bad_request($msg, $alternate_url = null)
  * @param string $msg
  * @param string|null $alternate_url redirect to this url
  */
-function page_not_found($msg, $alternate_url = null)
+function page_not_found($msg, $alternate_url = null): void
 {
     set_status_header(404);
     if ($alternate_url == null) {
@@ -325,7 +322,7 @@ function page_not_found($msg, $alternate_url = null)
  * @param string|null $title
  * @param bool $show_trace
  */
-function fatal_error($msg, $title = null, $show_trace = true)
+function fatal_error($msg, $title = null, $show_trace = true): void
 {
     if (empty($title)) {
         $title = l10n('Piwigo encountered a non recoverable error');
@@ -362,10 +359,8 @@ function fatal_error($msg, $title = null, $show_trace = true)
 
 /**
  * Returns the breadcrumb to be displayed above thumbnails on tag page.
- *
- * @return string
  */
-function get_tags_content_title()
+function get_tags_content_title(): string
 {
     global $page;
     $title = '<a href="' . get_root_url() . 'tags.php" title="' . l10n('display available tags') . '">'
@@ -377,10 +372,8 @@ function get_tags_content_title()
 
 /**
  * Returns the breadcrumb to be displayed above thumbnails on combined categories page.
- *
- * @return string
  */
-function get_combined_categories_content_title()
+function get_combined_categories_content_title(): string
 {
     global $page;
 
@@ -426,7 +419,7 @@ function get_combined_categories_content_title()
  * @param int $code
  * @param string $text for exotic http codes
  */
-function set_status_header($code, $text = '')
+function set_status_header($code, $text = ''): void
 {
     if (empty($text)) {
         switch ($code) {
@@ -468,9 +461,8 @@ function set_status_header($code, $text = '')
  * This method is called by a trigger_notify()
  *
  * @param string $desc
- * @return string
  */
-function render_category_literal_description($desc)
+function render_category_literal_description($desc): string
 {
     ! isset($desc) ? $desc = '' : false;
     return strip_tags($desc, '<span><p><a><br><b><i><small><big><strong><em>');
@@ -482,7 +474,7 @@ function render_category_literal_description($desc)
  *
  * @param BlockManager[] $menu_ref_arr
  */
-function register_default_menubar_blocks($menu_ref_arr)
+function register_default_menubar_blocks(array $menu_ref_arr): void
 {
     $menu = &$menu_ref_arr[0];
     if ($menu->get_id() != 'menubar') {
@@ -509,7 +501,7 @@ function register_default_menubar_blocks($menu_ref_arr)
  * @param array $info at least file or name
  * @return string
  */
-function render_element_name($info)
+function render_element_name(array $info)
 {
     if (! empty($info['name'])) {
         return trigger_change('render_element_name', $info['name'], $info);
@@ -524,7 +516,7 @@ function render_element_name($info)
  * @param string $param used to identify the trigger
  * @return string
  */
-function render_element_description($info, $param = '')
+function render_element_description(array $info, $param = '')
 {
     if (! empty($info['comment'])) {
         return trigger_change('render_element_description', $info['comment'], $param);
@@ -540,7 +532,7 @@ function render_element_description($info, $param = '')
  * @param string $comment
  * @return string
  */
-function get_thumbnail_title($info, $title, $comment = '')
+function get_thumbnail_title(array $info, $title, $comment = '')
 {
     global $conf, $user;
 
@@ -592,7 +584,7 @@ function get_src_image_url_protection_handler($url, $src_image)
  * @param array $infos id, path
  * @return string
  */
-function get_element_url_protection_handler($url, $infos)
+function get_element_url_protection_handler($url, array $infos)
 {
     global $conf;
     if ($conf['original_url_protection'] == 'images') {// protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
@@ -607,7 +599,7 @@ function get_element_url_protection_handler($url, $infos)
 /**
  * Sends to the template all messages stored in $page and in the session.
  */
-function flush_page_messages()
+function flush_page_messages(): void
 {
     global $template, $page;
     if ($template->get_template_vars('page_refresh') === null) {
@@ -629,7 +621,7 @@ function flush_page_messages()
  * parameter on nl2br() (and anyway the second parameter of nl2br does not
  * match what Piwigo gives.
  */
-function pwg_nl2br($string)
+function pwg_nl2br($string): array|null|int|float|false|string
 {
     if (empty($string)) {
         return $string;

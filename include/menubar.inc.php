@@ -14,7 +14,7 @@ initialize_menu();
 /**
  * Setups each block the main menubar.
  */
-function initialize_menu()
+function initialize_menu(): void
 {
     global $page, $conf, $user, $template, $filter;
 

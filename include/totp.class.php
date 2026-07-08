@@ -15,7 +15,7 @@ class PwgTOTP
      * @param int $timestamp 30s intervasl since 1970
      * @return string TOTP Code
      */
-    private static function generateCodeFromTimestamp($secret, $timestamp)
+    private static function generateCodeFromTimestamp($secret, float $timestamp): string
     {
         $key = PwgBase32::decode($secret);
 
@@ -37,7 +37,7 @@ class PwgTOTP
      * @param int $length Length in bytes (default: 20)
      * @return string Base32-encoded secret
      */
-    public static function generateSecret($length = 20)
+    public static function generateSecret($length = 20): string
     {
         $random = random_bytes($length);
         return PwgBase32::encode($random, false);
@@ -47,7 +47,7 @@ class PwgTOTP
      * @param string $secret Encoded base32 secret
      * @return string otpauth://totp/ url
      */
-    public static function getOtpAuthUrl($secret)
+    public static function getOtpAuthUrl($secret): string
     {
         global $user;
         $url = substr((string) get_absolute_root_url(), 0, -1);
@@ -58,7 +58,7 @@ class PwgTOTP
      * @param string $secret Encoded base32 secret
      * @return string data:image/png;base64..
      */
-    public static function getQrCode($secret)
+    public static function getQrCode($secret): string
     {
         $otp_url = self::getOtpAuthUrl($secret);
 
@@ -74,7 +74,7 @@ class PwgTOTP
      * @param int $timestamp timestamp used in second (default: 30)
      * @return string 6 digits TOTP code
      */
-    public static function generateCode($secret, $timestamp = 30)
+    public static function generateCode($secret, $timestamp = 30): string
     {
         $timestamp = floor(time() / $timestamp); // e.g 58338889 > 30-second intervals since 1970 at the moment T
         return self::generateCodeFromTimestamp($secret, $timestamp);
@@ -87,9 +87,8 @@ class PwgTOTP
      * @param string $secret Encoded base32 secret
      * @param int $timestamp timestamp used in second (default: 30)
      * @param int $check_interval Number of 30s steps to check before/after current (default: 1)
-     * @return bool
      */
-    public static function verifyCode($code, $secret, $timestamp = 30, $check_interval = 1)
+    public static function verifyCode($code, $secret, $timestamp = 30, $check_interval = 1): bool
     {
         $timestamp = floor(time() / $timestamp);
 

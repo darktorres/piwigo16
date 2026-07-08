@@ -24,7 +24,7 @@ $service->run();
 /**
  * event handler that registers standard methods with the web service
  */
-function ws_addDefaultMethods($arr)
+function ws_addDefaultMethods($arr): void
 {
     global $conf, $user;
     $service = &$arr[0];

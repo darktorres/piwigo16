@@ -9,7 +9,7 @@
 
 class PwgJsonEncoder extends PwgResponseEncoder
 {
-    public function encodeResponse($response)
+    public function encodeResponse($response): string|false
     {
         if ($response instanceof PwgError) {
             return json_encode(
@@ -29,7 +29,7 @@ class PwgJsonEncoder extends PwgResponseEncoder
         );
     }
 
-    public function getContentType()
+    public function getContentType(): string
     {
         return 'text/plain';
     }

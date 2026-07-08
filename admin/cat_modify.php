@@ -18,7 +18,7 @@ include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
 // Example : "pets > rex > 1_year_old" is on the the same site as the
 // Piwigo files and this category has 22 for identifier
 // get_complete_dir(22) returns "./galleries/pets/rex/1_year_old/"
-function get_complete_dir($category_id)
+function get_complete_dir($category_id): string
 {
     return get_site_url($category_id) . get_local_dir($category_id);
 }
@@ -27,7 +27,7 @@ function get_complete_dir($category_id)
 // Example : "pets > rex > 1_year_old" is on the the same site as the
 // Piwigo files and this category has 22 for identifier
 // get_local_dir(22) returns "pets/rex/1_year_old/"
-function get_local_dir($category_id)
+function get_local_dir($category_id): string
 {
     global $page;
 

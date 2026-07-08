@@ -9,10 +9,19 @@
 
 class tabsheet
 {
+    /**
+     * @var array{}
+     */
     public $sheets;
 
+    /**
+     * @var null
+     */
     public $uniqid;
 
+    /**
+     * @var ''
+     */
     public $selected;
 
     /*
@@ -28,7 +37,7 @@ class tabsheet
         $this->selected = '';
     }
 
-    public function set_id($id)
+    public function set_id($id): void
     {
         $this->uniqid = $id;
     }
@@ -36,7 +45,7 @@ class tabsheet
     /*
        add a tab
     */
-    public function add($name, $caption, $url, $selected = false)
+    public function add($name, $caption, $url, $selected = false): bool
     {
         if (! isset($this->sheets[$name])) {
             $this->sheets[$name] = [
@@ -54,7 +63,7 @@ class tabsheet
     /*
        remove a tab
     */
-    public function delete($name)
+    public function delete($name): bool
     {
         if (isset($this->sheets[$name])) {
             array_splice($this->sheets, $name, 1);
@@ -70,7 +79,7 @@ class tabsheet
     /*
        select a tab to be active
     */
-    public function select($name)
+    public function select($name): void
     {
         $this->sheets = trigger_change('tabsheet_before_select', $this->sheets, $this->uniqid);
         if (! array_key_exists((string) $name, $this->sheets)) {
@@ -115,7 +124,7 @@ class tabsheet
      * Fill $this->$name {default value = TABSHEET} with HTML code for tabsheet
      * Fill $this->titlename {default value = TABSHEET_TITLE} with formated caption of the selected tab
      */
-    public function assign()
+    public function assign(): void
     {
         global $template;
 

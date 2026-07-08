@@ -27,7 +27,7 @@ class check_integrity
      *
      * @param void
      */
-    public function check()
+    public function check(): void
     {
         global $page, $header_notes, $conf;
 
@@ -140,7 +140,7 @@ class check_integrity
      *
      * @param void
      */
-    public function display()
+    public function display(): void
     {
         global $template;
 
@@ -220,7 +220,7 @@ class check_integrity
      *
      * @param $anomaly arguments
      */
-    public function add_anomaly($anomaly, $correction_fct = null, $correction_fct_args = null, $correction_msg = null)
+    public function add_anomaly($anomaly, $correction_fct = null, $correction_fct_args = null, $correction_msg = null): void
     {
         $id = md5($anomaly . $correction_fct . serialize($correction_fct_args) . $correction_msg);
 
@@ -244,7 +244,7 @@ class check_integrity
      *
      * @param ignore $conf_ignore_list list array
      */
-    public function update_conf($conf_ignore_list = [])
+    public function update_conf($conf_ignore_list = []): void
     {
         $conf_c13y_ignore = [];
         $conf_c13y_ignore['version'] = PHPWG_VERSION;
@@ -258,7 +258,7 @@ class check_integrity
      *
      * @param void
      */
-    public function maintenance()
+    public function maintenance(): void
     {
         $this->update_conf();
     }
@@ -269,7 +269,7 @@ class check_integrity
      * @param void
      * @return html links
      */
-    public function get_htlm_links_more_info()
+    public function get_htlm_links_more_info(): string
     {
         $pwg_links = pwg_URL();
         $link_fmt = '<a href="%s" onclick="window.open(this.href, \'\'); return false;">%s</a>';

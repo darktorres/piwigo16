@@ -28,7 +28,7 @@ function get_root_url()
  * returns the absolute url to the root of PWG
  * @param bool $with_scheme if false - does not add http://toto.com
  */
-function get_absolute_root_url($with_scheme = true)
+function get_absolute_root_url($with_scheme = true): string
 {
     global $conf;
     // TODO - add HERE the possibility to call PWG functions from external scripts
@@ -111,10 +111,9 @@ function add_url_params($url, $params, $arg_separator = '&amp;')
 /**
  * build an index URL for a specific section
  *
- * @param array $params
  * @return string
  */
-function make_index_url($params = [])
+function make_index_url(array $params = [])
 {
     global $conf;
     $url = get_root_url() . 'index';
@@ -200,10 +199,9 @@ function duplicate_picture_url($redefined = [], $removed = [])
 /**
  * create a picture URL on a specific section for a specific picture
  *
- * @param array $params
  * @return string
  */
-function make_picture_url($params)
+function make_picture_url(array $params)
 {
     global $conf;
 
@@ -245,7 +243,7 @@ function make_picture_url($params)
 /**
  *adds to the url the chronology and start parameters
  */
-function add_well_known_params_in_url($url, $params)
+function add_well_known_params_in_url($url, array $params)
 {
     if (isset($params['chronology_field'])) {
         $url .= '/' . $params['chronology_field'];
@@ -273,11 +271,8 @@ function add_well_known_params_in_url($url, $params)
  *
  * Depending on section, other parameters are required (see function code
  * for details)
- *
- * @param array $params
- * @return string
  */
-function make_section_in_url($params)
+function make_section_in_url(array $params): string
 {
     global $conf;
     $section_string = '';
@@ -401,9 +396,8 @@ function make_section_in_url($params)
  *
  * @param array $tokens of url tokens to parse
  * @param int $next_token the index in the array of url tokens; in/out
- * @return array
  */
-function parse_section_url($tokens, &$next_token)
+function parse_section_url(array $tokens, &$next_token): array
 {
     $page = [];
     if (isset($tokens[$next_token]) and str_starts_with($tokens[$next_token], 'categor')) {
@@ -590,8 +584,9 @@ function parse_section_url($tokens, &$next_token)
 /**
  * the reverse of add_well_known_params_in_url
  * parses start, flat and chronology from url tokens
+ * @return list<string>[]|string[]|true[]
  */
-function parse_well_known_params_url($tokens, &$i)
+function parse_well_known_params_url(array $tokens, &$i): array
 {
     $page = [];
     while (isset($tokens[$i])) {
@@ -657,7 +652,7 @@ function get_action_url($id, $what_part, $download)
  * @param array $element_info containing element information from db;
  * at least 'id', 'path' should be present
  */
-function get_element_url($element_info)
+function get_element_url(array $element_info)
 {
     $url = $element_info['path'];
     if (! url_is_remote($url)) {
@@ -671,7 +666,7 @@ function get_element_url($element_info)
  *
  * @param null
  */
-function set_make_full_url()
+function set_make_full_url(): void
 {
     global $page;
 
@@ -691,7 +686,7 @@ function set_make_full_url()
  *
  * @param null
  */
-function unset_make_full_url()
+function unset_make_full_url(): void
 {
     global $page;
 
@@ -714,7 +709,7 @@ function unset_make_full_url()
  *
  * @return embellished
  */
-function embellish_url($url)
+function embellish_url($url): string|array
 {
     $url = str_replace('/./', '/', $url);
     while (($dotdot = strpos($url, '/../', 1)) !== false) {
@@ -749,9 +744,8 @@ function get_gallery_home_url()
  *
  * @param string[] $rejects
  * @param bool $escape escape *&* to *&amp;*
- * @return string
  */
-function get_query_string_diff($rejects = [], $escape = true)
+function get_query_string_diff($rejects = [], $escape = true): string
 {
     if (empty($_SERVER['QUERY_STRING'])) {
         return '';
@@ -768,9 +762,8 @@ function get_query_string_diff($rejects = [], $escape = true)
  * returns true if the url is absolute (begins with http)
  *
  * @param string $url
- * @return bool
  */
-function url_is_remote($url)
+function url_is_remote($url): bool
 {
     if (str_starts_with($url, 'http://')
       or str_starts_with($url, 'https://')) {
@@ -783,7 +776,7 @@ function url_is_remote($url)
  * List favorite image_ids of the current user.
  * @since 13
  */
-function get_user_favorites()
+function get_user_favorites(): array
 {
     global $user;
 

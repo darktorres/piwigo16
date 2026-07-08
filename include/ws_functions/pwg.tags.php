@@ -13,11 +13,11 @@
  * @param mixed[] $params
  *    @option bool sort_by_counter
  */
-function ws_tags_getList($params, &$service)
+function ws_tags_getList(array $params, &$service): array
 {
     $tags = get_available_tags();
     if ($params['sort_by_counter']) {
-        usort($tags, fn ($a, $b) => -$a['counter'] + $b['counter']);
+        usort($tags, fn (array $a, array $b): int|float => -$a['counter'] + $b['counter']);
     } else {
         usort($tags, tag_alpha_compare(...));
     }
@@ -50,7 +50,7 @@ function ws_tags_getList($params, &$service)
  * Only admin can run this method and permissions are not taken into
  * account.
  */
-function ws_tags_getAdminList($params, &$service)
+function ws_tags_getAdminList($params, &$service): array
 {
     return [
         'tags' => new PwgNamedArray(
@@ -73,7 +73,7 @@ function ws_tags_getAdminList($params, &$service)
  *    @option int page
  *    @option string order
  */
-function ws_tags_getImages($params, &$service)
+function ws_tags_getImages(array $params, &$service): array
 {
     // first build all the tag_ids we are interested in
     $tags = find_tags($params['tag_id'], $params['tag_url_name'], $params['tag_name']);
@@ -208,7 +208,7 @@ SELECT *
  * @param mixed[] $params
  *    @option string name
  */
-function ws_tags_add($params, &$service)
+function ws_tags_add(array $params, &$service): \PwgError|array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -235,7 +235,7 @@ WHERE id = ' . $creation_output['id'] . ';';
     ];
 }
 
-function ws_tags_delete($params, &$service)
+function ws_tags_delete(array $params, &$service): \PwgError|array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -267,7 +267,7 @@ SELECT COUNT(*)
     }
 }
 
-function ws_tags_rename($params, &$service)
+function ws_tags_rename(array $params, &$service)
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -335,7 +335,7 @@ SELECT
     return $tag;
 }
 
-function ws_tags_duplicate($params, &$service)
+function ws_tags_duplicate(array $params, &$service): \PwgError|array
 {
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -417,7 +417,7 @@ SELECT image_id
     ];
 }
 
-function ws_tags_merge($params, &$service)
+function ws_tags_merge(array $params, &$service): \PwgError|array
 {
 
     if (get_pwg_token() != $params['pwg_token']) {

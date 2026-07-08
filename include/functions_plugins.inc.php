@@ -50,7 +50,7 @@ class PluginMaintain
     /**
      * @removed 2.7
      */
-    public function autoUpdate()
+    public function autoUpdate(): void
     {
         if (is_admin() && ! defined('IN_WS')) {
             trigger_error('Function PluginMaintain::autoUpdate deprecated', E_USER_WARNING);
@@ -95,7 +95,7 @@ function add_event_handler(
     $func,
     $priority = EVENT_HANDLER_PRIORITY_NEUTRAL,
     $include_path = null
-) {
+): bool {
     global $pwg_event_handlers;
 
     if (isset($pwg_event_handlers[$event][$priority])) {
@@ -127,7 +127,7 @@ function remove_event_handler(
     $event,
     $func,
     $priority = EVENT_HANDLER_PRIORITY_NEUTRAL
-) {
+): bool {
     global $pwg_event_handlers;
 
     if (! isset($pwg_event_handlers[$event][$priority])) {
@@ -218,7 +218,7 @@ function trigger_change($event, $data = null)
  *
  * @param string $event
  */
-function trigger_notify($event)
+function trigger_notify($event): void
 {
     global $pwg_event_handlers;
 
@@ -257,9 +257,8 @@ function trigger_notify($event)
  *
  * @param string $plugin_id
  * @param mixed $data
- * @return bool
  */
-function set_plugin_data($plugin_id, &$data)
+function set_plugin_data($plugin_id, &$data): bool
 {
     global $pwg_loaded_plugins;
     if (isset($pwg_loaded_plugins[$plugin_id])) {
@@ -288,9 +287,8 @@ function &get_plugin_data($plugin_id)
  *
  * @param string $state optional filter
  * @param string $id returns only data about given plugin
- * @return array
  */
-function get_db_plugins($state = '', $id = '')
+function get_db_plugins($state = '', $id = ''): array
 {
     $query = '
 SELECT * FROM ' . PLUGINS_TABLE;
@@ -315,7 +313,7 @@ SELECT * FROM ' . PLUGINS_TABLE;
  *
  * @param string $plugin
  */
-function load_plugin($plugin)
+function load_plugin(array $plugin): void
 {
     $file_name = PHPWG_PLUGINS_PATH . $plugin['id'] . '/main.inc.php';
     if (file_exists($file_name)) {
@@ -334,7 +332,7 @@ function load_plugin($plugin)
  *
  * @param array $plugin (id, version, state) will be updated if version changes
  */
-function autoupdate_plugin(&$plugin)
+function autoupdate_plugin(array &$plugin): void
 {
     // try to find the filesystem version in lines 2 to 10 of main.inc.php
     $fh = fopen(PHPWG_PLUGINS_PATH . $plugin['id'] . '/main.inc.php', 'r');
@@ -406,7 +404,7 @@ UPDATE ' . PLUGINS_TABLE . '
 /**
  * Loads all the registered plugins.
  */
-function load_plugins()
+function load_plugins(): void
 {
     global $conf, $pwg_loaded_plugins;
     $pwg_loaded_plugins = [];

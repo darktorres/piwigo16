@@ -9,7 +9,7 @@
 
 add_event_handler('tabsheet_before_select', 'add_core_tabs');
 
-function add_core_tabs($sheets, $tab_id)
+function add_core_tabs(array $sheets, $tab_id): array
 {
     global $conf;
 

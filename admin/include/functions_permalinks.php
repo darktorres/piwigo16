@@ -48,7 +48,7 @@ SELECT c.id
  * @param bool $save if true, the current category-permalink association
  * is saved in the old permalinks table in case external links hit it
  */
-function delete_cat_permalink($cat_id, $save)
+function delete_cat_permalink($cat_id, $save): bool
 {
     global $page, $cache;
     $query = '
@@ -108,7 +108,7 @@ VALUES
  * @param bool $save if true, the current category-permalink association
  * is saved in the old permalinks table in case external links hit it
  */
-function set_cat_permalink($cat_id, $permalink, $save)
+function set_cat_permalink($cat_id, $permalink, $save): bool
 {
     global $page, $cache;
 

@@ -172,31 +172,31 @@ foreach ($by_user_ratings as $id => $rating) {
     }
 }
 
-function avg_compare($a, $b)
+function avg_compare(array $a, array $b): int
 {
     $d = $a['avg'] - $b['avg'];
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
-function count_compare($a, $b)
+function count_compare(array $a, array $b): int
 {
     $d = $a['count'] - $b['count'];
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
-function cv_compare($a, $b)
+function cv_compare(array $a, array $b): int
 {
     $d = $b['cv'] - $a['cv']; // desc
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
-function consensus_dev_compare($a, $b)
+function consensus_dev_compare(array $a, array $b): int
 {
     $d = $b['cd'] - $a['cd']; // desc
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
-function last_rate_compare($a, $b)
+function last_rate_compare(array $a, array $b): int
 {
     return -strcmp((string) $a['last_date'], (string) $b['last_date']);
 }

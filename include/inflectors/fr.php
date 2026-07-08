@@ -9,11 +9,11 @@
 
 class Inflector_fr
 {
-    private $exceptions;
+    private array $exceptions;
 
-    private $pluralizers;
+    private readonly array $pluralizers;
 
-    private $singularizers;
+    private readonly array $singularizers;
 
     public function __construct()
     {
@@ -47,7 +47,10 @@ class Inflector_fr
         ]);
     }
 
-    public function get_variants($word)
+    /**
+     * @return mixed[]
+     */
+    public function get_variants($word): array
     {
         $res = [];
 

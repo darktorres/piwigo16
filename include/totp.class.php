@@ -14,7 +14,7 @@ class PwgTOTP
      * Generate a Base32 secret for TOTP
      *
      * @param string $secret Base32-encoded secret
-     * @param int $timestamp 30s intervasl since 1970
+     * @param float $timestamp 30s intervasl since 1970
      * @return string TOTP Code
      */
     private static function generateCodeFromTimestamp($secret, float $timestamp): string

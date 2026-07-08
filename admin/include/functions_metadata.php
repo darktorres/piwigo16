@@ -296,7 +296,7 @@ SELECT id, path, representative_ext
  * Returns an array associating element id (images.id) with its complete
  * path in the filesystem
  *
- * @param int $category_id
+ * @param int|string $category_id numeric category id, or '' for no filter
  * @param int $site_id
  * @param bool $recursive
  * @param bool $only_new

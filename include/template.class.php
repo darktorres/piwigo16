@@ -84,11 +84,6 @@ class Template
      */
     public $index_buttons = [];
 
-    /**
-     * @var string
-     * @var string
-     * @var string
-     */
     public function __construct(
         $root = '.',
         $theme = '',
@@ -527,6 +522,8 @@ class Template
             return $v;
         }
         $this->output .= $v;
+
+        return null;
     }
 
     /**
@@ -1062,7 +1059,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $source
      * @param Smarty $smarty
-     * @param return string
+     * @return string
      */
     public static function prefilter_white_space($source, $smarty): string|array|null
     {
@@ -1092,7 +1089,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $source
      * @param Smarty $smarty
-     * @param return string
+     * @return string
      */
     public static function postfilter_language($source, $smarty): string|array|null
     {
@@ -1113,7 +1110,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $source
      * @param Smarty $smarty
-     * @param return string
+     * @return string
      */
     public static function prefilter_local_css($source, $smarty)
     {
@@ -1378,12 +1375,12 @@ final class Css extends Combinable
 class CssLoader
 {
     /**
-     * @param Css[]
+     * @var Css[]
      */
     private array $registered_css;
 
     /**
-     * @param int used to keep declaration order
+     * @var int used to keep declaration order
      */
     private int $counter;
 
@@ -1466,7 +1463,7 @@ class ScriptLoader
     private bool $did_head;
 
     /**
-     * @var bool
+     * @var array<string, Script>
      */
     private array $head_done_scripts;
 
@@ -1909,9 +1906,8 @@ final class FileCombiner
      * @param string $header CSS directives that must appear first in
      *                       the minified file (only used when
      *                       $return_content===true)
-     * @return null|string
      */
-    private function process_combinable($combinable, bool $return_content, bool $force, string &$header)
+    private function process_combinable($combinable, bool $return_content, bool $force, string &$header): ?string
     {
         global $conf;
         if ($combinable->is_template) {
@@ -1924,7 +1920,8 @@ final class FileCombiner
                 if (! $force && file_exists(PHPWG_ROOT_PATH . $file)) {
                     $combinable->path = $file;
                     $combinable->version = false;
-                    return;
+
+                    return null;
                 }
             }
 
@@ -1945,7 +1942,10 @@ final class FileCombiner
             }
             file_put_contents(PHPWG_ROOT_PATH . $file, $content);
             $combinable->path = $file;
-        } elseif ($return_content) {
+
+            return null;
+        }
+        if ($return_content) {
             $content = file_get_contents(PHPWG_ROOT_PATH . $combinable->path);
             if ($this->is_css) {
                 $content = self::process_css($content, $combinable->path, $header);
@@ -1954,6 +1954,8 @@ final class FileCombiner
             }
             return $content;
         }
+
+        return null;
     }
 
     /**

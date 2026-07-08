@@ -149,7 +149,8 @@ class c13y_internal
     /**
      * Do correction user
      *
-     * @param user_id, $id action
+     * @param int $id user_id
+     * @param string $action
      * @return bool true if ok else false
      */
     public function c13y_correction_user($id, $action)

@@ -19,7 +19,7 @@ abstract class PersistentCache
     protected $instance_key = PHPWG_VERSION;
 
     /**
-     * @return a key that can be safely be used with get/set methods
+     * @return string a key that can be safely be used with get/set methods
      */
     public function make_key($key)
     {

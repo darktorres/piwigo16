@@ -1715,7 +1715,7 @@ DELETE
  *
  * @since 2.9
  * @param array $image_ids
- * @return associative array, image_id => list of tag ids
+ * @return array<int, int[]> image_id => list of tag ids
  */
 function get_image_tag_ids($image_ids): array
 {
@@ -1814,7 +1814,7 @@ function empty_lounge($invalidate_user_cache = true)
 
     if (isset($conf['empty_lounge_running'])) {
         [$running_exec_id, $running_exec_start_time] = explode('-', $conf['empty_lounge_running']);
-        if (time() - $running_exec_start_time > 60) {
+        if (time() - (int) $running_exec_start_time > 60) {
             $logger->debug(__FUNCTION__ . ', exec=' . $running_exec_id . ', timeout stopped by another call to the function');
             conf_delete_param('empty_lounge_running');
         }
@@ -2292,7 +2292,7 @@ function pwg_http_client()
  * Retrieve data from external URL.
  *
  * @param string $src
- * @param string|Ressource $dest - can be a file ressource or string
+ * @param string|resource $dest - can be a file ressource or string
  * @param array $get_data - data added to request url
  * @param array $post_data - data transmitted with POST
  * @param string $user_agent

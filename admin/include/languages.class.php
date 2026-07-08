@@ -29,7 +29,6 @@ class languages
      * Perform requested actions
      * @param string $action - action
      * @param string $language_id - language id
-     * @param array - errors
      * @return list<('CANNOT ACTIVATE - LANGUAGE IS ALREADY ACTIVATED'|'CANNOT DEACTIVATE - LANGUAGE IS ALREADY DEACTIVATED'|'CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE'|'CANNOT DELETE - LANGUAGE DOES NOT EXIST'|'CANNOT DELETE - LANGUAGE IS ACTIVATED')>
      */
     public function perform_action($action, $language_id): array

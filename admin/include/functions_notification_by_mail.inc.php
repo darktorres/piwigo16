@@ -54,7 +54,7 @@ where
 
 /**
  * Check sendmail timeout state
- * @return true, if it's timeout
+ * @return bool true if it's a timeout
  */
 function check_sendmail_timeout()
 {
@@ -67,7 +67,7 @@ function check_sendmail_timeout()
 
 /**
  * Add quote to all elements of check_key_list
- * @return quoted check key list
+ * @return string[] quoted check key list
  */
 function quote_check_key_list($check_key_list = []): array
 {
@@ -336,7 +336,7 @@ function assign_vars_nbm_mail_content(array $nbm_user): void
  * Subscribe or unsubscribe notification by mail
  * is_subscribe define if action=subscribe or unsubscribe
  * check_key list where action will be done
- * @return check_key list treated
+ * @return array check_key list treated
  */
 function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_subscribe = false, $check_key_list = []): array
 {
@@ -475,7 +475,7 @@ function do_subscribe_unsubscribe_notification_by_mail($is_admin_request, $is_su
 /**
  * Unsubscribe notification by mail
  * check_key list where action will be done
- * @return check_key list treated
+ * @return array check_key list treated
  */
 function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = []): array
 {
@@ -485,7 +485,7 @@ function unsubscribe_notification_by_mail($is_admin_request, $check_key_list = [
 /**
  * Subscribe notification by mail
  * check_key list where action will be done
- * @return check_key list treated
+ * @return array check_key list treated
  */
 function subscribe_notification_by_mail($is_admin_request, $check_key_list = []): array
 {

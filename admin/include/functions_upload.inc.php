@@ -692,7 +692,7 @@ function upload_file_video($representative_ext, $file_path)
     exec('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1' . " '{$file_path}'", $O, $S);
 
     if (! empty($O[0])) {
-        $second = min(floor($O[0] * 10) / 10, 2);
+        $second = min(floor((float) $O[0] * 10) / 10, 2);
     } else {
         $second = 0; // Safest position of the poster
     }
@@ -947,8 +947,7 @@ function convert_shorthand_notation_to_bytes($value)
     }
 
     if (isset($multiply_by)) {
-        $value = substr((string) $value, 0, -1);
-        $value *= $multiply_by;
+        $value = (int) substr((string) $value, 0, -1) * $multiply_by;
     }
 
     return $value;
@@ -994,7 +993,7 @@ function ready_for_upload_message(): ?string
  *
  * @since 14
  *
- * @return array(width, height)
+ * @return int[] [width, height]
  */
 function get_optimal_dimensions_for_representative(): array
 {

@@ -26,8 +26,6 @@ class check_integrity
 
     /**
      * Check integrities
-     *
-     * @param void
      */
     public function check(): void
     {
@@ -139,8 +137,6 @@ class check_integrity
 
     /**
      * Display anomalies list
-     *
-     * @param void
      */
     public function display(): void
     {
@@ -244,7 +240,7 @@ class check_integrity
     /**
      * Update table config
      *
-     * @param ignore $conf_ignore_list list array
+     * @param array $conf_ignore_list list array
      */
     public function update_conf($conf_ignore_list = []): void
     {
@@ -257,8 +253,6 @@ class check_integrity
 
     /**
      * Apply maintenance
-     *
-     * @param void
      */
     public function maintenance(): void
     {
@@ -268,8 +262,7 @@ class check_integrity
     /**
      * Returns links more informations
      *
-     * @param void
-     * @return html links
+     * @return string links
      */
     public function get_htlm_links_more_info(): string
     {

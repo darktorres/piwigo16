@@ -82,7 +82,7 @@ class PwgNamedArray
 
     /**
      * Constructs a named array
-     * @param arr $_content (keys must be consecutive integers starting at 0)
+     * @param array $_content (keys must be consecutive integers starting at 0)
      * @param string $_itemName xml element name for values of arr (e.g. image)
      * @param array $xmlAttributes of sub-item attributes that will be encoded as
      *      xml attributes instead of xml child elements
@@ -108,11 +108,11 @@ class PwgNamedStruct
     /**
      * Constructs a named struct (usually returned by web service function
      * implementation)
-     * @param name $xmlAttributes string - containing xml element name
-     * @param content $xmlElements array - the actual content (php array)
-     * @param xmlAttributes array - name of the keys in $content that will be
+     * @param array $_content the actual content (php array)
+     * @param ?array $xmlAttributes name of the keys in $content that will be
      *    encoded as xml attributes (if null - automatically prefer xml attributes
      *    whenever possible)
+     * @param ?array $xmlElements keys in $content to always treat as xml elements
      */
     public function __construct(
         public $_content,

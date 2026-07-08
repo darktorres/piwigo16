@@ -41,6 +41,21 @@ interface imageInterface
 // |                          Main Image Class                             |
 // +-----------------------------------------------------------------------+
 
+/**
+ * Unknown methods are forwarded to $this->image (an imageInterface
+ * implementor) via __call(). These @method tags mirror that interface.
+ *
+ * @method int get_width()
+ * @method int get_height()
+ * @method bool set_compression_quality($quality)
+ * @method bool crop($width, $height, $x, $y)
+ * @method bool strip()
+ * @method bool rotate($rotation)
+ * @method bool resize($width, $height)
+ * @method bool sharpen($amount)
+ * @method bool compose($overlay, $x, $y, $opacity)
+ * @method void write($destination_filepath)
+ */
 class pwg_image
 {
     /**

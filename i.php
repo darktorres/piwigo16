@@ -37,7 +37,7 @@ $logger = new Logger([
     'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf['db_password']) . '.txt',
 ]);
 
-function trigger_notify(): void {}
+function trigger_notify($event, ...$args): void {}
 function get_extension(?string $filename): string
 {
     if ($filename === null) {

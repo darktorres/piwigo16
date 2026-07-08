@@ -162,7 +162,7 @@ function pwg_query($query)
  *
  * @param string $column
  * @param string $table
- * @param int
+ * @return int
  */
 function pwg_db_nextval($column, $table)
 {

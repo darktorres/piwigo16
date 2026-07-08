@@ -16,7 +16,7 @@ it('completes a fresh install end-to-end', function (): void {
     $page = H::visitPwg($this, '/install.php');
 
     if (str_contains($page->content(), 'Congratulations') || !str_contains($page->content(), 'Installation')) {
-        test()->markTestSkipped('Piwigo is already installed — remove local/.installed.test to exercise this flow.');
+        \PHPUnit\Framework\Assert::markTestSkipped('Piwigo is already installed — remove local/.installed.test to exercise this flow.');
     }
 
     H::assertNoServerErrors($page, 'install page initial render');

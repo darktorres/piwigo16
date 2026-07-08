@@ -26,7 +26,6 @@ SELECT id FROM ' . CATEGORIES_TABLE . '
 
 /** returns a category id that has used before this permalink (or null)
  * @param string $permalink
- * @param bool is_hit if true update the usage counters on the old permalinks
  */
 function get_cat_id_from_old_permalink($permalink)
 {

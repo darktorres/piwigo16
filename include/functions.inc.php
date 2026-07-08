@@ -23,8 +23,6 @@ include_once PHPWG_ROOT_PATH . 'include/derivative.inc.php';
 
 /**
  * returns the current microsecond since Unix epoch
- *
- * @return int
  */
 function micro_seconds(): string
 {
@@ -1372,7 +1370,7 @@ function l10n_dec($singular_key, $plural_key, $decimal): string
  * @param string $key translation key
  * @param mixed $args arguments to use on sprintf($key, args)
  *   if args is a array, each values are used on sprintf
- * @return string
+ * @return array{key_args: array}
  */
 function get_l10n_args($key, $args = ''): array
 {
@@ -1660,7 +1658,7 @@ function hash_from_query($query, $keyname): array
  * if _$fieldname_ is provided the returned value will be a one dimension array
  *
  * @param string $query
- * @param string $fieldname
+ * @param string|false $fieldname
  */
 #[\Deprecated(message: '2.6')]
 function array_from_query($query, $fieldname = false): array
@@ -1760,7 +1758,7 @@ function get_parent_language($lang_id = null)
  *
  * @param string $filename
  * @param string $dirname
- * @param mixed $options can contain
+ * @param array $options can contain
  *     @option string language - language to load
  *     @option bool return - if true the file content is returned
  *     @option bool no_fallback - if true do not load default language
@@ -2801,7 +2799,7 @@ function pwg_unique_exec_begins($token_name, $timeout = 60): false|string
 
     if (isset($conf[$token_name . '_running'])) {
         [$running_exec_id, $running_exec_start_time] = explode('-', $conf[$token_name . '_running']);
-        if (time() - $running_exec_start_time > $timeout) {
+        if (time() - (int) $running_exec_start_time > $timeout) {
             $logger->info('[' . $token_name . '][exec=' . $exec_id . '] exec=' . $running_exec_id . ', timeout stopped by another call to the function');
             pwg_unique_exec_ends($token_name);
         }
@@ -2861,7 +2859,7 @@ function pwg_unique_exec_ends($token_name): void
  *
  * @since 16.3
  *
- * @return array(string, ?string)
+ * @return array{0: string, 1: ?string}
  */
 function get_container_info(): array
 {

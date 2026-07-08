@@ -191,7 +191,7 @@ function parse_exif_gps_data(array $raw, $ref): float|int
 {
     foreach ($raw as &$i) {
         $i = explode('/', $i);
-        $i = $i[1] == 0 ? 0 : $i[0] / $i[1];
+        $i = $i[1] == 0 ? 0 : (float) $i[0] / (float) $i[1];
     }
     unset($i);
 

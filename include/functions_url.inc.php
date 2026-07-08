@@ -665,8 +665,6 @@ function get_element_url(array $element_info)
 
 /**
  * Indicate to build url with full path
- *
- * @param null
  */
 function set_make_full_url(): void
 {
@@ -685,8 +683,6 @@ function set_make_full_url(): void
 
 /**
  * Restore old parameter to build url with full path
- *
- * @param null
  */
 function unset_make_full_url(): void
 {
@@ -708,8 +704,6 @@ function unset_make_full_url(): void
 
 /**
  * Embellish the url argument
- *
- * @return embellished
  */
 function embellish_url($url): string|array
 {

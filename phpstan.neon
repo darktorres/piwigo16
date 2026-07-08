@@ -2,7 +2,7 @@ includes:
     - phpstan-baseline.neon
 
 parameters:
-    level: 1
+    level: 2
     paths:
         - .
     excludePaths:
@@ -22,5 +22,9 @@ parameters:
             - language/*.php
             # Runtime-compiled Smarty templates + combined JS/CSS cache, not source.
             - _data/*
+            # Standalone maintenance script; its own header comment documents
+            # that knplabs/github-api must be `composer require`d manually
+            # before running it — it's not one of this project's own deps.
+            - tools/github_issues.php
     bootstrapFiles:
         - tools/phpstan-bootstrap.php

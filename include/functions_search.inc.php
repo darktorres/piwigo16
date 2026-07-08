@@ -826,7 +826,7 @@ class QNumericRangeScope extends QSearchScope
 
         foreach ($range as $i => &$val) {
             if (preg_match('#^(-?[0-9.]+)/([0-9.]+)$#i', (string) $val, $matches)) {
-                $val = floatval($matches[1] / $matches[2]);
+                $val = floatval((float) $matches[1] / (float) $matches[2]);
             } elseif (preg_match('/^(-?[0-9.]+)([km])?/i', (string) $val, $matches)) {
                 $val = floatval($matches[1]);
                 if (isset($matches[2])) {

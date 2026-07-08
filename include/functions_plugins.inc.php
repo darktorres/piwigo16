@@ -219,8 +219,9 @@ function trigger_change($event, $data = null)
  * @since 2.6
  *
  * @param string $event
+ * @param mixed ...$args extra event data, forwarded to registered handlers
  */
-function trigger_notify($event): void
+function trigger_notify($event, ...$args): void
 {
     global $pwg_event_handlers;
 
@@ -238,8 +239,6 @@ function trigger_notify($event): void
     if (! isset($pwg_event_handlers[$event])) {
         return;
     }
-    $args = func_get_args();
-    array_shift($args);
 
     foreach ($pwg_event_handlers[$event] as $priority => $handlers) {
         foreach ($handlers as $handler) {
@@ -312,8 +311,6 @@ SELECT * FROM ' . PLUGINS_TABLE;
 /**
  * Loads a plugin in memory.
  * It performs autoupdate, includes the main.inc.php file and updates *$pwg_loaded_plugins*.
- *
- * @param string $plugin
  */
 function load_plugin(array $plugin): void
 {

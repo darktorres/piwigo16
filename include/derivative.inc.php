@@ -95,20 +95,14 @@ final class SrcImage
         }
     }
 
-    /**
-     * @return bool
-     */
-    public function is_original(): int
+    public function is_original(): bool
     {
-        return $this->flags & self::IS_ORIGINAL;
+        return (bool) ($this->flags & self::IS_ORIGINAL);
     }
 
-    /**
-     * @return bool
-     */
-    public function is_mimetype(): int
+    public function is_mimetype(): bool
     {
-        return $this->flags & self::IS_MIMETYPE;
+        return (bool) ($this->flags & self::IS_MIMETYPE);
     }
 
     public function get_path(): string
@@ -159,10 +153,7 @@ final class SrcImage
  */
 final class DerivativeImage
 {
-    /**
-     * @var array
-     */
-    private $params;
+    private ?DerivativeParams $params = null;
 
     /**
      * @var string

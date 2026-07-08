@@ -643,7 +643,7 @@ SELECT id
  * Returns user identifier thanks to his name.
  *
  * @param string $username
- * @param int|false
+ * @return int|false
  */
 function get_userid($username)
 {
@@ -670,7 +670,7 @@ SELECT ' . $conf['user_fields']['id'] . '
  * Returns user identifier thanks to his email.
  *
  * @param string $email
- * @param int|false
+ * @return int|false
  */
 function get_userid_by_email($email)
 {
@@ -1448,7 +1448,6 @@ function get_access_type_status($user_status = ''): int
 /**
  * Returns if user has access to a particular ACCESS_*
  *
- * @return int one of ACCESS_* constants
  * @param string $user_status used if $user not initialized
  */
 function is_autorize_status($access_type, $user_status = ''): bool
@@ -2735,7 +2734,6 @@ function save_edit_context(): void
  *
  * @since 16
  * @param int $image_id
- * @return string|bool
  */
 function get_edit_context($image_id): false|string|null
 {

@@ -81,8 +81,7 @@ class themes
      * Perform requested actions
      * @param string $action - action
      * @param string $theme_id - theme id
-     * @param array - errors
-     * @return list
+     * @return string[] errors
      */
     public function perform_action($action, $theme_id): array
     {

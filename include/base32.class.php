@@ -60,7 +60,7 @@ class PwgBase32
     /**
      *    Use padding false when encoding for urls
      *
-     * @return base32 encoded string
+     * @return string base32 encoded string
      */
     public static function encode($input, $padding = true): string
     {

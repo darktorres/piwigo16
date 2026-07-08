@@ -842,7 +842,11 @@ function format_date_legacy($original, $show = null, $format = null)
 /**
  * returns a formatted and localized date for display
  *
- * @param int|string $original timestamp or datetime string
+ * @param int|string|DateTime|false $original timestamp, datetime string, or
+ *   an already-converted DateTime/false — format_fromto() passes
+ *   str2DateTime()'s own return type straight through; both are handled
+ *   gracefully (DateTime passes through str2DateTime() as-is, false/empty
+ *   short-circuits to the "N/A" string below)
  * @param array $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
  *    THIS PARAMETER IS PLANNED TO CHANGE
  * @param string $format input format respecting date() syntax
@@ -2251,7 +2255,7 @@ SELECT COUNT(DISTINCT(com.id))
  */
 function safe_version_compare($a, $b, $op = null): int|bool
 {
-    $replace_chars = (fn ($m): int => ord(strtolower((string) $m[1])[0]));
+    $replace_chars = (fn ($m): string => (string) ord(strtolower((string) $m[1])[0]));
 
     // add dot before groups of letters (version_compare does the same thing)
     $a = preg_replace('#([0-9]+)([a-z]+)#i', '$1.$2', $a);

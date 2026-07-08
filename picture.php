@@ -131,7 +131,7 @@ function default_picture_content($content, array $element_info)
         if (array_key_exists((string) $_COOKIE['picture_deriv'], ImageStdParams::get_defined_type_map())) {
             pwg_set_session_var('picture_deriv', $_COOKIE['picture_deriv']);
         }
-        setcookie('picture_deriv', false, [
+        setcookie('picture_deriv', '', [
             'expires' => 0,
             'path' => cookie_path(),
         ]);

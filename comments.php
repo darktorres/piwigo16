@@ -385,8 +385,7 @@ $navbar = create_navigation_bar(
     $url,
     $counter,
     $start,
-    $page['items_number'],
-    ''
+    $page['items_number']
 );
 
 $template->assign('navbar', $navbar);

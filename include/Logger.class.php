@@ -343,7 +343,8 @@ class Logger
     /**
      * Formats the message for logging.
      *
-     * @param  string $level
+     * @param  int $level severity level constant (self::EMERGENCY etc.) —
+     *   log()'s only caller always passes its own int $severity here
      * @param  string $message
      * @param  array  $context
      */

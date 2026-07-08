@@ -921,8 +921,10 @@ function create_user_infos($user_ids, $override_values = null): void
 /**
  * Returns the auto login key for an user or false if the user is not found.
  *
- * @param int $user_id
- * @param int $time
+ * @param int|numeric-string $user_id auto_login() passes the raw
+ *   remember-me cookie's exploded, is_numeric()-checked string parts
+ * @param int|numeric-string $time ditto — only ever used in string
+ *   concatenation (the HMAC input) or SQL interpolation, never arithmetic
  * @param string $username fille with corresponding username
  */
 function calculate_auto_login_key($user_id, $time, &$username): string|false
@@ -947,7 +949,11 @@ WHERE ' . $conf['user_fields']['id'] . ' = ' . $user_id;
 /**
  * Performs all required actions for user login.
  *
- * @param int $user_id
+ * @param int|numeric-string|false $user_id auto_login() passes a raw
+ *   remember-me cookie's numeric-string user id; register.php passes
+ *   get_userid()'s result directly, which is typed int|false (false is not
+ *   reachable there in practice since it looks up the user just created by
+ *   the immediately-preceding successful register_user() call)
  * @param bool $remember_me
  */
 function log_user($user_id, $remember_me): void
@@ -1999,7 +2005,10 @@ UPDATE ' . USER_INFOS_TABLE . '
  * @since 13
  *
  * @param string $param
- * @param string $value
+ * @param mixed $value userprefs_save() serialize()s the whole preferences
+ *   array, so this isn't limited to strings — real callers pass bool
+ *   (admin.php), int (password.php's timestamp), and array
+ *   (functions_search.inc.php's filter list) too
  */
 function userprefs_update_param($param, $value): void
 {

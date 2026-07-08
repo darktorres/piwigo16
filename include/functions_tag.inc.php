@@ -193,8 +193,11 @@ function add_level_to_tags($tags)
  *
  * @param int[] $tag_ids
  * @param string $mode
- * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
- * @param string $order_by - optionally overwrite default photo order
+ * @param string|null $extra_images_where_sql - optionally apply a sql where
+ *   filter to retrieved images; null is treated the same as '' (both are
+ *   empty() below), and admin/batch_manager.php passes null explicitly
+ * @param string|null $order_by - optionally overwrite default photo order;
+ *   null is treated the same as '' for the same reason
  */
 function get_image_ids_for_tags($tag_ids, $mode = 'AND', $extra_images_where_sql = '', $order_by = '', $use_permissions = true): array
 {
@@ -284,7 +287,9 @@ SELECT t.*, count(*) AS counter
 /**
  * Return a list of tags corresponding to any of ids, url_names or names.
  *
- * @param int[] $ids
+ * @param array<int|string> $ids functions_url.inc.php's parse_section_url()
+ *   passes raw preg_match() capture strings, never cast to int — only used
+ *   in an implode() SQL context below, so numeric strings work identically
  * @param string[] $url_names
  * @param string[] $names
  * @return array [id, name, url_name]

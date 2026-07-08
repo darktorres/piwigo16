@@ -56,7 +56,7 @@ $mysqli = new mysqli('localhost', $option['db_user'], $option['db_password']);
 $option['db_name'] = create_database($option);
 
 install_piwigo($option);
-$pwg_token = log_user($option, $cookies);
+$pwg_token = test_log_user($option, $cookies);
 create_album($option, $cookies);
 add_picture($option, $cookies, $pwg_token);
 
@@ -119,7 +119,7 @@ function install_piwigo(array $option): void
         CURLOPT_URL => $option['url'] . '/install.php',
         CURLOPT_COOKIESESSION => true,
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => 1,
+        CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => $data,
     ];
 
@@ -150,7 +150,7 @@ function install_piwigo(array $option): void
 // | Script Login an User |
 // +----------------------+
 
-function log_user(array $option, $cookies)
+function test_log_user(array $option, $cookies)
 {
     // Log an user - Admin here
     $data = [
@@ -166,7 +166,7 @@ function log_user(array $option, $cookies)
         CURLOPT_COOKIEJAR => $cookies,
         CURLOPT_COOKIEFILE => $cookies,
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => 1,
+        CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => $data,
     ];
 
@@ -189,7 +189,7 @@ function log_user(array $option, $cookies)
         CURLOPT_COOKIEJAR => $cookies,
         CURLOPT_COOKIEFILE => $cookies,
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => 1,
+        CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => $data,
     ];
 
@@ -228,7 +228,7 @@ function create_album(array $option, $cookies): void
         CURLOPT_COOKIEFILE => $cookies,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_POST => 1,
+        CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => $data,
     ];
 

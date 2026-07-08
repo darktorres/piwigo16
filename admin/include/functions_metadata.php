@@ -28,9 +28,9 @@ function get_sync_iptc_data($file): array
     foreach ($iptc as $pwg_key => $value) {
         if (in_array($pwg_key, ['date_creation', 'date_available'])) {
             if (preg_match('/(\d{4})(\d{2})(\d{2})/', (string) $value, $matches)) {
-                $year = $matches[1];
-                $month = $matches[2];
-                $day = $matches[3];
+                $year = (int) $matches[1];
+                $month = (int) $matches[2];
+                $day = (int) $matches[3];
 
                 if (! checkdate($month, $day, $year)) {
                     // we suppose the year is correct
@@ -178,13 +178,13 @@ function get_sync_metadata($infos)
                 if (isset($width) and $width != '') {
                     $infos['width'] = (int) $width;
                 } else {
-                    $infos['width'] = round(explode(' ', $vb)[2]);
+                    $infos['width'] = round((float) explode(' ', $vb)[2]);
                 }
 
                 if (isset($height) and $height != '') {
                     $infos['height'] = (int) $height;
                 } else {
-                    $infos['height'] = round(explode(' ', $vb)[3]);
+                    $infos['height'] = round((float) explode(' ', $vb)[3]);
                 }
             }
             if ($image_size = @getimagesize($file)) {

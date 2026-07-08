@@ -419,7 +419,10 @@ SELECT
  * Verifies that the representative picture really exists in the db and
  * picks up a random representative if possible and based on config.
  *
- * @param 'all'|int|int[] $ids
+ * @param 'all'|int|array<int|string> $ids ws_functions/pwg.images.php passes
+ *   preg_match()-validated but never int-cast category id strings; $ids only
+ *   ever flows into implode()/SQL contexts below, so numeric strings work
+ *   identically
  */
 function update_category($ids = 'all')
 {
@@ -659,7 +662,7 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
 
     $datas = [];
 
-    $cat_map_callback = (fn ($m): int => $cat_map[$m[1]]['rank']);
+    $cat_map_callback = (fn ($m): string => (string) $cat_map[$m[1]]['rank']);
 
     foreach ($cat_map as $id => $cat) {
         $new_global_rank = preg_replace_callback(
@@ -1494,7 +1497,10 @@ SELECT id, uppercats, global_rank, visible, status
  * Set tags to an image.
  * Warning: given tags are all tags associated to the image, not additionnal tags.
  *
- * @param int[] $tags
+ * @param array<int|string> $tags real callers (ws_functions/pwg.images.php)
+ *   pass explode()'d tag id strings, never converted to int — tag ids only
+ *   ever flow into SQL/array-value contexts here, so numeric strings work
+ *   identically
  * @param int $image_id
  */
 function set_tags($tags, $image_id): void
@@ -1507,7 +1513,7 @@ function set_tags($tags, $image_id): void
 /**
  * Add new tags to a set of images.
  *
- * @param int[] $tags
+ * @param array<int|string> $tags see set_tags()'s $tags
  * @param int[] $images
  */
 function add_tags($tags, $images): void
@@ -2790,7 +2796,9 @@ function clear_derivative_cache_rec($path, $pattern)
  * Deletes derivatives of a particular element
  *
  * @param array $infos ('path'[, 'representative_ext'])
- * @param 'all'|int $type
+ * @param 'all'|int|'custom' $type IMG_CUSTOM (defined as the string
+ *   'custom') is a legitimate value, not just the numeric IMG_* type
+ *   constants — admin/picture_coi.php passes it directly
  */
 function delete_element_derivatives(array $infos, $type = 'all'): void
 {

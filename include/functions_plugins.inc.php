@@ -286,7 +286,9 @@ function &get_plugin_data($plugin_id)
 /**
  * Returns an array of plugins defined in the database.
  *
- * @param string $state optional filter
+ * @param string|null $state optional filter; null is treated the same as ''
+ *   below (both are empty()) — admin/include/plugins.class.php passes null
+ *   explicitly when it only wants to filter by $id
  * @param string $id returns only data about given plugin
  */
 function get_db_plugins($state = '', $id = ''): array

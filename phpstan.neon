@@ -2,7 +2,7 @@ includes:
     - phpstan-baseline.neon
 
 parameters:
-    level: 4
+    level: 5
     paths:
         - .
     excludePaths:
@@ -26,5 +26,17 @@ parameters:
             # that knplabs/github-api must be `composer require`d manually
             # before running it — it's not one of this project's own deps.
             - tools/github_issues.php
+            # ECS config: references PhpCsFixer\Fixer\...\*Fixer::class
+            # constants that only exist nested inside
+            # vendor/symplify/easy-coding-standard/vendor/friendsofphp/
+            # php-cs-fixer (bundled, not a direct composer.json dependency —
+            # confirmed via `find vendor -iname '*php-cs-fixer*'`, nothing at
+            # the top level). ECS's own bootstrap resolves them fine at
+            # runtime (this file runs clean on every `composer lint:php`),
+            # but our root autoloader can't see them, so PHPStan types every
+            # ::class reference here as plain class-string instead of
+            # class-string<FixerInterface>. Tooling config, not application
+            # code — same rationale as tools/phpstan-bootstrap.php below.
+            - ecs.php
     bootstrapFiles:
         - tools/phpstan-bootstrap.php

@@ -297,7 +297,8 @@ function bad_request($msg, $alternate_url = null): void
  * Exits the current script with 404 code.
  * @todo nice display if $template loaded
  *
- * @param string $msg
+ * @param string|null $msg null is treated the same as '' below (string
+ *   concatenation); comments.php passes null when comments are disabled
  * @param string|null $alternate_url redirect to this url
  */
 function page_not_found($msg, $alternate_url = null): void

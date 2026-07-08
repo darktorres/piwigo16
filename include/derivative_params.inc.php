@@ -58,7 +58,7 @@ function char_to_fraction($c): float|int
  */
 function fraction_to_char($f): string
 {
-    return chr(ord('a') + round($f * 25));
+    return chr(ord('a') + (int) round($f * 25));
 }
 
 /**
@@ -227,7 +227,10 @@ final class SizingParams
      * Calculates the cropping rectangle and the scaled size for an input image size.
      *
      * @param int[] $in_size - two element array of input dimensions (width, height)
-     * @param string $coi - four character encoded string containing the center of interest (unused if max_crop=0)
+     * @param string|null $coi - four character encoded string containing the
+     *   center of interest, or null (unused if max_crop=0 — compute_final_size()
+     *   always passes null since it never needs the crop preview); crop_h()/
+     *   crop_v() already treat null and '' identically via empty($coi)
      * @param-out ImageRect|null $crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
      * @param-out array<int|float>|null $scale_size - two element array containing width and height of the scaled image, or null
      */
@@ -244,14 +247,14 @@ final class SizingParams
                     if ($h < $this->min_size[1]) {
                         $idealCropPx = $destCrop->width() - floor($destCrop->height() * $this->ideal_size[0] / $this->min_size[1]);
                         $maxCropPx = round($this->max_crop * $destCrop->width());
-                        $destCrop->crop_h(min($idealCropPx, $maxCropPx), $coi);
+                        $destCrop->crop_h((int) min($idealCropPx, $maxCropPx), $coi);
                     }
                 } else {
                     $w = $destCrop->width() / $ratio_h;
                     if ($w < $this->min_size[0]) {
                         $idealCropPx = $destCrop->height() - floor($destCrop->width() * $this->ideal_size[1] / $this->min_size[0]);
                         $maxCropPx = round($this->max_crop * $destCrop->height());
-                        $destCrop->crop_v(min($idealCropPx, $maxCropPx), $coi);
+                        $destCrop->crop_v((int) min($idealCropPx, $maxCropPx), $coi);
                     }
                 }
             }

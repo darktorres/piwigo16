@@ -1264,11 +1264,14 @@ class PwgTemplateAdapter
 
     /**
      * @param string $type
-     * @param array $img
+     * @param array|SrcImage $img
      */
     public function derivative($type, $img): \DerivativeImage
     {
-        return new DerivativeImage($type, $img);
+        // Mirrors derivative_url()/DerivativeImage::url()'s own
+        // is_object($infos) ? $infos : new SrcImage($infos) handling — the
+        // constructor itself only accepts a real SrcImage.
+        return new DerivativeImage($type, is_object($img) ? $img : new SrcImage($img));
     }
 
     /**
@@ -1543,7 +1546,9 @@ class ScriptLoader
      * @param string $id
      * @param int $load_mode
      * @param string[] $require
-     * @param string $path
+     * @param string|null $path null defers to fill_well_known()'s
+     *   self::$known_paths lookup by $id — this method's own UI-core-dependency
+     *   recursion below passes null deliberately
      * @param string $version
      */
     public function add($id, $load_mode, $require, $path, $version = '0', $is_template = false): void

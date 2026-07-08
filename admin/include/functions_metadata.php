@@ -130,7 +130,8 @@ function get_sync_metadata_attributes(): array
  * Get all metadata of a file.
  *
  * @param array $infos - (path[, representative_ext])
- * @return array - includes data provided in $infos
+ * @return array|false includes data provided in $infos, or false if the
+ *   file's size can't be read
  */
 function get_sync_metadata($infos)
 {

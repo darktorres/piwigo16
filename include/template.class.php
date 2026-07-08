@@ -45,7 +45,7 @@ class Template
     public $external_filters = [];
 
     /**
-     * @var string - Content to add before </head> tag
+     * @var string[] - Content to add before </head> tag
      */
     public $html_head_elements = [];
 
@@ -292,6 +292,10 @@ class Template
     public function delete_compiled_templates(): void
     {
         $save_compile_id = $this->smarty->compile_id;
+        // Smarty's own @var string on $compile_id contradicts its own
+        // `= null` default (vendor/smarty/smarty/src/TemplateBase.php) —
+        // not a native type, and not ours to fix.
+        // @phpstan-ignore assign.propertyType
         $this->smarty->compile_id = null;
         $this->smarty->clearCompiledTemplate();
         $this->smarty->compile_id = $save_compile_id;
@@ -327,7 +331,6 @@ class Template
      * Sets the template filenames for handles.
      *
      * @param string[] $filename_array hashmap of handle=>filename
-     * @return true
      */
     public function set_filenames($filename_array): bool
     {
@@ -1292,7 +1295,7 @@ class Combinable
     /**
      * @param string $id
      * @param string $path
-     * @param string $version
+     * @param string|false $version false disables version-based cache busting
      */
     public function __construct(
         public $id,
@@ -1608,7 +1611,7 @@ class ScriptLoader
     /**
      * Returns combined scripts loaded in footer.
      *
-     * @return Combinable[]
+     * @return array{0: Combinable[], 1: Combinable[]}
      */
     public function get_footer_scripts(): array
     {

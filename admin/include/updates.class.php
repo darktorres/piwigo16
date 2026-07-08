@@ -18,7 +18,7 @@ include_once PHPWG_ROOT_PATH . 'include/functions.inc.php';
 class updates
 {
     /**
-     * @var array{class-string<plugins>, class-string<themes>, class-string<languages>}|array{mixed}
+     * @var string[]
      */
     public $types = [];
 
@@ -31,12 +31,12 @@ class updates
     public $missing = [];
 
     /**
-     * @var array{'AdminTools', 'TakeATour', 'language_switch', 'LocalFilesEditor'}
+     * @var string[]
      */
     public $default_plugins = [];
 
     /**
-     * @var array{'modus', 'elegant', 'smartpocket'}
+     * @var string[]
      */
     public $default_themes = [];
 

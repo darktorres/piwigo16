@@ -194,7 +194,7 @@ class PclZip
 {
     // ----- File descriptor of the zip file
     /**
-     * @var int
+     * @var resource|int|false|null
      */
     public $zip_fd = 0;
 
@@ -4501,6 +4501,10 @@ class PclZip
     // Parameters :
     // Return Values :
     // --------------------------------------------------------------------------------
+    /**
+     * @param-out array{comment: string|false, entries: mixed, disk_entries: mixed,
+     *   offset: mixed, size: mixed, disk: mixed, disk_start: mixed} $p_central_dir
+     */
     public function privReadEndCentralDir(array &$p_central_dir)
     {
         $v_result = 1;
@@ -4627,22 +4631,19 @@ class PclZip
         }
 
         // ----- Get comment
-        if ($v_data['comment_size'] != 0) {
-            $p_central_dir['comment'] = fread($this->zip_fd, $v_data['comment_size']);
-        } else {
-            $p_central_dir['comment'] = '';
-        }
+        $v_comment = $v_data['comment_size'] != 0
+            ? fread($this->zip_fd, $v_data['comment_size'])
+            : '';
 
-        $p_central_dir['entries'] = $v_data['entries'];
-        $p_central_dir['disk_entries'] = $v_data['disk_entries'];
-        $p_central_dir['offset'] = $v_data['offset'];
-        $p_central_dir['size'] = $v_data['size'];
-        $p_central_dir['disk'] = $v_data['disk'];
-        $p_central_dir['disk_start'] = $v_data['disk_start'];
-
-        // TBC
-        // for(reset($p_central_dir); $key = key($p_central_dir); next($p_central_dir)) {
-        // }
+        $p_central_dir = [
+            'comment' => $v_comment,
+            'entries' => $v_data['entries'],
+            'disk_entries' => $v_data['disk_entries'],
+            'offset' => $v_data['offset'],
+            'size' => $v_data['size'],
+            'disk' => $v_data['disk'],
+            'disk_start' => $v_data['disk_start'],
+        ];
 
         // ----- Return
         return $v_result;
@@ -5002,7 +5003,7 @@ class PclZip
     // Parameters :
     // Return Values :
     // --------------------------------------------------------------------------------
-    public function privMerge(&$p_archive_to_add)
+    public function privMerge(self &$p_archive_to_add)
     {
         $v_result = 1;
 

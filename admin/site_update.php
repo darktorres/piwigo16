@@ -71,6 +71,9 @@ $counts = [
 $basedir = '';
 $db_categories = [];
 $to_delete = [];
+// $simulate is only set once $_POST['submit'] is set (see below), which
+// also gates every later block that reads it.
+$simulate = false;
 
 if ($site_is_remote) {
     fatal_error('remote sites not supported');
@@ -853,7 +856,7 @@ $template->set_filenames([
     'update' => 'site_update.tpl',
 ]);
 $result_title = '';
-if (isset($simulate) and $simulate) {
+if ($simulate) {
     $result_title .= '[' . l10n('Simulation') . '] ';
 }
 

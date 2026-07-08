@@ -34,7 +34,7 @@ abstract class PersistentCache
      * Searches for a key in the persistent cache and fills corresponding value.
      * @param string $key
      * @param-out mixed $value
-     * @return false if the $key is not found in cache ($value is not modified in this case)
+     * @return bool false if the $key is not found in cache ($value is not modified in this case)
      */
     abstract public function get($key, &$value);
 
@@ -43,7 +43,7 @@ abstract class PersistentCache
      * @param string $key - it should be the return value of make_key function
      * @param mixed $value
      * @param int $lifetime
-     * @return false on error
+     * @return bool false on error
      */
     abstract public function set($key, $value, $lifetime = null);
 

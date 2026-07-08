@@ -17,6 +17,8 @@ include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
 
 // Bootstrap global, set by include/config_default.inc.php.
 global $conf;
+// Set by parse_request(), called below.
+global $page;
 
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $conf['data_location'] . 'i/');
@@ -399,6 +401,21 @@ while ($row = pwg_db_fetch_assoc($result)) {
     $conf[$row['param']] = $row['value'];
 }
 ImageStdParams::load_from_db();
+
+// parse_request() fills these by mutating the $page global from inside its
+// own function scope; the defaults below only keep analysis sound for the
+// reads that follow (always overwritten before use in every real path).
+$page['root_path'] = '';
+$page['derivative_path'] = '';
+$page['derivative_ext'] = '';
+$page['derivative_type'] = null;
+$page['derivative_params'] = null;
+$page['coi'] = null;
+$page['src_location'] = '';
+$page['src_path'] = '';
+$page['src_url'] = '';
+$page['original_size'] = null;
+$page['rotation_angle'] = 0;
 
 parse_request();
 // var_export($page);

@@ -22,12 +22,12 @@ class PwgXmlWriter
     public $_indentStr;
 
     /**
-     * @var array{}
+     * @var string[]
      */
     public $_elementStack;
 
     /**
-     * @var false
+     * @var bool
      */
     public $_lastTagOpen;
 

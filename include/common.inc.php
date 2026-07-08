@@ -190,6 +190,14 @@ if (isset($conf['order_by_inside_category_custom'])) {
 
 check_lounge();
 
+// include/user.inc.php sets these by calling build_user()/auto_login()/
+// auth_key_login(), each mutating the $user global from its own function
+// scope; the defaults below only keep analysis sound for the reads further
+// down (always overwritten before use in every real path).
+$user['id'] ??= $conf['guest_id'];
+$user['email'] ??= null;
+$user['theme'] ??= '';
+
 include PHPWG_ROOT_PATH . 'include/user.inc.php';
 $user['internal_status'] ??= [];
 

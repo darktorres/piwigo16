@@ -914,7 +914,7 @@ SELECT uppercats
     while ($row = pwg_db_fetch_assoc($result)) {
         $uppercats = array_merge(
             $uppercats,
-            explode(',', (string) $row['uppercats'])
+            array_map('intval', explode(',', (string) $row['uppercats']))
         );
     }
     $uppercats = array_unique($uppercats);
@@ -1806,7 +1806,8 @@ function fill_lounge($images, $categories): void
  *
  * @since 12
  * @param bool $invalidate_user_cache
- * @return int number of images moved
+ * @return array|void the moved image_id/category_id rows, or void if another
+ *   call is already emptying the lounge concurrently
  */
 function empty_lounge($invalidate_user_cache = true)
 {

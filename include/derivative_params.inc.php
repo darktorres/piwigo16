@@ -67,17 +67,23 @@ function fraction_to_char($f): string
 final class ImageRect
 {
     /**
-     * @var int
-     * @var int
-     * @var int
-     * @var int
+     * @var int|float
      */
     public $l;
 
+    /**
+     * @var int|float
+     */
     public $t;
 
+    /**
+     * @var int|float
+     */
     public $r;
 
+    /**
+     * @var int|float
+     */
     public $b;
 
     /**
@@ -91,17 +97,11 @@ final class ImageRect
         $this->b = $l[1];
     }
 
-    /**
-     * @return int
-     */
     public function width(): int|float
     {
         return $this->r - $this->l;
     }
 
-    /**
-     * @return int
-     */
     public function height(): int|float
     {
         return $this->b - $this->t;
@@ -229,7 +229,7 @@ final class SizingParams
      * @param int[] $in_size - two element array of input dimensions (width, height)
      * @param string $coi - four character encoded string containing the center of interest (unused if max_crop=0)
      * @param-out ImageRect|null $crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
-     * @param-out int[]|null $scale_size - two element array containing width and height of the scaled image, or null
+     * @param-out array<int|float>|null $scale_size - two element array containing width and height of the scaled image, or null
      */
     public function compute(array $in_size, $coi, &$crop_rect, &$scale_size): void
     {
@@ -264,9 +264,9 @@ final class SizingParams
         if ($ratio_w > 1 || $ratio_h > 1) {
             if ($ratio_w > $ratio_h) {
                 $scale_size[0] = $this->ideal_size[0];
-                $scale_size[1] = floor(1e-6 + $scale_size[1] / $ratio_w);
+                $scale_size[1] = (int) floor(1e-6 + $scale_size[1] / $ratio_w);
             } else {
-                $scale_size[0] = floor(1e-6 + $scale_size[0] / $ratio_h);
+                $scale_size[0] = (int) floor(1e-6 + $scale_size[0] / $ratio_h);
                 $scale_size[1] = $this->ideal_size[1];
             }
         } else {

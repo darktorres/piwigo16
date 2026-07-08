@@ -552,17 +552,17 @@ class image_ext_imagick implements imageInterface
     public $imagickdir = '';
 
     /**
-     * @var string
+     * @var int|string
      */
     public $width = '';
 
     /**
-     * @var string
+     * @var int|string
      */
     public $height = '';
 
     /**
-     * @var true
+     * @var bool
      */
     public $is_animated_webp = false;
 

@@ -1851,7 +1851,7 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
             }
 
             // load parent language content directly in global
-            if (! empty($load_lang_info['parent'])) {
+            if (is_array($load_lang_info) && ! empty($load_lang_info['parent'])) {
                 $parent_language = $load_lang_info['parent'];
             } elseif (! empty($lang_info['parent'])) {
                 $parent_language = $lang_info['parent'];
@@ -1986,7 +1986,7 @@ function create_navigation_bar($url, $nb_element, $start, $nb_element_page, $cle
         $url_start = $url . $start_str;
 
         $cur_page = $navbar['CURRENT_PAGE'] = $start / $nb_element_page + 1;
-        $maximum = ceil($nb_element / $nb_element_page);
+        $maximum = (int) ceil($nb_element / $nb_element_page);
 
         $start = $nb_element_page * round($start / $nb_element_page);
         $previous = $start - $nb_element_page;
@@ -2007,7 +2007,7 @@ function create_navigation_bar($url, $nb_element, $start, $nb_element_page, $cle
         // pages to display
         $navbar['pages'] = [];
         $navbar['pages'][1] = $url;
-        for ($i = max(floor($cur_page) - $pages_around, 2), $stop = min(ceil($cur_page) + $pages_around + 1, $maximum);
+        for ($i = (int) max(floor($cur_page) - $pages_around, 2), $stop = min(ceil($cur_page) + $pages_around + 1, $maximum);
             $i < $stop; $i++) {
             $navbar['pages'][$i] = $url . $start_str . (($i - 1) * $nb_element_page);
         }

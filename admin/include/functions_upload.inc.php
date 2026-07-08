@@ -1017,5 +1017,5 @@ function get_optimal_dimensions_for_representative(): array
 
     $margin_coef = 1.5;
 
-    return [$w * $margin_coef, $h * $margin_coef];
+    return [(int) ($w * $margin_coef), (int) ($h * $margin_coef)];
 }

@@ -1780,7 +1780,7 @@ SELECT
  *
  * @since 2.8
  * @param int $user_id
- * @return array
+ * @return array|false false if auth keys are disabled or the user status is ineligible
  */
 function create_user_auth_key($user_id, $user_status = null)
 {

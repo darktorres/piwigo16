@@ -97,7 +97,7 @@ final class ImageStdParams
     private static $disabled_type_map = [];
 
     /**
-     * @var DerivativeParams[]
+     * @var string[]
      */
     private static $undefined_type_map = [];
 
@@ -154,7 +154,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return string[]
      */
     public static function get_undefined_type_map()
     {

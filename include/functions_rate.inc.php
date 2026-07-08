@@ -15,7 +15,8 @@ declare(strict_types=1);
  * @param int $image_id
  * @param int|string|null $rate raw $_POST value (string) from picture.php,
  *   an (int)-cast value from the WS layer, or null when absent
- * @return array as return by update_rating_score()
+ * @return array|false as returned by update_rating_score(), or false if the
+ *   rate is invalid or forbidden
  */
 function rate_picture($image_id, int|string|null $rate)
 {

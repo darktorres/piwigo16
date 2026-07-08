@@ -12,17 +12,17 @@ declare(strict_types=1);
 class tabsheet
 {
     /**
-     * @var array{}
+     * @var array<string, array{caption: string, url: string}>
      */
     public $sheets;
 
     /**
-     * @var null
+     * @var mixed
      */
     public $uniqid;
 
     /**
-     * @var ''
+     * @var string
      */
     public $selected;
 

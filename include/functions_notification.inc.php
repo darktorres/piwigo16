@@ -41,7 +41,8 @@ function get_std_sql_where_restrict_filter(
  * @param string $type 'new_comments', 'unvalidated_comments', 'new_elements', 'updated_categories', 'new_users'
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int|array int for action count array for info
+ * @return int|array|null int for action count, array for info, null for an
+ *   unrecognized $type/$action
  */
 function custom_notification_query($action, $type, $start = null, $end = null)
 {

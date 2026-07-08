@@ -149,7 +149,7 @@ abstract class CalendarBase
      * @param bool $show_any - adds any link to the end of the bar
      * @param bool $show_empty - shows all labels even those without items
      * @param array $labels - optional labels for items (e.g. Jan,Feb,...)
-     * @return string
+     * @return array<int, array<string, mixed>>
      */
     protected function get_nav_bar_from_items(
         $date_components,

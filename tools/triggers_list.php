@@ -807,7 +807,7 @@ array(
 array(
   'name' => 'before_send_mail',
   'type' => 'trigger_change',
-  'vars' => array('bool', 'result', 'mixed', 'to', 'array', 'arguments', 'PHPMailer', 'mail'),
+  'vars' => array('bool', 'result', 'mixed', 'to', 'array', 'arguments', 'Symfony\Component\Mime\Email', 'mail'),
   'files' => array('include\functions_mail.inc.php (pwg_mail)'),
 ),
 array(

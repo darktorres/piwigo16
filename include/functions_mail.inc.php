@@ -10,7 +10,11 @@
  * @package functions\mail
  */
 
-use PHPMailer\PHPMailer\PHPMailer;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Email;
 
 /**
  * Returns the name of the mail sender
@@ -627,20 +631,13 @@ function pwg_mail($to, $args=array(), $tpl=array())
     $conf_mail = get_mail_configuration();
   }
 
-  include_once(PHPWG_ROOT_PATH.'include/phpmailer/Exception.php');
-  include_once(PHPWG_ROOT_PATH.'include/phpmailer/SMTP.php');
-  include_once(PHPWG_ROOT_PATH.'include/phpmailer/PHPMailer.php');
-
-  $mail = new PHPMailer;
+  $email = new Email();
 
   foreach (get_clean_recipients_list($to) as $recipient)
   {
-    $mail->addAddress($recipient['email'], $recipient['name']);
+    $email->addTo(new Address($recipient['email'], $recipient['name']));
   }
 
-  $mail->WordWrap = 76;
-  $mail->CharSet = 'UTF-8';
-  
   // Compute root_path in order have complete path
   set_make_full_url();
 
@@ -655,8 +652,8 @@ function pwg_mail($to, $args=array(), $tpl=array())
   {
     $from = unformat_email($args['from']);
   }
-  $mail->setFrom($from['email'], $from['name']);
-  $mail->addReplyTo($args['reply_to_mail_address'] ?? $from['email'], $args['reply_to_name'] ?? $from['name']);
+  $email->from(new Address($from['email'], $from['name']));
+  $email->replyTo(new Address($args['reply_to_mail_address'] ?? $from['email'], $args['reply_to_name'] ?? $from['name']));
 
   // Subject
   if (empty($args['subject']))
@@ -664,14 +661,14 @@ function pwg_mail($to, $args=array(), $tpl=array())
     $args['subject'] = 'Piwigo';
   }
   $args['subject'] = trim(preg_replace('#[\n\r]+#s', '', $args['subject']));
-  $mail->Subject = $args['subject'];
+  $email->subject($args['subject']);
 
   // Cc
   if (!empty($args['Cc']))
   {
     foreach (get_clean_recipients_list($args['Cc']) as $recipient)
     {
-      $mail->addCC($recipient['email'], $recipient['name']);
+      $email->addCc(new Address($recipient['email'], $recipient['name']));
     }
   }
 
@@ -688,7 +685,7 @@ function pwg_mail($to, $args=array(), $tpl=array())
   {
     foreach ($Bcc as $recipient)
     {
-      $mail->addBCC($recipient['email'], $recipient['name']);
+      $email->addBcc(new Address($recipient['email'], $recipient['name']));
     }
   }
 
@@ -863,21 +860,19 @@ function pwg_mail($to, $args=array(), $tpl=array())
   // Undo Compute root_path in order have complete path
   unset_make_full_url();
 
-  // Send content to PHPMailer
+  // Send content
   if (isset($contents['text/html']))
   {
-    $mail->isHTML(true);
-    $mail->Body = move_css_to_body($contents['text/html']);
-    
+    $email->html(move_css_to_body($contents['text/html']));
+
     if (isset($contents['text/plain']))
     {
-      $mail->AltBody = $contents['text/plain'];
+      $email->text($contents['text/plain']);
     }
   }
   else
   {
-    $mail->isHTML(false);
-    $mail->Body = $contents['text/plain'];
+    $email->text($contents['text/plain']);
   }
 
   if ($conf_mail['use_smtp'])
@@ -893,40 +888,50 @@ function pwg_mail($to, $args=array(), $tpl=array())
       $smtp_port = 25;
     }
 
-    $mail->IsSMTP();
+    $dsn_auth = '';
+    if (!empty($conf_mail['smtp_user']))
+    {
+      $dsn_auth = rawurlencode($conf_mail['smtp_user']).':'.rawurlencode($conf_mail['smtp_password']).'@';
+    }
 
-    // enables SMTP debug information (for testing) 2 - debug, 0 - no message
-    $mail->SMTPDebug = 0;
-    
-    $mail->Host = $smtp_host;
-    $mail->Port = $smtp_port;
+    $dsn = 'smtp://'.$dsn_auth.$smtp_host.':'.$smtp_port;
 
     if (!empty($conf_mail['smtp_secure']) and in_array($conf_mail['smtp_secure'], array('ssl', 'tls')))
     {
-      $mail->SMTPSecure = $conf_mail['smtp_secure'];
-    }
-    
-    if (!empty($conf_mail['smtp_user']))
-    {
-      $mail->SMTPAuth = true;
-      $mail->Username = $conf_mail['smtp_user'];
-      $mail->Password = $conf_mail['smtp_password'];
+      $dsn .= '?encryption='.$conf_mail['smtp_secure'];
     }
   }
+  else
+  {
+    // matches PHPMailer's default (non-SMTP) behavior, which sends via PHP's native mail()
+    $dsn = 'native://default';
+  }
+
+  $mailer = new Mailer(Transport::fromDsn($dsn));
 
   $ret = true;
-  $pre_result = trigger_change('before_send_mail', true, $to, $args, $mail);
+  $error_message = null;
+  $pre_result = trigger_change('before_send_mail', true, $to, $args, $email);
 
   if ($pre_result)
   {
-    $ret = $mail->send();
+    try
+    {
+      $mailer->send($email);
+    }
+    catch (TransportExceptionInterface $e)
+    {
+      $ret = false;
+      $error_message = $e->getMessage();
+    }
+
     if (!$ret and (!ini_get('display_errors') or is_admin()))
     {
-      trigger_error('Mailer Error: ' . $mail->ErrorInfo, E_USER_WARNING);
+      trigger_error('Mailer Error: ' . $error_message, E_USER_WARNING);
     }
     if ($conf['debug_mail'])
     {
-      pwg_send_mail_test($ret, $mail, $args);
+      pwg_send_mail_test($ret, $email, $args, $error_message);
     }
   }
 
@@ -976,13 +981,14 @@ function move_css_to_body($content)
  * Saves a copy of the mail if _data/tmp.
  *
  * @param boolean $success
- * @param PHPMailer $mail
+ * @param Email $mail
  * @param array $args
+ * @param string|null $error_message
  */
-function pwg_send_mail_test($success, $mail, $args)
+function pwg_send_mail_test($success, $mail, $args, $error_message = null)
 {
   global $conf, $user, $lang_info;
-  
+
   $dir = PHPWG_ROOT_PATH.$conf['data_location'].'tmp';
   if (mkgetdir($dir, MKGETDIR_DEFAULT&~MKGETDIR_DIE_ON_ERROR))
   {
@@ -995,13 +1001,13 @@ function pwg_send_mail_test($success, $mail, $args)
     {
       $filename .= '.html';
     }
-    
+
     $file = fopen($filename, 'w+');
     if (!$success)
     {
-      fwrite($file, "ERROR: " . $mail->ErrorInfo . "\n\n");
+      fwrite($file, "ERROR: " . $error_message . "\n\n");
     }
-    fwrite($file, $mail->getSentMIMEMessage());
+    fwrite($file, $mail->toString());
     fclose($file);
   }
 }

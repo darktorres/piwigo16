@@ -22,7 +22,9 @@
     "ext-simplexml": "*",
     "ext-zlib": "*",
     "smarty/smarty": "^5",
-    "symfony/dotenv": "^8.1"
+    "symfony/dotenv": "^8.1",
+    "symfony/mailer": "^8",
+    "symfony/mime": "^8"
   },
   "suggest": {
     "ext-exif": "Read EXIF metadata from JPEGs. All call sites guard with function_exists(); features that need EXIF degrade gracefully when the extension is absent.",

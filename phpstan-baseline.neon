@@ -391,12 +391,6 @@ parameters:
 			path: include/php_compat/gzopen.php
 
 		-
-			message: '#^Instantiated class League\\OAuth2\\Client\\Grant\\RefreshToken not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: include/phpmailer/OAuth.php
-
-		-
 			message: '#^Access to an undefined static property QRtools\:\:\$frames\.$#'
 			identifier: staticProperty.notFound
 			count: 1

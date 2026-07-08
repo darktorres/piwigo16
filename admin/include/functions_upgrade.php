@@ -243,7 +243,7 @@ WHERE '.$conf['user_fields']['username'].'=\''.$username.'\'
   }
   $row = pwg_db_fetch_assoc(pwg_query($query));
 
-  if (!$conf['password_verify']($password, $row['password']))
+  if (!pwg_password_verify($password, $row['password']))
   {
     $page['errors'][] = l10n('Invalid password!');
   }

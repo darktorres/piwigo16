@@ -120,7 +120,7 @@ function search_case_username($username)
  * @param bool $notify_user
  * @return int|false user id or false
  */
-function register_user($login, $password, $mail_address, $notify_admin=true, &$errors = array(), $notify_user=false)
+function register_user($login, #[\SensitiveParameter] $password, $mail_address, $notify_admin=true, &$errors = array(), $notify_user=false)
 {
   global $conf;
 
@@ -174,7 +174,7 @@ function register_user($login, $password, $mail_address, $notify_admin=true, &$e
   {
     $insert = array(
       $conf['user_fields']['username'] => $login,
-      $conf['user_fields']['password'] => $conf['password_hash']($password),
+      $conf['user_fields']['password'] => pwg_password_hash($password),
       $conf['user_fields']['email'] => $mail_address
       );
 
@@ -1144,85 +1144,145 @@ function auto_login()
 }
 
 /**
- * Hashes a password with the PasswordHash class from phpass security library.
- * @since 2.5
+ * Verifies a password against a legacy phpass ($P$/$H$-prefixed) hash.
+ * Minimal extraction of the vendored phpass library's core check algorithm
+ * (include/passwordhash.class.php, removed in this commit) -- kept only
+ * long enough to rehash existing installs' passwords forward to bcrypt in
+ * pwg_password_verify(); never used to generate new hashes.
+ * @see http://www.openwall.com/phpass/ (public domain, Solar Designer)
+ *
+ * @param string $password plain text
+ * @param string $hash phpass $P$/$H$-prefixed hash
+ * @return bool
+ */
+function pwg_phpass_verify_legacy(
+  #[\SensitiveParameter] $password,
+  #[\SensitiveParameter] $hash
+)
+{
+  static $itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+  if (strlen($password) > 4096 or strlen($hash) != 34)
+  {
+    return false;
+  }
+
+  $id = substr($hash, 0, 3);
+  if ($id !== '$P$' and $id !== '$H$')
+  {
+    return false;
+  }
+
+  $count_log2 = strpos($itoa64, $hash[3]);
+  if ($count_log2 === false or $count_log2 < 7 or $count_log2 > 30)
+  {
+    return false;
+  }
+  $count = 1 << $count_log2;
+
+  $salt = substr($hash, 4, 8);
+  if (strlen($salt) != 8)
+  {
+    return false;
+  }
+
+  $computed = md5($salt.$password, true);
+  do
+  {
+    $computed = md5($computed.$password, true);
+  }
+  while (--$count);
+
+  // phpass's custom base64-like encoding (not RFC 4648)
+  $output = substr($hash, 0, 12);
+  $i = 0;
+  do
+  {
+    $value = ord($computed[$i++]);
+    $output .= $itoa64[$value & 0x3f];
+    if ($i < 16)
+      $value |= ord($computed[$i]) << 8;
+    $output .= $itoa64[($value >> 6) & 0x3f];
+    if ($i++ >= 16)
+      break;
+    if ($i < 16)
+      $value |= ord($computed[$i]) << 16;
+    $output .= $itoa64[($value >> 12) & 0x3f];
+    if ($i++ >= 16)
+      break;
+    $output .= $itoa64[($value >> 18) & 0x3f];
+  }
+  while ($i < 16);
+
+  return hash_equals($hash, $output);
+}
+
+/**
+ * Hashes a password with native password_hash() (bcrypt).
+ * @since 17
  *
  * @param string $password plain text
  * @return string
  */
-function pwg_password_hash($password)
+function pwg_password_hash(
+  #[\SensitiveParameter] $password
+)
 {
-  global $pwg_hasher;
-
-  if (empty($pwg_hasher))
-  {
-    require_once(PHPWG_ROOT_PATH.'include/passwordhash.class.php');
-
-    // We use the portable hash feature from phpass because we can't be sure
-    // Piwigo runs on PHP 5.3+ (and won't run on an older version in the
-    // future)
-    $pwg_hasher = new PasswordHash(13, true);
-  }
-
-  return $pwg_hasher->HashPassword($password);
+  $cost = pwg_test_mode_is_active() ? 4 : 13;
+  return password_hash($password, PASSWORD_BCRYPT, array('cost' => $cost));
 }
 
 /**
- * Verifies a password, with the PasswordHash class from phpass security library.
- * If the hash is 'old' (assumed MD5) the hash is updated in database, used for
- * migration from Piwigo 2.4.
- * @since 2.5
+ * Verifies a password against a stored hash using native password_verify()
+ * (bcrypt). Also accepts a legacy phpass ($P$/$H$-prefixed) hash produced
+ * by this codebase's own pre-P5 pwg_password_hash(), rehashing it to
+ * bcrypt on successful verify -- the same forward-migration pattern
+ * SEC-41/P28 reuses later for bcrypt->Argon2id. The old MD5/
+ * $conf['pass_convert'] tier (bridging from *upstream* Piwigo's own
+ * pre-2.5 format) is removed outright: this fork has no in-place upgrade
+ * from upstream (docs/adr/0002-clean-fork-no-inplace-upgrade.md) -- that
+ * bridging is the one-shot import:legacy tool's job (P15/P23), not a live
+ * runtime path here.
+ * @since 17
  *
  * @param string $password plain text
- * @param string $hash may be md5 or phpass hashed password
- * @param integer $user_id only useful to update password hash from md5 to phpass
+ * @param string $hash bcrypt or legacy phpass hash
+ * @param integer $user_id only useful to update the hash format in database
  * @return bool
  */
-function pwg_password_verify($password, $hash, $user_id=null)
+function pwg_password_verify(
+  #[\SensitiveParameter] $password,
+  #[\SensitiveParameter] $hash,
+  $user_id=null
+)
 {
-  global $conf, $pwg_hasher;
+  global $conf;
 
-  // If the password has not been hashed with the current algorithm.
-  if (strpos($hash, '$P') !== 0)
+  if (str_starts_with($hash, '$P$') or str_starts_with($hash, '$H$'))
   {
-    if (!empty($conf['pass_convert']))
+    if (!pwg_phpass_verify_legacy($password, $hash))
     {
-      $check = ($hash == $conf['pass_convert']($password));
-    }
-    else
-    {
-      $check = ($hash == md5($password));
+      return false;
     }
 
-    if ($check)
+    if (!isset($user_id) or $conf['external_authentification'])
     {
-      if (!isset($user_id) or $conf['external_authentification'])
-      {
-        return true;
-      }
-
-      // Rehash using new hash.
-      $hash = pwg_password_hash($password);
-
-      single_update(
-        USERS_TABLE,
-        array('password' => $hash),
-        array('id' => $user_id)
-        );
+      return true;
     }
+
+    // Rehash using new hash.
+    $new_hash = pwg_password_hash($password);
+
+    single_update(
+      USERS_TABLE,
+      array('password' => $new_hash),
+      array('id' => $user_id)
+      );
+
+    return true;
   }
 
-  // If the stored hash is longer than an MD5, presume the
-  // new style phpass portable hash.
-  if (empty($pwg_hasher))
-  {
-    require_once(PHPWG_ROOT_PATH.'include/passwordhash.class.php');
-
-    // We use the portable hash feature
-    $pwg_hasher = new PasswordHash(13, true);
-  }
-
-  return $pwg_hasher->CheckPassword($password, $hash);
+  return password_verify($password, $hash);
 }
 
 /**
@@ -1277,7 +1337,7 @@ function pwg_login($success, $username, $password, $remember_me)
   $fake_user = generate_fake_user();
 
   // Verify password with fallback to fake user
-  $password_verify = $conf['password_verify'](
+  $password_verify = pwg_password_verify(
     $password,
     $user_found['password'] ?? $fake_user['password'],
     $user_found['id'] ?? $fake_user['id']
@@ -1390,20 +1450,14 @@ FROM '.USERS_TABLE.' AS u
  */
 function generate_fake_user()
 {
-  global $conf;
-
-  // Check if password_hash or password_verify has been changed
-  $is_verify_hash_changed = 'pwg_password_hash' !== $conf['password_hash']
-    || 'pwg_password_verify' !== $conf['password_verify'];
-
   // Generate once per session to avoid repeated hashing overhead.
   // Uses current password_hash algorithm to match real user verification costs.
-  if (!isset($_SESSION['fake_user_cache']) || $is_verify_hash_changed)
+  if (!isset($_SESSION['fake_user_cache']))
   {
     $fake_password = bin2hex(random_bytes(10));
     $_SESSION['fake_user_cache'] = array(
       'id' => null,
-      'password' => $conf['password_hash']($fake_password)
+      'password' => pwg_password_hash($fake_password)
     );
   }
 
@@ -2328,7 +2382,7 @@ SELECT
         }
       }
 
-      $updates[ $conf['user_fields']['password'] ] = $conf['password_hash']($params['password']);
+      $updates[ $conf['user_fields']['password'] ] = pwg_password_hash($params['password']);
     }
   }
 

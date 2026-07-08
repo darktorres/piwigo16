@@ -5,10 +5,9 @@ declare(strict_types=1);
 // Minimal stubs required to load include/functions_user.inc.php standalone:
 // - add_event_handler() is called at file top-level (`add_event_handler('try_log_user',
 //   'pwg_login');`), so it must exist before the require, not just before a call.
-// - PHPWG_ROOT_PATH is read by pwg_password_hash()/pwg_password_verify() to
-//   require_once include/passwordhash.class.php.
-// - single_update()/USERS_TABLE back the legacy-md5-rehash path (only exercised
-//   by the last test below).
+// - PHPWG_ROOT_PATH is read elsewhere in the file (unrelated to password hashing).
+// - single_update()/USERS_TABLE back the legacy-phpass-rehash path (only exercised
+//   by the last two tests below).
 if (!defined('PHPWG_ROOT_PATH')) {
     define('PHPWG_ROOT_PATH', __DIR__ . '/../../');
 }
@@ -31,15 +30,17 @@ if (!defined('USERS_TABLE')) {
 
 require_once PHPWG_ROOT_PATH . 'include/functions_user.inc.php';
 
-// pwg_password_hash()/pwg_password_verify() (include/functions_user.inc.php:1153,1181)
-// always use the phpass portable-hash library (include/passwordhash.class.php):
-// `new PasswordHash(13, true)` forces portable mode regardless of CRYPT_BLOWFISH
-// availability, producing a `$P$`-prefixed hash. There is no bcrypt path in this
-// codebase yet — that migration is docs/PLAN-REPLAY.md's SEC-41, done in P28.
+// pwg_password_hash()/pwg_password_verify() (include/functions_user.inc.php) use
+// native password_hash()/password_verify() (bcrypt) as of P5. pwg_password_verify()
+// also accepts a legacy phpass ($P$/$H$-prefixed) hash -- this codebase's own
+// pre-P5 format, still present in installs/fixtures created before this migration
+// -- rehashing it to bcrypt on successful verify. The old MD5/$conf['pass_convert']
+// fallback (bridging from *upstream* Piwigo's pre-2.5 format) is gone: this fork
+// has no in-place upgrade from upstream (docs/adr/0002-clean-fork-no-inplace-upgrade.md).
 
-test('pwg_password_hash produces a phpass portable hash', function (): void {
+test('pwg_password_hash produces a bcrypt hash', function (): void {
     $hash = pwg_password_hash('correcthorsebatterystaple');
-    expect($hash)->toStartWith('$P$');
+    expect($hash)->toStartWith('$2y$');
 });
 
 test('pwg_password_verify accepts its own hash and rejects a wrong password', function (): void {
@@ -48,19 +49,41 @@ test('pwg_password_verify accepts its own hash and rejects a wrong password', fu
     expect(pwg_password_verify('wrong', $hash))->toBeFalse();
 });
 
-test('pwg_password_verify accepts a legacy md5 hash without touching the DB', function (): void {
-    // No $user_id passed: pwg_password_verify()'s `!isset($user_id)` branch returns
-    // true immediately, before reaching the single_update() rehash call.
-    $md5Hash = md5('ancientpassword');
-    expect(pwg_password_verify('ancientpassword', $md5Hash))->toBeTrue();
-    expect(pwg_password_verify('wrongpassword', $md5Hash))->toBeFalse();
+test('pwg_password_hash reads cost from test mode', function (): void {
+    // pwg_test_mode_is_active() reads the X-Piwigo-Env header (include/env.inc.php);
+    // PHP_SAPI is 'cli' here, so it only needs the header present, matching
+    // tests/bootstrap.php's convention for the rest of the suite.
+    $_SERVER['HTTP_X_PIWIGO_ENV'] = 'test';
+    $hash = pwg_password_hash('costcheck');
+    // bcrypt hash format: $2y$<cost>$<22-char-salt><31-char-hash>
+    expect($hash)->toStartWith('$2y$04$');
 });
 
-test('pwg_password_verify rehashes a legacy md5 hash when a user_id is given', function (): void {
+test('pwg_password_verify accepts a legacy phpass hash and rejects a wrong password', function (): void {
+    // Precomputed with a fixed salt via the (now-removed) vendored phpass library,
+    // cross-checked byte-for-byte against pwg_phpass_verify_legacy()'s extraction.
+    $phpassHash = '$P$5testsalt/.6ES3kLR5L.kwZkBtHpD/';
+    expect(pwg_password_verify('legacyPhpassPassw0rd!', $phpassHash))->toBeTrue();
+    expect(pwg_password_verify('wrongpassword', $phpassHash))->toBeFalse();
+});
+
+test('pwg_password_verify accepts a legacy phpass hash without touching the DB', function (): void {
+    // No $user_id passed: pwg_password_verify()'s `!isset($user_id)` branch returns
+    // true immediately, before reaching the single_update() rehash call.
+    $phpassHash = '$P$5testsalt/.6ES3kLR5L.kwZkBtHpD/';
+    expect(pwg_password_verify('legacyPhpassPassw0rd!', $phpassHash))->toBeTrue();
+});
+
+test('pwg_password_verify rehashes a legacy phpass hash when a user_id is given', function (): void {
     global $conf;
     $conf ??= [];
     $conf['external_authentification'] = false;
 
-    $md5Hash = md5('ancientpassword');
-    expect(pwg_password_verify('ancientpassword', $md5Hash, 42))->toBeTrue();
+    $phpassHash = '$P$5testsalt/.6ES3kLR5L.kwZkBtHpD/';
+    expect(pwg_password_verify('legacyPhpassPassw0rd!', $phpassHash, 42))->toBeTrue();
+});
+
+test('pwg_phpass_verify_legacy rejects malformed hashes', function (): void {
+    expect(pwg_phpass_verify_legacy('anything', 'not-a-phpass-hash'))->toBeFalse();
+    expect(pwg_phpass_verify_legacy('anything', '$2y$04$tooshortforbcryptbutwrongprefix'))->toBeFalse();
 });

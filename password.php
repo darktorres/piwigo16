@@ -294,7 +294,7 @@ function reset_password()
     
   single_update(
     USERS_TABLE,
-    array($conf['user_fields']['password'] => $conf['password_hash']($_POST['use_new_pwd'])),
+    array($conf['user_fields']['password'] => pwg_password_hash($_POST['use_new_pwd'])),
     array($conf['user_fields']['id'] => $user_id)
     );
 

@@ -977,7 +977,7 @@ CREATE TABLE `piwigo_users` (
 
 LOCK TABLES `piwigo_users` WRITE;
 /*!40000 ALTER TABLE `piwigo_users` DISABLE KEYS */;
-INSERT INTO `piwigo_users` VALUES (1,'fixture_admin','$P$GKWTcsy9lUwCQQMNr880AK1Ivrqwku0','fixture_admin@example.test'),(2,'guest',NULL,NULL),(3,'regular_user','$P$Gp4zt3KppzjTJFmThm8H.eQDVH7tA50',NULL),(4,'power_user','$P$GmoQrTcm/hh7IYDX5Kf9kY10ZUrIKr0',NULL);
+INSERT INTO `piwigo_users` VALUES (1,'fixture_admin','$2y$04$mHabCTp1ThRGZLM6S6piuea1HS3Q95PbxIT/8hSKtXXS6L/NYKRb2','fixture_admin@example.test'),(2,'guest',NULL,NULL),(3,'regular_user','$2y$04$xGZfKCZNROjaLMYm0nOuKugaMf/IEPCzJsuk9lpjDwZrK.RZLusGy',NULL),(4,'power_user','$2y$04$7imX8Hz1Z2RqB7lcmrq2fumGWsXLRtER0scaaiq69AEohVEWLCIAW',NULL);
 /*!40000 ALTER TABLE `piwigo_users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

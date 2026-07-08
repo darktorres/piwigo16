@@ -216,7 +216,7 @@ function save_profile_from_post($userdata, &$errors)
   ;';
       list($current_password) = pwg_db_fetch_row(pwg_query($query));
 
-      if (!$conf['password_verify']($_POST['password'], $current_password))
+      if (!pwg_password_verify($_POST['password'], $current_password))
       {
         $errors[] = l10n('Current password is wrong');
       }
@@ -243,8 +243,7 @@ function save_profile_from_post($userdata, &$errors)
       if (!empty($_POST['use_new_pwd']))
       {
         $fields[] = $conf['user_fields']['password'];
-        // password is hashed with function $conf['password_hash']
-        $data[ $conf['user_fields']['password'] ] = $conf['password_hash']($_POST['use_new_pwd']);
+        $data[ $conf['user_fields']['password'] ] = pwg_password_hash($_POST['use_new_pwd']);
 
         deactivate_user_auth_keys($userdata['id']);
       }

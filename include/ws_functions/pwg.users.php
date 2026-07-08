@@ -621,7 +621,7 @@ SELECT '.$conf['user_fields']['password'].' AS password
 ;';
     list($current_password) = pwg_db_fetch_row(pwg_query($query));
 
-    if (!$conf['password_verify']($params['password'], $current_password))
+    if (!pwg_password_verify($params['password'], $current_password))
     {
       return new PwgError(403, l10n('Current password is wrong'));
     }

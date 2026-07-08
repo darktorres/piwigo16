@@ -298,14 +298,13 @@ SELECT id, path, representative_ext
  * @param int $site_id
  * @param bool $recursive
  * @param bool $only_new
- * @return array
  */
 function get_filelist(
     $category_id = '',
     $site_id = 1,
     $recursive = false,
     $only_new = false
-) {
+): array {
     // filling $cat_ids : all categories required
     $cat_ids = [];
 

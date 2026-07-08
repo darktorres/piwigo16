@@ -19,7 +19,7 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
  *
  * @return string feed identifier
  */
-function find_available_feed_id()
+function find_available_feed_id(): string
 {
     while (true) {
         $key = generate_key(50);

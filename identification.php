@@ -33,7 +33,7 @@ unset($_SESSION['reset_password_code']);
 if (isset($_POST['redirect'])) {
     $_POST['redirect_decoded'] = urldecode((string) $_POST['redirect']);
 }
-check_input_parameter('redirect_decoded', $_POST, false, '{^' . preg_quote(cookie_path()) . '}');
+check_input_parameter('redirect_decoded', $_POST, false, '{^' . preg_quote((string) cookie_path()) . '}');
 
 $redirect_to = '';
 if (! empty($_GET['redirect'])) {
@@ -72,7 +72,7 @@ if (isset($_POST['login'])) {
             redirect(
                 empty($redirect_to)
                 ? get_gallery_home_url()
-                : substr((string) $root_url, 0, strlen((string) $root_url) - strlen(cookie_path())) . $redirect_to
+                : substr((string) $root_url, 0, strlen((string) $root_url) - strlen((string) cookie_path())) . $redirect_to
             );
         } else {
             $page['errors']['login_form_error'] = l10n('Invalid username or password!');

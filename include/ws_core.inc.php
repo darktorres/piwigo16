@@ -516,7 +516,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
                 }
 
                 if ($options['type'] > 0) {
-                    if (($ret = self::checkType($the_param, $options['type'], $name)) !== null) {
+                    if (($ret = self::checkType($the_param, $options['type'], $name)) instanceof \PwgError) {
                         return $ret;
                     }
                 }

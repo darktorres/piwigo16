@@ -23,8 +23,10 @@
     "ext-zlib": "*",
     "endroid/qr-code": "^6",
     "pelago/emogrifier": "^8",
+    "psr/http-client": "^1.0",
     "smarty/smarty": "^5",
     "symfony/dotenv": "^8.1",
+    "symfony/http-client": "^8.0",
     "symfony/mailer": "^8",
     "symfony/mime": "^8"
   },

@@ -2432,6 +2432,24 @@ function cat_admin_access($category_id)
 }
 
 /**
+ * Returns a shared, lazily-built Symfony HttpClient instance. Symfony picks
+ * the best available transport itself (curl if present, native streams
+ * otherwise) -- no need to hand-roll the curl/file_get_contents/fsockopen
+ * fallback chain the old fetchRemote() implementation did.
+ *
+ * @return \Symfony\Contracts\HttpClient\HttpClientInterface
+ */
+function pwg_http_client()
+{
+  static $client = null;
+  if ($client === null)
+  {
+    $client = \Symfony\Component\HttpClient\HttpClient::create();
+  }
+  return $client;
+}
+
+/**
  * Retrieve data from external URL.
  *
  * @param string $src
@@ -2439,10 +2457,9 @@ function cat_admin_access($category_id)
  * @param array $get_data - data added to request url
  * @param array $post_data - data transmitted with POST
  * @param string $user_agent
- * @param int $step (internal use)
  * @return bool
  */
-function fetchRemote($src, &$dest, $get_data=array(), $post_data=array(), $user_agent='Piwigo', $step=0)
+function fetchRemote($src, &$dest, $get_data=array(), $post_data=array(), $user_agent='Piwigo')
 {
   global $conf;
 
@@ -2461,12 +2478,8 @@ function fetchRemote($src, &$dest, $get_data=array(), $post_data=array(), $user_
     }
   }
 
-  // After 3 redirections, return false
-  if ($step > 3) return false;
-
   // Initialization
-  $method  = empty($post_data) ? 'GET' : 'POST';
-  $request = empty($post_data) ? '' : http_build_query($post_data, '', '&');
+  $method = empty($post_data) ? 'GET' : 'POST';
   if (!empty($get_data))
   {
     $src .= strpos($src, '?') === false ? '?' : '&';
@@ -2476,6 +2489,8 @@ function fetchRemote($src, &$dest, $get_data=array(), $post_data=array(), $user_
   // Initialize $dest
   is_resource($dest) or $dest = '';
 
+  $headers = array('User-Agent' => $user_agent);
+
   // Piwigo makes real self-requests back into this same app (e.g. forcing
   // derivative-image generation right after upload, see
   // add_uploaded_file() in functions_upload.inc.php). Test mode is detected
@@ -2483,149 +2498,54 @@ function fetchRemote($src, &$dest, $get_data=array(), $post_data=array(), $user_
   // so without forwarding it here, a self-request looks like a plain
   // production hit and never picks up the test DB config. Only forward it
   // for same-host requests, not genuinely external ones (piwigo.org etc).
-  $test_mode_header = null;
   if (pwg_test_mode_is_active())
   {
     $header_value = pwg_test_mode_header();
     $src_host = parse_url($src, PHP_URL_HOST);
     if ($header_value !== null && $src_host !== null && $src_host === ($_SERVER['HTTP_HOST'] ?? null))
     {
-      $test_mode_header = 'X-Piwigo-Env: '.$header_value;
+      $headers['X-Piwigo-Env'] = $header_value;
     }
   }
 
-  // Try curl to read remote file
-  // TODO : remove all these @
-  if (function_exists('curl_init') && function_exists('curl_exec'))
-  {
-    $ch = @curl_init();
-
-    if (isset($conf['use_proxy']) && $conf['use_proxy'])
-    {
-      @curl_setopt($ch, CURLOPT_HTTPPROXYTUNNEL, 0);
-      @curl_setopt($ch, CURLOPT_PROXY, $conf['proxy_server']);
-      if (isset($conf['proxy_auth']) && !empty($conf['proxy_auth']))
-      {
-        @curl_setopt($ch, CURLOPT_PROXYUSERPWD, $conf['proxy_auth']);
-      }
-    }
-
-    @curl_setopt($ch, CURLOPT_URL, $src);
-    @curl_setopt($ch, CURLOPT_HEADER, 1);
-    @curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
-    @curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    if ($test_mode_header !== null)
-    {
-      @curl_setopt($ch, CURLOPT_HTTPHEADER, array($test_mode_header));
-    }
-    if ($method == 'POST')
-    {
-      @curl_setopt($ch, CURLOPT_POST, 1);
-      @curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
-    }
-    $content = @curl_exec($ch);
-    $header_length = @curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-    $status = @curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    @curl_close($ch);
-    if ($content !== false and $status >= 200 and $status < 400)
-    {
-      if (preg_match('/Location:\s+?(.+)/', substr($content, 0, $header_length), $m))
-      {
-        return fetchRemote($m[1], $dest, array(), array(), $user_agent, $step+1);
-      }
-      $content = substr($content, $header_length);
-      is_resource($dest) ? @fwrite($dest, $content) : $dest = $content;
-      return true;
-    }
-  }
-
-  // Try file_get_contents to read remote file
-  if (ini_get('allow_url_fopen'))
-  {
-    $opts = array(
-      'http' => array(
-        'method' => $method,
-        'user_agent' => $user_agent,
-      )
+  $options = array(
+    'headers' => $headers,
+    'max_redirects' => 3,
+    'timeout' => 10,
     );
-    if ($method == 'POST')
-    {
-      $opts['http']['content'] = $request;
-    }
-    $context = @stream_context_create($opts);
-    $content = @file_get_contents($src, false, $context);
-    if ($content !== false)
-    {
-      is_resource($dest) ? @fwrite($dest, $content) : $dest = $content;
-      return true;
-    }
+
+  if ($method == 'POST')
+  {
+    $options['body'] = $post_data;
   }
 
-  // Try fsockopen to read remote file
-  $src = parse_url($src);
-  $host = $src['host'];
-  $path = isset($src['path']) ? $src['path'] : '/';
-  $path .= isset($src['query']) ? '?'.$src['query'] : '';
+  if (!empty($conf['use_proxy']) && !empty($conf['proxy_server']))
+  {
+    $proxy_url = $conf['proxy_server'];
+    if (!empty($conf['proxy_auth']))
+    {
+      $proxy_url = preg_replace('#^(https?://)#', '$1'.$conf['proxy_auth'].'@', $proxy_url);
+    }
+    $options['proxy'] = $proxy_url;
+  }
 
-  if (($s = @fsockopen($host,80,$errno,$errstr,5)) === false)
+  try
+  {
+    $response = pwg_http_client()->request($method, $src, $options);
+    $content = $response->getContent(false);
+    $status = $response->getStatusCode();
+  }
+  catch (\Throwable $e)
   {
     return false;
   }
 
-  $http_request  = $method." ".$path." HTTP/1.0\r\n";
-  $http_request .= "Host: ".$host."\r\n";
-  if ($method == 'POST')
+  if ($status < 200 || $status >= 400)
   {
-    $http_request .= "Content-Type: application/x-www-form-urlencoded;\r\n";
-    $http_request .= "Content-Length: ".strlen($request)."\r\n";
+    return false;
   }
-  $http_request .= "User-Agent: ".$user_agent."\r\n";
-  $http_request .= "Accept: */*\r\n";
-  $http_request .= "\r\n";
-  $http_request .= $request;
 
-  fwrite($s, $http_request);
-
-  $i = 0;
-  $in_content = false;
-  while (!feof($s))
-  {
-    $line = fgets($s);
-
-    if (rtrim($line,"\r\n") == '' && !$in_content)
-    {
-      $in_content = true;
-      $i++;
-      continue;
-    }
-    if ($i == 0)
-    {
-      if (!preg_match('/HTTP\/(\\d\\.\\d)\\s*(\\d+)\\s*(.*)/',rtrim($line,"\r\n"), $m))
-      {
-        fclose($s);
-        return false;
-      }
-      $status = (int) $m[2];
-      if ($status < 200 || $status >= 400)
-      {
-        fclose($s);
-        return false;
-      }
-    }
-    if (!$in_content)
-    {
-      if (preg_match('/Location:\s+?(.+)$/',rtrim($line,"\r\n"),$m))
-      {
-        fclose($s);
-        return fetchRemote(trim($m[1]),$dest,array(),array(),$user_agent,$step+1);
-      }
-      $i++;
-      continue;
-    }
-    is_resource($dest) ? @fwrite($dest, $line) : $dest .= $line;
-    $i++;
-  }
-  fclose($s);
+  is_resource($dest) ? @fwrite($dest, $content) : $dest = $content;
   return true;
 }
 

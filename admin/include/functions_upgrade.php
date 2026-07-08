@@ -9,7 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-function check_upgrade()
+function check_upgrade(): bool
 {
     if (defined('PHPWG_IN_UPGRADE')) {
         return PHPWG_IN_UPGRADE;
@@ -241,6 +241,7 @@ WHERE ' . $conf['user_fields']['username'] . '=\'' . $username . '\'
 
 /**
  * which upgrades are available ?
+ * @return array<int, string>
  */
 function get_available_upgrade_ids(): array
 {

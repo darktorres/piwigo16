@@ -37,9 +37,10 @@ function get_nb_available_tags()
  * The returned list can be a subset of all existing tags due to permissions,
  * also tags with no images are not returned.
  *
- * @return array [id, name, counter, url_name]
+ * @param array<int, int|string> $tag_ids
+ * @return array<int, array<string, mixed>> [id, name, counter, url_name]
  */
-function get_available_tags($tag_ids = []): array
+function get_available_tags(array $tag_ids = []): array
 {
     global $persistent_cache, $user;
 
@@ -61,7 +62,7 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
         ' AND '
     );
 
-    if (is_array($tag_ids) and count($tag_ids) > 0) {
+    if (count($tag_ids) > 0) {
         $use_persistent_cache = false;
 
         $query .= '
@@ -113,7 +114,7 @@ SELECT *
 /**
  * Returns all tags even associated to no image.
  *
- * @return array [id, name, url_name]
+ * @return array<int, array<string, mixed>> [id, name, url_name]
  */
 function get_all_tags(): array
 {
@@ -142,8 +143,8 @@ SELECT *
  * calculation method avoid having very different levels for tags having
  * nearly the same count when set are small.
  *
- * @param array $tags at least [id, counter]
- * @return array [..., level]
+ * @param array<int, array<string, mixed>> $tags at least [id, counter]
+ * @return array<int, array<string, mixed>> [..., level]
  */
 function add_level_to_tags($tags)
 {
@@ -198,8 +199,9 @@ function add_level_to_tags($tags)
  *   empty() below), and admin/batch_manager.php passes null explicitly
  * @param string|null $order_by - optionally overwrite default photo order;
  *   null is treated the same as '' for the same reason
+ * @return array<int|string, mixed>
  */
-function get_image_ids_for_tags($tag_ids, $mode = 'AND', $extra_images_where_sql = '', $order_by = '', $use_permissions = true): array
+function get_image_ids_for_tags($tag_ids, $mode = 'AND', $extra_images_where_sql = '', $order_by = '', bool $use_permissions = true): array
 {
     global $conf;
     if (empty($tag_ids)) {
@@ -248,7 +250,7 @@ SELECT id
  * @param int[] $items
  * @param int $max_tags
  * @param int[] $excluded_tag_ids
- * @return array [id, name, counter, url_name]
+ * @return array<int, array<string, mixed>> [id, name, counter, url_name]
  */
 function get_common_tags($items, $max_tags, $excluded_tag_ids = []): array
 {
@@ -292,7 +294,7 @@ SELECT t.*, count(*) AS counter
  *   in an implode() SQL context below, so numeric strings work identically
  * @param string[] $url_names
  * @param string[] $names
- * @return array [id, name, url_name]
+ * @return array<int|string, mixed> [id, name, url_name]
  */
 function find_tags($ids = [], $url_names = [], $names = []): array
 {
@@ -321,11 +323,19 @@ SELECT *
     return query2array($query);
 }
 
+/**
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
+ */
 function tags_id_compare(array $a, array $b): int
 {
     return ($a['id'] < $b['id']) ? -1 : 1;
 }
 
+/**
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
+ */
 function tags_counter_compare(array $a, array $b): int
 {
     if ($a['counter'] == $b['counter']) {

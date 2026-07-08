@@ -16,6 +16,7 @@ add_event_handler('user_comment_check', 'user_comment_check');
  * This method is called by a trigger_change()
  *
  * @param string $action before check
+ * @param array<string, mixed> $comment
  * @return string validate, moderate, reject
  */
 function user_comment_check($action, array $comment)
@@ -57,9 +58,9 @@ function user_comment_check($action, array $comment)
 /**
  * Tries to insert a user comment and returns action to perform.
  *
- * @param array $comm
+ * @param array<string, mixed> $comm
  * @param string $key secret key sent back to the browser
- * @param array $infos output array of error messages
+ * @param array<int, string> $infos output array of error messages
  * @return string validate, moderate, reject
  */
 function insert_user_comment(&$comm, $key, &$infos)
@@ -284,6 +285,7 @@ $user_where_clause . '
  *    only admin can update all comments
  *    users can edit their own comments if admin allow them
  *
+ * @param array<string, mixed> $comment
  * @param string $post_key secret key sent back to the browser
  * @return string validate, moderate, reject
  */
@@ -380,6 +382,7 @@ $user_where_clause . '
  * Only used when no validation is needed, otherwise pwg_mail_notification_admins() is used.
  *
  * @param string $action edit, delete
+ * @param array<string, mixed> $comment
  */
 function email_admin($action, array $comment): void
 {

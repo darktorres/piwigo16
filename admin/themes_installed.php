@@ -129,6 +129,10 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
 }
 
 // sort themes by state then by name
+/**
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
+ */
 function cmp(array $a, array $b): int
 {
     $s = [

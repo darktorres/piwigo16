@@ -53,12 +53,12 @@ function ts_to_iso8601($ts): string
  * exactly this file's own usage (no image/language/copyright/enclosure/etc.
  * -- feed.php never sets any of those), not a general-purpose feed library.
  *
- * @param array $channel keys: title, link, encoding
- * @param array $items each: title, link, description, html (bool -- wrap
+ * @param array<string, mixed> $channel keys: title, link, encoding
+ * @param array<int, array<string, mixed>> $items each: title, link, description, html (bool -- wrap
  *        description in CDATA instead of escaping it), date (ISO 8601
  *        string), author, guid
  */
-function pwg_generate_rss2_feed(array $channel, $items): string
+function pwg_generate_rss2_feed(array $channel, array $items): string
 {
     $feed = '<?xml version="1.0" encoding="' . $channel['encoding'] . '"?>' . "\n";
     $feed .= "<rss version=\"2.0\">\n";

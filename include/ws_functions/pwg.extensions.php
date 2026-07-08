@@ -14,7 +14,7 @@ declare(strict_types=1);
  * @param mixed[] $params
  * @return array{id: mixed, name: mixed, version: mixed, state: mixed, description: mixed}[]
  */
-function ws_plugins_getList($params, $service): array
+function ws_plugins_getList($params, PwgServer &$service): array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/plugins.class.php';
 
@@ -49,7 +49,7 @@ function ws_plugins_getList($params, $service): array
  *    @option string plugin
  *    @option string pwg_token
  */
-function ws_plugins_performAction(array $params, $service): \PwgError|true
+function ws_plugins_performAction(array $params, PwgServer &$service): \PwgError|true
 {
     global $template, $conf;
 
@@ -72,7 +72,7 @@ function ws_plugins_performAction(array $params, $service): \PwgError|true
     $errors = $plugins->perform_action($params['action'], $params['plugin']);
 
     if (! empty($errors)) {
-        return new PwgError(500, $errors);
+        return new PwgError(500, implode(', ', $errors));
     } else {
         if (in_array($params['action'], ['activate', 'deactivate'])) {
             $template->delete_compiled_templates();
@@ -89,7 +89,7 @@ function ws_plugins_performAction(array $params, $service): \PwgError|true
  *    @option string theme
  *    @option string pwg_token
  */
-function ws_themes_performAction(array $params, $service): \PwgError|true
+function ws_themes_performAction(array $params, PwgServer &$service): \PwgError|true
 {
     global $template, $conf;
 
@@ -108,7 +108,7 @@ function ws_themes_performAction(array $params, $service): \PwgError|true
     $errors = $themes->perform_action($params['action'], $params['theme']);
 
     if (! empty($errors)) {
-        return new PwgError(500, $errors);
+        return new PwgError(500, implode(', ', $errors));
     } else {
         if (in_array($params['action'], ['activate', 'deactivate'])) {
             $template->delete_compiled_templates();
@@ -127,7 +127,7 @@ function ws_themes_performAction(array $params, $service): \PwgError|true
  *    @option string pwg_token
  *    @option bool reactivate (optional - undocumented)
  */
-function ws_extensions_update(array $params, $service)
+function ws_extensions_update(array $params, PwgServer &$service): \PwgError|string
 {
     global $conf;
 
@@ -215,10 +215,10 @@ function ws_extensions_update(array $params, $service)
 
     return match ($upgrade_status) {
         'ok' => l10n('%s has been successfully updated.', $extension_name),
-        'temp_path_error' => new PwgError(null, l10n('Can\'t create temporary file.')),
-        'dl_archive_error' => new PwgError(null, l10n('Can\'t download archive.')),
-        'archive_error' => new PwgError(null, l10n('Can\'t read or extract archive.')),
-        default => new PwgError(null, l10n('An error occured during extraction (%s).', $upgrade_status)),
+        'temp_path_error' => new PwgError(500, l10n('Can\'t create temporary file.')),
+        'dl_archive_error' => new PwgError(500, l10n('Can\'t download archive.')),
+        'archive_error' => new PwgError(500, l10n('Can\'t read or extract archive.')),
+        default => new PwgError(500, l10n('An error occured during extraction (%s).', $upgrade_status)),
     };
 }
 
@@ -231,7 +231,7 @@ function ws_extensions_update(array $params, $service)
  *    @option bool reset
  *    @option string pwg_token
  */
-function ws_extensions_ignoreupdate(array $params, $service): \PwgError|true
+function ws_extensions_ignoreupdate(array $params, PwgServer &$service): \PwgError|true
 {
     global $conf;
 
@@ -283,8 +283,9 @@ function ws_extensions_ignoreupdate(array $params, $service): \PwgError|true
  * API method
  * Checks for updates (core and extensions)
  * @param mixed[] $params
+ * @return array{piwigo_need_update: mixed, ext_need_update: bool|null}
  */
-function ws_extensions_checkupdates($params, $service): array
+function ws_extensions_checkupdates($params, PwgServer &$service): array
 {
     global $conf;
 

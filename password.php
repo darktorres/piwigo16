@@ -210,7 +210,7 @@ function process_password_request(): bool
  *
  * @return mixed (user_id if OK, false otherwise)
  */
-function check_password_reset_key($reset_key)
+function check_password_reset_key(mixed $reset_key): mixed
 {
     global $page, $conf;
 
@@ -320,7 +320,7 @@ function reset_password_key(): false|float|int|string
     return $user_id;
 }
 
-function reset_password_code()
+function reset_password_code(): mixed
 {
     if (! isset($_SESSION['valid_reset_password_code'])) {
         return false;

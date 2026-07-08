@@ -169,11 +169,8 @@ SELECT category_id, MAX(`rank`) AS max_rank
 
 /**
  * Merge chunks added by pwg.images.addChunk
- * @param string $output_filepath
- * @param string $original_sum
- * @param string $type
  */
-function merge_chunks($output_filepath, $original_sum, $type)
+function merge_chunks(string $output_filepath, string $original_sum, string $type): ?\PwgError
 {
     global $conf, $logger;
 
@@ -226,6 +223,8 @@ function merge_chunks($output_filepath, $original_sum, $type)
     if (function_exists('memory_get_usage')) {
         $logger->debug('[merge_chunks] memory_get_usage after loading chunks: ' . memory_get_usage(), 'WS');
     }
+
+    return null;
 }
 
 /**
@@ -274,8 +273,9 @@ function remove_chunks($original_sum, $type): void
  *    @option string author
  *    @option string content
  *    @option string key
+ * @return \PwgError|array{comment: PwgNamedStruct}
  */
-function ws_images_addComment(array $params, $service): \PwgError|array
+function ws_images_addComment(array $params, PwgServer $service): \PwgError|array
 {
     global $conf;
 
@@ -340,8 +340,9 @@ SELECT DISTINCT image_id
  *    @option int image_id
  *    @option int comments_page
  *    @option int comments_per_page
+ * @return \PwgError|array<string, mixed>
  */
-function ws_images_getInfo(array $params, $service): \PwgError|array
+function ws_images_getInfo(array $params, PwgServer $service): \PwgError|array
 {
     global $user, $conf;
 
@@ -581,7 +582,7 @@ SELECT id, date, author, content
  *    @option int image_id
  *    @option float rate
  */
-function ws_images_rate(array $params, $service)
+function ws_images_rate(array $params, PwgServer $service): mixed
 {
     $query = '
 SELECT DISTINCT id
@@ -619,8 +620,9 @@ SELECT DISTINCT id
  *    @option int per_page
  *    @option int page
  *    @option string order (optional)
+ * @return array{paging: PwgNamedStruct, images: PwgNamedArray}
  */
-function ws_images_search(array $params, $service): array
+function ws_images_search(array $params, PwgServer $service): array
 {
     include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
 
@@ -703,8 +705,9 @@ SELECT *
  * Registers a new search
  * @param mixed[] $params
  *    @option string query
+ * @return \PwgError|array{search_id: string, search_url: string}
  */
-function ws_images_filteredSearch_create(array $params, $service): \PwgError|array
+function ws_images_filteredSearch_create(array $params, PwgServer $service): \PwgError|array
 {
     global $user, $conf;
 
@@ -975,7 +978,7 @@ function ws_images_filteredSearch_create(array $params, $service): \PwgError|arr
  *    @option int image_id
  *    @option int level
  */
-function ws_images_setPrivacyLevel(array $params, $service)
+function ws_images_setPrivacyLevel(array $params, PwgServer $service): \PwgError|int|string
 {
     global $conf;
 
@@ -1007,8 +1010,9 @@ UPDATE ' . IMAGES_TABLE . '
  *    @option int image_id
  *    @option int category_id
  *    @option int rank
+ * @return array<string, mixed>|\PwgError
  */
-function ws_images_setRank(array $params, $service): array|\PwgError
+function ws_images_setRank(array $params, PwgServer $service): array|\PwgError
 {
     if (count($params['image_id']) > 1) {
         include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -1116,7 +1120,7 @@ UPDATE ' . IMAGE_CATEGORY_TABLE . '
  *    @option string type = 'file'
  *    @option int position
  */
-function ws_images_add_chunk(array $params, $service)
+function ws_images_add_chunk(array $params, PwgServer $service): ?\PwgError
 {
     global $conf, $logger;
 
@@ -1159,6 +1163,8 @@ function ws_images_add_chunk(array $params, $service)
             'an error has occured while writting chunk ' . $params['position'] . ' for ' . $params['type']
         );
     }
+
+    return null;
 }
 
 /**
@@ -1169,7 +1175,7 @@ function ws_images_add_chunk(array $params, $service)
  *    @option string type = 'file'
  *    @option string sum
  */
-function ws_images_addFile(array $params, $service)
+function ws_images_addFile(array $params, PwgServer $service): \PwgError|bool|null
 {
     global $conf, $logger;
 
@@ -1193,7 +1199,7 @@ SELECT
 
     // since Piwigo 2.4 and derivatives, we do not take the imported "thumb" into account
     if ($params['type'] == 'thumb') {
-        remove_chunks($image['md5sum'], $type);
+        remove_chunks($image['md5sum'], $params['type']);
         return true;
     }
 
@@ -1237,6 +1243,8 @@ SELECT
         $params['image_id'],
         $image['md5sum'] // we force the md5sum to remain the same
     );
+
+    return null;
 }
 
 /**
@@ -1254,8 +1262,9 @@ SELECT
  *    @option int level
  *    @option bool check_uniqueness
  *    @option int image_id (optional)
+ * @return \PwgError|array{image_id: int|string, url: string}
  */
-function ws_images_add(array $params, $service): \PwgError|array
+function ws_images_add(array $params, PwgServer $service): \PwgError|array
 {
     global $conf, $user, $logger;
 
@@ -1404,8 +1413,9 @@ SELECT id, name, permalink
  *    @option int level
  *    @option string|string[] tags
  *    @option int image_id (optional)
+ * @return \PwgError|array{image_id: int|string, url: string}
  */
-function ws_images_addSimple(array $params, $service): \PwgError|array
+function ws_images_addSimple(array $params, PwgServer $service): \PwgError|array
 {
     global $conf, $logger;
 
@@ -1533,8 +1543,9 @@ SELECT id, name, permalink
  *    @option int level
  *    @option string|string[] tags
  *    @option int image_id (optional)
+ * @return \PwgError|array<string, mixed>|null
  */
-function ws_images_upload(array $params, $service)
+function ws_images_upload(array $params, PwgServer $service): \PwgError|array|null
 {
     global $conf;
 
@@ -1728,6 +1739,8 @@ SELECT
             'add_status' => $add_status,
         ];
     }
+
+    return null;
 }
 
 /**
@@ -1751,7 +1764,7 @@ SELECT
  *    @option string tag_ids (optional) - "tag_id,tag_id"
  *    @option int image_id (optional)
  */
-function ws_images_uploadAsync(array $params, &$service)
+function ws_images_uploadAsync(array $params, PwgServer &$service): mixed
 {
     global $conf, $user, $logger;
 
@@ -1995,7 +2008,7 @@ SELECT COUNT(*)
  *    @option string filename_list (optional)
  * @return mixed[]
  */
-function ws_images_exist(array $params, $service): array
+function ws_images_exist(array $params, PwgServer $service): array
 {
     global $conf, $logger;
 
@@ -2061,8 +2074,9 @@ SELECT id, file
  * @since 13
  * @param mixed[] $params
  *    @option string filename_list
+ * @return array<int|string, array<string, mixed>>
  */
-function ws_images_formats_searchImage(array $params, $service)
+function ws_images_formats_searchImage(array $params, PwgServer $service): array
 {
     global $conf, $logger;
 
@@ -2155,7 +2169,7 @@ SELECT
  *    @option int format_id
  *    @option string pwg_token
  */
-function ws_images_formats_delete(array $params, $service): \PwgError|bool
+function ws_images_formats_delete(array $params, PwgServer $service): \PwgError|bool
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2258,8 +2272,9 @@ DELETE FROM ' . IMAGE_FORMAT_TABLE . '
  * @param mixed[] $params
  *    @option int image_id
  *    @option string file_sum
+ * @return \PwgError|array<string, string>
  */
-function ws_images_checkFiles(array $params, $service): \PwgError|array
+function ws_images_checkFiles(array $params, PwgServer $service): \PwgError|array
 {
     global $logger;
 
@@ -2324,7 +2339,7 @@ SELECT path
  *    @option string single_value_mode
  *    @option string multiple_value_mode
  */
-function ws_images_setInfo(array $params, $service)
+function ws_images_setInfo(array $params, PwgServer $service): ?\PwgError
 {
     global $conf;
 
@@ -2468,6 +2483,8 @@ SELECT *
     }
 
     invalidate_user_cache();
+
+    return null;
 }
 
 /**
@@ -2477,7 +2494,7 @@ SELECT *
  *    @option int|int[] image_id
  *    @option string pwg_token
  */
-function ws_images_delete(array $params, $service): \PwgError|int
+function ws_images_delete(array $params, PwgServer $service): \PwgError|int
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2511,8 +2528,9 @@ function ws_images_delete(array $params, $service): \PwgError|int
  * API method
  * Checks if Piwigo is ready for upload
  * @param mixed[] $params
+ * @return array{message: ?string, ready_for_upload: bool}
  */
-function ws_images_checkUpload($params, $service)
+function ws_images_checkUpload(array $params, PwgServer $service): array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
 
@@ -2530,8 +2548,9 @@ function ws_images_checkUpload($params, $service)
  * Empties the lounge, where photos may wait before taking off.
  * @since 12
  * @param mixed[] $params
+ * @return array{rows: mixed}
  */
-function ws_images_emptyLounge($params, $service): array
+function ws_images_emptyLounge(array $params, PwgServer $service): array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -2547,8 +2566,9 @@ function ws_images_emptyLounge($params, $service): array
  * Empties the lounge, where photos may wait before taking off.
  * @since 12
  * @param mixed[] $params
+ * @return \PwgError|array<string, mixed>
  */
-function ws_images_uploadCompleted(array $params, $service): \PwgError|array
+function ws_images_uploadCompleted(array $params, PwgServer $service): \PwgError|array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -2610,8 +2630,9 @@ SELECT
  * add md5sum at photos, by block. Returns how md5sum were added and how many are remaining.
  * @param mixed[] $params
  *    @option int block_size
+ * @return \PwgError|array{nb_added: int, nb_no_md5sum: int}
  */
-function ws_images_setMd5sum(array $params, $service): \PwgError|array
+function ws_images_setMd5sum(array $params, PwgServer $service): \PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2638,8 +2659,9 @@ function ws_images_setMd5sum(array $params, $service): \PwgError|array
  * Synchronize metadatas photos. Returns how many metadatas were sync.
  * @param mixed[] $params
  *    @option int image_id
+ * @return \PwgError|array{nb_synchronized: int}
  */
-function ws_images_syncMetadata(array $params, $service): \PwgError|array
+function ws_images_syncMetadata(array $params, PwgServer $service): \PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2694,8 +2716,9 @@ SELECT id
  * Deletes orphan photos, by block. Returns how many orphans were deleted and how many are remaining.
  * @param mixed[] $params
  *    @option int block_size
+ * @return \PwgError|array{nb_deleted: int, nb_orphans: int}
  */
-function ws_images_deleteOrphans(array $params, $service): \PwgError|array
+function ws_images_deleteOrphans(array $params, PwgServer $service): \PwgError|array
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2724,7 +2747,7 @@ function ws_images_deleteOrphans(array $params, $service): \PwgError|array
  *    @option string action
  *    @option string pwg_token
  */
-function ws_images_setCategory(array $params, $service)
+function ws_images_setCategory(array $params, PwgServer $service): ?\PwgError
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -2754,4 +2777,6 @@ SELECT
     }
 
     invalidate_user_cache();
+
+    return null;
 }

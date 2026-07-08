@@ -68,7 +68,7 @@ function cookie_path(): ?string
  * @param mixed $value
  * @param int|null $expire
  */
-function pwg_set_cookie_var($var, $value, $expire = null): bool
+function pwg_set_cookie_var(string $var, $value, $expire = null): bool
 {
     if ($value == null or $expire === 0) {
         unset($_COOKIE['pwg_' . $var]);

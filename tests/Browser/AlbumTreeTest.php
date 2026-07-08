@@ -15,6 +15,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * mouse-event state machine, which Playwright's synthesised mouse events
  * don't reliably enter — not a meaningful regression net either way.
  */
+/**
+ * @return array{0: object, 1: string}
+ */
 function albumTreePwgToken(object $test): array
 {
     $page = H::loginAsAdmin($test);

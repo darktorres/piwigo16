@@ -25,16 +25,22 @@ abstract class CalendarBase
 {
     /**
      * db column on which this calendar works
+     *
+     * @var string
      */
     public $date_field;
 
     /**
      * used for queries (INNER JOIN or normal)
+     *
+     * @var string
      */
     public $inner_sql;
 
     /**
      * used to store db fields
+     *
+     * @var array<int, array{sql: string, labels: mixed}>
      */
     public $calendar_levels;
 
@@ -106,9 +112,9 @@ abstract class CalendarBase
     /**
      * Returns a display name for a date component optionally using labels.
      *
-     * @return string
+     * @return mixed
      */
-    protected function get_date_component_label($level, $date_component)
+    protected function get_date_component_label(int $level, string $date_component)
     {
         $label = $date_component;
         if (isset($this->calendar_levels[$level]['labels'][$date_component])) {
@@ -144,15 +150,15 @@ abstract class CalendarBase
     /**
      * Creates a calendar navigation bar.
      *
-     * @param array $date_components
-     * @param array $items - hash of items to put in the bar (e.g. 2005,2006)
+     * @param array<int, int|string> $date_components
+     * @param array<int|string, mixed> $items - hash of items to put in the bar (e.g. 2005,2006)
      * @param bool $show_any - adds any link to the end of the bar
      * @param bool $show_empty - shows all labels even those without items
-     * @param array $labels - optional labels for items (e.g. Jan,Feb,...)
+     * @param array<int|string, mixed>|null $labels - optional labels for items (e.g. Jan,Feb,...)
      * @return array<int, array<string, mixed>>
      */
     protected function get_nav_bar_from_items(
-        $date_components,
+        array $date_components,
         array $items,
         $show_any,
         $show_empty = false,
@@ -220,8 +226,9 @@ abstract class CalendarBase
      * Creates a calendar navigation bar for a given level.
      *
      * @param int $level - 0-year, 1-month/week, 2-day
+     * @param array<int|string, mixed>|null $labels
      */
-    protected function build_nav_bar($level, $labels = null)
+    protected function build_nav_bar($level, ?array $labels = null): void
     {
         global $template, $conf, $page;
 
@@ -272,7 +279,7 @@ $this->get_date_where($level) . '
      * Assigns the next/previous link to the template with regards to
      * the currently choosen date.
      */
-    protected function build_next_prev()
+    protected function build_next_prev(): void
     {
         global $template, $page;
 

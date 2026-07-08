@@ -11,16 +11,25 @@ declare(strict_types=1);
 
 class languages
 {
+    /**
+     * @var array<string, array<string, mixed>>
+     */
     public $fs_languages = [];
 
+    /**
+     * @var array<string, mixed>
+     */
     public $db_languages = [];
 
+    /**
+     * @var array<int|string, array<string, mixed>>
+     */
     public $server_languages = [];
 
     /**
      * Initialize $fs_languages and $db_languages
      */
-    public function __construct($target_charset = null)
+    public function __construct(?string $target_charset = null)
     {
         $this->get_fs_languages($target_charset);
     }
@@ -117,7 +126,7 @@ UPDATE ' . USER_INFOS_TABLE . '
     /**
      *  Get languages defined in the language directory
      */
-    public function get_fs_languages($target_charset = null): void
+    public function get_fs_languages(?string $target_charset = null): void
     {
         if (empty($target_charset)) {
             $target_charset = get_pwg_charset();
@@ -191,7 +200,7 @@ UPDATE ' . USER_INFOS_TABLE . '
     /**
      * Retrieve PEM server datas to $server_languages
      */
-    public function get_server_languages($new = false): bool
+    public function get_server_languages(bool $new = false): bool
     {
         global $user, $conf;
 
@@ -268,6 +277,7 @@ UPDATE ' . USER_INFOS_TABLE . '
      * @param string $action - install or upgrade
      * @param string $revision - remote revision identifier (numeric)
      * @param string $dest - language id or extension id
+     * @return mixed
      */
     public function extract_language_files($action, $revision, $dest = '')
     {
@@ -378,6 +388,9 @@ UPDATE ' . USER_INFOS_TABLE . '
 
     /**
      * Sort functions
+     *
+     * @param array<string, mixed> $a
+     * @param array<string, mixed> $b
      */
     public function extension_name_compare(array $a, array $b): int
     {

@@ -11,10 +11,19 @@ declare(strict_types=1);
 
 class check_integrity
 {
+    /**
+     * @var array<int, mixed>
+     */
     public $ignore_list;
 
+    /**
+     * @var array<int, array<string, mixed>>
+     */
     public $retrieve_list;
 
+    /**
+     * @var array<int, mixed>
+     */
     public $build_ignore_list;
 
     public function __construct()
@@ -146,7 +155,7 @@ class check_integrity
         $submit_automatic_correction = false;
         $submit_ignore = false;
 
-        if (isset($this->retrieve_list) and count($this->retrieve_list) > 0) {
+        if (count($this->retrieve_list) > 0) {
             $template->set_filenames([
                 'check_integrity' => 'check_integrity.tpl',
             ]);
@@ -216,7 +225,10 @@ class check_integrity
     /**
      * Add anomaly data
      *
-     * @param $anomaly arguments
+     * @param string $anomaly arguments
+     * @param ?string $correction_fct
+     * @param ?array<string, mixed> $correction_fct_args
+     * @param ?string $correction_msg
      */
     public function add_anomaly($anomaly, $correction_fct = null, $correction_fct_args = null, $correction_msg = null): void
     {
@@ -240,7 +252,7 @@ class check_integrity
     /**
      * Update table config
      *
-     * @param array $conf_ignore_list list array
+     * @param array<int, mixed> $conf_ignore_list list array
      */
     public function update_conf($conf_ignore_list = []): void
     {

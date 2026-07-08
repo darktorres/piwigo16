@@ -9,7 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-function get_search_id_pattern($candidate): ?string
+function get_search_id_pattern(int|string $candidate): ?string
 {
     $clause_pattern = null;
     if (preg_match('/^psk-\d{8}-[a-z0-9]{10}$/i', (string) $candidate)) {
@@ -21,7 +21,10 @@ function get_search_id_pattern($candidate): ?string
     return $clause_pattern;
 }
 
-function get_search_info($candidate)
+/**
+ * @return array<string, mixed>|null
+ */
+function get_search_info(int|string $candidate): ?array
 {
     global $page;
 
@@ -67,10 +70,9 @@ SELECT *
  * Returns search rules stored into a serialized array in "search"
  * table. Each search rules set is numericaly identified.
  *
- * @param int $search_id
- * @return array
+ * @return array<string, mixed>|false
  */
-function get_search_array($search_id): mixed
+function get_search_array(int|string $search_id): mixed
 {
     global $user;
 
@@ -86,9 +88,11 @@ function get_search_array($search_id): mixed
 /**
  * Returns the list of items corresponding to the advanced search array.
  *
+ * @param array<string, mixed> $search
  * @param string $images_where optional additional restriction on images table
+ * @return array{items: array<int, mixed>, search_details: array{matching_cat_ids: array<int, mixed>|null, matching_tag_ids: array<int, mixed>|null, has_filters_filled: bool, image_ids_for_filter: array<string, mixed>}}
  */
-function get_regular_search_results(array $search, $images_where = ''): array
+function get_regular_search_results(array $search, string $images_where = ''): array
 {
     global $conf, $logger;
 
@@ -715,11 +719,9 @@ function get_clause_for_filter($filter_name): string
  *
  * @since 15
  *
- * @param string $filter_name
- *
- * @return array|false array of image_ids, or false
+ * @return array<int, mixed>|false array of image_ids, or false
  */
-function get_items_for_filter($filter_name)
+function get_items_for_filter(string $filter_name)
 {
     global $page, $logger;
 
@@ -769,14 +771,17 @@ define('QST_BREAK', 0x20);
  */
 class QSearchScope
 {
+    /**
+     * @param string[] $aliases
+     */
     public function __construct(
-        public $id,
-        public $aliases,
-        public $nullable = false,
-        public $is_text = true
+        public string $id,
+        public array $aliases,
+        public bool $nullable = false,
+        public bool $is_text = true
     ) {}
 
-    public function parse($token): bool
+    public function parse(QSingleToken $token): bool
     {
         if (! $this->nullable && strlen((string) $token->term) == 0) {
             return false;
@@ -784,25 +789,40 @@ class QSearchScope
         return true;
     }
 
-    public function process_char(&$ch, &$crt_token): bool
+    public function process_char(string &$ch, string &$crt_token): bool
     {
         return false;
+    }
+
+    /**
+     * Only QNumericRangeScope and QDateRangeScope support get_sql() —
+     * qsearch_get_images() only calls it for scope ids backed by one of
+     * those two subclasses (width/height/ratio/size/hits/score/filesize/id/
+     * created/posted), never for a plain QSearchScope (tag/photo/file/
+     * author, which have their own dedicated SQL building).
+     */
+    public function get_sql(string $field, QSingleToken $token): string
+    {
+        throw new \LogicException(static::class . ' does not support get_sql()');
     }
 }
 
 class QNumericRangeScope extends QSearchScope
 {
+    /**
+     * @param string[] $aliases
+     */
     public function __construct(
-        $id,
-        $aliases,
-        $nullable = false,
-        private $epsilon = 0
+        string $id,
+        array $aliases,
+        bool $nullable = false,
+        private int|float $epsilon = 0
     ) {
         parent::__construct($id, $aliases, $nullable, false);
     }
 
     #[\Override]
-    public function parse($token): bool
+    public function parse(QSingleToken $token): bool
     {
         $str = $token->term;
         $strict = [0, 0];
@@ -869,7 +889,8 @@ class QNumericRangeScope extends QSearchScope
         return true;
     }
 
-    public function get_sql($field, $token): string
+    #[\Override]
+    public function get_sql(string $field, QSingleToken $token): string
     {
         $clauses = [];
         if ($token->scope_data['range'][0] !== '') {
@@ -892,16 +913,19 @@ class QNumericRangeScope extends QSearchScope
 
 class QDateRangeScope extends QSearchScope
 {
+    /**
+     * @param string[] $aliases
+     */
     public function __construct(
-        $id,
-        $aliases,
-        $nullable = false
+        string $id,
+        array $aliases,
+        bool $nullable = false
     ) {
         parent::__construct($id, $aliases, $nullable, false);
     }
 
     #[\Override]
-    public function parse($token): bool
+    public function parse(QSingleToken $token): bool
     {
         $str = $token->term;
         $strict = [0, 0];
@@ -947,7 +971,8 @@ class QDateRangeScope extends QSearchScope
         return true;
     }
 
-    public function get_sql($field, $token): string
+    #[\Override]
+    public function get_sql(string $field, QSingleToken $token): string
     {
         $clauses = [];
         if ($token->scope_data[0] != '') {
@@ -982,18 +1007,27 @@ class QDateRangeScope extends QSearchScope
  */
 class QSingleToken implements \Stringable
 {
-    public $is_single = true; /* the actual word/phrase string */
+    public bool $is_single = true; /* the actual word/phrase string */
 
+    /**
+     * @var string[]
+     */
     public $variants = [];
 
+    /**
+     * @var mixed set by QSearchScope::parse() (or a subclass override);
+     *   QNumericRangeScope stores array{range: array, strict: array},
+     *   QDateRangeScope stores a plain 2-element string[] range — the shape
+     *   depends on which scope subclass parsed this token
+     */
     public $scope_data;
 
-    public $idx;
+    public ?int $idx = null;
 
     public function __construct(
-        public $term,
-        public $modifier,
-        public $scope
+        public string $term,
+        public int $modifier,
+        public ?QSearchScope $scope
     ) {}
 
     public function __toString(): string
@@ -1024,10 +1058,13 @@ class QSingleToken implements \Stringable
  */
 class QMultiToken implements \Stringable
 {
-    public $is_single = false;
+    public bool $is_single = false;
 
-    public $modifier;
+    public int $modifier = 0;
 
+    /**
+     * @var array<int, QSingleToken|QMultiToken>
+     */
     public $tokens = []; // the actual array of QSingleToken or QMultiToken
 
     public function __toString(): string
@@ -1055,7 +1092,11 @@ class QMultiToken implements \Stringable
         return $s;
     }
 
-    private function push(&$token, &$modifier, &$scope): void
+    /**
+     * @param-out null $scope push() only ever resets this to null; it never
+     *   assigns a QSearchScope back to the caller
+     */
+    private function push(string &$token, int &$modifier, ?QSearchScope &$scope): void
     {
         if (strlen((string) $token) || (isset($scope) && $scope->nullable)) {
             if (isset($scope)) {
@@ -1075,7 +1116,7 @@ class QMultiToken implements \Stringable
      * @param int $qi the character index in $q where to start parsing
      * @param int $level the depth from root in the tree (number of opened and unclosed opening brackets)
      */
-    protected function parse_expression($q, &$qi, $level, $root)
+    protected function parse_expression(string $q, int &$qi, int $level, QExpression $root): void
     {
         $crt_token = '';
         $crt_modifier = 0;
@@ -1106,7 +1147,7 @@ class QMultiToken implements \Stringable
                         }
                         break;
                     case ':':
-                        $scope = @$root->scopes[strtolower((string) $crt_token)];
+                        $scope = $root->scopes[strtolower((string) $crt_token)] ?? null;
                         if (! isset($scope) || isset($crt_scope)) { // white space
                             $this->push($crt_token, $crt_modifier, $crt_scope);
                         } else {
@@ -1244,13 +1285,13 @@ class QMultiToken implements \Stringable
         }
     }
 
-    private static function priority($modifier): int
+    private static function priority(int $modifier): int
     {
         return $modifier & QST_OR ? 0 : 1;
     }
 
     /* because evaluations occur left to right, we ensure that 'a OR b c d' is interpreted as 'a OR (b c d)' */
-    protected function check_operator_priority()
+    protected function check_operator_priority(): void
     {
         // Always overwritten at $i == 1 before being read at $i >= 2; the
         // initializer only keeps analysis sound.
@@ -1297,15 +1338,27 @@ class QMultiToken implements \Stringable
 
 class QExpression extends QMultiToken
 {
+    /**
+     * @var array<string, QSearchScope>
+     */
     public $scopes = [];
 
+    /**
+     * @var array<int, QSingleToken>
+     */
     public $stokens = [];
 
+    /**
+     * @var array<int, int>
+     */
     public $stoken_modifiers = [];
 
+    /**
+     * @param QSearchScope[] $scopes
+     */
     public function __construct(
-        $q,
-        $scopes
+        string $q,
+        array $scopes
     ) {
         foreach ($scopes as $scope) {
             $this->scopes[$scope->id] = $scope;
@@ -1349,27 +1402,52 @@ class QExpression extends QMultiToken
  */
 class QResults
 {
-    public $all_tags;
+    /**
+     * @var array<int, array<string, mixed>>
+     */
+    public array $all_tags = [];
 
-    public $tag_ids;
+    /**
+     * @var array<int, array<int, int>>
+     */
+    public array $tag_ids = [];
 
-    public $tag_iids;
+    /**
+     * @var array<int, array<int, mixed>>
+     */
+    public array $tag_iids = [];
 
-    public $all_cats;
+    /**
+     * @var array<int, array<string, mixed>>
+     */
+    public array $all_cats = [];
 
-    public $cat_ids;
+    /**
+     * @var array<int, array<int, int>>
+     */
+    public array $cat_ids = [];
 
-    public $cat_iids;
+    /**
+     * @var array<int, array<int, mixed>>
+     */
+    public array $cat_iids = [];
 
-    public $images_iids;
+    /**
+     * @var array<int, array<int, mixed>>
+     */
+    public array $images_iids = [];
 
-    public $iids;
+    /**
+     * @var array<int, array<int, mixed>>
+     */
+    public array $iids = [];
 }
 
 /**
+ * @param string[] $fields
  * @return non-falsy-string[]
  */
-function qsearch_get_text_token_search_sql($token, $fields): array
+function qsearch_get_text_token_search_sql(QSingleToken $token, array $fields): array
 {
     global $page;
 
@@ -1665,7 +1743,11 @@ SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . '
     $qsr->cat_ids = $token_cat_ids;
 }
 
-function qsearch_eval(QMultiToken $expr, QResults $qsr, &$qualifies, &$ignored_terms)
+/**
+ * @param string[] $ignored_terms
+ * @return array<int, mixed>
+ */
+function qsearch_eval(QMultiToken $expr, QResults $qsr, bool &$qualifies, array &$ignored_terms): array
 {
     $qualifies = false; // until we find at least one positive term
     $ignored_terms = [];
@@ -1674,6 +1756,8 @@ function qsearch_eval(QMultiToken $expr, QResults $qsr, &$qualifies, &$ignored_t
 
     for ($i = 0; $i < count($expr->tokens); $i++) {
         $crt = $expr->tokens[$i];
+        $crt_qualifies = false;
+        $crt_ignored_terms = [];
         if ($crt->is_single) {
             $crt_ids = $qsr->iids[$crt->idx] = array_unique(
                 array_merge(
@@ -1695,7 +1779,7 @@ function qsearch_eval(QMultiToken $expr, QResults $qsr, &$qualifies, &$ignored_t
             $ignored_terms = array_merge($ignored_terms, $crt_ignored_terms);
             if ($modifier & QST_OR) {
                 $ids = array_unique(array_merge($ids, $crt_ids));
-                $qualifies |= $crt_qualifies;
+                $qualifies = $qualifies || $crt_qualifies;
             } elseif ($crt_qualifies) {
                 if ($qualifies) {
                     $ids = array_intersect($ids, $crt_ids);
@@ -1727,10 +1811,10 @@ function qsearch_eval(QMultiToken $expr, QResults $qsr, &$qualifies, &$ignored_t
  *      )
  *    )
  *
- * @param string $q
- * @return array
+ * @param array<string, mixed> $options
+ * @return array<string, mixed>
  */
-function get_quick_search_results($q, array $options)
+function get_quick_search_results(string $q, array $options)
 {
     global $persistent_cache, $conf, $user;
 
@@ -1755,8 +1839,11 @@ function get_quick_search_results($q, array $options)
 
 /**
  * @see get_quick_search_results but without result caching
+ *
+ * @param array<string, mixed> $options
+ * @return array<string, mixed>
  */
-function get_quick_search_results_no_cache($q, array $options)
+function get_quick_search_results_no_cache(string $q, array $options): array
 {
     global $conf;
 
@@ -1766,6 +1853,7 @@ function get_quick_search_results_no_cache($q, array $options)
           'items' => [],
           'qs' => [
               'q' => $q,
+              'unmatched_terms' => [],
           ],
       ];
 
@@ -1832,6 +1920,7 @@ function get_quick_search_results_no_cache($q, array $options)
     // allow plugins to evaluate their own scopes
     trigger_notify('qsearch_before_eval', $expression, $qsr);
 
+    $tmp = false; // top-level "qualifies" out-param, unused by this caller
     $ids = qsearch_eval($expression, $qsr, $tmp, $search_results['qs']['unmatched_terms']);
 
     $debug[] = "<!--\nparsed: " . htmlspecialchars((string) $expression);
@@ -1899,12 +1988,9 @@ SELECT DISTINCT(id) FROM ' . IMAGES_TABLE . ' i';
  * Returns an array of 'items' corresponding to the search id.
  * It can be either a quick search or a regular search.
  *
- * @param int $search_id
- * @param bool $super_order_by
- * @param string $images_where optional aditional restriction on images table
- * @return array
+ * @return array<string, mixed>
  */
-function get_search_results($search_id, $super_order_by, $images_where = '')
+function get_search_results(int|string $search_id, ?bool $super_order_by, string $images_where = ''): array
 {
     $search = get_search_array($search_id);
     if (! isset($search['q'])) {
@@ -1917,7 +2003,10 @@ function get_search_results($search_id, $super_order_by, $images_where = '')
     }
 }
 
-function split_allwords($raw_allwords): ?array
+/**
+ * @return string[]|null
+ */
+function split_allwords(string $raw_allwords): ?array
 {
     $words = null;
 
@@ -1945,7 +2034,7 @@ function split_allwords($raw_allwords): ?array
     return $words;
 }
 
-function get_available_search_uuid()
+function get_available_search_uuid(): string
 {
     $candidate = 'psk-' . date('Ymd') . '-' . generate_key(10);
 
@@ -1963,7 +2052,11 @@ SELECT
     }
 }
 
-function save_search(array $rules, $forked_from = null): array
+/**
+ * @param array<string, mixed> $rules
+ * @return array{0: string, 1: string}
+ */
+function save_search(array $rules, ?int $forked_from = null): array
 {
     global $user;
 

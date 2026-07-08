@@ -111,12 +111,14 @@ function search_case_username($username)
  *
  * @param string $login
  * @param string $password
+ * @param ?string $mail_address optional: pwg.users.add's own WS contract
+ *   defaults this to null when the caller omits it
  * @param bool $notify_admin
- * @param array $errors populated with error messages
+ * @param array<int, string> $errors populated with error messages
  * @param bool $notify_user
  * @return int|false user id or false
  */
-function register_user($login, #[\SensitiveParameter] $password, $mail_address, $notify_admin = true, &$errors = [], $notify_user = false)
+function register_user($login, #[\SensitiveParameter] $password, ?string $mail_address, $notify_admin = true, &$errors = [], $notify_user = false)
 {
     global $conf;
 
@@ -270,8 +272,9 @@ SELECT id
  * Same that getuserdata() but with additional tests for guest.
  *
  * @param int $user_id
+ * @return array<string, mixed>
  */
-function build_user($user_id, $use_cache = true): array
+function build_user($user_id, bool $use_cache = true): array
 {
     global $conf;
 
@@ -299,7 +302,7 @@ function build_user($user_id, $use_cache = true): array
  *
  * @param int $user_id
  * @param bool $use_cache
- * @return array
+ * @return array<string, mixed>
  */
 function getuserdata($user_id, $use_cache = false)
 {
@@ -699,10 +702,10 @@ SELECT
 /**
  * Returns a array with default user valuees.
  *
- * @param $convert_str ceonferts 'true' and 'false' into booleans
- * @return array|false false if the default user row doesn't exist
+ * @param bool $convert_str ceonferts 'true' and 'false' into booleans
+ * @return array<string, mixed>|false false if the default user row doesn't exist
  */
-function get_default_user_info($convert_str = true)
+function get_default_user_info(bool $convert_str = true)
 {
     global $cache, $conf;
 
@@ -865,7 +868,7 @@ function get_browser_language(): false|int|string
  * Creates user informations based on default values.
  *
  * @param int|int[] $user_ids
- * @param array $override_values values used to override default user values
+ * @param array<string, mixed>|null $override_values values used to override default user values
  */
 function create_user_infos($user_ids, $override_values = null): void
 {
@@ -1231,7 +1234,7 @@ add_event_handler('try_log_user', 'pwg_login');
  * @param string $password
  * @param bool $remember_me
  */
-function pwg_login($success, $username, $password, $remember_me): bool
+function pwg_login(bool $success, $username, $password, $remember_me): bool
 {
     if ($success === true) {
         return true;
@@ -1318,7 +1321,7 @@ function pwg_login($success, $username, $password, $remember_me): bool
  *
  * @since 16
  * @param string $username_or_email
- * @return array|null
+ * @return array<string, mixed>|null
  */
 function find_user_by_username_or_email($username_or_email)
 {
@@ -1361,7 +1364,7 @@ FROM ' . USERS_TABLE . ' AS u
  * while maintaining constant-time authentication behavior.
  *
  * @since 16
- * @return array id and password
+ * @return array{id: null, password: string} id and password
  */
 function generate_fake_user()
 {
@@ -1465,7 +1468,7 @@ function get_access_type_status($user_status = ''): int
  *
  * @param string $user_status used if $user not initialized
  */
-function is_autorize_status($access_type, $user_status = ''): bool
+function is_autorize_status(int $access_type, $user_status = ''): bool
 {
     return get_access_type_status($user_status) >= $access_type;
 }
@@ -1475,7 +1478,7 @@ function is_autorize_status($access_type, $user_status = ''): bool
  *
  * @param string $user_status used if $user not initialized
  */
-function check_status($access_type, $user_status = ''): void
+function check_status(int $access_type, $user_status = ''): void
 {
     if (! is_autorize_status($access_type, $user_status)) {
         access_denied();
@@ -1573,7 +1576,7 @@ function can_manage_comment($action, $comment_author_id): bool
  * Compute sql WHERE condition with restrict and filter data.
  * "FandF" means Forbidden and Filters.
  *
- * @param array $condition_fields one witch fields apply each filter
+ * @param array<string, string> $condition_fields one witch fields apply each filter
  *    - forbidden_categories
  *    - visible_categories
  *    - forbidden_images
@@ -1673,8 +1676,12 @@ function get_recent_photos_sql($db_field): string
  * Performs auto-connection if authentication key is valid.
  *
  * @since 2.8
+ * @param mixed $auth_key raw, unvalidated request input ($_GET['auth'], an
+ *   Authorization header value, or a ws param) — always (string)-cast
+ *   before use, deliberately not narrowed since a malicious/malformed
+ *   request can hand this an array
  */
-function auth_key_login($auth_key, $connection_by_header = false): bool
+function auth_key_login($auth_key, bool $connection_by_header = false): bool
 {
     global $conf, $user, $page;
 
@@ -1793,9 +1800,9 @@ SELECT
  *
  * @since 2.8
  * @param int $user_id
- * @return array|false false if auth keys are disabled or the user status is ineligible
+ * @return array<string, mixed>|false false if auth keys are disabled or the user status is ineligible
  */
-function create_user_auth_key($user_id, $user_status = null)
+function create_user_auth_key($user_id, ?string $user_status = null)
 {
     global $conf;
 
@@ -1899,7 +1906,7 @@ function deactivate_password_reset_key($user_id): void
  * @since 15
  * @param int $user_id
  * @param bool $first_login
- * @return array time_validation and password link
+ * @return array{time_validation: string, password_link: string}
  */
 function generate_password_link($user_id, $first_login = false): array
 {
@@ -2422,7 +2429,7 @@ SELECT
  * @param int $user_id
  * @param int|null $duration
  * @param string $key_name
- * @return array auth_key / apikey_secret / apikey_name /
+ * @return array<string, mixed> auth_key / apikey_secret / apikey_name /
  * user_id / created_on / duration / expired_on / key_type
  */
 function create_api_key($user_id, $duration, $key_name): array
@@ -2504,7 +2511,7 @@ SELECT
  * @param string $pkid
  * @return string|bool
  */
-function edit_api_key($user_id, $pkid, $api_name)
+function edit_api_key($user_id, $pkid, ?string $api_name)
 {
     $query = '
 SELECT
@@ -2538,6 +2545,7 @@ SELECT
  *
  * @since 16
  * @param string $user_id
+ * @return false|array<int, array<string, mixed>>
  */
 function get_api_key($user_id): false|array
 {
@@ -2612,7 +2620,7 @@ SELECT
  *
  * @since 16
  * @param string $user_id
- * @return array|false
+ * @return array<int, array<string, mixed>>|false
  */
 function get_available_api_key($user_id)
 {
@@ -2652,7 +2660,7 @@ function connected_with_pwg_ui(): bool
  * @since 16
  * @return bool
  */
-function notification_api_key_expiration($username, $email, $days_left)
+function notification_api_key_expiration(string $username, string $email, int $days_left)
 {
     global $conf;
 
@@ -2682,7 +2690,7 @@ function notification_api_key_expiration($username, $email, $days_left)
  * Generate an user code for verification
  *
  * @since 16
- * @return array [$secret, $code]
+ * @return array{secret: string, code: string}
  */
 function generate_user_code(): array
 {

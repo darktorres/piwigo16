@@ -179,6 +179,10 @@ if (count($missing_plugin_ids) > 0) {
 }
 
 // sort plugins by state then by name
+/**
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
+ */
 function cmp(array $a, array $b): int|bool
 {
     $s = [

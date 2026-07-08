@@ -13,7 +13,7 @@ declare(strict_types=1);
 class LocalSiteReader
 {
     public function __construct(
-        public $site_url
+        public string $site_url
     ) {
         global $conf;
         if (! isset($conf['flip_file_ext'])) {
@@ -49,7 +49,7 @@ class LocalSiteReader
     /**
      * @return mixed[]
      */
-    public function get_full_directories($basedir): array
+    public function get_full_directories(string $basedir): array
     {
         $fs_fulldirs = get_fs_directories($basedir);
         return $fs_fulldirs;
@@ -59,7 +59,7 @@ class LocalSiteReader
      * Returns an array with all file system files according to $conf['file_ext']
      * and $conf['picture_ext']
      * @param string $path recurse in this directory
-     * @return array like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
+     * @return array<string, array<string, mixed>> like "pic.jpg"=>array('representative_ext'=>'jpg' ... )
      */
     public function get_elements($path): array
     {
@@ -112,12 +112,18 @@ class LocalSiteReader
 
     // returns the name of the attributes that are supported for
     // files update/synchronization
+    /**
+     * @return string[]
+     */
     public function get_update_attributes(): array
     {
         return ['representative_ext'];
     }
 
-    public function get_element_update_attributes($file): array
+    /**
+     * @return array{representative_ext: ?string}
+     */
+    public function get_element_update_attributes(string $file): array
     {
         global $conf;
         $data = [];
@@ -138,19 +144,26 @@ class LocalSiteReader
 
     // returns the name of the attributes that are supported for
     // metadata update/synchronization according to configuration
+    /**
+     * @return string[]
+     */
     public function get_metadata_attributes(): array
     {
         return get_sync_metadata_attributes();
     }
 
     // returns a hash of attributes (metadata+filesize+width,...) for file
-    public function get_element_metadata($infos)
+    /**
+     * @param array<string, mixed> $infos
+     * @return array<string, mixed>|false
+     */
+    public function get_element_metadata($infos): array|false
     {
         return get_sync_metadata($infos);
     }
 
     // -------------------------------------------------- private functions --------
-    public function get_representative_ext($path, $filename_wo_ext)
+    public function get_representative_ext(string $path, string $filename_wo_ext): ?string
     {
         global $conf;
         $base_test = $path . '/pwg_representative/' . $filename_wo_ext . '.';
@@ -166,7 +179,7 @@ class LocalSiteReader
     /**
      * @return float[]
      */
-    public function get_formats($path, $filename_wo_ext): array
+    public function get_formats(string $path, string $filename_wo_ext): array
     {
         global $conf;
 

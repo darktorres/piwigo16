@@ -28,24 +28,42 @@ class PluginMaintain
 
     /**
      * @param string $plugin_version
-     * @param array $errors - used to return error messages
+     * @param array<int, string> $errors - used to return error messages
+     * @return mixed - matches DummyPlugin_maintain::install()'s committed native
+     *   `mixed` return; kept docblock-only here (not native) since a native
+     *   return type on this base class would break any real third-party plugin
+     *   maintain.class.php subclass whose own override declares no return type
+     *   at all (verified empirically: PHP fatals on such a mismatch)
      */
     public function install($plugin_version, &$errors = []) {}
 
     /**
      * @param string $plugin_version
-     * @param array $errors - used to return error messages
+     * @param array<int, string> $errors - used to return error messages
+     * @return mixed - see install()'s @return docblock
      */
     public function activate($plugin_version, &$errors = []) {}
 
+    /**
+     * @return mixed - see install()'s @return docblock
+     */
     public function deactivate() {}
 
+    /**
+     * @return mixed - see install()'s @return docblock
+     */
     public function uninstall() {}
 
     /**
      * @param string $old_version
      * @param string $new_version
-     * @param array $errors - used to return error messages
+     * @param array<int, string> $errors - used to return error messages
+     * matches DummyPlugin_maintain::update()'s committed native `void`
+     * return; written as the phpstan-only variant of the return tag below
+     * because ECS's phpdoc_no_empty_return fixer strips the generic form
+     * of that tag, which would leave this method's return type undeclared
+     * again
+     * @phpstan-return void
      */
     public function update($old_version, $new_version, &$errors = []) {}
 
@@ -74,12 +92,22 @@ class ThemeMaintain
 
     /**
      * @param string $theme_version
-     * @param array $errors - used to return error messages
+     * @param array<int, string> $errors - used to return error messages
+     * @return mixed - matches DummyTheme_maintain::activate()'s committed
+     *   native `mixed` return; kept docblock-only here (not native) for the
+     *   same third-party-subclass contravariance reason as PluginMaintain
+     *   above.
      */
     public function activate($theme_version, &$errors = []) {}
 
+    /**
+     * @return mixed - see activate()'s @return docblock
+     */
     public function deactivate() {}
 
+    /**
+     * @return mixed - see activate()'s @return docblock
+     */
     public function delete() {}
 }
 
@@ -290,6 +318,7 @@ function &get_plugin_data($plugin_id)
  *   below (both are empty()) — admin/include/plugins.class.php passes null
  *   explicitly when it only wants to filter by $id
  * @param string $id returns only data about given plugin
+ * @return array<int|string, mixed>
  */
 function get_db_plugins($state = '', $id = ''): array
 {
@@ -313,6 +342,8 @@ SELECT * FROM ' . PLUGINS_TABLE;
 /**
  * Loads a plugin in memory.
  * It performs autoupdate, includes the main.inc.php file and updates *$pwg_loaded_plugins*.
+ *
+ * @param array<string, mixed> $plugin
  */
 function load_plugin(array $plugin): void
 {
@@ -331,7 +362,7 @@ function load_plugin(array $plugin): void
  *
  * @since 2.7
  *
- * @param array $plugin (id, version, state) will be updated if version changes
+ * @param array<string, mixed> $plugin (id, version, state) will be updated if version changes
  */
 function autoupdate_plugin(array &$plugin): void
 {

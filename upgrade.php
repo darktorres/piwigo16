@@ -54,6 +54,7 @@ include_once PHPWG_ROOT_PATH . 'include/template.class.php';
 
 /**
  * list all tables in an array
+ * @return array<int, string>
  */
 function get_tables(): array
 {
@@ -76,7 +77,8 @@ SHOW TABLES
 /**
  * list all columns of each given table
  *
- * @return array of array
+ * @param array<int, string> $tables
+ * @return array<string, array<int, string>>
  */
 function get_columns_of($tables): array
 {
@@ -98,7 +100,7 @@ DESC `' . $table . '`
     return $columns_of;
 }
 
-function print_time($message): void
+function print_time(mixed $message): void
 {
     global $last_time;
 

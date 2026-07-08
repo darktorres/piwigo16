@@ -19,49 +19,81 @@ class DummyPlugin_maintain extends PluginMaintain
     // plugins::build_maintain_class(), outside this codebase, not
     // statically knowable) — genuinely undecidable until real PluginMaintain
     // contracts (P31) replace this pre-2.7 procedural fallback entirely.
-    public function install($plugin_version, &$errors = [])
+    /**
+     * @param array<int, string> $errors - not natively typed: PluginMaintain's
+     *   own base declares $errors with no native type, and PHP's parameter
+     *   contravariance rules fatal on narrowing an untyped parent param to a
+     *   native type in the override (verified empirically)
+     */
+    public function install($plugin_version, &$errors = []): mixed
     {
         // @phpstan-ignore function.impossibleType
         if (is_callable('plugin_install')) {
             return plugin_install($this->plugin_id, $plugin_version, $errors);
         }
+
+        return null;
     }
 
-    public function activate($plugin_version, &$errors = [])
+    /**
+     * @param array<int, string> $errors - see install()'s $errors docblock
+     */
+    public function activate($plugin_version, &$errors = []): mixed
     {
         // @phpstan-ignore function.impossibleType
         if (is_callable('plugin_activate')) {
             return plugin_activate($this->plugin_id, $plugin_version, $errors);
         }
+
+        return null;
     }
 
-    public function deactivate()
+    public function deactivate(): mixed
     {
         // @phpstan-ignore function.impossibleType
         if (is_callable('plugin_deactivate')) {
             return plugin_deactivate($this->plugin_id);
         }
+
+        return null;
     }
 
-    public function uninstall()
+    public function uninstall(): mixed
     {
         // @phpstan-ignore function.impossibleType
         if (is_callable('plugin_uninstall')) {
             return plugin_uninstall($this->plugin_id);
         }
+
+        return null;
     }
 
-    public function update($old_version, $new_version, &$errors = []) {}
+    /**
+     * @param array<int, string> $errors - see install()'s $errors docblock
+     */
+    public function update($old_version, $new_version, &$errors = []): void {}
 }
 
 class plugins
 {
+    /**
+     * @var array<string, array<string, mixed>>
+     */
     public $fs_plugins = [];
 
+    /**
+     * @var array<string, array<string, mixed>>
+     */
     public $db_plugins_by_id = [];
 
+    /**
+     * @var array<int|string, array<string, mixed>>
+     */
     public $server_plugins = [];
 
+    /**
+     * @var string[]
+     */
     public $default_plugins = ['LocalFilesEditor', 'language_switch', 'TakeATour', 'AdminTools'];
 
     /**
@@ -81,7 +113,7 @@ class plugins
      * or build a new class with the procedural methods
      * @param string $plugin_id
      */
-    private static function build_maintain_class($plugin_id)
+    private static function build_maintain_class($plugin_id): PluginMaintain
     {
         $file_to_include = PHPWG_PLUGINS_PATH . $plugin_id . '/maintain';
         $classname = $plugin_id . '_maintain';
@@ -112,9 +144,10 @@ class plugins
      * Perform requested actions
      * @param string $action - action
      * @param string $plugin_id - plugin id
-     * @param array $options - errors
+     * @param array{revision?: mixed} $options - errors
+     * @return array<int|string, mixed>
      */
-    public function perform_action($action, $plugin_id, array $options = [])
+    public function perform_action($action, $plugin_id, array $options = []): array
     {
         global $conf;
 
@@ -142,11 +175,6 @@ class plugins
                 $plugin_maintain->install($this->fs_plugins[$plugin_id]['version'], $errors);
                 $activity_details['version'] = $this->fs_plugins[$plugin_id]['version'];
 
-                // $plugin_maintain is a dynamically instantiated `new $classname()`
-                // subclass PHPStan can't trace; it resolves against PluginMaintain's
-                // empty no-op base install(), but real plugin subclasses populate
-                // $errors by reference.
-                // @phpstan-ignore empty.variable
                 if (empty($errors)) {
                     $query = '
 INSERT INTO ' . PLUGINS_TABLE . ' (id,version)
@@ -308,8 +336,9 @@ DELETE FROM ' . PLUGINS_TABLE . '
     /**
      * Load metadata of a plugin in `fs_plugins` array
      * @from 2.7
+     * @return array{name: string, version: string, uri: string, description: string, author: string, hasSettings: bool, 'author uri'?: string, extension?: string}|false
      */
-    public function get_fs_plugin($plugin_id): array|false
+    public function get_fs_plugin(string $plugin_id): array|false
     {
         $path = PHPWG_PLUGINS_PATH . $plugin_id;
 
@@ -367,7 +396,13 @@ DELETE FROM ' . PLUGINS_TABLE . '
             }
 
             // IMPORTANT SECURITY !
+            // hasSettings is bool, not a display string; htmlspecialchars()
+            // rejects non-string arguments under strict_types, so exclude it
+            // from the escaping pass and restore it afterwards.
+            $has_settings = $plugin['hasSettings'];
+            unset($plugin['hasSettings']);
             $plugin = array_map(htmlspecialchars(...), $plugin);
+            $plugin['hasSettings'] = $has_settings;
             $this->fs_plugins[$plugin_id] = $plugin;
 
             return $plugin;
@@ -379,7 +414,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
     /**
      * Sort fs_plugins
      */
-    public function sort_fs_plugins($order = 'name'): void
+    public function sort_fs_plugins(string $order = 'name'): void
     {
         switch ($order) {
             case 'name':
@@ -402,7 +437,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
     /**
      * @return mixed[]
      */
-    public function get_versions_to_check($beta_test = false, $version = PHPWG_VERSION): array
+    public function get_versions_to_check(bool $beta_test = false, string $version = PHPWG_VERSION): array
     {
         global $conf;
 
@@ -456,7 +491,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
      * Retrieve PEM server datas to $server_plugins
      * $beta_test parameter add plugins compatible with the previous version
      */
-    public function get_server_plugins($new = false, $beta_test = false): bool
+    public function get_server_plugins(bool $new = false, bool $beta_test = false): bool
     {
         global $user, $conf;
 
@@ -504,7 +539,10 @@ DELETE FROM ' . PLUGINS_TABLE . '
         return false;
     }
 
-    public function get_incompatible_plugins($actualize = false)
+    /**
+     * @return array<string, mixed>|false
+     */
+    public function get_incompatible_plugins(bool $actualize = false): array|false
     {
         if (isset($_SESSION['incompatible_plugins']) and ! $actualize
           and $_SESSION['incompatible_plugins']['~~expire~~'] > time()) {
@@ -569,7 +607,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
     /**
      * Sort $server_plugins
      */
-    public function sort_server_plugins($order = 'date'): void
+    public function sort_server_plugins(string $order = 'date'): void
     {
         switch ($order) {
             case 'date':
@@ -596,7 +634,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
      *  @param string $revision - archive URL
      * @param string $dest - plugin id or extension id
      */
-    public function extract_plugin_files($action, $revision, $dest, &$plugin_id = null)
+    public function extract_plugin_files($action, $revision, $dest, ?string &$plugin_id = null): string
     {
         global $logger;
 
@@ -697,7 +735,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
     /**
      * @return string[]
      */
-    public function get_merged_extensions($version = PHPWG_VERSION): array
+    public function get_merged_extensions(string $version = PHPWG_VERSION): array
     {
         $file = PHPWG_ROOT_PATH . 'install/obsolete_extensions.list';
         $merged_extensions = [];
@@ -714,6 +752,9 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
     /**
      * Sort functions
+     *
+     * @param array<string, mixed> $a
+     * @param array<string, mixed> $b
      */
     public function extension_revision_compare(array $a, array $b): int
     {
@@ -724,11 +765,19 @@ DELETE FROM ' . PLUGINS_TABLE . '
         }
     }
 
+    /**
+     * @param array<string, mixed> $a
+     * @param array<string, mixed> $b
+     */
     public function extension_name_compare(array $a, array $b): int
     {
         return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
     }
 
+    /**
+     * @param array<string, mixed> $a
+     * @param array<string, mixed> $b
+     */
     public function extension_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author_name'], (string) $b['author_name']);
@@ -739,6 +788,10 @@ DELETE FROM ' . PLUGINS_TABLE . '
         }
     }
 
+    /**
+     * @param array<string, mixed> $a
+     * @param array<string, mixed> $b
+     */
     public function plugin_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author'], (string) $b['author']);
@@ -749,6 +802,10 @@ DELETE FROM ' . PLUGINS_TABLE . '
         }
     }
 
+    /**
+     * @param array<string, mixed> $a
+     * @param array<string, mixed> $b
+     */
     public function extension_downloads_compare(array $a, array $b): int
     {
         if ($a['extension_nb_downloads'] < $b['extension_nb_downloads']) {

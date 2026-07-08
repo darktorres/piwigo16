@@ -14,7 +14,7 @@ if (! defined('PHPWG_ROOT_PATH')) {
 }
 
 // Bootstrap globals, set by include/common.inc.php.
-global $conf, $template;
+global $conf, $template, $page;
 
 if (! is_webmaster()) {
     return;

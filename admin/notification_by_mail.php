@@ -47,10 +47,10 @@ $must_repost = false;
 /**
  * Do timeout treatment in order to finish to send mails
  * @param $post_keyname: key of check_key post array
- * @param $check_key_treated: array of check_key treated
+ * @param array<int, mixed> $check_key_treated: array of check_key treated
  * @return bool whether treatment timed out and must be reposted
  */
-function do_timeout_treatment($post_keyname, $check_key_treated = []): bool
+function do_timeout_treatment(string $post_keyname, array $check_key_treated = []): bool
 {
     global $env_nbm, $page;
 
@@ -81,7 +81,7 @@ function do_timeout_treatment($post_keyname, $check_key_treated = []): bool
  * Get the authorized_status for each tab
  * return corresponding status
  */
-function get_tab_status($mode): int
+function get_tab_status(string $mode): int
 {
     $result = ACCESS_WEBMASTER;
     $result = match ($mode) {
@@ -176,7 +176,7 @@ order by
  * Apply global functions to mail content
  * return customize mail content rendered
  */
-function render_global_customize_mail_content($customize_mail_content)
+function render_global_customize_mail_content(mixed $customize_mail_content): mixed
 {
     global $conf;
 
@@ -195,9 +195,11 @@ function render_global_customize_mail_content($customize_mail_content)
  * Return list of "treated" check_key for 'send'
  */
 /**
+ * @param array<int, mixed> $check_key_list
+ * @param mixed $customize_mail_content
  * @return mixed[]
  */
-function do_action_send_mail_notification($action = 'list_to_send', $check_key_list = [], $customize_mail_content = ''): array
+function do_action_send_mail_notification(string $action = 'list_to_send', array $check_key_list = [], $customize_mail_content = ''): array
 {
     global $conf, $page, $user, $lang_info, $lang, $env_nbm;
     $return_list = [];

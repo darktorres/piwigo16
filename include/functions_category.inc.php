@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 /**
  * Callback used for sorting by global_rank
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
  */
 function global_rank_compare(array $a, array $b): int
 {
@@ -19,6 +21,8 @@ function global_rank_compare(array $a, array $b): int
 
 /**
  * Callback used for sorting by rank
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
  */
 function rank_compare(array $a, array $b): int|float
 {
@@ -45,7 +49,7 @@ function check_restrictions($category_id): void
 /**
  * Returns template vars for main categories menu.
  *
- * @return array[]
+ * @return array<int, array<string, mixed>>
  */
 function get_categories_menu(): array
 {
@@ -145,7 +149,7 @@ WHERE ' . $where . '
  * Retrieves informations about a category.
  *
  * @param int $id
- * @return ?array
+ * @return array<string, mixed>|null
  */
 function get_cat_info($id)
 {
@@ -200,7 +204,7 @@ SELECT *
  *  1: SQL ORDER command
  *  2: visiblity (true or false)
  *
- * @return array[]
+ * @return array<int, array{0: string, 1: string, 2: bool}>
  */
 function get_category_preferred_image_orders()
 {
@@ -225,7 +229,8 @@ function get_category_preferred_image_orders()
 /**
  * Assign a template var useable with {html_options} from a list of categories
  *
- * @param array[] $categories (at least id,name,global_rank,uppercats for each)
+ * @param array<int, array<string, mixed>> $categories (at least id,name,global_rank,uppercats for each)
+ * @param array<int, mixed> $selecteds
  * @param string $blockname variable name in template
  * @param bool $fullname full breadcrumb or not
  */
@@ -270,6 +275,10 @@ function display_select_categories(
 /**
  * Same as display_select_categories but categories are ordered by rank
  * @see display_select_categories()
+ * @param string $query
+ * @param array<int, mixed> $selecteds
+ * @param string $blockname variable name in template
+ * @param bool $fullname full breadcrumb or not
  */
 function display_select_cat_wrapper(
     $query,
@@ -399,7 +408,7 @@ function get_display_images_count($cat_nb_images, $cat_count_images, $cat_count_
 /**
  * Find a random photo among all photos inside an album (including sub-albums)
  *
- * @param array $category (at least id,uppercats,count_images)
+ * @param array<string, mixed> $category (at least id,uppercats,count_images)
  * @param bool $recursive
  * @return int|null
  */
@@ -444,7 +453,9 @@ SELECT image_id
  * Get computed array of categories, that means cache data of all categories
  * available for the current user (count_categories, count_images, etc.).
  *
+ * @param array<string, mixed> $userdata
  * @param int $filter_days number of recent days to filter on or null
+ * @return array<int|string, array<string, mixed>>
  */
 function get_computed_categories(array &$userdata, $filter_days = null): array
 {
@@ -541,7 +552,8 @@ FROM ' . CATEGORIES_TABLE . ' as c
 /**
  * Removes a category from computed array of categories and updates counters.
  *
- * @param array $cat category to remove
+ * @param array<int|string, array<string, mixed>> $cats
+ * @param array<string, mixed> $cat category to remove
  */
 function remove_computed_category(array &$cats, array $cat): void
 {
@@ -571,8 +583,9 @@ function remove_computed_category(array &$cats, array $cat): void
  * @param string $mode
  * @param string $extra_images_where_sql - optionally apply a sql where filter to retrieved images
  * @param string $order_by - optionally overwrite default photo order
+ * @return array<int, int|string>
  */
-function get_image_ids_for_categories($cat_ids, $mode = 'AND', $extra_images_where_sql = '', $order_by = '', $use_permissions = true): array
+function get_image_ids_for_categories($cat_ids, $mode = 'AND', $extra_images_where_sql = '', $order_by = '', bool $use_permissions = true): array
 {
     global $conf;
 
@@ -615,9 +628,9 @@ SELECT id
  * @param int[] $items
  * @param int $max
  * @param int[] $excluded_cat_ids
- * @return array [id, name, counter, url_name]
+ * @return array<int|string, array<string, mixed>> [id, name, counter, url_name]
  */
-function get_common_categories($items, $max = null, $excluded_cat_ids = [], $use_permissions = true): array
+function get_common_categories($items, $max = null, $excluded_cat_ids = [], bool $use_permissions = true): array
 {
     if (empty($items)) {
         return [];
@@ -667,6 +680,8 @@ SELECT
 }
 
 /**
+ * @param array<int, int|string> $items
+ * @param array<int, int|string> $excluded_cat_ids
  * @return mixed[]
  */
 function get_related_categories_menu($items, $excluded_cat_ids = []): array

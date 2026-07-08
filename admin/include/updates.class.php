@@ -22,12 +22,15 @@ class updates
      */
     public $types = [];
 
-    public $plugins;
+    public ?plugins $plugins = null;
 
-    public $themes;
+    public ?themes $themes = null;
 
-    public $languages;
+    public ?languages $languages = null;
 
+    /**
+     * @var array<string, array<int, array<string, mixed>>>
+     */
     public $missing = [];
 
     /**
@@ -40,13 +43,22 @@ class updates
      */
     public $default_themes = [];
 
+    /**
+     * @var string[]
+     */
     public $default_languages = [];
 
+    /**
+     * @var string[]
+     */
     public $merged_extensions = [];
 
+    /**
+     * @var string
+     */
     public $merged_extension_url = 'https://upstream.example.invalid/merged_extensions.txt';
 
-    public function __construct($page = 'updates')
+    public function __construct(string $page = 'updates')
     {
         $this->types = ['plugins', 'themes', 'languages'];
 
@@ -84,6 +96,7 @@ class updates
      *   'minor_version' => new minor version available,
      *   'major_version' => new major version available,
      * )
+     * @return array<string, mixed>
      */
     public function get_piwigo_new_versions(): array
     {
@@ -261,7 +274,7 @@ class updates
         }
     }
 
-    public function get_server_extensions($version = PHPWG_VERSION): bool
+    public function get_server_extensions(string $version = PHPWG_VERSION): bool
     {
         global $user;
 
@@ -350,12 +363,12 @@ class updates
     }
 
     // Check all extensions upgrades
-    public function check_extensions()
+    public function check_extensions(): void
     {
         global $conf;
 
         if (! $this->get_server_extensions()) {
-            return false;
+            return;
         }
 
         $_SESSION['extensions_need_update'] = [];
@@ -405,7 +418,10 @@ class updates
         }
     }
 
-    public function check_missing_extensions($missing): void
+    /**
+     * @param array<string, string> $missing
+     */
+    public function check_missing_extensions(array $missing): void
     {
         foreach ($missing as $id => $type) {
             $fs = 'fs_' . $type;
@@ -421,7 +437,7 @@ class updates
         }
     }
 
-    public function get_merged_extensions($version): void
+    public function get_merged_extensions(string $version): void
     {
         if (fetchRemote($this->merged_extension_url, $result)) {
             $rows = explode("\n", $result);
@@ -436,7 +452,7 @@ class updates
         }
     }
 
-    public static function process_obsolete_list($file): void
+    public static function process_obsolete_list(string $file): void
     {
         if (file_exists(PHPWG_ROOT_PATH . $file)
           and $old_files = file(PHPWG_ROOT_PATH . $file, FILE_IGNORE_NEW_LINES)) {
@@ -452,7 +468,7 @@ class updates
         }
     }
 
-    public static function upgrade_to($upgrade_to, &$step, $check_current_version = true): void
+    public static function upgrade_to(string $upgrade_to, int|string &$step, bool $check_current_version = true): void
     {
         global $page, $conf, $template;
 
@@ -573,7 +589,7 @@ class updates
 
     // Compare version number with a letter suffix
     // Similar to version_compare with "<" sign
-    public function container_version_compare($v1, $v2): bool|int|null
+    public function container_version_compare(?string $v1, string $v2): bool|int|null
     {
         // Split 16.2.0d into "16.2.0" as semantic_ver and "d" as sub_ver
         $v1_semantic_ver = substr((string) $v1, 0, -1);

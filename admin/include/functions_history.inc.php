@@ -28,6 +28,8 @@ function history_tabsheet(): void
 
 /**
  * Callback used to sort history entries
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
  */
 function history_compare(array $a, array $b): int
 {
@@ -37,10 +39,12 @@ function history_compare(array $a, array $b): int
 /**
  * Perform history search.
  *
- * @param array $data  - used in trigger_change
+ * @param array<int, array<string, mixed>> $data  - used in trigger_change
+ * @param array<string, mixed> $search
  * @param string[] $types
+ * @return array<int, array<string, mixed>>
  */
-function get_history($data, array $search, $types)
+function get_history($data, array $search, $types): array
 {
     if (isset($search['fields']['filename'])) {
         $query = '

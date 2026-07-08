@@ -27,8 +27,9 @@ declare(strict_types=1);
  *    @option int[] exclude (optional)
  *    @option string min_register
  *    @option string max_register
+ * @return \PwgError|array<int|string, mixed>
  */
-function ws_users_getList(array $params, &$service): \PwgError|array
+function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
 {
     global $conf;
 
@@ -346,7 +347,7 @@ SELECT DISTINCT ';
  *    @option string password (optional)
  *    @option string email (optional)
  */
-function ws_users_add(array $params, &$service)
+function ws_users_add(array $params, PwgServer &$service): mixed
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -393,7 +394,7 @@ function ws_users_add(array $params, &$service)
  *    @option int[] user_id
  *    @option string pwg_token
  */
-function ws_users_getAuthKey(array $params, &$service)
+function ws_users_getAuthKey(array $params, PwgServer &$service): mixed
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -415,7 +416,7 @@ function ws_users_getAuthKey(array $params, &$service)
  *    @option int[] user_id
  *    @option string pwg_token
  */
-function ws_users_delete(array $params, &$service): \PwgError|string
+function ws_users_delete(array $params, PwgServer &$service): \PwgError|string
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -479,7 +480,7 @@ SELECT
  *    @option bool show_nb_hits (optional)
  *    @option bool enabled_high (optional)
  */
-function ws_users_setInfo(array $params, &$service)
+function ws_users_setInfo(array $params, PwgServer &$service): mixed
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -514,7 +515,7 @@ function ws_users_setInfo(array $params, &$service)
  *    @option string new_password (optional)
  *    @option string conf_new_password (optional)
  */
-function ws_users_setMyInfo(array $params, &$service)
+function ws_users_setMyInfo(array $params, PwgServer &$service): \PwgError|string
 {
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
@@ -602,7 +603,7 @@ SELECT ' . $conf['user_fields']['password'] . ' AS password
  *    @option string param
  *    @option string|mixed value
  */
-function ws_users_preferences_set(array $params, &$service)
+function ws_users_preferences_set(array $params, PwgServer &$service): mixed
 {
     global $user;
 
@@ -626,7 +627,7 @@ function ws_users_preferences_set(array $params, &$service)
  * @param mixed[] $params
  *    @option int image_id
  */
-function ws_users_favorites_add(array $params, &$service): \PwgError|true
+function ws_users_favorites_add(array $params, PwgServer &$service): \PwgError|true
 {
     global $user;
 
@@ -665,7 +666,7 @@ SELECT COUNT(*)
  * @param mixed[] $params
  *    @option int image_id
  */
-function ws_users_favorites_remove(array $params, &$service): \PwgError|true
+function ws_users_favorites_remove(array $params, PwgServer &$service): \PwgError|true
 {
     global $user;
 
@@ -703,8 +704,9 @@ DELETE
  *    @option int per_page
  *    @option int page
  *    @option string order
+ * @return false|array{paging: PwgNamedStruct, images: PwgNamedArray}
  */
-function ws_users_favorites_getList(array $params, &$service): false|array
+function ws_users_favorites_getList(array $params, PwgServer &$service): false|array
 {
     global $conf, $user;
 
@@ -776,8 +778,9 @@ SELECT
  *    @option int user_id
  *    @option string pwg_token
  *    @option boolean send_by_mail
+ * @return \PwgError|array{generated_link: mixed, send_by_mail: string|false|null, time_validation: mixed}
  */
-function ws_users_generate_password_link(array $params, &$service): \PwgError|array
+function ws_users_generate_password_link(array $params, PwgServer &$service): \PwgError|array
 {
     global $user, $conf;
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -841,7 +844,7 @@ function ws_users_generate_password_link(array $params, &$service): \PwgError|ar
  *    @option int user_id
  *    @option string pwg_token
  */
-function ws_set_main_user(array $params, &$service): \PwgError|string
+function ws_set_main_user(array $params, PwgServer &$service): \PwgError|string
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
@@ -876,8 +879,9 @@ function ws_set_main_user(array $params, &$service): \PwgError|string
  * Create a new api key for the current user
  * @since 15
  * @param mixed[] $params
+ * @return \PwgError|array<string, mixed>
  */
-function ws_create_api_key(array $params, &$service): \PwgError|array
+function ws_create_api_key(array $params, PwgServer &$service): \PwgError|array
 {
     global $user, $logger;
 
@@ -913,7 +917,7 @@ function ws_create_api_key(array $params, &$service): \PwgError|array
  * @since 15
  * @param mixed[] $params
  */
-function ws_revoke_api_key(array $params, &$service)
+function ws_revoke_api_key(array $params, PwgServer &$service): \PwgError|string
 {
     global $user, $logger;
 
@@ -946,7 +950,7 @@ function ws_revoke_api_key(array $params, &$service)
  * @since 15
  * @param mixed[] $params
  */
-function ws_edit_api_key(array $params, &$service)
+function ws_edit_api_key(array $params, PwgServer &$service): \PwgError|string
 {
     global $user, $logger;
 
@@ -983,8 +987,9 @@ function ws_edit_api_key(array $params, &$service)
  * Get all api key for the current user
  * @since 15
  * @param mixed[] $params
+ * @return \PwgError|array<int, mixed>|string
  */
-function ws_get_api_key(array $params, &$service): \PwgError|array|string
+function ws_get_api_key(array $params, PwgServer &$service): \PwgError|array|string
 {
     global $user;
 

@@ -9,15 +9,17 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 /**
- * @return mixed[]
+ * @param array<int, string> $sortable_by
+ * @param array<int, string> $get_rejects
+ * @return array<int, string>
  */
 function parse_sort_variables(
-    $sortable_by,
-    $default_field,
-    $get_param,
-    $get_rejects,
-    $template_var,
-    $anchor = ''
+    array $sortable_by,
+    ?string $default_field,
+    string $get_param,
+    array $get_rejects,
+    string $template_var,
+    string $anchor = ''
 ): array {
     global $template;
 
@@ -58,12 +60,10 @@ function parse_sort_variables(
             $ret[] = $field;
             $disp = '<em>' . $disp . '</em>';
         }
-        if (isset($template_var)) {
-            $template->assign(
-                $template_var . strtoupper((string) $field),
-                '<a href="' . $url . $anchor . '" title="' . l10n('Sort order') . '">' . $disp . '</a>'
-            );
-        }
+        $template->assign(
+            $template_var . strtoupper((string) $field),
+            '<a href="' . $url . $anchor . '" title="' . l10n('Sort order') . '">' . $disp . '</a>'
+        );
     }
     return $ret;
 }

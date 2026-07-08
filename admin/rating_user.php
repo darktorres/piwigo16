@@ -177,30 +177,50 @@ foreach ($by_user_ratings as $id => $rating) {
     }
 }
 
+/**
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
+ */
 function avg_compare(array $a, array $b): int
 {
     $d = $a['avg'] - $b['avg'];
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
+/**
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
+ */
 function count_compare(array $a, array $b): int
 {
     $d = $a['count'] - $b['count'];
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
+/**
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
+ */
 function cv_compare(array $a, array $b): int
 {
     $d = $b['cv'] - $a['cv']; // desc
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
+/**
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
+ */
 function consensus_dev_compare(array $a, array $b): int
 {
     $d = $b['cd'] - $a['cd']; // desc
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
+/**
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
+ */
 function last_rate_compare(array $a, array $b): int
 {
     return -strcmp((string) $a['last_date'], (string) $b['last_date']);

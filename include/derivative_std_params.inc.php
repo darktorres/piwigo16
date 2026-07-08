@@ -107,7 +107,7 @@ final class ImageStdParams
     private static $watermark;
 
     /**
-     * @var array
+     * @var array<string, int>
      */
     public static $custom = [];
 
@@ -166,7 +166,7 @@ final class ImageStdParams
     /**
      * @return DerivativeParams
      */
-    public static function get_by_type($type)
+    public static function get_by_type(string $type)
     {
         return self::$all_type_map[$type];
     }
@@ -259,7 +259,7 @@ final class ImageStdParams
     /**
      * Saves the configuration in database.
      */
-    public static function save($save_disabled = true): void
+    public static function save(bool $save_disabled = true): void
     {
         $ser = serialize([
             'd' => self::$type_map,
@@ -288,7 +288,10 @@ final class ImageStdParams
         }
     }
 
-    public static function set_and_save_disabled($map): void
+    /**
+     * @param DerivativeParams[] $map
+     */
+    public static function set_and_save_disabled(array $map): void
     {
         self::$disabled_type_map = $map;
         self::save_disabled();

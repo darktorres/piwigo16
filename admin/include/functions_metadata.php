@@ -16,6 +16,7 @@ include_once PHPWG_ROOT_PATH . '/include/functions_metadata.inc.php';
  * @toto : clean code (factorize foreach)
  *
  * @param string $file
+ * @return array<string, string>
  */
 function get_sync_iptc_data($file): array
 {
@@ -58,6 +59,7 @@ function get_sync_iptc_data($file): array
  * Returns EXIF metadata to sync from a file, depending on EXIF mapping.
  *
  * @param string $file
+ * @return array<string, mixed>
  */
 function get_sync_exif_data($file): array
 {
@@ -129,8 +131,8 @@ function get_sync_metadata_attributes(): array
 /**
  * Get all metadata of a file.
  *
- * @param array $infos - (path[, representative_ext])
- * @return array|false includes data provided in $infos, or false if the
+ * @param array<string, mixed> $infos - (path[, representative_ext])
+ * @return array<string, mixed>|false includes data provided in $infos, or false if the
  *   file's size can't be read
  */
 function get_sync_metadata($infos)
@@ -301,6 +303,7 @@ SELECT id, path, representative_ext
  * @param int $site_id
  * @param bool $recursive
  * @param bool $only_new
+ * @return array<int|string, mixed>
  */
 function get_filelist(
     $category_id = '',

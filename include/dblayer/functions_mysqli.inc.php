@@ -175,72 +175,81 @@ SELECT IF(MAX(' . $column . ')+1 IS NULL, 1, MAX(' . $column . ')+1)
     return $next;
 }
 
-function pwg_db_changes()
+function pwg_db_changes(): int|string
 {
     global $mysqli;
 
     return $mysqli->affected_rows;
 }
 
-function pwg_db_num_rows($result)
+function pwg_db_num_rows(mysqli_result|bool $result): int|string
 {
     return $result->num_rows ?? 0;
 }
 
-function pwg_db_fetch_array($result)
+/**
+ * @return array<int, mixed>|null|false
+ */
+function pwg_db_fetch_array(mysqli_result|bool $result): array|null|false
 {
     return $result->fetch_array();
 }
 
-function pwg_db_fetch_assoc($result)
+/**
+ * @return array<string, mixed>|null|false
+ */
+function pwg_db_fetch_assoc(mysqli_result|bool $result): array|null|false
 {
     return $result->fetch_assoc();
 }
 
-function pwg_db_fetch_row($result)
+/**
+ * @return array<int, mixed>|null
+ */
+function pwg_db_fetch_row(mysqli_result|bool $result): array|null
 {
     return $result->fetch_row();
 }
 
-function pwg_db_fetch_object($result)
+function pwg_db_fetch_object(mysqli_result|bool $result): object|null|false
 {
     return $result->fetch_object();
 }
 
-function pwg_db_free_result($result)
+function pwg_db_free_result(mysqli_result|bool $result): void
 {
-    return $result->free_result();
+    $result->free_result();
 }
 
-function pwg_db_real_escape_string($s)
+function pwg_db_real_escape_string(?string $s): ?string
 {
     global $mysqli;
 
     return isset($s) ? $mysqli->real_escape_string($s) : null;
 }
 
-function pwg_db_insert_id()
+function pwg_db_insert_id(): int|string
 {
     global $mysqli;
 
     return $mysqli->insert_id;
 }
 
-function pwg_db_errno()
+function pwg_db_errno(): int
 {
     global $mysqli;
 
     return $mysqli->errno;
 }
 
-function pwg_db_error()
+function pwg_db_error(): string
 {
     global $mysqli;
 
     return $mysqli->error;
 }
 
-function pwg_db_close()
+function pwg_db_close(): bool
 {
     global $mysqli;
 
@@ -252,12 +261,11 @@ define('MASS_UPDATES_SKIP_EMPTY', 1);
 /**
  * Updates multiple lines in a table.
  *
- * @param string $tablename
- * @param array $dbfields - contains 'primary' and 'update' arrays
- * @param array $datas - indexed by column names
+ * @param array{primary: string[], update: string[]} $dbfields
+ * @param array<int, array<string, mixed>> $datas - indexed by column names
  * @param int $flags - if MASS_UPDATES_SKIP_EMPTY, empty values do not overwrite existing ones
  */
-function mass_updates($tablename, array $dbfields, $datas, $flags = 0): void
+function mass_updates(string $tablename, array $dbfields, array $datas, int $flags = 0): void
 {
     if (count($datas) == 0) {
         return;
@@ -378,12 +386,11 @@ UPDATE ' . protect_column_name($tablename) . ' AS t1, ' . $temporary_tablename .
 /**
  * Updates one line in a table.
  *
- * @param string $tablename
- * @param array $datas
- * @param array $where
+ * @param array<string, mixed> $datas
+ * @param array<string, mixed> $where
  * @param int $flags - if MASS_UPDATES_SKIP_EMPTY, empty values do not overwrite existing ones
  */
-function single_update($tablename, $datas, $where, $flags = 0): void
+function single_update(string $tablename, array $datas, array $where, int $flags = 0): void
 {
     if (count($datas) == 0) {
         return;
@@ -434,13 +441,12 @@ UPDATE ' . protect_column_name($tablename) . '
 /**
  * Inserts multiple lines in a table.
  *
- * @param string $table_name
- * @param array $dbfields - fields from $datas which will be used
- * @param array $datas
- * @param array $options
+ * @param string[] $dbfields - fields from $datas which will be used
+ * @param array<int, array<string, mixed>> $datas
+ * @param array<string, mixed> $options
  *    - boolean ignore - use "INSERT IGNORE"
  */
-function mass_inserts($table_name, $dbfields, $datas, array $options = []): void
+function mass_inserts(string $table_name, array $dbfields, array $datas, array $options = []): void
 {
     $ignore = '';
     if (isset($options['ignore']) and $options['ignore']) {
@@ -494,12 +500,11 @@ INSERT ' . $ignore . ' INTO ' . protect_column_name($table_name) . '
 /**
  * Inserts one line in a table.
  *
- * @param string $table_name
- * @param array $data
- * @param array $options
+ * @param array<string, mixed> $data
+ * @param array<string, mixed> $options
  *    - boolean ignore - use "INSERT IGNORE"
  */
-function single_insert($table_name, $data, array $options = []): void
+function single_insert(string $table_name, array $data, array $options = []): void
 {
     $ignore = '';
     if (isset($options['ignore']) and $options['ignore']) {
@@ -533,7 +538,7 @@ INSERT ' . $ignore . ' INTO ' . protect_column_name($table_name) . '
     }
 }
 
-function protect_column_name($column_name)
+function protect_column_name(string $column_name): string
 {
     if ($column_name[0] != '`') {
         $column_name = '`' . $column_name . '`';
@@ -590,19 +595,25 @@ function do_maintenance_all_tables(): void
     }
 }
 
-function pwg_db_concat($array): string
+/**
+ * @param string[] $array
+ */
+function pwg_db_concat(array $array): string
 {
     $string = implode(',', $array);
     return 'CONCAT(' . $string . ')';
 }
 
-function pwg_db_concat_ws($array, $separator): string
+/**
+ * @param string[] $array
+ */
+function pwg_db_concat_ws(array $array, string $separator): string
 {
     $string = implode(',', $array);
     return 'CONCAT_WS(\'' . $separator . '\',' . $string . ')';
 }
 
-function pwg_db_cast_to_text($string)
+function pwg_db_cast_to_text(string $string): string
 {
     return $string;
 }
@@ -663,7 +674,7 @@ function boolean_to_string($var)
     }
 }
 
-function pwg_db_get_recent_period_expression($period, $date = 'CURRENT_DATE'): string
+function pwg_db_get_recent_period_expression(int|string $period, string $date = 'CURRENT_DATE'): string
 {
     if ($date != 'CURRENT_DATE') {
         $date = '\'' . $date . '\'';
@@ -672,7 +683,7 @@ function pwg_db_get_recent_period_expression($period, $date = 'CURRENT_DATE'): s
     return 'SUBDATE(' . $date . ',INTERVAL ' . $period . ' DAY)';
 }
 
-function pwg_db_get_recent_period($period, $date = 'CURRENT_DATE')
+function pwg_db_get_recent_period(int|string $period, string $date = 'CURRENT_DATE'): mixed
 {
     $query = '
 SELECT ' . pwg_db_get_recent_period_expression($period);
@@ -681,37 +692,37 @@ SELECT ' . pwg_db_get_recent_period_expression($period);
     return $d;
 }
 
-function pwg_db_get_flood_period_expression($seconds): string
+function pwg_db_get_flood_period_expression(int|string $seconds): string
 {
     return 'SUBDATE(NOW(), INTERVAL ' . $seconds . ' SECOND)';
 }
 
-function pwg_db_get_hour($date): string
+function pwg_db_get_hour(string $date): string
 {
     return 'HOUR(' . $date . ')';
 }
 
-function pwg_db_get_date_YYYYMM($date): string
+function pwg_db_get_date_YYYYMM(string $date): string
 {
     return 'DATE_FORMAT(' . $date . ', \'%Y%m\')';
 }
 
-function pwg_db_get_date_MMDD($date): string
+function pwg_db_get_date_MMDD(string $date): string
 {
     return 'DATE_FORMAT(' . $date . ', \'%m%d\')';
 }
 
-function pwg_db_get_year($date): string
+function pwg_db_get_year(string $date): string
 {
     return 'YEAR(' . $date . ')';
 }
 
-function pwg_db_get_month($date): string
+function pwg_db_get_month(string $date): string
 {
     return 'MONTH(' . $date . ')';
 }
 
-function pwg_db_get_week($date, $mode = null): string
+function pwg_db_get_week(string $date, ?int $mode = null): string
 {
     if ($mode) {
         return 'WEEK(' . $date . ', ' . $mode . ')';
@@ -720,22 +731,22 @@ function pwg_db_get_week($date, $mode = null): string
     }
 }
 
-function pwg_db_get_dayofmonth($date): string
+function pwg_db_get_dayofmonth(string $date): string
 {
     return 'DAYOFMONTH(' . $date . ')';
 }
 
-function pwg_db_get_dayofweek($date): string
+function pwg_db_get_dayofweek(string $date): string
 {
     return 'DAYOFWEEK(' . $date . ')';
 }
 
-function pwg_db_get_weekday($date): string
+function pwg_db_get_weekday(string $date): string
 {
     return 'WEEKDAY(' . $date . ')';
 }
 
-function pwg_db_date_to_ts($date): string
+function pwg_db_date_to_ts(string $date): string
 {
     return 'UNIX_TIMESTAMP(' . $date . ')';
 }
@@ -744,7 +755,7 @@ function pwg_db_date_to_ts($date): string
  * Returns (or send to standard output) the message concerning the
  * error occured for the last mysql query.
  */
-function my_error($header, $die): void
+function my_error(string $header, bool $die = true): void
 {
     global $mysqli;
 
@@ -789,11 +800,9 @@ function my_error($header, $die): void
  *
  * @since 2.6
  *
- * @param string $query
- * @param string $key_name
- * @param string $value_name
+ * @return array<int|string, mixed>
  */
-function query2array($query, $key_name = null, $value_name = null): array
+function query2array(string $query, ?string $key_name = null, ?string $value_name = null): array
 {
     $result = pwg_query($query);
     $data = [];

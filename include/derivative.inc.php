@@ -45,7 +45,7 @@ final class SrcImage
     private int $flags = 0;
 
     /**
-     * @param array $infos assoc array of data from images table
+     * @param array<string, mixed> $infos assoc array of data from images table
      */
     public function __construct(
         array $infos
@@ -111,7 +111,7 @@ final class SrcImage
     }
 
     /**
-     * @return string
+     * @return string|array<int|string, mixed>
      */
     public function get_url(): string|array
     {
@@ -188,8 +188,8 @@ final class DerivativeImage
     /**
      * Generates the url of a thumbnail.
      *
-     * @param array|SrcImage $infos array of info from db or SrcImage
-     * @return string
+     * @param array<string, mixed>|SrcImage $infos array of info from db or SrcImage
+     * @return string|array<int|string, mixed>
      */
     public static function thumb_url($infos): string|array
     {
@@ -201,8 +201,8 @@ final class DerivativeImage
      *
      * @param string|DerivativeParams $type standard derivative param type (e.g. IMG_*)
      *    or a DerivativeParams object
-     * @param array|SrcImage $infos array of info from db or SrcImage
-     * @return string
+     * @param array<string, mixed>|SrcImage $infos array of info from db or SrcImage
+     * @return string|array<int|string, mixed>
      */
     public static function url($type, $infos): string|array
     {
@@ -230,7 +230,7 @@ final class DerivativeImage
      * This is useful for any plugin/theme to just use $deriv[IMG_XLARGE] even if
      * the XLARGE is disabled.
      *
-     * @param array|SrcImage $src_image array of info from db or SrcImage
+     * @param array<string, mixed>|SrcImage $src_image array of info from db or SrcImage
      * @return DerivativeImage[]
      */
     public static function get_all($src_image): array
@@ -258,7 +258,7 @@ final class DerivativeImage
      * Disabled derivatives fallback to an enabled derivative.
      *
      * @param string $type standard derivative param type (e.g. IMG_*)
-     * @param array|SrcImage $src_image array of info from db or SrcImage
+     * @param array<string, mixed>|SrcImage $src_image array of info from db or SrcImage
      * @return DerivativeImage|null null if $type not found
      */
     public static function get_one($type, $src_image): ?self
@@ -282,8 +282,12 @@ final class DerivativeImage
 
     /**
      * @todo : documentation of DerivativeImage::build
+     * @param ?DerivativeParams $params by-ref: may be reassigned to null (source used as-is) or a smaller defined type
+     * @param string $rel_path by-ref out-param
+     * @param string $rel_url by-ref out-param
+     * @param ?bool $is_cached by-ref out-param; not bound to a real variable when omitted (uses its default)
      */
-    private static function build($src, &$params, &$rel_path, &$rel_url, &$is_cached = null): void
+    private static function build(SrcImage $src, &$params, &$rel_path, &$rel_url, &$is_cached = null): void
     {
         if ($src->has_size() && $params->is_identity($src->get_size())) {// the source image is smaller than what we should do - we do not upsample
             if (! $params->will_watermark($src->get_size()) && ! $src->rotation) {// no watermark, no rotation required -> we will use the source image
@@ -356,7 +360,7 @@ final class DerivativeImage
     }
 
     /**
-     * @return string
+     * @return string|array<int|string, mixed>
      */
     public function get_url(): string|array
     {
@@ -442,6 +446,7 @@ final class DerivativeImage
 
     /**
      * @param int $maxw
+     * @param int $maxh
      * @return int[]
      */
     public function get_scaled_size($maxw, $maxh)
@@ -467,6 +472,7 @@ final class DerivativeImage
      * Returns the scaled size as HTML attributes.
      *
      * @param int $maxw
+     * @param int $maxh
      * @return string
      */
     public function get_scaled_size_htm($maxw = 9999, $maxh = 9999)

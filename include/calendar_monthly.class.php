@@ -188,6 +188,7 @@ class CalendarMonthly extends CalendarBase
 
     /**
      * Build global calendar and assign the result in _$tpl_var_
+     * @param array<string, mixed> $tpl_var
      */
     protected function build_global_calendar(array &$tpl_var): bool
     {
@@ -253,6 +254,7 @@ class CalendarMonthly extends CalendarBase
 
     /**
      * Build year calendar and assign the result in _$tpl_var_
+     * @param array<string, mixed> $tpl_var
      */
     protected function build_year_calendar(array &$tpl_var): bool
     {
@@ -313,6 +315,7 @@ class CalendarMonthly extends CalendarBase
 
     /**
      * Build month calendar and assign the result in _$tpl_var_
+     * @param array<string, mixed> $tpl_var
      */
     protected function build_month_calendar(array &$tpl_var): bool
     {

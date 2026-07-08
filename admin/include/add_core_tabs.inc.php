@@ -11,7 +11,11 @@ declare(strict_types=1);
 
 add_event_handler('tabsheet_before_select', 'add_core_tabs');
 
-function add_core_tabs(array $sheets, $tab_id): array
+/**
+ * @param array<string, array{caption: string, url: string}> $sheets
+ * @return array<string, array{caption: string, url: string}>
+ */
+function add_core_tabs(array $sheets, mixed $tab_id): array
 {
     global $conf;
 

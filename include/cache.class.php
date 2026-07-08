@@ -14,14 +14,15 @@ declare(strict_types=1);
  */
 abstract class PersistentCache
 {
-    public $default_lifetime = 86400;
+    public int $default_lifetime = 86400;
 
-    protected $instance_key = PHPWG_VERSION;
+    protected string $instance_key = PHPWG_VERSION;
 
     /**
+     * @param array<int|string, mixed>|string $key
      * @return string a key that can be safely be used with get/set methods
      */
-    public function make_key($key)
+    public function make_key(array|string $key)
     {
         if (is_array($key)) {
             $key = implode('&', $key);
@@ -36,7 +37,7 @@ abstract class PersistentCache
      * @param-out mixed $value
      * @return bool false if the $key is not found in cache ($value is not modified in this case)
      */
-    abstract public function get($key, &$value);
+    abstract public function get($key, mixed &$value);
 
     /**
      * Sets a key/value pair in the persistent cache.
@@ -51,7 +52,7 @@ abstract class PersistentCache
      * Purge the persistent cache.
      * @param bool $all - if false only expired items will be purged
      */
-    abstract public function purge($all);
+    abstract public function purge($all): void;
 }
 
 /**
@@ -67,7 +68,7 @@ class PersistentFileCache extends PersistentCache
         $this->dir = PHPWG_ROOT_PATH . $conf['data_location'] . 'cache/';
     }
 
-    public function get($key, &$value): bool
+    public function get($key, mixed &$value): bool
     {
         $loaded = @file_get_contents($this->dir . $key . '.cache');
         if ($loaded !== false && ($loaded = unserialize($loaded)) !== false) {

@@ -14,8 +14,9 @@ declare(strict_types=1);
  * Get comments
  * @since 16
  * @param mixed[] $params
+ * @return \PwgError|array<string, mixed>
  */
-function ws_userComments_getList(array $params, &$service): \PwgError|array
+function ws_userComments_getList(array $params, PwgServer &$service): \PwgError|array
 {
     global $conf;
 
@@ -195,7 +196,7 @@ GROUP BY author_id
  * @since 16
  * @param mixed[] $params
  */
-function ws_userComments_delete(array $params, &$service): \PwgError|string
+function ws_userComments_delete(array $params, PwgServer &$service): \PwgError|string
 {
     include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 
@@ -214,7 +215,7 @@ function ws_userComments_delete(array $params, &$service): \PwgError|string
  * @since 16
  * @param mixed[] $params
  */
-function ws_userComments_validate(array $params, &$service): \PwgError|string
+function ws_userComments_validate(array $params, PwgServer &$service): \PwgError|string
 {
     include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 

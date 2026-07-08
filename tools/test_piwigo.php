@@ -64,7 +64,10 @@ add_picture($option, $cookies, $pwg_token);
 // | Create a new database |
 // +-----------------------+
 
-function create_database(array $option)
+/**
+ * @param array<string, mixed> $option
+ */
+function create_database(array $option): string
 {
     global $mysqli;
 
@@ -97,6 +100,9 @@ function create_database(array $option)
 // | Script Installing Piwigo |
 // +--------------------------+
 
+/**
+ * @param array<string, mixed> $option
+ */
 function install_piwigo(array $option): void
 {
     $data = [
@@ -150,7 +156,10 @@ function install_piwigo(array $option): void
 // | Script Login an User |
 // +----------------------+
 
-function test_log_user(array $option, $cookies)
+/**
+ * @param array<string, mixed> $option
+ */
+function test_log_user(array $option, string $cookies): mixed
 {
     // Log an user - Admin here
     $data = [
@@ -213,7 +222,10 @@ function test_log_user(array $option, $cookies)
 // | Script Creating Album |
 // +-----------------------+
 
-function create_album(array $option, $cookies): void
+/**
+ * @param array<string, mixed> $option
+ */
+function create_album(array $option, string $cookies): void
 {
     $data = [
         'method' => 'pwg.categories.add',
@@ -251,7 +263,10 @@ function create_album(array $option, $cookies): void
 // |  Script adding picture  |
 // +-------------------------+
 
-function add_picture(array $option, $cookies, $pwg_token): void
+/**
+ * @param array<string, mixed> $option
+ */
+function add_picture(array $option, string $cookies, mixed $pwg_token): void
 {
     global $mysqli;
 

@@ -338,7 +338,10 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         self::assertGreaterThan(40, $sizeKB, "fixture should be > 40 KB (got {$sizeKB} KB)");
     }
 
-    /** POSTs a form to a script served through Apache, with the test-mode header. */
+    /**
+     * POSTs a form to a script served through Apache, with the test-mode header.
+     * @param array<string, mixed> $fields
+     */
     private function postForm(string $scriptName, array $fields): string
     {
         $url = $this->baseUrl . '/' . $scriptName;
@@ -394,6 +397,10 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         return (int) $decoded['result']['image_id'];
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     private function callWs(string $method, array $params): array
     {
         $url = $this->baseUrl . '/ws.php?format=json';

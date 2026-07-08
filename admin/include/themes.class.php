@@ -19,37 +19,58 @@ class DummyTheme_maintain extends ThemeMaintain
     // themes::build_maintain_class(), outside this codebase, not statically
     // knowable) — genuinely undecidable until real ThemeMaintain contracts
     // (P31) replace this pre-2.7 procedural fallback entirely.
-    public function activate($theme_version, &$errors = [])
+    /**
+     * @param array<int, string> $errors - not natively typed: ThemeMaintain's
+     *   own base declares $errors with no native type, and PHP's parameter
+     *   contravariance rules fatal on narrowing an untyped parent param to a
+     *   native type in the override (verified empirically)
+     */
+    public function activate($theme_version, &$errors = []): mixed
     {
         // @phpstan-ignore function.impossibleType
         if (is_callable('theme_activate')) {
             return theme_activate($this->theme_id, $theme_version, $errors);
         }
+
+        return null;
     }
 
-    public function deactivate()
+    public function deactivate(): mixed
     {
         // @phpstan-ignore function.impossibleType
         if (is_callable('theme_deactivate')) {
             return theme_deactivate($this->theme_id);
         }
+
+        return null;
     }
 
-    public function delete()
+    public function delete(): mixed
     {
         // @phpstan-ignore function.impossibleType
         if (is_callable('theme_delete')) {
             return theme_delete($this->theme_id);
         }
+
+        return null;
     }
 }
 
 class themes
 {
+    /**
+     * @var array<string, array<string, mixed>>
+     */
     public $fs_themes = [];
 
+    /**
+     * @var array<string, array<string, mixed>>
+     */
     public $db_themes_by_id = [];
 
+    /**
+     * @var array<int|string, array<string, mixed>>
+     */
     public $server_themes = [];
 
     /**
@@ -69,7 +90,7 @@ class themes
      * or build a new class with the procedural methods
      * @param string $theme_id
      */
-    private static function build_maintain_class($theme_id)
+    private static function build_maintain_class($theme_id): ThemeMaintain
     {
         $file_to_include = PHPWG_THEMES_PATH . '/' . $theme_id . '/admin/maintain.inc.php';
         $classname = $theme_id . '_maintain';
@@ -140,15 +161,6 @@ class themes
                 $theme_maintain = self::build_maintain_class($theme_id);
                 $theme_maintain->activate($this->fs_themes[$theme_id]['version'], $errors);
 
-                // Two layers of dynamic dispatch make this unfixable by
-                // restructuring: $theme_maintain can be a `new $classname()`
-                // theme-defined subclass PHPStan can't trace at all, or the
-                // named DummyTheme_maintain fallback — whose own activate()
-                // forwards to a theme-defined theme_activate() function via
-                // is_callable(), a second dynamic-dispatch layer. Both real
-                // paths can populate $errors; only PluginMaintain-style
-                // proper contracts (P31) remove the ambiguity.
-                // @phpstan-ignore empty.variable
                 if (empty($errors)) {
                     $query = '
 INSERT INTO ' . THEMES_TABLE . '
@@ -250,7 +262,7 @@ DELETE
         return $errors;
     }
 
-    public function missing_parent_theme($theme_id)
+    public function missing_parent_theme(string $theme_id): ?string
     {
         if (! isset($this->fs_themes[$theme_id]['parent'])) {
             return null;
@@ -272,7 +284,7 @@ DELETE
     /**
      * @return mixed[]
      */
-    public function get_children_themes($theme_id): array
+    public function get_children_themes(string $theme_id): array
     {
         $children = [];
 
@@ -285,7 +297,7 @@ DELETE
         return $children;
     }
 
-    public function set_default_theme($theme_id): void
+    public function set_default_theme(string $theme_id): void
     {
         global $conf;
 
@@ -319,7 +331,7 @@ UPDATE ' . USER_INFOS_TABLE . '
     /**
      * @return mixed[]
      */
-    public function get_db_themes($id = ''): array
+    public function get_db_themes(string $id = ''): array
     {
         $query = '
 SELECT
@@ -438,7 +450,7 @@ SELECT
     /**
      * Sort fs_themes
      */
-    public function sort_fs_themes($order = 'name'): void
+    public function sort_fs_themes(string $order = 'name'): void
     {
         switch ($order) {
             case 'name':
@@ -459,7 +471,7 @@ SELECT
     /**
      * Retrieve PEM server datas to $server_themes
      */
-    public function get_server_themes($new = false): bool
+    public function get_server_themes(bool $new = false): bool
     {
         global $user, $conf;
 
@@ -530,7 +542,7 @@ SELECT
     /**
      * Sort $server_themes
      */
-    public function sort_server_themes($order = 'date'): void
+    public function sort_server_themes(string $order = 'date'): void
     {
         switch ($order) {
             case 'date':
@@ -558,7 +570,7 @@ SELECT
      * @param string $revision - remote revision identifier (numeric)
      * @param string $dest - theme id or extension id
      */
-    public function extract_theme_files($action, $revision, $dest, &$theme_id = null)
+    public function extract_theme_files($action, $revision, $dest, ?string &$theme_id = null): string
     {
         global $logger;
 
@@ -660,6 +672,10 @@ SELECT
     /**
      * Sort functions
      */
+    /**
+     * @param array<string, mixed> $a
+     * @param array<string, mixed> $b
+     */
     public function extension_revision_compare(array $a, array $b): int
     {
         if ($a['revision_date'] < $b['revision_date']) {
@@ -669,11 +685,19 @@ SELECT
         }
     }
 
+    /**
+     * @param array<string, mixed> $a
+     * @param array<string, mixed> $b
+     */
     public function extension_name_compare(array $a, array $b): int
     {
         return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
     }
 
+    /**
+     * @param array<string, mixed> $a
+     * @param array<string, mixed> $b
+     */
     public function extension_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author_name'], (string) $b['author_name']);
@@ -684,6 +708,10 @@ SELECT
         }
     }
 
+    /**
+     * @param array<string, mixed> $a
+     * @param array<string, mixed> $b
+     */
     public function theme_author_compare(array $a, array $b): int
     {
         $r = strcasecmp((string) $a['author'], (string) $b['author']);
@@ -694,6 +722,10 @@ SELECT
         }
     }
 
+    /**
+     * @param array<string, mixed> $a
+     * @param array<string, mixed> $b
+     */
     public function extension_downloads_compare(array $a, array $b): int
     {
         if ($a['extension_nb_downloads'] < $b['extension_nb_downloads']) {

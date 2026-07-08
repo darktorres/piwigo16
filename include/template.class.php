@@ -40,7 +40,7 @@ class Template
     public $extents = [];
 
     /**
-     * @var array - Templates prefilter from external sources (plugins)
+     * @var array<string, array<int, array<int, array{0: string, 1: mixed}>>> - Templates prefilter from external sources (plugins)
      */
     public $external_filters = [];
 
@@ -75,19 +75,19 @@ class Template
     public $cssLoader;
 
     /**
-     * @var array - Runtime buttons on picture page
+     * @var array<int, string[]> - Runtime buttons on picture page
      */
     public $picture_buttons = [];
 
     /**
-     * @var array - Runtime buttons on index page
+     * @var array<int, string[]> - Runtime buttons on index page
      */
     public $index_buttons = [];
 
     public function __construct(
-        $root = '.',
-        $theme = '',
-        $path = 'template'
+        string $root = '.',
+        string $theme = '',
+        string $path = 'template'
     ) {
         global $conf, $lang_info;
 
@@ -214,7 +214,7 @@ class Template
      * @param bool $load_css
      * @param bool $load_local_head
      */
-    public function set_theme($root, $theme, $path, $load_css = true, $load_local_head = true, $colorscheme = 'dark'): void
+    public function set_theme($root, $theme, $path, $load_css = true, $load_local_head = true, string $colorscheme = 'dark'): void
     {
         // we need themeconf before std_pgs to see what themes use_standard_pages
         $themeconf = $this->load_themeconf($root . '/' . $theme);
@@ -424,7 +424,7 @@ class Template
      * Assigns a template variable.
      * @see http://www.smarty.net/manual/en/api.assign.php
      *
-     * @param string|array $tpl_var can be a var name or a hashmap of variables
+     * @param string|array<string, mixed> $tpl_var can be a var name or a hashmap of variables
      *    (in this case, do not use the _$value_ parameter)
      * @param mixed $value
      */
@@ -492,7 +492,7 @@ class Template
      *
      * @param string $tpl_var
      */
-    public function get_template_vars($tpl_var = null)
+    public function get_template_vars($tpl_var = null): mixed
     {
         return $this->smarty->getTemplateVars($tpl_var);
     }
@@ -647,6 +647,7 @@ class Template
      *    - {'Comment'|translate}
      *    - {'%d comments'|translate:$count}
      * @see l10n()
+     * @param array<int, string> $params
      */
     public static function modcompiler_translate(array $params): string
     {
@@ -679,6 +680,7 @@ class Template
      * Usage :
      *    - {$count|translate_dec:'%d comment':'%d comments'}
      * @see l10n_dec()
+     * @param array<int, string> $params
      */
     public static function modcompiler_translate_dec(array $params): string
     {
@@ -708,6 +710,7 @@ class Template
      *
      * @param string $text
      * @param string $delimiter
+     * @return string[]
      */
     public static function mod_explode($text, $delimiter = ','): array
     {
@@ -733,7 +736,7 @@ class Template
      * The "html_head" block allows to add content just before
      * </head> element in the output after the head has been parsed.
      *
-     * @param array $params (unused)
+     * @param array<int, mixed> $params (unused)
      * @param string $content
      */
     public function block_html_head($params, $content): void
@@ -750,7 +753,7 @@ class Template
      * The "html_style" block allows to add CSS juste before
      * </head> element in the output after the head has been parsed.
      *
-     * @param array $params (unused)
+     * @param array<int, mixed> $params (unused)
      * @param string $content
      */
     public function block_html_style($params, $content): void
@@ -775,6 +778,7 @@ class Template
      *    - crop (optional, used if type is empty)
      *    - min_height (optional, used with crop)
      *    - min_height (optional, used with crop)
+     * @param array<string, mixed> $params
      * @param Smarty $smarty
      */
     public function func_define_derivative(array $params, $smarty): void
@@ -823,6 +827,7 @@ class Template
      *   - require (optional) comma separated list of script ids required to be loaded
      *     and executed before this one
      *   - version (optional) used to force a browser refresh
+     * @param array<string, mixed> $params
      */
     public function func_combine_script(array $params): void
     {
@@ -847,7 +852,7 @@ class Template
             empty($params['require']) ? [] : explode(',', (string) $params['require']),
             @$params['path'],
             $params['version'] ?? '0',
-            @$params['template']
+            (bool) @$params['template']
         );
     }
 
@@ -857,6 +862,7 @@ class Template
      *
      * @param array $params
      *    - load (required)
+     * @param array<string, mixed> $params
      */
     public function func_get_combined_scripts(array $params): string
     {
@@ -905,7 +911,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * Returns clean relative URL to script file.
      *
      * @param Combinable $script
-     * @return string
+     * @return string|array<int|string, mixed>
      */
     private static function make_script_src($script): string|array
     {
@@ -928,6 +934,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param array $params
      *    - require (optional) comma separated list of script ids
+     * @param array<string, mixed> $params
      * @param string $content
      */
     public function block_footer_script(array $params, $content): void
@@ -954,6 +961,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *    - version (optional) used to force a browser refresh
      *    - order (optional)
      *    - template (optional) set to true to allow smarty syntax in the css file
+     * @param array<string, mixed> $params
      */
     public function func_combine_css(array $params): void
     {
@@ -972,7 +980,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * The "get_combined_scripts" function returns a placeholder for delayed
      * CSS files combination and minification.
      *
-     * @param array $params (unused)
+     * @param array<int, mixed> $params (unused)
      */
     public function func_get_combined_css($params): string
     {
@@ -1067,7 +1075,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $source
      * @param Smarty $smarty
-     * @return string
+     * @return string|array<int|string, string|null>|null
      */
     public static function prefilter_white_space($source, $smarty): string|array|null
     {
@@ -1097,7 +1105,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      *
      * @param string $source
      * @param Smarty $smarty
-     * @return string
+     * @return string|array<int|string, string|null>|null
      */
     public static function postfilter_language($source, $smarty): string|array|null
     {
@@ -1145,7 +1153,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      * Loads the configuration file from a theme directory and returns it.
      *
      * @param string $dir
-     * @return array
+     * @return array<string, mixed>
      */
     public function load_themeconf($dir)
     {
@@ -1244,13 +1252,13 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
 class PwgTemplateAdapter
 {
     #[\Deprecated(message: 'use "translate" modifier')]
-    public function l10n($text)
+    public function l10n(string $text): string
     {
         return l10n($text);
     }
 
     #[\Deprecated(message: 'use "translate_dec" modifier')]
-    public function l10n_dec($s, $p, $v): string
+    public function l10n_dec(string $s, string $p, int $v): string
     {
         return l10n_dec($s, $p, $v);
     }
@@ -1264,7 +1272,7 @@ class PwgTemplateAdapter
 
     /**
      * @param string $type
-     * @param array|SrcImage $img
+     * @param array<string, mixed>|SrcImage $img
      */
     public function derivative($type, $img): \DerivativeImage
     {
@@ -1276,8 +1284,8 @@ class PwgTemplateAdapter
 
     /**
      * @param string $type
-     * @param array $img
-     * @return string
+     * @param array<string, mixed> $img
+     * @return string|array<int|string, mixed>
      */
     public function derivative_url($type, $img): string|array
     {
@@ -1336,7 +1344,7 @@ class Combinable
 final class Script extends Combinable
 {
     /**
-     * @var array
+     * @var array{order?: int}
      */
     public $extra;
 
@@ -1345,7 +1353,7 @@ final class Script extends Combinable
      * @param string $id
      * @param string $path
      * @param string $version
-     * @param array $precedents
+     * @param string[] $precedents
      */
     public function __construct(
         public $load_mode,
@@ -1419,7 +1427,7 @@ class CssLoader
     /**
      * Callback for CSS files sorting.
      */
-    private static function cmp_by_order($a, $b): int|float
+    private static function cmp_by_order(Css $a, Css $b): int
     {
         return $a->order - $b->order;
     }
@@ -1482,6 +1490,9 @@ class ScriptLoader
 
     private ?bool $did_footer = null;
 
+    /**
+     * @var array<string, string>
+     */
     private static array $known_paths = [
         'core.scripts' => 'themes/default/js/scripts.js',
         'jquery' => 'themes/default/js/jquery.min.js',
@@ -1489,6 +1500,9 @@ class ScriptLoader
         'jquery.ui.effect' => 'themes/default/js/ui/minified/jquery.ui.effect.min.js',
     ];
 
+    /**
+     * @var array<string, string[]>
+     */
     private static array $ui_core_dependencies = [
         'jquery.ui.widget' => ['jquery'],
         'jquery.ui.position' => ['jquery'],
@@ -1551,7 +1565,7 @@ class ScriptLoader
      *   recursion below passes null deliberately
      * @param string $version
      */
-    public function add($id, $load_mode, $require, $path, $version = '0', $is_template = false): void
+    public function add($id, $load_mode, $require, $path, $version = '0', bool $is_template = false): void
     {
         if ($this->did_head && $load_mode == 0) {
             trigger_error("Attempt to add script {$id} but the head has been written", E_USER_WARNING);
@@ -1780,7 +1794,7 @@ class ScriptLoader
     /**
      * Callback for scripts sorter.
      */
-    private static function cmp_by_mode_and_order($s1, $s2): int|float
+    private static function cmp_by_mode_and_order(Script $s1, Script $s2): int
     {
         $ret = intval($s1->load_mode) - intval($s2->load_mode);
         if ($ret) {
@@ -1886,6 +1900,8 @@ final class FileCombiner
     /**
      * Process a set of pending files.
      *
+     * @param Combinable[] $result
+     * @param Combinable[] $pending
      * @param string[] $key
      */
     private function flush_pending(array &$result, array &$pending, array $key, bool $force): void

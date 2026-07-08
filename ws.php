@@ -32,8 +32,10 @@ $service->run();
 
 /**
  * event handler that registers standard methods with the web service
+ *
+ * @param array<int, PwgServer> $arr
  */
-function ws_addDefaultMethods($arr): void
+function ws_addDefaultMethods(array $arr): void
 {
     global $conf, $user;
     $service = &$arr[0];

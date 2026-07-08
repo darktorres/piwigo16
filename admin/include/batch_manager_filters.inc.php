@@ -59,6 +59,10 @@ if ($conf['enable_synchronization']) {
     ];
 }
 
+/**
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
+ */
 function UC_name_compare(array $a, array $b): int
 {
     return strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME']));

@@ -19,6 +19,10 @@ if (!function_exists('add_event_handler')) {
 }
 
 if (!function_exists('single_update')) {
+    /**
+     * @param array<string, mixed> $data
+     * @param array<string, mixed> $where
+     */
     function single_update(string $table, array $data, array $where): void
     {
     }

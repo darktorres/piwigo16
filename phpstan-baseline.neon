@@ -13,12 +13,6 @@ parameters:
 			path: admin/include/check_integrity.class.php
 
 		-
-			message: '#^Undefined variable\: \$f$#'
-			identifier: variable.undefined
-			count: 1
-			path: admin/include/image.class.php
-
-		-
 			message: '#^Function plugin_activate not found\.$#'
 			identifier: function.notFound
 			count: 1
@@ -181,12 +175,6 @@ parameters:
 			path: include/template.class.php
 
 		-
-			message: '#^Undefined variable\: \$type$#'
-			identifier: variable.undefined
-			count: 1
-			path: include/ws_functions/pwg.images.php
-
-		-
 			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'
 			identifier: include.fileNotFound
 			count: 1
@@ -205,7 +193,7 @@ parameters:
 			path: ready.php
 
 		-
-			message: '#^Cannot unset offset ''CHANGE_COLUMN'' on array\{tags\: non\-empty\-list\<non\-empty\-array\>, TITLE\?\: string\}\.$#'
+			message: '#^Cannot unset offset ''CHANGE_COLUMN'' on array\{tags\: non\-empty\-list\<non\-empty\-array\<string, mixed\>\>, TITLE\?\: string\}\.$#'
 			identifier: unset.offset
 			count: 1
 			path: tags.php
@@ -233,12 +221,6 @@ parameters:
 			identifier: include.fileNotFound
 			count: 1
 			path: upgrade.php
-
-		-
-			message: '#^Function my_error invoked with 1 parameter, 2 required\.$#'
-			identifier: arguments.count
-			count: 1
-			path: upgrade_feed.php
 
 		-
 			message: '#^Path in include\(\) "\./local/config/config\.inc\.php" is not a file or it does not exist\.$#'

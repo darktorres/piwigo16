@@ -39,7 +39,7 @@ $logger = new Logger([
     'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf['db_password']) . '.txt',
 ]);
 
-function trigger_notify($event, ...$args): void {}
+function trigger_notify(string $event, mixed ...$args): void {}
 function get_extension(?string $filename): string
 {
     if ($filename === null) {
@@ -51,7 +51,7 @@ function get_extension(?string $filename): string
     return $dot_position === false ? '' : substr($filename, $dot_position + 1);
 }
 
-function mkgetdir($dir): bool
+function mkgetdir(string $dir): bool
 {
     if (! is_dir($dir)) {
         global $conf;
@@ -76,7 +76,7 @@ function mkgetdir($dir): bool
 
 // end fast bootstrap
 
-function ierror($msg, $code): never
+function ierror(string $msg, int $code): never
 {
     global $logger;
     if ($code == 301 || $code == 302) {
@@ -109,14 +109,17 @@ function ierror($msg, $code): never
     exit;
 }
 
-function time_step(&$step): int
+function time_step(float &$step): int
 {
     $tmp = $step;
     $step = microtime(true);
     return intval(1000 * ($step - $tmp));
 }
 
-function url_to_size($s): array
+/**
+ * @return array{0: int, 1: int}
+ */
+function url_to_size(string $s): array
 {
     $pos = strpos((string) $s, 'x');
     if ($pos === false) {
@@ -125,7 +128,10 @@ function url_to_size($s): array
     return [(int) substr((string) $s, 0, $pos), (int) substr((string) $s, $pos + 1)];
 }
 
-function parse_custom_params($tokens): \DerivativeParams
+/**
+ * @param string[] $tokens
+ */
+function parse_custom_params(array $tokens): \DerivativeParams
 {
     if (count($tokens) < 1) {
         ierror('Empty array while parsing Sizing', 400);
@@ -249,7 +255,7 @@ function parse_request(): \DerivativeParams
     return $page['derivative_params'];
 }
 
-function try_switch_source(DerivativeParams $params, $original_mtime): bool
+function try_switch_source(DerivativeParams $params, int $original_mtime): bool
 {
     global $page;
     if (! isset($page['original_size'])) {
@@ -322,7 +328,7 @@ function try_switch_source(DerivativeParams $params, $original_mtime): bool
     return false;
 }
 
-function send_derivative($expires): void
+function send_derivative(false|int $expires): void
 {
     global $page;
 
@@ -361,6 +367,11 @@ function send_derivative($expires): void
     fclose($fp);
 }
 
+/**
+ * @param array<int|string, mixed>|string $value
+ * @return mixed the unserialized value, false if $value is a malformed
+ *   serialized string, or $value itself unchanged if it isn't a string
+ */
 function safe_unserialize($value)
 {
     if (is_string($value)) {

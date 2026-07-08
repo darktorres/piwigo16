@@ -400,6 +400,8 @@ function delete_orphan_tags(): void
 
 /**
  * Get all tags (id + name) linked to no photo
+ *
+ * @return array<int, array{id: string, name: string}>
  */
 function get_orphan_tags(): array
 {
@@ -424,7 +426,7 @@ SELECT
  *   ever flows into implode()/SQL contexts below, so numeric strings work
  *   identically
  */
-function update_category($ids = 'all')
+function update_category($ids = 'all'): ?false
 {
     global $conf;
 
@@ -477,6 +479,8 @@ SELECT DISTINCT id
             set_random_representant($to_rand);
         }
     }
+
+    return null;
 }
 
 /**
@@ -549,7 +553,7 @@ DELETE
  *
  * @return string[]
  */
-function get_fs_directories($path, $recursive = true): array
+function get_fs_directories(string $path, bool $recursive = true): array
 {
     global $conf;
 
@@ -590,7 +594,7 @@ function get_fs_directories($path, $recursive = true): array
  * The list of ordered categories id is supposed to be in the same parent
  * category
  *
- * @param array $categories
+ * @param array<int, mixed> $categories
  */
 function save_categories_order($categories): void
 {
@@ -700,7 +704,7 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
  * @param bool|string $value
  * @param bool $unlock_child optional   default false
  */
-function set_cat_visible($categories, $value, $unlock_child = false)
+function set_cat_visible($categories, $value, $unlock_child = false): ?false
 {
     if (($value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) === null) {
         trigger_error("set_cat_visible invalid param {$value}", E_USER_WARNING);
@@ -728,6 +732,8 @@ UPDATE ' . CATEGORIES_TABLE . '
   WHERE id IN (' . implode(',', $subcats) . ')';
         pwg_query($query);
     }
+
+    return null;
 }
 
 /**
@@ -736,7 +742,7 @@ UPDATE ' . CATEGORIES_TABLE . '
  * @param int[] $categories
  * @param string $value
  */
-function set_cat_status($categories, $value)
+function set_cat_status($categories, $value): ?false
 {
     if (! in_array($value, ['public', 'private'])) {
         trigger_error("set_cat_status invalid param {$value}", E_USER_WARNING);
@@ -892,6 +898,8 @@ DELETE
             }
         }
     }
+
+    return null;
 }
 
 /**
@@ -925,7 +933,10 @@ SELECT uppercats
     return $uppercats;
 }
 
-function get_category_representant_properties($image_id, $size = null): array
+/**
+ * @return array{src: string|array<int|string, mixed>, url: string}
+ */
+function get_category_representant_properties(int|string $image_id, ?string $size = null): array
 {
     $query = '
 SELECT id,representative_ext,path
@@ -1043,7 +1054,7 @@ SELECT id, uppercats, site_id
  *
  * @param string $path
  * @param bool $recursive
- * @return array
+ * @return array{elements: string[], thumbnails: string[], representatives: string[]}
  */
 #[\Deprecated(message: '2.4')]
 function get_fs($path, $recursive = true)
@@ -1339,13 +1350,9 @@ SELECT status
  * @param int|string|null $parent_id ws_categories_add() passes null by
  *   default (WS_TYPE_INT param, unset by the caller), admin/cat_list.php
  *   passes a raw, unvalidated $_GET['parent_id'] string
- * @param array $options
- *    - boolean commentable
- *    - boolean visible
- *    - string status
- *    - string comment
- *    - boolean inherit
- * @return array ('info', 'id') or ('error')
+ * @param array{commentable?: mixed, visible?: mixed, status?: mixed, comment?: mixed, inherit?: mixed} $options
+ *   values are validated internally (is_bool()/==), not trusted from callers
+ * @return array{error: string}|array{info: string, id: int|string}
  */
 function create_virtual_category($category_name, $parent_id = null, array $options = []): array
 {
@@ -1559,9 +1566,11 @@ DELETE
 /**
  * Delete tags and tags associations.
  *
- * @param int[] $tag_ids
+ * @param array<int, int|string> $tag_ids get_orphan_tags()'s ids flow in as
+ *   mysqli-returned numeric strings; tag ids only ever flow into SQL/array
+ *   contexts here, so numeric strings work identically
  */
-function delete_tags($tag_ids)
+function delete_tags($tag_ids): void
 {
     // we need the list of impacted images, to update their lastmodified
     $query = '
@@ -1662,7 +1671,7 @@ SELECT id
 /**
  * Set tags of images. Overwrites all existing associations.
  *
- * @param array $tags_of - keys are image ids, values are array of tag ids
+ * @param array<int|string, array<int, int|string>> $tags_of - keys are image ids, values are array of tag ids
  */
 function set_tags_of($tags_of): void
 {
@@ -1714,7 +1723,7 @@ DELETE
  * no tags.
  *
  * @since 2.9
- * @param array $image_ids
+ * @param array<int, int|string> $image_ids
  * @return array<int, int[]> image_id => list of tag ids
  */
 function get_image_tag_ids($image_ids): array
@@ -1744,11 +1753,11 @@ SELECT
  * Compare the list of tags, for each image. Returns image_ids where tag list has changed.
  *
  * @since 2.9
- * @param array $taglist_before - for each image_id (key), list of tag ids
- * @param array $taglist_after - for each image_id (key), list of tag ids
- * @return array - image_ids where the list has changed
+ * @param array<int|string, array<int, int|string>> $taglist_before - for each image_id (key), list of tag ids
+ * @param array<int|string, array<int, int|string>> $taglist_after - for each image_id (key), list of tag ids
+ * @return array<int, int|string> - image_ids where the list has changed
  */
-function compare_image_tag_lists(array $taglist_before, $taglist_after): array
+function compare_image_tag_lists(array $taglist_before, array $taglist_after): array
 {
     $images_to_update = [];
 
@@ -1770,8 +1779,8 @@ function compare_image_tag_lists(array $taglist_before, $taglist_after): array
  * Instead of associating images to categories, add them in the lounge, waiting for take-off.
  *
  * @since 12
- * @param array $images - list of image ids
- * @param array $categories - list of category ids
+ * @param array<int, int|string> $images - list of image ids
+ * @param array<int, int|string> $categories - list of category ids
  */
 function fill_lounge($images, $categories): void
 {
@@ -1802,10 +1811,10 @@ function fill_lounge($images, $categories): void
  *
  * @since 12
  * @param bool $invalidate_user_cache
- * @return array|void the moved image_id/category_id rows, or void if another
- *   call is already emptying the lounge concurrently
+ * @return array<int, array<string, mixed>>|null the moved image_id/category_id
+ *   rows, or null if another call is already emptying the lounge concurrently
  */
-function empty_lounge($invalidate_user_cache = true)
+function empty_lounge($invalidate_user_cache = true): ?array
 {
     global $logger, $conf;
 
@@ -1834,7 +1843,7 @@ INSERT IGNORE
 
     if ($running_exec_id != $exec_id) {
         $logger->debug(__FUNCTION__ . ', exec=' . $exec_id . ', skip');
-        return;
+        return null;
     }
     $logger->debug(__FUNCTION__ . ', exec=' . $exec_id . ' wins the race and gets the token!');
 
@@ -1892,7 +1901,7 @@ DELETE
  * @param int[] $images
  * @param int[] $categories
  */
-function associate_images_to_categories($images, $categories)
+function associate_images_to_categories($images, $categories): ?false
 {
     if (count($images) == 0
         or count($categories) == 0) {
@@ -1964,6 +1973,8 @@ SELECT
 
         update_category($categories);
     }
+
+    return null;
 }
 
 /**
@@ -1971,7 +1982,7 @@ SELECT
  *
  * @param int[] $images
  */
-function dissociate_images_from_category($images, $category): int
+function dissociate_images_from_category($images, int|string $category): int
 {
     // physical links must not be broken, so we must first retrieve image_id
     // which create virtual links with the category to "dissociate from".
@@ -2012,7 +2023,7 @@ DELETE
  *   literal '0') since check_input_parameter() only validates array-ness
  *   when the value is non-empty
  */
-function move_images_to_categories($images, $categories)
+function move_images_to_categories($images, $categories): ?false
 {
     if (! is_array($categories)) {
         $categories = [];
@@ -2044,6 +2055,8 @@ DELETE ' . IMAGE_CATEGORY_TABLE . '.*
     if (count($categories) > 0) {
         associate_images_to_categories($images, $categories);
     }
+
+    return null;
 }
 
 /**
@@ -2053,7 +2066,7 @@ DELETE ' . IMAGE_CATEGORY_TABLE . '.*
  * @param int[] $sources
  * @param int[] $destinations
  */
-function associate_categories_to_categories($sources, $destinations)
+function associate_categories_to_categories($sources, $destinations): ?false
 {
     if (count($sources) == 0) {
         return false;
@@ -2067,6 +2080,8 @@ SELECT image_id
     $images = query2array($query, null, 'image_id');
 
     associate_images_to_categories($images, $destinations);
+
+    return null;
 }
 
 /**
@@ -2090,7 +2105,7 @@ function pwg_URL(): array
 /**
  * Invalidates cached data (permissions and category counts) for all users.
  */
-function invalidate_user_cache($full = true): void
+function invalidate_user_cache(bool $full = true): void
 {
     global $persistent_cache, $logger;
 
@@ -2135,6 +2150,7 @@ UPDATE ' . USER_CACHE_TABLE . '
  *
  * @param int $MinLevelAccess
  * @param int $MaxLevelAccess
+ * @return array<int, string>
  */
 function get_user_access_level_html_options($MinLevelAccess = ACCESS_FREE, $MaxLevelAccess = ACCESS_CLOSED): array
 {
@@ -2179,7 +2195,7 @@ function get_extents($start = ''): array
  * Create a new tag.
  *
  * @param string $tag_name
- * @return array ('id', info') or ('error')
+ * @return array{info: string, id: int|string}|array{error: string}
  */
 function create_tag($tag_name): array
 {
@@ -2257,8 +2273,8 @@ function pwg_http_client()
  *
  * @param string $src
  * @param string|resource $dest - can be a file ressource or string
- * @param array $get_data - data added to request url
- * @param array $post_data - data transmitted with POST
+ * @param array<string, mixed> $get_data - data added to request url
+ * @param array<string, mixed> $post_data - data transmitted with POST
  * @param string $user_agent
  */
 function fetchRemote($src, &$dest, $get_data = [], $post_data = [], $user_agent = 'Piwigo'): bool
@@ -2365,6 +2381,10 @@ SELECT name
     return $groupname;
 }
 
+/**
+ * @param array<int, int|string> $group_ids
+ * @return false|array<int|string, string>
+ */
 function delete_groups($group_ids): false|array
 {
 
@@ -2533,7 +2553,7 @@ function get_active_menu($menu_page)
  * @param string $query
  * @param bool $only_user_language - if true, only local name is returned for
  *    multilingual tags (if ExtendedDescription plugin is active)
- * @return array[] ('id', 'name')
+ * @return array<int, array{name: mixed, id: string}>
  */
 function get_taglist($query, $only_user_language = true): array
 {
@@ -2607,6 +2627,7 @@ function get_tag_ids($raw_tags, $allow_create = true): array
  * names. Sequence is not case sensitive.
  * Warning: By definition, this function breaks original keys.
  *
+ * @param array<int, int|string> $element_ids
  * @param string[] $name - names of elements, indexed by ids
  * @return int[]
  */
@@ -2757,7 +2778,7 @@ function clear_derivative_cache($types = 'all'): void
  * Used by clear_derivative_cache()
  * @ignore
  */
-function clear_derivative_cache_rec($path, $pattern)
+function clear_derivative_cache_rec(string $path, string $pattern): bool
 {
     $rmdir = true;
     $rm_index = false;
@@ -2768,7 +2789,15 @@ function clear_derivative_cache_rec($path, $pattern)
                 continue;
             }
             if (is_dir($path . '/' . $node)) {
-                $rmdir &= clear_derivative_cache_rec($path . '/' . $node, $pattern);
+                // Always recurse, even once $rmdir is already false: every
+                // subdirectory must still get its matching derivative files
+                // deleted. Combine with a plain logical AND (not `&=`, which
+                // silently promotes $rmdir from bool to int on bool|null
+                // operands and corrupts the return type across recursive
+                // calls) computed from an already-evaluated variable, so the
+                // recursive call itself is never short-circuited away.
+                $sub_rmdir = clear_derivative_cache_rec($path . '/' . $node, $pattern);
+                $rmdir = $rmdir && $sub_rmdir;
             } else {
                 if (preg_match($pattern, $node)) {
                     unlink($path . '/' . $node);
@@ -2790,12 +2819,14 @@ function clear_derivative_cache_rec($path, $pattern)
         }
         return $rmdir;
     }
+
+    return false;
 }
 
 /**
  * Deletes derivatives of a particular element
  *
- * @param array $infos ('path'[, 'representative_ext'])
+ * @param array{path: string, representative_ext?: string} $infos
  * @param 'all'|int|'custom' $type IMG_CUSTOM (defined as the string
  *   'custom') is a legitimate value, not just the numeric IMG_* type
  *   constants — admin/picture_coi.php passes it directly
@@ -2850,9 +2881,9 @@ function get_dirs($directory): array
  * Recursively delete a directory.
  *
  * @param string $path
- * @param string $trash_path, try to move the directory to this path if it cannot be delete
+ * @param ?string $trash_path, try to move the directory to this path if it cannot be delete
  */
-function deltree($path, $trash_path = null)
+function deltree($path, $trash_path = null): ?bool
 {
     if (is_dir($path)) {
         $fh = opendir($path);
@@ -2881,10 +2912,14 @@ function deltree($path, $trash_path = null)
                     break;
                 }
             }
+
+            return null;
         } else {
             return false;
         }
     }
+
+    return null;
 }
 
 /**
@@ -2986,7 +3021,7 @@ SELECT
     return count($path_for_id);
 }
 
-function count_orphans()
+function count_orphans(): mixed
 {
     if (conf_get_param('count_orphans') === null) {
         // we don't care about the list of image_ids, we only care about the number
@@ -3078,7 +3113,7 @@ function save_images_order($category_id, $images): void
  * list.
  *
  * @since 2.9
- * @param array $image_ids
+ * @param int[] $image_ids
  */
 function update_images_lastmodified($image_ids): void
 {
@@ -3132,8 +3167,9 @@ function number_format_human_readable($numbers): string
  *   admin/photo.php, admin/photos_add_direct.php) pass a raw, unvalidated
  *   $_GET value directly
  * @param bool $die_on_missing
+ * @return array<string, mixed>|null
  */
-function get_image_infos($image_id, $die_on_missing = false)
+function get_image_infos($image_id, $die_on_missing = false): ?array
 {
     if (! is_numeric($image_id)) {
         fatal_error('[' . __FUNCTION__ . '] invalid image identifier ' . htmlentities($image_id));
@@ -3162,7 +3198,7 @@ SELECT *
  * @since 12
  * @return mixed[][]|float[]|int[]
  */
-function get_cache_size_derivatives($path): array
+function get_cache_size_derivatives(string $path): array
 {
     $msizes = []; // final res
     $subdirs = []; // sous-rep
@@ -3292,7 +3328,7 @@ SELECT
  *
  * @since 13
  */
-function get_piwigo_news()
+function get_piwigo_news(): mixed
 {
     global $lang_info;
 
@@ -3334,7 +3370,7 @@ function get_piwigo_news()
     return $news;
 }
 
-function get_graphics_library()
+function get_graphics_library(): string|false
 {
     global $conf;
 
@@ -3380,6 +3416,9 @@ function get_graphics_library_label(): string
     return $label_for_lib[$library_code] . ' ' . $library_version;
 }
 
+/**
+ * @return array<string, mixed>
+ */
 function get_pwg_general_statitics(): array
 {
     $stats = [];
@@ -3462,7 +3501,7 @@ SELECT
     return $stats;
 }
 
-function get_installation_date()
+function get_installation_date(): mixed
 {
     $candidate = null;
 

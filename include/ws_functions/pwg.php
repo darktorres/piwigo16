@@ -17,8 +17,9 @@ declare(strict_types=1);
  *    @option int[] ids
  *    @option int max_urls
  *    @option int prev_page (optional)
+ * @return \PwgError|array{next_page?: int|string, urls?: string[]}
  */
-function ws_getMissingDerivatives(array $params, &$service): \PwgError|array
+function ws_getMissingDerivatives(array $params, PwgServer &$service): \PwgError|array
 {
     global $conf;
 
@@ -109,7 +110,7 @@ SELECT id, path, representative_ext, width, height, rotation
  * Returns Piwigo version
  * @param mixed[] $params
  */
-function ws_getVersion($params, &$service): string
+function ws_getVersion($params, PwgServer &$service): string
 {
     return PHPWG_VERSION;
 }
@@ -118,8 +119,9 @@ function ws_getVersion($params, &$service): string
  * API method
  * Returns general informations about the installation
  * @param mixed[] $params
+ * @return array{infos: PwgNamedArray}
  */
-function ws_getInfos($params, &$service): array
+function ws_getInfos($params, PwgServer &$service): array
 {
     $infos['version'] = PHPWG_VERSION;
 
@@ -186,8 +188,9 @@ function ws_getInfos($params, &$service): array
  *
  * @since 12
  * @param mixed[] $params
+ * @return array{infos: PwgNamedArray}
  */
-function ws_getCacheSize($params, &$service): array
+function ws_getCacheSize($params, PwgServer &$service): array
 {
     global $conf;
 
@@ -254,7 +257,7 @@ function ws_getCacheSize($params, &$service): array
  * @param mixed[] $params
  *    @option int[] image_id
  */
-function ws_caddie_add(array $params, &$service): int
+function ws_caddie_add(array $params, PwgServer &$service): int
 {
     global $user;
 
@@ -292,7 +295,7 @@ SELECT id
  *    @option int user_id
  *    @option string anonymous_id (optional)
  */
-function ws_rates_delete(array $params, &$service)
+function ws_rates_delete(array $params, PwgServer &$service): int|string
 {
     $query = '
 DELETE FROM ' . RATE_TABLE . '
@@ -320,7 +323,7 @@ DELETE FROM ' . RATE_TABLE . '
  *    @option string username
  *    @option string password
  */
-function ws_session_login(array $params, &$service): \PwgError|true
+function ws_session_login(array $params, PwgServer &$service): \PwgError|true
 {
     if (defined('PWG_API_KEY_REQUEST')) {
         return new PwgError(401, 'Cannot use this method with an api key');
@@ -345,7 +348,7 @@ function ws_session_login(array $params, &$service): \PwgError|true
  * Performs a logout
  * @param mixed[] $params
  */
-function ws_session_logout($params, &$service): \PwgError|true
+function ws_session_logout($params, PwgServer &$service): \PwgError|true
 {
     if (defined('PWG_API_KEY_REQUEST')) {
         return new PwgError(401, 'Cannot use this method with an api key');
@@ -361,8 +364,9 @@ function ws_session_logout($params, &$service): \PwgError|true
  * API method
  * Returns info about the current user
  * @param mixed[] $params
+ * @return array<string, mixed>
  */
-function ws_session_getStatus($params, &$service)
+function ws_session_getStatus($params, PwgServer &$service): array
 {
     global $user, $conf;
 
@@ -412,8 +416,10 @@ function ws_session_getStatus($params, &$service)
  * API method
  * Returns lines of users activity
  *  @since 12
+ * @param array<string, mixed> $param
+ * @return \PwgError|array{result_lines: array<int, array<string, mixed>>, page_offset: int, end_page: bool, params: array<string, mixed>}
  */
-function ws_getActivityList(array $param, &$service): \PwgError|array
+function ws_getActivityList(array $param, PwgServer &$service): \PwgError|array
 {
     global $conf;
 
@@ -615,8 +621,9 @@ SELECT
  * API method
  * Log a new line in visit history
  * @since 13
+ * @param array<string, mixed> $params
  */
-function ws_history_log(array $params, &$service): void
+function ws_history_log(array $params, PwgServer &$service): void
 {
     global $logger, $page;
 
@@ -653,8 +660,10 @@ function ws_history_log(array $params, &$service): void
  * API method
  * Returns lines of an history search
  * @since 13
+ * @param array<string, mixed> $param
+ * @return array<string, mixed>
  */
-function ws_history_search(array $param, &$service): array
+function ws_history_search(array $param, PwgServer &$service): array
 {
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';

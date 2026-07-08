@@ -16,25 +16,25 @@ declare(strict_types=1);
 // Define all needed methods for image class
 interface imageInterface
 {
-    public function get_width();
+    public function get_width(): int|float;
 
-    public function get_height();
+    public function get_height(): int|float;
 
-    public function set_compression_quality($quality);
+    public function set_compression_quality(int $quality): bool;
 
-    public function crop($width, $height, $x, $y);
+    public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool;
 
-    public function strip();
+    public function strip(): bool;
 
-    public function rotate($rotation);
+    public function rotate(int|float $rotation): bool;
 
-    public function resize($width, $height);
+    public function resize(int|float $width, int|float $height): bool;
 
-    public function sharpen($amount);
+    public function sharpen(int|float $amount): bool;
 
-    public function compose($overlay, $x, $y, $opacity);
+    public function compose(pwg_image $overlay, int|float $x, int|float $y, int|float $opacity): bool;
 
-    public function write($destination_filepath);
+    public function write(string $destination_filepath): bool;
 }
 
 // +-----------------------------------------------------------------------+
@@ -45,16 +45,16 @@ interface imageInterface
  * Unknown methods are forwarded to $this->image (an imageInterface
  * implementor) via __call(). These @method tags mirror that interface.
  *
- * @method int get_width()
- * @method int get_height()
- * @method bool set_compression_quality($quality)
- * @method bool crop($width, $height, $x, $y)
+ * @method int|float get_width()
+ * @method int|float get_height()
+ * @method bool set_compression_quality(int $quality)
+ * @method bool crop(int|float $width, int|float $height, int|float $x, int|float $y)
  * @method bool strip()
- * @method bool rotate($rotation)
- * @method bool resize($width, $height)
- * @method bool sharpen($amount)
- * @method bool compose($overlay, $x, $y, $opacity)
- * @method void write($destination_filepath)
+ * @method bool rotate(int|float $rotation)
+ * @method bool resize(int|float $width, int|float $height)
+ * @method bool sharpen(int|float $amount)
+ * @method bool compose(pwg_image $overlay, int|float $x, int|float $y, int|float $opacity)
+ * @method bool write(string $destination_filepath)
  */
 class pwg_image
 {
@@ -65,13 +65,19 @@ class pwg_image
      */
     public $image;
 
-    public $library = '';
+    /**
+     * @var string|false false is only ever transient: get_library() can
+     *   return false, but __construct() dies() immediately when that
+     *   happens, so a successfully constructed instance always holds a
+     *   non-empty string here
+     */
+    public string|false $library = '';
 
-    public static $ext_imagick_version = '';
+    public static string $ext_imagick_version = '';
 
     public function __construct(
-        public $source_filepath,
-        $library = null
+        public string $source_filepath,
+        ?string $library = null
     ) {
         global $conf;
 
@@ -96,16 +102,19 @@ class pwg_image
     }
 
     // Unknow methods will be redirected to image object
-    public function __call(string $method, array $arguments)
+    /**
+     * @param array<int, mixed> $arguments
+     */
+    public function __call(string $method, array $arguments): mixed
     {
         return call_user_func_array([$this->image, $method], $arguments);
     }
 
     // Piwigo resize function
     /**
-     * @return mixed[]
+     * @return array{source: string, destination: string, width: int|float, height: int|float, size: string, time: string|null, library: string|false}
      */
-    public function pwg_resize($destination_filepath, $max_width, $max_height, $quality, $automatic_rotation = true, $strip_metadata = false, $crop = false, $follow_orientation = true): array
+    public function pwg_resize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false, bool $crop = false, bool $follow_orientation = true): array
     {
         $starttime = get_moment();
 
@@ -150,7 +159,10 @@ class pwg_image
         return $this->get_resize_result($destination_filepath, $resize_dimensions['width'], $resize_dimensions['height'], $starttime);
     }
 
-    public static function get_resize_dimensions($width, $height, $max_width, $max_height, $rotation = null, $crop = false, $follow_orientation = true): array
+    /**
+     * @return array{width: int|float, height: int|float, crop?: array{width: int|float, height: int|float, x: int|float, y: int|float}}
+     */
+    public static function get_resize_dimensions(int|float $width, int|float $height, int $max_width, int $max_height, ?int $rotation = null, bool $crop = false, bool $follow_orientation = true): array
     {
         $rotate_for_dimensions = false;
         if (isset($rotation) and in_array(abs($rotation), [90, 270])) {
@@ -219,7 +231,10 @@ class pwg_image
         return $result;
     }
 
-    public static function webp_info($source_filepath): array
+    /**
+     * @return array{type: string, has-animation: bool, has-transparent: bool}
+     */
+    public static function webp_info(string $source_filepath): array
     {
         // function based on https://stackoverflow.com/questions/61221874/detect-if-a-webp-image-is-transparent-in-php
         //
@@ -230,7 +245,7 @@ class pwg_image
 
         $fp = fopen($source_filepath, 'rb');
         if (! $fp) {
-            throw new Exception("webp_info(): fopen({$f}): Failed");
+            throw new Exception("webp_info(): fopen({$source_filepath}): Failed");
         }
         $buf = fread($fp, 25);
         fclose($fp);
@@ -271,7 +286,7 @@ class pwg_image
         }
     }
 
-    public static function get_rotation_angle($source_filepath): ?int
+    public static function get_rotation_angle(string $source_filepath): ?int
     {
         [$width, $height, $type] = getimagesize($source_filepath);
         if ($type != IMAGETYPE_JPEG) {
@@ -300,7 +315,7 @@ class pwg_image
         return $rotation;
     }
 
-    public static function get_rotation_code_from_angle($rotation_angle)
+    public static function get_rotation_code_from_angle(?int $rotation_angle): int
     {
         switch ($rotation_angle) {
             case 0:   return 0;
@@ -308,9 +323,18 @@ class pwg_image
             case 180: return 2;
             case 270: return 3;
         }
+        // unreachable for the real domain {null, 0, 90, 180, 270} returned by
+        // get_rotation_angle() (null loosely matches "case 0" above)
+        throw new Exception("get_rotation_code_from_angle(): unexpected rotation angle {$rotation_angle}");
     }
 
-    public static function get_rotation_angle_from_code($rotation_code)
+    /**
+     * @param int|numeric-string $rotation_code i.php's only caller passes
+     *   $row['rotation'] straight from a mysqli fetch_assoc() result, which
+     *   comes back as a numeric string (confirmed empirically against the
+     *   real test DB — this driver does not use native int/float fetching)
+     */
+    public static function get_rotation_angle_from_code(int|string $rotation_code): int
     {
         switch ($rotation_code % 4) {
             case 0: return 0;
@@ -318,12 +342,17 @@ class pwg_image
             case 2: return 180;
             case 3: return 270;
         }
+        // unreachable: $rotation_code is a tinyint unsigned db column,
+        // always 0-3, so % 4 always matches one of the cases above
+        throw new Exception("get_rotation_angle_from_code(): unexpected rotation code {$rotation_code}");
     }
 
     /**
      * Returns a normalized convolution kernel for sharpening
+     *
+     * @return array<int, array<int, int|float>>
      */
-    public static function get_sharpen_matrix($amount): array
+    public static function get_sharpen_matrix(int|float $amount): array
     {
         // Amount should be in the range of 48-10
         $amount = round(abs(-48 + ($amount * 0.38)), 2);
@@ -345,7 +374,10 @@ class pwg_image
         return $matrix;
     }
 
-    protected function get_resize_result($destination_filepath, $width, $height, $time = null): array
+    /**
+     * @return array{source: string, destination: string, width: int|float, height: int|float, size: string, time: string|null, library: string|false}
+     */
+    protected function get_resize_result(string $destination_filepath, int|float $width, int|float $height, ?float $time = null): array
     {
         return [
             'source' => $this->source_filepath,
@@ -363,7 +395,7 @@ class pwg_image
         return extension_loaded('imagick') and class_exists('Imagick');
     }
 
-    public static function get_ext_imagick_command()
+    public static function get_ext_imagick_command(): string
     {
         global $page, $conf;
 
@@ -405,7 +437,7 @@ class pwg_image
         return function_exists('gd_info');
     }
 
-    public static function get_library($library = null, $extension = null)
+    public static function get_library(?string $library = null, ?string $extension = null): string|false
     {
         global $conf;
 
@@ -440,7 +472,7 @@ class pwg_image
         return false;
     }
 
-    public function destroy()
+    public function destroy(): bool
     {
         if (method_exists($this->image, 'destroy')) {
             return $this->image->destroy();
@@ -461,7 +493,7 @@ class image_imagick implements imageInterface
     public $image;
 
     public function __construct(
-        $source_filepath
+        string $source_filepath
     ) {
         // A bug cause that Imagick class can not be extended
         $this->image = new Imagick($source_filepath);
@@ -477,12 +509,12 @@ class image_imagick implements imageInterface
         return $this->image->getImageHeight();
     }
 
-    public function set_compression_quality($quality): bool
+    public function set_compression_quality(int $quality): bool
     {
         return $this->image->setImageCompressionQuality($quality);
     }
 
-    public function crop($width, $height, $x, $y): bool
+    public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
     {
         return $this->image->cropImage($width, $height, $x, $y);
     }
@@ -492,14 +524,14 @@ class image_imagick implements imageInterface
         return $this->image->stripImage();
     }
 
-    public function rotate($rotation): bool
+    public function rotate(int|float $rotation): bool
     {
         $this->image->rotateImage(new ImagickPixel(), -$rotation);
         $this->image->setImageOrientation(Imagick::ORIENTATION_TOPLEFT);
         return true;
     }
 
-    public function resize($width, $height): bool
+    public function resize(int|float $width, int|float $height): bool
     {
         $this->image->setInterlaceScheme(Imagick::INTERLACE_LINE);
 
@@ -513,13 +545,13 @@ class image_imagick implements imageInterface
         return $this->image->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 0.9);
     }
 
-    public function sharpen($amount): bool
+    public function sharpen(int|float $amount): bool
     {
         $m = pwg_image::get_sharpen_matrix($amount);
         return $this->image->convolveImage($m);
     }
 
-    public function compose($overlay, $x, $y, $opacity): bool
+    public function compose(pwg_image $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
         $ioverlay = $overlay->image->image;
         /*if ($ioverlay->getImageAlphaChannel() !== Imagick::ALPHACHANNEL_OPAQUE)
@@ -537,7 +569,7 @@ class image_imagick implements imageInterface
         return $this->image->compositeImage($ioverlay, Imagick::COMPOSITE_DISSOLVE, $x, $y);
     }
 
-    public function write($destination_filepath): bool
+    public function write(string $destination_filepath): bool
     {
         // use 4:2:2 chroma subsampling (reduce file size by 20-30% with "almost" no human perception)
         $this->image->setSamplingFactors([2, 1]);
@@ -551,27 +583,30 @@ class image_imagick implements imageInterface
 
 class image_ext_imagick implements imageInterface
 {
-    public $imagickdir = '';
+    public string $imagickdir = '';
 
     /**
-     * @var int|string
+     * @var int|float
      */
-    public $width = '';
+    public $width = 0;
 
     /**
-     * @var int|string
+     * @var int|float
      */
-    public $height = '';
+    public $height = 0;
 
     /**
      * @var bool
      */
     public $is_animated_webp = false;
 
+    /**
+     * @var array<string, int|float|string|null>
+     */
     public $commands = [];
 
     public function __construct(
-        public $source_filepath
+        public string $source_filepath
     ) {
         global $conf;
         $this->imagickdir = $conf['ext_imagick_dir'];
@@ -601,26 +636,26 @@ class image_ext_imagick implements imageInterface
             die("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));
         }
 
-        $this->width = $match[1];
-        $this->height = $match[2];
+        $this->width = (int) $match[1];
+        $this->height = (int) $match[2];
     }
 
-    public function add_command($command, $params = null): void
+    public function add_command(string $command, int|float|string|null $params = null): void
     {
         $this->commands[$command] = $params;
     }
 
-    public function get_width()
+    public function get_width(): int|float
     {
         return $this->width;
     }
 
-    public function get_height()
+    public function get_height(): int|float
     {
         return $this->height;
     }
 
-    public function crop($width, $height, $x, $y): bool
+    public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
     {
         $this->width = $width;
         $this->height = $height;
@@ -636,7 +671,7 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function rotate($rotation): bool
+    public function rotate(int|float $rotation): bool
     {
         if (empty($rotation)) {
             return true;
@@ -652,7 +687,7 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function set_compression_quality($quality): bool
+    public function set_compression_quality(int $quality): bool
     {
         global $conf;
 
@@ -667,7 +702,7 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function resize($width, $height): bool
+    public function resize(int|float $width, int|float $height): bool
     {
         $this->width = $width;
         $this->height = $height;
@@ -677,7 +712,7 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function sharpen($amount): bool
+    public function sharpen(int|float $amount): bool
     {
         $m = pwg_image::get_sharpen_matrix($amount);
 
@@ -691,7 +726,7 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function compose($overlay, $x, $y, $opacity): bool
+    public function compose(pwg_image $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
         $param = 'compose dissolve -define compose:args=' . $opacity;
         $param .= ' ' . escapeshellarg(realpath($overlay->image->source_filepath));
@@ -701,7 +736,7 @@ class image_ext_imagick implements imageInterface
         return true;
     }
 
-    public function write($destination_filepath): bool
+    public function write(string $destination_filepath): bool
     {
         global $logger;
 
@@ -752,12 +787,12 @@ class image_ext_imagick implements imageInterface
 
 class image_gd implements imageInterface
 {
-    public $image;
+    public GdImage|false $image;
 
-    public $quality = 95;
+    public int $quality = 95;
 
     public function __construct(
-        $source_filepath
+        string $source_filepath
     ) {
         $gd_info = gd_info();
         $extension = strtolower(get_extension($source_filepath));
@@ -783,8 +818,21 @@ class image_gd implements imageInterface
         return imagesy($this->image);
     }
 
-    public function crop($width, $height, $x, $y)
+    public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
     {
+        // GD's native imagecreatetruecolor()/imagecopymerge() require int
+        // arguments (unlike Imagick/ext_imagick, which tolerate float pixel
+        // coordinates) — real callers do pass floats here (e.g. i.php's
+        // $crop_rect->width()/->l are int|float, since ImageRect::crop_h()/
+        // crop_v() accumulate floor()'s float return type), which threw a
+        // TypeError under this backend before this cast was added (verified
+        // directly: imagecreatetruecolor(900.0, ...) throws "must be of type
+        // int, float given" under strict_types).
+        $width = (int) $width;
+        $height = (int) $height;
+        $x = (int) $x;
+        $y = (int) $y;
+
         $dest = imagecreatetruecolor($width, $height);
 
         imagealphablending($dest, false);
@@ -804,21 +852,25 @@ class image_gd implements imageInterface
         return true;
     }
 
-    public function rotate($rotation): bool
+    public function rotate(int|float $rotation): bool
     {
         $dest = imagerotate($this->image, $rotation, 0);
         $this->image = $dest;
         return true;
     }
 
-    public function set_compression_quality($quality): bool
+    public function set_compression_quality(int $quality): bool
     {
         $this->quality = $quality;
         return true;
     }
 
-    public function resize($width, $height)
+    public function resize(int|float $width, int|float $height): bool
     {
+        // see crop()'s comment: GD's native functions require int arguments
+        $width = (int) $width;
+        $height = (int) $height;
+
         $dest = imagecreatetruecolor($width, $height);
 
         imagealphablending($dest, false);
@@ -833,14 +885,22 @@ class image_gd implements imageInterface
         return $result;
     }
 
-    public function sharpen($amount): bool
+    public function sharpen(int|float $amount): bool
     {
         $m = pwg_image::get_sharpen_matrix($amount);
         return imageconvolution($this->image, $m, 1, 0);
     }
 
-    public function compose($overlay, $x, $y, $opacity): bool
+    public function compose(pwg_image $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
+        // see crop()'s comment: GD's native imagecopy()/imagecopymerge()
+        // require int arguments — real callers pass floats here too (i.php's
+        // watermark positioning uses round(), which always returns float),
+        // which threw a TypeError under this backend before this cast was
+        // added.
+        $x = (int) $x;
+        $y = (int) $y;
+
         $ioverlay = $overlay->image->image;
         /* A replacement for php's imagecopymerge() function that supports the alpha channel
         See php bug #23815:  http://bugs.php.net/bug.php?id=23815 */
@@ -860,18 +920,21 @@ class image_gd implements imageInterface
         return true;
     }
 
-    public function write($destination_filepath): void
+    public function write(string $destination_filepath): bool
     {
         $extension = strtolower(get_extension($destination_filepath));
 
         if ($extension == 'png') {
-            imagepng($this->image, $destination_filepath);
-        } elseif ($extension == 'gif') {
-            imagegif($this->image, $destination_filepath);
-        } else {
-            imagejpeg($this->image, $destination_filepath, $this->quality);
+            return imagepng($this->image, $destination_filepath);
         }
+        if ($extension == 'gif') {
+            return imagegif($this->image, $destination_filepath);
+        }
+        return imagejpeg($this->image, $destination_filepath, $this->quality);
     }
 
-    public function destroy() {}
+    public function destroy(): bool
+    {
+        return true;
+    }
 }

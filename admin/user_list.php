@@ -246,7 +246,7 @@ if (userprefs_get_param('user-manager-view', 'line') == 'line') {
     $template->assign('pagination', userprefs_get_param('user-manager-pagination', 10));
 }
 
-function webmaster_id_is_local()
+function webmaster_id_is_local(): mixed
 {
     // include/config_default.inc.php never sets local_dir_site/webmaster_id
     // (confirmed: no such keys in that file at all) — they only ever come

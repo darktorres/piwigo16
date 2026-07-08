@@ -18,6 +18,7 @@ declare(strict_types=1);
  * @param string $filepath
  * @param string $replaced
  * @param string $replacing
+ * @param string $dblayer
  */
 function execute_sqlfile($filepath, $replaced, $replacing, $dblayer): void
 {
@@ -81,8 +82,8 @@ function activate_core_plugins(): void
 /**
  * Connect to database during installation. Uses $_POST.
  *
- * @param array $infos - populated with infos
- * @param array $errors - populated with errors
+ * @param array<int, string> $infos - populated with infos
+ * @param array<int, string> $errors - populated with errors
  */
 function install_db_connect(&$infos, &$errors): void
 {

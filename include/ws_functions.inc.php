@@ -12,8 +12,10 @@ declare(strict_types=1);
 /**
  * Event handler for method invocation security check. Should return a PwgError
  * if the preconditions are not satifsied for method invocation.
+ *
+ * @param array<string, mixed> $params
  */
-function ws_isInvokeAllowed($res, $methodName, $params)
+function ws_isInvokeAllowed(mixed $res, string $methodName, array $params): mixed
 {
     global $conf;
 
@@ -32,9 +34,10 @@ function ws_isInvokeAllowed($res, $methodName, $params)
 /**
  * returns a "standard" (for our web service) array of sql where clauses that
  * filters the images (images table only)
+ * @param array<string, mixed> $params
  * @return list{0: non-falsy-string, 1?: non-falsy-string, 2?: non-falsy-string, 3?: non-falsy-string, 4?: non-falsy-string, 5?: non-falsy-string, 6?: non-falsy-string, 7?: non-falsy-string, 8?: non-falsy-string, 9?: non-falsy-string, 10?: non-falsy-string}|array{}
  */
-function ws_std_image_sql_filter(array $params, $tbl_name = ''): array
+function ws_std_image_sql_filter(array $params, string $tbl_name = ''): array
 {
     foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
         if (isset($params[$datefield]) and ! is_valid_mysql_datetime($params[$datefield])) {
@@ -83,8 +86,10 @@ function ws_std_image_sql_filter(array $params, $tbl_name = ''): array
 
 /**
  * returns a "standard" (for our web service) ORDER BY sql clause for images
+ *
+ * @param array<string, mixed> $params
  */
-function ws_std_image_sql_order(array $params, $tbl_name = ''): string
+function ws_std_image_sql_order(array $params, string $tbl_name = ''): string
 {
     $ret = '';
     if (empty($params['order'])) {
@@ -127,6 +132,9 @@ function ws_std_image_sql_order(array $params, $tbl_name = ''): string
 /**
  * returns an array map of urls (thumb/element) for image_row - to be returned
  * in a standard way by different web service methods
+ *
+ * @param array<string, mixed> $image_row
+ * @return array<string, mixed>
  */
 function ws_std_get_urls(array $image_row): array
 {
@@ -179,6 +187,8 @@ function ws_std_get_urls(array $image_row): array
 /**
  * returns an array of image attributes that are to be encoded as xml attributes
  * instead of xml elements
+ *
+ * @return string[]
  */
 function ws_std_get_image_xml_attributes(): array
 {
@@ -187,6 +197,9 @@ function ws_std_get_image_xml_attributes(): array
     ];
 }
 
+/**
+ * @return string[]
+ */
 function ws_std_get_category_xml_attributes(): array
 {
     return [
@@ -194,6 +207,9 @@ function ws_std_get_category_xml_attributes(): array
     ];
 }
 
+/**
+ * @return string[]
+ */
 function ws_std_get_tag_xml_attributes(): array
 {
     return [
@@ -203,6 +219,7 @@ function ws_std_get_tag_xml_attributes(): array
 
 /**
  * create a tree from a flat list of categories, no recursivity for high speed
+ * @param array<int|string, array<string, mixed>> $categories
  * @return mixed[]
  */
 function categories_flatlist_to_tree(array $categories): array

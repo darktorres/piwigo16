@@ -176,15 +176,20 @@ foreach ($allAlbum as $album) {
 $is_forbidden = array_fill_keys(@explode(',', (string) $user['forbidden_categories']), 1);
 
 // Make an ordered tree
+/**
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
+ */
 function cmpCat(array $a, array $b): int
 {
     return $a['rank'] <=> $b['rank'];
 }
 
 /**
+ * @param array<int|string, mixed> $assocT
  * @return array{rank: mixed, name: mixed, status: mixed, id: mixed, visible: mixed, uppercats: mixed, nb_images: mixed, last_updates: mixed, has_not_access: bool, nb_sub_photos: mixed}[]|array{rank: mixed, name: mixed, status: mixed, id: mixed, visible: mixed, uppercats: mixed, nb_images: mixed, last_updates: mixed, has_not_access: bool, nb_sub_photos: mixed, nb_subcats: int<0, max>, children: mixed}[]
  */
-function assocToOrderedTree($assocT): array
+function assocToOrderedTree(array $assocT): array
 {
     global $nb_photos_in, $nb_sub_photos, $is_forbidden;
 
@@ -271,9 +276,10 @@ $template->assign_var_from_handle('ADMIN_CONTENT', 'albums');
 // |                              functions                                |
 // +-----------------------------------------------------------------------+
 /**
- * @return mixed[]
+ * @param array<int, mixed> $ids
+ * @return array<int|string, mixed>
  */
-function get_categories_ref_date($ids, $field = 'date_available', $minmax = 'max'): array
+function get_categories_ref_date(array $ids, string $field = 'date_available', string $minmax = 'max'): array
 {
     // we need to work on the whole tree under each category, even if we don't
     // want to sort sub categories

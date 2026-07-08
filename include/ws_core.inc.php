@@ -40,13 +40,13 @@ define('WS_XML_ATTRIBUTES', 'attributes_xml_');
  */
 class PwgError
 {
-    private $_code;
+    private int $_code;
 
-    private $_codeText;
+    private string $_codeText;
 
     public function __construct(
-        $code,
-        $codeText
+        int $code,
+        string $codeText
     ) {
         if ($code >= 400 and $code < 600) {
             set_status_header($code, $codeText);
@@ -56,12 +56,12 @@ class PwgError
         $this->_codeText = $codeText;
     }
 
-    public function code()
+    public function code(): int
     {
         return $this->_code;
     }
 
-    public function message()
+    public function message(): string
     {
         return $this->_codeText;
     }
@@ -76,21 +76,21 @@ class PwgNamedArray
 {
     /* private */
     /**
-     * @var int[]|string[]
+     * @var array<string, int>
      */
     public $_xmlAttributes;
 
     /**
      * Constructs a named array
-     * @param array $_content (keys must be consecutive integers starting at 0)
+     * @param array<int, mixed> $_content (keys must be consecutive integers starting at 0)
      * @param string $_itemName xml element name for values of arr (e.g. image)
-     * @param array $xmlAttributes of sub-item attributes that will be encoded as
+     * @param string[] $xmlAttributes of sub-item attributes that will be encoded as
      *      xml attributes instead of xml child elements
      */
     public function __construct(
-        public $_content,
-        public $_itemName,
-        $xmlAttributes = []
+        public array $_content,
+        public string $_itemName,
+        array $xmlAttributes = []
     ) {
         $this->_xmlAttributes = array_flip($xmlAttributes);
     }
@@ -103,21 +103,24 @@ class PwgNamedArray
 class PwgNamedStruct
 {
     /* private */
+    /**
+     * @var array<string, int>
+     */
     public $_xmlAttributes;
 
     /**
      * Constructs a named struct (usually returned by web service function
      * implementation)
-     * @param array $_content the actual content (php array)
-     * @param ?array $xmlAttributes name of the keys in $content that will be
+     * @param array<string, mixed> $_content the actual content (php array)
+     * @param string[]|null $xmlAttributes name of the keys in $content that will be
      *    encoded as xml attributes (if null - automatically prefer xml attributes
      *    whenever possible)
-     * @param ?array $xmlElements keys in $content to always treat as xml elements
+     * @param string[]|null $xmlElements keys in $content to always treat as xml elements
      */
     public function __construct(
-        public $_content,
-        $xmlAttributes = null,
-        $xmlElements = null
+        public array $_content,
+        ?array $xmlAttributes = null,
+        ?array $xmlElements = null
     ) {
         if (isset($xmlAttributes)) {
             $this->_xmlAttributes = array_flip($xmlAttributes);
@@ -142,7 +145,7 @@ abstract class PwgRequestHandler
     /** Virtual abstract method. Decodes the request (GET or POST) handles the
      * method invocation as well as response sending.
      */
-    abstract public function handleRequest(&$service);
+    abstract public function handleRequest(PwgServer &$service): void;
 }
 
 /**
@@ -153,17 +156,17 @@ abstract class PwgResponseEncoder
     /** encodes the web service response to the appropriate output format
      * @param mixed $response the unencoded result of a service method call
      */
-    abstract public function encodeResponse($response);
+    abstract public function encodeResponse($response): string|false;
 
     /** default "Content-Type" http header for this kind of response format
      */
-    abstract public function getContentType();
+    abstract public function getContentType(): string;
 
     /**
      * returns true if the parameter is a 'struct' (php array type whose keys are
      * NOT consecutive integers starting with 0)
      */
-    public static function is_struct(&$data)
+    public static function is_struct(mixed &$data): bool
     {
         if (is_array($data)) {
             if (range(0, count($data) - 1) !== array_keys($data)) { # string keys, unordered, non-incremental keys, .. - whatever, make object
@@ -177,12 +180,12 @@ abstract class PwgResponseEncoder
      * removes all XML formatting from $response (named array, named structs, etc)
      * usually called by every response encoder, except rest xml.
      */
-    public static function flattenResponse(&$value): void
+    public static function flattenResponse(mixed &$value): void
     {
         self::flatten($value);
     }
 
-    private static function flatten(&$value): void
+    private static function flatten(mixed &$value): void
     {
         if (is_object($value)) {
             $class = strtolower(@$value::class);
@@ -213,14 +216,17 @@ abstract class PwgResponseEncoder
 
 class PwgServer
 {
-    public $_requestHandler;
+    public ?PwgRequestHandler $_requestHandler = null;
 
-    public $_requestFormat;
+    public ?string $_requestFormat = null;
 
-    public $_responseEncoder;
+    public ?PwgResponseEncoder $_responseEncoder = null;
 
-    public $_responseFormat;
+    public ?string $_responseFormat = null;
 
+    /**
+     * @var array<string, array{callback: callable, description: string, signature: array<string, array<string, mixed>>, include: string, options: array<string, mixed>}>
+     */
     public $_methods = [];
 
     public function __construct() {}
@@ -228,7 +234,7 @@ class PwgServer
     /**
      *  Initializes the request handler.
      */
-    public function setHandler($requestFormat, &$requestHandler): void
+    public function setHandler(string $requestFormat, ?PwgRequestHandler &$requestHandler): void
     {
         $this->_requestHandler = &$requestHandler;
         $this->_requestFormat = $requestFormat;
@@ -237,7 +243,7 @@ class PwgServer
     /**
      *  Initializes the request handler.
      */
-    public function setEncoder($responseFormat, &$encoder): void
+    public function setEncoder(string $responseFormat, ?PwgResponseEncoder &$encoder): void
     {
         $this->_responseEncoder = &$encoder;
         $this->_responseFormat = $responseFormat;
@@ -282,7 +288,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     /**
      * Encodes a response and sends it back to the browser.
      */
-    public function sendResponse($response): void
+    public function sendResponse(mixed $response): void
     {
         $encodedResponse = $this->_responseEncoder->encodeResponse($response);
         $contentType = $this->_responseEncoder->getContentType();
@@ -295,10 +301,18 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     /**
      * Registers a web service method.
      * @param string $methodName - the name of the method as seen externally
-     * @param callable $callback mixed - php method to be invoked internally
-     * @param array|null $params - map of allowed parameter names with options;
-     *   many real registrations in ws.php (e.g. pwg.getVersion, pwg.getInfos,
-     *   pwg.session.getStatus) explicitly pass null for "no params"
+     * @param string|array<int, string> $callback - a callable (function name,
+     *   or [class, method]); typed as string|array rather than native
+     *   `callable`, since most registrations in ws.php name a function that
+     *   is not yet defined at this point (its file is only include_once'd
+     *   lazily, from $include_file, right before invoke() actually calls it)
+     *   — a native `callable` type would fail PHP's is-it-currently-callable
+     *   check immediately at registration time
+     * @param array<int, string>|array<string, mixed>|null $params - either a
+     *   plain list of allowed parameter names (shorthand, no options) or a map
+     *   of allowed parameter names to their options; many real registrations
+     *   in ws.php (e.g. pwg.getVersion, pwg.getInfos, pwg.session.getStatus)
+     *   explicitly pass null for "no params"
      *    @option mixed default (optional)
      *    @option int flags (optional)
      *      possible values: WS_PARAM_ALLOW_ARRAY, WS_PARAM_FORCE_ARRAY, WS_PARAM_OPTIONAL
@@ -306,17 +320,24 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
      *      possible values: WS_TYPE_BOOL, WS_TYPE_INT, WS_TYPE_FLOAT, WS_TYPE_ID
      *                       WS_TYPE_POSITIVE, WS_TYPE_NOTNULL
      *    @option int|float maxValue (optional)
-     * @param string $description - a description of the method.
+     * @param string|null $description - a description of the method; some
+     *   real registrations in ws.php explicitly pass null for "no description"
      * @param string $include_file - a file to be included befaore the callback is executed
-     * @param array $options
+     * @param array<string, mixed> $options
      *    @option bool hidden (optional) - if true, this method won't be visible by reflection.getMethodList
      *    @option bool admin_only (optional)
      *    @option bool post_only (optional)
      */
-    public function addMethod($methodName, $callback, $params = [], $description = '', $include_file = '', $options = []): void
+    public function addMethod(string $methodName, string|array $callback, ?array $params = [], ?string $description = '', string $include_file = '', array $options = []): void
     {
         if (! is_array($params)) {
             $params = [];
+        }
+
+        // ws.php's own registrations (e.g. pwg.plugins.performAction,
+        // pwg.themes.performAction) explicitly pass null for "no description"
+        if ($description === null) {
+            $description = '';
         }
 
         if (range(0, count($params) - 1) === array_keys($params)) {
@@ -352,30 +373,32 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         ];
     }
 
-    public function hasMethod($methodName): bool
+    public function hasMethod(string $methodName): bool
     {
         return isset($this->_methods[$methodName]);
     }
 
-    public function getMethodDescription($methodName)
+    public function getMethodDescription(string $methodName): string
     {
-        $desc = @$this->_methods[$methodName]['description'];
-        return $desc ?? '';
+        return $this->_methods[$methodName]['description'] ?? '';
     }
 
-    public function getMethodSignature($methodName)
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    public function getMethodSignature(string $methodName): array
     {
-        $signature = @$this->_methods[$methodName]['signature'];
-        return $signature ?? [];
+        return $this->_methods[$methodName]['signature'] ?? [];
     }
 
     /**
      * @since 2.6
+     *
+     * @return array<string, mixed>
      */
-    public function getMethodOptions($methodName)
+    public function getMethodOptions(string $methodName): array
     {
-        $options = @$this->_methods[$methodName]['options'];
-        return $options ?? [];
+        return $this->_methods[$methodName]['options'] ?? [];
     }
 
     public static function isPost(): bool
@@ -383,7 +406,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         return ! empty($_POST);
     }
 
-    public static function makeArrayParam(&$param): void
+    public static function makeArrayParam(mixed &$param): void
     {
         if ($param == null) {
             $param = [];
@@ -394,7 +417,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         }
     }
 
-    public static function checkType(&$param, $type, $name): ?\PwgError
+    public static function checkType(mixed &$param, int $type, string $name): ?\PwgError
     {
         $opts = [];
         $msg = '';
@@ -454,7 +477,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         return null;
     }
 
-    public static function hasFlag($val, $flag): bool
+    public static function hasFlag(int $val, int $flag): bool
     {
         return ($val & $flag) == $flag;
     }
@@ -463,9 +486,9 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
      *  Invokes a registered method. Returns the return of the method (or
      *  a PwgError object if the method is not found)
      *  @param string $methodName the name of the method to invoke
-     *  @param array $params array of parameters to pass to the invoked method
+     *  @param array<string, mixed> $params array of parameters to pass to the invoked method
      */
-    public function invoke($methodName, array $params)
+    public function invoke(string $methodName, array $params): mixed
     {
         $method = @$this->_methods[$methodName];
 
@@ -556,8 +579,11 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
     /**
      * WS reflection method implementation: lists all available methods
+     *
+     * @param array<string, mixed> $params
+     * @return array{methods: PwgNamedArray}
      */
-    public static function ws_getMethodList($params, &$service): array
+    public static function ws_getMethodList(array $params, self &$service): array
     {
         $methods = array_filter(
             $service->_methods,
@@ -570,8 +596,11 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
     /**
      * WS reflection method implementation: gets information about a given method
+     *
+     * @param array<string, mixed> $params
+     * @return \PwgError|array<string, mixed>
      */
-    public static function ws_getMethodDetails(array $params, &$service): \PwgError|array
+    public static function ws_getMethodDetails(array $params, self &$service): \PwgError|array
     {
         $methodName = $params['methodName'];
 

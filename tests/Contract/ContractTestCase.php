@@ -65,7 +65,11 @@ abstract class ContractTestCase extends IntegrationTestCase
         return $this->cookieJar;
     }
 
-    /** Anonymous WS call (guest). */
+    /**
+     * Anonymous WS call (guest).
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     protected function ws(string $method, array $params = []): array
     {
         return $this->callWs($method, $params);
@@ -132,7 +136,11 @@ abstract class ContractTestCase extends IntegrationTestCase
         self::assertSame(302, $status, sprintf('UI login failed — expected redirect, got HTTP %d: %s', $status, $body));
     }
 
-    /** WS call authenticated as fixture_admin. */
+    /**
+     * WS call authenticated as fixture_admin.
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     protected function wsAdmin(string $method, array $params = []): array
     {
         $this->loginAsAdmin();
@@ -150,6 +158,9 @@ abstract class ContractTestCase extends IntegrationTestCase
         return (string) ($status['result']['pwg_token'] ?? '');
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     protected static function assertMatchesSchema(string $schemaName, array $data): void
     {
         $path = __DIR__ . '/schemas/' . $schemaName . '.json';
@@ -177,6 +188,7 @@ abstract class ContractTestCase extends IntegrationTestCase
 
     /**
      * @param array<string, mixed> $params
+     * @return array<string, mixed>
      */
     protected function callWs(string $method, array $params): array
     {

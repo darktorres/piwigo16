@@ -136,7 +136,7 @@ function mkgetdir($dir, $flags = MKGETDIR_DEFAULT): bool
  *
  * @return int *0* if _$str_ is ASCII, *1* if UTF-8, *-1* otherwise
  */
-function qualify_utf8($Str): int
+function qualify_utf8(string $Str): int
 {
     $ret = 0;
     for ($i = 0; $i < strlen((string) $Str); $i++) {
@@ -420,8 +420,9 @@ if (function_exists('mb_strtolower') && defined('PWG_CHARSET')) {
 } else {
     /**
      * @ignore
+     * @param string $term
      */
-    function pwg_transliterate($term)
+    function pwg_transliterate($term): string
     {
         return remove_accents(strtolower((string) $term));
     }
@@ -503,7 +504,7 @@ function do_log($image_id = null, $image_type = null)
  * @param int $image_id
  * @param string $image_type
  */
-function pwg_log($image_id = null, $image_type = null, $format_id = null): bool
+function pwg_log($image_id = null, $image_type = null, int|string|null $format_id = null): bool
 {
     global $conf, $user, $page;
 
@@ -622,7 +623,11 @@ INSERT INTO ' . HISTORY_TABLE . '
     return true;
 }
 
-function pwg_activity($object, $object_id, $action, array $details = []): void
+/**
+ * @param int|string|array<int, int|string> $object_id
+ * @param array<string, mixed> $details
+ */
+function pwg_activity(string $object, $object_id, string $action, array $details = []): void
 {
     global $user;
 
@@ -794,7 +799,7 @@ function str2DateTime($original, $format = null)
  * returns a formatted and localized date for display (LEGACY use format_date)
  *
  * @param int|string $original timestamp or datetime string
- * @param array $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
+ * @param string[]|null $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
  * @param string $format input format respecting date() syntax
  * @return string
  */
@@ -847,7 +852,7 @@ function format_date_legacy($original, $show = null, $format = null)
  *   str2DateTime()'s own return type straight through; both are handled
  *   gracefully (DateTime passes through str2DateTime() as-is, false/empty
  *   short-circuits to the "N/A" string below)
- * @param array $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
+ * @param string[]|null $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
  *    THIS PARAMETER IS PLANNED TO CHANGE
  * @param string $format input format respecting date() syntax
  * @return string
@@ -923,7 +928,7 @@ function format_fromto($from, $to, $full = false)
  * @param bool $with_text append "ago" or "in the future"
  * @return string
  */
-function time_since($original, $stop = 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = false)
+function time_since($original, $stop = 'minute', $format = null, $with_text = true, bool $with_week = true, bool $only_last_unit = false)
 {
     $date = str2DateTime($original, $format);
 
@@ -1130,7 +1135,7 @@ function redirect($url, $msg = '', $refresh_time = 0): void
  * returns available themes
  *
  * @param bool $show_mobile
- * @return array
+ * @return array<int|string, string>
  */
 function get_pwg_themes($show_mobile = false)
 {
@@ -1207,7 +1212,7 @@ function original_to_format($path, $format_ext): string
 /**
  * get the full path of an image
  *
- * @param array $element_info element information from db (at least 'path')
+ * @param array<string, mixed> $element_info element information from db (at least 'path')
  * @return string
  */
 function get_element_path(array $element_info)
@@ -1319,7 +1324,7 @@ function l10n_dec($singular_key, $plural_key, $decimal): string
  * @param string $key translation key
  * @param mixed $args arguments to use on sprintf($key, args)
  *   if args is a array, each values are used on sprintf
- * @return array{key_args: array}
+ * @return array{key_args: array<int, mixed>}
  */
 function get_l10n_args($key, $args = ''): array
 {
@@ -1407,7 +1412,7 @@ SELECT ' . $conf['user_fields']['email'] . '
  *
  * @param string $condition SQL condition
  */
-function load_conf_from_db($condition = '', $die_on_condition_with_no_result = true): void
+function load_conf_from_db($condition = '', bool $die_on_condition_with_no_result = true): void
 {
     global $conf;
 
@@ -1537,7 +1542,7 @@ function conf_get_param($param, $default_value = null)
  * Apply *unserialize* on a value only if it is a string
  * @since 2.7
  *
- * @param array|string $value
+ * @param array<int|string, mixed>|string $value
  * @return mixed the unserialized value, false if $value is a malformed
  *   serialized string, or $value itself unchanged if it isn't a string
  */
@@ -1553,8 +1558,8 @@ function safe_unserialize($value)
  * Apply *json_decode* on a value only if it is a string
  * @since 2.7
  *
- * @param array|string $value
- * @return array
+ * @param array<int|string, mixed>|string $value
+ * @return array<int|string, mixed>
  */
 function safe_json_decode($value)
 {
@@ -1567,10 +1572,10 @@ function safe_json_decode($value)
 /**
  * Prepends and appends strings at each value of the given array.
  *
- * @param array $array
+ * @param array<int|string, mixed> $array
  * @param string $prepend_str
  * @param string $append_str
- * @return array
+ * @return array<int|string, string>
  */
 function prepend_append_array_items($array, $prepend_str, $append_str)
 {
@@ -1585,6 +1590,7 @@ function prepend_append_array_items($array, $prepend_str, $append_str)
  * @param string $query
  * @param string $keyname
  * @param string $valuename
+ * @return array<int|string, mixed>
  */
 #[\Deprecated(message: '2.6')]
 function simple_hash_from_query($query, $keyname, $valuename): array
@@ -1598,6 +1604,7 @@ function simple_hash_from_query($query, $keyname, $valuename): array
  *
  * @param string $query
  * @param string $keyname
+ * @return array<int|string, mixed>
  */
 #[\Deprecated(message: '2.6')]
 function hash_from_query($query, $keyname): array
@@ -1612,6 +1619,7 @@ function hash_from_query($query, $keyname): array
  *
  * @param string $query
  * @param string|false $fieldname
+ * @return array<int|string, mixed>
  */
 #[\Deprecated(message: '2.6')]
 function array_from_query($query, $fieldname = false): array
@@ -1711,7 +1719,7 @@ function get_parent_language($lang_id = null)
  *
  * @param string $filename
  * @param string $dirname
- * @param array $options can contain
+ * @param array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool} $options can contain
  *     @option string language - language to load
  *     @option bool return - if true the file content is returned
  *     @option bool no_fallback - if true do not load default language
@@ -1839,7 +1847,7 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
  * @param string $source_charset
  * @param string $dest_charset
  */
-function convert_charset($str, $source_charset, $dest_charset)
+function convert_charset($str, $source_charset, $dest_charset): string|false
 {
     if ($source_charset == $dest_charset) {
         return $str;
@@ -1926,8 +1934,9 @@ function verify_ephemeral_key($key, $aditionnal_data_to_hash = ''): bool
  * @param int $nb_element_page
  * @param bool $clean_url
  * @param string $param_name
+ * @return array<string, mixed>
  */
-function create_navigation_bar($url, $nb_element, $start, $nb_element_page, $clean_url = false, $param_name = 'start'): array
+function create_navigation_bar($url, int $nb_element, $start, $nb_element_page, $clean_url = false, $param_name = 'start'): array
 {
     global $conf;
 
@@ -1980,7 +1989,7 @@ function create_navigation_bar($url, $nb_element, $start, $nb_element_page, $cle
  *
  * @param string $date
  * @param bool $is_child_date
- * @return array
+ * @return false|array<string, mixed>
  */
 function get_icon($date, $is_child_date = false): false|array
 {
@@ -2049,8 +2058,9 @@ function get_pwg_token(): string
  * @param bool $is_array
  * @param string $pattern
  * @param bool $mandatory
+ * @param array<int|string, mixed> $param_array
  */
-function check_input_parameter($param_name, array $param_array, $is_array, $pattern, $mandatory = false)
+function check_input_parameter($param_name, array $param_array, $is_array, $pattern, $mandatory = false): ?true
 {
     $param_value = null;
     if (isset($param_array[$param_name])) {
@@ -2080,6 +2090,8 @@ function check_input_parameter($param_name, array $param_array, $is_array, $patt
             fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" is not valid');
         }
     }
+
+    return null;
 }
 
 /**
@@ -2737,7 +2749,7 @@ SELECT
     $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] executed in ' . get_elapsed_time($start_time, get_moment()));
 }
 
-function send_piwigo_infos_retry_later($wait_time): void
+function send_piwigo_infos_retry_later(int $wait_time): void
 {
     global $conf, $logger;
 
@@ -2749,7 +2761,7 @@ function send_piwigo_infos_retry_later($wait_time): void
     $logger->info('[' . __FUNCTION__ . '] new send_piwigo_infos_last_notice=' . $conf['send_piwigo_infos_last_notice']);
 }
 
-function pwg_unique_exec_begins($token_name, $timeout = 60): false|string
+function pwg_unique_exec_begins(string $token_name, int $timeout = 60): false|string
 {
     global $conf, $logger;
 
@@ -2784,7 +2796,7 @@ INSERT IGNORE
     return $exec_id;
 }
 
-function pwg_unique_exec_is_running($token_name): bool
+function pwg_unique_exec_is_running(string $token_name): bool
 {
     $query = '
 SELECT
@@ -2797,7 +2809,7 @@ SELECT
     return $counter > 0;
 }
 
-function pwg_unique_exec_ends($token_name): void
+function pwg_unique_exec_ends(string $token_name): void
 {
     global $logger;
 

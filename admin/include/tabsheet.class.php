@@ -31,15 +31,15 @@ class tabsheet
       $titlename in the template is affected by $titlename value
     */
     public function __construct(
-        public $name = 'TABSHEET',
-        public $titlename = 'TABSHEET_TITLE'
+        public string $name = 'TABSHEET',
+        public string $titlename = 'TABSHEET_TITLE'
     ) {
         $this->sheets = [];
         $this->uniqid = null;
         $this->selected = '';
     }
 
-    public function set_id($id): void
+    public function set_id(string $id): void
     {
         $this->uniqid = $id;
     }
@@ -47,7 +47,7 @@ class tabsheet
     /*
        add a tab
     */
-    public function add($name, $caption, $url, $selected = false): bool
+    public function add(string $name, string $caption, string $url, bool $selected = false): bool
     {
         if (! isset($this->sheets[$name])) {
             $this->sheets[$name] = [
@@ -65,10 +65,10 @@ class tabsheet
     /*
        remove a tab
     */
-    public function delete($name): bool
+    public function delete(string $name): bool
     {
         if (isset($this->sheets[$name])) {
-            array_splice($this->sheets, $name, 1);
+            unset($this->sheets[$name]);
 
             if ($this->selected == $name) {
                 $this->selected = '';
@@ -81,7 +81,7 @@ class tabsheet
     /*
        select a tab to be active
     */
-    public function select($name): void
+    public function select(string $name): void
     {
         $this->sheets = trigger_change('tabsheet_before_select', $this->sheets, $this->uniqid);
         if (! array_key_exists((string) $name, $this->sheets)) {
@@ -94,7 +94,7 @@ class tabsheet
     /*
       set $titlename value
     */
-    public function set_titlename($titlename)
+    public function set_titlename(string $titlename): string
     {
         $this->titlename = $titlename;
         return $this->titlename;
@@ -103,15 +103,17 @@ class tabsheet
     /*
       returns $titlename value
     */
-    public function get_titlename()
+    public function get_titlename(): string
     {
         return $this->titlename;
     }
 
-    /*
-      returns properties of selected tab
-    */
-    public function get_selected()
+    /**
+     * returns properties of selected tab
+     *
+     * @return array{caption: string, url: string}|null
+     */
+    public function get_selected(): ?array
     {
         if (! empty($this->selected)) {
             return $this->sheets[$this->selected];

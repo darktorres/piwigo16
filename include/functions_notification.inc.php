@@ -41,8 +41,8 @@ function get_std_sql_where_restrict_filter(
  * @param string $type 'new_comments', 'unvalidated_comments', 'new_elements', 'updated_categories', 'new_users'
  * @param string $start (mysql datetime format)
  * @param string $end (mysql datetime format)
- * @return int|array|null int for action count, array for info, null for an
- *   unrecognized $type/$action
+ * @return int|array<int|string, mixed>|null int for action count, array for
+ *   info, null for an unrecognized $type/$action
  */
 function custom_notification_query($action, $type, $start = null, $end = null)
 {
@@ -320,14 +320,14 @@ function news_exists($start = null, $end = null): bool
 /**
  * Formats a news line and adds it to the array (e.g. '5 new elements')
  *
- * @param array $news
+ * @param array<int, string> $news
  * @param int $count
  * @param string $singular_key
  * @param string $plural_key
  * @param string $url
  * @param bool $add_url
  */
-function add_news_line(&$news, $count, $singular_key, $plural_key, $url = '', $add_url = false): void
+function add_news_line(array &$news, $count, $singular_key, $plural_key, $url = '', $add_url = false): void
 {
     if ($count > 0) {
         $line = l10n_dec($singular_key, $plural_key, $count);
@@ -350,6 +350,8 @@ function add_news_line(&$news, $count, $singular_key, $plural_key, $url = '', $a
  * @param string $end (mysql datetime format)
  * @param bool $exclude_img_cats if true, no info about new images/categories
  * @param bool $add_url add html link around news
+ * @param string|null $auth_key
+ * @return array<int, string>
  */
 function news($start = null, $end = null, $exclude_img_cats = false, $add_url = false, $auth_key = null): array
 {
@@ -422,7 +424,7 @@ function news($start = null, $end = null, $exclude_img_cats = false, $add_url = 
  * @param int $max_dates maximum number of recent dates
  * @param int $max_elements maximum number of elements per date
  * @param int $max_cats maximum number of categories per date
- * @return array
+ * @return array<int|string, mixed>
  */
 function get_recent_post_dates($max_dates, $max_elements, $max_cats)
 {
@@ -488,7 +490,8 @@ SELECT
  * Same as get_recent_post_dates() but parameters as an indexed array.
  * @see get_recent_post_dates()
  *
- * @return array
+ * @param array<string, int> $args
+ * @return array<int|string, mixed>
  */
 function get_recent_post_dates_array(array $args)
 {
@@ -503,7 +506,8 @@ function get_recent_post_dates_array(array $args)
  * Returns html description about recently published elements grouped by post date.
  * @todo clean up HTML output, currently messy and invalid !
  *
- * @param array $date_detail returned value of get_recent_post_dates()
+ * @param array<string, mixed> $date_detail returned value of get_recent_post_dates()
+ * @param string|null $auth_key
  */
 function get_html_description_recent_post_date(array $date_detail, $auth_key = null): string
 {
@@ -567,7 +571,7 @@ function get_html_description_recent_post_date(array $date_detail, $auth_key = n
 /**
  * Returns title about recently published elements grouped by post date.
  *
- * @param array $date_detail returned value of get_recent_post_dates()
+ * @param array<string, mixed> $date_detail returned value of get_recent_post_dates()
  */
 function get_title_recent_post_date(array $date_detail): string
 {

@@ -51,6 +51,8 @@ function get_mail_sender_email()
  * - smtp_secure
  * - email_webmaster
  * - name_webmaster
+ *
+ * @return array<string, mixed>
  */
 function get_mail_configuration(): array
 {
@@ -102,7 +104,7 @@ function format_email($name, $email): string
  * @since 2.6
  *
  * @param string|string[] $input - if is an array must contain email[, name]
- * @return array email, name
+ * @return array{email: string, name: string}
  */
 function unformat_email($input): array
 {
@@ -318,9 +320,10 @@ function switch_lang_back(): void
  * Send a notification email to all administrators.
  * current user (if admin) is not notified
  *
- * @param string|array $subject
- * @param string|array $content
+ * @param string|array<int|string, mixed> $subject
+ * @param string|array<int|string, mixed> $content
  * @param bool $send_technical_details - send user IP and browser
+ * @param int|string|null $group_id
  * @return bool
  */
 function pwg_mail_notification_admins($subject, $content, $send_technical_details = true, $group_id = null)
@@ -377,11 +380,12 @@ function pwg_mail_notification_admins($subject, $content, $send_technical_detail
  * @see pwg_mail()
  * @since 2.6
  *
- * @param array $args - as in pwg_mail()
- * @param array $tpl - as in pwg_mail()
+ * @param array<string, mixed> $args - as in pwg_mail()
+ * @param array<string, mixed> $tpl - as in pwg_mail()
+ * @param int|string|null $group_id
  * @return bool
  */
-function pwg_mail_admins(array $args = [], $tpl = [], $exclude_current_user = true, $only_webmasters = false, $group_id = null)
+function pwg_mail_admins(array $args = [], array $tpl = [], bool $exclude_current_user = true, bool $only_webmasters = false, $group_id = null)
 {
     if (empty($args['content']) and empty($tpl)) {
         return false;
@@ -448,12 +452,12 @@ SELECT
  * @see pwg_mail()
  *
  * @param int $group_id
- * @param array $args - as in pwg_mail()
+ * @param array<string, mixed> $args - as in pwg_mail()
  *       o language_selected: filters users of the group by language [default value empty]
- * @param array $tpl - as in pwg_mail()
+ * @param array<string, mixed> $tpl - as in pwg_mail()
  * @return bool
  */
-function pwg_mail_group($group_id, array $args = [], $tpl = []): bool|int
+function pwg_mail_group($group_id, array $args = [], array $tpl = []): bool|int
 {
     if (empty($group_id) or (empty($args['content']) and empty($tpl))) {
         return false;
@@ -547,8 +551,8 @@ SELECT
 /**
  * Sends an email, using Piwigo specific informations.
  *
- * @param string|array $to
- * @param array $args
+ * @param string|array<int|string, mixed> $to
+ * @param array{from?: mixed, reply_to_mail_address?: string, reply_to_name?: string, Cc?: mixed, Bcc?: mixed, subject?: mixed, content?: mixed, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args
  *       o from: sender [default value webmaster email]
  *       o reply_to_mail_address: reply-to can be different of the "from" (new 16.4.0) [default value empty]
  *       o reply_to_name: reply-to can be different of the "from" (new 16.4.0) [default value empty]
@@ -562,7 +566,7 @@ SELECT
  *       o mail_title: main title of the mail [default value $conf['gallery_title']]
  *       o mail_subtitle: subtitle of the mail [default value subject]
  *       o auth_key: authentication key to add on footer link [default value null]
- * @param array $tpl - use these options to define a custom content template file
+ * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl - use these options to define a custom content template file
  *       o filename
  *       o dirname (optional)
  *       o assign (optional)
@@ -828,8 +832,15 @@ function pwg_mail($to, array $args = [], array $tpl = [])
     return $ret;
 }
 
+/**
+ * @param mixed $result
+ * @param string|array<int|string, mixed> $to
+ * @param mixed $subject
+ * @param mixed $content
+ * @param mixed $headers unused
+ */
 #[\Deprecated(message: '2.6')]
-function pwg_send_mail($result, $to, $subject, $content, $headers)
+function pwg_send_mail($result, $to, $subject, $content, $headers): mixed
 {
     if (is_admin()) {
         trigger_error('pwg_send_mail function is deprecated', E_USER_NOTICE);
@@ -867,6 +878,7 @@ function move_css_to_body(string $content)
  * @param bool $success
  * @param Email $mail
  * @param string|null $error_message
+ * @param array<string, mixed> $args
  */
 function pwg_send_mail_test($success, $mail, array $args, $error_message = null): void
 {
@@ -899,7 +911,7 @@ function pwg_send_mail_test($success, $mail, array $args, $error_message = null)
  * @param string $password_link
  * @param string $gallery_title
  * @param string $remaining_time
- * @return array mail content
+ * @return array{subject: string, content: string, content_format: string} mail content
  */
 function pwg_generate_reset_password_mail($username, $password_link, $gallery_title, $remaining_time): array
 {
@@ -934,7 +946,8 @@ function pwg_generate_reset_password_mail($username, $password_link, $gallery_ti
  * @param string $username
  * @param string $gallery_title
  * @param string $remaining_time
- * @return array mail content
+ * @param string $set_password_link
+ * @return array{subject: string, content: string, content_format: string} mail content
  */
 function pwg_generate_set_password_mail($username, $set_password_link, $gallery_title, $remaining_time): array
 {
@@ -968,7 +981,7 @@ function pwg_generate_set_password_mail($username, $set_password_link, $gallery_
  * Return the content mail to send
  * @since 16
  * @param string $code
- * @return array mail content
+ * @return array{subject: string, content: string, content_format: string} mail content
  */
 function pwg_generate_code_verification_mail($code): array
 {
@@ -994,7 +1007,9 @@ function pwg_generate_code_verification_mail($code): array
  *
  * Return the content mail to send
  * @since 16
- * @return array mail content
+ * @param string $username
+ * @param int $nb_of_apikeys
+ * @return array{subject: string, content: string, content_format: string} mail content
  */
 function pwg_generate_success_reset_password_mail($username, $nb_of_apikeys): array
 {

@@ -13,9 +13,10 @@ declare(strict_types=1);
  * returns informations from IPTC metadata, mapping is done in this function.
  *
  * @param string $filename
- * @param array $map
+ * @param array<string, string> $map
+ * @return array<string, string>
  */
-function get_iptc_data($filename, $map, $array_sep = ','): array
+function get_iptc_data($filename, $map, string $array_sep = ','): array
 {
     global $conf;
 
@@ -102,7 +103,8 @@ function clean_iptc_value($value)
  * returns informations from EXIF metadata, mapping is done in this function.
  *
  * @param string $filename
- * @param array $map
+ * @param array<string, string> $map
+ * @return array<string, mixed>
  */
 function get_exif_data($filename, $map): array
 {
@@ -171,7 +173,7 @@ function get_exif_data($filename, $map): array
     return $result;
 }
 
-function strip_html_in_metadata(&$v, $k): void
+function strip_html_in_metadata(mixed &$v, int|string $k): void
 {
     $v = strip_tags((string) $v);
 }

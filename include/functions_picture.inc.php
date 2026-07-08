@@ -14,6 +14,7 @@ declare(strict_types=1);
  * - period
  * - repeat
  * - play
+ * @return array<string, mixed>
  */
 function get_default_slideshow_params(): array
 {
@@ -28,6 +29,8 @@ function get_default_slideshow_params(): array
 
 /**
  * Checks and corrects slideshow params
+ * @param array<string, mixed> $params
+ * @return array<string, mixed>
  */
 function correct_slideshow_params(array $params = []): array
 {
@@ -46,6 +49,7 @@ function correct_slideshow_params(array $params = []): array
  * Decodes slideshow string params into array
  *
  * @param string $encode_params
+ * @return array<string, mixed>
  */
 function decode_slideshow_params($encode_params = null): array
 {
@@ -77,6 +81,7 @@ function decode_slideshow_params($encode_params = null): array
 
 /**
  * Encodes slideshow array params into a string
+ * @param array<string, mixed> $decode_params
  */
 function encode_slideshow_params(array $decode_params = []): string
 {

@@ -15,7 +15,7 @@ declare(strict_types=1);
  * @param int $image_id
  * @param int|string|null $rate raw $_POST value (string) from picture.php,
  *   an (int)-cast value from the WS layer, or null when absent
- * @return array|false as returned by update_rating_score(), or false if the
+ * @return array<string, mixed>|false as returned by update_rating_score(), or false if the
  *   rate is invalid or forbidden
  */
 function rate_picture($image_id, int|string|null $rate)
@@ -110,7 +110,7 @@ INSERT
  *  m = global average rate (all rates)
  *
  * @param int|false $element_id if false applies to all
- * @return array (score, average, count) values are null if $element_id is false
+ * @return array<string, mixed> (score, average, count) values are null if $element_id is false
  */
 function update_rating_score($element_id = false)
 {

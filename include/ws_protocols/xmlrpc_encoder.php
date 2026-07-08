@@ -9,7 +9,7 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-function xmlrpc_encode($data)
+function xmlrpc_encode(mixed $data): string
 {
     switch (gettype($data)) {
         case 'boolean':
@@ -40,6 +40,8 @@ function xmlrpc_encode($data)
             }
             return $return;
     }
+
+    return '';
 }
 
 class PwgXmlRpcEncoder extends PwgResponseEncoder

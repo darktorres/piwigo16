@@ -16,7 +16,7 @@ declare(strict_types=1);
  * of array( id=>?, name=>?, permalink=>?). If url input parameter is null,
  * returns only the categories name without links.
  *
- * @param array $cat_informations
+ * @param array<int, array<string, mixed>> $cat_informations
  * @param string|null $url
  */
 function get_cat_display_name($cat_informations, $url = ''): string
@@ -28,11 +28,6 @@ function get_cat_display_name($cat_informations, $url = ''): string
     $is_first = true;
 
     foreach ($cat_informations as $cat) {
-        is_array($cat) or trigger_error(
-            'get_cat_display_name wrong type for category ',
-            E_USER_WARNING
-        );
-
         $cat['name'] = trigger_change(
             'render_category_name',
             $cat['name'],
@@ -72,6 +67,7 @@ function get_cat_display_name($cat_informations, $url = ''): string
  * @param string|null $url
  * @param bool $single_link
  * @param string|null $link_class
+ * @param string|null $auth_key
  */
 function get_cat_display_name_cache(
     $uppercats,
@@ -202,6 +198,9 @@ function render_comment_content($content): string|null
 
 /**
  * Callback used for sorting by name.
+ *
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
  */
 function name_compare(array $a, array $b): int
 {
@@ -210,6 +209,9 @@ function name_compare(array $a, array $b): int
 
 /**
  * Callback used for sorting by name (slug) with cache.
+ *
+ * @param array<string, mixed> $a
+ * @param array<string, mixed> $b
  */
 function tag_alpha_compare(array $a, array $b): int
 {
@@ -508,7 +510,7 @@ function register_default_menubar_blocks(array $menu_ref_arr): void
  * Returns display name for an element.
  * Returns 'name' if exists of name from 'file'.
  *
- * @param array $info at least file or name
+ * @param array<string, mixed> $info at least file or name
  * @return string
  */
 function render_element_name(array $info)
@@ -522,7 +524,7 @@ function render_element_name(array $info)
 /**
  * Returns display description for an element.
  *
- * @param array $info at least comment
+ * @param array<string, mixed> $info at least comment
  * @param string $param used to identify the trigger
  * @return string
  */
@@ -537,7 +539,7 @@ function render_element_description(array $info, $param = '')
 /**
  * Add info to the title of the thumbnail based on photo properties.
  *
- * @param array $info hit, rating_score, nb_comments
+ * @param array<string, mixed> $info hit, rating_score, nb_comments
  * @param string $title
  * @param string $comment
  * @return string
@@ -591,7 +593,7 @@ function get_src_image_url_protection_handler($url, $src_image)
  * Event handler to protect element urls.
  *
  * @param string $url
- * @param array $infos id, path
+ * @param array<string, mixed> $infos id, path
  * @return string
  */
 function get_element_url_protection_handler($url, array $infos)
@@ -630,6 +632,9 @@ function flush_page_messages(): void
  * pwg_nl2br is useful for PHP 5.2 which doesn't accept more than 1
  * parameter on nl2br() (and anyway the second parameter of nl2br does not
  * match what Piwigo gives.
+ *
+ * @param array<int|string, mixed>|null|int|float|false|string $string
+ * @return array<int|string, mixed>|null|int|float|false|string
  */
 function pwg_nl2br($string): array|null|int|float|false|string
 {

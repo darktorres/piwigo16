@@ -56,7 +56,7 @@ function char_to_fraction($c): float|int
 /**
  * Converts a float into a char a-z.
  */
-function fraction_to_char($f): string
+function fraction_to_char(float $f): string
 {
     return chr(ord('a') + (int) round($f * 25));
 }
@@ -200,7 +200,7 @@ final class SizingParams
     /**
      * Returns a square SizingParams object.
      */
-    public static function square($w): self
+    public static function square(int $w): self
     {
         return new self([$w, $w], 1, [$w, $w]);
     }
@@ -208,9 +208,9 @@ final class SizingParams
     /**
      * Adds tokens depending on sizing configuration.
      *
-     * @param array $tokens
+     * @param array<int, int|string> $tokens
      */
-    public function add_url_tokens(&$tokens): void
+    public function add_url_tokens(array &$tokens): void
     {
         if ($this->max_crop == 0) {
             $tokens[] = 's' . size_to_url($this->ideal_size);
@@ -233,8 +233,10 @@ final class SizingParams
      *   crop_v() already treat null and '' identically via empty($coi)
      * @param-out ImageRect|null $crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
      * @param-out array<int|float>|null $scale_size - two element array containing width and height of the scaled image, or null
+     * @param ImageRect|null $crop_rect by-ref out-param; always bound to a fresh, undefined variable at every real call site
+     * @param array<int|float>|null $scale_size by-ref out-param; always bound to a fresh, undefined variable at every real call site
      */
-    public function compute(array $in_size, $coi, &$crop_rect, &$scale_size): void
+    public function compute(array $in_size, $coi, ?ImageRect &$crop_rect, ?array &$scale_size): void
     {
         $destCrop = new ImageRect($in_size);
 
@@ -327,17 +329,18 @@ final class DerivativeParams
     /**
      * Adds tokens depending on sizing configuration.
      *
-     * @param array $tokens
+     * @param array<int, int|string> $tokens
      */
-    public function add_url_tokens(&$tokens): void
+    public function add_url_tokens(array &$tokens): void
     {
         $this->sizing->add_url_tokens($tokens);
     }
 
     /**
+     * @param int[] $in_size
      * @return int[]
      */
-    public function compute_final_size($in_size)
+    public function compute_final_size(array $in_size)
     {
         $this->sizing->compute($in_size, null, $crop_rect, $scale_size);
         return $scale_size != null ? $scale_size : $in_size;
@@ -361,8 +364,9 @@ final class DerivativeParams
 
     /**
      * @todo : description of DerivativeParams::is_identity
+     * @param int[] $in_size
      */
-    public function is_identity($in_size): bool
+    public function is_identity(array $in_size): bool
     {
         if ($in_size[0] > $this->sizing->ideal_size[0] or
             $in_size[1] > $this->sizing->ideal_size[1]) {
@@ -372,9 +376,10 @@ final class DerivativeParams
     }
 
     /**
+     * @param int[] $out_size
      * @return bool
      */
-    public function will_watermark($out_size)
+    public function will_watermark(array $out_size)
     {
         if ($this->use_watermark) {
             $min_size = ImageStdParams::get_watermark()->min_size;

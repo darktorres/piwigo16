@@ -152,8 +152,9 @@ class CalendarMonthly extends CalendarBase
     /**
      * Returns an array with all the days in a given month.
      *
-     * @param int $year
-     * @param int $month
+     * @param int|string $year both callers pass $page['chronology_date'][CYEAR],
+     *   a numeric string parsed from the URL (or the literal 'any')
+     * @param int|string $month same: $page['chronology_date'][CMONTH]
      */
     protected function get_all_days_in_month($year, $month): int
     {

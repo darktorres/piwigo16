@@ -48,10 +48,11 @@ $must_repost = false;
  * Do timeout treatment in order to finish to send mails
  * @param $post_keyname: key of check_key post array
  * @param $check_key_treated: array of check_key treated
+ * @return bool whether treatment timed out and must be reposted
  */
-function do_timeout_treatment($post_keyname, $check_key_treated = []): void
+function do_timeout_treatment($post_keyname, $check_key_treated = []): bool
 {
-    global $env_nbm, $base_url, $page, $must_repost;
+    global $env_nbm, $page;
 
     if ($env_nbm['is_sendmail_timeout']) {
         if (isset($_POST[$post_keyname])) {
@@ -64,15 +65,16 @@ function do_timeout_treatment($post_keyname, $check_key_treated = []): void
             }
             $_POST[$post_keyname] = array_diff($_POST[$post_keyname], $check_key_treated);
 
-            $must_repost = true;
             $page['errors'][] = l10n_dec(
                 'Execution time is out, treatment must be continue [Estimated time: %d second].',
                 'Execution time is out, treatment must be continue [Estimated time: %d seconds].',
                 $time_refresh
             );
+            return true;
         }
     }
 
+    return false;
 }
 
 /*
@@ -476,10 +478,10 @@ switch ($page['mode']) {
 
         if (isset($_POST['falsify']) and isset($_POST['cat_true'])) {
             $check_key_treated = unsubscribe_notification_by_mail(true, $_POST['cat_true']);
-            do_timeout_treatment('cat_true', $check_key_treated);
+            $must_repost = do_timeout_treatment('cat_true', $check_key_treated);
         } elseif (isset($_POST['trueify']) and isset($_POST['cat_false'])) {
             $check_key_treated = subscribe_notification_by_mail(true, $_POST['cat_false']);
-            do_timeout_treatment('cat_false', $check_key_treated);
+            $must_repost = do_timeout_treatment('cat_false', $check_key_treated);
         }
         break;
 
@@ -487,7 +489,7 @@ switch ($page['mode']) {
 
         if (isset($_POST['send_submit']) and isset($_POST['send_selection']) and isset($_POST['send_customize_mail_content'])) {
             $check_key_treated = do_action_send_mail_notification('send', $_POST['send_selection'], stripslashes((string) $_POST['send_customize_mail_content']));
-            do_timeout_treatment('send_selection', $check_key_treated);
+            $must_repost = do_timeout_treatment('send_selection', $check_key_treated);
         }
 
 }
@@ -605,7 +607,7 @@ switch ($page['mode']) {
             foreach ($data_users as $nbm_user) {
                 if (
                     (! $must_repost) or // Not timeout, normal treatment
-                    (($must_repost) and in_array($nbm_user['check_key'], $_POST['send_selection']))  // Must be repost, show only user to send
+                    in_array($nbm_user['check_key'], $_POST['send_selection'])  // Must be repost, show only user to send
                 ) {
                     $tpl_var['users'][] =
                       [

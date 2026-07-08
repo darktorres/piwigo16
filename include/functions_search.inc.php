@@ -137,9 +137,9 @@ function get_regular_search_results(array $search, $images_where = ''): array
         // 1) we search in regular fields (ie, the ones in the piwigo_images table)
         $fields = ['file', 'name', 'comment', 'author'];
 
-        if (isset($search['fields']['allwords']['fields']) and count($search['fields']['allwords']['fields']) > 0) {
-            $fields = array_intersect($fields, $search['fields']['allwords']['fields']);
-        }
+        // the outer if already established isset(...) and count(...) > 0
+        // for this same key
+        $fields = array_intersect($fields, $search['fields']['allwords']['fields']);
 
         $cat_fields_dictionnary = [
             'cat-title' => 'name',
@@ -390,7 +390,7 @@ SELECT
             '6m' => '6 MONTH',
         ];
 
-        if (isset($options[$search['fields']['date_posted']['preset']]) and $search['fields']['date_posted']['preset'] != 'custom') {
+        if (isset($options[$search['fields']['date_posted']['preset']])) {
             $date_posted_clause = 'date_available > SUBDATE(NOW(), INTERVAL ' . $options[$search['fields']['date_posted']['preset']] . ')';
         } elseif ($search['fields']['date_posted']['preset'] == 'custom' and isset($search['fields']['date_posted']['custom'])) {
             $date_posted_subclauses = [];
@@ -463,7 +463,7 @@ SELECT
             '12m' => '12 MONTH',
         ];
 
-        if (isset($options[$search['fields']['date_created']['preset']]) and $search['fields']['date_created']['preset'] != 'custom') {
+        if (isset($options[$search['fields']['date_created']['preset']])) {
             $date_created_clause = 'date_creation > SUBDATE(NOW(), INTERVAL ' . $options[$search['fields']['date_created']['preset']] . ')';
         } elseif ($search['fields']['date_created']['preset'] == 'custom' and isset($search['fields']['date_created']['custom'])) {
             $date_created_subclauses = [];
@@ -1381,7 +1381,7 @@ function qsearch_get_text_token_search_sql($token, $fields): array
         if ($token->modifier & QST_WILDCARD_BEGIN) {
             $use_ft = false;
         }
-        if ($token->modifier & (QST_QUOTED | QST_WILDCARD_END) == (QST_QUOTED | QST_WILDCARD_END)) {
+        if (($token->modifier & (QST_QUOTED | QST_WILDCARD_END)) == (QST_QUOTED | QST_WILDCARD_END)) {
             $use_ft = false;
         }
 

@@ -21,47 +21,41 @@ pwg_load_env_file(PHPWG_ROOT_PATH);
 // precaution to prevent someone trying to break out of a SQL statement.
 //
 if (function_exists('get_magic_quotes_gpc') && ! @get_magic_quotes_gpc()) {
-    if (is_array($_POST)) {
-        foreach ($_POST as $k => $v) {
-            if (is_array($_POST[$k])) {
-                foreach ($_POST[$k] as $k2 => $v2) {
-                    $_POST[$k][$k2] = addslashes((string) $v2);
-                }
-                @reset($_POST[$k]);
-            } else {
-                $_POST[$k] = addslashes((string) $v);
+    foreach ($_POST as $k => $v) {
+        if (is_array($_POST[$k])) {
+            foreach ($_POST[$k] as $k2 => $v2) {
+                $_POST[$k][$k2] = addslashes((string) $v2);
             }
+            @reset($_POST[$k]);
+        } else {
+            $_POST[$k] = addslashes((string) $v);
         }
-        @reset($_POST);
     }
+    @reset($_POST);
 
-    if (is_array($_GET)) {
-        foreach ($_GET as $k => $v) {
-            if (is_array($_GET[$k])) {
-                foreach ($_GET[$k] as $k2 => $v2) {
-                    $_GET[$k][$k2] = addslashes((string) $v2);
-                }
-                @reset($_GET[$k]);
-            } else {
-                $_GET[$k] = addslashes((string) $v);
+    foreach ($_GET as $k => $v) {
+        if (is_array($_GET[$k])) {
+            foreach ($_GET[$k] as $k2 => $v2) {
+                $_GET[$k][$k2] = addslashes((string) $v2);
             }
+            @reset($_GET[$k]);
+        } else {
+            $_GET[$k] = addslashes((string) $v);
         }
-        @reset($_GET);
     }
+    @reset($_GET);
 
-    if (is_array($_COOKIE)) {
-        foreach ($_COOKIE as $k => $v) {
-            if (is_array($_COOKIE[$k])) {
-                foreach ($_COOKIE[$k] as $k2 => $v2) {
-                    $_COOKIE[$k][$k2] = addslashes((string) $v2);
-                }
-                @reset($_COOKIE[$k]);
-            } else {
-                $_COOKIE[$k] = addslashes((string) $v);
+    foreach ($_COOKIE as $k => $v) {
+        if (is_array($_COOKIE[$k])) {
+            foreach ($_COOKIE[$k] as $k2 => $v2) {
+                $_COOKIE[$k][$k2] = addslashes((string) $v2);
             }
+            @reset($_COOKIE[$k]);
+        } else {
+            $_COOKIE[$k] = addslashes((string) $v);
         }
-        @reset($_COOKIE);
     }
+    @reset($_COOKIE);
 }
 
 // ----------------------------------------------------- variable initialization
@@ -175,7 +169,6 @@ load_language('install.lang', '', [
 header('Content-Type: text/html; charset=UTF-8');
 // ------------------------------------------------- check php version
 if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
-    // include(PHPWG_ROOT_PATH.'install/php5_apache_configuration.php'); // to remove, with all its related content
     $errors[] = l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION);
 }
 

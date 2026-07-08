@@ -269,6 +269,10 @@ class Template
     {
         $this->smarty->addTemplateDir($dir);
 
+        // Smarty's own @var string on $compile_id contradicts its own
+        // `= null` default (vendor/smarty/smarty/src/TemplateBase.php) —
+        // not a native type, and not ours to fix.
+        // @phpstan-ignore isset.property
         if (! isset($this->smarty->compile_id)) {
             $compile_id = '1';
             $compile_id .= ($real_dir = realpath($dir)) === false ? $dir : $real_dir;
@@ -330,13 +334,12 @@ class Template
     /**
      * Sets the template filenames for handles.
      *
-     * @param string[] $filename_array hashmap of handle=>filename
+     * @param array<string, string|null> $filename_array hashmap of
+     *   handle=>filename; a null value unsets that handle (no current
+     *   first-party caller exercises this, but the API supports it)
      */
     public function set_filenames($filename_array): bool
     {
-        if (! is_array($filename_array)) {
-            return false;
-        }
         reset($filename_array);
         foreach ($filename_array as $handle => $filename) {
             if ($filename === null) {
@@ -367,7 +370,9 @@ class Template
     /**
      * Sets template extentions filenames for handles.
      *
-     * @param string[] $filename_array hashmap of handle=>filename
+     * @param mixed $filename_array hashmap of handle=>filename; the real
+     *   caller (load_themeconf()) passes unserialize($conf['extents_for_templates']),
+     *   which is not guaranteed to be an array
      * @param string $dir
      * @param bool $overwrite
      * @param string $theme
@@ -626,7 +631,7 @@ class Template
      */
     public static function get_php_str_val($str)
     {
-        if (is_string($str) && strlen($str) > 1) {
+        if (strlen($str) > 1) {
             if (($str[0] == '\'' && $str[strlen($str) - 1] == '\'')
               || ($str[0] == '"' && $str[strlen($str) - 1] == '"')) {
                 eval('$tmp=' . $str . ';');
@@ -1422,7 +1427,9 @@ class CssLoader
      *
      * @param string $id
      * @param string $path
-     * @param string $version
+     * @param string|false $version false disables version-based cache
+     *   busting, mirroring Combinable::$version's own contract; no current
+     *   .tpl passes version=, but func_combine_css() forwards it verbatim
      * @param int $order
      * @param bool $is_template
      */
@@ -1634,7 +1641,9 @@ class ScriptLoader
 
         $result = [[], []];
         foreach ($todo as $id => $script) {
-            if (! is_string($script->load_mode)) {
+            // load_mode 0 (head) scripts are handled by get_head_scripts();
+            // only 1 (footer-sync) and 2 (footer-async) belong here.
+            if ($script->load_mode > 0) {
                 $result[$script->load_mode - 1][$id] = $script;
             }
         }

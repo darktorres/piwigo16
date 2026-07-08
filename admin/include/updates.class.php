@@ -108,9 +108,8 @@ class updates
             $url .= ($env === 'Official') ? '&docker' : '&show_requirements'; // Check docker version if in container
             $url .= '&origin_hash=' . sha1($conf['secret_key'] . get_absolute_root_url());
 
-            if (@fetchRemote($url, $result)
-                and $all_versions = @explode("\n", $result)
-                and is_array($all_versions)) {
+            if (@fetchRemote($url, $result)) {
+                $all_versions = explode("\n", $result);
                 $new_versions['piwigo.org-checked'] = true;
                 $last_version = trim($all_versions[0]);
                 if ($env === 'Official') {

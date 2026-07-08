@@ -83,7 +83,8 @@ class Logger
 
     /**
      * File handle for this instance's log file.
-     * @var resource
+     * @var resource|null null until open() successfully opens the file
+     *   (never assigned falsy on failure — that path throws instead)
      */
     private $_fileHandle;
 
@@ -128,7 +129,6 @@ class Logger
             if (file_exists($this->options['filePath']) && ! is_writable($this->options['filePath'])) {
                 $this->_logStatus = self::STATUS_OPEN_FAILED;
                 throw new RuntimeException(self::$_messages['writefail']);
-                return;
             }
 
             if (($this->_fileHandle = fopen($this->options['filePath'], 'a')) != false) {
@@ -172,7 +172,10 @@ class Logger
      * Writes a $line to the log with a severity level of DEBUG.
      *
      * @param string $line
-     * @param string $cat
+     * @param string|array|null $cat some call sites (e.g.
+     *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
+     *   pass an array here as a 2-arg debug(message, data) convenience —
+     *   log() detects this and treats it as $args instead
      * @param array $args
      */
     public function debug($line, $cat = null, $args = []): void
@@ -184,7 +187,10 @@ class Logger
      * Writes a $line to the log with a severity level of INFO.
      *
      * @param string $line
-     * @param string $cat
+     * @param string|array|null $cat some call sites (e.g.
+     *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
+     *   pass an array here as a 2-arg debug(message, data) convenience —
+     *   log() detects this and treats it as $args instead
      * @param array $args
      */
     public function info($line, $cat = null, $args = []): void
@@ -196,7 +202,10 @@ class Logger
      * Writes a $line to the log with a severity level of NOTICE.
      *
      * @param string $line
-     * @param string $cat
+     * @param string|array|null $cat some call sites (e.g.
+     *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
+     *   pass an array here as a 2-arg debug(message, data) convenience —
+     *   log() detects this and treats it as $args instead
      * @param array $args
      */
     public function notice($line, $cat = null, $args = []): void
@@ -208,7 +217,10 @@ class Logger
      * Writes a $line to the log with a severity level of WARNING.
      *
      * @param string $line
-     * @param string $cat
+     * @param string|array|null $cat some call sites (e.g.
+     *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
+     *   pass an array here as a 2-arg debug(message, data) convenience —
+     *   log() detects this and treats it as $args instead
      * @param array $args
      */
     public function warn($line, $cat = null, $args = []): void
@@ -220,7 +232,10 @@ class Logger
      * Writes a $line to the log with a severity level of ERROR.
      *
      * @param string $line
-     * @param string $cat
+     * @param string|array|null $cat some call sites (e.g.
+     *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
+     *   pass an array here as a 2-arg debug(message, data) convenience —
+     *   log() detects this and treats it as $args instead
      * @param array $args
      */
     public function error($line, $cat = null, $args = []): void
@@ -232,7 +247,10 @@ class Logger
      * Writes a $line to the log with a severity level of ALERT.
      *
      * @param string $line
-     * @param string $cat
+     * @param string|array|null $cat some call sites (e.g.
+     *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
+     *   pass an array here as a 2-arg debug(message, data) convenience —
+     *   log() detects this and treats it as $args instead
      * @param array $args
      */
     public function alert($line, $cat = null, $args = []): void
@@ -244,7 +262,10 @@ class Logger
      * Writes a $line to the log with a severity level of CRITICAL.
      *
      * @param string $line
-     * @param string $cat
+     * @param string|array|null $cat some call sites (e.g.
+     *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
+     *   pass an array here as a 2-arg debug(message, data) convenience —
+     *   log() detects this and treats it as $args instead
      * @param array $args
      */
     public function critical($line, $cat = null, $args = []): void
@@ -256,7 +277,10 @@ class Logger
      * Writes a $line to the log with a severity level of EMERGENCY.
      *
      * @param string $line
-     * @param string $cat
+     * @param string|array|null $cat some call sites (e.g.
+     *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
+     *   pass an array here as a 2-arg debug(message, data) convenience —
+     *   log() detects this and treats it as $args instead
      * @param array $args
      */
     public function emergency($line, $cat = null, $args = []): void
@@ -268,7 +292,10 @@ class Logger
      * Writes a $line to the log with the given severity.
      *
      * @param int $severity
-     * @param string $cat
+     * @param string|array|null $cat some call sites (e.g.
+     *   admin/include/functions.php's $logger->debug('taglist_before', $taglist_before))
+     *   pass an array here as a 2-arg debug(message, data) convenience —
+     *   log() detects this and treats it as $args instead
      * @param array $args
      */
     public function log($severity, $message, $cat = null, $args = []): void

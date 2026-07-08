@@ -19060,55 +19060,6 @@
       <code><![CDATA[include(PHPWG_ROOT_PATH .'include/dblayer/functions_'.$dblayer.'.inc.php')]]></code>
     </UnresolvableInclude>
   </file>
-  <file src="install/php5_apache_configuration.php">
-    <MissingReturnType>
-      <code><![CDATA[closePage]]></code>
-      <code><![CDATA[initPHP5]]></code>
-      <code><![CDATA[openPage]]></code>
-    </MissingReturnType>
-    <PossiblyNullArgument>
-      <code><![CDATA[$_SERVER['SERVER_ADDR']]]></code>
-    </PossiblyNullArgument>
-    <PossiblyUndefinedArrayOffset>
-      <code><![CDATA[$_SERVER['SERVER_ADDR']]]></code>
-    </PossiblyUndefinedArrayOffset>
-    <RiskyTruthyFalsyComparison>
-      <code><![CDATA[!($my_hostname = @gethostbyaddr($_SERVER['SERVER_ADDR']))]]></code>
-    </RiskyTruthyFalsyComparison>
-    <UndefinedConstant>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_ROOT_PATH]]></code>
-      <code><![CDATA[PHPWG_URL]]></code>
-      <code><![CDATA[PHPWG_VERSION]]></code>
-    </UndefinedConstant>
-    <UndefinedFunction>
-      <code><![CDATA[l10n("You may referer to your hosting provider's support and see how you could switch to PHP 5 by yourself.")]]></code>
-      <code><![CDATA[l10n('Hope to see you back soon.')]]></code>
-      <code><![CDATA[l10n('It appears your webhost is currently running PHP %s.')]]></code>
-      <code><![CDATA[l10n('Language')]]></code>
-      <code><![CDATA[l10n('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.')]]></code>
-      <code><![CDATA[l10n('Note you can change your configuration by yourself and restart Piwigo after that.')]]></code>
-      <code><![CDATA[l10n('PHP 5 is required')]]></code>
-      <code><![CDATA[l10n('Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file.')]]></code>
-      <code><![CDATA[l10n('Piwigo was not able to configure PHP 5.')]]></code>
-      <code><![CDATA[l10n('Sorry!')]]></code>
-      <code><![CDATA[l10n('Try to configure PHP 5')]]></code>
-      <code><![CDATA[l10n(ucwords($script))]]></code>
-      <code><![CDATA[script_basename()]]></code>
-    </UndefinedFunction>
-    <UndefinedGlobalVariable>
-      <code><![CDATA[$language]]></code>
-      <code><![CDATA[$language]]></code>
-      <code><![CDATA[$language]]></code>
-      <code><![CDATA[$languages]]></code>
-    </UndefinedGlobalVariable>
-    <UndefinedVariable>
-      <code><![CDATA[$hosting]]></code>
-    </UndefinedVariable>
-    <UnresolvableInclude>
-      <code><![CDATA[include(PHPWG_ROOT_PATH.'install/hosting.php')]]></code>
-    </UnresolvableInclude>
-  </file>
   <file src="install/upgrade_1.3.0.php">
     <UndefinedFunction>
       <code><![CDATA[mass_updates(

@@ -431,9 +431,8 @@ if (function_exists('mb_strtolower') && defined('PWG_CHARSET')) {
  * simplify a string to insert it into an URL
  *
  * @param string $str
- * @return string
  */
-function str2url($str): string|array
+function str2url($str): string
 {
     $str = $safe = pwg_transliterate($str);
     $str = preg_replace('/[^\x80-\xffa-z0-9_\s\'\:\/\[\],-]/', '', $str);
@@ -727,76 +726,22 @@ function pwg_activity($object, $object_id, $action, array $details = []): void
 
 /**
  * Computes the difference between two dates.
- * returns a DateInterval object or a stdClass with the same attributes
- * http://stephenharris.info/date-intervals-in-php-5-2
  *
  * @param DateTime $date1
  * @param DateTime $date2
- * @return DateInterval|stdClass
+ * @return DateInterval
  */
 function dateDiff($date1, $date2)
 {
-    if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
-        return $date1->diff($date2);
-    }
-
-    $diff = new stdClass();
-
-    // Make sure $date1 is ealier
-    $diff->invert = $date2 < $date1;
-    if ($diff->invert) {
-        [$date1, $date2] = [$date2, $date1];
-    }
-
-    // Calculate R values
-    $R = ($date1 <= $date2 ? '+' : '-');
-    $r = ($date1 <= $date2 ? '' : '-');
-
-    // Calculate total days
-    $diff->days = round(abs($date1->format('U') - $date2->format('U')) / 86400);
-
-    // A leap year work around - consistent with DateInterval
-    $leap_year = $date1->format('m-d') == '02-29';
-    if ($leap_year) {
-        $date1->modify('-1 day');
-    }
-
-    // Years, months, days, hours
-    $periods = [
-        'years' => -1,
-        'months' => -1,
-        'days' => -1,
-        'hours' => -1,
-    ];
-
-    foreach ($periods as $period => &$i) {
-        if ($period == 'days' && $leap_year) {
-            $date1->modify('+1 day');
-        }
-
-        while ($date1 <= $date2) {
-            $date1->modify('+1 ' . $period);
-            $i++;
-        }
-
-        // Reset date and record increments
-        $date1->modify('-1 ' . $period);
-    }
-
-    [$diff->y, $diff->m, $diff->d, $diff->h] = array_values($periods);
-
-    // Minutes, seconds
-    $diff->s = round(abs($date1->format('U') - $date2->format('U')));
-    $diff->i = floor($diff->s / 60);
-    $diff->s = $diff->s - $diff->i * 60;
-
-    return $diff;
+    return $date1->diff($date2);
 }
 
 /**
  * converts a string into a DateTime object
  *
- * @param int|string $original timestamp or datetime string
+ * @param int|string|DateTime $original timestamp, datetime string, or an
+ *   already-converted DateTime (returned as-is; some callers pass the same
+ *   value through this function repeatedly)
  * @param string $format input format respecting date() syntax
  * @return DateTime|false
  */
@@ -810,7 +755,7 @@ function str2DateTime($original, $format = null)
         return $original;
     }
 
-    if (! empty($format) && version_compare(PHP_VERSION, '5.3.0') >= 0) {// from known date format
+    if (! empty($format)) {// from known date format
         return DateTime::createFromFormat('!' . $format, (string) $original); // ! char to reset fields to UNIX epoch
     } else {
         $t = trim((string) $original, '0123456789');
@@ -863,7 +808,7 @@ function format_date_legacy($original, $show = null, $format = null)
         return l10n('N/A');
     }
 
-    if ($show === null || $show === true) {
+    if ($show === null) {
         $show = ['day_name', 'day', 'month', 'year'];
     }
 
@@ -914,7 +859,7 @@ function format_date($original, $show = null, $format = null)
         return l10n('N/A');
     }
 
-    if ($show === null || $show === true) {
+    if ($show === null) {
         $show = ['day_name', 'day', 'month', 'year'];
     }
 
@@ -1389,7 +1334,10 @@ function get_l10n_args($key, $args = ''): array
  * it is usefull to "prepare" a text and translate it later
  * @see get_l10n_args()
  *
- * @param array $key_args one l10n_args element or array of l10n_args elements
+ * @param mixed $key_args one l10n_args element or array of l10n_args
+ *   elements; the array shape isn't enforced by a native type, so the
+ *   is_array() check below is a real runtime guard against malformed input,
+ *   not a redundant one
  * @param string $sep used when translated elements are concatened
  */
 function l10n_args($key_args, $sep = "\n"): string
@@ -1508,7 +1456,7 @@ function pwg_is_dbconf_writeable(): bool
  * Add or update a config parameter
  *
  * @param string $param
- * @param string $value
+ * @param mixed $value scalar, array, or object (arrays/objects are serialized)
  * @param bool $updateGlobal update global *$conf* variable
  * @param callable $parser function to apply to the value before save in database
  * (eg: serialize, json_encode) will not be applied to *$conf* if *$parser* is *true*
@@ -1586,7 +1534,8 @@ function conf_get_param($param, $default_value = null)
  * @since 2.7
  *
  * @param array|string $value
- * @return array
+ * @return mixed the unserialized value, false if $value is a malformed
+ *   serialized string, or $value itself unchanged if it isn't a string
  */
 function safe_unserialize($value)
 {
@@ -1835,11 +1784,13 @@ function load_language($filename, $dirname = '', array $options = []): string|bo
             }
 
             // load language content
-            $lang = null;
-            $lang_info = null;
             @include $source_file;
-            $load_lang = $lang;
-            $load_lang_info = $lang_info;
+            // get_defined_vars() (rather than reading $lang/$lang_info
+            // directly) keeps their real, include-dependent type visible to
+            // static analysis instead of appearing to always be undefined.
+            $included_vars = get_defined_vars();
+            $load_lang = $included_vars['lang'] ?? null;
+            $load_lang_info = $included_vars['lang_info'] ?? null;
 
             // access already existing values
             global $lang, $lang_info;
@@ -1964,7 +1915,10 @@ function verify_ephemeral_key($key, $aditionnal_data_to_hash = ''): bool
  * return an array which will be sent to template to display navigation bar
  *
  * @param string $url base url of all links
- * @param int $start
+ * @param int|string $start may be a numeric string: index.php/category_cats.inc.php
+ *   pass a raw preg_match() capture (include/functions_url.inc.php), and
+ *   admin/rating.php/admin/batch_manager.php pass $_GET/$_REQUEST directly
+ *   after only an is_numeric() check
  * @param int $nb_element_page
  * @param bool $clean_url
  * @param string $param_name
@@ -1977,7 +1931,7 @@ function create_navigation_bar($url, $nb_element, $start, $nb_element_page, $cle
     $pages_around = $conf['paginate_pages_around'];
     $start_str = $clean_url ? '/' . $param_name . '-' : (! str_contains($url, '?') ? '?' : '&amp;') . $param_name . '=';
 
-    if (! is_numeric($start) or (is_numeric($start) and $start < 0)) {
+    if ($start < 0) {
         $start = 0;
     }
 
@@ -2551,38 +2505,39 @@ SELECT
     $piwigo_infos['general_stats']['nb_private_themes'] = 0;
     $piwigo_infos['themes'] = [];
     $private_themes = [];
+    // piwigo_themes has no 'state' column (confirmed in both
+    // install/piwigo_structure-mysql.sql and the test fixture) — unlike
+    // plugins, a theme is only in this table while active, so every row
+    // here is implicitly active.
     foreach ($themes->db_themes_by_id as $theme) {
-        $theme['state'] = 'active';
-        if ($theme['state'] == 'active') {
-            $eid = null;
-            if (isset($themes->fs_themes[$theme['id']])) {
-                $uri = $themes->fs_themes[$theme['id']]['uri'];
-                if (preg_match('/eid=(\d+)/', (string) $uri, $matches)) {
-                    if (isset($pem_extensions[$matches[1]])) {
-                        $eid = $matches[1];
-                    }
+        $eid = null;
+        if (isset($themes->fs_themes[$theme['id']])) {
+            $uri = $themes->fs_themes[$theme['id']]['uri'];
+            if (preg_match('/eid=(\d+)/', (string) $uri, $matches)) {
+                if (isset($pem_extensions[$matches[1]])) {
+                    $eid = $matches[1];
                 }
             }
-
-            if (empty($eid)) {
-                // let's search in the data fetched from PEM
-                $eid = $official_exts[$conf['pem_themes_category']][$theme['id']] ?? null;
-            }
-
-            // we must exclude "private extensions". A private extension :
-            //
-            // * has no eid
-            // * OR has un unknown theme_id among all "Archive root directory" in PEM
-            if (empty($eid)) {
-                $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] ' . $theme['id'] . ' is a private theme, not sent to piwigo.org');
-                $private_themes[$theme['id']] = 1;
-                continue;
-            }
-
-            $codename = $pem_extensions[$eid]['archive_root_dir'] ?? $theme['id'];
-
-            $piwigo_infos['themes'][] = '#' . $eid . '/' . $codename . '/' . $theme['version'];
         }
+
+        if (empty($eid)) {
+            // let's search in the data fetched from PEM
+            $eid = $official_exts[$conf['pem_themes_category']][$theme['id']] ?? null;
+        }
+
+        // we must exclude "private extensions". A private extension :
+        //
+        // * has no eid
+        // * OR has un unknown theme_id among all "Archive root directory" in PEM
+        if (empty($eid)) {
+            $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] ' . $theme['id'] . ' is a private theme, not sent to piwigo.org');
+            $private_themes[$theme['id']] = 1;
+            continue;
+        }
+
+        $codename = $pem_extensions[$eid]['archive_root_dir'] ?? $theme['id'];
+
+        $piwigo_infos['themes'][] = '#' . $eid . '/' . $codename . '/' . $theme['version'];
     }
 
     $piwigo_infos['general_stats']['nb_private_themes'] = count(array_keys($private_themes));

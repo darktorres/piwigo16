@@ -14,8 +14,14 @@ declare(strict_types=1);
  */
 class DummyTheme_maintain extends ThemeMaintain
 {
+    // Each is_callable() here checks for a bare function dynamically defined
+    // by a theme's own maintain.inc.php (include_once'd in
+    // themes::build_maintain_class(), outside this codebase, not statically
+    // knowable) — genuinely undecidable until real ThemeMaintain contracts
+    // (P31) replace this pre-2.7 procedural fallback entirely.
     public function activate($theme_version, &$errors = [])
     {
+        // @phpstan-ignore function.impossibleType
         if (is_callable('theme_activate')) {
             return theme_activate($this->theme_id, $theme_version, $errors);
         }
@@ -23,6 +29,7 @@ class DummyTheme_maintain extends ThemeMaintain
 
     public function deactivate()
     {
+        // @phpstan-ignore function.impossibleType
         if (is_callable('theme_deactivate')) {
             return theme_deactivate($this->theme_id);
         }
@@ -30,6 +37,7 @@ class DummyTheme_maintain extends ThemeMaintain
 
     public function delete()
     {
+        // @phpstan-ignore function.impossibleType
         if (is_callable('theme_delete')) {
             return theme_delete($this->theme_id);
         }

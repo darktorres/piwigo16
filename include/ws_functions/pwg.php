@@ -197,8 +197,7 @@ function ws_getCacheSize($params, &$service): array
     if (function_exists('exec')) {
         @exec('du -sk ' . $path_cache, $return_array_cache);
         if (
-            is_array($return_array_cache)
-            and ! empty($return_array_cache[0])
+            ! empty($return_array_cache[0])
             and preg_match('/^(\d+)\s/', $return_array_cache[0], $matches_cache)
         ) {
             $infos['cache_size'] = $matches_cache[1] * 1024;
@@ -226,8 +225,7 @@ function ws_getCacheSize($params, &$service): array
     if (function_exists('exec')) {
         @exec('du -sk ' . $path_template_c, $return_array_template_c);
         if (
-            is_array($return_array_template_c)
-            and ! empty($return_array_template_c[0])
+            ! empty($return_array_template_c[0])
             and preg_match('/^(\d+)\s/', $return_array_template_c[0], $matches_template_c)
         ) {
             $infos['tsizes'] = $matches_template_c[1] * 1024;

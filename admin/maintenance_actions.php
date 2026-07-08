@@ -230,11 +230,6 @@ DELETE
 
             if ($versions['latest'] == '') {
                 $page['errors'][] = l10n('Check for upgrade failed for unknown reasons.');
-            }
-            // concatenation needed to avoid automatic transformation by release
-            // script generator
-            elseif ($versions['current'] == '%PWGVERSION%') {
-                $page['infos'][] = l10n('You are running on development sources, no check possible.');
             } elseif (version_compare($versions['current'], $versions['latest']) < 0) {
                 $page['infos'][] = l10n('A new version of Piwigo is available.');
             } else {

@@ -243,6 +243,15 @@ final class BrowserTestHelpers
      * returns the post-login page. Asserts the logout link is present,
      * proving the session is actually authenticated (not just redirected).
      */
+    // PHPStan infers fill()/click() always resolve through Webpage's
+    // InteractsWithElements trait (returning self: Webpage) and claims this
+    // method can never return AwaitableWebpage/PendingAwaitablePage — but
+    // those two classes proxy fill()/click() through __call() (undeclared,
+    // untyped to static analysis) and really do come back out here at
+    // runtime: a real browser run threw "Return value must be of type
+    // Webpage, AwaitableWebpage returned" after this return type was once
+    // narrowed to plain Webpage, proving the union is load-bearing, not dead.
+    // @phpstan-ignore return.unusedType, return.unusedType
     public static function loginAsAdmin(object $test): Webpage|PendingAwaitablePage|AwaitableWebpage
     {
         $page = self::visitPwg($test, '/identification.php');

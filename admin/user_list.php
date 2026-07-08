@@ -248,12 +248,18 @@ if (userprefs_get_param('user-manager-view', 'line') == 'line') {
 
 function webmaster_id_is_local()
 {
+    // include/config_default.inc.php never sets local_dir_site/webmaster_id
+    // (confirmed: no such keys in that file at all) — they only ever come
+    // from an optional, site-owner-authored local/config/config.inc.php
+    // loaded at runtime, whose content isn't knowable statically.
     $conf = [];
     include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
     @include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
+    // @phpstan-ignore isset.offset
     if (isset($conf['local_dir_site'])) {
         @include PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.inc.php';
     }
+    // @phpstan-ignore nullCoalesce.offset
     return $conf['webmaster_id'] ?? false;
 }
 

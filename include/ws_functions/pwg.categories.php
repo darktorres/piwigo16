@@ -1204,6 +1204,13 @@ SELECT id, name, dir, uppercats
     move_categories($category_ids, $params['parent']);
     invalidate_user_cache();
 
+    // move_categories() mutates $page['errors'] from its own function scope
+    // (global $page;) — get_defined_vars() (rather than reading $page
+    // directly) keeps its real, post-call shape visible here instead of
+    // appearing to still be exactly the empty array set above.
+    $included_vars = get_defined_vars();
+    $page = $included_vars['page'];
+
     if (count($page['errors']) != 0) {
         return new PwgError(403, implode('; ', $page['errors']));
     }

@@ -94,9 +94,12 @@ class PersistentFileCache extends PersistentCache
             'data' => $value,
         ]);
 
-        if (@file_put_contents($this->dir . $key . '.cache', $serialized) === false) {
+        $path = $this->dir . $key . '.cache';
+        $written = @file_put_contents($path, $serialized);
+        if ($written === false) {
             mkgetdir($this->dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR);
-            if (@file_put_contents($this->dir . $key . '.cache', $serialized) === false) {
+            $written = @file_put_contents($path, $serialized);
+            if ($written === false) {
                 return false;
             }
         }

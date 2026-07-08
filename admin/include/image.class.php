@@ -59,7 +59,9 @@ interface imageInterface
 class pwg_image
 {
     /**
-     * @var object
+     * @var object|null null until either a 'load_image_library' event
+     *   listener sets it (see the trigger_notify() call in __construct())
+     *   or __construct() itself instantiates the chosen library class
      */
     public $image;
 
@@ -389,7 +391,7 @@ class pwg_image
         }
 
         @exec($conf['ext_imagick_dir'] . self::get_ext_imagick_command() . ' -version', $returnarray);
-        if (is_array($returnarray) and ! empty($returnarray[0]) and preg_match('/ImageMagick/i', $returnarray[0])) {
+        if (! empty($returnarray[0]) and preg_match('/ImageMagick/i', $returnarray[0])) {
             if (preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];
             }
@@ -595,7 +597,7 @@ class image_ext_imagick implements imageInterface
 
         $command = $this->imagickdir . 'identify -format "%wx%h" "' . realpath($this->source_filepath) . '"';
         @exec($command, $returnarray);
-        if (! is_array($returnarray) or empty($returnarray[0]) or ! preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
+        if (empty($returnarray[0]) or ! preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
             die("[External ImageMagick] Corrupt image\n" . var_export($returnarray, true));
         }
 
@@ -734,13 +736,13 @@ class image_ext_imagick implements imageInterface
         $logger->debug($exec, 'i.php');
         @exec($exec, $returnarray);
 
-        if (is_array($returnarray) && (count($returnarray) > 0)) {
+        if (count($returnarray) > 0) {
             $logger->error('', 'i.php', $returnarray);
             foreach ($returnarray as $line) {
                 trigger_error($line, E_USER_WARNING);
             }
         }
-        return is_array($returnarray);
+        return true;
     }
 }
 
@@ -793,10 +795,7 @@ class image_gd implements imageInterface
 
         $result = imagecopymerge($dest, $this->image, 0, 0, $x, $y, $width, $height, 100);
 
-        if ($result !== false) {
-            $this->image = $dest;
-        } else {
-        }
+        $this->image = $dest;
         return $result;
     }
 
@@ -830,10 +829,7 @@ class image_gd implements imageInterface
 
         $result = imagecopyresampled($dest, $this->image, 0, 0, 0, 0, $width, $height, $this->get_width(), $this->get_height());
 
-        if ($result !== false) {
-            $this->image = $dest;
-        } else {
-        }
+        $this->image = $dest;
         return $result;
     }
 

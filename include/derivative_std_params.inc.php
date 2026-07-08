@@ -141,7 +141,9 @@ final class ImageStdParams
     }
 
     /**
-     * @return DerivativeParams[]
+     * @return DerivativeParams[]|string $conf['disabled_derivatives'] is
+     *   stored serialized in the database — callers must safe_unserialize()
+     *   this when it falls through to that fallback
      */
     public static function get_disabled_type_map()
     {

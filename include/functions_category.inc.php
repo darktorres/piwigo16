@@ -285,7 +285,9 @@ function display_select_cat_wrapper(
 /**
  * Returns all subcategory identifiers of given category ids
  *
- * @param int[] $ids
+ * @param array<int|string> $ids several callers (comments.php, admin/rating.php)
+ *   wrap a raw, unvalidated $_GET value directly — the is_numeric() check
+ *   below is a real guard, not dead code
  * @return int[]
  */
 function get_subcat_ids($ids): array

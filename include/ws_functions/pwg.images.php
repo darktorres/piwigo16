@@ -516,7 +516,7 @@ SELECT id, date, author, content
     if ($conf['activate_comments'] and
         $is_commentable and
         (! is_a_guest()
-          or (is_a_guest() and $conf['comments_forall'])
+          or $conf['comments_forall']
         )
     ) {
         $comment_post_data['author'] = stripslashes((string) $user['username']);

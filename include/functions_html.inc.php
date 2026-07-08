@@ -170,9 +170,8 @@ function get_cat_display_name_from_id($cat_id, $url = ''): string
  * urls becomes a tags
  *
  * @param string $content
- * @return string
  */
-function render_comment_content($content): string|array|null
+function render_comment_content($content): string|null
 {
     $content = htmlspecialchars($content);
     $pattern = '/(https?:\/\/\S*)/';
@@ -356,7 +355,14 @@ function fatal_error($msg, $title = null, $show_trace = true): never
     }
     error_reporting(E_ALL);
     trigger_error(strip_tags($msg) . $btrace_msg, E_USER_ERROR);
-    die(0); // just in case
+    // Genuinely reachable, not just defensive: include/error_collector.inc.php
+    // installs a set_error_handler() that intercepts E_USER_ERROR and returns
+    // true (suppressing PHP's normal fatal-and-terminate behavior), so
+    // trigger_error() above can actually return here when that handler is
+    // active (installed for every real request via common.inc.php) — static
+    // analysis has no way to know set_error_handler() changes this.
+    // @phpstan-ignore deadCode.unreachable
+    die(0);
 }
 
 /**

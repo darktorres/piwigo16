@@ -296,7 +296,9 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
      * Registers a web service method.
      * @param string $methodName - the name of the method as seen externally
      * @param callable $callback mixed - php method to be invoked internally
-     * @param array $params - map of allowed parameter names with options
+     * @param array|null $params - map of allowed parameter names with options;
+     *   many real registrations in ws.php (e.g. pwg.getVersion, pwg.getInfos,
+     *   pwg.session.getStatus) explicitly pass null for "no params"
      *    @option mixed default (optional)
      *    @option int flags (optional)
      *      possible values: WS_PARAM_ALLOW_ARRAY, WS_PARAM_FORCE_ARRAY, WS_PARAM_OPTIONAL
@@ -559,7 +561,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     {
         $methods = array_filter(
             $service->_methods,
-            fn (array $m): bool => empty($m['options']['hidden']) || ! $m['options']['hidden']
+            fn (array $m): bool => empty($m['options']['hidden'])
         );
         return [
             'methods' => new PwgNamedArray(array_keys($methods), 'method'),

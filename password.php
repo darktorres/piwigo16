@@ -92,7 +92,7 @@ function process_verification_code(): bool
 
     // check if we want to skip email sending
     // if user is guest, generic or doesn't have email
-    $skip_mail = ! $is_user_found or empty($userdata['email']);
+    $skip_mail = ! $is_user_found || empty($userdata['email']);
 
     // send mail with verification code to user
     switch_lang_to($userdata['language']);

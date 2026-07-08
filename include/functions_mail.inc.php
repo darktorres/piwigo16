@@ -772,15 +772,12 @@ function pwg_mail($to, array $args = [], array $tpl = [])
     unset_make_full_url();
 
     // Send content
+    // 'text/plain' is always present in $contents — $content_type_list
+    // (above) unconditionally includes it; 'text/html' is conditional.
     if (isset($contents['text/html'])) {
         $email->html(move_css_to_body($contents['text/html']));
-
-        if (isset($contents['text/plain'])) {
-            $email->text($contents['text/plain']);
-        }
-    } else {
-        $email->text($contents['text/plain']);
     }
+    $email->text($contents['text/plain']);
 
     if ($conf_mail['use_smtp']) {
         // now we need to split port number

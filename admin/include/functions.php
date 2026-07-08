@@ -899,7 +899,7 @@ DELETE
  */
 function get_uppercat_ids($cat_ids): array
 {
-    if (! is_array($cat_ids) or count($cat_ids) < 1) {
+    if (count($cat_ids) < 1) {
         return [];
     }
 
@@ -1333,7 +1333,9 @@ SELECT status
  * Create a virtual category.
  *
  * @param string $category_name
- * @param int $parent_id
+ * @param int|string|null $parent_id ws_categories_add() passes null by
+ *   default (WS_TYPE_INT param, unset by the caller), admin/cat_list.php
+ *   passes a raw, unvalidated $_GET['parent_id'] string
  * @param array $options
  *    - boolean commentable
  *    - boolean visible
@@ -1555,14 +1557,6 @@ DELETE
  */
 function delete_tags($tag_ids)
 {
-    if (is_numeric($tag_ids)) {
-        $tag_ids = [$tag_ids];
-    }
-
-    if (! is_array($tag_ids)) {
-        return false;
-    }
-
     // we need the list of impacted images, to update their lastmodified
     $query = '
 SELECT
@@ -1719,10 +1713,6 @@ DELETE
  */
 function get_image_tag_ids($image_ids): array
 {
-    if (! is_array($image_ids) and is_int($image_ids)) {
-        $images_ids = [$image_ids];
-    }
-
     if (count($image_ids) == 0) {
         return [];
     }
@@ -2011,10 +2001,17 @@ DELETE
  * This function will preserve ranks.
  *
  * @param int[] $images
- * @param int[] $categories
+ * @param int[]|string $categories admin/picture_modify.php's
+ *   $_POST['associate'] can reach here as a non-array scalar (e.g. a
+ *   literal '0') since check_input_parameter() only validates array-ness
+ *   when the value is non-empty
  */
 function move_images_to_categories($images, $categories)
 {
+    if (! is_array($categories)) {
+        $categories = [];
+    }
+
     if (count($images) == 0) {
         return false;
     }
@@ -2027,7 +2024,7 @@ DELETE ' . IMAGE_CATEGORY_TABLE . '.*
   WHERE id IN (' . implode(',', $images) . ')
 ';
 
-    if (is_array($categories) and count($categories) > 0) {
+    if (count($categories) > 0) {
         $query .= '
     AND category_id NOT IN (' . implode(',', $categories) . ')
 ';
@@ -2038,7 +2035,7 @@ DELETE ' . IMAGE_CATEGORY_TABLE . '.*
 ;';
     pwg_query($query);
 
-    if (is_array($categories) and count($categories) > 0) {
+    if (count($categories) > 0) {
         associate_images_to_categories($images, $categories);
     }
 }
@@ -2125,46 +2122,6 @@ function invalidate_user_cache_nb_tags(): void
 UPDATE ' . USER_CACHE_TABLE . '
   SET nb_available_tags = NULL';
     pwg_query($query);
-}
-
-/**
- * Adds the caracter set to a create table sql query.
- * All CREATE TABLE queries must call this function
- *
- * @param string $query
- * @return string
- */
-function create_table_add_character_set($query)
-{
-    defined('DB_CHARSET') or fatal_error('create_table_add_character_set DB_CHARSET undefined');
-    if ('DB_CHARSET' != '') {
-        if (version_compare(pwg_get_db_version(), '4.1.0', '<')) {
-            return $query;
-        }
-        $charset_collate = ' DEFAULT CHARACTER SET ' . DB_CHARSET;
-        if (DB_COLLATE != '') {
-            $charset_collate .= ' COLLATE ' . DB_COLLATE;
-        }
-        if (is_array($query)) {
-            foreach ($query as $id => $q) {
-                $q = trim($q);
-                $q = trim($q, ';');
-                if (preg_match('/^CREATE\s+TABLE/i', $q)) {
-                    $q .= $charset_collate;
-                }
-                $q .= ';';
-                $query[$id] = $q;
-            }
-        } else {
-            $query = trim($query);
-            $query = trim($query, ';');
-            if (preg_match('/^CREATE\s+TABLE/i', $query)) {
-                $query .= $charset_collate;
-            }
-            $query .= ';';
-        }
-    }
-    return $query;
 }
 
 /**
@@ -2321,7 +2278,9 @@ function fetchRemote($src, &$dest, $get_data = [], $post_data = [], $user_agent 
     }
 
     // Initialize $dest
-    is_resource($dest) or $dest = '';
+    if (! is_resource($dest)) {
+        $dest = '';
+    }
 
     $headers = [
         'User-Agent' => $user_agent,
@@ -2659,8 +2618,11 @@ function order_by_name($element_ids, array $name): array
 /**
  * Grant access to a list of categories for a list of users.
  *
- * @param int[] $category_ids
- * @param int[] $user_ids
+ * @param int|numeric-string|int[] $category_ids may be a single scalar id
+ *   (e.g. admin/cat_perm.php's $page['cat'], admin/include/functions.php's
+ *   own $inserted_id) rather than an array
+ * @param int|numeric-string|int[] $user_ids may be a single scalar id (e.g.
+ *   admin/user_perm.php's $page['user'], sourced from $_GET['user_id'])
  */
 function add_permission_on_category($category_ids, $user_ids): void
 {
@@ -2741,7 +2703,8 @@ SELECT
 /**
  * Delete all derivative files for one or several types
  *
- * @param 'all'|int[] $types
+ * @param 'all'|string|string[] $types type name(s) (e.g. IMG_SQUARE), not
+ *   ids — admin/maintenance_actions.php passes a single exploded type name
  */
 function clear_derivative_cache($types = 'all'): void
 {
@@ -3111,10 +3074,6 @@ function save_images_order($category_id, $images): void
  */
 function update_images_lastmodified($image_ids): void
 {
-    if (! is_array($image_ids) and is_int($image_ids)) {
-        $images_ids = [$image_ids];
-    }
-
     if (count($image_ids) == 0) {
         return;
     }
@@ -3161,7 +3120,9 @@ function number_format_human_readable($numbers): string
  * Get infos related to an image
  *
  * @since 2.9
- * @param int $image_id
+ * @param int|string $image_id several callers (admin/picture_modify.php,
+ *   admin/photo.php, admin/photos_add_direct.php) pass a raw, unvalidated
+ *   $_GET value directly
  * @param bool $die_on_missing
  */
 function get_image_infos($image_id, $die_on_missing = false)
@@ -3206,10 +3167,9 @@ function get_cache_size_derivatives($path): array
                 }
 
                 if (is_file($path . '/' . $node)) {
-                    if ($split = explode('-', $node)) {
-                        $size_code = substr(end($split), 0, 2);
-                        @$msizes[$size_code] += filesize($path . '/' . $node);
-                    }
+                    $split = explode('-', $node);
+                    $size_code = substr(end($split), 0, 2);
+                    @$msizes[$size_code] += filesize($path . '/' . $node);
                 } elseif (is_dir($path . '/' . $node)) {
                     $tmp_msizes = get_cache_size_derivatives($path . '/' . $node);
                     foreach ($tmp_msizes as $size_key => $value) {

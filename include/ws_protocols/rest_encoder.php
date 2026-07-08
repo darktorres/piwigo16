@@ -12,11 +12,6 @@ declare(strict_types=1);
 class PwgXmlWriter
 {
     /**
-     * @var true
-     */
-    public $_indent;
-
-    /**
      * @var '	'
      */
     public $_indentStr;
@@ -48,7 +43,6 @@ class PwgXmlWriter
         $this->_indentLevel = 0;
 
         $this->_encodedXml = '';
-        $this->_indent = true;
         $this->_indentStr = "\t";
     }
 
@@ -133,15 +127,12 @@ class PwgXmlWriter
 
     public function _eol_indent(): void
     {
-        if ($this->_indent) {
-            $this->_output("\n");
-        }
+        $this->_output("\n");
     }
 
     public function _indent(): void
     {
-        if ($this->_indent and
-            $this->_indentLevel > count($this->_elementStack)) {
+        if ($this->_indentLevel > count($this->_elementStack)) {
             $this->_output(
                 str_repeat((string) $this->_indentStr, count($this->_elementStack))
             );

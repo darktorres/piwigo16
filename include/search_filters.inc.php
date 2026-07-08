@@ -94,7 +94,7 @@ if ($page['section'] == 'search' and isset($page['search_details'])) {
 
         // in case the search has forbidden tags for current user, we need to filter the search rule
         $my_search['fields']['tags']['words'] = array_intersect($my_search['fields']['tags']['words'], $filter_tag_ids);
-    } elseif (isset($my_search['fields']['tags']) and ! ($display_filters['tags']['access'])) {
+    } elseif (isset($my_search['fields']['tags'])) {
         unset($my_search['fields']['tags']);
     }
 
@@ -140,7 +140,7 @@ SELECT
 
         // in case the search has forbidden authors for current user, we need to filter the search rule
         $my_search['fields']['author']['words'] = array_intersect($my_search['fields']['author']['words'], $author_names);
-    } elseif (isset($my_search['fields']['author']) and ! ($display_filters['author']['access'])) {
+    } elseif (isset($my_search['fields']['author'])) {
         unset($my_search['fields']['author']);
     }
 
@@ -235,7 +235,7 @@ SELECT
 
         $template->assign('LIST_DATE_POSTED', $date_posted['list_of_dates']);
         $template->assign('DATE_POSTED', $counters);
-    } elseif (isset($my_search['fields']['date_posted']) and ! ($display_filters['post_date']['access'])) {
+    } elseif (isset($my_search['fields']['date_posted'])) {
         unset($my_search['fields']['date_posted']);
     }
 
@@ -332,7 +332,7 @@ SELECT
 
         $template->assign('LIST_DATE_CREATED', $date_created['list_of_dates']);
         $template->assign('DATE_CREATED', $counters);
-    } elseif (isset($my_search['fields']['date_created']) and ! ($display_filters['creation_date']['access'])) {
+    } elseif (isset($my_search['fields']['date_created'])) {
         unset($my_search['fields']['date_created']);
     }
 
@@ -390,7 +390,7 @@ SELECT
 
         // in case the search has forbidden added_by users for current user, we need to filter the search rule
         $my_search['fields']['added_by'] = array_intersect($my_search['fields']['added_by'], $user_ids);
-    } elseif (isset($my_search['fields']['added_by']) and ! ($display_filters['added_by']['access'])) {
+    } elseif (isset($my_search['fields']['added_by'])) {
         unset($my_search['fields']['added_by']);
     }
 
@@ -423,7 +423,7 @@ SELECT
             // in case the search has forbidden albums for current user, we need to filter the search rule
             $my_search['fields']['cat']['words'] = array_intersect($my_search['fields']['cat']['words'], array_keys($fullname_of));
         }
-    } elseif (isset($my_search['fields']['cat']) and ! ($display_filters['album']['access'])) {
+    } elseif (isset($my_search['fields']['cat'])) {
         unset($my_search['fields']['cat']);
     }
 
@@ -470,7 +470,7 @@ SELECT
         } else {
             $template->assign('FILETYPES', $all_exts);
         }
-    } elseif (isset($my_search['fields']['filetypes']) and ! ($display_filters['file_type']['access'])) {
+    } elseif (isset($my_search['fields']['filetypes'])) {
         unset($my_search['fields']['filetypes']);
     }
 
@@ -524,7 +524,7 @@ SELECT
                 }
             }
             $template->assign('RATING', $ratings);
-        } elseif (isset($my_search['fields']['ratings']) and ! ($display_filters['rating']['access'])) {
+        } elseif (isset($my_search['fields']['ratings'])) {
             unset($my_search['fields']['ratings']);
         }
     } else {
@@ -637,7 +637,7 @@ SELECT
             }
         }
         $template->assign('RATIOS', $ratios);
-    } elseif (isset($my_search['fields']['ratios']) and ! ($display_filters['ratio']['access'])) {
+    } elseif (isset($my_search['fields']['ratios'])) {
         unset($my_search['fields']['ratios']);
     }
 

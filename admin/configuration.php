@@ -353,13 +353,22 @@ switch ($page['section']) {
 
         function order_by_is_local(): bool
         {
+            // include/config_default.inc.php never sets local_dir_site/
+            // order_by/order_by_inside_category (confirmed: no such keys in
+            // that file at all) — they only ever come from an optional,
+            // site-owner-authored local/config/config.inc.php loaded at
+            // runtime, whose content isn't knowable statically. Whether
+            // $conf ends up with these keys genuinely depends on a file
+            // that may not exist and isn't part of this codebase.
             $conf = [];
             include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
             @include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
+            // @phpstan-ignore isset.offset
             if (isset($conf['local_dir_site'])) {
                 @include PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'config/config.inc.php';
             }
 
+            // @phpstan-ignore isset.offset, isset.offset, logicalOr.alwaysFalse
             return isset($conf['order_by']) or isset($conf['order_by_inside_category']);
         }
 
@@ -529,11 +538,11 @@ switch ($page['section']) {
                 $tpl_var['must_square'] = ($type == IMG_SQUARE ? true : false);
                 $tpl_var['must_enable'] = ($type == IMG_SQUARE || $type == IMG_THUMB || $type == $conf['derivative_default_size']) ? true : false;
 
-                if ($params = @$enabled[$type]) {
+                if ($params = $enabled[$type] ?? null) {
                     $tpl_var['enabled'] = true;
                 } else {
                     $tpl_var['enabled'] = false;
-                    $params = @$disabled[$type];
+                    $params = $disabled[$type] ?? null;
                 }
 
                 if ($params) {

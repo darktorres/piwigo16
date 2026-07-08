@@ -12,7 +12,9 @@ declare(strict_types=1);
 /**
  * Checks if an email is well formed and not already in use.
  *
- * @param int $user_id
+ * @param int|null $user_id null when checking an address with no user yet
+ *   (e.g. install.php's admin account, function_user.inc.php's own
+ *   register_user())
  * @param string $mail_address
  * @return string|void error message or nothing
  */
@@ -698,7 +700,7 @@ SELECT
  * Returns a array with default user valuees.
  *
  * @param $convert_str ceonferts 'true' and 'false' into booleans
- * @return array
+ * @return array|false false if the default user row doesn't exist
  */
 function get_default_user_info($convert_str = true)
 {
@@ -1113,6 +1115,13 @@ function pwg_phpass_verify_legacy(
             $value |= ord($computed[$i]) << 16;
         }
         $output .= $itoa64[($value >> 12) & 0x3F];
+        // Byte-for-byte port of the canonical phpass encoding loop
+        // (openwall.com/phpass) — this bounds check is provably redundant
+        // for our always-exactly-16-byte $computed (the loop's first
+        // `$i++ >= 16` check above always catches that boundary first), but
+        // is kept to match the reference algorithm exactly rather than
+        // hand-trim security-sensitive, publicly-audited crypto code.
+        // @phpstan-ignore greaterOrEqual.alwaysFalse
         if ($i++ >= 16) {
             break;
         }
@@ -1620,9 +1629,7 @@ function get_sql_condition_FandF(
                 }
                 break;
             default:
-
                 die('Unknow condition');
-                break;
 
         }
     }

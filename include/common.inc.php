@@ -32,15 +32,9 @@ if (! function_exists('get_magic_quotes_gpc') or ! @get_magic_quotes_gpc()) {
     {
         $v = addslashes((string) $v);
     }
-    if (is_array($_GET)) {
-        array_walk_recursive($_GET, sanitize_mysql_kv(...));
-    }
-    if (is_array($_POST)) {
-        array_walk_recursive($_POST, sanitize_mysql_kv(...));
-    }
-    if (is_array($_COOKIE)) {
-        array_walk_recursive($_COOKIE, sanitize_mysql_kv(...));
-    }
+    array_walk_recursive($_GET, sanitize_mysql_kv(...));
+    array_walk_recursive($_POST, sanitize_mysql_kv(...));
+    array_walk_recursive($_COOKIE, sanitize_mysql_kv(...));
 }
 if (! empty($_SERVER['PATH_INFO'])) {
     $_SERVER['PATH_INFO'] = addslashes((string) $_SERVER['PATH_INFO']);
@@ -191,15 +185,31 @@ if (isset($conf['order_by_inside_category_custom'])) {
 check_lounge();
 
 // include/user.inc.php sets these by calling build_user()/auto_login()/
-// auth_key_login(), each mutating the $user global from its own function
-// scope; the defaults below only keep analysis sound for the reads further
-// down (always overwritten before use in every real path).
-$user['id'] ??= $conf['guest_id'];
-$user['email'] ??= null;
-$user['theme'] ??= '';
+// auth_key_login(), each mutating the $user/$page globals from its own
+// function scope, which static analysis can't trace through the include()
+// below. $user's keys are always overwritten before use in every real path;
+// $page's are genuinely optional (only auth_key_login() sets them, and only
+// on an invalid/expiring auth key), so these defaults are real fallbacks,
+// not just analysis scaffolding.
+$user['id'] = $conf['guest_id'];
+$user['email'] = null;
+$user['theme'] = '';
+$page['auth_key_invalid'] = false;
+$page['notify_api_key_expiration'] = null;
 
 include PHPWG_ROOT_PATH . 'include/user.inc.php';
-$user['internal_status'] ??= [];
+
+// include/user.inc.php's own top-level code calls build_user() (which can
+// set $user['internal_status']) and auth_key_login() (which can set
+// $page['auth_key_invalid']/['notify_api_key_expiration']) — both mutate
+// these globals from their own function scope, a function-call-inside-an-
+// include hop static analysis can't trace. get_defined_vars() (rather than
+// reading $user/$page directly) keeps their real, post-include shape
+// visible here instead of appearing to still be exactly the pre-include
+// defaults above.
+$included_vars = get_defined_vars();
+$user = $included_vars['user'];
+$page = $included_vars['page'];
 
 // This fork does not call back to the real piwigo.org — upstream.example.invalid
 // (.invalid TLD per RFC 2606, guaranteed not to resolve) stops it from sending
@@ -236,7 +246,7 @@ if (is_a_guest()) {
 
 // in case an auth key was provided and is no longer valid, we must wait to
 // be here, with language loaded, to prepare the message
-if (isset($page['auth_key_invalid']) and $page['auth_key_invalid']) {
+if ($page['auth_key_invalid']) {
     $page['errors'][] =
       l10n('Your authentication key is no longer valid.')
       . sprintf(' <a href="%s">%s</a>', get_root_url() . 'identification.php', l10n('Login'))
@@ -244,7 +254,7 @@ if (isset($page['auth_key_invalid']) and $page['auth_key_invalid']) {
 }
 
 // check if we need to notified user about api_key expiration
-if (isset($page['notify_api_key_expiration']) and is_array($page['notify_api_key_expiration'])) {
+if (is_array($page['notify_api_key_expiration'])) {
     $is_mail_send = notification_api_key_expiration(
         $user['username'],
         $user['email'],

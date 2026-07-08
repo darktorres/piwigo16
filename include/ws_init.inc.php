@@ -29,38 +29,39 @@ if (! isset($responseFormat)) {
 
 $service = new PwgServer();
 
-if ($requestFormat !== null) {
-    $handler = null;
-    switch ($requestFormat) {
-        case 'rest':
-            include_once PHPWG_ROOT_PATH . 'include/ws_protocols/rest_handler.php';
-            $handler = new PwgRestRequestHandler();
-            break;
-    }
-    $service->setHandler($requestFormat, $handler);
+// $requestFormat is hardcoded to 'rest' above; the format-selection switch
+// stays for parity with $responseFormat's structure and in case more request
+// formats are ever added.
+$handler = null;
+switch ($requestFormat) {
+    case 'rest':
+        include_once PHPWG_ROOT_PATH . 'include/ws_protocols/rest_handler.php';
+        $handler = new PwgRestRequestHandler();
+        break;
 }
+$service->setHandler($requestFormat, $handler);
 
-if ($responseFormat !== null) {
-    $encoder = null;
-    switch ($responseFormat) {
-        case 'rest':
-            include_once PHPWG_ROOT_PATH . 'include/ws_protocols/rest_encoder.php';
-            $encoder = new PwgRestEncoder();
-            break;
-        case 'php':
-            include_once PHPWG_ROOT_PATH . 'include/ws_protocols/php_encoder.php';
-            $encoder = new PwgSerialPhpEncoder();
-            break;
-        case 'json':
-            include_once PHPWG_ROOT_PATH . 'include/ws_protocols/json_encoder.php';
-            $encoder = new PwgJsonEncoder();
-            break;
-        case 'xmlrpc':
-            include_once PHPWG_ROOT_PATH . 'include/ws_protocols/xmlrpc_encoder.php';
-            $encoder = new PwgXmlRpcEncoder();
-            break;
-    }
-    $service->setEncoder($responseFormat, $encoder);
+// $responseFormat can never be null here: it's either $_GET['format'] or,
+// per the isset() fallback above, $requestFormat ('rest').
+$encoder = null;
+switch ($responseFormat) {
+    case 'rest':
+        include_once PHPWG_ROOT_PATH . 'include/ws_protocols/rest_encoder.php';
+        $encoder = new PwgRestEncoder();
+        break;
+    case 'php':
+        include_once PHPWG_ROOT_PATH . 'include/ws_protocols/php_encoder.php';
+        $encoder = new PwgSerialPhpEncoder();
+        break;
+    case 'json':
+        include_once PHPWG_ROOT_PATH . 'include/ws_protocols/json_encoder.php';
+        $encoder = new PwgJsonEncoder();
+        break;
+    case 'xmlrpc':
+        include_once PHPWG_ROOT_PATH . 'include/ws_protocols/xmlrpc_encoder.php';
+        $encoder = new PwgXmlRpcEncoder();
+        break;
 }
+$service->setEncoder($responseFormat, $encoder);
 
 set_make_full_url();

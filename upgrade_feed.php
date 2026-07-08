@@ -10,8 +10,8 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 
 // check php version
-if (version_compare(PHP_VERSION, '5', '<')) {
-    die('Piwigo requires PHP 5 or above.');
+if (version_compare(PHP_VERSION, '8.5.0', '<')) {
+    die('Piwigo requires PHP 8.5 or above.');
 }
 
 define('PHPWG_ROOT_PATH', './');

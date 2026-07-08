@@ -45,10 +45,10 @@ $cookies = dirname(__DIR__) . '/cookies.txt';
 
 // Connection to mySQL
 
+// mysqli's default report mode (MYSQLI_REPORT_ERROR|MYSQLI_REPORT_STRICT since
+// PHP 8.1) throws on connection failure, so a plain constructor call here
+// either succeeds or never reaches the next line.
 $mysqli = new mysqli('localhost', $option['db_user'], $option['db_password']);
-if (! $mysqli) {
-    die('Cannot connect to mySQL');
-}
 
 // Check if database name is set otherwise we use a random name.
 // Then we create the database.
@@ -134,7 +134,12 @@ function install_piwigo(array $option): void
 
     require_once PHPWG_ROOT_PATH . '/local/config/database.inc.php';
 
-    if (PHPWG_INSTALLED === true) {
+    // Every define('PHPWG_INSTALLED', ...) call in this codebase always
+    // writes true, so a bare reference here would either be always-true or,
+    // if the generated database.inc.php lacks the define entirely, a fatal
+    // undefined-constant error — defined() is the real presence check, the
+    // same one used everywhere else PHPWG_INSTALLED is consulted.
+    if (defined('PHPWG_INSTALLED')) {
         echo "Installation OK!\n";
     } else {
         echo "Installation KO!\n";

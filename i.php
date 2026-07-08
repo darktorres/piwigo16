@@ -155,7 +155,7 @@ function parse_custom_params($tokens): \DerivativeParams
     return new DerivativeParams(new SizingParams($size, $crop, $min_size));
 }
 
-function parse_request(): void
+function parse_request(): \DerivativeParams
 {
     global $conf, $page;
 
@@ -245,6 +245,8 @@ function parse_request(): void
     $page['src_location'] = $req . $ext;
     $page['src_path'] = PHPWG_ROOT_PATH . $page['src_location'];
     $page['src_url'] = $page['root_path'] . $page['src_location'];
+
+    return $page['derivative_params'];
 }
 
 function try_switch_source(DerivativeParams $params, $original_mtime): bool
@@ -409,7 +411,6 @@ $page['root_path'] = '';
 $page['derivative_path'] = '';
 $page['derivative_ext'] = '';
 $page['derivative_type'] = null;
-$page['derivative_params'] = null;
 $page['coi'] = null;
 $page['src_location'] = '';
 $page['src_path'] = '';
@@ -417,13 +418,14 @@ $page['src_url'] = '';
 $page['original_size'] = null;
 $page['rotation_angle'] = 0;
 
-parse_request();
+// parse_request() always either sets $page['derivative_params'] itself
+// (both non-error paths do) or calls ierror(), which never returns — so its
+// return value here is never null; returning it directly (rather than
+// re-reading $page['derivative_params'] afterwards) keeps this typed
+// soundly, since PHPStan can't trace the global mutation back through the
+// call.
+$params = parse_request();
 // var_export($page);
-
-$params = $page['derivative_params'];
-if (! $params instanceof DerivativeParams) {
-    ierror('invalid derivative params', 500);
-}
 
 $src_mtime = @filemtime($page['src_path']);
 if ($src_mtime === false) {

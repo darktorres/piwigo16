@@ -104,8 +104,8 @@ if (isset($page['search'])) {
       pwg_get_cookie_var('display_thumbnail', 'no_display_thumbnail');
 }
 
-$form_param['ip'] = $_GET['filter_ip'] ?? $form['ip'] ?? null;
-$form_param['image_id'] = $_GET['filter_image_id'] ?? $form['image_id'] ?? null;
+$form_param['ip'] = $_GET['filter_ip'] ?? null;
+$form_param['image_id'] = $_GET['filter_image_id'] ?? null;
 $form_param['user_id'] = $_GET['filter_user_id'] ?? '-1';
 
 if (isset($_GET['filter_ip']) or isset($_GET['filter_image_id']) or isset($_GET['filter_user_id'])) {
@@ -129,7 +129,6 @@ $template->assign(
         'USER_ID' => $form_param['user_id'],
         'USER_NAME' => @$form_param['user_name'],
         'IMAGE_ID' => $form_param['image_id'],
-        'FILENAME' => $form['filename'] ?? null,
         'IP' => $form_param['ip'],
         'START' => @$form['start'],
         'END' => @$form['end'],

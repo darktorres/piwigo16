@@ -201,10 +201,9 @@ SELECT DISTINCT ';
     }
 
     if (isset($display['ui.last_visit'])) {
-        if (! $first) {
-            $query .= ', ';
-        }
-        $query .= 'ui.last_visit_from_history AS last_visit_from_history';
+        // $display always has at least the 'id' entry set above the foreach,
+        // so $first is always false by the time we get here.
+        $query .= ', ui.last_visit_from_history AS last_visit_from_history';
     }
     $query .= '
   FROM ' . USERS_TABLE . ' AS u
@@ -985,7 +984,7 @@ function ws_edit_api_key(array $params, &$service)
  * @since 15
  * @param mixed[] $params
  */
-function ws_get_api_key(array $params, &$service): \PwgError|array|false
+function ws_get_api_key(array $params, &$service): \PwgError|array|string
 {
     global $user;
 

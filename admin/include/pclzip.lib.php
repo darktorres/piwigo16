@@ -47,15 +47,6 @@ if (! defined('PCLZIP_SEPARATOR')) {
     define('PCLZIP_SEPARATOR', ',');
 }
 
-// ----- Error configuration
-// 0 : PclZip Class integrated error handling
-// 1 : PclError external library error handling. By enabling this
-//     you must ensure that you have included PclError library.
-// [2,...] : reserved for futur use
-if (! defined('PCLZIP_ERROR_EXTERNAL')) {
-    define('PCLZIP_ERROR_EXTERNAL', 0);
-}
-
 // ----- Optional static temporary directory
 //       By default temporary files are generated in the script current
 //       path.
@@ -1297,11 +1288,7 @@ class PclZip
     // --------------------------------------------------------------------------------
     public function errorCode()
     {
-        if (PCLZIP_ERROR_EXTERNAL == 1) {
-            return PclErrorCode();
-        } else {
-            return $this->error_code;
-        }
+        return $this->error_code;
     }
     // --------------------------------------------------------------------------------
 
@@ -1357,14 +1344,10 @@ class PclZip
     // --------------------------------------------------------------------------------
     public function errorInfo($p_full = false)
     {
-        if (PCLZIP_ERROR_EXTERNAL == 1) {
-            return PclErrorString();
+        if ($p_full) {
+            return $this->errorName(true) . ' : ' . $this->error_string;
         } else {
-            if ($p_full) {
-                return $this->errorName(true) . ' : ' . $this->error_string;
-            } else {
-                return $this->error_string . ' [code ' . $this->error_code . ']';
-            }
+            return $this->error_string . ' [code ' . $this->error_code . ']';
         }
     }
     // --------------------------------------------------------------------------------
@@ -1676,7 +1659,6 @@ class PclZip
                     // each index item in the list must be a couple with a start and
                     // an end value : [0,3], [5-5], [8-10], ...
                     // ----- Check the format of each item
-                    $v_sort_flag = false;
                     $v_sort_value = 0;
                     for ($j = 0; $j < sizeof($v_work_list); $j++) {
                         // ----- Explode the item
@@ -1705,8 +1687,6 @@ class PclZip
 
                         // ----- Look for list sort
                         if ($v_result_list[$p_options_list[$i]][$j]['start'] < $v_sort_value) {
-                            $v_sort_flag = true;
-
                             // ----- TBC : An automatic sort should be writen ...
                             // ----- Error log
                             self::privErrorLog(PCLZIP_ERR_INVALID_OPTION_VALUE, "Invalid order of index range for option '" . PclZipUtilOptionText($p_options_list[$i]) . "'");
@@ -1715,11 +1695,6 @@ class PclZip
                             return self::errorCode();
                         }
                         $v_sort_value = $v_result_list[$p_options_list[$i]][$j]['start'];
-                    }
-
-                    // ----- Sort the items
-                    if ($v_sort_flag) {
-                        // TBC : To Be Completed
                     }
 
                     // ----- Next option
@@ -4419,25 +4394,20 @@ class PclZip
         // ----- Extract properties
 
         // ----- Recuperate date in UNIX format
-        // if ($p_header['mdate'] && $p_header['mtime'])
-        // TBC : bug : this was ignoring time with 0/0/0
-        if (1) {
-            // ----- Extract time
-            $v_hour = ($p_header['mtime'] & 0xF800) >> 11;
-            $v_minute = ($p_header['mtime'] & 0x07E0) >> 5;
-            $v_seconde = ($p_header['mtime'] & 0x001F) * 2;
+        // TBC : bug : this used to ignore time with 0/0/0 when gated behind
+        // `if ($p_header['mdate'] && $p_header['mtime'])` — always run instead.
+        // ----- Extract time
+        $v_hour = ($p_header['mtime'] & 0xF800) >> 11;
+        $v_minute = ($p_header['mtime'] & 0x07E0) >> 5;
+        $v_seconde = ($p_header['mtime'] & 0x001F) * 2;
 
-            // ----- Extract date
-            $v_year = (($p_header['mdate'] & 0xFE00) >> 9) + 1980;
-            $v_month = ($p_header['mdate'] & 0x01E0) >> 5;
-            $v_day = $p_header['mdate'] & 0x001F;
+        // ----- Extract date
+        $v_year = (($p_header['mdate'] & 0xFE00) >> 9) + 1980;
+        $v_month = ($p_header['mdate'] & 0x01E0) >> 5;
+        $v_day = $p_header['mdate'] & 0x001F;
 
-            // ----- Get UNIX date format
-            $p_header['mtime'] = @mktime($v_hour, $v_minute, $v_seconde, $v_month, $v_day, $v_year);
-
-        } else {
-            $p_header['mtime'] = time();
-        }
+        // ----- Get UNIX date format
+        $p_header['mtime'] = @mktime($v_hour, $v_minute, $v_seconde, $v_month, $v_day, $v_year);
 
         // ----- Set the stored filename
         $p_header['stored_filename'] = $p_header['filename'];
@@ -4611,24 +4581,10 @@ class PclZip
         $v_data = unpack('vdisk/vdisk_start/vdisk_entries/ventries/Vsize/Voffset/vcomment_size', $v_binary_data);
 
         // ----- Check the global size
-        if (($v_pos + $v_data['comment_size'] + 18) != $v_size) {
-
-            // ----- Removed in release 2.2 see readme file
-            // The check of the file size is a little too strict.
-            // Some bugs where found when a zip is encrypted/decrypted with 'crypt'.
-            // While decrypted, zip has training 0 bytes
-            if (0) {
-                // ----- Error log
-                self::privErrorLog(
-                    PCLZIP_ERR_BAD_FORMAT,
-                    'The central dir is not at the end of the archive.'
-                                     . ' Some trailing bytes exists after the archive.'
-                );
-
-                // ----- Return
-                return self::errorCode();
-            }
-        }
+        // The check of the file size used to be done here, but was removed in
+        // release 2.2 (see readme file): it was a little too strict — some
+        // bugs were found when a zip is encrypted/decrypted with 'crypt',
+        // since a decrypted zip has trailing 0 bytes.
 
         // ----- Get comment
         $v_comment = $v_data['comment_size'] != 0
@@ -4975,10 +4931,8 @@ class PclZip
         // ----- Just a check
         if ($p_parent_dir != $p_dir) {
             // ----- Look for parent directory
-            if ($p_parent_dir != '') {
-                if (($v_result = $this->privDirCheck($p_parent_dir)) != 1) {
-                    return $v_result;
-                }
+            if (($v_result = $this->privDirCheck($p_parent_dir)) != 1) {
+                return $v_result;
             }
         }
 
@@ -5234,12 +5188,8 @@ class PclZip
     // --------------------------------------------------------------------------------
     public function privErrorLog($p_error_code = 0, $p_error_string = ''): void
     {
-        if (PCLZIP_ERROR_EXTERNAL == 1) {
-            PclError($p_error_code, $p_error_string);
-        } else {
-            $this->error_code = $p_error_code;
-            $this->error_string = $p_error_string;
-        }
+        $this->error_code = $p_error_code;
+        $this->error_string = $p_error_string;
     }
     // --------------------------------------------------------------------------------
 
@@ -5250,12 +5200,8 @@ class PclZip
     // --------------------------------------------------------------------------------
     public function privErrorReset(): void
     {
-        if (PCLZIP_ERROR_EXTERNAL == 1) {
-            PclErrorReset();
-        } else {
-            $this->error_code = 0;
-            $this->error_string = '';
-        }
+        $this->error_code = 0;
+        $this->error_string = '';
     }
     // --------------------------------------------------------------------------------
 
@@ -5267,29 +5213,10 @@ class PclZip
     // --------------------------------------------------------------------------------
     public function privDisableMagicQuotes(): int
     {
-        $v_result = 1;
-
-        // ----- Look if function exists
-        if ((! function_exists('get_magic_quotes_runtime'))
-            || (! function_exists('set_magic_quotes_runtime'))) {
-            return $v_result;
-        }
-
-        // ----- Look if already done
-        if ($this->magic_quotes_status != -1) {
-            return $v_result;
-        }
-
-        // ----- Get and memorize the magic_quote value
-        $this->magic_quotes_status = @get_magic_quotes_runtime();
-
-        // ----- Disable magic_quotes
-        if ($this->magic_quotes_status == 1) {
-            @set_magic_quotes_runtime(0);
-        }
-
-        // ----- Return
-        return $v_result;
+        // magic_quotes_runtime (and its get_/set_ accessors) was removed in
+        // PHP 8.0; this project's minimum PHP (8.5) never has it, so this is
+        // permanently a no-op.
+        return 1;
     }
     // --------------------------------------------------------------------------------
 
@@ -5301,26 +5228,10 @@ class PclZip
     // --------------------------------------------------------------------------------
     public function privSwapBackMagicQuotes(): int
     {
-        $v_result = 1;
-
-        // ----- Look if function exists
-        if ((! function_exists('get_magic_quotes_runtime'))
-            || (! function_exists('set_magic_quotes_runtime'))) {
-            return $v_result;
-        }
-
-        // ----- Look if something to do
-        if ($this->magic_quotes_status != -1) {
-            return $v_result;
-        }
-
-        // ----- Swap back magic_quotes
-        if ($this->magic_quotes_status == 1) {
-            @set_magic_quotes_runtime($this->magic_quotes_status);
-        }
-
-        // ----- Return
-        return $v_result;
+        // magic_quotes_runtime (and its get_/set_ accessors) was removed in
+        // PHP 8.0; this project's minimum PHP (8.5) never has it, so this is
+        // permanently a no-op.
+        return 1;
     }
     // --------------------------------------------------------------------------------
 
@@ -5447,7 +5358,9 @@ function PclZipUtilPathInclusion($p_dir, $p_path): int
         }
 
         // ----- Compare the items
-        if (($v_list_dir[$i] != $v_list_path[$j]) && ($v_list_dir[$i] != '') && ($v_list_path[$j] != '')) {
+        // (both sides are already known non-empty here: the empty-string
+        // cases above `continue` past this point)
+        if ($v_list_dir[$i] != $v_list_path[$j]) {
             $v_result = 0;
         }
 
@@ -5571,7 +5484,7 @@ function PclZipUtilRename($p_src, $p_dest): int
 // Return Values :
 //   The option text value.
 // --------------------------------------------------------------------------------
-function PclZipUtilOptionText($p_option): int|string
+function PclZipUtilOptionText($p_option): string
 {
 
     $v_list = get_defined_constants();

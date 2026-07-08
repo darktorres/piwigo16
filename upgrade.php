@@ -317,7 +317,6 @@ $mysql_changes = [];
 
 // check php version
 if (version_compare(PHP_VERSION, REQUIRED_PHP_VERSION, '<')) {
-    // include(PHPWG_ROOT_PATH.'install/php5_apache_configuration.php'); // to remove, with all its related content
     $page['errors'][] = l10n('PHP version %s required (you are running on PHP %s)', REQUIRED_PHP_VERSION, PHP_VERSION);
 }
 
@@ -334,6 +333,14 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
         $page['upgrade_start'] = get_moment();
         $conf['die_on_sql_error'] = false;
         include $upgrade_file;
+        // install/upgrade_*.php scripts (e.g. upgrade_1.3.1.php) can
+        // array_push() onto $mysql_changes from this same top-level scope —
+        // get_defined_vars() (rather than reading $mysql_changes directly)
+        // keeps its real, post-include shape visible here instead of
+        // appearing to still be the empty array set above.
+        $included_vars = get_defined_vars();
+        $mysql_changes = $included_vars['mysql_changes'];
+
         conf_update_param('piwigo_db_version', get_branch_from_version(PHPWG_VERSION));
 
         // Conf delete param on last major update for whats new popin to be displayed when changing major version

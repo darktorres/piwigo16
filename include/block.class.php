@@ -233,7 +233,9 @@ class DisplayBlock
     protected $_position;
 
     /**
-     * @var string
+     * @var string|null null until set_title() is called (the constructor
+     *   never sets it) — get_title() falls back to the registered block's
+     *   own name in that case
      */
     protected $_title;
 

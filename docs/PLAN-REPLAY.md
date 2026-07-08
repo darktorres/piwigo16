@@ -1163,13 +1163,13 @@ vendored libs that cause dynamic property warnings.
 #### Commit ordering
 
 One commit per step, each tracked as a step in `docs/plan/manifest.yaml` — do **not** silently
-merge or drop steps. The Rector passes 12–15 are distinct, and the `DateTime` pass (14) is the
-one most easily lost when 13 and 15 are combined; if a step is genuinely deferred it must be
-recorded as `skipped(reason)`, not dropped. (Vendor-swap steps 2–10 may leave the vendored file
-dormant and batch the physical file deletions into the ECS commit (11), but each swap commit must
-already have stopped *referencing* the vendored lib.) Full test suite after each (browser E2E at
-minimum; full `vendor/bin/pest` for Rector/PHPStan steps). Order matters — each step builds on
-the previous.
+merge or drop steps. The Rector passes 12–14 are distinct and must land as separate commits, not
+combined; if a step is genuinely deferred (as the former `DateTime` step was — see the note after
+step 16) it must be recorded as a doc note explaining why and where the work moved, not silently
+dropped. (Vendor-swap steps 2–10 may leave the vendored file dormant and batch the physical file
+deletions into the ECS commit (11), but each swap commit must already have stopped *referencing*
+the vendored lib.) Full test suite after each (browser E2E at minimum; full `vendor/bin/pest` for
+Rector/PHPStan steps). Order matters — each step builds on the previous.
 
 1. Fix 4 fatal `utf8_encode` calls (replace with `mb_convert_encoding`)
 2. Remove vendored Smarty (`include/smarty/`, 173 files) + `composer require smarty/smarty ^5` (Smarty stays as rendering engine until P29)
@@ -1229,14 +1229,30 @@ the previous.
     browser E2E + contract suites after it to catch any fixer that changed behaviour, not just layout
 12. Rector `withPhpSets(php85: true)` (full tests)
 13. Rector `typeDeclarations: true` (full tests)
-14. Rector `DateTimeToDateTimeImmutableRector` — replaces 105 legacy
-    `date()` / `strftime()` / `time()` / `mktime()` calls with
-    `DateTimeImmutable` equivalents. Rector handles the mechanical rewrite;
-    review each hunk for format-string correctness. `strftime()` (removed
-    in 8.1) → `IntlDateFormatter` or `DateTimeImmutable::format()`.
-15. Rector `instanceOf: true` (full tests)
-16. `declare(strict_types=1)` on all first-party files (after Rector type declarations so signatures are already tightened)
-17. PHPStan L0→L10: one commit per level, fixing all errors at that level before advancing (each commit includes the neon level bump)
+14. Rector `instanceOf: true` (full tests)
+15. `declare(strict_types=1)` on all first-party files (after Rector type declarations so signatures are already tightened)
+16. PHPStan L0→L10: one commit per level, fixing all errors at that level before advancing (each commit includes the neon level bump)
+
+> **Dropped step, investigated live during replay:** an earlier draft of this
+> list had a step 14, "Rector `DateTimeToDateTimeImmutableRector`," meant to
+> replace ~105 legacy `date()`/`strftime()`/`time()`/`mktime()` calls with
+> `DateTimeImmutable`. That rule does not exist anywhere in Rector's history —
+> confirmed by searching Rector's own repo/docs (only `DateTimeToDateTimeInterfaceRector`
+> exists, which retypes existing `DateTime`-typed properties/params to
+> `DateTimeInterface`, not procedural `date()`/`time()`/`mktime()` calls to
+> objects) and by checking `16.x-rewrite`'s own finished `rector.php` and
+> `src/` tree: it never ran this conversion either — `withPhpSets(php85) +
+> TYPE_DECLARATION` only, and 61 raw `date()`/`time()`/`mktime()` calls remain
+> in the finished tree alongside 31 organically-adopted `DateTimeImmutable`
+> uses. `strftime()` was independently confirmed unused in 17.x-rewrite
+> (zero grep hits — no PHP 8.1 breakage risk). No PHP-version-compatibility
+> deadline forces this conversion, and 81 individually-risky manual
+> timezone/format rewrites (native `date()` reads PHP's default timezone
+> implicitly; `DateTimeImmutable` built from a raw timestamp defaults to UTC)
+> aren't worth doing as a mechanical sweep with no tooling support. Moved to
+> P27 step 10 (below) — DateTimeImmutable adoption makes more sense once the
+> call sites live in typed, namespaced, individually-tested classes instead
+> of sprawled across untyped procedural includes.
 
 #### Rector strategy (16.x-v2 lesson learned)
 
@@ -5656,6 +5672,14 @@ and static analysis tightening.
    non-namespaced procedural code; by this phase the codebase is typed and
    namespaced enough that it should). Re-baseline from scratch — don't
    assume the pre-pause `psalm-baseline.xml` is still meaningful.
+10. `DateTimeImmutable` adoption for the remaining raw `date()`/`time()`/`mktime()`
+    call sites (deferred from P5 — see that phase's step 14 note: no Rector
+    rule automates this, so it's a manual, per-call-site rewrite). By this
+    phase every call site lives in a typed, namespaced, individually-tested
+    class rather than an untyped procedural include, which makes the
+    per-site timezone/format review from P5's note tractable. Re-count at
+    start (P5 last measured ~81 first-party sites; some will have moved or
+    been deleted by P17-P23's domain extraction).
 
 **Tests:** Each REST response/request DTO gets construction + validation tests.
 Integration tests for every search filter combination.
@@ -7346,7 +7370,7 @@ Fibers concurrent I/O.
 | Device detection    | UA-string parsing via mobiledetect               | Removed the UA-string lib — native Client Hints (`Sec-CH-UA-*`) + responsive CSS ([ADR-0021]) |
 | HTTP client          | Raw curl/fsockopen/file_get_contents (`fetchRemote()` 100+ LOC) | PSR-18 `ClientInterface` via `symfony/http-client` — auto-retry, timeouts, proxy, SSRF guard |
 | CLI tool             | 15 maintenance actions web-UI only                | `bin/piwigo` via `symfony/console`: cache:clear, maintenance:*, user:list, migration:run |
-| Date/time handling   | 105 `date()`/`strftime()`/`time()` calls          | `DateTimeImmutable` everywhere via Rector `DateTimeToDateTimeImmutableRector` |
+| Date/time handling   | ~81 `date()`/`time()`/`mktime()` calls            | `DateTimeImmutable` everywhere, hand-migrated per call site (P27 step 10 — no Rector rule exists for this) |
 | Dark mode            | No `prefers-color-scheme` support                 | Tailwind `dark:` variant + OS media query + manual toggle in user prefs |
 | Structured data      | No JSON-LD / Schema.org markup                    | `ImageObject`, `ImageGallery`, `BreadcrumbList`, `SearchAction` via JSON-LD |
 | XML Sitemap          | No sitemap                                        | `/sitemap-index.xml` with `<image:image>` extension, privacy-aware, cached |

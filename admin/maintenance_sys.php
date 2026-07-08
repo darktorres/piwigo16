@@ -13,6 +13,10 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+// Bootstrap globals. Set by admin/maintenance.php (which dynamically
+// includes this tab panel) or include/common.inc.php.
+global $conf, $template;
+
 // +-----------------------------------------------------------------------+
 // |                    Only Webmaster can see this tab                    |
 // +-----------------------------------------------------------------------+

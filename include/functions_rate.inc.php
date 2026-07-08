@@ -13,10 +13,11 @@ declare(strict_types=1);
  * Rate a picture by the current user.
  *
  * @param int $image_id
- * @param float $rate
+ * @param int|string|null $rate raw $_POST value (string) from picture.php,
+ *   an (int)-cast value from the WS layer, or null when absent
  * @return array as return by update_rating_score()
  */
-function rate_picture($image_id, $rate)
+function rate_picture($image_id, int|string|null $rate)
 {
     global $conf, $user;
 

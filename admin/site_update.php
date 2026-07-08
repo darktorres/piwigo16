@@ -13,6 +13,9 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $logger, $template, $user;
+
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
 // +-----------------------------------------------------------------------+
@@ -55,6 +58,19 @@ $error_labels = [
 ];
 $errors = [];
 $infos = [];
+$counts = [
+    'new_categories' => 0,
+    'del_categories' => 0,
+    'del_elements' => 0,
+    'new_elements' => 0,
+    'upd_elements' => 0,
+];
+// $basedir/$db_categories/$to_delete are always set by the "directories /
+// categories" block below whenever sync is 'dirs' or 'files' — the only
+// two values the "files / elements" block (which reads them) also requires.
+$basedir = '';
+$db_categories = [];
+$to_delete = [];
 
 if ($site_is_remote) {
     fatal_error('remote sites not supported');
@@ -119,15 +135,6 @@ if (isset($_POST['submit'])) {
 // +-----------------------------------------------------------------------+
 // |                      directories / categories                         |
 // +-----------------------------------------------------------------------+
-if (isset($_POST['submit'])
-    and ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files')) {
-    $counts['new_categories'] = 0;
-    $counts['del_categories'] = 0;
-    $counts['del_elements'] = 0;
-    $counts['new_elements'] = 0;
-    $counts['upd_elements'] = 0;
-}
-
 if (isset($_POST['submit'])
     and ($_POST['sync'] == 'dirs' or $_POST['sync'] == 'files')
     and ! $general_failure) {
@@ -449,6 +456,7 @@ SELECT id, path
     $insert_links = [];
     $insert_formats = [];
     $formats_to_delete = [];
+    $caddiables = [];
 
     foreach (array_diff(array_keys($fs), $db_elements) as $path) {
         $insert = [];

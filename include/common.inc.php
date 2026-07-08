@@ -14,6 +14,9 @@ defined('PHPWG_ROOT_PATH') or trigger_error('Hacking attempt!', E_USER_ERROR);
 // determine the initial instant to indicate the generation time of this page
 $t2 = microtime(true);
 
+// accumulates pwg_debug() messages for display in the page footer
+$debug = '';
+
 // @set_magic_quotes_runtime(0); // Disable magic_quotes_runtime
 
 //
@@ -188,6 +191,7 @@ if (isset($conf['order_by_inside_category_custom'])) {
 check_lounge();
 
 include PHPWG_ROOT_PATH . 'include/user.inc.php';
+$user['internal_status'] ??= [];
 
 // This fork does not call back to the real piwigo.org — upstream.example.invalid
 // (.invalid TLD per RFC 2606, guaranteed not to resolve) stops it from sending
@@ -270,9 +274,7 @@ if (! isset($conf['no_photo_yet'])) {
     include PHPWG_ROOT_PATH . 'include/no_photo_yet.inc.php';
 }
 
-if (isset($user['internal_status']['guest_must_be_guest'])
-    and
-    $user['internal_status']['guest_must_be_guest'] === true) {
+if (($user['internal_status']['guest_must_be_guest'] ?? false) === true) {
     $header_msgs[] = l10n('Bad status for user "guest", using default status. Please notify the webmaster.');
 }
 

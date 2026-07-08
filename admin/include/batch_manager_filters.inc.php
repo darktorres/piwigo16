@@ -13,6 +13,10 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+// Bootstrap globals. $base_url/$collection are set by the two including
+// batch_manager_*.php controllers; the rest by include/common.inc.php.
+global $base_url, $collection, $conf, $page, $template;
+
 $prefilters = [
     [
         'ID' => 'caddie',
@@ -91,6 +95,7 @@ if (isset($page['no_md5sum_number'])) {
 }
 
 // privacy level
+$level_options = [];
 foreach ($conf['available_permission_levels'] as $level) {
     $level_options[$level] = l10n(sprintf('Level %d', $level));
 

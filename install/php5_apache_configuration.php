@@ -22,6 +22,8 @@ if (($script != 'install' and $script != 'upgrade')
 
 function initPHP5(): bool
 {
+    // Set by install/hosting.php, sharing this function's local scope.
+    $hosting = [];
     include PHPWG_ROOT_PATH . 'install/hosting.php';
     $htaccess = PHPWG_ROOT_PATH . '.htaccess';
 

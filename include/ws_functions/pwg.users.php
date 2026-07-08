@@ -1003,5 +1003,5 @@ function ws_get_api_key(array $params, &$service): \PwgError|array|false
 
     $api_keys = get_api_key($user['id']);
 
-    return $api_keys ?? l10n('No API key found');
+    return $api_keys ?: l10n('No API key found');
 }

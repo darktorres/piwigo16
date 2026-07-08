@@ -15,6 +15,9 @@ define('PHPWG_ROOT_PATH', './');
 include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
 @include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
 
+// Bootstrap global, set by include/config_default.inc.php.
+global $conf;
+
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 defined('PWG_DERIVATIVE_DIR') or define('PWG_DERIVATIVE_DIR', $conf['data_location'] . 'i/');
 
@@ -71,7 +74,7 @@ function mkgetdir($dir): bool
 
 // end fast bootstrap
 
-function ierror($msg, $code): void
+function ierror($msg, $code): never
 {
     global $logger;
     if ($code == 301 || $code == 302) {
@@ -401,6 +404,9 @@ parse_request();
 // var_export($page);
 
 $params = $page['derivative_params'];
+if (! $params instanceof DerivativeParams) {
+    ierror('invalid derivative params', 500);
+}
 
 $src_mtime = @filemtime($page['src_path']);
 if ($src_mtime === false) {

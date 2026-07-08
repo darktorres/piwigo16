@@ -615,6 +615,7 @@ function pwg_db_cast_to_text($string)
  */
 function get_enums($table, $field)
 {
+    $options = [];
     $result = pwg_query('DESC ' . $table);
     while ($row = pwg_db_fetch_assoc($result)) {
         if ($row['Field'] == $field) {

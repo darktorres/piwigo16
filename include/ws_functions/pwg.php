@@ -436,6 +436,10 @@ function ws_getActivityList(array $param, &$service): \PwgError|array
 
     $line_id = 0;
 
+    // $min/$max are only read below when the same date_min/date_max
+    // condition that sets them here is true again.
+    $min = null;
+    $max = null;
     if (! empty($param['date_min'])) {
         $min = date_format(date_create($param['date_min']), 'Y-m-d H:i:s');
         $max = date_format(date_create($param['date_max']), 'Y-m-d 23:59:59');
@@ -526,6 +530,7 @@ SELECT
                     $row['details'] = str_replace('`groups`', 'groups', $row['details']);
                     $row['details'] = str_replace('`rank`', 'rank', $row['details']);
                     $details = @unserialize($row['details']);
+                    $detailsType = null;
 
                     if (isset($row['user_agent'])) {
                         $details['agent'] = $row['user_agent'];
@@ -744,27 +749,23 @@ function ws_history_search(array $param, &$service): array
     // $_POST['filename'] simultaneously
 
     // store seach in database
-    if (! empty($search)) {
-        // register search rules in database, then they will be available on
-        // thumbnails page and picture page.
-        $query = '
+    // register search rules in database, then they will be available on
+    // thumbnails page and picture page.
+    $query = '
   INSERT INTO ' . SEARCH_TABLE . '
   (rules)
   VALUES
   (\'' . pwg_db_real_escape_string(serialize($search)) . '\')
   ;';
 
-        pwg_query($query);
+    pwg_query($query);
 
-        $search_id = pwg_db_insert_id();
+    $search_id = pwg_db_insert_id();
 
-        // Remove redirect for ajax //
-        // redirect(
-        //   PHPWG_ROOT_PATH.'admin.php?page=history&search_id='.$search_id
-        //   );
-    } else {
-        $page['errors'][] = l10n('Empty query. No criteria has been entered.');
-    }
+    // Remove redirect for ajax //
+    // redirect(
+    //   PHPWG_ROOT_PATH.'admin.php?page=history&search_id='.$search_id
+    //   );
 
     // what are the lines to display in reality ?
     $query = '
@@ -859,6 +860,7 @@ SELECT ' . $conf['user_fields']['id'] . ' AS id
         }
     }
 
+    $name_of_category = [];
     if (count($category_ids) > 0) {
         $query = '
 SELECT id, uppercats
@@ -868,7 +870,6 @@ SELECT id, uppercats
         $uppercats_of = query2array($query, 'id', 'uppercats');
 
         $full_cat_path = [];
-        $name_of_category = [];
 
         foreach ($uppercats_of as $category_id => $uppercats) {
             $full_cat_path[$category_id] = get_cat_display_name_cache(
@@ -884,6 +885,7 @@ SELECT id, uppercats
         }
     }
 
+    $image_infos = [];
     if (count($image_ids) > 0) {
         $query = '
 SELECT
@@ -899,6 +901,8 @@ SELECT
         $image_infos = query2array($query, 'id');
     }
 
+    global $name_of_tag; // used for preg_replace
+    $name_of_tag = [];
     if ($has_tags > 0) {
         $query = '
 SELECT
@@ -906,8 +910,6 @@ SELECT
     name, url_name
   FROM ' . TAGS_TABLE;
 
-        global $name_of_tag; // used for preg_replace
-        $name_of_tag = [];
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
             $name_of_tag[$row['id']] = trigger_change('render_tag_name', $row['name'], $row);
@@ -981,6 +983,7 @@ SELECT
                 ]
             );
 
+            $element = [];
             if (isset($image_infos[$line['image_id']])) {
                 $element = [
                     'id' => $line['image_id'],

@@ -117,10 +117,6 @@ class plugins
             $crt_db_plugin = $this->db_plugins_by_id[$plugin_id];
         }
 
-        if ($action !== 'update') { // wait for files to be updated
-            $plugin_maintain = self::build_maintain_class($plugin_id);
-        }
-
         $activity_details = [
             'plugin_id' => $plugin_id,
         ];
@@ -133,9 +129,15 @@ class plugins
                     break;
                 }
 
+                $plugin_maintain = self::build_maintain_class($plugin_id);
                 $plugin_maintain->install($this->fs_plugins[$plugin_id]['version'], $errors);
                 $activity_details['version'] = $this->fs_plugins[$plugin_id]['version'];
 
+                // $plugin_maintain is a dynamically instantiated `new $classname()`
+                // subclass PHPStan can't trace; it resolves against PluginMaintain's
+                // empty no-op base install(), but real plugin subclasses populate
+                // $errors by reference.
+                // @phpstan-ignore empty.variable
                 if (empty($errors)) {
                     $query = '
 INSERT INTO ' . PLUGINS_TABLE . ' (id,version)
@@ -184,6 +186,7 @@ UPDATE ' . PLUGINS_TABLE . '
                 }
 
                 if (empty($errors)) {
+                    $plugin_maintain = self::build_maintain_class($plugin_id);
                     $plugin_maintain->activate($crt_db_plugin['version'], $errors);
                     $activity_details['version'] = $crt_db_plugin['version'];
                 }
@@ -213,6 +216,7 @@ UPDATE ' . PLUGINS_TABLE . '
 ;';
                 pwg_query($query);
 
+                $plugin_maintain = self::build_maintain_class($plugin_id);
                 $plugin_maintain->deactivate();
 
                 if (isset($crt_db_plugin['version'])) {
@@ -242,6 +246,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
 ;';
                 pwg_query($query);
 
+                $plugin_maintain = self::build_maintain_class($plugin_id);
                 $plugin_maintain->uninstall();
                 break;
 
@@ -607,9 +612,9 @@ DELETE FROM ' . PLUGINS_TABLE . '
                         }
                     }
 
-                    $logger->debug(__FUNCTION__ . ', $main_filepath = ' . $main_filepath);
-
                     if (isset($main_filepath)) {
+                        $logger->debug(__FUNCTION__ . ', $main_filepath = ' . $main_filepath);
+
                         $root = dirname($main_filepath); // main.inc.php path in archive
                         if ($action == 'upgrade') {
                             $plugin_id = $dest;
@@ -626,6 +631,9 @@ DELETE FROM ' . PLUGINS_TABLE . '
                             $root,
                             PCLZIP_OPT_REPLACE_NEWER
                         )) {
+                            // extraction succeeded; 'ok' if the extracted result
+                            // list doesn't happen to include main.inc.php itself
+                            $status = 'ok';
                             foreach ($result as $file) {
                                 if ($file['stored_filename'] == $main_filepath) {
                                     $status = $file['status'];
@@ -633,8 +641,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
                                 }
                             }
                             if (file_exists($extract_path . '/obsolete.list')
-                              and $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES)
-                              and ! empty($old_files)) {
+                              and $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES)) {
                                 $old_files[] = 'obsolete.list';
                                 $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
 
@@ -693,7 +700,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
         $file = PHPWG_ROOT_PATH . 'install/obsolete_extensions.list';
         $merged_extensions = [];
 
-        if (file_exists($file) and $obsolete_ext = file($file, FILE_IGNORE_NEW_LINES) and ! empty($obsolete_ext)) {
+        if (file_exists($file) and $obsolete_ext = file($file, FILE_IGNORE_NEW_LINES)) {
             foreach ($obsolete_ext as $ext) {
                 if (preg_match('/^(\d+) ?: ?(.*?)$/', $ext, $matches)) {
                     $merged_extensions[$matches[1]] = $matches[2];

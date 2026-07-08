@@ -378,7 +378,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
     public static function isPost(): bool
     {
-        return isset($HTTP_RAW_POST_DATA) or ! empty($_POST);
+        return ! empty($_POST);
     }
 
     public static function makeArrayParam(&$param): void

@@ -96,8 +96,6 @@ class themes
             $crt_db_theme = $this->db_themes_by_id[$theme_id];
         }
 
-        $theme_maintain = self::build_maintain_class($theme_id);
-
         $errors = [];
         $activity_details = [
             'theme_id' => $theme_id,
@@ -132,8 +130,18 @@ class themes
                     break;
                 }
 
+                $theme_maintain = self::build_maintain_class($theme_id);
                 $theme_maintain->activate($this->fs_themes[$theme_id]['version'], $errors);
 
+                // Two layers of dynamic dispatch make this unfixable by
+                // restructuring: $theme_maintain can be a `new $classname()`
+                // theme-defined subclass PHPStan can't trace at all, or the
+                // named DummyTheme_maintain fallback — whose own activate()
+                // forwards to a theme-defined theme_activate() function via
+                // is_callable(), a second dynamic-dispatch layer. Both real
+                // paths can populate $errors; only PluginMaintain-style
+                // proper contracts (P31) remove the ambiguity.
+                // @phpstan-ignore empty.variable
                 if (empty($errors)) {
                     $query = '
 INSERT INTO ' . THEMES_TABLE . '
@@ -183,6 +191,7 @@ SELECT id
                     $this->set_default_theme($new_theme);
                 }
 
+                $theme_maintain = self::build_maintain_class($theme_id);
                 $theme_maintain->deactivate();
 
                 $query = '
@@ -216,6 +225,7 @@ DELETE
                     break;
                 }
 
+                $theme_maintain = self::build_maintain_class($theme_id);
                 $theme_maintain->delete();
 
                 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
@@ -566,9 +576,9 @@ SELECT
                         }
                     }
 
-                    $logger->debug(__FUNCTION__ . ', $main_filepath = ' . $main_filepath);
-
                     if (isset($main_filepath)) {
+                        $logger->debug(__FUNCTION__ . ', $main_filepath = ' . $main_filepath);
+
                         $root = dirname($main_filepath); // main.inc.php path in archive
                         if ($action == 'upgrade') {
                             $theme_id = $dest;
@@ -587,6 +597,9 @@ SELECT
                                 PCLZIP_OPT_REPLACE_NEWER
                             )
                         ) {
+                            // extraction succeeded; 'ok' if the extracted result
+                            // list doesn't happen to include main.inc.php itself
+                            $status = 'ok';
                             foreach ($result as $file) {
                                 if ($file['stored_filename'] == $main_filepath) {
                                     $status = $file['status'];
@@ -594,8 +607,7 @@ SELECT
                                 }
                             }
                             if (file_exists($extract_path . '/obsolete.list')
-                              and $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES)
-                              and ! empty($old_files)) {
+                              and $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES)) {
                                 $old_files[] = 'obsolete.list';
 
                                 $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');

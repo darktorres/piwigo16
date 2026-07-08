@@ -13,6 +13,11 @@ declare(strict_types=1);
  * This file is included by the picture page to manage picture metadata
  */
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $template;
+// Set by picture.php, right before this include.
+global $picture;
+
 include_once PHPWG_ROOT_PATH . '/include/functions_metadata.inc.php';
 if (($conf['show_exif']) and (function_exists('exif_read_data'))) {
     $exif_mapping = [];

@@ -13,6 +13,9 @@ if (! defined('IN_ADMIN')) {
     die('Hacking attempt!');
 }
 
+// Bootstrap globals, set by include/common.inc.php.
+global $template;
+
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
 // +-----------------------------------------------------------------------+

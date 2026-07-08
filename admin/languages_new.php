@@ -13,6 +13,9 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $page, $template;
+
 if (! $conf['enable_extensions_install']) {
     die('Piwigo extensions install/update system is disabled');
 }

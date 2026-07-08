@@ -383,6 +383,10 @@ class CalendarMonthly extends CalendarBase
                 $tpl_crt_week[] = [];
             }
 
+            // get_all_days_in_month() always returns >= 28, so this loop
+            // always runs at least once and $dow is always assigned below;
+            // the initializer only keeps analysis sound.
+            $dow = 0;
             for ($day = 1;
                 $day <= $this->get_all_days_in_month(
                     $page['chronology_date'][CYEAR],

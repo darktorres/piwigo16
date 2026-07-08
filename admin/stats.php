@@ -13,6 +13,9 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $lang, $template, $user;
+
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
 
@@ -243,7 +246,7 @@ $template->assign(
 /**
  * @return float[]|int[]
  */
-function set_missing_values($unit, $data, $firstDate = null, $lastDate = null): array
+function set_missing_values(string $unit, $data, $firstDate = null, $lastDate = null): array
 {
     $limit = count($data);
     $result = [];
@@ -260,19 +263,13 @@ function set_missing_values($unit, $data, $firstDate = null, $lastDate = null): 
     }
 
     // Declare variable according the unit
-    if ($unit == 'year') {
-        $date_format = 'Y';
-        $date_add = 'P1Y';
-    } elseif ($unit == 'month') {
-        $date_format = 'Y-m';
-        $date_add = 'P1M';
-    } elseif ($unit == 'day') {
-        $date_format = 'Y-m-d';
-        $date_add = 'P1D';
-    } elseif ($unit == 'hour') {
-        $date_format = 'Y-m-d\TH:00';
-        $date_add = 'PT1H';
-    }
+    [$date_format, $date_add] = match ($unit) {
+        'year' => ['Y', 'P1Y'],
+        'month' => ['Y-m', 'P1M'],
+        'day' => ['Y-m-d', 'P1D'],
+        'hour' => ['Y-m-d\TH:00', 'PT1H'],
+        default => throw new InvalidArgumentException('Invalid unit: ' . $unit),
+    };
 
     // Fill an empty array with all the dates
     while ($date <= $date_end) {

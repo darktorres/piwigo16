@@ -13,6 +13,9 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf;
+
 if (! $conf['enable_extensions_install'] and ! $conf['enable_core_update']) {
     die('update system is disabled');
 }

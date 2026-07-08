@@ -13,6 +13,9 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+// Bootstrap globals, set by include/common.inc.php.
+global $page, $template;
+
 check_input_parameter('user_id', $_GET, false, PATTERN_ID);
 
 $edit_user = build_user($_GET['user_id'], false);

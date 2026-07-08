@@ -8,6 +8,10 @@ declare(strict_types=1);
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
+
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $debug, $t2, $template;
+
 $template->set_filenames([
     'tail' => 'footer.tpl',
 ]);

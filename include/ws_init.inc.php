@@ -23,7 +23,7 @@ if (isset($_GET['format'])) {
     $responseFormat = $_GET['format'];
 }
 
-if (! isset($responseFormat) and isset($requestFormat)) {
+if (! isset($responseFormat)) {
     $responseFormat = $requestFormat;
 }
 

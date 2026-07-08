@@ -78,6 +78,9 @@ include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
 @include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
 
+// Bootstrap global, set by include/config_default.inc.php.
+global $conf;
+
 include PHPWG_ROOT_PATH . 'include/functions.inc.php';
 include PHPWG_ROOT_PATH . 'include/template.class.php';
 
@@ -412,6 +415,7 @@ INSERT INTO ' . $prefixeTable . 'config (param,value,comment)
 }
 
 // ------------------------------------------------------ start template output
+$languages_options = [];
 foreach ($languages->fs_languages as $language_code => $fs_language) {
     if ($language == $language_code) {
         $template->assign('language_selection', $language_code);

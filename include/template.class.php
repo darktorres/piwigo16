@@ -733,7 +733,9 @@ class Template
      */
     public function block_html_head($params, $content): void
     {
-        $content = isset($content) ? trim($content) : '';
+        // Smarty calls block plugins twice: null $content on the opening
+        // tag, real content on the closing tag ("second call" below).
+        $content = trim((string) $content);
         if (! empty($content)) { // second call
             $this->html_head_elements[] = $content;
         }
@@ -748,7 +750,9 @@ class Template
      */
     public function block_html_style($params, $content): void
     {
-        $content = isset($content) ? trim($content) : '';
+        // Smarty calls block plugins twice: null $content on the opening
+        // tag, real content on the closing tag ("second call" below).
+        $content = trim((string) $content);
         if (! empty($content)) { // second call
             $this->html_style .= "\n" . $content;
         }
@@ -923,7 +927,9 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      */
     public function block_footer_script(array $params, $content): void
     {
-        $content = isset($content) ? trim($content) : '';
+        // Smarty calls block plugins twice: null $content on the opening
+        // tag, real content on the closing tag ("second call" below).
+        $content = trim((string) $content);
         if (! empty($content)) { // second call
 
             $this->scriptLoader->add_inline(
@@ -1143,7 +1149,14 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         $dir = realpath($dir);
         if (! isset($themeconfs[$dir])) {
             $themeconf = [];
+            // themeconf.inc.php may set this to push extra template
+            // variables, instead of reaching for $this/$template directly
+            // (this file is included from many distinct Template instances,
+            // not only the global $template). assign() on an empty array is
+            // a no-op, so no need to guard the common case where it's unset.
+            $theme_template_vars = [];
             include $dir . '/themeconf.inc.php';
+            $this->assign($theme_template_vars);
             // Put themeconf in cache
             $themeconfs[$dir] = $themeconf;
         }

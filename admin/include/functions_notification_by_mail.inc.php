@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+// Bootstrap global, set by include/common.inc.php.
+global $conf;
+
 /* nbm_global_var */
 $env_nbm =
           [

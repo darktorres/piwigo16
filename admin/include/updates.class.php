@@ -440,8 +440,7 @@ class updates
     public static function process_obsolete_list($file): void
     {
         if (file_exists(PHPWG_ROOT_PATH . $file)
-          and $old_files = file(PHPWG_ROOT_PATH . $file, FILE_IGNORE_NEW_LINES)
-          and ! empty($old_files)) {
+          and $old_files = file(PHPWG_ROOT_PATH . $file, FILE_IGNORE_NEW_LINES)) {
             $old_files[] = $file;
             foreach ($old_files as $old_file) {
                 $path = PHPWG_ROOT_PATH . $old_file;

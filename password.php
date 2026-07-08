@@ -17,6 +17,9 @@ define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
 
+// Bootstrap globals, set by include/common.inc.php.
+global $page, $template, $user;
+
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
@@ -454,6 +457,7 @@ if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
 }
 
 // Get list of languages
+$language_options = [];
 foreach (get_languages() as $language_code => $language_name) {
     $language_options[$language_code] = $language_name;
 }

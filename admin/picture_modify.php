@@ -13,6 +13,10 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+// Bootstrap globals. $admin_photo_base_url is set by admin/photo.php before
+// including this panel; the rest by include/common.inc.php.
+global $admin_photo_base_url, $cache, $conf, $template, $user;
+
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
 // +-----------------------------------------------------------------------+

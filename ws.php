@@ -13,6 +13,10 @@ define('PHPWG_ROOT_PATH', './');
 define('IN_WS', true);
 
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
+
+// Bootstrap global, set by include/common.inc.php.
+global $conf;
+
 check_status(ACCESS_FREE);
 
 if (! $conf['allow_web_services']) {
@@ -20,6 +24,9 @@ if (! $conf['allow_web_services']) {
 }
 
 include_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
+
+// Set by include/ws_init.inc.php, right above.
+global $service;
 
 $service->run();
 

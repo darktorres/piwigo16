@@ -16,6 +16,9 @@ if (version_compare(PHP_VERSION, '5', '<')) {
 
 define('PHPWG_ROOT_PATH', './');
 
+// Bootstrap globals, set by include/config_default.inc.php and database.inc.php.
+global $conf, $prefixeTable;
+
 include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
 @include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
 defined('PWG_LOCAL_DIR') or define('PWG_LOCAL_DIR', 'local/');
@@ -77,7 +80,7 @@ echo '<pre>';
 echo count($to_apply) . ' upgrades to apply';
 
 foreach ($to_apply as $upgrade_id) {
-    unset($upgrade_description);
+    $upgrade_description = '';
 
     echo "\n\n";
     echo '=== upgrade ' . $upgrade_id . "\n";

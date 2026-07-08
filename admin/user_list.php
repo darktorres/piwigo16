@@ -12,6 +12,10 @@ declare(strict_types=1);
 /**
  * Add users and manage users list
  */
+
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $page, $template, $user;
+
 check_input_parameter('group', $_GET, false, PATTERN_ID);
 check_input_parameter('user_id', $_GET, false, PATTERN_ID);
 
@@ -148,6 +152,7 @@ if (isset($_GET['show_add_user'])) {
 }
 
 // Status options
+$label_of_status = [];
 foreach (get_enums(USER_INFOS_TABLE, 'status') as $status) {
     $label_of_status[$status] = l10n('user_status_' . $status);
 }
@@ -162,6 +167,7 @@ SELECT
 ';
 
 $result = pwg_query($query);
+$nb_users_by_status = [];
 while ($row = pwg_db_fetch_assoc($result)) {
     $nb_users_by_status[$row['status']] = [
         'name' => l10n('user_status_' . $row['status']),
@@ -185,6 +191,7 @@ $template->assign('pref_status_selected', 'normal');
 $template->assign('nb_users_by_status', $nb_users_by_status);
 
 // user level options
+$level_options = [];
 foreach ($conf['available_permission_levels'] as $level) {
     $level_options[$level] = l10n(sprintf('Level %d', $level));
 }

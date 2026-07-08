@@ -295,9 +295,9 @@ UPDATE ' . USER_INFOS_TABLE . '
                         }
                     }
 
-                    $logger->debug(__FUNCTION__ . ', $main_filepath = ' . $main_filepath);
-
                     if (isset($main_filepath)) {
+                        $logger->debug(__FUNCTION__ . ', $main_filepath = ' . $main_filepath);
+
                         $root = basename(dirname($main_filepath)); // common.lang.php path in archive
                         if (preg_match('/^[a-z]{2}_[A-Z]{2}$/', $root)) {
                             if ($action == 'install') {
@@ -316,6 +316,9 @@ UPDATE ' . USER_INFOS_TABLE . '
                                     PCLZIP_OPT_REPLACE_NEWER
                                 )
                             ) {
+                                // extraction succeeded; 'ok' if the extracted result
+                                // list doesn't happen to include the main file itself
+                                $status = 'ok';
                                 foreach ($result as $file) {
                                     if ($file['stored_filename'] == $main_filepath) {
                                         $status = $file['status'];
@@ -329,8 +332,7 @@ UPDATE ' . USER_INFOS_TABLE . '
                                     }
                                 }
                                 if (file_exists($extract_path . '/obsolete.list')
-                                  and $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES)
-                                  and ! empty($old_files)) {
+                                  and $old_files = file($extract_path . '/obsolete.list', FILE_IGNORE_NEW_LINES)) {
                                     $old_files[] = 'obsolete.list';
                                     $logger->debug(__FUNCTION__ . ', $old_files = {' . join('},{', $old_files) . '}');
 

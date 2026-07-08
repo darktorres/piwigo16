@@ -9,6 +9,10 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+// Bootstrap globals. $maint_actions is set by admin/maintenance.php before
+// dynamically including this tab panel; the rest by include/common.inc.php.
+global $conf, $maint_actions, $persistent_cache, $template;
+
 fs_quick_check();
 
 // +-----------------------------------------------------------------------+

@@ -13,6 +13,9 @@ if (! defined('PHOTOS_ADD_BASE_URL')) {
     die('Hacking attempt!');
 }
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $template, $user;
+
 // +-----------------------------------------------------------------------+
 // |                        batch management request                       |
 // +-----------------------------------------------------------------------+

@@ -13,6 +13,13 @@ declare(strict_types=1);
  * This file is included by the picture page to manage user comments
  */
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $page, $template, $user;
+// Set by picture.php, right before this include.
+global $related_categories, $url_self;
+
+$comment_action = null;
+
 // the picture is commentable if it belongs at least to one category which
 // is commentable
 $page['show_comments'] = false;
@@ -232,7 +239,7 @@ SELECT
             'SHOW_WEBSITE' => $conf['comments_enable_website'],
         ];
 
-        if (@$comment_action == 'reject') {
+        if ($comment_action == 'reject') {
             foreach (['content', 'author', 'website_url', 'email'] as $k) {
                 $tpl_var[strtoupper($k)] = isset($_POST[$k]) ? htmlspecialchars(stripslashes((string) @$_POST[$k])) : '';
             }

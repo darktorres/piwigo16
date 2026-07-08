@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $template, $user;
+
 /**
  * Management of elements set. Elements can belong to a category or to the
  * user caddie.
@@ -501,7 +504,7 @@ if (! empty($_SESSION['bulk_manager_filter']['tags'])) {
 }
 
 if (isset($_SESSION['bulk_manager_filter']['dimension'])) {
-    $where_clauses = [];
+    $where_clause = [];
     if (isset($_SESSION['bulk_manager_filter']['dimension']['min_width'])) {
         $where_clause[] = 'width >= ' . $_SESSION['bulk_manager_filter']['dimension']['min_width'];
     }
@@ -532,7 +535,7 @@ SELECT id
 }
 
 if (isset($_SESSION['bulk_manager_filter']['filesize'])) {
-    $where_clauses = [];
+    $where_clause = [];
 
     if (isset($_SESSION['bulk_manager_filter']['filesize']['min'])) {
         // to counter the effect of converting kB to mB and rounding, we need to go slightly lower for the minimum value

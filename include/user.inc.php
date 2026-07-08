@@ -9,6 +9,11 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $user;
+// Set by include/ws_init.inc.php, included conditionally below.
+global $service;
+
 // by default we start with guest
 $user['id'] = $conf['guest_id'];
 

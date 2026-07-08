@@ -141,7 +141,7 @@ SELECT id, name, permalink
         }
     }
 
-    if ($single_link and isset($single_url)) {
+    if ($single_link) {
         $output .= '</a>';
     }
 
@@ -324,7 +324,7 @@ function page_not_found($msg, $alternate_url = null): void
  * @param string|null $title
  * @param bool $show_trace
  */
-function fatal_error($msg, $title = null, $show_trace = true): void
+function fatal_error($msg, $title = null, $show_trace = true): never
 {
     if (empty($title)) {
         $title = l10n('Piwigo encountered a non recoverable error');
@@ -461,12 +461,13 @@ function set_status_header($code, $text = ''): void
 /**
  * Returns the category comment for rendering in html textual mode (subcatify)
  * This method is called by a trigger_notify()
- *
- * @param string $desc
  */
-function render_category_literal_description($desc): string
+function render_category_literal_description(?string $desc): string
 {
-    ! isset($desc) ? $desc = '' : false;
+    if (! isset($desc)) {
+        $desc = '';
+    }
+
     return strip_tags($desc, '<span><p><a><br><b><i><small><big><strong><em>');
 }
 

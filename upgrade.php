@@ -18,6 +18,9 @@ if (function_exists('ini_set')) {
 
 define('PHPWG_ROOT_PATH', './');
 
+// Bootstrap globals, set by include/config_default.inc.php and $config_file.
+global $conf, $prefixeTable;
+
 // load config file
 include PHPWG_ROOT_PATH . 'include/config_default.inc.php';
 @include PHPWG_ROOT_PATH . 'local/config/config.inc.php';
@@ -336,8 +339,9 @@ if ((isset($_POST['submit']) or isset($_GET['now']))
         // Conf delete param on last major update for whats new popin to be displayed when changing major version
         conf_delete_param('last_major_update');
 
-        // Something to add in database.inc.php?
-        if (! empty($mysql_changes)) {
+        // Something to add in database.inc.php? (install/upgrade_*.php
+        // scripts may push onto $mysql_changes)
+        if (count($mysql_changes) > 0) {
             $config_file_contents =
               substr($config_file_contents, 0, $php_end_tag) . "\r\n"
               . implode("\r\n", $mysql_changes) . "\r\n"
@@ -446,6 +450,7 @@ else {
     include_once PHPWG_ROOT_PATH . 'admin/include/languages.class.php';
     $languages = new languages();
 
+    $languages_options = [];
     foreach ($languages->fs_languages as $language_code => $fs_language) {
         if ($language == $language_code) {
             $template->assign('language_selection', $language_code);

@@ -46,17 +46,15 @@ DELETE
     }
     $tokens = explode(';', $categories_string);
     foreach ($tokens as $token) {
-        @[$cat_id, $rank] = explode(',', $token);
+        $token_parts = explode(',', $token);
+        $cat_id = $token_parts[0];
+        $rank = $token_parts[1] ?? 'auto';
 
         if (! preg_match('/^\d+$/', $cat_id)) {
             continue;
         }
 
         $cat_ids[] = $cat_id;
-
-        if (! isset($rank)) {
-            $rank = 'auto';
-        }
         $rank_on_category[$cat_id] = $rank;
 
         if ($rank == 'auto') {
@@ -1283,6 +1281,7 @@ SELECT COUNT(*)
 
     // does the image already exists ?
     if ($params['check_uniqueness']) {
+        $where_clause = '0'; // no known uniqueness_mode: skip the uniqueness check
         if ($conf['uniqueness_mode'] == 'md5sum') {
             $where_clause = "md5sum = '" . $params['original_sum'] . "'";
         }
@@ -1539,13 +1538,13 @@ function ws_images_upload(array $params, $service)
 {
     global $conf;
 
+    $format_ext = null;
+
     if (get_pwg_token() != $params['pwg_token']) {
         return new PwgError(403, 'Invalid security token');
     }
 
     if (isset($params['format_of'])) {
-        $format_ext = null;
-
         // are formats enabled?
         if (! $conf['enable_formats']) {
             return new PwgError(401, 'formats are disabled');

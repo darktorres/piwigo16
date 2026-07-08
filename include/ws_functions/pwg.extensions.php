@@ -204,6 +204,10 @@ function ws_extensions_update(array $params, $service)
     } elseif ($type == 'languages') {
         $upgrade_status = $extension->extract_language_files('upgrade', $revision, $extension_id);
         $extension_name = $extension->fs_languages[$extension_id]['name'];
+    } else {
+        // Unreachable: $type is $params['type'], already restricted to
+        // plugins/themes/languages by the in_array() guard above.
+        throw new LogicException('Invalid extension type: ' . $type);
     }
 
     global $template;

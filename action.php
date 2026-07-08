@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+// Bootstrap globals, set by include/common.inc.php below.
+global $conf, $user;
+
 define('PHPWG_ROOT_PATH', './');
 session_cache_limiter('public');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
@@ -125,6 +128,11 @@ switch ($_GET['part']) {
         $file = original_to_representative(get_element_path($element_info), $element_info['representative_ext']);
         break;
     case 'f':
+        // part=f is reachable directly by request even when the earlier
+        // enable_formats block (which sets $format) never ran.
+        if (! isset($format)) {
+            do_error(400, 'Invalid request - format');
+        }
         $file = original_to_format(get_element_path($element_info), $format['ext']);
         $element_info['file'] = get_filename_wo_extension($element_info['file']) . '.' . $format['ext'];
         break;
@@ -136,9 +144,12 @@ if (empty($file)) {
 
 if ($_GET['part'] == 'e') {
     pwg_log($_GET['id'], 'high');
-} elseif ($_GET['part'] == 'e') {
+} elseif ($_GET['part'] == 'r') {
     pwg_log($_GET['id'], 'other');
 } elseif ($_GET['part'] == 'f') {
+    if (! isset($format)) {
+        do_error(400, 'Invalid request - format');
+    }
     pwg_log($_GET['id'], 'high', $format['format_id']);
 }
 

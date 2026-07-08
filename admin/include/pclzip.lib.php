@@ -4519,6 +4519,7 @@ class PclZip
         // ----- First try : look if this is an archive with no commentaries (most of the time)
         // in this case the end of central dir is at 22 bytes of the file end
         $v_found = 0;
+        $v_pos = 0; // always overwritten below before use; keeps analysis sound
         if ($v_size > 26) {
             @fseek($this->zip_fd, $v_size - 22);
             if (($v_pos = @ftell($this->zip_fd)) != ($v_size - 22)) {

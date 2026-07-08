@@ -13,6 +13,9 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+// Bootstrap globals, set by include/common.inc.php.
+global $template;
+
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 
@@ -123,6 +126,9 @@ $template->set_filenames(
 );
 
 $page['section'] = $_GET['section'] ?? 'status';
+if (! in_array($page['section'], ['comments', 'visible', 'status', 'representative'])) {
+    $page['section'] = 'status';
+}
 $base_url = PHPWG_ROOT_PATH . 'admin.php?page=cat_options&amp;section=';
 
 $template->assign(
@@ -153,92 +159,76 @@ $tabsheet->assign();
 // option
 $cats_true = [];
 $cats_false = [];
-switch ($page['section']) {
-    case 'comments':
-
-        $query_true = '
+[$query_true, $query_false, $l_section, $l_true, $l_false] = match ($page['section']) {
+    'comments' => [
+        '
 SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . '
   WHERE commentable = \'true\'
-;';
-        $query_false = '
+;',
+        '
 SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . '
   WHERE commentable = \'false\'
-;';
-        $template->assign(
-            [
-                'L_SECTION' => l10n('Authorize users to add comments on selected albums'),
-                'L_CAT_OPTIONS_TRUE' => l10n('Authorized'),
-                'L_CAT_OPTIONS_FALSE' => l10n('Forbidden'),
-            ]
-        );
-        break;
-
-    case 'visible':
-
-        $query_true = '
+;',
+        l10n('Authorize users to add comments on selected albums'),
+        l10n('Authorized'),
+        l10n('Forbidden'),
+    ],
+    'visible' => [
+        '
 SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . '
   WHERE visible = \'true\'
-;';
-        $query_false = '
+;',
+        '
 SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . '
   WHERE visible = \'false\'
-;';
-        $template->assign(
-            [
-                'L_SECTION' => l10n('Lock albums'),
-                'L_CAT_OPTIONS_TRUE' => l10n('Unlocked'),
-                'L_CAT_OPTIONS_FALSE' => l10n('Locked'),
-            ]
-        );
-        break;
-
-    case 'status':
-
-        $query_true = '
+;',
+        l10n('Lock albums'),
+        l10n('Unlocked'),
+        l10n('Locked'),
+    ],
+    'status' => [
+        '
 SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . '
   WHERE status = \'public\'
-;';
-        $query_false = '
+;',
+        '
 SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . '
   WHERE status = \'private\'
-;';
-        $template->assign(
-            [
-                'L_SECTION' => l10n('Manage authorizations for selected albums'),
-                'L_CAT_OPTIONS_TRUE' => l10n('Public'),
-                'L_CAT_OPTIONS_FALSE' => l10n('Private'),
-            ]
-        );
-        break;
-
-    case 'representative':
-
-        $query_true = '
+;',
+        l10n('Manage authorizations for selected albums'),
+        l10n('Public'),
+        l10n('Private'),
+    ],
+    'representative' => [
+        '
 SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . '
   WHERE representative_picture_id IS NOT NULL
-;';
-        $query_false = '
+;',
+        '
 SELECT DISTINCT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=category_id
   WHERE representative_picture_id IS NULL
-;';
-        $template->assign(
-            [
-                'L_SECTION' => l10n('Representative'),
-                'L_CAT_OPTIONS_TRUE' => l10n('singly represented'),
-                'L_CAT_OPTIONS_FALSE' => l10n('randomly represented'),
-            ]
-        );
-        break;
-
-}
+;',
+        l10n('Representative'),
+        l10n('singly represented'),
+        l10n('randomly represented'),
+    ],
+    default => throw new InvalidArgumentException('Invalid section: ' . $page['section']),
+};
+$template->assign(
+    [
+        'L_SECTION' => $l_section,
+        'L_CAT_OPTIONS_TRUE' => $l_true,
+        'L_CAT_OPTIONS_FALSE' => $l_false,
+    ]
+);
 display_select_cat_wrapper($query_true, [], 'category_option_true');
 display_select_cat_wrapper($query_false, [], 'category_option_false');
 $template->assign('PWG_TOKEN', get_pwg_token());

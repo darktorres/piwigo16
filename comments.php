@@ -16,6 +16,9 @@ define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $template;
+
 if (! $conf['activate_comments']) {
     page_not_found(null);
 }

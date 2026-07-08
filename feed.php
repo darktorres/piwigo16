@@ -13,6 +13,9 @@ define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_notification.inc.php';
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $user;
+
 // +-----------------------------------------------------------------------+
 // |                               functions                               |
 // +-----------------------------------------------------------------------+
@@ -93,6 +96,9 @@ check_input_parameter('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
 
 $feed_id = $_GET['feed'] ?? '';
 $image_only = isset($_GET['image_only']);
+// Only read below when $image_only is false, which implies $feed_id was
+// non-empty and the branch below already populated it.
+$feed_row = [];
 
 // echo '<pre>'.generate_key(50).'</pre>';
 if (! empty($feed_id)) {

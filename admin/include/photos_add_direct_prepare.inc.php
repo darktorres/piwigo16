@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $template;
+
 // +-----------------------------------------------------------------------+
 // | Photo selection                                                       |
 // +-----------------------------------------------------------------------+

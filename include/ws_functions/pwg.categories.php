@@ -159,6 +159,7 @@ SELECT
                 @$categories_of_image[$row['image_id']][] = $row['category_id'];
             }
 
+            $details_for_category = [];
             if (count($category_ids) > 0) {
                 // find details (for URL generation) about each album
                 $query = '
@@ -1213,6 +1214,7 @@ SELECT id, name, dir, uppercats
     WHERE id IN (' . implode(',', $category_ids) . ')
   ;';
     $result = pwg_query($query);
+    $cat_display_name = '';
     while ($row = pwg_db_fetch_assoc($result)) {
         $cat_display_name = get_cat_display_name_cache(
             $row['uppercats'],

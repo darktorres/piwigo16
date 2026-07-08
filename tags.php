@@ -16,6 +16,9 @@ declare(strict_types=1);
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $template;
+
 check_status(ACCESS_GUEST);
 
 trigger_notify('loc_begin_tags');

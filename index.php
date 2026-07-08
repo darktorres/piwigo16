@@ -14,6 +14,9 @@ define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 include PHPWG_ROOT_PATH . 'include/section_init.inc.php';
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $page, $template;
+
 // Check Access and exit when user status is not ok
 check_status(ACCESS_GUEST);
 

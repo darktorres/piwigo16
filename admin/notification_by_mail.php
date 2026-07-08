@@ -17,6 +17,9 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $template;
+
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/functions_notification_by_mail.inc.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
@@ -424,7 +427,7 @@ trigger_notify('nbm_event_handler_added');
 // +-----------------------------------------------------------------------+
 // | Insert new users with mails                                           |
 // +-----------------------------------------------------------------------+
-if (! isset($_POST) or (count($_POST) == 0)) {
+if (count($_POST) == 0) {
     // No insert data in post mode
     insert_new_data_user_mail_notification();
 }

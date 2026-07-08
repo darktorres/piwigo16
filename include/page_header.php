@@ -9,6 +9,11 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $page, $template;
+// Set by the including page script, right before this include.
+global $title;
+
 //
 // Start output of page
 //

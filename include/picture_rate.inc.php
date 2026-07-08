@@ -12,6 +12,12 @@ declare(strict_types=1);
 /**
  * This file is included by the picture page to manage rates
  */
+
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $page, $template, $user;
+// Set by picture.php, right before this include.
+global $picture, $url_self;
+
 if ($conf['rate']) {
     $rate_summary = [
         'count' => 0,

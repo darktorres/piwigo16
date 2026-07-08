@@ -14,6 +14,9 @@ declare(strict_types=1);
  * or to show recent categories or main page categories list
  */
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $logger, $page, $template, $user;
+
 // $user['forbidden_categories'] including with USER_CACHE_CATEGORIES_TABLE
 $query = '
 SELECT SQL_CALC_FOUND_ROWS

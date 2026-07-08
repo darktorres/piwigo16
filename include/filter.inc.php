@@ -16,6 +16,9 @@ declare(strict_types=1);
 //  List of visible categories (count(visible) < count(forbidden) more often)
 // $filter['visible_images']: List of visible images
 
+// Bootstrap global, set by include/common.inc.php.
+global $user;
+
 if (! get_filter_page_value('cancel')) {
     if (isset($_GET['filter'])) {
         $filter['matches'] = [];

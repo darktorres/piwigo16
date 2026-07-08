@@ -33,7 +33,7 @@ abstract class PersistentCache
     /**
      * Searches for a key in the persistent cache and fills corresponding value.
      * @param string $key
-     * @param out mixed $value
+     * @param-out mixed $value
      * @return false if the $key is not found in cache ($value is not modified in this case)
      */
     abstract public function get($key, &$value);

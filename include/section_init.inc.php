@@ -28,6 +28,12 @@ declare(strict_types=1);
 //   'start'    => 24
 //   );
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $filter, $logger, $page, $persistent_cache, $template, $user;
+if (! $persistent_cache instanceof PersistentCache) {
+    fatal_error('persistent cache not initialized');
+}
+
 $page['items'] = [];
 $page['start'] = $page['startcat'] = 0;
 

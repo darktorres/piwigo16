@@ -16,6 +16,10 @@ declare(strict_types=1);
 define('PHPWG_ROOT_PATH', '../');
 define('PWG_HELP', true);
 define('IN_ADMIN', true);
+
+// Bootstrap global, set by include/common.inc.php below.
+global $template;
+
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 
 // +-----------------------------------------------------------------------+

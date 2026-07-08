@@ -2426,6 +2426,7 @@ function create_api_key($user_id, $duration, $key_name): array
         'key_type' => 'api_key',
     ];
 
+    $expiration = null;
     if (! empty($duration)) {
         $query = '
 SELECT

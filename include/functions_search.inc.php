@@ -430,6 +430,10 @@ SELECT
             }
 
             $date_posted_clause = '(' . implode(' OR ', prepend_append_array_items($date_posted_subclauses, '(', ')')) . ')';
+        } else {
+            // Unknown/stale preset value (e.g. a saved search referencing a
+            // preset that no longer exists): don't filter on this criterion.
+            $date_posted_clause = '1=1';
         }
 
         $query = '
@@ -499,6 +503,10 @@ SELECT
             }
 
             $date_created_clause = '(' . implode(' OR ', prepend_append_array_items($date_created_subclauses, '(', ')')) . ')';
+        } else {
+            // Unknown/stale preset value (e.g. a saved search referencing a
+            // preset that no longer exists): don't filter on this criterion.
+            $date_created_clause = '1=1';
         }
 
         $query = '
@@ -1244,6 +1252,9 @@ class QMultiToken implements \Stringable
     /* because evaluations occur left to right, we ensure that 'a OR b c d' is interpreted as 'a OR (b c d)' */
     protected function check_operator_priority()
     {
+        // Always overwritten at $i == 1 before being read at $i >= 2; the
+        // initializer only keeps analysis sound.
+        $crt_prio = 0;
         for ($i = 0; $i < count($this->tokens); $i++) {
             if (! $this->tokens[$i]->is_single) {
                 $this->tokens[$i]->check_operator_priority();

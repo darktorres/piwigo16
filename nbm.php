@@ -12,6 +12,10 @@ declare(strict_types=1);
 // --------------------------------------------------------------------- include
 define('PHPWG_ROOT_PATH', './');
 include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
+
+// Bootstrap global, set by include/common.inc.php.
+global $template;
+
 check_status(ACCESS_FREE);
 include_once PHPWG_ROOT_PATH . 'include/functions_notification.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';

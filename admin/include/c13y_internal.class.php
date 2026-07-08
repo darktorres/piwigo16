@@ -161,12 +161,13 @@ class c13y_internal
         if (! empty($id)) {
             switch ($action) {
                 case 'creation':
+                    $name = null;
+                    $password = null;
+
                     if ($id == $conf['guest_id']) {
                         $name = 'guest';
-                        $password = null;
                     } elseif ($id == $conf['default_user_id']) {
                         $name = 'guest';
-                        $password = null;
                     } elseif ($id == $conf['webmaster_id']) {
                         $name = 'webmaster';
                         $password = generate_key(6);

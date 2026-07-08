@@ -14,6 +14,9 @@ include_once PHPWG_ROOT_PATH . 'include/common.inc.php';
 include PHPWG_ROOT_PATH . 'include/section_init.inc.php';
 include_once PHPWG_ROOT_PATH . 'include/functions_picture.inc.php';
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $page, $template, $user;
+
 save_edit_context();
 
 // Check Access and exit when user status is not ok

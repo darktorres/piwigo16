@@ -113,7 +113,7 @@ final class ImageRect
      * @param int $pixels - the amount to substract from the width
      * @param stirng $coi - a 4 character string (or null) containing the center of interest
      */
-    public function crop_h($pixels, $coi): void
+    public function crop_h($pixels, ?string $coi): void
     {
         if ($this->width() <= $pixels) {
             return;
@@ -228,8 +228,8 @@ final class SizingParams
      *
      * @param int[] $in_size - two element array of input dimensions (width, height)
      * @param string $coi - four character encoded string containing the center of interest (unused if max_crop=0)
-     * @param ImageRect $crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
-     * @param int[] $scale_size - two element array containing width and height of the scaled image
+     * @param-out ImageRect|null $crop_rect - ImageRect containing the cropping rectangle or null if cropping is not required
+     * @param-out int[]|null $scale_size - two element array containing width and height of the scaled image, or null
      */
     public function compute(array $in_size, $coi, &$crop_rect, &$scale_size): void
     {

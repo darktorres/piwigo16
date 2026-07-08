@@ -13,6 +13,11 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+// Bootstrap globals. $admin_album_base_url and $category are set by
+// admin/album.php before including this panel; the rest by
+// include/common.inc.php.
+global $admin_album_base_url, $category, $conf, $template;
+
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
 // +-----------------------------------------------------------------------+

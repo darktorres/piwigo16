@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+// Bootstrap globals, set by include/common.inc.php.
+global $page, $template;
+
 include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 
 $my_base_url = get_root_url() . 'admin.php?page=';

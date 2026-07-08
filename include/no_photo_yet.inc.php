@@ -9,6 +9,9 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $user;
+
 // The "No Photo Yet" feature: if you have no photo yet in your gallery, the
 // gallery displays only a big box to show you the way for adding your first
 // photos

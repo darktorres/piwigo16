@@ -13,6 +13,10 @@ if (! defined('PHPWG_ROOT_PATH')) {
     die('Hacking attempt!');
 }
 
+// Bootstrap globals. $link_start is set by admin.php before including this
+// page; the rest by include/common.inc.php.
+global $conf, $lang, $link_start, $logger, $page, $pwg_loaded_plugins, $template, $user;
+
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/check_integrity.class.php';
 include_once PHPWG_ROOT_PATH . 'admin/include/c13y_internal.class.php';

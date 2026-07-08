@@ -176,13 +176,13 @@ function get_sync_metadata($infos)
 
                 if (isset($width) and $width != '') {
                     $infos['width'] = (int) $width;
-                } elseif (isset($vb)) {
+                } else {
                     $infos['width'] = round(explode(' ', $vb)[2]);
                 }
 
                 if (isset($height) and $height != '') {
                     $infos['height'] = (int) $height;
-                } elseif (isset($vb)) {
+                } else {
                     $infos['height'] = round(explode(' ', $vb)[3]);
                 }
             }

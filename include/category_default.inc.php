@@ -13,6 +13,10 @@ declare(strict_types=1);
  * This file is included by the main page to show thumbnails for the default
  * case
  */
+
+// Bootstrap globals, set by include/common.inc.php.
+global $conf, $page, $template, $user;
+
 $pictures = [];
 
 $selection = array_slice(

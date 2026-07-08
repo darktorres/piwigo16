@@ -64,18 +64,6 @@ $header_msgs = array();
 $header_notes = array();
 $filter = array();
 
-foreach(
-  array(
-    'gzopen',
-    'str_starts_with'
-    ) as $func)
-{
-  if (!function_exists($func))
-  {
-    include_once(PHPWG_ROOT_PATH . 'include/php_compat/'.$func.'.php');
-  }
-}
-
 include(PHPWG_ROOT_PATH . 'include/config_default.inc.php');
 @include(PHPWG_ROOT_PATH. 'local/config/config.inc.php');
 

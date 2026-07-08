@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 defined('PHPWG_ROOT_PATH') or die('Hacking attempt!');
 
 require_once PHPWG_ROOT_PATH . 'include/base32.class.php';

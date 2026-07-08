@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -16,7 +18,7 @@ $pictures = [];
 $selection = array_slice(
     $page['items'],
     $page['start'],
-    $page['nb_image_page']
+    (int) $page['nb_image_page']
 );
 
 $selection = trigger_change('loc_index_thumbnails_selection', $selection);

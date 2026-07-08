@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 $validated_keys = [
     'af_ZA' => [
         'IP: %s',

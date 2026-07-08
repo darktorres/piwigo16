@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -1821,7 +1823,7 @@ function get_quick_search_results_no_cache($q, array $options)
 
     $ids = qsearch_eval($expression, $qsr, $tmp, $search_results['qs']['unmatched_terms']);
 
-    $debug[] = "<!--\nparsed: " . htmlspecialchars($expression);
+    $debug[] = "<!--\nparsed: " . htmlspecialchars((string) $expression);
     $debug[] = count($expression->stokens) . ' tokens';
     for ($i = 0; $i < count($expression->stokens); $i++) {
         $debug[] = htmlspecialchars((string) $expression->stokens[$i]) . ': ' . count($qsr->tag_ids[$i]) . ' tags, ' . count($qsr->tag_iids[$i]) . ' tiids, ' . count($qsr->images_iids[$i]) . ' iiids, ' . count($qsr->iids[$i]) . ' iids'

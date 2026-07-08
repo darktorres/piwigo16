@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -56,13 +58,17 @@ function get_elapsed_time($start, $end): string
 }
 
 /**
- * returns the part of the string after the last "."
- *
- * @param string $filename
+ * returns the part of the string after the last "." (empty string if none)
  */
-function get_extension($filename): string
+function get_extension(?string $filename): string
 {
-    return substr(strrchr($filename, '.'), 1, strlen($filename));
+    if ($filename === null) {
+        return '';
+    }
+
+    $dot_position = strrpos($filename, '.');
+
+    return $dot_position === false ? '' : substr($filename, $dot_position + 1);
 }
 
 /**
@@ -807,7 +813,7 @@ function str2DateTime($original, $format = null)
     }
 
     if (! empty($format) && version_compare(PHP_VERSION, '5.3.0') >= 0) {// from known date format
-        return DateTime::createFromFormat('!' . $format, $original); // ! char to reset fields to UNIX epoch
+        return DateTime::createFromFormat('!' . $format, (string) $original); // ! char to reset fields to UNIX epoch
     } else {
         $t = trim((string) $original, '0123456789');
         if (empty($t)) { // from timestamp
@@ -834,8 +840,8 @@ function str2DateTime($original, $format = null)
             }
 
             $date = new DateTime();
-            $date->setDate($ymdhms[0], $ymdhms[1], $ymdhms[2]);
-            $date->setTime($ymdhms[3], $ymdhms[4], $ymdhms[5]);
+            $date->setDate((int) $ymdhms[0], (int) $ymdhms[1], (int) $ymdhms[2]);
+            $date->setTime((int) $ymdhms[3], (int) $ymdhms[4], (int) $ymdhms[5]);
             return $date;
         }
     }

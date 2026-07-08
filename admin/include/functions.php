@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -2901,7 +2903,7 @@ function deltree($path, $trash_path = null)
             if (! is_dir($trash_path)) {
                 @mkgetdir($trash_path, MKGETDIR_RECURSIVE | MKGETDIR_DIE_ON_ERROR | MKGETDIR_PROTECT_HTACCESS);
             }
-            while ($r = $trash_path . '/' . md5(uniqid(mt_rand(), true))) {
+            while ($r = $trash_path . '/' . md5(uniqid((string) mt_rand(), true))) {
                 if (! is_dir($r)) {
                     @rename($path, $r);
                     break;

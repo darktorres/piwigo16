@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -373,7 +375,7 @@ if (empty($page['is_external'])) {
     // We want all pages that display thumbnails, except on the tags page
     // Fill related tags action
     if (! empty($page['items']) and $page['body_data']['section'] != 'tags') {
-        $selection = array_slice($page['items'], $page['start'], $page['nb_image_page']);
+        $selection = array_slice($page['items'], $page['start'], (int) $page['nb_image_page']);
         $tags = add_level_to_tags(get_common_tags($selection, $conf['content_tag_cloud_items_number']));
         $related_tags = [];
         foreach ($tags as $tag) {

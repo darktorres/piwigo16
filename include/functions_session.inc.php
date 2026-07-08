@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -11,13 +13,7 @@
 // two parameters is deprecated. To correct this,
 // we pass a SessionHandlerInterface instance.
 // https://github.com/Piwigo/Piwigo/issues/2296
-// Depending on the PHP version, we include the appropriate
-// session handler class file.
-if (version_compare(PHP_VERSION, '8.0.0') < 0) {
-    include_once PHPWG_ROOT_PATH . '/include/pwgsession_php7.class.php';
-} else {
-    include_once PHPWG_ROOT_PATH . '/include/pwgsession.class.php';
-}
+include_once PHPWG_ROOT_PATH . '/include/pwgsession.class.php';
 
 if (isset($conf['session_save_handler'])
   and ($conf['session_save_handler'] == 'db')
@@ -163,9 +159,9 @@ DELETE
 /**
  * Called by PHP session manager, garbage collector for expired sessions.
  *
- * @return true
+ * @return int number of expired sessions deleted
  */
-function pwg_session_gc(): bool
+function pwg_session_gc(): int
 {
     global $conf;
 
@@ -176,7 +172,7 @@ DELETE
     . $conf['session_length'] . '
 ;';
     pwg_query($query);
-    return true;
+    return pwg_db_changes();
 }
 
 /**

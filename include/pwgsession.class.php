@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // see https://php.watch/versions/8.4/session_set_save_handler-alt-signature-deprecated
 class PwgSession implements SessionHandlerInterface
 {

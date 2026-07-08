@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -835,7 +837,7 @@ class Template
             $load,
             empty($params['require']) ? [] : explode(',', (string) $params['require']),
             @$params['path'],
-            $params['version'] ?? 0,
+            $params['version'] ?? '0',
             @$params['template']
         );
     }
@@ -952,7 +954,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             $params['id'] = md5((string) $params['path']);
         }
 
-        $this->cssLoader->add($params['id'], $params['path'], $params['version'] ?? 0, (int) @$params['order'], (bool) @$params['template']);
+        $this->cssLoader->add($params['id'], $params['path'], $params['version'] ?? '0', (int) @$params['order'], (bool) @$params['template']);
     }
 
     /**
@@ -1285,7 +1287,7 @@ class Combinable
     public function __construct(
         public $id,
         $path,
-        public $version = 0
+        public $version = '0'
     ) {
         $this->set_path($path);
         $this->is_template = false;
@@ -1328,7 +1330,7 @@ final class Script extends Combinable
         public $load_mode,
         $id,
         $path,
-        $version = 0,
+        $version = '0',
         public $precedents = []
     ) {
         parent::__construct($id, $path, $version);
@@ -1350,7 +1352,7 @@ final class Css extends Combinable
     public function __construct(
         $id,
         $path,
-        $version = 0,
+        $version = '0',
         public $order = 0
     ) {
         parent::__construct($id, $path, $version);
@@ -1411,7 +1413,7 @@ class CssLoader
      * @param int $order
      * @param bool $is_template
      */
-    public function add($id, $path, $version = 0, $order = 0, $is_template = false): void
+    public function add($id, $path, $version = '0', $order = 0, $is_template = false): void
     {
         if (! isset($this->registered_css[$id])) {
             // costum order as an higher impact than declaration order
@@ -1421,7 +1423,10 @@ class CssLoader
             $this->counter++;
         } else {
             $css = $this->registered_css[$id];
-            if ($css->order < $order * 1000 || version_compare($css->version, $version) < 0) {
+            if ($css->order < $order * 1000
+                || $css->version === false
+                || $version === false
+                || version_compare($css->version, $version) < 0) {
                 unset($this->registered_css[$id]);
                 $this->add($id, $path, $version, $order, $is_template);
             }
@@ -1521,7 +1526,7 @@ class ScriptLoader
      * @param string $path
      * @param string $version
      */
-    public function add($id, $load_mode, $require, $path, $version = 0, $is_template = false): void
+    public function add($id, $load_mode, $require, $path, $version = '0', $is_template = false): void
     {
         if ($this->did_head && $load_mode == 0) {
             trigger_error("Attempt to add script {$id} but the head has been written", E_USER_WARNING);
@@ -1553,7 +1558,7 @@ class ScriptLoader
                 $script->precedents = array_unique(array_merge($script->precedents, $require));
             }
             $script->set_path($path);
-            if ($version && version_compare($script->version, $version) < 0) {
+            if ($version && $script->version !== false && version_compare($script->version, $version) < 0) {
                 $script->version = $version;
             }
             if ($load_mode < $script->load_mode) {

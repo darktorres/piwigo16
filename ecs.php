@@ -25,8 +25,6 @@ return ECSConfig::configure()
         __DIR__ . '/node_modules',
         __DIR__ . '/tests',
         __DIR__ . '/vendor',
-        // Deferred to P5, after vendor removal (see docs/PLAN-REPLAY.md P0 step 4).
-        DeclareStrictTypesFixer::class,
         // Too aggressive on ~500 files of untouched legacy docblocks this phase.
         GeneralPhpdocAnnotationRemoveFixer::class,
         LineLengthFixer::class,
@@ -39,6 +37,7 @@ return ECSConfig::configure()
         psr12: true,
     )
     ->withRules([
+        DeclareStrictTypesFixer::class,
         LineEndingFixer::class,
         NoTrailingWhitespaceInStringFixer::class,
         RandomApiMigrationFixer::class,

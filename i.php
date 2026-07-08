@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // +-----------------------------------------------------------------------+
 // | This file is part of Piwigo.                                          |
 // |                                                                       |
@@ -33,9 +35,15 @@ $logger = new Logger([
 ]);
 
 function trigger_notify(): void {}
-function get_extension($filename): string
+function get_extension(?string $filename): string
 {
-    return substr(strrchr((string) $filename, '.'), 1, strlen((string) $filename));
+    if ($filename === null) {
+        return '';
+    }
+
+    $dot_position = strrpos($filename, '.');
+
+    return $dot_position === false ? '' : substr($filename, $dot_position + 1);
 }
 
 function mkgetdir($dir): bool

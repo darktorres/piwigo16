@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 $themeconf = [
     'name' => 'default',
     'icon_dir' => 'themes/default/icon',

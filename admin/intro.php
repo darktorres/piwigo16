@@ -213,7 +213,7 @@ while ($mondays < $nb_weeks) {
 $week_number = array_reverse($week_number);
 $date_string = $date->format('Y-m-d');
 
-if (! isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity_last_weeks']['calculated_on'] < strtotime('5 minutes ago')) {
+if (! isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity_last_weeks']['calculated_on'] < pwg_now()->getTimestamp() - 300) {
     $start_time = get_moment();
 
     $query = '
@@ -248,7 +248,8 @@ if (! isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity
     $logger->debug('[admin/intro::' . __LINE__ . '] recent activity calculated in ' . get_elapsed_time($start_time, get_moment()));
 
     $_SESSION['cache_activity_last_weeks'] = [
-        'calculated_on' => time(),
+        'calculated_on' => pwg_now()
+            ->getTimestamp(),
         'data' => $activity_last_weeks,
     ];
 }

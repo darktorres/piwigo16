@@ -2010,7 +2010,7 @@ final class FileCombiner
       if ($this->is_css)
         $content = self::process_css($content, $combinable->path, $header );
       else
-        $content = self::process_js($content, $combinable->path );
+        $content = self::process_js($content);
 
       if ($return_content)
         return $content;
@@ -2023,7 +2023,7 @@ final class FileCombiner
       if ($this->is_css)
         $content = self::process_css($content, $combinable->path, $header );
       else
-        $content = self::process_js($content, $combinable->path );
+        $content = self::process_js($content);
       return $content;
     }
   }
@@ -2032,16 +2032,10 @@ final class FileCombiner
    * Process a JS file.
    *
    * @param string $js file content
-   * @param string $file
    * @return string
    */
-  private static function process_js($js, $file)
+  private static function process_js($js)
   {
-    if (strpos($file, '.min')===false and strpos($file, '.packed')===false )
-    {
-      require_once(PHPWG_ROOT_PATH.'include/jshrink.class.php');
-      try { $js = JShrink\Minifier::minify($js); } catch(Exception $e) {}
-    }
     return trim($js, " \t\r\n;").";\n";
   }
 
@@ -2057,16 +2051,6 @@ final class FileCombiner
   private static function process_css($css, $file, &$header)
   {
     $css = self::process_css_rec($css, dirname($file), $header);
-    if (strpos($file, '.min')===false)
-    {
-      require_once(PHPWG_ROOT_PATH.'include/minify/src/Minify.php');
-      require_once(PHPWG_ROOT_PATH.'include/minify/src/CSS.php');
-      require_once(PHPWG_ROOT_PATH.'include/minify/path-converter/src/ConverterInterface.php');
-      require_once(PHPWG_ROOT_PATH.'include/minify/path-converter/src/Converter.php');
-      require_once(PHPWG_ROOT_PATH.'include/minify/path-converter/src/NoConverter.php');
-      $minifier = new \MatthiasMullie\Minify\CSS($css);
-      $css = $minifier->minify();
-    }
     $css = trigger_change('combined_css_postfilter', $css);
     return $css;
   }

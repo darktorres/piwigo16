@@ -42,6 +42,50 @@ function ts_to_iso8601($ts)
   return date('Y-m-d\\TH:i:s',$ts).$tz;
 }
 
+/**
+ * Builds a well-formed RSS 2.0 feed from channel metadata and items. Covers
+ * exactly this file's own usage (no image/language/copyright/enclosure/etc.
+ * -- feed.php never sets any of those), not a general-purpose feed library.
+ *
+ * @param array $channel keys: title, link, encoding
+ * @param array $items each: title, link, description, html (bool -- wrap
+ *        description in CDATA instead of escaping it), date (ISO 8601
+ *        string), author, guid
+ * @return string
+ */
+function pwg_generate_rss2_feed($channel, $items)
+{
+  $feed = '<?xml version="1.0" encoding="'.$channel['encoding'].'"?>'."\n";
+  $feed.= "<rss version=\"2.0\">\n";
+  $feed.= "  <channel>\n";
+  $feed.= '    <title>'.htmlspecialchars($channel['title'])."</title>\n";
+  $feed.= '    <link>'.htmlspecialchars($channel['link'])."</link>\n";
+  $feed.= "    <description></description>\n";
+  $feed.= '    <lastBuildDate>'.(new DateTimeImmutable())->format(DATE_RFC2822)."</lastBuildDate>\n";
+
+  foreach ($items as $item)
+  {
+    $feed.= "    <item>\n";
+    $feed.= '      <title>'.htmlspecialchars(strip_tags($item['title']))."</title>\n";
+    $feed.= '      <link>'.htmlspecialchars($item['link'])."</link>\n";
+    $feed.= '      <description>'.(!empty($item['html']) ? '<![CDATA['.$item['description'].']]>' : htmlspecialchars($item['description']))."</description>\n";
+    if (!empty($item['author']))
+    {
+      $feed.= '      <author>'.htmlspecialchars($item['author'])."</author>\n";
+    }
+    if (!empty($item['date']))
+    {
+      $feed.= '      <pubDate>'.(new DateTimeImmutable($item['date']))->format(DATE_RFC2822)."</pubDate>\n";
+    }
+    $feed.= '      <guid isPermaLink="false">'.htmlspecialchars($item['guid'] !== '' ? $item['guid'] : $item['link'])."</guid>\n";
+    $feed.= "    </item>\n";
+  }
+
+  $feed.= "  </channel>\n";
+  $feed.= "</rss>\n";
+  return $feed;
+}
+
 // +-----------------------------------------------------------------------+
 // |                            initialization                             |
 // +-----------------------------------------------------------------------+
@@ -84,16 +128,12 @@ check_status(ACCESS_GUEST);
 
 list($dbnow) = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
 
-include_once(PHPWG_ROOT_PATH.'include/feedcreator.class.php');
-
 set_make_full_url();
 
-$rss = new UniversalFeedCreator();
-$rss->encoding=get_pwg_charset();
-$rss->title = $conf['gallery_title'];
-$rss->title.= ' (as '.stripslashes($user['username']).')';
-
-$rss->link = get_gallery_home_url();
+$rss_encoding = get_pwg_charset();
+$rss_title = $conf['gallery_title'].' (as '.stripslashes($user['username']).')';
+$rss_link = get_gallery_home_url();
+$rss_items = array();
 
 // +-----------------------------------------------------------------------+
 // |                            Feed creation                              |
@@ -106,24 +146,23 @@ if (!$image_only)
 
   if (count($news) > 0)
   {
-    $item = new FeedItem();
-    $item->title = l10n('New on %s', format_date($dbnow) );
-    $item->link = get_gallery_home_url();
-
     // content creation
-    $item->description = '<ul>';
+    $description = '<ul>';
     foreach ($news as $line)
     {
-      $item->description.= '<li>'.$line.'</li>';
+      $description.= '<li>'.$line.'</li>';
     }
-    $item->description.= '</ul>';
-    $item->descriptionHtmlSyndicated = true;
+    $description.= '</ul>';
 
-    $item->date = ts_to_iso8601(datetime_to_ts($dbnow));
-    $item->author = $conf['rss_feed_author'];
-    $item->guid= sprintf('%s', $dbnow);;
-
-    $rss->addItem($item);
+    $rss_items[] = array(
+      'title' => l10n('New on %s', format_date($dbnow) ),
+      'link' => get_gallery_home_url(),
+      'description' => $description,
+      'html' => true,
+      'date' => ts_to_iso8601(datetime_to_ts($dbnow)),
+      'author' => $conf['rss_feed_author'],
+      'guid' => sprintf('%s', $dbnow),
+      );
 
     $query = '
 UPDATE '.USER_FEED_TABLE.'
@@ -152,10 +191,8 @@ $dates = get_recent_post_dates_array($conf['recent_post_dates']['RSS']);
 
 foreach($dates as $date_detail)
 { // for each recent post date we create a feed item
-  $item = new FeedItem();
   $date = $date_detail['date_available'];
-  $item->title = get_title_recent_post_date($date_detail);
-  $item->link = make_index_url(
+  $link = make_index_url(
         array(
           'chronology_field' => 'posted',
           'chronology_style'=> 'monthly',
@@ -164,23 +201,36 @@ foreach($dates as $date_detail)
         )
       );
 
-  $item->description .=
-    '<a href="'.make_index_url().'">'.$conf['gallery_title'].'</a><br> ';
+  $description = '<a href="'.make_index_url().'">'.$conf['gallery_title'].'</a><br> ';
+  $description .= get_html_description_recent_post_date($date_detail);
 
-  $item->description .= get_html_description_recent_post_date($date_detail);
-
-  $item->descriptionHtmlSyndicated = true;
-
-  $item->date = ts_to_iso8601(datetime_to_ts($date));
-  $item->author = $conf['rss_feed_author'];
-  $item->guid= sprintf('%s', 'pics-'.$date);;
-
-  $rss->addItem($item);
+  $rss_items[] = array(
+    'title' => get_title_recent_post_date($date_detail),
+    'link' => $link,
+    'description' => $description,
+    'html' => true,
+    'date' => ts_to_iso8601(datetime_to_ts($date)),
+    'author' => $conf['rss_feed_author'],
+    'guid' => sprintf('%s', 'pics-'.$date),
+    );
 }
+
+$feed_content = pwg_generate_rss2_feed(
+  array(
+    'title' => $rss_title,
+    'link' => $rss_link,
+    'encoding' => $rss_encoding,
+    ),
+  $rss_items
+  );
 
 $fileName= PHPWG_ROOT_PATH.$conf['data_location'].'tmp';
 mkgetdir($fileName); // just in case
 $fileName.='/feed.xml';
+file_put_contents($fileName, $feed_content);
+
 // send XML feed
-echo $rss->saveFeed('RSS2.0', $fileName, true);
+header('Content-Type: application/rss+xml; charset='.$rss_encoding.'; filename='.basename($fileName));
+header('Content-Disposition: inline; filename='.basename($fileName));
+echo $feed_content;
 ?>

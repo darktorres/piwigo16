@@ -295,42 +295,6 @@ parameters:
 			path: include/derivative.inc.php
 
 		-
-			message: '#^Access to an undefined property FeedCreator\:\:\$_timeout\.$#'
-			identifier: property.notFound
-			count: 1
-			path: include/feedcreator.class.php
-
-		-
-			message: '#^Access to an undefined property HtmlDescribable\:\:\$description\.$#'
-			identifier: property.notFound
-			count: 1
-			path: include/feedcreator.class.php
-
-		-
-			message: '#^Access to an undefined property PIECreator01\:\:\$truncSize\.$#'
-			identifier: property.notFound
-			count: 1
-			path: include/feedcreator.class.php
-
-		-
-			message: '#^Function each not found\.$#'
-			identifier: function.notFound
-			count: 1
-			path: include/feedcreator.class.php
-
-		-
-			message: '#^Method FeedCreator\:\:createFeed\(\) should return string but return statement is missing\.$#'
-			identifier: return.missing
-			count: 1
-			path: include/feedcreator.class.php
-
-		-
-			message: '#^Static call to instance method FeedCreator\:\:iTrunc\(\)\.$#'
-			identifier: method.staticCall
-			count: 1
-			path: include/feedcreator.class.php
-
-		-
 			message: '#^Undefined variable\: \$comm$#'
 			identifier: variable.undefined
 			count: 1
@@ -359,24 +323,6 @@ parameters:
 			identifier: return.missing
 			count: 2
 			path: include/functions_user.inc.php
-
-		-
-			message: '#^Cannot unset property JShrink\\Minifier\:\:\$c because it might have hooks in a subclass\.$#'
-			identifier: unset.possiblyHookedProperty
-			count: 3
-			path: include/jshrink.class.php
-
-		-
-			message: '#^Cannot unset property JShrink\\Minifier\:\:\$input because it might have hooks in a subclass\.$#'
-			identifier: unset.possiblyHookedProperty
-			count: 1
-			path: include/jshrink.class.php
-
-		-
-			message: '#^Cannot unset property JShrink\\Minifier\:\:\$options because it might have hooks in a subclass\.$#'
-			identifier: unset.possiblyHookedProperty
-			count: 1
-			path: include/jshrink.class.php
 
 		-
 			message: '#^Deprecated in PHP 8\.4\: Parameter \#3 \$use_include_path \(int\) is implicitly nullable via default value null\.$#'

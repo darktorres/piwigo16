@@ -14,9 +14,6 @@ admin/themes/
 template-extension/
 tools/ws/
 
-# Bundled third-party libraries under include/
-include/minify/
-
 # Pre-existing project docs, not authored/reformatted in this phase
 README.md
 SECURITY.md

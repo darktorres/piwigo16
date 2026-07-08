@@ -609,9 +609,8 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
             if ($handle = @fopen($archive, 'wb') and fetchRemote($url, $handle, $get_data)) {
                 fclose($handle);
-                include_once PHPWG_ROOT_PATH . 'admin/include/pclzip.lib.php';
-                $zip = new PclZip($archive);
-                if ($list = $zip->listContent()) {
+                include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
+                if ($list = zip_list_filenames($archive)) {
                     foreach ($list as $file) {
                         // we search main.inc.php in archive
                         if (basename((string) $file['filename']) == 'main.inc.php'
@@ -633,13 +632,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
                         $extract_path = PHPWG_PLUGINS_PATH . $plugin_id;
                         $logger->debug(__FUNCTION__ . ', $extract_path = ' . $extract_path);
 
-                        if ($result = $zip->extract(
-                            PCLZIP_OPT_PATH,
-                            $extract_path,
-                            PCLZIP_OPT_REMOVE_PATH,
-                            $root,
-                            PCLZIP_OPT_REPLACE_NEWER
-                        )) {
+                        if ($result = zip_extract($archive, $extract_path, $root)) {
                             // extraction succeeded; 'ok' if the extracted result
                             // list doesn't happen to include main.inc.php itself
                             $status = 'ok';

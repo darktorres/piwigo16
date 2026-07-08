@@ -19,18 +19,6 @@ parameters:
 			path: admin/include/image.class.php
 
 		-
-			message: '#^Call to function unset\(\) contains undefined variable \$v_header_list\.$#'
-			identifier: unset.variable
-			count: 1
-			path: admin/include/pclzip.lib.php
-
-		-
-			message: '#^Undefined variable\: \$v_file$#'
-			identifier: variable.undefined
-			count: 2
-			path: admin/include/pclzip.lib.php
-
-		-
 			message: '#^Function plugin_activate not found\.$#'
 			identifier: function.notFound
 			count: 1

@@ -501,32 +501,20 @@ class updates
             @fclose($zip);
 
             if (@filesize($filename)) {
-                $zip = new PclZip($filename);
-                if ($result = $zip->extract(
-                    PCLZIP_OPT_PATH,
-                    PHPWG_ROOT_PATH,
-                    PCLZIP_OPT_REMOVE_PATH,
-                    $remove_path,
-                    PCLZIP_OPT_SET_CHMOD,
-                    0755,
-                    PCLZIP_OPT_REPLACE_NEWER
-                )) {
+                include_once PHPWG_ROOT_PATH . 'admin/include/functions_zip.inc.php';
+                if ($result = zip_extract($filename, PHPWG_ROOT_PATH, $remove_path, 0755)) {
                     // Check if all files were extracted
                     $error = '';
                     foreach ($result as $extract) {
                         if (! in_array($extract['status'], ['ok', 'filtered', 'already_a_directory'])) {
                             // Try to change chmod and extract
                             if (@chmod(PHPWG_ROOT_PATH . $extract['filename'], 0777)
-                              and ($res = $zip->extract(
-                                  PCLZIP_OPT_BY_NAME,
-                                  $remove_path . '/' . $extract['filename'],
-                                  PCLZIP_OPT_PATH,
+                              and ($res = zip_extract(
+                                  $filename,
                                   PHPWG_ROOT_PATH,
-                                  PCLZIP_OPT_REMOVE_PATH,
                                   $remove_path,
-                                  PCLZIP_OPT_SET_CHMOD,
                                   0755,
-                                  PCLZIP_OPT_REPLACE_NEWER
+                                  $remove_path . '/' . $extract['filename']
                               ))
                               and isset($res[0]['status'])
                               and $res[0]['status'] == 'ok') {

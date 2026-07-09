@@ -31,7 +31,9 @@ SELECT COUNT(rate) AS count
   FROM ' . RATE_TABLE . '
   WHERE element_id = ' . $picture['current']['id'] . '
 ;';
-        [$rate_summary['count'], $rate_summary['average']] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$rate_summary['count'], $rate_summary['average']] = $row;
     }
     $template->assign('rate_summary', $rate_summary);
 

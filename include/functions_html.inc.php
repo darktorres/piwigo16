@@ -154,7 +154,9 @@ SELECT id, name, permalink
 function get_cat_display_name_from_id($cat_id, $url = ''): string
 {
     $cat_info = get_cat_info($cat_id);
-    return get_cat_display_name($cat_info['upper_names'], $url);
+    // $cat_id isn't existence-validated by callers (WS/URL param) -- a
+    // stale/forged id falls back to an empty breadcrumb.
+    return get_cat_display_name($cat_info['upper_names'] ?? [], $url);
 }
 
 /**

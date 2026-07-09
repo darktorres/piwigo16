@@ -131,14 +131,18 @@ SELECT
     $list = [];
     while ($row = pwg_db_fetch_assoc($result)) {
 
-        $medium = DerivativeImage::get_one(
+        $medium_derivative = DerivativeImage::get_one(
             IMG_MEDIUM,
             [
                 'id' => $row['image_id'],
                 'path' => $row['path'],
                 'representative_ext' => $row['representative_ext'],
             ]
-        )->get_url();
+        );
+        // IMG_MEDIUM is a standard type, always present in the defined
+        // type map — get_one() only returns null for an unknown type.
+        assert($medium_derivative !== null);
+        $medium = $medium_derivative->get_url();
 
         if (empty($row['author_id']) or $row['author_id'] == $conf['guest_id']) {
             $author_name = $row['author'];

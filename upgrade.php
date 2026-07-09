@@ -181,7 +181,9 @@ include PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $conf['dblayer'] . '.in
 upgrade_db_connect();
 pwg_db_check_charset();
 
-[$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+$row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+assert($row !== null);
+[$dbnow] = $row;
 define('CURRENT_DATE', $dbnow);
 
 // +-----------------------------------------------------------------------+

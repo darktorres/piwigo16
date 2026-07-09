@@ -221,7 +221,9 @@ SELECT
     JOIN ' . IMAGE_CATEGORY_TABLE . ' ON image_id = id
   WHERE category_id = ' . $category['id'] . '
 ;';
-    [$image_count, $min_date, $max_date] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$image_count, $min_date, $max_date] = $row;
 
     if ($min_date == $max_date) {
         $info_title = l10n(

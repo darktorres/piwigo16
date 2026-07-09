@@ -237,7 +237,9 @@ SELECT DISTINCT ';
     /* GET THE RESULT OF SQL_CALC_FOUND_ROWS if display total_count is requested */
     if (isset($params['display']['total_count'])) {
         $total_count_query_result = pwg_query('SELECT FOUND_ROWS();');
-        [$total_count] = pwg_db_fetch_row($total_count_query_result);
+        $row = pwg_db_fetch_row($total_count_query_result);
+        assert($row !== null);
+        [$total_count] = $row;
         $total_count = (int) $total_count;
     }
     while ($row = pwg_db_fetch_assoc($result)) {
@@ -574,7 +576,9 @@ SELECT ' . $conf['user_fields']['password'] . ' AS password
   FROM ' . USERS_TABLE . '
   WHERE ' . $conf['user_fields']['id'] . ' = \'' . $user['id'] . '\'
 ;';
-        [$current_password] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$current_password] = $row;
 
         if (! pwg_password_verify($params['password'], $current_password)) {
             return new PwgError(403, l10n('Current password is wrong'));
@@ -650,7 +654,9 @@ SELECT COUNT(*)
   FROM ' . IMAGES_TABLE . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count == 0) {
         return new PwgError(404, 'image_id not found');
     }
@@ -689,7 +695,9 @@ SELECT COUNT(*)
   FROM ' . IMAGES_TABLE . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count == 0) {
         return new PwgError(404, 'image_id not found');
     }
@@ -910,7 +918,8 @@ function ws_create_api_key(array $params, PwgServer &$service): \PwgError|array
         return new PwgError(400, 'Key name is too long');
     }
 
-    $key_name = pwg_db_real_escape_string($params['key_name']);
+    $key_name = pwg_db_real_escape_string((string) $params['key_name']);
+    assert($key_name !== null);
     $duration = $params['duration'] == 0 ? 1 : $params['duration'];
 
     $secret = create_api_key($user['id'], $duration, $key_name);

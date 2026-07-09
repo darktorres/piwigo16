@@ -203,7 +203,9 @@ SELECT
         // this photo is new
 
         // current date
-        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+        $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+        assert($row !== null);
+        [$dbnow] = $row;
         $date_parts = preg_split('/[^\d]/', (string) $dbnow, 4);
         if ($date_parts === false) {
             throw new Exception(__FUNCTION__ . '(): preg_split() failed');
@@ -359,7 +361,11 @@ SELECT
         );
     } else {
         // database registration
+        // pwg_db_real_escape_string() only returns null for a null input,
+        // and basename() never returns null, so the ?? fallback rules
+        // that out.
         $file = pwg_db_real_escape_string($original_filename ?? basename($file_path));
+        assert($file !== null);
         $insert = [
             'file' => $file,
             'name' => get_name_from_file($file),
@@ -413,6 +419,7 @@ SELECT
     set_make_full_url();
     // in case we are on uploadify.php, we have to replace the false path
     $derivative_url = preg_replace('#admin/include/i#', 'i', DerivativeImage::url(IMG_MEDIUM, $src_image));
+    assert($derivative_url !== null);
     unset_make_full_url();
 
     $logger->info(__FUNCTION__ . ' : force cache generation, derivative_url = ' . $derivative_url);
@@ -437,7 +444,9 @@ function add_uploaded_file_add_to_categories(int|string $image_id, ?array $categ
 
     if (! $conf['lounge_active']) {
         // check if we need to use the lounge from now
-        [$nb_photos] = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . IMAGES_TABLE . ';'));
+        $row = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . IMAGES_TABLE . ';'));
+        assert($row !== null);
+        [$nb_photos] = $row;
         if ($nb_photos >= $conf['lounge_activate_threshold']) {
             conf_update_param('lounge_active', true, true);
         }
@@ -684,6 +693,7 @@ function upload_file_tiff(?string $representative_ext, string $file_path): ?stri
             '-0.' . $representative_ext,
             $representative_file_abspath
         );
+        assert($first_file_abspath !== null);
 
         if (file_exists($first_file_abspath)) {
             rename($first_file_abspath, $representative_file_abspath);
@@ -813,6 +823,7 @@ function upload_file_psd(?string $representative_ext, string $file_path): ?strin
             '-0.' . $representative_ext,
             $representative_file_abspath
         );
+        assert($first_file_abspath !== null);
 
         if (file_exists($first_file_abspath)) {
             rename($first_file_abspath, $representative_file_abspath);

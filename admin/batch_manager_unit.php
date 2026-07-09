@@ -267,6 +267,9 @@ SELECT
         $related_categories = [];
         $related_category_ids = [];
         $media['image'] = get_image_infos($row['id'], true);
+        // die_on_missing=true means get_image_infos() only returns null via
+        // a fatal_error() path that never returns.
+        assert($media['image'] !== null);
 
         while ($item = pwg_db_fetch_assoc($sub_result)) {
             $name =

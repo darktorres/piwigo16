@@ -502,8 +502,9 @@ class pwg_image
 
     public function destroy(): bool
     {
-        if (method_exists($this->image, 'destroy')) {
-            return $this->image->destroy();
+        $image = $this->getImage();
+        if (method_exists($image, 'destroy')) {
+            return $image->destroy();
         }
         return true;
     }

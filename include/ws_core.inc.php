@@ -228,6 +228,27 @@ class PwgServer
     public function __construct() {}
 
     /**
+     * $_requestHandler is only read after run()'s own null-check, but
+     * intervening method calls (addMethod(), trigger_notify()) mean
+     * PHPStan can't carry that narrowing to handleRequest()'s call site.
+     */
+    private function requestHandler(): \PwgRequestHandler
+    {
+        assert($this->_requestHandler !== null);
+        return $this->_requestHandler;
+    }
+
+    /**
+     * sendResponse() is only ever called once setEncoder() has run
+     * (the real app-level contract every real caller follows).
+     */
+    private function responseEncoder(): \PwgResponseEncoder
+    {
+        assert($this->_responseEncoder !== null);
+        return $this->_responseEncoder;
+    }
+
+    /**
      *  Initializes the request handler.
      */
     public function setHandler(string $requestFormat, ?PwgRequestHandler &$requestHandler): void
@@ -278,7 +299,8 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
         trigger_notify('ws_add_methods', [&$this]);
         uksort($this->_methods, strnatcmp(...));
-        $this->_requestHandler->handleRequest($this);
+        $this->requestHandler()
+            ->handleRequest($this);
     }
 
     /**
@@ -286,8 +308,10 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
      */
     public function sendResponse(mixed $response): void
     {
-        $encodedResponse = $this->_responseEncoder->encodeResponse($response);
-        $contentType = $this->_responseEncoder->getContentType();
+        $encodedResponse = $this->responseEncoder()
+            ->encodeResponse($response);
+        $contentType = $this->responseEncoder()
+            ->getContentType();
 
         @header('Content-Type: ' . $contentType . '; charset=' . get_pwg_charset());
         print_r($encodedResponse);

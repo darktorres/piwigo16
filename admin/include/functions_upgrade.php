@@ -137,7 +137,9 @@ SELECT theme
   FROM ' . PREFIX_TABLE . 'user_infos
   WHERE user_id = ' . $conf['default_user_id'] . '
 ;';
-        [$default_theme] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$default_theme] = $row;
 
         // if the default theme has just been deactivated, let's set another core theme as default
         if (in_array($default_theme, $theme_ids)) {
@@ -148,7 +150,9 @@ SELECT
   FROM ' . PREFIX_TABLE . 'themes
   WHERE id = \'' . PHPWG_DEFAULT_TEMPLATE . '\'
 ;';
-            [$counter] = pwg_db_fetch_row(pwg_query($query));
+            $row = pwg_db_fetch_row(pwg_query($query));
+            assert($row !== null);
+            [$counter] = $row;
             if ($counter < 1) {
                 // we need to activate theme first
                 include_once PHPWG_ROOT_PATH . 'admin/include/themes.class.php';

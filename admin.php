@@ -233,7 +233,9 @@ SELECT COUNT(*)
   FROM ' . COMMENTS_TABLE . '
   WHERE validated=\'false\'
 ;';
-    [$nb_comments] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$nb_comments] = $row;
 
     if ($nb_comments > 0) {
         $template->assign('NB_PENDING_COMMENTS', $nb_comments);
@@ -247,7 +249,9 @@ SELECT COUNT(*)
   FROM ' . CADDIE_TABLE . '
   WHERE user_id = ' . $user['id'] . '
 ;';
-[$nb_photos_in_caddie] = pwg_db_fetch_row(pwg_query($query));
+$row = pwg_db_fetch_row(pwg_query($query));
+assert($row !== null);
+[$nb_photos_in_caddie] = $row;
 
 if ($nb_photos_in_caddie > 0) {
     $template->assign(
@@ -277,7 +281,9 @@ if (in_array($page['page'], ['site_update', 'batch_manager'])) {
 // only calculate number of orphans on all pages if the number of images is "not huge"
 $page['nb_orphans'] = 0;
 
-[$page['nb_photos_total']] = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . IMAGES_TABLE));
+$row = pwg_db_fetch_row(pwg_query('SELECT COUNT(*) FROM ' . IMAGES_TABLE));
+assert($row !== null);
+[$page['nb_photos_total']] = $row;
 if ($page['nb_photos_total'] < 100000) { // 100k is already a big gallery
     $page['nb_orphans'] = count_orphans();
 }

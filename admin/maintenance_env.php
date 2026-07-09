@@ -204,8 +204,9 @@ DELETE
                 // because integer are limited to 4,294,967,296 we need to split BSF
                 // versions in date.time
                 foreach ($versions as $key => $value) {
-                    $versions[$key] =
-                      preg_replace('/BSF_(\d{8})(\d{4})/', '$1.$2', $value);
+                    $replaced = preg_replace('/BSF_(\d{8})(\d{4})/', '$1.$2', $value);
+                    assert($replaced !== null);
+                    $versions[$key] = $replaced;
                 }
             } else {
                 $versions['latest'] = trim($lines[1]);
@@ -248,7 +249,9 @@ $purge_urls[l10n(IMG_CUSTOM)] = sprintf($url_format, 'derivatives') . '&amp;type
 
 $php_current_timestamp = date('Y-m-d H:i:s');
 $db_version = pwg_get_db_version();
-[$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();'));
+$row = pwg_db_fetch_row(pwg_query('SELECT now();'));
+assert($row !== null);
+[$db_current_date] = $row;
 
 [$container_name, $container_version] = get_container_info();
 

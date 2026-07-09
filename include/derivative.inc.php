@@ -283,28 +283,41 @@ final class DerivativeImage
      * @param ?DerivativeParams $params by-ref: may be reassigned to null (source used as-is) or a smaller defined type
      * @param string $rel_path by-ref out-param
      * @param string $rel_url by-ref out-param
-     * @param ?bool $is_cached by-ref out-param; not bound to a real variable when omitted (uses its default)
+     * @param bool $is_cached by-ref out-param; not bound to a real variable when omitted (uses its default)
      */
-    private static function build(SrcImage $src, &$params, &$rel_path, &$rel_url, &$is_cached = null): void
+    private static function build(SrcImage $src, &$params, &$rel_path, &$rel_url, &$is_cached = false): void
     {
-        if ($src->has_size() && $params->is_identity($src->get_size())) {// the source image is smaller than what we should do - we do not upsample
-            if (! $params->will_watermark($src->get_size()) && ! $src->rotation) {// no watermark, no rotation required -> we will use the source image
-                $params = null;
-                $rel_path = $rel_url = $src->rel_path;
-                return;
-            }
-            $defined_types = array_keys(ImageStdParams::get_defined_type_map());
-            for ($i = 0; $i < count($defined_types); $i++) {
-                if ($defined_types[$i] == $params->type) {
-                    for ($i--; $i >= 0; $i--) {
-                        $smaller = ImageStdParams::get_by_type($defined_types[$i]);
-                        if ($smaller->sizing->max_crop == $params->sizing->max_crop && $smaller->is_identity($src->get_size())) {
-                            $params = $smaller;
-                            self::build($src, $params, $rel_path, $rel_url, $is_cached);
-                            return;
+        // every real call site (the constructor, url(), and this method's
+        // own recursive call below) passes a freshly-resolved, non-null
+        // DerivativeParams; it's only ever reassigned to null as an
+        // out-param, below.
+        assert($params !== null);
+
+        if ($src->has_size()) {
+            $src_size = $src->get_size();
+            // has_size() checks the same underlying state get_size() would
+            // otherwise recompute, so a true has_size() guarantees get_size()
+            // returns non-null here.
+            assert($src_size !== null);
+            if ($params->is_identity($src_size)) {// the source image is smaller than what we should do - we do not upsample
+                if (! $params->will_watermark($src_size) && ! $src->rotation) {// no watermark, no rotation required -> we will use the source image
+                    $params = null;
+                    $rel_path = $rel_url = $src->rel_path;
+                    return;
+                }
+                $defined_types = array_keys(ImageStdParams::get_defined_type_map());
+                for ($i = 0; $i < count($defined_types); $i++) {
+                    if ($defined_types[$i] == $params->type) {
+                        for ($i--; $i >= 0; $i--) {
+                            $smaller = ImageStdParams::get_by_type($defined_types[$i]);
+                            if ($smaller->sizing->max_crop == $params->sizing->max_crop && $smaller->is_identity($src_size)) {
+                                $params = $smaller;
+                                self::build($src, $params, $rel_path, $rel_url, $is_cached);
+                                return;
+                            }
                         }
+                        break;
                     }
-                    break;
                 }
             }
         }
@@ -394,14 +407,15 @@ final class DerivativeImage
     }
 
     /**
-     * @return int[]
+     * @return int[]|null null if the source image's own size failed to compute
      */
-    public function get_size()
+    public function get_size(): ?array
     {
-        if ($this->params == null) {
-            return $this->src_image->get_size();
+        $src_size = $this->src_image->get_size();
+        if ($this->params == null || $src_size == null) {
+            return $src_size;
         }
-        return $this->params->compute_final_size($this->src_image->get_size());
+        return $this->params->compute_final_size($src_size);
     }
 
     /**
@@ -446,7 +460,7 @@ final class DerivativeImage
     /**
      * @param int $maxw
      * @param int $maxh
-     * @return int[]
+     * @return int[]|null
      */
     public function get_scaled_size($maxw, $maxh)
     {

@@ -991,7 +991,8 @@ SELECT image_id
   ORDER BY ' . DB_RANDOM_FUNCTION . '()
   LIMIT 1
 ;';
-        [$representative] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        $representative = $row !== null ? $row[0] : null;
 
         $datas[] = [
             'id' => $category_id,
@@ -1306,7 +1307,9 @@ SELECT uppercats
   FROM ' . CATEGORIES_TABLE . '
   WHERE id = ' . $new_parent . '
 ;';
-        [$new_parent_uppercats] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$new_parent_uppercats] = $row;
 
         foreach ($categories as $category) {
             // technically, you can't move a category with uppercats 12,125,13,14
@@ -1342,7 +1345,9 @@ SELECT status
   FROM ' . CATEGORIES_TABLE . '
   WHERE id = ' . $new_parent . '
 ;';
-        [$parent_status] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$parent_status] = $row;
     }
 
     if ($parent_status == 'private') {
@@ -1860,7 +1865,9 @@ INSERT IGNORE
 ;';
     pwg_query($query);
 
-    [$empty_lounge_running] = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = "empty_lounge_running"'));
+    $row = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = "empty_lounge_running"'));
+    assert($row !== null);
+    [$empty_lounge_running] = $row;
     [$running_exec_id] = explode('-', (string) $empty_lounge_running);
 
     if ($running_exec_id != $exec_id) {
@@ -2403,7 +2410,9 @@ SELECT name
 ;';
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
-        [$groupname] = pwg_db_fetch_row($result);
+        $row = pwg_db_fetch_row($result);
+        assert($row !== null);
+        [$groupname] = $row;
     } else {
         return false;
     }
@@ -2488,7 +2497,9 @@ SELECT ' . $conf['user_fields']['username'] . '
 ;';
     $result = pwg_query($query);
     if (pwg_db_num_rows($result) > 0) {
-        [$username] = pwg_db_fetch_row($result);
+        $row = pwg_db_fetch_row($result);
+        assert($row !== null);
+        [$username] = $row;
     } else {
         return false;
     }
@@ -3003,7 +3014,9 @@ SELECT CONCAT(
   )
   FROM `' . $tables[$item] . '`
 ;';
-        [$keys[$item]] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$keys[$item]] = $row;
     }
 
     return $keys;
@@ -3071,14 +3084,18 @@ SELECT
     COUNT(*)
   FROM ' . IMAGES_TABLE . '
 ;';
-        [$image_counter_all] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$image_counter_all] = $row;
 
         $query = '
 SELECT
     COUNT(DISTINCT(image_id))
   FROM ' . IMAGE_CATEGORY_TABLE . '
 ;';
-        [$image_counter_in_categories] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$image_counter_in_categories] = $row;
 
         $counter = $image_counter_all - $image_counter_in_categories;
         conf_update_param('count_orphans', $counter, true);
@@ -3476,31 +3493,41 @@ function get_pwg_general_statitics(): array
 SELECT COUNT(*)
   FROM ' . IMAGES_TABLE . '
 ;';
-    [$stats['nb_photos']] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$stats['nb_photos']] = $row;
 
     $query = '
 SELECT COUNT(*)
   FROM ' . CATEGORIES_TABLE . '
 ;';
-    [$stats['nb_categories']] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$stats['nb_categories']] = $row;
 
     $query = '
 SELECT COUNT(*)
   FROM ' . TAGS_TABLE . '
 ;';
-    [$stats['nb_tags']] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$stats['nb_tags']] = $row;
 
     $query = '
 SELECT COUNT(*)
   FROM ' . IMAGE_TAG_TABLE . '
 ;';
-    [$stats['nb_image_tag']] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$stats['nb_image_tag']] = $row;
 
     $query = '
 SELECT COUNT(*)
   FROM ' . USERS_TABLE . '
 ;';
-    [$stats['nb_users']] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$stats['nb_users']] = $row;
 
     $query = '
 SELECT
@@ -3508,19 +3535,25 @@ SELECT
   FROM ' . USER_INFOS_TABLE . '
   WHERE status IN (\'webmaster\', \'admin\')
 ;';
-    [$stats['nb_admins']] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$stats['nb_admins']] = $row;
 
     $query = '
 SELECT COUNT(*)
   FROM `' . GROUPS_TABLE . '`
 ;';
-    [$stats['nb_groups']] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$stats['nb_groups']] = $row;
 
     $query = '
 SELECT COUNT(*)
   FROM ' . RATE_TABLE . '
 ;';
-    [$stats['nb_rates']] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$stats['nb_rates']] = $row;
 
     $query = '
 SELECT
@@ -3528,14 +3561,18 @@ SELECT
   FROM ' . HISTORY_SUMMARY_TABLE . '
   WHERE month IS NULL
 ;';
-    [$stats['nb_views']] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$stats['nb_views']] = $row;
 
     $query = '
 SELECT
     SUM(filesize)
   FROM ' . IMAGES_TABLE . '
 ;';
-    [$stats['disk_usage']] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$stats['disk_usage']] = $row;
 
     $query = '
 SELECT
@@ -3543,7 +3580,9 @@ SELECT
     SUM(filesize)
   FROM ' . IMAGE_FORMAT_TABLE . '
 ;';
-    [$stats['nb_formats'], $stats['formats_disk_usage']] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$stats['nb_formats'], $stats['formats_disk_usage']] = $row;
 
     $stats['disk_usage'] += $stats['formats_disk_usage'];
 

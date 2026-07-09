@@ -53,19 +53,24 @@ SELECT registration_date
   ORDER BY user_id ASC
   LIMIT 1
 ;';
-    [$register_date] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    $register_date = $row !== null ? $row[0] : null;
 
     $query = '
 SELECT COUNT(*)
   FROM ' . CATEGORIES_TABLE . '
 ;';
-    [$nb_cats] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$nb_cats] = $row;
 
     $query = '
 SELECT COUNT(*)
   FROM ' . IMAGES_TABLE . '
 ;';
-    [$nb_images] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$nb_images] = $row;
 
     // To see the mobile app promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
     $template->assign('PROMOTE_MOBILE_APPS', (strtotime((string) $register_date) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30));

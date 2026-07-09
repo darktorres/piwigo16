@@ -26,7 +26,9 @@ SELECT COUNT(*)
   FROM ' . CATEGORIES_TABLE . '
 ;';
 
-[$nb_cats] = pwg_db_fetch_row(pwg_query($query));
+$row = pwg_db_fetch_row(pwg_query($query));
+assert($row !== null);
+[$nb_cats] = $row;
 $template->assign(
     [
         'nb_cats' => $nb_cats,

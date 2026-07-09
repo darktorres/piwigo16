@@ -73,7 +73,7 @@ if (is_a_guest() or is_generic() or $filters_conf['last_filters_conf'] == false)
 
 $words = [];
 if (! empty($_GET['q'])) {
-    $words = split_allwords($_GET['q']);
+    $words = split_allwords($_GET['q']) ?? [];
 }
 
 if (count($words) > 0 or in_array('allwords', $fields)) {

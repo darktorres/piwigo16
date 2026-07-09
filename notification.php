@@ -33,7 +33,9 @@ SELECT COUNT(*)
   FROM ' . USER_FEED_TABLE . '
   WHERE id = \'' . $key . '\'
 ;';
-        [$count] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$count] = $row;
         if ($count == 0) {
             return $key;
         }

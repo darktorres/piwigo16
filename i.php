@@ -156,6 +156,7 @@ function parse_custom_params(array $tokens): \DerivativeParams
         $crop = char_to_fraction($token);
 
         $token = array_shift($tokens);
+        assert($token !== null);
         $min_size = url_to_size($token);
     }
     return new DerivativeParams(new SizingParams($size, $crop, $min_size));
@@ -581,6 +582,11 @@ if ($params->will_watermark($d_size)) {
     if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
         $wm_scaling_params = SizingParams::classic($d_size[0], $d_size[1]);
         $wm_scaling_params->compute($wm_size, null, $tmp, $wm_scaled_size);
+        // compute()'s $scale_size out-param is only null when neither ratio
+        // exceeds 1 — impossible here, since we're inside the same
+        // "watermark bigger than destination in some dimension" guard that
+        // condition is derived from.
+        assert($wm_scaled_size !== null);
         $wm_size = $wm_scaled_size;
         $wm_image->resize($wm_scaled_size[0], $wm_scaled_size[1]);
     }

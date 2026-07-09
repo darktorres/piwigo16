@@ -1520,13 +1520,17 @@ function qsearch_get_images(QExpression $expr, QResults $qsr): void
 ';
     for ($i = 0; $i < count($expr->stokens); $i++) {
         $token = $expr->stokens[$i];
-        $scope_id = isset($token->scope) ? $token->scope->id : 'photo';
+        $scope = $token->scope;
+        $scope_id = $scope !== null ? $scope->id : 'photo';
         $clauses = [];
 
         $like = addslashes((string) $token->term);
         $like = str_replace(['%', '_'], ['\\%', '\\_'], $like); // escape LIKE specials %_
         $file_like = 'CONVERT(file, CHAR) LIKE \'%' . $like . '%\'';
 
+        // every case below other than 'photo'/'file'/'author'/default is
+        // only reachable when $scope was non-null (it's the source of
+        // $scope_id itself in that case), hence the asserts.
         switch ($scope_id) {
             case 'photo':
                 $clauses[] = $file_like;
@@ -1547,31 +1551,40 @@ function qsearch_get_images(QExpression $expr, QResults $qsr): void
                 break;
             case 'width':
             case 'height':
-                $clauses[] = $token->scope->get_sql($scope_id, $token);
+                assert($scope !== null);
+                $clauses[] = $scope->get_sql($scope_id, $token);
                 break;
             case 'ratio':
-                $clauses[] = $token->scope->get_sql('width/height', $token);
+                assert($scope !== null);
+                $clauses[] = $scope->get_sql('width/height', $token);
                 break;
             case 'size':
-                $clauses[] = $token->scope->get_sql('width*height', $token);
+                assert($scope !== null);
+                $clauses[] = $scope->get_sql('width*height', $token);
                 break;
             case 'hits':
-                $clauses[] = $token->scope->get_sql('hit', $token);
+                assert($scope !== null);
+                $clauses[] = $scope->get_sql('hit', $token);
                 break;
             case 'score':
-                $clauses[] = $token->scope->get_sql('rating_score', $token);
+                assert($scope !== null);
+                $clauses[] = $scope->get_sql('rating_score', $token);
                 break;
             case 'filesize':
-                $clauses[] = $token->scope->get_sql('1024*filesize', $token);
+                assert($scope !== null);
+                $clauses[] = $scope->get_sql('1024*filesize', $token);
                 break;
             case 'created':
-                $clauses[] = $token->scope->get_sql('date_creation', $token);
+                assert($scope !== null);
+                $clauses[] = $scope->get_sql('date_creation', $token);
                 break;
             case 'posted':
-                $clauses[] = $token->scope->get_sql('date_available', $token);
+                assert($scope !== null);
+                $clauses[] = $scope->get_sql('date_available', $token);
                 break;
             case 'id':
-                $clauses[] = $token->scope->get_sql($scope_id, $token);
+                assert($scope !== null);
+                $clauses[] = $scope->get_sql($scope_id, $token);
                 break;
             default:
                 // allow plugins to have their own scope with columns added in db by themselves
@@ -2066,7 +2079,9 @@ SELECT
   FROM ' . SEARCH_TABLE . '
   WHERE search_uuid = \'' . $candidate . '\'
 ;';
-    [$counter] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$counter] = $row;
     if ($counter == 0) {
         return $candidate;
     } else {
@@ -2082,7 +2097,9 @@ function save_search(array $rules, ?int $forked_from = null): array
 {
     global $user;
 
-    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW()'));
+    $row = pwg_db_fetch_row(pwg_query('SELECT NOW()'));
+    assert($row !== null);
+    [$dbnow] = $row;
     $search_uuid = get_available_search_uuid();
 
     single_insert(

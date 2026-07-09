@@ -212,7 +212,9 @@ ORDER BY
   month DESC
 ;';
 
-    [$result['avg']] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$result['avg']] = $row;
 
     return $result;
 }

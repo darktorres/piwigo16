@@ -256,7 +256,9 @@ SELECT COUNT(*)
   FROM `' . TAGS_TABLE . '`
   WHERE id in (' . implode(',', $params['tag_id']) . ')
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count != count($params['tag_id'])) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
     }
@@ -296,7 +298,9 @@ SELECT COUNT(*)
   FROM `' . TAGS_TABLE . '`
   WHERE id = ' . $tag_id . '
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count == 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
     }
@@ -369,7 +373,9 @@ SELECT COUNT(*)
   FROM `' . TAGS_TABLE . '`
   WHERE id = ' . $tag_id . '
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count == 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This tag does not exist.');
     }
@@ -379,7 +385,9 @@ SELECT COUNT(*)
   FROM `' . TAGS_TABLE . '`
   WHERE name = "' . $copy_name . '"
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count != 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already taken.');
     }
@@ -455,7 +463,9 @@ SELECT COUNT(*)
   FROM `' . TAGS_TABLE . '`
   WHERE id in (' . implode(',', $all_tags) . ')
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count != count($all_tags)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'All tags does not exist.');
     }

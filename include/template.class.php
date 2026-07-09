@@ -1322,7 +1322,9 @@ class Combinable
 
     /**
      * @param string $id
-     * @param string $path
+     * @param string|null $path null leaves $path unset -- callers that pass
+     *   null (e.g. ScriptLoader::add()'s UI-core-dependency recursion) rely
+     *   on a well-known path being filled in afterwards
      * @param string|false $version false disables version-based cache busting
      */
     public function __construct(
@@ -1335,7 +1337,7 @@ class Combinable
     }
 
     /**
-     * @param string $path
+     * @param string|null $path a null/empty path is a deliberate no-op
      */
     public function set_path($path): void
     {
@@ -1363,7 +1365,7 @@ final class Script extends Combinable
     /**
      * @param int $load_mode 0,1,2
      * @param string $id
-     * @param string $path
+     * @param string|null $path see Combinable::__construct()
      * @param string|false $version false disables version-based cache
      *   busting, mirroring Combinable::$version's own contract
      * @param string[] $precedents

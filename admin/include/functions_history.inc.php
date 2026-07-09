@@ -361,7 +361,9 @@ SELECT
     COUNT(*)
   FROM ' . HISTORY_TABLE . '
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
 
     if ($count <= $conf['history_autopurge_keep_lines']) {
         history_remove_summarized_column();
@@ -443,7 +445,9 @@ SELECT
     COUNT(*)
   FROM ' . HISTORY_TABLE . '
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
 
     if ($count > $conf['history_autopurge_keep_lines'] + $conf['history_autopurge_blocksize']) {
         // it's not yet time to remove history.summarized

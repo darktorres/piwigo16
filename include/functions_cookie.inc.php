@@ -55,6 +55,9 @@ function cookie_path(): string
         $scr .= PHPWG_ROOT_PATH;
         while (1) {
             $new = preg_replace('#[^/]+/\.\.(/|$)#', '', (string) $scr);
+            // fixed, valid pattern -- preg_replace() only returns null on a
+            // compile error, which is unreachable here.
+            assert($new !== null);
             if ($new == $scr) {
                 break;
             }

@@ -150,9 +150,9 @@ final class ImageRect
      * Crops vertically this rectangle by increasing top side and/or reducing the bottom side.
      *
      * @param int $pixels - the amount to substract from the height
-     * @param string $coi - a 4 character string (or null) containing the center of interest
+     * @param ?string $coi - a 4 character string (or null) containing the center of interest
      */
-    public function crop_v($pixels, $coi): void
+    public function crop_v($pixels, ?string $coi): void
     {
         if ($this->height() <= $pixels) {
             return;

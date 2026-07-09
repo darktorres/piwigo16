@@ -171,7 +171,8 @@ SELECT
   FROM `' . GROUPS_TABLE . '`
   WHERE id = ' . $_POST['group'] . '
 ;';
-        [$group_name] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        $group_name = $row !== null ? $row[0] : null;
 
         $template->assign(
             [

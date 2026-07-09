@@ -442,7 +442,9 @@ SELECT image_id
 ;';
         $result = pwg_query($query);
         if (pwg_db_num_rows($result) > 0) {
-            [$image_id] = pwg_db_fetch_row($result);
+            $row = pwg_db_fetch_row($result);
+            assert($row !== null);
+            [$image_id] = $row;
         }
     }
 

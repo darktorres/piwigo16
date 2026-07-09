@@ -368,6 +368,7 @@ function metadata_normalize_keywords_string($keywords_string): string
     global $conf;
 
     $keywords_string = preg_replace($conf['metadata_keyword_separator_regex'], ',', $keywords_string);
+    assert($keywords_string !== null);
     // new lines are always considered as keyword separators
     $keywords_string = str_replace(["\r\n", "\n", "\r"], ',', $keywords_string);
     $keywords_string = preg_replace('/,+/', ',', $keywords_string);

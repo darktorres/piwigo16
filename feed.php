@@ -125,7 +125,9 @@ SELECT user_id,
 // Check the status now after the user has been loaded
 check_status(ACCESS_GUEST);
 
-[$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+$row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+assert($row !== null);
+[$dbnow] = $row;
 
 set_make_full_url();
 

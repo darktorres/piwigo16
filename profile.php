@@ -203,7 +203,9 @@ function save_profile_from_post(array $userdata, &$errors): bool
     FROM ' . USERS_TABLE . '
     WHERE ' . $conf['user_fields']['id'] . ' = \'' . $userdata['id'] . '\'
   ;';
-            [$current_password] = pwg_db_fetch_row(pwg_query($query));
+            $row = pwg_db_fetch_row(pwg_query($query));
+            assert($row !== null);
+            [$current_password] = $row;
 
             if (! pwg_password_verify($_POST['password'], $current_password)) {
                 $errors[] = l10n('Current password is wrong');
@@ -379,7 +381,9 @@ function load_profile_in_template($url_action, $url_redirect, array $userdata, ?
     $template->assign('IN_ADMIN', defined('IN_ADMIN'));
 
     // api key expiration choice
-    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 DAY);'));
+    $row = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL 1 DAY);'));
+    assert($row !== null);
+    [$dbnow] = $row;
     $template->assign('API_CURRENT_DATE', explode(' ', (string) $dbnow)[0]);
 
     $duration = [];

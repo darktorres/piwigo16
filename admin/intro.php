@@ -81,7 +81,9 @@ SELECT COUNT(*)
   FROM ' . CATEGORIES_TABLE . '
   WHERE visible =\'false\'
 ;';
-[$locked_album] = pwg_db_fetch_row(pwg_query($query));
+$row = pwg_db_fetch_row(pwg_query($query));
+assert($row !== null);
+[$locked_album] = $row;
 if ($locked_album > 0) {
     $locked_album_url = PHPWG_ROOT_PATH . 'admin.php?page=cat_options&section=visible';
 
@@ -110,19 +112,24 @@ if ($conf['show_newsletter_subscription'] and userprefs_get_param('show_newslett
     ORDER BY user_id ASC
     LIMIT 1
   ;';
-    [$register_date] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    $register_date = $row !== null ? $row[0] : null;
 
     $query = '
   SELECT COUNT(*)
     FROM ' . CATEGORIES_TABLE . '
   ;';
-    [$nb_cats] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$nb_cats] = $row;
 
     $query = '
   SELECT COUNT(*)
     FROM ' . IMAGES_TABLE . '
   ;';
-    [$nb_images] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$nb_images] = $row;
 
     // To see the newsletter promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
 
@@ -168,7 +175,9 @@ if ($conf['activate_comments']) {
 SELECT COUNT(*)
   FROM ' . COMMENTS_TABLE . '
 ;';
-    [$nb_comments] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$nb_comments] = $row;
     $template->assign('NB_COMMENTS', $nb_comments);
 } else {
     $template->assign('NB_COMMENTS', 0);

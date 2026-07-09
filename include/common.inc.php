@@ -159,7 +159,9 @@ if (! isset($conf['piwigo_installed_version'])) {
 
 // Check if last major update conf is set if not set it
 if (! isset($conf['last_major_update'])) {
-    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+    $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+    assert($row !== null);
+    [$dbnow] = $row;
     conf_update_param('last_major_update', $dbnow, true);
 }
 

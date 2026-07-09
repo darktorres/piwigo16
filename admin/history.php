@@ -120,7 +120,8 @@ if ($form_param['user_id'] != '-1') {
     WHERE id = ' . $form_param['user_id'] . '
   ;';
 
-    [$form_param['user_name']] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    $form_param['user_name'] = $row !== null ? $row[0] : null;
     $form_param['user_id'] = empty(pwg_db_fetch_row(pwg_query($query))) ? '-1' : $form_param['user_id'];
 }
 

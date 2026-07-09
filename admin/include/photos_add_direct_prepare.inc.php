@@ -143,7 +143,9 @@ SELECT
     COUNT(*)
   FROM ' . CATEGORIES_TABLE . '
 ;';
-[$nb_albums] = pwg_db_fetch_row(pwg_query($query));
+$row = pwg_db_fetch_row(pwg_query($query));
+assert($row !== null);
+[$nb_albums] = $row;
 // $nb_albums = 0;
 $template->assign('NB_ALBUMS', $nb_albums);
 

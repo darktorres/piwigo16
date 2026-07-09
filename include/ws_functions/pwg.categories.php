@@ -136,7 +136,9 @@ SELECT SQL_CALC_FOUND_ROWS i.*
             $images[] = $image;
         }
 
-        [$total_images] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+        $row = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+        assert($row !== null);
+        [$total_images] = $row;
         $total_images = (int) $total_images;
 
         // let's take care of adding the related albums to each photo
@@ -318,7 +320,9 @@ SELECT SQL_CALC_FOUND_ROWS
     $result = pwg_query($query);
 
     if (isset($params['limit'])) {
-        [$result_count] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+        $row = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+        assert($row !== null);
+        [$result_count] = $row;
         if ($params['cat_id'] > 0) {
             --$result_count;
         }
@@ -407,7 +411,9 @@ SELECT representative_picture_id
                 $subresult = pwg_query($query);
 
                 if (pwg_db_num_rows($subresult) > 0) {
-                    [$image_id] = pwg_db_fetch_row($subresult);
+                    $subrow = pwg_db_fetch_row($subresult);
+                    assert($subrow !== null);
+                    [$image_id] = $subrow;
                 }
             }
         }
@@ -595,7 +601,9 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
 ;';
     $result = pwg_query($query);
 
-    [$counter] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+    $row = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+    assert($row !== null);
+    [$counter] = $row;
 
     $cats = [];
     while ($row = pwg_db_fetch_assoc($result)) {
@@ -914,7 +922,9 @@ SELECT COUNT(*)
   FROM ' . CATEGORIES_TABLE . '
   WHERE id = ' . $params['category_id'] . '
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count == 0) {
         return new PwgError(404, 'category_id not found');
     }
@@ -925,7 +935,9 @@ SELECT COUNT(*)
   FROM ' . IMAGES_TABLE . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count == 0) {
         return new PwgError(404, 'image_id not found');
     }
@@ -981,7 +993,9 @@ SELECT COUNT(*)
   FROM ' . IMAGE_CATEGORY_TABLE . '
   WHERE category_id = ' . $params['category_id'] . '
 ;';
-    [$nb_images] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$nb_images] = $row;
 
     if (! $conf['allow_random_representative'] and $nb_images != 0) {
         return new PwgError(401, 'not permitted');

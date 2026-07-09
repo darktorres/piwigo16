@@ -438,6 +438,7 @@ function str2url($str): string
     $str = $safe = pwg_transliterate($str);
     $str = preg_replace('/[^\x80-\xffa-z0-9_\s\'\:\/\[\],-]/', '', $str);
     $str = preg_replace('/[\s\'\:\/\[\],-]+/', ' ', trim((string) $str));
+    assert($str !== null);
     $res = str_replace(' ', '_', $str);
 
     if (empty($res)) {
@@ -1024,8 +1025,8 @@ function time_since($original, $stop = 'minute', $format = null, $with_text = tr
  * @param string $original
  * @param string $format_in respecting date() syntax
  * @param string $format_out respecting date() syntax
- * @param string $default if _$original_ is empty
- * @return string
+ * @param string|null $default returned as-is if _$original_ is empty or unparsable
+ * @return string|null
  */
 function transform_date($original, $format_in, $format_out, $default = null)
 {
@@ -1417,7 +1418,9 @@ SELECT ' . $conf['user_fields']['email'] . '
   FROM ' . USERS_TABLE . '
   WHERE ' . $conf['user_fields']['id'] . ' = ' . $conf['webmaster_id'] . '
 ;';
-    [$email] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$email] = $row;
 
     $email = trigger_change('get_webmaster_mail_address', $email);
 
@@ -1468,7 +1471,9 @@ function pwg_is_dbconf_writeable(): bool
     [$param, $value] = ['pwg_is_dbconf_writeable_' . generate_key(12), date('c') . ' ' . generate_key(20)];
 
     conf_update_param($param, $value);
-    [$dbvalue] = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = \'' . $param . '\''));
+    $row = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = \'' . $param . '\''));
+    assert($row !== null);
+    [$dbvalue] = $row;
 
     if ($dbvalue != $value) {
         return false;
@@ -2235,10 +2240,8 @@ function url_check_format($url)
 
 /**
  * check email format
- *
- * @param string $mail_address
  */
-function email_check_format($mail_address): bool
+function email_check_format(?string $mail_address): bool
 {
     return filter_var($mail_address, FILTER_VALIDATE_EMAIL) !== false;
 }
@@ -2272,7 +2275,9 @@ SELECT COUNT(DISTINCT(com.id))
     ON ic.image_id = com.image_id
   WHERE ' . implode('
     AND ', $where);
-        [$user['nb_available_comments']] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$user['nb_available_comments']] = $row;
 
         single_update(
             USER_CACHE_TABLE,
@@ -2310,9 +2315,9 @@ function safe_version_compare($a, $b, $op = null): int|bool
     $b = preg_replace_callback('#\b([a-z]{1})\b#i', $replace_chars, (string) $b);
 
     if (empty($op)) {
-        return version_compare($a, $b);
+        return version_compare((string) $a, (string) $b);
     } else {
-        return version_compare($a, $b, $op);
+        return version_compare((string) $a, (string) $b, $op);
     }
 }
 
@@ -2406,7 +2411,9 @@ function send_piwigo_infos(): void
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 
-    [$db_current_date] = pwg_db_fetch_row(pwg_query('SELECT now();'));
+    $row = pwg_db_fetch_row(pwg_query('SELECT now();'));
+    assert($row !== null);
+    [$db_current_date] = $row;
 
     if (! isset($conf['send_piwigo_infos_origin_hash'])) {
         conf_update_param('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
@@ -2818,7 +2825,9 @@ INSERT IGNORE
 ;';
     pwg_query($query);
 
-    [$running_exec] = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = "' . $token_name . '_running"'));
+    $row = pwg_db_fetch_row(pwg_query('SELECT value FROM ' . CONFIG_TABLE . ' WHERE param = "' . $token_name . '_running"'));
+    assert($row !== null);
+    [$running_exec] = $row;
     [$running_exec_id] = explode('-', (string) $running_exec);
 
     if ($running_exec_id != $exec_id) {
@@ -2838,7 +2847,9 @@ SELECT
   FROM ' . CONFIG_TABLE . '
   WHERE param = "' . $token_name . '_running"
 ;';
-    [$counter] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$counter] = $row;
 
     return $counter > 0;
 }

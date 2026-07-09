@@ -174,7 +174,9 @@ SELECT count(1) FROM ' . COMMENTS_TABLE . '
         $query .= '
 ;';
 
-        [$counter] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$counter] = $row;
         if ($counter > 0) {
             $infos[] = l10n('Anti-flood system : please wait for a moment before trying to post another comment');
             $comment_action = 'reject';
@@ -441,7 +443,9 @@ SELECT
         }
     }
 
-    [$author_id] = pwg_db_fetch_row($result);
+    $row = pwg_db_fetch_row($result);
+    assert($row !== null);
+    [$author_id] = $row;
 
     return $author_id;
 }

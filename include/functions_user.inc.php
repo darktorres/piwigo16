@@ -15,10 +15,9 @@ declare(strict_types=1);
  * @param int|null $user_id null when checking an address with no user yet
  *   (e.g. install.php's admin account, function_user.inc.php's own
  *   register_user())
- * @param string $mail_address
  * @return string|void error message or nothing
  */
-function validate_mail_address($user_id, $mail_address)
+function validate_mail_address($user_id, ?string $mail_address)
 {
     global $conf;
 
@@ -39,7 +38,9 @@ FROM ' . USERS_TABLE . '
 WHERE upper(' . $conf['user_fields']['email'] . ') = upper(\'' . $mail_address . '\')
 ' . (is_numeric($user_id) ? 'AND ' . $conf['user_fields']['id'] . ' != \'' . $user_id . '\'' : '') . '
 ;';
-        [$count] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$count] = $row;
         if ($count != 0) {
             return l10n('this email address is already in use');
         }
@@ -223,6 +224,9 @@ SELECT id
         }
 
         if ($notify_user and email_check_format($mail_address)) {
+            // email_check_format() returning true proves $mail_address is a
+            // well-formed, non-empty string (filter_var() rejects null).
+            assert($mail_address !== null);
             include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
 
             $length = mt_rand(10, 15);
@@ -341,7 +345,8 @@ SELECT
   WHERE ui.user_id = ' . $user_id . '
   GROUP BY ui.user_id
 ;';
-        [$counter] = pwg_db_fetch_row(pwg_query($query));
+        $counter_row = pwg_db_fetch_row(pwg_query($query));
+        $counter = $counter_row !== null ? $counter_row[0] : 0;
         if ($counter != 1) {
             create_user_infos($user_id);
         }
@@ -404,7 +409,9 @@ SELECT
   FROM ' . USER_CACHE_TABLE . '
   WHERE user_id=' . $userdata['id'] . '
 ;';
-                    [$nb_cache_lines] = pwg_db_fetch_row(pwg_query($query));
+                    $row = pwg_db_fetch_row(pwg_query($query));
+                    assert($row !== null);
+                    [$nb_cache_lines] = $row;
 
                     $logger_msg = $logger_msg_prefix . 'user_cache generation waiting k=' . $k . ' ';
                     $waiting_time = get_elapsed_time($user_cache_waiting_start_time, get_moment());
@@ -463,7 +470,9 @@ SELECT COUNT(DISTINCT(image_id)) as total
   FROM ' . IMAGE_CATEGORY_TABLE . '
   WHERE category_id NOT IN (' . $userdata['forbidden_categories'] . ')
     AND image_id ' . $userdata['image_access_type'] . ' (' . $userdata['image_access_list'] . ')';
-            [$userdata['nb_total_images']] = pwg_db_fetch_row(pwg_query($query));
+            $row = pwg_db_fetch_row(pwg_query($query));
+            assert($row !== null);
+            [$userdata['nb_total_images']] = $row;
 
             // now we update user cache categories
             $user_cache_cats = get_computed_categories($userdata, null);
@@ -676,7 +685,9 @@ SELECT ' . $conf['user_fields']['id'] . '
     if (pwg_db_num_rows($result) == 0) {
         return false;
     } else {
-        [$user_id] = pwg_db_fetch_row($result);
+        $row = pwg_db_fetch_row($result);
+        assert($row !== null);
+        [$user_id] = $row;
         return $user_id;
     }
 }
@@ -704,7 +715,9 @@ SELECT
     if (pwg_db_num_rows($result) == 0) {
         return false;
     } else {
-        [$user_id] = pwg_db_fetch_row($result);
+        $row = pwg_db_fetch_row($result);
+        assert($row !== null);
+        [$user_id] = $row;
         return $user_id;
     }
 }
@@ -890,7 +903,9 @@ function create_user_infos($user_ids, $override_values = null): void
 
     if (! empty($user_ids)) {
         $inserts = [];
-        [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+        $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+        assert($row !== null);
+        [$dbnow] = $row;
 
         $default_user = get_default_user_info(false);
         if ($default_user === false) {
@@ -1860,7 +1875,9 @@ SELECT
   FROM ' . USER_AUTH_KEYS_TABLE . '
   WHERE auth_key = \'' . $candidate . '\'
 ;';
-    [$counter, $now, $expiration] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$counter, $now, $expiration] = $row;
     if ($counter == 0) {
         $key = [
             'auth_key' => $candidate,
@@ -1936,7 +1953,9 @@ function generate_password_link($user_id, $first_login = false): array
     $duration = $first_login
     ? $conf['password_activation_duration']
     : $conf['password_reset_duration'];
-    [$expire] = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL ' . $duration . ' SECOND)'));
+    $row = pwg_db_fetch_row(pwg_query('SELECT ADDDATE(NOW(), INTERVAL ' . $duration . ' SECOND)'));
+    assert($row !== null);
+    [$expire] = $row;
 
     single_update(
         USER_INFOS_TABLE,
@@ -2112,7 +2131,9 @@ SELECT COUNT(*)
   FROM ' . ACTIVITY_TABLE . '
   WHERE action = \'login\' and performed_by = ' . $user_id . '';
 
-    [$logged_in] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$logged_in] = $row;
     if ($logged_in > 0) {
         return false;
     }
@@ -2460,7 +2481,9 @@ function create_api_key($user_id, $duration, $key_name): array
     $key_id = 'pkid-' . date('Ymd') . '-' . generate_key(20);
     $key_secret = generate_key(40);
 
-    [$dbnow] = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+    $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
+    assert($row !== null);
+    [$dbnow] = $row;
 
     $key = [
         'auth_key' => $key_id,
@@ -2477,7 +2500,9 @@ function create_api_key($user_id, $duration, $key_name): array
 SELECT
   ADDDATE(NOW(), INTERVAL ' . ($duration * 60 * 60 * 24) . ' SECOND)
 ;';
-        [$expiration] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$expiration] = $row;
         $key['duration'] = $duration;
     }
     $key['expired_on'] = $expiration;
@@ -2507,7 +2532,9 @@ SELECT
   AND user_id = ' . $user_id . '
 ;';
 
-    [$key, $now] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$key, $now] = $row;
     if ($key == 0) {
         return l10n('API Key not found');
     }
@@ -2544,7 +2571,9 @@ SELECT
   AND user_id = ' . $user_id . '
 ;';
 
-    [$key] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$key] = $row;
     if ($key == 0) {
         return l10n('API Key not found');
     }
@@ -2591,7 +2620,9 @@ SELECT *
 SELECT
   NOW()
 ;';
-    [$now] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$now] = $row;
 
     foreach ($api_keys as $i => $api_key) {
         $api_key['apikey_secret'] = str_repeat('*', 40);

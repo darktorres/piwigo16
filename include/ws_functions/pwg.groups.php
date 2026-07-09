@@ -68,7 +68,10 @@ SELECT
  */
 function ws_groups_add(array $params, PwgServer &$service): mixed
 {
+    // pwg_db_real_escape_string() only returns null for a null input, and
+    // the (string) cast above already rules that out.
     $params['name'] = pwg_db_real_escape_string(strip_tags(stripslashes((string) $params['name'])));
+    assert($params['name'] !== null);
 
     // is the name not already used ?
     $query = '
@@ -76,7 +79,9 @@ SELECT COUNT(*)
   FROM `' . GROUPS_TABLE . '`
   WHERE name = \'' . $params['name'] . '\'
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count != 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
     }
@@ -154,13 +159,18 @@ SELECT COUNT(*)
   FROM `' . GROUPS_TABLE . '`
   WHERE id = ' . $params['group_id'] . '
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count == 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
     }
 
     if (! empty($params['name'])) {
+        // pwg_db_real_escape_string() only returns null for a null input,
+        // and the (string) cast above already rules that out.
         $params['name'] = pwg_db_real_escape_string(strip_tags(stripslashes((string) $params['name'])));
+        assert($params['name'] !== null);
 
         // is the name not already used ?
         $query = '
@@ -169,7 +179,9 @@ SELECT COUNT(*)
   WHERE name = \'' . $params['name'] . '\'
   AND id != ' . $params['group_id'] . '
 ;';
-        [$count] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$count] = $row;
         if ($count != 0) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
         }
@@ -216,7 +228,9 @@ SELECT COUNT(*)
   FROM `' . GROUPS_TABLE . '`
   WHERE id = ' . $params['group_id'] . '
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count == 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
     }
@@ -278,7 +292,9 @@ SELECT COUNT(*)
   FROM `' . GROUPS_TABLE . '`
   WHERE id in (' . implode(',', $all_groups) . ')
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count != count($all_groups)) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'All groups does not exist.');
     }
@@ -364,7 +380,9 @@ SELECT COUNT(*)
   FROM `' . GROUPS_TABLE . '`
   WHERE name = \'' . pwg_db_real_escape_string($params['copy_name']) . '\'
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count != 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This name is already used by another group.');
     }
@@ -374,7 +392,9 @@ SELECT COUNT(*)
   FROM `' . GROUPS_TABLE . '`
   WHERE id = ' . $params['group_id'] . '
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count == 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
     }
@@ -385,7 +405,9 @@ SELECT is_default
   WHERE id = ' . $params['group_id'] . '
 ;';
 
-    [$is_default] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$is_default] = $row;
 
     // creating the group
     single_insert(
@@ -458,7 +480,9 @@ SELECT COUNT(*)
   FROM `' . GROUPS_TABLE . '`
   WHERE id = ' . $params['group_id'] . '
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count == 0) {
         return new PwgError(WS_ERR_INVALID_PARAM, 'This group does not exist.');
     }

@@ -91,14 +91,18 @@ if (! empty($page['cat_filter'])) {
 
 $query .= '
 WHERE 1=1' . $page['user_filter'];
-[$nb_images] = pwg_db_fetch_row(pwg_query($query));
+$count_row = pwg_db_fetch_row(pwg_query($query));
+assert($count_row !== null);
+[$nb_images] = $count_row;
 
 $query = '
 SELECT
     COUNT(*)
   FROM ' . RATE_TABLE .
 ';';
-[$nb_elements] = pwg_db_fetch_row(pwg_query($query));
+$count_row = pwg_db_fetch_row(pwg_query($query));
+assert($count_row !== null);
+[$nb_elements] = $count_row;
 
 // +-----------------------------------------------------------------------+
 // |                             template init                             |

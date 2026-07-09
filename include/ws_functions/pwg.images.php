@@ -1057,7 +1057,9 @@ SELECT COUNT(*)
   FROM ' . IMAGES_TABLE . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count == 0) {
         return new PwgError(404, 'image_id not found');
     }
@@ -1069,7 +1071,9 @@ SELECT COUNT(*)
   WHERE image_id = ' . $params['image_id'] . '
     AND category_id = ' . $params['category_id'] . '
 ;';
-    [$count] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$count] = $row;
     if ($count == 0) {
         return new PwgError(404, 'This image is not associated to this category');
     }
@@ -1294,7 +1298,9 @@ SELECT COUNT(*)
   FROM ' . IMAGES_TABLE . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-        [$count] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$count] = $row;
         if ($count == 0) {
             return new PwgError(404, 'image_id not found');
         }
@@ -1315,7 +1321,9 @@ SELECT COUNT(*)
   FROM ' . IMAGES_TABLE . '
   WHERE ' . $where_clause . '
 ;';
-        [$counter] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$counter] = $row;
         if ($counter != 0) {
             return new PwgError(500, 'file already exists');
         }
@@ -1459,7 +1467,9 @@ SELECT COUNT(*)
   FROM ' . IMAGES_TABLE . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-        [$count] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$count] = $row;
         if ($count == 0) {
             return new PwgError(404, 'image_id not found');
         }
@@ -1512,7 +1522,9 @@ SELECT COUNT(*)
                 throw new Exception('ws_images_addSimple(): preg_split() failed');
             }
             foreach ($tag_names as $tag_name) {
-                $tag_ids[] = tag_id_from_tag_name(preg_replace('#\\\\*,#', ',', $tag_name));
+                $unescaped_tag_name = preg_replace('#\\\\*,#', ',', $tag_name);
+                assert($unescaped_tag_name !== null);
+                $tag_ids[] = tag_id_from_tag_name($unescaped_tag_name);
             }
         }
 
@@ -1673,6 +1685,9 @@ SELECT *
 
             $image = $images[0];
 
+            // guaranteed non-null by the empty($format_ext) guard above,
+            // inside the same isset($params['format_of']) branch.
+            assert($format_ext !== null);
             $add_status = add_format($filePath, $format_ext, $image['id']);
 
             return [
@@ -1743,7 +1758,9 @@ SELECT
   WHERE category_id = ' . $params['category'][0] . '
   AND image_id NOT IN (Select image_id from ' . IMAGE_CATEGORY_TABLE . ')
 ;';
-        [$nb_photos_lounge] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$nb_photos_lounge] = $row;
 
         $category_name = get_cat_display_name_from_id($params['category'][0], null);
 
@@ -1803,7 +1820,9 @@ SELECT COUNT(*)
   FROM ' . IMAGES_TABLE . '
   WHERE id = ' . $params['image_id'] . '
 ;';
-        [$count] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [$count] = $row;
         if ($count == 0) {
             return new PwgError(404, __FUNCTION__ . ' : image_id not found');
         }
@@ -2323,7 +2342,9 @@ SELECT path
         return new PwgError(404, 'image_id not found');
     }
 
-    [$path] = pwg_db_fetch_row($result);
+    $row = pwg_db_fetch_row($result);
+    assert($row !== null);
+    [$path] = $row;
 
     $ret = [];
 

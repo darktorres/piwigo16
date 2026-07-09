@@ -381,7 +381,9 @@ while ($row = pwg_db_fetch_assoc($result)) {
     $element_ids[] = $row['image_id'];
     $category_ids[] = $row['category_id'];
 }
-[$counter] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+$count_row = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+assert($count_row !== null);
+[$counter] = $count_row;
 
 $url = PHPWG_ROOT_PATH . 'comments.php'
   . get_query_string_diff(['start', 'edit', 'delete', 'validate', 'pwg_token']);

@@ -324,6 +324,9 @@ class Logger
     {
         $this->open();
         if ($this->status() == self::STATUS_LOG_OPEN) {
+            // status() only reaches STATUS_LOG_OPEN in open()'s branch that
+            // also assigns _fileHandle a real resource.
+            assert($this->_fileHandle !== null);
             if (fwrite($this->_fileHandle, $line) === false) {
                 throw new RuntimeException(self::$_messages['writefail']);
             }

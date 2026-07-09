@@ -56,7 +56,9 @@ function pwg_db_connect($host, $user, $password, $database): void
     // MySQL 5.7 default settings forbid to select a colum that is not in the
     // group by. We've used that in Piwigo, for years. As an immediate solution
     // we can remove this constraint in the current MySQL session.
-    [$sql_mode_current] = pwg_db_fetch_row(pwg_query('SELECT @@SESSION.sql_mode'));
+    $row = pwg_db_fetch_row(pwg_query('SELECT @@SESSION.sql_mode'));
+    assert($row !== null);
+    [$sql_mode_current] = $row;
 
     // remove ONLY_FULL_GROUP_BY from the list
     $sql_mode_altered = implode(',', array_diff(explode(',', (string) $sql_mode_current), ['ONLY_FULL_GROUP_BY']));
@@ -170,7 +172,9 @@ function pwg_db_nextval($column, $table)
     $query = '
 SELECT IF(MAX(' . $column . ')+1 IS NULL, 1, MAX(' . $column . ')+1)
   FROM ' . $table;
-    [$next] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$next] = $row;
 
     return $next;
 }
@@ -472,7 +476,9 @@ function mass_inserts(string $table_name, array $dbfields, array $datas, array $
         $first = true;
 
         $query = 'SHOW VARIABLES LIKE \'max_allowed_packet\'';
-        [, $packet_size] = pwg_db_fetch_row(pwg_query($query));
+        $row = pwg_db_fetch_row(pwg_query($query));
+        assert($row !== null);
+        [, $packet_size] = $row;
         $packet_size -= 2000; // The last list of values MUST not exceed 2000 character*/
         $query = '';
 
@@ -702,7 +708,9 @@ function pwg_db_get_recent_period(int|string $period, string $date = 'CURRENT_DA
 {
     $query = '
 SELECT ' . pwg_db_get_recent_period_expression($period);
-    [$d] = pwg_db_fetch_row(pwg_query($query));
+    $row = pwg_db_fetch_row(pwg_query($query));
+    assert($row !== null);
+    [$d] = $row;
 
     return $d;
 }
@@ -828,11 +836,17 @@ function query2array(string $query, ?string $key_name = null, ?string $value_nam
     if (isset($key_name)) {
         if (isset($value_name)) {
             while ($row = $result->fetch_assoc()) {
-                $data[is_float($row[$key_name]) ? (int) $row[$key_name] : $row[$key_name]] = $row[$value_name];
+                $key = $row[$key_name];
+                // matches PHP's own implicit null-key coercion; made
+                // explicit here only to satisfy the array key type.
+                $key = is_float($key) ? (int) $key : ($key ?? '');
+                $data[$key] = $row[$value_name];
             }
         } else {
             while ($row = $result->fetch_assoc()) {
-                $data[is_float($row[$key_name]) ? (int) $row[$key_name] : $row[$key_name]] = $row;
+                $key = $row[$key_name];
+                $key = is_float($key) ? (int) $key : ($key ?? '');
+                $data[$key] = $row;
             }
         }
     } else {

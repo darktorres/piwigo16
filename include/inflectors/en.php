@@ -152,14 +152,18 @@ class Inflector_en implements InflectorInterface
     }
 
     /**
-     * @param array<string, string> $rules
-     * @param array<int, string|null> $res
+     * @param array<string, string> $rules always one of this class's own
+     *   fixed, valid regex literal arrays
+     * @param array<int, string> $res
      */
-    private static function run(array $rules, string $word, array &$res): string|null|false
+    private static function run(array $rules, string $word, array &$res): string|false
     {
         foreach ($rules as $rule => $replacement) {
             $rc = preg_replace($rule . 'i', (string) $replacement, (string) $word, -1, $count);
             if ($count) {
+                // fixed, valid pattern -- preg_replace() only returns null
+                // on a compile error, which is unreachable here.
+                assert($rc !== null);
                 if ($rc !== $word) {
                     $res[] = $rc;
                     return $rc;

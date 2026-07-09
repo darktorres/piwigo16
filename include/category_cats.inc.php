@@ -68,7 +68,9 @@ $query .= '
 $query = trigger_change('loc_begin_index_category_thumbnails_query', $query);
 
 $result = pwg_query($query);
-[$page['total_categories']] = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+$total_row = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
+assert($total_row !== null);
+[$page['total_categories']] = $total_row;
 
 $categories = [];
 $category_ids = [];
@@ -103,7 +105,9 @@ SELECT representative_picture_id
 ;';
         $subresult = pwg_query($query);
         if (pwg_db_num_rows($subresult) > 0) {
-            [$image_id] = pwg_db_fetch_row($subresult);
+            $subrow = pwg_db_fetch_row($subresult);
+            assert($subrow !== null);
+            [$image_id] = $subrow;
         }
     }
 

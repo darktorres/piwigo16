@@ -142,46 +142,64 @@ function unformat_email($input): array
  * @since 2.6
  *
  * @param mixed $data
- * @return string[][]
+ * @return list<array{email: string, name: string}>
  */
 function get_clean_recipients_list($data): array
 {
     if (empty($data)) {
         return [];
     }
+
+    // Every branch below funnels into $entries rather than reusing/mutating
+    // $data in place: $data starts as mixed, and PHPStan cannot follow a
+    // by-reference foreach mutation or an array_map() over still-mixed
+    // elements back into a precise array{email,name} shape.
+    $entries = [];
+
     if (is_array($data)) {
         $values = array_values($data);
         if (! is_array($values[0])) {
             $keys = array_keys($data);
             if (is_int($keys[0])) { // simple array of emails
-                foreach ($data as &$item) {
-                    $item = [
-                        'email' => trim((string) $item),
+                foreach ($data as $item) {
+                    $entries[] = [
+                        'email' => trim(is_scalar($item) ? (string) $item : ''),
                         'name' => '',
                     ];
                 }
-                unset($item);
             } else { // hashmap of one recipient
-                $data = [unformat_email($data)];
+                $entries[] = unformat_email($data);
             }
         } else { // array of hashmaps
-            $data = array_map(unformat_email(...), $data);
+            foreach ($data as $item) {
+                if (is_array($item) || is_string($item)) {
+                    $entries[] = unformat_email($item);
+                } else {
+                    $entries[] = [
+                        'email' => is_scalar($item) ? trim((string) $item) : '',
+                        'name' => '',
+                    ];
+                }
+            }
         }
     } else {
-        $data = explode(',', (string) $data);
-        $data = array_map(unformat_email(...), $data);
+        $list = explode(',', is_scalar($data) ? (string) $data : '');
+        foreach ($list as $item) {
+            $entries[] = unformat_email($item);
+        }
     }
 
     $existing = [];
-    foreach ($data as $i => $entry) {
+    $result = [];
+    foreach ($entries as $entry) {
         if (isset($existing[$entry['email']])) {
-            unset($data[$i]);
-        } else {
-            $existing[$entry['email']] = true;
+            continue;
         }
+        $existing[$entry['email']] = true;
+        $result[] = $entry;
     }
 
-    return array_values($data);
+    return $result;
 }
 
 /**
@@ -384,8 +402,8 @@ function pwg_mail_notification_admins($subject, $content, $send_technical_detail
  * @see pwg_mail()
  * @since 2.6
  *
- * @param array<string, mixed> $args - as in pwg_mail()
- * @param array<string, mixed> $tpl - as in pwg_mail()
+ * @param array{from?: mixed, reply_to_mail_address?: string, reply_to_name?: string, Cc?: mixed, Bcc?: mixed, subject?: mixed, content?: mixed, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args - as in pwg_mail()
+ * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl - as in pwg_mail()
  * @param int|string|null $group_id
  * @return bool
  */
@@ -456,9 +474,9 @@ SELECT
  * @see pwg_mail()
  *
  * @param int $group_id
- * @param array<string, mixed> $args - as in pwg_mail()
+ * @param array{language_selected?: string, from?: mixed, reply_to_mail_address?: string, reply_to_name?: string, Cc?: mixed, Bcc?: mixed, subject?: mixed, content?: mixed, content_format?: string, email_format?: string, theme?: string, mail_title?: string, mail_subtitle?: string, auth_key?: string} $args - as in pwg_mail()
  *       o language_selected: filters users of the group by language [default value empty]
- * @param array<string, mixed> $tpl - as in pwg_mail()
+ * @param array{filename?: string, dirname?: string, assign?: array<string, mixed>} $tpl - as in pwg_mail()
  * @return bool
  */
 function pwg_mail_group($group_id, array $args = [], array $tpl = []): bool|int
@@ -494,6 +512,14 @@ SELECT DISTINCT language
     }
 
     foreach ($languages as $language) {
+        // array_from_query()'s own docblock (include/functions.inc.php) only
+        // declares array<int|string, mixed> regardless of $fieldname, so
+        // each $language here is mixed even though the 'language' column is
+        // never NULL in practice; guard defensively rather than trust it.
+        if (! is_string($language) || $language === '') {
+            continue;
+        }
+
         // get subset of users in this group for a specific language
         $query = '
 SELECT
@@ -519,31 +545,53 @@ SELECT
         switch_lang_to($language);
 
         foreach ($users as $u) {
-            $authkey = create_user_auth_key($u['user_id'], $u['status']);
+            // Same array_from_query() under-typing as $languages above: each
+            // row is declared mixed, so every field access below needs a
+            // real runtime guard.
+            if (! is_array($u)) {
+                continue;
+            }
+
+            $u_user_id = $u['user_id'] ?? null;
+            if (! is_numeric($u_user_id)) {
+                continue;
+            }
+            $u_status = $u['status'] ?? null;
+            $u_status = is_string($u_status) ? $u_status : null;
+            $u_email = $u['email'] ?? null;
+            $u_email = is_string($u_email) ? $u_email : '';
+
+            $authkey = create_user_auth_key((int) $u_user_id, $u_status);
 
             $user_tpl = $tpl;
 
             if ($authkey !== false) {
-                $user_tpl['assign']['LINK'] = add_url_params($tpl['assign']['LINK'], [
-                    'auth' => $authkey['auth_key'],
+                $link = $tpl['assign']['LINK'] ?? null;
+                $user_tpl['assign']['LINK'] = add_url_params(is_string($link) ? $link : '', [
+                    'auth' => $authkey['auth_key'] ?? null,
                 ]);
 
-                if (isset($user_tpl['assign']['IMG']['link'])) {
-                    $user_tpl['assign']['IMG']['link'] = add_url_params(
-                        $user_tpl['assign']['IMG']['link'],
+                $img = $user_tpl['assign']['IMG'] ?? null;
+                if (is_array($img) && isset($img['link']) && is_string($img['link'])) {
+                    $img['link'] = add_url_params(
+                        $img['link'],
                         [
-                            'auth' => $authkey['auth_key'],
+                            'auth' => $authkey['auth_key'] ?? null,
                         ]
                     );
+                    $user_tpl['assign']['IMG'] = $img;
                 }
             }
 
             $user_args = $args;
             if ($authkey !== false) {
-                $user_args['auth_key'] = $authkey['auth_key'];
+                $auth_key = $authkey['auth_key'] ?? null;
+                if (is_string($auth_key)) {
+                    $user_args['auth_key'] = $auth_key;
+                }
             }
 
-            $return &= pwg_mail($u['email'], $user_args, $user_tpl);
+            $return &= pwg_mail($u_email, $user_args, $user_tpl);
         }
 
         switch_lang_back();
@@ -604,7 +652,15 @@ function pwg_mail($to, array $args = [], array $tpl = [])
             'name' => $conf_mail['name_webmaster'],
         ];
     } else {
-        $from = unformat_email($args['from']);
+        // $args['from'] is declared `mixed` in the shape above since callers
+        // may pass either a string or an array{email[, name]}; anything
+        // else (e.g. an int/bool/object) falls back to an empty string,
+        // which unformat_email() turns into an empty email/name pair.
+        $from_input = $args['from'];
+        if (! is_array($from_input) && ! is_string($from_input)) {
+            $from_input = is_scalar($from_input) ? (string) $from_input : '';
+        }
+        $from = unformat_email($from_input);
     }
     $email->from(new Address($from['email'], $from['name']));
     $email->replyTo(new Address($args['reply_to_mail_address'] ?? $from['email'], $args['reply_to_name'] ?? $from['name']));
@@ -613,7 +669,8 @@ function pwg_mail($to, array $args = [], array $tpl = [])
     if (empty($args['subject'])) {
         $args['subject'] = 'Piwigo';
     }
-    $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', (string) $args['subject']));
+    $subject_input = is_scalar($args['subject']) ? (string) $args['subject'] : '';
+    $args['subject'] = trim((string) preg_replace('#[\n\r]+#s', '', $subject_input));
     $email->subject($args['subject']);
 
     // Cc
@@ -696,9 +753,16 @@ function pwg_mail($to, array $args = [], array $tpl = [])
                 $add_url_params['auth'] = $args['auth_key'];
             }
 
+            // get_gallery_home_url() is declared to return `mixed`
+            // (include/functions_url.inc.php); every real branch of its
+            // body actually returns a string, so this narrows locally
+            // rather than widening add_url_params()'s $url parameter.
+            $gallery_home_url = get_gallery_home_url();
+            $gallery_home_url = is_string($gallery_home_url) ? $gallery_home_url : '';
+
             $template->assign(
                 [
-                    'GALLERY_URL' => add_url_params(get_gallery_home_url(), $add_url_params),
+                    'GALLERY_URL' => add_url_params($gallery_home_url, $add_url_params),
                     'GALLERY_TITLE' => $page['gallery_title'] ?? $conf['gallery_title'],
                     'VERSION' => $conf['show_version'] ? PHPWG_VERSION : '',
                     'PHPWG_URL' => defined('PHPWG_URL') ? PHPWG_URL : '',
@@ -734,6 +798,12 @@ function pwg_mail($to, array $args = [], array $tpl = [])
         // Content
         // Stored in a temp variable, if a content template is used it will be assigned
         // to the $CONTENT template variable, otherwise it will be appened to the mail
+        // $args['content'] is declared `mixed` in the shape above (the
+        // caller-supplied value is not otherwise constrained); every real
+        // caller passes a string, but fall back to '' rather than cast a
+        // non-scalar value (array/object) straight to string.
+        $content_input = is_scalar($args['content']) ? (string) $args['content'] : '';
+
         if ($args['content_format'] == 'text/plain' and $content_type == 'text/html') {
             // convert plain text to html
             $mail_content =
@@ -742,13 +812,13 @@ function pwg_mail($to, array $args = [], array $tpl = [])
                   (string) preg_replace(
                       '/(https?:\/\/([-\w\.]+[-\w])+(:\d+)?(\/([\w\/_\.\#-]*(\?\S+)?[^\.\s])?)?)/i',
                       '<a href="$1">$1</a>',
-                      htmlspecialchars((string) $args['content'])
+                      htmlspecialchars($content_input)
                   )
               ) .
               '</p>';
         } elseif ($args['content_format'] == 'text/html' and $content_type == 'text/plain') {
             // convert html text to plain text
-            $mail_content = strip_tags((string) $args['content']);
+            $mail_content = strip_tags($content_input);
         } else {
             $mail_content = $args['content'];
         }
@@ -940,7 +1010,10 @@ function pwg_generate_reset_password_mail($username, $password_link, $gallery_ti
 
     unset_make_full_url();
 
-    $message = trigger_change('render_lost_password_mail_content', $message);
+    // trigger_change()'s own return type is mixed; fall back to the
+    // pre-trigger $message rather than trust a misbehaving handler.
+    $message_after_trigger = trigger_change('render_lost_password_mail_content', $message);
+    $message = is_string($message_after_trigger) ? $message_after_trigger : $message;
 
     return [
         'subject' => '[' . $gallery_title . '] ' . l10n('Password Reset'),
@@ -976,7 +1049,10 @@ function pwg_generate_set_password_mail($username, $set_password_link, $gallery_
 
     unset_make_full_url();
 
-    $message = trigger_change('render_lost_password_mail_content', $message);
+    // trigger_change()'s own return type is mixed; fall back to the
+    // pre-trigger $message rather than trust a misbehaving handler.
+    $message_after_trigger = trigger_change('render_lost_password_mail_content', $message);
+    $message = is_string($message_after_trigger) ? $message_after_trigger : $message;
     $subject = l10n('Welcome to %s', $gallery_title);
 
     return [

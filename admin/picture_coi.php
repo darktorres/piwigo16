@@ -23,22 +23,38 @@ check_status(ACCESS_ADMINISTRATOR);
 
 check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
+// check_input_parameter() only validates the raw $_GET value against
+// PATTERN_ID (or dies); it does not narrow $_GET's type for PHPStan, so
+// re-derive a real int here for every later use.
+$image_id = 0;
+if (isset($_GET['image_id']) && is_numeric($_GET['image_id'])) {
+    $image_id = (int) $_GET['image_id'];
+}
+
 if (isset($_POST['submit'])) {
     $query = 'UPDATE ' . IMAGES_TABLE;
-    if (strlen((string) $_POST['l']) == 0) {
+
+    $coi_l = $_POST['l'] ?? null;
+    $coi_l_str = is_scalar($coi_l) ? (string) $coi_l : '';
+
+    if (strlen($coi_l_str) == 0) {
         $query .= ' SET coi=NULL';
     } else {
-        $coi = fraction_to_char($_POST['l'])
-          . fraction_to_char($_POST['t'])
-          . fraction_to_char($_POST['r'])
-          . fraction_to_char($_POST['b']);
+        $to_fraction = static function (mixed $v): float {
+            return is_numeric($v) ? (float) $v : 0.0;
+        };
+
+        $coi = fraction_to_char($to_fraction($coi_l))
+          . fraction_to_char($to_fraction($_POST['t'] ?? null))
+          . fraction_to_char($to_fraction($_POST['r'] ?? null))
+          . fraction_to_char($to_fraction($_POST['b'] ?? null));
         $query .= ' SET coi=\'' . $coi . '\'';
     }
-    $query .= ' WHERE id=' . $_GET['image_id'];
+    $query .= ' WHERE id=' . $image_id;
     pwg_query($query);
 }
 
-$query = 'SELECT * FROM ' . IMAGES_TABLE . ' WHERE id=' . $_GET['image_id'];
+$query = 'SELECT * FROM ' . IMAGES_TABLE . ' WHERE id=' . $image_id;
 $row = pwg_db_fetch_assoc(pwg_query($query));
 if (! is_array($row)) {
     page_not_found('Requested photo does not exist');

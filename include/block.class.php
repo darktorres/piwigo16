@@ -80,12 +80,16 @@ class BlockManager
         $conf_id = 'blk_' . $this->id;
         $mb_conf = $conf[$conf_id] ?? [];
         if (! is_array($mb_conf)) {
-            $mb_conf = @unserialize($mb_conf);
+            $mb_conf = is_string($mb_conf) ? @unserialize($mb_conf) : false;
+        }
+        if (! is_array($mb_conf)) {
+            $mb_conf = [];
         }
 
         $idx = 1;
         foreach ($this->registered_blocks as $id => $block) {
-            $pos = $mb_conf[$id] ?? $idx * 50;
+            $raw_pos = $mb_conf[$id] ?? $idx * 50;
+            $pos = is_numeric($raw_pos) ? (int) $raw_pos : $idx * 50;
             if ($pos > 0) {
                 $this->display_blocks[$id] = new DisplayBlock($block);
                 $this->display_blocks[$id]->set_position($pos);

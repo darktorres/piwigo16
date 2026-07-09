@@ -12,22 +12,27 @@ declare(strict_types=1);
 /**
  * API method
  * Returns a list of tags
- * @param mixed[] $params
- *    @option bool sort_by_counter
+ *
+ * @param array{sort_by_counter: bool, ...} $params non-null bool default,
+ *   WS_TYPE_BOOL -- always present.
  * @return array{tags: PwgNamedArray}
  */
 function ws_tags_getList(array $params, PwgServer &$service): array
 {
     $tags = get_available_tags();
     if ($params['sort_by_counter']) {
-        usort($tags, fn (array $a, array $b): int|float => -$a['counter'] + $b['counter']);
+        usort($tags, function (array $a, array $b): int {
+            $a_counter = is_numeric($a['counter']) ? (float) $a['counter'] : 0.0;
+            $b_counter = is_numeric($b['counter']) ? (float) $b['counter'] : 0.0;
+            return $b_counter <=> $a_counter;
+        });
     } else {
         usort($tags, tag_alpha_compare(...));
     }
 
     for ($i = 0; $i < count($tags); $i++) {
-        $tags[$i]['id'] = (int) $tags[$i]['id'];
-        $tags[$i]['counter'] = (int) $tags[$i]['counter'];
+        $tags[$i]['id'] = is_numeric($tags[$i]['id']) ? (int) $tags[$i]['id'] : 0;
+        $tags[$i]['counter'] = is_numeric($tags[$i]['counter']) ? (int) $tags[$i]['counter'] : 0;
         $tags[$i]['url'] = make_index_url(
             [
                 'section' => 'tags',
@@ -48,13 +53,16 @@ function ws_tags_getList(array $params, PwgServer &$service): array
 /**
  * API method
  * Returns the list of tags as you can see them in administration
- * @param mixed[] $params
  *
  * Only admin can run this method and permissions are not taken into
  * account.
+ *
+ * @param array<string, mixed> $params this method is registered with a
+ *   null signature (zero registered params) -- $params is the raw,
+ *   entirely unvalidated request array, but the body doesn't read it.
  * @return array{tags: PwgNamedArray}
  */
-function ws_tags_getAdminList($params, PwgServer &$service): array
+function ws_tags_getAdminList(array $params, PwgServer &$service): array
 {
     return [
         'tags' => new PwgNamedArray(
@@ -68,14 +76,16 @@ function ws_tags_getAdminList($params, PwgServer &$service): array
 /**
  * API method
  * Returns a list of images for tags
- * @param mixed[] $params
- *    @option int[] tag_id (optional)
- *    @option string[] tag_url_name (optional)
- *    @option string[] tag_name (optional)
- *    @option bool tag_mode_and
- *    @option int per_page
- *    @option int page
- *    @option string order
+ *
+ * @param array{tag_id: array<int, int>, tag_url_name: array<int, string>, tag_name: array<int, string>, tag_mode_and: bool, per_page: int, page: int, order: string|null, f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
+ *   tag_id/tag_url_name/tag_name: FORCE_ARRAY with a null default --
+ *   makeArrayParam() converts the null default to [], always a list
+ *   (tag_id: positive ints via WS_TYPE_ID; tag_url_name/tag_name:
+ *   untyped, so strings). tag_mode_and/per_page/page: non-null default,
+ *   always present. order: null default, no 'type' flag -- always
+ *   present, string|null. f_* keys: the shared $f_params block merged
+ *   into this registration, see
+ *   ws_std_image_sql_filter()/ws_std_image_sql_order().
  * @return array{paging: PwgNamedStruct, images: PwgNamedArray}
  */
 function ws_tags_getImages(array $params, PwgServer &$service): array
@@ -84,8 +94,12 @@ function ws_tags_getImages(array $params, PwgServer &$service): array
     $tags = find_tags($params['tag_id'], $params['tag_url_name'], $params['tag_name']);
     $tags_by_id = [];
     foreach ($tags as $tag) {
-        $tags['id'] = (int) $tag['id'];
-        $tags_by_id[$tag['id']] = $tag;
+        if (! is_array($tag)) {
+            continue;
+        }
+        $tag_id = isset($tag['id']) && is_numeric($tag['id']) ? (int) $tag['id'] : 0;
+        $tag['id'] = $tag_id;
+        $tags_by_id[$tag_id] = $tag;
     }
     unset($tags);
     $tag_ids = array_keys($tags_by_id);
@@ -103,6 +117,10 @@ function ws_tags_getImages(array $params, PwgServer &$service): array
         $where_clauses,
         $order_by
     );
+    // Cast to int at the source (not just at each read site) so
+    // array_flip($image_ids) below produces int keys matching $row_id's
+    // (int) cast, instead of leaving PHPStan-only string keys.
+    $image_ids = array_values(array_map(intval(...), array_filter($image_ids, 'is_numeric')));
 
     $count_set = count($image_ids);
     $image_ids = array_slice($image_ids, $params['per_page'] * $params['page'], $params['per_page']);
@@ -138,9 +156,14 @@ SELECT *
         $result = pwg_query($query);
 
         while ($row = pwg_db_fetch_assoc($result)) {
+            if (! is_numeric($row['id'])) {
+                continue;
+            }
+            $row_id = (int) $row['id'];
+
             $image = [];
-            $image['rank'] = $rank_of[$row['id']];
-            $image['is_favorite'] = isset($favorite_ids[$row['id']]);
+            $image['rank'] = $rank_of[$row_id];
+            $image['is_favorite'] = isset($favorite_ids[$row_id]);
 
             foreach (['id', 'width', 'height', 'hit'] as $k) {
                 if (isset($row[$k])) {
@@ -151,12 +174,13 @@ SELECT *
                 $image[$k] = $row[$k];
             }
 
-            $image['name'] = strip_tags((string) trigger_change('render_element_name', $image['name'], __FUNCTION__));
+            $rendered_name = trigger_change('render_element_name', $image['name'], __FUNCTION__);
+            $image['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
             $image['comment'] = trigger_change('render_element_description', $image['comment'], __FUNCTION__);
 
             $image = array_merge($image, ws_std_get_urls($row));
 
-            $image_tag_ids = ($params['tag_mode_and']) ? $tag_ids : $image_tag_map[$image['id']];
+            $image_tag_ids = ($params['tag_mode_and']) ? $tag_ids : $image_tag_map[$row_id];
             $image_tags = [];
             foreach ($image_tag_ids as $tag_id) {
                 $url = make_index_url(
@@ -208,8 +232,9 @@ SELECT *
 /**
  * API method
  * Adds a tag
- * @param mixed[] $params
- *    @option string name
+ *
+ * @param array{name: string, ...} $params no 'default' key -- mandatory,
+ *   always present.
  * @return \PwgError|array{info: string, id: int|string, name: string, url_name: string}
  */
 function ws_tags_add(array $params, PwgServer &$service): \PwgError|array
@@ -230,18 +255,25 @@ FROM `' . TAGS_TABLE . '`
 WHERE id = ' . $creation_output['id'] . ';';
 
     $new_tag = query2array($query);
+    $new_tag_name = $new_tag[0]['name'] ?? null;
+    $new_tag_url_name = $new_tag[0]['url_name'] ?? null;
 
     return [
         'info' => $creation_output['info'],
         'id' => $creation_output['id'],
-        'name' => $new_tag[0]['name'],
-        'url_name' => $new_tag[0]['url_name'],
+        'name' => is_string($new_tag_name) ? $new_tag_name : '',
+        'url_name' => is_string($new_tag_url_name) ? $new_tag_url_name : '',
     ];
 }
 
 /**
- * @param array<string, mixed> $params
- * @return \PwgError|array{id: array<int, mixed>}
+ * API method
+ * Delete tag(s) by ID
+ *
+ * @param array{tag_id: array<int, int>, pwg_token: string, ...} $params
+ *   neither has a 'default' key -- both mandatory, always present;
+ *   FORCE_ARRAY always coerces tag_id to a list of positive ints.
+ * @return \PwgError|array{id: array<int, int>}
  */
 function ws_tags_delete(array $params, PwgServer &$service): \PwgError|array
 {
@@ -278,7 +310,12 @@ SELECT COUNT(*)
 }
 
 /**
- * @param array<string, mixed> $params
+ * API method
+ * Rename tag
+ *
+ * @param array{tag_id: int, new_name: string, pwg_token: string, ...} $params
+ *   none has a 'default' key -- all mandatory, always present, WS_TYPE_ID
+ *   guarantees a plain int for tag_id.
  * @return \PwgError|array<string, mixed>
  */
 function ws_tags_rename(array $params, PwgServer &$service): \PwgError|array
@@ -352,7 +389,12 @@ SELECT
 }
 
 /**
- * @param array<string, mixed> $params
+ * API method
+ * Create a copy of a tag
+ *
+ * @param array{tag_id: int, copy_name: string, pwg_token: string, ...} $params
+ *   none has a 'default' key -- all mandatory, always present, WS_TYPE_ID
+ *   guarantees a plain int for tag_id.
  * @return \PwgError|array{id: int|string, name: string, url_name: mixed, count: int}
  */
 function ws_tags_duplicate(array $params, PwgServer &$service): \PwgError|array
@@ -412,6 +454,7 @@ SELECT image_id
   WHERE tag_id = ' . $tag_id . '
 ;';
     $destination_tag_image_ids = array_from_query($query, 'image_id');
+    $destination_tag_image_ids = array_values(array_filter($destination_tag_image_ids, 'is_string'));
 
     $inserts = [];
 
@@ -442,8 +485,14 @@ SELECT image_id
 }
 
 /**
- * @param array<string, mixed> $params
- * @return \PwgError|array{destination_tag: mixed, deleted_tag: mixed, images_in_merged_tag: array<int, mixed>}
+ * API method
+ * Merge tags in one other group
+ *
+ * @param array{destination_tag_id: int, merge_tag_id: array<int, int>, pwg_token: string, ...} $params
+ *   none has a 'default' key -- all mandatory, always present;
+ *   destination_tag_id: WS_TYPE_ID guarantees a plain int; merge_tag_id:
+ *   FORCE_ARRAY always coerces to a list of positive ints.
+ * @return \PwgError|array{destination_tag: int, deleted_tag: array<int, int>, images_in_merged_tag: array<int, mixed>}
  */
 function ws_tags_merge(array $params, PwgServer &$service): \PwgError|array
 {
@@ -480,7 +529,7 @@ SELECT DISTINCT(image_id)
   WHERE
     tag_id IN (' . implode(',', $merge_tag) . ')
 ;';
-    $image_in_merge_tags = array_values(query2array($query, null, 'image_id'));
+    $image_in_merge_tags = query2array($query, null, 'image_id');
 
     $query = '
 SELECT image_id
@@ -488,9 +537,10 @@ SELECT image_id
   WHERE tag_id = ' . $params['destination_tag_id'] . '
 ;';
 
-    $image_in_dest = array_values(query2array($query, null, 'image_id'));
+    $image_in_dest = query2array($query, null, 'image_id');
 
     $image_to_add = array_diff($image_in_merge_tags, $image_in_dest);
+    $image_to_add = array_values(array_filter($image_to_add, 'is_string'));
 
     $inserts = [];
     foreach ($image_to_add as $image) {

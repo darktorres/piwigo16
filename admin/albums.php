@@ -60,18 +60,30 @@ $sort_orders = [
 
 if (isset($_POST['simpleAutoOrder']) || isset($_POST['recursiveAutoOrder'])) {
 
-    if (! in_array($_POST['order'], $sort_orders)) {
+    $post_order = $_POST['order'] ?? null;
+    if (! is_string($post_order) || ! in_array($post_order, $sort_orders)) {
         die('Invalid sort order');
     }
     check_input_parameter('id', $_POST, false, '/^-?\d+$/');
+
+    // check_input_parameter() above fatal_error()s on a non-scalar or
+    // non-matching value, but only narrows the type on its own end; $_POST
+    // itself is still mixed to PHPStan, so re-derive the validated string here.
+    $post_id = $_POST['id'] ?? null;
+    $post_id = is_scalar($post_id) ? (string) $post_id : '';
 
     $query = '
 SELECT id
   FROM ' . CATEGORIES_TABLE . '
   WHERE id_uppercat ' .
-      (($_POST['id'] === '-1') ? 'IS NULL' : '= ' . $_POST['id']) . '
+      (($post_id === '-1') ? 'IS NULL' : '= ' . $post_id) . '
 ;';
     $category_ids = array_from_query($query, 'id');
+    // 'id' is CATEGORIES_TABLE's primary key column, always a numeric
+    // string per this driver's string|null fetch convention -- filter out
+    // the (never-actually-occurring) null case so downstream implode()/
+    // get_subcat_ids() calls get values castable to string.
+    $category_ids = array_values(array_filter($category_ids, 'is_string'));
 
     if (isset($_POST['recursiveAutoOrder'])) {
         $category_ids = get_subcat_ids($category_ids);
@@ -80,7 +92,7 @@ SELECT id
     $categories = [];
     $sort = [];
 
-    [$order_by_field, $order_by_asc] = explode(' ', (string) $_POST['order']);
+    [$order_by_field, $order_by_asc] = explode(' ', $post_order);
 
     $order_by_date = false;
     if (str_starts_with($order_by_field, 'date_')) {
@@ -100,12 +112,16 @@ SELECT id, name, id_uppercat
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        $row['name'] = trigger_change('render_category_name', $row['name'], 'admin_cat_list');
+        /** @var array<string, string|null> $row */
+        $rendered_name = trigger_change('render_category_name', $row['name'], 'admin_cat_list');
+        $row['name'] = is_string($rendered_name) ? $rendered_name : $row['name'];
 
         if ($order_by_date) {
+            // id is CATEGORIES_TABLE's NOT NULL primary key.
+            assert($row['id'] !== null);
             $sort[] = $ref_dates[$row['id']];
         } else {
-            $sort[] = remove_accents($row['name']);
+            $sort[] = remove_accents((string) $row['name']);
         }
 
         $categories[] = [
@@ -159,14 +175,21 @@ $allAlbum = query2array($query);
 $associatedTree = [];
 
 foreach ($allAlbum as $album) {
-    $album['name'] = trigger_change('render_category_name', $album['name'], 'admin_cat_list');
-    $album['lastmodified'] = time_since($album['lastmodified'], 'year');
-
+    // Read every raw column (still string|null, per this driver's
+    // fetch convention) before any reassignment below -- writing a mixed
+    // value (trigger_change()'s return) into one offset of a generic
+    // array<string, string|null> would otherwise widen every other key's
+    // inferred type to mixed for the rest of this iteration.
     $parents = explode(',', (string) $album['uppercats']);
     $the_place = &$associatedTree[strval($parents[0])];
     for ($i = 1; $i < count($parents); $i++) {
         $the_place = &$the_place['children'][strval($parents[$i])];
     }
+
+    $rendered_name = trigger_change('render_category_name', $album['name'], 'admin_cat_list');
+    $album['name'] = is_string($rendered_name) ? $rendered_name : $album['name'];
+    $album['lastmodified'] = time_since((string) $album['lastmodified'], 'year');
+
     $the_place['cat'] = $album;
 }
 
@@ -198,18 +221,30 @@ function assocToOrderedTree(array $assocT): array
     $orderedTree = [];
 
     foreach ($assocT as $cat) {
+        if (! is_array($cat) || ! isset($cat['cat']) || ! is_array($cat['cat'])) {
+            // Every reachable node of $associatedTree gets its 'cat' key
+            // populated from its own category row while the tree is built
+            // above (uppercats always ends with the category's own id, and
+            // $allAlbum holds every category row) -- but that's an
+            // algorithmic invariant, not something guaranteed by the type
+            // system, so skip defensively instead of trusting it blindly.
+            continue;
+        }
+        /** @var array<string, string|null> $cat_row */
+        $cat_row = $cat['cat'];
+
         $orderedCat = [];
-        $orderedCat['rank'] = $cat['cat']['rank'];
-        $orderedCat['name'] = $cat['cat']['name'];
-        $orderedCat['status'] = $cat['cat']['status'];
-        $orderedCat['id'] = $cat['cat']['id'];
-        $orderedCat['visible'] = $cat['cat']['visible'];
-        $orderedCat['uppercats'] = $cat['cat']['uppercats'];
-        $orderedCat['nb_images'] = $nb_photos_in[$cat['cat']['id']] ?? 0;
-        $orderedCat['last_updates'] = $cat['cat']['lastmodified'];
-        $orderedCat['has_not_access'] = isset($is_forbidden[$cat['cat']['id']]);
-        $orderedCat['nb_sub_photos'] = $nb_sub_photos[$cat['cat']['id']] ?? 0;
-        if (isset($cat['children'])) {
+        $orderedCat['rank'] = $cat_row['rank'];
+        $orderedCat['name'] = $cat_row['name'];
+        $orderedCat['status'] = $cat_row['status'];
+        $orderedCat['id'] = $cat_row['id'];
+        $orderedCat['visible'] = $cat_row['visible'];
+        $orderedCat['uppercats'] = $cat_row['uppercats'];
+        $orderedCat['nb_images'] = $nb_photos_in[$cat_row['id']] ?? 0;
+        $orderedCat['last_updates'] = $cat_row['lastmodified'];
+        $orderedCat['has_not_access'] = isset($is_forbidden[$cat_row['id']]);
+        $orderedCat['nb_sub_photos'] = $nb_sub_photos[$cat_row['id']] ?? 0;
+        if (isset($cat['children']) && is_array($cat['children'])) {
             // Does not update when moving a node
             $orderedCat['nb_subcats'] = count($cat['children']);
             $orderedCat['children'] = assocToOrderedTree($cat['children']);
@@ -241,7 +276,7 @@ $all_categories = query2array($query, 'id', 'uppercats');
 $subcats_of = [];
 
 foreach ($all_categories as $id => $uppercats) {
-    foreach (array_slice(explode(',', $uppercats), 0, -1) as $uppercat_id) {
+    foreach (array_slice(explode(',', (string) $uppercats), 0, -1) as $uppercat_id) {
         @$subcats_of[$uppercat_id][] = $id;
     }
 }
@@ -283,9 +318,20 @@ $template->assign_var_from_handle('ADMIN_CONTENT', 'albums');
  */
 function get_categories_ref_date(array $ids, string $field = 'date_available', string $minmax = 'max'): array
 {
+    // $ids is documented as array<int, mixed> because callers pass an
+    // already-mixed source ($_POST/array_from_query() cascades); filter to
+    // the int|string values get_subcat_ids() and the final lookup below
+    // actually need, rather than trusting every element's shape.
+    $numeric_ids = [];
+    foreach ($ids as $id) {
+        if (is_int($id) || is_string($id)) {
+            $numeric_ids[] = $id;
+        }
+    }
+
     // we need to work on the whole tree under each category, even if we don't
     // want to sort sub categories
-    $category_ids = get_subcat_ids($ids);
+    $category_ids = get_subcat_ids($numeric_ids);
 
     // search for the reference date of each album
     $query = '
@@ -315,7 +361,7 @@ SELECT
         $subcat_ids = [];
 
         foreach ($uppercats_of as $id => $uppercats) {
-            if (preg_match('/(^|,)' . $cat_id . '(,|$)/', $uppercats)) {
+            if (preg_match('/(^|,)' . $cat_id . '(,|$)/', (string) $uppercats)) {
                 $subcat_ids[] = $id;
             }
         }
@@ -336,7 +382,7 @@ SELECT
 
     // only return the list of $ids, not the sub-categories
     $return = [];
-    foreach ($ids as $id) {
+    foreach ($numeric_ids as $id) {
         $return[$id] = $ref_dates[$id];
     }
 

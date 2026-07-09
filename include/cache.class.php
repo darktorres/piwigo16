@@ -25,7 +25,11 @@ abstract class PersistentCache
     public function make_key(array|string $key)
     {
         if (is_array($key)) {
-            $key = implode('&', $key);
+            $parts = array_map(
+                static fn (mixed $part): string => is_scalar($part) ? (string) $part : serialize($part),
+                $key
+            );
+            $key = implode('&', $parts);
         }
         $key .= $this->instance_key;
         return md5($key);
@@ -71,12 +75,25 @@ class PersistentFileCache extends PersistentCache
     public function get($key, mixed &$value): bool
     {
         $loaded = @file_get_contents($this->dir . $key . '.cache');
-        if ($loaded !== false && ($loaded = unserialize($loaded)) !== false) {
-            if ($loaded['expire'] > time()) {
-                $value = $loaded['data'];
-                return true;
-            }
+        if ($loaded === false) {
+            return false;
         }
+
+        $unserialized = @unserialize($loaded);
+        if (! is_array($unserialized) || ! isset($unserialized['expire'], $unserialized['data'])) {
+            return false;
+        }
+
+        $expire = $unserialized['expire'];
+        if (! is_int($expire)) {
+            return false;
+        }
+
+        if ($expire > time()) {
+            $value = $unserialized['data'];
+            return true;
+        }
+
         return false;
     }
 

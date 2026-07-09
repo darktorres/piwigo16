@@ -81,15 +81,19 @@ SELECT ' . implode(',', $fields) . '
 
     // Load language if cookie is set from login/register/password pages
     if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
-        if (! array_key_exists((string) $_COOKIE['lang'], get_languages())) {
-            fatal_error('[Hacking attempt] the input parameter "' . $_COOKIE['lang'] . '" is not valid');
+        $lang_cookie = $_COOKIE['lang'];
+        if (! is_string($lang_cookie)) {
+            fatal_error('[Hacking attempt] the input parameter "lang" is not valid');
+        }
+        if (! array_key_exists($lang_cookie, get_languages())) {
+            fatal_error('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
         }
 
-        $user['language'] = $_COOKIE['lang'];
+        $user['language'] = $lang_cookie;
         single_update(
             USER_INFOS_TABLE,
             [
-                'language' => $_COOKIE['lang'],
+                'language' => $lang_cookie,
             ],
             [
                 'user_id' => $user['id'],
@@ -141,6 +145,12 @@ function save_profile_from_post(array $userdata, &$errors): bool
         return false;
     }
 
+    // $userdata['id'] is always the current session user's numeric id
+    // (built in include/user.inc.php from $conf['guest_id'] or
+    // $_SESSION['pwg_uid'], never a raw untyped value); narrow once here
+    // for reuse below.
+    $user_id = is_numeric($userdata['id']) ? (int) $userdata['id'] : 0;
+
     $special_user = in_array($userdata['id'], [$conf['guest_id'], $conf['default_user_id']]);
     if ($special_user) {
         unset(
@@ -162,14 +172,18 @@ function save_profile_from_post(array $userdata, &$errors): bool
 
     if ($conf['allow_user_customization'] or defined('IN_ADMIN')) {
         $int_pattern = '/^\d+$/';
-        if (empty($_POST['nb_image_page'])
-            or (! preg_match($int_pattern, (string) $_POST['nb_image_page']))) {
+        $nb_image_page = $_POST['nb_image_page'] ?? null;
+        if (empty($nb_image_page)
+            or (! is_scalar($nb_image_page))
+            or (! preg_match($int_pattern, (string) $nb_image_page))) {
             $errors[] = l10n('The number of photos per page must be a not null scalar');
         }
 
         // periods must be integer values, they represents number of days
-        if (! preg_match($int_pattern, (string) $_POST['recent_period'])
-            or $_POST['recent_period'] < 0) {
+        $recent_period = $_POST['recent_period'] ?? null;
+        if (! is_scalar($recent_period)
+            or ! preg_match($int_pattern, (string) $recent_period)
+            or $recent_period < 0) {
             $errors[] = l10n('Recent period must be a positive integer value');
         }
 
@@ -185,7 +199,8 @@ function save_profile_from_post(array $userdata, &$errors): bool
     if (isset($_POST['mail_address'])) {
         // if $_POST and $userdata have are same email
         // validate_mail_address allows, however, to check email
-        $mail_error = validate_mail_address($userdata['id'], $_POST['mail_address']);
+        $mail_address_input = is_string($_POST['mail_address']) ? $_POST['mail_address'] : null;
+        $mail_error = validate_mail_address($user_id, $mail_address_input);
         if (! empty($mail_error)) {
             $errors[] = $mail_error;
         }
@@ -201,13 +216,19 @@ function save_profile_from_post(array $userdata, &$errors): bool
             $query = '
   SELECT ' . $conf['user_fields']['password'] . ' AS password
     FROM ' . USERS_TABLE . '
-    WHERE ' . $conf['user_fields']['id'] . ' = \'' . $userdata['id'] . '\'
+    WHERE ' . $conf['user_fields']['id'] . ' = \'' . $user_id . '\'
   ;';
             $row = pwg_db_fetch_row(pwg_query($query));
             assert($row !== null);
             [$current_password] = $row;
 
-            if (! pwg_password_verify($_POST['password'], $current_password)) {
+            // the password column allows NULL (external-authentication
+            // accounts with no local password set); such an account can
+            // never verify against a supplied old password
+            $password_input = $_POST['password'] ?? null;
+            if (! is_string($current_password)
+                or ! is_string($password_input)
+                or ! pwg_password_verify($password_input, $current_password)) {
                 $errors[] = l10n('Current password is wrong');
             }
         }
@@ -222,40 +243,43 @@ function save_profile_from_post(array $userdata, &$errors): bool
         if (isset($_POST['mail_address'])) {
             // update common user informations
             $fields = [$conf['user_fields']['email']];
+            $mail_address = is_string($_POST['mail_address']) ? $_POST['mail_address'] : '';
 
             $data = [];
             $data[$conf['user_fields']['id']] = $userdata['id'];
-            $data[$conf['user_fields']['email']] = $_POST['mail_address'];
+            $data[$conf['user_fields']['email']] = $mail_address;
 
             // password is updated only if filled
-            if (! empty($_POST['use_new_pwd'])) {
+            if (! empty($_POST['use_new_pwd']) and is_string($_POST['use_new_pwd'])) {
                 $fields[] = $conf['user_fields']['password'];
                 $data[$conf['user_fields']['password']] = pwg_password_hash($_POST['use_new_pwd']);
 
-                deactivate_user_auth_keys($userdata['id']);
+                deactivate_user_auth_keys($user_id);
             }
 
             // username is updated only if allowed
-            if (! empty($_POST['username'])) {
-                if ($_POST['username'] != $userdata['username'] and get_userid($_POST['username'])) {
+            if (! empty($_POST['username']) and is_string($_POST['username'])) {
+                $username = $_POST['username'];
+                if ($username != $userdata['username'] and get_userid($username)) {
                     $page['errors'][] = l10n('this login is already used');
                     unset($_POST['redirect']);
                 } else {
                     $fields[] = $conf['user_fields']['username'];
-                    $data[$conf['user_fields']['username']] = $_POST['username'];
+                    $data[$conf['user_fields']['username']] = $username;
 
                     // send email to the user
-                    if ($_POST['username'] != $userdata['username']) {
+                    if ($username != $userdata['username']) {
                         include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
-                        switch_lang_to($userdata['language']);
+                        $notification_language = is_string($userdata['language']) ? $userdata['language'] : get_default_language();
+                        switch_lang_to($notification_language);
 
                         $keyargs_content = [
                             get_l10n_args('Hello', ''),
-                            get_l10n_args('Your username has been successfully changed to : %s', $_POST['username']),
+                            get_l10n_args('Your username has been successfully changed to : %s', $username),
                         ];
 
                         pwg_mail(
-                            $_POST['mail_address'],
+                            $mail_address,
                             [
                                 'subject' => '[' . $conf['gallery_title'] . '] ' . l10n('Username modification'),
                                 'content' => l10n_args($keyargs_content),
@@ -277,8 +301,8 @@ function save_profile_from_post(array $userdata, &$errors): bool
                 [$data]
             );
 
-            if ($_POST['mail_address'] != $userdata['email']) {
-                deactivate_password_reset_key($userdata['id']);
+            if ($mail_address != $userdata['email']) {
+                deactivate_password_reset_key($user_id);
             }
 
             $activity_details_tables[] = 'users';
@@ -315,12 +339,12 @@ function save_profile_from_post(array $userdata, &$errors): bool
             $activity_details_tables[] = 'user_infos';
         }
         trigger_notify('save_profile_from_post', $userdata['id']);
-        pwg_activity('user', $userdata['id'], 'edit', [
+        pwg_activity('user', $user_id, 'edit', [
             'function' => __FUNCTION__,
             'tables' => implode(',', $activity_details_tables),
         ]);
 
-        if (! empty($_POST['redirect'])) {
+        if (! empty($_POST['redirect']) and is_string($_POST['redirect'])) {
             redirect($_POST['redirect']);
         }
     }
@@ -349,7 +373,7 @@ function load_profile_in_template($url_action, $url_redirect, array $userdata, ?
 
     $template->assign(
         [
-            $template_prefixe . 'USERNAME' => stripslashes((string) $userdata['username']),
+            $template_prefixe . 'USERNAME' => stripslashes(is_string($userdata['username']) ? $userdata['username'] : ''),
             $template_prefixe . 'EMAIL' => @$userdata['email'],
             $template_prefixe . 'ALLOW_USER_CUSTOMIZATION' => $conf['allow_user_customization'],
             $template_prefixe . 'ACTIVATE_COMMENTS' => $conf['activate_comments'],
@@ -403,7 +427,7 @@ SELECT
 ;';
     $result = query2array($query)[0];
     foreach ($result as $day => $date) {
-        $display_duration[$day] = l10n('%d days', $day) . ' (' . format_date($date, ['day', 'month', 'year']) . ')';
+        $display_duration[$day] = l10n('%d days', $day) . ' (' . format_date($date ?? false, ['day', 'month', 'year']) . ')';
     }
 
     if ($has_custom) {

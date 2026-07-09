@@ -12,21 +12,20 @@ declare(strict_types=1);
 /**
  * API method
  * Returns a list of users
- * @param mixed[] $params
- *    @option int[] user_id (optional)
- *    @option string username (optional)
- *    @option string[] status (optional)
- *    @option int min_level (optional)
- *    @option int max_level (optional)
- *    @option int[] group_id (optional)
- *    @option int per_page
- *    @option int page
- *    @option string order
- *    @option string display
- *    @option string filter
- *    @option int[] exclude (optional)
- *    @option string min_register
- *    @option string max_register
+ *
+ * @param array{user_id?: array<int, int>, username?: string, status?: array<int, string>, min_level: int, group_id?: array<int, int>, per_page: int, page: int, order: string, exclude?: array<int, int>, display: string, filter?: string, min_register?: string, max_register?: string, ...} $params
+ *   user_id/status/group_id/exclude: WS_PARAM_OPTIONAL with no 'default'
+ *   key -- may be entirely absent; FORCE_ARRAY (user_id/group_id/exclude)
+ *   always coerces to a list when present. username/filter/min_register/
+ *   max_register: WS_PARAM_OPTIONAL with no 'default' key -- may be
+ *   entirely absent, no 'type' flag so plain string when present.
+ *   min_level/per_page/page: non-null default, WS_TYPE_INT|WS_TYPE_POSITIVE
+ *   -- always present, always int. order/display: non-null string
+ *   defaults, no 'type' flag -- always present, always string.
+ *   max_level: not a registered param at all (checked in the body via
+ *   $params['max_level'] but absent from this method's ws.php signature)
+ *   -- reachable only if a client sends an unregistered extra GET/POST
+ *   key, covered by the shape's open tail, never explicitly typed.
  * @return \PwgError|array<int|string, mixed>
  */
 function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
@@ -38,10 +37,8 @@ function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
     }
 
     // Insensitive case sort order
-    if (isset($params['order'])) {
-        if (str_contains((string) $params['order'], 'username')) {
-            $params['order'] = str_ireplace('username', 'LOWER(username)', $params['order']);
-        }
+    if (str_contains($params['order'], 'username')) {
+        $params['order'] = str_ireplace('username', 'LOWER(username)', $params['order']);
     }
 
     $where_clauses = ['1=1'];
@@ -140,42 +137,51 @@ function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
         'u.' . $conf['user_fields']['id'] => 'id',
     ];
 
+    // $params['display'] is a comma-separated string per the WS contract
+    // (see the @param docblock above); it's never reused/reassigned here as
+    // a scratch variable of a different type -- $display_flags is a
+    // dedicated, precisely-typed array<string, true> "set" of the
+    // requested display options, built via array_fill_keys() (we only ever
+    // isset() it, never read its values) so its type stays uniform across
+    // every branch below instead of drifting per-branch like array_flip()
+    // of a partially-literal list would.
+    $display_flags = [];
     if ($params['display'] != 'none') {
-        $params['display'] = array_map(trim(...), explode(',', (string) $params['display']));
+        $requested_display = array_map(trim(...), explode(',', (string) $params['display']));
 
-        if (in_array('all', $params['display'])) {
-            $params['display'] = [
+        if (in_array('all', $requested_display, true)) {
+            $requested_display = [
                 'username', 'email', 'status', 'level', 'groups', 'language', 'theme',
                 'nb_image_page', 'recent_period', 'expand', 'show_nb_comments', 'show_nb_hits',
                 'enabled_high', 'registration_date', 'registration_date_string',
                 'registration_date_since', 'last_visit', 'last_visit_string',
                 'last_visit_since', 'total_count',
             ];
-        } elseif (in_array('basics', $params['display'])) {
-            $params['display'] = array_merge($params['display'], [
+        } elseif (in_array('basics', $requested_display, true)) {
+            $requested_display = array_merge($requested_display, [
                 'username', 'email', 'status', 'level', 'groups',
             ]);
-        } elseif (in_array('only_id', $params['display'])) {
-            $params['display'] = [];
+        } elseif (in_array('only_id', $requested_display, true)) {
+            $requested_display = [];
         }
-        $params['display'] = array_flip($params['display']);
+        $display_flags = array_fill_keys($requested_display, true);
 
         // if registration_date_string or registration_date_since is requested,
         // then registration_date is automatically added
-        if (isset($params['display']['registration_date_string']) or isset($params['display']['registration_date_since'])) {
-            $params['display']['registration_date'] = true;
+        if (isset($display_flags['registration_date_string']) or isset($display_flags['registration_date_since'])) {
+            $display_flags['registration_date'] = true;
         }
 
         // if last_visit_string or last_visit_since is requested, then
         // last_visit is automatically added
-        if (isset($params['display']['last_visit_string']) or isset($params['display']['last_visit_since'])) {
-            $params['display']['last_visit'] = true;
+        if (isset($display_flags['last_visit_string']) or isset($display_flags['last_visit_since'])) {
+            $display_flags['last_visit'] = true;
         }
 
-        if (isset($params['display']['username'])) {
+        if (isset($display_flags['username'])) {
             $display['u.' . $conf['user_fields']['username']] = 'username';
         }
-        if (isset($params['display']['email'])) {
+        if (isset($display_flags['email'])) {
             $display['u.' . $conf['user_fields']['email']] = 'email';
         }
 
@@ -185,19 +191,17 @@ function ws_users_getList(array $params, PwgServer &$service): \PwgError|array
             'last_visit',
         ];
         foreach ($ui_fields as $field) {
-            if (isset($params['display'][$field])) {
+            if (isset($display_flags[$field])) {
                 $display['ui.' . $field] = $field;
             }
         }
-    } else {
-        $params['display'] = [];
     }
 
     $query = '
 SELECT DISTINCT ';
 
     // ADD SQL_CALC_FOUND_ROWS if display total_count is requested
-    if (isset($params['display']['total_count'])) {
+    if (isset($display_flags['total_count'])) {
         $query .= 'SQL_CALC_FOUND_ROWS ';
     }
     $first = true;
@@ -224,7 +228,7 @@ SELECT DISTINCT ';
   WHERE
     ' . implode(' AND ', $where_clauses) . '
   ORDER BY ' . $params['order'];
-    if ($params['per_page'] != 0 || ! empty($params['display'])) {
+    if ($params['per_page'] != 0 || ! empty($display_flags)) {
         $query .= '
     LIMIT ' . $params['per_page'] . '
     OFFSET ' . ($params['per_page'] * $params['page']) . ';
@@ -235,16 +239,21 @@ SELECT DISTINCT ';
     $total_count = 0;
 
     /* GET THE RESULT OF SQL_CALC_FOUND_ROWS if display total_count is requested */
-    if (isset($params['display']['total_count'])) {
+    if (isset($display_flags['total_count'])) {
         $total_count_query_result = pwg_query('SELECT FOUND_ROWS();');
         $row = pwg_db_fetch_row($total_count_query_result);
         assert($row !== null);
         [$total_count] = $row;
         $total_count = (int) $total_count;
     }
+    // Extracted once (instead of re-checking isset($display_flags['groups'])
+    // both inside this loop and again below it) because PHPStan's loop-body
+    // type narrowing otherwise mis-infers the offset as unconditionally
+    // present after the loop.
+    $want_groups = isset($display_flags['groups']);
     while ($row = pwg_db_fetch_assoc($result)) {
         $row['id'] = intval($row['id']);
-        if (isset($params['display']['groups'])) {
+        if ($want_groups) {
             $row['groups'] = []; // will be filled later
         }
         $users[$row['id']] = $row;
@@ -252,40 +261,54 @@ SELECT DISTINCT ';
 
     $users_id_arr = [];
     if (count($users) > 0) {
-        if (isset($params['display']['groups'])) {
+        if ($want_groups) {
             $query = '
   SELECT user_id, group_id
   FROM ' . USER_GROUP_TABLE . '
   WHERE user_id IN (' . implode(',', array_keys($users)) . ')
 ;';
             $result = pwg_query($query);
-            while ($row = pwg_db_fetch_assoc($result)) {
-                $users[$row['user_id']]['groups'][] = intval($row['group_id']);
+            // a dedicated $group_row (instead of reusing $row from the loop
+            // above, which iterates a differently-shaped result set) keeps
+            // PHPStan's per-loop type inference precise.
+            while ($group_row = pwg_db_fetch_assoc($result)) {
+                $group_user_id = is_numeric($group_row['user_id']) ? (int) $group_row['user_id'] : null;
+                $group_id = is_numeric($group_row['group_id']) ? (int) $group_row['group_id'] : null;
+                if ($group_user_id === null || $group_id === null || ! isset($users[$group_user_id]) || ! is_array($users[$group_user_id]['groups'] ?? null)) {
+                    continue;
+                }
+                $users[$group_user_id]['groups'][] = $group_id;
             }
         }
         foreach ($users as $cur_user) {
-            $users_id_arr[] = $cur_user['id'];
-            if (isset($params['display']['registration_date_string'])) {
-                $users[$cur_user['id']]['registration_date_string'] = format_date($cur_user['registration_date'], ['day', 'month', 'year']);
+            // $cur_user['id'] was intval()'d above when $users was
+            // populated, so it's already a real int here.
+            $cur_user_id = $cur_user['id'];
+            $users_id_arr[] = $cur_user_id;
+
+            $cur_user_registration_date = is_string($cur_user['registration_date']) ? $cur_user['registration_date'] : null;
+
+            if (isset($display_flags['registration_date_string'])) {
+                $users[$cur_user_id]['registration_date_string'] = format_date($cur_user_registration_date ?? false, ['day', 'month', 'year']);
             }
-            if (isset($params['display']['registration_date_since'])) {
-                $users[$cur_user['id']]['registration_date_since'] = time_since($cur_user['registration_date'], 'month');
+            if (isset($display_flags['registration_date_since'])) {
+                $users[$cur_user_id]['registration_date_since'] = time_since($cur_user_registration_date ?? '', 'month');
             }
-            if (isset($params['display']['last_visit'])) {
-                $last_visit = $cur_user['last_visit'];
-                $users[$cur_user['id']]['last_visit'] = $last_visit;
+            if (isset($display_flags['last_visit'])) {
+                $last_visit = is_string($cur_user['last_visit']) ? $cur_user['last_visit'] : null;
+                $users[$cur_user_id]['last_visit'] = $last_visit;
 
                 if (! get_boolean($cur_user['last_visit_from_history']) and empty($last_visit)) {
-                    $last_visit = get_user_last_visit_from_history($cur_user['id'], true);
-                    $users[$cur_user['id']]['last_visit'] = $last_visit;
+                    $last_visit = get_user_last_visit_from_history($cur_user_id, true);
+                    $users[$cur_user_id]['last_visit'] = $last_visit;
                 }
 
-                if (isset($params['display']['last_visit_string'])) {
-                    $users[$cur_user['id']]['last_visit_string'] = format_date($last_visit, ['day', 'month', 'year']);
+                if (isset($display_flags['last_visit_string'])) {
+                    $users[$cur_user_id]['last_visit_string'] = format_date($last_visit ?? false, ['day', 'month', 'year']);
                 }
 
-                if (isset($params['display']['last_visit_since'])) {
-                    $users[$cur_user['id']]['last_visit_since'] = time_since($last_visit, 'day');
+                if (isset($display_flags['last_visit_since'])) {
+                    $users[$cur_user_id]['last_visit_since'] = time_since($last_visit ?? '', 'day');
                 }
             }
         }
@@ -327,8 +350,13 @@ SELECT DISTINCT ';
          * }
          * }*/
     }
-    $users = trigger_change('ws_users_getList', $users);
-    if ($params['per_page'] == 0 && empty($params['display'])) {
+    // trigger_change()'s return type is genuinely mixed (it dispatches to
+    // whatever handler is registered for 'ws_users_getList'); narrow back
+    // to the same array<int, array<string, mixed>> shape that was passed
+    // in.
+    $users_after_trigger = trigger_change('ws_users_getList', $users);
+    $users = is_array($users_after_trigger) ? $users_after_trigger : $users;
+    if ($params['per_page'] == 0 && empty($display_flags)) {
         $method_result = $users_id_arr;
     } else {
         $method_result = [
@@ -344,7 +372,7 @@ SELECT DISTINCT ';
         ];
     }
     // deprecated: kept for retrocompatibility
-    if (isset($params['display']['total_count'])) {
+    if (isset($display_flags['total_count'])) {
         $method_result['total_count'] = $total_count;
     }
     return $method_result;
@@ -353,10 +381,16 @@ SELECT DISTINCT ';
 /**
  * API method
  * Adds a user
- * @param mixed[] $params
- *    @option string username
- *    @option string password (optional)
- *    @option string email (optional)
+ *
+ * @param array{username: string, auto_password: bool, password: string|null, password_confirm?: string, email: string|null, send_password_by_mail: bool, pwg_token: string, ...} $params
+ *   username/pwg_token: no 'default' key -- mandatory, always present.
+ *   auto_password/send_password_by_mail: non-null bool default,
+ *   WS_TYPE_BOOL -- always present, always bool (auto_password's ws.php
+ *   registration previously said 'flags' => WS_TYPE_BOOL, a typo that
+ *   left it uncoerced -- fixed to 'type' => WS_TYPE_BOOL alongside this
+ *   shape). password/email: null default, no 'type' flag -- always
+ *   present, string|null. password_confirm: WS_PARAM_OPTIONAL with no
+ *   'default' key -- may be entirely absent.
  */
 function ws_users_add(array $params, PwgServer &$service): mixed
 {
@@ -371,13 +405,21 @@ function ws_users_add(array $params, PwgServer &$service): mixed
     global $conf;
 
     if ($conf['double_password_type_in_admin']) {
-        if ($params['password'] != $params['password_confirm']) {
+        if ($params['password'] != ($params['password_confirm'] ?? null)) {
             return new PwgError(WS_ERR_INVALID_PARAM, l10n('The passwords do not match'));
         }
     }
 
     if ($params['auto_password']) {
         $params['password'] = generate_key(mt_rand(15, 20));
+    }
+
+    // register_user() genuinely requires a string password; a client that
+    // sends neither auto_password=true nor an explicit password would
+    // otherwise reach it with null and crash inside pwg_password_hash() ->
+    // password_hash() (a real string-typed native function).
+    if ($params['password'] === null) {
+        return new PwgError(WS_ERR_INVALID_PARAM, l10n('Please, enter a password'));
     }
 
     $user_id = register_user(
@@ -401,9 +443,10 @@ function ws_users_add(array $params, PwgServer &$service): mixed
 /**
  * API method
  * Get a new authentication key for a user.
- * @param mixed[] $params
- *    @option int[] user_id
- *    @option string pwg_token
+ *
+ * @param array{user_id: int, pwg_token: string, ...} $params neither has a
+ *   'default' key -- both mandatory, always present. user_id: WS_TYPE_ID,
+ *   not FORCE_ARRAY here -- a plain int.
  */
 function ws_users_getAuthKey(array $params, PwgServer &$service): mixed
 {
@@ -423,9 +466,10 @@ function ws_users_getAuthKey(array $params, PwgServer &$service): mixed
 /**
  * API method
  * Deletes users
- * @param mixed[] $params
- *    @option int[] user_id
- *    @option string pwg_token
+ *
+ * @param array{user_id: array<int, int>, pwg_token: string, ...} $params
+ *   neither has a 'default' key -- both mandatory, always present;
+ *   FORCE_ARRAY always coerces user_id to a list of positive ints.
  */
 function ws_users_delete(array $params, PwgServer &$service): \PwgError|string
 {
@@ -475,21 +519,13 @@ SELECT
 /**
  * API method
  * Updates users
- * @param mixed[] $params
- *    @option int[] user_id
- *    @option string username (optional)
- *    @option string password (optional)
- *    @option string email (optional)
- *    @option string status (optional)
- *    @option int level (optional)
- *    @option string language (optional)
- *    @option string theme (optional)
- *    @option int nb_image_page (optional)
- *    @option int recent_period (optional)
- *    @option bool expand (optional)
- *    @option bool show_nb_comments (optional)
- *    @option bool show_nb_hits (optional)
- *    @option bool enabled_high (optional)
+ *
+ * @param array{user_id: array<int, int>, username?: string, password?: string, email?: string, status?: string, level?: int, language?: string, theme?: string, group_id?: array<int, int>, nb_image_page?: int, recent_period?: int, expand?: bool, show_nb_comments?: bool, show_nb_hits?: bool, enabled_high?: bool, pwg_token: string, ...} $params
+ *   user_id/pwg_token: no 'default' key -- mandatory, always present;
+ *   FORCE_ARRAY always coerces user_id to a list of positive ints. every
+ *   other key: WS_PARAM_OPTIONAL with no 'default' key -- may be entirely
+ *   absent; group_id: WS_TYPE_INT only (no POSITIVE) since -1 is a valid
+ *   value ("dissociate from all groups").
  */
 function ws_users_setInfo(array $params, PwgServer &$service): mixed
 {
@@ -500,12 +536,22 @@ function ws_users_setInfo(array $params, PwgServer &$service): mixed
     $updated_users = check_and_save_user_infos($params);
 
     if (isset($updated_users['error'])) {
-        return new PwgError($updated_users['error']['code'], $updated_users['error']['message']);
+        // check_and_save_user_infos() is declared to return plain `array`
+        // (include/functions_user.inc.php); its error branches always
+        // populate error.code (int) and error.message (string), but that
+        // shape isn't statically expressed, so narrow defensively here
+        // rather than trust the mixed offsets.
+        $error = $updated_users['error'];
+        $error_code = is_array($error) && is_int($error['code'] ?? null) ? $error['code'] : WS_ERR_INVALID_PARAM;
+        $error_message = is_array($error) && is_string($error['message'] ?? null) ? $error['message'] : 'Invalid parameters';
+        return new PwgError($error_code, $error_message);
     }
+
+    $updated_infos = is_array($updated_users['infos'] ?? null) ? $updated_users['infos'] : [];
 
     return $service->invoke('pwg.users.getList', [
         'user_id' => $updated_users['user_id'],
-        'display' => 'basics,' . implode(',', array_keys($updated_users['infos'])),
+        'display' => 'basics,' . implode(',', array_keys($updated_infos)),
     ]);
 }
 
@@ -513,18 +559,14 @@ function ws_users_setInfo(array $params, PwgServer &$service): mixed
  * API method
  * Update user
  * @since 16
- * @param mixed[] $params
- *    @option string email (optional)
- *    @option int nb_image_page (optional)
- *    @option string theme (optional)
- *    @option string language (optional)
- *    @option int recent_period (optional)
- *    @option bool expand (optional)
- *    @option bool show_nb_comments (optional)
- *    @option bool show_nb_hits (optional)
- *    @option string password (optional)
- *    @option string new_password (optional)
- *    @option string conf_new_password (optional)
+ *
+ * @param array{email?: string, nb_image_page?: int, theme?: string, language?: string, recent_period?: int, expand?: bool, show_nb_comments?: bool, show_nb_hits?: bool, password?: string, new_password?: string, conf_new_password?: string, pwg_token: string, ...} $params
+ *   pwg_token: no 'default' key -- mandatory, always present. every other
+ *   key: WS_PARAM_OPTIONAL with no 'default' key -- may be entirely
+ *   absent. (the body's unset() calls for 'username'/'status'/'level'/
+ *   'group_id'/'enabled_high' target keys not in this method's own
+ *   ws.php registration at all -- harmless no-ops, not part of the real
+ *   shape.)
  */
 function ws_users_setMyInfo(array $params, PwgServer &$service): \PwgError|string
 {
@@ -567,7 +609,7 @@ function ws_users_setMyInfo(array $params, PwgServer &$service): \PwgError|strin
     }
 
     if (! empty($params['password'])) {
-        if ($params['new_password'] != $params['conf_new_password']) {
+        if (($params['new_password'] ?? null) != ($params['conf_new_password'] ?? null)) {
             return new PwgError(403, l10n('The passwords do not match'));
         }
 
@@ -579,12 +621,13 @@ SELECT ' . $conf['user_fields']['password'] . ' AS password
         $row = pwg_db_fetch_row(pwg_query($query));
         assert($row !== null);
         [$current_password] = $row;
+        $current_password = is_string($current_password) ? $current_password : '';
 
         if (! pwg_password_verify($params['password'], $current_password)) {
             return new PwgError(403, l10n('Current password is wrong'));
         }
 
-        $params['password'] = $params['new_password'];
+        $params['password'] = $params['new_password'] ?? null;
     }
 
     // Unset admin field also new and conf password
@@ -602,7 +645,15 @@ SELECT ' . $conf['user_fields']['password'] . ' AS password
     $updated_users = check_and_save_user_infos($params);
 
     if (isset($updated_users['error'])) {
-        return new PwgError($updated_users['error']['code'], $updated_users['error']['message']);
+        // check_and_save_user_infos() is declared to return plain `array`
+        // (include/functions_user.inc.php); its error branches always
+        // populate error.code (int) and error.message (string), but that
+        // shape isn't statically expressed, so narrow defensively here
+        // rather than trust the mixed offsets.
+        $error = $updated_users['error'];
+        $error_code = is_array($error) && is_int($error['code'] ?? null) ? $error['code'] : WS_ERR_INVALID_PARAM;
+        $error_message = is_array($error) && is_string($error['message'] ?? null) ? $error['message'] : 'Invalid parameters';
+        return new PwgError($error_code, $error_message);
     }
 
     return l10n('Your changes have been applied.');
@@ -612,9 +663,11 @@ SELECT ' . $conf['user_fields']['password'] . ' AS password
  * API method
  * Set a preferences parameter to current user
  * @since 13
- * @param mixed[] $params
- *    @option string param
- *    @option string|mixed value
+ *
+ * @param array{param: string, value?: string, is_json: bool, ...} $params
+ *   param: no 'default' key -- mandatory, always present. value:
+ *   WS_PARAM_OPTIONAL with no 'default' key -- may be entirely absent.
+ *   is_json: non-null bool default, WS_TYPE_BOOL -- always present.
  */
 function ws_users_preferences_set(array $params, PwgServer &$service): mixed
 {
@@ -624,7 +677,7 @@ function ws_users_preferences_set(array $params, PwgServer &$service): mixed
         return new PwgError(WS_ERR_INVALID_PARAM, 'Invalid param name #' . $params['param'] . '#');
     }
 
-    $value = stripslashes((string) $params['value']);
+    $value = stripslashes((string) ($params['value'] ?? ''));
     if ($params['is_json']) {
         $value = json_decode($value, true);
     }
@@ -637,8 +690,9 @@ function ws_users_preferences_set(array $params, PwgServer &$service): mixed
 /**
  * API method
  * Adds a favorite image for the current user
- * @param mixed[] $params
- *    @option int image_id
+ *
+ * @param array{image_id: int, ...} $params no 'default' key -- mandatory,
+ *   always present, WS_TYPE_ID guarantees a plain int.
  */
 function ws_users_favorites_add(array $params, PwgServer &$service): \PwgError|true
 {
@@ -678,8 +732,9 @@ SELECT COUNT(*)
 /**
  * API method
  * Removes a favorite image for the current user
- * @param mixed[] $params
- *    @option int image_id
+ *
+ * @param array{image_id: int, ...} $params no 'default' key -- mandatory,
+ *   always present, WS_TYPE_ID guarantees a plain int.
  */
 function ws_users_favorites_remove(array $params, PwgServer &$service): \PwgError|true
 {
@@ -717,10 +772,11 @@ DELETE
 /**
  * API method
  * Returns the favorite images of the current user
- * @param mixed[] $params
- *    @option int per_page
- *    @option int page
- *    @option string order
+ *
+ * @param array{per_page: int, page: int, order: string|null, ...} $params
+ *   per_page/page: non-null int default, WS_TYPE_INT|WS_TYPE_POSITIVE --
+ *   always present. order: null default, no 'type' flag -- always
+ *   present, string|null.
  * @return false|array{paging: PwgNamedStruct, images: PwgNamedArray}
  */
 function ws_users_favorites_getList(array $params, PwgServer &$service): false|array
@@ -791,10 +847,11 @@ SELECT
  * API method
  * Returns the reset password link of the current user
  * @since 15
- * @param mixed[] $params
- *    @option int user_id
- *    @option string pwg_token
- *    @option boolean send_by_mail
+ *
+ * @param array{user_id: int, pwg_token: string, send_by_mail: bool, ...} $params
+ *   user_id/pwg_token: no 'default' key -- mandatory, always present,
+ *   WS_TYPE_ID guarantees a plain int for user_id. send_by_mail: non-null
+ *   bool default, WS_TYPE_BOOL -- always present.
  * @return \PwgError|array{generated_link: mixed, send_by_mail: string|false|null, time_validation: mixed}
  */
 function ws_users_generate_password_link(array $params, PwgServer &$service): \PwgError|array
@@ -812,34 +869,42 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): \P
         return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
     }
 
+    // getuserdata() is declared to return array<string, mixed> (its own
+    // @return docblock, include/functions_user.inc.php); narrow the
+    // specific fields this function consumes to their real column types.
     $user_lost = getuserdata($params['user_id']);
+    $user_lost_status = is_string($user_lost['status']) ? $user_lost['status'] : '';
 
     // Cannot perform this action for a guest or generic user
-    if (is_a_guest($user_lost['status']) or is_generic($user_lost['status'])) {
+    if (is_a_guest($user_lost_status) or is_generic($user_lost_status)) {
         return new PwgError(403, 'Password reset is not allowed for this user');
     }
 
     // Only webmaster can perform this action for another webmaster
-    if ($user['status'] === 'admin' && $user_lost['status'] === 'webmaster') {
+    if ($user['status'] === 'admin' && $user_lost_status === 'webmaster') {
         return new PwgError(403, 'You cannot perform this action');
     }
 
     $first_login = has_already_logged_in($params['user_id']);
     $send_by_mail_response = null;
-    $lang_to_use = $first_login ? get_default_language() : $user_lost['language'];
+    $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : get_default_language();
+    $lang_to_use = $first_login ? get_default_language() : $user_lost_language;
 
     switch_lang_to($lang_to_use);
     $generate_link = generate_password_link($params['user_id'], $first_login);
 
-    if ($params['send_by_mail'] and ! empty($user_lost['email'])) {
+    $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
+
+    if ($params['send_by_mail'] and ! empty($user_lost_email)) {
+        $user_lost_username = is_string($user_lost['username']) ? $user_lost['username'] : '';
         if ($first_login) {
-            $email_params = pwg_generate_set_password_mail($user_lost['username'], $generate_link['password_link'], $conf['gallery_title'], $generate_link['time_validation']);
+            $email_params = pwg_generate_set_password_mail($user_lost_username, $generate_link['password_link'], $conf['gallery_title'], $generate_link['time_validation']);
         } else {
-            $email_params = pwg_generate_reset_password_mail($user_lost['username'], $generate_link['password_link'], $conf['gallery_title'], $generate_link['time_validation']);
+            $email_params = pwg_generate_reset_password_mail($user_lost_username, $generate_link['password_link'], $conf['gallery_title'], $generate_link['time_validation']);
         }
         // Here we remove the display of errors because they prevent the response from being parsed
-        if (@pwg_mail($user_lost['email'], $email_params)) {
-            $send_by_mail_response = 'Mail sent at : ' . $user_lost['email'];
+        if (@pwg_mail($user_lost_email, $email_params)) {
+            $send_by_mail_response = 'Mail sent at : ' . $user_lost_email;
         } else {
             $send_by_mail_response = false;
         }
@@ -857,9 +922,10 @@ function ws_users_generate_password_link(array $params, PwgServer &$service): \P
  * API method
  * Set a user as the main user
  * @since 15
- * @param mixed[] $params
- *    @option int user_id
- *    @option string pwg_token
+ *
+ * @param array{user_id: int, pwg_token: string, ...} $params neither has a
+ *   'default' key -- both mandatory, always present, WS_TYPE_ID guarantees
+ *   a plain int for user_id.
  */
 function ws_set_main_user(array $params, PwgServer &$service): \PwgError|string
 {
@@ -895,7 +961,10 @@ function ws_set_main_user(array $params, PwgServer &$service): \PwgError|string
  * API method
  * Create a new api key for the current user
  * @since 15
- * @param mixed[] $params
+ *
+ * @param array{key_name: string, duration: int, pwg_token: string, ...} $params
+ *   none has a 'default' key -- all mandatory, always present; duration:
+ *   WS_TYPE_INT|WS_TYPE_POSITIVE guarantees a plain int.
  * @return \PwgError|array<string, mixed>
  */
 function ws_create_api_key(array $params, PwgServer &$service): \PwgError|array
@@ -920,7 +989,9 @@ function ws_create_api_key(array $params, PwgServer &$service): \PwgError|array
 
     $key_name = pwg_db_real_escape_string((string) $params['key_name']);
     assert($key_name !== null);
-    $duration = $params['duration'] == 0 ? 1 : $params['duration'];
+    // the guard above already rejects any duration outside [1, 999999], so
+    // it can never be 0 here.
+    $duration = $params['duration'];
 
     $secret = create_api_key($user['id'], $duration, $key_name);
 
@@ -933,7 +1004,9 @@ function ws_create_api_key(array $params, PwgServer &$service): \PwgError|array
  * API method
  * Revoke a api key for the current user
  * @since 15
- * @param mixed[] $params
+ *
+ * @param array{pkid: string, pwg_token: string, ...} $params neither has a
+ *   'default' key -- both mandatory, always present, no 'type' flag.
  */
 function ws_revoke_api_key(array $params, PwgServer &$service): \PwgError|string
 {
@@ -966,7 +1039,10 @@ function ws_revoke_api_key(array $params, PwgServer &$service): \PwgError|string
  * API method
  * Edit a api key for the current user
  * @since 15
- * @param mixed[] $params
+ *
+ * @param array{key_name: string, pkid: string, pwg_token: string, ...} $params
+ *   none has a 'default' key -- all mandatory, always present, no 'type'
+ *   flag.
  */
 function ws_edit_api_key(array $params, PwgServer &$service): \PwgError|string
 {
@@ -1004,7 +1080,9 @@ function ws_edit_api_key(array $params, PwgServer &$service): \PwgError|string
  * API method
  * Get all api key for the current user
  * @since 15
- * @param mixed[] $params
+ *
+ * @param array{pwg_token: string, ...} $params no 'default' key --
+ *   mandatory, always present, no 'type' flag.
  * @return \PwgError|array<int, mixed>|string
  */
 function ws_get_api_key(array $params, PwgServer &$service): \PwgError|array|string

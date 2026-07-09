@@ -37,10 +37,13 @@ include PHPWG_ROOT_PATH . 'include/page_header.php';
 
 if (
     isset($_GET['page'])
-    and preg_match('/^[a-z_]*$/', (string) $_GET['page'])
+    and is_string($_GET['page'])
+    and preg_match('/^[a-z_]*$/', $_GET['page'])
 ) {
+    $help_page = $_GET['page'];
+
     $help_content =
-      load_language('help/' . $_GET['page'] . '.html', '', [
+      load_language('help/' . $help_page . '.html', '', [
           'return' => true,
       ]);
 
@@ -51,7 +54,7 @@ if (
     $help_content = trigger_change(
         'get_popup_help_content',
         $help_content,
-        $_GET['page']
+        $help_page
     );
 } else {
     die('Hacking attempt!');

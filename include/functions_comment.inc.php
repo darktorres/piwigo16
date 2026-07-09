@@ -38,19 +38,24 @@ function user_comment_check($action, array $comment)
         return $action;
     }
 
+    $comment_content = is_string($comment['content'] ?? null) ? $comment['content'] : '';
     $link_count = preg_match_all(
         '/https?:\/\//',
-        (string) $comment['content'],
+        $comment_content,
         $matches
     );
     // the pattern above is a hardcoded, always-valid regex
     assert($link_count !== false);
 
-    if (str_contains((string) $comment['author'], 'http://')) {
+    $comment_author = is_string($comment['author'] ?? null) ? $comment['author'] : '';
+    if (str_contains($comment_author, 'http://')) {
         $link_count++;
     }
 
     if ($link_count > $conf['comment_spam_max_links']) {
+        if (! isset($_POST['cr']) or ! is_array($_POST['cr'])) {
+            $_POST['cr'] = [];
+        }
         $_POST['cr'][] = 'links';
         return $my_action;
     }
@@ -97,10 +102,11 @@ function insert_user_comment(&$comm, $key, &$infos)
         // if a guest try to use the name of an already existing user, he must be
         // rejected
         if ($comm['author'] != 'guest') {
+            $comment_author_name = is_string($comm['author']) ? $comm['author'] : '';
             $query = '
 SELECT COUNT(*) AS user_exists
   FROM ' . USERS_TABLE . '
-  WHERE ' . $conf['user_fields']['username'] . " = '" . addslashes((string) $comm['author']) . "'";
+  WHERE ' . $conf['user_fields']['username'] . " = '" . addslashes($comment_author_name) . "'";
             $row = pwg_db_fetch_assoc(pwg_query($query));
             // a COUNT(*) query always returns exactly one row
             assert(is_array($row));
@@ -120,6 +126,9 @@ SELECT COUNT(*) AS user_exists
 
     if (! verify_ephemeral_key(@$key, $comm['image_id'])) {
         $comment_action = 'reject';
+        if (! isset($_POST['cr']) or ! is_array($_POST['cr'])) {
+            $_POST['cr'] = [];
+        }
         $_POST['cr'][] = 'key'; // rvelices: I use this outside to see how spam robots work
     }
 
@@ -127,13 +136,18 @@ SELECT COUNT(*) AS user_exists
     if (! empty($comm['website_url'])) {
         if (! $conf['comments_enable_website']) { // honeypot: if the field is disabled, it should be empty !
             $comment_action = 'reject';
+            if (! isset($_POST['cr']) or ! is_array($_POST['cr'])) {
+                $_POST['cr'] = [];
+            }
             $_POST['cr'][] = 'website_url';
         } else {
-            $comm['website_url'] = strip_tags((string) $comm['website_url']);
-            if (! preg_match('/^https?/i', $comm['website_url'])) {
-                $comm['website_url'] = 'http://' . $comm['website_url'];
+            $website_url = is_string($comm['website_url']) ? $comm['website_url'] : '';
+            $website_url = strip_tags($website_url);
+            if (! preg_match('/^https?/i', $website_url)) {
+                $website_url = 'http://' . $website_url;
             }
-            if (! url_check_format($comm['website_url'])) {
+            $comm['website_url'] = $website_url;
+            if (! url_check_format($website_url)) {
                 $infos[] = l10n('Your website URL is invalid');
                 $comment_action = 'reject';
             }
@@ -154,7 +168,8 @@ SELECT COUNT(*) AS user_exists
     }
 
     // anonymous id = ip address
-    $ip_components = explode('.', (string) $comm['ip']);
+    $comment_ip = is_string($comm['ip']) ? $comm['ip'] : '';
+    $ip_components = explode('.', $comment_ip);
     if (count($ip_components) > 3) {
         array_pop($ip_components);
     }
@@ -180,32 +195,44 @@ SELECT count(1) FROM ' . COMMENTS_TABLE . '
         if ($counter > 0) {
             $infos[] = l10n('Anti-flood system : please wait for a moment before trying to post another comment');
             $comment_action = 'reject';
+            if (! isset($_POST['cr']) or ! is_array($_POST['cr'])) {
+                $_POST['cr'] = [];
+            }
             $_POST['cr'][] = 'flood_time';
         }
     }
 
     // perform more spam check
-    $comment_action = trigger_change(
+    $comment_action_result = trigger_change(
         'user_comment_check',
         $comment_action,
         $comm
     );
+    // handlers of the user_comment_check event contract MUST return a string
+    // (validate/moderate/reject); fail closed if a handler misbehaves
+    $comment_action = is_string($comment_action_result) ? $comment_action_result : 'reject';
 
     if ($comment_action != 'reject') {
+        $comment_author = is_string($comm['author']) ? $comm['author'] : '';
+        $comment_ip = is_string($comm['ip']) ? $comm['ip'] : '';
+        $comment_content = is_string($comm['content']) ? $comm['content'] : '';
+        $comment_website_url = is_string($comm['website_url'] ?? null) ? $comm['website_url'] : '';
+        $comment_email = is_string($comm['email'] ?? null) ? $comm['email'] : '';
+
         $query = '
 INSERT INTO ' . COMMENTS_TABLE . '
   (author, author_id, anonymous_id, content, date, validated, validation_date, image_id, website_url, email)
   VALUES (
-    \'' . $comm['author'] . '\',
+    \'' . $comment_author . '\',
     ' . $comm['author_id'] . ',
-    \'' . $comm['ip'] . '\',
-    \'' . $comm['content'] . '\',
+    \'' . $comment_ip . '\',
+    \'' . $comment_content . '\',
     NOW(),
     \'' . ($comment_action == 'validate' ? 'true' : 'false') . '\',
     ' . ($comment_action == 'validate' ? 'NOW()' : 'NULL') . ',
     ' . $comm['image_id'] . ',
-    ' . (! empty($comm['website_url']) ? '\'' . $comm['website_url'] . '\'' : 'NULL') . ',
-    ' . (! empty($comm['email']) ? '\'' . $comm['email'] . '\'' : 'NULL') . '
+    ' . (! empty($comment_website_url) ? '\'' . $comment_website_url . '\'' : 'NULL') . ',
+    ' . (! empty($comment_email) ? '\'' . $comment_email . '\'' : 'NULL') . '
   )
 ';
         pwg_query($query);
@@ -220,9 +247,9 @@ INSERT INTO ' . COMMENTS_TABLE . '
             $comment_url = get_absolute_root_url() . 'comments.php?comment_id=' . $comm['id'];
 
             $keyargs_content = [
-                get_l10n_args('Author: %s', stripslashes((string) $comm['author'])),
-                get_l10n_args('Email: %s', stripslashes((string) $comm['email'])),
-                get_l10n_args('Comment: %s', stripslashes((string) $comm['content'])),
+                get_l10n_args('Author: %s', stripslashes($comment_author)),
+                get_l10n_args('Email: %s', stripslashes($comment_email)),
+                get_l10n_args('Comment: %s', stripslashes($comment_content)),
                 get_l10n_args(''),
                 get_l10n_args('Manage this user comment: %s', $comment_url),
             ];
@@ -232,7 +259,7 @@ INSERT INTO ' . COMMENTS_TABLE . '
             }
 
             pwg_mail_notification_admins(
-                get_l10n_args('Comment by %s', stripslashes((string) $comm['author'])),
+                get_l10n_args('Comment by %s', stripslashes($comment_author)),
                 $keyargs_content
             );
         }
@@ -251,9 +278,11 @@ INSERT INTO ' . COMMENTS_TABLE . '
  */
 function delete_user_comment($comment_id): bool
 {
+    global $user;
+
     $user_where_clause = '';
     if (! is_admin()) {
-        $user_where_clause = '   AND author_id = \'' . $GLOBALS['user']['id'] . '\'';
+        $user_where_clause = '   AND author_id = \'' . $user['id'] . '\'';
     }
 
     if (is_array($comment_id)) {
@@ -267,6 +296,7 @@ DELETE FROM ' . COMMENTS_TABLE . '
   WHERE ' . $where_clause .
 $user_where_clause . '
 ;';
+    pwg_query($query);
 
     if (pwg_db_changes()) {
         invalidate_user_cache_nb_comments();
@@ -274,7 +304,7 @@ $user_where_clause . '
         email_admin(
             'delete',
             [
-                'author' => $GLOBALS['user']['username'],
+                'author' => $user['username'],
                 'comment_id' => $comment_id,
             ]
         );
@@ -297,11 +327,13 @@ $user_where_clause . '
  */
 function update_user_comment(array $comment, $post_key)
 {
-    global $conf, $page;
+    global $conf, $page, $user;
 
     $comment_action = 'validate';
 
-    if (! verify_ephemeral_key($post_key, $comment['image_id'])) {
+    $comment_image_id = is_scalar($comment['image_id']) ? (string) $comment['image_id'] : '';
+
+    if (! verify_ephemeral_key($post_key, $comment_image_id)) {
         $comment_action = 'reject';
     } elseif (! $conf['comments_validation'] or is_admin()) { // should the updated comment must be validated
         $comment_action = 'validate'; // one of validate, moderate, reject
@@ -310,25 +342,30 @@ function update_user_comment(array $comment, $post_key)
     }
 
     // perform more spam check
-    $comment_action =
+    $comment_action_result =
       trigger_change(
           'user_comment_check',
           $comment_action,
           array_merge(
               $comment,
               [
-                  'author' => $GLOBALS['user']['username'],
+                  'author' => $user['username'],
               ]
           )
       );
+    // handlers of the user_comment_check event contract MUST return a string
+    // (validate/moderate/reject); fail closed if a handler misbehaves
+    $comment_action = is_string($comment_action_result) ? $comment_action_result : 'reject';
 
     // website
     if (! empty($comment['website_url'])) {
-        $comm['website_url'] = strip_tags((string) $comm['website_url']);
-        if (! preg_match('/^https?/i', (string) $comment['website_url'])) {
-            $comment['website_url'] = 'http://' . $comment['website_url'];
+        $website_url = is_string($comment['website_url']) ? $comment['website_url'] : '';
+        $website_url = strip_tags($website_url);
+        if (! preg_match('/^https?/i', $website_url)) {
+            $website_url = 'http://' . $website_url;
         }
-        if (! url_check_format($comment['website_url'])) {
+        $comment['website_url'] = $website_url;
+        if (! url_check_format($website_url)) {
             $page['errors'][] = l10n('Your website URL is invalid');
             $comment_action = 'reject';
         }
@@ -338,16 +375,20 @@ function update_user_comment(array $comment, $post_key)
         $user_where_clause = '';
         if (! is_admin()) {
             $user_where_clause = '   AND author_id = \'' .
-    $GLOBALS['user']['id'] . '\'';
+    $user['id'] . '\'';
         }
+
+        $comment_content = is_string($comment['content']) ? $comment['content'] : '';
+        $comment_website_url = is_string($comment['website_url'] ?? null) ? $comment['website_url'] : '';
+        $comment_id_value = is_scalar($comment['comment_id']) ? (string) $comment['comment_id'] : '0';
 
         $query = '
 UPDATE ' . COMMENTS_TABLE . '
-  SET content = \'' . $comment['content'] . '\',
-      website_url = ' . (! empty($comment['website_url']) ? '\'' . $comment['website_url'] . '\'' : 'NULL') . ',
+  SET content = \'' . $comment_content . '\',
+      website_url = ' . (! empty($comment_website_url) ? '\'' . $comment_website_url . '\'' : 'NULL') . ',
       validated = \'' . ($comment_action == 'validate' ? 'true' : 'false') . '\',
       validation_date = ' . ($comment_action == 'validate' ? 'NOW()' : 'NULL') . '
-  WHERE id = ' . $comment['comment_id'] .
+  WHERE id = ' . $comment_id_value .
 $user_where_clause . '
 ;';
         $result = pwg_query($query);
@@ -356,26 +397,26 @@ $user_where_clause . '
         if ($result and $conf['email_admin_on_comment_validation'] and $comment_action == 'moderate') {
             include_once PHPWG_ROOT_PATH . 'include/functions_mail.inc.php';
 
-            $comment_url = get_absolute_root_url() . 'comments.php?comment_id=' . $comment['comment_id'];
+            $comment_url = get_absolute_root_url() . 'comments.php?comment_id=' . $comment_id_value;
 
             $keyargs_content = [
-                get_l10n_args('Author: %s', stripslashes((string) $GLOBALS['user']['username'])),
-                get_l10n_args('Comment: %s', stripslashes((string) $comment['content'])),
+                get_l10n_args('Author: %s', stripslashes((string) $user['username'])),
+                get_l10n_args('Comment: %s', stripslashes($comment_content)),
                 get_l10n_args(''),
                 get_l10n_args('Manage this user comment: %s', $comment_url),
                 get_l10n_args('(!) This comment requires validation'),
             ];
 
             pwg_mail_notification_admins(
-                get_l10n_args('Comment by %s', stripslashes((string) $GLOBALS['user']['username'])),
+                get_l10n_args('Comment by %s', stripslashes((string) $user['username'])),
                 $keyargs_content
             );
         }
         // just mail admin
         elseif ($result) {
             email_admin('edit', [
-                'author' => $GLOBALS['user']['username'],
-                'content' => stripslashes((string) $comment['content']),
+                'author' => $user['username'],
+                'content' => stripslashes($comment_content),
             ]);
         }
     }
@@ -447,7 +488,7 @@ SELECT
     assert($row !== null);
     [$author_id] = $row;
 
-    return $author_id;
+    return is_numeric($author_id) ? (int) $author_id : false;
 }
 
 /**

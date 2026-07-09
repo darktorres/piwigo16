@@ -106,13 +106,20 @@ if (isset($page['search'])) {
 
 $form_param['ip'] = $_GET['filter_ip'] ?? null;
 $form_param['image_id'] = $_GET['filter_image_id'] ?? null;
-$form_param['user_id'] = $_GET['filter_user_id'] ?? '-1';
+
+// check_input_parameter() above already validated filter_user_id to be
+// digits-only (pattern '/^\d+$/') when present; is_numeric() here narrows
+// the type for static analysis and falls back to the "no filter" sentinel
+// -1 (matching the pre-existing '-1' convention below) for anything else.
+$form_param['user_id'] = isset($_GET['filter_user_id']) && is_numeric($_GET['filter_user_id'])
+    ? (int) $_GET['filter_user_id']
+    : -1;
 
 if (isset($_GET['filter_ip']) or isset($_GET['filter_image_id']) or isset($_GET['filter_user_id'])) {
     $form['start'] = '';
 }
 
-if ($form_param['user_id'] != '-1') {
+if ($form_param['user_id'] !== -1) {
     $query = '
   SELECT
       username
@@ -122,7 +129,7 @@ if ($form_param['user_id'] != '-1') {
 
     $row = pwg_db_fetch_row(pwg_query($query));
     $form_param['user_name'] = $row !== null ? $row[0] : null;
-    $form_param['user_id'] = empty(pwg_db_fetch_row(pwg_query($query))) ? '-1' : $form_param['user_id'];
+    $form_param['user_id'] = empty(pwg_db_fetch_row(pwg_query($query))) ? -1 : $form_param['user_id'];
 }
 
 $template->assign(

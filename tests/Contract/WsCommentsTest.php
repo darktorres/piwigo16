@@ -27,6 +27,7 @@ final class WsCommentsTest extends ContractTestCase
         ]);
 
         $result = $response['result'];
+        self::assertIsArray($result);
         self::assertArrayHasKey('summary', $result);
         self::assertArrayHasKey('comments', $result);
         self::assertIsArray($result['comments']);

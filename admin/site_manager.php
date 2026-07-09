@@ -54,12 +54,13 @@ $tabsheet->assign();
 // +-----------------------------------------------------------------------+
 // |                        new site creation form                         |
 // +-----------------------------------------------------------------------+
-if (isset($_POST['submit']) and ! empty($_POST['galleries_url'])) {
-    $is_remote = url_is_remote($_POST['galleries_url']);
+if (isset($_POST['submit']) and ! empty($_POST['galleries_url']) and is_string($_POST['galleries_url'])) {
+    $galleries_url_input = $_POST['galleries_url'];
+    $is_remote = url_is_remote($galleries_url_input);
     if ($is_remote) {
         fatal_error('remote sites not supported');
     }
-    $url = preg_replace('/[\/]*$/', '', (string) $_POST['galleries_url']);
+    $url = preg_replace('/[\/]*$/', '', $galleries_url_input);
     $url .= '/';
     if (! (str_starts_with($url, '.'))) {
         $url = './' . $url;
@@ -138,7 +139,7 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
   GROUP BY c.site_id
 ;';
 $sites_detail = hash_from_query($query, 'site_id');
-
+/** @var array<int|string, array<string, string|null>> $sites_detail */
 $query = '
 SELECT *
   FROM ' . SITES_TABLE . '
@@ -146,6 +147,12 @@ SELECT *
 $result = pwg_query($query);
 
 while ($row = pwg_db_fetch_assoc($result)) {
+    // 'id' and 'galleries_url' are both NOT NULL columns on the sites
+    // table (see install/piwigo_structure-mysql.sql), so
+    // pwg_db_fetch_assoc() never returns null for either of these keys
+    // here.
+    assert(is_string($row['id']));
+    assert(is_string($row['galleries_url']));
     $is_remote = url_is_remote($row['galleries_url']);
     $base_url = PHPWG_ROOT_PATH . 'admin.php';
     $base_url .= '?page=site_manager';

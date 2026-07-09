@@ -82,7 +82,22 @@ function get_search_array(int|string $search_id): mixed
         bad_request('this search identifier does not exist');
     }
 
-    return unserialize($search['rules']);
+    $rules = $search['rules'] ?? null;
+    if (! is_string($rules)) {
+        return false;
+    }
+
+    $result = unserialize($rules);
+    if (! is_array($result)) {
+        return false;
+    }
+
+    // search rules are always serialized from an associative array with
+    // string keys ('fields', 'q', ...) — see search.php and
+    // ws_history_search() in include/ws_functions/pwg.php, the only two
+    // places that build the array later passed to save_search()/serialize().
+    /** @var array<string, mixed> $result */
+    return $result;
 }
 
 /**
@@ -90,7 +105,7 @@ function get_search_array(int|string $search_id): mixed
  *
  * @param array<string, mixed> $search
  * @param string $images_where optional additional restriction on images table
- * @return array{items: array<int, mixed>, search_details: array{matching_cat_ids: array<int, mixed>|null, matching_tag_ids: array<int, mixed>|null, has_filters_filled: bool, image_ids_for_filter: array<string, mixed>}}
+ * @return array{items: array<int|string, mixed>, search_details: array{matching_cat_ids: list<string|null>|null, matching_tag_ids: list<string|null>|null, has_filters_filled: bool, image_ids_for_filter: array{}|array{expert?: array<mixed>, allwords?: list<string|null>, author?: list<string|null>, filetypes?: list<string|null>, added_by?: list<string|null>, cat?: list<string|null>, date_posted?: list<string|null>, date_created?: list<string|null>, ratios?: list<string|null>, ratings?: list<string|null>, filesize?: list<string|null>, height?: list<string|null>, width?: list<string|null>, tags?: array<int|string, mixed>, custom?: list<string|null>}}}
  */
 function get_regular_search_results(array $search, string $images_where = ''): array
 {
@@ -111,45 +126,77 @@ function get_regular_search_results(array $search, string $images_where = ''): a
 
     $image_ids_for_filter = [];
 
-    $display_filters = safe_unserialize(conf_get_param('filters_views', $conf['default_filters_views']));
+    $raw_filters_views = conf_get_param('filters_views', $conf['default_filters_views']);
+    $unserialized_display_filters = (is_array($raw_filters_views) or is_string($raw_filters_views))
+        ? safe_unserialize($raw_filters_views)
+        : [];
 
-    foreach ($display_filters as $filt_name => $filt_conf) {
-        if (isset($filt_conf['access'])) {
-            if ($filt_conf['access'] == 'everybody' or ($filt_conf['access'] == 'admins-only' and is_admin()) or ($filt_conf['access'] == 'registered-users' and is_classic_user())) {
-                $display_filters[$filt_name]['access'] = true;
-            } else {
-                $display_filters[$filt_name]['access'] = false;
+    // $display_filters maps each filter name (eg. 'expert', 'words', 'tags', ...) to its
+    // config array; every entry we actually read below is an array (we only ever access
+    // the 'access' key, set to a bool right after this loop), so non-array entries coming
+    // from a malformed $conf['filters_views'] are simply dropped here.
+    $display_filters = [];
+    if (is_array($unserialized_display_filters)) {
+        foreach ($unserialized_display_filters as $filt_name => $filt_conf) {
+            if (is_string($filt_name) and is_array($filt_conf)) {
+                $display_filters[$filt_name] = $filt_conf;
             }
         }
     }
 
+    foreach ($display_filters as $filt_name => $filt_conf) {
+        if (isset($filt_conf['access'])) {
+            if ($filt_conf['access'] == 'everybody' or ($filt_conf['access'] == 'admins-only' and is_admin()) or ($filt_conf['access'] == 'registered-users' and is_classic_user())) {
+                $filt_conf['access'] = true;
+            } else {
+                $filt_conf['access'] = false;
+            }
+            $display_filters[$filt_name] = $filt_conf;
+        }
+    }
+
+    // $search['fields'] holds one entry per active search criterion (eg. 'allwords',
+    // 'tags', 'cat', ...); narrowed once here so every access below is a single-level
+    // (and therefore typed) offset access instead of chaining through mixed.
+    $raw_search_fields = $search['fields'] ?? null;
+    $search_fields = is_array($raw_search_fields) ? $raw_search_fields : [];
+
     //
     // expert
     //
-    if (isset($search['fields']['expert']) and ! empty($search['fields']['expert']['string']) and $display_filters['expert']['access']) {
+    $expert_field = $search_fields['expert'] ?? null;
+    $expert_string = (is_array($expert_field) && is_string($expert_field['string'] ?? null)) ? $expert_field['string'] : null;
+    if (isset($search_fields['expert']) and ! empty($expert_string) and ($display_filters['expert']['access'] ?? false)) {
         $has_filters_filled = true;
 
-        $image_ids_for_filter['expert'] = get_quick_search_results($search['fields']['expert']['string'], [])['items'];
+        $expert_items = get_quick_search_results($expert_string, [])['items'];
+        $image_ids_for_filter['expert'] = is_array($expert_items) ? $expert_items : [];
     }
 
     //
     // allwords
     //
-    if (isset($search['fields']['allwords']) and ! empty($search['fields']['allwords']['words']) and count($search['fields']['allwords']['fields']) > 0 and $display_filters['words']['access']) {
+    $allwords_field = $search_fields['allwords'] ?? null;
+    $allwords_words = is_array($allwords_field) && is_array($allwords_field['words'] ?? null)
+        ? array_values(array_filter($allwords_field['words'], 'is_string'))
+        : [];
+    $allwords_search_fields = is_array($allwords_field) && is_array($allwords_field['fields'] ?? null)
+        ? array_values(array_filter($allwords_field['fields'], 'is_string'))
+        : [];
+    if (isset($search_fields['allwords']) and count($allwords_words) > 0 and count($allwords_search_fields) > 0 and ($display_filters['words']['access'] ?? false)) {
         $has_filters_filled = true;
 
         // 1) we search in regular fields (ie, the ones in the piwigo_images table)
         $fields = ['file', 'name', 'comment', 'author'];
 
-        // the outer if already established isset(...) and count(...) > 0
-        // for this same key
-        $fields = array_intersect($fields, $search['fields']['allwords']['fields']);
+        // the outer if already established count(...) > 0 for this same key
+        $fields = array_intersect($fields, $allwords_search_fields);
 
         $cat_fields_dictionnary = [
             'cat-title' => 'name',
             'cat-desc' => 'comment',
         ];
-        $cat_fields = array_intersect(array_keys($cat_fields_dictionnary), $search['fields']['allwords']['fields']);
+        $cat_fields = array_intersect(array_keys($cat_fields_dictionnary), $allwords_search_fields);
 
         // in the OR mode, request must be :
         // ((field1 LIKE '%word1%' OR field2 LIKE '%word1%')
@@ -160,7 +207,7 @@ function get_regular_search_results(array $search, string $images_where = ''): a
         // AND (field1 LIKE '%word2%' OR field2 LIKE '%word2%'))
         $word_clauses = [];
         $cat_ids_by_word = $tag_ids_by_word = [];
-        foreach ($search['fields']['allwords']['words'] as $word) {
+        foreach ($allwords_words as $word) {
             $field_clauses = [];
             foreach ($fields as $field) {
                 $field_clauses[] = $field . " LIKE '%" . $word . "%'";
@@ -200,7 +247,7 @@ SELECT
             }
 
             // search_in_tags
-            if (in_array('tags', $search['fields']['allwords']['fields'])) {
+            if (in_array('tags', $allwords_search_fields)) {
                 $query = '
 SELECT
     id
@@ -241,12 +288,16 @@ SELECT
         }
 
         // make sure the "mode" is either OR or AND
-        if (! in_array($search['fields']['allwords']['mode'], ['OR', 'AND'])) {
-            $search['fields']['allwords']['mode'] = 'AND';
-        }
+        // $allwords_field is already known to be an array here: reaching this
+        // point required count($allwords_search_fields) > 0 above, which is
+        // only non-empty when the is_array($allwords_field) check at its
+        // definition (a few lines up) already passed.
+        $allwords_mode = (is_string($allwords_field['mode'] ?? null) && in_array($allwords_field['mode'], ['OR', 'AND'], true))
+            ? $allwords_field['mode']
+            : 'AND';
 
         $filter_clause = "\n         " . implode(
-            "\n         " . $search['fields']['allwords']['mode'] . "\n         ",
+            "\n         " . $allwords_mode . "\n         ",
             $word_clauses
         );
 
@@ -292,11 +343,15 @@ SELECT
     //
     // author
     //
-    if (isset($search['fields']['author']) and count($search['fields']['author']['words']) > 0 and $display_filters['author']['access']) {
+    $author_field = $search_fields['author'] ?? null;
+    $author_words = is_array($author_field) && is_array($author_field['words'] ?? null)
+        ? array_values(array_filter($author_field['words'], 'is_string'))
+        : [];
+    if (isset($search_fields['author']) and count($author_words) > 0 and ($display_filters['author']['access'] ?? false)) {
         $has_filters_filled = true;
 
         $author_clauses = [];
-        foreach ($search['fields']['author']['words'] as $word) {
+        foreach ($author_words as $word) {
             $author_clauses[] = "author = '" . $word . "'";
         }
 
@@ -314,11 +369,13 @@ SELECT
     //
     // filetypes
     //
-    if (! empty($search['fields']['filetypes']) and $display_filters['file_type']['access']) {
+    $filetypes_field = $search_fields['filetypes'] ?? null;
+    $filetypes = is_array($filetypes_field) ? array_values(array_filter($filetypes_field, 'is_string')) : [];
+    if (count($filetypes) > 0 and ($display_filters['file_type']['access'] ?? false)) {
         $has_filters_filled = true;
 
         $filetypes_clauses = [];
-        foreach ($search['fields']['filetypes'] as $ext) {
+        foreach ($filetypes as $ext) {
             $filetypes_clauses[] = 'path LIKE \'%.' . $ext . '\'';
         }
 
@@ -336,7 +393,9 @@ SELECT
     //
     // added_by
     //
-    if (! empty($search['fields']['added_by']) and $display_filters['added_by']['access']) {
+    $added_by_field = $search_fields['added_by'] ?? null;
+    $added_by_ids = is_array($added_by_field) ? array_values(array_filter($added_by_field, 'is_string')) : [];
+    if (count($added_by_ids) > 0 and ($display_filters['added_by']['access'] ?? false)) {
         $has_filters_filled = true;
 
         $query = '
@@ -344,7 +403,7 @@ SELECT
     DISTINCT(id)
   FROM ' . IMAGES_TABLE . ' AS i
     INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
-  WHERE added_by IN (' . implode(',', $search['fields']['added_by']) . ')
+  WHERE added_by IN (' . implode(',', $added_by_ids) . ')
   ' . $forbidden . '
 ;';
         $image_ids_for_filter['added_by'] = query2array($query, null, 'id');
@@ -353,16 +412,27 @@ SELECT
     //
     // cat
     //
-    if (isset($search['fields']['cat']) and ! empty($search['fields']['cat']['words']) and $display_filters['album']['access']) {
+    $cat_field = $search_fields['cat'] ?? null;
+    $cat_words = [];
+    if (is_array($cat_field) and is_array($cat_field['words'] ?? null)) {
+        foreach ($cat_field['words'] as $cat_word) {
+            if (is_string($cat_word)) {
+                $cat_words[] = $cat_word;
+            } elseif (is_int($cat_word)) {
+                $cat_words[] = (string) $cat_word;
+            }
+        }
+    }
+    if (isset($search_fields['cat']) and count($cat_words) > 0 and ($display_filters['album']['access'] ?? false)) {
         $has_filters_filled = true;
 
-        if ($search['fields']['cat']['sub_inc']) {
+        if (is_array($cat_field) and ! empty($cat_field['sub_inc'])) {
             // searching all the categories id of sub-categories
-            $cat_ids = get_subcat_ids($search['fields']['cat']['words']);
+            $cat_ids = get_subcat_ids($cat_words);
         } else {
             // TODO we take the list of cat_ids "as is", we should check they still
             // exist and are browseable to the user
-            $cat_ids = $search['fields']['cat']['words'];
+            $cat_ids = $cat_words;
         }
 
         // in case the album would no longer exists, we consider the filter on album no longer active
@@ -382,7 +452,21 @@ SELECT
     //
     // date_posted
     //
-    if (! empty($search['fields']['date_posted']['preset']) and $display_filters['post_date']['access']) {
+    $date_posted_field = $search_fields['date_posted'] ?? null;
+    $date_posted_preset = is_array($date_posted_field) && is_string($date_posted_field['preset'] ?? null)
+        ? $date_posted_field['preset']
+        : null;
+    $date_posted_custom = [];
+    if (is_array($date_posted_field) and is_array($date_posted_field['custom'] ?? null)) {
+        foreach ($date_posted_field['custom'] as $date_posted_custom_value) {
+            if (is_string($date_posted_custom_value)) {
+                $date_posted_custom[] = $date_posted_custom_value;
+            } elseif (is_int($date_posted_custom_value)) {
+                $date_posted_custom[] = (string) $date_posted_custom_value;
+            }
+        }
+    }
+    if (! empty($date_posted_preset) and ($display_filters['post_date']['access'] ?? false)) {
 
         $has_filters_filled = true;
 
@@ -394,11 +478,11 @@ SELECT
             '6m' => '6 MONTH',
         ];
 
-        if (isset($options[$search['fields']['date_posted']['preset']])) {
-            $date_posted_clause = 'date_available > SUBDATE(NOW(), INTERVAL ' . $options[$search['fields']['date_posted']['preset']] . ')';
-        } elseif ($search['fields']['date_posted']['preset'] == 'custom' and isset($search['fields']['date_posted']['custom'])) {
+        if (isset($options[$date_posted_preset])) {
+            $date_posted_clause = 'date_available > SUBDATE(NOW(), INTERVAL ' . $options[$date_posted_preset] . ')';
+        } elseif ($date_posted_preset == 'custom' and count($date_posted_custom) > 0) {
             $date_posted_subclauses = [];
-            $custom_dates = array_flip($search['fields']['date_posted']['custom']);
+            $custom_dates = array_flip($date_posted_custom);
 
             foreach (array_keys($custom_dates) as $custom_date) {
                 // in real-life tests, we have determined "where year(date_available) = 2024" was
@@ -455,7 +539,21 @@ SELECT
     //
     // date_created
     //
-    if (! empty($search['fields']['date_created']['preset']) and $display_filters['creation_date']['access']) {
+    $date_created_field = $search_fields['date_created'] ?? null;
+    $date_created_preset = is_array($date_created_field) && is_string($date_created_field['preset'] ?? null)
+        ? $date_created_field['preset']
+        : null;
+    $date_created_custom = [];
+    if (is_array($date_created_field) and is_array($date_created_field['custom'] ?? null)) {
+        foreach ($date_created_field['custom'] as $date_created_custom_value) {
+            if (is_string($date_created_custom_value)) {
+                $date_created_custom[] = $date_created_custom_value;
+            } elseif (is_int($date_created_custom_value)) {
+                $date_created_custom[] = (string) $date_created_custom_value;
+            }
+        }
+    }
+    if (! empty($date_created_preset) and ($display_filters['creation_date']['access'] ?? false)) {
 
         $has_filters_filled = true;
 
@@ -467,11 +565,11 @@ SELECT
             '12m' => '12 MONTH',
         ];
 
-        if (isset($options[$search['fields']['date_created']['preset']])) {
-            $date_created_clause = 'date_creation > SUBDATE(NOW(), INTERVAL ' . $options[$search['fields']['date_created']['preset']] . ')';
-        } elseif ($search['fields']['date_created']['preset'] == 'custom' and isset($search['fields']['date_created']['custom'])) {
+        if (isset($options[$date_created_preset])) {
+            $date_created_clause = 'date_creation > SUBDATE(NOW(), INTERVAL ' . $options[$date_created_preset] . ')';
+        } elseif ($date_created_preset == 'custom' and count($date_created_custom) > 0) {
             $date_created_subclauses = [];
-            $custom_dates = array_flip($search['fields']['date_created']['custom']);
+            $custom_dates = array_flip($date_created_custom);
 
             foreach (array_keys($custom_dates) as $custom_date) {
                 // in real-life tests, we have determined "where year(date_creation) = 2024" was
@@ -528,7 +626,9 @@ SELECT
     //
     // ratios
     //
-    if (! empty($search['fields']['ratios']) and $display_filters['ratio']['access']) {
+    $ratios_field = $search_fields['ratios'] ?? null;
+    $ratios = is_array($ratios_field) ? array_values(array_filter($ratios_field, 'is_string')) : [];
+    if (count($ratios) > 0 and ($display_filters['ratio']['access'] ?? false)) {
         $has_filters_filled = true;
 
         $clause_for_ratio = [
@@ -539,8 +639,10 @@ SELECT
         ];
 
         $ratios_clauses = [];
-        foreach ($search['fields']['ratios'] as $r) {
-            $ratios_clauses[] = $clause_for_ratio[$r];
+        foreach ($ratios as $r) {
+            if (isset($clause_for_ratio[$r])) {
+                $ratios_clauses[] = $clause_for_ratio[$r];
+            }
         }
 
         $query = '
@@ -557,11 +659,13 @@ SELECT
     //
     // ratings
     //
-    if ($conf['rate'] and ! empty($search['fields']['ratings']) and $display_filters['rating']['access']) {
+    $ratings_field = $search_fields['ratings'] ?? null;
+    $ratings = is_array($ratings_field) ? array_values(array_filter($ratings_field, 'is_string')) : [];
+    if ($conf['rate'] and count($ratings) > 0 and ($display_filters['rating']['access'] ?? false)) {
         $has_filters_filled = true;
 
         $filter_clauses = [];
-        foreach ($search['fields']['ratings'] as $r) {
+        foreach ($ratings as $r) {
             if ($r == 0) {
                 $filter_clauses[] = 'rating_score IS NULL';
             } else {
@@ -583,7 +687,9 @@ SELECT
     //
     // filesize
     //
-    if (! empty($search['fields']['filesize_min']) and ! empty($search['fields']['filesize_max']) and $display_filters['file_size']['access']) {
+    $filesize_min_raw = $search_fields['filesize_min'] ?? null;
+    $filesize_max_raw = $search_fields['filesize_max'] ?? null;
+    if (! empty($filesize_min_raw) and ! empty($filesize_max_raw) and is_numeric($filesize_min_raw) and is_numeric($filesize_max_raw) and ($display_filters['file_size']['access'] ?? false)) {
         $has_filters_filled = true;
 
         // because of conversion from kB to mB, approximation, then conversion back to kB,
@@ -593,7 +699,7 @@ SELECT
     DISTINCT(id)
   FROM ' . IMAGES_TABLE . ' AS i
     INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
-  WHERE filesize BETWEEN ' . ($search['fields']['filesize_min'] - 100) . ' AND ' . ($search['fields']['filesize_max'] + 100) . '
+  WHERE filesize BETWEEN ' . ((float) $filesize_min_raw - 100) . ' AND ' . ((float) $filesize_max_raw + 100) . '
   ' . $forbidden . '
 ;';
         $image_ids_for_filter['filesize'] = query2array($query, null, 'id');
@@ -602,7 +708,9 @@ SELECT
     //
     // height
     //
-    if (! empty($search['fields']['height_min']) and ! empty($search['fields']['height_max']) and $display_filters['height']['access']) {
+    $height_min_raw = $search_fields['height_min'] ?? null;
+    $height_max_raw = $search_fields['height_max'] ?? null;
+    if (! empty($height_min_raw) and ! empty($height_max_raw) and is_scalar($height_min_raw) and is_scalar($height_max_raw) and ($display_filters['height']['access'] ?? false)) {
         $has_filters_filled = true;
 
         $query = '
@@ -610,7 +718,7 @@ SELECT
     DISTINCT(id)
   FROM ' . IMAGES_TABLE . ' AS i
     INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
-  WHERE height BETWEEN ' . $search['fields']['height_min'] . ' AND ' . $search['fields']['height_max'] . '
+  WHERE height BETWEEN ' . (string) $height_min_raw . ' AND ' . (string) $height_max_raw . '
   ' . $forbidden . '
 ;';
         $image_ids_for_filter['height'] = query2array($query, null, 'id');
@@ -619,7 +727,9 @@ SELECT
     //
     // width
     //
-    if (! empty($search['fields']['width_min']) and ! empty($search['fields']['width_max']) and $display_filters['width']['access']) {
+    $width_min_raw = $search_fields['width_min'] ?? null;
+    $width_max_raw = $search_fields['width_max'] ?? null;
+    if (! empty($width_min_raw) and ! empty($width_max_raw) and is_scalar($width_min_raw) and is_scalar($width_max_raw) and ($display_filters['width']['access'] ?? false)) {
         $has_filters_filled = true;
 
         $query = '
@@ -627,7 +737,7 @@ SELECT
     DISTINCT(id)
   FROM ' . IMAGES_TABLE . ' AS i
     INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id = ic.image_id
-  WHERE width BETWEEN ' . $search['fields']['width_min'] . ' AND ' . $search['fields']['width_max'] . '
+  WHERE width BETWEEN ' . (string) $width_min_raw . ' AND ' . (string) $width_max_raw . '
   ' . $forbidden . '
 ;';
         $image_ids_for_filter['width'] = query2array($query, null, 'id');
@@ -636,12 +746,22 @@ SELECT
     //
     // tags
     //
-    if (isset($search['fields']['tags']) and ! empty($search['fields']['tags']['words']) and $display_filters['tags']['access']) {
+    $tags_field = $search_fields['tags'] ?? null;
+    $tags_words = [];
+    if (is_array($tags_field) and is_array($tags_field['words'] ?? null)) {
+        foreach ($tags_field['words'] as $tag_word) {
+            if (is_numeric($tag_word)) {
+                $tags_words[] = (int) $tag_word;
+            }
+        }
+    }
+    $tags_mode = is_array($tags_field) && is_string($tags_field['mode'] ?? null) ? $tags_field['mode'] : 'AND';
+    if (isset($search_fields['tags']) and count($tags_words) > 0 and ($display_filters['tags']['access'] ?? false)) {
         $has_filters_filled = true;
 
         $image_ids_for_filter['tags'] = get_image_ids_for_tags(
-            $search['fields']['tags']['words'],
-            $search['fields']['tags']['mode']
+            $tags_words,
+            $tags_mode
         );
     }
 
@@ -662,13 +782,31 @@ SELECT
 
     $items = [];
     if (! empty($image_ids_for_filter)) {
-        if (count($image_ids_for_filter) > 1) {
-            $items = array_values(array_unique(array_intersect(...array_values($image_ids_for_filter))));
+        // every entry of $image_ids_for_filter is either a query2array() id list
+        // (list<string|null> — the 'id' column is a non-null primary key, so the
+        // null case never actually happens in practice) or, for 'expert', the
+        // already-narrowed result of get_quick_search_results(); normalize every
+        // entry to a plain string-id list here so the intersection below has an
+        // unambiguous element type.
+        $normalized_filter_ids = [];
+        foreach ($image_ids_for_filter as $filter_name => $filter_ids) {
+            $string_ids = [];
+            foreach ($filter_ids as $filter_id) {
+                if (is_scalar($filter_id)) {
+                    $string_ids[] = (string) $filter_id;
+                }
+            }
+            $normalized_filter_ids[$filter_name] = $string_ids;
+        }
+
+        if (count($normalized_filter_ids) > 1) {
+            $items = array_values(array_unique(array_intersect(...array_values($normalized_filter_ids))));
         } else {
             // exactly one filter is filled here — grab its (only) value
             // without a dynamic re-lookup by key, which PHPStan can't
             // verify against this array's many conditionally-set keys.
-            $items = reset($image_ids_for_filter);
+            $first_filter_ids = reset($normalized_filter_ids);
+            $items = $first_filter_ids !== false ? $first_filter_ids : [];
         }
     }
 
@@ -710,7 +848,16 @@ function get_clause_for_filter(string $filter_name): string
         return '1=1' . $page['search_details']['forbidden'];
     }
 
-    return 'image_id IN (' . implode(',', $other_filters_items) . ')';
+    // get_items_for_filter() ultimately pulls its values from
+    // $page['search_details']['image_ids_for_filter'], which is declared
+    // array<string, mixed> (get_regular_search_results()'s return shape) — in
+    // practice always image ids, but narrow to scalars here for implode().
+    $other_filters_item_strings = array_map(
+        static fn (mixed $v): string => is_scalar($v) ? (string) $v : '0',
+        $other_filters_items
+    );
+
+    return 'image_id IN (' . implode(',', $other_filters_item_strings) . ')';
 }
 
 /**
@@ -893,12 +1040,22 @@ class QNumericRangeScope extends QSearchScope
     #[\Override]
     public function get_sql(string $field, QSingleToken $token): string
     {
+        // set by parse() above as ['range' => array{0: int|float|string, 1:
+        // int|float|string}, 'strict' => array{0: int, 1: int}] — see
+        // QSingleToken::$scope_data's own docblock for why this can't be a
+        // static property type.
+        $scope_data = $token->scope_data;
+        $range = is_array($scope_data) && is_array($scope_data['range'] ?? null) ? $scope_data['range'] : ['', ''];
+        $strict = is_array($scope_data) && is_array($scope_data['strict'] ?? null) ? $scope_data['strict'] : [0, 0];
+        $range_0 = $range[0] ?? '';
+        $range_1 = $range[1] ?? '';
+
         $clauses = [];
-        if ($token->scope_data['range'][0] !== '') {
-            $clauses[] = $field . ' >' . ($token->scope_data['strict'][0] ? '' : '=') . $token->scope_data['range'][0] . ' ';
+        if ($range_0 !== '') {
+            $clauses[] = $field . ' >' . (empty($strict[0]) ? '=' : '') . (is_scalar($range_0) ? (string) $range_0 : '') . ' ';
         }
-        if ($token->scope_data['range'][1] !== '') {
-            $clauses[] = $field . ' <' . ($token->scope_data['strict'][1] ? '' : '=') . $token->scope_data['range'][1] . ' ';
+        if ($range_1 !== '') {
+            $clauses[] = $field . ' <' . (empty($strict[1]) ? '=' : '') . (is_scalar($range_1) ? (string) $range_1 : '') . ' ';
         }
 
         if (empty($clauses)) {
@@ -975,12 +1132,20 @@ class QDateRangeScope extends QSearchScope
     #[\Override]
     public function get_sql(string $field, QSingleToken $token): string
     {
+        // set by parse() above as a plain 2-element string[] range — see
+        // QSingleToken::$scope_data's own docblock for why this can't be a
+        // static property type.
+        $scope_data = $token->scope_data;
+        $date_range = is_array($scope_data) ? $scope_data : ['', ''];
+        $date_range_0 = $date_range[0] ?? '';
+        $date_range_1 = $date_range[1] ?? '';
+
         $clauses = [];
-        if ($token->scope_data[0] != '') {
-            $clauses[] = $field . ' >= \'' . $token->scope_data[0] . '\'';
+        if ($date_range_0 != '') {
+            $clauses[] = $field . ' >= \'' . (is_scalar($date_range_0) ? (string) $date_range_0 : '') . '\'';
         }
-        if ($token->scope_data[1] != '') {
-            $clauses[] = $field . ' <= \'' . $token->scope_data[1] . '\'';
+        if ($date_range_1 != '') {
+            $clauses[] = $field . ' <= \'' . (is_scalar($date_range_1) ? (string) $date_range_1 : '') . '\'';
         }
 
         if (empty($clauses)) {
@@ -1415,7 +1580,9 @@ class QResults
     public array $tag_ids = [];
 
     /**
-     * @var array<int, array<int, mixed>>
+     * Populated exclusively from query2array($query, null, ...) calls (id lists).
+     *
+     * @var array<int, list<string|null>>
      */
     public array $tag_iids = [];
 
@@ -1430,17 +1597,25 @@ class QResults
     public array $cat_ids = [];
 
     /**
-     * @var array<int, array<int, mixed>>
+     * Populated exclusively from query2array($query, null, ...) calls (id lists).
+     *
+     * @var array<int, list<string|null>>
      */
     public array $cat_iids = [];
 
     /**
-     * @var array<int, array<int, mixed>>
+     * Populated exclusively from query2array($query, null, ...) calls (id lists).
+     *
+     * @var array<int, list<string|null>>
      */
     public array $images_iids = [];
 
     /**
-     * @var array<int, array<int, mixed>>
+     * array_unique(array_merge(...)) of images_iids/cat_iids/tag_iids — same
+     * element type as those three, but array_unique() doesn't renumber keys
+     * so this is a plain (possibly sparse) array, not a list.
+     *
+     * @var array<int, array<int, string|null>>
      */
     public array $iids = [];
 }
@@ -1586,15 +1761,15 @@ function qsearch_get_images(QExpression $expr, QResults $qsr): void
                 break;
             default:
                 // allow plugins to have their own scope with columns added in db by themselves
-                $clauses = trigger_change('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
+                $clauses_after_hook = trigger_change('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
+                $clauses = is_array($clauses_after_hook) ? array_values(array_filter($clauses_after_hook, 'is_string')) : $clauses;
                 break;
         }
         if (! empty($clauses)) {
             $query = $query_base . '(' . implode("\n OR ", $clauses) . ')';
-            // query2array() with a value_name and no key_name always
-            // returns a sequential list (array<int, mixed>) — its
-            // declared return type is broader to cover its other modes.
-            $qsr->images_iids[$i] = array_values(query2array($query, null, 'id'));
+            // query2array() with a value_name and no key_name always returns a
+            // sequential list already, so no array_values() call is needed here.
+            $qsr->images_iids[$i] = query2array($query, null, 'id');
         }
     }
 }
@@ -1618,8 +1793,15 @@ function qsearch_get_tags(QExpression $expr, QResults $qsr): void
 WHERE (' . implode("\n OR ", $clauses) . ')';
         $result = pwg_query($query);
         while ($tag = pwg_db_fetch_assoc($result)) {
-            $token_tag_ids[$i][] = $tag['id'];
-            $all_tags[$tag['id']] = $tag;
+            // 'id' is TAGS_TABLE's non-null auto-increment primary key, so it's
+            // always a numeric string here — the is_numeric() guard only
+            // protects against a genuinely malformed row.
+            if (! is_numeric($tag['id'])) {
+                continue;
+            }
+            $tag_id = (int) $tag['id'];
+            $token_tag_ids[$i][] = $tag_id;
+            $all_tags[$tag_id] = $tag;
         }
     }
 
@@ -1646,8 +1828,9 @@ WHERE (' . implode("\n OR ", $clauses) . ')';
 SELECT image_id FROM ' . IMAGE_TAG_TABLE . '
   WHERE tag_id IN (' . implode(',', $tag_ids) . ')
   GROUP BY image_id';
-            // see qsearch_get_images()'s comment on query2array()'s return shape
-            $qsr->tag_iids[$i] = array_values(query2array($query, null, 'image_id'));
+            // query2array() with a value_name and no key_name always returns a
+            // sequential list already, so no array_values() call is needed here.
+            $qsr->tag_iids[$i] = query2array($query, null, 'image_id');
             if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $tag_ids);
             } else {
@@ -1657,9 +1840,9 @@ SELECT image_id FROM ' . IMAGE_TAG_TABLE . '
             }
         } elseif (isset($token->scope) && $token->scope->id == 'tag' && strlen($token->term) == 0) {
             if ($token->modifier & QST_WILDCARD) {// eg. 'tag:*' returns all tagged images
-                $qsr->tag_iids[$i] = array_values(query2array('SELECT DISTINCT image_id FROM ' . IMAGE_TAG_TABLE, null, 'image_id'));
+                $qsr->tag_iids[$i] = query2array('SELECT DISTINCT image_id FROM ' . IMAGE_TAG_TABLE, null, 'image_id');
             } else {// eg. 'tag:' returns all untagged images
-                $qsr->tag_iids[$i] = array_values(query2array('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_TAG_TABLE . ' ON id=image_id WHERE image_id IS NULL', null, 'id'));
+                $qsr->tag_iids[$i] = query2array('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_TAG_TABLE . ' ON id=image_id WHERE image_id IS NULL', null, 'id');
             }
         }
     }
@@ -1698,8 +1881,15 @@ SELECT
   WHERE (' . implode("\n OR ", $clauses) . ')';
         $result = pwg_query($query);
         while ($cat = pwg_db_fetch_assoc($result)) {
-            $token_cat_ids[$i][] = $cat['id'];
-            $all_cats[$cat['id']] = $cat;
+            // 'id' is CATEGORIES_TABLE's non-null auto-increment primary key, so
+            // it's always a numeric string here — the is_numeric() guard only
+            // protects against a genuinely malformed row.
+            if (! is_numeric($cat['id'])) {
+                continue;
+            }
+            $cat_id = (int) $cat['id'];
+            $token_cat_ids[$i][] = $cat_id;
+            $all_cats[$cat_id] = $cat;
         }
     }
 
@@ -1730,15 +1920,17 @@ SELECT
     INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id and user_id = ' . $user['id'] . '
   WHERE id IN (' . implode(',', get_subcat_ids($cat_ids)) . ')
 ;';
-                $cat_ids = query2array($query, null, 'id');
+                // id is CATEGORIES_TABLE's NOT NULL primary key.
+                $cat_ids = array_map(intval(...), query2array($query, null, 'id'));
             }
 
             $query = '
 SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . '
   WHERE category_id IN (' . implode(',', $cat_ids) . ')
   GROUP BY image_id';
-            // see qsearch_get_images()'s comment on query2array()'s return shape
-            $qsr->cat_iids[$i] = array_values(query2array($query, null, 'image_id'));
+            // query2array() with a value_name and no key_name always returns a
+            // sequential list already, so no array_values() call is needed here.
+            $qsr->cat_iids[$i] = query2array($query, null, 'image_id');
             if ($expr->stoken_modifiers[$i] & QST_NOT) {
                 $not_ids = array_merge($not_ids, $cat_ids);
             } else {
@@ -1748,9 +1940,9 @@ SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . '
             }
         } elseif (isset($token->scope) && $token->scope->id == 'category' && strlen($token->term) == 0) {
             if ($token->modifier & QST_WILDCARD) {// eg. 'category:*' returns all images associated to an album
-                $qsr->cat_iids[$i] = array_values(query2array('SELECT DISTINCT image_id FROM ' . IMAGE_CATEGORY_TABLE, null, 'image_id'));
+                $qsr->cat_iids[$i] = query2array('SELECT DISTINCT image_id FROM ' . IMAGE_CATEGORY_TABLE, null, 'image_id');
             } else {// eg. 'category:' returns all orphan images
-                $qsr->cat_iids[$i] = array_values(query2array('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id WHERE image_id IS NULL', null, 'id'));
+                $qsr->cat_iids[$i] = query2array('SELECT id FROM ' . IMAGES_TABLE . ' LEFT JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id WHERE image_id IS NULL', null, 'id');
             }
         }
     }
@@ -1765,8 +1957,11 @@ SELECT image_id FROM ' . IMAGE_CATEGORY_TABLE . '
 }
 
 /**
+ * Built exclusively from QResults::$images_iids/$cat_iids/$tag_iids (or, on
+ * recursion, from this same function), all of which hold list<string|null>.
+ *
  * @param string[] $ignored_terms
- * @return array<int, mixed>
+ * @return array<int, string|null>
  */
 function qsearch_eval(QMultiToken $expr, QResults $qsr, bool &$qualifies, array &$ignored_terms): array
 {
@@ -1856,7 +2051,7 @@ function get_quick_search_results(string $q, array $options)
 
     $res = get_quick_search_results_no_cache($q, $options);
 
-    if (count($res['items'])) {// cache the results only if not empty - otherwise it is useless
+    if (is_array($res['items']) and count($res['items'])) {// cache the results only if not empty - otherwise it is useless
         $persistent_cache->set($cache_key, $res, 300);
     }
     return $res;
@@ -1882,7 +2077,12 @@ function get_quick_search_results_no_cache(string $q, array $options): array
           ],
       ];
 
-    $q = trigger_change('qsearch_pre', $q);
+    // no in-tree listener registers for 'qsearch_pre', so $q is always still
+    // a string here, but a plugin listener could theoretically return
+    // something else — fall back to the pre-hook value rather than crash a
+    // user-facing search.
+    $q_after_hook = trigger_change('qsearch_pre', $q);
+    $q = is_string($q_after_hook) ? $q_after_hook : $q;
 
     $scopes = [];
     $scopes[] = new QSearchScope('tag', ['tags']);
@@ -1909,7 +2109,10 @@ function get_quick_search_results_no_cache(string $q, array $options): array
     $scopes[] = new QDateRangeScope('posted', $postedDateAliases);
 
     // allow plugins to add their own scopes
-    $scopes = trigger_change('qsearch_get_scopes', $scopes);
+    $scopes_after_hook = trigger_change('qsearch_get_scopes', $scopes);
+    $scopes = is_array($scopes_after_hook)
+        ? array_values(array_filter($scopes_after_hook, static fn (mixed $s): bool => $s instanceof QSearchScope))
+        : $scopes;
     $expression = new QExpression($q, $scopes);
 
     // get inflections for terms
@@ -1962,9 +2165,26 @@ function get_quick_search_results_no_cache(string $q, array $options): array
 
     $search_results['qs']['matching_tags'] = $qsr->all_tags;
     $search_results['qs']['matching_cats'] = $qsr->all_cats;
-    $search_results = trigger_change('qsearch_results', $search_results, $expression, $qsr);
-    if (isset($search_results['items'])) {
-        $ids = array_merge($ids, $search_results['items']);
+    // no in-tree listener registers for 'qsearch_results', so $search_results
+    // keeps its original array<string, mixed> shape here, but a plugin
+    // listener could theoretically return something else — only string-keyed
+    // entries of a genuine array response are merged back in.
+    $search_results_after_hook = trigger_change('qsearch_results', $search_results, $expression, $qsr);
+    if (is_array($search_results_after_hook)) {
+        foreach ($search_results_after_hook as $hook_key => $hook_value) {
+            if (is_string($hook_key)) {
+                $search_results[$hook_key] = $hook_value;
+            }
+        }
+    }
+    if (isset($search_results['items']) and is_array($search_results['items'])) {
+        $extra_ids = [];
+        foreach ($search_results['items'] as $extra_id) {
+            if (is_string($extra_id) or $extra_id === null) {
+                $extra_ids[] = $extra_id;
+            }
+        }
+        $ids = array_merge($ids, $extra_ids);
     }
 
     global $template;
@@ -1979,7 +2199,7 @@ function get_quick_search_results_no_cache(string $q, array $options): array
 
     $where_clauses = [];
     $where_clauses[] = 'i.id IN (' . implode(',', $ids) . ')';
-    if (! empty($options['images_where'])) {
+    if (! empty($options['images_where']) and is_scalar($options['images_where'])) {
         $where_clauses[] = '(' . $options['images_where'] . ')';
     }
     if ($permissions) {
@@ -2024,7 +2244,7 @@ function get_search_results(int|string $search_id, ?bool $super_order_by, string
     if ($search === false) {
         bad_request('this search identifier does not exist');
     }
-    if (! isset($search['q'])) {
+    if (! isset($search['q']) or ! is_string($search['q'])) {
         return get_regular_search_results($search, $images_where);
     } else {
         return get_quick_search_results($search['q'], [
@@ -2112,7 +2332,8 @@ function save_search(array $rules, ?int $forked_from = null): array
     );
 
     if (! is_a_guest() and ! is_generic()) {
-        userprefs_update_param('gallery_search_filters', array_keys($rules['fields'] ?? []));
+        $rules_fields = $rules['fields'] ?? [];
+        userprefs_update_param('gallery_search_filters', array_keys(is_array($rules_fields) ? $rules_fields : []));
     }
 
     $url = make_index_url(

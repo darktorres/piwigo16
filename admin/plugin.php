@@ -16,7 +16,8 @@ if (! defined('PHPWG_ROOT_PATH')) {
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 check_status(ACCESS_ADMINISTRATOR);
 
-$sections = explode('/', $_GET['section'] ?? '');
+$section_param = $_GET['section'] ?? '';
+$sections = explode('/', is_string($section_param) ? $section_param : '');
 for ($i = 0; $i < count($sections); $i++) {
     if (empty($sections[$i])) {
         unset($sections[$i]);

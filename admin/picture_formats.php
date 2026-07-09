@@ -23,10 +23,15 @@ check_status(ACCESS_ADMINISTRATOR);
 
 check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
+// $_GET['image_id'], when present, matches PATTERN_ID (digits only), but
+// that guarantee isn't visible to static analysis, hence the explicit
+// narrowing before it's used in SQL/URL concatenation below.
+$image_id = is_numeric($_GET['image_id'] ?? null) ? (int) $_GET['image_id'] : 0;
+
 $query = '
 SELECT *
   FROM ' . IMAGES_TABLE . '
-  WHERE id = ' . $_GET['image_id'] . '
+  WHERE id = ' . $image_id . '
 ;';
 $images = query2array($query);
 $image = $images[0];
@@ -35,7 +40,7 @@ $query = '
 SELECT
     *
   FROM ' . IMAGE_FORMAT_TABLE . '
-  WHERE image_id = ' . $_GET['image_id'] . '
+  WHERE image_id = ' . $image_id . '
 ;';
 
 $formats = query2array($query);
@@ -53,7 +58,7 @@ foreach ($formats as &$format) {
 }
 
 $template->assign([
-    'ADD_FORMATS_URL' => get_root_url() . 'admin.php?page=photos_add&formats=' . $_GET['image_id'],
+    'ADD_FORMATS_URL' => get_root_url() . 'admin.php?page=photos_add&formats=' . $image_id,
     'IMG_SQUARE_SRC' => DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $image),
     'FORMATS' => $formats,
     'PWG_TOKEN' => get_pwg_token(),

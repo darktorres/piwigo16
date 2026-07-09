@@ -24,12 +24,18 @@ check_status(ACCESS_ADMINISTRATOR);
 
 check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 
-$admin_album_base_url = get_root_url() . 'admin.php?page=album-' . $_GET['cat_id'];
+// check_input_parameter() only validates the format when 'cat_id' is
+// present (mandatory=false above); fall back to 0 (no matching album,
+// handled by the "unknown album" die() below) rather than risk building
+// an invalid query from a missing/non-numeric value.
+$cat_id = isset($_GET['cat_id']) && is_numeric($_GET['cat_id']) ? (int) $_GET['cat_id'] : 0;
+
+$admin_album_base_url = get_root_url() . 'admin.php?page=album-' . $cat_id;
 
 $query = '
 SELECT *
   FROM ' . CATEGORIES_TABLE . '
-  WHERE id = ' . $_GET['cat_id'] . '
+  WHERE id = ' . $cat_id . '
 ;';
 $category = pwg_db_fetch_assoc(pwg_query($query));
 
@@ -45,7 +51,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 
 $page['tab'] = 'properties';
 
-if (isset($_GET['tab'])) {
+if (isset($_GET['tab']) && is_string($_GET['tab'])) {
     $page['tab'] = $_GET['tab'];
 }
 
@@ -63,6 +69,12 @@ $category_name = trigger_change(
     $category['name'],
     'get_cat_display_name_cache'
 );
+// trigger_change() is a generic plugin hook and legitimately returns
+// mixed; fall back to the raw (unrendered) category name if no handler
+// returned a string.
+if (! is_string($category_name)) {
+    $category_name = is_string($category['name']) ? $category['name'] : '';
+}
 $template->assign([
     'ADMIN_PAGE_TITLE' => l10n('Edit album') . ' <strong>' . $category_name . '</strong>',
     'ADMIN_PAGE_OBJECT_ID' => '#' . $category['id'],

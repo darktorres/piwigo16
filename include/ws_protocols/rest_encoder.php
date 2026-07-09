@@ -83,14 +83,14 @@ class PwgXmlWriter
     public function write_content(mixed $value): void
     {
         $this->_end_prev(false);
-        $value = (string) $value;
+        $value = is_scalar($value) ? (string) $value : '';
         $this->_output(htmlspecialchars($value));
     }
 
     public function write_cdata(mixed $value): void
     {
         $this->_end_prev(false);
-        $value = (string) $value;
+        $value = is_scalar($value) ? (string) $value : '';
         $this->_output(
             '<![CDATA['
       . str_replace(']]>', ']]&gt;', $value)
@@ -105,7 +105,7 @@ class PwgXmlWriter
 
     public function encode_attribute(mixed $value): string
     {
-        return htmlspecialchars((string) $value);
+        return htmlspecialchars(is_scalar($value) ? (string) $value : '');
     }
 
     public function _end_prev(bool $done): bool
@@ -219,9 +219,11 @@ class PwgRestEncoder extends PwgResponseEncoder
                 continue;
             } // null means we dont put it
             if ($name == WS_XML_ATTRIBUTES) {
-                foreach ($value as $attr_name => $attr_value) {
-                    $this->writer()
-                        ->write_attribute($attr_name, $attr_value);
+                if (is_array($value)) {
+                    foreach ($value as $attr_name => $attr_value) {
+                        $this->writer()
+                            ->write_attribute((string) $attr_name, $attr_value);
+                    }
                 }
                 unset($data[$name]);
             } elseif (isset($xml_attributes[$name])) {
@@ -291,7 +293,10 @@ class PwgRestEncoder extends PwgResponseEncoder
                 }
                 break;
             default:
-                trigger_error('Invalid type ' . gettype($data) . ' ' . @$data::class, E_USER_WARNING);
+                // Every gettype() outcome that could mean $data is an object
+                // is already handled by the 'object' case above; only
+                // resource/unknown-type values reach here.
+                trigger_error('Invalid type ' . gettype($data), E_USER_WARNING);
         }
     }
 }

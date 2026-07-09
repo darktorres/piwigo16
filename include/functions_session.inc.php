@@ -89,10 +89,13 @@ function get_remote_addr_session_hash(): string
         return '';
     }
 
-    if (! str_contains((string) $_SERVER['REMOTE_ADDR'], ':')) {// ipv4
+    $remote_addr = $_SERVER['REMOTE_ADDR'];
+    $remote_addr = is_string($remote_addr) ? $remote_addr : '';
+
+    if (! str_contains($remote_addr, ':')) {// ipv4
         return vsprintf(
             '%02X%02X',
-            explode('.', (string) $_SERVER['REMOTE_ADDR'])
+            explode('.', $remote_addr)
         );
     }
     return ''; // ipv6 not yet
@@ -113,7 +116,7 @@ SELECT data
 ;';
     $result = pwg_query($query);
     if (($row = pwg_db_fetch_assoc($result))) {
-        return $row['data'];
+        return $row['data'] ?? '';
     }
     return '';
 }

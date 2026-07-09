@@ -187,7 +187,7 @@ function custom_notification_query($action, $type, $start = null, $end = null): 
             // table prefix before using it as query2array()'s value_name
             $result_field = str_contains($field_id, '.') ? substr($field_id, strpos($field_id, '.') + 1) : $field_id;
             $infos = query2array($query, null, $result_field);
-            return array_values(array_map(intval(...), $infos));
+            return array_map(intval(...), $infos);
 
         default:
             return null; // stop and return nothing
@@ -460,13 +460,21 @@ SELECT
     $dates = query2array($query);
 
     for ($i = 0; $i < count($dates); $i++) {
+        // captured once per row, before the 'elements'/'categories' keys
+        // below are added to $dates[$i]: mutating a dynamically-indexed
+        // array element widens PHPStan's inferred value type for the
+        // whole row, so re-reading date_available from $dates[$i] after
+        // that point would no longer be known to be a plain string.
+        $date_available = $dates[$i]['date_available'] ?? null;
+        $date_available = is_string($date_available) ? $date_available : '';
+
         if ($max_elements > 0) { // get some thumbnails ...
             $query = '
 SELECT DISTINCT i.*
   FROM ' . IMAGES_TABLE . ' i
     INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON id=image_id
   ' . $where_sql . '
-    AND date_available=\'' . $dates[$i]['date_available'] . '\'
+    AND date_available=\'' . $date_available . '\'
   ORDER BY ' . DB_RANDOM_FUNCTION . '()
   LIMIT ' . $max_elements . '
 ;';
@@ -482,7 +490,7 @@ SELECT
     INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' AS ic ON i.id=image_id
     INNER JOIN ' . CATEGORIES_TABLE . ' c ON c.id=category_id
   ' . $where_sql . '
-    AND date_available=\'' . $dates[$i]['date_available'] . '\'
+    AND date_available=\'' . $date_available . '\'
   GROUP BY category_id, c.uppercats
   ORDER BY img_count DESC
   LIMIT ' . $max_cats . '
@@ -530,9 +538,12 @@ function get_html_description_recent_post_date(array $date_detail, $auth_key = n
 
     $description = '<ul>';
 
+    $nb_elements = $date_detail['nb_elements'] ?? null;
+    $nb_elements = is_numeric($nb_elements) ? (int) $nb_elements : 0;
+
     $description .=
           '<li>'
-          . l10n_dec('%d new photo', '%d new photos', $date_detail['nb_elements'])
+          . l10n_dec('%d new photo', '%d new photos', $nb_elements)
           . ' ('
           . '<a href="' . add_url_params(make_index_url([
               'section' => 'recent_pics',
@@ -541,7 +552,13 @@ function get_html_description_recent_post_date(array $date_detail, $auth_key = n
           . ')'
           . '</li><br>';
 
-    foreach ($date_detail['elements'] as $element) {
+    $elements = $date_detail['elements'] ?? [];
+    $elements = is_array($elements) ? $elements : [];
+    foreach ($elements as $element) {
+        if (! is_array($element)) {
+            continue;
+        }
+        /** @var array<string, mixed> $element */
         $tn_src = DerivativeImage::thumb_url($element);
         $description .= '<a href="' .
           add_url_params(
@@ -557,18 +574,30 @@ function get_html_description_recent_post_date(array $date_detail, $auth_key = n
     }
     $description .= '...<br>';
 
+    $nb_cats = $date_detail['nb_cats'] ?? null;
+    $nb_cats = is_numeric($nb_cats) ? (int) $nb_cats : 0;
+
     $description .=
           '<li>'
-          . l10n_dec('%d album updated', '%d albums updated', $date_detail['nb_cats'])
+          . l10n_dec('%d album updated', '%d albums updated', $nb_cats)
           . '</li>';
 
     $description .= '<ul>';
-    foreach ($date_detail['categories'] as $cat) {
+    $categories = $date_detail['categories'] ?? [];
+    $categories = is_array($categories) ? $categories : [];
+    foreach ($categories as $cat) {
+        if (! is_array($cat)) {
+            continue;
+        }
+        $uppercats = $cat['uppercats'] ?? null;
+        $uppercats = is_string($uppercats) ? $uppercats : '';
+        $img_count = $cat['img_count'] ?? null;
+        $img_count = is_numeric($img_count) ? (int) $img_count : 0;
         $description .=
               '<li>'
-              . get_cat_display_name_cache($cat['uppercats'], '', false, null, $auth_key)
+              . get_cat_display_name_cache($uppercats, '', false, null, $auth_key)
               . ' (' .
-              l10n_dec('%d new photo', '%d new photos', $cat['img_count']) . ')'
+              l10n_dec('%d new photo', '%d new photos', $img_count) . ')'
               . '</li>';
     }
     $description .= '</ul>';
@@ -587,9 +616,13 @@ function get_title_recent_post_date(array $date_detail): string
 {
     global $lang;
 
-    $title = l10n_dec('%d new photo', '%d new photos', $date_detail['nb_elements']);
+    $nb_elements = $date_detail['nb_elements'] ?? null;
+    $nb_elements = is_numeric($nb_elements) ? (int) $nb_elements : 0;
+    $title = l10n_dec('%d new photo', '%d new photos', $nb_elements);
 
-    if (preg_match('/^\d+-(\d+)-(\d+) /', (string) $date_detail['date_available'], $matches)) {
+    $date_available = $date_detail['date_available'] ?? null;
+    $date_available = is_string($date_available) ? $date_available : '';
+    if (preg_match('/^\d+-(\d+)-(\d+) /', $date_available, $matches)) {
         $title .= ' (' . $lang['month'][(int) $matches[1]] . ' ' . $matches[2] . ')';
     }
 

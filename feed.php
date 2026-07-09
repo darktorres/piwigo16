@@ -60,26 +60,46 @@ function ts_to_iso8601($ts): string
  */
 function pwg_generate_rss2_feed(array $channel, array $items): string
 {
-    $feed = '<?xml version="1.0" encoding="' . $channel['encoding'] . '"?>' . "\n";
+    $channel_encoding = $channel['encoding'] ?? '';
+    $channel_encoding = is_string($channel_encoding) ? $channel_encoding : '';
+    $channel_title = $channel['title'] ?? '';
+    $channel_title = is_string($channel_title) ? $channel_title : '';
+    $channel_link = $channel['link'] ?? '';
+    $channel_link = is_string($channel_link) ? $channel_link : '';
+
+    $feed = '<?xml version="1.0" encoding="' . $channel_encoding . '"?>' . "\n";
     $feed .= "<rss version=\"2.0\">\n";
     $feed .= "  <channel>\n";
-    $feed .= '    <title>' . htmlspecialchars((string) $channel['title']) . "</title>\n";
-    $feed .= '    <link>' . htmlspecialchars((string) $channel['link']) . "</link>\n";
+    $feed .= '    <title>' . htmlspecialchars($channel_title) . "</title>\n";
+    $feed .= '    <link>' . htmlspecialchars($channel_link) . "</link>\n";
     $feed .= "    <description></description>\n";
     $feed .= '    <lastBuildDate>' . new DateTimeImmutable()->format(DATE_RFC2822) . "</lastBuildDate>\n";
 
     foreach ($items as $item) {
+        $item_title = $item['title'] ?? '';
+        $item_title = is_string($item_title) ? $item_title : '';
+        $item_link = $item['link'] ?? '';
+        $item_link = is_string($item_link) ? $item_link : '';
+        $item_description = $item['description'] ?? '';
+        $item_description = is_string($item_description) ? $item_description : '';
+        $item_author = $item['author'] ?? '';
+        $item_author = is_string($item_author) ? $item_author : '';
+        $item_date = $item['date'] ?? '';
+        $item_date = is_string($item_date) ? $item_date : '';
+        $item_guid = $item['guid'] ?? '';
+        $item_guid = is_string($item_guid) ? $item_guid : '';
+
         $feed .= "    <item>\n";
-        $feed .= '      <title>' . htmlspecialchars(strip_tags((string) $item['title'])) . "</title>\n";
-        $feed .= '      <link>' . htmlspecialchars((string) $item['link']) . "</link>\n";
-        $feed .= '      <description>' . (! empty($item['html']) ? '<![CDATA[' . $item['description'] . ']]>' : htmlspecialchars((string) $item['description'])) . "</description>\n";
-        if (! empty($item['author'])) {
-            $feed .= '      <author>' . htmlspecialchars((string) $item['author']) . "</author>\n";
+        $feed .= '      <title>' . htmlspecialchars(strip_tags($item_title)) . "</title>\n";
+        $feed .= '      <link>' . htmlspecialchars($item_link) . "</link>\n";
+        $feed .= '      <description>' . (! empty($item['html']) ? '<![CDATA[' . $item_description . ']]>' : htmlspecialchars($item_description)) . "</description>\n";
+        if (! empty($item_author)) {
+            $feed .= '      <author>' . htmlspecialchars($item_author) . "</author>\n";
         }
-        if (! empty($item['date'])) {
-            $feed .= '      <pubDate>' . new DateTimeImmutable($item['date'])->format(DATE_RFC2822) . "</pubDate>\n";
+        if (! empty($item_date)) {
+            $feed .= '      <pubDate>' . new DateTimeImmutable($item_date)->format(DATE_RFC2822) . "</pubDate>\n";
         }
-        $feed .= '      <guid isPermaLink="false">' . htmlspecialchars($item['guid'] !== '' ? $item['guid'] : $item['link']) . "</guid>\n";
+        $feed .= '      <guid isPermaLink="false">' . htmlspecialchars($item_guid !== '' ? $item_guid : $item_link) . "</guid>\n";
         $feed .= "    </item>\n";
     }
 
@@ -95,6 +115,8 @@ function pwg_generate_rss2_feed(array $channel, array $items): string
 check_input_parameter('feed', $_GET, false, '/^[0-9a-z]{50}$/i');
 
 $feed_id = $_GET['feed'] ?? '';
+$feed_id = is_string($feed_id) ? $feed_id : '';
+$user_feed_table = USER_FEED_TABLE;
 $image_only = isset($_GET['image_only']);
 // Only read below when $image_only is false, which implies $feed_id was
 // non-empty and the branch below already populated it.
@@ -105,7 +127,7 @@ if (! empty($feed_id)) {
     $query = '
 SELECT user_id,
        last_check
-  FROM ' . USER_FEED_TABLE . '
+  FROM ' . $user_feed_table . '
   WHERE id = \'' . $feed_id . '\'
 ;';
     $feed_row = pwg_db_fetch_assoc(pwg_query($query));
@@ -113,7 +135,10 @@ SELECT user_id,
         page_not_found(l10n('Unknown feed identifier'));
     }
     if ($feed_row['user_id'] != $user['id']) { // new user
-        $user = build_user($feed_row['user_id'], true);
+        $feed_user_id = $feed_row['user_id'];
+        if (is_numeric($feed_user_id)) {
+            $user = build_user((int) $feed_user_id, true);
+        }
     }
 } else {
     $image_only = true;
@@ -128,6 +153,9 @@ check_status(ACCESS_GUEST);
 $row = pwg_db_fetch_row(pwg_query('SELECT NOW();'));
 assert($row !== null);
 [$dbnow] = $row;
+// NOW() is a MySQL builtin that always returns a valid non-null datetime
+// value, never a nullable column read.
+assert(is_string($dbnow));
 
 set_make_full_url();
 
@@ -168,7 +196,7 @@ if (! $image_only) {
         ];
 
         $query = '
-UPDATE ' . USER_FEED_TABLE . '
+UPDATE ' . $user_feed_table . '
   SET last_check = \'' . $dbnow . '\'
   WHERE id = \'' . $feed_id . '\'
 ;';
@@ -180,7 +208,7 @@ if (! empty($feed_id) and empty($news)) {// update the last check from time to t
     if (! isset($feed_row['last_check'])
       or time() - datetime_to_ts($feed_row['last_check']) > 30 * 24 * 3600) {
         $query = '
-UPDATE ' . USER_FEED_TABLE . '
+UPDATE ' . $user_feed_table . '
   SET last_check = ' . pwg_db_get_recent_period_expression(-15, $dbnow) . '
   WHERE id = \'' . $feed_id . '\'
 ;';
@@ -188,16 +216,19 @@ UPDATE ' . USER_FEED_TABLE . '
     }
 }
 
+/** @var array<int, array<string, mixed>> $dates */
 $dates = get_recent_post_dates_array($conf['recent_post_dates']['RSS']);
 
 foreach ($dates as $date_detail) { // for each recent post date we create a feed item
     $date = $date_detail['date_available'];
+    // date_available is a NOT NULL datetime column, always a string.
+    assert(is_string($date));
     $link = make_index_url(
         [
             'chronology_field' => 'posted',
             'chronology_style' => 'monthly',
             'chronology_view' => 'calendar',
-            'chronology_date' => explode('-', substr((string) $date, 0, 10)),
+            'chronology_date' => explode('-', substr($date, 0, 10)),
         ]
     );
 

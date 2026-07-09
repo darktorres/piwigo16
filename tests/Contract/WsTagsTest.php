@@ -20,9 +20,14 @@ final class WsTagsTest extends ContractTestCase
         // The fixture seeds 3 tags all attached to photos, so this must be non-empty.
         $response = $this->ws('pwg.tags.getList');
 
-        self::assertNotEmpty($response['result']['tags'], 'Fixture must contain at least one used tag');
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $tags = $result['tags'];
+        self::assertIsArray($tags);
+        self::assertNotEmpty($tags, 'Fixture must contain at least one used tag');
 
-        foreach ($response['result']['tags'] as $tag) {
+        foreach ($tags as $tag) {
+            self::assertIsArray($tag);
             self::assertIsInt($tag['id']);
             self::assertIsString($tag['name']);
             self::assertGreaterThan(0, $tag['counter']);
@@ -44,7 +49,17 @@ final class WsTagsTest extends ContractTestCase
         $publicList = $this->ws('pwg.tags.getList');
 
         // getAdminList includes all tags; getList only returns used ones
-        self::assertGreaterThanOrEqual(count($publicList['result']['tags']), count($adminList['result']['tags']));
+        $publicResult = $publicList['result'];
+        self::assertIsArray($publicResult);
+        $publicTags = $publicResult['tags'];
+        self::assertIsArray($publicTags);
+
+        $adminResult = $adminList['result'];
+        self::assertIsArray($adminResult);
+        $adminTags = $adminResult['tags'];
+        self::assertIsArray($adminTags);
+
+        self::assertGreaterThanOrEqual(count($publicTags), count($adminTags));
     }
 
     public function test_getAdminList_forbidden_for_guest(): void
@@ -61,6 +76,8 @@ final class WsTagsTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.tags.getImages', $response);
-        self::assertArrayHasKey('images', $response['result']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertArrayHasKey('images', $result);
     }
 }

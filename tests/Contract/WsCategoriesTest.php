@@ -18,14 +18,25 @@ final class WsCategoriesTest extends ContractTestCase
     {
         $response = $this->wsAdmin('pwg.categories.getList', ['recursive' => 1]);
 
-        self::assertIsArray($response['result']['categories']);
-        self::assertNotEmpty($response['result']['categories'], 'Fixture must contain at least one album');
+        $result = $response['result'] ?? null;
+        if (!is_array($result)) {
+            self::fail('WS response result is not an array: ' . json_encode($response));
+        }
 
-        $first = $response['result']['categories'][0];
-        self::assertIsInt($first['id']);
-        self::assertIsString($first['name']);
-        self::assertIsInt($first['nb_images']);
-        self::assertIsString($first['url']);
+        $categories = $result['categories'] ?? null;
+        if (!is_array($categories)) {
+            self::fail('WS response result.categories is not an array: ' . json_encode($response));
+        }
+        self::assertNotEmpty($categories, 'Fixture must contain at least one album');
+
+        $first = $categories[0] ?? null;
+        if (!is_array($first)) {
+            self::fail('First category is not an array: ' . json_encode($response));
+        }
+        self::assertIsInt($first['id'] ?? null);
+        self::assertIsString($first['name'] ?? null);
+        self::assertIsInt($first['nb_images'] ?? null);
+        self::assertIsString($first['url'] ?? null);
     }
 
     public function test_getAdminList_response_matches_schema(): void
@@ -57,7 +68,10 @@ final class WsCategoriesTest extends ContractTestCase
     {
         $response = $this->wsAdmin('pwg.categories.getImages', ['cat_id' => 1]);
 
-        $result = $response['result'];
+        $result = $response['result'] ?? null;
+        if (!is_array($result)) {
+            self::fail('WS response result is not an array: ' . json_encode($response));
+        }
         self::assertArrayHasKey('paging', $result);
         self::assertArrayHasKey('images', $result);
         self::assertIsArray($result['images']);

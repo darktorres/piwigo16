@@ -24,7 +24,8 @@ check_status(ACCESS_FREE);
 // but if the user is already identified, we redirect to gallery home
 // instead of displaying the log in form
 if (! is_a_guest()) {
-    redirect(get_gallery_home_url());
+    $gallery_home_url = get_gallery_home_url();
+    redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
 }
 
 trigger_notify('loc_begin_identification');
@@ -35,14 +36,14 @@ unset($_SESSION['reset_password_code']);
 
 // security (level 1): the redirect must occur within Piwigo, so the
 // redirect param must start with the relative home url
-if (isset($_POST['redirect'])) {
-    $_POST['redirect_decoded'] = urldecode((string) $_POST['redirect']);
+if (isset($_POST['redirect']) && is_string($_POST['redirect'])) {
+    $_POST['redirect_decoded'] = urldecode($_POST['redirect']);
 }
 check_input_parameter('redirect_decoded', $_POST, false, '{^' . preg_quote((string) cookie_path()) . '}');
 
 $redirect_to = '';
-if (! empty($_GET['redirect'])) {
-    $redirect_to = urldecode((string) $_GET['redirect']);
+if (! empty($_GET['redirect']) && is_string($_GET['redirect'])) {
+    $redirect_to = urldecode($_GET['redirect']);
     if ($conf['guest_access'] and ! isset($_GET['hide_redirect_error'])) {
         $page['errors']['login_page_error'] = l10n('You are not authorized to access the requested page');
     }
@@ -52,14 +53,22 @@ if (isset($_POST['login'])) {
     if (! isset($_COOKIE[session_name()])) {
         $page['errors']['login_page_error'] = l10n('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
     } else {
+        // $_POST['username'] is required to be a string for try_log_user();
+        // an unset/non-string value falls back to '' which will simply not
+        // match any account. $_POST['password'] is allowed to be null (both
+        // this and ws_session_login() are try_log_user()'s only real
+        // callers, and both can genuinely omit the field).
+        $username = is_string($_POST['username'] ?? null) ? $_POST['username'] : '';
+        $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : null;
+
         if ($conf['insensitive_case_logon'] == true) {
-            $_POST['username'] = search_case_username($_POST['username']);
+            $username = search_case_username($username);
         }
 
-        $redirect_to = isset($_POST['redirect']) ? urldecode((string) $_POST['redirect']) : '';
+        $redirect_to = is_string($_POST['redirect'] ?? null) ? urldecode($_POST['redirect']) : '';
         $remember_me = isset($_POST['remember_me']) and $_POST['remember_me'] == 1;
 
-        if (try_log_user($_POST['username'], $_POST['password'], $remember_me)) {
+        if (try_log_user($username, $password, $remember_me)) {
             // security (level 2): force redirect within Piwigo. We redirect to
             // absolute root url, including http(s)://, without the cookie path,
             // concatenated with $_POST['redirect'] param.
@@ -74,9 +83,11 @@ if (isset($_POST['login'])) {
 
             $_SESSION['connected_with'] = 'pwg_ui';
 
+            $gallery_home_url = get_gallery_home_url();
+
             redirect(
                 empty($redirect_to)
-                ? get_gallery_home_url()
+                ? (is_string($gallery_home_url) ? $gallery_home_url : '')
                 : substr((string) $root_url, 0, strlen((string) $root_url) - strlen((string) cookie_path())) . $redirect_to
             );
         } else {
@@ -121,11 +132,15 @@ if (! $conf['gallery_locked'] && (! isset($themeconf['hide_menu_on']) or ! in_ar
 
 // Load language if cookie is set from login/register/password pages
 if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
-    if (! array_key_exists((string) $_COOKIE['lang'], get_languages())) {
-        fatal_error('[Hacking attempt] the input parameter "' . $_COOKIE['lang'] . '" is not valid');
+    $lang_cookie = $_COOKIE['lang'];
+    if (! is_string($lang_cookie)) {
+        fatal_error('[Hacking attempt] the input parameter "lang" is not valid');
+    }
+    if (! array_key_exists($lang_cookie, get_languages())) {
+        fatal_error('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
     }
 
-    $user['language'] = $_COOKIE['lang'];
+    $user['language'] = $lang_cookie;
     load_language('common.lang', '', [
         'language' => $user['language'],
     ]);

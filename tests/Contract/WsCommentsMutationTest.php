@@ -21,8 +21,11 @@ final class WsCommentsMutationTest extends ContractTestCase
         // The ephemeral key must come from the server (HMAC over IP + secret_key).
         // pwg.images.getInfo returns a ready-to-use key in result.comment_post_data.key
         // generated with valid_after_seconds=2, so we must sleep before submitting.
-        $info = $this->callWs('pwg.images.getInfo', ['image_id' => self::FIXTURE_IMAGE_ID]);
-        $key  = (string) ($info['result']['comment_post']['key'] ?? '');
+        $info         = $this->callWs('pwg.images.getInfo', ['image_id' => self::FIXTURE_IMAGE_ID]);
+        $infoResult   = $info['result'] ?? null;
+        $commentPost  = is_array($infoResult) ? ($infoResult['comment_post'] ?? null) : null;
+        $rawKey       = is_array($commentPost) ? ($commentPost['key'] ?? null) : null;
+        $key          = is_string($rawKey) ? $rawKey : '';
         sleep(3);
 
         $response = $this->callWs('pwg.images.addComment', [
@@ -32,7 +35,16 @@ final class WsCommentsMutationTest extends ContractTestCase
             'key'      => $key,
         ]);
         self::assertSame('ok', $response['stat']);
-        return (int) $response['result']['comment']['id'];
+
+        $result  = $response['result'] ?? null;
+        $comment = is_array($result) ? ($result['comment'] ?? null) : null;
+        $id      = is_array($comment) ? ($comment['id'] ?? null) : null;
+
+        if (! is_numeric($id)) {
+            self::fail('comment.id must be numeric');
+        }
+
+        return (int) $id;
     }
 
     public function test_validate_comment_returns_ok(): void

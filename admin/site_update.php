@@ -162,7 +162,16 @@ SELECT id, uppercats, global_rank, status, visible
 ';
         }
     }
+    // hash_from_query()'s declared return type is under-typed (array<int|string,
+    // mixed>) — each row is really the fetch_assoc() result for id, uppercats,
+    // global_rank, status, visible (all string|null), but this same array is
+    // later reused (below) to hold freshly-inserted categories keyed by their
+    // new int id, whose entries additionally carry an int 'parent' and int
+    // 'id'/'rank'/'global_rank' fields. array<string, mixed> is the honest
+    // common shape for both origins; individual fields are narrowed with
+    // is_string()/is_int() at each point of use below.
     $db_categories = hash_from_query($query, 'id');
+    /** @var array<int|string, array<string, mixed>> $db_categories */
 
     // get categort full directories in an array for comparison with file
     // system directory tree
@@ -172,7 +181,10 @@ SELECT id, uppercats, global_rank, status, visible
     if (isset($_POST['cat']) and is_numeric($_POST['cat'])) {
         $basedir = $db_fulldirs[(int) $_POST['cat']];
     } else {
-        $basedir = preg_replace('#/*$#', '', (string) $site_url);
+        // preg_replace() can return null on a regex engine error; the base
+        // directory is never allowed to be null downstream (LocalSiteReader
+        // expects a real string path).
+        $basedir = preg_replace('#/*$#', '', (string) $site_url) ?? '';
     }
 
     // we need to have fulldirs as keys to make efficient comparison
@@ -208,7 +220,10 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
     $next_id = pwg_db_nextval('id', CATEGORIES_TABLE);
 
     // retrieve sub-directories fulldirs from the site reader
-    $fs_fulldirs = $site_reader->get_full_directories($basedir);
+    // get_full_directories() is declared to return mixed[], but in practice
+    // it always forwards get_fs_directories()'s string[] result; filter
+    // defensively so this array's element type is a real string.
+    $fs_fulldirs = array_filter($site_reader->get_full_directories($basedir), is_string(...));
 
     // get_full_directories doesn't include the base directory, so if it's a
     // category directory, we need to include it in our array
@@ -240,12 +255,24 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             if (isset($db_fulldirs[dirname((string) $fulldir)])) {
                 $parent = $db_fulldirs[dirname((string) $fulldir)];
 
+                // $db_categories[$parent] can be either a raw DB row
+                // (uppercats/global_rank as string|null) or a previously
+                // inserted category from an earlier iteration of this same
+                // loop (uppercats as string, global_rank as int|string) —
+                // narrow to the concatenable subset either way.
+                $parent_uppercats = $db_categories[$parent]['uppercats'] ?? null;
+                $parent_uppercats = is_string($parent_uppercats) ? $parent_uppercats : '';
+                $parent_global_rank = $db_categories[$parent]['global_rank'] ?? null;
+                if (! is_string($parent_global_rank) && ! is_int($parent_global_rank)) {
+                    $parent_global_rank = '';
+                }
+
                 $insert['id_uppercat'] = $parent;
                 $insert['uppercats'] =
-                  $db_categories[$parent]['uppercats'] . ',' . $insert['id'];
+                  $parent_uppercats . ',' . $insert['id'];
                 $insert['rank'] = $next_rank[$parent]++;
                 $insert['global_rank'] =
-                  $db_categories[$parent]['global_rank'] . '.' . $insert['rank'];
+                  $parent_global_rank . '.' . $insert['rank'];
                 if ($db_categories[$parent]['status'] == 'private') {
                     $insert['status'] = 'private';
                 }
@@ -317,14 +344,22 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 if (! empty($result)) {
                     $granted_grps = [];
                     while ($row = pwg_db_fetch_assoc($result)) {
-                        if (! isset($granted_grps[$row['cat_id']])) {
-                            $granted_grps[$row['cat_id']] = [];
+                        // cat_id is a NOT NULL foreign key; skip defensively
+                        // if it's ever missing/non-numeric rather than using
+                        // it as an invalid array key.
+                        $cat_id = $row['cat_id'];
+                        if (! is_numeric($cat_id)) {
+                            continue;
+                        }
+                        $cat_id = (int) $cat_id;
+                        if (! isset($granted_grps[$cat_id])) {
+                            $granted_grps[$cat_id] = [];
                         }
                         // TODO: explanaition
                         array_push(
                             $granted_grps,
                             [
-                                $row['cat_id'] => array_push($granted_grps[$row['cat_id']], $row['group_id']),
+                                $cat_id => array_push($granted_grps[$cat_id], $row['group_id']),
                             ]
                         );
                     }
@@ -338,14 +373,22 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 if (! empty($result)) {
                     $granted_users = [];
                     while ($row = pwg_db_fetch_assoc($result)) {
-                        if (! isset($granted_users[$row['cat_id']])) {
-                            $granted_users[$row['cat_id']] = [];
+                        // cat_id is a NOT NULL foreign key; skip defensively
+                        // if it's ever missing/non-numeric rather than using
+                        // it as an invalid array key.
+                        $cat_id = $row['cat_id'];
+                        if (! is_numeric($cat_id)) {
+                            continue;
+                        }
+                        $cat_id = (int) $cat_id;
+                        if (! isset($granted_users[$cat_id])) {
+                            $granted_users[$cat_id] = [];
                         }
                         // TODO: explanaition
                         array_push(
                             $granted_users,
                             [
-                                $row['cat_id'] => array_push($granted_users[$row['cat_id']], $row['user_id']),
+                                $cat_id => array_push($granted_users[$cat_id], $row['user_id']),
                             ]
                         );
                     }
@@ -353,9 +396,14 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
                 $insert_granted_users = [];
                 $insert_granted_grps = [];
                 foreach ($category_ids as $ids) {
-                    $parent_id = $db_categories[$ids]['parent'];
-                    while (in_array($parent_id, $category_ids)) {
-                        $parent_id = $db_categories[$parent_id]['parent'];
+                    // 'parent' only exists on the freshly-inserted-category
+                    // shape of $db_categories entries (see above); narrow to
+                    // int so it's safe to use as an array key below.
+                    $parent_id = $db_categories[$ids]['parent'] ?? null;
+                    $parent_id = is_int($parent_id) ? $parent_id : null;
+                    while ($parent_id !== null && in_array($parent_id, $category_ids)) {
+                        $parent_id = $db_categories[$parent_id]['parent'] ?? null;
+                        $parent_id = is_int($parent_id) ? $parent_id : null;
                     }
                     if ($db_categories[$ids]['status'] == 'private' and $parent_id !== null) {
                         if (isset($granted_grps[$parent_id])) {
@@ -450,7 +498,10 @@ SELECT id, path
               160,
               "\n"
           ) . ')';
-        $db_elements = simple_hash_from_query($query, 'id', 'path');
+        // simple_hash_from_query()'s declared return type is under-typed
+        // (array<int|string, mixed>); path is a NOT NULL varchar column, so
+        // filter defensively to guarantee real strings here.
+        $db_elements = array_filter(simple_hash_from_query($query, 'id', 'path'), is_string(...));
     }
 
     // next element id available
@@ -509,17 +560,23 @@ SELECT id, path
         ];
 
         if ($conf['enable_formats']) {
-            foreach ($fs[$path]['formats'] as $ext => $filesize) {
-                $insert_formats[] = [
-                    'image_id' => $insert['id'],
-                    'ext' => $ext,
-                    'filesize' => $filesize,
-                ];
+            // 'formats' is only known as mixed here (get_elements()'s
+            // declared value type is array<string, mixed>), but it's always
+            // the get_formats() float[] result when set.
+            $element_formats = $fs[$path]['formats'] ?? null;
+            if (is_array($element_formats)) {
+                foreach ($element_formats as $ext => $filesize) {
+                    $insert_formats[] = [
+                        'image_id' => $insert['id'],
+                        'ext' => $ext,
+                        'filesize' => $filesize,
+                    ];
 
-                $infos[] = [
-                    'path' => $insert['path'],
-                    'info' => l10n('format %s added', $ext),
-                ];
+                    $infos[] = [
+                        'path' => $insert['path'],
+                        'info' => l10n('format %s added', $ext),
+                    ];
+                }
             }
         }
 
@@ -549,16 +606,27 @@ SELECT *
 ;';
             $result = pwg_query($query);
             while ($row = pwg_db_fetch_assoc($result)) {
-                if (! isset($db_formats[$row['image_id']])) {
-                    $db_formats[$row['image_id']] = [];
+                // image_id/ext are NOT NULL columns; skip defensively rather
+                // than use a null/non-scalar value as an array key.
+                $format_image_id = $row['image_id'];
+                $format_ext = $row['ext'];
+                if (! is_numeric($format_image_id) || ! is_string($format_ext)) {
+                    continue;
+                }
+                $format_image_id = (int) $format_image_id;
+                if (! isset($db_formats[$format_image_id])) {
+                    $db_formats[$format_image_id] = [];
                 }
 
-                $db_formats[$row['image_id']][$row['ext']] = $row['format_id'];
+                $db_formats[$format_image_id][$format_ext] = $row['format_id'];
             }
 
             // first we search the formats that were removed
             foreach ($db_formats as $image_id => $formats) {
-                $image_formats_to_delete = array_diff_key($formats, $fs[$db_elements[$image_id]]['formats']);
+                // 'formats' is only known as mixed here (get_elements()'s
+                // declared value type is array<string, mixed>).
+                $element_formats = $fs[$db_elements[$image_id]]['formats'] ?? null;
+                $image_formats_to_delete = array_diff_key($formats, is_array($element_formats) ? $element_formats : []);
                 $logger->debug('image_formats_to_delete', 'sync', $image_formats_to_delete);
                 foreach ($image_formats_to_delete as $ext => $format_id) {
                     $formats_to_delete[] = $format_id;
@@ -579,7 +647,10 @@ SELECT *
                     $formats = $db_formats[$image_id];
                 }
 
-                $image_formats_to_insert = array_diff_key($fs[$path]['formats'], $formats);
+                // 'formats' is only known as mixed here (get_elements()'s
+                // declared value type is array<string, mixed>).
+                $element_formats = $fs[$path]['formats'] ?? null;
+                $image_formats_to_insert = array_diff_key(is_array($element_formats) ? $element_formats : [], $formats);
                 $logger->debug('image_formats_to_insert', 'sync', $image_formats_to_insert);
                 foreach ($image_formats_to_insert as $ext => $filesize) {
                     $insert_formats[] = [
@@ -711,8 +782,14 @@ if (isset($_POST['submit'])
 
         $datas = [];
         foreach ($files as $id => $file) {
-            $file = $file['path'];
-            $data = $site_reader->get_element_update_attributes($file);
+            // get_filelist() returns hash_from_query($query, 'id'), i.e.
+            // each row from query2array() with key_name set and value_name
+            // null: always the full fetch_assoc() row array (string keys =
+            // id/path/representative_ext column names, string|null values).
+            assert(is_array($file));
+            /** @var array<string, string|null> $file */
+            $path = $file['path'] ?? '';
+            $data = $site_reader->get_element_update_attributes($path);
             $data['id'] = $id;
             $datas[] = $data;
         } // end foreach file
@@ -787,6 +864,12 @@ if (isset($_POST['submit']) and isset($_POST['sync_meta'])
     $tags_of = [];
 
     foreach ($files as $id => $element_infos) {
+        // get_filelist() returns hash_from_query($query, 'id'), i.e. each
+        // row from query2array() with key_name set and value_name null:
+        // always the full fetch_assoc() row array (string keys = column
+        // names, string|null values).
+        assert(is_array($element_infos));
+        /** @var array<string, string|null> $element_infos */
         $data = $site_reader->get_element_metadata($element_infos);
 
         if (is_array($data)) {
@@ -795,12 +878,12 @@ if (isset($_POST['submit']) and isset($_POST['sync_meta'])
             $datas[] = $data;
 
             foreach (['keywords', 'tags'] as $key) {
-                if (isset($data[$key])) {
+                if (isset($data[$key]) && is_string($data[$key])) {
                     if (! isset($tags_of[$id])) {
                         $tags_of[$id] = [];
                     }
 
-                    foreach (explode(',', (string) $data[$key]) as $tag_name) {
+                    foreach (explode(',', $data[$key]) as $tag_name) {
                         $tags_of[$id][] = tag_id_from_tag_name($tag_name);
                     }
                 }
@@ -883,13 +966,18 @@ $template->assign(
 // |                        introduction : choices                         |
 // +-----------------------------------------------------------------------+
 if (isset($_POST['submit'])) {
+    $privacy_level_selected = 0;
+    if (isset($_POST['privacy_level']) and is_numeric($_POST['privacy_level'])) {
+        $privacy_level_selected = (int) $_POST['privacy_level'];
+    }
+
     $tpl_introduction = [
         'sync' => $_POST['sync'],
         'sync_meta' => isset($_POST['sync_meta']) ? true : false,
         'display_info' => isset($_POST['display_info']) and $_POST['display_info'] == 1,
         'add_to_caddie' => isset($_POST['add_to_caddie']) and $_POST['add_to_caddie'] == 1,
         'subcats_included' => isset($_POST['subcats-included']) and $_POST['subcats-included'] == 1,
-        'privacy_level_selected' => (int) @$_POST['privacy_level'],
+        'privacy_level_selected' => $privacy_level_selected,
         'meta_all' => isset($_POST['meta_all']) ? true : false,
         'meta_empty_overrides' => isset($_POST['meta_empty_overrides']) ? true : false,
     ];

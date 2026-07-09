@@ -43,25 +43,29 @@ function get_absolute_root_url($with_scheme = true): string
     $url = '';
     if ($with_scheme) {
         $is_https = false;
-        if (isset($_SERVER['HTTPS']) &&
-          ((strtolower((string) $_SERVER['HTTPS']) == 'on') or ($_SERVER['HTTPS'] == 1))) {
+        $https_value = $_SERVER['HTTPS'] ?? null;
+        if (is_scalar($https_value) &&
+          ((strtolower((string) $https_value) == 'on') or ($https_value == 1))) {
             $is_https = true;
             $url .= 'https://';
         } else {
             $url .= 'http://';
         }
-        if (isset($_SERVER['HTTP_X_FORWARDED_HOST'])) {
-            $url .= $_SERVER['HTTP_X_FORWARDED_HOST'];
+        $forwarded_host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? null;
+        if (is_string($forwarded_host)) {
+            $url .= $forwarded_host;
         } else {
-            $url .= $_SERVER['HTTP_HOST'];
+            $http_host = $_SERVER['HTTP_HOST'] ?? null;
+            $url .= is_string($http_host) ? $http_host : '';
 
             $url_port = null;
 
             if ($conf['url_port'] == 'none') {
                 // do nothing
             } elseif ($conf['url_port'] == 'auto') {
-                if ((! $is_https && $_SERVER['SERVER_PORT'] != 80) || ($is_https && $_SERVER['SERVER_PORT'] != 443)) {
-                    $url_port = ':' . $_SERVER['SERVER_PORT'];
+                $server_port = $_SERVER['SERVER_PORT'] ?? null;
+                if ((! $is_https && $server_port != 80) || ($is_https && $server_port != 443)) {
+                    $url_port = ':' . ((is_string($server_port) || is_int($server_port)) ? $server_port : '');
                 }
             } else {
                 // we have a custom port
@@ -102,7 +106,7 @@ function add_url_params($url, $params, string $arg_separator = '&amp;')
             }
             $url .= $param;
             if (isset($val)) {
-                $url .= '=' . $val;
+                $url .= '=' . (is_scalar($val) ? $val : '');
             }
         }
     }
@@ -212,15 +216,16 @@ function make_picture_url(array $params): string
         $url .= '?';
     }
     $url .= '/';
+    $image_id = $params['image_id'] ?? null;
     switch ($conf['picture_url_style']) {
         case 'id-file':
-            $url .= $params['image_id'];
-            if (isset($params['image_file'])) {
+            $url .= is_scalar($image_id) ? $image_id : '';
+            if (isset($params['image_file']) and is_string($params['image_file'])) {
                 $url .= '-' . str2url(get_filename_wo_extension($params['image_file']));
             }
             break;
         case 'file':
-            if (isset($params['image_file'])) {
+            if (isset($params['image_file']) and is_string($params['image_file'])) {
                 $fname_wo_ext = get_filename_wo_extension($params['image_file']);
                 if (ord($fname_wo_ext) > ord('9') or ! preg_match('/^\d+(-|$)/', $fname_wo_ext)) {
                     $url .= $fname_wo_ext;
@@ -229,7 +234,7 @@ function make_picture_url(array $params): string
             }
             // no break
         default:
-            $url .= $params['image_id'];
+            $url .= is_scalar($image_id) ? $image_id : '';
     }
     if (! isset($params['category'])) {// make urls shorter ...
         unset($params['flat']);
@@ -247,13 +252,19 @@ function make_picture_url(array $params): string
 function add_well_known_params_in_url(string $url, array $params): string
 {
     if (isset($params['chronology_field'])) {
-        $url .= '/' . $params['chronology_field'];
-        $url .= '-' . $params['chronology_style'];
+        $chronology_field = $params['chronology_field'];
+        $url .= '/' . (is_scalar($chronology_field) ? $chronology_field : '');
+
+        $chronology_style = $params['chronology_style'] ?? null;
+        $url .= '-' . (is_scalar($chronology_style) ? $chronology_style : '');
+
         if (isset($params['chronology_view'])) {
-            $url .= '-' . $params['chronology_view'];
+            $chronology_view = $params['chronology_view'];
+            $url .= '-' . (is_scalar($chronology_view) ? $chronology_view : '');
         }
         if (! empty($params['chronology_date'])) {
-            $url .= '-' . implode('-', $params['chronology_date']);
+            $chronology_date = $params['chronology_date'];
+            $url .= '-' . implode('-', is_array($chronology_date) ? array_filter($chronology_date, 'is_scalar') : []);
         }
     }
 
@@ -262,7 +273,8 @@ function add_well_known_params_in_url(string $url, array $params): string
     }
 
     if (isset($params['start']) and $params['start'] > 0) {
-        $url .= '/start-' . $params['start'];
+        $start = $params['start'];
+        $url .= '/start-' . (is_scalar($start) ? $start : '');
     }
     return $url;
 }
@@ -279,7 +291,8 @@ function make_section_in_url(array $params): string
 {
     global $conf;
     $section_string = '';
-    $section = @$params['section'];
+    $section_raw = $params['section'] ?? null;
+    $section = is_string($section_raw) ? $section_raw : null;
     if (! isset($section)) {
         $section_of = [
             'category' => 'categories',
@@ -305,37 +318,52 @@ function make_section_in_url(array $params): string
             if (! isset($params['category'])) {
                 $section_string .= '/categories';
             } else {
-                isset($params['category']['name']) or trigger_error(
+                $category_info = $params['category'];
+                if (! is_array($category_info)) {
+                    $category_info = [];
+                }
+
+                isset($category_info['name']) or trigger_error(
                     'make_section_in_url category name not set',
                     E_USER_WARNING
                 );
 
-                array_key_exists('permalink', $params['category']) or trigger_error(
+                array_key_exists('permalink', $category_info) or trigger_error(
                     'make_section_in_url category permalink not set',
                     E_USER_WARNING
                 );
 
                 $section_string .= '/category/';
-                if (empty($params['category']['permalink'])) {
-                    $section_string .= $params['category']['id'];
+                if (empty($category_info['permalink'])) {
+                    $category_id = $category_info['id'] ?? null;
+                    $section_string .= is_scalar($category_id) ? $category_id : '';
                     if ($conf['category_url_style'] == 'id-name') {
-                        $section_string .= '-' . str2url($params['category']['name']);
+                        $category_name = $category_info['name'] ?? null;
+                        $section_string .= '-' . str2url(is_string($category_name) ? $category_name : '');
                     }
                 } else {
-                    $section_string .= $params['category']['permalink'];
+                    $category_permalink = $category_info['permalink'];
+                    $section_string .= is_scalar($category_permalink) ? $category_permalink : '';
                 }
 
-                if (isset($params['combined_categories'])) {
+                if (isset($params['combined_categories']) and is_array($params['combined_categories'])) {
                     foreach ($params['combined_categories'] as $category) {
                         $section_string .= '/';
 
+                        if (! is_array($category)) {
+                            $category = [];
+                        }
+
                         if (empty($category['permalink'])) {
-                            $section_string .= $category['id'];
+                            $combined_id = $category['id'] ?? null;
+                            $section_string .= is_scalar($combined_id) ? $combined_id : '';
                             if ($conf['category_url_style'] == 'id-name') {
-                                $section_string .= '-' . str2url($category['name']);
+                                $combined_name = $category['name'] ?? null;
+                                $section_string .= '-' . str2url(is_string($combined_name) ? $combined_name : '');
                             }
                         } else {
-                            $section_string .= $category['permalink'];
+                            $combined_permalink = $category['permalink'];
+                            $section_string .= is_scalar($combined_permalink) ? $combined_permalink : '';
                         }
                     }
                 }
@@ -347,21 +375,27 @@ function make_section_in_url(array $params): string
 
             $section_string .= '/tags';
 
-            foreach ($params['tags'] as $tag) {
+            $tags_param = $params['tags'] ?? [];
+            foreach ((is_array($tags_param) ? $tags_param : []) as $tag) {
+                if (! is_array($tag)) {
+                    $tag = [];
+                }
+                $tag_id = $tag['id'] ?? null;
+                $tag_url_name = $tag['url_name'] ?? null;
                 switch ($conf['tag_url_style']) {
                     case 'id':
-                        $section_string .= '/' . $tag['id'];
+                        $section_string .= '/' . (is_scalar($tag_id) ? $tag_id : '');
                         break;
                     case 'tag':
-                        if (isset($tag['url_name'])) {
-                            $section_string .= '/' . $tag['url_name'];
+                        if (isset($tag_url_name) && is_scalar($tag_url_name)) {
+                            $section_string .= '/' . $tag_url_name;
                             break;
                         }
                         // no break
                     default:
-                        $section_string .= '/' . $tag['id'];
-                        if (isset($tag['url_name'])) {
-                            $section_string .= '-' . $tag['url_name'];
+                        $section_string .= '/' . (is_scalar($tag_id) ? $tag_id : '');
+                        if (isset($tag_url_name) && is_scalar($tag_url_name)) {
+                            $section_string .= '-' . $tag_url_name;
                         }
                 }
             }
@@ -370,12 +404,14 @@ function make_section_in_url(array $params): string
 
         case 'search':
 
-            $section_string .= '/search/' . $params['search'];
+            $search_param = $params['search'] ?? null;
+            $section_string .= '/search/' . (is_scalar($search_param) ? $search_param : '');
             break;
 
         case 'list':
 
-            $section_string .= '/list/' . implode(',', $params['list']);
+            $list_param = $params['list'] ?? [];
+            $section_string .= '/list/' . implode(',', is_array($list_param) ? array_filter($list_param, 'is_scalar') : []);
             break;
 
         case 'none':
@@ -677,7 +713,7 @@ function get_action_url($id, $what_part, bool $download): string
 function get_element_url(array $element_info): mixed
 {
     $url = $element_info['path'];
-    if (! url_is_remote($url)) {
+    if (is_string($url) && ! url_is_remote($url)) {
         $url = embellish_url(get_root_url() . $url);
     }
     return $url;
@@ -765,11 +801,12 @@ function get_gallery_home_url(): mixed
  */
 function get_query_string_diff($rejects = [], $escape = true): string
 {
-    if (empty($_SERVER['QUERY_STRING'])) {
+    $query_string = $_SERVER['QUERY_STRING'] ?? null;
+    if (! is_string($query_string) || empty($query_string)) {
         return '';
     }
 
-    parse_str((string) $_SERVER['QUERY_STRING'], $vars);
+    parse_str($query_string, $vars);
 
     $vars = array_diff_key($vars, array_flip($rejects));
 

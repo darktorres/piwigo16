@@ -22,8 +22,10 @@ global $user;
 if (! get_filter_page_value('cancel')) {
     if (isset($_GET['filter'])) {
         $filter['matches'] = [];
+        $filter_get_param = $_GET['filter'];
         $filter['enabled'] =
-          preg_match('/^start-recent-(\d+)$/', (string) $_GET['filter'], $filter['matches']) === 1;
+          is_string($filter_get_param)
+          && preg_match('/^start-recent-(\d+)$/', $filter_get_param, $filter['matches']) === 1;
     } else {
         $filter['enabled'] = pwg_get_session_var('filter_enabled', false);
     }
@@ -38,6 +40,19 @@ if ($filter['enabled']) {
         'time' => 0,
         'date' => '',
     ]);
+    if (
+        ! is_array($filter_key)
+        || ! isset($filter_key['user'], $filter_key['recent_period'], $filter_key['time'], $filter_key['date'])
+    ) {
+        // Session data is only ever written below by this same file, but
+        // guard against a missing/corrupted session value defensively.
+        $filter_key = [
+            'user' => 0,
+            'recent_period' => -1,
+            'time' => 0,
+            'date' => '',
+        ];
+    }
 
     if (isset($filter['matches'])) {
         $filter['recent_period'] = $filter['matches'][1];
@@ -84,7 +99,8 @@ WHERE ';
         $query .= '
     date_available >= ' . pwg_db_get_recent_period_expression($filter['recent_period']);
 
-        $filter['visible_images'] = implode(',', array_from_query($query, 'image_id'));
+        $visible_image_ids = array_from_query($query, 'image_id');
+        $filter['visible_images'] = implode(',', array_filter($visible_image_ids, 'is_string'));
 
         if (empty($filter['visible_images'])) {
             // Must be not empty
@@ -99,7 +115,8 @@ WHERE ';
         pwg_set_session_var('filter_visible_images', $filter['visible_images']);
     } else {
         // Read only data
-        $filter['categories'] = unserialize(pwg_get_session_var('filter_categories', serialize([])));
+        $serialized_categories = pwg_get_session_var('filter_categories', serialize([]));
+        $filter['categories'] = is_string($serialized_categories) ? unserialize($serialized_categories) : [];
         $filter['visible_categories'] = pwg_get_session_var('filter_visible_categories', '');
         $filter['visible_images'] = pwg_get_session_var('filter_visible_images', '');
     }

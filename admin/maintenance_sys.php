@@ -53,7 +53,8 @@ if (is_webmaster()) {
             $action = $rows['action'];
             $date = '';
             $hour = '';
-            $details = unserialize($rows['details']);
+            $details = is_string($rows['details']) ? unserialize($rows['details']) : false;
+            $details = is_array($details) ? $details : [];
             $detail = [
                 'type' => 'empty',
             ];
@@ -165,7 +166,7 @@ if (is_webmaster()) {
                 case ACTIVITY_SYSTEM_PLUGIN:
                     $object_icon = 'icon-puzzle';
                     $object = 'plugin';
-                    if (isset($details['plugin_id'])) {
+                    if (isset($details['plugin_id']) && is_string($details['plugin_id'])) {
                         $object = str_replace(['_', '-'], ' ', $details['plugin_id']);
                     }
                     switch ($rows['action']) {
@@ -210,14 +211,14 @@ if (is_webmaster()) {
                             $action_color = 'icon-red';
                             $action = l10n('Delete');
                             // for delete we need to specific format details
-                            if (isset($details['db_version'])) {
+                            if (isset($details['db_version']) && is_string($details['db_version'])) {
                                 $detail['type'] = 'db_fs_version';
                                 $detail[] = [
                                     'icon' => 'icon-flow-branch',
                                     'text' => 'database : ' . $details['db_version'],
                                 ];
                             }
-                            if (isset($details['fs_version'])) {
+                            if (isset($details['fs_version']) && is_string($details['fs_version'])) {
                                 $detail['type'] = 'db_fs_version';
                                 $detail[] = [
                                     'icon' => 'icon-flow-branch',
@@ -242,7 +243,7 @@ if (is_webmaster()) {
                 case ACTIVITY_SYSTEM_THEME:
                     $object_icon = 'icon-brush';
                     $object = 'theme';
-                    if (isset($details['theme_id'])) {
+                    if (isset($details['theme_id']) && is_string($details['theme_id'])) {
                         $object = str_replace(['_', '-'], ' ', $details['theme_id']);
                     }
 

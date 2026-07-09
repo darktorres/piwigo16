@@ -103,8 +103,21 @@ class plugins
     {
         $this->get_fs_plugins();
 
-        foreach (get_db_plugins() as $db_plugin) {
-            $this->db_plugins_by_id[$db_plugin['id']] = $db_plugin;
+        // get_db_plugins() is declared to return array<int|string, mixed>
+        // in include/functions_plugins.inc.php, but it's a thin wrapper
+        // around query2array($query) with no $key_name/$value_name, which
+        // is precisely typed as list<array<string, string|null>> (this
+        // driver never enables MYSQLI_OPT_INT_AND_FLOAT_NATIVE). The
+        // under-typed docblock lives in that other file; narrow locally
+        // here instead of widening the property below.
+        /** @var list<array<string, string|null>> $db_plugins */
+        $db_plugins = get_db_plugins();
+        foreach ($db_plugins as $db_plugin) {
+            $id = $db_plugin['id'] ?? null;
+            if (! is_string($id)) {
+                continue;
+            }
+            $this->db_plugins_by_id[$id] = $db_plugin;
         }
     }
 
@@ -149,10 +162,27 @@ class plugins
     }
 
     /**
+     * $fs_plugins is declared with a loose `array<string, mixed>` value
+     * type (it stores several differently-typed metadata fields under one
+     * array), but the only writer, get_fs_plugin(), always stores a real
+     * string under 'version' (its own @return shape guarantees
+     * `version: string`). Narrow that single invariant here instead of
+     * repeating an is_string()+fallback check at every call site.
+     */
+    private function fs_plugin_version(string $plugin_id): string
+    {
+        $version = $this->fs_plugins[$plugin_id]['version'] ?? null;
+        return is_string($version) ? $version : '0';
+    }
+
+    /**
      * Perform requested actions
      * @param string $action - action
      * @param string $plugin_id - plugin id
-     * @param array{revision?: mixed} $options - errors
+     * @param array{revision?: string} $options - errors: the only real
+     *   caller (pwg.extensions.php's ws_extensions_update()) always passes
+     *   a string here, coming from a WS param already typed `revision:
+     *   string` in that function's own @param array{...} shape
      * @return array<int|string, mixed>
      */
     public function perform_action($action, $plugin_id, array $options = []): array
@@ -180,13 +210,14 @@ class plugins
                 }
 
                 $plugin_maintain = self::build_maintain_class($plugin_id);
-                $plugin_maintain->install($this->fs_plugins[$plugin_id]['version'], $errors);
-                $activity_details['version'] = $this->fs_plugins[$plugin_id]['version'];
+                $fs_version = $this->fs_plugin_version($plugin_id);
+                $plugin_maintain->install($fs_version, $errors);
+                $activity_details['version'] = $fs_version;
 
                 if (empty($errors)) {
                     $query = '
 INSERT INTO ' . PLUGINS_TABLE . ' (id,version)
-  VALUES (\'' . $plugin_id . '\', \'' . $this->fs_plugins[$plugin_id]['version'] . '\')
+  VALUES (\'' . $plugin_id . '\', \'' . $fs_version . '\')
 ;';
                     pwg_query($query);
                 } else {
@@ -195,7 +226,7 @@ INSERT INTO ' . PLUGINS_TABLE . ' (id,version)
                 break;
 
             case 'update':
-                $previous_version = $this->fs_plugins[$plugin_id]['version'];
+                $previous_version = $this->fs_plugin_version($plugin_id);
                 $activity_details['from_version'] = $previous_version;
                 // the only real caller (pwg.extensions.php's ws_extensions_ignoreUpdate
                 // upgrade path) always passes 'revision' alongside action='update'
@@ -206,7 +237,7 @@ INSERT INTO ' . PLUGINS_TABLE . ' (id,version)
 
                 if ($errors[0] === 'ok') {
                     $this->get_fs_plugin($plugin_id); // refresh plugins list
-                    $new_version = $this->fs_plugins[$plugin_id]['version'];
+                    $new_version = $this->fs_plugin_version($plugin_id);
                     $activity_details['to_version'] = $new_version;
 
                     $plugin_maintain = self::build_maintain_class($plugin_id);
@@ -229,7 +260,12 @@ UPDATE ' . PLUGINS_TABLE . '
             case 'activate':
                 if (! isset($crt_db_plugin)) {
                     $errors = $this->perform_action('install', $plugin_id);
-                    [$crt_db_plugin] = get_db_plugins(null, $plugin_id);
+                    // get_db_plugins() is under-typed (see __construct()'s
+                    // comment above) — its real shape here is
+                    // list<array<string, string|null>>.
+                    /** @var list<array<string, string|null>> $matching_db_plugins */
+                    $matching_db_plugins = get_db_plugins(null, $plugin_id);
+                    [$crt_db_plugin] = $matching_db_plugins;
                     load_conf_from_db();
                 } elseif ($crt_db_plugin['state'] == 'active') {
                     break;
@@ -237,8 +273,10 @@ UPDATE ' . PLUGINS_TABLE . '
 
                 if (empty($errors)) {
                     $plugin_maintain = self::build_maintain_class($plugin_id);
-                    $plugin_maintain->activate($crt_db_plugin['version'], $errors);
-                    $activity_details['version'] = $crt_db_plugin['version'];
+                    $crt_version = $crt_db_plugin['version'] ?? null;
+                    $crt_version = is_string($crt_version) ? $crt_version : '0';
+                    $plugin_maintain->activate($crt_version, $errors);
+                    $activity_details['version'] = $crt_version;
                 }
 
                 if (empty($errors)) {
@@ -466,12 +504,23 @@ DELETE FROM ' . PLUGINS_TABLE . '
         // $result is never a resource here: no fopen() handle is passed to
         // fetchRemote() above.
         if (fetchRemote($url, $result) and is_string($result) and $pem_versions = @unserialize($result)) {
+            // unserialize() of a remote PEM response is genuinely
+            // untyped — validate it's an array of arrays before indexing
+            // into it below, rather than trusting the external payload.
+            if (! is_array($pem_versions)) {
+                return $versions_to_check;
+            }
+
             $i = 0;
 
             // If the actual version exist, put the PEM id in $versions_to_check
             while ($i < count($pem_versions) && count($versions_to_check) == 0) {
-                if (get_branch_from_version($pem_versions[$i]['name']) == get_branch_from_version($version)) {
-                    $versions_to_check[] = $pem_versions[$i]['id'];
+                $pem_version = $pem_versions[$i] ?? null;
+                if (is_array($pem_version)) {
+                    $pem_version_name = $pem_version['name'] ?? null;
+                    if (is_string($pem_version_name) and get_branch_from_version($pem_version_name) == get_branch_from_version($version)) {
+                        $versions_to_check[] = $pem_version['id'] ?? null;
+                    }
                 }
                 $i++;
             }
@@ -480,12 +529,16 @@ DELETE FROM ' . PLUGINS_TABLE . '
             if ($beta_test) {
                 // If the actual version is not in PEM, put the latest PEM version
                 if (count($versions_to_check) == 0) {
-                    $versions_to_check[] = $pem_versions[0]['id'];
+                    $first_pem_version = $pem_versions[0] ?? null;
+                    if (is_array($first_pem_version)) {
+                        $versions_to_check[] = $first_pem_version['id'] ?? null;
+                    }
                 } else { // Else search the next version in PEM
                     $has_found_previous_version = false;
                     while ($i < count($pem_versions) && ! $has_found_previous_version) {
-                        if ($pem_versions[$i]['id'] != $versions_to_check[0]) {
-                            $versions_to_check[] = $pem_versions[$i]['id'];
+                        $pem_version = $pem_versions[$i] ?? null;
+                        if (is_array($pem_version) and ($pem_version['id'] ?? null) != $versions_to_check[0]) {
+                            $versions_to_check[] = $pem_version['id'] ?? null;
                             $has_found_previous_version = true;
                         }
                         $i++;
@@ -521,12 +574,23 @@ DELETE FROM ' . PLUGINS_TABLE . '
         if (empty($versions_to_check)) {
             return true;
         }
+        // get_versions_to_check() returns mixed[] (each PEM "id" comes
+        // from an untyped unserialize() of a remote payload) — reduce to
+        // strings for implode() below rather than trusting the shape.
+        $versions_to_check_strings = [];
+        foreach ($versions_to_check as $version_to_check) {
+            if (is_scalar($version_to_check)) {
+                $versions_to_check_strings[] = (string) $version_to_check;
+            }
+        }
 
         // Plugins to check
         $plugins_to_check = [];
         foreach ($this->fs_plugins as $fs_plugin) {
-            if (isset($fs_plugin['extension'])) {
-                $plugins_to_check[] = $fs_plugin['extension'];
+            // 'extension' is only ever set by get_fs_plugin() to the
+            // numeric-string PEM extension id it parsed from main.inc.php.
+            if (isset($fs_plugin['extension']) and is_scalar($fs_plugin['extension'])) {
+                $plugins_to_check[] = (string) $fs_plugin['extension'];
             }
         }
 
@@ -536,7 +600,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
             'category_id' => $conf['pem_plugins_category'],
             'format' => 'php',
             'last_revision_only' => 'true',
-            'version' => implode(',', $versions_to_check),
+            'version' => implode(',', $versions_to_check_strings),
             'lang' => substr((string) $user['language'], 0, 2),
             'get_nb_downloads' => 'true',
         ];
@@ -556,7 +620,15 @@ DELETE FROM ' . PLUGINS_TABLE . '
                 return false;
             }
             foreach ($pem_plugins as $plugin) {
-                $this->server_plugins[$plugin['extension_id']] = $plugin;
+                if (! is_array($plugin) || ! isset($plugin['extension_id'])) {
+                    continue;
+                }
+                /** @var array<string, mixed> $plugin */
+                $extension_id = $plugin['extension_id'];
+                if (! is_string($extension_id) && ! is_int($extension_id)) {
+                    continue;
+                }
+                $this->server_plugins[$extension_id] = $plugin;
             }
             return true;
         }
@@ -568,18 +640,37 @@ DELETE FROM ' . PLUGINS_TABLE . '
      */
     public function get_incompatible_plugins(bool $actualize = false): array|false
     {
-        if (isset($_SESSION['incompatible_plugins']) and ! $actualize
-          and $_SESSION['incompatible_plugins']['~~expire~~'] > time()) {
-            return $_SESSION['incompatible_plugins'];
+        // $_SESSION is a superglobal with no known value type, so PHPStan
+        // sees $_SESSION['incompatible_plugins'] as mixed; narrow it once
+        // here instead of re-reading the raw superglobal offset below.
+        $cached = $_SESSION['incompatible_plugins'] ?? null;
+        if (is_array($cached) and ! $actualize) {
+            $expire = $cached['~~expire~~'] ?? null;
+            if (is_int($expire) and $expire > time()) {
+                // The only writer of $_SESSION['incompatible_plugins'] is
+                // this method, always with a '~~expire~~' int key plus
+                // string-keyed $plugin_id => version entries (see below).
+                /** @var array<string, mixed> $cached */
+                return $cached;
+            }
         }
 
-        $_SESSION['incompatible_plugins'] = [
+        $incompatible_plugins = [
             '~~expire~~' => time() + 300,
         ];
+        $_SESSION['incompatible_plugins'] = $incompatible_plugins;
 
         $versions_to_check = $this->get_versions_to_check();
         if (empty($versions_to_check)) {
             return false;
+        }
+        // get_versions_to_check() returns mixed[] (see get_server_plugins()'s
+        // identical narrowing above).
+        $versions_to_check_strings = [];
+        foreach ($versions_to_check as $version_to_check) {
+            if (is_scalar($version_to_check)) {
+                $versions_to_check_strings[] = (string) $version_to_check;
+            }
         }
 
         global $conf;
@@ -587,8 +678,8 @@ DELETE FROM ' . PLUGINS_TABLE . '
         // Plugins to check
         $plugins_to_check = [];
         foreach ($this->fs_plugins as $fs_plugin) {
-            if (isset($fs_plugin['extension'])) {
-                $plugins_to_check[] = $fs_plugin['extension'];
+            if (isset($fs_plugin['extension']) and is_scalar($fs_plugin['extension'])) {
+                $plugins_to_check[] = (string) $fs_plugin['extension'];
             }
         }
 
@@ -597,7 +688,7 @@ DELETE FROM ' . PLUGINS_TABLE . '
         $get_data = [
             'category_id' => $conf['pem_plugins_category'],
             'format' => 'php',
-            'version' => implode(',', $versions_to_check),
+            'version' => implode(',', $versions_to_check_strings),
             'extension_include' => implode(',', $plugins_to_check),
         ];
 
@@ -611,21 +702,33 @@ DELETE FROM ' . PLUGINS_TABLE . '
 
             $server_plugins = [];
             foreach ($pem_plugins as $plugin) {
-                if (! isset($server_plugins[$plugin['extension_id']])) {
-                    $server_plugins[$plugin['extension_id']] = [];
+                if (! is_array($plugin) || ! isset($plugin['extension_id'])) {
+                    continue;
                 }
-                $server_plugins[$plugin['extension_id']][] = $plugin['revision_name'];
+                /** @var array<string, mixed> $plugin */
+                $extension_id = $plugin['extension_id'];
+                if (! is_string($extension_id) && ! is_int($extension_id)) {
+                    continue;
+                }
+                if (! isset($server_plugins[$extension_id])) {
+                    $server_plugins[$extension_id] = [];
+                }
+                $server_plugins[$extension_id][] = $plugin['revision_name'] ?? null;
             }
 
             foreach ($this->fs_plugins as $plugin_id => $fs_plugin) {
-                if (isset($fs_plugin['extension'])
-                  and ! in_array($plugin_id, $this->default_plugins)
+                $extension = $fs_plugin['extension'] ?? null;
+                if (! is_string($extension)) {
+                    continue;
+                }
+                if (! in_array($plugin_id, $this->default_plugins)
                   and $fs_plugin['version'] != 'auto'
-                  and (! isset($server_plugins[$fs_plugin['extension']]) or ! in_array($fs_plugin['version'], $server_plugins[$fs_plugin['extension']]))) {
-                    $_SESSION['incompatible_plugins'][$plugin_id] = $fs_plugin['version'];
+                  and (! isset($server_plugins[$extension]) or ! in_array($fs_plugin['version'], $server_plugins[$extension]))) {
+                    $incompatible_plugins[$plugin_id] = $fs_plugin['version'];
                 }
             }
-            return $_SESSION['incompatible_plugins'];
+            $_SESSION['incompatible_plugins'] = $incompatible_plugins;
+            return $incompatible_plugins;
         }
         return false;
     }
@@ -816,7 +919,14 @@ DELETE FROM ' . PLUGINS_TABLE . '
      */
     public function extension_name_compare(array $a, array $b): int
     {
-        return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
+        // 'extension_name' comes from an untyped unserialize() of a remote
+        // PEM payload (see get_server_plugins()); only cast scalars actually
+        // safe to stringify, treat anything else as empty for comparison.
+        $a_name = $a['extension_name'] ?? null;
+        $b_name = $b['extension_name'] ?? null;
+        $a_name = is_scalar($a_name) ? (string) $a_name : '';
+        $b_name = is_scalar($b_name) ? (string) $b_name : '';
+        return strcmp(strtolower($a_name), strtolower($b_name));
     }
 
     /**
@@ -825,7 +935,12 @@ DELETE FROM ' . PLUGINS_TABLE . '
      */
     public function extension_author_compare(array $a, array $b): int
     {
-        $r = strcasecmp((string) $a['author_name'], (string) $b['author_name']);
+        // see extension_name_compare()'s comment on 'extension_name'
+        $a_author = $a['author_name'] ?? null;
+        $b_author = $b['author_name'] ?? null;
+        $a_author = is_scalar($a_author) ? (string) $a_author : '';
+        $b_author = is_scalar($b_author) ? (string) $b_author : '';
+        $r = strcasecmp($a_author, $b_author);
         if ($r == 0) {
             return $this->extension_name_compare($a, $b);
         } else {
@@ -839,7 +954,12 @@ DELETE FROM ' . PLUGINS_TABLE . '
      */
     public function plugin_author_compare(array $a, array $b): int
     {
-        $r = strcasecmp((string) $a['author'], (string) $b['author']);
+        // see extension_name_compare()'s comment on 'extension_name'
+        $a_author = $a['author'] ?? null;
+        $b_author = $b['author'] ?? null;
+        $a_author = is_scalar($a_author) ? (string) $a_author : '';
+        $b_author = is_scalar($b_author) ? (string) $b_author : '';
+        $r = strcasecmp($a_author, $b_author);
         if ($r == 0) {
             return name_compare($a, $b);
         } else {

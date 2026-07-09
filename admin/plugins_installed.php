@@ -71,11 +71,22 @@ $plugin_menu_links_deprec = trigger_change('get_admin_plugin_menu_links', []);
 
 $settings_url_for_plugin_deprec = [];
 
-foreach ($plugin_menu_links_deprec as $value) {
-    if (preg_match('/^admin\.php\?page=plugin-(.*)$/', (string) $value['URL'], $matches)) {
-        $settings_url_for_plugin_deprec[$matches[1]] = $value['URL'];
-    } elseif (preg_match('/^.*section=(.*?)[\/&%].*$/', (string) $value['URL'], $matches)) {
-        $settings_url_for_plugin_deprec[$matches[1]] = $value['URL'];
+// trigger_change() is declared to return mixed (it echoes back whatever
+// registered handlers return); narrow it to an iterable of arrays here
+// before reading each item's 'URL' entry.
+if (is_array($plugin_menu_links_deprec)) {
+    foreach ($plugin_menu_links_deprec as $value) {
+        if (! is_array($value) || ! isset($value['URL']) || ! is_string($value['URL'])) {
+            continue;
+        }
+
+        $menu_link_url = $value['URL'];
+
+        if (preg_match('/^admin\.php\?page=plugin-(.*)$/', $menu_link_url, $matches)) {
+            $settings_url_for_plugin_deprec[$matches[1]] = $menu_link_url;
+        } elseif (preg_match('/^.*section=(.*?)[\/&%].*$/', $menu_link_url, $matches)) {
+            $settings_url_for_plugin_deprec[$matches[1]] = $menu_link_url;
+        }
     }
 }
 
@@ -95,8 +106,13 @@ $count_types_plugins = [
 ];
 
 foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
-    if (isset($_SESSION['incompatible_plugins'][$plugin_id])
-      and $fs_plugin['version'] != $_SESSION['incompatible_plugins'][$plugin_id]) {
+    // $_SESSION is a superglobal with no known value type, so PHPStan
+    // sees $_SESSION['incompatible_plugins'] as mixed; narrow it once here
+    // (same pattern as plugins.class.php's get_incompatible_plugins()).
+    $incompatible_plugins_session = $_SESSION['incompatible_plugins'] ?? null;
+    if (is_array($incompatible_plugins_session)
+      and isset($incompatible_plugins_session[$plugin_id])
+      and $fs_plugin['version'] != $incompatible_plugins_session[$plugin_id]) {
         // Incompatible plugins must be reinitilized
         unset($_SESSION['incompatible_plugins']);
     }
@@ -116,7 +132,12 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
         'http://piwigo.org/ext',
         'https://piwigo.org/ext',
     ];
-    $visit_url = str_replace($url_to_replace, PEM_URL, $fs_plugin['uri']);
+    // fs_plugins is declared with a loose array<string, mixed> value type,
+    // but get_fs_plugin() (the only writer) always stores a real string
+    // under 'uri' (defaults to '', overwritten by a regex-extracted URI).
+    $fs_plugin_uri = $fs_plugin['uri'] ?? '';
+    $fs_plugin_uri = is_string($fs_plugin_uri) ? $fs_plugin_uri : '';
+    $visit_url = str_replace($url_to_replace, PEM_URL, $fs_plugin_uri);
 
     $tpl_plugin = [
         'ID' => $plugin_id,
@@ -131,22 +152,26 @@ foreach ($plugins->fs_plugins as $plugin_id => $fs_plugin) {
     ];
 
     if (isset($plugins->db_plugins_by_id[$plugin_id])) {
-        $tpl_plugin['STATE'] = $plugins->db_plugins_by_id[$plugin_id]['state'];
+        $db_plugin_state = $plugins->db_plugins_by_id[$plugin_id]['state'] ?? null;
+        $plugin_state = is_string($db_plugin_state) ? $db_plugin_state : 'inactive';
     } else {
-        $tpl_plugin['STATE'] = 'inactive';
+        $plugin_state = 'inactive';
     }
+    $tpl_plugin['STATE'] = $plugin_state;
 
-    if (isset($fs_plugin['extension']) and isset($merged_extensions[$fs_plugin['extension']])) {
+    $fs_plugin_extension = $fs_plugin['extension'] ?? null;
+    if (is_string($fs_plugin_extension) and isset($merged_extensions[$fs_plugin_extension])) {
         // Deactivate manually plugin from database
         $query = 'UPDATE ' . PLUGINS_TABLE . ' SET state=\'inactive\' WHERE id=\'' . $plugin_id . '\'';
         pwg_query($query);
 
-        $tpl_plugin['STATE'] = 'merged';
+        $plugin_state = 'merged';
+        $tpl_plugin['STATE'] = $plugin_state;
         $tpl_plugin['DESC'] = l10n('THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW.');
         $merged_plugins = true;
     }
 
-    $count_types_plugins[$tpl_plugin['STATE']]++;
+    $count_types_plugins[$plugin_state]++;
 
     $tpl_plugins[] = $tpl_plugin;
 }
@@ -192,10 +217,20 @@ function cmp(array $a, array $b): int|bool
         'inactive' => 3,
     ];
 
-    if ($a['STATE'] == $b['STATE']) {
-        return strcasecmp((string) $a['NAME'], (string) $b['NAME']);
+    $a_state = $a['STATE'] ?? null;
+    $a_state = is_string($a_state) ? $a_state : '';
+    $b_state = $b['STATE'] ?? null;
+    $b_state = is_string($b_state) ? $b_state : '';
+
+    if ($a_state === $b_state) {
+        $a_name = $a['NAME'] ?? null;
+        $a_name = is_scalar($a_name) ? (string) $a_name : '';
+        $b_name = $b['NAME'] ?? null;
+        $b_name = is_scalar($b_name) ? (string) $b_name : '';
+
+        return strcasecmp($a_name, $b_name);
     } else {
-        return $s[$a['STATE']] >= $s[$b['STATE']];
+        return ($s[$a_state] ?? 0) >= ($s[$b_state] ?? 0);
     }
 }
 

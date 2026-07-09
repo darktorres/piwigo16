@@ -130,6 +130,7 @@ function initialize_menu(): void
     // ------------------------------------------------------------------------ tags
     $block = $menu->get_block('mbTags');
     if ($block != null and script_basename() != 'picture') {
+        $block->data = [];
         $tags = get_available_tags();
         usort($tags, tags_counter_compare(...));
         $tags = array_slice($tags, 0, $conf['menubar_tag_cloud_items_number']);
@@ -151,6 +152,7 @@ function initialize_menu(): void
 
     // ----------------------------------------------------------- special categories
     if (($block = $menu->get_block('mbSpecials')) != null) {
+        $block->data = [];
         if (! is_a_guest()) {// favorites
             $block->data['favorites'] =
               [
@@ -227,6 +229,7 @@ function initialize_menu(): void
 
     // ---------------------------------------------------------------------- summary
     if (($block = $menu->get_block('mbMenu')) != null) {
+        $block->data = [];
         // quick search block will be displayed only if data['qsearch'] is set
         // to "yes"
         $block->data['qsearch'] = true;

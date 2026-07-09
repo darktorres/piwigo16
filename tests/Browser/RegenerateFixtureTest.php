@@ -100,16 +100,24 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             'password' => self::ADMIN_PASS,
         ]);
         self::assertSame('ok', $login['stat'], 'fixture_admin login must succeed');
-        $pwgToken = (string) $this->callWs('pwg.session.getStatus', [])['result']['pwg_token'];
+        $statusResult = $this->callWs('pwg.session.getStatus', [])['result'];
+        self::assertIsArray($statusResult, 'pwg.session.getStatus result must be an array');
+        $pwgTokenValue = $statusResult['pwg_token'];
+        self::assertIsString($pwgTokenValue, 'pwg.session.getStatus result must include a string pwg_token');
+        $pwgToken = $pwgTokenValue;
 
         // 4. Two albums: one root, one nested sub-album.
-        $rootAlbumId = (int) $this->callWs('pwg.categories.add', ['name' => 'Sample Album'])['result']['id'];
+        $rootAlbumResult = $this->callWs('pwg.categories.add', ['name' => 'Sample Album'])['result'];
+        self::assertIsArray($rootAlbumResult, 'pwg.categories.add result must be an array');
+        $rootAlbumId = self::idFromWsValue($rootAlbumResult['id'], 'pwg.categories.add');
         $subAlbum    = $this->callWs('pwg.categories.add', [
             'name'   => 'Nested Sub Album',
             'parent' => (string) $rootAlbumId,
         ]);
         self::assertSame('ok', $subAlbum['stat']);
-        $subAlbumId = (int) $subAlbum['result']['id'];
+        $subAlbumResult = $subAlbum['result'];
+        self::assertIsArray($subAlbumResult, 'pwg.categories.add result must be an array');
+        $subAlbumId = self::idFromWsValue($subAlbumResult['id'], 'pwg.categories.add');
 
         // 5. Five photos, generated via GD (solid color + label), uploaded
         // through the real pwg.images.addSimple pipeline.
@@ -151,7 +159,9 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         foreach (['nature', 'travel', 'family'] as $name) {
             $res = $this->callWs('pwg.tags.add', ['name' => $name, 'pwg_token' => $pwgToken]);
             self::assertSame('ok', $res['stat'], "tag $name should be created");
-            $tagIds[] = (int) $res['result']['id'];
+            $tagAddResult = $res['result'];
+            self::assertIsArray($tagAddResult, 'pwg.tags.add result must be an array');
+            $tagIds[] = self::idFromWsValue($tagAddResult['id'], 'pwg.tags.add');
         }
         $db = $this->newMysqli($this->dbName);
         $db->query(sprintf(
@@ -173,7 +183,13 @@ final class RegenerateFixtureTest extends IntegrationTestCase
                 'pwg_token' => $pwgToken,
             ]);
             self::assertSame('ok', $res['stat'], "user $username should be created");
-            $userIds[$username] = (int) $res['result']['users'][0]['id'];
+            $userAddResult = $res['result'];
+            self::assertIsArray($userAddResult, 'pwg.users.add result must be an array');
+            $addedUsers = $userAddResult['users'];
+            self::assertIsArray($addedUsers, 'pwg.users.add result must include a users list');
+            $firstAddedUser = $addedUsers[0];
+            self::assertIsArray($firstAddedUser, 'pwg.users.add users[0] must be an array');
+            $userIds[$username] = self::idFromWsValue($firstAddedUser['id'], 'pwg.users.add');
         }
 
         // 8. Five comments across different users/photos (1 unvalidated).
@@ -206,7 +222,13 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         foreach (['Editors', 'Reviewers', 'Guests'] as $name) {
             $res = $this->callWs('pwg.groups.add', ['name' => $name, 'pwg_token' => $pwgToken]);
             self::assertSame('ok', $res['stat'], "group $name should be created");
-            $groupIds[] = (int) $res['result']['groups'][0]['id'];
+            $groupAddResult = $res['result'];
+            self::assertIsArray($groupAddResult, 'pwg.groups.add result must be an array');
+            $addedGroups = $groupAddResult['groups'];
+            self::assertIsArray($addedGroups, 'pwg.groups.add result must include a groups list');
+            $firstAddedGroup = $addedGroups[0];
+            self::assertIsArray($firstAddedGroup, 'pwg.groups.add groups[0] must be an array');
+            $groupIds[] = self::idFromWsValue($firstAddedGroup['id'], 'pwg.groups.add');
         }
         $db->query(sprintf(
             'INSERT INTO %suser_group (user_id, group_id) VALUES (1,%d),(%d,%d),(%d,%d),(%d,%d)',
@@ -405,7 +427,38 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // uploaded.
         $this->callWs('pwg.images.emptyLounge', []);
 
-        return (int) $decoded['result']['image_id'];
+        $uploadResult = $decoded['result'];
+        self::assertIsArray($uploadResult, 'photo upload result must be an array');
+
+        return self::idFromWsValue($uploadResult['image_id'], 'pwg.images.addSimple');
+    }
+
+    /**
+     * Narrows a WS response id field down to a real int. Piwigo's WS layer
+     * surfaces ids in two different but equally real shapes depending on
+     * the call: pwg_db_insert_id()'s own return type is int|string (see
+     * create_virtual_category()/create_tag(), backing pwg.categories.add/
+     * pwg.tags.add, and ws_images_addSimple()'s own declared return shape
+     * of PwgError or array{image_id: int|string, url: string}), while ids
+     * that come back through a getList-style response (pwg.groups.add ->
+     * pwg.groups.getList, pwg.users.add -> pwg.users.getList) are either
+     * intval()'d server-side (real int) or, for pwg.groups.add, surfaced
+     * verbatim from a raw DB row (numeric string, per this codebase's DB
+     * layer invariant that every column value is string|null). Either way,
+     * a WS JSON id is always an int or a numeric string, never anything
+     * else.
+     */
+    private static function idFromWsValue(mixed $value, string $context): int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_string($value) && is_numeric($value)) {
+            return (int) $value;
+        }
+
+        self::fail(sprintf('%s result id must be an int or a numeric string, got %s', $context, get_debug_type($value)));
     }
 
     /**

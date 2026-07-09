@@ -12,11 +12,13 @@ declare(strict_types=1);
 /**
  * API method
  * Returns a list of missing derivatives (not generated yet)
- * @param mixed[] $params
- *    @option string types (optional)
- *    @option int[] ids
- *    @option int max_urls
- *    @option int prev_page (optional)
+ * @param array{types: array<int, string>, ids: array<int, int>, max_urls: int, prev_page: int|null, f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
+ *    types/ids: WS_PARAM_FORCE_ARRAY, null default -- never null
+ *    (makeArrayParam() converts to []). max_urls: WS_TYPE_INT|POSITIVE,
+ *    default 200 (non-null) -- always int. prev_page: WS_TYPE_INT|
+ *    POSITIVE, null default -- int|null. f_* (see
+ *    ws_std_image_sql_filter()'s docblock): shared filter set merged in
+ *    via ws.php's $f_params.
  * @return \PwgError|array{next_page?: int|string, urls?: string[]}
  */
 function ws_getMissingDerivatives(array $params, PwgServer &$service): \PwgError|array
@@ -37,6 +39,11 @@ function ws_getMissingDerivatives(array $params, PwgServer &$service): \PwgError
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$max_id, $image_count] = $row;
+    // COUNT(*) is always numeric; MAX(id)+1 is numeric whenever rows
+    // exist, which the $image_count == 0 early return below guarantees
+    // for every later use of $max_id.
+    $image_count = is_numeric($image_count) ? (int) $image_count : 0;
+    $max_id = is_numeric($max_id) ? (int) $max_id : 0;
 
     if ($image_count == 0) {
         return [];
@@ -70,11 +77,11 @@ SELECT id, path, representative_ext, width, height, rotation
 
     $urls = [];
     do {
-        $result = pwg_query(str_replace('start_id', $start_id, $query_model));
+        $result = pwg_query(str_replace('start_id', (string) $start_id, $query_model));
         $is_last = pwg_db_num_rows($result) < $qlimit;
 
         while ($row = pwg_db_fetch_assoc($result)) {
-            $start_id = $row['id'];
+            $start_id = is_numeric($row['id']) ? (int) $row['id'] : 0;
             $src_image = new SrcImage($row);
             if ($src_image->is_mimetype()) {
                 continue;
@@ -280,8 +287,9 @@ function ws_getCacheSize($params, PwgServer &$service): array
 /**
  * API method
  * Adds images to the caddie
- * @param mixed[] $params
- *    @option int[] image_id
+ * @param array{image_id: array<int, int>, ...} $params image_id:
+ *    WS_PARAM_FORCE_ARRAY|WS_TYPE_ID, mandatory (no 'default') -- always
+ *    a list of positive ints.
  */
 function ws_caddie_add(array $params, PwgServer &$service): int
 {
@@ -317,9 +325,10 @@ SELECT id
 /**
  * API method
  * Deletes rates of an user
- * @param mixed[] $params
- *    @option int user_id
- *    @option string anonymous_id (optional)
+ * @param array{user_id: int, anonymous_id: string|null, image_id?: int, ...} $params
+ *    user_id: WS_TYPE_ID, mandatory -- always int. anonymous_id: no
+ *    WS_TYPE flag, null default -- string|null. image_id:
+ *    WS_PARAM_OPTIONAL with no 'default' -- may be entirely absent.
  */
 function ws_rates_delete(array $params, PwgServer &$service): int|string
 {
@@ -345,9 +354,9 @@ DELETE FROM ' . RATE_TABLE . '
 /**
  * API method
  * Performs a login
- * @param mixed[] $params
- *    @option string username
- *    @option string password
+ * @param array{username: string, password: string|null, ...} $params
+ *    username: no WS_TYPE flag, mandatory -- always a plain string.
+ *    password: no WS_TYPE flag, null default -- string|null.
  */
 function ws_session_login(array $params, PwgServer &$service): \PwgError|true
 {
@@ -412,14 +421,15 @@ function ws_session_getStatus($params, PwgServer &$service): array
     $res['connected_with'] = $_SESSION['connected_with'] ?? null;
 
     // Piwigo Remote Sync does not support receiving the new (version 14) output "save_visits"
-    if (isset($_SERVER['HTTP_USER_AGENT']) and preg_match('/^PiwigoRemoteSync/', (string) $_SERVER['HTTP_USER_AGENT'])) {
+    $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+    if (is_string($http_user_agent) and preg_match('/^PiwigoRemoteSync/', $http_user_agent)) {
         unset($res['save_visits']);
         unset($res['connected_with']);
     }
 
     // Piwigo Remote Sync does not support receiving the available sizes
     $piwigo_remote_sync_agent = 'Apache-HttpClient/';
-    if (! isset($_SERVER['HTTP_USER_AGENT']) or ! str_starts_with((string) $_SERVER['HTTP_USER_AGENT'], $piwigo_remote_sync_agent)) {
+    if (! is_string($http_user_agent) or ! str_starts_with($http_user_agent, $piwigo_remote_sync_agent)) {
         $res['available_sizes'] = array_keys(ImageStdParams::get_defined_type_map());
     }
 
@@ -444,7 +454,11 @@ function ws_session_getStatus($params, PwgServer &$service): array
  * API method
  * Returns lines of users activity
  *  @since 12
- * @param array<string, mixed> $param
+ * @param array{page: int|null, offset: int, uid: int|null, date_min: string|null, date_max: string|null, id: int|null, object: string|null, action: string|null, ...} $param
+ *    page/uid/id: WS_TYPE_INT|POSITIVE or WS_TYPE_ID, null default ->
+ *    int|null. offset: WS_TYPE_INT|POSITIVE, default 0 (non-null) ->
+ *    always int. date_min/date_max/object/action: no WS_TYPE flag, null
+ *    default -> string|null.
  * @return \PwgError|array{result_lines: array<int, array<string, mixed>>, page_offset: int, end_page: bool, params: array<string, mixed>}
  */
 function ws_getActivityList(array $param, PwgServer &$service): \PwgError|array
@@ -479,10 +493,10 @@ function ws_getActivityList(array $param, PwgServer &$service): \PwgError|array
         assert($min_date !== false);
         $min = date_format($min_date, 'Y-m-d H:i:s');
 
-        // date_max may be empty/unvalidated here — date_create() only
-        // returns false on a genuinely malformed string, never on ''
-        // (which means "now")
-        $max_date = date_create($param['date_max']);
+        // date_max may be empty/unvalidated/absent here — date_create()
+        // only returns false on a genuinely malformed string, never on ''
+        // (which means "now"), so a missing date_max is coalesced to ''
+        $max_date = date_create($param['date_max'] ?? '');
         assert($max_date !== false);
         $max = date_format($max_date, 'Y-m-d 23:59:59');
     }
@@ -568,12 +582,22 @@ SELECT
 
                 if ($line_key === $current_key) {
                     // I increment the counter of the previous line
-                    $output_lines[count($output_lines) - 1]['counter']++;
-                    $output_lines[count($output_lines) - 1]['object_id'][] = $row['object_id'];
+                    $last_idx = count($output_lines) - 1;
+                    $prev_counter = $output_lines[$last_idx]['counter'];
+                    $output_lines[$last_idx]['counter'] = (is_int($prev_counter) ? $prev_counter : 0) + 1;
+
+                    $prev_object_ids = $output_lines[$last_idx]['object_id'];
+                    if (is_array($prev_object_ids)) {
+                        $prev_object_ids[] = $row['object_id'];
+                        $output_lines[$last_idx]['object_id'] = $prev_object_ids;
+                    }
                 } else {
                     $row['details'] = str_replace('`groups`', 'groups', (string) $row['details']);
                     $row['details'] = str_replace('`rank`', 'rank', $row['details']);
                     $details = @unserialize($row['details']);
+                    if (! is_array($details)) {
+                        $details = [];
+                    }
                     $detailsType = null;
 
                     if (isset($row['user_agent'])) {
@@ -604,8 +628,10 @@ SELECT
                         'counter' => 1,
                     ];
 
-                    $user_ids[$row['performed_by']] = 1;
-                    if ($row['object'] == 'user') {
+                    if ($row['performed_by'] !== null) {
+                        $user_ids[$row['performed_by']] = 1;
+                    }
+                    if ($row['object'] == 'user' and $row['object_id'] !== null) {
                         $user_ids[$row['object_id']] = 1;
                     }
 
@@ -633,19 +659,39 @@ SELECT
     }
 
     foreach ($output_lines as $idx => $output_line) {
-        if ($output_line['object'] == 'user') {
+        if ($output_line['object'] == 'user' and is_array($output_line['object_id'])) {
             foreach ($output_line['object_id'] as $user_id) {
-                @$output_lines[$idx]['details']['users'][] = $username_of[$user_id] ?? 'user#' . $user_id;
+                if (! is_string($user_id) and ! is_int($user_id)) {
+                    continue;
+                }
+
+                $details = $output_lines[$idx]['details'];
+                if (! is_array($details)) {
+                    $details = [];
+                }
+
+                $users = $details['users'] ?? [];
+                if (! is_array($users)) {
+                    $users = [];
+                }
+
+                $users[] = $username_of[$user_id] ?? 'user#' . $user_id;
+                $details['users'] = $users;
+                $output_lines[$idx]['details'] = $details;
             }
 
-            if (isset($output_lines[$idx]['details']['users'])) {
-                $output_lines[$idx]['details']['users_string'] = implode(', ', $output_lines[$idx]['details']['users']);
+            $details = $output_lines[$idx]['details'];
+            if (is_array($details) and isset($details['users']) and is_array($details['users'])) {
+                $details['users_string'] = implode(', ', array_filter($details['users'], 'is_string'));
+                $output_lines[$idx]['details'] = $details;
             }
         }
 
-        $output_lines[$idx]['username'] = 'user#' . $output_lines[$idx]['user_id'];
-        if (isset($username_of[$output_lines[$idx]['user_id']])) {
-            $output_lines[$idx]['username'] = $username_of[$output_lines[$idx]['user_id']];
+        $user_id_val = $output_lines[$idx]['user_id'];
+        $user_id_key = is_string($user_id_val) || is_int($user_id_val) ? $user_id_val : '';
+        $output_lines[$idx]['username'] = 'user#' . $user_id_key;
+        if (isset($username_of[$user_id_key])) {
+            $output_lines[$idx]['username'] = $username_of[$user_id_key];
         }
     }
 
@@ -661,7 +707,11 @@ SELECT
  * API method
  * Log a new line in visit history
  * @since 13
- * @param array<string, mixed> $params
+ * @param array{image_id: int, cat_id: int|null, section: string|null, tags_string: string|null, is_download: bool, ...} $params
+ *    image_id: WS_TYPE_ID, mandatory -- always int. cat_id: WS_TYPE_ID,
+ *    null default -- int|null. section/tags_string: no WS_TYPE flag,
+ *    null default -- string|null. is_download: WS_TYPE_BOOL, default
+ *    false (non-null) -- always bool.
  */
 function ws_history_log(array $params, PwgServer &$service): void
 {
@@ -700,7 +750,15 @@ function ws_history_log(array $params, PwgServer &$service): void
  * API method
  * Returns lines of an history search
  * @since 13
- * @param array<string, mixed> $param
+ * @param array{start: string|null, end: string|null, types: array<int, string>, user_id: int|string, image_id: int|null, filename: string|null, ip: string|null, display_thumbnail: string, pageNumber: int|null, ...} $param
+ *    start/end/filename/ip: no WS_TYPE flag, null default -- string|null.
+ *    types: WS_PARAM_FORCE_ARRAY, non-null array default, no WS_TYPE flag
+ *    -- always an array (never coerced element-wise). user_id: no
+ *    WS_TYPE flag, non-null int default (-1) -- int if the default is
+ *    used, otherwise the raw uncoerced request string. image_id:
+ *    WS_TYPE_ID, null default -- int|null. display_thumbnail: no
+ *    WS_TYPE flag, non-null string default -- always string.
+ *    pageNumber: WS_TYPE_INT|POSITIVE, null default -- int|null.
  * @return array<string, mixed>
  */
 function ws_history_search(array $param, PwgServer &$service): array
@@ -821,11 +879,27 @@ SELECT rules
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$serialized_rules] = $row;
+    // this row is the one we just INSERTed above (via $search_id =
+    // pwg_db_insert_id()) with a serialize() call we made ourselves, so
+    // the 'rules' column is guaranteed to be a non-null string here.
+    assert(is_string($serialized_rules));
 
     $page['search'] = unserialize($serialized_rules);
 
     /* TODO - no need to get a huge number of rows from db (should take only what needed for display + SQL_CALC_FOUND_ROWS */
+    // trigger_change()'s return type is genuinely mixed (it dispatches
+    // to whatever handler is registered for 'get_history'); narrow to the
+    // list of row-arrays that get_history() actually returns.
     $data = trigger_change('get_history', [], $page['search'], $types);
+    if (! is_array($data)) {
+        $data = [];
+    }
+    // get_history() (the only real handler for the 'get_history' event, per
+    // admin/include/functions_history.inc.php) returns array<int,
+    // array<string, mixed>>; the trigger_change() dispatch above only
+    // proved each element is an array, not that its keys are strings.
+    /** @var array<int, array<string, mixed>> $data */
+    $data = array_values(array_filter($data, is_array(...)));
     usort($data, history_compare(...));
 
     $page['nb_lines'] = count($data);
@@ -839,14 +913,19 @@ SELECT rules
     $has_tags = false;
     $search_ids = [];
 
+    // get_history() (the real 'get_history' handler) builds each $row via
+    // pwg_db_fetch_assoc(), so every field here is really string|null.
     foreach ($data as $row) {
-        $user_ids[$row['user_id']] = 1;
+        $row_user_id = $row['user_id'] ?? null;
+        if (is_string($row_user_id)) {
+            $user_ids[$row_user_id] = 1;
+        }
 
-        if (isset($row['category_id'])) {
+        if (isset($row['category_id']) and is_string($row['category_id'])) {
             array_push($category_ids, $row['category_id']);
         }
 
-        if (isset($row['image_id'])) {
+        if (isset($row['image_id']) and is_string($row['image_id'])) {
             $image_ids[$row['image_id']] = 1;
         }
 
@@ -854,7 +933,7 @@ SELECT rules
             $has_tags = true;
         }
 
-        if (isset($row['search_id'])) {
+        if (isset($row['search_id']) and is_string($row['search_id'])) {
             array_push($search_ids, $row['search_id']);
         }
 
@@ -872,19 +951,36 @@ SELECT
 ;';
         $search_details = query2array($query, 'id', 'rules');
 
-        foreach ($search_details as $id_search => $rules_search) {
-            $rules_search = safe_unserialize($rules_search)['fields'];
-            if (! empty($rules_search['tags']['words'])) {
+        foreach ($search_details as $id_search => $rules_search_raw) {
+            if (! is_string($rules_search_raw)) {
+                continue;
+            }
+
+            $unserialized = safe_unserialize($rules_search_raw);
+            $rules_search = is_array($unserialized) && isset($unserialized['fields']) && is_array($unserialized['fields'])
+                ? $unserialized['fields']
+                : [];
+
+            $rules_tags = is_array($rules_search['tags'] ?? null) ? $rules_search['tags'] : [];
+            if (! empty($rules_tags['words'])) {
                 $has_tags = true;
             }
 
-            if (! empty($rules_search['cat']['words'])) {
-                $category_ids = array_merge($category_ids, $rules_search['cat']['words']);
+            $rules_cat = is_array($rules_search['cat'] ?? null) ? $rules_search['cat'] : [];
+            if (! empty($rules_cat['words']) and is_array($rules_cat['words'])) {
+                foreach ($rules_cat['words'] as $cat_id) {
+                    if (is_string($cat_id) || is_int($cat_id)) {
+                        $category_ids[] = (string) $cat_id;
+                    }
+                }
             }
 
-            if (! empty($rules_search['added_by'])) {
-                foreach ($rules_search['added_by'] as $key) {
-                    $user_ids[$key] = 1;
+            $rules_added_by = $rules_search['added_by'] ?? null;
+            if (! empty($rules_added_by) and is_array($rules_added_by)) {
+                foreach ($rules_added_by as $key) {
+                    if (is_string($key) || is_int($key)) {
+                        $user_ids[$key] = 1;
+                    }
                 }
             }
 
@@ -903,6 +999,9 @@ SELECT ' . $conf['user_fields']['id'] . ' AS id
 
         $username_of = [];
         while ($row = pwg_db_fetch_assoc($result)) {
+            if ($row['id'] === null) {
+                continue;
+            }
             $username_of[$row['id']] = stripslashes((string) $row['username']);
         }
     }
@@ -912,13 +1011,17 @@ SELECT ' . $conf['user_fields']['id'] . ' AS id
         $query = '
 SELECT id, uppercats
   FROM ' . CATEGORIES_TABLE . '
-  WHERE id IN (' . implode(',', array_values($category_ids)) . ')
+  WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
         $uppercats_of = query2array($query, 'id', 'uppercats');
 
         $full_cat_path = [];
 
         foreach ($uppercats_of as $category_id => $uppercats) {
+            if ($uppercats === null) {
+                continue;
+            }
+
             $full_cat_path[$category_id] = get_cat_display_name_cache(
                 $uppercats,
                 'admin.php?page=album-'
@@ -959,6 +1062,9 @@ SELECT
 
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
+            if ($row['id'] === null) {
+                continue;
+            }
             $name_of_tag[$row['id']] = trigger_change('render_tag_name', $row['name'], $row);
         }
     }
@@ -974,16 +1080,40 @@ SELECT
     $sorted_members = [];
 
     foreach ($history_lines as $line) {
-        if (isset($line['image_type']) and $line['image_type'] == 'high') {
-            $summary['total_filesize'] += @intval($image_infos[$line['image_id']]['filesize']);
+        // every field of $line comes straight from get_history()'s
+        // pwg_db_fetch_assoc() rows, so it is really string|null.
+        $line_image_type = $line['image_type'] ?? null;
+        $line_image_type = is_string($line_image_type) ? $line_image_type : null;
+        $line_image_id = $line['image_id'] ?? null;
+        $line_image_id = is_string($line_image_id) ? $line_image_id : null;
+        $line_user_id = $line['user_id'] ?? null;
+        $line_user_id = is_string($line_user_id) ? $line_user_id : null;
+        $line_ip = $line['IP'] ?? null;
+        $line_ip = is_string($line_ip) ? $line_ip : null;
+        $line_tag_ids = $line['tag_ids'] ?? null;
+        $line_tag_ids = is_string($line_tag_ids) ? $line_tag_ids : null;
+        $line_search_id = $line['search_id'] ?? null;
+        $line_search_id = is_string($line_search_id) ? $line_search_id : null;
+        $line_date = $line['date'] ?? null;
+        $line_date = is_string($line_date) ? $line_date : null;
+        $line_time = $line['time'] ?? null;
+        $line_time = is_string($line_time) ? $line_time : null;
+        $line_section = $line['section'] ?? null;
+        $line_section = is_string($line_section) ? $line_section : null;
+        $line_category_id = $line['category_id'] ?? null;
+        $line_category_id = is_string($line_category_id) ? $line_category_id : null;
+
+        if ($line_image_type === 'high' and $line_image_id !== null) {
+            $summary['total_filesize'] += @intval($image_infos[$line_image_id]['filesize'] ?? null);
         }
 
-        if ($line['user_id'] == $conf['guest_id']) {
-            if (! isset($summary['guests_IP'][$line['IP']])) {
-                $summary['guests_IP'][$line['IP']] = 0;
+        if ($line_user_id == $conf['guest_id']) {
+            $ip_key = $line_ip ?? '';
+            if (! isset($summary['guests_IP'][$ip_key])) {
+                $summary['guests_IP'][$ip_key] = 0;
             }
 
-            $summary['guests_IP'][$line['IP']]++;
+            $summary['guests_IP'][$ip_key]++;
         }
 
         $i++;
@@ -994,27 +1124,35 @@ SELECT
 
         $user_name = '#unknown';
         $user_string = '';
-        if (isset($username_of[$line['user_id']])) {
-            $user_name = $username_of[$line['user_id']];
-            $user_string .= $username_of[$line['user_id']];
+        $user_id_key = $line_user_id ?? '';
+        if (isset($username_of[$user_id_key])) {
+            $user_name = $username_of[$user_id_key];
+            $user_string .= $username_of[$user_id_key];
         } else {
-            $user_string .= $line['user_id'];
+            $user_string .= $user_id_key;
         }
         $user_string .= '&nbsp;<a href="';
         $user_string .= PHPWG_ROOT_PATH . 'admin.php?page=history';
         $user_string .= '&amp;search_id=' . $search_id;
-        $user_string .= '&amp;user_id=' . $line['user_id'];
+        $user_string .= '&amp;user_id=' . $user_id_key;
         $user_string .= '">+</a>';
 
         $tag_names = '';
         $tag_ids = '';
-        if (isset($line['tag_ids'])) {
+        if ($line_tag_ids !== null) {
             $tag_names = preg_replace_callback(
                 '/(\d+)/',
-                fn ($m): mixed => $name_of_tag[$m[1]] ?? $m[1],
-                (string) $line['tag_ids']
+                /**
+                 * @param array<int, string> $m
+                 */
+                function (array $m) use ($name_of_tag): string {
+                    $tag_id = $m[1];
+                    $found = $name_of_tag[$tag_id] ?? $tag_id;
+                    return is_string($found) ? $found : $tag_id;
+                },
+                $line_tag_ids
             );
-            $tag_ids = $line['tag_ids'];
+            $tag_ids = $line_tag_ids;
         }
 
         $image_string = '';
@@ -1022,21 +1160,21 @@ SELECT
         $image_edit_string = '';
         $image_id = '';
         $cat_name = '';
-        if (isset($line['image_id'])) {
-            $image_edit_string = PHPWG_ROOT_PATH . 'admin.php?page=photo-' . $line['image_id'];
+        if ($line_image_id !== null) {
+            $image_edit_string = PHPWG_ROOT_PATH . 'admin.php?page=photo-' . $line_image_id;
             $picture_url = make_picture_url(
                 [
-                    'image_id' => $line['image_id'],
+                    'image_id' => $line_image_id,
                 ]
             );
 
             $element = [];
-            if (isset($image_infos[$line['image_id']])) {
+            if (isset($image_infos[$line_image_id])) {
                 $element = [
-                    'id' => $line['image_id'],
-                    'file' => $image_infos[$line['image_id']]['file'],
-                    'path' => $image_infos[$line['image_id']]['path'],
-                    'representative_ext' => $image_infos[$line['image_id']]['representative_ext'],
+                    'id' => $line_image_id,
+                    'file' => $image_infos[$line_image_id]['file'],
+                    'path' => $image_infos[$line_image_id]['path'],
+                    'representative_ext' => $image_infos[$line_image_id]['representative_ext'],
                 ];
                 $thumbnail_display = $page['search']['fields']['display_thumbnail'];
             } else {
@@ -1045,30 +1183,31 @@ SELECT
 
             $image_title = '';
 
-            if (isset($image_infos[$line['image_id']]['label'])) {
-                $image_title .= ' ' . trigger_change('render_element_description', $image_infos[$line['image_id']]['label']);
+            if (isset($image_infos[$line_image_id]['label'])) {
+                $rendered_label = trigger_change('render_element_description', $image_infos[$line_image_id]['label']);
+                $image_title .= ' ' . (is_string($rendered_label) ? $rendered_label : '');
             } else {
                 $image_edit_string = '';
                 $image_title .= ' unknown filename';
             }
 
             $image_string = '';
-            $image_id = $line['image_id'];
+            $image_id = $line_image_id;
 
             $image_string =
             '<span><img src="' . @DerivativeImage::url(ImageStdParams::get_by_type(IMG_SQUARE), $element)
             . '" alt="' . $image_title . '" title="' . $image_title . '">';
         }
 
-        if (isset($line['search_id'])) {
+        if ($line_search_id !== null) {
             $search_detail = [
-                'allwords' => ! empty($search_details[$line['search_id']]['allwords']['words']) ? $search_details[$line['search_id']]['allwords']['words'] : null,
-                'tags' => ! empty($search_details[$line['search_id']]['tags']['words']) ? array_intersect_key($name_of_tag, array_flip($search_details[$line['search_id']]['tags']['words'])) : null,
-                'date_posted' => ! empty($search_details[$line['search_id']]['date_posted']) ? $search_details[$line['search_id']]['date_posted'] : null,
-                'cat' => ! empty($search_details[$line['search_id']]['cat']['words']) ? array_intersect_key($name_of_category, array_flip($search_details[$line['search_id']]['cat']['words'])) : null,
-                'author' => ! empty($search_details[$line['search_id']]['author']['words']) ? $search_details[$line['search_id']]['author']['words'] : null,
-                'added_by' => ! empty($search_details[$line['search_id']]['added_by']) ? array_intersect_key($username_of, array_flip($search_details[$line['search_id']]['added_by'])) : null,
-                'filetypes' => ! empty($search_details[$line['search_id']]['filetypes']) ? $search_details[$line['search_id']]['filetypes'] : null,
+                'allwords' => ! empty($search_details[$line_search_id]['allwords']['words']) ? $search_details[$line_search_id]['allwords']['words'] : null,
+                'tags' => ! empty($search_details[$line_search_id]['tags']['words']) ? array_intersect_key($name_of_tag, array_flip($search_details[$line_search_id]['tags']['words'])) : null,
+                'date_posted' => ! empty($search_details[$line_search_id]['date_posted']) ? $search_details[$line_search_id]['date_posted'] : null,
+                'cat' => ! empty($search_details[$line_search_id]['cat']['words']) ? array_intersect_key($name_of_category, array_flip($search_details[$line_search_id]['cat']['words'])) : null,
+                'author' => ! empty($search_details[$line_search_id]['author']['words']) ? $search_details[$line_search_id]['author']['words'] : null,
+                'added_by' => ! empty($search_details[$line_search_id]['added_by']) ? array_intersect_key($username_of, array_flip($search_details[$line_search_id]['added_by'])) : null,
+                'filetypes' => ! empty($search_details[$line_search_id]['filetypes']) ? $search_details[$line_search_id]['filetypes'] : null,
             ];
         } else {
             $search_detail = null;
@@ -1079,21 +1218,21 @@ SELECT
         array_push(
             $result,
             [
-                'DATE' => format_date($line['date']),
-                'TIME' => $line['time'],
+                'DATE' => format_date($line_date ?? ''),
+                'TIME' => $line_time,
                 'USER' => $user_string,
                 'USERNAME' => $user_name,
-                'USERID' => $line['user_id'],
-                'IP' => $line['IP'],
+                'USERID' => $line_user_id,
+                'IP' => $line_ip,
                 'IMAGE' => $image_string,
                 'IMAGENAME' => $image_title,
                 'IMAGEID' => $image_id,
                 'EDIT_IMAGE' => $image_edit_string,
-                'TYPE' => $line['image_type'],
-                'SECTION' => $line['section'],
-                'FULL_CATEGORY_PATH' => $line['category_id'] !== null && isset($full_cat_path[$line['category_id']]) ? strip_tags($full_cat_path[$line['category_id']]) : l10n('Root') . $line['category_id'],
-                'CATEGORY' => $line['category_id'] !== null && isset($name_of_category[$line['category_id']]) ? $name_of_category[$line['category_id']] : l10n('Root') . $line['category_id'],
-                'SEARCH_ID' => $line['search_id'] ?? null,
+                'TYPE' => $line_image_type,
+                'SECTION' => $line_section,
+                'FULL_CATEGORY_PATH' => $line_category_id !== null && isset($full_cat_path[$line_category_id]) ? strip_tags($full_cat_path[$line_category_id]) : l10n('Root') . $line_category_id,
+                'CATEGORY' => $line_category_id !== null && isset($name_of_category[$line_category_id]) ? $name_of_category[$line_category_id] : l10n('Root') . $line_category_id,
+                'SEARCH_ID' => $line_search_id,
                 'TAGS' => explode(',', (string) $tag_names),
                 'TAGIDS' => explode(',', $tag_ids),
                 'SEARCH_DETAILS' => $search_detail,

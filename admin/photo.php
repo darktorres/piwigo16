@@ -25,12 +25,17 @@ check_status(ACCESS_ADMINISTRATOR);
 check_input_parameter('cat_id', $_GET, false, PATTERN_ID);
 check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 
-$admin_photo_base_url = get_root_url() . 'admin.php?page=photo-' . $_GET['image_id'];
+// check_input_parameter() above already validated $_GET['image_id'] against
+// PATTERN_ID (digits only) when present; $_GET values are always strings
+// (or arrays, for foo[]=... params) so is_string() is the real narrowing.
+$get_image_id = is_string($_GET['image_id'] ?? null) ? $_GET['image_id'] : '';
+
+$admin_photo_base_url = get_root_url() . 'admin.php?page=photo-' . $get_image_id;
 
 // retrieving direct information about picture
-$page['image'] = get_image_infos($_GET['image_id'], true);
+$page['image'] = get_image_infos($get_image_id, true);
 
-if (isset($_GET['cat_id'])) {
+if (isset($_GET['cat_id']) && is_string($_GET['cat_id'])) {
     $query = '
 SELECT *
   FROM ' . CATEGORIES_TABLE . '
@@ -47,7 +52,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 
 $page['tab'] = 'properties';
 
-if (isset($_GET['tab'])) {
+if (isset($_GET['tab']) && is_string($_GET['tab'])) {
     $page['tab'] = $_GET['tab'];
 }
 
@@ -58,7 +63,7 @@ $tabsheet->assign();
 
 $template->assign(
     [
-        'ADMIN_PAGE_TITLE' => l10n('Edit photo') . ' <span class="image-id">#' . $_GET['image_id'] . '</span>',
+        'ADMIN_PAGE_TITLE' => l10n('Edit photo') . ' <span class="image-id">#' . $get_image_id . '</span>',
     ]
 );
 

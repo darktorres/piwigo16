@@ -12,9 +12,13 @@ declare(strict_types=1);
 /**
  * API method
  * Returns the list of groups
- * @param mixed[] $params
- *    @option int[] group_id (optional)
- *    @option string name (optional)
+ *
+ * @param array{group_id?: array<int, int>, name?: string, per_page: int, page: int, order: string, ...} $params
+ *   group_id/name: WS_PARAM_OPTIONAL with no 'default' key -- may be
+ *   entirely absent; FORCE_ARRAY always coerces group_id to a list of
+ *   positive ints when present. per_page/page: non-null int default --
+ *   always present. order: non-null string default ('name'), no 'type'
+ *   flag -- always present, always string.
  * @return \PwgError|array{paging: PwgNamedStruct, groups: PwgNamedArray}
  */
 function ws_groups_getList(array $params, PwgServer &$service): \PwgError|array
@@ -61,9 +65,10 @@ SELECT
 /**
  * API method
  * Adds a group
- * @param mixed[] $params
- *    @option string name
- *    @option bool is_default
+ *
+ * @param array{name: string, is_default: bool, ...} $params name has no
+ *   'default' key -- mandatory, always present. is_default: non-null
+ *   bool default, WS_TYPE_BOOL -- always present.
  * @return mixed \PwgError, or the result of the pwg.groups.getList invocation
  */
 function ws_groups_add(array $params, PwgServer &$service): mixed
@@ -110,9 +115,10 @@ SELECT COUNT(*)
 /**
  * API method
  * Deletes a group
- * @param mixed[] $params
- *    @option int[] group_id
- *    @option string pwg_token
+ *
+ * @param array{group_id: array<int, int>, pwg_token: string, ...} $params
+ *   neither has a 'default' key -- both mandatory, always present;
+ *   FORCE_ARRAY always coerces group_id to a list of positive ints.
  */
 function ws_groups_delete(array $params, PwgServer &$service): \PwgError|\PwgNamedArray
 {
@@ -135,10 +141,11 @@ function ws_groups_delete(array $params, PwgServer &$service): \PwgError|\PwgNam
 /**
  * API method
  * Updates a group
- * @param mixed[] $params
- *    @option int group_id
- *    @option string name (optional)
- *    @option bool is_default (optional)
+ *
+ * @param array{group_id: int, name?: string, is_default?: bool, pwg_token: string, ...} $params
+ *   group_id/pwg_token: no 'default' key -- mandatory, always present,
+ *   WS_TYPE_ID guarantees a plain int for group_id. name/is_default:
+ *   WS_PARAM_OPTIONAL with no 'default' key -- may be entirely absent.
  * @return mixed \PwgError, or the result of the pwg.groups.getList invocation
  */
 function ws_groups_setInfo(array $params, PwgServer &$service): mixed
@@ -189,7 +196,7 @@ SELECT COUNT(*)
         $updates['name'] = $params['name'];
     }
 
-    if (! empty($params['is_default']) or @$params['is_default'] === false) {
+    if (! empty($params['is_default']) or ($params['is_default'] ?? null) === false) {
         $updates['is_default'] = boolean_to_string($params['is_default']);
     }
 
@@ -211,9 +218,11 @@ SELECT COUNT(*)
 /**
  * API method
  * Adds user(s) to a group
- * @param mixed[] $params
- *    @option int group_id
- *    @option int[] user_id
+ *
+ * @param array{group_id: int, user_id: array<int, int>, pwg_token: string, ...} $params
+ *   none has a 'default' key -- all mandatory, always present; group_id:
+ *   WS_TYPE_ID guarantees a plain int; user_id: FORCE_ARRAY always
+ *   coerces to a list of positive ints.
  * @return mixed \PwgError, or the result of the pwg.groups.getList invocation
  */
 function ws_groups_addUser(array $params, PwgServer &$service): mixed
@@ -266,9 +275,12 @@ SELECT COUNT(*)
 /**
  * API method
  * Merge groups in one other group
- * @param mixed[] $params
- *    @option int destination_group_id
- *    @option int[] merge_group_id
+ *
+ * @param array{destination_group_id: int, merge_group_id: array<int, int>, pwg_token: string, ...} $params
+ *   none has a 'default' key -- all mandatory, always present;
+ *   destination_group_id: WS_TYPE_ID guarantees a plain int;
+ *   merge_group_id: FORCE_ARRAY always coerces to a list of positive
+ *   ints.
  * @return \PwgError|array{destination_group: mixed, deleted_group: mixed}
  */
 function ws_groups_merge(array $params, PwgServer &$service): \PwgError|array
@@ -343,6 +355,11 @@ SELECT user_id
 
     pwg_activity('group', $params['destination_group_id'], 'edit');
     foreach ($user_to_add as $user_id) {
+        if ($user_id === null) {
+            // defensive: user_id is a NOT NULL foreign key column, but
+            // query2array()'s general return type is string|null
+            continue;
+        }
         pwg_activity('user', $user_id, 'edit', [
             'associated' => $params['destination_group_id'],
         ]);
@@ -363,9 +380,10 @@ SELECT user_id
 /**
  * API method
  * Create a copy of a group
- * @param mixed[] $params
- *    @option int group_id
- *    @option string copy_name
+ *
+ * @param array{group_id: int, copy_name: string, pwg_token: string, ...} $params
+ *   none has a 'default' key -- all mandatory, always present,
+ *   WS_TYPE_ID guarantees a plain int for group_id.
  * @return mixed \PwgError, or the result of the pwg.groups.getList invocation
  */
 function ws_groups_duplicate(array $params, PwgServer &$service): mixed
@@ -450,6 +468,11 @@ SELECT is_default
     invalidate_user_cache();
 
     foreach ($users as $user_id) {
+        if ($user_id === null) {
+            // defensive: user_id is a NOT NULL foreign key column, but
+            // query2array()'s general return type is string|null
+            continue;
+        }
         pwg_activity('user', $user_id, 'edit', [
             'associated' => $params['group_id'],
         ]);
@@ -463,9 +486,11 @@ SELECT is_default
 /**
  * API method
  * Removes user(s) from a group
- * @param mixed[] $params
- *    @option int group_id
- *    @option int[] user_id
+ *
+ * @param array{group_id: int, user_id: array<int, int>, pwg_token: string, ...} $params
+ *   none has a 'default' key -- all mandatory, always present; group_id:
+ *   WS_TYPE_ID guarantees a plain int; user_id: FORCE_ARRAY always
+ *   coerces to a list of positive ints.
  * @return mixed \PwgError, or the result of the pwg.groups.getList invocation
  */
 function ws_groups_deleteUser(array $params, PwgServer &$service): mixed

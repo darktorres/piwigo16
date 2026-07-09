@@ -40,7 +40,7 @@ abstract class CalendarBase
     /**
      * used to store db fields
      *
-     * @var array<int, array{sql: string, labels: mixed}>
+     * @var array<int, array{sql: string, labels: array<int|string, string>|null}>
      */
     public $calendar_levels;
 
@@ -112,7 +112,7 @@ abstract class CalendarBase
     /**
      * Returns a display name for a date component optionally using labels.
      *
-     * @return mixed
+     * @return string
      */
     protected function get_date_component_label(int $level, string $date_component)
     {
@@ -303,7 +303,10 @@ AND ' . $this->date_field . ' IS NOT NULL
 GROUP BY period';
 
         $current = implode('-', $page['chronology_date']);
-        $upper_items = query2array($query, null, 'period');
+        // period is a concatenation of non-null date parts (enforced by the
+        // "date_field IS NOT NULL" clause above), but query2array()'s generic
+        // signature still types each element as string|null, so filter for real.
+        $upper_items = array_values(array_filter(query2array($query, null, 'period'), 'is_string'));
 
         $version_compare_2arg = static fn (string $a, string $b): int => version_compare($a, $b);
 

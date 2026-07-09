@@ -65,6 +65,14 @@ if (! is_array($mb_conf)) {
     $mb_conf = [];
 }
 
+// $mb_conf comes from an unserialize() of DB-stored config, so its element
+// types are not statically known; normalize every position to a real int.
+$mb_conf_normalized = [];
+foreach ($mb_conf as $id => $pos) {
+    $mb_conf_normalized[$id] = is_numeric($pos) ? (int) $pos : 0;
+}
+$mb_conf = $mb_conf_normalized;
+
 foreach ($mb_conf as $id => $pos) {
     if (! isset($reg_blocks[$id])) {
         unset($mb_conf[$id]);
@@ -84,7 +92,8 @@ if (isset($_POST['submit']) and is_webmaster()) {
         $hide = isset($_POST['hide_' . $id]);
         $mb_conf[$id] = ($hide ? -1 : +1) * (int) abs($pos);
 
-        $pos = (int) @$_POST['pos_' . $id];
+        $pos_input = $_POST['pos_' . $id] ?? null;
+        $pos = is_numeric($pos_input) ? (int) $pos_input : 0;
         if ($pos > 0) {
             $mb_conf[$id] = $mb_conf[$id] > 0 ? $pos : -$pos;
         }

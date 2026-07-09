@@ -81,7 +81,11 @@ class themes
         $this->get_fs_themes();
 
         foreach ($this->get_db_themes() as $db_theme) {
-            $this->db_themes_by_id[$db_theme['id']] = $db_theme;
+            $id = $db_theme['id'] ?? null;
+            if (! is_string($id)) {
+                continue;
+            }
+            $this->db_themes_by_id[$id] = $db_theme;
         }
     }
 
@@ -108,6 +112,31 @@ class themes
         }
 
         return new DummyTheme_maintain($theme_id);
+    }
+
+    /**
+     * $fs_themes is declared with a loose `array<string, mixed>` value
+     * type (it stores several differently-typed metadata fields under one
+     * array), but the only writer, get_fs_themes(), always stores a real
+     * string under 'version' (its own array literal guarantees `version:
+     * string`, further narrowed by trim() overwrites). Narrow that single
+     * invariant here instead of repeating an is_string()+fallback check at
+     * every call site.
+     */
+    private function fs_theme_version(string $theme_id): string
+    {
+        $version = $this->fs_themes[$theme_id]['version'] ?? null;
+        return is_string($version) ? $version : '0';
+    }
+
+    /**
+     * See fs_theme_version()'s comment: 'name' is likewise always a real
+     * string in the only writer, get_fs_themes().
+     */
+    private function fs_theme_name(string $theme_id): string
+    {
+        $name = $this->fs_themes[$theme_id]['name'] ?? null;
+        return is_string($name) ? $name : $theme_id;
     }
 
     /**
@@ -163,19 +192,21 @@ class themes
                 }
 
                 $theme_maintain = self::build_maintain_class($theme_id);
-                $theme_maintain->activate($this->fs_themes[$theme_id]['version'], $errors);
+                $fs_version = $this->fs_theme_version($theme_id);
+                $theme_maintain->activate($fs_version, $errors);
 
                 if (empty($errors)) {
+                    $fs_name = $this->fs_theme_name($theme_id);
                     $query = '
 INSERT INTO ' . THEMES_TABLE . '
   (id, version, name)
   VALUES(\'' . $theme_id . '\',
-         \'' . $this->fs_themes[$theme_id]['version'] . '\',
-         \'' . $this->fs_themes[$theme_id]['name'] . '\')
+         \'' . $fs_version . '\',
+         \'' . $fs_name . '\')
 ;';
                     pwg_query($query);
 
-                    $activity_details['version'] = $this->fs_themes[$theme_id]['version'];
+                    $activity_details['version'] = $fs_version;
 
                     if ($this->fs_themes[$theme_id]['mobile']) {
                         conf_update_param('mobile_theme', $theme_id);
@@ -211,6 +242,9 @@ SELECT id
                         $row = pwg_db_fetch_row($result);
                         assert($row !== null);
                         [$new_theme] = $row;
+                        if (! is_string($new_theme)) {
+                            $new_theme = 'default';
+                        }
                     }
 
                     $this->set_default_theme($new_theme);
@@ -276,6 +310,10 @@ DELETE
 
         $parent = $this->fs_themes[$theme_id]['parent'];
 
+        if (! is_string($parent)) {
+            return null;
+        }
+
         if ($parent == 'default') {
             return null;
         }
@@ -288,7 +326,7 @@ DELETE
     }
 
     /**
-     * @return mixed[]
+     * @return string[]
      */
     public function get_children_themes(string $theme_id): array
     {
@@ -296,7 +334,10 @@ DELETE
 
         foreach ($this->fs_themes as $test_child) {
             if (isset($test_child['parent']) and $test_child['parent'] == $theme_id) {
-                $children[] = $test_child['name'];
+                $name = $test_child['name'] ?? null;
+                if (is_string($name)) {
+                    $children[] = $name;
+                }
             }
         }
 
@@ -335,7 +376,7 @@ UPDATE ' . USER_INFOS_TABLE . '
     }
 
     /**
-     * @return mixed[]
+     * @return array<int, array<string, string|null>>
      */
     public function get_db_themes(string $id = ''): array
     {
@@ -440,9 +481,10 @@ SELECT
                         $theme['screenshot'] = $screenshot_path;
                     } else {
                         global $conf;
+                        $admin_theme = userprefs_get_param('admin_theme', 'clear');
                         $theme['screenshot'] =
                           PHPWG_ROOT_PATH . 'admin/themes/'
-                          . userprefs_get_param('admin_theme', 'clear')
+                          . (is_string($admin_theme) ? $admin_theme : 'clear')
                           . '/images/missing_screenshot.png'
                         ;
                     }
@@ -508,13 +550,32 @@ SELECT
         // $result is never a resource here: no fopen() handle is passed to
         // fetchRemote() above.
         if (fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = @unserialize($result)) {
+            // unserialize() of a remote PEM response is genuinely untyped —
+            // validate it's an array of arrays before indexing into it
+            // below, rather than trusting the external payload (see
+            // plugins::get_versions_to_check()'s identical guard).
+            if (! is_array($pem_versions)) {
+                return false;
+            }
+
             if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
-                $version = $pem_versions[0]['name'];
+                $first_pem_version = $pem_versions[0] ?? null;
+                $first_pem_version_name = is_array($first_pem_version) ? ($first_pem_version['name'] ?? null) : null;
+                if (is_string($first_pem_version_name)) {
+                    $version = $first_pem_version_name;
+                }
             }
             $branch = get_branch_from_version($version);
             foreach ($pem_versions as $pem_version) {
-                if (str_starts_with((string) $pem_version['name'], $branch)) {
-                    $versions_to_check[] = $pem_version['id'];
+                if (! is_array($pem_version)) {
+                    continue;
+                }
+                $pem_version_name = $pem_version['name'] ?? null;
+                if (is_string($pem_version_name) and str_starts_with($pem_version_name, $branch)) {
+                    $pem_version_id = $pem_version['id'] ?? null;
+                    if (is_scalar($pem_version_id)) {
+                        $versions_to_check[] = (string) $pem_version_id;
+                    }
                 }
             }
         }
@@ -525,8 +586,8 @@ SELECT
         // Themes to check
         $themes_to_check = [];
         foreach ($this->fs_themes as $fs_theme) {
-            if (isset($fs_theme['extension'])) {
-                $themes_to_check[] = $fs_theme['extension'];
+            if (isset($fs_theme['extension']) and is_scalar($fs_theme['extension'])) {
+                $themes_to_check[] = (string) $fs_theme['extension'];
             }
         }
 
@@ -557,7 +618,15 @@ SELECT
                 return false;
             }
             foreach ($pem_themes as $theme) {
-                $this->server_themes[$theme['extension_id']] = $theme;
+                if (! is_array($theme) || ! isset($theme['extension_id'])) {
+                    continue;
+                }
+                /** @var array<string, mixed> $theme */
+                $extension_id = $theme['extension_id'];
+                if (! is_string($extension_id) && ! is_int($extension_id)) {
+                    continue;
+                }
+                $this->server_themes[$extension_id] = $theme;
             }
             return true;
         }
@@ -735,7 +804,14 @@ SELECT
      */
     public function extension_name_compare(array $a, array $b): int
     {
-        return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
+        // 'extension_name' comes from an untyped unserialize() of a remote
+        // PEM payload (see get_server_themes()); only cast scalars actually
+        // safe to stringify, treat anything else as empty for comparison.
+        $a_name = $a['extension_name'] ?? null;
+        $b_name = $b['extension_name'] ?? null;
+        $a_name = is_scalar($a_name) ? (string) $a_name : '';
+        $b_name = is_scalar($b_name) ? (string) $b_name : '';
+        return strcmp(strtolower($a_name), strtolower($b_name));
     }
 
     /**
@@ -744,7 +820,12 @@ SELECT
      */
     public function extension_author_compare(array $a, array $b): int
     {
-        $r = strcasecmp((string) $a['author_name'], (string) $b['author_name']);
+        // see extension_name_compare()'s comment on 'extension_name'
+        $a_author = $a['author_name'] ?? null;
+        $b_author = $b['author_name'] ?? null;
+        $a_author = is_scalar($a_author) ? (string) $a_author : '';
+        $b_author = is_scalar($b_author) ? (string) $b_author : '';
+        $r = strcasecmp($a_author, $b_author);
         if ($r == 0) {
             return $this->extension_name_compare($a, $b);
         } else {
@@ -758,7 +839,12 @@ SELECT
      */
     public function theme_author_compare(array $a, array $b): int
     {
-        $r = strcasecmp((string) $a['author'], (string) $b['author']);
+        // see extension_name_compare()'s comment on 'extension_name'
+        $a_author = $a['author'] ?? null;
+        $b_author = $b['author'] ?? null;
+        $a_author = is_scalar($a_author) ? (string) $a_author : '';
+        $b_author = is_scalar($b_author) ? (string) $b_author : '';
+        $r = strcasecmp($a_author, $b_author);
         if ($r == 0) {
             return name_compare($a, $b);
         } else {

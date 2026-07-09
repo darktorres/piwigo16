@@ -50,7 +50,17 @@ if (isset($_GET['revision'])) {
     } else {
         check_pwg_token();
 
-        $install_status = $languages->extract_language_files('install', $_GET['revision']);
+        // $_GET values are always string|array; 'revision' is only ever
+        // built from $language['revision_id'] in this file's own template
+        // link below, so it's a plain numeric string in the normal case.
+        $revision = $_GET['revision'];
+        $revision = is_string($revision) ? $revision : '';
+
+        $install_status = $languages->extract_language_files('install', $revision);
+        // extract_language_files() is declared "@return mixed" but every
+        // internal code path assigns $status a string literal before
+        // returning it; narrow defensively rather than trust the docblock.
+        $install_status = is_string($install_status) ? $install_status : '';
 
         redirect($base_url . '&installstatus=' . $install_status);
     }
@@ -60,7 +70,10 @@ if (isset($_GET['revision'])) {
 // |                        installation result                            |
 // +-----------------------------------------------------------------------+
 if (isset($_GET['installstatus'])) {
-    switch ($_GET['installstatus']) {
+    $installstatus = $_GET['installstatus'];
+    $installstatus = is_string($installstatus) ? $installstatus : '';
+
+    switch ($installstatus) {
         case 'ok':
             $page['infos'][] = l10n('Language has been successfully installed');
             break;
@@ -78,7 +91,7 @@ if (isset($_GET['installstatus'])) {
             break;
 
         default:
-            $page['errors'][] = l10n('An error occured during extraction (%s).', htmlspecialchars((string) $_GET['installstatus']));
+            $page['errors'][] = l10n('An error occured during extraction (%s).', htmlspecialchars($installstatus));
     }
 }
 
@@ -87,23 +100,39 @@ if (isset($_GET['installstatus'])) {
 // +-----------------------------------------------------------------------+
 if ($languages->get_server_languages(true)) {
     foreach ($languages->server_languages as $language) {
-        [$date] = explode(' ', (string) $language['revision_date']);
+        // $language comes from an untyped unserialize() of a remote PEM
+        // payload (see languages::get_server_languages()); only cast
+        // scalars actually safe to stringify, treat anything else as empty
+        // (same pattern as languages.class.php::extension_name_compare()).
+        $revision_date = $language['revision_date'] ?? null;
+        $revision_date = is_scalar($revision_date) ? (string) $revision_date : '';
+
+        $revision_id = $language['revision_id'] ?? null;
+        $revision_id = is_scalar($revision_id) ? (string) $revision_id : '';
+
+        $extension_id = $language['extension_id'] ?? null;
+        $extension_id = is_scalar($extension_id) ? (string) $extension_id : '';
+
+        $download_url = $language['download_url'] ?? null;
+        $download_url = is_scalar($download_url) ? (string) $download_url : '';
+
+        [$date] = explode(' ', $revision_date);
 
         $url_auto_install = htmlentities($base_url)
-          . '&amp;revision=' . $language['revision_id']
+          . '&amp;revision=' . $revision_id
           . '&amp;pwg_token=' . get_pwg_token()
         ;
 
         $template->append('languages', [
             'EXT_NAME' => $language['extension_name'],
             'EXT_DESC' => $language['extension_description'],
-            'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . $language['extension_id'],
+            'EXT_URL' => PEM_URL . '/extension_view.php?eid=' . $extension_id,
             'VERSION' => $language['revision_name'],
             'VER_DESC' => $language['revision_description'],
             'DATE' => $date,
             'AUTHOR' => $language['author_name'],
             'URL_INSTALL' => $url_auto_install,
-            'URL_DOWNLOAD' => $language['download_url'] . '&amp;origin=piwigo_download',
+            'URL_DOWNLOAD' => $download_url . '&amp;origin=piwigo_download',
         ]);
     }
 } else {

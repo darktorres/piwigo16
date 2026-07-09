@@ -71,8 +71,9 @@ function create_database(array $option): string
 {
     global $mysqli;
 
-    if (! isset($option['db_name'])) {
-        $option['db_name'] = uniqid();
+    $db_name = $option['db_name'] ?? null;
+    if (! is_string($db_name) || $db_name === '') {
+        $db_name = uniqid();
     }
 
     $query = '
@@ -82,18 +83,18 @@ function create_database(array $option): string
     $res = $mysqli->query($query);
 
     while (($row = $res->fetch_row())) {
-        if ($row[0] == $option['db_name']) {
+        if ($row[0] == $db_name) {
             die('Database name already exist');
         }
     }
 
     $query = '
-    CREATE DATABASE ' . $option['db_name'] . '
+    CREATE DATABASE ' . $db_name . '
   ;';
 
     $mysqli->query($query);
 
-    return $option['db_name'];
+    return $db_name;
 }
 
 // +--------------------------+
@@ -105,6 +106,11 @@ function create_database(array $option): string
  */
 function install_piwigo(array $option): void
 {
+    $url = $option['url'];
+    if (! is_string($url)) {
+        throw new Exception('install_piwigo(): option url must be a string');
+    }
+
     $data = [
         'install' => 1,
         'dbhost' => 'localhost',
@@ -122,7 +128,7 @@ function install_piwigo(array $option): void
     $ch = curl_init();
 
     $curLopt = [
-        CURLOPT_URL => $option['url'] . '/install.php',
+        CURLOPT_URL => $url . '/install.php',
         CURLOPT_COOKIESESSION => true,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST => true,
@@ -164,6 +170,11 @@ function test_log_user(array $option, string $cookies): mixed
     // the only real caller passes dirname(__DIR__) . '/cookies.txt', always non-empty
     assert($cookies !== '');
 
+    $url = $option['url'];
+    if (! is_string($url)) {
+        throw new Exception('test_log_user(): option url must be a string');
+    }
+
     // Log an user - Admin here
     $data = [
         'method' => 'pwg.session.login',
@@ -173,7 +184,7 @@ function test_log_user(array $option, string $cookies): mixed
 
     $ch = curl_init();
 
-    curl_setopt($ch, CURLOPT_URL, $option['url'] . '/ws.php?format=json');
+    curl_setopt($ch, CURLOPT_URL, $url . '/ws.php?format=json');
     curl_setopt($ch, CURLOPT_COOKIEJAR, $cookies);
     curl_setopt($ch, CURLOPT_COOKIEFILE, $cookies);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -192,7 +203,7 @@ function test_log_user(array $option, string $cookies): mixed
 
     $ch = curl_init();
 
-    curl_setopt($ch, CURLOPT_URL, $option['url'] . '/ws.php?format=json');
+    curl_setopt($ch, CURLOPT_URL, $url . '/ws.php?format=json');
     curl_setopt($ch, CURLOPT_COOKIEJAR, $cookies);
     curl_setopt($ch, CURLOPT_COOKIEFILE, $cookies);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -208,12 +219,16 @@ function test_log_user(array $option, string $cookies): mixed
         throw new Exception('test_log_user(): curl_exec() failed');
     }
     $result = json_decode($content, true);
-    if ($result['stat'] == 'ok') {
+    if (! is_array($result)) {
+        throw new Exception('test_log_user(): invalid JSON response');
+    }
+    if (($result['stat'] ?? null) === 'ok') {
         echo "Login OK!\n";
     } else {
         echo "Login KO!\n";
     }
-    return $result['result']['pwg_token'];
+    $sessionResult = $result['result'] ?? null;
+    return is_array($sessionResult) ? ($sessionResult['pwg_token'] ?? null) : null;
 }
 
 // +-----------------------+
@@ -228,6 +243,11 @@ function create_album(array $option, string $cookies): void
     // the only real caller passes dirname(__DIR__) . '/cookies.txt', always non-empty
     assert($cookies !== '');
 
+    $url = $option['url'];
+    if (! is_string($url)) {
+        throw new Exception('create_album(): option url must be a string');
+    }
+
     $data = [
         'method' => 'pwg.categories.add',
         'name' => 'AlbumExample',
@@ -235,7 +255,7 @@ function create_album(array $option, string $cookies): void
 
     $ch = curl_init();
 
-    curl_setopt($ch, CURLOPT_URL, $option['url'] . '/ws.php?format=json');
+    curl_setopt($ch, CURLOPT_URL, $url . '/ws.php?format=json');
     curl_setopt($ch, CURLOPT_COOKIEJAR, $cookies);
     curl_setopt($ch, CURLOPT_COOKIEFILE, $cookies);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -252,7 +272,10 @@ function create_album(array $option, string $cookies): void
         throw new Exception('create_album(): curl_exec() failed');
     }
     $result = json_decode($content, true);
-    if ($result['stat'] == 'ok') {
+    if (! is_array($result)) {
+        throw new Exception('create_album(): invalid JSON response');
+    }
+    if (($result['stat'] ?? null) === 'ok') {
         echo "Album creation OK!\n";
     } else {
         echo "Album creation KO!\n";
@@ -270,7 +293,12 @@ function add_picture(array $option, string $cookies, mixed $pwg_token): void
 {
     global $mysqli;
 
-    exec('perl piwigo_upload.pl --url=' . $option['url'] . ' --user=admin --password=pwg123 --file=temp.png --album_id=1');
+    $url = $option['url'];
+    if (! is_string($url)) {
+        throw new Exception('add_picture(): option url must be a string');
+    }
+
+    exec('perl piwigo_upload.pl --url=' . $url . ' --user=admin --password=pwg123 --file=temp.png --album_id=1');
 
     $mysqli->select_db($option['db_name']);
 

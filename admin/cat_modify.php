@@ -61,7 +61,10 @@ function get_local_dir(int|string $category_id): string
     $query .= ';';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        $database_dirs[$row['id']] = $row['dir'];
+        $row_id = $row['id'];
+        if (is_string($row_id)) {
+            $database_dirs[$row_id] = $row['dir'];
+        }
     }
     foreach ($upper_array as $id) {
         $local_dir .= $database_dirs[$id] . '/';
@@ -72,7 +75,7 @@ function get_local_dir(int|string $category_id): string
 
 // retrieving the site url : "http://domain.com/gallery/" or
 // simply "./galleries/"
-function get_site_url(int|string $category_id): mixed
+function get_site_url(int|string $category_id): string
 {
     global $page;
 
@@ -86,7 +89,8 @@ SELECT galleries_url
     if (! is_array($row)) {
         throw new Exception(__FUNCTION__ . "(): category #{$category_id} not found");
     }
-    return $row['galleries_url'];
+    $galleries_url = $row['galleries_url'];
+    return is_string($galleries_url) ? $galleries_url : '';
 }
 
 function get_min_local_dir(?string $local_dir): ?string
@@ -222,8 +226,16 @@ SELECT
   WHERE category_id = ' . $category['id'] . '
 ;';
     $row = pwg_db_fetch_row(pwg_query($query));
-    assert($row !== null);
+    if (! is_array($row)) {
+        throw new Exception("cat_modify.php: aggregate photo count/date query returned no row for category #{$category['id']}");
+    }
     [$image_count, $min_date, $max_date] = $row;
+    // date_available is a NOT NULL column but the driver still types every
+    // fetched value as string|null; format_date()'s phpDoc param forbids
+    // null, so fall back to false (its "no date" sentinel) if that ever
+    // isn't the case.
+    $min_date = is_string($min_date) ? $min_date : false;
+    $max_date = is_string($max_date) ? $max_date : false;
 
     if ($min_date == $max_date) {
         $info_title = l10n(
@@ -274,10 +286,14 @@ SELECT occured_on
 $result = query2array($query);
 
 if (count($result) > 0) {
+    // occured_on is a nullable timestamp column; the driver always types
+    // fetched values as string|null, so narrow with real fallbacks rather
+    // than assuming a value is present.
+    $occured_on = $result[0]['occured_on'];
     $template->assign(
         [
-            'INFO_CREATION_SINCE' => time_since($result[0]['occured_on'], 'day', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
-            'INFO_CREATION' => format_date($result[0]['occured_on'], ['day', 'month', 'year']),
+            'INFO_CREATION_SINCE' => time_since(is_string($occured_on) ? $occured_on : '', 'day', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
+            'INFO_CREATION' => format_date(is_string($occured_on) ? $occured_on : false, ['day', 'month', 'year']),
         ]
     );
 }

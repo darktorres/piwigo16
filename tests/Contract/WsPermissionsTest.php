@@ -18,8 +18,12 @@ final class WsPermissionsTest extends ContractTestCase
     {
         $response = $this->wsAdmin('pwg.permissions.getList');
 
-        self::assertArrayHasKey('categories', $response['result']);
-        self::assertIsArray($response['result']['categories']);
+        $result = $response['result'];
+        if (!is_array($result)) {
+            self::fail('pwg.permissions.getList result is not an array');
+        }
+        self::assertArrayHasKey('categories', $result);
+        self::assertIsArray($result['categories']);
     }
 
     public function test_getList_forbidden_for_guest(): void

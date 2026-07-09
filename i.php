@@ -30,13 +30,25 @@ pwg_apply_env_to_conf($conf, $prefixeTable);
 
 include PHPWG_ROOT_PATH . 'include/Logger.class.php';
 
+// $conf['data_location']/'log_dir'/'db_password' lost their specific string
+// types the same way include/common.inc.php's equivalent config reads do
+// (see the comment there): pwg_apply_env_to_conf(array &$conf, ...)'s by-ref
+// `array` parameter erases the per-key type info PHPStan had built up for
+// $conf, so we re-narrow here.
+$log_data_location = $conf['data_location'];
+$log_dir = $conf['log_dir'];
+$db_password = $conf['db_password'];
+if (! is_string($log_data_location) || ! is_string($log_dir) || ! is_string($db_password)) {
+    die("Invalid \$conf['data_location']/'log_dir'/'db_password' configuration: expected strings.");
+}
+
 $logger = new Logger([
-    'directory' => PHPWG_ROOT_PATH . $conf['data_location'] . $conf['log_dir'],
+    'directory' => PHPWG_ROOT_PATH . $log_data_location . $log_dir,
     'severity' => $conf['log_level'],
     // we use an hashed filename to prevent direct file access, and we salt with
     // the db_password instead of secret_key because the log must be usable in i.php
     // (secret_key is in the database)
-    'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf['db_password']) . '.txt',
+    'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $db_password) . '.txt',
 ]);
 
 function trigger_notify(string $event, mixed ...$args): void {}
@@ -94,7 +106,10 @@ function ierror(string $msg, int $code): never
         exit;
     }
     if ($code >= 400) {
-        $protocol = $_SERVER['SERVER_PROTOCOL'];
+        $protocol = $_SERVER['SERVER_PROTOCOL'] ?? null;
+        if (! is_string($protocol)) {
+            $protocol = 'HTTP/1.0';
+        }
         if (($protocol != 'HTTP/1.1') && ($protocol != 'HTTP/1.0')) {
             $protocol = 'HTTP/1.0';
         }
@@ -169,15 +184,21 @@ function parse_request(): \DerivativeParams
     if ($conf['question_mark_in_urls'] == false and
          isset($_SERVER['PATH_INFO']) and ! empty($_SERVER['PATH_INFO'])) {
         $req = $_SERVER['PATH_INFO'];
+        // PHPStan types superglobal reads as mixed; PATH_INFO is only ever
+        // populated by the web server as a string (verified via the isset()
+        // + !empty() guard above), but we still narrow defensively rather
+        // than cast.
+        $req = is_string($req) ? $req : '';
         $req = str_replace('//', '/', $req);
         $path_count = count(explode('/', $req));
         $page['root_path'] = PHPWG_ROOT_PATH . str_repeat('../', $path_count - 1);
     } else {
         $req = $_SERVER['QUERY_STRING'];
-        if ($pos = strpos((string) $req, '&')) {
-            $req = substr((string) $req, 0, $pos);
+        $req = is_string($req) ? $req : '';
+        if ($pos = strpos($req, '&')) {
+            $req = substr($req, 0, $pos);
         }
-        $req = rawurldecode((string) $req);
+        $req = rawurldecode($req);
         /*foreach (array_keys($_GET) as $keynum => $key)
         {
           $req = $key;
@@ -398,16 +419,31 @@ foreach (explode(',', 'load,rotate,crop,scale,sharpen,watermark,save,send') as $
     $timing[$k] = '';
 }
 
-include_once PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $conf['dblayer'] . '.inc.php';
+// $conf['dblayer']/'db_host'/'db_user'/'db_base' lost their specific string
+// types the same way described above (see the comment near the Logger
+// construction); 'db_password' was already re-narrowed there and is reused
+// as-is since nothing reassigns it in between.
+$dblayer = $conf['dblayer'];
+if (! is_string($dblayer)) {
+    ierror("Invalid \$conf['dblayer'] configuration: expected a string.", 500);
+}
+include_once PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php';
 include_once PHPWG_ROOT_PATH . '/include/derivative_params.inc.php';
 include_once PHPWG_ROOT_PATH . '/include/derivative_std_params.inc.php';
 
+$db_host = $conf['db_host'];
+$db_user = $conf['db_user'];
+$db_base = $conf['db_base'];
+if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_base)) {
+    ierror("Invalid \$conf['db_host']/'db_user'/'db_base' configuration: expected strings.", 500);
+}
+
 try {
     pwg_db_connect(
-        $conf['db_host'],
-        $conf['db_user'],
-        $conf['db_password'],
-        $conf['db_base']
+        $db_host,
+        $db_user,
+        $db_password,
+        $db_base
     );
 } catch (Exception $e) {
     $logger->error($e->getMessage(), 'i.php');
@@ -422,6 +458,12 @@ SELECT param, value
 
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
+    // 'param' is the config table's primary key column (never NULL in
+    // practice), but pwg_db_fetch_assoc() types every column as
+    // string|null, so an array key still needs narrowing.
+    if (! is_string($row['param'])) {
+        continue;
+    }
     $conf[$row['param']] = $row['value'];
 }
 ImageStdParams::load_from_db();
@@ -472,8 +514,9 @@ if (isset($_GET['b'])) {
 }
 
 if (! $need_generate) {
-    if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])
-      and strtotime((string) $_SERVER['HTTP_IF_MODIFIED_SINCE']) == $derivative_mtime) {// send the last mod time of the file back
+    $if_modified_since = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? null;
+    if (is_string($if_modified_since)
+      and strtotime($if_modified_since) == $derivative_mtime) {// send the last mod time of the file back
         header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $derivative_mtime) . ' GMT', true, 304);
         header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 10 * 24 * 3600) . ' GMT', true, 304);
         exit;
@@ -513,7 +556,17 @@ SELECT *
                     ]
                 );
             } else {
-                $page['rotation_angle'] = pwg_image::get_rotation_angle_from_code($row['rotation']);
+                // get_rotation_angle_from_code()'s docblock confirms
+                // (empirically, against the real DB) that this driver's
+                // fetch_assoc() always returns a numeric string here; guard
+                // it explicitly rather than casting, since a cast alone
+                // wouldn't satisfy the numeric-string contract.
+                // isset($row['rotation']) above already narrows this to string.
+                $rotation = $row['rotation'];
+                if (! is_numeric($rotation)) {
+                    ierror('Invalid rotation value in database', 500);
+                }
+                $page['rotation_angle'] = pwg_image::get_rotation_angle_from_code($rotation);
             }
         }
         if (! $row) {

@@ -40,7 +40,7 @@ class Template
     public $extents = [];
 
     /**
-     * @var array<string, array<int, array<int, array{0: string, 1: mixed}>>> - Templates prefilter from external sources (plugins)
+     * @var array<string, array<int, array<int, array{0: string, 1: callable}>>> - Templates prefilter from external sources (plugins)
      */
     public $external_filters = [];
 
@@ -232,13 +232,15 @@ class Template
 
         $this->set_template_dir($root . '/' . $theme . '/' . $path);
 
-        if (isset($themeconf['parent']) and $themeconf['parent'] != $theme) {
+        if (isset($themeconf['parent']) and is_string($themeconf['parent']) and $themeconf['parent'] != $theme) {
+            $load_parent_css = $themeconf['load_parent_css'] ?? $load_css;
+            $load_parent_local_head = $themeconf['load_parent_local_head'] ?? $load_local_head;
             $this->set_theme(
                 $root,
                 $themeconf['parent'],
                 $path,
-                $themeconf['load_parent_css'] ?? $load_css,
-                $themeconf['load_parent_local_head'] ?? $load_local_head
+                is_bool($load_parent_css) ? $load_parent_css : $load_css,
+                is_bool($load_parent_local_head) ? $load_parent_local_head : $load_local_head
             );
         }
 
@@ -246,7 +248,7 @@ class Template
             'id' => $theme,
             'load_css' => $load_css,
         ];
-        if (! empty($themeconf['local_head']) and $load_local_head) {
+        if (! empty($themeconf['local_head']) and $load_local_head and is_string($themeconf['local_head'])) {
             $tpl_var['local_head'] = realpath($root . '/' . $theme . '/' . $themeconf['local_head']);
         }
         $themeconf['id'] = $theme;
@@ -314,7 +316,7 @@ class Template
     public function get_themeconf($val)
     {
         $tc = $this->smarty->getTemplateVars('themeconf');
-        return $tc[$val] ?? '';
+        return is_array($tc) ? ($tc[$val] ?? '') : '';
     }
 
     /**
@@ -383,14 +385,18 @@ class Template
         }
         foreach ($filename_array as $filename => $value) {
             if (is_array($value)) {
-                $handle = $value[0];
-                $param = $value[1];
-                $thm = $value[2];
+                $handle = $value[0] ?? null;
+                $param = $value[1] ?? null;
+                $thm = $value[2] ?? null;
             } elseif (is_string($value)) {
                 $handle = $value;
                 $param = 'N/A';
                 $thm = 'N/A';
             } else {
+                return false;
+            }
+
+            if ((! is_string($handle) && ! is_int($handle)) or ! is_scalar($param) or ! is_scalar($thm)) {
                 return false;
             }
 
@@ -471,9 +477,10 @@ class Template
      */
     public function concat($tpl_var, $value): void
     {
+        $current = $this->smarty->getTemplateVars($tpl_var);
         $this->assign(
             $tpl_var,
-            $this->smarty->getTemplateVars($tpl_var) . $value
+            (is_string($current) ? $current : '') . $value
         );
     }
 
@@ -579,6 +586,9 @@ class Template
             }
             // trigger the event for eventual use of a cdn
             $href = trigger_change('combined_css', $href, $combi);
+            if (! is_string($href)) {
+                throw new Exception("flush(): a 'combined_css' event listener returned a non-string value");
+            }
             $content[] = '<link rel="stylesheet" type="text/css" href="' . $href . '">';
         }
         $this->output = str_replace(
@@ -788,17 +798,24 @@ class Template
      */
     public function func_define_derivative(array $params, $smarty): void
     {
-        ! empty($params['name']) or fatal_error('define_derivative missing name');
+        $name = $params['name'] ?? null;
+        (! empty($name) && is_string($name)) or fatal_error('define_derivative missing name');
         if (isset($params['type'])) {
-            $derivative = ImageStdParams::get_by_type($params['type']);
-            $smarty->assign($params['name'], $derivative);
+            $type = $params['type'];
+            is_string($type) or fatal_error('define_derivative type must be a string');
+            $derivative = ImageStdParams::get_by_type($type);
+            $smarty->assign($name, $derivative);
             return;
         }
         ! empty($params['width']) or fatal_error('define_derivative missing width');
         ! empty($params['height']) or fatal_error('define_derivative missing height');
+        $width = $params['width'];
+        $height = $params['height'];
+        is_scalar($width) or fatal_error('define_derivative width must be scalar');
+        is_scalar($height) or fatal_error('define_derivative height must be scalar');
 
-        $w = intval($params['width']);
-        $h = intval($params['height']);
+        $w = intval($width);
+        $h = intval($height);
         $crop = 0;
         $minw = null;
         $minh = null;
@@ -807,18 +824,32 @@ class Template
             if (is_bool($params['crop'])) {
                 $crop = $params['crop'] ? 1 : 0;
             } else {
-                $crop = round($params['crop'] / 100, 2);
+                $crop_val = $params['crop'];
+                is_numeric($crop_val) or fatal_error('define_derivative crop must be numeric');
+                $crop = round((float) $crop_val / 100, 2);
             }
 
             if ($crop) {
-                $minw = empty($params['min_width']) ? $w : intval($params['min_width']);
+                if (empty($params['min_width'])) {
+                    $minw = $w;
+                } else {
+                    $min_width = $params['min_width'];
+                    is_scalar($min_width) or fatal_error('define_derivative min_width must be scalar');
+                    $minw = intval($min_width);
+                }
                 $minw <= $w or fatal_error('define_derivative invalid min_width');
-                $minh = empty($params['min_height']) ? $h : intval($params['min_height']);
+                if (empty($params['min_height'])) {
+                    $minh = $h;
+                } else {
+                    $min_height = $params['min_height'];
+                    is_scalar($min_height) or fatal_error('define_derivative min_height must be scalar');
+                    $minh = intval($min_height);
+                }
                 $minh <= $h or fatal_error('define_derivative invalid min_height');
             }
         }
 
-        $smarty->assign($params['name'], ImageStdParams::get_custom($w, $h, $crop, $minw, $minh));
+        $smarty->assign($name, ImageStdParams::get_custom($w, $h, $crop, $minw, $minh));
     }
 
     /**
@@ -836,9 +867,18 @@ class Template
      */
     public function func_combine_script(array $params): void
     {
-        if (! isset($params['id'])) {
+        if (! isset($params['id']) || ! is_string($params['id'])) {
             trigger_error("combine_script: missing 'id' parameter", E_USER_ERROR);
+            // Genuinely reachable, not just defensive: include/error_collector.inc.php
+            // installs a set_error_handler() that intercepts E_USER_ERROR and returns
+            // true (suppressing PHP's normal fatal-and-terminate behavior), so this
+            // return prevents $params['id'] from being read below when it's genuinely
+            // missing/non-string — static analysis has no way to know
+            // set_error_handler() changes trigger_error()'s termination behavior.
+            // @phpstan-ignore deadCode.unreachable
+            return;
         }
+        $id = $params['id'];
         $load = 0;
         if (isset($params['load'])) {
             switch ($params['load']) {
@@ -851,13 +891,22 @@ class Template
             }
         }
 
+        $require = $params['require'] ?? null;
+        $require_list = (! empty($require) && is_scalar($require)) ? explode(',', (string) $require) : [];
+
+        $path = $params['path'] ?? null;
+        $path = is_string($path) ? $path : null;
+
+        $version = $params['version'] ?? '0';
+        $version = is_string($version) ? $version : '0';
+
         $this->scriptLoader->add(
-            $params['id'],
+            $id,
             $load,
-            empty($params['require']) ? [] : explode(',', (string) $params['require']),
-            @$params['path'],
-            $params['version'] ?? '0',
-            (bool) @$params['template']
+            $require_list,
+            $path,
+            $version,
+            (bool) ($params['template'] ?? false)
         );
     }
 
@@ -953,10 +1002,12 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         // tag, real content on the closing tag ("second call" below).
         $content = trim((string) $content);
         if (! empty($content)) { // second call
+            $require = $params['require'] ?? null;
+            $require_list = (! empty($require) && is_scalar($require)) ? explode(',', (string) $require) : [];
 
             $this->scriptLoader->add_inline(
                 $content,
-                empty($params['require']) ? [] : explode(',', (string) $params['require'])
+                $require_list
             );
         }
     }
@@ -975,15 +1026,24 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
      */
     public function func_combine_css(array $params): void
     {
-        if (empty($params['path'])) {
+        if (empty($params['path']) || ! is_string($params['path'])) {
             fatal_error('combine_css missing path');
         }
+        $path = $params['path'];
 
-        if (! isset($params['id'])) {
-            $params['id'] = md5((string) $params['path']);
+        if (! isset($params['id']) || ! is_string($params['id'])) {
+            $id = md5($path);
+        } else {
+            $id = $params['id'];
         }
 
-        $this->cssLoader->add($params['id'], $params['path'], $params['version'] ?? '0', (int) @$params['order'], (bool) @$params['template']);
+        $version = $params['version'] ?? '0';
+        $version = ($version === false || is_string($version)) ? $version : '0';
+
+        $order = $params['order'] ?? 0;
+        $order = is_numeric($order) ? (int) $order : 0;
+
+        $this->cssLoader->add($id, $path, $version, $order, (bool) ($params['template'] ?? false));
     }
 
     /**
@@ -1052,7 +1112,17 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             foreach ($this->external_filters[$handle] as $filters) {
                 foreach ($filters as $filter) {
                     [$type, $callback] = $filter;
-                    $compile_id .= $type . (is_array($callback) ? implode('', $callback) : $callback);
+                    if (is_array($callback)) {
+                        $callback_key = implode('', array_map(
+                            static fn (mixed $part): string => is_string($part) ? $part : get_debug_type($part),
+                            $callback
+                        ));
+                    } elseif (is_string($callback)) {
+                        $callback_key = $callback;
+                    } else {
+                        $callback_key = get_debug_type($callback);
+                    }
+                    $compile_id .= $type . $callback_key;
                     $this->smarty->registerFilter($type, $callback);
                 }
             }
@@ -1071,6 +1141,16 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             foreach ($this->external_filters[$handle] as $filters) {
                 foreach ($filters as $filter) {
                     [$type, $callback] = $filter;
+                    // Smarty\Smarty::unregisterFilter()'s own docblock types
+                    // its 2nd param as `callback|string` -- `callback` (no
+                    // trailing e) isn't a recognized PHPStan pseudo-type, so
+                    // it resolves as the unrelated class Smarty\callback
+                    // instead of PHP's native `callable`. The implementation
+                    // (vendor/smarty/smarty/src/Smarty.php) itself accepts
+                    // any real callable via is_string()/_getFilterName()
+                    // fallback -- this is a vendor docblock typo, not a bug
+                    // in our code.
+                    // @phpstan-ignore argument.type
                     $this->smarty->unregisterFilter($type, $callback);
                 }
             }
@@ -1138,10 +1218,16 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     public static function prefilter_local_css($source, $smarty)
     {
         $css = [];
-        foreach ($smarty->getTemplateVars('themes') as $theme) {
-            $f = PWG_LOCAL_DIR . 'css/' . $theme['id'] . '-rules.css';
-            if (file_exists(PHPWG_ROOT_PATH . $f)) {
-                $css[] = "{combine_css path='{$f}' order=10}";
+        $themes = $smarty->getTemplateVars('themes');
+        if (is_array($themes)) {
+            foreach ($themes as $theme) {
+                if (! is_array($theme) || ! isset($theme['id']) || ! is_string($theme['id'])) {
+                    continue;
+                }
+                $f = PWG_LOCAL_DIR . 'css/' . $theme['id'] . '-rules.css';
+                if (file_exists(PHPWG_ROOT_PATH . $f)) {
+                    $css[] = "{combine_css path='{$f}' order=10}";
+                }
             }
         }
         $f = PWG_LOCAL_DIR . 'css/rules.css';
@@ -1778,7 +1864,7 @@ class ScriptLoader
      * @param int $recursion_limiter
      * @return int
      */
-    private function compute_script_topological_order($script_id, int|float $recursion_limiter = 0): int|float
+    private function compute_script_topological_order($script_id, int $recursion_limiter = 0): int
     {
         if (! isset($this->registered_scripts[$script_id])) {
             trigger_error("Undefined script {$script_id} is required by someone", E_USER_WARNING);
@@ -1883,8 +1969,8 @@ final class FileCombiner
         global $conf;
         $force = false;
         if (is_admin() && ($this->is_css || ! $conf['template_compile_check'])) {
-            $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && str_contains((string) $_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
-              || (isset($_SERVER['HTTP_PRAGMA']) && strpos((string) $_SERVER['HTTP_PRAGMA'], 'no-cache'));
+            $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && is_string($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
+              || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
         }
 
         $result = [];
@@ -2031,10 +2117,13 @@ final class FileCombiner
      *                       the minified file.
      * @return string
      */
-    private static function process_css($css, $file, string &$header)
+    private static function process_css($css, $file, string &$header): string
     {
         $css = self::process_css_rec($css, dirname($file), $header);
         $css = trigger_change('combined_css_postfilter', $css);
+        if (! is_string($css)) {
+            throw new Exception("process_css(): a 'combined_css_postfilter' event listener returned a non-string value");
+        }
         return $css;
     }
 

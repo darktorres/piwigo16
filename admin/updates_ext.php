@@ -24,7 +24,8 @@ if (! is_webmaster()) {
     $page['warnings'][] = str_replace('%s', l10n('user_status_webmaster'), l10n('%s status is required to edit parameters.'));
 }
 
-$conf['updates_ignored'] = unserialize($conf['updates_ignored']);
+$updates_ignored_raw = unserialize($conf['updates_ignored']);
+$conf['updates_ignored'] = is_array($updates_ignored_raw) ? $updates_ignored_raw : [];
 
 include_once PHPWG_ROOT_PATH . 'admin/include/updates.class.php';
 $autoupdate = new updates($page['page']);
@@ -48,6 +49,11 @@ foreach ($autoupdate->types as $type) {
     }
 
     $updates_extension[$type] = [];
+
+    $ignored_ids = $conf['updates_ignored'][$type] ?? [];
+    if (! is_array($ignored_ids)) {
+        $ignored_ids = [];
+    }
 
     foreach ($fs_ext as $ext_id => $fs_ext) {
         if (! isset($fs_ext['extension']) or ! isset($server_ext[$fs_ext['extension']])) {
@@ -74,13 +80,13 @@ foreach ($autoupdate->types as $type) {
                     'CURRENT_VERSION' => $fs_ext['version'],
                     'NEW_VERSION' => $ext_info['revision_name'],
                     'URL_DOWNLOAD' => $ext_info['download_url'] . '&amp;origin=piwigo_download',
-                    'IGNORED' => in_array($ext_id, $conf['updates_ignored'][$type]),
+                    'IGNORED' => in_array($ext_id, $ignored_ids),
                 ]
             );
         }
     }
 
-    if (! empty($conf['updates_ignored'][$type])) {
+    if (! empty($ignored_ids)) {
         $show_reset = true;
     }
 }

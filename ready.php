@@ -25,22 +25,30 @@ pwg_apply_env_to_conf($conf, $prefixeTable);
 header('Content-Type: text/plain');
 
 $host = $conf['db_host'] ?? '';
+$host = is_string($host) ? $host : '';
 $port = null;
 $socket = null;
-if (str_starts_with((string) $host, '/')) {
+if (str_starts_with($host, '/')) {
     $socket = $host;
     $host = null;
 } else {
-    $parts = explode(':', (string) $host, 2);
+    $parts = explode(':', $host, 2);
     $host = $parts[0];
     $port = isset($parts[1]) ? (int) $parts[1] : null;
 }
 
+$dbUser = $conf['db_user'] ?? '';
+$dbUser = is_string($dbUser) ? $dbUser : '';
+$dbPassword = $conf['db_password'] ?? '';
+$dbPassword = is_string($dbPassword) ? $dbPassword : '';
+$dbBase = $conf['db_base'] ?? '';
+$dbBase = is_string($dbBase) ? $dbBase : '';
+
 $ready = false;
 
 try {
-    $mysqli = new mysqli($host, $conf['db_user'] ?? '', $conf['db_password'] ?? '', '', $port, $socket);
-    $ready = $mysqli->select_db($conf['db_base'] ?? '');
+    $mysqli = new mysqli($host, $dbUser, $dbPassword, '', $port, $socket);
+    $ready = $mysqli->select_db($dbBase);
 } catch (\mysqli_sql_exception) {
     $ready = false;
 }

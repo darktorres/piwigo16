@@ -39,7 +39,9 @@ if (! is_writable($themes_dir)) {
 // |                       perform installation                            |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['revision']) and isset($_GET['extension'])) {
+if (isset($_GET['revision']) and isset($_GET['extension'])
+    and is_string($_GET['revision']) and is_string($_GET['extension'])
+) {
     if (! is_webmaster()) {
         $page['errors'][] = l10n('Webmaster status is required.');
     } else {
@@ -65,14 +67,15 @@ if (isset($_GET['installstatus'])) {
         case 'ok':
             $page['infos'][] = l10n('Theme has been successfully installed');
 
-            if (isset($themes->fs_themes[$_GET['theme_id']])) {
+            $installed_theme_id = $_GET['theme_id'] ?? null;
+            if (is_string($installed_theme_id) && isset($themes->fs_themes[$installed_theme_id])) {
                 pwg_activity(
                     'system',
                     ACTIVITY_SYSTEM_THEME,
                     'install',
                     [
-                        'theme_id' => $_GET['theme_id'],
-                        'version' => $themes->fs_themes[$_GET['theme_id']]['version'],
+                        'theme_id' => $installed_theme_id,
+                        'version' => $themes->fs_themes[$installed_theme_id]['version'],
                     ]
                 );
             }
@@ -91,9 +94,11 @@ if (isset($_GET['installstatus'])) {
             break;
 
         default:
+            $installstatus_raw = $_GET['installstatus'];
+            $installstatus_str = is_scalar($installstatus_raw) ? (string) $installstatus_raw : '';
             $page['errors'][] = l10n(
                 'An error occured during extraction (%s).',
-                htmlspecialchars((string) $_GET['installstatus'])
+                htmlspecialchars($installstatus_str)
             );
     }
 }
@@ -108,9 +113,18 @@ $template->set_filenames([
 
 if ($themes->get_server_themes(true)) { // only new themes
     foreach ($themes->server_themes as $theme) {
+        // server_themes entries come from an untyped unserialize() of a
+        // remote PEM payload (themes::get_server_themes()); narrow the
+        // fields used in a typed context below rather than trusting the
+        // external payload's shape.
+        $revision_id_raw = $theme['revision_id'] ?? null;
+        $revision_id = is_scalar($revision_id_raw) ? (string) $revision_id_raw : '';
+        $extension_id_raw = $theme['extension_id'] ?? null;
+        $extension_id = is_scalar($extension_id_raw) ? (string) $extension_id_raw : '';
+
         $url_auto_install = htmlentities($base_url)
-          . '&amp;revision=' . $theme['revision_id']
-          . '&amp;extension=' . $theme['extension_id']
+          . '&amp;revision=' . $revision_id
+          . '&amp;extension=' . $extension_id
           . '&amp;pwg_token=' . get_pwg_token()
         ;
 
@@ -128,9 +142,10 @@ if ($themes->get_server_themes(true)) { // only new themes
     $page['errors'][] = l10n('Can\'t connect to server.');
 }
 
+$admin_theme_pref = userprefs_get_param('admin_theme', 'clear');
 $template->assign(
     'default_screenshot',
-    get_root_url() . 'admin/themes/' . userprefs_get_param('admin_theme', 'clear') . '/images/missing_screenshot.png'
+    get_root_url() . 'admin/themes/' . (is_string($admin_theme_pref) ? $admin_theme_pref : 'clear') . '/images/missing_screenshot.png'
 );
 $template->assign('ADMIN_PAGE_TITLE', l10n('Themes'));
 

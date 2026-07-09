@@ -24,7 +24,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions_history.inc.php';
 // +-----------------------------------------------------------------------+
 // Get the last unit of time for years, months, days and hours
 /**
- * @return mixed[]
+ * @return list<array<string, string|null>>
  */
 function get_last(int $last_number = 60, string $type = 'year'): array
 {
@@ -118,18 +118,18 @@ ORDER BY
         $limit = ($last - 1) * 12 + $date->format('n') - 1;
         $query .=
 ' LIMIT ' . $limit;
-        $result = array_values(query2array($query . ';'));
+        $result = query2array($query . ';');
         $lastDate = $date->sub(new DateInterval('P' . ($last - 1) . 'Y' . ($date->format('n') - 1) . 'M'));
         return set_missing_values('month', $result, $lastDate, new DateTime());
     }
 
     if (count(query2array($query . ';')) > 1) {
-        return set_missing_values('month', array_values(query2array($query . ';')));
+        return set_missing_values('month', query2array($query . ';'));
     } else {
         $last_year_date = new DateTime();
         return set_missing_values(
             'month',
-            array_values(query2array($query . ';')),
+            query2array($query . ';'),
             $last_year_date->sub(new DateInterval('P1Y')),
             new DateTime()
         );
@@ -291,8 +291,9 @@ function set_missing_values(string $unit, array $data, ?DateTime $firstDate = nu
     foreach ($data as $value) {
         $str = get_date_object($value)
             ->format($date_format);
-        if (isset($result[$str])) {
-            $result[$str] += $value['nb_pages'];
+        $nb_pages = $value['nb_pages'] ?? null;
+        if (isset($result[$str]) && is_numeric($nb_pages)) {
+            $result[$str] += (int) $nb_pages;
         }
     }
 
@@ -305,13 +306,20 @@ function set_missing_values(string $unit, array $data, ?DateTime $firstDate = nu
  */
 function get_date_object(array $row): \DateTime
 {
-    $date_string = $row['year'];
-    if ($row['month'] != null) {
-        $date_string = $date_string . '-' . $row['month'];
-        if ($row['day'] != null) {
-            $date_string = $date_string . '-' . $row['day'];
-            if ($row['hour'] != null) {
-                $date_string = $date_string . ' ' . $row['hour'] . ':00';
+    $year = $row['year'];
+    $date_string = is_string($year) ? $year : '';
+
+    $month = $row['month'];
+    if ($month != null) {
+        $date_string = $date_string . '-' . (is_string($month) ? $month : '');
+
+        $day = $row['day'];
+        if ($day != null) {
+            $date_string = $date_string . '-' . (is_string($day) ? $day : '');
+
+            $hour = $row['hour'];
+            if ($hour != null) {
+                $date_string = $date_string . ' ' . (is_string($hour) ? $hour : '') . ':00';
             }
         }
     } else {

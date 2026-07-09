@@ -17,7 +17,7 @@ add_event_handler('upload_image_resize', 'pwg_image_resize');
 add_event_handler('upload_thumbnail_resize', 'pwg_image_resize');
 
 /**
- * @return array<string, array<string, mixed>>
+ * @return array<string, array{default: bool|int, min: int|null, max: int|null, pattern: string|null, can_be_null: bool, error_message: string|null}>
  */
 function get_upload_form_config(): array
 {
@@ -25,7 +25,11 @@ function get_upload_form_config(): array
     $upload_form_config = [
         'original_resize' => [
             'default' => false,
+            'min' => null,
+            'max' => null,
+            'pattern' => null,
             'can_be_null' => false,
+            'error_message' => null,
         ],
 
         'original_resize_maxwidth' => [
@@ -97,6 +101,16 @@ function save_upload_form_config(array $data, array &$errors = [], array &$form_
             $min = $upload_form_config[$field]['min'];
             $max = $upload_form_config[$field]['max'];
             $pattern = $upload_form_config[$field]['pattern'];
+            $error_message = $upload_form_config[$field]['error_message'];
+
+            if (! is_int($min) || ! is_int($max) || ! is_string($pattern) || ! is_string($error_message) || ! is_scalar($value)) {
+                // every upload_form_config entry that reaches this branch
+                // (i.e. isn't the boolean toggle handled above) defines
+                // min/max/pattern/error_message as int/int/string/string;
+                // this guard only exists to give PHPStan a real narrowing
+                // and should never actually skip a field in practice.
+                continue;
+            }
 
             if (preg_match($pattern, (string) $value) and $value >= $min and $value <= $max) {
                 $updates[] = [
@@ -105,7 +119,7 @@ function save_upload_form_config(array $data, array &$errors = [], array &$form_
                 ];
             } else {
                 $errors[] = sprintf(
-                    $upload_form_config[$field]['error_message'],
+                    $error_message,
                     $min,
                     $max
                 );
@@ -164,7 +178,14 @@ SELECT
         $images_found = query2array($query);
 
         if (count($images_found) > 0) {
-            $image_id = $images_found[0]['id'];
+            $found_id = $images_found[0]['id'];
+            if (! is_string($found_id) || ! is_numeric($found_id)) {
+                // id is the table's NOT NULL auto-increment primary key,
+                // so it is always a numeric string here; this guard only
+                // exists to give PHPStan a real narrowing.
+                throw new Exception(__FUNCTION__ . '(): unexpected non-numeric image id while checking for duplicates');
+            }
+            $image_id = (int) $found_id;
             $logger->info('[' . __FUNCTION__ . '] image already exist #' . $image_id . ', we delete the newly uploaded file : ' . $source_filepath);
             unlink($source_filepath);
 
@@ -299,15 +320,18 @@ SELECT
     // pwg_representative file.
     $representative_ext = trigger_change('upload_file', null, $file_path);
 
-    $logger->info('Handling ' . (string) $file_path . ' got ' . (string) $representative_ext);
-
     // If it is set to either true (the file didn't need a
-    // representative generated) or false (the generation of the
-    // representative failed), set it to null because we have no
-    // representative file.
-    if (is_bool($representative_ext)) {
+    // representative generated), false (the generation of the
+    // representative failed), or any other non-string value an event
+    // handler might return, set it to null because we have no
+    // representative file. (All upload_file handlers registered in this
+    // file return ?string, but trigger_change() itself is inherently
+    // mixed since any plugin can register a handler for this event.)
+    if (! is_string($representative_ext)) {
         $representative_ext = null;
     }
+
+    $logger->info('Handling ' . (string) $file_path . ' got ' . ($representative_ext ?? ''));
 
     if (pwg_image::get_library() != 'gd') {
         if ($conf['original_resize']) {
@@ -477,8 +501,14 @@ function add_format(string $source_filepath, string $format_ext, int|string $for
         die('[' . __FUNCTION__ . '] formats are disabled');
     }
 
-    if (! in_array($format_ext, conf_get_param('format_ext', ['cr2']))) {
-        die('[' . __FUNCTION__ . '] unexpected format extension "' . $format_ext . '" (authorized extensions: ' . implode(', ', conf_get_param('format_ext', ['cr2'])) . ')');
+    $authorized_format_exts = conf_get_param('format_ext', ['cr2']);
+    // conf_get_param() is inherently mixed (config values come straight
+    // from the $conf global); only elements that are actually strings can
+    // be safely passed to in_array()/implode() below.
+    $authorized_format_exts = is_array($authorized_format_exts) ? array_filter($authorized_format_exts, 'is_string') : ['cr2'];
+
+    if (! in_array($format_ext, $authorized_format_exts)) {
+        die('[' . __FUNCTION__ . '] unexpected format extension "' . $format_ext . '" (authorized extensions: ' . implode(', ', $authorized_format_exts) . ')');
     }
 
     $query = '
@@ -575,7 +605,13 @@ function upload_file_pdf(?string $representative_ext, string $file_path): ?strin
     }
 
     $ext = conf_get_param('pdf_representative_ext', 'jpg');
+    if (! is_string($ext)) {
+        $ext = 'jpg';
+    }
     $jpg_quality = conf_get_param('pdf_jpg_quality', 90);
+    if (! is_numeric($jpg_quality)) {
+        $jpg_quality = 90;
+    }
 
     // move the uploaded file to pwg_representative sub-directory
     $representative_file_path = original_to_representative($file_path, $ext);
@@ -1023,6 +1059,14 @@ function convert_shorthand_notation_to_bytes(string|false $value): int|string|fa
 
 function add_upload_error(int|string $upload_id, string $error_message): void
 {
+    if (! isset($_SESSION['uploads_error']) || ! is_array($_SESSION['uploads_error'])) {
+        $_SESSION['uploads_error'] = [];
+    }
+
+    if (! isset($_SESSION['uploads_error'][$upload_id]) || ! is_array($_SESSION['uploads_error'][$upload_id])) {
+        $_SESSION['uploads_error'][$upload_id] = [];
+    }
+
     $_SESSION['uploads_error'][$upload_id][] = $error_message;
 }
 
@@ -1068,15 +1112,35 @@ function get_optimal_dimensions_for_representative(): array
     global $conf;
 
     $enabled = ImageStdParams::get_defined_type_map();
-    $disabled = safe_unserialize(ImageStdParams::get_disabled_type_map());
-    if ($disabled === false) {
-        $disabled = [];
+
+    $disabled_raw = safe_unserialize(ImageStdParams::get_disabled_type_map());
+    // ImageStdParams persists this map as serialize()d DerivativeParams[]
+    // (see ImageStdParams::get_disabled_type_map()'s docblock);
+    // unserialize() is only typed mixed by PHP itself, so filter out
+    // anything that isn't actually a DerivativeParams instance rather
+    // than trusting the blob blindly.
+    /** @var array<string, DerivativeParams> $disabled */
+    $disabled = [];
+    if (is_array($disabled_raw)) {
+        foreach ($disabled_raw as $disabled_type => $disabled_params) {
+            if (is_string($disabled_type) && $disabled_params instanceof DerivativeParams) {
+                $disabled[$disabled_type] = $disabled_params;
+            }
+        }
     }
 
     $w = $h = 2000; // safe default values
 
     foreach (ImageStdParams::get_all_types() as $type) {
-        $params = $enabled[$type] ?? @$disabled[$type];
+        // get_all_types() includes types disabled by default (e.g.
+        // IMG_3XLARGE/IMG_4XLARGE), which get_defined_type_map() genuinely
+        // omits (get_enabled_default_sizes() unsets them) -- $enabled can
+        // really lack a $type key here, so this isn't PHPStan-provable
+        // dead code even though its docblock-only DerivativeParams[]
+        // return type makes it look that way; array_key_exists() forces a
+        // real control-flow check instead of trusting that docblock as
+        // exhaustive.
+        $params = array_key_exists($type, $enabled) ? $enabled[$type] : ($disabled[$type] ?? null);
 
         if ($params) {
             [$w, $h] = $params->sizing->ideal_size;

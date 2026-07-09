@@ -38,16 +38,20 @@ $page['cat'] = $category['id'];
 if (! empty($_POST)) {
     check_pwg_token();
 
-    if ($category['status'] != $_POST['status'] or ($category['status'] != 'public' and isset($_POST['apply_on_sub']))) {
+    // the status <select> always submits this field; fall back to an empty
+    // string (never matches 'public'/'private') on malformed input
+    $post_status = isset($_POST['status']) && is_string($_POST['status']) ? $_POST['status'] : '';
+
+    if ($category['status'] != $post_status or ($category['status'] != 'public' and isset($_POST['apply_on_sub']))) {
         $cat_ids = [$page['cat']];
         if (isset($_POST['apply_on_sub'])) {
             $cat_ids = array_merge($cat_ids, get_subcat_ids([$page['cat']]));
         }
-        set_cat_status($cat_ids, $_POST['status']);
-        $category['status'] = $_POST['status'];
+        set_cat_status($cat_ids, $post_status);
+        $category['status'] = $post_status;
     }
 
-    if ($_POST['status'] == 'private') {
+    if ($post_status == 'private') {
         //
         // manage groups
         //
@@ -56,16 +60,29 @@ SELECT group_id
   FROM ' . GROUP_ACCESS_TABLE . '
   WHERE cat_id = ' . $page['cat'] . '
 ;';
-        $groups_granted = array_from_query($query, 'group_id');
+        // array_from_query()'s own return type is declared array<int|string,
+        // mixed>; narrow to the real int ids (DB values are string|null per
+        // this driver, group_id is a NOT NULL numeric column)
+        $groups_granted = [];
+        foreach (array_from_query($query, 'group_id') as $raw_group_id) {
+            if (is_numeric($raw_group_id)) {
+                $groups_granted[] = (int) $raw_group_id;
+            }
+        }
 
-        if (! isset($_POST['groups'])) {
-            $_POST['groups'] = [];
+        $post_groups = [];
+        if (isset($_POST['groups']) && is_array($_POST['groups'])) {
+            foreach ($_POST['groups'] as $raw_group_id) {
+                if (is_numeric($raw_group_id)) {
+                    $post_groups[] = (int) $raw_group_id;
+                }
+            }
         }
 
         //
         // remove permissions to groups
         //
-        $deny_groups = array_diff($groups_granted, $_POST['groups']);
+        $deny_groups = array_diff($groups_granted, $post_groups);
         if (count($deny_groups) > 0) {
             // if you forbid access to an album, all sub-albums become
             // automatically forbidden
@@ -81,7 +98,7 @@ DELETE
         //
         // add permissions to groups
         //
-        $grant_groups = $_POST['groups'];
+        $grant_groups = $post_groups;
         if (count($grant_groups) > 0) {
             $cat_ids = get_uppercat_ids([$page['cat']]);
             if (isset($_POST['apply_on_sub'])) {
@@ -124,16 +141,29 @@ SELECT user_id
   FROM ' . USER_ACCESS_TABLE . '
   WHERE cat_id = ' . $page['cat'] . '
 ;';
-        $users_granted = array_from_query($query, 'user_id');
+        // array_from_query()'s own return type is declared array<int|string,
+        // mixed>; narrow to the real int ids (DB values are string|null per
+        // this driver, user_id is a NOT NULL numeric column)
+        $users_granted = [];
+        foreach (array_from_query($query, 'user_id') as $raw_user_id) {
+            if (is_numeric($raw_user_id)) {
+                $users_granted[] = (int) $raw_user_id;
+            }
+        }
 
-        if (! isset($_POST['users'])) {
-            $_POST['users'] = [];
+        $post_users = [];
+        if (isset($_POST['users']) && is_array($_POST['users'])) {
+            foreach ($_POST['users'] as $raw_user_id) {
+                if (is_numeric($raw_user_id)) {
+                    $post_users[] = (int) $raw_user_id;
+                }
+            }
         }
 
         //
         // remove permissions to users
         //
-        $deny_users = array_diff($users_granted, $_POST['users']);
+        $deny_users = array_diff($users_granted, $post_users);
         if (count($deny_users) > 0) {
             // if you forbid access to an album, all sub-album become automatically
             // forbidden
@@ -149,7 +179,7 @@ DELETE
         //
         // add permissions to users
         //
-        $grant_users = $_POST['users'];
+        $grant_users = $post_users;
         if (count($grant_users) > 0) {
             add_permission_on_category($page['cat'], $grant_users);
         }
@@ -204,7 +234,15 @@ SELECT group_id
   FROM ' . GROUP_ACCESS_TABLE . '
   WHERE cat_id = ' . $page['cat'] . '
 ;';
-$group_granted_ids = array_from_query($query, 'group_id');
+// array_from_query()'s own return type is declared array<int|string, mixed>;
+// narrow to the real int ids (DB values are string|null per this driver,
+// group_id is a NOT NULL numeric column)
+$group_granted_ids = [];
+foreach (array_from_query($query, 'group_id') as $raw_group_id) {
+    if (is_numeric($raw_group_id)) {
+        $group_granted_ids[] = (int) $raw_group_id;
+    }
+}
 $template->assign('groups_selected', $group_granted_ids);
 
 // users...
@@ -223,7 +261,15 @@ SELECT user_id
   FROM ' . USER_ACCESS_TABLE . '
   WHERE cat_id = ' . $page['cat'] . '
 ;';
-$user_granted_direct_ids = array_from_query($query, 'user_id');
+// array_from_query()'s own return type is declared array<int|string, mixed>;
+// narrow to the real int ids (DB values are string|null per this driver,
+// user_id is a NOT NULL numeric column)
+$user_granted_direct_ids = [];
+foreach (array_from_query($query, 'user_id') as $raw_user_id) {
+    if (is_numeric($raw_user_id)) {
+        $user_granted_direct_ids[] = (int) $raw_user_id;
+    }
+}
 $template->assign('users_selected', $user_granted_direct_ids);
 
 $user_granted_indirect_ids = [];
@@ -237,6 +283,12 @@ SELECT user_id, group_id
 ';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
+        // group_id/user_id are NOT NULL numeric columns; this driver
+        // returns every column as string|null, so guard before using
+        // group_id as an array key and collecting user_id
+        if (! is_string($row['group_id']) || ! is_string($row['user_id'])) {
+            continue;
+        }
         if (! isset($granted_groups[$row['group_id']])) {
             $granted_groups[$row['group_id']] = [];
         }
@@ -261,7 +313,9 @@ SELECT user_id, group_id
     foreach ($granted_groups as $group_id => $group_users) {
         $group_usernames = [];
         foreach ($group_users as $user_id) {
-            if (in_array($user_id, $user_granted_indirect_ids)) {
+            // simple_hash_from_query()'s own return type is declared
+            // array<int|string, mixed>; narrow to the real username string
+            if (in_array($user_id, $user_granted_indirect_ids) && isset($users[$user_id]) && is_string($users[$user_id])) {
                 $group_usernames[] = $users[$user_id];
             }
         }

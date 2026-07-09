@@ -22,6 +22,7 @@ final class WsImagesTest extends ContractTestCase
         $response = $this->wsAdmin('pwg.images.getInfo', ['image_id' => self::FIXTURE_IMAGE_ID]);
 
         $result = $response['result'];
+        self::assertIsArray($result);
         self::assertSame(self::FIXTURE_IMAGE_ID, $result['id']);
         self::assertIsString($result['file']);
         self::assertIsArray($result['derivatives']);
@@ -86,7 +87,9 @@ final class WsImagesTest extends ContractTestCase
     {
         $response = $this->wsAdmin('pwg.images.checkUpload');
 
-        self::assertArrayHasKey('ready_for_upload', $response['result']);
-        self::assertIsBool($response['result']['ready_for_upload']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertArrayHasKey('ready_for_upload', $result);
+        self::assertIsBool($result['ready_for_upload']);
     }
 }

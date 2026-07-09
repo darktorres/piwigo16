@@ -30,7 +30,7 @@ $themes = new themes();
 // |                          perform actions                              |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['action']) and isset($_GET['theme'])) {
+if (isset($_GET['action']) and is_string($_GET['action']) and isset($_GET['theme']) and is_string($_GET['theme'])) {
     $page['errors'] = $themes->perform_action($_GET['action'], $_GET['theme']);
 
     if (empty($page['errors'])) {
@@ -52,7 +52,12 @@ $default_theme = get_default_theme();
 $db_themes = $themes->get_db_themes();
 $db_theme_ids = [];
 foreach ($db_themes as $db_theme) {
-    $db_theme_ids[] = $db_theme['id'];
+    // get_db_themes() is typed array<int, array<string, string|null>>, so
+    // $db_theme is always an array here.
+    $db_theme_id = $db_theme['id'] ?? null;
+    if (is_string($db_theme_id)) {
+        $db_theme_ids[] = $db_theme_id;
+    }
 }
 
 $tpl_themes = [];
@@ -120,7 +125,7 @@ foreach ($themes->fs_themes as $theme_id => $fs_theme) {
 
             $tpl_theme['DELETE_TOOLTIP'] = l10n(
                 'Impossible to delete this theme. Other themes depends on it: %s',
-                implode(', ', $children)
+                implode(', ', array_filter($children, 'is_string'))
             );
         }
     }
@@ -147,10 +152,24 @@ function cmp(array $a, array $b): int
         return 1;
     }
 
-    if ($a['STATE'] == $b['STATE']) {
-        return strcasecmp((string) $a['NAME'], (string) $b['NAME']);
+    // 'STATE' and 'NAME' are always plain strings in every $tpl_theme built
+    // above ('STATE' is a string literal, 'NAME' comes from
+    // themes::fs_theme_name()'s guaranteed-string invariant), but $a/$b are
+    // only known as array<string, mixed> here since usort's callback
+    // signature can't carry the caller's more precise shape.
+    $a_state = $a['STATE'] ?? null;
+    $b_state = $b['STATE'] ?? null;
+    $a_state = is_string($a_state) ? $a_state : '';
+    $b_state = is_string($b_state) ? $b_state : '';
+
+    if ($a_state == $b_state) {
+        $a_name = $a['NAME'] ?? null;
+        $b_name = $b['NAME'] ?? null;
+        $a_name = is_string($a_name) ? $a_name : '';
+        $b_name = is_string($b_name) ? $b_name : '';
+        return strcasecmp($a_name, $b_name);
     } else {
-        return $s[$a['STATE']] >= $s[$b['STATE']] ? 1 : -1;
+        return ($s[$a_state] ?? 1) >= ($s[$b_state] ?? 1) ? 1 : -1;
     }
 }
 usort($tpl_themes, cmp(...));

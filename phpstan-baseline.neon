@@ -139,12 +139,6 @@ parameters:
 			path: include/derivative.inc.php
 
 		-
-			message: '#^Undefined variable\: \$comm$#'
-			identifier: variable.undefined
-			count: 1
-			path: include/functions_comment.inc.php
-
-		-
 			message: '#^Undefined variable\: \$cached$#'
 			identifier: variable.undefined
 			count: 2

@@ -30,7 +30,11 @@ if (! $conf['allow_user_registration']) {
 trigger_notify('loc_begin_register');
 
 if (isset($_POST['submit'])) {
-    if (! verify_ephemeral_key(@$_POST['key'])) {
+    $post_key = $_POST['key'] ?? null;
+    if (! is_string($post_key)) {
+        $post_key = '';
+    }
+    if (! verify_ephemeral_key($post_key)) {
         set_status_header(403);
         $page['errors']['register_page_error'] = l10n('Invalid/expired form key');
     }
@@ -43,10 +47,14 @@ if (isset($_POST['submit'])) {
         $page['errors']['register_form_error'] = l10n('The passwords do not match');
     }
 
+    $post_login = is_string($_POST['login'] ?? null) ? $_POST['login'] : '';
+    $post_password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
+    $post_mail_address = is_string($_POST['mail_address'] ?? null) ? $_POST['mail_address'] : null;
+
     register_user(
-        $_POST['login'],
-        $_POST['password'],
-        $_POST['mail_address'],
+        $post_login,
+        $post_password,
+        $post_mail_address,
         true,
         $page['errors'],
         isset($_POST['send_password_by_mail'])
@@ -54,12 +62,15 @@ if (isset($_POST['submit'])) {
 
     if (count($page['errors']) == 0) {
         // email notification
-        if (isset($_POST['send_password_by_mail']) and email_check_format($_POST['mail_address'])) {
+        if (isset($_POST['send_password_by_mail']) and email_check_format($post_mail_address)) {
+            if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
+                $_SESSION['page_infos'] = [];
+            }
             $_SESSION['page_infos'][] = l10n('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
         }
 
         // log user and redirect
-        $user_id = get_userid($_POST['login']);
+        $user_id = get_userid($post_login);
         log_user($user_id, false);
         redirect(make_index_url());
     }
@@ -68,8 +79,11 @@ if (isset($_POST['submit'])) {
     $registration_post_key = get_ephemeral_key(6);
 }
 
-$login = ! empty($_POST['login']) ? htmlspecialchars(stripslashes((string) $_POST['login'])) : '';
-$email = ! empty($_POST['mail_address']) ? htmlspecialchars(stripslashes((string) $_POST['mail_address'])) : '';
+$login_raw = $_POST['login'] ?? null;
+$login = ! empty($login_raw) && is_string($login_raw) ? htmlspecialchars(stripslashes($login_raw)) : '';
+
+$mail_raw = $_POST['mail_address'] ?? null;
+$email = ! empty($mail_raw) && is_string($mail_raw) ? htmlspecialchars(stripslashes($mail_raw)) : '';
 
 // ----------------------------------------------------- template initialization
 //
@@ -98,11 +112,15 @@ if (! isset($themeconf['hide_menu_on']) or ! in_array('theRegisterPage', $themec
 
 // Load language if cookie is set from login/register/password pages
 if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
-    if (! array_key_exists((string) $_COOKIE['lang'], get_languages())) {
-        fatal_error('[Hacking attempt] the input parameter "' . $_COOKIE['lang'] . '" is not valid');
+    $lang_cookie = $_COOKIE['lang'];
+    if (! is_string($lang_cookie)) {
+        fatal_error('[Hacking attempt] the input parameter "lang" is not valid');
+    }
+    if (! array_key_exists($lang_cookie, get_languages())) {
+        fatal_error('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
     }
 
-    $user['language'] = $_COOKIE['lang'];
+    $user['language'] = $lang_cookie;
     load_language('common.lang', '', [
         'language' => $user['language'],
     ]);

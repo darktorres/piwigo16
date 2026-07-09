@@ -204,13 +204,14 @@ class updates
             return;
         }
 
-        $new_versions_string = join(
-            ' & ',
-            array_intersect_key(
-                $new_versions,
-                array_fill_keys(['minor', 'major'], 1)
-            )
+        // $new_versions is array<string, mixed> per get_piwigo_new_versions()'s
+        // return type, but 'minor'/'major' are only ever set to trimmed
+        // version strings above — filter to be certain before join().
+        $matching_new_versions = array_intersect_key(
+            $new_versions,
+            array_fill_keys(['minor', 'major'], 1)
         );
+        $new_versions_string = join(' & ', array_filter($matching_new_versions, 'is_string'));
 
         if (empty($new_versions_string)) {
             return;
@@ -225,14 +226,22 @@ class updates
         if (! isset($conf['update_notify_last_notification'])) {
             $notify = true;
         } else {
-            $conf['update_notify_last_notification'] = safe_unserialize($conf['update_notify_last_notification']);
-            $last_notification = $conf['update_notify_last_notification']['notified_on'];
+            // safe_unserialize() returns mixed (unserialize() of an
+            // untyped conf value) — narrow to the array{version,
+            // notified_on} shape this key is always written as further
+            // down in this method.
+            $last_notification_raw = safe_unserialize($conf['update_notify_last_notification']);
+            $last_notification_data = is_array($last_notification_raw) ? $last_notification_raw : [];
+            $conf['update_notify_last_notification'] = $last_notification_data;
+            $last_notification = $last_notification_data['notified_on'] ?? null;
+            $last_notification_version = $last_notification_data['version'] ?? null;
 
-            if ($new_versions_string != $conf['update_notify_last_notification']['version']) {
+            if ($new_versions_string != $last_notification_version) {
                 $notify = true;
             } elseif (
                 $conf['update_notify_reminder_period'] > 0
-                and strtotime((string) $last_notification) < strtotime($conf['update_notify_reminder_period'] . ' seconds ago')
+                and is_string($last_notification)
+                and strtotime($last_notification) < strtotime($conf['update_notify_reminder_period'] . ' seconds ago')
             ) {
                 $notify = true;
             }
@@ -293,13 +302,32 @@ class updates
         // $result is never a resource here: no fopen() handle is passed to
         // fetchRemote() above.
         if (fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = @unserialize($result)) {
-            if (! preg_match('/^\d+\.\d+\.\d+$/', (string) $version)) {
-                $version = $pem_versions[0]['name'];
-            }
-            $branch = get_branch_from_version($version);
-            foreach ($pem_versions as $pem_version) {
-                if (str_starts_with((string) $pem_version['name'], $branch)) {
-                    $versions_to_check[] = $pem_version['id'];
+            // unserialize() of a remote PEM response is genuinely untyped —
+            // validate it's an array of arrays before indexing into it
+            // below, rather than trusting the external payload (see the
+            // identical narrowing in plugins.class.php::get_versions_to_check()).
+            if (is_array($pem_versions)) {
+                if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
+                    $first_pem_version = $pem_versions[0] ?? null;
+                    if (is_array($first_pem_version)) {
+                        $first_pem_version_name = $first_pem_version['name'] ?? null;
+                        if (is_string($first_pem_version_name)) {
+                            $version = $first_pem_version_name;
+                        }
+                    }
+                }
+                $branch = get_branch_from_version($version);
+                foreach ($pem_versions as $pem_version) {
+                    if (! is_array($pem_version)) {
+                        continue;
+                    }
+                    $pem_version_name = $pem_version['name'] ?? null;
+                    if (is_string($pem_version_name) and str_starts_with($pem_version_name, $branch)) {
+                        $pem_version_id = $pem_version['id'] ?? null;
+                        if (is_scalar($pem_version_id)) {
+                            $versions_to_check[] = (string) $pem_version_id;
+                        }
+                    }
                 }
             }
         }
@@ -346,16 +374,24 @@ class updates
             $servers = [];
 
             foreach ($pem_exts as $ext) {
-                if (isset($ext_to_check[$ext['extension_id']])) {
-                    $type = $ext_to_check[$ext['extension_id']];
+                if (! is_array($ext)) {
+                    continue;
+                }
+                $extension_id = $ext['extension_id'] ?? null;
+                if (! is_string($extension_id) && ! is_int($extension_id)) {
+                    continue;
+                }
+
+                if (isset($ext_to_check[$extension_id])) {
+                    $type = $ext_to_check[$extension_id];
 
                     if (! isset($servers[$type])) {
                         $servers[$type] = [];
                     }
 
-                    $servers[$type][$ext['extension_id']] = $ext;
+                    $servers[$type][$extension_id] = $ext;
 
-                    unset($ext_to_check[$ext['extension_id']]);
+                    unset($ext_to_check[$extension_id]);
                 }
             }
 
@@ -412,16 +448,27 @@ class updates
     // Check if extension have been upgraded since last check
     public function check_updated_extensions(): void
     {
+        // $_SESSION is a superglobal with no known value type, so PHPStan
+        // sees $_SESSION['extensions_need_update'] as mixed; narrow it once
+        // here instead of re-reading the raw superglobal offset below.
+        $extensions_need_update_raw = $_SESSION['extensions_need_update'] ?? null;
+        $extensions_need_update = is_array($extensions_need_update_raw) ? $extensions_need_update_raw : [];
+
         foreach ($this->types as $type) {
-            if (! empty($_SESSION['extensions_need_update'][$type])) {
-                $fs = 'fs_' . $type;
-                foreach ($this->{$type}->{$fs} as $ext_id => $fs_ext) {
-                    if (isset($_SESSION['extensions_need_update'][$type][$ext_id])
-                      and safe_version_compare($fs_ext['version'], $_SESSION['extensions_need_update'][$type][$ext_id], '>=')) {
-                        // Extension have been upgraded
-                        $this->check_extensions();
-                        break;
-                    }
+            $type_updates_raw = $extensions_need_update[$type] ?? null;
+            if (empty($type_updates_raw) || ! is_array($type_updates_raw)) {
+                continue;
+            }
+
+            $fs = 'fs_' . $type;
+            foreach ($this->{$type}->{$fs} as $ext_id => $fs_ext) {
+                $needed_version = $type_updates_raw[$ext_id] ?? null;
+                if (isset($needed_version)
+                  and is_string($needed_version)
+                  and safe_version_compare($fs_ext['version'], $needed_version, '>=')) {
+                    // Extension have been upgraded
+                    $this->check_extensions();
+                    break;
                 }
             }
         }
@@ -520,11 +567,22 @@ class updates
                 if (@fetchRemote(PHPWG_URL . '/download/dlcounter.php?code=' . $dl_code . '&chunk_num=' . $chunk_num, $result)
                   and is_string($result)
                   and $input = @unserialize($result)) {
-                    if ($input['remaining'] == 0) {
+                    // unserialize() of a remote dlcounter response is
+                    // genuinely untyped — validate it's an array before
+                    // indexing into it below.
+                    if (is_array($input)) {
+                        $remaining = $input['remaining'] ?? null;
+                        if ($remaining == 0) {
+                            $end = true;
+                        }
+                        if ($zip !== false) {
+                            $chunk_data = $input['data'] ?? null;
+                            if (is_string($chunk_data)) {
+                                @fwrite($zip, base64_decode($chunk_data));
+                            }
+                        }
+                    } else {
                         $end = true;
-                    }
-                    if ($zip !== false) {
-                        @fwrite($zip, base64_decode((string) $input['data']));
                     }
                 } else {
                     $end = true;

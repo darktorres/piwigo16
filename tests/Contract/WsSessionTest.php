@@ -18,16 +18,20 @@ final class WsSessionTest extends ContractTestCase
     {
         $response = $this->ws('pwg.session.getStatus');
 
-        self::assertSame('guest', $response['result']['username']);
-        self::assertSame('guest', $response['result']['status']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertSame('guest', $result['username']);
+        self::assertSame('guest', $result['status']);
     }
 
     public function test_getStatus_returns_admin_after_login(): void
     {
         $response = $this->wsAdmin('pwg.session.getStatus');
 
-        self::assertSame('fixture_admin', $response['result']['username']);
-        self::assertSame('webmaster', $response['result']['status']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertSame('fixture_admin', $result['username']);
+        self::assertSame('webmaster', $result['status']);
         self::assertMatchesSchema('session.getStatus', $response);
     }
 
@@ -57,6 +61,8 @@ final class WsSessionTest extends ContractTestCase
         $this->callWs('pwg.session.logout', []);
 
         $status = $this->callWs('pwg.session.getStatus', []);
-        self::assertSame('guest', $status['result']['status']);
+        $result = $status['result'];
+        self::assertIsArray($result);
+        self::assertSame('guest', $result['status']);
     }
 }

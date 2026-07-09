@@ -192,21 +192,27 @@ $additional_filters = [
 
 foreach ($additional_filters as $filter_key => $filter_table) {
     if (isset($_GET[$filter_key])) {
+        $filter_value = $_GET[$filter_key];
+        if (! is_scalar($filter_value)) {
+            fatal_error('[Hacking attempt] the input parameter "' . $filter_key . '" is not valid');
+        }
+        $filter_value = (string) $filter_value;
+
         $query = '
 SELECT
     name
   FROM ' . $filter_table . '
-  WHERE id = ' . $_GET[$filter_key] . '
+  WHERE id = ' . $filter_value . '
 ;';
         $rows = query2array($query);
 
         if (count($rows) == 0) {
-            fatal_error($filter_key . ' #' . $_GET[$filter_key] . ' does not exist');
+            fatal_error($filter_key . ' #' . $filter_value . ' does not exist');
         }
 
         $additional_filt_type = $filter_key;
         $additional_filt_name = $rows[0]['name'];
-        $additional_filt_value = $_GET[$filter_key];
+        $additional_filt_value = $filter_value;
 
         break;
     }

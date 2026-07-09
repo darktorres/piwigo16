@@ -47,9 +47,13 @@ $collection = [];
 if (isset($_POST['nb_photos_deleted'])) {
     check_input_parameter('nb_photos_deleted', $_POST, false, '/^\d+$/');
 
-    // let's fake a collection (we don't know the image_ids so we use "null", we only
-    // care about the number of items here)
-    $collection = array_fill(0, $_POST['nb_photos_deleted'], null);
+    // let's fake a collection (we don't know the image_ids so we use 0 as a
+    // placeholder, we only care about the number of items here): this
+    // branch is reached only after an ajax-driven "delete" action (see
+    // batchManagerGlobal.js), whose photos are already gone, so no
+    // downstream code in the 'delete' action below needs real ids
+    $nb_photos_deleted = is_numeric($_POST['nb_photos_deleted']) ? (int) $_POST['nb_photos_deleted'] : 0;
+    $collection = array_fill(0, $nb_photos_deleted, 0);
 } elseif (isset($_POST['setSelected'])) {
     // Here we don't use check_input_parameter because preg_match has a limit in
     // the repetitive pattern. Found a limit to 3276 but may depend on memory.
@@ -57,30 +61,44 @@ if (isset($_POST['nb_photos_deleted'])) {
     // check_input_parameter('whole_set', $_POST, false, '/^\d+(,\d+)*$/');
     //
     // Instead, let's break the input parameter into pieces and check pieces one by one.
-    $collection = explode(',', (string) $_POST['whole_set']);
+    $whole_set = isset($_POST['whole_set']) && is_string($_POST['whole_set']) ? $_POST['whole_set'] : '';
 
-    foreach ($collection as $id) {
+    foreach (explode(',', $whole_set) as $id) {
         if (! preg_match('/^\d+$/', $id)) {
             fatal_error('[Hacking attempt] the input parameter "whole_set" is not valid');
         }
+        $collection[] = (int) $id;
     }
-} elseif (isset($_POST['selection'])) {
-    $collection = $_POST['selection'];
+} elseif (isset($_POST['selection']) && is_array($_POST['selection'])) {
+    foreach ($_POST['selection'] as $selected_id) {
+        if (is_numeric($selected_id)) {
+            $collection[] = (int) $selected_id;
+        }
+    }
 }
 
 // +-----------------------------------------------------------------------+
 // |                       global mode form submission                     |
 // +-----------------------------------------------------------------------+
 
+// Locally-typed snapshot of $_SESSION['bulk_manager_filter']. It is always
+// written as an array by admin/batch_manager.php (which includes this
+// file), before this file runs; this guards against corrupted/foreign
+// session state and lets PHPStan track a real array shape for the reads
+// below (this file never writes to $_SESSION['bulk_manager_filter']).
+/** @var array<string, mixed> $bulk_manager_filter */
+$bulk_manager_filter = isset($_SESSION['bulk_manager_filter']) && is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
+
 // $page['prefilter'] is a shortcut to test if the current filter contains a
 // given prefilter. The idea is to make conditions simpler to write in the
 // code.
 $page['prefilter'] = 'none';
-if (isset($_SESSION['bulk_manager_filter']['prefilter'])) {
-    $page['prefilter'] = $_SESSION['bulk_manager_filter']['prefilter'];
+if (isset($bulk_manager_filter['prefilter'])) {
+    $page['prefilter'] = $bulk_manager_filter['prefilter'];
 }
 
-$redirect_url = get_root_url() . 'admin.php?page=' . $_GET['page'];
+$get_page = isset($_GET['page']) && is_string($_GET['page']) ? $_GET['page'] : '';
+$redirect_url = get_root_url() . 'admin.php?page=' . $get_page;
 
 if (isset($_POST['submit'])) {
     // if the user tries to apply an action, it means that there is at least 1
@@ -104,10 +122,17 @@ DELETE
         // remove from caddie action available only in caddie so reload content
         $redirect = true;
     } elseif ($action == 'add_tags') {
-        if (empty($_POST['add_tags'])) {
+        if (empty($_POST['add_tags']) || ! is_array($_POST['add_tags'])) {
             $page['errors'][] = l10n('Select at least one tag');
         } else {
-            $tag_ids = get_tag_ids($_POST['add_tags']);
+            $add_tags = [];
+            foreach ($_POST['add_tags'] as $raw_tag) {
+                if (is_string($raw_tag)) {
+                    $add_tags[] = $raw_tag;
+                }
+            }
+
+            $tag_ids = get_tag_ids($add_tags);
             add_tags($tag_ids, $collection);
 
             if ($page['prefilter'] == 'no_tag') {
@@ -115,14 +140,15 @@ DELETE
             }
         }
     } elseif ($action == 'del_tags') {
-        if (isset($_POST['del_tags']) and count($_POST['del_tags']) > 0) {
+        $del_tags = isset($_POST['del_tags']) && is_array($_POST['del_tags']) ? array_filter($_POST['del_tags'], 'is_scalar') : [];
+        if (count($del_tags) > 0) {
             $taglist_before = get_image_tag_ids($collection);
 
             $query = '
 DELETE
   FROM ' . IMAGE_TAG_TABLE . '
   WHERE image_id IN (' . implode(',', $collection) . ')
-    AND tag_id IN (' . implode(',', $_POST['del_tags']) . ')
+    AND tag_id IN (' . implode(',', $del_tags) . ')
 ;';
             pwg_query($query);
 
@@ -130,8 +156,8 @@ DELETE
             $images_to_update = compare_image_tag_lists($taglist_before, $taglist_after);
             update_images_lastmodified($images_to_update);
 
-            if (isset($_SESSION['bulk_manager_filter']['tags']) &&
-              count(array_intersect($_SESSION['bulk_manager_filter']['tags'], $_POST['del_tags']))) {
+            if (isset($bulk_manager_filter['tags']) && is_array($bulk_manager_filter['tags']) &&
+              count(array_intersect(array_filter($bulk_manager_filter['tags'], 'is_scalar'), $del_tags))) {
                 $redirect = true;
             }
         } else {
@@ -140,12 +166,19 @@ DELETE
     }
 
     if ($action == 'associate') {
-        if (empty($_POST['associate'])) {
+        if (empty($_POST['associate']) || ! is_array($_POST['associate'])) {
             $page['errors'][] = l10n('Select at least one album');
         } else {
+            $associate_categories = [];
+            foreach ($_POST['associate'] as $raw_category_id) {
+                if (is_numeric($raw_category_id)) {
+                    $associate_categories[] = (int) $raw_category_id;
+                }
+            }
+
             associate_images_to_categories(
                 $collection,
-                $_POST['associate']
+                $associate_categories
             );
 
             $_SESSION['page_infos'] = [
@@ -156,14 +189,23 @@ DELETE
             if ($page['prefilter'] == 'no_album') {
                 $redirect = true;
             } elseif ($page['prefilter'] == 'no_virtual_album') {
-                $category_info = get_cat_info($_POST['associate']);
-                if (empty($category_info['dir'])) {
-                    $redirect = true;
+                // "no_virtual_album" refresh only makes sense when we know
+                // whether the target album has a physical directory; with
+                // the multi-album selector, use the first selected album
+                // (matches the single-select behavior this branch had
+                // before "associate" became a multi-value field).
+                $first_associate_category = reset($associate_categories);
+                if ($first_associate_category !== false) {
+                    $category_info = get_cat_info($first_associate_category);
+                    if (empty($category_info['dir'])) {
+                        $redirect = true;
+                    }
                 }
             }
         }
     } elseif ($action == 'move') {
-        move_images_to_categories($collection, [$_POST['move']]);
+        $move_category = isset($_POST['move']) && is_numeric($_POST['move']) ? (int) $_POST['move'] : null;
+        move_images_to_categories($collection, $move_category !== null ? [$move_category] : []);
 
         $_SESSION['page_infos'] = [
             l10n('Information data registered in database'),
@@ -173,16 +215,19 @@ DELETE
         if ($page['prefilter'] == 'no_album') {
             $redirect = true;
         } elseif ($page['prefilter'] == 'no_virtual_album') {
-            $category_info = get_cat_info($_POST['move']);
-            if (empty($category_info['dir'])) {
-                $redirect = true;
+            if ($move_category !== null) {
+                $category_info = get_cat_info($move_category);
+                if (empty($category_info['dir'])) {
+                    $redirect = true;
+                }
             }
-        } elseif (isset($_SESSION['bulk_manager_filter']['category'])
-            and $_POST['move'] != $_SESSION['bulk_manager_filter']['category']) {
+        } elseif (isset($bulk_manager_filter['category'])
+            and $move_category != $bulk_manager_filter['category']) {
             $redirect = true;
         }
     } elseif ($action == 'dissociate') {
-        $nb_dissociated = dissociate_images_from_category($collection, $_POST['dissociate']);
+        $dissociate_category = isset($_POST['dissociate']) && is_numeric($_POST['dissociate']) ? (int) $_POST['dissociate'] : 0;
+        $nb_dissociated = dissociate_images_from_category($collection, $dissociate_category);
 
         if ($nb_dissociated > 0) {
             $_SESSION['page_infos'] = [
@@ -303,8 +348,8 @@ DELETE
             'action' => 'privacy_level',
         ]);
 
-        if (isset($_SESSION['bulk_manager_filter']['level'])) {
-            if ($_POST['level'] < $_SESSION['bulk_manager_filter']['level']) {
+        if (isset($bulk_manager_filter['level'])) {
+            if ($_POST['level'] < $bulk_manager_filter['level']) {
                 $redirect = true;
             }
         }
@@ -321,13 +366,16 @@ DELETE
             // now done with ajax calls, with blocks
             // $deleted_count = delete_elements($collection, true);
             if (count($collection) > 0) {
+                if (! isset($_SESSION['page_infos']) || ! is_array($_SESSION['page_infos'])) {
+                    $_SESSION['page_infos'] = [];
+                }
                 $_SESSION['page_infos'][] = l10n_dec(
                     '%d photo was deleted',
                     '%d photos were deleted',
                     count($collection)
                 );
 
-                $redirect_url = get_root_url() . 'admin.php?page=' . $_GET['page'];
+                $redirect_url = get_root_url() . 'admin.php?page=' . $get_page;
                 $redirect = true;
             } else {
                 $page['errors'][] = l10n('No photo can be deleted');
@@ -340,7 +388,7 @@ DELETE
     // synchronize metadata
     elseif ($action == 'metadata') {
         $page['infos'][] = l10n('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>';
-    } elseif ($action == 'delete_derivatives' && ! empty($_POST['del_derivatives_type'])) {
+    } elseif ($action == 'delete_derivatives' && isset($_POST['del_derivatives_type']) && is_array($_POST['del_derivatives_type']) && ! empty($_POST['del_derivatives_type'])) {
         $query = 'SELECT path,representative_ext FROM ' . IMAGES_TABLE . '
   WHERE id IN (' . implode(',', $collection) . ')';
         $result = pwg_query($query);
@@ -352,7 +400,9 @@ DELETE
                 $derivative_infos['representative_ext'] = (string) $info['representative_ext'];
             }
             foreach ($_POST['del_derivatives_type'] as $type) {
-                delete_element_derivatives($derivative_infos, $type);
+                if (is_string($type)) {
+                    delete_element_derivatives($derivative_infos, $type);
+                }
             }
         }
     } elseif ($action == 'generate_derivatives') {
@@ -448,7 +498,7 @@ if (! empty($_GET['display'])) {
     if ($_GET['display'] == 'all') {
         $page['nb_images'] = count($page['cat_elements_id']);
     } else {
-        $page['nb_images'] = intval($_GET['display']);
+        $page['nb_images'] = is_numeric($_GET['display']) ? intval($_GET['display']) : 0;
     }
 } elseif (in_array($conf['batch_manager_images_per_page_global'], [20, 50, 100])) {
     $page['nb_images'] = $conf['batch_manager_images_per_page_global'];
@@ -468,15 +518,17 @@ if (count($page['cat_elements_id']) > 0) {
     $template->assign('navbar', $nav_bar);
 
     $is_category = false;
-    if (isset($_SESSION['bulk_manager_filter']['category'])
-        and ! isset($_SESSION['bulk_manager_filter']['category_recursive'])) {
+    $filter_category_id = 0;
+    if (isset($bulk_manager_filter['category']) && is_numeric($bulk_manager_filter['category'])
+        and ! isset($bulk_manager_filter['category_recursive'])) {
         $is_category = true;
+        $filter_category_id = (int) $bulk_manager_filter['category'];
     }
 
     // If using the 'duplicates' filter,
     // order by the fields that are used to find duplicates.
-    if (isset($_SESSION['bulk_manager_filter']['prefilter'])
-        and $_SESSION['bulk_manager_filter']['prefilter'] === 'duplicates'
+    if (isset($bulk_manager_filter['prefilter'])
+        and $bulk_manager_filter['prefilter'] === 'duplicates'
         and isset($duplicates_on_fields)) {
         // The $duplicates_on_fields variable is defined in ./batch_manager.php
         $order_by_fields = array_merge($duplicates_on_fields, ['id']);
@@ -488,10 +540,10 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
   FROM ' . IMAGES_TABLE;
 
     if ($is_category) {
-        $category_info = get_cat_info($_SESSION['bulk_manager_filter']['category']);
+        $category_info = get_cat_info($filter_category_id);
 
         $conf['order_by'] = $conf['order_by_inside_category'];
-        if (! empty($category_info['image_order'])) {
+        if (! empty($category_info['image_order']) && is_string($category_info['image_order'])) {
             $conf['order_by'] = ' ORDER BY ' . $category_info['image_order'];
         }
 
@@ -504,7 +556,7 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
 
     if ($is_category) {
         $query .= '
-    AND category_id = ' . $_SESSION['bulk_manager_filter']['category'];
+    AND category_id = ' . $filter_category_id;
     }
 
     $query .= '
@@ -520,11 +572,13 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
         $src_image = new SrcImage($row);
 
         $ttitle = render_element_name($row);
-        if ($ttitle != get_name_from_file($row['file'])) {
+        $row_file = is_string($row['file']) ? $row['file'] : '';
+        if ($ttitle != get_name_from_file($row_file)) {
             $ttitle .= ' (' . $row['file'] . ')';
         }
 
-        $ttitle .= '<br>' . $row['width'] . '&times;' . $row['height'] . ' pixels, ' . sprintf('%.2f', $row['filesize'] / 1024) . 'MB';
+        $row_filesize = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
+        $ttitle .= '<br>' . $row['width'] . '&times;' . $row['height'] . ' pixels, ' . sprintf('%.2f', $row_filesize / 1024) . 'MB';
 
         $template->append(
             'thumbnails',

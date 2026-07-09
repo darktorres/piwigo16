@@ -86,7 +86,7 @@ $since_options = [
 
 trigger_notify('loc_begin_comments');
 
-if (! empty($_GET['since'])) {
+if (! empty($_GET['since']) and is_scalar($_GET['since'])) {
     $page['since'] = intval($_GET['since']);
 } else {
     $page['since'] = 4;
@@ -96,7 +96,7 @@ if (! empty($_GET['since'])) {
 //
 $page['sort_by'] = 'date';
 // if the form was submitted, it overloads default behaviour
-if (isset($_GET['sort_by']) and isset($sort_by[$_GET['sort_by']])) {
+if (isset($_GET['sort_by']) and is_string($_GET['sort_by']) and isset($sort_by[$_GET['sort_by']])) {
     $page['sort_by'] = $_GET['sort_by'];
 }
 
@@ -104,7 +104,7 @@ if (isset($_GET['sort_by']) and isset($sort_by[$_GET['sort_by']])) {
 //
 $page['sort_order'] = 'DESC';
 // if the form was submitted, it overloads default behaviour
-if (isset($_GET['sort_order']) and isset($sort_order[$_GET['sort_order']])) {
+if (isset($_GET['sort_order']) and is_string($_GET['sort_order']) and isset($sort_order[$_GET['sort_order']])) {
     $page['sort_order'] = $_GET['sort_order'];
 }
 
@@ -124,7 +124,10 @@ $page['where_clauses'] = [];
 if (isset($_GET['cat']) and $_GET['cat'] != 0) {
     check_input_parameter('cat', $_GET, false, PATTERN_ID);
 
-    $category_ids = get_subcat_ids([$_GET['cat']]);
+    $cat_id = $_GET['cat'];
+    $cat_id = is_scalar($cat_id) ? (string) $cat_id : '0';
+
+    $category_ids = get_subcat_ids([$cat_id]);
     if (empty($category_ids)) {
         $category_ids = [-1];
     }
@@ -134,32 +137,40 @@ if (isset($_GET['cat']) and $_GET['cat'] != 0) {
 }
 
 // search a particular author
-if (! empty($_GET['author'])) {
+if (! empty($_GET['author']) and is_scalar($_GET['author'])) {
+    $author_search = (string) $_GET['author'];
     $page['where_clauses'][] =
-      '(u.' . $conf['user_fields']['username'] . ' = \'' . $_GET['author'] . '\' OR author = \'' . $_GET['author'] . '\')';
+      '(u.' . $conf['user_fields']['username'] . ' = \'' . $author_search . '\' OR author = \'' . $author_search . '\')';
 }
 
 // search a specific comment (if you're coming directly from an admin
 // notification email)
 if (! empty($_GET['comment_id'])) {
     check_input_parameter('comment_id', $_GET, false, PATTERN_ID);
+    // check_input_parameter() validated this against PATTERN_ID (/^\d+$/)
+    // above -- it would have called fatal_error() otherwise.
+    assert(is_numeric($_GET['comment_id']));
+    $get_comment_id = (string) $_GET['comment_id'];
 
     // currently, the $_GET['comment_id'] is only used by admins from email
     // for management purpose (validate/delete)
     if (! is_admin()) {
+        $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+        $request_uri = is_string($request_uri) ? $request_uri : '';
         $login_url =
           get_root_url() . 'identification.php?redirect='
-          . urlencode(urlencode((string) $_SERVER['REQUEST_URI']))
+          . urlencode(urlencode($request_uri))
         ;
         redirect($login_url);
     }
 
-    $page['where_clauses'][] = 'com.id = ' . $_GET['comment_id'];
+    $page['where_clauses'][] = 'com.id = ' . $get_comment_id;
 }
 
 // search a substring among comments content
-if (! empty($_GET['keyword'])) {
-    $keywords = preg_split('/[\s,;]+/', (string) $_GET['keyword']);
+if (! empty($_GET['keyword']) and is_scalar($_GET['keyword'])) {
+    $keyword_search = (string) $_GET['keyword'];
+    $keywords = preg_split('/[\s,;]+/', $keyword_search);
     // the pattern above is a hardcoded, always-valid regex
     assert($keywords !== false);
     $page['where_clauses'][] =
@@ -203,12 +214,15 @@ foreach ($actions as $loop_action) {
     if (isset($_GET[$loop_action])) {
         $action = $loop_action;
         check_input_parameter($action, $_GET, false, PATTERN_ID);
-        $comment_id = $_GET[$action];
+        // check_input_parameter() validated this against PATTERN_ID
+        // (/^\d+$/) above -- it would have called fatal_error() otherwise.
+        assert(is_numeric($_GET[$action]));
+        $comment_id = (int) $_GET[$action];
         break;
     }
 }
 
-if (isset($action)) {
+if (isset($action) and $comment_id !== null) {
     $comment_author_id = get_comment_author_id($comment_id);
     // die_on_error defaults to true, so false is unreachable here
     assert($comment_author_id !== false);
@@ -231,6 +245,10 @@ if (isset($action)) {
         if ($action == 'edit') {
             if (! empty($_POST['content'])) {
                 check_pwg_token();
+                $post_key = $_POST['key'] ?? null;
+                if (! is_string($post_key)) {
+                    $post_key = '';
+                }
                 $comment_action = update_user_comment(
                     [
                         'comment_id' => $_GET['edit'],
@@ -238,18 +256,27 @@ if (isset($action)) {
                         'content' => $_POST['content'],
                         'website_url' => @$_POST['website_url'],
                     ],
-                    $_POST['key']
+                    $post_key
                 );
 
                 switch ($comment_action) {
                     case 'moderate':
+                        if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
+                            $_SESSION['page_infos'] = [];
+                        }
                         $_SESSION['page_infos'][] = l10n('An administrator must authorize your comment before it is visible.');
                         // no break
                     case 'validate':
+                        if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
+                            $_SESSION['page_infos'] = [];
+                        }
                         $_SESSION['page_infos'][] = l10n('Your comment has been registered');
                         $perform_redirect = true;
                         break;
                     case 'reject':
+                        if (! isset($_SESSION['page_errors']) or ! is_array($_SESSION['page_errors'])) {
+                            $_SESSION['page_errors'] = [];
+                        }
                         $_SESSION['page_errors'][] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
                         break;
                     default:
@@ -277,11 +304,14 @@ $template->set_filenames([
     'comments' => 'comments.tpl',
     'comment_list' => 'comment_list.tpl',
 ]);
+$keyword_param = (isset($_GET['keyword']) && is_scalar($_GET['keyword'])) ? (string) $_GET['keyword'] : null;
+$author_param = (isset($_GET['author']) && is_scalar($_GET['author'])) ? (string) $_GET['author'] : null;
+
 $template->assign(
     [
         'F_ACTION' => PHPWG_ROOT_PATH . 'comments.php',
-        'F_KEYWORD' => isset($_GET['keyword']) ? htmlspecialchars(stripslashes((string) $_GET['keyword'])) : '',
-        'F_AUTHOR' => isset($_GET['author']) ? htmlspecialchars(stripslashes((string) $_GET['author'])) : '',
+        'F_KEYWORD' => $keyword_param !== null ? htmlspecialchars(stripslashes($keyword_param)) : '',
+        'F_AUTHOR' => $author_param !== null ? htmlspecialchars(stripslashes($author_param)) : '',
     ]
 );
 
@@ -334,7 +364,7 @@ $template->assign('item_number_options_selected', $page['items_number']);
 // |                            navigation bar                             |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['start'])) {
+if (isset($_GET['start']) and is_scalar($_GET['start'])) {
     $start = intval($_GET['start']);
 } else {
     $start = 0;
@@ -384,6 +414,8 @@ while ($row = pwg_db_fetch_assoc($result)) {
 $count_row = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
 assert($count_row !== null);
 [$counter] = $count_row;
+// FOUND_ROWS() always returns a single non-null numeric value
+assert($counter !== null);
 
 $url = PHPWG_ROOT_PATH . 'comments.php'
   . get_query_string_diff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
@@ -413,21 +445,33 @@ SELECT *
     $categories = query2array($query, 'id');
 
     foreach ($comments as $comment) {
-        if (! empty($elements[$comment['image_id']]['name'])) {
-            $name = $elements[$comment['image_id']]['name'];
+        $image_id = $comment['image_id'];
+        // comments.image_id / image_category.image_id are both NOT NULL
+        // columns; the driver still returns every value as string|null.
+        assert($image_id !== null);
+
+        $category_id = $comment['category_id'];
+        // image_category.category_id is a NOT NULL column
+        assert($category_id !== null);
+
+        if (! empty($elements[$image_id]['name'])) {
+            $name = $elements[$image_id]['name'];
         } else {
-            $name = get_name_from_file($elements[$comment['image_id']]['file']);
+            $file = $elements[$image_id]['file'];
+            // images.file is a NOT NULL column
+            assert($file !== null);
+            $name = get_name_from_file($file);
         }
 
         // source of the thumbnail picture
-        $src_image = new SrcImage($elements[$comment['image_id']]);
+        $src_image = new SrcImage($elements[$image_id]);
 
         // link to the full size picture
         $url = make_picture_url(
             [
-                'category' => $categories[$comment['category_id']],
-                'image_id' => $comment['image_id'],
-                'image_file' => $elements[$comment['image_id']]['file'],
+                'category' => $categories[$category_id],
+                'image_id' => $image_id,
+                'image_file' => $elements[$image_id]['file'],
             ]
         );
 
@@ -438,6 +482,16 @@ SELECT *
             $email = $comment['email'];
         }
 
+        $date = $comment['date'];
+        // comments.date is a NOT NULL column
+        assert($date !== null);
+
+        $author_id = $comment['author_id'];
+        // comments.author_id is nullable in schema; a NULL author can never
+        // match a real user id, so treat it as unowned rather than casting
+        // blindly.
+        $author_id = is_numeric($author_id) ? (int) $author_id : -1;
+
         $tpl_comment = [
             'ID' => $comment['comment_id'],
             'U_PICTURE' => $url,
@@ -445,7 +499,7 @@ SELECT *
             'ALT' => $name,
             'AUTHOR' => trigger_change('render_comment_author', $comment['author']),
             'WEBSITE_URL' => $comment['website_url'],
-            'DATE' => format_date($comment['date'], ['day_name', 'day', 'month', 'year', 'time']),
+            'DATE' => format_date($date, ['day_name', 'day', 'month', 'year', 'time']),
             'CONTENT' => trigger_change('render_comment_content', $comment['content']),
         ];
 
@@ -453,7 +507,7 @@ SELECT *
             $tpl_comment['EMAIL'] = $email;
         }
 
-        if (can_manage_comment('delete', $comment['author_id'])) {
+        if (can_manage_comment('delete', $author_id)) {
             $tpl_comment['U_DELETE'] = add_url_params(
                 $url_self,
                 [
@@ -463,7 +517,7 @@ SELECT *
             );
         }
 
-        if (can_manage_comment('edit', $comment['author_id'])) {
+        if (can_manage_comment('edit', $author_id)) {
             $tpl_comment['U_EDIT'] = add_url_params(
                 $url_self,
                 [
@@ -473,16 +527,16 @@ SELECT *
 
             if (isset($edit_comment) and ($comment['comment_id'] == $edit_comment)) {
                 $tpl_comment['IN_EDIT'] = true;
-                $key = get_ephemeral_key(2, $comment['image_id']);
+                $key = get_ephemeral_key(2, $image_id);
                 $tpl_comment['KEY'] = $key;
-                $tpl_comment['IMAGE_ID'] = $comment['image_id'];
+                $tpl_comment['IMAGE_ID'] = $image_id;
                 $tpl_comment['CONTENT'] = $comment['content'];
                 $tpl_comment['PWG_TOKEN'] = get_pwg_token();
                 $tpl_comment['U_CANCEL'] = $url_self;
             }
         }
 
-        if (can_manage_comment('validate', $comment['author_id'])) {
+        if (can_manage_comment('validate', $author_id)) {
             if ($comment['validated'] != 'true') {
                 $tpl_comment['U_VALIDATE'] = add_url_params(
                     $url_self,

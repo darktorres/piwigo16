@@ -34,7 +34,7 @@ trigger_notify('loc_begin_index');
 
 // ---------------------------------------------- change of image display order
 if (isset($_GET['image_order'])) {
-    if ((int) $_GET['image_order'] > 0) {
+    if (is_numeric($_GET['image_order']) && (int) $_GET['image_order'] > 0) {
         pwg_set_session_var('image_order', (int) $_GET['image_order']);
     } else {
         pwg_unset_session_var('image_order');
@@ -48,7 +48,7 @@ if (isset($_GET['image_order'])) {
 }
 if (isset($_GET['display'])) {
     $page['meta_robots']['noindex'] = 1;
-    if (array_key_exists((string) $_GET['display'], ImageStdParams::get_defined_type_map())) {
+    if (is_string($_GET['display']) && array_key_exists($_GET['display'], ImageStdParams::get_defined_type_map())) {
         pwg_set_session_var('index_deriv', $_GET['display']);
     }
 }

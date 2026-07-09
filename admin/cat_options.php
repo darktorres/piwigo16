@@ -37,26 +37,34 @@ if (! empty($_POST)) {
 
 if (isset($_POST['falsify'])
     and isset($_POST['cat_true'])
+    and is_array($_POST['cat_true'])
     and count($_POST['cat_true']) > 0) {
+    $cat_true = [];
+    foreach ($_POST['cat_true'] as $raw_cat_id) {
+        if (is_numeric($raw_cat_id)) {
+            $cat_true[] = (int) $raw_cat_id;
+        }
+    }
+
     switch ($_GET['section']) {
         case 'comments':
 
             $query = '
 UPDATE ' . CATEGORIES_TABLE . '
   SET commentable = \'false\'
-  WHERE id IN (' . implode(',', $_POST['cat_true']) . ')
+  WHERE id IN (' . implode(',', $cat_true) . ')
 ;';
             pwg_query($query);
             break;
 
         case 'visible':
 
-            set_cat_visible($_POST['cat_true'], 'false');
+            set_cat_visible($cat_true, 'false');
             break;
 
         case 'status':
 
-            set_cat_status($_POST['cat_true'], 'private');
+            set_cat_status($cat_true, 'private');
             break;
 
         case 'representative':
@@ -64,51 +72,59 @@ UPDATE ' . CATEGORIES_TABLE . '
             $query = '
 UPDATE ' . CATEGORIES_TABLE . '
   SET representative_picture_id = NULL
-  WHERE id IN (' . implode(',', $_POST['cat_true']) . ')
+  WHERE id IN (' . implode(',', $cat_true) . ')
 ;';
             pwg_query($query);
             break;
 
     }
 
-    pwg_activity('album', $_POST['cat_true'], 'edit', [
+    pwg_activity('album', $cat_true, 'edit', [
         'section' => $_GET['section'],
         'action' => 'falsify',
     ]);
 } elseif (isset($_POST['trueify'])
          and isset($_POST['cat_false'])
+         and is_array($_POST['cat_false'])
          and count($_POST['cat_false']) > 0) {
+    $cat_false = [];
+    foreach ($_POST['cat_false'] as $raw_cat_id) {
+        if (is_numeric($raw_cat_id)) {
+            $cat_false[] = (int) $raw_cat_id;
+        }
+    }
+
     switch ($_GET['section']) {
         case 'comments':
 
             $query = '
 UPDATE ' . CATEGORIES_TABLE . '
   SET commentable = \'true\'
-  WHERE id IN (' . implode(',', $_POST['cat_false']) . ')
+  WHERE id IN (' . implode(',', $cat_false) . ')
 ;';
             pwg_query($query);
             break;
 
         case 'visible':
 
-            set_cat_visible($_POST['cat_false'], 'true');
+            set_cat_visible($cat_false, 'true');
             break;
 
         case 'status':
 
-            set_cat_status($_POST['cat_false'], 'public');
+            set_cat_status($cat_false, 'public');
             break;
 
         case 'representative':
 
-            // theoretically, all categories in $_POST['cat_false'] contain at
+            // theoretically, all categories in $cat_false contain at
             // least one element, so Piwigo can find a representant.
-            set_random_representant($_POST['cat_false']);
+            set_random_representant($cat_false);
             break;
 
     }
 
-    pwg_activity('album', $_POST['cat_false'], 'edit', [
+    pwg_activity('album', $cat_false, 'edit', [
         'section' => $_GET['section'],
         'action' => 'trueify',
     ]);
@@ -125,23 +141,24 @@ $template->set_filenames(
     ]
 );
 
-$page['section'] = $_GET['section'] ?? 'status';
-if (! in_array($page['section'], ['comments', 'visible', 'status', 'representative'])) {
-    $page['section'] = 'status';
+$section = $_GET['section'] ?? 'status';
+if (! is_string($section) or ! in_array($section, ['comments', 'visible', 'status', 'representative'], true)) {
+    $section = 'status';
 }
+$page['section'] = $section;
 $base_url = PHPWG_ROOT_PATH . 'admin.php?page=cat_options&amp;section=';
 
 $template->assign(
     [
         'U_HELP' => get_root_url() . 'admin/popuphelp.php?page=cat_options',
-        'F_ACTION' => $base_url . $page['section'],
+        'F_ACTION' => $base_url . $section,
     ]
 );
 
 // TabSheet
 $tabsheet = new tabsheet();
 $tabsheet->set_id('cat_options');
-$tabsheet->select($page['section']);
+$tabsheet->select($section);
 $tabsheet->assign();
 
 // +-----------------------------------------------------------------------+
@@ -159,7 +176,7 @@ $tabsheet->assign();
 // option
 $cats_true = [];
 $cats_false = [];
-[$query_true, $query_false, $l_section, $l_true, $l_false] = match ($page['section']) {
+[$query_true, $query_false, $l_section, $l_true, $l_false] = match ($section) {
     'comments' => [
         '
 SELECT id,name,uppercats,global_rank
@@ -205,7 +222,10 @@ SELECT id,name,uppercats,global_rank
         l10n('Public'),
         l10n('Private'),
     ],
-    'representative' => [
+    // 'representative' is the only value that can still reach here: $section
+    // is already restricted to comments/visible/status/representative by
+    // the in_array() guard above.
+    default => [
         '
 SELECT id,name,uppercats,global_rank
   FROM ' . CATEGORIES_TABLE . '
@@ -220,7 +240,6 @@ SELECT DISTINCT id,name,uppercats,global_rank
         l10n('singly represented'),
         l10n('randomly represented'),
     ],
-    default => throw new InvalidArgumentException('Invalid section: ' . $page['section']),
 };
 $template->assign(
     [

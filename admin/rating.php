@@ -75,7 +75,9 @@ SELECT ' . $conf['user_fields']['username'] . ' as username, ' . $conf['user_fie
 ;';
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
-    $users[$row['id']] = stripslashes((string) $row['username']);
+    if (is_string($row['id'])) {
+        $users[$row['id']] = stripslashes((string) $row['username']);
+    }
 }
 
 $query = '
@@ -94,6 +96,7 @@ WHERE 1=1' . $page['user_filter'];
 $count_row = pwg_db_fetch_row(pwg_query($query));
 assert($count_row !== null);
 [$nb_images] = $count_row;
+$nb_images = is_numeric($nb_images) ? (int) $nb_images : 0;
 
 $query = '
 SELECT
@@ -219,10 +222,11 @@ ORDER BY date DESC;';
       ];
 
     while ($row = pwg_db_fetch_assoc($result)) {
-        if (isset($users[$row['user_id']])) {
-            $user_rate = $users[$row['user_id']];
+        $row_user_id = is_string($row['user_id']) ? $row['user_id'] : '';
+        if (isset($users[$row_user_id])) {
+            $user_rate = $users[$row_user_id];
         } else {
-            $user_rate = '? ' . $row['user_id'];
+            $user_rate = '? ' . $row_user_id;
         }
         if (strlen((string) $row['anonymous_id']) > 0) {
             $user_rate .= '(' . $row['anonymous_id'] . ')';

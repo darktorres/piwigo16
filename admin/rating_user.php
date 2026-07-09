@@ -21,12 +21,12 @@ $tabsheet->select('rating_user');
 $tabsheet->assign();
 
 $filter_min_rates = 2;
-if (isset($_GET['f_min_rates'])) {
+if (isset($_GET['f_min_rates']) && is_numeric($_GET['f_min_rates'])) {
     $filter_min_rates = (int) $_GET['f_min_rates'];
 }
 
 $consensus_top_number = $conf['top_number'];
-if (isset($_GET['consensus_top_number'])) {
+if (isset($_GET['consensus_top_number']) && is_numeric($_GET['consensus_top_number'])) {
     $consensus_top_number = (int) $_GET['consensus_top_number'];
 }
 
@@ -42,9 +42,10 @@ $query = 'SELECT DISTINCT
 $users_by_id = [];
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
+    $status = $row['status'];
     $users_by_id[(int) $row['id']] = [
-        'name' => $row['name'],
-        'anon' => is_autorize_status(ACCESS_CLASSIC, $row['status']) ? false : true,
+        'name' => is_string($row['name']) ? $row['name'] : '',
+        'anon' => is_autorize_status(ACCESS_CLASSIC, is_string($status) ? $status : '') ? false : true,
     ];
 }
 
@@ -62,13 +63,14 @@ $query = '
 SELECT * FROM ' . RATE_TABLE . ' ORDER by date DESC';
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
-    if (! isset($users_by_id[$row['user_id']])) {
-        $users_by_id[$row['user_id']] = [
+    $user_id = (int) $row['user_id'];
+    if (! isset($users_by_id[$user_id])) {
+        $users_by_id[$user_id] = [
             'name' => '???' . $row['user_id'],
             'anon' => false,
         ];
     }
-    $usr = $users_by_id[$row['user_id']];
+    $usr = $users_by_id[$user_id];
     if ($usr['anon']) {
         $user_key = $usr['name'] . '(' . $row['anonymous_id'] . ')';
     } else {
@@ -76,7 +78,7 @@ while ($row = pwg_db_fetch_assoc($result)) {
     }
     if (! isset($by_user_ratings[$user_key])) {
         $rating = $by_user_rating_model;
-        $rating['uid'] = (int) $row['user_id'];
+        $rating['uid'] = $user_id;
         $rating['aid'] = $usr['anon'] ? $row['anonymous_id'] : '';
         $rating['last_date'] = $rating['first_date'] = $row['date'];
     } else {
@@ -84,12 +86,13 @@ while ($row = pwg_db_fetch_assoc($result)) {
         $rating['first_date'] = $row['date'];
     }
 
-    $rating['rates'][$row['rate']][] = [
-        'id' => $row['element_id'],
+    $element_id = (int) $row['element_id'];
+    $rating['rates'][(int) $row['rate']][] = [
+        'id' => $element_id,
         'date' => $row['date'],
     ];
     $by_user_ratings[$user_key] = $rating;
-    $image_ids[$row['element_id']] = 1;
+    $image_ids[$element_id] = 1;
 }
 
 // get image tn urls
@@ -101,7 +104,7 @@ if (count($image_ids) > 0) {
     $result = pwg_query($query);
     $params = ImageStdParams::get_by_type(IMG_SQUARE);
     while ($row = pwg_db_fetch_assoc($result)) {
-        $image_urls[$row['id']] = [
+        $image_urls[(int) $row['id']] = [
             'tn' => DerivativeImage::url($params, $row),
             'page' => make_picture_url([
                 'image_id' => $row['id'],
@@ -128,7 +131,12 @@ $query = 'SELECT id
   FROM ' . IMAGES_TABLE . '
   ORDER by rating_score DESC
   LIMIT ' . $consensus_top_number;
-$best_rated = array_flip(array_from_query($query, 'id'));
+// array_from_query()'s declared return type is array<int|string, mixed>
+// (it loses query2array()'s more precise list<string|null> for this
+// single-column mode); filter to numeric strings and cast to int (matching
+// how $id_date['id'] -- this array's lookup key below -- is always a real
+// int) before array_flip().
+$best_rated = array_flip(array_map(intval(...), array_filter(array_from_query($query, 'id'), 'is_numeric')));
 
 // by user stats
 foreach ($by_user_ratings as $id => &$rating) {
@@ -183,7 +191,9 @@ foreach ($by_user_ratings as $id => $rating) {
  */
 function avg_compare(array $a, array $b): int
 {
-    $d = $a['avg'] - $b['avg'];
+    $a_avg = is_numeric($a['avg'] ?? null) ? (float) $a['avg'] : 0.0;
+    $b_avg = is_numeric($b['avg'] ?? null) ? (float) $b['avg'] : 0.0;
+    $d = $a_avg - $b_avg;
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
@@ -193,7 +203,9 @@ function avg_compare(array $a, array $b): int
  */
 function count_compare(array $a, array $b): int
 {
-    $d = $a['count'] - $b['count'];
+    $a_count = is_numeric($a['count'] ?? null) ? (float) $a['count'] : 0.0;
+    $b_count = is_numeric($b['count'] ?? null) ? (float) $b['count'] : 0.0;
+    $d = $a_count - $b_count;
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
@@ -203,7 +215,9 @@ function count_compare(array $a, array $b): int
  */
 function cv_compare(array $a, array $b): int
 {
-    $d = $b['cv'] - $a['cv']; // desc
+    $a_cv = is_numeric($a['cv'] ?? null) ? (float) $a['cv'] : 0.0;
+    $b_cv = is_numeric($b['cv'] ?? null) ? (float) $b['cv'] : 0.0;
+    $d = $b_cv - $a_cv; // desc
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
@@ -213,7 +227,9 @@ function cv_compare(array $a, array $b): int
  */
 function consensus_dev_compare(array $a, array $b): int
 {
-    $d = $b['cd'] - $a['cd']; // desc
+    $a_cd = is_numeric($a['cd'] ?? null) ? (float) $a['cd'] : 0.0;
+    $b_cd = is_numeric($b['cd'] ?? null) ? (float) $b['cd'] : 0.0;
+    $d = $b_cd - $a_cd; // desc
     return ($d == 0) ? 0 : ($d < 0 ? -1 : 1);
 }
 
@@ -223,7 +239,9 @@ function consensus_dev_compare(array $a, array $b): int
  */
 function last_rate_compare(array $a, array $b): int
 {
-    return -strcmp((string) $a['last_date'], (string) $b['last_date']);
+    $a_date = is_string($a['last_date'] ?? null) ? $a['last_date'] : '';
+    $b_date = is_string($b['last_date'] ?? null) ? $b['last_date'] : '';
+    return -strcmp($a_date, $b_date);
 }
 
 $order_by_index = 4;

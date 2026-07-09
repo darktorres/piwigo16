@@ -18,7 +18,12 @@ final class WsUsersTest extends ContractTestCase
     {
         $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics']);
 
-        $usernames = array_column($response['result']['users'], 'username');
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $users = $result['users'] ?? null;
+        self::assertIsArray($users);
+
+        $usernames = array_column($users, 'username');
         self::assertContains('fixture_admin', $usernames, 'fixture_admin must appear in user list');
     }
 
@@ -43,6 +48,7 @@ final class WsUsersTest extends ContractTestCase
         $response = $this->wsAdmin('pwg.users.favorites.getList');
 
         $result = $response['result'];
+        self::assertIsArray($result);
         self::assertArrayHasKey('paging', $result);
         self::assertArrayHasKey('images', $result);
     }

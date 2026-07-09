@@ -42,6 +42,9 @@ $page['start'] = $page['startcat'] = 0;
 if ($conf['question_mark_in_urls'] == false and
      isset($_SERVER['PATH_INFO']) and ! empty($_SERVER['PATH_INFO'])) {
     $rewritten = $_SERVER['PATH_INFO'];
+    // $_SERVER values are typed mixed by PHPStan (PATH_INFO is a string in
+    // practice, but the superglobal's declared value type doesn't say so)
+    $rewritten = is_string($rewritten) ? $rewritten : '';
     $rewritten = str_replace('//', '/', $rewritten);
     $path_count = count(explode('/', $rewritten));
     $page['root_path'] = PHPWG_ROOT_PATH . str_repeat('../', $path_count - 1);
@@ -163,6 +166,10 @@ if ($page['section'] == 'categories' and ! isset($page['flat'])) {
 
 if (pwg_get_session_var('image_order', 0) > 0) {
     $image_order_id = pwg_get_session_var('image_order');
+    // pwg_get_session_var() is declared to return mixed; index.php is the
+    // only writer of the 'image_order' session var and always stores an
+    // int, but that isn't visible through the session accessor's signature
+    $image_order_id = is_numeric($image_order_id) ? (int) $image_order_id : -1;
 
     $orders = get_category_preferred_image_orders();
 
@@ -320,9 +327,11 @@ else {
         $items = get_image_ids_for_tags($page['tag_ids']);
 
         if (count($items) == 0) {
+            $remote_addr = $_SERVER['REMOTE_ADDR'];
+            $remote_addr = is_string($remote_addr) ? $remote_addr : '';
             $logger->info(
                 'attempt to see the name of the tag #' . implode(', #', $page['tag_ids'])
-        . ' from the address : ' . $_SERVER['REMOTE_ADDR']
+        . ' from the address : ' . $remote_addr
             );
             access_denied();
         }
@@ -570,7 +579,13 @@ if (isset($page['chronology_field'])) {
 
 // title update
 if (isset($page['title'])) {
-    $page['section_title'] = '<a href="' . get_gallery_home_url() . '">' . l10n('Home') . '</a>';
+    // get_gallery_home_url() is declared to return `mixed`
+    // (include/functions_url.inc.php); every real branch of its body
+    // actually returns a string, so this narrows locally rather than
+    // widening this concatenation's context
+    $gallery_home_url = get_gallery_home_url();
+    $gallery_home_url = is_string($gallery_home_url) ? $gallery_home_url : '';
+    $page['section_title'] = '<a href="' . $gallery_home_url . '">' . l10n('Home') . '</a>';
     if (! empty($page['title'])) {
         $page['section_title'] .= $conf['level_separator'] . $page['title'];
     } else {

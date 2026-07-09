@@ -90,12 +90,17 @@ function activate_core_plugins(): void
  */
 function install_db_connect(&$infos, &$errors): void
 {
+    $dbhost = is_string($_POST['dbhost'] ?? null) ? $_POST['dbhost'] : '';
+    $dbuser = is_string($_POST['dbuser'] ?? null) ? $_POST['dbuser'] : '';
+    $dbpasswd = is_string($_POST['dbpasswd'] ?? null) ? $_POST['dbpasswd'] : '';
+    $dbname = is_string($_POST['dbname'] ?? null) ? $_POST['dbname'] : '';
+
     try {
         pwg_db_connect(
-            $_POST['dbhost'],
-            $_POST['dbuser'],
-            $_POST['dbpasswd'],
-            $_POST['dbname']
+            $dbhost,
+            $dbuser,
+            $dbpasswd,
+            $dbname
         );
         pwg_db_check_version();
     } catch (Exception $e) {

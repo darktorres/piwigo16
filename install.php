@@ -21,41 +21,21 @@ pwg_load_env_file(PHPWG_ROOT_PATH);
 // precaution to prevent someone trying to break out of a SQL statement.
 //
 if (function_exists('get_magic_quotes_gpc') && ! @get_magic_quotes_gpc()) {
-    foreach ($_POST as $k => $v) {
-        if (is_array($_POST[$k])) {
-            foreach ($_POST[$k] as $k2 => $v2) {
-                $_POST[$k][$k2] = addslashes((string) $v2);
-            }
-            @reset($_POST[$k]);
-        } else {
-            $_POST[$k] = addslashes((string) $v);
+    // Leaf values recursed into by array_walk_recursive() from $_GET/$_POST/
+    // $_COOKIE are always strings in practice (HTTP request data never
+    // contains scalars other than strings; arrays are recursed into rather
+    // than passed to the callback), but the parameter is typed mixed so we
+    // narrow rather than force-cast it. Same pattern as
+    // include/common.inc.php's sanitize_mysql_kv().
+    function install_sanitize_mysql_kv(mixed &$v, int|string $k): void
+    {
+        if (is_string($v)) {
+            $v = addslashes($v);
         }
     }
-    @reset($_POST);
-
-    foreach ($_GET as $k => $v) {
-        if (is_array($_GET[$k])) {
-            foreach ($_GET[$k] as $k2 => $v2) {
-                $_GET[$k][$k2] = addslashes((string) $v2);
-            }
-            @reset($_GET[$k]);
-        } else {
-            $_GET[$k] = addslashes((string) $v);
-        }
-    }
-    @reset($_GET);
-
-    foreach ($_COOKIE as $k => $v) {
-        if (is_array($_COOKIE[$k])) {
-            foreach ($_COOKIE[$k] as $k2 => $v2) {
-                $_COOKIE[$k][$k2] = addslashes((string) $v2);
-            }
-            @reset($_COOKIE[$k]);
-        } else {
-            $_COOKIE[$k] = addslashes((string) $v);
-        }
-    }
-    @reset($_COOKIE);
+    array_walk_recursive($_POST, install_sanitize_mysql_kv(...));
+    array_walk_recursive($_GET, install_sanitize_mysql_kv(...));
+    array_walk_recursive($_COOKIE, install_sanitize_mysql_kv(...));
 }
 
 // ----------------------------------------------------- variable initialization
@@ -63,7 +43,9 @@ if (function_exists('get_magic_quotes_gpc') && ! @get_magic_quotes_gpc()) {
 define('DEFAULT_PREFIX_TABLE', 'piwigo_');
 
 if (isset($_POST['install'])) {
-    $prefixeTable = $_POST['prefix'];
+    // Narrow to string (and guard the possibly-missing array key) rather than
+    // trusting raw POST data downstream in SQL/file-content concatenation.
+    $prefixeTable = is_string($_POST['prefix'] ?? null) ? $_POST['prefix'] : DEFAULT_PREFIX_TABLE;
 } else {
     $prefixeTable = DEFAULT_PREFIX_TABLE;
 }
@@ -81,8 +63,9 @@ include PHPWG_ROOT_PATH . 'include/template.class.php';
 // download database config file if exists
 check_input_parameter('dl', $_GET, false, '/^[a-f0-9]{32}$/');
 
-if (! empty($_GET['dl']) && file_exists(PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $_GET['dl'])) {
-    $filename = PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $_GET['dl'];
+$dl_param = $_GET['dl'] ?? null;
+if (is_string($dl_param) && $dl_param !== '' && file_exists(PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $dl_param)) {
+    $filename = PHPWG_ROOT_PATH . $conf['data_location'] . 'pwg_' . $dl_param;
     header('Cache-Control: no-cache, must-revalidate');
     header('Pragma: no-cache');
     header('Content-Disposition: attachment; filename="database.inc.php"');
@@ -94,10 +77,10 @@ if (! empty($_GET['dl']) && file_exists(PHPWG_ROOT_PATH . $conf['data_location']
 }
 
 // Obtain various vars
-$dbhost = (! empty($_POST['dbhost'])) ? $_POST['dbhost'] : 'localhost';
-$dbuser = (! empty($_POST['dbuser'])) ? $_POST['dbuser'] : '';
-$dbpasswd = (! empty($_POST['dbpasswd'])) ? $_POST['dbpasswd'] : '';
-$dbname = (! empty($_POST['dbname'])) ? $_POST['dbname'] : '';
+$dbhost = (! empty($_POST['dbhost']) && is_string($_POST['dbhost'])) ? $_POST['dbhost'] : 'localhost';
+$dbuser = (! empty($_POST['dbuser']) && is_string($_POST['dbuser'])) ? $_POST['dbuser'] : '';
+$dbpasswd = (! empty($_POST['dbpasswd']) && is_string($_POST['dbpasswd'])) ? $_POST['dbpasswd'] : '';
+$dbname = (! empty($_POST['dbname']) && is_string($_POST['dbname'])) ? $_POST['dbname'] : '';
 
 // dblayer
 if (! extension_loaded('mysqli')) {
@@ -105,10 +88,10 @@ if (! extension_loaded('mysqli')) {
 }
 $dblayer = 'mysqli';
 
-$admin_name = (! empty($_POST['admin_name'])) ? $_POST['admin_name'] : '';
-$admin_pass1 = (! empty($_POST['admin_pass1'])) ? $_POST['admin_pass1'] : '';
-$admin_pass2 = (! empty($_POST['admin_pass2'])) ? $_POST['admin_pass2'] : '';
-$admin_mail = (! empty($_POST['admin_mail'])) ? $_POST['admin_mail'] : '';
+$admin_name = (! empty($_POST['admin_name']) && is_string($_POST['admin_name'])) ? $_POST['admin_name'] : '';
+$admin_pass1 = (! empty($_POST['admin_pass1']) && is_string($_POST['admin_pass1'])) ? $_POST['admin_pass1'] : '';
+$admin_pass2 = (! empty($_POST['admin_pass2']) && is_string($_POST['admin_pass2'])) ? $_POST['admin_pass2'] : '';
+$admin_mail = (! empty($_POST['admin_mail']) && is_string($_POST['admin_mail'])) ? $_POST['admin_mail'] : '';
 
 $is_newsletter_subscribe = true;
 if (isset($_POST['install'])) {
@@ -131,8 +114,8 @@ include PHPWG_ROOT_PATH . 'admin/include/functions.php';
 include PHPWG_ROOT_PATH . 'admin/include/languages.class.php';
 $languages = new languages('utf-8');
 
-if (isset($_GET['language'])) {
-    $language = strip_tags((string) $_GET['language']);
+if (isset($_GET['language']) && is_string($_GET['language'])) {
+    $language = strip_tags($_GET['language']);
 
     if (! in_array($language, array_keys($languages->fs_languages))) {
         $language = PHPWG_DEFAULT_LANGUAGE;
@@ -140,8 +123,10 @@ if (isset($_GET['language'])) {
 } else {
     $language = 'en_UK';
     // Try to get browser language
+    $accept_language = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null;
+    $accept_language = is_string($accept_language) ? $accept_language : '';
     foreach ($languages->fs_languages as $language_code => $fs_language) {
-        if (substr((string) $language_code, 0, 2) == @substr((string) $_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)) {
+        if (substr($language_code, 0, 2) == substr($accept_language, 0, 2)) {
             $language = $language_code;
             break;
         }
@@ -195,14 +180,14 @@ if (isset($_POST['install'])) {
     pwg_db_check_charset();
 
     if (
-        strlen((string) $prefixeTable) > 20
-        or preg_match('/^\d/', (string) $prefixeTable)
-        or ! preg_match('/^[a-zA-Z0-9_$]*$/u', (string) $prefixeTable)
+        strlen($prefixeTable) > 20
+        or preg_match('/^\d/', $prefixeTable)
+        or ! preg_match('/^[a-zA-Z0-9_$]*$/u', $prefixeTable)
     ) {
         $errors[] = 'invalid table prefix';
     }
 
-    $webmaster = trim((string) preg_replace('/\s{2,}/', ' ', (string) $admin_name));
+    $webmaster = trim((string) preg_replace('/\s{2,}/', ' ', $admin_name));
     if (empty($webmaster)) {
         $errors[] = l10n('enter a login for webmaster');
     } elseif (preg_match('/[\'"]/', $webmaster)) {
@@ -232,7 +217,7 @@ if (isset($_POST['install'])) {
         $env_file = PHPWG_ROOT_PATH . pwg_test_mode_env_file();
         // Strip line-breaks to prevent .env injection via crafted POST values.
         $env_vals = array_map(
-            fn ($v): string|array => str_replace(["\n", "\r", "\0"], '', $v),
+            fn (string $v): string => str_replace(["\n", "\r", "\0"], '', $v),
             [$dbhost, $dbuser, $dbpasswd, $dbname, $prefixeTable]
         );
         $env_body = 'PIWIGO_DB_HOST=' . $env_vals[0] . "\n" . 'PIWIGO_DB_USER=' . $env_vals[1] . "\n"
@@ -242,8 +227,10 @@ if (isset($_POST['install'])) {
         if (pwg_test_mode_is_active()) {
             $scheme = (! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
             $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $host = is_string($host) ? $host : 'localhost';
             $script = $_SERVER['SCRIPT_NAME'] ?? '';
-            $base_url = rtrim($scheme . '://' . $host . dirname((string) $script), '/');
+            $script = is_string($script) ? $script : '';
+            $base_url = rtrim($scheme . '://' . $host . dirname($script), '/');
             if ($base_url !== '') {
                 $env_body .= 'PIWIGO_BASE_URL=' . $base_url . "\n";
             }
@@ -465,10 +452,20 @@ if ($step == 1) {
         // we don't load user cache because since Piwigo 15.4.0 the calculation of user
         // cache requires $logger which is not instanciated
         $user = build_user(1, false);
-        log_user($user['id'], false);
+        // build_user() returns array<string, mixed>; the 'id' key we just set
+        // to the literal user id 1 doesn't retain that literal type through
+        // the return, so narrow to what log_user() actually accepts.
+        $login_user_id = $user['id'];
+        $login_user_id = is_int($login_user_id) || (is_string($login_user_id) && is_numeric($login_user_id)) ? $login_user_id : false;
+        log_user($login_user_id, false);
         $_SESSION['connected_with'] = 'pwg_ui';
 
-        $user['preferences']['show_whats_new_' . get_branch_from_version(PHPWG_VERSION)] = false;
+        // Same reason: narrow 'preferences' to array without discarding
+        // whatever getuserdata() already populated it with.
+        $preferences = $user['preferences'] ?? null;
+        $preferences = is_array($preferences) ? $preferences : [];
+        $preferences['show_whats_new_' . get_branch_from_version(PHPWG_VERSION)] = false;
+        $user['preferences'] = $preferences;
 
         // newsletter subscription
         if ($is_newsletter_subscribe) {
@@ -481,7 +478,8 @@ if ($step == 1) {
                 ]
             );
 
-            $user['preferences']['show_newsletter_subscription'] = false;
+            $preferences['show_newsletter_subscription'] = false;
+            $user['preferences'] = $preferences;
         }
 
         userprefs_save();

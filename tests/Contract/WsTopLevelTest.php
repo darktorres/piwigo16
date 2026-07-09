@@ -12,7 +12,10 @@ final class WsTopLevelTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.getVersion', $response);
-        self::assertMatchesRegularExpression('/^\d+\.\d+/', $response['result']);
+
+        $result = $response['result'];
+        self::assertIsString($result);
+        self::assertMatchesRegularExpression('/^\d+\.\d+/', $result);
     }
 
     public function test_getInfos_returns_install_statistics(): void
@@ -22,7 +25,13 @@ final class WsTopLevelTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.getInfos', $response);
 
-        $names = array_column($response['result']['infos'], 'name');
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertArrayHasKey('infos', $result);
+        $infos = $result['infos'];
+        self::assertIsArray($infos);
+
+        $names = array_column($infos, 'name');
         self::assertContains('version', $names);
         self::assertContains('nb_elements', $names);
         self::assertContains('nb_categories', $names);
@@ -49,6 +58,10 @@ final class WsTopLevelTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.getMissingDerivatives', $response);
-        self::assertIsArray($response['result']['urls']);
+
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertArrayHasKey('urls', $result);
+        self::assertIsArray($result['urls']);
     }
 }

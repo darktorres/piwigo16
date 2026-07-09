@@ -77,6 +77,9 @@ SELECT id, file, path, representative_ext
         // TODO : 'language_selected' => ....
     ];
 
+    $mail_content = $_POST['mail_content'] ?? null;
+    $mail_content = is_string($mail_content) ? $mail_content : '';
+
     $tpl = [
         'filename' => 'cat_group_info',
         'assign' => [
@@ -91,11 +94,11 @@ SELECT id, file, path, representative_ext
                     ],
                 ]
             ),
-            'CPL_CONTENT' => empty($_POST['mail_content']) ? '' : stripslashes((string) $_POST['mail_content']),
+            'CPL_CONTENT' => empty($mail_content) ? '' : stripslashes($mail_content),
         ],
     ];
 
-    if ($_POST['who'] == 'users' and isset($_POST['users']) and count($_POST['users']) > 0) {
+    if ($_POST['who'] == 'users' and isset($_POST['users']) and is_array($_POST['users']) and count($_POST['users']) > 0) {
         check_input_parameter('users', $_POST, true, PATTERN_ID);
 
         // TODO code very similar to function pwg_mail_group. We'd better create
@@ -106,6 +109,11 @@ SELECT id, file, path, representative_ext
         // have access to this album. No real privacy issue here, even if we
         // send the email to a user without permission.
 
+        // check_input_parameter() above already validated that every item
+        // matches PATTERN_ID (digits only), so this filter only exists to
+        // give implode() a provably string-castable array.
+        $post_user_ids = array_filter($_POST['users'], 'is_string');
+
         $query = '
 SELECT
     ui.user_id,
@@ -115,15 +123,22 @@ SELECT
     u.' . $conf['user_fields']['username'] . ' AS username
   FROM ' . USER_INFOS_TABLE . ' AS ui
     JOIN ' . USERS_TABLE . ' AS u ON u.' . $conf['user_fields']['id'] . ' = ui.user_id
-  WHERE ui.user_id IN (' . implode(',', $_POST['users']) . ')
+  WHERE ui.user_id IN (' . implode(',', $post_user_ids) . ')
 ;';
         $users = query2array($query);
         $usernames = [];
 
         foreach ($users as $u) {
+            // user_infos.user_id is the row's own key column; a
+            // non-numeric value would mean a corrupt join, so skip this
+            // user rather than pass a fabricated id to create_user_auth_key().
+            if (! is_numeric($u['user_id'])) {
+                continue;
+            }
+
             $usernames[] = $u['username'];
 
-            $authkey = create_user_auth_key($u['user_id'], $u['status']);
+            $authkey = create_user_auth_key((int) $u['user_id'], $u['status']);
 
             $user_tpl = $tpl;
 
@@ -143,12 +158,15 @@ SELECT
             }
 
             $user_args = $args;
-            if (isset($authkey['auth_key'])) {
+            if (isset($authkey['auth_key']) and is_string($authkey['auth_key'])) {
                 $user_args['auth_key'] = $authkey['auth_key'];
             }
 
-            switch_lang_to($u['language']);
-            pwg_mail($u['email'], $user_args, $user_tpl);
+            $user_language = is_string($u['language']) ? $u['language'] : get_default_language();
+            $user_email = is_string($u['email']) ? $u['email'] : '';
+
+            switch_lang_to($user_language);
+            pwg_mail($user_email, $user_args, $user_tpl);
             switch_lang_back();
         }
 
@@ -163,13 +181,18 @@ SELECT
     } elseif ($_POST['who'] == 'group' and ! empty($_POST['group'])) {
         check_input_parameter('group', $_POST, false, PATTERN_ID);
 
-        pwg_mail_group($_POST['group'], $args, $tpl);
+        // check_input_parameter() above fatal_errors (never returns) unless
+        // $_POST['group'] matches PATTERN_ID (digits only); the is_numeric()
+        // check here only narrows the type for what follows.
+        $group_id = is_numeric($_POST['group']) ? (int) $_POST['group'] : 0;
+
+        pwg_mail_group($group_id, $args, $tpl);
 
         $query = '
 SELECT
     name
   FROM `' . GROUPS_TABLE . '`
-  WHERE id = ' . $_POST['group'] . '
+  WHERE id = ' . $group_id . '
 ;';
         $row = pwg_db_fetch_row(pwg_query($query));
         $group_name = $row !== null ? $row[0] : null;
@@ -252,7 +275,7 @@ SELECT
     id,
     name
   FROM `' . GROUPS_TABLE . '`
-  WHERE id IN (' . implode(',', $group_ids) . ')
+  WHERE id IN (' . implode(',', array_filter($group_ids, 'is_string')) . ')
   ORDER BY name ASC
 ;';
         $template->assign(

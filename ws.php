@@ -1746,7 +1746,7 @@ enabled_high, registration_date, registration_date_string, registration_date_sin
             'username' => [],
             'auto_password' => [
                 'default' => false,
-                'flags' => WS_TYPE_BOOL,
+                'type' => WS_TYPE_BOOL,
                 'info' => 'if true ignores password and confirm password',
             ],
             'password' => [

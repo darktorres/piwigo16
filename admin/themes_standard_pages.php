@@ -68,9 +68,17 @@ if (isset($_POST['submit']) and is_webmaster()) {
 }
 
 // Handle logo upload, allow png, jpg and svg
-if (isset($_FILES['std_pgs_logo']) and ! empty($_FILES['std_pgs_logo']['tmp_name'])) {
+$std_pgs_logo_upload = $_FILES['std_pgs_logo'] ?? null;
+if (
+    is_array($std_pgs_logo_upload)
+    and isset($std_pgs_logo_upload['tmp_name'])
+    and is_string($std_pgs_logo_upload['tmp_name'])
+    and $std_pgs_logo_upload['tmp_name'] !== ''
+) {
+    $std_pgs_logo_tmp_name = $std_pgs_logo_upload['tmp_name'];
+
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime_type = $finfo === false ? false : finfo_file($finfo, $_FILES['std_pgs_logo']['tmp_name']);
+    $mime_type = $finfo === false ? false : finfo_file($finfo, $std_pgs_logo_tmp_name);
 
     // Allowed MIME types
     $allowed_mimes = [
@@ -90,13 +98,16 @@ if (isset($_FILES['std_pgs_logo']) and ! empty($_FILES['std_pgs_logo']['tmp_name
     } else {
         $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'logo';
         if (mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
-            $pathinfo = pathinfo((string) $_FILES['std_pgs_logo']['name']);
+            $std_pgs_logo_name = isset($std_pgs_logo_upload['name']) && is_string($std_pgs_logo_upload['name'])
+                ? $std_pgs_logo_upload['name']
+                : '';
+            $pathinfo = pathinfo($std_pgs_logo_name);
 
             $file_path = $upload_dir . '/' . str2url($pathinfo['filename']) . '.' . $allowed_mimes[$mime_type];
 
             conf_update_param('standard_pages_selected_logo_path', $file_path, true);
 
-            if (move_uploaded_file($_FILES['std_pgs_logo']['tmp_name'], $file_path)) {
+            if (move_uploaded_file($std_pgs_logo_tmp_name, $file_path)) {
                 $logo['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
             } else {
                 $template->assign(

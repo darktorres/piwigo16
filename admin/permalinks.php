@@ -23,7 +23,9 @@ function parse_sort_variables(
 ): array {
     global $template;
 
-    $url_components = parse_url((string) $_SERVER['REQUEST_URI']);
+    $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+    $request_uri = is_string($request_uri) ? $request_uri : '';
+    $url_components = parse_url($request_uri);
     // REQUEST_URI is always a well-formed URI for a real HTTP request
     assert($url_components !== false);
 
@@ -82,20 +84,26 @@ include_once PHPWG_ROOT_PATH . 'admin/include/functions_permalinks.php';
 check_input_parameter('cat_id', $_POST, false, PATTERN_ID);
 
 $selected_cat = [];
-if (isset($_POST['set_permalink']) and $_POST['cat_id'] > 0) {
+// check_input_parameter() above only validates the format when 'cat_id' is
+// present; narrow to a real int here rather than risk building an invalid
+// query from a missing/non-numeric value.
+$post_cat_id = isset($_POST['cat_id']) && is_numeric($_POST['cat_id']) ? (int) $_POST['cat_id'] : 0;
+if (isset($_POST['set_permalink']) and $post_cat_id > 0) {
     check_pwg_token();
-    $permalink = $_POST['permalink'];
+    $permalink = $_POST['permalink'] ?? null;
+    $permalink = is_string($permalink) ? $permalink : '';
     if (empty($permalink)) {
-        delete_cat_permalink($_POST['cat_id'], isset($_POST['save']));
+        delete_cat_permalink($post_cat_id, isset($_POST['save']));
     } else {
-        set_cat_permalink($_POST['cat_id'], $permalink, isset($_POST['save']));
+        set_cat_permalink($post_cat_id, $permalink, isset($_POST['save']));
     }
-    $selected_cat = [$_POST['cat_id']];
+    $selected_cat = [$post_cat_id];
 } elseif (isset($_GET['delete_permanent'])) {
     check_pwg_token();
+    $delete_permanent = is_string($_GET['delete_permanent']) ? $_GET['delete_permanent'] : null;
     $query = '
 DELETE FROM ' . OLD_PERMALINKS_TABLE . '
-  WHERE permalink=\'' . pwg_db_real_escape_string($_GET['delete_permanent']) . '\'
+  WHERE permalink=\'' . pwg_db_real_escape_string($delete_permanent) . '\'
   LIMIT 1';
     $result = pwg_query($query);
     if (pwg_db_changes() == 0) {
@@ -143,7 +151,11 @@ if ($sort_by[0] == 'id' or $sort_by[0] == 'permalink') {
 $categories = [];
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
-    $row['name'] = get_cat_display_name_cache($row['uppercats']);
+    // uppercats is NOT NULL in the schema; is_string() is a defensive
+    // narrowing of the driver's generic string|null column type, not a
+    // documented nullability.
+    $uppercats = is_string($row['uppercats']) ? $row['uppercats'] : '';
+    $row['name'] = get_cat_display_name_cache($uppercats);
     $categories[] = $row;
 }
 
@@ -171,7 +183,11 @@ if (count($sort_by)) {
 $result = pwg_query($query);
 $deleted_permalinks = [];
 while ($row = pwg_db_fetch_assoc($result)) {
-    $row['name'] = get_cat_display_name_cache($row['cat_id']);
+    // cat_id is NOT NULL in the schema; is_string() is a defensive
+    // narrowing of the driver's generic string|null column type, not a
+    // documented nullability.
+    $cat_id_str = is_string($row['cat_id']) ? $row['cat_id'] : '';
+    $row['name'] = get_cat_display_name_cache($cat_id_str);
     $row['U_DELETE'] =
         add_url_params(
             $url_del_base,

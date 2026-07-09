@@ -120,7 +120,17 @@ trigger_notify('loc_begin_picture');
 
 // this is the default handler that generates the display for the element
 /**
- * @param array<string, mixed> $element_info
+ * $element_info is always $picture['current'] (see the trigger_change() call
+ * near the end of this file) — 'derivatives' is populated by
+ * DerivativeImage::get_all() (include/derivative.inc.php), keyed by the
+ * IMG_* type strings.
+ *
+ * @param array{
+ *     file: string,
+ *     derivatives: array<string, DerivativeImage>,
+ *     element_url?: string,
+ *     ...
+ * } $element_info
  */
 function default_picture_content(string $content, array $element_info): ?string
 {
@@ -131,7 +141,8 @@ function default_picture_content(string $content, array $element_info): ?string
     }
 
     if (isset($_COOKIE['picture_deriv'])) {
-        if (array_key_exists((string) $_COOKIE['picture_deriv'], ImageStdParams::get_defined_type_map())) {
+        if (is_string($_COOKIE['picture_deriv'])
+            and array_key_exists($_COOKIE['picture_deriv'], ImageStdParams::get_defined_type_map())) {
             pwg_set_session_var('picture_deriv', $_COOKIE['picture_deriv']);
         }
         setcookie('picture_deriv', '', [
@@ -140,6 +151,9 @@ function default_picture_content(string $content, array $element_info): ?string
         ]);
     }
     $deriv_type = pwg_get_session_var('picture_deriv', $conf['derivative_default_size']);
+    if (! is_string($deriv_type)) {
+        $deriv_type = IMG_MEDIUM;
+    }
     $selected_derivative = $element_info['derivatives'][$deriv_type];
 
     $unique_derivatives = [];
@@ -149,7 +163,7 @@ function default_picture_content(string $content, array $element_info): ?string
         if ($type == IMG_SQUARE || $type == IMG_THUMB) {
             continue;
         }
-        if (! array_key_exists((string) $type, ImageStdParams::get_defined_type_map())) {
+        if (! array_key_exists($type, ImageStdParams::get_defined_type_map())) {
             continue;
         }
         $url = $derivative->get_url();
@@ -167,7 +181,7 @@ function default_picture_content(string $content, array $element_info): ?string
 
     global $page, $template;
 
-    if ($show_original) {
+    if ($show_original and isset($element_info['element_url'])) {
         $template->assign('U_ORIGINAL', $element_info['element_url']);
     }
 
@@ -299,7 +313,11 @@ UPDATE ' . CATEGORIES_TABLE . '
         case 'rate':
 
             include_once PHPWG_ROOT_PATH . 'include/functions_rate.inc.php';
-            rate_picture($page['image_id'], $_POST['rate']);
+            $rate = $_POST['rate'] ?? null;
+            if (! is_int($rate) and ! is_string($rate)) {
+                $rate = null;
+            }
+            rate_picture($page['image_id'], $rate);
             redirect($url_self);
 
             // no break
@@ -307,15 +325,22 @@ UPDATE ' . CATEGORIES_TABLE . '
 
             include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
             check_input_parameter('comment_to_edit', $_GET, false, PATTERN_ID);
+            // check_input_parameter() validated this against PATTERN_ID
+            // (/^\d+$/) above -- it would have called fatal_error() otherwise.
+            assert(is_numeric($_GET['comment_to_edit']));
             // false is unreachable here: $die_on_error defaults to true,
             // and get_comment_author_id() calls fatal_error() (never) in
             // that case instead of returning
-            $author_id = get_comment_author_id($_GET['comment_to_edit']);
+            $author_id = get_comment_author_id((int) $_GET['comment_to_edit']);
             assert($author_id !== false);
 
             if (can_manage_comment('edit', $author_id)) {
                 if (! empty($_POST['content'])) {
                     check_pwg_token();
+                    $post_key = $_POST['key'] ?? null;
+                    if (! is_string($post_key)) {
+                        $post_key = '';
+                    }
                     $comment_action = update_user_comment(
                         [
                             'comment_id' => $_GET['comment_to_edit'],
@@ -323,19 +348,28 @@ UPDATE ' . CATEGORIES_TABLE . '
                             'content' => $_POST['content'],
                             'website_url' => @$_POST['website_url'],
                         ],
-                        $_POST['key']
+                        $post_key
                     );
 
                     $perform_redirect = false;
                     switch ($comment_action) {
                         case 'moderate':
+                            if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
+                                $_SESSION['page_infos'] = [];
+                            }
                             $_SESSION['page_infos'][] = l10n('An administrator must authorize your comment before it is visible.');
                             // no break
                         case 'validate':
+                            if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
+                                $_SESSION['page_infos'] = [];
+                            }
                             $_SESSION['page_infos'][] = l10n('Your comment has been registered');
                             $perform_redirect = true;
                             break;
                         case 'reject':
+                            if (! isset($_SESSION['page_errors']) or ! is_array($_SESSION['page_errors'])) {
+                                $_SESSION['page_errors'] = [];
+                            }
                             $_SESSION['page_errors'][] = l10n('Your comment has NOT been registered because it did not pass the validation rules');
                             break;
                         default:
@@ -359,13 +393,16 @@ UPDATE ' . CATEGORIES_TABLE . '
             include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 
             check_input_parameter('comment_to_delete', $_GET, false, PATTERN_ID);
+            // check_input_parameter() validated this against PATTERN_ID
+            // (/^\d+$/) above -- it would have called fatal_error() otherwise.
+            assert(is_numeric($_GET['comment_to_delete']));
 
             // false is unreachable here: see the edit_comment case above
-            $author_id = get_comment_author_id($_GET['comment_to_delete']);
+            $author_id = get_comment_author_id((int) $_GET['comment_to_delete']);
             assert($author_id !== false);
 
             if (can_manage_comment('delete', $author_id)) {
-                delete_user_comment($_GET['comment_to_delete']);
+                delete_user_comment((int) $_GET['comment_to_delete']);
             }
 
             redirect($url_self);
@@ -378,13 +415,16 @@ UPDATE ' . CATEGORIES_TABLE . '
             include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 
             check_input_parameter('comment_to_validate', $_GET, false, PATTERN_ID);
+            // check_input_parameter() validated this against PATTERN_ID
+            // (/^\d+$/) above -- it would have called fatal_error() otherwise.
+            assert(is_numeric($_GET['comment_to_validate']));
 
             // false is unreachable here: see the edit_comment case above
-            $author_id = get_comment_author_id($_GET['comment_to_validate']);
+            $author_id = get_comment_author_id((int) $_GET['comment_to_validate']);
             assert($author_id !== false);
 
             if (can_manage_comment('validate', $author_id)) {
-                validate_user_comment($_GET['comment_to_validate']);
+                validate_user_comment((int) $_GET['comment_to_validate']);
             }
 
             redirect($url_self);
@@ -425,6 +465,10 @@ SELECT id,uppercats,commentable,visible,status,global_rank
 ) . '
 ;';
 $related_categories = array_from_query($query);
+// array_from_query() with no $fieldname argument delegates straight to
+// query2array($query) -- its own @return docblock (array<int|string, mixed>)
+// is looser than query2array()'s precise conditional return type.
+/** @var list<array<string, string|null>> $related_categories */
 usort($related_categories, global_rank_compare(...));
 // -------------------------first, prev, current, next & last picture management
 $picture = [];
@@ -463,21 +507,34 @@ while ($row = pwg_db_fetch_assoc($result)) {
     $row['src_image'] = new SrcImage($row);
     $row['derivatives'] = DerivativeImage::get_all($row['src_image']);
 
-    $extTab = explode('.', (string) $row['path']);
-    $row['path_ext'] = strtolower(get_extension($row['path']));
-    $row['file_ext'] = strtolower(get_extension($row['file']));
+    // Writing computed keys (src_image, derivatives, ...) back into $row
+    // widens PHPStan's inferred value type for every key in this array (it
+    // was array<string, string|null> from pwg_db_fetch_assoc()) to a shared
+    // union across all of them -- narrow explicitly at each still-scalar
+    // column read below instead of casting the widened union directly.
+    $row_path = $row['path'];
+    assert(is_string($row_path)); // images.path is NOT NULL
+    $extTab = explode('.', $row_path);
+    $row['path_ext'] = strtolower(get_extension($row_path));
+
+    $row_file = $row['file'];
+    assert(is_string($row_file)); // images.file is NOT NULL
+    $row['file_ext'] = strtolower(get_extension($row_file));
 
     if ($i == 'current') {
         $row['element_path'] = get_element_path($row);
 
+        $row_id = $row['id'];
+        assert(is_string($row_id)); // images.id is the NOT NULL primary key
+
         if ($row['src_image']->is_original()) {// we have a photo
             if ($user['enabled_high'] == 'true') {
                 $row['element_url'] = $row['src_image']->get_url();
-                $row['download_url'] = get_action_url($row['id'], 'e', true);
+                $row['download_url'] = get_action_url($row_id, 'e', true);
             }
         } else { // not a pic - need download link
             $row['element_url'] = get_element_url($row);
-            $row['download_url'] = get_action_url($row['id'], 'e', true);
+            $row['download_url'] = get_action_url($row_id, 'e', true);
         }
     }
 
@@ -516,7 +573,8 @@ if (isset($_GET['slideshow'])) {
         'nofollow' => 1,
     ];
 
-    $slideshow_params = decode_slideshow_params($_GET['slideshow']);
+    $get_slideshow = $_GET['slideshow'];
+    $slideshow_params = decode_slideshow_params(is_string($get_slideshow) ? $get_slideshow : null);
     $slideshow_url_params['slideshow'] = encode_slideshow_params($slideshow_params);
 
     if ($slideshow_params['play']) {
@@ -584,6 +642,33 @@ if (isset($_GET['metadata'])) {
 $page['body_id'] = 'thePicturePage';
 
 // allow plugins to change what we computed before passing data to template
+/**
+ * trigger_change() (include/functions_plugins.inc.php) is only typed to
+ * return mixed -- restate the shape plugins are expected to preserve: one
+ * images-table row (pwg_db_fetch_assoc(), string|null columns) per
+ * navigation slot, plus the computed fields set on $row above.
+ *
+ * @var array<string, array{
+ *     id: string,
+ *     file: string,
+ *     path: string,
+ *     comment: string|null,
+ *     author: string|null,
+ *     date_creation: string|null,
+ *     date_available: string,
+ *     width: string|null,
+ *     height: string|null,
+ *     hit: string,
+ *     filesize: string|null,
+ *     src_image: SrcImage,
+ *     derivatives: array<string, DerivativeImage>,
+ *     url: string,
+ *     download_url?: string,
+ *     TITLE: string,
+ *     TITLE_ESC: string,
+ *     ...
+ * }> $picture
+ */
 $picture = trigger_change('picture_pictures_data', $picture);
 
 // ------------------------------------------------------- navigation management
@@ -629,12 +714,19 @@ SELECT *
         );
 
         foreach ($formats as &$format) {
+            // array_unshift() above prepends a differently-shaped literal
+            // (only download_url/ext/filesize) onto the query2array() rows
+            // (format_id/image_id/ext/filesize), so PHPStan can no longer
+            // track a precise per-key type for $format -- narrow explicitly.
             if (! isset($format['download_url'])) {
-                $format['download_url'] = 'action.php?format=' . $format['format_id'] . '&amp;download';
+                $format_id = $format['format_id'];
+                $format['download_url'] = 'action.php?format=' . (is_scalar($format_id) ? $format_id : '') . '&amp;download';
             }
 
-            $format['label'] = strtoupper((string) $format['ext']);
-            $lang_key = 'format ' . strtoupper((string) $format['ext']);
+            $format_ext = $format['ext'];
+            $format_ext = is_string($format_ext) ? $format_ext : '';
+            $format['label'] = strtoupper($format_ext);
+            $lang_key = 'format ' . strtoupper($format_ext);
             if (isset($lang[$lang_key])) {
                 $format['label'] = $lang[$lang_key];
             }
@@ -680,7 +772,12 @@ if ($page['slideshow']) {
     }
 
     foreach (['dec', 'inc'] as $op) {
-        $new_period = $slideshow_params['period'] + ((($op == 'dec') ? -1 : 1) * $conf['slideshow_period_step']);
+        // decode_slideshow_params()/correct_slideshow_params() only declare
+        // @return array<string, mixed>; 'period' is always numeric in
+        // practice (int default, or a preg-captured \d+ string).
+        $current_period = $slideshow_params['period'];
+        $current_period = is_numeric($current_period) ? (int) $current_period : 0;
+        $new_period = $current_period + ((($op == 'dec') ? -1 : 1) * $conf['slideshow_period_step']);
         $new_slideshow_params =
           correct_slideshow_params(
               array_merge(
@@ -816,13 +913,14 @@ if (! empty($picture['current']['author'])) {
 
 // creation date
 if (! empty($picture['current']['date_creation'])) {
-    $val = format_date($picture['current']['date_creation']);
+    $date_creation = $picture['current']['date_creation'];
+    $val = format_date($date_creation);
     $url = make_index_url(
         [
             'chronology_field' => 'created',
             'chronology_style' => 'monthly',
             'chronology_view' => 'list',
-            'chronology_date' => explode('-', substr((string) $picture['current']['date_creation'], 0, 10)),
+            'chronology_date' => explode('-', substr($date_creation, 0, 10)),
         ]
     );
     $infos['INFO_CREATION_DATE'] =
@@ -838,7 +936,7 @@ $url = make_index_url(
         'chronology_view' => 'list',
         'chronology_date' => explode(
             '-',
-            substr((string) $picture['current']['date_available'], 0, 10)
+            substr($picture['current']['date_available'], 0, 10)
         ),
     ]
 );
@@ -908,6 +1006,10 @@ if (count($related_categories) == 1 and
 SELECT id, name, permalink
   FROM ' . CATEGORIES_TABLE . '
   WHERE id IN (' . implode(',', $ids) . ')';
+    // hash_from_query()'s own @return docblock (array<int|string, mixed>) is
+    // looser than query2array()'s precise conditional return type, which it
+    // delegates to with a non-null $keyname.
+    /** @var array<int|string, array<string, string|null>> $cat_map */
     $cat_map = hash_from_query($query, 'id');
     foreach ($related_categories as $category) {
         $cats = [];
@@ -936,13 +1038,19 @@ $element_content = trigger_change(
 );
 $template->assign('ELEMENT_CONTENT', $element_content);
 
+$http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+$http_user_agent = is_string($http_user_agent) ? $http_user_agent : '';
 if (isset($picture['next'])
     and $picture['next']['src_image']->is_original()
     and $template->get_template_vars('U_PREFETCH') == null
-    and ! str_contains((string) @$_SERVER['HTTP_USER_AGENT'], 'Chrome/')) {
+    and ! str_contains($http_user_agent, 'Chrome/')) {
+    $prefetch_deriv_type = pwg_get_session_var('picture_deriv', $conf['derivative_default_size']);
+    if (! is_string($prefetch_deriv_type)) {
+        $prefetch_deriv_type = IMG_MEDIUM;
+    }
     $template->assign(
         'U_PREFETCH',
-        $picture['next']['derivatives'][pwg_get_session_var('picture_deriv', $conf['derivative_default_size'])]->get_url()
+        $picture['next']['derivatives'][$prefetch_deriv_type]->get_url()
     );
 }
 
@@ -987,5 +1095,6 @@ if ($page['slideshow'] and $conf['light_slideshow']) {
     $template->pparse('picture');
 }
 // ------------------------------------------------------------ log informations
-pwg_log($picture['current']['id'], 'picture');
+$current_image_id = $picture['current']['id'];
+pwg_log(is_numeric($current_image_id) ? (int) $current_image_id : null, 'picture');
 include PHPWG_ROOT_PATH . 'include/page_tail.php';

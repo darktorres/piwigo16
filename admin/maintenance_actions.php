@@ -191,11 +191,12 @@ DELETE
 
     case 'derivatives':
 
-        $types_str = $_GET['type'];
+        $types_str = $_GET['type'] ?? '';
+        $types_str = is_string($types_str) ? $types_str : '';
         if ($types_str == 'all') {
-            clear_derivative_cache($_GET['type']);
+            clear_derivative_cache($types_str);
         } else {
-            $types = explode('_', (string) $types_str);
+            $types = explode('_', $types_str);
             foreach ($types as $type_to_clear) {
                 clear_derivative_cache($type_to_clear);
             }
@@ -279,6 +280,24 @@ $row = pwg_db_fetch_row(pwg_query('SELECT now();'));
 assert($row !== null);
 [$db_current_date] = $row;
 
+// $conf['cache_sizes'] is a serialized 4-row [name, value] list produced by
+// ws_getCacheSize() (cache_size, msizes, tsizes, last_date_calc); row 3's
+// value is the last_date_calc date string used for time_since().
+$cache_sizes = isset($conf['cache_sizes']) ? unserialize($conf['cache_sizes']) : null;
+if (! is_array($cache_sizes)) {
+    $cache_sizes = null;
+}
+$time_elapsed_since_last_calc = null;
+if ($cache_sizes !== null) {
+    $last_calc_row = $cache_sizes[3] ?? null;
+    if (is_array($last_calc_row)) {
+        $last_calc_value = $last_calc_row['value'] ?? null;
+        if (is_int($last_calc_value) || is_string($last_calc_value)) {
+            $time_elapsed_since_last_calc = time_since($last_calc_value, 'year');
+        }
+    }
+}
+
 $template->assign(
     [
         'maint_actions' => $maint_actions,
@@ -309,8 +328,8 @@ $template->assign(
         'PHP_DATATIME' => $php_current_timestamp,
         'DB_DATATIME' => $db_current_date,
         'pwg_token' => $pwg_token,
-        'cache_sizes' => (isset($conf['cache_sizes'])) ? unserialize($conf['cache_sizes']) : null,
-        'time_elapsed_since_last_calc' => (isset($conf['cache_sizes'])) ? time_since(unserialize($conf['cache_sizes'])[3]['value'], 'year') : null,
+        'cache_sizes' => $cache_sizes,
+        'time_elapsed_since_last_calc' => $time_elapsed_since_last_calc,
     ]
 );
 

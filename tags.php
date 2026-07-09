@@ -71,7 +71,11 @@ if ($page['display_mode'] == 'letters') {
     ];
 
     foreach ($tags as $tag) {
-        $tag_letter = mb_strtoupper(mb_substr(pwg_transliterate($tag['name']), 0, 1, PWG_CHARSET), PWG_CHARSET);
+        $tag_name = $tag['name'];
+        if (! is_string($tag_name)) {
+            $tag_name = is_string($tag['name_raw'] ?? null) ? $tag['name_raw'] : '';
+        }
+        $tag_letter = mb_strtoupper(mb_substr(pwg_transliterate($tag_name), 0, 1, PWG_CHARSET), PWG_CHARSET);
 
         if ($current_tag_idx == 0) {
             $current_letter = $tag_letter;

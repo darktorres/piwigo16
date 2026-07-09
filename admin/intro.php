@@ -147,8 +147,17 @@ if ($conf['show_newsletter_subscription'] and userprefs_get_param('show_newslett
 
 $stats = get_pwg_general_statitics();
 
+// get_pwg_general_statitics() is declared to return array<string, mixed>,
+// so PHPStan can't see that these two keys are already coerced from the
+// SUM() DB values to int within that function; narrow locally.
+$disk_usage = $stats['disk_usage'];
+$disk_usage = is_numeric($disk_usage) ? (float) $disk_usage : 0.0;
+
+$nb_views = $stats['nb_views'];
+$nb_views = is_numeric($nb_views) ? (float) $nb_views : 0.0;
+
 $du_decimals = 1;
-$du_gb = $stats['disk_usage'] / (1024 * 1024);
+$du_gb = $disk_usage / (1024 * 1024);
 if ($du_gb > 100) {
     $du_decimals = 0;
 }
@@ -162,7 +171,7 @@ $template->assign(
         'NB_USERS' => $stats['nb_users'],
         'NB_GROUPS' => $stats['nb_groups'],
         'NB_RATES' => $stats['nb_rates'],
-        'NB_VIEWS' => number_format_human_readable($stats['nb_views']),
+        'NB_VIEWS' => number_format_human_readable($nb_views),
         'NB_PLUGINS' => count($pwg_loaded_plugins),
         'STORAGE_USED' => str_replace(' ', '&nbsp;', l10n('%sGB', number_format($du_gb, $du_decimals))),
         'U_QUICK_SYNC' => PHPWG_ROOT_PATH . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . get_pwg_token(),
@@ -186,13 +195,32 @@ SELECT COUNT(*)
 if ($conf['show_piwigo_latest_news']) {
     $latest_news = get_piwigo_news();
 
-    if (isset($latest_news['id']) and $latest_news['posted_on'] > time() - 60 * 60 * 24 * 30) {
+    // get_piwigo_news() is declared to return mixed (it can come straight
+    // back out of unserialize() on the cache file), so every field needs a
+    // real runtime check before use below.
+    $news_posted_on = is_array($latest_news) ? ($latest_news['posted_on'] ?? null) : null;
+
+    if (
+        is_array($latest_news)
+        && isset($latest_news['id'])
+        && (is_int($news_posted_on) || is_string($news_posted_on))
+        && $news_posted_on > time() - 60 * 60 * 24 * 30
+    ) {
+        $news_url = $latest_news['url'] ?? null;
+        $news_url = is_string($news_url) ? $news_url : '';
+
+        $news_posted = $latest_news['posted'] ?? null;
+        $news_posted = is_string($news_posted) ? $news_posted : '';
+
+        $news_subject = $latest_news['subject'] ?? null;
+        $news_subject = is_string($news_subject) ? $news_subject : '';
+
         $page['messages'][] = sprintf(
             '%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>',
             l10n('Latest Piwigo news'),
-            $latest_news['url'],
-            time_since($latest_news['posted_on'], 'year') . ' (' . $latest_news['posted'] . ')',
-            $latest_news['subject']
+            $news_url,
+            time_since($news_posted_on, 'year') . ' (' . $news_posted . ')',
+            $news_subject
         );
     }
 }
@@ -228,7 +256,11 @@ while ($mondays < $nb_weeks) {
 $week_number = array_reverse($week_number);
 $date_string = $date->format('Y-m-d');
 
-if (! isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity_last_weeks']['calculated_on'] < pwg_now()->getTimestamp() - 300) {
+$session_cache_activity = $_SESSION['cache_activity_last_weeks'] ?? null;
+$session_cache_calculated_on = is_array($session_cache_activity) ? ($session_cache_activity['calculated_on'] ?? null) : null;
+$session_cache_calculated_on = is_numeric($session_cache_calculated_on) ? (int) $session_cache_calculated_on : null;
+
+if ($session_cache_calculated_on === null or $session_cache_calculated_on < pwg_now()->getTimestamp() - 300) {
     $start_time = get_moment();
 
     $query = '
@@ -269,16 +301,35 @@ if (! isset($_SESSION['cache_activity_last_weeks']) or $_SESSION['cache_activity
     ];
 }
 
-$activity_last_weeks = $_SESSION['cache_activity_last_weeks']['data'];
+$session_cache_activity = $_SESSION['cache_activity_last_weeks'] ?? null;
+$cached_activity_data = is_array($session_cache_activity) ? ($session_cache_activity['data'] ?? null) : null;
+$raw_activity_last_weeks = is_array($cached_activity_data) ? $cached_activity_data : [];
 
-foreach ($activity_last_weeks as $week => $i) {
+$activity_last_weeks = [];
+
+foreach ($raw_activity_last_weeks as $week => $i) {
+    if (! is_array($i)) {
+        continue;
+    }
+
     foreach ($i as $day => $j) {
-        $details = $j['details'];
+        if (! is_array($j)) {
+            continue;
+        }
+
+        $details = $j['details'] ?? null;
+        $details = is_array($details) ? $details : [];
         ksort($details);
+
+        $number = $j['number'] ?? null;
+        $number = is_numeric($number) ? $number : 0;
+
+        $activity_last_weeks[$week][$day] = $j;
         $activity_last_weeks[$week][$day]['details'] = $details;
-        if ($j['number'] > 0) {
+
+        if ($number > 0) {
             $temp_data[] = [
-                'x' => $j['number'],
+                'x' => $number,
                 'd' => $day,
                 'w' => $week,
             ];
@@ -307,7 +358,11 @@ usort($temp_data, cmp_day(...));
 $diff_x = [];
 
 for ($i = 1; $i < count($temp_data); $i++) {
-    $diff_x[] = $temp_data[$i]['x'] / $temp_data[$i - 1]['x'] * 100;
+    // the 'x' key is always the numeric $number built earlier (guarded by
+    // is_numeric()+> 0 above).
+    $current_x = $temp_data[$i]['x'];
+    $previous_x = $temp_data[$i - 1]['x'];
+    $diff_x[] = $current_x / $previous_x * 100;
 }
 
 $split = 0;
@@ -329,8 +384,12 @@ for ($i = 0; $i < $nb_weeks; $i++) {
 
 $size = 1;
 
+// 'w'/'d' are always the $week/$day foreach keys built earlier, always
+// int|string (PHP's own array-key invariant).
 if (isset($temp_data[0])) {
-    $chart_data[$temp_data[0]['w']][$temp_data[0]['d']] = $size;
+    $chart_w = $temp_data[0]['w'];
+    $chart_d = $temp_data[0]['d'];
+    $chart_data[$chart_w][$chart_d] = $size;
 }
 
 // Set sizes in chart data
@@ -338,7 +397,9 @@ for ($i = 1; $i < count($temp_data); $i++) {
     if ($diff_x[$i - 1] == -1) {
         $size++;
     }
-    $chart_data[$temp_data[$i]['w']][$temp_data[$i]['d']] = $size;
+    $chart_w = $temp_data[$i]['w'];
+    $chart_d = $temp_data[$i]['d'];
+    $chart_data[$chart_w][$chart_d] = $size;
 }
 
 // Assign data for the template
@@ -418,9 +479,11 @@ foreach ($file_extensions as $ext => $ext_details) {
 // Add cache size if requested and known.
 if ($conf['add_cache_to_storage_chart'] && isset($conf['cache_sizes'])) {
     $cache_sizes = unserialize($conf['cache_sizes']);
-    if (isset($cache_sizes)) {
-        if (isset($cache_sizes[0]) && isset($cache_sizes[0]['value'])) {
-            @$data_storage['Cache']['total']['filesize'] = $cache_sizes[0]['value'] / 1024;
+    if (is_array($cache_sizes)) {
+        $cache_size_zero = $cache_sizes[0] ?? null;
+        $cache_size_value = is_array($cache_size_zero) ? ($cache_size_zero['value'] ?? null) : null;
+        if (is_numeric($cache_size_value)) {
+            @$data_storage['Cache']['total']['filesize'] = $cache_size_value / 1024;
         }
     }
 }

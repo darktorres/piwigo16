@@ -11,10 +11,13 @@ declare(strict_types=1);
 /**
  * API method
  * Returns the list of all plugins
- * @param mixed[] $params
+ *
+ * @param array<string, mixed> $params this method is registered with a
+ *   null signature (zero registered params) -- $params is the raw,
+ *   entirely unvalidated request array, but the body doesn't read it.
  * @return array{id: mixed, name: mixed, version: mixed, state: mixed, description: mixed}[]
  */
-function ws_plugins_getList($params, PwgServer &$service): array
+function ws_plugins_getList(array $params, PwgServer &$service): array
 {
     include_once PHPWG_ROOT_PATH . 'admin/include/plugins.class.php';
 
@@ -44,10 +47,10 @@ function ws_plugins_getList($params, PwgServer &$service): array
 /**
  * API method
  * Performs an action on a plugin
- * @param mixed[] $params
- *    @option string action
- *    @option string plugin
- *    @option string pwg_token
+ *
+ * @param array{action: string, plugin: string, pwg_token: string, ...} $params
+ *   none has a 'default' key -- all mandatory, always present, no 'type'
+ *   flag.
  */
 function ws_plugins_performAction(array $params, PwgServer &$service): \PwgError|true
 {
@@ -72,7 +75,7 @@ function ws_plugins_performAction(array $params, PwgServer &$service): \PwgError
     $errors = $plugins->perform_action($params['action'], $params['plugin']);
 
     if (! empty($errors)) {
-        return new PwgError(500, implode(', ', $errors));
+        return new PwgError(500, implode(', ', array_filter($errors, 'is_string')));
     } else {
         if (in_array($params['action'], ['activate', 'deactivate'])) {
             $template->delete_compiled_templates();
@@ -84,10 +87,10 @@ function ws_plugins_performAction(array $params, PwgServer &$service): \PwgError
 /**
  * API method
  * Performs an action on a theme
- * @param mixed[] $params
- *    @option string action
- *    @option string theme
- *    @option string pwg_token
+ *
+ * @param array{action: string, theme: string, pwg_token: string, ...} $params
+ *   none has a 'default' key -- all mandatory, always present, no 'type'
+ *   flag.
  */
 function ws_themes_performAction(array $params, PwgServer &$service): \PwgError|true
 {
@@ -120,12 +123,13 @@ function ws_themes_performAction(array $params, PwgServer &$service): \PwgError|
 /**
  * API method
  * Updates an extension
- * @param mixed[] $params
- *    @option string type
- *    @option string id
- *    @option string revision
- *    @option string pwg_token
- *    @option bool reactivate (optional - undocumented)
+ *
+ * @param array{type: string, id: string, revision: string, pwg_token: string, ...} $params
+ *   none has a 'default' key -- all mandatory, always present, no 'type'
+ *   flag. reactivate: not a registered param at all (checked in the body
+ *   via isset($params['reactivate']), reachable only through the
+ *   self-redirect a few lines below that appends it as a raw extra query
+ *   param) -- covered by the shape's open tail, never explicitly typed.
  */
 function ws_extensions_update(array $params, PwgServer &$service): \PwgError|string
 {
@@ -157,10 +161,10 @@ function ws_extensions_update(array $params, PwgServer &$service): \PwgError|str
     $extension = match ($type) {
         'plugins' => new plugins(),
         'themes' => new themes(),
-        'languages' => new languages(),
-        // Unreachable: $type is already restricted to plugins/themes/
-        // languages by the in_array() guard above.
-        default => throw new LogicException('Invalid extension type: ' . $type),
+        // 'languages' is the only value that can still reach here: $type
+        // is already restricted to plugins/themes/languages by the
+        // in_array() guard above.
+        default => new languages(),
     };
 
     if ($extension instanceof plugins) {
@@ -232,11 +236,11 @@ function ws_extensions_update(array $params, PwgServer &$service): \PwgError|str
 /**
  * API method
  * Ignore an update
- * @param mixed[] $params
- *    @option string type (optional)
- *    @option string id (optional)
- *    @option bool reset
- *    @option string pwg_token
+ *
+ * @param array{type: string|null, id: string|null, reset: bool, pwg_token: string, ...} $params
+ *   type/id: null default, no 'type' flag -- always present, string|null.
+ *   reset: non-null bool default, WS_TYPE_BOOL -- always present.
+ *   pwg_token: no 'default' key -- mandatory, always present.
  */
 function ws_extensions_ignoreupdate(array $params, PwgServer &$service): \PwgError|true
 {
@@ -253,7 +257,22 @@ function ws_extensions_ignoreupdate(array $params, PwgServer &$service): \PwgErr
         return new PwgError(403, 'Invalid security token');
     }
 
-    $conf['updates_ignored'] = unserialize($conf['updates_ignored']);
+    // unserialize() is typed mixed by PHP's own stub -- narrow to the
+    // known {plugins,themes,languages} shape (each a plain list of
+    // extension id strings, per the install-time default row in
+    // install/db/103-database.php) before any offset access below.
+    $updates_ignored_raw = unserialize($conf['updates_ignored']);
+    $updates_ignored_raw = is_array($updates_ignored_raw) ? $updates_ignored_raw : [];
+
+    $ignored_plugins = $updates_ignored_raw['plugins'] ?? null;
+    $ignored_themes = $updates_ignored_raw['themes'] ?? null;
+    $ignored_languages = $updates_ignored_raw['languages'] ?? null;
+
+    $conf['updates_ignored'] = [
+        'plugins' => is_array($ignored_plugins) ? array_values(array_filter($ignored_plugins, 'is_string')) : [],
+        'themes' => is_array($ignored_themes) ? array_values(array_filter($ignored_themes, 'is_string')) : [],
+        'languages' => is_array($ignored_languages) ? array_values(array_filter($ignored_languages, 'is_string')) : [],
+    ];
 
     // Reset ignored extension
     if ($params['reset']) {
@@ -289,10 +308,13 @@ function ws_extensions_ignoreupdate(array $params, PwgServer &$service): \PwgErr
 /**
  * API method
  * Checks for updates (core and extensions)
- * @param mixed[] $params
+ *
+ * @param array<string, mixed> $params this method is registered with a
+ *   null signature (zero registered params) -- $params is the raw,
+ *   entirely unvalidated request array, but the body doesn't read it.
  * @return array{piwigo_need_update: mixed, ext_need_update: bool|null}
  */
-function ws_extensions_checkupdates($params, PwgServer &$service): array
+function ws_extensions_checkupdates(array $params, PwgServer &$service): array
 {
     global $conf;
 

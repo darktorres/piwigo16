@@ -35,17 +35,24 @@ if ($page['show_comments'] and isset($_POST['content'])) {
         die('Session expired');
     }
 
+    $post_author = $_POST['author'] ?? null;
+    // isset($_POST['content']) was already checked by the enclosing if().
+    $post_content = $_POST['content'];
+    $post_website_url = $_POST['website_url'] ?? null;
+    $post_email = $_POST['email'] ?? null;
+
     $comm = [
-        'author' => empty(@$_POST['author']) ? '' : trim((string) @$_POST['author']),
-        'content' => empty(@$_POST['content']) ? '' : trim((string) $_POST['content']),
-        'website_url' => empty(@$_POST['website_url']) ? '' : trim((string) @$_POST['website_url']),
-        'email' => empty(@$_POST['email']) ? '' : trim((string) @$_POST['email']),
+        'author' => is_string($post_author) && ! empty($post_author) ? trim($post_author) : '',
+        'content' => is_string($post_content) && ! empty($post_content) ? trim($post_content) : '',
+        'website_url' => is_string($post_website_url) && ! empty($post_website_url) ? trim($post_website_url) : '',
+        'email' => is_string($post_email) && ! empty($post_email) ? trim($post_email) : '',
         'image_id' => $page['image_id'],
     ];
 
     include_once PHPWG_ROOT_PATH . 'include/functions_comment.inc.php';
 
-    $comment_action = insert_user_comment($comm, @$_POST['key'], $page['errors']);
+    $post_key = $_POST['key'] ?? null;
+    $comment_action = insert_user_comment($comm, is_string($post_key) ? $post_key : '', $page['errors']);
 
     switch ($comment_action) {
         case 'moderate':
@@ -92,6 +99,7 @@ SELECT
     $row = pwg_db_fetch_assoc(pwg_query($query));
     // a COUNT(*) query always returns exactly one row
     assert(is_array($row));
+    $nb_comments = is_numeric($row['nb_comments']) ? (int) $row['nb_comments'] : 0;
 
     // navigation bar creation
     if (! isset($page['start'])) {
@@ -100,7 +108,7 @@ SELECT
 
     $navigation_bar = create_navigation_bar(
         duplicate_picture_url([], ['start']),
-        $row['nb_comments'],
+        $nb_comments,
         $page['start'],
         $conf['nb_comment_page'],
         true // We want a clean URL
@@ -108,18 +116,20 @@ SELECT
 
     $template->assign(
         [
-            'COMMENT_COUNT' => $row['nb_comments'],
+            'COMMENT_COUNT' => $nb_comments,
             'navbar' => $navigation_bar,
             'comments' => [],
         ]
     );
 
-    if ($row['nb_comments'] > 0) {
+    if ($nb_comments > 0) {
         // comments order (get, session, conf)
-        if (! empty($_GET['comments_order']) && in_array(strtoupper((string) $_GET['comments_order']), ['ASC', 'DESC'])) {
-            pwg_set_session_var('comments_order', $_GET['comments_order']);
+        $get_comments_order = $_GET['comments_order'] ?? null;
+        if (is_string($get_comments_order) && ! empty($get_comments_order) && in_array(strtoupper($get_comments_order), ['ASC', 'DESC'])) {
+            pwg_set_session_var('comments_order', $get_comments_order);
         }
         $comments_order = pwg_get_session_var('comments_order', $conf['comments_order']);
+        $comments_order = is_string($comments_order) ? $comments_order : 'ASC';
 
         $template->assign([
             'COMMENTS_ORDER_URL' => add_url_params(duplicate_picture_url(), [
@@ -162,6 +172,10 @@ SELECT
                 $email = $row['email'];
             }
 
+            // com.date is NOT NULL in the schema (default '1970-01-01 00:00:00'),
+            // so a fetched row always carries a real date string.
+            assert(is_string($row['date']));
+
             $tpl_comment =
               [
                   'ID' => $row['id'],
@@ -171,7 +185,11 @@ SELECT
                   'WEBSITE_URL' => $row['website_url'],
               ];
 
-            if (can_manage_comment('delete', $row['author_id'])) {
+            // com.author_id allows NULL (anonymous/guest comments); no real
+            // user id is ever negative, so -1 is a safe "never matches" sentinel.
+            $comment_author_id = is_numeric($row['author_id']) ? (int) $row['author_id'] : -1;
+
+            if (can_manage_comment('delete', $comment_author_id)) {
                 $tpl_comment['U_DELETE'] = add_url_params(
                     $url_self,
                     [
@@ -181,7 +199,7 @@ SELECT
                     ]
                 );
             }
-            if (can_manage_comment('edit', $row['author_id'])) {
+            if (can_manage_comment('edit', $comment_author_id)) {
                 $tpl_comment['U_EDIT'] = add_url_params(
                     $url_self,
                     [
@@ -243,7 +261,8 @@ SELECT
 
         if ($comment_action == 'reject') {
             foreach (['content', 'author', 'website_url', 'email'] as $k) {
-                $tpl_var[strtoupper($k)] = isset($_POST[$k]) ? htmlspecialchars(stripslashes((string) @$_POST[$k])) : '';
+                $post_value = $_POST[$k] ?? null;
+                $tpl_var[strtoupper($k)] = is_string($post_value) ? htmlspecialchars(stripslashes($post_value)) : '';
             }
         }
         $template->assign('comment_add', $tpl_var);

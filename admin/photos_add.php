@@ -42,7 +42,7 @@ $upload_form_config = get_upload_form_config();
 // |                                 Tabs                                  |
 // +-----------------------------------------------------------------------+
 if (isset($_GET['section'])) {
-    $page['tab'] = $_GET['section'];
+    $page['tab'] = is_string($_GET['section']) ? $_GET['section'] : 'direct';
 
     // backward compatibility
     if ($page['tab'] == 'ploader') {

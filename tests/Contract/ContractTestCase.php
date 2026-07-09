@@ -158,7 +158,13 @@ abstract class ContractTestCase extends IntegrationTestCase
     protected function getPwgToken(): string
     {
         $status = $this->callWs('pwg.session.getStatus', []);
-        return (string) ($status['result']['pwg_token'] ?? '');
+        $result = $status['result'] ?? null;
+        if (!is_array($result)) {
+            return '';
+        }
+
+        $token = $result['pwg_token'] ?? '';
+        return is_string($token) ? $token : '';
     }
 
     /**

@@ -67,7 +67,8 @@ if (isset($_GET['plugins_new_order'])) {
 // theme changer
 if (isset($_GET['change_theme'])) {
     $admin_themes = ['roma', 'clear'];
-    $admin_theme_array = [userprefs_get_param('admin_theme', 'clear')];
+    $admin_theme_param = userprefs_get_param('admin_theme', 'clear');
+    $admin_theme_array = [is_string($admin_theme_param) ? $admin_theme_param : 'clear'];
     $result = array_diff(
         $admin_themes,
         $admin_theme_array
@@ -81,7 +82,7 @@ if (isset($_GET['change_theme'])) {
 
     $url_params = [];
     foreach (['page', 'tab', 'section'] as $url_param) {
-        if (isset($_GET[$url_param])) {
+        if (isset($_GET[$url_param]) and is_scalar($_GET[$url_param])) {
             $url_params[] = $url_param . '=' . $_GET[$url_param];
         }
     }
@@ -112,14 +113,15 @@ $test_get = $_GET;
 unset($test_get['page']);
 unset($test_get['section']);
 unset($test_get['tag']);
-if (count($test_get) == 0 and ! empty($_SERVER['QUERY_STRING'])) {
-    $change_theme_url .= str_replace('&', '&amp;', $_SERVER['QUERY_STRING']) . '&amp;';
+$query_string = $_SERVER['QUERY_STRING'] ?? null;
+if (count($test_get) == 0 and is_string($query_string) and ! empty($query_string)) {
+    $change_theme_url .= str_replace('&', '&amp;', $query_string) . '&amp;';
 }
 $change_theme_url .= 'change_theme=1';
 
 // ?page=plugin-community-pendings is an clean alias of
 // ?page=plugin&section=community/admin.php&tab=pendings
-if (isset($_GET['page']) and preg_match('/^plugin-([^-]*)(?:-(.*))?$/', (string) $_GET['page'], $matches)) {
+if (isset($_GET['page']) and is_string($_GET['page']) and preg_match('/^plugin-([^-]*)(?:-(.*))?$/', $_GET['page'], $matches)) {
     $_GET['page'] = 'plugin';
 
     if (preg_match('/^piwigo_(videojs|openstreetmap)$/', $matches[1])) {
@@ -134,7 +136,7 @@ if (isset($_GET['page']) and preg_match('/^plugin-([^-]*)(?:-(.*))?$/', (string)
 
 // ?page=album-134-properties is an clean alias of
 // ?page=album&cat_id=134&tab=properties
-if (isset($_GET['page']) and preg_match('/^album-(\d+)(?:-(.*))?$/', (string) $_GET['page'], $matches)) {
+if (isset($_GET['page']) and is_string($_GET['page']) and preg_match('/^album-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)) {
     $_GET['page'] = 'album';
     $_GET['cat_id'] = $matches[1];
     if (isset($matches[2])) {
@@ -144,7 +146,7 @@ if (isset($_GET['page']) and preg_match('/^album-(\d+)(?:-(.*))?$/', (string) $_
 
 // ?page=photo-1234-properties is an clean alias of
 // ?page=photo&image_id=1234&tab=properties
-if (isset($_GET['page']) and preg_match('/^photo-(\d+)(?:-(.*))?$/', (string) $_GET['page'], $matches)) {
+if (isset($_GET['page']) and is_string($_GET['page']) and preg_match('/^photo-(\d+)(?:-(.*))?$/', $_GET['page'], $matches)) {
     $_GET['page'] = 'photo';
     $_GET['image_id'] = $matches[1];
     if (isset($matches[2])) {
@@ -153,7 +155,8 @@ if (isset($_GET['page']) and preg_match('/^photo-(\d+)(?:-(.*))?$/', (string) $_
 }
 
 if (isset($_GET['page'])
-    and preg_match('/^[a-z_]*$/', (string) $_GET['page'])
+    and is_string($_GET['page'])
+    and preg_match('/^[a-z_]*$/', $_GET['page'])
     and is_file(PHPWG_ROOT_PATH . 'admin/' . $_GET['page'] . '.php')) {
     $page['page'] = $_GET['page'];
 } else {

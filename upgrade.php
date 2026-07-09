@@ -66,8 +66,12 @@ SHOW TABLES
     $result = pwg_query($query);
 
     while ($row = pwg_db_fetch_row($result)) {
-        if (preg_match('/^' . PREFIX_TABLE . '/', (string) $row[0])) {
-            $tables[] = $row[0];
+        $table_name = $row[0];
+        if (! is_string($table_name)) {
+            continue;
+        }
+        if (preg_match('/^' . PREFIX_TABLE . '/', $table_name)) {
+            $tables[] = $table_name;
         }
     }
 
@@ -93,7 +97,11 @@ DESC `' . $table . '`
         $columns_of[$table] = [];
 
         while ($row = pwg_db_fetch_row($result)) {
-            $columns_of[$table][] = $row[0];
+            $column_name = $row[0];
+            if (! is_string($column_name)) {
+                continue;
+            }
+            $columns_of[$table][] = $column_name;
         }
     }
 
@@ -105,8 +113,12 @@ function print_time(mixed $message): void
     global $last_time;
 
     $new_time = get_moment();
+    $message_str = is_scalar($message) || $message instanceof Stringable
+        ? (string) $message
+        : print_r($message, true);
+
     echo '<pre>[' . get_elapsed_time($last_time, $new_time) . ']';
-    echo ' ' . $message;
+    echo ' ' . $message_str;
     echo '</pre>';
     flush();
     $last_time = $new_time;
@@ -130,7 +142,7 @@ function print_time(mixed $message): void
 include PHPWG_ROOT_PATH . 'admin/include/languages.class.php';
 $languages = new languages('utf-8');
 if (isset($_GET['language'])) {
-    $language = strip_tags((string) $_GET['language']);
+    $language = is_string($_GET['language']) ? strip_tags($_GET['language']) : '';
 
     if (! in_array($language, array_keys($languages->fs_languages))) {
         $language = PHPWG_DEFAULT_LANGUAGE;
@@ -138,8 +150,10 @@ if (isset($_GET['language'])) {
 } else {
     $language = 'en_UK';
     // Try to get browser language
+    $http_accept_language = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null;
+    $http_accept_language = is_string($http_accept_language) ? $http_accept_language : '';
     foreach ($languages->fs_languages as $language_code => $fs_language) {
-        if (substr((string) $language_code, 0, 2) == @substr((string) $_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2)) {
+        if (substr($language_code, 0, 2) == substr($http_accept_language, 0, 2)) {
             $language = $language_code;
             break;
         }
@@ -210,7 +224,8 @@ $has_remote_site = false;
 $query = 'SELECT galleries_url FROM ' . SITES_TABLE . ';';
 $result = pwg_query($query);
 while ($row = pwg_db_fetch_assoc($result)) {
-    if (url_is_remote($row['galleries_url'])) {
+    $galleries_url = $row['galleries_url'] ?? null;
+    if (is_string($galleries_url) && url_is_remote($galleries_url)) {
         $has_remote_site = true;
     }
 }

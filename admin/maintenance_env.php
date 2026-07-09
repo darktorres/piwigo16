@@ -183,7 +183,13 @@ DELETE
 
     case 'derivatives':
 
-        clear_derivative_cache($_GET['type']);
+        $derivative_type = $_GET['type'] ?? 'all';
+        if (is_array($derivative_type)) {
+            $derivative_type = array_values(array_filter($derivative_type, 'is_string'));
+        } elseif (! is_string($derivative_type)) {
+            $derivative_type = 'all';
+        }
+        clear_derivative_cache($derivative_type);
         break;
 
     case 'check_upgrade':
@@ -259,6 +265,26 @@ if (! in_array($container_name, ['Official', 'none'])) {
     $container_name = '(unofficial) ' . $container_name;
 }
 
+// $conf['cache_sizes'] is normally the serialized string as loaded from the
+// config table, but conf_update_param(..., true) can also leave the raw
+// array in place within the same request.
+$cache_sizes = null;
+if (isset($conf['cache_sizes'])) {
+    if (is_string($conf['cache_sizes'])) {
+        $unserialized_cache_sizes = unserialize($conf['cache_sizes']);
+        if (is_array($unserialized_cache_sizes)) {
+            $cache_sizes = $unserialized_cache_sizes;
+        }
+    } elseif (is_array($conf['cache_sizes'])) {
+        $cache_sizes = $conf['cache_sizes'];
+    }
+}
+
+$time_elapsed_since_last_calc = null;
+if ($cache_sizes !== null && is_array($cache_sizes[3] ?? null) && (is_string($cache_sizes[3]['value'] ?? null) || is_int($cache_sizes[3]['value'] ?? null))) {
+    $time_elapsed_since_last_calc = time_since($cache_sizes[3]['value'], 'year');
+}
+
 $template->assign(
     [
         'U_MAINT_CATEGORIES' => sprintf($url_format, 'categories'),
@@ -288,8 +314,8 @@ $template->assign(
         'U_PHPINFO' => sprintf($url_format, 'phpinfo'),
         'PHP_DATATIME' => $php_current_timestamp,
         'DB_DATATIME' => $db_current_date,
-        'cache_sizes' => (isset($conf['cache_sizes'])) ? unserialize($conf['cache_sizes']) : null,
-        'time_elapsed_since_last_calc' => (isset($conf['cache_sizes'])) ? time_since(unserialize($conf['cache_sizes'])[3]['value'], 'year') : null,
+        'cache_sizes' => $cache_sizes,
+        'time_elapsed_since_last_calc' => $time_elapsed_since_last_calc,
     ]
 );
 
@@ -314,7 +340,7 @@ if ($conf['gallery_locked']) {
 }
 
 $installed_on = get_installation_date();
-if (! empty($installed_on)) {
+if (is_string($installed_on) && $installed_on !== '') {
     $template->assign(
         [
             'INSTALLED_ON' => format_date($installed_on, ['day', 'month', 'year']),

@@ -101,6 +101,9 @@ SELECT *
 
     $tags = [];
     while ($row = pwg_db_fetch_assoc($result)) {
+        if (! is_string($row['id'])) {
+            continue;
+        }
         if (isset($tag_counters[$row['id']])) {
             $row['counter'] = intval($tag_counters[$row['id']]);
             $row['name_raw'] = $row['name'];
@@ -157,7 +160,7 @@ function add_level_to_tags($tags)
     $total_count = 0;
 
     foreach ($tags as $tag) {
-        $total_count += $tag['counter'];
+        $total_count += is_numeric($tag['counter']) ? (int) $tag['counter'] : 0;
     }
 
     // average count of available tags will determine the level of each tag

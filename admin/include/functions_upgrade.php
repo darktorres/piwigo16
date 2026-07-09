@@ -185,11 +185,12 @@ function check_upgrade_access_rights(): void
     if (version_compare($current_release, '2.0', '>=') and isset($_COOKIE[session_name()])) {
         // Check if user is already connected as webmaster
         session_start();
-        if (! empty($_SESSION['pwg_uid'])) {
+        $pwg_uid = $_SESSION['pwg_uid'] ?? null;
+        if (! empty($pwg_uid) and (is_int($pwg_uid) or (is_string($pwg_uid) and is_numeric($pwg_uid)))) {
             $query = '
 SELECT status
   FROM ' . USER_INFOS_TABLE . '
-  WHERE user_id = ' . $_SESSION['pwg_uid'] . '
+  WHERE user_id = ' . (int) $pwg_uid . '
 ;';
             pwg_query($query);
 
@@ -205,14 +206,19 @@ SELECT status
         return;
     }
 
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    $username = is_string($_POST['username']) ? $_POST['username'] : null;
+    $password = is_string($_POST['password']) ? $_POST['password'] : null;
+
+    if ($username === null or $password === null) {
+        return;
+    }
 
     if (function_exists('get_magic_quotes_gpc') && ! @get_magic_quotes_gpc()) {
-        $username = pwg_db_real_escape_string($username);
+        $username = pwg_db_real_escape_string($username) ?? $username;
     }
 
     if (version_compare($current_release, '2.0', '<')) {
+        // mb_convert_encoding() always returns a string given a string input.
         $username = mb_convert_encoding($username, 'ISO-8859-1', 'UTF-8');
         $password = mb_convert_encoding($password, 'ISO-8859-1', 'UTF-8');
     }
@@ -234,7 +240,7 @@ WHERE ' . $conf['user_fields']['username'] . '=\'' . $username . '\'
     }
     $row = pwg_db_fetch_assoc(pwg_query($query));
 
-    if (! is_array($row)) {
+    if (! is_array($row) or ! isset($row['password'])) {
         $page['errors'][] = l10n('Invalid password!');
     } elseif (! pwg_password_verify($password, $row['password'])) {
         $page['errors'][] = l10n('Invalid password!');
@@ -278,7 +284,7 @@ function check_upgrade_feed(): bool
 SELECT id
   FROM ' . UPGRADE_TABLE . '
 ;';
-    $applied = array_from_query($query, 'id');
+    $applied = array_filter(array_from_query($query, 'id'), 'is_string');
 
     // retrieve existing upgrades
     $existing = get_available_upgrade_ids();

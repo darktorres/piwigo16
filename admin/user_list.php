@@ -43,9 +43,13 @@ SELECT id, name, COUNT(ug.user_id) as nb_users_of
 $result = pwg_query($query);
 
 while ($row = pwg_db_fetch_assoc($result)) {
-    $groups[$row['id']] = $row['name'];
+    $group_id = $row['id'];
+    if (! is_string($group_id)) {
+        continue;
+    }
+    $groups[$group_id] = $row['name'];
     $groups_for_filter[] = [
-        'id' => $row['id'],
+        'id' => $group_id,
         'name' => $row['name'],
         'counter' => $row['nb_users_of'],
     ];
@@ -142,7 +146,7 @@ $template->assign(
         'password_protected_users' => implode(',', array_unique($password_protected_users)),
         'guest_user' => $conf['guest_id'],
         'filter_group' => ($_GET['group'] ?? null),
-        'search_input' => (isset($_GET['user_id']) ? 'id:' . $_GET['user_id'] : null),
+        'search_input' => ((isset($_GET['user_id']) && is_string($_GET['user_id'])) ? 'id:' . $_GET['user_id'] : null),
         'connected_user' => $user['id'],
         'connected_user_status' => $user['status'],
         'owner' => $conf['webmaster_id'],
@@ -172,8 +176,12 @@ SELECT
 $result = pwg_query($query);
 $nb_users_by_status = [];
 while ($row = pwg_db_fetch_assoc($result)) {
-    $nb_users_by_status[$row['status']] = [
-        'name' => l10n('user_status_' . $row['status']),
+    $status = $row['status'];
+    if (! is_string($status)) {
+        continue;
+    }
+    $nb_users_by_status[$status] = [
+        'name' => l10n('user_status_' . $status),
         'counter' => $row['nb_users_of'],
     ];
 }
@@ -211,8 +219,13 @@ SELECT
 $result = pwg_query($query);
 $nb_users_by_level = $level_options;
 while ($row = pwg_db_fetch_assoc($result)) {
-    $nb_users_by_level[$row['level']] = [
-        'name' => l10n(sprintf('Level %d', $row['level'])),
+    $level = $row['level'];
+    if (! is_numeric($level)) {
+        continue;
+    }
+    $level = (int) $level;
+    $nb_users_by_level[$level] = [
+        'name' => l10n(sprintf('Level %d', $level)),
         'counter' => $row['nb_users_of'],
     ];
 }

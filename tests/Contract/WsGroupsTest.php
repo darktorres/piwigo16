@@ -19,6 +19,9 @@ final class WsGroupsTest extends ContractTestCase
         $response = $this->wsAdmin('pwg.groups.getList');
 
         $result = $response['result'];
+        if (!is_array($result)) {
+            self::fail('pwg.groups.getList result is not an array');
+        }
         self::assertArrayHasKey('paging', $result);
         self::assertArrayHasKey('groups', $result);
         self::assertIsArray($result['groups']);

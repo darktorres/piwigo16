@@ -87,12 +87,25 @@ function encode_slideshow_params(array $decode_params = []): string
 {
     global $conf;
 
-    $params = array_diff_assoc(correct_slideshow_params($decode_params), get_default_slideshow_params());
+    // decode_slideshow_params()/correct_slideshow_params() only ever populate
+    // scalar values (period/repeat as int|numeric-string, play and the
+    // regex-matched flags as bool|string); filter defensively so
+    // array_diff_assoc() only ever compares string-castable values.
+    $corrected = array_filter(correct_slideshow_params($decode_params), 'is_scalar');
+    $defaults = array_filter(get_default_slideshow_params(), 'is_scalar');
+    $params = array_diff_assoc($corrected, $defaults);
     $result = '';
 
+    // $params' keys are always string: correct_slideshow_params() and
+    // get_default_slideshow_params() both declare array<string, mixed>.
     foreach ($params as $name => $value) {
         // boolean_to_string return $value, if it's not a bool
-        $result .= '+' . $name . '-' . boolean_to_string($value);
+        $value = boolean_to_string($value);
+        if (!is_scalar($value)) {
+            continue;
+        }
+
+        $result .= '+' . $name . '-' . $value;
     }
 
     return $result;

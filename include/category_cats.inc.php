@@ -65,7 +65,10 @@ $query .= '
   LIMIT ' . $conf['nb_categories_page'] . ' OFFSET ' . ($page['startcat'] ?? 0) . '
 ;';
 
-$query = trigger_change('loc_begin_index_category_thumbnails_query', $query);
+$filtered_query = trigger_change('loc_begin_index_category_thumbnails_query', $query);
+if (is_string($filtered_query)) {
+    $query = $filtered_query;
+}
 
 $result = pwg_query($query);
 $total_row = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
@@ -78,6 +81,12 @@ $image_ids = [];
 $user_representative_updates_for = [];
 
 while ($row = pwg_db_fetch_assoc($result)) {
+    $cat_id = $row['id'];
+    if (! is_string($cat_id)) {
+        // 'id' is the categories table primary key (NOT NULL); this should never happen
+        continue;
+    }
+
     $row['is_child_date_last'] = @$row['max_date_last'] > @$row['date_last'];
 
     if (! empty($row['user_representative_picture_id'])) {
@@ -113,19 +122,19 @@ SELECT representative_picture_id
 
     if (isset($image_id)) {
         if ($conf['representative_cache_on_subcats'] and $row['user_representative_picture_id'] != $image_id) {
-            $user_representative_updates_for[$row['id']] = $image_id;
+            $user_representative_updates_for[$cat_id] = $image_id;
         }
 
         $row['representative_picture_id'] = $image_id;
         $image_ids[] = $image_id;
         $categories[] = $row;
-        $category_ids[] = $row['id'];
+        $category_ids[] = $cat_id;
     } else {
         $logger->info(
             sprintf(
                 '[%s] category #%u was listed in SQL but no image_id found, so it was skipped',
                 basename(__FILE__),
-                $row['id']
+                $cat_id
             )
         );
     }
@@ -170,8 +179,14 @@ SELECT *
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
+        $image_row_id = $row['id'];
+        if (! is_string($image_row_id)) {
+            // 'id' is the images table primary key (NOT NULL); this should never happen
+            continue;
+        }
+
         if ($row['level'] <= $user['level']) {
-            $infos_of_image[$row['id']] = $row;
+            $infos_of_image[$image_row_id] = $row;
         } else {
             // problem: we must not display the thumbnail of a photo which has a
             // higher privacy level than user privacy level
@@ -182,7 +197,7 @@ SELECT *
             // * set it as the representative_picture_id for the category
 
             foreach ($categories as &$category) {
-                if ($row['id'] == $category['representative_picture_id']) {
+                if ($image_row_id == $category['representative_picture_id']) {
                     // searching a random representant among elements in sub-categories
                     $image_id = get_random_image_in_category($category);
 
@@ -209,7 +224,13 @@ SELECT *
 ;';
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
-            $infos_of_image[$row['id']] = $row;
+            $new_image_row_id = $row['id'];
+            if (! is_string($new_image_row_id)) {
+                // 'id' is the images table primary key (NOT NULL); this should never happen
+                continue;
+            }
+
+            $infos_of_image[$new_image_row_id] = $row;
         }
     }
 
@@ -258,11 +279,14 @@ if (count($categories) > 0) {
             continue;
         }
 
-        $category['name'] = trigger_change(
+        $rendered_category_name = trigger_change(
             'render_category_name',
             $category['name'],
             'subcatify_category_name'
         );
+        $category['name'] = is_string($rendered_category_name)
+            ? $rendered_category_name
+            : (is_string($category['name']) ? $category['name'] : '');
 
         if ($page['section'] == 'recent_cats') {
             $name = get_cat_display_name_cache($category['uppercats'], null);
@@ -275,7 +299,7 @@ if (count($categories) > 0) {
         $tpl_var = array_merge($category, [
             'ID' => $category['id'] /* obsolete */,
             'representative' => $representative_infos,
-            'TN_ALT' => strip_tags((string) $category['name']),
+            'TN_ALT' => strip_tags($category['name']),
 
             'URL' => make_index_url(
                 [

@@ -49,7 +49,7 @@ class check_integrity
             is_array($conf_c13y_ignore['list'])
         ) {
             $ignore_list_changed = false;
-            $this->ignore_list = $conf_c13y_ignore['list'];
+            $this->ignore_list = array_values($conf_c13y_ignore['list']);
         } else {
             $ignore_list_changed = true;
             $this->ignore_list = [];
@@ -71,14 +71,15 @@ class check_integrity
         }
 
         // Treatments
-        if (isset($_POST['c13y_submit_correction']) and isset($_POST['c13y_selection'])) {
+        if (isset($_POST['c13y_submit_correction']) and isset($_POST['c13y_selection']) and is_array($_POST['c13y_selection'])) {
+            $c13y_selection = $_POST['c13y_selection'];
             $corrected_count = 0;
             $not_corrected_count = 0;
 
             foreach ($this->retrieve_list as $i => $c13y) {
                 if (! empty($c13y['correction_fct']) and
                     $c13y['is_callable'] and
-                    in_array($c13y['id'], $_POST['c13y_selection'])) {
+                    in_array($c13y['id'], $c13y_selection)) {
                     if (is_array($c13y['correction_fct_args'])) {
                         $args = $c13y['correction_fct_args'];
                     } elseif ($c13y['correction_fct_args'] !== null) {
@@ -86,12 +87,15 @@ class check_integrity
                     } else {
                         $args = [];
                     }
-                    $this->retrieve_list[$i]['corrected'] = call_user_func_array($c13y['correction_fct'], $args);
+                    $correction_fct = $c13y['correction_fct'];
+                    if (is_callable($correction_fct)) {
+                        $this->retrieve_list[$i]['corrected'] = call_user_func_array($correction_fct, $args);
 
-                    if ($this->retrieve_list[$i]['corrected']) {
-                        ++$corrected_count;
-                    } else {
-                        ++$not_corrected_count;
+                        if ($this->retrieve_list[$i]['corrected']) {
+                            ++$corrected_count;
+                        } else {
+                            ++$not_corrected_count;
+                        }
                     }
                 }
             }
@@ -111,11 +115,12 @@ class check_integrity
                 );
             }
         } else {
-            if (isset($_POST['c13y_submit_ignore']) and isset($_POST['c13y_selection'])) {
+            if (isset($_POST['c13y_submit_ignore']) and isset($_POST['c13y_selection']) and is_array($_POST['c13y_selection'])) {
+                $c13y_selection = $_POST['c13y_selection'];
                 $ignored_count = 0;
 
                 foreach ($this->retrieve_list as $i => $c13y) {
-                    if (in_array($c13y['id'], $_POST['c13y_selection'])) {
+                    if (in_array($c13y['id'], $c13y_selection)) {
                         $this->build_ignore_list[] = $c13y['id'];
                         $this->retrieve_list[$i]['ignored'] = true;
                         ++$ignored_count;
@@ -132,11 +137,13 @@ class check_integrity
             }
         }
 
+        $scalar_ignore_list = array_filter($this->ignore_list, 'is_scalar');
+        $scalar_build_ignore_list = array_filter($this->build_ignore_list, 'is_scalar');
         $ignore_list_changed =
           (
               ($ignore_list_changed) or
-        (count(array_diff($this->ignore_list, $this->build_ignore_list)) > 0) or
-        (count(array_diff($this->build_ignore_list, $this->ignore_list)) > 0)
+        (count(array_diff($scalar_ignore_list, $scalar_build_ignore_list)) > 0) or
+        (count(array_diff($scalar_build_ignore_list, $scalar_ignore_list)) > 0)
           );
 
         if ($ignore_list_changed) {

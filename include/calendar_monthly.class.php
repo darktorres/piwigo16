@@ -227,6 +227,7 @@ class CalendarMonthly extends CalendarBase
         }
 
         global $lang;
+        $calendar_bars = [];
         foreach ($items as $year => $year_data) {
             $chronology_date = [$year];
             $url = duplicate_index_url([
@@ -241,7 +242,7 @@ class CalendarMonthly extends CalendarBase
                 $lang['month']
             );
 
-            $tpl_var['calendar_bars'][] =
+            $calendar_bars[] =
               [
                   'U_HEAD' => $url,
                   'NB_IMAGES' => $year_data['nb_images'],
@@ -249,6 +250,7 @@ class CalendarMonthly extends CalendarBase
                   'items' => $nav_bar,
               ];
         }
+        $tpl_var['calendar_bars'] = $calendar_bars;
 
         return true;
     }
@@ -290,6 +292,7 @@ class CalendarMonthly extends CalendarBase
             return false;
         }
         global $lang;
+        $calendar_bars = [];
         foreach ($items as $month => $month_data) {
             $chronology_date = [$page['chronology_date'][CYEAR], $month];
             $url = duplicate_index_url([
@@ -302,7 +305,7 @@ class CalendarMonthly extends CalendarBase
                 false
             );
 
-            $tpl_var['calendar_bars'][] =
+            $calendar_bars[] =
               [
                   'U_HEAD' => $url,
                   'NB_IMAGES' => $month_data['nb_images'],
@@ -310,6 +313,7 @@ class CalendarMonthly extends CalendarBase
                   'items' => $nav_bar,
               ];
         }
+        $tpl_var['calendar_bars'] = $calendar_bars;
 
         return true;
     }
@@ -358,7 +362,10 @@ class CalendarMonthly extends CalendarBase
             $derivative = new DerivativeImage(IMG_SQUARE, new SrcImage($row));
             $items[$day]['derivative'] = $derivative;
             $items[$day]['file'] = $row['file'];
-            $items[$day]['dow'] = $row['dow'];
+            // dow is DAYOFWEEK(date_field)-1, a numeric SQL expression, so
+            // it comes back as a numeric string (never null: the row is
+            // guaranteed to exist and date_field is filtered NOT NULL above)
+            $items[$day]['dow'] = is_numeric($row['dow']) ? (int) $row['dow'] : 0;
         }
 
         if (! empty($items)) {

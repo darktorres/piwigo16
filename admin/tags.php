@@ -72,6 +72,7 @@ $orphan_tag_names = [];
 foreach ($orphan_tags as $tag) {
     $orphan_tag_names[] = trigger_change('render_tag_name', $tag['name'], $tag);
 }
+$orphan_tag_names = array_filter($orphan_tag_names, is_string(...));
 
 if (count($orphan_tag_names) > 0) {
     $warning_tags = sprintf(
@@ -131,14 +132,25 @@ $all_tags = [];
 while ($tag = pwg_db_fetch_assoc($result)) {
     $raw_name = $tag['name'];
     $tag['raw_name'] = $raw_name;
-    $tag['name'] = trigger_change('render_tag_name', $raw_name, $tag);
-    $counter = intval(@$tag_counters[$tag['id']]);
+    $rendered_name = trigger_change('render_tag_name', $raw_name, $tag);
+    $rendered_name = is_string($rendered_name) ? $rendered_name : ($raw_name ?? '');
+    $tag['name'] = $rendered_name;
+
+    $tag_id = $tag['id'];
+    $counter = 0;
+    if (is_string($tag_id) && isset($tag_counters[$tag_id])) {
+        $tag_counter_value = $tag_counters[$tag_id];
+        if (is_numeric($tag_counter_value)) {
+            $counter = intval($tag_counter_value);
+        }
+    }
     if ($counter > 0) {
-        $tag['counter'] = intval(@$tag_counters[$tag['id']]);
+        $tag['counter'] = $counter;
     }
 
     $alt_names = trigger_change('get_tag_alt_names', [], $raw_name);
-    $alt_names = array_diff(array_unique($alt_names), [$tag['name']]);
+    $alt_names = is_array($alt_names) ? array_filter($alt_names, is_string(...)) : [];
+    $alt_names = array_diff(array_unique($alt_names), [$rendered_name]);
     if (count($alt_names)) {
         $tag['alt_names'] = implode(', ', $alt_names);
     }

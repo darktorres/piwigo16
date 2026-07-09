@@ -30,6 +30,51 @@ final class WsGroupsMutationTest extends ContractTestCase
         parent::tearDown();
     }
 
+    /**
+     * Narrows a decoded WS response down to result.$collection[0], asserting
+     * the shape at every level. callWs() returns array<string, mixed>, so
+     * nothing below the top level is known without explicit checks.
+     *
+     * @param array<string, mixed> $response
+     * @return array<string, mixed>
+     */
+    private static function firstItem(array $response, string $collection): array
+    {
+        $result = $response['result'] ?? null;
+        self::assertIsArray($result, 'WS response "result" is not an array');
+
+        $items = $result[$collection] ?? null;
+        self::assertIsArray($items, sprintf('WS response "result.%s" is not an array', $collection));
+
+        $item = $items[0] ?? null;
+        self::assertIsArray($item, sprintf('WS response "result.%s[0]" is not an array', $collection));
+
+        return $item;
+    }
+
+    /** @param array<string, mixed> $response */
+    private static function firstItemId(array $response, string $collection): int
+    {
+        $item = self::firstItem($response, $collection);
+        $id   = $item['id'] ?? null;
+        self::assertTrue(
+            is_int($id) || (is_string($id) && is_numeric($id)),
+            sprintf('%s[0].id is missing or not numeric', $collection)
+        );
+
+        return (int) $id;
+    }
+
+    /** @param array<string, mixed> $response */
+    private static function firstItemName(array $response, string $collection): string
+    {
+        $item = self::firstItem($response, $collection);
+        $name = $item['name'] ?? null;
+        self::assertIsString($name, sprintf('%s[0].name is missing or not a string', $collection));
+
+        return $name;
+    }
+
     public function test_add_returns_group_shape(): void
     {
         $name     = 'ct_group_' . uniqid();
@@ -38,14 +83,14 @@ final class WsGroupsMutationTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.groups.getList', $response);
 
-        $this->groupId = (int) $response['result']['groups'][0]['id'];
+        $this->groupId = self::firstItemId($response, 'groups');
     }
 
     public function test_setInfo_renames_group(): void
     {
         $name = 'ct_group_' . uniqid();
         $add  = $this->callWs('pwg.groups.add', ['name' => $name]);
-        $this->groupId = (int) $add['result']['groups'][0]['id'];
+        $this->groupId = self::firstItemId($add, 'groups');
 
         $token    = $this->getPwgToken();
         $newName  = $name . '_renamed';
@@ -57,19 +102,19 @@ final class WsGroupsMutationTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.groups.getList', $response);
-        self::assertSame($newName, $response['result']['groups'][0]['name']);
+        self::assertSame($newName, self::firstItemName($response, 'groups'));
     }
 
     public function test_addUser_and_deleteUser_return_group_shape(): void
     {
         $name = 'ct_group_' . uniqid();
         $add  = $this->callWs('pwg.groups.add', ['name' => $name]);
-        $this->groupId = (int) $add['result']['groups'][0]['id'];
+        $this->groupId = self::firstItemId($add, 'groups');
         $token = $this->getPwgToken();
 
         // fixture_admin is user id=1 (webmaster); use a fixture normal user if available
         $users   = $this->callWs('pwg.users.getList', []);
-        $userId  = (int) $users['result']['users'][0]['id'];
+        $userId  = self::firstItemId($users, 'users');
 
         $addUser = $this->callWs('pwg.groups.addUser', [
             'group_id'  => $this->groupId,
@@ -92,7 +137,7 @@ final class WsGroupsMutationTest extends ContractTestCase
     {
         $name  = 'ct_group_' . uniqid();
         $add   = $this->callWs('pwg.groups.add', ['name' => $name]);
-        $id    = (int) $add['result']['groups'][0]['id'];
+        $id    = self::firstItemId($add, 'groups');
         $token = $this->getPwgToken();
 
         $response = $this->callWs('pwg.groups.delete', [
@@ -108,7 +153,7 @@ final class WsGroupsMutationTest extends ContractTestCase
     {
         $name  = 'ct_group_' . uniqid();
         $add   = $this->callWs('pwg.groups.add', ['name' => $name]);
-        $srcId = (int) $add['result']['groups'][0]['id'];
+        $srcId = self::firstItemId($add, 'groups');
         $token = $this->getPwgToken();
 
         $copyName = $name . '_copy';
@@ -121,7 +166,7 @@ final class WsGroupsMutationTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.groups.getList', $response);
 
-        $copyId = (int) $response['result']['groups'][0]['id'];
+        $copyId = self::firstItemId($response, 'groups');
 
         // clean up both
         $this->callWs('pwg.groups.delete', ['group_id' => $srcId,  'pwg_token' => $token]);
@@ -133,8 +178,8 @@ final class WsGroupsMutationTest extends ContractTestCase
         $token = $this->getPwgToken();
         $src   = $this->callWs('pwg.groups.add', ['name' => 'ct_merge_src_' . uniqid()]);
         $dst   = $this->callWs('pwg.groups.add', ['name' => 'ct_merge_dst_' . uniqid()]);
-        $srcId = (int) $src['result']['groups'][0]['id'];
-        $dstId = (int) $dst['result']['groups'][0]['id'];
+        $srcId = self::firstItemId($src, 'groups');
+        $dstId = self::firstItemId($dst, 'groups');
 
         $response = $this->callWs('pwg.groups.merge', [
             'merge_group_id'       => [$srcId],
@@ -143,7 +188,9 @@ final class WsGroupsMutationTest extends ContractTestCase
         ]);
 
         self::assertSame('ok', $response['stat']);
-        self::assertArrayHasKey('destination_group', $response['result']);
+        $result = $response['result'] ?? null;
+        self::assertIsArray($result, 'WS response "result" is not an array');
+        self::assertArrayHasKey('destination_group', $result);
 
         // src was deleted by merge; clean up dst
         $this->callWs('pwg.groups.delete', ['group_id' => $dstId, 'pwg_token' => $token]);

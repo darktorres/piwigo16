@@ -35,7 +35,9 @@ function rate_picture($image_id, int|string|null $rate)
         return false;
     }
 
-    $ip_components = explode('.', (string) $_SERVER['REMOTE_ADDR']);
+    $remote_addr = $_SERVER['REMOTE_ADDR'];
+    $remote_addr = is_string($remote_addr) ? $remote_addr : '';
+    $ip_components = explode('.', $remote_addr);
     if (count($ip_components) > 3) {
         array_pop($ip_components);
     }
@@ -43,6 +45,10 @@ function rate_picture($image_id, int|string|null $rate)
 
     if ($user_anonymous) {
         $save_anonymous_id = pwg_get_cookie_var('anonymous_rater', $anonymous_id);
+        // pwg_get_cookie_var()'s own return type is mixed; a cookie value is
+        // always a string when present, and the $default we passed
+        // ($anonymous_id) is already a string, so fail back to it.
+        $save_anonymous_id = is_string($save_anonymous_id) ? $save_anonymous_id : $anonymous_id;
 
         if ($anonymous_id != $save_anonymous_id) { // client has changed his IP adress or he's trying to fool us
             $query = '
@@ -52,6 +58,10 @@ SELECT element_id
     AND anonymous_id = \'' . $anonymous_id . '\'
 ;';
             $already_there = array_from_query($query, 'element_id');
+            // array_from_query() is typed array<int|string, mixed>; the
+            // element_id column is a string|null DB value, and implode()
+            // needs every element to be string-castable.
+            $already_there = array_filter($already_there, 'is_string');
 
             if (count($already_there) > 0) {
                 $query = '
@@ -115,7 +125,14 @@ INSERT
 function update_rating_score($element_id = false)
 {
     if (($alt_result = trigger_change('update_rating_score', false, $element_id)) !== false) {
-        return $alt_result;
+        // trigger_change()'s own return type is mixed; the contract of this
+        // event is to return the (score, average, count) shape documented
+        // above, so fail through to the real computation below rather than
+        // trust a misbehaving handler's return value.
+        if (is_array($alt_result)) {
+            /** @var array<string, mixed> $alt_result */
+            return $alt_result;
+        }
     }
 
     $query = '
@@ -128,13 +145,28 @@ SELECT element_id,
     $all_rates_count = 0;
     $all_rates_avg = 0;
     $item_ratecount_avg = 0;
+    /** @var array<int, array{rcount: int, rsum: float}> $by_item */
     $by_item = [];
 
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        $all_rates_count += $row['rcount'];
-        $all_rates_avg += $row['rsum'];
-        $by_item[$row['element_id']] = $row;
+        // COUNT()/SUM()/the grouped-by column all come back as string|null
+        // from the DB layer; COUNT() is never null, and this GROUP BY only
+        // ever yields rows that have at least one rate, so all three are
+        // numeric here. Narrow them once so the arithmetic and array-key
+        // uses below are properly typed.
+        $row_rcount = is_numeric($row['rcount']) ? (int) $row['rcount'] : 0;
+        $row_rsum = is_numeric($row['rsum']) ? (float) $row['rsum'] : 0.0;
+        $row_element_id = is_numeric($row['element_id']) ? (int) $row['element_id'] : null;
+        if ($row_element_id === null) {
+            continue;
+        }
+        $all_rates_count += $row_rcount;
+        $all_rates_avg += $row_rsum;
+        $by_item[$row_element_id] = [
+            'rcount' => $row_rcount,
+            'rsum' => $row_rsum,
+        ];
     }
 
     if ($all_rates_count > 0) {
@@ -168,13 +200,20 @@ SELECT element_id,
     );
 
     // set to null all items with no rate
-    if (! isset($by_item[$element_id])) {
+    // $by_item is keyed by int; PHP itself casts a bool array offset to int
+    // (false => 0), made explicit here so the offset type matches.
+    $element_id_key = $element_id === false ? 0 : $element_id;
+    if (! isset($by_item[$element_id_key])) {
         $query = '
 SELECT id FROM ' . IMAGES_TABLE . '
   LEFT JOIN ' . RATE_TABLE . ' ON id=element_id
   WHERE element_id IS NULL AND rating_score IS NOT NULL';
 
         $to_update = array_from_query($query, 'id');
+        // array_from_query() is typed array<int|string, mixed>; the id
+        // column is a string|null DB value, and implode() needs every
+        // element to be string-castable.
+        $to_update = array_filter($to_update, 'is_string');
 
         if (! empty($to_update)) {
             $query = '

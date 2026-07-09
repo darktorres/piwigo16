@@ -33,7 +33,12 @@ function history_tabsheet(): void
  */
 function history_compare(array $a, array $b): int
 {
-    return strcmp($a['date'] . $a['time'], $b['date'] . $b['time']);
+    $a_date = isset($a['date']) && is_string($a['date']) ? $a['date'] : '';
+    $a_time = isset($a['time']) && is_string($a['time']) ? $a['time'] : '';
+    $b_date = isset($b['date']) && is_string($b['date']) ? $b['date'] : '';
+    $b_time = isset($b['time']) && is_string($b['time']) ? $b['time'] : '';
+
+    return strcmp($a_date . $a_time, $b_date . $b_time);
 }
 
 /**
@@ -46,33 +51,50 @@ function history_compare(array $a, array $b): int
  */
 function get_history($data, array $search, $types): array
 {
-    if (isset($search['fields']['filename'])) {
+    // $search comes from unserialize()'d search rules (see
+    // ws_history_search() in include/ws_functions/pwg.php), so its
+    // 'fields' sub-array is only provably an array, not that its values
+    // have the expected scalar/array shapes; narrow each field on use.
+    $fields = [];
+    if (isset($search['fields']) and is_array($search['fields'])) {
+        $fields = $search['fields'];
+    }
+
+    $filename = null;
+    if (isset($fields['filename']) and is_string($fields['filename'])) {
+        $filename = $fields['filename'];
+    }
+
+    $image_ids = [];
+
+    if ($filename !== null) {
         $query = '
 SELECT
     id
   FROM ' . IMAGES_TABLE . '
-  WHERE file LIKE \'' . $search['fields']['filename'] . '\'
+  WHERE file LIKE \'' . $filename . '\'
 ;';
-        $search['image_ids'] = array_from_query($query, 'id');
+        $image_ids = array_filter(array_from_query($query, 'id'), 'is_string');
     }
 
     // echo '<pre>'; print_r($search); echo '</pre>';
 
     $clauses = [];
 
-    if (isset($search['fields']['date-after'])) {
-        $clauses[] = "date >= '" . $search['fields']['date-after'] . "'";
+    if (isset($fields['date-after']) and is_string($fields['date-after'])) {
+        $clauses[] = "date >= '" . $fields['date-after'] . "'";
     }
 
-    if (isset($search['fields']['date-before'])) {
-        $clauses[] = "date <= '" . $search['fields']['date-before'] . "'";
+    if (isset($fields['date-before']) and is_string($fields['date-before'])) {
+        $clauses[] = "date <= '" . $fields['date-before'] . "'";
     }
 
-    if (isset($search['fields']['types'])) {
+    if (isset($fields['types']) and is_array($fields['types'])) {
+        $search_types = array_filter($fields['types'], 'is_string');
         $local_clauses = [];
 
         foreach ($types as $type) {
-            if (in_array($type, $search['fields']['types'])) {
+            if (in_array($type, $search_types)) {
                 $clause = 'image_type ';
                 if ($type == 'none') {
                     $clause .= 'IS NULL';
@@ -89,26 +111,25 @@ SELECT
         }
     }
 
-    if (isset($search['fields']['user'])
-        and $search['fields']['user'] != -1) {
-        $clauses[] = 'user_id = ' . $search['fields']['user'];
+    if (isset($fields['user']) and is_numeric($fields['user']) and (int) $fields['user'] !== -1) {
+        $clauses[] = 'user_id = ' . (int) $fields['user'];
     }
 
-    if (isset($search['fields']['image_id'])) {
-        $clauses[] = 'image_id = ' . $search['fields']['image_id'];
+    if (isset($fields['image_id']) and is_numeric($fields['image_id'])) {
+        $clauses[] = 'image_id = ' . (int) $fields['image_id'];
     }
 
-    if (isset($search['fields']['filename'])) {
-        if (count($search['image_ids']) == 0) {
+    if ($filename !== null) {
+        if (count($image_ids) == 0) {
             // a clause that is always false
             $clauses[] = '1 = 2 ';
         } else {
-            $clauses[] = 'image_id IN (' . implode(', ', $search['image_ids']) . ')';
+            $clauses[] = 'image_id IN (' . implode(', ', $image_ids) . ')';
         }
     }
 
-    if (isset($search['fields']['ip'])) {
-        $clauses[] = 'IP LIKE "' . $search['fields']['ip'] . '"';
+    if (isset($fields['ip']) and is_string($fields['ip'])) {
+        $clauses[] = 'IP LIKE "' . $fields['ip'] . '"';
     }
 
     $clauses = prepend_append_array_items($clauses, '(', ')');
@@ -149,9 +170,9 @@ SELECT
 /**
  * Compute statistics from history table to history_summary table
  *
- * @param int $max_lines - to only compute the next X lines, not the whole remaining lines
+ * @param int|null $max_lines - to only compute the next X lines, not the whole remaining lines
  */
-function history_summarize($max_lines = null): void
+function history_summarize(?int $max_lines = null): void
 {
     // we need to know which was the last line "summarized"
     $query = '
@@ -167,7 +188,8 @@ SELECT
     $history_min_id = 0;
     if (count($summary_lines) > 0) {
         $last_summary = $summary_lines[0];
-        $history_min_id = $last_summary['history_id_to'];
+        $last_history_id_to = $last_summary['history_id_to'];
+        $history_min_id = is_numeric($last_history_id_to) ? (int) $last_history_id_to : 0;
     } else {
         // if we have no "reference", ie "starting point", we need to find
         // one. And "0" is not the right answer here, because history table may
@@ -179,7 +201,11 @@ SELECT
 ;';
         $history_lines = query2array($query);
         if (count($history_lines) > 0) {
-            $history_min_id = $history_lines[0]['min_id'] - 1;
+            $min_id = $history_lines[0]['min_id'];
+            // MIN(id) with no matching rows comes back as SQL NULL (the
+            // aggregate query always returns exactly one row); mirror the
+            // previous implicit null->0 coercion explicitly.
+            $history_min_id = (is_numeric($min_id) ? (int) $min_id : 0) - 1;
         }
     }
 

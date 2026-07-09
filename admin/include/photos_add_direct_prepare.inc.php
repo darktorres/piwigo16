@@ -95,22 +95,31 @@ if (isset($_GET['album'])) {
     // set the category from get url or ...
     check_input_parameter('album', $_GET, false, PATTERN_ID);
 
+    // check_input_parameter() above validated (or killed the request via
+    // fatal_error()) that a non-empty $_GET['album'] matches PATTERN_ID
+    // (digits only) -- it doesn't retype the superglobal though, so we
+    // narrow once here and reuse this variable below.
+    $album_id = is_numeric($_GET['album']) ? (int) $_GET['album'] : null;
+
     // test if album really exists
     $query = '
 SELECT id, uppercats
   FROM ' . CATEGORIES_TABLE . '
-  WHERE id = ' . $_GET['album'] . '
+  WHERE id = ' . ($album_id ?? 0) . '
 ;';
     $result = pwg_query($query);
-    if (pwg_db_num_rows($result) == 1) {
-        $selected_category = [$_GET['album']];
+    if ($album_id !== null && pwg_db_num_rows($result) == 1) {
+        $selected_category = [$album_id];
 
         $cat = pwg_db_fetch_assoc($result);
         // the num_rows == 1 check above guarantees a row is available
         assert(is_array($cat));
-        $template->assign('ADD_TO_ALBUM', get_cat_display_name_cache($cat['uppercats'], null));
+        $uppercats = $cat['uppercats'];
+        // uppercats is a NOT NULL varchar column (install/piwigo_structure-mysql.sql)
+        assert(is_string($uppercats));
+        $template->assign('ADD_TO_ALBUM', get_cat_display_name_cache($uppercats, null));
     } else {
-        fatal_error('[Hacking attempt] the album id = "' . $_GET['album'] . '" is not valid');
+        fatal_error('[Hacking attempt] the album id = "' . ($album_id ?? '') . '" is not valid');
     }
 } else {
     // we need to know the category in which the last photo was added
@@ -129,7 +138,10 @@ SELECT category_id, c.uppercats
         // the num_rows > 0 check above guarantees a row is available
         assert(is_array($row));
         $selected_category = [$row['category_id']];
-        $selected_category_name = get_cat_display_name_cache($row['uppercats'], null);
+        $uppercats = $row['uppercats'];
+        // uppercats is a NOT NULL varchar column (install/piwigo_structure-mysql.sql)
+        assert(is_string($uppercats));
+        $selected_category_name = get_cat_display_name_cache($uppercats, null);
         $template->assign('selected_category_name', $selected_category_name);
     }
 }

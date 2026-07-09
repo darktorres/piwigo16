@@ -20,7 +20,11 @@ $user['id'] = $conf['guest_id'];
 if (isset($_COOKIE[session_name()])) {
     if (isset($_GET['act']) and $_GET['act'] == 'logout') { // logout
         logout_user();
-        redirect(get_gallery_home_url());
+        // get_gallery_home_url() is declared to return `mixed` (include/functions_url.inc.php);
+        // every real branch of its body actually returns a string, so this narrows locally
+        // rather than widening redirect()'s $url parameter.
+        $gallery_home_url = get_gallery_home_url();
+        redirect(is_string($gallery_home_url) ? $gallery_home_url : '/');
     } elseif (! empty($_SESSION['pwg_uid'])) {
         $user['id'] = $_SESSION['pwg_uid'];
     }
@@ -35,7 +39,7 @@ if ($user['id'] == $conf['guest_id']) {
 if ($conf['apache_authentication']) {
     $remote_user = null;
     foreach (['REMOTE_USER', 'REDIRECT_REMOTE_USER'] as $server_key) {
-        if (isset($_SERVER[$server_key])) {
+        if (isset($_SERVER[$server_key]) and is_string($_SERVER[$server_key])) {
             $remote_user = $_SERVER[$server_key];
             break;
         }
@@ -57,8 +61,10 @@ if (isset($_GET['auth'])) {
 if (
     defined('IN_WS')
     and isset($_SERVER['HTTP_X_PIWIGO_API'])
+    and is_string($_SERVER['HTTP_X_PIWIGO_API'])
     and ! empty($_SERVER['HTTP_X_PIWIGO_API'])
     and isset($_REQUEST['method'])
+    and is_string($_REQUEST['method'])
 ) {
     $auth_header = pwg_db_real_escape_string($_SERVER['HTTP_X_PIWIGO_API']) ?? null;
 
@@ -84,8 +90,8 @@ if (
     defined('IN_WS')
     and isset($_REQUEST['method'])
     and $_REQUEST['method'] == 'pwg.images.uploadAsync'
-    and isset($_POST['username'])
-    and isset($_POST['password'])
+    and is_string($_POST['username'] ?? null)
+    and is_string($_POST['password'] ?? null)
 ) {
     include_once PHPWG_ROOT_PATH . 'include/ws_init.inc.php';
     include_once PHPWG_ROOT_PATH . 'include/ws_functions/pwg.php';
@@ -110,7 +116,8 @@ if (defined('IN_ADMIN') and IN_ADMIN) {
 } elseif (
     isset($_REQUEST['method'])
     and isset($_SERVER['HTTP_REFERER'])
-    and preg_match('/\/admin\.php\?page=/', (string) $_SERVER['HTTP_REFERER'])
+    and is_string($_SERVER['HTTP_REFERER'])
+    and preg_match('/\/admin\.php\?page=/', $_SERVER['HTTP_REFERER'])
 ) {
     $page['user_use_cache'] = false;
 }

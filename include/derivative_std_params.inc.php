@@ -211,18 +211,38 @@ final class ImageStdParams
     {
         global $conf;
         $arr = @unserialize($conf['derivatives']);
-        if ($arr !== false) {
-            self::$type_map = $arr['d'];
-            self::$watermark = @$arr['w'];
-            if (! self::$watermark) {
-                self::$watermark = new WatermarkParams();
+        // unserialize() is only typed mixed by PHP itself (the serialized
+        // blob could decode to any PHP value, or to a malformed non-array
+        // shape from a hand-edited config row) -- narrow every sub-value
+        // for real before trusting it, rather than assigning the blob
+        // blindly into these precisely-typed properties.
+        if ($arr !== false && is_array($arr)) {
+            $type_map = [];
+            if (isset($arr['d']) && is_array($arr['d'])) {
+                foreach ($arr['d'] as $type => $params) {
+                    if (is_string($type) && $params instanceof DerivativeParams) {
+                        $type_map[$type] = $params;
+                    }
+                }
             }
-            self::$custom = @$arr['c'];
-            if (! self::$custom) {
-                self::$custom = [];
+            self::$type_map = $type_map;
+
+            self::$watermark = isset($arr['w']) && $arr['w'] instanceof WatermarkParams
+                ? $arr['w']
+                : new WatermarkParams();
+
+            $custom = [];
+            if (isset($arr['c']) && is_array($arr['c'])) {
+                foreach ($arr['c'] as $key => $value) {
+                    if (is_string($key) && is_numeric($value)) {
+                        $custom[$key] = (int) $value;
+                    }
+                }
             }
-            if (isset($arr['q'])) {
-                self::$quality = $arr['q'];
+            self::$custom = $custom;
+
+            if (isset($arr['q']) && is_numeric($arr['q'])) {
+                self::$quality = (int) $arr['q'];
             }
         } else {
             self::$watermark = new WatermarkParams();
@@ -230,7 +250,19 @@ final class ImageStdParams
             self::save(false);
         }
 
-        self::$disabled_type_map = safe_unserialize(self::get_disabled_type_map());
+        $disabled_raw = safe_unserialize(self::get_disabled_type_map());
+        // get_disabled_type_map() persists its map as serialize()d
+        // DerivativeParams[] too (see its own docblock) -- same
+        // untyped-blob situation as above, so filter it the same way.
+        $disabled_type_map = [];
+        if (is_array($disabled_raw)) {
+            foreach ($disabled_raw as $disabled_type => $disabled_params) {
+                if (is_string($disabled_type) && $disabled_params instanceof DerivativeParams) {
+                    $disabled_type_map[$disabled_type] = $disabled_params;
+                }
+            }
+        }
+        self::$disabled_type_map = $disabled_type_map;
         if (empty(self::$disabled_type_map)) {
             self::$disabled_type_map = self::get_disabled_default_sizes();
             self::save_disabled();

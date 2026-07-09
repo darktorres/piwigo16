@@ -318,7 +318,10 @@ function &get_plugin_data($plugin_id)
  *   below (both are empty()) — admin/include/plugins.class.php passes null
  *   explicitly when it only wants to filter by $id
  * @param string $id returns only data about given plugin
- * @return array<int|string, mixed>
+ * @return list<array<string, string|null>> - thin wrapper around
+ *   query2array($query) with no $key_name/$value_name, precisely typed as
+ *   list<array<string, string|null>> (this driver never enables
+ *   MYSQLI_OPT_INT_AND_FLOAT_NATIVE)
  */
 function get_db_plugins($state = '', $id = ''): array
 {
@@ -343,15 +346,24 @@ SELECT * FROM ' . PLUGINS_TABLE;
  * Loads a plugin in memory.
  * It performs autoupdate, includes the main.inc.php file and updates *$pwg_loaded_plugins*.
  *
- * @param array<string, mixed> $plugin
+ * @param array<string, string|null> $plugin - matches get_db_plugins()'s
+ *   real element type (its only caller, load_plugins(), passes rows
+ *   straight from there)
  */
 function load_plugin(array $plugin): void
 {
-    $file_name = PHPWG_PLUGINS_PATH . $plugin['id'] . '/main.inc.php';
+    $plugin_id = $plugin['id'] ?? null;
+    if (! is_string($plugin_id)) {
+        // 'id' is a NOT NULL varchar primary key in the plugins table; a
+        // non-string value here means the row is not usable.
+        return;
+    }
+
+    $file_name = PHPWG_PLUGINS_PATH . $plugin_id . '/main.inc.php';
     if (file_exists($file_name)) {
         autoupdate_plugin($plugin);
         global $pwg_loaded_plugins;
-        $pwg_loaded_plugins[$plugin['id']] = $plugin;
+        $pwg_loaded_plugins[$plugin_id] = $plugin;
         include_once $file_name;
     }
 }
@@ -362,12 +374,21 @@ function load_plugin(array $plugin): void
  *
  * @since 2.7
  *
- * @param array<string, mixed> $plugin (id, version, state) will be updated if version changes
+ * @param array<string, string|null> $plugin (id, version, state) will be
+ *   updated if version changes - matches get_db_plugins()'s real element
+ *   type (its only caller, load_plugin(), already guards 'id' to string)
  */
 function autoupdate_plugin(array &$plugin): void
 {
+    $plugin_id = $plugin['id'] ?? null;
+    if (! is_string($plugin_id)) {
+        // 'id' is a NOT NULL varchar primary key in the plugins table; a
+        // non-string value here means the row is not usable.
+        return;
+    }
+
     // try to find the filesystem version in lines 2 to 10 of main.inc.php
-    $fh = fopen(PHPWG_PLUGINS_PATH . $plugin['id'] . '/main.inc.php', 'r');
+    $fh = fopen(PHPWG_PLUGINS_PATH . $plugin_id . '/main.inc.php', 'r');
     $fs_version = null;
     $i = -1;
 
@@ -386,18 +407,23 @@ function autoupdate_plugin(array &$plugin): void
         fclose($fh);
     }
 
+    // 'version' is a NOT NULL varchar column defaulting to '0'; fall back
+    // to that same default if the row value is ever missing/non-string.
+    $plugin_version = $plugin['version'] ?? null;
+    $plugin_version = is_string($plugin_version) ? $plugin_version : '0';
+
     // if version is auto (dev) or superior
     if ($fs_version != null && (
-        $fs_version == 'auto' || $plugin['version'] == 'auto' ||
-          safe_version_compare($plugin['version'], $fs_version, '<')
+        $fs_version == 'auto' || $plugin_version == 'auto' ||
+          safe_version_compare($plugin_version, $fs_version, '<')
     )
     ) {
-        $old_version = $plugin['version'];
+        $old_version = $plugin_version;
         $new_version = $fs_version;
 
         $plugin['version'] = $fs_version;
 
-        $maintain_file = PHPWG_PLUGINS_PATH . $plugin['id'] . '/maintain.class.php';
+        $maintain_file = PHPWG_PLUGINS_PATH . $plugin_id . '/maintain.class.php';
 
         // autoupdate is applicable only to plugins with 2.7 architecture
         if (file_exists($maintain_file)) {
@@ -406,17 +432,21 @@ function autoupdate_plugin(array &$plugin): void
             // call update method
             include_once $maintain_file;
 
-            $classname = $plugin['id'] . '_maintain';
+            $classname = $plugin_id . '_maintain';
 
             // piwigo-videojs and piwigo-openstreetmap unfortunately have a "-" in their folder
             // name (=plugin_id) and a class name can't have a "-". So we have to replace with a "_"
             $classname = str_replace('-', '_', $classname);
 
-            $plugin_maintain = new $classname($plugin['id']);
+            $plugin_maintain = new $classname($plugin_id);
             if (! $plugin_maintain instanceof PluginMaintain) {
                 throw new \LogicException("autoupdate_plugin(): {$classname} does not extend PluginMaintain");
             }
-            $plugin_maintain->update($plugin['version'], $fs_version, $page['errors']);
+            // $old_version (pre-mutation), not $plugin['version'] (already
+            // overwritten with $fs_version above) -- passing the mutated
+            // value here made update() always see old==new, defeating any
+            // version-gated migration logic in a plugin's own update().
+            $plugin_maintain->update($old_version, $fs_version, $page['errors']);
         }
 
         // update database (only on production). We want to avoid registering an "auto" to "auto" update,
@@ -424,13 +454,13 @@ function autoupdate_plugin(array &$plugin): void
         if ($new_version != $old_version) {
             $query = '
 UPDATE ' . PLUGINS_TABLE . '
-  SET version = "' . $plugin['version'] . '"
-  WHERE id = "' . $plugin['id'] . '"
+  SET version = "' . $fs_version . '"
+  WHERE id = "' . $plugin_id . '"
 ;';
             pwg_query($query);
 
             pwg_activity('system', ACTIVITY_SYSTEM_PLUGIN, 'autoupdate', [
-                'plugin_id' => $plugin['id'],
+                'plugin_id' => $plugin_id,
                 'from_version' => $old_version,
                 'to_version' => $new_version,
             ]);

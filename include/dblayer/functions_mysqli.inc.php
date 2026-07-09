@@ -176,7 +176,10 @@ SELECT IF(MAX(' . $column . ')+1 IS NULL, 1, MAX(' . $column . ')+1)
     assert($row !== null);
     [$next] = $row;
 
-    return $next;
+    // The IF(...) wrapper guarantees a non-NULL numeric result; fall back to
+    // 1 (the same value the query itself uses when MAX() is NULL) if that
+    // invariant is ever violated.
+    return is_numeric($next) ? (int) $next : 1;
 }
 
 function pwg_db_changes(): int|string
@@ -192,7 +195,13 @@ function pwg_db_num_rows(mysqli_result|bool $result): int|string
 }
 
 /**
- * @return array<int, mixed>|null|false
+ * Every column value comes back as string|null: this driver never enables
+ * MYSQLI_OPT_INT_AND_FLOAT_NATIVE (grepped, confirmed absent), and this was
+ * verified empirically against the real test DB across int/timestamp/
+ * computed-aggregate columns -- fetch_assoc()/fetch_row() never return
+ * bool/int/float, only string or NULL.
+ *
+ * @return array<int, string|null>|null|false
  */
 function pwg_db_fetch_array(mysqli_result|bool $result): array|null|false
 {
@@ -203,18 +212,36 @@ function pwg_db_fetch_array(mysqli_result|bool $result): array|null|false
 }
 
 /**
- * @return array<string, mixed>|null|false
+ * @return array<string, string|null>|null|false
  */
 function pwg_db_fetch_assoc(mysqli_result|bool $result): array|null|false
 {
     if (! $result instanceof mysqli_result) {
         return false;
     }
-    return $result->fetch_assoc();
+
+    $row = $result->fetch_assoc();
+    if (! is_array($row)) {
+        return $row;
+    }
+
+    // mysqli_result::fetch_assoc() is declared to allow int/float column
+    // values (relevant only if MYSQLI_OPT_INT_AND_FLOAT_NATIVE were set,
+    // which this driver never does -- see the invariant documented above
+    // pwg_db_fetch_array()). Normalize defensively so the return type holds
+    // even if that assumption is ever violated. Rebuilt via array_map()
+    // (rather than a mutating foreach) so the callback's own return type
+    // lets PHPStan re-infer $row as array<string, string|null> directly.
+    $row = array_map(
+        static fn (mixed $value): string|null => is_string($value) || $value === null ? $value : (string) $value,
+        $row
+    );
+
+    return $row;
 }
 
 /**
- * @return array<int, mixed>|null
+ * @return array<int, string|null>|null
  */
 function pwg_db_fetch_row(mysqli_result|bool $result): array|null
 {
@@ -302,7 +329,7 @@ UPDATE ' . protect_column_name($tablename) . '
             foreach ($dbfields['update'] as $key) {
                 $separator = $is_first ? '' : ",\n    ";
 
-                if (isset($data[$key]) and $data[$key] != '') {
+                if (isset($data[$key]) and $data[$key] != '' and is_scalar($data[$key])) {
                     $query .= $separator . protect_column_name($key) . ' = \'' . $data[$key] . '\'';
                 } else {
                     if ($flags & MASS_UPDATES_SKIP_EMPTY) {
@@ -322,7 +349,7 @@ UPDATE ' . protect_column_name($tablename) . '
                     if (! $is_first) {
                         $query .= ' AND ';
                     }
-                    if (isset($data[$key])) {
+                    if (isset($data[$key]) and is_scalar($data[$key])) {
                         $query .= protect_column_name($key) . ' = \'' . $data[$key] . '\'';
                     } else {
                         $query .= protect_column_name($key) . ' IS NULL';
@@ -424,7 +451,7 @@ UPDATE ' . protect_column_name($tablename) . '
     foreach ($datas as $key => $value) {
         $separator = $is_first ? '' : ",\n    ";
 
-        if (isset($value) and $value !== '') {
+        if (isset($value) and $value !== '' and is_scalar($value)) {
             $query .= $separator . protect_column_name($key) . ' = \'' . $value . '\'';
         } else {
             if ($flags & MASS_UPDATES_SKIP_EMPTY) {
@@ -445,7 +472,7 @@ UPDATE ' . protect_column_name($tablename) . '
             if (! $is_first) {
                 $query .= ' AND ';
             }
-            if (isset($value)) {
+            if (isset($value) and is_scalar($value)) {
                 $query .= protect_column_name($key) . ' = \'' . $value . '\'';
             } else {
                 $query .= protect_column_name($key) . ' IS NULL';
@@ -479,6 +506,10 @@ function mass_inserts(string $table_name, array $dbfields, array $datas, array $
         $row = pwg_db_fetch_row(pwg_query($query));
         assert($row !== null);
         [, $packet_size] = $row;
+        // max_allowed_packet is always a numeric byte count and this system
+        // variable always exists; fall back to MySQL's historical default
+        // (1 MiB) if that invariant is ever violated.
+        $packet_size = is_numeric($packet_size) ? (int) $packet_size : 1_048_576;
         $packet_size -= 2000; // The last list of values MUST not exceed 2000 character*/
         $query = '';
 
@@ -505,7 +536,7 @@ INSERT ' . $ignore . ' INTO ' . protect_column_name($table_name) . '
                     $query .= ',';
                 }
 
-                if (! isset($insert[$dbfield]) or $insert[$dbfield] === '') {
+                if (! isset($insert[$dbfield]) or $insert[$dbfield] === '' or ! is_scalar($insert[$dbfield])) {
                     $query .= 'NULL';
                 } else {
                     $query .= "'" . $insert[$dbfield] . "'";
@@ -547,7 +578,7 @@ INSERT ' . $ignore . ' INTO ' . protect_column_name($table_name) . '
                 $is_first = false;
             }
 
-            if ($value === '' || $value === null) {
+            if ($value === '' || $value === null || ! is_scalar($value)) {
                 $query .= 'NULL';
             } else {
                 $query .= "'" . $value . "'";
@@ -672,7 +703,7 @@ function get_enums($table, $field): array
  */
 function get_boolean($input)
 {
-    if (strtolower((string) $input) === 'false') {
+    if (is_string($input) && strtolower($input) === 'false') {
         return false;
     }
 
@@ -777,6 +808,8 @@ function pwg_db_date_to_ts(string $date): string
 /**
  * Returns (or send to standard output) the message concerning the
  * error occured for the last mysql query.
+ *
+ * @phpstan-return ($die is true ? never : void)
  */
 function my_error(string $header, bool $die = true): void
 {
@@ -823,7 +856,9 @@ function my_error(string $header, bool $die = true): void
  *
  * @since 2.6
  *
- * @return array<int|string, mixed>
+ * @phpstan-return ($key_name is null
+ *   ? ($value_name is null ? list<array<string, string|null>> : list<string|null>)
+ *   : ($value_name is null ? array<int|string, array<string, string|null>> : array<int|string, string|null>))
  */
 function query2array(string $query, ?string $key_name = null, ?string $value_name = null): array
 {
@@ -835,27 +870,27 @@ function query2array(string $query, ?string $key_name = null, ?string $value_nam
 
     if (isset($key_name)) {
         if (isset($value_name)) {
-            while ($row = $result->fetch_assoc()) {
+            while ($row = pwg_db_fetch_assoc($result)) {
                 $key = $row[$key_name];
                 // matches PHP's own implicit null-key coercion; made
                 // explicit here only to satisfy the array key type.
-                $key = is_float($key) ? (int) $key : ($key ?? '');
+                $key ??= '';
                 $data[$key] = $row[$value_name];
             }
         } else {
-            while ($row = $result->fetch_assoc()) {
+            while ($row = pwg_db_fetch_assoc($result)) {
                 $key = $row[$key_name];
-                $key = is_float($key) ? (int) $key : ($key ?? '');
+                $key ??= '';
                 $data[$key] = $row;
             }
         }
     } else {
         if (isset($value_name)) {
-            while ($row = $result->fetch_assoc()) {
+            while ($row = pwg_db_fetch_assoc($result)) {
                 $data[] = $row[$value_name];
             }
         } else {
-            while ($row = $result->fetch_assoc()) {
+            while ($row = pwg_db_fetch_assoc($result)) {
                 $data[] = $row;
             }
         }

@@ -36,8 +36,24 @@ global $template;
 include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
 check_status(ACCESS_ADMINISTRATOR);
 
-$tpl_extension = isset($conf['extents_for_templates']) ?
-      unserialize($conf['extents_for_templates']) : [];
+$tpl_extension = [];
+if (isset($conf['extents_for_templates']) && is_string($conf['extents_for_templates'])) {
+    $unserialized_tpl_extension = unserialize($conf['extents_for_templates']);
+    if (is_array($unserialized_tpl_extension)) {
+        foreach ($unserialized_tpl_extension as $tpl_extension_file => $tpl_extension_conditions) {
+            if (is_string($tpl_extension_file) && is_array($tpl_extension_conditions)
+                && isset($tpl_extension_conditions[0], $tpl_extension_conditions[1], $tpl_extension_conditions[2])
+                && is_string($tpl_extension_conditions[0]) && is_string($tpl_extension_conditions[1])
+                && is_string($tpl_extension_conditions[2])) {
+                $tpl_extension[$tpl_extension_file] = [
+                    $tpl_extension_conditions[0],
+                    $tpl_extension_conditions[1],
+                    $tpl_extension_conditions[2],
+                ];
+            }
+        }
+    }
+}
 $new_extensions = get_extents();
 
 /* Selective URLs keyword */
@@ -118,16 +134,24 @@ $available_templates = array_merge(
 
 if (isset($_POST['submit'])) {
     $replacements = [];
+    $post_reptpl = isset($_POST['reptpl']) && is_array($_POST['reptpl']) ? $_POST['reptpl'] : [];
+    $post_original = isset($_POST['original']) && is_array($_POST['original']) ? $_POST['original'] : [];
+    $post_url = isset($_POST['url']) && is_array($_POST['url']) ? $_POST['url'] : [];
+    $post_bound = isset($_POST['bound']) && is_array($_POST['bound']) ? $_POST['bound'] : [];
     $i = 0;
-    while (isset($_POST['reptpl'][$i])) {
-        $newtpl = $_POST['reptpl'][$i];
-        $original = $_POST['original'][$i];
+    while (isset($post_reptpl[$i])) {
+        $newtpl = $post_reptpl[$i];
+        $original = $post_original[$i] ?? null;
+        $url_keyword = $post_url[$i] ?? null;
+        $bound_tpl = $post_bound[$i] ?? null;
+        if (! is_string($newtpl) || ! is_string($original) || ! is_string($url_keyword) || ! is_string($bound_tpl)) {
+            $i++;
+            continue;
+        }
         $handle = $eligible_templates[$original];
-        $url_keyword = $_POST['url'][$i];
         if ($url_keyword == '----------') {
             $url_keyword = 'N/A';
         }
-        $bound_tpl = $_POST['bound'][$i];
         if ($bound_tpl == '----------') {
             $bound_tpl = 'N/A';
         }

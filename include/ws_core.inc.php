@@ -197,8 +197,16 @@ abstract class PwgResponseEncoder
             return;
         }
 
-        if (self::is_struct($value)) {
-            if (isset($value[WS_XML_ATTRIBUTES])) {
+        // is_struct() takes $value by reference with a mixed-typed
+        // parameter, so PHPStan discards the is_array() narrowing above
+        // across the call; re-assert it immediately after the call.
+        $is_struct = self::is_struct($value);
+        if (! is_array($value)) {
+            return;
+        }
+
+        if ($is_struct) {
+            if (isset($value[WS_XML_ATTRIBUTES]) and is_array($value[WS_XML_ATTRIBUTES])) {
                 $value = array_merge($value, $value[WS_XML_ATTRIBUTES]);
                 unset($value[WS_XML_ATTRIBUTES]);
             }
@@ -361,7 +369,11 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         }
 
         if (range(0, count($params) - 1) === array_keys($params)) {
-            $params = array_flip($params);
+            // shorthand form: a plain list of allowed parameter names
+            // (strings); array_filter() proves that to PHPStan since the
+            // declared type also allows the array<string, mixed> options-map
+            // form, whose values aren't guaranteed int|string.
+            $params = array_flip(array_filter($params, 'is_string'));
         }
 
         $signature = [];
@@ -373,7 +385,10 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
                     'type' => 0,
                 ];
             } else {
-                if (! isset($data['flags'])) {
+                // every real registration in ws.php that sets 'flags' uses
+                // one of the WS_PARAM_* int constants; fall back to 0 for
+                // anything else (missing, or a non-int value).
+                if (! isset($data['flags']) or ! is_int($data['flags'])) {
                     $data['flags'] = 0;
                 }
                 if (array_key_exists('default', $data)) {
@@ -535,7 +550,11 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         $missing_params = [];
 
         foreach ($signature as $name => $options) {
+            // addMethod() always populates 'flags' as an int (WS_PARAM_*
+            // constants or 0); the signature is stored back through the
+            // loosely-typed $_methods property though, so re-assert it here.
             $flags = $options['flags'];
+            $flags = is_int($flags) ? $flags : 0;
 
             // parameter not provided in the request
             if (! array_key_exists((string) $name, $params)) {
@@ -564,8 +583,12 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
                     self::makeArrayParam($the_param);
                 }
 
-                if ($options['type'] > 0) {
-                    if (($ret = self::checkType($the_param, $options['type'], $name)) instanceof \PwgError) {
+                // same reasoning as $flags above: addMethod() always
+                // populates 'type' as an int (WS_TYPE_* constants or 0).
+                $type = $options['type'];
+                $type = is_int($type) ? $type : 0;
+                if ($type > 0) {
+                    if (($ret = self::checkType($the_param, $type, $name)) instanceof \PwgError) {
                         return $ret;
                     }
                 }
@@ -630,7 +653,10 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     {
         $methodName = $params['methodName'];
 
-        if (! $service->hasMethod($methodName)) {
+        // 'methodName' is registered with no WS_TYPE_* flag, so invoke()
+        // never coerces it; narrow it here instead of trusting the raw
+        // request value.
+        if (! is_string($methodName) or ! $service->hasMethod($methodName)) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Requested method does not exist');
         }
 
@@ -642,10 +668,18 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         ];
 
         foreach ($service->getMethodSignature($methodName) as $name => $options) {
+            // same reasoning as invoke(): addMethod() always populates
+            // 'flags'/'type' as ints, but the signature travels back out
+            // through the loosely-typed $_methods property.
+            $flags = $options['flags'];
+            $flags = is_int($flags) ? $flags : 0;
+            $type = $options['type'];
+            $type = is_int($type) ? $type : 0;
+
             $param_data = [
                 'name' => $name,
-                'optional' => self::hasFlag($options['flags'], WS_PARAM_OPTIONAL),
-                'acceptArray' => self::hasFlag($options['flags'], WS_PARAM_ACCEPT_ARRAY),
+                'optional' => self::hasFlag($flags, WS_PARAM_OPTIONAL),
+                'acceptArray' => self::hasFlag($flags, WS_PARAM_ACCEPT_ARRAY),
                 'type' => 'mixed',
             ];
 
@@ -659,17 +693,17 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
                 $param_data['info'] = $options['info'];
             }
 
-            if (self::hasFlag($options['type'], WS_TYPE_BOOL)) {
+            if (self::hasFlag($type, WS_TYPE_BOOL)) {
                 $param_data['type'] = 'bool';
-            } elseif (self::hasFlag($options['type'], WS_TYPE_INT)) {
+            } elseif (self::hasFlag($type, WS_TYPE_INT)) {
                 $param_data['type'] = 'int';
-            } elseif (self::hasFlag($options['type'], WS_TYPE_FLOAT)) {
+            } elseif (self::hasFlag($type, WS_TYPE_FLOAT)) {
                 $param_data['type'] = 'float';
             }
-            if (self::hasFlag($options['type'], WS_TYPE_POSITIVE)) {
+            if (self::hasFlag($type, WS_TYPE_POSITIVE)) {
                 $param_data['type'] .= ' positive';
             }
-            if (self::hasFlag($options['type'], WS_TYPE_NOTNULL)) {
+            if (self::hasFlag($type, WS_TYPE_NOTNULL)) {
                 $param_data['type'] .= ' notnull';
             }
 

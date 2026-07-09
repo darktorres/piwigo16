@@ -33,6 +33,12 @@ function get_cat_display_name($cat_informations, $url = ''): string
             $cat['name'],
             'get_cat_display_name'
         );
+        // trigger_change()'s own return type is mixed; category names are
+        // always strings, but a misbehaving handler shouldn't propagate a
+        // non-string value into the markup built below.
+        if (! is_string($cat['name'])) {
+            $cat['name'] = '';
+        }
 
         if ($is_first) {
             $is_first = false;
@@ -52,7 +58,8 @@ function get_cat_display_name($cat_informations, $url = ''): string
                   . '">';
             $output .= $cat['name'] . '</a>';
         } else {
-            $output .= '<a href="' . PHPWG_ROOT_PATH . $url . $cat['id'] . '">';
+            $cat_id = is_scalar($cat['id']) ? (string) $cat['id'] : '';
+            $output .= '<a href="' . PHPWG_ROOT_PATH . $url . $cat_id . '">';
             $output .= $cat['name'] . '</a>';
         }
     }
@@ -110,6 +117,12 @@ SELECT id, name, permalink
             $cat['name'],
             'get_cat_display_name_cache'
         );
+        // trigger_change()'s own return type is mixed; category names are
+        // always strings, but a misbehaving handler shouldn't propagate a
+        // non-string value into the markup built below.
+        if (! is_string($cat['name'])) {
+            $cat['name'] = '';
+        }
 
         if ($is_first) {
             $is_first = false;
@@ -156,7 +169,14 @@ function get_cat_display_name_from_id($cat_id, $url = ''): string
     $cat_info = get_cat_info($cat_id);
     // $cat_id isn't existence-validated by callers (WS/URL param) -- a
     // stale/forged id falls back to an empty breadcrumb.
-    return get_cat_display_name($cat_info['upper_names'] ?? [], $url);
+    $upper_names = $cat_info['upper_names'] ?? [];
+    // get_cat_info()'s return type is the generic array<string, mixed>, but
+    // its 'upper_names' key (the only producer, verified in
+    // functions_category.inc.php) is always built as a list of category-row
+    // arrays with string keys (id, name, permalink) -- never anything else.
+    $upper_names = is_array($upper_names) ? $upper_names : [];
+    /** @var array<int, array<string, mixed>> $upper_names */
+    return get_cat_display_name($upper_names, $url);
 }
 
 /**
@@ -206,7 +226,10 @@ function render_comment_content($content): string|null
  */
 function name_compare(array $a, array $b): int
 {
-    return strcmp(strtolower((string) $a['name']), strtolower((string) $b['name']));
+    $name_a = is_string($a['name'] ?? null) ? $a['name'] : '';
+    $name_b = is_string($b['name'] ?? null) ? $b['name'] : '';
+
+    return strcmp(strtolower($name_a), strtolower($name_b));
 }
 
 /**
@@ -219,13 +242,16 @@ function tag_alpha_compare(array $a, array $b): int
 {
     global $cache;
 
-    foreach ([$a, $b] as $tag) {
-        if (! isset($cache[__FUNCTION__][$tag['name']])) {
-            $cache[__FUNCTION__][$tag['name']] = pwg_transliterate($tag['name']);
+    $name_a = is_string($a['name'] ?? null) ? $a['name'] : '';
+    $name_b = is_string($b['name'] ?? null) ? $b['name'] : '';
+
+    foreach ([$name_a, $name_b] as $tag_name) {
+        if (! isset($cache[__FUNCTION__][$tag_name])) {
+            $cache[__FUNCTION__][$tag_name] = pwg_transliterate($tag_name);
         }
     }
 
-    return strcmp((string) $cache[__FUNCTION__][$a['name']], (string) $cache[__FUNCTION__][$b['name']]);
+    return strcmp((string) $cache[__FUNCTION__][$name_a], (string) $cache[__FUNCTION__][$name_b]);
 }
 
 /**
@@ -250,7 +276,9 @@ function access_denied(): never
         exit();
     }
 
-    redirect_http(get_root_url() . 'identification.php?redirect=' . urlencode(urlencode((string) $_SERVER['REQUEST_URI'])));
+    $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+    $request_uri = is_string($request_uri) ? $request_uri : '';
+    redirect_http(get_root_url() . 'identification.php?redirect=' . urlencode(urlencode($request_uri)));
 }
 
 /**
@@ -460,7 +488,8 @@ function set_status_header($code, $text = ''): void
                 break;
         }
     }
-    $protocol = $_SERVER['SERVER_PROTOCOL'];
+    $protocol = $_SERVER['SERVER_PROTOCOL'] ?? '';
+    $protocol = is_string($protocol) ? $protocol : '';
     if (($protocol != 'HTTP/1.1') && ($protocol != 'HTTP/1.0')) {
         $protocol = 'HTTP/1.0';
     }
@@ -515,12 +544,16 @@ function register_default_menubar_blocks(array $menu_ref_arr): void
  * @param array<string, mixed> $info at least file or name
  * @return string
  */
-function render_element_name(array $info)
+function render_element_name(array $info): string
 {
-    if (! empty($info['name'])) {
-        return trigger_change('render_element_name', $info['name'], $info);
+    if (! empty($info['name']) && is_string($info['name'])) {
+        $rendered_name = trigger_change('render_element_name', $info['name'], $info);
+        // trigger_change()'s own return type is mixed; fall back to the
+        // pre-trigger name if a misbehaving handler returns something else.
+        return is_string($rendered_name) ? $rendered_name : $info['name'];
     }
-    return get_name_from_file($info['file']);
+    $filename = $info['file'] ?? null;
+    return get_name_from_file(is_string($filename) ? $filename : '');
 }
 
 /**
@@ -530,10 +563,14 @@ function render_element_name(array $info)
  * @param string $param used to identify the trigger
  * @return string
  */
-function render_element_description(array $info, $param = '')
+function render_element_description(array $info, $param = ''): string
 {
-    if (! empty($info['comment'])) {
-        return trigger_change('render_element_description', $info['comment'], $param);
+    if (! empty($info['comment']) && is_string($info['comment'])) {
+        $rendered_comment = trigger_change('render_element_description', $info['comment'], $param);
+        // trigger_change()'s own return type is mixed; fall back to the
+        // pre-trigger comment if a misbehaving handler returns something
+        // else.
+        return is_string($rendered_comment) ? $rendered_comment : $info['comment'];
     }
     return '';
 }
@@ -546,7 +583,7 @@ function render_element_description(array $info, $param = '')
  * @param string $comment
  * @return string
  */
-function get_thumbnail_title(array $info, $title, $comment = '')
+function get_thumbnail_title(array $info, $title, $comment = ''): string
 {
     global $conf, $user;
 
@@ -560,8 +597,8 @@ function get_thumbnail_title(array $info, $title, $comment = '')
         $details[] = l10n('rating score %s', $info['rating_score']);
     }
 
-    if (isset($info['nb_comments']) and $info['nb_comments'] != 0) {
-        $details[] = l10n_dec('%d comment', '%d comments', $info['nb_comments']);
+    if (isset($info['nb_comments']) and is_numeric($info['nb_comments']) and (int) $info['nb_comments'] !== 0) {
+        $details[] = l10n_dec('%d comment', '%d comments', (int) $info['nb_comments']);
     }
 
     if (count($details) > 0) {
@@ -574,9 +611,10 @@ function get_thumbnail_title(array $info, $title, $comment = '')
     }
 
     $title = htmlspecialchars(strip_tags($title));
-    $title = trigger_change('get_thumbnail_title', $title, $info);
-
-    return $title;
+    $rendered_title = trigger_change('get_thumbnail_title', $title, $info);
+    // trigger_change()'s own return type is mixed; fall back to the
+    // pre-trigger title if a misbehaving handler returns something else.
+    return is_string($rendered_title) ? $rendered_title : $title;
 }
 
 /**
@@ -601,12 +639,15 @@ function get_element_url_protection_handler($url, array $infos)
 {
     global $conf;
     if ($conf['original_url_protection'] == 'images') {// protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
-        $ext = get_extension($infos['path']);
+        $path = $infos['path'] ?? null;
+        $ext = get_extension(is_string($path) ? $path : null);
         if (! in_array($ext, $conf['picture_ext'])) {
             return $url;
         }
     }
-    return get_action_url($infos['id'], 'e', false);
+    $id = $infos['id'] ?? '';
+    $id = is_int($id) || is_string($id) ? $id : '';
+    return get_action_url($id, 'e', false);
 }
 
 /**
@@ -617,7 +658,12 @@ function flush_page_messages(): void
     global $template, $page;
     if ($template->get_template_vars('page_refresh') === null) {
         foreach (['errors', 'infos', 'warnings', 'messages'] as $mode) {
-            if (isset($_SESSION['page_' . $mode])) {
+            // Every writer of $_SESSION['page_*'] elsewhere in the codebase
+            // (comments.php, picture.php, admin/batch_manager*.php, ...)
+            // guards with is_array() before appending, so this mirrors that
+            // same invariant instead of trusting the superglobal's mixed
+            // element type.
+            if (isset($_SESSION['page_' . $mode]) and is_array($_SESSION['page_' . $mode])) {
                 $page[$mode] = array_merge($page[$mode], $_SESSION['page_' . $mode]);
                 unset($_SESSION['page_' . $mode]);
             }

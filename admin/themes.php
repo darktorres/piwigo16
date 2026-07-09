@@ -21,7 +21,13 @@ include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 $my_base_url = get_root_url() . 'admin.php?page=themes';
 
 if (isset($_GET['tab'])) {
-    $page['tab'] = $_GET['tab'];
+    check_input_parameter('tab', $_GET, false, '/^(installed|update|new|standard_pages)$/');
+    // check_input_parameter() validates the raw value against the pattern
+    // above but only ever returns true|never -- it doesn't narrow $_GET's
+    // type for static analysis -- $_GET values are string|array<mixed> at
+    // best, so re-check it is a string before trusting it as the tab name.
+    $tab = $_GET['tab'];
+    $page['tab'] = is_string($tab) ? $tab : 'installed';
 } else {
     $page['tab'] = 'installed';
 }

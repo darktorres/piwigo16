@@ -70,7 +70,12 @@ function check_sendmail_timeout()
  */
 function quote_check_key_list($check_key_list = []): array
 {
-    return array_map(fn ($s): string => '\'' . $s . '\'', $check_key_list);
+    // $check_key_list may come straight from $_POST (see
+    // admin/notification_by_mail.php), so its elements are only provably
+    // string-castable once filtered.
+    $string_check_keys = array_filter($check_key_list, is_string(...));
+
+    return array_map(fn (string $s): string => '\'' . $s . '\'', $string_check_keys);
 }
 
 /*
@@ -84,7 +89,8 @@ function quote_check_key_list($check_key_list = []): array
  * @param string $action
  * @param array<int, mixed> $check_key_list
  * @param bool|string $enabled_filter_value
- * @return mixed[]
+ * @return array<int, array<string, string|null>> nbm user rows, as fetched
+ *         by pwg_db_fetch_assoc() (every column comes back as string|null)
  */
 function get_user_notifications($action, $check_key_list = [], $enabled_filter_value = ''): array
 {
@@ -125,8 +131,13 @@ where 1=1';
         $query .= $query_and_check_key;
 
         if ($enabled_filter_value != '') {
+            // boolean_to_string() is declared to return mixed (it echoes
+            // back non-bool input unchanged); $enabled_filter_value is
+            // bool|string here, so the result is always a string, but that
+            // isn't visible through the helper's own signature.
+            $enabled_filter_string = boolean_to_string($enabled_filter_value);
             $query .= ' and
-        N.enabled = \'' . boolean_to_string($enabled_filter_value) . '\'';
+        N.enabled = \'' . (is_string($enabled_filter_string) ? $enabled_filter_string : '') . '\'';
         }
 
         $query .= '
@@ -221,15 +232,19 @@ function end_users_env_nbm(): void
  * Return none
  */
 /**
- * @param array<string, mixed> $nbm_user
+ * @param array<string, string|null> $nbm_user a get_user_notifications() row
  */
 function set_user_on_env_nbm(array &$nbm_user, bool $is_action_send): void
 {
     global $user, $lang, $lang_info, $env_nbm;
 
-    $user = build_user($nbm_user['user_id'], true);
+    // user_id is USER_MAIL_NOTIFICATION_TABLE's primary key (NOT NULL per
+    // install/piwigo_structure-mysql.sql), always a non-null numeric value.
+    $nbm_user_id_raw = $nbm_user['user_id'];
+    assert(is_string($nbm_user_id_raw) && is_numeric($nbm_user_id_raw));
+    $user = build_user((int) $nbm_user_id_raw, true);
 
-    switch_lang_to($user['language']);
+    switch_lang_to(is_string($user['language']) ? $user['language'] : get_default_language());
 
     if ($is_action_send) {
         $env_nbm['mail_template'] = get_mail_template($env_nbm['email_format']);
@@ -256,7 +271,7 @@ function unset_user_on_env_nbm(): void
  * Return none
  */
 /**
- * @param array<string, mixed> $nbm_user
+ * @param array<string, string|null> $nbm_user a get_user_notifications() row
  */
 function inc_mail_sent_success(array $nbm_user): void
 {
@@ -272,7 +287,7 @@ function inc_mail_sent_success(array $nbm_user): void
  * Return none
  */
 /**
- * @param array<string, mixed> $nbm_user
+ * @param array<string, string|null> $nbm_user a get_user_notifications() row
  */
 function inc_mail_sent_failed(array $nbm_user): void
 {
@@ -319,7 +334,7 @@ function display_counter_info(): void
 }
 
 /**
- * @param array<string, mixed> $nbm_user
+ * @param array<string, string|null> $nbm_user a get_user_notifications() row
  */
 function assign_vars_nbm_mail_content(array $nbm_user): void
 {
@@ -327,16 +342,22 @@ function assign_vars_nbm_mail_content(array $nbm_user): void
 
     set_make_full_url();
 
+    // get_gallery_home_url() is declared to return mixed; real callers
+    // always get back a string URL, but that isn't visible through its own
+    // signature.
+    $gallery_home_url = get_gallery_home_url();
+    $gallery_home_url_str = is_string($gallery_home_url) ? $gallery_home_url : '';
+
     $env_nbm['mail_template']->assign(
         [
             'USERNAME' => stripslashes((string) $nbm_user['username']),
 
             'SEND_AS_NAME' => $env_nbm['send_as_name'],
 
-            'UNSUBSCRIBE_LINK' => add_url_params(get_gallery_home_url() . '/nbm.php', [
+            'UNSUBSCRIBE_LINK' => add_url_params($gallery_home_url_str . '/nbm.php', [
                 'unsubscribe' => $nbm_user['check_key'],
             ]),
-            'SUBSCRIBE_LINK' => add_url_params(get_gallery_home_url() . '/nbm.php', [
+            'SUBSCRIBE_LINK' => add_url_params($gallery_home_url_str . '/nbm.php', [
                 'subscribe' => $nbm_user['check_key'],
             ]),
             'CONTACT_EMAIL' => $env_nbm['send_as_mail_address'],

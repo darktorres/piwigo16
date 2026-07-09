@@ -304,14 +304,25 @@ final class BrowserTestHelpers
         JS;
 
         $result = $page->script($js);
-        $decoded = json_decode((string) $result, true);
+        if (!is_string($result)) {
+            throw new ExpectationFailedException(
+                "WS call to {$method} did not return a string result: " . var_export($result, true)
+            );
+        }
+
+        $decoded = json_decode($result, true);
         if (!is_array($decoded)) {
             throw new ExpectationFailedException(
                 "WS call to {$method} did not return valid JSON: " . var_export($result, true)
             );
         }
 
-        return $decoded;
+        $normalized = [];
+        foreach ($decoded as $key => $value) {
+            $normalized[(string) $key] = $value;
+        }
+
+        return $normalized;
     }
 
     /**
@@ -375,7 +386,14 @@ final class BrowserTestHelpers
     {
         $status = self::wsCall($page, 'pwg.session.getStatus');
 
-        return (string) ($status['result']['pwg_token'] ?? '');
+        $result = $status['result'] ?? null;
+        if (!is_array($result)) {
+            return '';
+        }
+
+        $token = $result['pwg_token'] ?? '';
+
+        return is_string($token) ? $token : '';
     }
 
     /**
@@ -468,7 +486,17 @@ final class BrowserTestHelpers
         self::curlWs($cookieJar, ['method' => 'pwg.images.emptyLounge']);
         @unlink($cookieJar);
 
-        return (int) $decoded['result']['image_id'];
+        $result = $decoded['result'] ?? null;
+        if (!is_array($result)) {
+            throw new ExpectationFailedException('Photo upload response missing result: ' . var_export($body, true));
+        }
+
+        $imageId = $result['image_id'] ?? null;
+        if (!is_numeric($imageId)) {
+            throw new ExpectationFailedException('Photo upload response missing image_id: ' . var_export($body, true));
+        }
+
+        return (int) $imageId;
     }
 
     /** @param array<string, mixed> $fields */

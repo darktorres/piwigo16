@@ -21,17 +21,22 @@ function cookie_path(): string
          ! empty($_SERVER['REDIRECT_SCRIPT_NAME'])) {
         $scr = $_SERVER['REDIRECT_SCRIPT_NAME'];
     } elseif (isset($_SERVER['REDIRECT_URL'])) {
+        $redirect_url = is_string($_SERVER['REDIRECT_URL']) ? $_SERVER['REDIRECT_URL'] : '';
+        $path_info = isset($_SERVER['PATH_INFO']) && is_string($_SERVER['PATH_INFO'])
+            ? $_SERVER['PATH_INFO']
+            : '';
+
         // mod_rewrite is activated for upper level directories. we must set the
         // cookie to the path shown in the browser otherwise it will be discarded.
         if (
             isset($_SERVER['PATH_INFO']) and ! empty($_SERVER['PATH_INFO']) and
             ($_SERVER['REDIRECT_URL'] !== $_SERVER['PATH_INFO']) and
-            (str_ends_with((string) $_SERVER['REDIRECT_URL'], (string) $_SERVER['PATH_INFO']))
+            (str_ends_with($redirect_url, $path_info))
         ) {
             $scr = substr(
-                (string) $_SERVER['REDIRECT_URL'],
+                $redirect_url,
                 0,
-                strlen((string) $_SERVER['REDIRECT_URL']) - strlen((string) $_SERVER['PATH_INFO'])
+                strlen($redirect_url) - strlen($path_info)
             );
         } else {
             $scr = $_SERVER['REDIRECT_URL'];
@@ -40,7 +45,7 @@ function cookie_path(): string
         $scr = $_SERVER['SCRIPT_NAME'];
     }
 
-    $scr = (string) $scr;
+    $scr = is_string($scr) ? $scr : '';
     $slash_pos = strrpos($scr, '/');
     assert($slash_pos !== false);
     $scr = substr($scr, 0, $slash_pos);
@@ -86,7 +91,8 @@ function pwg_set_cookie_var(string $var, $value, $expire = null): bool
     } else {
         $_COOKIE['pwg_' . $var] = $value;
         $expire = is_numeric($expire) ? $expire : strtotime('+10 years');
-        return setcookie('pwg_' . $var, (string) $value, [
+        $value_str = is_scalar($value) ? (string) $value : '';
+        return setcookie('pwg_' . $var, $value_str, [
             'expires' => $expire,
             'path' => cookie_path(),
         ]);

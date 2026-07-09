@@ -23,7 +23,7 @@ check_status(ACCESS_ADMINISTRATOR);
 $help_link = get_root_url() . 'admin.php?page=help&section=';
 $selected = null;
 
-if (! isset($_GET['section'])) {
+if (! isset($_GET['section']) || ! is_string($_GET['section'])) {
     $selected = 'add_photos';
 } else {
     $selected = $_GET['section'];

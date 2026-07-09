@@ -120,6 +120,10 @@ class c13y_internal
 
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
+            if (! is_string($row['id'])) {
+                continue;
+            }
+
             $status[$row['id']] = $row['status'];
         }
 

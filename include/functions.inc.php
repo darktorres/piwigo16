@@ -464,8 +464,14 @@ SELECT id, name
 
     $languages = [];
     while ($row = pwg_db_fetch_assoc($result)) {
-        if (is_dir(PHPWG_ROOT_PATH . 'language/' . $row['id'])) {
-            $languages[$row['id']] = $row['name'];
+        $id = $row['id'];
+        $name = $row['name'];
+        if (! is_string($id) || ! is_string($name)) {
+            continue;
+        }
+
+        if (is_dir(PHPWG_ROOT_PATH . 'language/' . $id)) {
+            $languages[$id] = $name;
         }
     }
 
@@ -496,7 +502,11 @@ function do_log($image_id = null, $image_type = null)
 
     $do_log = trigger_change('pwg_log_allowed', $do_log, $image_id, $image_type);
 
-    return $do_log;
+    // trigger_change() hands the value through arbitrary registered event
+    // handlers (mixed return); the contract of this filter is a bool, so a
+    // misbehaving handler falls back to the pre-filter truthiness instead of
+    // being trusted blindly.
+    return is_bool($do_log) ? $do_log : (bool) $do_log;
 }
 
 /**
@@ -547,10 +557,11 @@ UPDATE ' . USER_INFOS_TABLE . '
     }
 
     $ip = $_SERVER['REMOTE_ADDR'];
+    $ip = is_string($ip) ? $ip : '';
     // IPv6 should not be longer than 39 chars, and that is the maximum length of
     // the column in the database, but in case it would be longer, let's truncate it.
-    if (strlen((string) $ip) > 39) {
-        $ip = substr((string) $ip, 0, 39);
+    if (strlen($ip) > 39) {
+        $ip = substr($ip, 0, 39);
     }
 
     // If plugin developers add their own sections, Piwigo will automatically add it in the history.section enum column
@@ -560,11 +571,24 @@ UPDATE ' . USER_INFOS_TABLE . '
             conf_update_param('history_sections_cache', get_enums(HISTORY_TABLE, 'section'), true);
         }
 
-        $conf['history_sections_cache'] = safe_unserialize($conf['history_sections_cache']);
+        $cached_sections = $conf['history_sections_cache'];
+        $cached_sections = is_string($cached_sections) || is_array($cached_sections) ? safe_unserialize($cached_sections) : null;
+        if (! is_array($cached_sections)) {
+            $cached_sections = get_enums(HISTORY_TABLE, 'section');
+        }
+
+        $history_sections_cache = [];
+        foreach ($cached_sections as $cached_section) {
+            if (is_string($cached_section)) {
+                $history_sections_cache[] = $cached_section;
+            }
+        }
+
+        $conf['history_sections_cache'] = $history_sections_cache;
 
         if (
-            in_array($page['section'], $conf['history_sections_cache'])
-            or in_array(strtolower($page['section']), array_map(strtolower(...), $conf['history_sections_cache']))
+            in_array($page['section'], $history_sections_cache)
+            or in_array(strtolower($page['section']), array_map(strtolower(...), $history_sections_cache))
         ) {
             $section = $page['section'];
         } elseif (preg_match('/^[a-zA-Z0-9_-]+$/', $page['section'])) {
@@ -580,6 +604,17 @@ UPDATE ' . USER_INFOS_TABLE . '
             $section = $page['section'];
         }
     }
+
+    // $user['id']/$page[...] are read from loosely-typed global bags fed by
+    // DB rows (string|null) and session/config data (mixed); narrow each
+    // to the scalar the column actually stores before splicing into SQL.
+    $user_id = is_numeric($user['id']) ? (int) $user['id'] : 0;
+    $category_id = $page['category']['id'] ?? null;
+    $category_id = is_numeric($category_id) ? (int) $category_id : null;
+    $search_id = $page['search_id'] ?? null;
+    $search_id = is_numeric($search_id) ? (int) $search_id : null;
+    $auth_key_id = $page['auth_key_id'] ?? null;
+    $auth_key_id = is_numeric($auth_key_id) ? (int) $auth_key_id : null;
 
     $query = '
 INSERT INTO ' . HISTORY_TABLE . '
@@ -601,15 +636,15 @@ INSERT INTO ' . HISTORY_TABLE . '
   (
     CURRENT_DATE,
     CURRENT_TIME,
-    ' . $user['id'] . ',
+    ' . $user_id . ',
     \'' . $ip . '\',
     ' . (isset($section) ? "'" . $section . "'" : 'NULL') . ',
-    ' . ($page['category']['id'] ?? 'NULL') . ',
-    ' . ($page['search_id'] ?? 'NULL') . ',
+    ' . ($category_id ?? 'NULL') . ',
+    ' . ($search_id ?? 'NULL') . ',
     ' . ($image_id ?? 'NULL') . ',
     ' . (isset($image_type) ? "'" . $image_type . "'" : 'NULL') . ',
     ' . ($format_id ?? 'NULL') . ',
-    ' . ($page['auth_key_id'] ?? 'NULL') . ',
+    ' . ($auth_key_id ?? 'NULL') . ',
     ' . (isset($tags_string) ? "'" . $tags_string . "'" : 'NULL') . '
   )
 ;';
@@ -655,7 +690,7 @@ function pwg_activity(string $object, $object_id, string $action, array $details
     } else {
         $details['script'] = script_basename();
 
-        if ($details['script'] == 'admin' and isset($_GET['page'])) {
+        if ($details['script'] == 'admin' and isset($_GET['page']) and is_string($_GET['page'])) {
             $details['script'] .= '/' . $_GET['page'];
         }
     }
@@ -667,13 +702,13 @@ function pwg_activity(string $object, $object_id, string $action, array $details
     }
 
     $user_agent = null;
-    if ($object == 'user' and $action == 'login' and isset($_SERVER['HTTP_USER_AGENT'])) {
-        $user_agent = strip_tags((string) $_SERVER['HTTP_USER_AGENT']);
+    if ($object == 'user' and $action == 'login' and isset($_SERVER['HTTP_USER_AGENT']) and is_string($_SERVER['HTTP_USER_AGENT'])) {
+        $user_agent = strip_tags($_SERVER['HTTP_USER_AGENT']);
     }
 
-    if (isset($_SESSION['connected_with']) and $_SESSION['connected_with'] === 'api_key' and isset($_SERVER['HTTP_USER_AGENT'])) {
+    if (isset($_SESSION['connected_with']) and $_SESSION['connected_with'] === 'api_key' and isset($_SERVER['HTTP_USER_AGENT']) and is_string($_SERVER['HTTP_USER_AGENT'])) {
         $details['connected_with'] = 'api_key';
-        $user_agent = strip_tags((string) $_SERVER['HTTP_USER_AGENT']);
+        $user_agent = strip_tags($_SERVER['HTTP_USER_AGENT']);
     }
 
     // we want to know if the login is automatic with remember_me (auto_login)
@@ -691,7 +726,7 @@ function pwg_activity(string $object, $object_id, string $action, array $details
 
     if ($object == 'photo' and $action == 'add' and ! isset($details['sync'])) {
         $details['added_with'] = 'app';
-        if (isset($_SERVER['HTTP_REFERER']) and preg_match('/page=photos_add/', (string) $_SERVER['HTTP_REFERER'])) {
+        if (isset($_SERVER['HTTP_REFERER']) and is_string($_SERVER['HTTP_REFERER']) and preg_match('/page=photos_add/', $_SERVER['HTTP_REFERER'])) {
             $details['added_with'] = 'browser';
         }
     }
@@ -1170,21 +1205,37 @@ SELECT
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        if ($row['id'] == $conf['mobile_theme']) {
+        $id = $row['id'];
+        $name = $row['name'];
+        if (! is_string($id) || ! is_string($name)) {
+            continue;
+        }
+
+        if ($id == $conf['mobile_theme']) {
             if (! $show_mobile) {
                 continue;
             }
-            $row['name'] .= ' (' . l10n('Mobile') . ')';
+            $name .= ' (' . l10n('Mobile') . ')';
         }
-        if (check_theme_installed($row['id'])) {
-            $themes[$row['id']] = $row['name'];
+        if (check_theme_installed($id)) {
+            $themes[$id] = $name;
         }
     }
 
     // plugins want remove some themes based on user status maybe?
     $themes = trigger_change('get_pwg_themes', $themes);
+    if (! is_array($themes)) {
+        return [];
+    }
 
-    return $themes;
+    $filtered_themes = [];
+    foreach ($themes as $key => $value) {
+        if (is_string($value)) {
+            $filtered_themes[$key] = $value;
+        }
+    }
+
+    return $filtered_themes;
 }
 
 /**
@@ -1231,11 +1282,14 @@ function original_to_format($path, $format_ext): string
  * get the full path of an image
  *
  * @param array<string, mixed> $element_info element information from db (at least 'path')
- * @return string
  */
-function get_element_path(array $element_info)
+function get_element_path(array $element_info): string
 {
     $path = $element_info['path'];
+    // images.path is `varchar(255) NOT NULL` in the schema — a genuine DB
+    // row for this element always carries a string here.
+    assert(is_string($path));
+
     if (! url_is_remote($path)) {
         $path = PHPWG_ROOT_PATH . $path;
     }
@@ -1306,8 +1360,16 @@ function l10n($key)
     }
 
     if (func_num_args() > 1) {
-        $args = func_get_args();
-        $val = vsprintf($val, array_slice($args, 1));
+        $args = array_slice(func_get_args(), 1);
+        $values = [];
+        foreach ($args as $arg) {
+            // vsprintf() only accepts scalars/null; a caller passing
+            // something else (array/object) has no sane string
+            // representation here, so it degrades to an empty placeholder
+            // instead of crashing the whole translated string.
+            $values[] = is_scalar($arg) || $arg === null ? $arg : '';
+        }
+        $val = vsprintf($val, $values);
     }
 
     return $val;
@@ -1380,8 +1442,22 @@ function l10n_args($key_args, $sep = "\n"): string
             }
 
             if ($key === 'key_args') {
-                array_unshift($element, l10n(array_shift($element))); // translate the key
-                $result .= call_user_func_array(sprintf(...), $element);
+                // built by get_l10n_args(): array{key_args: array<int, mixed>}
+                // — 'key_args' is always an array here, but $key_args's
+                // declared type is mixed, so the shape isn't provable
+                // statically and needs a real runtime check.
+                if (! is_array($element)) {
+                    continue;
+                }
+
+                $l10n_key = array_shift($element);
+                if (! is_string($l10n_key)) {
+                    continue;
+                }
+
+                array_unshift($element, l10n($l10n_key)); // translate the key
+                $formatted = call_user_func_array(sprintf(...), $element);
+                $result .= is_string($formatted) ? $formatted : '';
             } else {
                 $result .= l10n_args($element, $sep);
             }
@@ -1397,19 +1473,23 @@ function l10n_args($key_args, $sep = "\n"): string
  * returns the corresponding value from $themeconf if existing or an empty string
  *
  * @param string $key
- * @return string
  */
-function get_themeconf($key)
+function get_themeconf($key): string
 {
-    return $GLOBALS['template']->get_themeconf($key);
+    // common.inc.php always initializes $GLOBALS['template'] to a Template
+    // instance before user code (including theme conf lookups) can run.
+    $template = $GLOBALS['template'];
+    assert($template instanceof Template);
+
+    $value = $template->get_themeconf($key);
+
+    return is_string($value) ? $value : '';
 }
 
 /**
  * Returns webmaster mail address depending on $conf['webmaster_id']
- *
- * @return string
  */
-function get_webmaster_mail_address()
+function get_webmaster_mail_address(): string
 {
     global $conf;
 
@@ -1421,10 +1501,13 @@ SELECT ' . $conf['user_fields']['email'] . '
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$email] = $row;
+    // users.email is nullable — a webmaster without an email set is real,
+    // not a bug, so this degrades to '' rather than asserting non-null.
+    $email = is_string($email) ? $email : '';
 
     $email = trigger_change('get_webmaster_mail_address', $email);
 
-    return $email;
+    return is_string($email) ? $email : '';
 }
 
 /**
@@ -1500,6 +1583,13 @@ function conf_update_param($param, $value, $updateGlobal = false, $parser = null
         $dbValue = addslashes(serialize($value));
     } else {
         $dbValue = boolean_to_string($value);
+    }
+
+    // call_user_func() and boolean_to_string() are both typed mixed in/out;
+    // a custom $parser or an untouched non-scalar $value could still hand
+    // back something that isn't safe to splice into SQL as-is.
+    if (! is_scalar($dbValue) && $dbValue !== null) {
+        $dbValue = addslashes(serialize($dbValue));
     }
 
     $query = '
@@ -1586,7 +1676,10 @@ function safe_unserialize($value)
 function safe_json_decode($value)
 {
     if (is_string($value)) {
-        return json_decode($value, true);
+        $decoded = json_decode($value, true);
+        // json_decode(..., true) returns null/scalar for malformed input or
+        // a JSON scalar; this function's contract is always an array.
+        return is_array($decoded) ? $decoded : [];
     }
     return $value;
 }
@@ -1601,7 +1694,9 @@ function safe_json_decode($value)
  */
 function prepend_append_array_items($array, $prepend_str, $append_str)
 {
-    array_walk($array, function (&$value, $key) use ($prepend_str, $append_str): void { $value = "{$prepend_str}{$value}{$append_str}"; });
+    array_walk($array, function (&$value, $key) use ($prepend_str, $append_str): void {
+        $value = $prepend_str . (is_scalar($value) ? (string) $value : '') . $append_str;
+    });
     return $array;
 }
 
@@ -1655,9 +1750,10 @@ function script_basename(): string
 {
     global $conf;
 
-    foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $value) {
-        if (! empty($_SERVER[$value])) {
-            $filename = strtolower((string) $_SERVER[$value]);
+    foreach (['SCRIPT_NAME', 'SCRIPT_FILENAME', 'PHP_SELF'] as $key) {
+        $raw = $_SERVER[$key] ?? null;
+        if (is_string($raw) && $raw !== '') {
+            $filename = strtolower($raw);
             if ($conf['php_extension_in_urls'] and get_extension($filename) !== 'php') {
                 continue;
             }
@@ -1907,10 +2003,12 @@ function get_ephemeral_key($valid_after_seconds, $aditionnal_data_to_hash = ''):
 {
     global $conf;
     $time = round(microtime(true), 1);
+    $remote_addr = $_SERVER['REMOTE_ADDR'];
+    $remote_addr = is_string($remote_addr) ? $remote_addr : '';
     return $time . ':' . $valid_after_seconds . ':'
         . hash_hmac(
             'md5',
-            $time . substr((string) $_SERVER['REMOTE_ADDR'], 0, 5) . $valid_after_seconds . $aditionnal_data_to_hash,
+            $time . substr($remote_addr, 0, 5) . $valid_after_seconds . $aditionnal_data_to_hash,
             (string) $conf['secret_key']
         );
 }
@@ -1926,12 +2024,14 @@ function verify_ephemeral_key($key, $aditionnal_data_to_hash = ''): bool
     global $conf;
     $time = microtime(true);
     $key_parts = explode(':', (string) $key);
+    $remote_addr = $_SERVER['REMOTE_ADDR'];
+    $remote_addr = is_string($remote_addr) ? $remote_addr : '';
     if (count($key_parts) != 3
         or $key_parts[0] > $time - (float) $key_parts[1] // page must have been retrieved more than X sec ago
         or $key_parts[0] < $time - 3600 // 60 minutes expiration
         or hash_hmac(
             'md5',
-            $key_parts[0] . substr((string) $_SERVER['REMOTE_ADDR'], 0, 5) . $key_parts[1] . $aditionnal_data_to_hash,
+            $key_parts[0] . substr($remote_addr, 0, 5) . $key_parts[1] . $aditionnal_data_to_hash,
             (string) $conf['secret_key']
         ) != $key_parts[2]
     ) {
@@ -2112,11 +2212,22 @@ function check_input_parameter($param_name, array $param_array, $is_array, $patt
         }
 
         foreach ($param_value as $key => $item_to_check) {
+            // a non-scalar item (e.g. an unexpected nested array) has no
+            // sane string form to validate against $pattern — that's a
+            // malformed/hacking-attempt input in its own right.
+            if (! is_scalar($item_to_check)) {
+                fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $param_name . '"');
+            }
+
             if (! preg_match(PATTERN_ID, (string) $key) or ! preg_match($pattern, (string) $item_to_check)) {
                 fatal_error('[Hacking attempt] an item is not valid in input parameter "' . $param_name . '"');
             }
         }
     } else {
+        if (! is_scalar($param_value)) {
+            fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" is not valid');
+        }
+
         if (! preg_match($pattern, (string) $param_value)) {
             fatal_error('[Hacking attempt] the input parameter "' . $param_name . '" is not valid');
         }
@@ -2165,14 +2276,12 @@ function get_branch_from_version($version): string
 
 /**
  * return the device type: mobile, tablet or desktop
- *
- * @return string
  */
-function get_device()
+function get_device(): string
 {
     $device = pwg_get_session_var('device');
 
-    if ($device === null) {
+    if (! is_string($device)) {
         // No UA-sniffing library (removed, no replacement — see
         // docs/adr/0021-native-platform-first-library-policy.md): the v17
         // responsive CSS (P30) removes the need for a separate mobile theme
@@ -2187,10 +2296,8 @@ function get_device()
 
 /**
  * return true if mobile theme should be loaded
- *
- * @return bool
  */
-function mobile_theme()
+function mobile_theme(): bool
 {
     global $conf;
 
@@ -2202,7 +2309,8 @@ function mobile_theme()
         $is_mobile_theme = get_boolean($_GET['mobile']);
         pwg_set_session_var('mobile_theme', $is_mobile_theme);
     } else {
-        $is_mobile_theme = pwg_get_session_var('mobile_theme');
+        $session_mobile_theme = pwg_get_session_var('mobile_theme');
+        $is_mobile_theme = is_bool($session_mobile_theme) ? $session_mobile_theme : null;
     }
 
     if ($is_mobile_theme === null) {
@@ -2379,7 +2487,13 @@ function send_piwigo_infos(): void
 
     $do_send = false;
     if (isset($conf['send_piwigo_infos_last_notice'])) {
-        if (strtotime($conf['send_piwigo_infos_last_notice']) < strtotime(conf_get_param('send_piwigo_infos_period', 7 * 24 * 60 * 60) . ' second ago')) {
+        // conf_get_param() reads $conf with a dynamic (non-literal) key, so
+        // its return stays mixed even though this specific param is always
+        // an int of seconds; narrow it before splicing into strtotime()'s
+        // relative-time string.
+        $period = conf_get_param('send_piwigo_infos_period', 7 * 24 * 60 * 60);
+        $period = is_numeric($period) ? (int) $period : 7 * 24 * 60 * 60;
+        if (strtotime($conf['send_piwigo_infos_last_notice']) < strtotime($period . ' second ago')) {
             $do_send = true;
         }
     } else {
@@ -2432,7 +2546,12 @@ function send_piwigo_infos(): void
     ];
 
     // convert disk_usage from kB to mB
-    $piwigo_infos['general_stats']['disk_usage'] = intval($piwigo_infos['general_stats']['disk_usage'] / 1024);
+    // get_pwg_general_statitics() is typed array<string, mixed>, so
+    // 'disk_usage' comes back mixed even though it's always a numeric
+    // byte count in practice.
+    $disk_usage_kb = $piwigo_infos['general_stats']['disk_usage'];
+    $disk_usage_kb = is_numeric($disk_usage_kb) ? (float) $disk_usage_kb : 0.0;
+    $piwigo_infos['general_stats']['disk_usage'] = intval($disk_usage_kb / 1024);
 
     $piwigo_infos['general_stats']['installed_on'] = get_installation_date();
     $piwigo_infos['general_stats']['nb_photos_synced'] = 0;
@@ -2497,11 +2616,38 @@ SELECT
     $url = PEM_URL . '/api/get_extension_list.php';
     // $result is never a resource here: no fopen() handle is passed to
     // fetchRemote() above.
-    if (fetchRemote($url, $result) and is_string($result) and $pem_extensions = @unserialize($result)) {
+    // unserialize() is typed mixed by PHP's own stub; the PEM API's
+    // contract is an array of {eid: {...}} extension records, but a
+    // malformed/unexpected response must degrade to the retry-later path
+    // instead of crashing on a foreach/array-access of something else.
+    $pem_extensions = [];
+    $pem_decode_ok = false;
+    if (fetchRemote($url, $result) and is_string($result)) {
+        $decoded_extensions = @unserialize($result);
+        if (is_array($decoded_extensions) and $decoded_extensions !== []) {
+            $pem_decode_ok = true;
+            foreach ($decoded_extensions as $decoded_eid => $decoded_ext) {
+                // $decoded_eid is always int|string (PHP's own array-key
+                // invariant for a foreach), so only $decoded_ext needs
+                // validating.
+                if (is_array($decoded_ext)) {
+                    $pem_extensions[$decoded_eid] = $decoded_ext;
+                }
+            }
+        }
+    }
+
+    if ($pem_decode_ok) {
         $official_exts = [];
         foreach ($pem_extensions as $eid => $ext) {
-            if (! empty($ext['archive_root_dir'])) {
-                @$official_exts[$ext['idx_category']][$ext['archive_root_dir']] = $eid;
+            $archive_root_dir = $ext['archive_root_dir'] ?? null;
+            $idx_category = $ext['idx_category'] ?? null;
+            if (
+                ! empty($archive_root_dir)
+                and (is_int($idx_category) || is_string($idx_category))
+                and (is_int($archive_root_dir) || is_string($archive_root_dir))
+            ) {
+                @$official_exts[$idx_category][$archive_root_dir] = $eid;
             }
         }
     } else {
@@ -2518,10 +2664,17 @@ SELECT
     $piwigo_infos['plugins'] = [];
     foreach ($plugins->db_plugins_by_id as $plugin) {
         if ($plugin['state'] == 'active') {
+            // piwigo_plugins.id/version are `varchar(...) NOT NULL` in the
+            // schema — a genuine row here always carries strings.
+            $plugin_id = $plugin['id'];
+            assert(is_string($plugin_id));
+            $plugin_version = $plugin['version'];
+            assert(is_string($plugin_version));
+
             $eid = null;
-            if (isset($plugins->fs_plugins[$plugin['id']])) {
-                $uri = $plugins->fs_plugins[$plugin['id']]['uri'];
-                if (preg_match('/eid=(\d+)/', (string) $uri, $matches)) {
+            if (isset($plugins->fs_plugins[$plugin_id])) {
+                $uri = $plugins->fs_plugins[$plugin_id]['uri'] ?? null;
+                if (is_string($uri) and preg_match('/eid=(\d+)/', $uri, $matches)) {
                     if (isset($pem_extensions[$matches[1]])) {
                         $eid = $matches[1];
                     }
@@ -2530,7 +2683,7 @@ SELECT
 
             if (empty($eid)) {
                 // let's search in the data fetched from PEM
-                $eid = $official_exts[$conf['pem_plugins_category']][$plugin['id']] ?? null;
+                $eid = $official_exts[$conf['pem_plugins_category']][$plugin_id] ?? null;
             }
 
             // we must exclude "private extensions". A private extension :
@@ -2538,14 +2691,15 @@ SELECT
             // * has no eid
             // * OR has un unknown plugin_id among all "Archive root directory" in PEM
             if (empty($eid)) {
-                $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] ' . $plugin['id'] . ' is a private plugin, not sent to piwigo.org');
+                $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] ' . $plugin_id . ' is a private plugin, not sent to piwigo.org');
                 $piwigo_infos['general_stats']['nb_private_plugins']++;
                 continue;
             }
 
-            $codename = $pem_extensions[$eid]['archive_root_dir'] ?? $plugin['id'];
+            $codename = $pem_extensions[$eid]['archive_root_dir'] ?? $plugin_id;
+            $codename = is_scalar($codename) ? $codename : $plugin_id;
 
-            $piwigo_infos['plugins'][] = '#' . $eid . '/' . $codename . '/' . $plugin['version'];
+            $piwigo_infos['plugins'][] = '#' . $eid . '/' . $codename . '/' . $plugin_version;
         }
     }
 
@@ -2561,10 +2715,17 @@ SELECT
     // plugins, a theme is only in this table while active, so every row
     // here is implicitly active.
     foreach ($themes->db_themes_by_id as $theme) {
+        // piwigo_themes.id/version are `varchar(...) NOT NULL` in the
+        // schema — a genuine row here always carries strings.
+        $theme_id = $theme['id'];
+        assert(is_string($theme_id));
+        $theme_version = $theme['version'];
+        assert(is_string($theme_version));
+
         $eid = null;
-        if (isset($themes->fs_themes[$theme['id']])) {
-            $uri = $themes->fs_themes[$theme['id']]['uri'];
-            if (preg_match('/eid=(\d+)/', (string) $uri, $matches)) {
+        if (isset($themes->fs_themes[$theme_id])) {
+            $uri = $themes->fs_themes[$theme_id]['uri'] ?? null;
+            if (is_string($uri) and preg_match('/eid=(\d+)/', $uri, $matches)) {
                 if (isset($pem_extensions[$matches[1]])) {
                     $eid = $matches[1];
                 }
@@ -2573,7 +2734,7 @@ SELECT
 
         if (empty($eid)) {
             // let's search in the data fetched from PEM
-            $eid = $official_exts[$conf['pem_themes_category']][$theme['id']] ?? null;
+            $eid = $official_exts[$conf['pem_themes_category']][$theme_id] ?? null;
         }
 
         // we must exclude "private extensions". A private extension :
@@ -2581,14 +2742,15 @@ SELECT
         // * has no eid
         // * OR has un unknown theme_id among all "Archive root directory" in PEM
         if (empty($eid)) {
-            $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] ' . $theme['id'] . ' is a private theme, not sent to piwigo.org');
-            $private_themes[$theme['id']] = 1;
+            $logger->info('[' . __FUNCTION__ . '][exec=' . $exec_id . '] ' . $theme_id . ' is a private theme, not sent to piwigo.org');
+            $private_themes[$theme_id] = 1;
             continue;
         }
 
-        $codename = $pem_extensions[$eid]['archive_root_dir'] ?? $theme['id'];
+        $codename = $pem_extensions[$eid]['archive_root_dir'] ?? $theme_id;
+        $codename = is_scalar($codename) ? $codename : $theme_id;
 
-        $piwigo_infos['themes'][] = '#' . $eid . '/' . $codename . '/' . $theme['version'];
+        $piwigo_infos['themes'][] = '#' . $eid . '/' . $codename . '/' . $theme_version;
     }
 
     $piwigo_infos['general_stats']['nb_private_themes'] = count(array_keys($private_themes));
@@ -2643,9 +2805,24 @@ SELECT
   GROUP BY object, action
 ;';
     $activities = query2array($query);
+    // 'activities' is heterogeneous by design: every object except 'system'
+    // (queried here, WHERE object != 'system') stores a flat action=>counter
+    // map; 'system' (queried below) stores an extra label-bucketing level.
+    // Built as two separately-shaped accumulators (each internally
+    // consistent, so PHPStan can track a precise nested type for each) and
+    // merged at the end -- the two queries' WHERE clauses guarantee
+    // disjoint $object keys, so the merge never overwrites either side.
+    /** @var array<string, array<string, string|null>> $piwigo_activities_flat */
+    $piwigo_activities_flat = [];
     foreach ($activities as $activity) {
         $piwigo_infos['general_stats']['nb_activities'] += $activity['counter'];
-        @$piwigo_infos['activities'][$activity['object']][$activity['action']] = $activity['counter'];
+
+        // piwigo_activity.object/action are `NOT NULL` in the schema.
+        $object = $activity['object'];
+        assert(is_string($object));
+        $action = $activity['action'];
+        assert(is_string($action));
+        $piwigo_activities_flat[$object][$action] = $activity['counter'];
     }
 
     $label_for_system_object_id = [
@@ -2665,9 +2842,21 @@ SELECT
   GROUP BY object, object_id, action
 ;';
     $activities = query2array($query);
+    /** @var array<string, array<string, array<string, string|null>>> $piwigo_activities_system */
+    $piwigo_activities_system = [];
     foreach ($activities as $activity) {
-        @$piwigo_infos['activities'][$activity['object']][$label_for_system_object_id[$activity['object_id']] ?? 'undefined'][$activity['action']] = $activity['counter'];
+        // piwigo_activity.object/object_id/action are `NOT NULL` in the schema.
+        $object = $activity['object'];
+        assert(is_string($object));
+        $object_id = $activity['object_id'];
+        assert(is_numeric($object_id));
+        $action = $activity['action'];
+        assert(is_string($action));
+
+        $label = $label_for_system_object_id[(int) $object_id] ?? 'undefined';
+        $piwigo_activities_system[$object][$label][$action] = $activity['counter'];
     }
+    $piwigo_infos['activities'] = $piwigo_activities_flat + $piwigo_activities_system;
 
     $query = '
 SELECT
@@ -2682,7 +2871,16 @@ SELECT
 ;';
     $updates = query2array($query);
     foreach ($updates as $update) {
-        $details = safe_unserialize($update['details']);
+        $update_details = $update['details'];
+        if (! is_string($update_details)) {
+            continue;
+        }
+
+        $details = safe_unserialize($update_details);
+        if (! is_array($details)) {
+            continue;
+        }
+
         if (isset($details['from_version']) and isset($details['to_version'])) {
             @$piwigo_infos['updates'][] = [
                 'action' => $update['action'],
@@ -2759,7 +2957,11 @@ SELECT
         $piwigo_infos['features'][$feature] = $conf[$feature] ? 'yes' : 'no';
     }
 
-    $url = conf_get_param('send_piwigo_infos_update_url', PHPWG_URL) . '/ws.php';
+    // conf_get_param() reads $conf with a dynamic (non-literal) key, so its
+    // return stays mixed even though this param is always a URL string.
+    $update_url_base = conf_get_param('send_piwigo_infos_update_url', PHPWG_URL);
+    $update_url_base = is_string($update_url_base) ? $update_url_base : PHPWG_URL;
+    $url = $update_url_base . '/ws.php';
 
     $get_data = [
         'format' => 'php',

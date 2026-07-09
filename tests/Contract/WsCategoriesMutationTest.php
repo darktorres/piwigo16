@@ -38,13 +38,13 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.categories.add', $response);
 
-        $this->categoryId = (int) $response['result']['id'];
+        $this->categoryId = $this->extractResultId($response);
     }
 
     public function test_setInfo_updates_name(): void
     {
         $add = $this->callWs('pwg.categories.add', ['name' => 'ct_album_' . uniqid()]);
-        $this->categoryId = (int) $add['result']['id'];
+        $this->categoryId = $this->extractResultId($add);
 
         $response = $this->callWs('pwg.categories.setInfo', [
             'category_id' => $this->categoryId,
@@ -57,7 +57,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     public function test_setRepresentative_returns_ok(): void
     {
         $add = $this->callWs('pwg.categories.add', ['name' => 'ct_album_' . uniqid()]);
-        $this->categoryId = (int) $add['result']['id'];
+        $this->categoryId = $this->extractResultId($add);
 
         // Associate fixture image 1 with this album first
         $token = $this->getPwgToken();
@@ -78,7 +78,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     public function test_deleteRepresentative_returns_ok(): void
     {
         $add = $this->callWs('pwg.categories.add', ['name' => 'ct_album_' . uniqid()]);
-        $this->categoryId = (int) $add['result']['id'];
+        $this->categoryId = $this->extractResultId($add);
 
         $response = $this->callWs('pwg.categories.deleteRepresentative', [
             'category_id' => $this->categoryId,
@@ -92,8 +92,8 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $token  = $this->getPwgToken();
         $parent = $this->callWs('pwg.categories.add', ['name' => 'ct_parent_' . uniqid()]);
         $child  = $this->callWs('pwg.categories.add', ['name' => 'ct_child_' . uniqid()]);
-        $parentId = (int) $parent['result']['id'];
-        $childId  = (int) $child['result']['id'];
+        $parentId = $this->extractResultId($parent);
+        $childId  = $this->extractResultId($child);
 
         $response = $this->callWs('pwg.categories.move', [
             'category_id' => $childId,
@@ -115,7 +115,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     public function test_calculateOrphans_returns_orphan_info(): void
     {
         $add = $this->callWs('pwg.categories.add', ['name' => 'ct_album_' . uniqid()]);
-        $this->categoryId = (int) $add['result']['id'];
+        $this->categoryId = $this->extractResultId($add);
 
         $response = $this->callWs('pwg.categories.calculateOrphans', [
             'category_id' => [$this->categoryId],
@@ -128,7 +128,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     public function test_delete_returns_ok(): void
     {
         $add   = $this->callWs('pwg.categories.add', ['name' => 'ct_album_' . uniqid()]);
-        $id    = (int) $add['result']['id'];
+        $id    = $this->extractResultId($add);
         $token = $this->getPwgToken();
 
         $response = $this->callWs('pwg.categories.delete', [
@@ -139,5 +139,30 @@ final class WsCategoriesMutationTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
         // already deleted
+    }
+
+    /**
+     * Extracts and int-casts the 'id' field from a WS mutation response's
+     * 'result' object (e.g. pwg.categories.add), narrowing the otherwise
+     * mixed decoded-JSON response so it can flow into typed contexts (the
+     * $categoryId property, subsequent WS call params, etc). Fails the test
+     * with a diagnostic message if the response doesn't have the expected
+     * shape, rather than silently producing a bogus 0.
+     *
+     * @param array<string, mixed> $response
+     */
+    private function extractResultId(array $response): int
+    {
+        $result = $response['result'] ?? null;
+        if (!is_array($result)) {
+            self::fail('WS response result is not an array: ' . json_encode($response));
+        }
+
+        $id = $result['id'] ?? null;
+        if (!is_numeric($id)) {
+            self::fail('WS response result.id is not numeric: ' . json_encode($response));
+        }
+
+        return (int) $id;
     }
 }

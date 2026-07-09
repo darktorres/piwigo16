@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
+use PHPUnit\Framework\ExpectationFailedException;
 
 /**
  * Verifies identify + remember-me flow: checking "remember me" sets the
@@ -34,5 +35,12 @@ it('logout clears the session and returns to an anonymous view', function (): vo
     $page = H::navigateOk($page, '/identification.php?act=logout');
 
     $status = H::wsCall($page, 'pwg.session.getStatus');
-    expect($status['result']['status'])->toBe('guest');
+    $result = $status['result'] ?? null;
+    if (!is_array($result)) {
+        throw new ExpectationFailedException(
+            'pwg.session.getStatus did not return a result array: ' . var_export($status, true)
+        );
+    }
+
+    expect($result['status'])->toBe('guest');
 });

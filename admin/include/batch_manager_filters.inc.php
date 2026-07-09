@@ -17,6 +17,15 @@ if (! defined('PHPWG_ROOT_PATH')) {
 // batch_manager_*.php controllers; the rest by include/common.inc.php.
 global $base_url, $collection, $conf, $page, $template;
 
+// Locally-typed snapshot of $_SESSION['bulk_manager_filter']. It is always
+// written as an array by admin/batch_manager.php (which includes this file,
+// via batch_manager_global.php / batch_manager_unit.php), before this file
+// runs; this guards against corrupted/foreign session state and lets
+// PHPStan track a real array shape for the reads below (this file never
+// writes to $_SESSION['bulk_manager_filter']).
+/** @var array<string, mixed> $bulk_manager_filter */
+$bulk_manager_filter = isset($_SESSION['bulk_manager_filter']) && is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
+
 $prefilters = [
     [
         'ID' => 'caddie',
@@ -65,10 +74,19 @@ if ($conf['enable_synchronization']) {
  */
 function UC_name_compare(array $a, array $b): int
 {
-    return strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME']));
+    $a_name = is_string($a['NAME']) ? $a['NAME'] : '';
+    $b_name = is_string($b['NAME']) ? $b['NAME'] : '';
+
+    return strcmp(strtolower($a_name), strtolower($b_name));
 }
 
-$prefilters = trigger_change('get_batch_manager_prefilters', $prefilters);
+$changed_prefilters = trigger_change('get_batch_manager_prefilters', $prefilters);
+
+// Plugins may return anything from this modifier event; only accept a real
+// array of arrays back, otherwise keep the built-in prefilter list above.
+if (is_array($changed_prefilters)) {
+    $prefilters = array_filter($changed_prefilters, 'is_array');
+}
 
 // Sort prefilters by localized name.
 usort($prefilters, fn (array $a, array $b): int => strcmp(strtolower((string) $a['NAME']), strtolower((string) $b['NAME'])));
@@ -77,7 +95,7 @@ $template->assign(
     [
         'conf_checksum_compute_blocksize' => $conf['checksum_compute_blocksize'],
         'prefilters' => $prefilters,
-        'filter' => $_SESSION['bulk_manager_filter'],
+        'filter' => $bulk_manager_filter,
         'selection' => $collection,
         'all_elements' => $page['cat_elements_id'],
         'START' => $page['start'],
@@ -111,7 +129,7 @@ foreach ($conf['available_permission_levels'] as $level) {
 $template->assign(
     [
         'filter_level_options' => $level_options,
-        'filter_level_options_selected' => $_SESSION['bulk_manager_filter']['level']
+        'filter_level_options_selected' => $bulk_manager_filter['level']
           ?? 0,
     ]
 );
@@ -119,13 +137,15 @@ $template->assign(
 // tags
 $filter_tags = [];
 
-if (! empty($_SESSION['bulk_manager_filter']['tags'])) {
+if (! empty($bulk_manager_filter['tags']) && is_array($bulk_manager_filter['tags'])) {
+    $filter_tags_ids = array_filter($bulk_manager_filter['tags'], 'is_scalar');
+
     $query = '
 SELECT
     id,
     name
   FROM ' . TAGS_TABLE . '
-  WHERE id IN (' . implode(',', $_SESSION['bulk_manager_filter']['tags']) . ')
+  WHERE id IN (' . implode(',', $filter_tags_ids) . ')
 ;';
 
     $filter_tags = get_taglist($query);
@@ -137,8 +157,8 @@ $template->assign('filter_tags', $filter_tags);
 $selected_category = null;
 $selected_category_name = '';
 
-if (isset($_SESSION['bulk_manager_filter']['category'])) {
-    $selected_category = intval($_SESSION['bulk_manager_filter']['category']);
+if (isset($bulk_manager_filter['category']) && is_numeric($bulk_manager_filter['category'])) {
+    $selected_category = intval($bulk_manager_filter['category']);
     $selected_category_name = get_cat_display_name_from_id($selected_category);
 }
 

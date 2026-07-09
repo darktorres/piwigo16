@@ -52,21 +52,36 @@ final class SrcImage
     ) {
         global $conf;
 
-        $this->id = $infos['id'];
-        $ext = strtolower(get_extension($infos['path']));
-        $infos['file_ext'] = @strtolower(get_extension($infos['file']));
+        // images.id/.path/.file are all NOT NULL DB columns, but every
+        // element read back from a DB row is string|null per this driver
+        // (no MYSQLI_OPT_INT_AND_FLOAT_NATIVE); narrow explicitly rather
+        // than trusting the schema at the type-check level.
+        $this->id = is_numeric($infos['id']) ? (int) $infos['id'] : 0;
+        $path = is_string($infos['path']) ? $infos['path'] : '';
+        $file = is_string($infos['file']) ? $infos['file'] : null;
+        $ext = strtolower(get_extension($path));
+        $infos['file_ext'] = @strtolower(get_extension($file));
         $infos['path_ext'] = $ext;
+        // representative_ext is a nullable DB column; empty()'s silent
+        // handling of a missing/non-string key is preserved via `?? null`.
+        $representative_ext_raw = $infos['representative_ext'] ?? null;
+        $representative_ext = is_string($representative_ext_raw) ? $representative_ext_raw : '';
         if (in_array($ext, $conf['picture_ext'])) {
-            $this->rel_path = $infos['path'];
+            $this->rel_path = $path;
             $this->flags |= self::IS_ORIGINAL;
-        } elseif (! empty($infos['representative_ext'])) {
-            $this->rel_path = original_to_representative($infos['path'], $infos['representative_ext']);
+        } elseif (! empty($representative_ext)) {
+            $this->rel_path = original_to_representative($path, $representative_ext);
         } else {
-            $this->rel_path = trigger_change('get_mimetype_location', get_themeconf('mime_icon_dir') . $ext . '.png', $ext);
+            $default_mimetype_location = get_themeconf('mime_icon_dir') . $ext . '.png';
+            $mimetype_location = trigger_change('get_mimetype_location', $default_mimetype_location, $ext);
+            // trigger_change() hands the value through arbitrary registered
+            // event handlers (mixed return); fall back to the pre-filter
+            // location if a misbehaving handler returns a non-string.
+            $this->rel_path = is_string($mimetype_location) ? $mimetype_location : $default_mimetype_location;
             $this->flags |= self::IS_MIMETYPE;
             if (($size = @getimagesize(PHPWG_ROOT_PATH . $this->rel_path)) === false) {
                 if ($ext == 'svg') {
-                    $this->rel_path = $infos['path'];
+                    $this->rel_path = $path;
                 } else {
                     $this->rel_path = 'themes/default/icon/mimetypes/unknown.png';
                 }
@@ -80,15 +95,15 @@ final class SrcImage
 
         if (! $this->size) {
             if (isset($infos['width']) && isset($infos['height'])) {
-                $width = $infos['width'];
-                $height = $infos['height'];
+                $width = is_numeric($infos['width']) ? (int) $infos['width'] : 0;
+                $height = is_numeric($infos['height']) ? (int) $infos['height'] : 0;
 
-                $this->rotation = intval($infos['rotation']) % 4;
+                $rotation_raw = $infos['rotation'] ?? null;
+                $this->rotation = is_numeric($rotation_raw) ? intval($rotation_raw) % 4 : 0;
                 // 1 or 5 =>  90 clockwise
                 // 3 or 7 => 270 clockwise
                 if ($this->rotation % 2) {
-                    $width = $infos['height'];
-                    $height = $infos['width'];
+                    [$width, $height] = [$height, $width];
                 }
 
                 $this->size = [$width, $height];
@@ -117,7 +132,11 @@ final class SrcImage
     {
         $url = get_root_url() . $this->rel_path;
         if (! ($this->flags & self::IS_MIMETYPE)) {
-            $url = trigger_change('get_src_image_url', $url, $this);
+            $filtered_url = trigger_change('get_src_image_url', $url, $this);
+            // trigger_change() hands the value through arbitrary registered
+            // event handlers (mixed return); fall back to the pre-filter
+            // url if a misbehaving handler returns a non-string.
+            $url = is_string($filtered_url) ? $filtered_url : $url;
         }
         return embellish_url($url);
     }
@@ -210,15 +229,18 @@ final class DerivativeImage
         if ($params == null) {
             return $src_image->get_url();
         }
-        return embellish_url(
-            trigger_change(
-                'get_derivative_url',
-                get_root_url() . $rel_url,
-                $params,
-                $src_image,
-                $rel_url
-            )
+        $default_url = get_root_url() . $rel_url;
+        $filtered_url = trigger_change(
+            'get_derivative_url',
+            $default_url,
+            $params,
+            $src_image,
+            $rel_url
         );
+        // trigger_change() hands the value through arbitrary registered
+        // event handlers (mixed return); fall back to the pre-filter url
+        // if a misbehaving handler returns a non-string.
+        return embellish_url(is_string($filtered_url) ? $filtered_url : $default_url);
     }
 
     /**
@@ -379,15 +401,18 @@ final class DerivativeImage
         if ($this->params == null) {
             return $this->src_image->get_url();
         }
-        return embellish_url(
-            trigger_change(
-                'get_derivative_url',
-                get_root_url() . $this->rel_url,
-                $this->params,
-                $this->src_image,
-                $this->rel_url
-            )
+        $default_url = get_root_url() . $this->rel_url;
+        $filtered_url = trigger_change(
+            'get_derivative_url',
+            $default_url,
+            $this->params,
+            $this->src_image,
+            $this->rel_url
         );
+        // trigger_change() hands the value through arbitrary registered
+        // event handlers (mixed return); fall back to the pre-filter url
+        // if a misbehaving handler returns a non-string.
+        return embellish_url(is_string($filtered_url) ? $filtered_url : $default_url);
     }
 
     public function same_as_source(): bool

@@ -82,7 +82,9 @@ SELECT id
   FROM ' . CATEGORIES_TABLE . '
   WHERE id IN (' . implode(',', $cat_ids) . ')
 ;';
-    $db_cat_ids = query2array($query, null, 'id');
+    // $value_name is given, so every element is a single 'id' column value
+    // (string|null), never the nested-row array branch.
+    $db_cat_ids = array_map(static fn ($v) => is_string($v) ? $v : '', query2array($query, null, 'id'));
 
     $unknown_cat_ids = array_diff($cat_ids, $db_cat_ids);
     if (count($unknown_cat_ids) != 0) {
@@ -100,7 +102,9 @@ SELECT category_id
   FROM ' . IMAGE_CATEGORY_TABLE . '
   WHERE image_id = ' . $image_id . '
 ;';
-    $existing_cat_ids = query2array($query, null, 'category_id');
+    // $value_name is given, so every element is a single 'category_id'
+    // column value (string|null), never the nested-row array branch.
+    $existing_cat_ids = array_map(static fn ($v) => is_string($v) ? $v : '', query2array($query, null, 'category_id'));
 
     if ($replace_mode) {
         $to_remove_cat_ids = array_diff($existing_cat_ids, $cat_ids);
@@ -141,7 +145,8 @@ SELECT category_id, MAX(`rank`) AS max_rank
             }
 
             if ($rank_on_category[$cat_id] == 'auto') {
-                $rank_on_category[$cat_id] = $current_rank_of[$cat_id] + 1;
+                $max_rank = is_numeric($current_rank_of[$cat_id]) ? (int) $current_rank_of[$cat_id] : 0;
+                $rank_on_category[$cat_id] = $max_rank + 1;
             }
         }
     }
@@ -268,11 +273,12 @@ function remove_chunks($original_sum, $type): void
 /**
  * API method
  * Adds a comment to an image
- * @param mixed[] $params
- *    @option int image_id
- *    @option string author
- *    @option string content
- *    @option string key
+ * @param array{image_id: int, author: string, content: string, key: string, ...} $params
+ *    image_id: WS_TYPE_ID, mandatory -- always a plain int. author/content/
+ *    key have no WS_TYPE flag, but PwgServer::invoke() rejects an array
+ *    value for any registered param without WS_PARAM_ACCEPT_ARRAY, so
+ *    they're always plain strings too (author has a string default,
+ *    content/key are mandatory)
  * @return \PwgError|array{comment: PwgNamedStruct}
  */
 function ws_images_addComment(array $params, PwgServer $service): \PwgError|array
@@ -336,10 +342,10 @@ SELECT DISTINCT image_id
 /**
  * API method
  * Returns detailed information for an element
- * @param mixed[] $params
- *    @option int image_id
- *    @option int comments_page
- *    @option int comments_per_page
+ * @param array{image_id: int, comments_page: int, comments_per_page: int, ...} $params
+ *    all three are WS_TYPE_INT|WS_TYPE_POSITIVE (image_id: WS_TYPE_ID) --
+ *    always plain ints by the time this runs (comments_page/
+ *    comments_per_page have defaults, so always present too)
  * @return \PwgError|array<string, mixed>
  */
 function ws_images_getInfo(array $params, PwgServer $service): \PwgError|array
@@ -368,16 +374,28 @@ LIMIT 1
     if ($image_row === false || $image_row === null) {
         throw new Exception('ws_images_getInfo(): fetch failed after a non-zero pwg_db_num_rows()');
     }
+    // id is the IMAGES_TABLE primary key, guaranteed numeric; captured
+    // before array_merge() below widens every value of $image_row to mixed.
+    assert(is_numeric($image_row['id']));
+    $image_id = (int) $image_row['id'];
+
+    // array_merge() with ws_std_get_urls()'s mixed-valued return widens
+    // PHPStan's tracked shape for every other key of the original
+    // pwg_db_fetch_assoc() row -- restate the columns this function reads
+    // below (id/file: IMAGES_TABLE NOT NULL; name/comment/rating_score:
+    // nullable) plus an open tail for the rest of the row and the
+    // page_url/element_url/download_url/derivatives keys ws_std_get_urls()
+    // injects.
+    /** @var array{id: string, file: string, name: string|null, comment: string|null, rating_score: string|null, ...} $image_row */
     $image_row = array_merge($image_row, ws_std_get_urls($image_row));
 
     $image_row['name_raw'] = $image_row['name'];
-    $image_row['name'] = strip_tags(
-        trigger_change(
-            'render_element_name',
-            $image_row['name'],
-            __FUNCTION__
-        ) ?? ''
+    $rendered_name = trigger_change(
+        'render_element_name',
+        $image_row['name'],
+        __FUNCTION__
     );
+    $image_row['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
 
     $image_row['comment_raw'] = $image_row['comment'];
     $image_row['comment'] = trigger_change(
@@ -391,7 +409,7 @@ LIMIT 1
 SELECT id, name, permalink, uppercats, global_rank, commentable
   FROM ' . IMAGE_CATEGORY_TABLE . '
     INNER JOIN ' . CATEGORIES_TABLE . ' ON category_id = id
-  WHERE image_id = ' . $image_row['id'] .
+  WHERE image_id = ' . $image_id .
       get_sql_condition_FandF(
           [
               'forbidden_categories' => 'category_id',
@@ -425,13 +443,12 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
 
         $row['id'] = (int) $row['id'];
 
-        $row['name'] = strip_tags(
-            (string) trigger_change(
-                'render_category_name',
-                $row['name'],
-                __FUNCTION__
-            )
+        $rendered_category_name = trigger_change(
+            'render_category_name',
+            $row['name'],
+            __FUNCTION__
         );
+        $row['name'] = strip_tags(is_string($rendered_category_name) ? $rendered_category_name : '');
 
         $related_categories[] = $row;
     }
@@ -444,7 +461,7 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
     }
 
     // -------------------------------------------------------------- related tags
-    $related_tags = get_common_tags([$image_row['id']], -1);
+    $related_tags = get_common_tags([$image_id], -1);
     foreach ($related_tags as $i => $tag) {
         $tag['url'] = make_index_url(
             [
@@ -460,13 +477,15 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
         );
 
         unset($tag['counter']);
+        assert(is_numeric($tag['id']));
         $tag['id'] = (int) $tag['id'];
         $related_tags[$i] = $tag;
     }
 
     // ------------------------------------------------------------- related rates
+    $rating_score_raw = $image_row['rating_score'];
     $rating = [
-        'score' => $image_row['rating_score'],
+        'score' => $rating_score_raw,
         'count' => 0,
         'average' => null,
     ];
@@ -474,14 +493,15 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
         $query = '
 SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
   FROM ' . RATE_TABLE . '
-  WHERE element_id = ' . $image_row['id'] . '
+  WHERE element_id = ' . $image_id . '
 ;';
         $row = pwg_db_fetch_assoc(pwg_query($query));
         if ($row === false || $row === null) {
             throw new Exception('ws_images_getInfo(): rate aggregate query returned no row');
         }
 
-        $rating['score'] = (float) $rating['score'];
+        assert(is_numeric($rating_score_raw));
+        $rating['score'] = (float) $rating_score_raw;
         $rating['average'] = (float) $row['average'];
         $rating['count'] = (int) $row['count'];
     }
@@ -489,7 +509,7 @@ SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
     // ---------------------------------------------------------- related comments
     $related_comments = [];
 
-    $where_comments = 'image_id = ' . $image_row['id'];
+    $where_comments = 'image_id = ' . $image_id;
     if (! is_admin()) {
         $where_comments .= ' AND validated="true"';
     }
@@ -527,12 +547,13 @@ SELECT id, date, author, content
         )
     ) {
         $comment_post_data['author'] = stripslashes((string) $user['username']);
-        $comment_post_data['key'] = get_ephemeral_key(2, $params['image_id']);
+        $comment_post_data['key'] = get_ephemeral_key(2, (string) $params['image_id']);
     }
 
     $ret = $image_row;
     foreach (['id', 'width', 'height', 'hit', 'filesize'] as $k) {
         if (isset($ret[$k])) {
+            assert(is_numeric($ret[$k]));
             $ret[$k] = (int) $ret[$k];
         }
     }
@@ -584,9 +605,9 @@ SELECT id, date, author, content
 /**
  * API method
  * Rates an image
- * @param mixed[] $params
- *    @option int image_id
- *    @option float rate
+ * @param array{image_id: int, rate: float, ...} $params both mandatory
+ *    (WS_TYPE_ID / WS_TYPE_FLOAT, no 'default') -- always plain scalars by
+ *    the time this runs
  */
 function ws_images_rate(array $params, PwgServer $service): mixed
 {
@@ -621,11 +642,10 @@ SELECT DISTINCT id
 /**
  * API method
  * Returns a list of elements corresponding to a query search
- * @param mixed[] $params
- *    @option string query
- *    @option int per_page
- *    @option int page
- *    @option string order (optional)
+ * @param array{query: string, per_page: int, page: int, order: string|null, f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
+ *    query: no WS_TYPE flag, mandatory -- always a plain string (see
+ *    ws_std_image_sql_filter()'s docblock for the shared f_* filter set,
+ *    merged in via ws.php's $f_params)
  * @return array{paging: PwgNamedStruct, images: PwgNamedArray}
  */
 function ws_images_search(array $params, PwgServer $service): array
@@ -651,10 +671,22 @@ function ws_images_search(array $params, PwgServer $service): array
         ]
     );
 
-    $image_ids = array_slice(
-        $search_result['items'],
-        $params['page'] * $params['per_page'],
-        $params['per_page']
+    // get_quick_search_results()'s return type is a generic array<string,
+    // mixed> (cross-file root cause: include/functions_search.inc.php could
+    // give 'items' a precise int[] shape, but that's shared by many other
+    // callers -- narrow locally here instead).
+    $search_items = $search_result['items'];
+    if (! is_array($search_items)) {
+        $search_items = [];
+    }
+
+    $image_ids = array_map(
+        static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+        array_slice(
+            $search_items,
+            $params['page'] * $params['per_page'],
+            $params['per_page']
+        )
     );
 
     if (count($image_ids)) {
@@ -669,6 +701,7 @@ SELECT *
 
         while ($row = pwg_db_fetch_assoc($result)) {
             $image = [];
+            assert($row['id'] !== null);
             $image['is_favorite'] = isset($favorite_ids[$row['id']]);
             foreach (['id', 'width', 'height', 'hit'] as $k) {
                 if (isset($row[$k])) {
@@ -679,10 +712,12 @@ SELECT *
                 $image[$k] = $row[$k];
             }
 
-            $image['name'] = strip_tags(trigger_change('render_element_name', $image['name'], __FUNCTION__) ?? '');
+            $rendered_image_name = trigger_change('render_element_name', $image['name'], __FUNCTION__);
+            $image['name'] = strip_tags(is_string($rendered_image_name) ? $rendered_image_name : '');
             $image['comment'] = trigger_change('render_element_description', $image['comment'], __FUNCTION__);
 
             $image = array_merge($image, ws_std_get_urls($row));
+            assert(is_int($image['id']));
             $images[$image_ids[$image['id']]] = $image;
         }
         ksort($images, SORT_NUMERIC);
@@ -695,7 +730,7 @@ SELECT *
                 'page' => $params['page'],
                 'per_page' => $params['per_page'],
                 'count' => count($images),
-                'total_count' => count($search_result['items']),
+                'total_count' => count($search_items),
             ]
         ),
         'images' => new PwgNamedArray(
@@ -709,8 +744,14 @@ SELECT *
 /**
  * API method
  * Registers a new search
- * @param mixed[] $params
- *    @option string query
+ *
+ * Every param here is WS_PARAM_OPTIONAL with no 'default' key, so
+ * PwgServer::invoke() leaves any not provided by the caller entirely
+ * absent from $params (not filled with null) -- hence the optional (?:)
+ * shape keys throughout. FORCE_ARRAY params, when present, are always
+ * arrays (never a bare scalar).
+ *
+ * @param array{search_id?: string, allwords?: string, allwords_mode?: string, allwords_fields?: array<int, string>, tags?: array<int, int>, tags_mode?: string, categories?: array<int, int>, categories_withsubs?: bool, authors?: array<int, string>, added_by?: array<int, int>, filetypes?: array<int, string>, date_posted_preset?: string, date_posted_custom?: array<int, string>, date_created_preset?: string, date_created_custom?: array<int, string>, ratios?: array<int, string>, ratings?: array<int, string>, filesize_min?: int, filesize_max?: int, height_min?: int, height_max?: int, width_min?: int, width_max?: int, ...} $params
  * @return \PwgError|array{search_id: string, search_url: string}
  */
 function ws_images_filteredSearch_create(array $params, PwgServer $service): \PwgError|array
@@ -980,9 +1021,11 @@ function ws_images_filteredSearch_create(array $params, PwgServer $service): \Pw
 /**
  * API method
  * Sets the level of an image
- * @param mixed[] $params
- *    @option int image_id
- *    @option int level
+ * @param array{image_id: array<int, int>, level: int, ...} $params
+ *    image_id: WS_PARAM_FORCE_ARRAY|WS_TYPE_ID -- always coerced to a list
+ *      of positive ints by PwgServer::invoke() before this runs
+ *    level: WS_TYPE_INT|WS_TYPE_POSITIVE, mandatory (no 'default') -- always
+ *      a plain int by the time this runs
  */
 function ws_images_setPrivacyLevel(array $params, PwgServer $service): \PwgError|int|string
 {
@@ -1012,10 +1055,11 @@ UPDATE ' . IMAGES_TABLE . '
 /**
  * API method
  * Sets the rank of an image in a category
- * @param mixed[] $params
- *    @option int image_id
- *    @option int category_id
- *    @option int rank
+ * @param array{image_id: array<int, int>, category_id: int, rank: int|null, ...} $params
+ *    image_id: WS_PARAM_FORCE_ARRAY|WS_TYPE_ID -- always a list of positive
+ *    ints. category_id: WS_TYPE_ID, mandatory. rank: WS_TYPE_INT|POSITIVE|
+ *    NOTNULL with a null default -- int when the caller provides it, null
+ *    otherwise
  * @return array<string, mixed>|\PwgError
  */
 function ws_images_setRank(array $params, PwgServer $service): array|\PwgError
@@ -1127,11 +1171,10 @@ UPDATE ' . IMAGE_CATEGORY_TABLE . '
 /**
  * API method
  * Adds a file chunk
- * @param mixed[] $params
- *    @option string data
- *    @option string original_sum
- *    @option string type = 'file'
- *    @option int position
+ * @param array{data: string, original_sum: string, type: string, position: string, ...} $params
+ *    none of these have a WS_TYPE flag; data/original_sum/position are
+ *    mandatory (no 'default'), type defaults to 'file' -- all always plain
+ *    strings (see PwgServer::invoke()'s array-rejection check)
  */
 function ws_images_add_chunk(array $params, PwgServer $service): ?\PwgError
 {
@@ -1183,10 +1226,9 @@ function ws_images_add_chunk(array $params, PwgServer $service): ?\PwgError
 /**
  * API method
  * Adds a file
- * @param mixed[] $params
- *    @option int image_id
- *    @option string type = 'file'
- *    @option string sum
+ * @param array{image_id: int, type: string, sum: string, ...} $params
+ *    image_id: WS_TYPE_ID, mandatory. type: no WS_TYPE flag, defaults to
+ *    'file'. sum: no WS_TYPE flag, mandatory -- both always plain strings
  */
 function ws_images_addFile(array $params, PwgServer $service): \PwgError|bool|null
 {
@@ -1211,6 +1253,13 @@ SELECT
     $image = pwg_db_fetch_assoc($result);
     if ($image === false || $image === null) {
         throw new Exception('ws_images_addFile(): fetch failed after a non-zero pwg_db_num_rows()');
+    }
+
+    // this legacy chunked-upload flow locates buffered chunks by md5sum, so
+    // it cannot proceed for a photo that has none (e.g. added before the
+    // md5sum feature was enabled, see pwg.images.setMd5sum).
+    if (! is_string($image['md5sum'])) {
+        return new PwgError(500, '[ws_images_addFile] image_id ' . $params['image_id'] . ' has no md5sum');
     }
 
     // since Piwigo 2.4 and derivatives, we do not take the imported "thumb" into account
@@ -1266,18 +1315,13 @@ SELECT
 /**
  * API method
  * Adds an image
- * @param mixed[] $params
- *    @option string original_sum
- *    @option string original_filename (optional)
- *    @option string name (optional)
- *    @option string author (optional)
- *    @option string date_creation (optional)
- *    @option string comment (optional)
- *    @option string categories (optional) - "cat_id[,rank];cat_id[,rank]"
- *    @option string tags_ids (optional) - "tag_id,tag_id"
- *    @option int level
- *    @option bool check_uniqueness
- *    @option int image_id (optional)
+ * @param array{thumbnail_sum: string|null, high_sum: string|null, original_sum: string, original_filename: string|null, name: string|null, author: string|null, date_creation: string|null, comment: string|null, categories: string|null, tag_ids: string|null, level: int, check_uniqueness: bool, image_id: int|null, ...} $params
+ *    All except level/check_uniqueness/image_id have no WS_TYPE flag and a
+ *    null default (or none, for the mandatory original_sum) -- always
+ *    plain strings when present (see PwgServer::invoke()'s array-rejection
+ *    check). level: WS_TYPE_INT|POSITIVE, default 0 (non-null) -- always
+ *    int. check_uniqueness: WS_TYPE_BOOL, default true -- always bool.
+ *    image_id: WS_TYPE_ID, null default -- int|null.
  * @return \PwgError|array{image_id: int|string, url: string}
  */
 function ws_images_add(array $params, PwgServer $service): \PwgError|array
@@ -1353,7 +1397,7 @@ SELECT COUNT(*)
         $file_path,
         $params['original_filename'],
         null, // categories
-        $params['level'] ?? null,
+        $params['level'],
         $params['image_id'] > 0 ? $params['image_id'] : null,
         $params['original_sum']
     );
@@ -1425,26 +1469,29 @@ SELECT id, name, permalink
 /**
  * API method
  * Adds a image (simple way)
- * @param mixed[] $params
- *    @option int[] category
- *    @option string name (optional)
- *    @option string author (optional)
- *    @option string comment (optional)
- *    @option int level
- *    @option string|string[] tags
- *    @option int image_id (optional)
+ * @param array{category: array<int, int>, name: string|null, author: string|null, comment: string|null, level: int, tags: string|array<array-key, string>|null, image_id: int|null, ...} $params
+ *    category: WS_PARAM_FORCE_ARRAY|WS_TYPE_ID with a null default --
+ *    makeArrayParam() converts the null default to [], so never null,
+ *    always a list of positive ints. name/author/comment: no WS_TYPE
+ *    flag, null default -- string|null. level: WS_TYPE_INT|POSITIVE,
+ *    default 0 (non-null) -- always int. tags: WS_PARAM_ACCEPT_ARRAY (not
+ *    FORCE), no WS_TYPE flag, null default -- string, array (if the
+ *    caller uses bracket syntax), or null. image_id: WS_TYPE_ID, null
+ *    default -- int|null.
  * @return \PwgError|array{image_id: int|string, url: string}
  */
 function ws_images_addSimple(array $params, PwgServer $service): \PwgError|array
 {
     global $conf, $logger;
 
-    if (! isset($_FILES['image'])) {
+    if (! isset($_FILES['image']) || ! is_array($_FILES['image'])) {
         return new PwgError(405, 'The image (file) is missing');
     }
+    $uploaded_image = $_FILES['image'];
 
-    if (isset($_FILES['image']['error']) && $_FILES['image']['error'] != 0) {
-        $message = match ($_FILES['image']['error']) {
+    if (isset($uploaded_image['error']) && $uploaded_image['error'] != 0) {
+        $upload_error = $uploaded_image['error'];
+        $message = match ($upload_error) {
             UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
             UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
             UPLOAD_ERR_PARTIAL => 'The uploaded file was only partially uploaded.',
@@ -1454,7 +1501,7 @@ function ws_images_addSimple(array $params, PwgServer $service): \PwgError|array
             UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload. ' .
             'PHP does not provide a way to ascertain which extension caused the file ' .
             'upload to stop; examining the list of loaded extensions with phpinfo() may help.',
-            default => "Error number {$_FILES['image']['error']} occurred while uploading a file.",
+            default => 'Error number ' . (is_scalar($upload_error) ? $upload_error : 'unknown') . ' occurred while uploading a file.',
         };
 
         $logger->error(__FUNCTION__ . ' ' . $message);
@@ -1477,9 +1524,15 @@ SELECT COUNT(*)
 
     include_once PHPWG_ROOT_PATH . 'admin/include/functions_upload.inc.php';
 
+    $uploaded_tmp_name = $uploaded_image['tmp_name'] ?? null;
+    if (! is_string($uploaded_tmp_name)) {
+        return new PwgError(500, '[ws_images_addSimple] missing uploaded file temp name');
+    }
+    $uploaded_name = $uploaded_image['name'] ?? null;
+
     $image_id = add_uploaded_file(
-        $_FILES['image']['tmp_name'],
-        $_FILES['image']['name'],
+        $uploaded_tmp_name,
+        is_string($uploaded_name) ? $uploaded_name : null,
         $params['category'],
         8,
         $params['image_id'] > 0 ? $params['image_id'] : null
@@ -1561,15 +1614,16 @@ SELECT id, name, permalink
 
 /**
  * API method
- * Adds a image (simple way)
- * @param mixed[] $params
- *    @option int[] category
- *    @option string name (optional)
- *    @option string author (optional)
- *    @option string comment (optional)
- *    @option int level
- *    @option string|string[] tags
- *    @option int image_id (optional)
+ * Uploads a file, chunked or whole
+ *
+ * @param array{name: string|null, category: array<int, int>, level: int, format_of: int|null, update_mode: bool, pwg_token: string, ...} $params
+ *    name: no WS_TYPE flag, null default -- string|null. category:
+ *    WS_PARAM_FORCE_ARRAY|WS_TYPE_ID, null default -- makeArrayParam()
+ *    converts the null default to [], so never null. level:
+ *    WS_TYPE_INT|POSITIVE, default 0 (non-null) -- always int. format_of:
+ *    WS_TYPE_ID, null default -- int|null. update_mode: WS_TYPE_BOOL,
+ *    default false (non-null) -- always bool. pwg_token: no WS_TYPE flag,
+ *    mandatory -- always a plain string.
  * @return \PwgError|array<string, mixed>|null
  */
 function ws_images_upload(array $params, PwgServer $service): \PwgError|array|null
@@ -1619,7 +1673,7 @@ function ws_images_upload(array $params, PwgServer $service): \PwgError|array|nu
     // Get a file name
     if (isset($_REQUEST['name'])) {
         $fileName = $_REQUEST['name'];
-    } elseif (! empty($_FILES)) {
+    } elseif (! empty($_FILES) && isset($_FILES['file']) && is_array($_FILES['file'])) {
         $fileName = $_FILES['file']['name'];
     } else {
         $fileName = uniqid('file_');
@@ -1627,13 +1681,13 @@ function ws_images_upload(array $params, PwgServer $service): \PwgError|array|nu
 
     // change the name of the file in the buffer to avoid any unexpected
     // extension. Function add_uploaded_file will eventually clean the mess.
-    $fileName = md5((string) $fileName);
+    $fileName = md5(is_scalar($fileName) ? (string) $fileName : '');
 
     $filePath = $upload_dir . DIRECTORY_SEPARATOR . $fileName;
 
     // Chunking might be enabled
-    $chunk = isset($_REQUEST['chunk']) ? intval($_REQUEST['chunk']) : 0;
-    $chunks = isset($_REQUEST['chunks']) ? intval($_REQUEST['chunks']) : 0;
+    $chunk = isset($_REQUEST['chunk']) && is_scalar($_REQUEST['chunk']) ? intval($_REQUEST['chunk']) : 0;
+    $chunks = isset($_REQUEST['chunks']) && is_scalar($_REQUEST['chunks']) ? intval($_REQUEST['chunks']) : 0;
 
     // file_put_contents('/tmp/plupload.log', "[".date('c')."] ".__FUNCTION__.', '.$fileName.' '.($chunk+1).'/'.$chunks."\n", FILE_APPEND);
 
@@ -1643,12 +1697,18 @@ function ws_images_upload(array $params, PwgServer $service): \PwgError|array|nu
     }
 
     if (! empty($_FILES)) {
-        if ($_FILES['file']['error'] || ! is_uploaded_file($_FILES['file']['tmp_name'])) {
+        if (! isset($_FILES['file']) || ! is_array($_FILES['file'])) {
+            die('{"jsonrpc" : "2.0", "error" : {"code": 103, "message": "Failed to move uploaded file."}, "id" : "id"}');
+        }
+        $uploaded_file = $_FILES['file'];
+        $uploaded_file_tmp_name = $uploaded_file['tmp_name'] ?? null;
+
+        if (! empty($uploaded_file['error']) || ! is_string($uploaded_file_tmp_name) || ! is_uploaded_file($uploaded_file_tmp_name)) {
             die('{"jsonrpc" : "2.0", "error" : {"code": 103, "message": "Failed to move uploaded file."}, "id" : "id"}');
         }
 
         // Read binary input stream and append it to temp file
-        if (! $in = @fopen($_FILES['file']['tmp_name'], 'rb')) {
+        if (! $in = @fopen($uploaded_file_tmp_name, 'rb')) {
             die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
         }
     } else {
@@ -1688,6 +1748,7 @@ SELECT *
             // guaranteed non-null by the empty($format_ext) guard above,
             // inside the same isset($params['format_of']) branch.
             assert($format_ext !== null);
+            assert($image['id'] !== null);
             $add_status = add_format($filePath, $format_ext, $image['id']);
 
             return [
@@ -1713,7 +1774,8 @@ SELECT
 ;';
             $images = query2array($query);
             if ($images != null) {
-                $id_image = $images[0]['id']; // take the id of the already existing image to replace it
+                $existing_id = $images[0]['id']; // take the id of the already existing image to replace it
+                $id_image = is_numeric($existing_id) ? (int) $existing_id : null;
                 $add_status = 'update';
             }
         }
@@ -1764,6 +1826,9 @@ SELECT
 
         $category_name = get_cat_display_name_from_id($params['category'][0], null);
 
+        $nb_photos_in_category = is_numeric($category_infos['nb_photos']) ? (int) $category_infos['nb_photos'] : 0;
+        $nb_photos_lounge = is_numeric($nb_photos_lounge) ? (int) $nb_photos_lounge : 0;
+
         return [
             'image_id' => $image_id,
             'src' => DerivativeImage::thumb_url($image_infos),
@@ -1771,7 +1836,7 @@ SELECT
             'name' => $image_infos['name'],
             'category' => [
                 'id' => $params['category'][0],
-                'nb_photos' => $category_infos['nb_photos'] + $nb_photos_lounge,
+                'nb_photos' => $nb_photos_in_category + $nb_photos_lounge,
                 'label' => $category_name,
             ],
             'add_status' => $add_status,
@@ -1785,22 +1850,16 @@ SELECT
  * API method
  * Adds a chunk of an image. Chunks don't have to be uploaded in the right sort order. When the last chunk is added, they get merged.
  * @since 11
- * @param mixed[] $params
- *    @option string username
- *    @option string password
- *    @option chunk int number of the chunk
- *    @option string chunk_sum MD5 sum of the chunk
- *    @option chunks int total number of chunks for this image
- *    @option string original_sum MD5 sum of the final image
- *    @option int[] category
- *    @option string filename
- *    @option string name (optional)
- *    @option string author (optional)
- *    @option string comment (optional)
- *    @option string date_creation (optional)
- *    @option int level
- *    @option string tag_ids (optional) - "tag_id,tag_id"
- *    @option int image_id (optional)
+ * @param array{username?: string, password: string|null, chunk: int, chunk_sum: string, chunks: int, original_sum: string, category: array<int, int>, filename: string, name: string|null, author: string|null, comment: string|null, date_creation: string|null, level: int, tag_ids: string|null, image_id: int|null, ...} $params
+ *    username: WS_PARAM_OPTIONAL, no 'default' -- may be entirely absent
+ *    from $params. password: WS_PARAM_OPTIONAL, null default. chunk/
+ *    chunks: WS_TYPE_INT|POSITIVE, mandatory -- always int. chunk_sum/
+ *    original_sum/filename: no WS_TYPE flag, mandatory -- always string.
+ *    category: WS_PARAM_FORCE_ARRAY|WS_TYPE_ID, null default -- never
+ *    null (makeArrayParam() converts to []). name/author/comment/
+ *    date_creation/tag_ids: no WS_TYPE flag, null default -- string|null.
+ *    level: WS_TYPE_INT|POSITIVE, default 0 (non-null) -- always int.
+ *    image_id: WS_TYPE_ID, null default -- int|null.
  */
 function ws_images_uploadAsync(array $params, PwgServer &$service): mixed
 {
@@ -1843,7 +1902,12 @@ SELECT COUNT(*)
     secure_directory(dirname($chunkfile_path));
 
     // move uploaded file
-    move_uploaded_file($_FILES['file']['tmp_name'], $chunkfile_path);
+    $uploaded_chunk = $_FILES['file'] ?? null;
+    $uploaded_chunk_tmp_name = is_array($uploaded_chunk) ? ($uploaded_chunk['tmp_name'] ?? null) : null;
+    if (! is_string($uploaded_chunk_tmp_name)) {
+        return new PwgError(500, 'missing uploaded chunk file');
+    }
+    move_uploaded_file($uploaded_chunk_tmp_name, $chunkfile_path);
     $logger->debug(__FUNCTION__ . ' uploaded ' . $chunkfile_path);
 
     // MD5 checksum
@@ -2044,9 +2108,8 @@ SELECT COUNT(*)
 /**
  * API method
  * Check if an image exists by it's name or md5 sum
- * @param mixed[] $params
- *    @option string md5sum_list (optional)
- *    @option string filename_list (optional)
+ * @param array{md5sum_list: string|null, filename_list: string|null, ...} $params
+ *    both: no WS_TYPE flag, null default -- string|null.
  * @return mixed[]
  */
 function ws_images_exist(array $params, PwgServer $service): array
@@ -2119,8 +2182,8 @@ SELECT id, file
  * Check if an image exists by it's name or md5 sum
  *
  * @since 13
- * @param mixed[] $params
- *    @option string filename_list
+ * @param array{filename_list: string, ...} $params filename_list: no
+ *    WS_TYPE flag, mandatory -- always a plain string.
  * @return array<int|string, array<string, mixed>>
  */
 function ws_images_formats_searchImage(array $params, PwgServer $service): array
@@ -2130,7 +2193,10 @@ function ws_images_formats_searchImage(array $params, PwgServer $service): array
     $logger->debug(__FUNCTION__, 'WS', $params);
 
     $candidates = json_decode(stripslashes((string) $params['filename_list']), true);
-
+    if (! is_array($candidates)) {
+        $candidates = [];
+    }
+    /** @var array<int|string, mixed> $candidates */
     $unique_filenames_db = [];
 
     $query = '
@@ -2141,6 +2207,7 @@ SELECT
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
+        assert($row['file'] !== null);
         $filename_wo_ext = get_filename_wo_extension($row['file']);
         @$unique_filenames_db[$filename_wo_ext][] = $row['id'];
     }
@@ -2156,6 +2223,7 @@ SELECT
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
+        assert($row['image_id'] !== null);
         $format_image_id = $row['image_id'];
         @$format_db[$format_image_id][] = $row['ext'];
     }
@@ -2165,7 +2233,14 @@ SELECT
     foreach ($candidates as $format_external_id => $format_filename) {
         $candidate_filename_wo_ext = null;
 
-        if (preg_match('/^(.*?)\.(' . implode('|', $conf['format_ext']) . ')$/', (string) $format_filename, $matches)) {
+        if (! is_string($format_filename)) {
+            $result[$format_external_id] = [
+                'status' => 'not found',
+            ];
+            continue;
+        }
+
+        if (preg_match('/^(.*?)\.(' . implode('|', $conf['format_ext']) . ')$/', $format_filename, $matches)) {
             $candidate_filename_wo_ext = $matches[1];
         }
 
@@ -2184,9 +2259,10 @@ SELECT
                 continue;
             }
             $img_id = $unique_filenames_db[$candidate_filename_wo_ext][0];
+            assert($img_id !== null);
             $mult_form = false;
             if (isset($format_db[$img_id])) {
-                $format_ext = pathinfo((string) $format_filename, PATHINFO_EXTENSION);
+                $format_ext = pathinfo($format_filename, PATHINFO_EXTENSION);
                 if (array_search($format_ext, $format_db[$img_id]) !== false) {
                     $mult_form = true;
                 }
@@ -2212,9 +2288,10 @@ SELECT
  * Remove a formats from the database and the file system
  *
  * @since 13
- * @param mixed[] $params
- *    @option int format_id
- *    @option string pwg_token
+ * @param array{format_id: int|array<int, int>|null, pwg_token: string, ...} $params
+ *    format_id: WS_TYPE_ID + WS_PARAM_ACCEPT_ARRAY, null default -- a
+ *    plain int, a list of ints, or null. pwg_token: no WS_TYPE flag,
+ *    mandatory -- always a plain string.
  */
 function ws_images_formats_delete(array $params, PwgServer $service): \PwgError|bool
 {
@@ -2260,6 +2337,8 @@ SELECT
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
+        assert($row['image_id'] !== null);
+        assert($row['ext'] !== null);
 
         if (! isset($formats_of[$row['image_id']])) {
             $image_ids[] = $row['image_id'];
@@ -2283,6 +2362,7 @@ SELECT
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
+        assert($row['path'] !== null);
         if (url_is_remote($row['path'])) {
             continue;
         }
@@ -2290,6 +2370,7 @@ SELECT
         $files = [];
         $image_path = get_element_path($row);
 
+        assert($row['id'] !== null);
         if (isset($formats_of[$row['id']])) {
             foreach ($formats_of[$row['id']] as $format_ext) {
                 $files[] = original_to_format($image_path, $format_ext);
@@ -2320,9 +2401,9 @@ DELETE FROM ' . IMAGE_FORMAT_TABLE . '
 /**
  * API method
  * Check is file has been update
- * @param mixed[] $params
- *    @option int image_id
- *    @option string file_sum
+ * @param array{image_id: int, file_sum: string|null, thumbnail_sum: string|null, high_sum: string|null, ...} $params
+ *    image_id: WS_TYPE_ID, mandatory -- always int. file_sum/
+ *    thumbnail_sum/high_sum: no WS_TYPE flag, null default -- string|null.
  * @return \PwgError|array<string, string>
  */
 function ws_images_checkFiles(array $params, PwgServer $service): \PwgError|array
@@ -2345,6 +2426,7 @@ SELECT path
     $row = pwg_db_fetch_row($result);
     assert($row !== null);
     [$path] = $row;
+    assert($path !== null);
 
     $ret = [];
 
@@ -2379,18 +2461,13 @@ SELECT path
 /**
  * API method
  * Sets details of an image
- * @param mixed[] $params
- *    @option int image_id
- *    @option string file (optional)
- *    @option string name (optional)
- *    @option string author (optional)
- *    @option string date_creation (optional)
- *    @option string comment (optional)
- *    @option string categories (optional) - "cat_id[,rank];cat_id[,rank]"
- *    @option string tags_ids (optional) - "tag_id,tag_id"
- *    @option int level (optional)
- *    @option string single_value_mode
- *    @option string multiple_value_mode
+ * @param array{image_id: int, file: string|null, name: string|null, author: string|null, date_creation: string|null, comment: string|null, categories: string|null, tag_ids: string|null, level: int|null, single_value_mode: string, multiple_value_mode: string, pwg_token?: string, ...} $params
+ *    image_id: WS_TYPE_ID, mandatory -- always int. file/name/author/
+ *    date_creation/comment/categories/tag_ids: no WS_TYPE flag, null
+ *    default -- string|null. level: WS_TYPE_INT|POSITIVE, null default --
+ *    int|null. single_value_mode/multiple_value_mode: no WS_TYPE flag,
+ *    non-null string defaults -- always string. pwg_token:
+ *    WS_PARAM_OPTIONAL with no 'default' key -- may be entirely absent.
  */
 function ws_images_setInfo(array $params, PwgServer $service): ?\PwgError
 {
@@ -2521,17 +2598,20 @@ SELECT *
     // Temporary use of the batch manager's unit mode,
     // not to be used by an external application,
     // as this code bellow will be deleted when a tag selector is added.
-    if (isset($_REQUEST['tag_list'])) {
+    if (isset($_REQUEST['tag_list']) && is_array($_REQUEST['tag_list'])) {
         if (isset($params['tag_ids'])) {
             return new PwgError(WS_ERR_INVALID_PARAM, 'Do not use tag_list and tag_ids at the same time.');
         }
 
         // clean user input
-        foreach ($_REQUEST['tag_list'] as $idx => $tag_candidate) {
-            $_REQUEST['tag_list'][$idx] = pwg_db_real_escape_string(strip_tags(stripslashes((string) $tag_candidate)));
+        $cleaned_tag_list = [];
+        foreach ($_REQUEST['tag_list'] as $tag_candidate) {
+            $cleaned_tag_list[] = pwg_db_real_escape_string(strip_tags(stripslashes(is_scalar($tag_candidate) ? (string) $tag_candidate : '')));
         }
 
-        $tag_list = get_tag_ids($_REQUEST['tag_list']);
+        // pwg_db_real_escape_string() only returns null for a null input,
+        // and every element pushed above is already a string.
+        $tag_list = get_tag_ids(array_filter($cleaned_tag_list, 'is_string'));
         set_tags($tag_list, $params['image_id']);
     }
 
@@ -2543,9 +2623,10 @@ SELECT *
 /**
  * API method
  * Deletes an image
- * @param mixed[] $params
- *    @option int|int[] image_id
- *    @option string pwg_token
+ * @param array{image_id: string|array<array-key, string>, pwg_token: string, ...} $params
+ *    image_id: WS_PARAM_ACCEPT_ARRAY (not FORCE), no WS_TYPE flag,
+ *    mandatory -- a plain string or an array, never null. pwg_token: no
+ *    WS_TYPE flag, mandatory -- always a plain string.
  */
 function ws_images_delete(array $params, PwgServer $service): \PwgError|int
 {
@@ -2620,9 +2701,13 @@ function ws_images_emptyLounge(array $params, PwgServer $service): array
 
 /**
  * API method
- * Empties the lounge, where photos may wait before taking off.
+ * Notify Piwigo you have finished uploading a set of photos.
  * @since 12
- * @param mixed[] $params
+ * @param array{image_id: string|array<array-key, string>|null, pwg_token: string, category_id: int, ...} $params
+ *    image_id: WS_PARAM_ACCEPT_ARRAY (not FORCE), no WS_TYPE flag, null
+ *    default -- string, array, or null. pwg_token: no WS_TYPE flag,
+ *    mandatory -- always string. category_id: WS_TYPE_ID, mandatory --
+ *    always int.
  * @return \PwgError|array<string, mixed>
  */
 function ws_images_uploadCompleted(array $params, PwgServer $service): \PwgError|array
@@ -2692,8 +2777,9 @@ SELECT
 /**
  * API method
  * add md5sum at photos, by block. Returns how md5sum were added and how many are remaining.
- * @param mixed[] $params
- *    @option int block_size
+ * @param array{block_size: int, pwg_token: string, ...} $params
+ *    block_size: WS_TYPE_INT|POSITIVE, default is a non-null $conf value
+ *    -- always int. pwg_token: no WS_TYPE flag, mandatory -- always string.
  * @return \PwgError|array{nb_added: int, nb_no_md5sum: int}
  */
 function ws_images_setMd5sum(array $params, PwgServer $service): \PwgError|array
@@ -2721,8 +2807,9 @@ function ws_images_setMd5sum(array $params, PwgServer $service): \PwgError|array
 /**
  * API method
  * Synchronize metadatas photos. Returns how many metadatas were sync.
- * @param mixed[] $params
- *    @option int image_id
+ * @param array{image_id: string|array<array-key, string>, pwg_token: string, ...} $params
+ *    image_id: WS_PARAM_ACCEPT_ARRAY, no WS_TYPE flag, mandatory -- a
+ *    plain string or an array, never null. pwg_token: mandatory string.
  * @return \PwgError|array{nb_synchronized: int}
  */
 function ws_images_syncMetadata(array $params, PwgServer $service): \PwgError|array
@@ -2770,6 +2857,8 @@ SELECT id
         return new PwgError(403, 'No image found');
     }
 
+    $image_ids = array_map(intval(...), $image_ids);
+
     include_once PHPWG_ROOT_PATH . 'admin/include/functions_metadata.php';
     include_once PHPWG_ROOT_PATH . 'admin/include/functions.php';
     sync_metadata($image_ids);
@@ -2782,8 +2871,9 @@ SELECT id
 /**
  * API method
  * Deletes orphan photos, by block. Returns how many orphans were deleted and how many are remaining.
- * @param mixed[] $params
- *    @option int block_size
+ * @param array{block_size: int, pwg_token: string, ...} $params
+ *    block_size: WS_TYPE_INT|POSITIVE, default 1000 (non-null) -- always
+ *    int. pwg_token: no WS_TYPE flag, mandatory -- always string.
  * @return \PwgError|array{nb_deleted: int, nb_orphans: int}
  */
 function ws_images_deleteOrphans(array $params, PwgServer $service): \PwgError|array
@@ -2809,11 +2899,11 @@ function ws_images_deleteOrphans(array $params, PwgServer $service): \PwgError|a
  * Associate/Dissociate/Move photos with an album.
  *
  * @since 14
- * @param mixed[] $params
- *    @option int[] image_id
- *    @option int category_id
- *    @option string action
- *    @option string pwg_token
+ * @param array{image_id: array<int, int>, category_id: int, action: string, pwg_token: string, ...} $params
+ *    image_id: WS_PARAM_FORCE_ARRAY|WS_TYPE_ID -- always a list of positive
+ *    ints. category_id: WS_TYPE_ID, mandatory. action/pwg_token: no
+ *    WS_TYPE flag, but always plain strings (action has a string default,
+ *    pwg_token is mandatory)
  */
 function ws_images_setCategory(array $params, PwgServer $service): ?\PwgError
 {

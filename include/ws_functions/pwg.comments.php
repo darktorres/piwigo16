@@ -13,7 +13,17 @@ declare(strict_types=1);
  * API method
  * Get comments
  * @since 16
- * @param mixed[] $params
+ *
+ * @param array{status: string, search: string|null, author_id?: int, image_id?: int, f_min_date: string|null, f_max_date: string|null, page: int, per_page: int, ...} $params
+ *   status: non-null string default ('all'), no 'type' flag -- always
+ *   present. search/f_min_date/f_max_date: null default, no 'type' flag
+ *   -- always present, string|null. author_id/image_id: WS_PARAM_OPTIONAL
+ *   with no 'default' key -- may be entirely absent; WS_TYPE_ID
+ *   guarantees a plain int when present. page: non-null int default,
+ *   WS_TYPE_INT|WS_TYPE_POSITIVE -- always present. per_page: same type
+ *   flag, default is $conf['comments_page_nb_comments'] (a real int,
+ *   confirmed 10 in config_default.inc.php) -- always present, always
+ *   int.
  * @return \PwgError|array<string, mixed>
  */
 function ws_userComments_getList(array $params, PwgServer &$service): \PwgError|array
@@ -39,11 +49,11 @@ function ws_userComments_getList(array $params, PwgServer &$service): \PwgError|
     $where_clauses = ['1=1'];
 
     if (isset($params['author_id']) and ! empty($params['author_id'])) {
-        $where_clauses['author_id'] = 'author_id = \'' . pwg_db_real_escape_string($params['author_id']) . '\'';
+        $where_clauses['author_id'] = 'author_id = ' . $params['author_id'];
     }
 
     if (isset($params['image_id']) and ! empty($params['image_id'])) {
-        $where_clauses[] = 'image_id = \'' . pwg_db_real_escape_string($params['image_id']) . '\'';
+        $where_clauses[] = 'image_id = ' . $params['image_id'];
     }
 
     if (! empty($params['f_min_date'])) {
@@ -84,17 +94,20 @@ WHERE ' . implode(' AND ', $where_clauses) . '
     if (! is_array($summary)) {
         return new PwgError(500, 'Unable to compute comments summary');
     }
-    $total_comments = $summary['all_comments'];
+    // count(*)/sum(...) results are typed string|null by the driver; they
+    // are always numeric here (count/sum of a non-empty aggregate), but
+    // fall back to 0 rather than assume it.
+    $total_comments = is_numeric($summary['all_comments']) ? (int) $summary['all_comments'] : 0;
 
     switch ($params['status']) {
         case 'pending':
             $where_clauses[] = 'validated = \'false\'';
-            $total_comments = $summary['pending'];
+            $total_comments = is_numeric($summary['pending']) ? (int) $summary['pending'] : 0;
             break;
 
         case 'validated':
             $where_clauses[] = 'validated = \'true\'';
-            $total_comments = $summary['validated'];
+            $total_comments = is_numeric($summary['validated']) ? (int) $summary['validated'] : 0;
             break;
     }
 
@@ -150,15 +163,22 @@ SELECT
             $author_name = stripslashes((string) ($row['username'] ?? $row['author'] ?? l10n('guest')));
         }
 
+        // date/date_available are NOT NULL columns but the driver still
+        // types every fetched value as string|null; format_date()'s
+        // phpDoc param forbids null, so fall back to false (its "no date"
+        // sentinel) if that ever isn't the case.
+        $comment_date = is_string($row['date']) ? $row['date'] : false;
+        $comment_date_available = is_string($row['date_available']) ? $row['date_available'] : false;
+
         $list[] = [
             'id' => $row['id'],
             'admin_link' => get_root_url() . 'admin.php?page=photo-' . $row['image_id'],
             'medium_url' => $medium,
             'file' => $row['file'],
-            'image_date_available' => format_date($row['date_available'], ['day_name', 'day', 'month', 'year', 'time']),
+            'image_date_available' => format_date($comment_date_available, ['day_name', 'day', 'month', 'year', 'time']),
             'author' => trigger_change('render_comment_author', $author_name),
             'author_status' => $conf['webmaster_id'] == $row['author_id'] ? 'main_user' : $row['status'],
-            'date' => format_date($row['date'], ['day_name', 'day', 'month', 'year', 'time']),
+            'date' => format_date($comment_date, ['day_name', 'day', 'month', 'year', 'time']),
             'content' => trigger_change('render_comment_content', $row['content']),
             'raw_content' => $row['content'],
             'is_pending' => ($row['validated'] == 'false'),
@@ -212,7 +232,10 @@ GROUP BY author_id
  * API method
  * Delete comments
  * @since 16
- * @param mixed[] $params
+ *
+ * @param array{comment_id: array<int, int>, pwg_token: string, ...} $params
+ *   neither has a 'default' key -- both mandatory, always present;
+ *   FORCE_ARRAY always coerces comment_id to a list of positive ints.
  */
 function ws_userComments_delete(array $params, PwgServer &$service): \PwgError|string
 {
@@ -231,7 +254,10 @@ function ws_userComments_delete(array $params, PwgServer &$service): \PwgError|s
  * API method
  * Validate comments
  * @since 16
- * @param mixed[] $params
+ *
+ * @param array{comment_id: array<int, int>, pwg_token: string, ...} $params
+ *   neither has a 'default' key -- both mandatory, always present;
+ *   FORCE_ARRAY always coerces comment_id to a list of positive ints.
  */
 function ws_userComments_validate(array $params, PwgServer &$service): \PwgError|string
 {

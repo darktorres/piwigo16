@@ -28,20 +28,34 @@ check_input_parameter('image_id', $_GET, false, PATTERN_ID);
 check_input_parameter('level', $_POST, false, '/^\d+$/');
 check_input_parameter('date_creation', $_POST, false, '/^\d\d\d\d-\d\d-\d\d( \d\d:\d\d:\d\d)?$/');
 
+// check_input_parameter() only validates the raw $_GET value against
+// PATTERN_ID (or dies); it does not narrow $_GET's type for PHPStan, so
+// re-derive a real int here for every later use.
+$image_id = 0;
+if (isset($_GET['image_id']) && is_numeric($_GET['image_id'])) {
+    $image_id = (int) $_GET['image_id'];
+}
+
 // retrieving direct information about picture. This may have been already
 // done on admin/photo.php but this page can also be accessed without
 // photo.php as proxy.
 if (! isset($page['image'])) {
-    $page['image'] = get_image_infos($_GET['image_id'], true);
+    $page['image'] = get_image_infos($image_id, true);
 }
 
 // represent
 $query = '
 SELECT id
   FROM ' . CATEGORIES_TABLE . '
-  WHERE representative_picture_id = ' . $_GET['image_id'] . '
+  WHERE representative_picture_id = ' . $image_id . '
 ;';
-$represented_albums = query2array($query, null, 'id');
+$represented_albums_raw = query2array($query, null, 'id');
+$represented_albums = [];
+foreach ($represented_albums_raw as $represented_album_value) {
+    if (is_numeric($represented_album_value)) {
+        $represented_albums[] = (int) $represented_album_value;
+    }
+}
 
 // +-----------------------------------------------------------------------+
 // |                             delete photo                              |
@@ -50,7 +64,7 @@ $represented_albums = query2array($query, null, 'id');
 if (isset($_GET['delete'])) {
     check_pwg_token();
 
-    delete_elements([$_GET['image_id']], true);
+    delete_elements([$image_id], true);
     invalidate_user_cache();
 
     // where to redirect the user now?
@@ -59,7 +73,7 @@ if (isset($_GET['delete'])) {
     // 2. else use the first reachable linked category
     // 3. redirect to gallery root
 
-    if ($custom_context = get_edit_context($_GET['image_id'])) {
+    if ($custom_context = get_edit_context($image_id)) {
         // considering we have a context available, we fake one to build the url
         // and we replace it with the context found in the session for this image_id
         redirect(str_replace('list/1,2', $custom_context, make_index_url([
@@ -75,7 +89,7 @@ if (isset($_GET['delete'])) {
 // +-----------------------------------------------------------------------+
 
 if (isset($_GET['sync_metadata'])) {
-    sync_metadata([intval($_GET['image_id'])]);
+    sync_metadata([$image_id]);
     $page['infos'][] = l10n('Metadata synchronized from file');
 }
 
@@ -84,12 +98,14 @@ if (isset($_POST['submit'])) {
     check_pwg_token();
 
     $data = [];
-    $data['id'] = $_GET['image_id'];
+    $data['id'] = $image_id;
     $data['level'] = $_POST['level'];
 
     $to_sanitize_fields = ['name', 'author', 'comment'];
     foreach ($to_sanitize_fields as $field) {
-        $data[$field] = $conf['allow_html_descriptions'] ? @$_POST[$field] : strip_tags((string) @$_POST[$field]);
+        $raw_field_value = $_POST[$field] ?? null;
+        $field_value = is_scalar($raw_field_value) ? (string) $raw_field_value : '';
+        $data[$field] = $conf['allow_html_descriptions'] ? $field_value : strip_tags($field_value);
     }
 
     if (! empty($_POST['date_creation'])) {
@@ -98,29 +114,52 @@ if (isset($_POST['submit'])) {
         $data['date_creation'] = null;
     }
 
+    $pre_hook_data = $data;
     $data = trigger_change('picture_modify_before_update', $data);
+    if (! is_array($data)) {
+        // 'picture_modify_before_update' handlers are documented to filter
+        // the array<string, mixed> $data they receive and return the same
+        // shape, but trigger_change()'s own return type is mixed (a handler
+        // could misbehave) -- fall back to the pre-hook data rather than
+        // silently dropping the admin's edit.
+        $data = $pre_hook_data;
+    }
 
     single_update(
         IMAGES_TABLE,
         $data,
         [
-            'id' => $data['id'],
+            'id' => $image_id,
         ]
     );
 
     // time to deal with tags
     $tag_ids = [];
-    if (! empty($_POST['tags'])) {
-        $tag_ids = get_tag_ids($_POST['tags']);
+    $raw_tags_post = $_POST['tags'] ?? null;
+    if (! empty($raw_tags_post)) {
+        if (is_array($raw_tags_post)) {
+            $tag_ids = get_tag_ids(array_filter($raw_tags_post, 'is_string'));
+        } elseif (is_string($raw_tags_post)) {
+            $tag_ids = get_tag_ids($raw_tags_post);
+        }
     }
-    set_tags($tag_ids, $_GET['image_id']);
+    set_tags($tag_ids, $image_id);
 
     // association to albums
     if (! isset($_POST['associate'])) {
         $_POST['associate'] = [];
     }
     check_input_parameter('associate', $_POST, true, PATTERN_ID);
-    move_images_to_categories([$_GET['image_id']], $_POST['associate']);
+
+    $associate_categories = [];
+    if (is_array($_POST['associate'])) {
+        foreach ($_POST['associate'] as $associate_value) {
+            if (is_numeric($associate_value)) {
+                $associate_categories[] = (int) $associate_value;
+            }
+        }
+    }
+    move_images_to_categories([$image_id], $associate_categories);
 
     invalidate_user_cache();
 
@@ -130,22 +169,31 @@ if (isset($_POST['submit'])) {
     }
     check_input_parameter('represent', $_POST, true, PATTERN_ID);
 
-    $no_longer_thumbnail_for = array_diff($represented_albums, $_POST['represent']);
+    $represent_categories = [];
+    if (is_array($_POST['represent'])) {
+        foreach ($_POST['represent'] as $represent_value) {
+            if (is_numeric($represent_value)) {
+                $represent_categories[] = (int) $represent_value;
+            }
+        }
+    }
+
+    $no_longer_thumbnail_for = array_diff($represented_albums, $represent_categories);
     if (count($no_longer_thumbnail_for) > 0) {
         set_random_representant($no_longer_thumbnail_for);
     }
 
-    $new_thumbnail_for = array_diff($_POST['represent'], $represented_albums);
+    $new_thumbnail_for = array_diff($represent_categories, $represented_albums);
     if (count($new_thumbnail_for) > 0) {
         $query = '
 UPDATE ' . CATEGORIES_TABLE . '
-  SET representative_picture_id = ' . $_GET['image_id'] . '
+  SET representative_picture_id = ' . $image_id . '
   WHERE id IN (' . implode(',', $new_thumbnail_for) . ')
 ;';
         pwg_query($query);
     }
 
-    $represented_albums = $_POST['represent'];
+    $represented_albums = $represent_categories;
 
     $template->assign(
         [
@@ -153,10 +201,10 @@ UPDATE ' . CATEGORIES_TABLE . '
         ]
     );
 
-    pwg_activity('photo', $_GET['image_id'], 'edit');
+    pwg_activity('photo', $image_id, 'edit');
 
     // refresh page cache
-    $page['image'] = get_image_infos($_GET['image_id'], true);
+    $page['image'] = get_image_infos($image_id, true);
 }
 
 // tags
@@ -166,7 +214,7 @@ SELECT
     name
   FROM ' . IMAGE_TAG_TABLE . ' AS it
     JOIN ' . TAGS_TABLE . ' AS t ON t.id = it.tag_id
-  WHERE image_id = ' . $_GET['image_id'] . '
+  WHERE image_id = ' . $image_id . '
 ;';
 $tag_selection = get_taglist($query);
 
@@ -202,22 +250,33 @@ if (in_array($row['rotation'], [1, 3])) {
     [$row['width'], $row['height']] = [$row['height'], $row['width']];
 }
 
+// $_POST['name']/['author']/['comment'] are mixed (raw superglobal reads);
+// re-derive real strings here, falling back to the stored row value when the
+// field wasn't (validly) resubmitted.
+$post_name = $_POST['name'] ?? null;
+$name_value = is_string($post_name) ? stripslashes($post_name) : (is_string($row['name'] ?? null) ? $row['name'] : '');
+
+$post_author = $_POST['author'] ?? null;
+$author_value = is_string($post_author) ? stripslashes($post_author) : (is_string($row['author'] ?? null) && $row['author'] !== '' ? $row['author'] : '');
+
+$post_comment = $_POST['comment'] ?? null;
+$comment_value = is_string($post_comment) ? stripslashes($post_comment) : (is_string($row['comment'] ?? null) && $row['comment'] !== '' ? $row['comment'] : '');
+
 $template->assign(
     [
         'tag_selection' => $tag_selection,
-        'U_DOWNLOAD' => 'action.php?id=' . $_GET['image_id'] . '&amp;part=e&amp;pwg_token=' . get_pwg_token() . '&amp;download',
+        'U_DOWNLOAD' => 'action.php?id=' . $image_id . '&amp;part=e&amp;pwg_token=' . get_pwg_token() . '&amp;download',
         'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1',
         'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . get_pwg_token(),
-        'U_HISTORY' => get_root_url() . 'admin.php?page=history&amp;filter_image_id=' . $_GET['image_id'],
-        'U_ACTIVITY' => get_root_url() . 'admin.php?page=user_activity&photo=' . $_GET['image_id'],
+        'U_HISTORY' => get_root_url() . 'admin.php?page=history&amp;filter_image_id=' . $image_id,
+        'U_ACTIVITY' => get_root_url() . 'admin.php?page=user_activity&photo=' . $image_id,
 
         'PATH' => $row['path'],
 
         'TN_SRC' => DerivativeImage::url(IMG_MEDIUM, $src_image),
         'FILE_SRC' => DerivativeImage::url(IMG_LARGE, $src_image),
 
-        'NAME' => isset($_POST['name']) ?
-            stripslashes((string) $_POST['name']) : @$row['name'],
+        'NAME' => $name_value,
 
         'TITLE' => render_element_name($row),
 
@@ -229,16 +288,11 @@ $template->assign(
 
         'REGISTRATION_DATE' => format_date($row['date_available']),
 
-        'AUTHOR' => htmlspecialchars(
-            (string) isset($_POST['author'])
-            ? stripslashes((string) $_POST['author'])
-            : (empty($row['author']) ? '' : $row['author'])
-        ),
+        'AUTHOR' => htmlspecialchars($author_value),
 
         'DATE_CREATION' => $row['date_creation'],
 
-        'DESCRIPTION' => htmlspecialchars((string) isset($_POST['comment']) ?
-            stripslashes((string) $_POST['comment']) : (empty($row['comment']) ? '' : $row['comment'])),
+        'DESCRIPTION' => htmlspecialchars($comment_value),
 
         'F_ACTION' => get_root_url() . 'admin.php'
             . get_query_string_diff(['sync_metadata']),
@@ -275,7 +329,7 @@ if ($conf['rate'] and ! empty($row['rating_score'])) {
 SELECT
     COUNT(*)
   FROM ' . RATE_TABLE . '
-  WHERE element_id = ' . $_GET['image_id'] . '
+  WHERE element_id = ' . $image_id . '
 ;';
     $rate_row = pwg_db_fetch_row(pwg_query($query));
     assert($rate_row !== null);
@@ -295,7 +349,8 @@ if (! empty($formats)) {
     $format_strings = [];
 
     foreach ($formats as $format) {
-        $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], $format['filesize'] / 1024);
+        $format_filesize = is_numeric($format['filesize']) ? (float) $format['filesize'] : 0.0;
+        $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], $format_filesize / 1024);
     }
 
     $intro_vars['formats'] = l10n('Formats: %s', implode(', ', $format_strings));
@@ -304,7 +359,7 @@ if (! empty($formats)) {
 $template->assign('INTRO', $intro_vars);
 
 if (in_array(get_extension($row['path']), $conf['picture_ext'])) {
-    $template->assign('U_COI', get_root_url() . 'admin.php?page=picture_coi&amp;image_id=' . $_GET['image_id']);
+    $template->assign('U_COI', get_root_url() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id);
 }
 
 // image level options
@@ -322,7 +377,7 @@ SELECT category_id, uppercats, dir
   FROM ' . IMAGE_CATEGORY_TABLE . ' AS ic
     INNER JOIN ' . CATEGORIES_TABLE . ' AS c
       ON c.id = ic.category_id
-  WHERE image_id = ' . $_GET['image_id'] . '
+  WHERE image_id = ' . $image_id . '
 ;';
 $result = pwg_query($query);
 
@@ -330,21 +385,24 @@ $related_categories = [];
 $related_categories_ids = [];
 
 while ($row = pwg_db_fetch_assoc($result)) {
+    $row_category_id = is_string($row['category_id']) ? $row['category_id'] : '';
+    $row_uppercats = is_string($row['uppercats']) ? $row['uppercats'] : '';
+
     $name =
       get_cat_display_name_cache(
-          $row['uppercats'],
+          $row_uppercats,
           get_root_url() . 'admin.php?page=album-'
       );
 
-    if ($row['category_id'] == $storage_category_id) {
+    if ($row_category_id == $storage_category_id) {
         $template->assign('STORAGE_CATEGORY', $name);
     }
 
-    $related_categories[$row['category_id']] = [
+    $related_categories[$row_category_id] = [
         'name' => $name,
-        'unlinkable' => $row['category_id'] != $storage_category_id,
+        'unlinkable' => $row_category_id != $storage_category_id,
     ];
-    $related_categories_ids[] = $row['category_id'];
+    $related_categories_ids[] = $row_category_id;
 }
 
 $template->assign('related_categories', $related_categories);
@@ -356,19 +414,24 @@ $template->assign('related_categories_ids', $related_categories_ids);
 // 2. else if user level is higher than image level, randomly find an authorized category
 // 3. else no jumpto link
 
-if ($custom_context = get_edit_context($_GET['image_id'])) {
+if ($custom_context = get_edit_context($image_id)) {
     $template->assign('U_JUMPTO', make_picture_url([
-        'image_id' => $_GET['image_id'],
+        'image_id' => $image_id,
     ]) . '/' . $custom_context);
 } elseif ($user['level'] >= $page['image']['level']) {
     $query = '
 SELECT category_id
   FROM ' . IMAGE_CATEGORY_TABLE . '
-  WHERE image_id = ' . $_GET['image_id'] . '
+  WHERE image_id = ' . $image_id . '
 ;';
 
+    // array_from_query() is deprecated and returns array<int|string, mixed>;
+    // query2array() is its typed replacement, giving list<string|null> here
+    // since only the 'category_id' column is selected.
+    $authorized_category_ids = array_filter(query2array($query, null, 'category_id'), 'is_string');
+
     $authorizeds = array_diff(
-        array_from_query($query, 'category_id'),
+        $authorized_category_ids,
         explode(
             ',',
             calculate_permissions($user['id'], $user['status'])
@@ -381,7 +444,7 @@ SELECT category_id
 
         $url_img = make_picture_url(
             [
-                'image_id' => $_GET['image_id'],
+                'image_id' => $image_id,
                 'image_file' => $image_file,
                 'category' => $cache['cat_names'][$category],
             ]
@@ -396,7 +459,7 @@ $query = '
 SELECT id
   FROM ' . CATEGORIES_TABLE . '
     INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id = category_id
-  WHERE image_id = ' . $_GET['image_id'] . '
+  WHERE image_id = ' . $image_id . '
 ;';
 $associated_albums = query2array($query, null, 'id');
 

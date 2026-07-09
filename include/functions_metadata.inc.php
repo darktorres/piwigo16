@@ -77,7 +77,10 @@ function clean_iptc_value($value)
     if (preg_match('/[\x80-\xff]/', $value)) {
         // apparently mac uses some MacRoman crap encoding. I don't know
         // how to detect it so a plugin should do the trick.
-        $value = trigger_change('clean_iptc_value', $value);
+        $changed_value = trigger_change('clean_iptc_value', $value);
+        if (is_string($changed_value)) {
+            $value = $changed_value;
+        }
         if (($qual = qualify_utf8($value)) != 0) {// has non ascii chars
             if ($qual > 0) {
                 $input_encoding = 'utf-8';
@@ -93,7 +96,14 @@ function clean_iptc_value($value)
                 }
             }
 
-            $value = convert_charset($value, $input_encoding, get_pwg_charset());
+            $converted_value = convert_charset($value, $input_encoding, get_pwg_charset());
+            // convert_charset() can fail (iconv()/mb_convert_encoding()
+            // returning false on malformed input); keep the unconverted
+            // value rather than propagating false to callers that always
+            // expect a string (e.g. strip_tags()).
+            if (is_string($converted_value)) {
+                $value = $converted_value;
+            }
         }
     }
     return $value;
@@ -124,6 +134,10 @@ function get_exif_data($filename, $map): array
             $exif = trigger_change('format_exif_data', $exif, $filename, $map);
         }
 
+        if (! is_array($exif)) {
+            $exif = [];
+        }
+
         // configured fields
         foreach ($map as $key => $field) {
             if (! str_contains((string) $field, ';')) {
@@ -132,8 +146,9 @@ function get_exif_data($filename, $map): array
                 }
             } else {
                 $tokens = explode(';', (string) $field);
-                if (isset($exif[$tokens[0]][$tokens[1]])) {
-                    $result[$key] = $exif[$tokens[0]][$tokens[1]];
+                $sub_value = $exif[$tokens[0]] ?? null;
+                if (is_array($sub_value) && isset($sub_value[$tokens[1]])) {
+                    $result[$key] = $sub_value[$tokens[1]];
                 }
             }
         }
@@ -141,12 +156,20 @@ function get_exif_data($filename, $map): array
         // GPS data
         $gps_exif = array_intersect_key($exif, array_flip(['GPSLatitudeRef', 'GPSLatitude', 'GPSLongitudeRef', 'GPSLongitude']));
         if (count($gps_exif) == 4) {
+            $lat_raw = $gps_exif['GPSLatitude'];
+            $lat_ref = $gps_exif['GPSLatitudeRef'];
+            $lon_raw = $gps_exif['GPSLongitude'];
+            $lon_ref = $gps_exif['GPSLongitudeRef'];
+
             if (
-                is_array($gps_exif['GPSLatitude']) and in_array($gps_exif['GPSLatitudeRef'], ['S', 'N']) and
-                is_array($gps_exif['GPSLongitude']) and in_array($gps_exif['GPSLongitudeRef'], ['W', 'E'])
+                is_array($lat_raw) and is_string($lat_ref) and in_array($lat_ref, ['S', 'N']) and
+                is_array($lon_raw) and is_string($lon_ref) and in_array($lon_ref, ['W', 'E'])
             ) {
-                $latitude = parse_exif_gps_data($gps_exif['GPSLatitude'], $gps_exif['GPSLatitudeRef']);
-                $longitude = parse_exif_gps_data($gps_exif['GPSLongitude'], $gps_exif['GPSLongitudeRef']);
+                $lat_raw = array_filter($lat_raw, 'is_string');
+                $lon_raw = array_filter($lon_raw, 'is_string');
+
+                $latitude = parse_exif_gps_data($lat_raw, $lat_ref);
+                $longitude = parse_exif_gps_data($lon_raw, $lon_ref);
 
                 if ($latitude >= -90.0 && $latitude <= 90.0 && $longitude >= -180.0 && $longitude <= 180.0) {
                     $result['latitude'] = $latitude;
@@ -165,7 +188,7 @@ function get_exif_data($filename, $map): array
             if (is_array($value)) {
                 array_walk_recursive($value, strip_html_in_metadata(...));
             } else {
-                $result[$key] = strip_tags((string) $value);
+                $result[$key] = strip_tags(is_scalar($value) ? (string) $value : '');
             }
         }
     }
@@ -175,7 +198,7 @@ function get_exif_data($filename, $map): array
 
 function strip_html_in_metadata(mixed &$v, int|string $k): void
 {
-    $v = strip_tags((string) $v);
+    $v = strip_tags(is_scalar($v) ? (string) $v : '');
 }
 
 /**

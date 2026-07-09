@@ -79,8 +79,13 @@ final class WsUploadTest extends ContractTestCase
         self::assertSame('ok', $response['stat'], 'addSimple failed: ' . $body);
 
         self::assertMatchesSchema('pwg.images.addSimple', $response);
-        self::assertGreaterThan(0, (int) $response['result']['image_id']);
 
-        $this->uploadedImageId = (int) $response['result']['image_id'];
+        $result = $response['result'] ?? null;
+        self::assertIsArray($result, 'addSimple result is not an array: ' . $body);
+        $imageId = $result['image_id'] ?? null;
+        self::assertIsNumeric($imageId, 'addSimple result.image_id is not numeric: ' . $body);
+        self::assertGreaterThan(0, (int) $imageId);
+
+        $this->uploadedImageId = (int) $imageId;
     }
 }

@@ -22,7 +22,12 @@ $my_base_url = get_root_url() . 'admin.php?page=languages';
 
 if (isset($_GET['tab'])) {
     check_input_parameter('tab', $_GET, false, '/^(installed|update|new)$/');
-    $page['tab'] = $_GET['tab'];
+    // check_input_parameter() validates the raw value against the pattern
+    // above (fatal_error()-ing on anything else) but does not narrow its
+    // type for static analysis -- $_GET values are string|array<mixed> at
+    // best, so re-check it is a string before trusting it as the tab name.
+    $tab = $_GET['tab'];
+    $page['tab'] = is_string($tab) ? $tab : 'installed';
 } else {
     $page['tab'] = 'installed';
 }

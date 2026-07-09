@@ -37,11 +37,37 @@ function get_watermark_filename(array $list, string $candidate, int $step = 0): 
 }
 
 $errors = [];
-$pwatermark = $_POST['w'];
+$pwatermark_post = $_POST['w'] ?? null;
+
+// The form posts a flat array w[key]=value (see configuration_watermark.tpl)
+// where every leaf arrives as a plain string; normalize into a concrete
+// shape so the rest of this file can rely on real types instead of
+// bare-casting raw superglobal data at each point of use.
+/** @var array<string, string> $pwatermark */
+$pwatermark = [];
+if (is_array($pwatermark_post)) {
+    foreach ($pwatermark_post as $pkey => $pvalue) {
+        if (is_string($pkey) && is_string($pvalue)) {
+            $pwatermark[$pkey] = $pvalue;
+        }
+    }
+}
 
 // step 0 - manage upload if any
-if (isset($_FILES['watermarkImage']) and ! empty($_FILES['watermarkImage']['tmp_name'])) {
-    $image_size = getimagesize($_FILES['watermarkImage']['tmp_name']);
+$watermark_upload = $_FILES['watermarkImage'] ?? null;
+$watermark_tmp_name = null;
+$watermark_upload_name = null;
+if (is_array($watermark_upload)) {
+    if (isset($watermark_upload['tmp_name']) && is_string($watermark_upload['tmp_name'])) {
+        $watermark_tmp_name = $watermark_upload['tmp_name'];
+    }
+    if (isset($watermark_upload['name']) && is_string($watermark_upload['name'])) {
+        $watermark_upload_name = $watermark_upload['name'];
+    }
+}
+
+if (! empty($watermark_tmp_name)) {
+    $image_size = getimagesize($watermark_tmp_name);
     $type = $image_size === false ? false : $image_size[2];
     if ($type != IMAGETYPE_PNG) {
         $errors['watermarkImage'] = sprintf(
@@ -52,7 +78,7 @@ if (isset($_FILES['watermarkImage']) and ! empty($_FILES['watermarkImage']['tmp_
         $upload_dir = PHPWG_ROOT_PATH . PWG_LOCAL_DIR . 'watermarks';
         if (mkgetdir($upload_dir, MKGETDIR_DEFAULT & ~MKGETDIR_DIE_ON_ERROR)) {
             // file name may include exotic chars like single quote, we need a safe name
-            $new_name = str2url(get_filename_wo_extension($_FILES['watermarkImage']['name']));
+            $new_name = str2url(get_filename_wo_extension($watermark_upload_name ?? ''));
 
             // we need existing watermarks to avoid overwritting one
             $watermark_files = [];
@@ -66,7 +92,7 @@ if (isset($_FILES['watermarkImage']) and ! empty($_FILES['watermarkImage']['tmp_
 
             $file_path = $upload_dir . '/' . get_watermark_filename($watermark_files, $new_name);
 
-            if (move_uploaded_file($_FILES['watermarkImage']['tmp_name'], $file_path)) {
+            if (move_uploaded_file($watermark_tmp_name, $file_path)) {
                 $pwatermark['file'] = substr($file_path, strlen(PHPWG_ROOT_PATH));
             } else {
                 $page['errors'][] = $errors['watermarkImage'] = "{$file_path} " . l10n('no write access');
@@ -78,35 +104,39 @@ if (isset($_FILES['watermarkImage']) and ! empty($_FILES['watermarkImage']['tmp_
 }
 
 // step 1 - sanitize HTML input
+// $pwatermark is declared array<string, string> above; assign string
+// literals here (not int) so that promise holds for every key, not just
+// the ones read via intval() below -- an int write here would otherwise
+// widen PHPStan's inferred value type for the whole array to int|string.
 switch ($pwatermark['position']) {
     case 'topleft':
 
-        $pwatermark['xpos'] = 0;
-        $pwatermark['ypos'] = 0;
+        $pwatermark['xpos'] = '0';
+        $pwatermark['ypos'] = '0';
         break;
 
     case 'topright':
 
-        $pwatermark['xpos'] = 100;
-        $pwatermark['ypos'] = 0;
+        $pwatermark['xpos'] = '100';
+        $pwatermark['ypos'] = '0';
         break;
 
     case 'middle':
 
-        $pwatermark['xpos'] = 50;
-        $pwatermark['ypos'] = 50;
+        $pwatermark['xpos'] = '50';
+        $pwatermark['ypos'] = '50';
         break;
 
     case 'bottomleft':
 
-        $pwatermark['xpos'] = 0;
-        $pwatermark['ypos'] = 100;
+        $pwatermark['xpos'] = '0';
+        $pwatermark['ypos'] = '100';
         break;
 
     case 'bottomright':
 
-        $pwatermark['xpos'] = 100;
-        $pwatermark['ypos'] = 100;
+        $pwatermark['xpos'] = '100';
+        $pwatermark['ypos'] = '100';
         break;
 
 }

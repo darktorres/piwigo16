@@ -43,12 +43,16 @@ final class WsApiKeyTest extends ContractTestCase
         ]);
 
         self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
         // create returns the raw key record; the plaintext secret is in apikey_secret,
         // and the key identifier (used as pkid in other calls) is in auth_key.
-        self::assertArrayHasKey('apikey_secret', $response['result']);
-        self::assertArrayHasKey('auth_key', $response['result']);
+        self::assertArrayHasKey('apikey_secret', $result);
+        self::assertArrayHasKey('auth_key', $result);
 
-        $this->pkid = $response['result']['auth_key'];
+        $authKey = $result['auth_key'];
+        self::assertIsString($authKey);
+        $this->pkid = $authKey;
     }
 
     public function test_get_returns_api_key_list(): void
@@ -59,7 +63,11 @@ final class WsApiKeyTest extends ContractTestCase
             'duration'  => 1,
             'pwg_token' => $token,
         ]);
-        $this->pkid = $create['result']['auth_key'];
+        $createResult = $create['result'];
+        self::assertIsArray($createResult);
+        $authKey = $createResult['auth_key'];
+        self::assertIsString($authKey);
+        $this->pkid = $authKey;
 
         $response = $this->callWs('pwg.users.api_key.get', [
             'pwg_token' => $token,
@@ -77,7 +85,11 @@ final class WsApiKeyTest extends ContractTestCase
             'duration'  => 1,
             'pwg_token' => $token,
         ]);
-        $this->pkid = $create['result']['auth_key'];
+        $createResult = $create['result'];
+        self::assertIsArray($createResult);
+        $authKey = $createResult['auth_key'];
+        self::assertIsString($authKey);
+        $this->pkid = $authKey;
 
         $response = $this->callWs('pwg.users.api_key.edit', [
             'pkid'      => $this->pkid,
@@ -97,7 +109,10 @@ final class WsApiKeyTest extends ContractTestCase
             'duration'  => 1,
             'pwg_token' => $token,
         ]);
-        $pkid = $create['result']['auth_key'];
+        $createResult = $create['result'];
+        self::assertIsArray($createResult);
+        $pkid = $createResult['auth_key'];
+        self::assertIsString($pkid);
 
         $response = $this->callWs('pwg.users.api_key.revoke', [
             'pkid'      => $pkid,

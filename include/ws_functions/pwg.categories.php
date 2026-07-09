@@ -12,12 +12,12 @@ declare(strict_types=1);
 /**
  * API method
  * Returns images per category
- * @param mixed[] $params
- *    @option int[] cat_id (optional)
- *    @option bool recursive
- *    @option int per_page
- *    @option int page
- *    @option string order (optional)
+ *
+ * @param array{cat_id: array<int, int>, recursive: bool, per_page: int, page: int, order: string|null, f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
+ *   cat_id: WS_PARAM_FORCE_ARRAY|WS_TYPE_INT|WS_TYPE_POSITIVE, null default
+ *   -- makeArrayParam() converts the null default to [], always a list of
+ *   positive ints. f_* keys: the shared $f_params block merged into this
+ *   registration, see ws_std_image_sql_filter()/ws_std_image_sql_order().
  * @return \PwgError|array{paging: PwgNamedStruct, images: PwgNamedArray}
  */
 function ws_categories_getImages(array $params, PwgServer &$service): \PwgError|array
@@ -115,6 +115,9 @@ SELECT SQL_CALC_FOUND_ROWS i.*
         $result = pwg_query($query);
 
         while ($row = pwg_db_fetch_assoc($result)) {
+            // id is images.id, a NOT NULL primary key -- verified against
+            // install/piwigo_structure-mysql.sql.
+            assert(is_string($row['id']));
             $image_ids[] = $row['id'];
 
             $image = [];
@@ -128,7 +131,8 @@ SELECT SQL_CALC_FOUND_ROWS i.*
                 $image[$k] = $row[$k];
             }
 
-            $image['name'] = strip_tags(trigger_change('render_element_name', $image['name'], __FUNCTION__) ?? '');
+            $rendered_name = trigger_change('render_element_name', $image['name'], __FUNCTION__);
+            $image['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
             $image['comment'] = trigger_change('render_element_description', $image['comment'], __FUNCTION__);
 
             $image = array_merge($image, ws_std_get_urls($row));
@@ -159,7 +163,9 @@ SELECT
             $result = pwg_query($query);
             while ($row = pwg_db_fetch_assoc($result)) {
                 $category_ids[] = $row['category_id'];
-                @$categories_of_image[$row['image_id']][] = $row['category_id'];
+                // image_id/category_id are NOT NULL columns of image_category
+                // -- verified against install/piwigo_structure-mysql.sql.
+                $categories_of_image[(int) $row['image_id']][] = (int) $row['category_id'];
             }
 
             $details_for_category = [];
@@ -179,12 +185,17 @@ SELECT
             foreach ($images as $idx => $image) {
                 $image_cats = [];
 
-                // it should not be possible at this point, but let's consider a photo can be in no album
-                if (! isset($categories_of_image[$image['id']])) {
+                $image_id = $image['id'];
+                if (! is_int($image_id)) {
                     continue;
                 }
 
-                foreach ($categories_of_image[$image['id']] as $cat_id) {
+                // it should not be possible at this point, but let's consider a photo can be in no album
+                if (! isset($categories_of_image[$image_id])) {
+                    continue;
+                }
+
+                foreach ($categories_of_image[$image_id] as $cat_id) {
                     $url = make_index_url([
                         'category' => $details_for_category[$cat_id],
                     ]);
@@ -192,7 +203,7 @@ SELECT
                     $page_url = make_picture_url(
                         [
                             'category' => $details_for_category[$cat_id],
-                            'image_id' => $image['id'],
+                            'image_id' => $image_id,
                             'image_file' => $image['file'],
                         ]
                     );
@@ -233,12 +244,13 @@ SELECT
 /**
  * API method
  * Returns a list of categories
- * @param mixed[] $params
- *    @option int cat_id (optional)
- *    @option bool recursive
- *    @option bool public
- *    @option bool tree_output
- *    @option bool fullname
+ *
+ * @param array{cat_id: int|null, recursive: bool, public: bool, tree_output: bool, fullname: bool, thumbnail_size: string, search: string|null, limit: int|null, ...} $params
+ *   all keys have a 'default' key in ws.php's registration, so all are
+ *   always present (never absent), and cat_id/search/limit's null default
+ *   is a real possible runtime value since they have no non-null-forcing
+ *   type flag beyond INT|POSITIVE (which still allows the null default
+ *   through unchanged).
  * @return \PwgError|array<int|string, mixed>
  */
 function ws_categories_getList(array $params, PwgServer &$service): \PwgError|array
@@ -323,6 +335,7 @@ SELECT SQL_CALC_FOUND_ROWS
         $row = pwg_db_fetch_row(pwg_query('SELECT FOUND_ROWS()'));
         assert($row !== null);
         [$result_count] = $row;
+        $result_count = is_numeric($result_count) ? (int) $result_count : 0;
         if ($params['cat_id'] > 0) {
             --$result_count;
         }
@@ -351,26 +364,29 @@ SELECT SQL_CALC_FOUND_ROWS
         }
 
         if ($params['fullname']) {
+            // uppercats is a NOT NULL column of the categories table --
+            // verified against install/piwigo_structure-mysql.sql.
+            assert(is_string($row['uppercats']));
             $row['name'] = strip_tags(get_cat_display_name_cache($row['uppercats'], null));
         } else {
             $row['name_raw'] = $row['name'];
 
-            $row['name'] = strip_tags(
-                (string) trigger_change(
-                    'render_category_name',
-                    $row['name'],
-                    'ws_categories_getList'
-                )
+            $rendered_name = trigger_change(
+                'render_category_name',
+                $row['name'],
+                'ws_categories_getList'
             );
+            $row['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
         }
 
         $row['comment_raw'] = $row['comment'];
 
-        $row['comment'] = (string) trigger_change(
+        $rendered_comment = trigger_change(
             'render_category_description',
             $row['comment'],
             'ws_categories_getList'
         );
+        $row['comment'] = is_string($rendered_comment) ? $rendered_comment : '';
 
         // management of the album thumbnail -- starts here
         //
@@ -452,7 +468,9 @@ SELECT id, path, representative_ext, level
 
         while ($row = pwg_db_fetch_assoc($result)) {
             if ($row['level'] <= $user['level']) {
-                $thumbnail_src_of[$row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
+                // id is images.id, a NOT NULL primary key -- verified
+                // against install/piwigo_structure-mysql.sql.
+                $thumbnail_src_of[(int) $row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
             } else {
                 // problem: we must not display the thumbnail of a photo which has a
                 // higher privacy level than user privacy level
@@ -470,7 +488,10 @@ SELECT id, path, representative_ext, level
                             $new_image_ids[] = $image_id;
                         }
                         if ($conf['representative_cache_on_level']) {
-                            $user_representative_updates_for[$category['id']] = $image_id;
+                            $category_id = $category['id'];
+                            if (is_numeric($category_id)) {
+                                $user_representative_updates_for[(int) $category_id] = $image_id;
+                            }
                         }
 
                         $category['representative_picture_id'] = $image_id;
@@ -489,7 +510,7 @@ SELECT id, path, representative_ext
             $result = pwg_query($query);
 
             while ($row = pwg_db_fetch_assoc($result)) {
-                $thumbnail_src_of[$row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
+                $thumbnail_src_of[(int) $row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
             }
         }
     }
@@ -520,8 +541,11 @@ SELECT id, path, representative_ext
 
     foreach ($cats as &$cat) {
         foreach ($categories as $category) {
-            if ($category['id'] == $cat['id'] and isset($category['representative_picture_id'])) {
-                $cat['tn_url'] = $thumbnail_src_of[$category['representative_picture_id']];
+            if ($category['id'] == $cat['id']
+              and isset($category['representative_picture_id'])
+              and is_numeric($category['representative_picture_id'])
+            ) {
+                $cat['tn_url'] = $thumbnail_src_of[(int) $category['representative_picture_id']] ?? null;
             }
         }
         // we don't want them in the output
@@ -546,10 +570,13 @@ SELECT id, path, representative_ext
 /**
  * API method
  * Returns the list of categories as you can see them in administration
- * @param mixed[] $params
  *
  * Only admin can run this method and permissions are not taken into
  * account.
+ *
+ * @param array{cat_id: int|null, search: string|null, recursive: bool, additional_output: string|null, ...} $params
+ *   all keys have a 'default' key in ws.php's registration, so all are
+ *   always present.
  * @return array<string, mixed>
  */
 function ws_categories_getAdminList(array $params, PwgServer &$service): array
@@ -607,9 +634,13 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
 
     $cats = [];
     while ($row = pwg_db_fetch_assoc($result)) {
+        // id/uppercats are NOT NULL columns of the categories table --
+        // verified against install/piwigo_structure-mysql.sql.
         $id = $row['id'];
+        assert(is_string($id));
         $row['nb_images'] = $nb_images_of[$id] ?? 0;
 
+        assert(is_string($row['uppercats']));
         $cat_display_name = get_cat_display_name_cache(
             $row['uppercats'],
             'admin.php?page=album-'
@@ -617,13 +648,12 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
 
         $row['name_raw'] = $row['name'];
 
-        $row['name'] = strip_tags(
-            (string) trigger_change(
-                'render_category_name',
-                $row['name'],
-                'ws_categories_getAdminList'
-            )
+        $rendered_name = trigger_change(
+            'render_category_name',
+            $row['name'],
+            'ws_categories_getAdminList'
         );
+        $row['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
         $row['fullname'] = strip_tags($cat_display_name);
 
         $row['comment_raw'] = $row['comment'];
@@ -648,6 +678,8 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
         $cats_ids = array_column($cats, 'id');
         $nb_subcats_of = [];
         if (! empty($cats_ids)) {
+            $cats_ids = array_map(strval(...), array_filter($cats_ids, 'is_scalar'));
+
             $query = '
 SELECT
     id_uppercat,
@@ -661,7 +693,8 @@ SELECT
         }
 
         foreach ($cats as $idx => $cat) {
-            $cats[$idx]['nb_categories'] = intval($nb_subcats_of[$cat['id']] ?? 0);
+            $cat_id = $cat['id'];
+            $cats[$idx]['nb_categories'] = is_numeric($cat_id) ? intval($nb_subcats_of[(int) $cat_id] ?? 0) : 0;
         }
     }
 
@@ -685,13 +718,11 @@ SELECT
 /**
  * API method
  * Adds a category
- * @param mixed[] $params
- *    @option string name
- *    @option int parent (optional)
- *    @option string comment (optional)
- *    @option bool visible
- *    @option string status (optional)
- *    @option bool commentable
+ *
+ * @param array{name: string, parent: int|null, comment: string|null, visible: bool, status: string|null, commentable: bool, position: string|null, pwg_token?: string, ...} $params
+ *   name: no 'default' key in ws.php's registration -- mandatory, always
+ *   present. pwg_token: WS_PARAM_OPTIONAL with no 'default' key -- may be
+ *   entirely absent.
  * @return \PwgError|array{info: string, id: int|string}
  */
 function ws_categories_add(array $params, PwgServer &$service): \PwgError|array
@@ -736,9 +767,11 @@ function ws_categories_add(array $params, PwgServer &$service): \PwgError|array
 /**
  * API method
  * Set the rank of a category
- * @param mixed[] $params
- *    @option int cat_id
- *    @option int rank
+ *
+ * @param array{category_id: array<int, int>, rank?: int, ...} $params
+ *   category_id: no 'default' key -- mandatory, always present; FORCE_ARRAY
+ *   always coerces to a list of positive ints. rank: WS_PARAM_OPTIONAL
+ *   (explicit flag) with no 'default' key -- may be entirely absent.
  */
 function ws_categories_setRank(array $params, PwgServer &$service): ?\PwgError
 {
@@ -790,7 +823,7 @@ SELECT id
         $was_inserted = false;
         $i = 1;
         foreach ($order_old as $category_id) {
-            if ($i == $params['rank']) {
+            if ($i == ($params['rank'] ?? null)) {
                 $order_new[] = $params['category_id'];
                 $was_inserted = true;
             }
@@ -812,14 +845,15 @@ SELECT id
 /**
  * API method
  * Sets details of a category
- * @param mixed[] $params
- *    @option int cat_id
- *    @option string name (optional)
- *    @option string status (optional)
- *    @option bool visible (optional)
- *    @option string comment (optional)
- *    @option bool commentable (optional)
- *    @option bool apply_commentable_to_subalbums (optional)
+ *
+ * @param array{category_id: int, name: string|null, comment: string|null, status: string|null, visible: string|null, commentable: string|null, apply_commentable_to_subalbums: string|null, pwg_token?: string, ...} $params
+ *   category_id: no 'default' key -- mandatory, always present, WS_TYPE_ID
+ *   guarantees a plain int. name/comment/status/visible/commentable/
+ *   apply_commentable_to_subalbums: none has a 'type' flag (visible and
+ *   commentable are validated by hand against /^(true|false)$/i below, not
+ *   coerced by WS_TYPE_BOOL) -- all have a null default so string|null,
+ *   always present. pwg_token: WS_PARAM_OPTIONAL with no 'default' key --
+ *   may be entirely absent.
  */
 function ws_categories_setInfo(array $params, PwgServer &$service): ?\PwgError
 {
@@ -910,9 +944,10 @@ UPDATE ' . CATEGORIES_TABLE . '
 /**
  * API method
  * Sets representative image of a category
- * @param mixed[] $params
- *    @option int category_id
- *    @option int image_id
+ *
+ * @param array{category_id: int, image_id: int, ...} $params neither has a
+ *   'default' key -- both mandatory, always present, WS_TYPE_ID guarantees
+ *   plain ints.
  */
 function ws_categories_setRepresentative(array $params, PwgServer &$service): ?\PwgError
 {
@@ -970,8 +1005,8 @@ UPDATE ' . USER_CACHE_CATEGORIES_TABLE . '
  * Deletes the album thumbnail. Only possible if
  * $conf['allow_random_representative'] or if the album has no direct photos.
  *
- * @param mixed[] $params
- *    @option int category_id
+ * @param array{category_id: int, ...} $params no 'default' key -- mandatory,
+ *   always present, WS_TYPE_ID guarantees a plain int.
  */
 function ws_categories_deleteRepresentative(array $params, PwgServer &$service): ?\PwgError
 {
@@ -1018,8 +1053,8 @@ UPDATE ' . CATEGORIES_TABLE . '
  *
  * Find a new album thumbnail.
  *
- * @param mixed[] $params
- *    @option int category_id
+ * @param array{category_id: int, ...} $params no 'default' key -- mandatory,
+ *   always present, WS_TYPE_ID guarantees a plain int.
  * @return \PwgError|array<string, mixed>
  */
 function ws_categories_refreshRepresentative(array $params, PwgServer &$service): \PwgError|array
@@ -1068,16 +1103,27 @@ SELECT *
     // in between could have deleted it
     assert(is_array($category));
 
-    return get_category_representant_properties($category['representative_picture_id'], IMG_SMALL);
+    // set_random_representant() is expected to have populated
+    // representative_picture_id above, but it's not a NOT NULL column, so
+    // guard for real instead of assuming the update landed.
+    $representative_picture_id = $category['representative_picture_id'];
+    if (! is_string($representative_picture_id)) {
+        return new PwgError(500, 'unable to determine a new representative picture for this category');
+    }
+
+    return get_category_representant_properties($representative_picture_id, IMG_SMALL);
 }
 
 /**
  * API method
  * Deletes a category
- * @param mixed[] $params
- *    @option string|int[] category_id
- *    @option string photo_deletion_mode
- *    @option string pwg_token
+ *
+ * @param array{category_id: string|array<array-key, string>, photo_deletion_mode: string, pwg_token: string, ...} $params
+ *   category_id: WS_PARAM_ACCEPT_ARRAY (not FORCE), no 'default' key --
+ *   mandatory, always present, accepts either a scalar or a bracket-array
+ *   caller value (never null, since mandatory). photo_deletion_mode: no
+ *   'type' flag, non-null default -- always a plain string. pwg_token: no
+ *   'default' key, no flags -- mandatory, always present, plain string.
  */
 function ws_categories_delete(array $params, PwgServer &$service): ?\PwgError
 {
@@ -1124,7 +1170,11 @@ SELECT id
   FROM ' . CATEGORIES_TABLE . '
   WHERE id IN (' . implode(',', $category_ids) . ')
 ;';
-    $category_ids = array_from_query($query, 'id');
+    // id is a NOT NULL primary key -- verified against
+    // install/piwigo_structure-mysql.sql. query2array() is used directly
+    // (rather than the deprecated array_from_query() wrapper) so the return
+    // type stays precise enough to narrow.
+    $category_ids = array_map(intval(...), array_filter(query2array($query, null, 'id'), 'is_numeric'));
 
     if (count($category_ids) == 0) {
         return null;
@@ -1141,11 +1191,14 @@ SELECT id
 /**
  * API method
  * Moves a category
- * @param mixed[] $params
- *    @option string|int[] category_id
- *    @option int parent
- *    @option string pwg_token
- * @return \PwgError|array{new_ariane_string: string, updated_cats: array<int, array{cat_id: mixed, nb_sub_photos: int}>}
+ *
+ * @param array{category_id: string|array<array-key, string>, parent: int, pwg_token: string, ...} $params
+ *   category_id: WS_PARAM_ACCEPT_ARRAY (not FORCE), no 'default' key --
+ *   mandatory, always present, accepts either a scalar or a bracket-array
+ *   caller value. parent: WS_TYPE_INT|WS_TYPE_POSITIVE, no 'default' key --
+ *   mandatory, always a plain int. pwg_token: no 'default' key, no flags --
+ *   mandatory, always present, plain string.
+ * @return \PwgError|array{new_ariane_string: string, updated_cats: array<int, array{cat_id: string, nb_sub_photos: int}>}
  */
 function ws_categories_move(array $params, PwgServer &$service): \PwgError|array
 {
@@ -1190,18 +1243,19 @@ SELECT id, name, dir, uppercats
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        $categories_in_db[$row['id']] = $row;
+        // id is a NOT NULL primary key -- verified against
+        // install/piwigo_structure-mysql.sql.
+        $categories_in_db[(int) $row['id']] = $row;
         $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', (string) $row['uppercats']), 0, -1));
 
         // we break on error at first physical category detected
         if (! empty($row['dir'])) {
-            $row['name'] = strip_tags(
-                (string) trigger_change(
-                    'render_category_name',
-                    $row['name'],
-                    'ws_categories_move'
-                )
+            $rendered_name = trigger_change(
+                'render_category_name',
+                $row['name'],
+                'ws_categories_move'
             );
+            $row['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
 
             return new PwgError(
                 403,
@@ -1262,11 +1316,14 @@ SELECT id, name, dir, uppercats
     $result = pwg_query($query);
     $cat_display_name = '';
     while ($row = pwg_db_fetch_assoc($result)) {
+        // uppercats is a NOT NULL column of the categories table --
+        // verified against install/piwigo_structure-mysql.sql.
+        assert(is_string($row['uppercats']));
         $cat_display_name = get_cat_display_name_cache(
             $row['uppercats'],
             'admin.php?page=album-'
         );
-        $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', (string) $row['uppercats']), 0, -1));
+        $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $row['uppercats']), 0, -1));
     }
 
     $query = '
@@ -1304,7 +1361,10 @@ SELECT
  * API method
  * Return the number of orphan photos if an album is deleted
  * @since 12
- * @param array<string, mixed> $param
+ *
+ * @param array{category_id: array<int, int>, ...} $param no 'default' key --
+ *   mandatory, always present, FORCE_ARRAY always coerces to a list of
+ *   positive ints.
  * @return array<int, array{nb_images_associated_outside: int, nb_images_becoming_orphan: int, nb_images_recursive: int}>
  */
 function ws_categories_calculateOrphans(array $param, PwgServer &$service): array
@@ -1372,7 +1432,9 @@ SELECT DISTINCT
         }
         // else it's better to avoid sending a huge SQL request, we compute the orphan list with PHP
         else {
-            $image_ids_recursive_keys = array_flip($image_ids_recursive);
+            // image_id is a NOT NULL column of image_category -- verified
+            // against install/piwigo_structure-mysql.sql.
+            $image_ids_recursive_keys = array_flip(array_filter($image_ids_recursive, 'is_string'));
 
             $query = '
   SELECT
@@ -1388,7 +1450,7 @@ SELECT DISTINCT
             $image_ids_not_orphan = [];
 
             foreach ($image_ids_associated_outside as $image_id) {
-                if (isset($image_ids_recursive_keys[$image_id])) {
+                if (is_string($image_id) && isset($image_ids_recursive_keys[$image_id])) {
                     $image_ids_not_orphan[] = $image_id;
                 }
             }

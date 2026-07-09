@@ -22,4 +22,7 @@ check_status(ACCESS_GUEST);
 //   redirect( make_index_url() );
 // }
 
-redirect(get_root_url() . 'search.php?q=' . $_GET['q']);
+$q = $_GET['q'] ?? '';
+$q = is_string($q) ? $q : '';
+
+redirect(get_root_url() . 'search.php?q=' . $q);

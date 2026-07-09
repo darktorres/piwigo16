@@ -653,7 +653,8 @@ class image_ext_imagick implements imageInterface
         global $conf;
         $this->imagickdir = $conf['ext_imagick_dir'];
 
-        if (str_starts_with((string) @$_SERVER['SCRIPT_FILENAME'], '/kunden/')) {  // 1and1
+        $script_filename = $_SERVER['SCRIPT_FILENAME'] ?? null;
+        if (is_string($script_filename) && str_starts_with($script_filename, '/kunden/')) {  // 1and1
             @putenv('MAGICK_THREAD_LIMIT=1');
         }
 

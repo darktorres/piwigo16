@@ -30,14 +30,21 @@ $debug = '';
 if (! function_exists('get_magic_quotes_gpc') or ! @get_magic_quotes_gpc()) {
     function sanitize_mysql_kv(mixed &$v, int|string $k): void
     {
-        $v = addslashes((string) $v);
+        // Leaf values recursed into by array_walk_recursive() from $_GET/
+        // $_POST/$_COOKIE are always strings in practice (HTTP request data
+        // never contains scalars other than strings; arrays are recursed
+        // into rather than passed to the callback), but the parameter is
+        // typed mixed so we narrow rather than force-cast it.
+        if (is_string($v)) {
+            $v = addslashes($v);
+        }
     }
     array_walk_recursive($_GET, sanitize_mysql_kv(...));
     array_walk_recursive($_POST, sanitize_mysql_kv(...));
     array_walk_recursive($_COOKIE, sanitize_mysql_kv(...));
 }
-if (! empty($_SERVER['PATH_INFO'])) {
-    $_SERVER['PATH_INFO'] = addslashes((string) $_SERVER['PATH_INFO']);
+if (! empty($_SERVER['PATH_INFO']) && is_string($_SERVER['PATH_INFO'])) {
+    $_SERVER['PATH_INFO'] = addslashes($_SERVER['PATH_INFO']);
 }
 
 //
@@ -75,10 +82,20 @@ if (! file_exists(PHPWG_ROOT_PATH . PWG_LOCAL_DIR . pwg_test_mode_installed_stam
 }
 defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);
 
-include PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $conf['dblayer'] . '.inc.php';
+// config_default.inc.php/pwg_apply_env_to_conf() always set $conf['dblayer']
+// to a string ('mysqli'), but pwg_apply_env_to_conf(array &$conf, ...)'s
+// generic `array` by-ref parameter erases per-key type info PHPStan had
+// built up for $conf, so we re-narrow at the point of use.
+$dblayer = $conf['dblayer'];
+if (! is_string($dblayer)) {
+    die("Invalid \$conf['dblayer'] configuration: expected a string.");
+}
+include PHPWG_ROOT_PATH . 'include/dblayer/functions_' . $dblayer . '.inc.php';
 
 if (isset($conf['show_php_errors']) && ! empty($conf['show_php_errors'])) {
-    @ini_set('error_reporting', $conf['show_php_errors']);
+    if (is_scalar($conf['show_php_errors'])) {
+        @ini_set('error_reporting', $conf['show_php_errors']);
+    }
     if ($conf['show_php_errors_on_frontend']) {
         // Route errors to DevTools (X-PHP-Error-N response headers) instead of
         // inline output, which corrupts JSON/XML/binary responses (see
@@ -90,7 +107,9 @@ if (isset($conf['show_php_errors']) && ! empty($conf['show_php_errors'])) {
 
 if ($conf['session_gc_probability'] > 0) {
     @ini_set('session.gc_divisor', 100);
-    @ini_set('session.gc_probability', min((int) $conf['session_gc_probability'], 100));
+    $gc_probability = $conf['session_gc_probability'];
+    $gc_probability = is_numeric($gc_probability) ? (int) $gc_probability : 1;
+    @ini_set('session.gc_probability', min($gc_probability, 100));
 }
 
 include PHPWG_ROOT_PATH . 'include/constants.php';
@@ -105,11 +124,18 @@ $persistent_cache = new PersistentFileCache();
 
 // Database connection
 try {
+    $db_host = $conf['db_host'];
+    $db_user = $conf['db_user'];
+    $db_password = $conf['db_password'];
+    $db_base = $conf['db_base'];
+    if (! is_string($db_host) || ! is_string($db_user) || ! is_string($db_password) || ! is_string($db_base)) {
+        throw new Exception("Invalid database configuration: \$conf['db_host'], 'db_user', 'db_password' and 'db_base' must be strings.");
+    }
     pwg_db_connect(
-        $conf['db_host'],
-        $conf['db_user'],
-        $conf['db_password'],
-        $conf['db_base']
+        $db_host,
+        $db_user,
+        $db_password,
+        $db_base
     );
 } catch (Exception $e) {
     my_error(l10n($e->getMessage()), true);
@@ -124,13 +150,23 @@ $conf['webmaster_id'] ??= 1;
 
 load_conf_from_db();
 
+// $conf['data_location']/'log_dir' lost their specific string types the same
+// way $conf['dblayer'] did above (see comment near the dblayer include); we
+// already validated 'db_password' is a string above ($db_password), so it is
+// reused here rather than re-narrowed.
+$log_data_location = $conf['data_location'];
+$log_dir = $conf['log_dir'];
+if (! is_string($log_data_location) || ! is_string($log_dir)) {
+    fatal_error("Invalid \$conf['data_location']/'log_dir' configuration: expected strings.");
+}
+
 $logger = new Logger([
-    'directory' => PHPWG_ROOT_PATH . $conf['data_location'] . $conf['log_dir'],
+    'directory' => PHPWG_ROOT_PATH . $log_data_location . $log_dir,
     'severity' => $conf['log_level'],
     // we use an hashed filename to prevent direct file access, and we salt with
     // the db_password instead of secret_key because the log must be usable in i.php
     // (secret_key is in the database)
-    'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $conf['db_password']) . '.txt',
+    'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $db_password) . '.txt',
     'globPattern' => 'log_*.txt',
     'archiveDays' => $conf['log_archive_days'],
 ]);
@@ -168,8 +204,9 @@ if (! isset($conf['last_major_update'])) {
 // 2022-02-25 due to escape on "rank" (becoming a mysql keyword in version 8), the $conf['order_by'] might
 // use a "rank", even if admin/configuration.php should have removed it. We must remove it.
 // TODO remove this data update as soon as 2025 arrives
-if (preg_match('/(, )?`rank` ASC/', (string) $conf['order_by'])) {
-    $order_by = preg_replace('/(, )?`rank` ASC/', '', (string) $conf['order_by']);
+$conf_order_by = $conf['order_by'];
+if (is_string($conf_order_by) && preg_match('/(, )?`rank` ASC/', $conf_order_by)) {
+    $order_by = preg_replace('/(, )?`rank` ASC/', '', $conf_order_by);
     if ($order_by == 'ORDER BY ') {
         $order_by = 'ORDER BY id ASC';
     }
@@ -257,10 +294,16 @@ if ($page['auth_key_invalid']) {
 
 // check if we need to notified user about api_key expiration
 if (is_array($page['notify_api_key_expiration'])) {
+    // auth_key_login() (include/functions_user.inc.php) always sets
+    // 'days_left' to intval($key['days_left']), i.e. an int, but $page is
+    // re-derived via get_defined_vars() after the include/user.inc.php
+    // include (see comment above), which erases that per-key type info.
+    $days_left = $page['notify_api_key_expiration']['days_left'] ?? null;
+    $days_left = is_int($days_left) ? $days_left : (is_numeric($days_left) ? (int) $days_left : 0);
     $is_mail_send = notification_api_key_expiration(
         $user['username'],
         $user['email'],
-        $page['notify_api_key_expiration']['days_left']
+        $days_left
     );
 
     if ($is_mail_send) {
@@ -281,7 +324,13 @@ if (is_array($page['notify_api_key_expiration'])) {
 
 // template instance
 if (defined('IN_ADMIN') and IN_ADMIN) {// Admin template
-    $template = new Template(PHPWG_ROOT_PATH . 'admin/themes', userprefs_get_param('admin_theme', 'clear'));
+    // userprefs_get_param() has no return type declaration (its own value
+    // comes from the equally-untyped global $user['preferences'][$param]),
+    // so its return is inferred as mixed; narrow to the same 'clear'
+    // fallback already passed as the default value.
+    $admin_theme = userprefs_get_param('admin_theme', 'clear');
+    $admin_theme = is_string($admin_theme) ? $admin_theme : 'clear';
+    $template = new Template(PHPWG_ROOT_PATH . 'admin/themes', $admin_theme);
 } else { // Classic template
     $theme = $user['theme'];
     if (script_basename() != 'ws' and mobile_theme()) {
@@ -330,7 +379,7 @@ if (! empty($conf['filter_pages']) and get_filter_page_value('used')) {
     $filter['enabled'] = false;
 }
 
-if (isset($conf['header_notes'])) {
+if (isset($conf['header_notes']) && is_array($conf['header_notes'])) {
     $header_notes = array_merge($header_notes, $conf['header_notes']);
 }
 

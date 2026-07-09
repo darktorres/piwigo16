@@ -12,10 +12,11 @@ declare(strict_types=1);
 /**
  * API method
  * Returns permissions
- * @param mixed[] $params
- *    @option int[] cat_id (optional)
- *    @option int[] group_id (optional)
- *    @option int[] user_id (optional)
+ *
+ * @param array{cat_id?: array<int, int>, group_id?: array<int, int>, user_id?: array<int, int>, ...} $params
+ *   all three keys: WS_PARAM_OPTIONAL with no 'default' key -- may be
+ *   entirely absent; FORCE_ARRAY always coerces to a list of positive
+ *   ints when present.
  * @return \PwgError|array{categories: PwgNamedArray}
  */
 function ws_permissions_getList(array $params, PwgServer &$service): \PwgError|array
@@ -41,10 +42,14 @@ SELECT user_id, cat_id
     $result = pwg_query($query);
 
     while ($row = pwg_db_fetch_assoc($result)) {
-        if (! isset($perms[$row['cat_id']])) {
-            $perms[$row['cat_id']]['id'] = intval($row['cat_id']);
+        if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
+            continue;
         }
-        $perms[$row['cat_id']]['users'][] = intval($row['user_id']);
+        $cat_id = (int) $row['cat_id'];
+        if (! isset($perms[$cat_id])) {
+            $perms[$cat_id]['id'] = $cat_id;
+        }
+        $perms[$cat_id]['users'][] = intval($row['user_id']);
     }
 
     // indirect users
@@ -58,10 +63,14 @@ SELECT ug.user_id, ga.cat_id
     $result = pwg_query($query);
 
     while ($row = pwg_db_fetch_assoc($result)) {
-        if (! isset($perms[$row['cat_id']])) {
-            $perms[$row['cat_id']]['id'] = intval($row['cat_id']);
+        if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
+            continue;
         }
-        $perms[$row['cat_id']]['users_indirect'][] = intval($row['user_id']);
+        $cat_id = (int) $row['cat_id'];
+        if (! isset($perms[$cat_id])) {
+            $perms[$cat_id]['id'] = $cat_id;
+        }
+        $perms[$cat_id]['users_indirect'][] = intval($row['user_id']);
     }
 
     // groups
@@ -73,10 +82,14 @@ SELECT group_id, cat_id
     $result = pwg_query($query);
 
     while ($row = pwg_db_fetch_assoc($result)) {
-        if (! isset($perms[$row['cat_id']])) {
-            $perms[$row['cat_id']]['id'] = intval($row['cat_id']);
+        if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
+            continue;
         }
-        $perms[$row['cat_id']]['groups'][] = intval($row['group_id']);
+        $cat_id = (int) $row['cat_id'];
+        if (! isset($perms[$cat_id])) {
+            $perms[$cat_id]['id'] = $cat_id;
+        }
+        $perms[$cat_id]['groups'][] = intval($row['group_id']);
     }
 
     // filter by group and user
@@ -115,11 +128,14 @@ SELECT group_id, cat_id
 /**
  * API method
  * Add permissions
- * @param mixed[] $params
- *    @option int[] cat_id
- *    @option int[] group_id (optional)
- *    @option int[] user_id (optional)
- *    @option bool recursive
+ *
+ * @param array{cat_id: array<int, int>, group_id?: array<int, int>, user_id?: array<int, int>, recursive: bool, pwg_token: string, ...} $params
+ *   cat_id: no 'default' key -- mandatory, always present, FORCE_ARRAY
+ *   always coerces to a list of positive ints. group_id/user_id:
+ *   WS_PARAM_OPTIONAL with no 'default' key -- may be entirely absent,
+ *   same FORCE_ARRAY coercion when present. recursive: non-null bool
+ *   default, WS_TYPE_BOOL -- always present. pwg_token: no 'default'
+ *   key -- mandatory, always present.
  * @return mixed \PwgError, or the result of the pwg.permissions.getList invocation
  */
 function ws_permissions_add(array $params, PwgServer &$service): mixed
@@ -179,10 +195,12 @@ SELECT id
 /**
  * API method
  * Removes permissions
- * @param mixed[] $params
- *    @option int[] cat_id
- *    @option int[] group_id (optional)
- *    @option int[] user_id (optional)
+ *
+ * @param array{cat_id: array<int, int>, group_id?: array<int, int>, user_id?: array<int, int>, pwg_token: string, ...} $params
+ *   cat_id/pwg_token: no 'default' key -- mandatory, always present,
+ *   FORCE_ARRAY always coerces cat_id to a list of positive ints.
+ *   group_id/user_id: WS_PARAM_OPTIONAL with no 'default' key -- may be
+ *   entirely absent, same FORCE_ARRAY coercion when present.
  * @return mixed \PwgError, or the result of the pwg.permissions.getList invocation
  */
 function ws_permissions_remove(array $params, PwgServer &$service): mixed

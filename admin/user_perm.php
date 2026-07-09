@@ -29,6 +29,16 @@ if (! empty($_POST)) {
     check_input_parameter('cat_false', $_POST, true, PATTERN_ID);
 }
 
+// check_input_parameter() above already fatal_error()s out unless these
+// are arrays of digit-only strings, but that guarantee isn't visible to
+// static analysis across the call; re-derive real array types here.
+$cat_true = isset($_POST['cat_true']) && is_array($_POST['cat_true'])
+    ? array_filter($_POST['cat_true'], 'is_string')
+    : [];
+$cat_false = isset($_POST['cat_false']) && is_array($_POST['cat_false'])
+    ? array_map('intval', array_filter($_POST['cat_false'], 'is_numeric'))
+    : [];
+
 // +-----------------------------------------------------------------------+
 // |                            variables init                             |
 // +-----------------------------------------------------------------------+
@@ -44,11 +54,10 @@ if (isset($_GET['user_id']) and is_numeric($_GET['user_id'])) {
 // +-----------------------------------------------------------------------+
 
 if (isset($_POST['falsify'])
-    and isset($_POST['cat_true'])
-    and count($_POST['cat_true']) > 0) {
+    and count($cat_true) > 0) {
     // if you forbid access to a category, all sub-categories become
     // automatically forbidden
-    $subcats = get_subcat_ids($_POST['cat_true']);
+    $subcats = get_subcat_ids($cat_true);
     $query = '
 DELETE FROM ' . USER_ACCESS_TABLE . '
   WHERE user_id = ' . $page['user'] . '
@@ -56,9 +65,8 @@ DELETE FROM ' . USER_ACCESS_TABLE . '
 ;';
     pwg_query($query);
 } elseif (isset($_POST['trueify'])
-    and isset($_POST['cat_false'])
-    and count($_POST['cat_false']) > 0) {
-    add_permission_on_category($_POST['cat_false'], $page['user']);
+    and count($cat_false) > 0) {
+    add_permission_on_category($cat_false, $page['user']);
 }
 
 // +-----------------------------------------------------------------------+
@@ -110,6 +118,10 @@ if (pwg_db_num_rows($result) > 0) {
     usort($cats, global_rank_compare(...));
 
     foreach ($cats as $category) {
+        if ($category['uppercats'] === null) {
+            continue;
+        }
+
         $template->append(
             'categories_because_of_groups',
             get_cat_display_name_cache($category['uppercats'], null)

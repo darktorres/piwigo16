@@ -55,7 +55,7 @@ function do_timeout_treatment(string $post_keyname, array $check_key_treated = [
     global $env_nbm, $page;
 
     if ($env_nbm['is_sendmail_timeout']) {
-        if (isset($_POST[$post_keyname])) {
+        if (isset($_POST[$post_keyname]) and is_array($_POST[$post_keyname])) {
             $post_count = count($_POST[$post_keyname]);
             $treated_count = count($check_key_treated);
             if ($treated_count != 0) {
@@ -63,7 +63,11 @@ function do_timeout_treatment(string $post_keyname, array $check_key_treated = [
             } else {
                 $time_refresh = 0;
             }
-            $_POST[$post_keyname] = array_diff($_POST[$post_keyname], $check_key_treated);
+            // $check_key_treated is check_key strings returned by the nbm
+            // helpers (typed mixed[] there); keep only the string ones so
+            // array_diff() gets values it can actually compare.
+            $check_key_treated_strings = array_filter($check_key_treated, is_string(...));
+            $_POST[$post_keyname] = array_diff(array_filter($_POST[$post_keyname], 'is_string'), $check_key_treated_strings);
 
             $page['errors'][] = l10n_dec(
                 'Execution time is out, treatment must be continue [Estimated time: %d second].',
@@ -161,7 +165,11 @@ order by
 
         // On timeout simulate like tabsheet send
         if ($env_nbm['is_sendmail_timeout']) {
-            $quoted_check_key_list = quote_check_key_list(array_diff($check_key_list, $check_key_treated));
+            // do_subscribe_unsubscribe_notification_by_mail() returns mixed[]
+            // of check_key strings; narrow before array_diff() needs values
+            // castable to string.
+            $check_key_treated_strings = array_filter($check_key_treated, is_string(...));
+            $quoted_check_key_list = quote_check_key_list(array_diff($check_key_list, $check_key_treated_strings));
             if (count($quoted_check_key_list) != 0) {
                 $query = 'delete from ' . USER_MAIL_NOTIFICATION_TABLE . ' where check_key in (' . implode(',', $quoted_check_key_list) . ');';
                 $result = pwg_query($query);
@@ -180,10 +188,16 @@ function render_global_customize_mail_content(mixed $customize_mail_content): mi
 {
     global $conf;
 
-    if ($conf['nbm_send_html_mail'] and ! (str_starts_with((string) $customize_mail_content, '<'))) {
+    // Real callers always pass a string (config value or POSTed content);
+    // this handler is registered as a generic event filter (mixed in/out),
+    // so narrow defensively rather than blindly casting a possibly
+    // non-scalar value.
+    $customize_mail_content_str = is_string($customize_mail_content) ? $customize_mail_content : '';
+
+    if ($conf['nbm_send_html_mail'] and ! str_starts_with($customize_mail_content_str, '<')) {
         // On HTML mail, detects if the content are HTML format.
         // If it's plain text format, convert content to readable HTML
-        return nl2br(htmlspecialchars((string) $customize_mail_content));
+        return nl2br(htmlspecialchars($customize_mail_content_str));
     } else {
         return $customize_mail_content;
     }
@@ -253,14 +267,21 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
 
                     // set env nbm user
                     set_user_on_env_nbm($nbm_user, $is_action_send);
-
+                    // set_user_on_env_nbm()'s by-ref $nbm_user param is only
+                    // typed array<string, mixed>, so the narrowing above is
+                    // lost across the call -- restate it.
+                    /** @var array<string, string|null> $nbm_user */
                     if ($is_action_send) {
                         $auth = null;
                         $add_url_params = [];
 
-                        $auth_key = create_user_auth_key($nbm_user['user_id'], $nbm_user['status']);
+                        // user_id is the joined users.id column, always a
+                        // non-null numeric DB value.
+                        $nbm_user_id_raw = $nbm_user['user_id'];
+                        assert(is_string($nbm_user_id_raw) && is_numeric($nbm_user_id_raw));
+                        $auth_key = create_user_auth_key((int) $nbm_user_id_raw, $nbm_user['status']);
 
-                        if ($auth_key !== false) {
+                        if ($auth_key !== false and is_string($auth_key['auth_key'])) {
                             $auth = $auth_key['auth_key'];
                             $add_url_params['auth'] = $auth;
                         }
@@ -321,6 +342,12 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                                     $conf['recent_post_dates']['NBM']
                                 );
                                 foreach ($recent_post_dates as $date_detail) {
+                                    // get_recent_post_dates_array() is typed to
+                                    // return array<int|string, mixed>; each
+                                    // element is really one get_recent_post_dates()
+                                    // date-detail row (array<string, mixed>).
+                                    assert(is_array($date_detail));
+                                    /** @var array<string, mixed> $date_detail */
                                     $env_nbm['mail_template']->append(
                                         'recent_posts',
                                         [
@@ -331,27 +358,39 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
                                 }
                             }
 
+                            $gallery_home_url = get_gallery_home_url();
                             $env_nbm['mail_template']->assign(
                                 [
                                     'GOTO_GALLERY_TITLE' => $conf['gallery_title'],
-                                    'GOTO_GALLERY_URL' => add_url_params(get_gallery_home_url(), $add_url_params),
+                                    'GOTO_GALLERY_URL' => add_url_params(is_string($gallery_home_url) ? $gallery_home_url : '', $add_url_params),
                                     'SEND_AS_NAME' => $env_nbm['send_as_name'],
                                 ]
                             );
+
+                            // $env_nbm is populated by begin_users_env_nbm()
+                            // (get_str_email_format() always returns string)
+                            // but the global is typed loosely; narrow here.
+                            $mail_email_format = is_string($env_nbm['email_format'])
+                                ? $env_nbm['email_format']
+                                : get_str_email_format((bool) $conf['nbm_send_html_mail']);
+
+                            $mail_args = [
+                                'from' => $env_nbm['send_as_mail_formated'],
+                                'subject' => $subject,
+                                'email_format' => $mail_email_format,
+                                'content' => $env_nbm['mail_template']->parse('notification_by_mail', true),
+                                'content_format' => $mail_email_format,
+                            ];
+                            if (is_string($auth)) {
+                                $mail_args['auth_key'] = $auth;
+                            }
 
                             $ret = pwg_mail(
                                 [
                                     'name' => stripslashes((string) $nbm_user['username']),
                                     'email' => $nbm_user['mail_address'],
                                 ],
-                                [
-                                    'from' => $env_nbm['send_as_mail_formated'],
-                                    'subject' => $subject,
-                                    'email_format' => $env_nbm['email_format'],
-                                    'content' => $env_nbm['mail_template']->parse('notification_by_mail', true),
-                                    'content_format' => $env_nbm['email_format'],
-                                    'auth_key' => $auth,
-                                ]
+                                $mail_args
                             );
 
                             if ($ret) {
@@ -413,7 +452,9 @@ function do_action_send_mail_notification(string $action = 'list_to_send', array
 // +-----------------------------------------------------------------------+
 // | Main                                                                  |
 // +-----------------------------------------------------------------------+
-if (! isset($_GET['mode'])) {
+if (! isset($_GET['mode']) or ! is_string($_GET['mode'])) {
+    // check_input_parameter() above already fatal_error()s on a non-scalar
+    // or non-matching value; $_GET entries are always strings in practice.
     $page['mode'] = 'send';
 } else {
     $page['mode'] = $_GET['mode'];
@@ -450,7 +491,8 @@ switch ($page['mode']) {
     case 'param':
 
         if (isset($_POST['param_submit'])) {
-            $_POST['nbm_send_mail_as'] = strip_tags((string) $_POST['nbm_send_mail_as']);
+            $nbm_send_mail_as = $_POST['nbm_send_mail_as'] ?? null;
+            $_POST['nbm_send_mail_as'] = strip_tags(is_string($nbm_send_mail_as) ? $nbm_send_mail_as : '');
 
             check_input_parameter('nbm_send_html_mail', $_POST, false, '/^(true|false)$/');
             check_input_parameter('nbm_send_detailed_content', $_POST, false, '/^(true|false)$/');
@@ -460,6 +502,10 @@ switch ($page['mode']) {
             // Update param
             $result = pwg_query('select param, value from ' . CONFIG_TABLE . ' where param like \'nbm\\_%\'');
             while ($nbm_user = pwg_db_fetch_assoc($result)) {
+                // 'param' is the config table's primary key, never null.
+                if (! is_string($nbm_user['param'])) {
+                    continue;
+                }
                 if (isset($_POST[$nbm_user['param']])) {
                     conf_update_param($nbm_user['param'], $_POST[$nbm_user['param']], true);
                     $updated_param_count++;
@@ -480,19 +526,27 @@ switch ($page['mode']) {
         // no break
     case 'subscribe':
 
-        if (isset($_POST['falsify']) and isset($_POST['cat_true'])) {
-            $check_key_treated = unsubscribe_notification_by_mail(true, $_POST['cat_true']);
+        if (isset($_POST['falsify']) and isset($_POST['cat_true']) and is_array($_POST['cat_true'])) {
+            $check_key_treated = unsubscribe_notification_by_mail(true, array_values($_POST['cat_true']));
             $must_repost = do_timeout_treatment('cat_true', $check_key_treated);
-        } elseif (isset($_POST['trueify']) and isset($_POST['cat_false'])) {
-            $check_key_treated = subscribe_notification_by_mail(true, $_POST['cat_false']);
+        } elseif (isset($_POST['trueify']) and isset($_POST['cat_false']) and is_array($_POST['cat_false'])) {
+            $check_key_treated = subscribe_notification_by_mail(true, array_values($_POST['cat_false']));
             $must_repost = do_timeout_treatment('cat_false', $check_key_treated);
         }
         break;
 
     case 'send':
 
-        if (isset($_POST['send_submit']) and isset($_POST['send_selection']) and isset($_POST['send_customize_mail_content'])) {
-            $check_key_treated = do_action_send_mail_notification('send', $_POST['send_selection'], stripslashes((string) $_POST['send_customize_mail_content']));
+        if (
+            isset($_POST['send_submit'])
+            and isset($_POST['send_selection']) and is_array($_POST['send_selection'])
+            and isset($_POST['send_customize_mail_content']) and is_string($_POST['send_customize_mail_content'])
+        ) {
+            $check_key_treated = do_action_send_mail_notification(
+                'send',
+                array_values($_POST['send_selection']),
+                stripslashes($_POST['send_customize_mail_content'])
+            );
             $must_repost = do_timeout_treatment('send_selection', $check_key_treated);
         }
 
@@ -571,14 +625,18 @@ switch ($page['mode']) {
         $opt_false = [];
         $opt_false_selected = [];
         foreach ($data_users as $nbm_user) {
+            if (! is_string($nbm_user['check_key'])) {
+                // check_key is the table's unique key, never null in practice.
+                continue;
+            }
             if (get_boolean($nbm_user['enabled'])) {
                 $opt_true[$nbm_user['check_key']] = stripslashes((string) $nbm_user['username']) . '[' . $nbm_user['mail_address'] . ']';
-                if ((isset($_POST['falsify']) and isset($_POST['cat_true']) and in_array($nbm_user['check_key'], $_POST['cat_true']))) {
+                if (isset($_POST['falsify']) and isset($_POST['cat_true']) and is_array($_POST['cat_true']) and in_array($nbm_user['check_key'], $_POST['cat_true'])) {
                     $opt_true_selected[] = $nbm_user['check_key'];
                 }
             } else {
                 $opt_false[$nbm_user['check_key']] = stripslashes((string) $nbm_user['username']) . '[' . $nbm_user['mail_address'] . ']';
-                if (isset($_POST['trueify']) and isset($_POST['cat_false']) and in_array($nbm_user['check_key'], $_POST['cat_false'])) {
+                if (isset($_POST['trueify']) and isset($_POST['cat_false']) and is_array($_POST['cat_false']) and in_array($nbm_user['check_key'], $_POST['cat_false'])) {
                     $opt_false_selected[] = $nbm_user['check_key'];
                 }
             }
@@ -603,22 +661,30 @@ switch ($page['mode']) {
         $data_users = do_action_send_mail_notification('list_to_send');
 
         $tpl_var['CUSTOMIZE_MAIL_CONTENT'] =
-          isset($_POST['send_customize_mail_content'])
-            ? stripslashes((string) $_POST['send_customize_mail_content'])
+          (isset($_POST['send_customize_mail_content']) and is_string($_POST['send_customize_mail_content']))
+            ? stripslashes($_POST['send_customize_mail_content'])
             : $conf['nbm_complementary_mail_content'];
+
+        $post_send_selection = (isset($_POST['send_selection']) and is_array($_POST['send_selection']))
+            ? $_POST['send_selection']
+            : [];
 
         if (count($data_users)) {
             foreach ($data_users as $nbm_user) {
+                // do_action_send_mail_notification('list_to_send') returns
+                // get_user_notifications() rows unchanged.
+                assert(is_array($nbm_user));
+                /** @var array<string, string|null> $nbm_user */
                 if (
                     (! $must_repost) or // Not timeout, normal treatment
-                    in_array($nbm_user['check_key'], $_POST['send_selection'])  // Must be repost, show only user to send
+                    in_array($nbm_user['check_key'], $post_send_selection)  // Must be repost, show only user to send
                 ) {
                     $tpl_var['users'][] =
                       [
                           'ID' => $nbm_user['check_key'],
                           'CHECKED' => ( // not check if not selected,  on init select<all
                               isset($_POST['send_selection']) and // not init
-                              ! in_array($nbm_user['check_key'], $_POST['send_selection']) // not selected
+                              ! in_array($nbm_user['check_key'], $post_send_selection) // not selected
                           ) ? '' : 'checked="checked"',
                           'USERNAME' => stripslashes((string) $nbm_user['username']),
                           'EMAIL' => $nbm_user['mail_address'],

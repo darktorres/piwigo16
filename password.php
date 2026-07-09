@@ -47,7 +47,8 @@ function process_verification_code(): bool
     }
 
     // empty param
-    $username_or_email = trim($_POST['username_or_email'] ?? '');
+    $username_or_email_raw = $_POST['username_or_email'] ?? '';
+    $username_or_email = is_string($username_or_email_raw) ? trim($username_or_email_raw) : '';
     if (empty($username_or_email)) {
         $page['errors']['password_form_error'] = l10n('Invalid username or email');
         return false;
@@ -70,7 +71,8 @@ function process_verification_code(): bool
 
     $userdata = getuserdata($user_id, false);
 
-    $status = $userdata['status'];
+    $status = $userdata['status'] ?? '';
+    $status = is_string($status) ? $status : '';
 
     if ($is_user_found) {
         // block early for generic or guest user because
@@ -81,9 +83,11 @@ function process_verification_code(): bool
         }
 
         // check lockout
+        $preferences = $userdata['preferences'] ?? null;
         if (
-            isset($userdata['preferences']['reset_password_forbidden_until'])
-            and $userdata['preferences']['reset_password_forbidden_until'] > time()
+            is_array($preferences)
+            and isset($preferences['reset_password_forbidden_until'])
+            and $preferences['reset_password_forbidden_until'] > time()
         ) {
             $page['errors']['password_form_error'] = l10n('Too many attempts, please try later..');
             return false;
@@ -92,14 +96,20 @@ function process_verification_code(): bool
 
     // check if we want to skip email sending
     // if user is guest, generic or doesn't have email
-    $skip_mail = ! $is_user_found || empty($userdata['email']);
+    $email = $userdata['email'] ?? null;
+    $email = is_string($email) ? $email : null;
+    $skip_mail = ! $is_user_found || empty($email);
 
     // send mail with verification code to user
-    switch_lang_to($userdata['language']);
+    $language = $userdata['language'] ?? '';
+    $language = is_string($language) ? $language : '';
+    switch_lang_to($language);
     $user_code = generate_user_code();
     $template_mail = pwg_generate_code_verification_mail($user_code['code']);
+    // $skip_mail already covers empty($email) (which includes null), so
+    // $email is provably a non-empty string here.
     if (! $skip_mail) {
-        $mail_send = pwg_mail($userdata['email'], $template_mail);
+        $mail_send = pwg_mail($email, $template_mail);
     }
     switch_lang_back();
 
@@ -125,60 +135,74 @@ function process_password_request(): bool
     global $page, $user;
 
     $state = $_SESSION['reset_password_code'] ?? null;
-    if (! $state) {
+    if (! is_array($state)) {
         return true;
     }
 
+    $created_at = $state['created_at'] ?? 0;
+    $created_at = is_numeric($created_at) ? (int) $created_at : 0;
+    $ttl = $state['ttl'] ?? 0;
+    $ttl = is_numeric($ttl) ? (int) $ttl : 0;
+
     // check expired
-    if (time() > $state['created_at'] + $state['ttl']) {
+    if (time() > $created_at + $ttl) {
         unset($_SESSION['reset_password_code']);
         $page['errors']['password_form_error'] = l10n('Code expired');
         return false;
     }
 
-    $_SESSION['reset_password_code']['attempts']++;
+    $attempts = $state['attempts'] ?? 0;
+    $attempts = (is_numeric($attempts) ? (int) $attempts : 0) + 1;
+    $state['attempts'] = $attempts;
+    $_SESSION['reset_password_code'] = $state;
+
+    $secret = $state['secret'] ?? '';
+    $secret = is_string($secret) ? $secret : '';
+
+    $user_id_raw = $state['user_id'] ?? null;
 
     $is_valid = true;
-    $user_code = trim($_POST['user_code'] ?? '');
+    $user_code_raw = $_POST['user_code'] ?? '';
+    $user_code = is_string($user_code_raw) ? trim($user_code_raw) : '';
 
     if (
         empty($user_code) // empty user code
         || ! preg_match('/^\d{6}$/', $user_code) // check digit 6
-        || ! verify_user_code($state['secret'], $user_code)) { // verify user code
+        || ! verify_user_code($secret, $user_code)) { // verify user code
         $is_valid = false;
     }
 
     if (! $is_valid) {
-        if ($_SESSION['reset_password_code']['attempts'] >= 3) {
+        if ($attempts >= 3) {
             unset($_SESSION['reset_password_code']);
             // lockout account for 1hour
-            if (! empty($state['user_id'])) {
+            if (! empty($user_id_raw) && is_numeric($user_id_raw)) {
                 $save_user = $user;
-                $user = build_user($state['user_id'], false);
+                $user = build_user((int) $user_id_raw, false);
                 userprefs_update_param('reset_password_forbidden_until', time() + 60 * 60);
                 $user = $save_user;
 
-                pwg_activity('user', $state['user_id'], 'reset_password_failure_too_many');
+                pwg_activity('user', (int) $user_id_raw, 'reset_password_failure_too_many');
             }
             $page['errors']['login_page_error'] = l10n('Too many attempts, please try later..');
             return false;
         }
 
-        if (! empty($state['user_id'])) {
-            pwg_activity('user', $state['user_id'], 'reset_password_failure_code');
+        if (! empty($user_id_raw) && is_numeric($user_id_raw)) {
+            pwg_activity('user', (int) $user_id_raw, 'reset_password_failure_code');
         }
         $page['errors']['password_form_error'] = l10n('Invalid verification code');
         return false;
     }
 
     // verify code success
-    $user_id = $state['user_id'];
     unset($_SESSION['reset_password_code']);
 
-    if (empty($user_id)) {
+    if (empty($user_id_raw) || ! is_numeric($user_id_raw)) {
         $page['errors']['password_form_error'] = l10n('Invalid verification code');
         return false;
     }
+    $user_id = (int) $user_id_raw;
 
     $save_user = $user;
     $user = build_user($user_id, false);
@@ -190,7 +214,8 @@ function process_password_request(): bool
         'email' => $user['email'],
         'language' => $user['language'],
     ];
-    $status = $user['status'] ?? null;
+    $status = $user['status'] ?? '';
+    $status = is_string($status) ? $status : '';
     $has_no_email = empty($user['email']);
     $page['username'] = $user['username'];
     $user = $save_user;
@@ -214,8 +239,8 @@ function check_password_reset_key(mixed $reset_key): mixed
 {
     global $page, $conf;
 
-    $key = $reset_key;
-    if (! preg_match('/^[a-z0-9]{20}$/i', (string) $key)) {
+    $key = is_string($reset_key) ? $reset_key : '';
+    if (! preg_match('/^[a-z0-9]{20}$/i', $key)) {
         $page['errors']['password_page_error'] = l10n('Invalid key');
         return false;
     }
@@ -230,9 +255,15 @@ SELECT
     AND activation_key_expire > NOW()
 ;';
     $result = pwg_query($query);
+    $user_id = null;
     while ($row = pwg_db_fetch_assoc($result)) {
-        if (pwg_password_verify($key, $row['activation_key'])) {
-            if (is_a_guest($row['status']) or is_generic($row['status'])) {
+        $activation_key = $row['activation_key'] ?? null;
+        if (! is_string($activation_key)) {
+            continue;
+        }
+        if (pwg_password_verify($key, $activation_key)) {
+            $status = $row['status'] ?? '';
+            if (is_a_guest($status) or is_generic($status)) {
                 $page['errors']['password_page_error'] = l10n('Password reset is not allowed for this user');
                 return false;
             }
@@ -260,7 +291,12 @@ function reset_password(): bool
 {
     global $page, $conf;
 
-    if ($_POST['use_new_pwd'] != $_POST['passwordConf']) {
+    $new_password_raw = $_POST['use_new_pwd'] ?? '';
+    $new_password = is_string($new_password_raw) ? $new_password_raw : '';
+    $password_conf_raw = $_POST['passwordConf'] ?? '';
+    $password_conf = is_string($password_conf_raw) ? $password_conf_raw : '';
+
+    if ($new_password != $password_conf) {
         $page['errors']['password_form_error'] = l10n('The passwords do not match');
         return false;
     }
@@ -275,21 +311,33 @@ function reset_password(): bool
     single_update(
         USERS_TABLE,
         [
-            $conf['user_fields']['password'] => pwg_password_hash($_POST['use_new_pwd']),
+            $conf['user_fields']['password'] => pwg_password_hash($new_password),
         ],
         [
             $conf['user_fields']['id'] => $user_id,
         ]
     );
 
-    if (isset($_SESSION['valid_reset_password_code']) and ! empty($_SESSION['valid_reset_password_code']['email'])) {
-        $reset_user = $_SESSION['valid_reset_password_code'];
-        switch_lang_to($reset_user['language']);
+    $reset_session = $_SESSION['valid_reset_password_code'] ?? null;
+    if (is_array($reset_session) and ! empty($reset_session['email'])) {
+        $reset_language = $reset_session['language'] ?? '';
+        $reset_language = is_string($reset_language) ? $reset_language : '';
+        switch_lang_to($reset_language);
 
-        $api_keys = get_available_api_key($reset_user['user_id']);
+        $reset_user_id = $reset_session['user_id'] ?? null;
+        $reset_user_id_str = is_numeric($reset_user_id) ? (string) $reset_user_id : '';
+        $api_keys = get_available_api_key($reset_user_id_str);
         $nb_of_apikeys = $api_keys ? count($api_keys) : 0;
-        $template_mail = pwg_generate_success_reset_password_mail($reset_user['username'], $nb_of_apikeys);
-        pwg_mail($reset_user['email'], $template_mail);
+
+        $reset_username = $reset_session['username'] ?? '';
+        $reset_username = is_string($reset_username) ? $reset_username : '';
+        $template_mail = pwg_generate_success_reset_password_mail($reset_username, $nb_of_apikeys);
+
+        // ! empty($reset_session['email']) above already guarantees this offset
+        // exists and is non-empty.
+        $reset_email = $reset_session['email'];
+        $reset_email = is_string($reset_email) ? $reset_email : '';
+        pwg_mail($reset_email, $template_mail);
 
         switch_lang_back();
     }
@@ -322,11 +370,12 @@ function reset_password_key(): false|float|int|string
 
 function reset_password_code(): mixed
 {
-    if (! isset($_SESSION['valid_reset_password_code'])) {
+    $state = $_SESSION['valid_reset_password_code'] ?? null;
+    if (! is_array($state)) {
         return false;
     }
 
-    return $_SESSION['valid_reset_password_code']['user_id'] ?? false;
+    return $state['user_id'] ?? false;
 }
 
 // +-----------------------------------------------------------------------+
@@ -392,16 +441,20 @@ if (! isset($page['action'])) {
 
 if ($page['action'] == 'reset') {
     if ((! isset($_GET['key']) and (is_a_guest() or is_generic())) and ! isset($_SESSION['valid_reset_password_code'])) {
-        redirect(get_gallery_home_url());
+        $gallery_home_url = get_gallery_home_url();
+        redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
     }
 }
 
 if ($page['action'] == 'lost' and ! is_a_guest()) {
-    redirect(get_gallery_home_url());
+    $gallery_home_url = get_gallery_home_url();
+    redirect(is_string($gallery_home_url) ? $gallery_home_url : '');
 }
 
 if ($page['action'] == 'lost_code' and ! isset($_SESSION['reset_password_code'])) {
-    redirect(get_gallery_home_url() . 'identification.php');
+    $gallery_home_url = get_gallery_home_url();
+    $gallery_home_url = is_string($gallery_home_url) ? $gallery_home_url : '';
+    redirect($gallery_home_url . 'identification.php');
 }
 
 if ($page['action'] == 'lost' and isset($_SESSION['reset_password_code'])) {
@@ -415,8 +468,8 @@ $title = l10n('Password Reset');
 if ($page['action'] == 'lost') {
     $title = l10n('Forgot your password?');
 
-    if (isset($_POST['username_or_email'])) {
-        $template->assign('username_or_email', htmlspecialchars(stripslashes((string) $_POST['username_or_email'])));
+    if (isset($_POST['username_or_email']) and is_string($_POST['username_or_email'])) {
+        $template->assign('username_or_email', htmlspecialchars(stripslashes($_POST['username_or_email'])));
     }
 } elseif ($page['action'] == 'reset' and isset($first_login) and $first_login) {
     $title = l10n('Welcome');
@@ -445,14 +498,15 @@ if (! isset($themeconf['hide_menu_on']) or ! in_array('thePasswordPage', $themec
 }
 
 // Load language if cookie is set from login/register/password pages
-if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
-    if (! array_key_exists((string) $_COOKIE['lang'], get_languages())) {
-        fatal_error('[Hacking attempt] the input parameter "' . $_COOKIE['lang'] . '" is not valid');
+$cookie_lang = $_COOKIE['lang'] ?? null;
+if (is_string($cookie_lang) and $user['language'] != $cookie_lang) {
+    if (! array_key_exists($cookie_lang, get_languages())) {
+        fatal_error('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
     }
 
-    $user['language'] = $_COOKIE['lang'];
+    $user['language'] = $cookie_lang;
     load_language('common.lang', '', [
-        'language' => $user['language'],
+        'language' => $cookie_lang,
     ]);
 }
 

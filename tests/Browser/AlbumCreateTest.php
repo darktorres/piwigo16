@@ -17,5 +17,11 @@ it('creates an album via the web service API using the browser session', functio
     $response = H::wsCall($page, 'pwg.categories.add', ['name' => 'Browser Test Album ' . uniqid()]);
 
     expect($response['stat'])->toBe('ok');
-    expect($response['result']['id'])->toBeGreaterThan(0);
+
+    $result = $response['result'];
+    if (!is_array($result)) {
+        throw new RuntimeException('Expected pwg.categories.add "result" to be an array, got ' . get_debug_type($result));
+    }
+
+    expect($result['id'])->toBeGreaterThan(0);
 });

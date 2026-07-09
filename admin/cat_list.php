@@ -42,7 +42,7 @@ $sort_orders = [
 // |                               functions                               |
 // +-----------------------------------------------------------------------+
 /**
- * @param array<int, mixed> $ids
+ * @param array<int|string> $ids
  * @return array<int|string, mixed>
  */
 function get_categories_ref_date(array $ids, string $field = 'date_available', string $minmax = 'max'): array
@@ -79,6 +79,9 @@ SELECT
         $subcat_ids = [];
 
         foreach ($uppercats_of as $id => $uppercats) {
+            if (! is_string($uppercats)) {
+                continue;
+            }
             if (preg_match('/(^|,)' . $cat_id . '(,|$)/', $uppercats)) {
                 $subcat_ids[] = $id;
             }
@@ -113,6 +116,15 @@ SELECT
 
 check_input_parameter('parent_id', $_GET, false, PATTERN_ID);
 
+// check_input_parameter() already validated (or killed the request) that
+// $_GET['parent_id'], when present, matches PATTERN_ID (digits only) -- but
+// it doesn't retype the superglobal, so we still narrow it once here and
+// reuse this variable everywhere below instead of the raw mixed value.
+$parent_id = null;
+if (isset($_GET['parent_id']) and is_numeric($_GET['parent_id'])) {
+    $parent_id = (int) $_GET['parent_id'];
+}
+
 $categories = [];
 
 $base_url = get_root_url() . 'admin.php?page=cat_list';
@@ -133,7 +145,7 @@ include PHPWG_ROOT_PATH . 'admin/include/albums_tab.inc.php';
 // request to delete a virtual category
 if (isset($_GET['delete']) and is_numeric($_GET['delete'])) {
     $photo_deletion_mode = 'no_delete';
-    if (isset($_GET['photo_deletion_mode'])) {
+    if (isset($_GET['photo_deletion_mode']) and is_string($_GET['photo_deletion_mode'])) {
         $photo_deletion_mode = $_GET['photo_deletion_mode'];
     }
     delete_categories([(int) $_GET['delete']], $photo_deletion_mode);
@@ -143,16 +155,17 @@ if (isset($_GET['delete']) and is_numeric($_GET['delete'])) {
     invalidate_user_cache();
 
     $redirect_url = get_root_url() . 'admin.php?page=cat_list';
-    if (isset($_GET['parent_id'])) {
-        $redirect_url .= '&parent_id=' . $_GET['parent_id'];
+    if ($parent_id !== null) {
+        $redirect_url .= '&parent_id=' . $parent_id;
     }
     redirect($redirect_url);
 }
 // request to add a virtual category
 elseif (isset($_POST['submitAdd'])) {
+    $virtual_name = is_string($_POST['virtual_name'] ?? null) ? $_POST['virtual_name'] : '';
     $output_create = create_virtual_category(
-        $_POST['virtual_name'],
-        @$_GET['parent_id']
+        $virtual_name,
+        $parent_id
     );
 
     invalidate_user_cache();
@@ -167,11 +180,11 @@ elseif (isset($_POST['submitAdd'])) {
 // |                            Navigation path                            |
 // +-----------------------------------------------------------------------+
 
-if (isset($_GET['parent_id'])) {
+if ($parent_id !== null) {
     $navigation .= $conf['level_separator'];
 
     $navigation .= get_cat_display_name_from_id(
-        $_GET['parent_id'],
+        $parent_id,
         $base_url . '&amp;parent_id='
     );
 }
@@ -181,8 +194,8 @@ if (isset($_GET['parent_id'])) {
 $template->set_filename('categories', 'cat_list.tpl');
 
 $form_action = PHPWG_ROOT_PATH . 'admin.php?page=cat_list';
-if (isset($_GET['parent_id'])) {
-    $form_action .= '&amp;parent_id=' . $_GET['parent_id'];
+if ($parent_id !== null) {
+    $form_action .= '&amp;parent_id=' . $parent_id;
 }
 $sort_orders_checked = array_keys($sort_orders);
 
@@ -204,17 +217,18 @@ $categories = [];
 $query = '
 SELECT id, name, permalink, dir, `rank`, status
   FROM ' . CATEGORIES_TABLE;
-if (! isset($_GET['parent_id'])) {
+if ($parent_id === null) {
     $query .= '
   WHERE id_uppercat IS NULL';
 } else {
     $query .= '
-  WHERE id_uppercat = ' . $_GET['parent_id'];
+  WHERE id_uppercat = ' . $parent_id;
 }
 $query .= '
   ORDER BY `rank` ASC
 ;';
 $categories = hash_from_query($query, 'id');
+/** @var array<int|string, array<string, string|null>> $categories */
 
 // get the categories containing images directly
 $categories_with_images = [];
@@ -240,8 +254,11 @@ SELECT
     $subcats_of = [];
 
     foreach ($all_categories as $id => $uppercats) {
+        if (! is_string($uppercats)) {
+            continue;
+        }
         foreach (array_slice(explode(',', $uppercats), 0, -1) as $uppercat_id) {
-            @$subcats_of[$uppercat_id][] = $id;
+            $subcats_of[(int) $uppercat_id][] = $id;
         }
     }
 
@@ -249,8 +266,8 @@ SELECT
     foreach ($subcats_of as $cat_id => $subcat_ids) {
         $nb_photos = 0;
         foreach ($subcat_ids as $id) {
-            if (isset($nb_photos_in[$id])) {
-                $nb_photos += $nb_photos_in[$id];
+            if (isset($nb_photos_in[$id]) and is_numeric($nb_photos_in[$id])) {
+                $nb_photos += (int) $nb_photos_in[$id];
             }
         }
 
@@ -261,19 +278,28 @@ SELECT
 $template->assign('categories', []);
 $base_url = get_root_url() . 'admin.php?page=';
 
-if (isset($_GET['parent_id'])) {
+if ($parent_id !== null) {
     $template->assign(
         'PARENT_EDIT',
-        $base_url . 'album-' . $_GET['parent_id']
+        $base_url . 'album-' . $parent_id
     );
 }
 
 foreach ($categories as $category) {
+    // 'id' is the CATEGORIES_TABLE primary key (NOT NULL, auto-increment) --
+    // it is always a numeric string here; this is a real guard, not dead
+    // code, since query2array()'s return type is generically string|null
+    // for every column.
+    if (! is_numeric($category['id'])) {
+        continue;
+    }
+    $cat_id = (int) $category['id'];
+
     $cat_list_url = $base_url . 'cat_list';
 
     $self_url = $cat_list_url;
-    if (isset($_GET['parent_id'])) {
-        $self_url .= '&amp;parent_id=' . $_GET['parent_id'];
+    if ($parent_id !== null) {
+        $self_url .= '&amp;parent_id=' . $parent_id;
     }
 
     $tpl_cat =
@@ -283,11 +309,11 @@ foreach ($categories as $category) {
               $category['name'],
               'admin_cat_list'
           ),
-          'NB_PHOTOS' => $nb_photos_in[$category['id']] ?? 0,
-          'NB_SUB_PHOTOS' => $nb_sub_photos[$category['id']] ?? 0,
-          'NB_SUB_ALBUMS' => isset($subcats_of[$category['id']]) ? count($subcats_of[$category['id']]) : 0,
-          'ID' => $category['id'],
-          'RANK' => $category['rank'] * 10,
+          'NB_PHOTOS' => $nb_photos_in[$cat_id] ?? 0,
+          'NB_SUB_PHOTOS' => $nb_sub_photos[$cat_id] ?? 0,
+          'NB_SUB_ALBUMS' => isset($subcats_of[$cat_id]) ? count($subcats_of[$cat_id]) : 0,
+          'ID' => $cat_id,
+          'RANK' => is_numeric($category['rank']) ? ((int) $category['rank']) * 10 : 0,
 
           'U_JUMPTO' => make_index_url(
               [
@@ -295,21 +321,21 @@ foreach ($categories as $category) {
               ]
           ),
 
-          'U_CHILDREN' => $cat_list_url . '&amp;parent_id=' . $category['id'],
-          'U_EDIT' => $base_url . 'album-' . $category['id'],
-          'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&amp;album=' . $category['id'],
-          'U_MOVE' => $base_url . 'albums#cat-' . $category['id'],
+          'U_CHILDREN' => $cat_list_url . '&amp;parent_id=' . $cat_id,
+          'U_EDIT' => $base_url . 'album-' . $cat_id,
+          'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&amp;album=' . $cat_id,
+          'U_MOVE' => $base_url . 'albums#cat-' . $cat_id,
 
           'IS_VIRTUAL' => empty($category['dir']),
-          'CAT_ADMIN_ACCESS' => cat_admin_access($category['id']),
+          'CAT_ADMIN_ACCESS' => cat_admin_access($cat_id),
       ];
 
     if (empty($category['dir'])) {
-        $tpl_cat['U_DELETE'] = $self_url . '&amp;delete=' . $category['id'];
+        $tpl_cat['U_DELETE'] = $self_url . '&amp;delete=' . $cat_id;
         $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . get_pwg_token();
     } else {
         if ($conf['enable_synchronization']) {
-            $tpl_cat['U_SYNC'] = $base_url . 'site_update&amp;site=1&amp;cat_id=' . $category['id'];
+            $tpl_cat['U_SYNC'] = $base_url . 'site_update&amp;site=1&amp;cat_id=' . $cat_id;
         }
     }
 

@@ -48,11 +48,16 @@ function do_error(int $code, string $str): never
 if ($conf['enable_formats'] and isset($_GET['format'])) {
     check_input_parameter('format', $_GET, false, PATTERN_ID);
 
+    if (! is_numeric($_GET['format'])) {
+        do_error(400, 'Invalid request - format');
+    }
+    $format_id = (int) $_GET['format'];
+
     $query = '
 SELECT
     *
   FROM ' . IMAGE_FORMAT_TABLE . '
-  WHERE format_id = ' . $_GET['format'] . '
+  WHERE format_id = ' . $format_id . '
 ;';
     $formats = query2array($query);
 
@@ -126,7 +131,14 @@ switch ($_GET['part']) {
         $file = get_element_path($element_info);
         break;
     case 'r':
-        $file = original_to_representative(get_element_path($element_info), $element_info['representative_ext']);
+        $representative_ext = $element_info['representative_ext'];
+        // images.representative_ext is nullable in the schema (only set
+        // when a custom representative image exists) — a genuine missing
+        // value means there is no representative file to serve.
+        if (empty($representative_ext)) {
+            do_error(404, 'Requested file not found');
+        }
+        $file = original_to_representative(get_element_path($element_info), $representative_ext);
         break;
     case 'f':
         // part=f is reachable directly by request even when the earlier
@@ -135,7 +147,11 @@ switch ($_GET['part']) {
             do_error(400, 'Invalid request - format');
         }
         $file = original_to_format(get_element_path($element_info), $format['ext']);
-        $element_info['file'] = get_filename_wo_extension($element_info['file']) . '.' . $format['ext'];
+        $original_file = $element_info['file'];
+        // images.file is `varchar(255) NOT NULL` in the schema — a genuine
+        // DB row for this element always carries a string here.
+        assert(is_string($original_file));
+        $element_info['file'] = get_filename_wo_extension($original_file) . '.' . $format['ext'];
         break;
 }
 

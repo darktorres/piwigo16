@@ -26,6 +26,17 @@ $selection = array_slice(
 );
 
 $selection = trigger_change('loc_index_thumbnails_selection', $selection);
+if (! is_array($selection)) {
+    // A misbehaving plugin handler could return something else; count()
+    // on a non-array/non-Countable is a fatal TypeError in PHP 8, so this
+    // also guards against a real runtime crash, not just the static type.
+    $selection = [];
+}
+/** @var list<int|string> $selection */
+$selection = array_values(array_filter(
+    $selection,
+    static fn ($item): bool => is_int($item) || is_string($item)
+));
 
 if (count($selection) > 0) {
     $rank_of = array_flip($selection);
@@ -37,7 +48,10 @@ SELECT *
 ;';
     $result = pwg_query($query);
     while ($row = pwg_db_fetch_assoc($result)) {
-        $row['rank'] = $rank_of[$row['id']];
+        // 'id' is the images table's NOT NULL primary key -- the '' fallback
+        // only satisfies the array-key type, it never changes real behavior.
+        $image_id = $row['id'] ?? '';
+        $row['rank'] = $rank_of[$image_id] ?? 0;
         $pictures[] = $row;
     }
 
@@ -84,21 +98,31 @@ trigger_notify('loc_begin_index_thumbnails', $pictures);
 $tpl_thumbnails_var = [];
 
 foreach ($pictures as $row) {
+    // 'id' is the images table's NOT NULL primary key -- the '' fallback
+    // only satisfies the array-key type, it never changes real behavior.
+    $image_id = $row['id'] ?? '';
+
     // link on picture.php page
     $url = duplicate_picture_url(
         [
-            'image_id' => $row['id'],
+            'image_id' => $image_id,
             'image_file' => $row['file'],
         ],
         ['start']
     );
 
     if (isset($nb_comments_of)) {
-        $row['NB_COMMENTS'] = $row['nb_comments'] = (int) @$nb_comments_of[$row['id']];
+        $row['NB_COMMENTS'] = $row['nb_comments'] = (int) @$nb_comments_of[$image_id];
     }
 
     $name = render_element_name($row);
     $desc = render_element_description($row, 'main_page_element_description');
+
+    // 'path'/'file' are non-nullable text columns in practice, but $row is a
+    // dynamically-fetched DB row (SELECT *), so PHPStan only knows them as
+    // possibly-non-string -- narrow for real before get_extension().
+    $row_path = is_string($row['path']) ? $row['path'] : null;
+    $row_file = is_string($row['file']) ? $row['file'] : null;
 
     $tpl_var = array_merge($row, [
         'TN_ALT' => htmlspecialchars(strip_tags($name)),
@@ -106,12 +130,15 @@ foreach ($pictures as $row) {
         'URL' => $url,
         'DESCRIPTION' => $desc,
         'src_image' => new SrcImage($row),
-        'path_ext' => strtolower(get_extension($row['path'])),
-        'file_ext' => strtolower(get_extension($row['file'])),
+        'path_ext' => strtolower(get_extension($row_path)),
+        'file_ext' => strtolower(get_extension($row_file)),
     ]);
 
     if ($conf['index_new_icon']) {
-        $tpl_var['icon_ts'] = get_icon($row['date_available']);
+        // '' falls through get_icon()'s own empty($date) guard exactly like
+        // a non-string/null column value would, so behavior is unchanged.
+        $date_available = is_string($row['date_available']) ? $row['date_available'] : '';
+        $tpl_var['icon_ts'] = get_icon($date_available);
     }
 
     if ($user['show_nb_hits']) {
@@ -121,13 +148,15 @@ foreach ($pictures as $row) {
     switch ($page['section']) {
         case 'best_rated':
 
-            $name = '(' . $row['rating_score'] . ') ' . $name;
+            $rating_score = $row['rating_score'];
+            $name = '(' . (is_string($rating_score) || is_int($rating_score) ? $rating_score : '') . ') ' . $name;
             break;
 
         case 'most_visited':
 
             if (! $user['show_nb_hits']) {
-                $name = '(' . $row['hit'] . ') ' . $name;
+                $hit = $row['hit'];
+                $name = '(' . (is_string($hit) || is_int($hit) ? $hit : '') . ') ' . $name;
             }
             break;
 
@@ -136,8 +165,11 @@ foreach ($pictures as $row) {
     $tpl_thumbnails_var[] = $tpl_var;
 }
 
+$index_deriv = pwg_get_session_var('index_deriv', IMG_THUMB);
+$index_deriv = is_string($index_deriv) ? $index_deriv : IMG_THUMB;
+
 $template->assign([
-    'derivative_params' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type(pwg_get_session_var('index_deriv', IMG_THUMB))),
+    'derivative_params' => trigger_change('get_index_derivative_params', ImageStdParams::get_by_type($index_deriv)),
     'maxRequests' => $conf['max_requests'],
     'SHOW_THUMBNAIL_CAPTION' => $conf['show_thumbnail_caption'],
 ]);

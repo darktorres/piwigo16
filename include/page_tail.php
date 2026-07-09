@@ -90,10 +90,11 @@ $template->assign('debug', $debug_vars);
 
 // ------------------------------------------------------------- mobile version
 if (! empty($conf['mobile_theme']) && (get_device() != 'desktop' || mobile_theme())) {
+    $request_uri = $_SERVER['REQUEST_URI'] ?? '';
     $template->assign(
         'TOGGLE_MOBILE_THEME_URL',
         add_url_params(
-            htmlspecialchars((string) $_SERVER['REQUEST_URI']),
+            htmlspecialchars(is_string($request_uri) ? $request_uri : ''),
             [
                 'mobile' => mobile_theme() ? 'false' : 'true',
             ]

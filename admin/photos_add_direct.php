@@ -30,7 +30,8 @@ DELETE FROM ' . CADDIE_TABLE . '
     pwg_query($query);
 
     $inserts = [];
-    foreach (array_unique(explode(',', (string) $_GET['batch'])) as $image_id) {
+    $batch_param = $_GET['batch'];
+    foreach (array_unique(explode(',', is_scalar($batch_param) ? (string) $batch_param : '')) as $image_id) {
         $inserts[] = [
             'user_id' => $user['id'],
             'element_id' => $image_id,
@@ -94,17 +95,23 @@ $formats_ext_info = null;
 if ($display_formats && $_GET['formats']) {
     check_input_parameter('formats', $_GET, false, PATTERN_ID, false);
 
-    $formats_original_info = get_image_infos($_GET['formats']);
+    $formats_id_param = $_GET['formats'];
+    $formats_original_info = get_image_infos(is_int($formats_id_param) || is_string($formats_id_param) ? $formats_id_param : '');
     if ($formats_original_info) {
         $src_image = new SrcImage($formats_original_info);
 
         $formats_original_info['src'] = DerivativeImage::url(IMG_SQUARE, $src_image);
 
+        // The 'id' column is the IMAGES_TABLE primary key: always a numeric
+        // value on a row fetched by get_image_infos(), just typed mixed
+        // because that function's return signature is array<string, mixed>.
+        $formats_image_id = is_numeric($formats_original_info['id']) ? (string) $formats_original_info['id'] : '0';
+
         // Fetch actual formats
         $query = '
 SELECT *
   FROM ' . IMAGE_FORMAT_TABLE . '
-  WHERE image_id = ' . $formats_original_info['id'] . '
+  WHERE image_id = ' . $formats_image_id . '
 ;';
         $formats = query2array($query);
 
@@ -113,7 +120,8 @@ SELECT *
             $formats_exts = [];
 
             foreach ($formats as $format) {
-                $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], $format['filesize'] / 1024);
+                $format_filesize = is_numeric($format['filesize']) ? ((float) $format['filesize']) / 1024 : 0.0;
+                $format_strings[] = sprintf('%s (%.2fMB)', $format['ext'], $format_filesize);
                 $formats_exts[] = strtolower((string) $format['ext']);
             }
 
@@ -121,11 +129,12 @@ SELECT *
             $formats_ext_info = json_encode($formats_exts);
         }
 
-        $extTab = explode('.', (string) $formats_original_info['file']);
+        $formats_file = $formats_original_info['file'];
+        $extTab = explode('.', is_string($formats_file) ? $formats_file : '');
 
         $formats_original_info['ext'] = l10n('%s file type', strtoupper(end($extTab)));
 
-        $formats_original_info['u_edit'] = get_root_url() . 'admin.php?page=photo-' . $formats_original_info['id'];
+        $formats_original_info['u_edit'] = get_root_url() . 'admin.php?page=photo-' . $formats_image_id;
 
         $have_formats_original = true;
     } else {

@@ -21,19 +21,33 @@ use Symfony\Component\Yaml\Yaml;
 $manifestPath = __DIR__ . '/../docs/plan/manifest.yaml';
 $manifest = Yaml::parseFile($manifestPath);
 
+// Yaml::parseFile() is declared to return mixed (a malformed manifest could
+// parse to a scalar/null); treat anything that isn't a mapping as empty so
+// the phases[] check below reports it the same way as a missing key.
+if (! is_array($manifest)) {
+    $manifest = [];
+}
+
 /** @var list<string> $errors */
 $errors = [];
 
 $phases = $manifest['phases'] ?? [];
 if (! is_array($phases) || $phases === []) {
     $errors[] = 'manifest has no phases[] entries';
+    $phases = [];
 }
 
 /** @var array<string, list<string>> $dependsOn */
 $dependsOn = [];
 
 foreach ($phases as $phase) {
-    $id = $phase['id'] ?? '(unknown)';
+    if (! is_array($phase)) {
+        $errors[] = 'phase entry is not a mapping';
+        continue;
+    }
+
+    $idRaw = $phase['id'] ?? '(unknown)';
+    $id = is_scalar($idRaw) ? (string) $idRaw : '(unknown)';
 
     if (! isset($phase['tier']) || $phase['tier'] === '') {
         $errors[] = "phase {$id} is missing tier";
@@ -66,7 +80,9 @@ $detectCycle = static function (string $node) use (&$detectCycle, &$visited, &$o
     $onStack[$node] = true;
 
     foreach ($dependsOn[$node] ?? [] as $dependency) {
-        $detectCycle((string) $dependency);
+        if (is_scalar($dependency)) {
+            $detectCycle((string) $dependency);
+        }
     }
 
     unset($onStack[$node]);

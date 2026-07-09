@@ -18,8 +18,13 @@ final class WsHistoryTest extends ContractTestCase
     {
         $response = $this->wsAdmin('pwg.activity.getList');
 
-        self::assertArrayHasKey('result_lines', $response['result']);
-        self::assertIsArray($response['result']['result_lines']);
+        $result = $response['result'];
+        if (!is_array($result)) {
+            self::fail('pwg.activity.getList result is not an array');
+        }
+
+        self::assertArrayHasKey('result_lines', $result);
+        self::assertIsArray($result['result_lines']);
     }
 
     public function test_activityGetList_forbidden_for_guest(): void
@@ -41,7 +46,12 @@ final class WsHistoryTest extends ContractTestCase
     {
         $response = $this->wsAdmin('pwg.history.search');
 
-        self::assertArrayHasKey('lines', $response['result']);
-        self::assertIsArray($response['result']['lines']);
+        $result = $response['result'];
+        if (!is_array($result)) {
+            self::fail('pwg.history.search result is not an array');
+        }
+
+        self::assertArrayHasKey('lines', $result);
+        self::assertIsArray($result['lines']);
     }
 }

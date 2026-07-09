@@ -36,10 +36,19 @@ check_input_parameter('action', $_GET, false, '/^(activate|deactivate|set_defaul
 check_input_parameter('language', $_GET, false, '/^(' . join('|', array_keys($languages->fs_languages)) . ')$/');
 
 if (isset($_GET['action']) and isset($_GET['language']) and is_webmaster()) {
-    $page['errors'] = $languages->perform_action($_GET['action'], $_GET['language']);
+    // check_input_parameter() above already fatal_error()s if either value
+    // is non-scalar or doesn't match the expected pattern; query string
+    // values reaching this point are always plain strings in practice, but
+    // narrow explicitly for perform_action()'s string parameters.
+    $action = $_GET['action'];
+    $language_id = $_GET['language'];
 
-    if (empty($page['errors'])) {
-        redirect($base_url);
+    if (is_string($action) and is_string($language_id)) {
+        $page['errors'] = $languages->perform_action($action, $language_id);
+
+        if (empty($page['errors'])) {
+            redirect($base_url);
+        }
     }
 }
 

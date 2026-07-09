@@ -24,7 +24,7 @@ include_once PHPWG_ROOT_PATH . 'admin/include/tabsheet.class.php';
 
 $my_base_url = get_root_url() . 'admin.php?page=updates';
 
-if (isset($_GET['tab'])) {
+if (isset($_GET['tab']) && is_string($_GET['tab'])) {
     $page['tab'] = $_GET['tab'];
 } else {
     $page['tab'] = 'pwg';

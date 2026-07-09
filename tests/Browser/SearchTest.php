@@ -7,7 +7,18 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 it('API search finds photo by name', function (): void {
     $page = H::loginAsAdmin($this);
     $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Test Album ' . uniqid()]);
-    $albumId = (int) $album['result']['id'];
+
+    $albumResult = $album['result'] ?? null;
+    if (!is_array($albumResult)) {
+        throw new RuntimeException('pwg.categories.add response missing result: ' . var_export($album, true));
+    }
+
+    $rawAlbumId = $albumResult['id'] ?? null;
+    if (!is_numeric($rawAlbumId)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric result.id: ' . var_export($albumResult, true));
+    }
+
+    $albumId = (int) $rawAlbumId;
 
     $uniqueName = 'BrowserSearchTarget_' . uniqid();
     $image = H::makeTestImage('Search Target');
@@ -16,7 +27,18 @@ it('API search finds photo by name', function (): void {
 
     $search = H::wsCall($page, 'pwg.images.search', ['query' => $uniqueName]);
     expect($search['stat'])->toBe('ok');
-    $names = array_column($search['result']['images'], 'name');
+
+    $searchResult = $search['result'] ?? null;
+    if (!is_array($searchResult)) {
+        throw new RuntimeException('pwg.images.search response missing result: ' . var_export($search, true));
+    }
+
+    $images = $searchResult['images'] ?? null;
+    if (!is_array($images)) {
+        throw new RuntimeException('pwg.images.search result missing images: ' . var_export($searchResult, true));
+    }
+
+    $names = array_column($images, 'name');
     expect($names)->toContain($uniqueName);
 });
 

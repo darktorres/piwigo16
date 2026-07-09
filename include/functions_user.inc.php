@@ -91,7 +91,13 @@ function search_case_username($username)
     FROM `' . USERS_TABLE . '`;
   ');
     while ($r = pwg_db_fetch_assoc($q)) {
-        $SCU_users[$r['username']] = strtolower((string) $r['username']);
+        $username_value = $r['username'];
+        if ($username_value === null) {
+            // username is NOT NULL in schema; skip defensively rather than
+            // let null silently coerce to the '' array key
+            continue;
+        }
+        $SCU_users[$username_value] = strtolower($username_value);
     }
     // $SCU_users is now an associative table where the key is the account as
     // registered in the DB, and the value is this same account, in lower case
@@ -150,7 +156,7 @@ function register_user($login, #[\SensitiveParameter] $password, ?string $mail_a
         }
     }
 
-    $errors = trigger_change(
+    $errors_after_trigger = trigger_change(
         'register_user_check',
         $errors,
         [
@@ -159,6 +165,15 @@ function register_user($login, #[\SensitiveParameter] $password, ?string $mail_a
             'email' => $mail_address,
         ]
     );
+    // 'register_user_check' handlers are documented to filter/append to the
+    // array<int, string> $errors they receive and return the same shape,
+    // but $errors itself may still be null here (register_user()'s
+    // &$errors = [] default only applies when the caller omits the
+    // argument entirely -- callers that pass a reference to an
+    // uninitialized variable, like ws_users_add(), get null instead), so
+    // this can't be a real invariant to assert() -- filter defensively
+    // instead of trusting trigger_change()'s generic mixed return.
+    $errors = is_array($errors_after_trigger) ? array_values(array_filter($errors_after_trigger, is_string(...))) : [];
 
     // if no error until here, registration of the user
     if (empty($errors)) {
@@ -172,10 +187,16 @@ function register_user($login, #[\SensitiveParameter] $password, ?string $mail_a
         $user_id = (int) pwg_db_insert_id();
 
         // Assign by default groups
+        // boolean_to_string() only returns non-string when its input isn't
+        // a bool (@return mixed in dblayer/functions_mysqli.inc.php); we
+        // always call it with the literal `true`, so the result is
+        // guaranteed to be the string 'true'.
+        $is_default_true = boolean_to_string(true);
+        assert(is_string($is_default_true));
         $query = '
 SELECT id
   FROM `' . GROUPS_TABLE . '`
-  WHERE is_default = \'' . boolean_to_string(true) . '\'
+  WHERE is_default = \'' . $is_default_true . '\'
   ORDER BY id ASC
 ;';
         $result = pwg_query($query);
@@ -287,13 +308,19 @@ function build_user($user_id, bool $use_cache = true): array
 
     if ($user['id'] == $conf['guest_id'] and $user['status'] != 'guest') {
         $user['status'] = 'guest';
-        $user['internal_status']['guest_must_be_guest'] = true;
+        $internal_status = $user['internal_status'] ?? [];
+        if (! is_array($internal_status)) {
+            $internal_status = [];
+        }
+        $internal_status['guest_must_be_guest'] = true;
+        $user['internal_status'] = $internal_status;
     }
 
     // Check user theme. 2 possible problems:
     // 1. the user_infos.theme was not found in the themes table, thus themes.name is null
     // 2. the theme is not really installed on the filesystem
-    if (! isset($user['theme_name']) or ! check_theme_installed($user['theme'])) {
+    $theme = $user['theme'] ?? null;
+    if (! isset($user['theme_name']) or ! is_string($theme) or ! check_theme_installed($theme)) {
         $user['theme'] = get_default_theme();
         $user['theme_name'] = $user['theme'];
     }
@@ -383,13 +410,20 @@ SELECT
     }
     unset($value);
 
-    $userdata['preferences'] = empty($userdata['preferences']) ? [] : unserialize($userdata['preferences']);
+    // Kept out of $userdata: unserialize()'s own return type is native
+    // mixed, and merging a mixed value into $userdata here would widen
+    // every other key's inferred type to mixed for the remainder of this
+    // function. Merged back in just before the final return instead.
+    $preferences_raw = $userdata['preferences'];
+    $preferences = ! empty($preferences_raw) && is_string($preferences_raw)
+        ? unserialize($preferences_raw)
+        : [];
 
     if ($use_cache) {
         $generate_user_cache = false;
-        $cache_generation_token_name = 'generate_user_cache-u' . $userdata['id'];
+        $cache_generation_token_name = 'generate_user_cache-u' . $user_id;
         $exec_code = substr(sha1(random_bytes(1000)), 0, 4);
-        $logger_msg_prefix = '[' . __FUNCTION__ . '][exec_code=' . $exec_code . '][user_id=' . $userdata['id'] . '] ';
+        $logger_msg_prefix = '[' . __FUNCTION__ . '][exec_code=' . $exec_code . '][user_id=' . $user_id . '] ';
 
         if (! isset($userdata['need_update'])
             or ! is_bool($userdata['need_update'])
@@ -407,7 +441,7 @@ SELECT
 SELECT
    COUNT(*)
   FROM ' . USER_CACHE_TABLE . '
-  WHERE user_id=' . $userdata['id'] . '
+  WHERE user_id=' . $user_id . '
 ;';
                     $row = pwg_db_fetch_row(pwg_query($query));
                     assert($row !== null);
@@ -442,61 +476,85 @@ SELECT
 
         if ($generate_user_cache) {
             $user_cache_generation_start_time = get_moment();
-            $userdata['cache_update_time'] = time();
+            $cache_update_time = time();
+            $userdata['cache_update_time'] = $cache_update_time;
 
             // Set need update are done
-            $userdata['need_update'] = false;
+            $need_update = false;
+            $userdata['need_update'] = $need_update;
 
-            $userdata['forbidden_categories'] =
-              calculate_permissions($userdata['id'], $userdata['status']);
+            $status = $userdata['status'];
+            assert(is_string($status));
+
+            $forbidden_categories = calculate_permissions($user_id, $status);
+            $userdata['forbidden_categories'] = $forbidden_categories;
+
+            $level = $userdata['level'] ?? '0';
+            assert(is_string($level));
 
             /* now we build the list of forbidden images (this list does not contain
             images that are not in at least an authorized category)*/
             $query = '
 SELECT DISTINCT(id)
   FROM ' . IMAGES_TABLE . ' INNER JOIN ' . IMAGE_CATEGORY_TABLE . ' ON id=image_id
-  WHERE category_id NOT IN (' . $userdata['forbidden_categories'] . ')
-    AND level>' . $userdata['level'];
+  WHERE category_id NOT IN (' . $forbidden_categories . ')
+    AND level>' . $level;
             $forbidden_ids = query2array($query, null, 'id');
 
             if (empty($forbidden_ids)) {
                 $forbidden_ids[] = 0;
             }
-            $userdata['image_access_type'] = 'NOT IN'; // TODO maybe later
-            $userdata['image_access_list'] = implode(',', $forbidden_ids);
+            $image_access_type = 'NOT IN'; // TODO maybe later
+            $userdata['image_access_type'] = $image_access_type;
+            $image_access_list = implode(',', $forbidden_ids);
+            $userdata['image_access_list'] = $image_access_list;
 
             $query = '
 SELECT COUNT(DISTINCT(image_id)) as total
   FROM ' . IMAGE_CATEGORY_TABLE . '
-  WHERE category_id NOT IN (' . $userdata['forbidden_categories'] . ')
-    AND image_id ' . $userdata['image_access_type'] . ' (' . $userdata['image_access_list'] . ')';
+  WHERE category_id NOT IN (' . $forbidden_categories . ')
+    AND image_id ' . $image_access_type . ' (' . $image_access_list . ')';
             $row = pwg_db_fetch_row(pwg_query($query));
             assert($row !== null);
-            [$userdata['nb_total_images']] = $row;
+            [$nb_total_images] = $row;
+            assert($nb_total_images !== null);
+            $userdata['nb_total_images'] = $nb_total_images;
 
             // now we update user cache categories
+            // get_computed_categories() takes $userdata by reference and is
+            // declared with a generic array<string, mixed> shape, so
+            // PHPStan can no longer track any of $userdata's per-key types
+            // after this call -- every subsequent read below goes through
+            // a freshly-narrowed local variable instead of re-reading
+            // $userdata.
             $user_cache_cats = get_computed_categories($userdata, null);
-            if (! is_admin($userdata['status'])) { // for non admins we forbid categories with no image (feature 1053)
+            if (! is_admin($status)) { // for non admins we forbid categories with no image (feature 1053)
                 $forbidden_ids = [];
                 foreach ($user_cache_cats as $cat) {
                     if ($cat['count_images'] == 0) {
-                        $forbidden_ids[] = $cat['cat_id'];
+                        $cat_id = $cat['cat_id'];
+                        assert(is_string($cat_id));
+                        $forbidden_ids[] = $cat_id;
                         remove_computed_category($user_cache_cats, $cat);
                     }
                 }
                 if (! empty($forbidden_ids)) {
-                    if (empty($userdata['forbidden_categories'])) {
-                        $userdata['forbidden_categories'] = implode(',', $forbidden_ids);
+                    if (empty($forbidden_categories)) {
+                        $forbidden_categories = implode(',', $forbidden_ids);
                     } else {
-                        $userdata['forbidden_categories'] .= ',' . implode(',', $forbidden_ids);
+                        $forbidden_categories .= ',' . implode(',', $forbidden_ids);
                     }
+                    $userdata['forbidden_categories'] = $forbidden_categories;
                 }
             }
+
+            $last_photo_date = $userdata['last_photo_date'];
+            assert($last_photo_date === null || is_string($last_photo_date));
 
             // delete user cache
             $query = '
 DELETE FROM ' . USER_CACHE_CATEGORIES_TABLE . '
-  WHERE user_id = ' . $userdata['id'];
+  WHERE user_id = ' . $user_id;
             pwg_query($query);
 
             // Due to concurrency issues, we ask MySQL to ignore errors on
@@ -521,8 +579,15 @@ DELETE FROM ' . USER_CACHE_CATEGORIES_TABLE . '
             // update user cache
             $query = '
 DELETE FROM ' . USER_CACHE_TABLE . '
-  WHERE user_id = ' . $userdata['id'];
+  WHERE user_id = ' . $user_id;
             pwg_query($query);
+
+            // boolean_to_string() only returns non-string when its input
+            // isn't a bool (@return mixed in
+            // dblayer/functions_mysqli.inc.php); $need_update is always a
+            // real bool here, so the result is guaranteed to be a string.
+            $need_update_str = boolean_to_string($need_update);
+            assert(is_string($need_update_str));
 
             // for the same reason as user_cache_categories, we ignore error on
             // this insert
@@ -532,17 +597,19 @@ INSERT IGNORE INTO ' . USER_CACHE_TABLE . '
     last_photo_date,
     image_access_type, image_access_list)
   VALUES
-  (' . $userdata['id'] . ',\'' . boolean_to_string($userdata['need_update']) . '\','
-  . $userdata['cache_update_time'] . ',\''
-  . $userdata['forbidden_categories'] . '\',' . $userdata['nb_total_images'] . ',' .
-  (empty($userdata['last_photo_date']) ? 'NULL' : '\'' . $userdata['last_photo_date'] . '\'') .
-  ',\'' . $userdata['image_access_type'] . '\',\'' . $userdata['image_access_list'] . '\')';
+  (' . $user_id . ',\'' . $need_update_str . '\','
+  . $cache_update_time . ',\''
+  . $forbidden_categories . '\',' . $nb_total_images . ',' .
+  (empty($last_photo_date) ? 'NULL' : '\'' . $last_photo_date . '\'') .
+  ',\'' . $image_access_type . '\',\'' . $image_access_list . '\')';
             pwg_query($query);
 
             pwg_unique_exec_ends($cache_generation_token_name);
             $logger->info($logger_msg_prefix . 'user_cache generated, executed in ' . get_elapsed_time($user_cache_generation_start_time, get_moment()));
         }
     }
+
+    $userdata['preferences'] = $preferences;
 
     return $userdata;
 }
@@ -688,7 +755,10 @@ SELECT ' . $conf['user_fields']['id'] . '
         $row = pwg_db_fetch_row($result);
         assert($row !== null);
         [$user_id] = $row;
-        return $user_id;
+        // the id column is the primary key: never null/non-numeric for an
+        // existing row
+        assert($user_id !== null && is_numeric($user_id));
+        return (int) $user_id;
     }
 }
 
@@ -718,7 +788,10 @@ SELECT
         $row = pwg_db_fetch_row($result);
         assert($row !== null);
         [$user_id] = $row;
-        return $user_id;
+        // the id column is the primary key: never null/non-numeric for an
+        // existing row
+        assert($user_id !== null && is_numeric($user_id));
+        return (int) $user_id;
     }
 }
 
@@ -793,7 +866,10 @@ function get_default_user_value($value_name, $default)
  */
 function get_default_theme(): string
 {
-    $theme = (string) get_default_user_value('theme', PHPWG_DEFAULT_TEMPLATE);
+    $theme = get_default_user_value('theme', PHPWG_DEFAULT_TEMPLATE);
+    if (! is_string($theme)) {
+        $theme = PHPWG_DEFAULT_TEMPLATE;
+    }
     if (check_theme_installed($theme)) {
         return $theme;
     }
@@ -810,7 +886,8 @@ function get_default_theme(): string
  */
 function get_default_language()
 {
-    return get_default_user_value('language', PHPWG_DEFAULT_LANGUAGE);
+    $language = get_default_user_value('language', PHPWG_DEFAULT_LANGUAGE);
+    return is_string($language) ? $language : PHPWG_DEFAULT_LANGUAGE;
 }
 
 /**
@@ -820,8 +897,8 @@ function get_default_language()
  */
 function get_browser_language(): false|int|string
 {
-    $language_header = @$_SERVER['HTTP_ACCEPT_LANGUAGE'];
-    if ($language_header == '') {
+    $language_header = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null;
+    if (! is_string($language_header) || $language_header === '') {
         return false;
     }
 
@@ -928,7 +1005,15 @@ function create_user_infos($user_ids, $override_values = null): void
             }
 
             $insert = array_merge(
-                array_map(pwg_db_real_escape_string(...), $default_user),
+                // $default_user's real values are always string|null (raw
+                // DB fetch or an override_values caller passing a string);
+                // guard with is_string() rather than assume, so a
+                // hypothetical non-string override can't TypeError on
+                // pwg_db_real_escape_string()'s ?string param.
+                array_map(
+                    static fn (mixed $value): mixed => is_string($value) ? pwg_db_real_escape_string($value) : $value,
+                    $default_user
+                ),
                 [
                     'user_id' => $user_id,
                     'status' => $status,
@@ -995,14 +1080,18 @@ function log_user($user_id, $remember_me): void
     // TODO check value of cookie
 
     if (isset($_COOKIE['lang']) and $user['language'] != $_COOKIE['lang']) {
-        if (! array_key_exists((string) $_COOKIE['lang'], get_languages())) {
-            fatal_error('[Hacking attempt] the input parameter "' . $_COOKIE['lang'] . '" is not valid');
+        $lang_cookie = $_COOKIE['lang'];
+        if (! is_string($lang_cookie)) {
+            fatal_error('[Hacking attempt] the input parameter "lang" is not valid');
+        }
+        if (! array_key_exists($lang_cookie, get_languages())) {
+            fatal_error('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
         }
 
         single_update(
             USER_INFOS_TABLE,
             [
-                'language' => $_COOKIE['lang'],
+                'language' => $lang_cookie,
             ],
             [
                 'user_id' => $user_id,
@@ -1064,22 +1153,25 @@ function auto_login(): bool
     global $conf;
 
     if (isset($_COOKIE[$conf['remember_me_name']])) {
-        $cookie = explode('-', stripslashes((string) $_COOKIE[$conf['remember_me_name']]));
-        if (count($cookie) === 3
-            and is_numeric($cookie[0]) /* user id */
-            and is_numeric($cookie[1]) /* time */
-            and time() - $conf['remember_me_length'] <= $cookie[1]
-            and time() >= $cookie[1] /* cookie generated in the past */) {
-            $key = calculate_auto_login_key($cookie[0], $cookie[1], $username);
-            if ($key !== false and $key === $cookie[2]) {
-                // Since Piwigo 16, 'connected_with' in the session defines the authentication context (UI, API, etc).
-                // Auto-login via remember-me may miss this, so we set it to 'pwg_ui' for UI logins (not API).
-                if (script_basename() != 'ws') {
-                    $_SESSION['connected_with'] = 'pwg_ui';
+        $remember_me_cookie = $_COOKIE[$conf['remember_me_name']];
+        if (is_string($remember_me_cookie)) {
+            $cookie = explode('-', stripslashes($remember_me_cookie));
+            if (count($cookie) === 3
+                and is_numeric($cookie[0]) /* user id */
+                and is_numeric($cookie[1]) /* time */
+                and time() - $conf['remember_me_length'] <= $cookie[1]
+                and time() >= $cookie[1] /* cookie generated in the past */) {
+                $key = calculate_auto_login_key($cookie[0], $cookie[1], $username);
+                if ($key !== false and $key === $cookie[2]) {
+                    // Since Piwigo 16, 'connected_with' in the session defines the authentication context (UI, API, etc).
+                    // Auto-login via remember-me may miss this, so we set it to 'pwg_ui' for UI logins (not API).
+                    if (script_basename() != 'ws') {
+                        $_SESSION['connected_with'] = 'pwg_ui';
+                    }
+                    log_user($cookie[0], true);
+                    trigger_notify('login_success', stripslashes($username));
+                    return true;
                 }
-                log_user($cookie[0], true);
-                trigger_notify('login_success', stripslashes($username));
-                return true;
             }
         }
         setcookie($conf['remember_me_name'], '', [
@@ -1244,13 +1336,19 @@ function pwg_password_verify(
  * Tries to login a user given username and password (must be MySql escaped).
  *
  * @param string $username
- * @param string $password
+ * @param string|null $password both real callers (identification.php's
+ *   $_POST, ws_session_login()'s optional WS param) can genuinely pass
+ *   null when the field is omitted
  * @param bool $remember_me
  * @return bool
  */
 function try_log_user($username, $password, $remember_me)
 {
-    return trigger_change('try_log_user', false, $username, $password, $remember_me);
+    $result = trigger_change('try_log_user', false, $username, $password, $remember_me);
+    // trigger_change()'s own return type is mixed; the only registered
+    // handler (pwg_login()) returns bool, but fail closed (deny login)
+    // rather than trust a misbehaving third-party handler.
+    return is_bool($result) ? $result : false;
 }
 
 add_event_handler('try_log_user', 'pwg_login');
@@ -1290,16 +1388,25 @@ function pwg_login(bool $success, $username, $password, $remember_me): bool
     $fake_user = generate_fake_user();
 
     // Verify password with fallback to fake user
+    $hash = $user_found['password'] ?? $fake_user['password'];
+    assert(is_string($hash));
+    $verify_user_id = $user_found['id'] ?? $fake_user['id'];
+    if ($verify_user_id !== null) {
+        assert(is_numeric($verify_user_id));
+        $verify_user_id = (int) $verify_user_id;
+    }
     $password_verify = pwg_password_verify(
         $password,
-        $user_found['password'] ?? $fake_user['password'],
-        $user_found['id'] ?? $fake_user['id']
+        $hash,
+        $verify_user_id
     );
 
     // If the user was not found, is a guest, or the password is incorrect
     if (empty($user_found) || $user_found['status'] === 'guest' || ! $password_verify) {
         if (! empty($user_found) && ! $password_verify) {
-            pwg_activity('user', $user_found['id'], 'login_failure_wrong_password');
+            $found_user_id = $user_found['id'];
+            assert(is_string($found_user_id));
+            pwg_activity('user', $found_user_id, 'login_failure_wrong_password');
         }
         trigger_notify('login_failure', stripslashes($username));
         return false;
@@ -1328,15 +1435,26 @@ function pwg_login(bool $success, $username, $password, $remember_me): bool
     ];
     $state = trigger_change('finalize_login', $state, $user_found, $remember_me);
 
-    if (! $state['can_login']) {
-        pwg_activity('user', $user_found['id'], $state['reason'] ?? 'login_failure_before_log_user');
+    // trigger_change()'s own return type is mixed; `&&` always yields a
+    // real bool regardless of operand types, which is what narrows
+    // $can_login/$authenticated below without needing an assert().
+    $can_login = is_array($state) && ($state['can_login'] ?? null);
+    $reason = is_array($state) ? ($state['reason'] ?? null) : null;
+    $authenticated = is_array($state) && ($state['authenticated'] ?? null);
+
+    if (! $can_login) {
+        $found_user_id = $user_found['id'];
+        assert(is_string($found_user_id));
+        pwg_activity('user', $found_user_id, is_string($reason) ? $reason : 'login_failure_before_log_user');
         trigger_notify('login_failure_before_log_user', stripslashes($username));
         return false;
     }
 
     // If plugin handled authentication, skip log_user()
-    if (! $state['authenticated']) {
-        log_user($user_found['id'], $remember_me);
+    if (! $authenticated) {
+        $found_user_id = $user_found['id'];
+        assert(is_string($found_user_id) && is_numeric($found_user_id));
+        log_user($found_user_id, $remember_me);
     }
 
     clear_fake_user_cache();
@@ -1407,7 +1525,15 @@ function generate_fake_user()
         ];
     }
 
-    return $_SESSION['fake_user_cache'];
+    $fake_user = $_SESSION['fake_user_cache'];
+    assert(is_array($fake_user));
+    assert(array_key_exists('id', $fake_user) && $fake_user['id'] === null);
+    assert(isset($fake_user['password']) && is_string($fake_user['password']));
+
+    return [
+        'id' => null,
+        'password' => $fake_user['password'],
+    ];
 }
 
 /**
@@ -1427,8 +1553,11 @@ function logout_user(): void
 {
     global $conf;
 
-    trigger_notify('user_logout', @$_SESSION['pwg_uid']);
-    pwg_activity('user', @$_SESSION['pwg_uid'], 'logout');
+    $pwg_uid = $_SESSION['pwg_uid'] ?? null;
+    trigger_notify('user_logout', $pwg_uid);
+    if (is_int($pwg_uid) || is_string($pwg_uid)) {
+        pwg_activity('user', $pwg_uid, 'logout');
+    }
 
     $_SESSION = [];
     session_unset();
@@ -1709,21 +1838,23 @@ function get_recent_photos_sql($db_field): string
  *
  * @since 2.8
  * @param mixed $auth_key raw, unvalidated request input ($_GET['auth'], an
- *   Authorization header value, or a ws param) — always (string)-cast
- *   before use, deliberately not narrowed since a malicious/malformed
- *   request can hand this an array
+ *   Authorization header value, or a ws param) — normalized to '' when not
+ *   already a string (a malicious/malformed request can hand this an
+ *   array), which safely fails every format check below
  */
 function auth_key_login($auth_key, bool $connection_by_header = false): bool
 {
     global $conf, $user, $page;
 
+    $auth_key = is_string($auth_key) ? $auth_key : '';
+
     $valid_key = false;
     $secret_key = null;
-    if (preg_match('/^[a-z0-9]{30}$/i', (string) $auth_key)) {
+    if (preg_match('/^[a-z0-9]{30}$/i', $auth_key)) {
         $valid_key = 'auth_key';
-    } elseif (preg_match('/^pkid-\d{8}-[a-z0-9]{20}:[a-z0-9]{40}$/i', (string) $auth_key)) {
+    } elseif (preg_match('/^pkid-\d{8}-[a-z0-9]{20}:[a-z0-9]{40}$/i', $auth_key)) {
         $valid_key = 'api_key';
-        $tmp_key = explode(':', (string) $auth_key);
+        $tmp_key = explode(':', $auth_key);
         $auth_key = $tmp_key[0];
         $secret_key = $tmp_key[1];
     }
@@ -1767,7 +1898,8 @@ SELECT
     // the key is an api_key
     if ($valid_key === 'api_key') {
         // check secret
-        if (! pwg_password_verify($secret_key, $key['apikey_secret'])) {
+        $apikey_secret = $key['apikey_secret'];
+        if (! is_string($apikey_secret) || ! pwg_password_verify($secret_key, $apikey_secret)) {
             return false;
         }
 
@@ -1794,7 +1926,9 @@ SELECT
         }
     }
 
-    $user['id'] = $key['user_id'];
+    $key_user_id = $key['user_id'];
+    assert(is_numeric($key_user_id));
+    $user['id'] = $key_user_id;
 
     // update last used key
     single_update(
@@ -1803,7 +1937,7 @@ SELECT
             'last_used_on' => $key['dbnow'],
         ],
         [
-            'user_id' => $user['id'],
+            'user_id' => $key_user_id,
             'auth_key' => $key['auth_key'],
         ],
     );
@@ -1818,7 +1952,7 @@ SELECT
         return true;
     }
 
-    log_user($user['id'], false);
+    log_user($key_user_id, false);
     trigger_notify('login_success', $key['username']);
 
     // to be registered in history table by pwg_log function
@@ -2160,14 +2294,18 @@ SELECT COUNT(*)
  */
 function check_and_save_user_infos(array $params): array
 {
-    if (isset($params['username']) and strlen(str_replace(' ', '', $params['username'])) == 0) {
-        // return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
-        return [
-            'error' => [
-                'code' => WS_ERR_INVALID_PARAM,
-                'message' => 'Name field must not be empty',
-            ],
-        ];
+    if (isset($params['username'])) {
+        $username_check = $params['username'];
+        assert(is_string($username_check));
+        if (strlen(str_replace(' ', '', $username_check)) == 0) {
+            // return new PwgError(WS_ERR_INVALID_PARAM, 'Name field must not be empty');
+            return [
+                'error' => [
+                    'code' => WS_ERR_INVALID_PARAM,
+                    'message' => 'Name field must not be empty',
+                ],
+            ];
+        }
     }
 
     global $conf, $user, $service;
@@ -2176,9 +2314,21 @@ function check_and_save_user_infos(array $params): array
 
     $updates = $updates_infos = [];
     $update_status = null;
+    $user_ids_for_status = [];
 
-    if (count($params['user_id']) == 1) {
-        if (get_username($params['user_id'][0]) === false) {
+    // real callers (ws_users_setInfo/ws_users_setPreferences) always pass
+    // 'user_id' as a list of ints (WS_TYPE_ID-coerced) or numeric strings
+    // (the global $user['id'] raw DB value); normalize once here so every
+    // usage below is a well-typed int.
+    assert(is_array($params['user_id']));
+    $user_ids = [];
+    foreach ($params['user_id'] as $raw_user_id) {
+        assert(is_int($raw_user_id) || (is_string($raw_user_id) && is_numeric($raw_user_id)));
+        $user_ids[] = (int) $raw_user_id;
+    }
+
+    if (count($user_ids) == 1) {
+        if (get_username($user_ids[0]) === false) {
             // return new PwgError(WS_ERR_INVALID_PARAM, 'This user does not exist.');
             return [
                 'error' => [
@@ -2189,8 +2339,10 @@ function check_and_save_user_infos(array $params): array
         }
 
         if (! empty($params['username'])) {
-            $user_id = get_userid($params['username']);
-            if ($user_id and $user_id != $params['user_id'][0]) {
+            $username_param = $params['username'];
+            assert(is_string($username_param));
+            $user_id = get_userid($username_param);
+            if ($user_id and $user_id != $user_ids[0]) {
                 // return new PwgError(WS_ERR_INVALID_PARAM, l10n('this login is already used'));
                 return [
                     'error' => [
@@ -2199,7 +2351,7 @@ function check_and_save_user_infos(array $params): array
                     ],
                 ];
             }
-            if ($params['username'] != strip_tags((string) $params['username'])) {
+            if ($username_param != strip_tags($username_param)) {
                 // return new PwgError(WS_ERR_INVALID_PARAM, l10n('html tags are not allowed in login'));
                 return [
                     'error' => [
@@ -2208,11 +2360,13 @@ function check_and_save_user_infos(array $params): array
                     ],
                 ];
             }
-            $updates[$conf['user_fields']['username']] = $params['username'];
+            $updates[$conf['user_fields']['username']] = $username_param;
         }
 
         if (! empty($params['email'])) {
-            if (($error = validate_mail_address($params['user_id'][0], $params['email'])) != '') {
+            $email_param = $params['email'];
+            assert(is_string($email_param));
+            if (($error = validate_mail_address($user_ids[0], $email_param)) != '') {
                 // return new PwgError(WS_ERR_INVALID_PARAM, $error);
                 return [
                     'error' => [
@@ -2221,7 +2375,7 @@ function check_and_save_user_infos(array $params): array
                     ],
                 ];
             }
-            $updates[$conf['user_fields']['email']] = $params['email'];
+            $updates[$conf['user_fields']['email']] = $email_param;
         }
 
         if (! empty($params['password'])) {
@@ -2239,7 +2393,7 @@ SELECT
                 // we add all admin+webmaster users BUT the user herself
                 $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$user['id']]));
 
-                if (in_array($params['user_id'][0], $password_protected_users)) {
+                if (in_array($user_ids[0], $password_protected_users)) {
                     // return new PwgError(403, 'Only webmasters can change password of other "webmaster/admin" users');
                     return [
                         'error' => [
@@ -2250,7 +2404,9 @@ SELECT
                 }
             }
 
-            $updates[$conf['user_fields']['password']] = pwg_password_hash($params['password']);
+            $password_param = $params['password'];
+            assert(is_string($password_param));
+            $updates[$conf['user_fields']['password']] = pwg_password_hash($password_param);
         }
     }
 
@@ -2294,9 +2450,11 @@ SELECT
 
         // status update query is separated from the rest as not applying to the same
         // set of users (current, guest and webmaster can't be changed)
-        $params['user_id_for_status'] = array_diff($params['user_id'], $protected_users);
+        $user_ids_for_status = array_diff($user_ids, $protected_users);
 
-        $update_status = $params['status'];
+        $status_param = $params['status'];
+        assert(is_string($status_param));
+        $update_status = $status_param;
     }
 
     if (! empty($params['level']) or @$params['level'] === 0) {
@@ -2367,30 +2525,30 @@ SELECT
         USERS_TABLE,
         $updates,
         [
-            $conf['user_fields']['id'] => $params['user_id'][0],
+            $conf['user_fields']['id'] => $user_ids[0],
         ]
     );
 
     if (isset($updates[$conf['user_fields']['password']])) {
-        deactivate_user_auth_keys($params['user_id'][0]);
+        deactivate_user_auth_keys($user_ids[0]);
     }
 
     if (isset($updates[$conf['user_fields']['email']])) {
-        deactivate_password_reset_key($params['user_id'][0]);
+        deactivate_password_reset_key($user_ids[0]);
     }
 
-    if (isset($update_status) and count($params['user_id_for_status']) > 0) {
+    if (isset($update_status) and count($user_ids_for_status) > 0) {
         $query = '
 UPDATE ' . USER_INFOS_TABLE . ' SET
     status = "' . $update_status . '"
-  WHERE user_id IN(' . implode(',', $params['user_id_for_status']) . ')
+  WHERE user_id IN(' . implode(',', array_map(strval(...), $user_ids_for_status)) . ')
 ;';
         pwg_query($query);
 
         // we delete sessions, ie disconnect, for users if status becomes "guest".
         // It's like deactivating the user.
         if ($update_status == 'guest') {
-            foreach ($params['user_id_for_status'] as $user_id_for_status) {
+            foreach ($user_ids_for_status as $user_id_for_status) {
                 delete_user_sessions($user_id_for_status);
             }
         }
@@ -2407,21 +2565,30 @@ UPDATE ' . USER_INFOS_TABLE . ' SET ';
             } else {
                 $first = false;
             }
+            assert(is_scalar($value));
             $query .= $field . ' = "' . $value . '"';
         }
 
         $query .= '
-  WHERE user_id IN(' . implode(',', $params['user_id']) . ')
+  WHERE user_id IN(' . implode(',', array_map(strval(...), $user_ids)) . ')
 ;';
         pwg_query($query);
     }
 
     // manage association to groups
     if (! empty($params['group_id'])) {
+        $group_id_param = $params['group_id'];
+        assert(is_array($group_id_param));
+        $group_ids_param = [];
+        foreach ($group_id_param as $raw_group_id) {
+            assert(is_int($raw_group_id) || (is_string($raw_group_id) && is_numeric($raw_group_id)));
+            $group_ids_param[] = (int) $raw_group_id;
+        }
+
         $query = '
 DELETE
   FROM ' . USER_GROUP_TABLE . '
-  WHERE user_id IN (' . implode(',', $params['user_id']) . ')
+  WHERE user_id IN (' . implode(',', array_map(strval(...), $user_ids)) . ')
 ;';
         pwg_query($query);
 
@@ -2430,7 +2597,7 @@ DELETE
 SELECT
     id
   FROM `' . GROUPS_TABLE . '`
-  WHERE id IN (' . implode(',', $params['group_id']) . ')
+  WHERE id IN (' . implode(',', array_map(strval(...), $group_ids_param)) . ')
 ;';
         $group_ids = array_from_query($query, 'id');
 
@@ -2441,7 +2608,7 @@ SELECT
             $inserts = [];
 
             foreach ($group_ids as $group_id) {
-                foreach ($params['user_id'] as $user_id) {
+                foreach ($user_ids as $user_id) {
                     $inserts[] = [
                         'user_id' => $user_id,
                         'group_id' => $group_id,
@@ -2455,7 +2622,7 @@ SELECT
 
     invalidate_user_cache();
 
-    pwg_activity('user', $params['user_id'], 'edit');
+    pwg_activity('user', $user_ids, 'edit');
 
     return [
         'user_id' => $params['user_id'],
@@ -2608,8 +2775,9 @@ SELECT *
 
     // query2array() with no key_name/value_name always returns a
     // sequential list (array<int, mixed>) — see qsearch_get_images()'s
-    // comment in functions_search.inc.php for the general pattern.
-    $api_keys = array_values(query2array($query));
+    // comment in functions_search.inc.php for the general pattern; it's
+    // already a list, so no array_values() wrapper is needed.
+    $api_keys = query2array($query);
     if (! $api_keys) {
         return false;
     }
@@ -2621,6 +2789,7 @@ SELECT
     $row = pwg_db_fetch_row(pwg_query($query));
     assert($row !== null);
     [$now] = $row;
+    assert($now !== null);
 
     foreach ($api_keys as $i => $api_key) {
         $api_key['apikey_secret'] = str_repeat('*', 40);
@@ -2628,14 +2797,27 @@ SELECT
 
         $api_key['apikey_name'] = stripslashes((string) $api_key['apikey_name']);
 
-        $api_key['created_on_format'] = format_date($api_key['created_on'], ['day', 'month', 'year']);
-        $api_key['expired_on_format'] = format_date($api_key['expired_on'], ['day', 'month', 'year']);
+        // extracted before any bool value is assigned into $api_key below
+        // (e.g. 'is_expired'), which would otherwise widen every sibling
+        // key's inferred type for the rest of this loop iteration
+        $created_on = $api_key['created_on'];
+        assert(is_string($created_on));
+        $api_key['created_on_format'] = format_date($created_on, ['day', 'month', 'year']);
+
+        $expired_on_raw = $api_key['expired_on'];
+        assert(is_string($expired_on_raw));
+        $api_key['expired_on_format'] = format_date($expired_on_raw, ['day', 'month', 'year']);
+
+        // also extracted early, for the same reason -- read again below,
+        // after 'is_expired' has already widened $api_key's value type
+        $revoked_on = $api_key['revoked_on'];
+
         $api_key['last_used_on_since'] =
           $api_key['last_used_on']
           ? time_since($api_key['last_used_on'], 'day')
           : l10n('Never');
 
-        $expired_on = str2DateTime($api_key['expired_on']);
+        $expired_on = str2DateTime($expired_on_raw);
         $now = str2DateTime($now);
         if ($expired_on === false || $now === false) {
             throw new Exception('get_api_key(): str2DateTime() failed on a DB-stored date');
@@ -2655,16 +2837,16 @@ SELECT
             }
         }
 
-        $api_key['expired_on_since'] = time_since($api_key['expired_on'], 'day');
+        $api_key['expired_on_since'] = time_since($expired_on_raw, 'day');
 
         $api_key['revoked_on_since'] =
-          $api_key['revoked_on']
-          ? time_since($api_key['revoked_on'], 'day')
+          $revoked_on
+          ? time_since($revoked_on, 'day')
           : null;
 
         $api_key['revoked_on_message'] =
-          $api_key['revoked_on']
-          ? l10n('This API key was manually revoked on %s', format_date($api_key['revoked_on'], ['day', 'month', 'year']))
+          $revoked_on
+          ? l10n('This API key was manually revoked on %s', format_date($revoked_on, ['day', 'month', 'year']))
           : null;
 
         $api_keys[$i] = $api_key;
@@ -2792,7 +2974,10 @@ function save_edit_context(): void
         return;
     }
 
-    $_SESSION['edit_context'] ??= [];
+    $edit_context = $_SESSION['edit_context'] ?? null;
+    if (! is_array($edit_context)) {
+        $edit_context = [];
+    }
 
     // the $page['section_url'] is set in the include/section_init script. It
     // contains the URL describing the "context" of the photo. Examples:
@@ -2808,7 +2993,7 @@ function save_edit_context(): void
     // let's add the item on top of previous registered values and keep only the last 10 values
     $_SESSION['edit_context'] = array_slice([
         $page['image_id'] => $page['section_url'],
-    ] + $_SESSION['edit_context'], 0, 10, true);
+    ] + $edit_context, 0, 10, true);
 }
 
 /**
@@ -2819,9 +3004,15 @@ function save_edit_context(): void
  */
 function get_edit_context($image_id): false|string|null
 {
-    if (! isset($_SESSION['edit_context'][$image_id])) {
+    $edit_context = $_SESSION['edit_context'] ?? null;
+    if (! is_array($edit_context) || ! isset($edit_context[$image_id])) {
         return false;
     }
 
-    return preg_replace('/^\/' . $image_id . '\//', '', (string) $_SESSION['edit_context'][$image_id]);
+    $value = $edit_context[$image_id];
+    if (! is_string($value)) {
+        return false;
+    }
+
+    return preg_replace('/^\/' . $image_id . '\//', '', $value);
 }

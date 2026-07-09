@@ -56,8 +56,15 @@ final class WsImagesMutationTest extends ContractTestCase
     {
         // The ephemeral key must come from the server; getInfo returns one in
         // result.comment_post_data.key (valid_after_seconds=2, so sleep first).
-        $info = $this->callWs('pwg.images.getInfo', ['image_id' => self::FIXTURE_IMAGE_ID]);
-        $key  = (string) ($info['result']['comment_post']['key'] ?? '');
+        $info       = $this->callWs('pwg.images.getInfo', ['image_id' => self::FIXTURE_IMAGE_ID]);
+        $infoResult = $info['result'] ?? null;
+        $key        = '';
+        if (is_array($infoResult)) {
+            $commentPost = $infoResult['comment_post'] ?? null;
+            if (is_array($commentPost) && is_string($commentPost['key'] ?? null)) {
+                $key = $commentPost['key'];
+            }
+        }
         sleep(3);
 
         $response = $this->callWs('pwg.images.addComment', [
@@ -69,7 +76,12 @@ final class WsImagesMutationTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.images.addComment', $response);
-        self::assertArrayHasKey('id', $response['result']['comment']);
+
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $comment = $result['comment'] ?? null;
+        self::assertIsArray($comment);
+        self::assertArrayHasKey('id', $comment);
     }
 
     public function test_emptyLounge_returns_rows(): void
@@ -77,7 +89,9 @@ final class WsImagesMutationTest extends ContractTestCase
         $response = $this->callWs('pwg.images.emptyLounge', []);
 
         self::assertSame('ok', $response['stat']);
-        self::assertArrayHasKey('rows', $response['result']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertArrayHasKey('rows', $result);
     }
 
     public function test_rate_invalid_value_returns_fail(): void

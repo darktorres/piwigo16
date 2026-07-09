@@ -36,7 +36,8 @@ trigger_notify('loc_begin_element_set_unit');
 if (isset($_POST['submit'])) {
     check_pwg_token();
     check_input_parameter('element_ids', $_POST, false, '/^\d+(,\d+)*$/');
-    $collection = explode(',', (string) $_POST['element_ids']);
+    $element_ids_param = $_POST['element_ids'] ?? null;
+    $collection = explode(',', is_string($element_ids_param) ? $element_ids_param : '');
 
     $datas = [];
 
@@ -48,6 +49,14 @@ SELECT id, date_creation
     $result = pwg_query($query);
 
     while ($row = pwg_db_fetch_assoc($result)) {
+        // IMAGES_TABLE.id is a NOT NULL auto_increment primary key; this
+        // guard only defends against the generic string|null element type
+        // pwg_db_fetch_assoc() carries for every column.
+        if ($row['id'] === null) {
+            continue;
+        }
+        $image_id = (int) $row['id'];
+
         $data = [];
 
         $data['id'] = $row['id'];
@@ -58,7 +67,8 @@ SELECT id, date_creation
         if ($conf['allow_html_descriptions']) {
             $data['comment'] = @$_POST['description-' . $row['id']];
         } else {
-            $data['comment'] = strip_tags((string) @$_POST['description-' . $row['id']]);
+            $description_post = $_POST['description-' . $row['id']] ?? null;
+            $data['comment'] = strip_tags(is_string($description_post) ? $description_post : '');
         }
 
         if (! empty($_POST['date_creation-' . $row['id']])) {
@@ -71,10 +81,15 @@ SELECT id, date_creation
 
         // tags management
         $tag_ids = [];
-        if (! empty($_POST['tags-' . $row['id']])) {
-            $tag_ids = get_tag_ids($_POST['tags-' . $row['id']]);
+        $raw_tags_post = $_POST['tags-' . $row['id']] ?? null;
+        if (! empty($raw_tags_post)) {
+            if (is_array($raw_tags_post)) {
+                $tag_ids = get_tag_ids(array_filter($raw_tags_post, 'is_string'));
+            } elseif (is_string($raw_tags_post)) {
+                $tag_ids = get_tag_ids($raw_tags_post);
+            }
         }
-        set_tags($tag_ids, $row['id']);
+        set_tags($tag_ids, $image_id);
     }
 
     mass_updates(
@@ -97,7 +112,8 @@ if (isset($_POST['nb_photos_deleted'])) {
 
     // let's fake a collection (we don't know the image_ids so we use "null", we only
     // care about the number of items here)
-    $collection = array_fill(0, $_POST['nb_photos_deleted'], null);
+    $nb_photos_deleted = is_numeric($_POST['nb_photos_deleted']) ? (int) $_POST['nb_photos_deleted'] : 0;
+    $collection = array_fill(0, $nb_photos_deleted, null);
 } elseif (isset($_POST['setSelected'])) {
     // Here we don't use check_input_parameter because preg_match has a limit in
     // the repetitive pattern. Found a limit to 3276 but may depend on memory.
@@ -105,7 +121,8 @@ if (isset($_POST['nb_photos_deleted'])) {
     // check_input_parameter('whole_set', $_POST, false, '/^\d+(,\d+)*$/');
     //
     // Instead, let's break the input parameter into pieces and check pieces one by one.
-    $collection = explode(',', (string) $_POST['whole_set']);
+    $whole_set_param = $_POST['whole_set'] ?? null;
+    $collection = explode(',', is_string($whole_set_param) ? $whole_set_param : '');
 
     foreach ($collection as $id) {
         if (! preg_match('/^\d+$/', $id)) {
@@ -148,7 +165,7 @@ $template->assign('ACTIVE_PLUGINS', array_keys($pwg_loaded_plugins));
 if (! empty($_GET['display'])) {
     // conf_update_param('batch_manager_images_per_page_unit' , intval($_GET['display']));
     // $page['nb_images'] = $conf['batch_manager_images_per_page_unit'];
-    $page['nb_images'] = intval($_GET['display']);
+    $page['nb_images'] = is_numeric($_GET['display']) ? intval($_GET['display']) : 0;
 } elseif (in_array($conf['batch_manager_images_per_page_unit'], [5, 10, 50])) {
     $page['nb_images'] = $conf['batch_manager_images_per_page_unit'];
 } else {
@@ -169,14 +186,24 @@ if (count($page['cat_elements_id']) > 0) {
 
     $element_ids = [];
 
+    // Locally-typed snapshot of $_SESSION['bulk_manager_filter']. It is
+    // always written as an array by admin/batch_manager.php (which includes
+    // this file) before this file runs; this guards against corrupted/foreign
+    // session state and lets PHPStan track a real array shape for the reads
+    // below (this file never writes to $_SESSION['bulk_manager_filter']).
+    /** @var array<string, mixed> $bulk_manager_filter */
+    $bulk_manager_filter = isset($_SESSION['bulk_manager_filter']) && is_array($_SESSION['bulk_manager_filter']) ? $_SESSION['bulk_manager_filter'] : [];
+
     $is_category = false;
-    if (isset($_SESSION['bulk_manager_filter']['category'])
-        and ! isset($_SESSION['bulk_manager_filter']['category_recursive'])) {
+    $filter_category_id = 0;
+    if (isset($bulk_manager_filter['category']) && is_numeric($bulk_manager_filter['category'])
+        and ! isset($bulk_manager_filter['category_recursive'])) {
         $is_category = true;
+        $filter_category_id = (int) $bulk_manager_filter['category'];
     }
 
-    if (isset($_SESSION['bulk_manager_filter']['prefilter'])
-        and $_SESSION['bulk_manager_filter']['prefilter'] == 'duplicates') {
+    if (isset($bulk_manager_filter['prefilter'])
+        and $bulk_manager_filter['prefilter'] == 'duplicates') {
         $conf['order_by'] = ' ORDER BY file, id';
     }
 
@@ -185,10 +212,10 @@ SELECT *
   FROM ' . IMAGES_TABLE;
 
     if ($is_category) {
-        $category_info = get_cat_info($_SESSION['bulk_manager_filter']['category']);
+        $category_info = get_cat_info($filter_category_id);
 
         $conf['order_by'] = $conf['order_by_inside_category'];
-        if (! empty($category_info['image_order'])) {
+        if (! empty($category_info['image_order']) && is_string($category_info['image_order'])) {
             $conf['order_by'] = ' ORDER BY ' . $category_info['image_order'];
         }
 
@@ -201,7 +228,7 @@ SELECT *
 
     if ($is_category) {
         $query .= '
-    AND category_id = ' . $_SESSION['bulk_manager_filter']['category'];
+    AND category_id = ' . $filter_category_id;
     }
 
     $query .= '
@@ -228,6 +255,13 @@ SELECT
     }
 
     foreach ($images as $row) {
+        // IMAGES_TABLE.id is a NOT NULL auto_increment primary key; this
+        // guard only defends against the generic string|null element type
+        // query2array() carries for every column.
+        if ($row['id'] === null) {
+            continue;
+        }
+
         $element_ids[] = $row['id'];
 
         $src_image = new SrcImage($row);
@@ -245,8 +279,9 @@ SELECT
 
         $tag_selection = get_taglist($query);
 
+        $row_file = is_string($row['file']) ? $row['file'] : '';
         $legend = render_element_name($row);
-        if ($legend != get_name_from_file($row['file'])) {
+        if ($legend != get_name_from_file($row_file)) {
             $legend .= ' (' . $row['file'] . ')';
         }
         $extTab = explode('.', (string) $row['path']);
@@ -272,6 +307,14 @@ SELECT
         assert($media['image'] !== null);
 
         while ($item = pwg_db_fetch_assoc($sub_result)) {
+            // IMAGE_CATEGORY_TABLE/CATEGORIES_TABLE.category_id/uppercats are
+            // NOT NULL; this guard only defends against the generic
+            // string|null element type pwg_db_fetch_assoc() carries for
+            // every column.
+            if ($item['category_id'] === null || $item['uppercats'] === null) {
+                continue;
+            }
+
             $name =
               get_cat_display_name_cache(
                   $item['uppercats'],
@@ -298,7 +341,7 @@ SELECT
     WHERE image_id = ' . $row['id'] . '
     ;';
         $authorizeds = array_diff(
-            array_from_query($query, 'category_id'),
+            array_filter(array_from_query($query, 'category_id'), 'is_string'),
             explode(
                 ',',
                 calculate_permissions($user['id'], $user['status'])
@@ -330,6 +373,8 @@ SELECT
         $admin_url_start = $admin_photo_base_url . '-properties';
         $admin_url_start .= isset($row['cat_id']) ? '&amp;cat_id=' . $row['cat_id'] : '';
         $selected_level = $row['level'] ?? $row['level'];
+        $row_filesize = is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0;
+        $row_date_available = is_string($row['date_available']) ? $row['date_available'] : '';
 
         $template->append(
             'elements',
@@ -351,11 +396,11 @@ SELECT
                     'TITLE' => render_element_name($row),
                     'DIMENSIONS' => @$row['width'] . 'x' . @$row['height'] . ' px',
                     'FORMAT' => ($row['width'] >= $row['height']) ? 1 : 0, // 0:horizontal, 1:vertical
-                    'FILESIZE' => l10n('%.2f MB', $row['filesize'] / 1024),
-                    'REGISTRATION_DATE' => format_date($row['date_available']),
+                    'FILESIZE' => l10n('%.2f MB', $row_filesize / 1024),
+                    'REGISTRATION_DATE' => format_date($row_date_available),
                     'EXT' => l10n('%s file type', end($extTab)),
-                    'POST_DATE' => l10n('Added on %s', format_date($row['date_available'], ['day', 'month', 'year'])),
-                    'AGE' => l10n(ucfirst(time_since($row['date_available'], 'year'))),
+                    'POST_DATE' => l10n('Added on %s', format_date($row_date_available, ['day', 'month', 'year'])),
+                    'AGE' => l10n(ucfirst(time_since($row_date_available, 'year'))),
                     'ADDED_BY' => l10n('Added by %s', $added_by_username_of[$row['added_by']] ?? l10n('N/A')),
                     'STATS' => l10n('Visited %d times', $row['hit']),
                     'FILE' => l10n('%s', $row['file']),

@@ -43,7 +43,30 @@ if ($_POST['resize_quality'] < 50 or $_POST['resize_quality'] > 98) {
     $errors['resize_quality'] = '[50..98]';
 }
 
-$pderivatives = $_POST['d'];
+$pderivatives_post = $_POST['d'] ?? null;
+
+// The form posts a nested array keyed by derivative type, e.g.
+// d[square][w], d[square][enabled] — every leaf value therefore arrives as
+// a plain string. Anything else (missing key, or a tampered field name
+// producing a nested array where a scalar is expected) is dropped here so
+// the rest of this file can rely on a real, non-mixed shape instead of
+// bare-casting raw superglobal data at each point of use.
+/** @var array<string, array<string, string|int|bool|null>> $pderivatives */
+$pderivatives = [];
+if (is_array($pderivatives_post)) {
+    foreach ($pderivatives_post as $ptype => $pfields) {
+        if (! is_string($ptype) || ! is_array($pfields)) {
+            continue;
+        }
+        $normalized = [];
+        foreach ($pfields as $pkey => $pvalue) {
+            if (is_string($pkey) && is_string($pvalue)) {
+                $normalized[$pkey] = $pvalue;
+            }
+        }
+        $pderivatives[$ptype] = $normalized;
+    }
+}
 
 // step 1 - sanitize HTML input
 foreach ($pderivatives as $type => &$pderivative) {
@@ -121,13 +144,25 @@ foreach (ImageStdParams::get_all_types() as $type) {
 
 // step 3 - save data
 if (count($errors) == 0 && count($derivative_errors) == 0) {
-    $quality_changed = ImageStdParams::$quality != intval($_POST['resize_quality']);
-    ImageStdParams::$quality = intval($_POST['resize_quality']);
+    $resize_quality_post = $_POST['resize_quality'] ?? null;
+    $resize_quality = is_numeric($resize_quality_post) ? intval($resize_quality_post) : 0;
+    $quality_changed = ImageStdParams::$quality != $resize_quality;
+    ImageStdParams::$quality = $resize_quality;
 
     $enabled = ImageStdParams::get_defined_type_map();
-    $disabled = safe_unserialize(ImageStdParams::get_disabled_type_map());
-    if ($disabled === false) {
-        $disabled = [];
+    $disabled_raw = safe_unserialize(ImageStdParams::get_disabled_type_map());
+    // ImageStdParams persists this map as serialize()d DerivativeParams[]
+    // (see ImageStdParams::save_disabled()); unserialize() is only typed
+    // mixed by PHP itself, so filter out anything that isn't actually a
+    // DerivativeParams instance rather than trusting the blob blindly.
+    /** @var array<string, DerivativeParams> $disabled */
+    $disabled = [];
+    if (is_array($disabled_raw)) {
+        foreach ($disabled_raw as $disabled_type => $disabled_params) {
+            if (is_string($disabled_type) && $disabled_params instanceof DerivativeParams) {
+                $disabled[$disabled_type] = $disabled_params;
+            }
+        }
     }
     $changed_types = [];
 
@@ -138,7 +173,7 @@ if (count($errors) == 0 && count($derivative_errors) == 0) {
             $new_params = new DerivativeParams(
                 new SizingParams(
                     [intval($pderivative['w']), intval($pderivative['h'])],
-                    round($pderivative['crop'] / 100, 2),
+                    round(intval($pderivative['crop']) / 100, 2),
                     [intval($pderivative['minw']), intval($pderivative['minh'])]
                 )
             );
@@ -217,11 +252,11 @@ if (count($errors) == 0 && count($derivative_errors) == 0) {
     ]);
 } else {
     foreach ($original_fields as $field) {
-        if (isset($_POST[$field])) {
+        if (isset($_POST[$field]) && is_string($_POST[$field])) {
             $template->append(
                 'sizes',
                 [
-                    $field => strip_tags((string) $_POST[$field]), // strip_tags prevents from XSS attempt
+                    $field => strip_tags($_POST[$field]), // strip_tags prevents from XSS attempt
                 ],
                 true
             );

@@ -61,12 +61,22 @@ class languages
                     break;
                 }
 
+                // 'version' and 'name' are populated by get_fs_languages()
+                // via array_map(htmlspecialchars(...), ...), so both are
+                // strings there; narrow the mixed read-back from the
+                // array<string, mixed>-typed $fs_languages property before
+                // interpolating into SQL.
+                $fs_version = $this->fs_languages[$language_id]['version'] ?? null;
+                $fs_version = is_scalar($fs_version) ? (string) $fs_version : '0';
+                $fs_name = $this->fs_languages[$language_id]['name'] ?? null;
+                $fs_name = is_scalar($fs_name) ? (string) $fs_name : '';
+
                 $query = '
 INSERT INTO ' . LANGUAGES_TABLE . '
   (id, version, name)
   VALUES(\'' . $language_id . '\',
-         \'' . $this->fs_languages[$language_id]['version'] . '\',
-         \'' . $this->fs_languages[$language_id]['name'] . '\')
+         \'' . $fs_version . '\',
+         \'' . $fs_name . '\')
 ;';
                 pwg_query($query);
                 break;
@@ -203,7 +213,13 @@ UPDATE ' . USER_INFOS_TABLE . '
         $result = pwg_query($query);
 
         while ($row = pwg_db_fetch_assoc($result)) {
-            $this->db_languages[$row['id']] = $row['name'];
+            // 'id' is the LANGUAGES_TABLE primary key (NOT NULL); guard it
+            // anyway since pwg_db_fetch_assoc() types every column string|null.
+            $id = $row['id'];
+            if (! is_string($id)) {
+                continue;
+            }
+            $this->db_languages[$id] = $row['name'];
         }
     }
 
@@ -226,13 +242,32 @@ UPDATE ' . USER_INFOS_TABLE . '
         // $result is never a resource here: no fopen() handle is passed to
         // fetchRemote() above.
         if (fetchRemote($url, $result, $get_data) and is_string($result) and $pem_versions = @unserialize($result)) {
-            if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
-                $version = $pem_versions[0]['name'];
-            }
-            $branch = get_branch_from_version($version);
-            foreach ($pem_versions as $pem_version) {
-                if (str_starts_with((string) $pem_version['name'], $branch)) {
-                    $versions_to_check[] = $pem_version['id'];
+            // unserialize() of a remote PEM response is genuinely untyped —
+            // validate it's an array of arrays before indexing into it
+            // below, rather than trusting the external payload (see the
+            // identical narrowing in plugins.class.php::get_versions_to_check()).
+            if (is_array($pem_versions)) {
+                if (! preg_match('/^\d+\.\d+\.\d+$/', $version)) {
+                    $first_pem_version = $pem_versions[0] ?? null;
+                    if (is_array($first_pem_version)) {
+                        $first_pem_version_name = $first_pem_version['name'] ?? null;
+                        if (is_string($first_pem_version_name)) {
+                            $version = $first_pem_version_name;
+                        }
+                    }
+                }
+                $branch = get_branch_from_version($version);
+                foreach ($pem_versions as $pem_version) {
+                    if (! is_array($pem_version)) {
+                        continue;
+                    }
+                    $pem_version_name = $pem_version['name'] ?? null;
+                    if (is_string($pem_version_name) and str_starts_with($pem_version_name, $branch)) {
+                        $pem_version_id = $pem_version['id'] ?? null;
+                        if (is_scalar($pem_version_id)) {
+                            $versions_to_check[] = (string) $pem_version_id;
+                        }
+                    }
                 }
             }
         }
@@ -243,8 +278,10 @@ UPDATE ' . USER_INFOS_TABLE . '
         // Languages to check
         $languages_to_check = [];
         foreach ($this->fs_languages as $fs_language) {
-            if (isset($fs_language['extension'])) {
-                $languages_to_check[] = $fs_language['extension'];
+            // 'extension' is only ever set by get_fs_languages() to the
+            // numeric-string PEM extension id it parsed from common.lang.php.
+            if (isset($fs_language['extension']) and is_scalar($fs_language['extension'])) {
+                $languages_to_check[] = (string) $fs_language['extension'];
             }
         }
 
@@ -275,8 +312,17 @@ UPDATE ' . USER_INFOS_TABLE . '
                 return false;
             }
             foreach ($pem_languages as $language) {
-                if (preg_match('/^.*? \[[A-Z]{2}\]$/', (string) $language['extension_name'])) {
-                    $this->server_languages[$language['extension_id']] = $language;
+                if (! is_array($language) || ! isset($language['extension_id'])) {
+                    continue;
+                }
+                /** @var array<string, mixed> $language */
+                $extension_id = $language['extension_id'];
+                if (! is_string($extension_id) && ! is_int($extension_id)) {
+                    continue;
+                }
+                $extension_name = $language['extension_name'] ?? null;
+                if (is_string($extension_name) and preg_match('/^.*? \[[A-Z]{2}\]$/', $extension_name)) {
+                    $this->server_languages[$extension_id] = $language;
                 }
             }
             @uasort($this->server_languages, $this->extension_name_compare(...));
@@ -427,6 +473,14 @@ UPDATE ' . USER_INFOS_TABLE . '
      */
     public function extension_name_compare(array $a, array $b): int
     {
-        return strcmp(strtolower((string) $a['extension_name']), strtolower((string) $b['extension_name']));
+        // 'extension_name' comes from an untyped unserialize() of a remote
+        // PEM payload (see get_server_languages()); only cast scalars
+        // actually safe to stringify, treat anything else as empty for
+        // comparison (same pattern as plugins.class.php::extension_name_compare()).
+        $a_name = $a['extension_name'] ?? null;
+        $b_name = $b['extension_name'] ?? null;
+        $a_name = is_scalar($a_name) ? (string) $a_name : '';
+        $b_name = is_scalar($b_name) ? (string) $b_name : '';
+        return strcmp(strtolower($a_name), strtolower($b_name));
     }
 }

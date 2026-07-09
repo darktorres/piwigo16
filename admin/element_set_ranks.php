@@ -59,12 +59,13 @@ $image_order_choices = ['default', 'rank', 'user_define'];
 $image_order_choice = 'default';
 
 if (isset($_POST['submit'])) {
-    if (isset($_POST['rank_of_image'])) {
-        asort($_POST['rank_of_image'], SORT_NUMERIC);
+    if (isset($_POST['rank_of_image']) && is_array($_POST['rank_of_image'])) {
+        $rank_of_image = array_filter($_POST['rank_of_image'], 'is_numeric');
+        asort($rank_of_image, SORT_NUMERIC);
 
         save_images_order(
             (int) $page['category_id'],
-            array_map(intval(...), array_keys($_POST['rank_of_image']))
+            array_map(intval(...), array_keys($rank_of_image))
         );
     }
 
@@ -77,12 +78,14 @@ if (isset($_POST['submit'])) {
 
     $image_order = null;
     if ($image_order_choice == 'user_define') {
+        $post_image_order = isset($_POST['image_order']) && is_array($_POST['image_order']) ? $_POST['image_order'] : [];
         for ($i = 0; $i < 3; $i++) {
-            if (! empty($_POST['image_order'][$i]) and in_array($_POST['image_order'][$i], array_keys($sort_fields))) {
+            $order_value = $post_image_order[$i] ?? null;
+            if (is_string($order_value) && $order_value !== '' && in_array($order_value, array_keys($sort_fields), true)) {
                 if (! empty($image_order)) {
                     $image_order .= ',';
                 }
-                $image_order .= $_POST['image_order'][$i];
+                $image_order .= $order_value;
             }
         }
     } elseif ($image_order_choice == 'rank') {
@@ -98,7 +101,7 @@ UPDATE ' . CATEGORIES_TABLE . '
 
     if (isset($_POST['image_order_subcats'])) {
         $cat_info = get_cat_info((int) $page['category_id']);
-        if (! is_array($cat_info)) {
+        if (! is_array($cat_info) || ! is_string($cat_info['uppercats'] ?? null)) {
             page_not_found('Requested album does not exist');
         }
 
@@ -133,7 +136,7 @@ SELECT *
   WHERE id = ' . $page['category_id'] . '
 ;';
 $category = pwg_db_fetch_assoc(pwg_query($query));
-if (! is_array($category)) {
+if (! is_array($category) || ! is_string($category['uppercats'] ?? null)) {
     page_not_found('Requested album does not exist');
 }
 
@@ -185,7 +188,7 @@ if (pwg_db_num_rows($result) > 0) {
         if (! empty($row['name'])) {
             $thumbnail_name = $row['name'];
         } else {
-            $file_wo_ext = get_filename_wo_extension($row['file']);
+            $file_wo_ext = is_string($row['file']) ? get_filename_wo_extension($row['file']) : '';
             $thumbnail_name = str_replace('_', ' ', $file_wo_ext);
         }
         $current_rank++;

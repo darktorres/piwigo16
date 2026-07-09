@@ -53,7 +53,8 @@ if (! isset($_GET['output']) or $_GET['output'] != 'content_only') {
 
 if (
     isset($_GET['page'])
-    and preg_match('/^[a-z_]*$/', (string) $_GET['page'])
+    and is_string($_GET['page'])
+    and preg_match('/^[a-z_]*$/', $_GET['page'])
 ) {
     $help_content = load_language(
         'help/' . $_GET['page'] . '.html',
@@ -69,6 +70,9 @@ if (
     }
 
     $help_content = trigger_change('get_popup_help_content', $help_content, $_GET['page']);
+    if (! is_string($help_content)) {
+        $help_content = '';
+    }
 } else {
     die('Hacking attempt!');
 }

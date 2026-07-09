@@ -15,7 +15,27 @@ if (! $persistent_cache instanceof PersistentCache) {
     fatal_error('persistent cache not initialized');
 }
 
-$filters_views = safe_unserialize(conf_get_param('filters_views', $conf['default_filters_views']));
+$filters_views_conf = conf_get_param('filters_views', null);
+if (is_array($filters_views_conf) || is_string($filters_views_conf)) {
+    $filters_views_raw = safe_unserialize($filters_views_conf);
+} else {
+    $filters_views_raw = $conf['default_filters_views'];
+}
+
+if (! is_array($filters_views_raw)) {
+    $filters_views_raw = $conf['default_filters_views'];
+    if (! is_array($filters_views_raw)) {
+        $filters_views_raw = [];
+    }
+}
+
+// 'last_filters_conf' is a lone boolean flag stored alongside the per-filter
+// settings in this config value (see admin/configuration.php); every other
+// entry is a settings array. This file only ever reads the per-filter
+// arrays by name, so drop the flag here to give $filters_views a uniform,
+// narrow shape.
+/** @var array<string, array<string, mixed>> $filters_views */
+$filters_views = array_filter($filters_views_raw, 'is_array');
 
 $template->assign('display_filter', $filters_views);
 
@@ -38,6 +58,19 @@ if ($page['section'] == 'search' and isset($page['search_details'])) {
     include_once PHPWG_ROOT_PATH . 'include/functions_search.inc.php';
 
     $my_search = get_search_array($page['search']);
+    if (! is_array($my_search)) {
+        // get_search_array() only returns false when unserialize() fails on
+        // malformed data; this file only runs for an already-validated
+        // search (get_search_info() calls bad_request() otherwise), so this
+        // is just a defensive fallback keeping the rest of this file array-typed.
+        $my_search = [];
+    }
+    if (! isset($my_search['fields']) || ! is_array($my_search['fields'])) {
+        $my_search['fields'] = [];
+    }
+
+    /** @var array<string, mixed> $search_fields */
+    $search_fields = &$my_search['fields'];
 
     $page['search_details']['forbidden'] = get_sql_condition_FandF(
         [
@@ -60,28 +93,63 @@ if ($page['section'] == 'search' and isset($page['search_details'])) {
         $search_items_clause = '1=1';
     }
 
-    if (isset($my_search['fields']['allwords']) and ! ($display_filters['words']['access'])) {
-        unset($my_search['fields']['allwords']);
+    if (isset($search_fields['allwords']) and ! ($display_filters['words']['access'])) {
+        unset($search_fields['allwords']);
     }
 
-    if (isset($my_search['fields']['tags']) and $display_filters['tags']['access']) {
+    if (isset($search_fields['tags']) and $display_filters['tags']['access']) {
         $filter_tags = [];
 
         // TODO calling get_available_tags(), with lots of photos/albums/tags may cost time,
         // we should reuse the result if already executed (for building the menu for example)
+
+        if (! is_array($search_fields['tags'])) {
+            $search_fields['tags'] = [];
+        }
+
+        $tag_words = [];
+        if (is_array($search_fields['tags']['words'] ?? null)) {
+            foreach ($search_fields['tags']['words'] as $tag_word) {
+                if (is_int($tag_word) || is_string($tag_word)) {
+                    $tag_words[] = $tag_word;
+                }
+            }
+        }
+
+        /**
+         * @param array<int, array<string, mixed>> $tags
+         * @return list<int|string>
+         */
+        $extract_tag_ids = static function (array $tags): array {
+            $ids = [];
+            foreach ($tags as $tag) {
+                $tag_id = $tag['id'] ?? null;
+                if (is_int($tag_id) || is_string($tag_id)) {
+                    $ids[] = $tag_id;
+                }
+            }
+            return $ids;
+        };
 
         $other_filters_items = get_items_for_filter('tags');
         if ($other_filters_items === false) {
             $filter_tags = get_available_tags();
             usort($filter_tags, tag_alpha_compare(...));
         } else {
-            $filter_tags = get_common_tags($other_filters_items, 0);
+            $tag_filter_items = [];
+            foreach ($other_filters_items as $other_filter_item) {
+                if (is_numeric($other_filter_item)) {
+                    $tag_filter_items[] = (int) $other_filter_item;
+                }
+            }
+
+            $filter_tags = get_common_tags($tag_filter_items, 0);
 
             // the user may have started a search on 2 or more tags that have no
             // intersection. In this case, $search_items is empty and get_common_tags
             // returns nothing. We should still display the list of selected tags. We
             // have to "force" them in the list.
-            $missing_tag_ids = array_diff($my_search['fields']['tags']['words'], array_column($filter_tags, 'id'));
+            $missing_tag_ids = array_diff($tag_words, $extract_tag_ids($filter_tags));
 
             if (count($missing_tag_ids) > 0) {
                 $filter_tags = array_merge(get_available_tags($missing_tag_ids), $filter_tags);
@@ -90,23 +158,23 @@ if ($page['section'] == 'search' and isset($page['search_details'])) {
 
         $template->assign('TAGS', $filter_tags);
 
-        $filter_tag_ids = count($filter_tags) > 0 ? array_column($filter_tags, 'id') : [];
+        $filter_tag_ids = count($filter_tags) > 0 ? $extract_tag_ids($filter_tags) : [];
 
         // in case the search has forbidden tags for current user, we need to filter the search rule
-        $my_search['fields']['tags']['words'] = array_intersect($my_search['fields']['tags']['words'], $filter_tag_ids);
-    } elseif (isset($my_search['fields']['tags'])) {
-        unset($my_search['fields']['tags']);
+        $search_fields['tags']['words'] = array_intersect($tag_words, $filter_tag_ids);
+    } elseif (isset($search_fields['tags'])) {
+        unset($search_fields['tags']);
     }
 
-    if (isset($my_search['fields']['expert'])) {
+    if (isset($search_fields['expert'])) {
         if (! $display_filters['expert']['access']) {
-            unset($my_search['fields']['expert']);
+            unset($search_fields['expert']);
         } else {
             load_language('help_quick_search.lang');
         }
     }
 
-    if (isset($my_search['fields']['author']) and $display_filters['author']['access']) {
+    if (isset($search_fields['author']) and $display_filters['author']['access']) {
         $filter_clause = get_clause_for_filter('author');
 
         $query = '
@@ -132,25 +200,64 @@ SELECT
             $filter_rows = query2array($query);
         }
 
-        $author_names = [];
-        foreach ($filter_rows as $author) {
-            $author_names[] = $author['author'];
+        if (! is_array($filter_rows)) {
+            // the persistent cache should only ever hold what query2array() just
+            // produced above; re-run the query if a corrupted entry slipped through.
+            $filter_rows = query2array($query);
         }
-        $template->assign('AUTHORS', $filter_rows);
+
+        // the persistent cache stores this row set as plain mixed data, so
+        // validate each row's shape defensively rather than trusting it.
+        $author_names = [];
+        $authors = [];
+        foreach ($filter_rows as $author_row) {
+            if (! is_array($author_row)) {
+                continue;
+            }
+            $authors[] = $author_row;
+
+            $author_name = $author_row['author'] ?? null;
+            if (is_string($author_name)) {
+                $author_names[] = $author_name;
+            }
+        }
+        $template->assign('AUTHORS', $authors);
+
+        if (! is_array($search_fields['author'])) {
+            $search_fields['author'] = [];
+        }
+
+        $author_words = [];
+        if (is_array($search_fields['author']['words'] ?? null)) {
+            foreach ($search_fields['author']['words'] as $author_word) {
+                if (is_string($author_word)) {
+                    $author_words[] = $author_word;
+                }
+            }
+        }
 
         // in case the search has forbidden authors for current user, we need to filter the search rule
-        $my_search['fields']['author']['words'] = array_intersect($my_search['fields']['author']['words'], $author_names);
-    } elseif (isset($my_search['fields']['author'])) {
-        unset($my_search['fields']['author']);
+        $search_fields['author']['words'] = array_intersect($author_words, $author_names);
+    } elseif (isset($search_fields['author'])) {
+        unset($search_fields['author']);
     }
 
-    if (isset($my_search['fields']['date_posted']) and $display_filters['post_date']['access']) {
+    if (isset($search_fields['date_posted']) and $display_filters['post_date']['access']) {
         $filter_clause = get_clause_for_filter('date_posted');
         $cache_key = $persistent_cache->make_key('filter_date_posted' . $user['id'] . $user['cache_update_time']);
-        $date_posted = null;
-        $set_persistent_cache = ! preg_match('/^image_id IN/', $filter_clause) and ! $persistent_cache->get($cache_key, $date_posted);
+        // we use persistent_cache only for fetching lines filtered only by permissions
+        $cache_applicable = ! preg_match('/^image_id IN/', $filter_clause);
+        $cached_date_posted = null;
+        $has_cached_date_posted = $cache_applicable and $persistent_cache->get($cache_key, $cached_date_posted);
 
-        if (! isset($date_posted)) {
+        if ($has_cached_date_posted
+            and is_array($cached_date_posted)
+            and is_array($cached_date_posted['pre_counters'] ?? null)
+            and is_array($cached_date_posted['list_of_dates'] ?? null)
+        ) {
+            $pre_counters = $cached_date_posted['pre_counters'];
+            $list_of_dates = $cached_date_posted['list_of_dates'];
+        } else {
             $query = '
 SELECT
     SUBDATE(NOW(), INTERVAL 24 HOUR) AS 24h,
@@ -191,16 +298,17 @@ SELECT
                 $list_of_dates[$y]['count'] = ($list_of_dates[$y]['count'] ?? 0) + 1;
             }
 
-            $date_posted = [
-                'pre_counters' => $pre_counters,
-                'list_of_dates' => $list_of_dates,
-            ];
-
-            if ($set_persistent_cache) {
+            if ($cache_applicable) {
                 // for this filter, we do not store in cache the $filter_rows : for a big gallery it may
                 // take more than 10MB. It is smarter to store in cache the result of the computation,
                 // which is just around 100 bytes.
-                $persistent_cache->set($cache_key, $date_posted);
+                $persistent_cache->set(
+                    $cache_key,
+                    [
+                        'pre_counters' => $pre_counters,
+                        'list_of_dates' => $list_of_dates,
+                    ]
+                );
             }
         }
 
@@ -216,38 +324,75 @@ SELECT
         foreach (array_keys($label_for_threshold) as $threshold) {
             $counters[$threshold] = [
                 'label' => $label_for_threshold[$threshold],
-                'counter' => $date_posted['pre_counters'][$threshold] ?? 0,
+                'counter' => $pre_counters[$threshold] ?? 0,
             ];
         }
 
-        foreach (array_keys($date_posted['list_of_dates']) as $y) {
-            $date_posted['list_of_dates'][$y]['label'] = l10n('year %d', $y);
-
-            foreach (array_keys($date_posted['list_of_dates'][$y]['months']) as $ym) {
-                [, $m] = explode('-', (string) $ym);
-                $date_posted['list_of_dates'][$y]['months'][$ym]['label'] = $lang['month'][(int) $m] . ' ' . $y;
-
-                foreach (array_keys($date_posted['list_of_dates'][$y]['months'][$ym]['days']) as $ymd) {
-                    [, , $d] = explode('-', (string) $ymd);
-                    $date_posted['list_of_dates'][$y]['months'][$ym]['days'][$ymd]['label'] = format_date($ymd);
-                }
+        // $list_of_dates may have come from the persistent cache above, which
+        // stores it as plain mixed data — validate each nesting level
+        // defensively rather than trusting its shape.
+        foreach (array_keys($list_of_dates) as $y) {
+            $year_bucket = $list_of_dates[$y] ?? null;
+            if (! is_array($year_bucket)) {
+                continue;
             }
-        }
-        krsort($date_posted['list_of_dates']);
+            $year_bucket['label'] = l10n('year %d', $y);
 
-        $template->assign('LIST_DATE_POSTED', $date_posted['list_of_dates']);
+            $months_bucket = $year_bucket['months'] ?? null;
+            if (is_array($months_bucket)) {
+                foreach (array_keys($months_bucket) as $ym) {
+                    $month_bucket = $months_bucket[$ym] ?? null;
+                    if (! is_array($month_bucket)) {
+                        continue;
+                    }
+
+                    [, $m] = explode('-', (string) $ym);
+                    $month_bucket['label'] = $lang['month'][(int) $m] . ' ' . $y;
+
+                    $days_bucket = $month_bucket['days'] ?? null;
+                    if (is_array($days_bucket)) {
+                        foreach (array_keys($days_bucket) as $ymd) {
+                            $day_bucket = $days_bucket[$ymd] ?? null;
+                            if (! is_array($day_bucket)) {
+                                continue;
+                            }
+                            $day_bucket['label'] = format_date($ymd);
+                            $days_bucket[$ymd] = $day_bucket;
+                        }
+                        $month_bucket['days'] = $days_bucket;
+                    }
+
+                    $months_bucket[$ym] = $month_bucket;
+                }
+                $year_bucket['months'] = $months_bucket;
+            }
+
+            $list_of_dates[$y] = $year_bucket;
+        }
+        krsort($list_of_dates);
+
+        $template->assign('LIST_DATE_POSTED', $list_of_dates);
         $template->assign('DATE_POSTED', $counters);
-    } elseif (isset($my_search['fields']['date_posted'])) {
-        unset($my_search['fields']['date_posted']);
+    } elseif (isset($search_fields['date_posted'])) {
+        unset($search_fields['date_posted']);
     }
 
-    if (isset($my_search['fields']['date_created']) and $display_filters['creation_date']['access']) {
+    if (isset($search_fields['date_created']) and $display_filters['creation_date']['access']) {
         $filter_clause = get_clause_for_filter('date_created');
         $cache_key = $persistent_cache->make_key('filter_date_created' . $user['id'] . $user['cache_update_time']);
-        $date_created = null;
-        $set_persistent_cache = ! preg_match('/^image_id IN/', $filter_clause) and ! $persistent_cache->get($cache_key, $date_created);
+        // we use persistent_cache only for fetching lines filtered only by permissions
+        $cache_applicable = ! preg_match('/^image_id IN/', $filter_clause);
+        $cached_date_created = null;
+        $has_cached_date_created = $cache_applicable and $persistent_cache->get($cache_key, $cached_date_created);
 
-        if (! isset($date_created)) {
+        if ($has_cached_date_created
+            and is_array($cached_date_created)
+            and is_array($cached_date_created['pre_counters'] ?? null)
+            and is_array($cached_date_created['list_of_dates'] ?? null)
+        ) {
+            $pre_counters = $cached_date_created['pre_counters'];
+            $list_of_dates = $cached_date_created['list_of_dates'];
+        } else {
             $query = '
 SELECT
     SUBDATE(NOW(), INTERVAL 7 DAY) AS 7d,
@@ -290,16 +435,17 @@ SELECT
                 }
             }
 
-            $date_created = [
-                'pre_counters' => $pre_counters,
-                'list_of_dates' => $list_of_dates,
-            ];
-
-            if ($set_persistent_cache) {
+            if ($cache_applicable) {
                 // for this filter, we do not store in cache the $filter_rows : for a big gallery it may
                 // take more than 10MB. It is smarter to store in cache the result of the computation,
                 // which is just around 100 bytes.
-                $persistent_cache->set($cache_key, $date_created);
+                $persistent_cache->set(
+                    $cache_key,
+                    [
+                        'pre_counters' => $pre_counters,
+                        'list_of_dates' => $list_of_dates,
+                    ]
+                );
             }
         }
 
@@ -315,32 +461,60 @@ SELECT
         foreach (array_keys($label_for_threshold) as $threshold) {
             $counters[$threshold] = [
                 'label' => $label_for_threshold[$threshold],
-                'counter' => $date_created['pre_counters'][$threshold] ?? 0,
+                'counter' => $pre_counters[$threshold] ?? 0,
             ];
         }
 
-        foreach (array_keys($date_created['list_of_dates']) as $y) {
-            $date_created['list_of_dates'][$y]['label'] = l10n('year %d', $y);
-
-            foreach (array_keys($date_created['list_of_dates'][$y]['months']) as $ym) {
-                [, $m] = explode('-', (string) $ym);
-                $date_created['list_of_dates'][$y]['months'][$ym]['label'] = $lang['month'][(int) $m] . ' ' . $y;
-
-                foreach (array_keys($date_created['list_of_dates'][$y]['months'][$ym]['days']) as $ymd) {
-                    [, , $d] = explode('-', (string) $ymd);
-                    $date_created['list_of_dates'][$y]['months'][$ym]['days'][$ymd]['label'] = format_date($ymd);
-                }
+        // $list_of_dates may have come from the persistent cache above, which
+        // stores it as plain mixed data — validate each nesting level
+        // defensively rather than trusting its shape.
+        foreach (array_keys($list_of_dates) as $y) {
+            $year_bucket = $list_of_dates[$y] ?? null;
+            if (! is_array($year_bucket)) {
+                continue;
             }
-        }
-        krsort($date_created['list_of_dates']);
+            $year_bucket['label'] = l10n('year %d', $y);
 
-        $template->assign('LIST_DATE_CREATED', $date_created['list_of_dates']);
+            $months_bucket = $year_bucket['months'] ?? null;
+            if (is_array($months_bucket)) {
+                foreach (array_keys($months_bucket) as $ym) {
+                    $month_bucket = $months_bucket[$ym] ?? null;
+                    if (! is_array($month_bucket)) {
+                        continue;
+                    }
+
+                    [, $m] = explode('-', (string) $ym);
+                    $month_bucket['label'] = $lang['month'][(int) $m] . ' ' . $y;
+
+                    $days_bucket = $month_bucket['days'] ?? null;
+                    if (is_array($days_bucket)) {
+                        foreach (array_keys($days_bucket) as $ymd) {
+                            $day_bucket = $days_bucket[$ymd] ?? null;
+                            if (! is_array($day_bucket)) {
+                                continue;
+                            }
+                            $day_bucket['label'] = format_date($ymd);
+                            $days_bucket[$ymd] = $day_bucket;
+                        }
+                        $month_bucket['days'] = $days_bucket;
+                    }
+
+                    $months_bucket[$ym] = $month_bucket;
+                }
+                $year_bucket['months'] = $months_bucket;
+            }
+
+            $list_of_dates[$y] = $year_bucket;
+        }
+        krsort($list_of_dates);
+
+        $template->assign('LIST_DATE_CREATED', $list_of_dates);
         $template->assign('DATE_CREATED', $counters);
-    } elseif (isset($my_search['fields']['date_created'])) {
-        unset($my_search['fields']['date_created']);
+    } elseif (isset($search_fields['date_created'])) {
+        unset($search_fields['date_created']);
     }
 
-    if (isset($my_search['fields']['added_by']) and $display_filters['added_by']['access']) {
+    if (isset($search_fields['added_by']) and $display_filters['added_by']['access']) {
         $filter_clause = get_clause_for_filter('added_by');
 
         $query = '
@@ -366,13 +540,30 @@ SELECT
             $filter_rows = query2array($query);
         }
 
-        $added_by = $filter_rows;
+        if (! is_array($filter_rows)) {
+            // the persistent cache should only ever hold what query2array() just
+            // produced above; re-run the query if a corrupted entry slipped through.
+            $filter_rows = query2array($query);
+        }
+
+        // the persistent cache stores this row set as plain mixed data, so
+        // validate each row's shape defensively rather than trusting it.
+        $added_by = [];
+        foreach ($filter_rows as $added_by_row) {
+            if (is_array($added_by_row)) {
+                $added_by[] = $added_by_row;
+            }
+        }
+
         $user_ids = [];
 
         if (count($added_by) > 0) {
             // now let's find the usernames of added_by users
-            foreach ($added_by as $i) {
-                $user_ids[] = $i['added_by_id'];
+            foreach ($added_by as $row) {
+                $row_added_by_id = $row['added_by_id'] ?? null;
+                if (is_string($row_added_by_id)) {
+                    $user_ids[] = $row_added_by_id;
+                }
             }
 
             $query = '
@@ -385,21 +576,42 @@ SELECT
             $username_of = query2array($query, 'id', 'username');
 
             foreach (array_keys($added_by) as $added_by_idx) {
-                $added_by_id = $added_by[$added_by_idx]['added_by_id'];
+                $added_by_id = $added_by[$added_by_idx]['added_by_id'] ?? null;
+                if (! is_string($added_by_id)) {
+                    continue;
+                }
                 $added_by[$added_by_idx]['added_by_name'] = $username_of[$added_by_id] ?? 'user #' . $added_by_id . ' (deleted)';
             }
         }
 
         $template->assign('ADDED_BY', $added_by);
 
+        $added_by_ids = [];
+        if (is_array($search_fields['added_by'])) {
+            foreach ($search_fields['added_by'] as $added_by_word) {
+                if (is_int($added_by_word) || is_string($added_by_word)) {
+                    $added_by_ids[] = $added_by_word;
+                }
+            }
+        }
+
         // in case the search has forbidden added_by users for current user, we need to filter the search rule
-        $my_search['fields']['added_by'] = array_intersect($my_search['fields']['added_by'], $user_ids);
-    } elseif (isset($my_search['fields']['added_by'])) {
-        unset($my_search['fields']['added_by']);
+        $search_fields['added_by'] = array_intersect($added_by_ids, $user_ids);
+    } elseif (isset($search_fields['added_by'])) {
+        unset($search_fields['added_by']);
     }
 
-    if (isset($my_search['fields']['cat']) and $display_filters['album']['access']) {
-        if (! empty($my_search['fields']['cat']['words'])) {
+    if (isset($search_fields['cat']) and $display_filters['album']['access']) {
+        $cat_words = [];
+        if (is_array($search_fields['cat']) && is_array($search_fields['cat']['words'] ?? null)) {
+            foreach ($search_fields['cat']['words'] as $cat_word) {
+                if (is_int($cat_word) || is_string($cat_word)) {
+                    $cat_words[] = $cat_word;
+                }
+            }
+        }
+
+        if (count($cat_words) > 0) {
             $fullname_of = [];
 
             $query = '
@@ -408,11 +620,15 @@ SELECT
     uppercats
   FROM ' . CATEGORIES_TABLE . '
     INNER JOIN ' . USER_CACHE_CATEGORIES_TABLE . ' ON id = cat_id AND user_id = ' . $user['id'] . '
-  WHERE id IN (' . implode(',', $my_search['fields']['cat']['words']) . ')
+  WHERE id IN (' . implode(',', $cat_words) . ')
 ;';
             $result = pwg_query($query);
 
             while ($row = pwg_db_fetch_assoc($result)) {
+                if ($row['id'] === null || $row['uppercats'] === null) {
+                    continue;
+                }
+
                 $cat_display_name = get_cat_display_name_cache(
                     $row['uppercats'],
                     'admin.php?page=album-' // TODO not sure it's relevant to link to admin pages
@@ -424,21 +640,23 @@ SELECT
 
             $template->assign('fullname_of', json_encode($fullname_of));
 
+            if (! is_array($search_fields['cat'])) {
+                $search_fields['cat'] = [];
+            }
+
             // in case the search has forbidden albums for current user, we need to filter the search rule
-            $my_search['fields']['cat']['words'] = array_intersect($my_search['fields']['cat']['words'], array_keys($fullname_of));
+            $search_fields['cat']['words'] = array_intersect($cat_words, array_keys($fullname_of));
         }
-    } elseif (isset($my_search['fields']['cat'])) {
-        unset($my_search['fields']['cat']);
+    } elseif (isset($search_fields['cat'])) {
+        unset($search_fields['cat']);
     }
 
-    if (isset($my_search['fields']['filetypes']) and $display_filters['file_type']['access']) {
+    if (isset($search_fields['filetypes']) and $display_filters['file_type']['access']) {
         $filter_clause = get_clause_for_filter('filetypes');
 
         // get all file extensions for this user in the gallery, whatever the current filters
         $cache_key = $persistent_cache->make_key('file_exts' . $user['id'] . $user['cache_update_time']);
-        $all_exts = null;
-        if (! $persistent_cache->get($cache_key, $all_exts)) {
-            $query = '
+        $all_exts_query = '
 SELECT
     SUBSTRING_INDEX(path, ".", -1) AS ext,
     COUNT(DISTINCT(id)) AS counter
@@ -448,8 +666,16 @@ SELECT
   GROUP BY ext
   ORDER BY counter DESC
 ;';
-            $all_exts = query2array($query, 'ext', 'counter');
+        $all_exts = null;
+        if (! $persistent_cache->get($cache_key, $all_exts)) {
+            $all_exts = query2array($all_exts_query, 'ext', 'counter');
             $persistent_cache->set($cache_key, $all_exts);
+        }
+
+        if (! is_array($all_exts)) {
+            // the persistent cache should only ever hold what query2array() just
+            // produced above; re-run the query if a corrupted entry slipped through.
+            $all_exts = query2array($all_exts_query, 'ext', 'counter');
         }
 
         if (preg_match('/^image_id IN/', $filter_clause)) {
@@ -474,15 +700,15 @@ SELECT
         } else {
             $template->assign('FILETYPES', $all_exts);
         }
-    } elseif (isset($my_search['fields']['filetypes'])) {
-        unset($my_search['fields']['filetypes']);
+    } elseif (isset($search_fields['filetypes'])) {
+        unset($search_fields['filetypes']);
     }
 
     // For rating
     if ($conf['rate']) {
         $template->assign('SHOW_FILTER_RATINGS', true);
 
-        if (isset($my_search['fields']['ratings']) and $display_filters['rating']['access']) {
+        if (isset($search_fields['ratings']) and $display_filters['rating']['access']) {
             $filter_clause = get_clause_for_filter('ratings');
 
             $cache_key = $persistent_cache->make_key('filter_ratings' . $user['id'] . $user['cache_update_time']);
@@ -528,18 +754,18 @@ SELECT
                 }
             }
             $template->assign('RATING', $ratings);
-        } elseif (isset($my_search['fields']['ratings'])) {
-            unset($my_search['fields']['ratings']);
+        } elseif (isset($search_fields['ratings'])) {
+            unset($search_fields['ratings']);
         }
     } else {
         $template->assign('SHOW_FILTER_RATINGS', false);
-        if (isset($my_search['fields']['ratings'])) {
-            unset($my_search['fields']['ratings']);
+        if (isset($search_fields['ratings'])) {
+            unset($search_fields['ratings']);
         }
     }
 
     // For filesize
-    if (isset($my_search['fields']['filesize_min']) && isset($my_search['fields']['filesize_max']) and $display_filters['file_size']['access']) {
+    if (isset($search_fields['filesize_min']) && isset($search_fields['filesize_max']) and $display_filters['file_size']['access']) {
         $filter_clause = get_clause_for_filter('filesize');
 
         $filesizes = [];
@@ -555,7 +781,10 @@ SELECT
 ;';
         $result = pwg_query($query);
         while ($row = pwg_db_fetch_assoc($result)) {
-            @$filesizes[sprintf('%.1f', $row['filesize'] / 1024)]++;
+            if (! is_numeric($row['filesize'])) {
+                continue;
+            }
+            @$filesizes[sprintf('%.1f', (float) $row['filesize'] / 1024)]++;
         }
 
         if (empty($filesizes)) { // arbitrary values, only used when no photos on the gallery
@@ -572,21 +801,24 @@ SELECT
             'max' => end($unique_filesizes),
         ];
 
+        $filesize_min = $search_fields['filesize_min'];
+        $filesize_max = $search_fields['filesize_max'];
+
         // warning: we will (hopefully) have smarter values for filters. The min/max of the
         // current search won't always be the first/last values found. It's going to be a
         // problem with this way to select selected values
         $filesize['selected'] = [
-            'min' => ! empty($my_search['fields']['filesize_min']) ? sprintf('%.1f', $my_search['fields']['filesize_min'] / 1024) : $unique_filesizes[0],
-            'max' => ! empty($my_search['fields']['filesize_max']) ? sprintf('%.1f', $my_search['fields']['filesize_max'] / 1024) : end($unique_filesizes),
+            'min' => (! empty($filesize_min) && is_numeric($filesize_min)) ? sprintf('%.1f', (float) $filesize_min / 1024) : $unique_filesizes[0],
+            'max' => (! empty($filesize_max) && is_numeric($filesize_max)) ? sprintf('%.1f', (float) $filesize_max / 1024) : end($unique_filesizes),
         ];
 
         $template->assign('FILESIZE', $filesize);
-    } elseif (isset($my_search['fields']['filesize_min']) && isset($my_search['fields']['filesize_max']) and ! ($display_filters['file_size']['access'])) {
-        unset($my_search['fields']['filesize_min']);
-        unset($my_search['fields']['filesize_max']);
+    } elseif (isset($search_fields['filesize_min']) && isset($search_fields['filesize_max']) and ! ($display_filters['file_size']['access'])) {
+        unset($search_fields['filesize_min']);
+        unset($search_fields['filesize_max']);
     }
 
-    if (isset($my_search['fields']['ratios']) and $display_filters['ratio']['access']) {
+    if (isset($search_fields['ratios']) and $display_filters['ratio']['access']) {
         $filter_clause = get_clause_for_filter('ratios');
 
         $cache_key = $persistent_cache->make_key('filter_ratios' . $user['id'] . $user['cache_update_time']);
@@ -617,11 +849,18 @@ SELECT
             ];
 
             foreach ($filter_rows as $row) {
-                if ($row['width'] <= 0 and $row['height'] <= 0) {
+                if (! is_numeric($row['width']) || ! is_numeric($row['height'])) {
                     continue;
                 }
 
-                $r = $row['width'] / $row['height'];
+                $row_width = (float) $row['width'];
+                $row_height = (float) $row['height'];
+
+                if ($row_width <= 0 and $row_height <= 0) {
+                    continue;
+                }
+
+                $r = $row_width / $row_height;
                 if ($r < 0.95) {
                     $ratios['Portrait']++;
                 } elseif ($r >= 0.95 and $r <= 1.05) {
@@ -641,11 +880,11 @@ SELECT
             }
         }
         $template->assign('RATIOS', $ratios);
-    } elseif (isset($my_search['fields']['ratios'])) {
-        unset($my_search['fields']['ratios']);
+    } elseif (isset($search_fields['ratios'])) {
+        unset($search_fields['ratios']);
     }
 
-    if (isset($my_search['fields']['height_min']) and isset($my_search['fields']['height_max']) and $display_filters['height']['access']) {
+    if (isset($search_fields['height_min']) and isset($search_fields['height_max']) and $display_filters['height']['access']) {
         $filter_clause = get_clause_for_filter('height');
 
         $query = '
@@ -671,7 +910,20 @@ SELECT
             $filter_rows = query2array($query, null, 'height');
         }
 
-        $heights = $filter_rows;
+        if (! is_array($filter_rows)) {
+            // the persistent cache should only ever hold what query2array() just
+            // produced above; re-run the query if a corrupted entry slipped through.
+            $filter_rows = query2array($query, null, 'height');
+        }
+
+        // the persistent cache stores this row set as plain mixed data, so
+        // validate each value defensively rather than trusting it.
+        $heights = [];
+        foreach ($filter_rows as $height_value) {
+            if (is_string($height_value)) {
+                $heights[] = $height_value;
+            }
+        }
 
         $height = [
             'list' => implode(',', $heights),
@@ -680,18 +932,18 @@ SELECT
                 'max' => end($heights),
             ],
             'selected' => [
-                'min' => ! empty($my_search['fields']['height_min']) ? $my_search['fields']['height_min'] : $heights[0],
-                'max' => ! empty($my_search['fields']['height_max']) ? $my_search['fields']['height_max'] : end($heights),
+                'min' => ! empty($search_fields['height_min']) ? $search_fields['height_min'] : $heights[0],
+                'max' => ! empty($search_fields['height_max']) ? $search_fields['height_max'] : end($heights),
             ],
         ];
 
         $template->assign('HEIGHT', $height);
-    } elseif (isset($my_search['fields']['height_min']) && isset($my_search['fields']['height_max']) and ! ($display_filters['height']['access'])) {
-        unset($my_search['fields']['height_min']);
-        unset($my_search['fields']['height_max']);
+    } elseif (isset($search_fields['height_min']) && isset($search_fields['height_max']) and ! ($display_filters['height']['access'])) {
+        unset($search_fields['height_min']);
+        unset($search_fields['height_max']);
     }
 
-    if (isset($my_search['fields']['width_min']) and isset($my_search['fields']['width_max']) and $display_filters['width']['access']) {
+    if (isset($search_fields['width_min']) and isset($search_fields['width_max']) and $display_filters['width']['access']) {
         $filter_clause = get_clause_for_filter('width');
 
         $query = '
@@ -717,7 +969,20 @@ SELECT
             $filter_rows = query2array($query, null, 'width');
         }
 
-        $widths = $filter_rows;
+        if (! is_array($filter_rows)) {
+            // the persistent cache should only ever hold what query2array() just
+            // produced above; re-run the query if a corrupted entry slipped through.
+            $filter_rows = query2array($query, null, 'width');
+        }
+
+        // the persistent cache stores this row set as plain mixed data, so
+        // validate each value defensively rather than trusting it.
+        $widths = [];
+        foreach ($filter_rows as $width_value) {
+            if (is_string($width_value)) {
+                $widths[] = $width_value;
+            }
+        }
 
         $width = [
             'list' => implode(',', $widths),
@@ -726,15 +991,15 @@ SELECT
                 'max' => end($widths),
             ],
             'selected' => [
-                'min' => ! empty($my_search['fields']['width_min']) ? $my_search['fields']['width_min'] : $widths[0],
-                'max' => ! empty($my_search['fields']['width_max']) ? $my_search['fields']['width_max'] : end($widths),
+                'min' => ! empty($search_fields['width_min']) ? $search_fields['width_min'] : $widths[0],
+                'max' => ! empty($search_fields['width_max']) ? $search_fields['width_max'] : end($widths),
             ],
         ];
 
         $template->assign('WIDTH', $width);
-    } elseif (isset($my_search['fields']['width_min']) && isset($my_search['fields']['width_max']) and ! ($display_filters['width']['access'])) {
-        unset($my_search['fields']['width_min']);
-        unset($my_search['fields']['width_max']);
+    } elseif (isset($search_fields['width_min']) && isset($search_fields['width_max']) and ! ($display_filters['width']['access'])) {
+        unset($search_fields['width_min']);
+        unset($search_fields['width_max']);
     }
 
     $template->assign(
@@ -759,6 +1024,10 @@ SELECT
                 usort($cats, name_compare(...));
                 $albums_found = [];
                 foreach ($cats as $cat) {
+                    if ($cat['uppercats'] === null) {
+                        continue;
+                    }
+
                     $single_link = false;
                     $albums_found[] = get_cat_display_name_cache(
                         $cat['uppercats'],
@@ -780,6 +1049,10 @@ SELECT
                 usort($tags, tag_alpha_compare(...));
                 $tags_found = [];
                 foreach ($tags as $tag) {
+                    if (! isset($tag['name']) || ! is_string($tag['name'])) {
+                        continue;
+                    }
+
                     $url = make_index_url(
                         [
                             'tags' => [$tag],

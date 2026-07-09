@@ -30,6 +30,33 @@ final class WsUsersMutationTest extends ContractTestCase
         parent::tearDown();
     }
 
+    /**
+     * Narrows a decoded WS response down to result.users[0], asserting the
+     * shape at every level. callWs() returns array<string, mixed>, so
+     * nothing below the top level is known without explicit checks.
+     *
+     * @param array<string, mixed> $response
+     */
+    private static function firstUserId(array $response): int
+    {
+        $result = $response['result'] ?? null;
+        self::assertIsArray($result, 'WS response "result" is not an array');
+
+        $users = $result['users'] ?? null;
+        self::assertIsArray($users, 'WS response "result.users" is not an array');
+
+        $user = $users[0] ?? null;
+        self::assertIsArray($user, 'WS response "result.users[0]" is not an array');
+
+        $id = $user['id'] ?? null;
+        self::assertTrue(
+            is_int($id) || (is_string($id) && is_numeric($id)),
+            'result.users[0].id is missing or not numeric'
+        );
+
+        return (int) $id;
+    }
+
     public function test_add_returns_user_list_shape(): void
     {
         $token    = $this->getPwgToken();
@@ -44,7 +71,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('users.getList', $response);
 
-        $this->userId = (int) $response['result']['users'][0]['id'];
+        $this->userId = self::firstUserId($response);
     }
 
     public function test_setInfo_returns_user_list_shape(): void
@@ -56,7 +83,7 @@ final class WsUsersMutationTest extends ContractTestCase
             'password'  => 'Test1234!',
             'pwg_token' => $token,
         ]);
-        $this->userId = (int) $add['result']['users'][0]['id'];
+        $this->userId = self::firstUserId($add);
 
         $response = $this->callWs('pwg.users.setInfo', [
             'user_id'   => $this->userId,
@@ -98,7 +125,7 @@ final class WsUsersMutationTest extends ContractTestCase
             'password'  => 'Test1234!',
             'pwg_token' => $token,
         ]);
-        $id = (int) $add['result']['users'][0]['id'];
+        $id = self::firstUserId($add);
 
         $response = $this->callWs('pwg.users.delete', [
             'user_id'   => [$id],

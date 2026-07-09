@@ -68,13 +68,18 @@ function get_sync_exif_data($file): array
     $exif = get_exif_data($file, $conf['use_exif_mapping']);
 
     foreach ($exif as $pwg_key => $value) {
+        // get_exif_data() returns array<string, mixed> because raw EXIF/trigger_change()
+        // values are heterogeneous (scalars, sometimes nested arrays); narrow to a string
+        // representation here for the regex/normalization/addslashes operations below.
+        $value_str = is_scalar($value) ? (string) $value : '';
+
         if (in_array($pwg_key, ['date_creation', 'date_available'])) {
-            if (preg_match('/^(\d{4}).(\d{2}).(\d{2}) (\d{2}).(\d{2}).(\d{2})/', (string) $value, $matches)) {
+            if (preg_match('/^(\d{4}).(\d{2}).(\d{2}) (\d{2}).(\d{2}).(\d{2})/', $value_str, $matches)) {
                 $exif[$pwg_key] = $matches[1] . '-' . $matches[2] . '-' . $matches[3] . ' ' . $matches[4] . ':' . $matches[5] . ':' . $matches[6];
                 if ($exif[$pwg_key] == '0000-00-00 00:00:00') {
                     $exif[$pwg_key] = null;
                 }
-            } elseif (preg_match('/^(\d{4}).(\d{2}).(\d{2})/', (string) $value, $matches)) {
+            } elseif (preg_match('/^(\d{4}).(\d{2}).(\d{2})/', $value_str, $matches)) {
                 $exif[$pwg_key] = $matches[1] . '-' . $matches[2] . '-' . $matches[3];
             } else {
                 unset($exif[$pwg_key]);
@@ -83,7 +88,7 @@ function get_sync_exif_data($file): array
         }
 
         if (in_array($pwg_key, ['keywords', 'tags'])) {
-            $exif[$pwg_key] = metadata_normalize_keywords_string($exif[$pwg_key]);
+            $exif[$pwg_key] = metadata_normalize_keywords_string($value_str);
         }
 
         if (empty($exif[$pwg_key])) {
@@ -91,7 +96,8 @@ function get_sync_exif_data($file): array
             continue;
         }
 
-        $exif[$pwg_key] = addslashes((string) $exif[$pwg_key]);
+        $current_value = $exif[$pwg_key];
+        $exif[$pwg_key] = addslashes(is_scalar($current_value) ? (string) $current_value : '');
     }
 
     return $exif;
@@ -138,7 +144,9 @@ function get_sync_metadata_attributes(): array
 function get_sync_metadata($infos)
 {
     global $conf;
-    $file = PHPWG_ROOT_PATH . $infos['path'];
+    $path = $infos['path'] ?? null;
+    $path = is_string($path) ? $path : '';
+    $file = PHPWG_ROOT_PATH . $path;
     $fs = @filesize($file);
 
     if ($fs === false) {
@@ -161,7 +169,9 @@ function get_sync_metadata($infos)
             }
         }
 
-        $file = original_to_representative($file, $infos['representative_ext']);
+        $representative_ext = $infos['representative_ext'];
+        $representative_ext = is_string($representative_ext) ? $representative_ext : '';
+        $file = original_to_representative($file, $representative_ext);
     }
 
     if (function_exists('mime_content_type')) {
@@ -200,7 +210,7 @@ function get_sync_metadata($infos)
 
     if ($is_tiff) {
         // back to original file
-        $file = PHPWG_ROOT_PATH . $infos['path'];
+        $file = PHPWG_ROOT_PATH . $path;
     }
 
     if ($conf['use_exif']) {
@@ -215,9 +225,12 @@ function get_sync_metadata($infos)
 
     foreach (['name', 'author'] as $single_line_field) {
         if (isset($infos[$single_line_field])) {
+            $field_value = $infos[$single_line_field];
+            $field_value = is_string($field_value) ? $field_value : '';
             foreach (["\r\n", "\n", "\r"] as $to_replace_string) {
-                $infos[$single_line_field] = str_replace($to_replace_string, ' ', $infos[$single_line_field]);
+                $field_value = str_replace($to_replace_string, ' ', $field_value);
             }
+            $infos[$single_line_field] = $field_value;
         }
     }
 
@@ -257,13 +270,21 @@ SELECT id, path, representative_ext
         }
         // print_r($data);
         $id = $data['id'];
+        if (! is_int($id) && ! is_string($id)) {
+            // no usable primary key to associate tags with, skip tagging for this row
+            continue;
+        }
+
         foreach (['keywords', 'tags'] as $key) {
             if (isset($data[$key])) {
                 if (! isset($tags_of[$id])) {
                     $tags_of[$id] = [];
                 }
 
-                foreach (explode(',', (string) $data[$key]) as $tag_name) {
+                $tag_list = $data[$key];
+                $tag_list = is_scalar($tag_list) ? (string) $tag_list : '';
+
+                foreach (explode(',', $tag_list) as $tag_name) {
                     $tags_of[$id][] = tag_id_from_tag_name($tag_name);
                 }
             }
